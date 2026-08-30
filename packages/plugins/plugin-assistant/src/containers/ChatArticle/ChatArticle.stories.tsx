@@ -28,7 +28,7 @@ import { Config } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
-import { Message, Outline, Task, TaskSet } from '@dxos/types';
+import { Message, Outline, Task } from '@dxos/types';
 
 import { AssistantPlugin } from '#plugin';
 import { translations } from '#translations';
@@ -116,7 +116,7 @@ const desktopOnlyChrome = (canvasElement: HTMLElement) => ({
 type StoryArgs = {
   /** Turns the story drives: each prompt is submitted, and its reply is what the scripted model returns. */
   messages?: { prompt: string; reply: string }[];
-  /** Seed the chat's working task set, so the article renders its `Chat.TaskList`. */
+  /** Seed the chat's checklist, so the article renders its `Chat.TaskList`. */
   tasks?: { title: string; status?: Task.Task['status'] }[];
   /** Contributes the deck's platform capability, which the prompt reads to drop desktop-only affordances. */
   platform?: DeckCapabilities.Platform;
@@ -142,7 +142,7 @@ const meta = {
         plugins: [
           ...corePlugins(),
           ClientPlugin.make({
-            types: [Chat.Chat, Feed.Feed, Message.Message, Outline.Outline, TaskSet.TaskSet, Task.Task, Text.Text],
+            types: [Chat.Chat, Feed.Feed, Message.Message, Outline.Outline, Task.Task, Text.Text],
             config: new Config({ runtime: { services: SERVICES_CONFIG.REMOTE } }),
             onClientInitialized: ({ client }) =>
               Effect.gen(function* () {
@@ -150,21 +150,13 @@ const meta = {
                 const [space] = client.spaces.get();
                 yield* Effect.promise(() => space.waitUntilReady());
                 const feed = space.db.add(Feed.make());
-                const taskSet = tasks.length ? space.db.add(TaskSet.make({ name: 'Test' })) : undefined;
-                if (taskSet) {
-                  for (const { title, status } of tasks) {
-                    TaskSet.addTask(space.db, taskSet, title, { status });
-                  }
+                const chat = space.db.add(Chat.make({ name: 'Test', feed: Ref.make(feed) }));
+                for (const { title, status } of tasks) {
+                  Chat.addTask(space.db, chat, title, { status });
                 }
-                const chat = space.db.add(
-                  Chat.make({ name: 'Test', feed: Ref.make(feed), taskSet: taskSet && Ref.make(taskSet) }),
-                );
-                if (chat.taskSet) {
-                  // The task list reads the set and its rows through resolve-once ref atoms; load
-                  // them so the story renders without waiting on a lazy resolution nothing triggers.
-                  const set = yield* Effect.promise(() => chat.taskSet!.load());
-                  yield* Effect.promise(() => Promise.all(set.tasks.map((task) => task.load())));
-                }
+                // The task list reads the rows through resolve-once ref atoms; load them so the
+                // story renders without waiting on a lazy resolution nothing triggers.
+                yield* Effect.promise(() => Promise.all(chat.tasks.map((task) => task.load())));
 
                 yield* Effect.promise(() => space.db.flush({ indexes: true }));
               }),
@@ -205,7 +197,7 @@ export const Default: Story = {
   },
 };
 
-/** The article's working tasks: `Chat.TaskList` reading the chat's task set through context. */
+/** The article's working tasks: `Chat.TaskList` reading the chat's checklist through context. */
 export const Tasks: Story = {
   args: {
     tasks: [

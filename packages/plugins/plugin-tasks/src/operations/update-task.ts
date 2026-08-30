@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
-import { TaskSet } from '@dxos/types';
+import { Task, TaskSet } from '@dxos/types';
 
 import { TaskOperation } from '#types';
 
@@ -31,8 +31,8 @@ const handler: Operation.WithHandler<typeof TaskOperation.UpdateTask> = TaskOper
 
       // Compared by entity id: the same object may be addressed local or space-qualified.
       if (milestone) {
-        const milestoneId = TaskSet.refEntityId(milestone);
-        const belongs = taskSet?.milestones.some((ref) => TaskSet.refEntityId(ref) === milestoneId) ?? false;
+        const milestoneId = Task.refEntityId(milestone);
+        const belongs = taskSet?.milestones.some((ref) => Task.refEntityId(ref) === milestoneId) ?? false;
         if (!belongs) {
           return yield* Effect.fail(
             new InvalidOperationInput({ message: 'The milestone does not belong to this task set.' }),

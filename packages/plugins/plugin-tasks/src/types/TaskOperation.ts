@@ -92,6 +92,24 @@ export const UpdateTask = Operation.make({
   }),
 }).pipe(Operation.mutation('write'));
 
+export const TaskRestorePoint = Schema.Struct({
+  entries: Schema.Array(
+    Schema.Struct({
+      task: Type.getSchema(Task.Task),
+      index: Schema.optional(Schema.Number).annotate({
+        description: "Position the task held in the set's `tasks` array; absent when it belonged to no set.",
+      }),
+    }),
+  ).annotate({
+    description: 'The deleted task and every sub-task that went with it.',
+  }),
+  taskSet: Schema.optional(Type.getSchema(TaskSet.TaskSet)).annotate({
+    description: 'The set the tasks were filed in, when they were in one.',
+  }),
+});
+
+export type TaskRestorePoint = Schema.Schema.Type<typeof TaskRestorePoint>;
+
 /**
  * Removes a task and its sub-tasks. `Database.remove` cascades along the parent edge, but the set's
  * `tasks` array is a separate membership record, so a generic delete leaves the whole subtree's
@@ -111,8 +129,20 @@ export const DeleteTask = Operation.make({
   output: Schema.Struct({
     /** Ids of the deleted task and every sub-task that went with it. */
     deleted: Schema.Array(Schema.String),
+    restore: TaskRestorePoint,
   }),
 }).pipe(Operation.mutation('destructive'));
+
+export const RestoreTasks = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.tasks.restore'),
+    name: 'Restore Tasks',
+    description: 'Restore deleted tasks and their sub-tasks to their task set.',
+    icon: 'ph--clock-counter-clockwise--regular',
+  },
+  input: TaskRestorePoint,
+  output: Schema.Void,
+}).pipe(Operation.mutation('write'));
 
 /**
  * Repositions a task within its set's `tasks` array. There is no sort key to patch — the array

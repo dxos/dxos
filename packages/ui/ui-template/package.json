@@ -1,0 +1,73 @@
+{
+  "name": "@dxos/ui-template",
+  "version": "0.11.1",
+  "private": true,
+  "description": "Layout template grammar, parser, and pluggable renderer (React implementation).",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
+    },
+    "./react": {
+      "source": "./src/react/index.ts",
+      "types": "./dist/types/src/react/index.d.ts",
+      "import": "./dist/lib/react/index.mjs"
+    },
+    "./codemirror": {
+      "source": "./src/codemirror/index.ts",
+      "types": "./dist/types/src/codemirror/index.d.ts",
+      "import": "./dist/lib/codemirror/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@codemirror/lang-xml": "catalog:",
+    "@codemirror/language": "catalog:",
+    "@codemirror/lint": "catalog:",
+    "@codemirror/state": "catalog:",
+    "@codemirror/view": "catalog:",
+    "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
+    "@dxos/react-ui-tabs": "workspace:*",
+    "@zag-js/react": "catalog:",
+    "@zag-js/splitter": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/echo": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
+    "@dxos/echo-react": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/types": "workspace:*",
+    "@dxos/ui-editor": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@storybook/react-vite": "catalog:",
+    "@types/react": "catalog:",
+    "@zag-js/core": "catalog:",
+    "@zag-js/vanilla": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "catalog:"
+  }
+}

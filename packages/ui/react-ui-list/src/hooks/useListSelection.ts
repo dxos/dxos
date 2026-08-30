@@ -37,6 +37,11 @@ export type SelectionItemBinding = {
 
 export type UseListSelectionReturn = {
   bind: (id: string, opts?: { disabled?: boolean }) => SelectionItemBinding;
+  /**
+   * Clear the selection (single: `undefined`; multi: empty set). A no-op — no emission — when
+   * nothing is selected, so repeated invocations (e.g. Escape presses) emit at most once.
+   */
+  clear: () => void;
 };
 
 const isMulti = (value: SingleValue | MultiValue): value is MultiValue => value instanceof Set;
@@ -76,8 +81,22 @@ export const useListSelection: {
   }, [isControlled, value]);
 
   const resolvedValue = isControlled ? value : internalValue;
+
+  // One mouse press selects twice before the next render — focus-follow, then click — while a
+  // controlled `value` is still stale, so single-select dedupes consecutive emissions. The ref
+  // re-syncs to the resolved value each render, so a consumer that rejects the change is emitted
+  // to again rather than silenced.
+  const emittedRef = useRef<SingleValue | MultiValue>(resolvedValue);
+  useEffect(() => {
+    emittedRef.current = resolvedValue;
+  });
+
   const setResolvedValue = useCallback(
     (next: SingleValue | MultiValue) => {
+      if (mode !== 'multi' && next === emittedRef.current) {
+        return;
+      }
+      emittedRef.current = next;
       if (!isControlled) {
         setInternalValue(next);
       }
@@ -113,6 +132,16 @@ export const useListSelection: {
     },
     [mode, resolvedValue, setResolvedValue],
   );
+
+  const clear = useCallback(() => {
+    if (mode === 'multi') {
+      if (isMulti(resolvedValue) && resolvedValue.size > 0) {
+        setResolvedValue(new Set());
+      }
+    } else if (resolvedValue !== undefined) {
+      setResolvedValue(undefined);
+    }
+  }, [mode, resolvedValue, setResolvedValue]);
 
   const followFocusDefault = mode === 'single';
   const trackFocus = followsFocus ?? followFocusDefault;
@@ -158,5 +187,5 @@ export const useListSelection: {
     [isSelected, mode, setSelected, trackFocus],
   );
 
-  return { bind };
+  return { bind, clear };
 };

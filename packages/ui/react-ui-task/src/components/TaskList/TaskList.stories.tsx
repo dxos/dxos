@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useState } from 'react';
-import { expect, waitFor } from 'storybook/test';
+import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { Obj, Ref } from '@dxos/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -13,7 +13,7 @@ import { Task } from '@dxos/types';
 import { translations } from '#translations';
 
 import { type TaskPlacement } from './hierarchy';
-import { TaskList, type TaskPatch } from './TaskList';
+import { type TaskDraft, type TaskEdit, TaskList } from './TaskList';
 
 const seed = (): Task.Task[] => [
   Task.make({
@@ -81,20 +81,26 @@ const DefaultStory = ({
   showOrdinals,
   showDescriptions,
   hierarchical,
+  framed = true,
 }: {
   readonly?: boolean;
   showGroupLabels?: boolean;
   showOrdinals?: boolean;
   showDescriptions?: boolean;
   hierarchical?: boolean;
+  /** Insets the pane in a card, as an article does. Off for the tests that measure the pane's own
+      columns against a row's, which the inset would offset. */
+  framed?: boolean;
 }) => {
   const [tasks, setTasks] = useState<Task.Task[]>(hierarchical ? hierarchicalSeed : seed);
+  // Selection is what the article wires, and what arrow-key navigation moves.
+  const [selected, setSelected] = useState<string>();
 
-  const handleCreate = useCallback((title: string) => {
-    setTasks((tasks) => [...tasks, Task.make({ title, status: 'todo' })]);
+  const handleCreate = useCallback(({ title, ...props }: TaskDraft) => {
+    setTasks((tasks) => [...tasks, Task.make({ title, status: 'todo', ...props })]);
   }, []);
 
-  const handleUpdate = useCallback((task: Task.Task, patch: TaskPatch) => {
+  const handleUpdate = useCallback((task: Task.Task, patch: TaskEdit) => {
     Obj.update(task, (task) => {
       Object.assign(task, patch);
     });
@@ -125,19 +131,27 @@ const DefaultStory = ({
   return (
     <TaskList.Root
       tasks={tasks}
+      hierarchical={hierarchical}
+      selected={selected}
       showGroupLabels={showGroupLabels}
       showOrdinals={showOrdinals}
       showDescriptions={showDescriptions}
-      hierarchical={hierarchical}
       onTaskCreate={readonly ? undefined : handleCreate}
       onTaskUpdate={readonly ? undefined : handleUpdate}
       onTaskDelete={readonly ? undefined : handleDelete}
       onTaskMove={readonly || !hierarchical ? undefined : handleMove}
+      onTaskSelect={(task) => setSelected(task?.id)}
     >
       <TaskList.Viewport>
         <TaskList.Content />
       </TaskList.Viewport>
-      <TaskList.Create />
+      {framed ? (
+        <div className='p-2'>
+          <TaskList.Edit classNames='border border-separator rounded-md p-2' />
+        </div>
+      ) : (
+        <TaskList.Edit />
+      )}
     </TaskList.Root>
   );
 };
@@ -190,9 +204,88 @@ export const Hierarchical: Story = {
   },
 };
 
+export const TestEdit: Story = {
+  args: { showGroupLabels: false, showOrdinals: true },
+  // The pane is the detail half: it creates when nothing is selected and edits the selection
+  // otherwise, which is the whole reason editing moved out of the row.
+  play: async ({ canvasElement }) => {
+    const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
+    const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]')!;
+    const description = () => pane.querySelector<HTMLElement>('[data-testid="taskList.edit.description"]');
+    const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]'));
+
+    // Nothing selected: the pane creates, and has no description to attach one to.
+    await expect(title().value).toEqual('');
+    await expect(description()).toBeNull();
+
+    // Selecting a task fills the pane with it.
+    const first = rows()[0];
+    const firstTitle = first.querySelector('.truncate')!.textContent;
+    first.click();
+    await waitFor(async () => expect(title().value).toEqual(firstTitle));
+    await waitFor(async () => expect(description()).not.toBeNull());
+
+    // Escape gives the reader a way back out: the selection clears and the pane returns to creating.
+    first.focus();
+    first.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await waitFor(async () => expect(description()).toBeNull());
+    await expect(title().value).toEqual('');
+    await expect(canvasElement.querySelectorAll('[aria-selected="true"]')).toHaveLength(0);
+
+    // Re-select for the remaining assertions.
+    first.click();
+    await waitFor(async () => expect(description()).not.toBeNull());
+
+    // The description is a markdown editor, held open — the pane IS the editor, so there is nothing
+    // to click into.
+    await waitFor(async () => expect(description()!.querySelector('.cm-content')).not.toBeNull());
+
+    // ...and its text starts where the title's does. CodeMirror insets its own content, which would
+    // otherwise sit the description further in than the field above it.
+    const left = (element: Element) => Math.round(element.getBoundingClientRect().left);
+    await expect(left(description()!.querySelector('.cm-line')!)).toEqual(left(title()));
+
+    // Tab moves from the title into the description's TEXT. The editor otherwise puts its tab stop
+    // on a wrapper that needs a further Enter to get into, so the caret was two keys away.
+    title().focus();
+    await userEvent.tab();
+    await waitFor(async () => expect(document.activeElement).toEqual(description()!.querySelector('.cm-content')));
+
+    // ...and Tab leaves again rather than indenting, so the field is not a trap.
+    await userEvent.tab();
+    await waitFor(async () => expect(description()!.contains(document.activeElement)).toBeFalsy());
+
+    // Save writes the pending description and leaves, dropping the pane back to creating.
+    const content = () => description()!.querySelector<HTMLElement>('.cm-content')!;
+    const text = () => content().textContent ?? '';
+    await userEvent.click(content());
+    await userEvent.keyboard(' KEEP');
+    await userEvent.click(pane.querySelector<HTMLElement>('[data-testid="taskList.edit.save"]')!);
+    await waitFor(async () => expect(description()).toBeNull());
+    await expect(title().value).toEqual('');
+
+    // Cancel leaves the same way but throws the pending edit away. The buttons must not take focus:
+    // the fields commit on blur, so a Cancel that stole focus would have written the very text it is
+    // meant to discard — as would the blur that tearing the editor down fires.
+    rows()[0].click();
+    await waitFor(async () => expect(description()).not.toBeNull());
+    await userEvent.click(content());
+    await userEvent.keyboard(' THROW');
+    await userEvent.click(pane.querySelector<HTMLElement>('[data-testid="taskList.edit.cancel"]')!);
+    await waitFor(async () => expect(description()).toBeNull());
+    await expect(canvasElement.querySelectorAll('[aria-selected="true"]')).toHaveLength(0);
+
+    // ...so what Save wrote survived and what Cancel discarded did not.
+    rows()[0].click();
+    await waitFor(async () => expect(description()).not.toBeNull());
+    await waitFor(async () => expect(text()).toContain('KEEP'));
+    await expect(text()).not.toContain('THROW');
+  },
+};
+
 export const TestHierarchy: Story = {
   // Descriptions on, so the alignment between a sub-task's description and its title is asserted.
-  args: { hierarchical: true, showOrdinals: true, showDescriptions: true },
+  args: { hierarchical: true, showOrdinals: true, showDescriptions: true, framed: false },
   // The tree is what the walk produces, not what the array holds; and restructuring is driven from
   // the keyboard, which is the half of the gesture set that CAN be synthesized (a native HTML5 drag
   // cannot).
@@ -268,6 +361,20 @@ export const TestHierarchy: Story = {
       ]),
     );
 
+    // Arrow keys step row to row and selection follows focus — the listbox aspect's own mechanism,
+    // which only works because each row is a Tabster groupper: without one the arrow lands on the
+    // row's first button instead of the next row.
+    const secondRowTitle = rows()[1].title;
+    rows()[0].row.focus();
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(async () =>
+      expect(canvasElement.querySelector('[aria-selected="true"]')?.textContent).toContain(secondRowTitle),
+    );
+    await userEvent.keyboard('{ArrowUp}');
+    await waitFor(async () =>
+      expect(canvasElement.querySelector('[aria-selected="true"]')?.textContent).toContain(rows()[0].title),
+    );
+
     // Moving a parent carries its sub-tasks: only the parent's own parentTask is written, so the
     // descendants' refs still point at it wherever it lands.
     const release = rows().find(({ title }) => title === 'Ship the spring release')!;
@@ -288,6 +395,12 @@ export const TestHierarchy: Story = {
 
     // Each row is findable by task id, which is how the drag preview collects a subtree to clone.
     await expect(canvasElement.querySelectorAll('[data-task-id]')).toHaveLength(7);
+
+    // The pane carries its own columns rather than the list's: it is a card below the list, so it
+    // has no ordinal gutter and does not step in with the tree. Only its own two cells line up.
+    const create = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
+    const paneInput = create.querySelector('input')!.getBoundingClientRect();
+    await expect(Math.round(paneInput.left)).toBeGreaterThan(Math.round(create.getBoundingClientRect().left));
 
     // Every row carries a handle in the ordinal's own gutter — the ordinal and the handle share one
     // cell, so nothing shifts when the cursor crosses a row. The drop itself needs a real pointer
@@ -311,11 +424,12 @@ export const TestHierarchy: Story = {
 };
 
 export const Test: Story = {
+  args: { framed: false },
   // The status toggle and the add-`+` share one row grid; assert their icon gutters actually line
   // up, since only geometry (not the DOM) shows the misalignment.
   play: async ({ canvasElement }) => {
     const row = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.item"]');
-    const create = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.create"]');
+    const create = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]');
     if (!row || !create) {
       throw new Error('Task rows not found.');
     }
@@ -326,6 +440,8 @@ export const Test: Story = {
     };
 
     const rowIcon = row.firstElementChild;
+    // The pane is one grid whose first cells ARE the title line, so its gutter cell is its first
+    // child — the same column a row's status toggle occupies.
     const createIcon = create.firstElementChild;
     if (!rowIcon || !createIcon) {
       throw new Error('Row icons not found.');

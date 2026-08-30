@@ -1,6 +1,6 @@
 # Project Tasks — Tasks
 
-_Resume: land #12787 — the hierarchical TaskList with drag-and-drop, built on react-ui-list. Uncommitted: none. Last: #12784 (Repo type, `#nnn` references, task-list UX) merged 2026-08-26._
+_Resume: #12787 MERGED 2026-08-27 — the hierarchical TaskList with drag-and-drop. Uncommitted: none. Next: pick from the Phase 3 backlog._
 
 ## Phase 1: Agent delegation over durable tasks
 
@@ -42,27 +42,35 @@ be visible in the UI, closing the gaps the storybook audit surfaced.
 - [ ] **Promote-task verb** — outside delegation the agent still cannot create
       a durable Task (carried from plugin-projects; delegation is currently the
       only promotion path).
-- [ ] **Set taskSet for Chat objects that are children of Projects** — stamp
-      `chat.taskSet` with the project's set when the chat is parented, instead
-      of resolving through the parent walk at read time (`peekProject`), so the
-      ref is durable and the UI needs no reactive parent lookup (closes the
-      TODO on `ChatTaskList`).
+- [x] **Chat holds Task refs, not a TaskSet ref** — `Chat.taskSet` is replaced
+      by `Chat.tasks: Ref<Task>[]` (the shape `TaskSet.tasks` has), owned via
+      `SetParent`. `ensureTaskSet`/`ensureTaskSetSync`/`peekTaskSetRef` are gone
+      along with the lazy create-then-link race; `Chat.addTask`/`deleteTask` are
+      the write primitives and `resolveTasks` the sync read. `ChatTaskList` reads
+      `chat.tasks` directly, closing its parent-walk TODO. This supersedes both
+      "Set taskSet for Chat objects that are children of Projects" and "Atomic
+      task-set initialization". Consequence: a project's chats no longer share
+      one ledger — see the new follow-up below.
+- [ ] **Surface a project's chat checklists** — now that a project chat's tasks
+      live on the chat, `Project.taskSet` no longer accumulates what its
+      conversations produced. Decide whether the project view aggregates its
+      chats' `tasks` or whether promotion into `Project.taskSet` becomes an
+      explicit verb.
 - [ ] **Trigger sub-agents from the task row** — status, dependencies and the
       spinner all render; what is left is starting a delegation from the row
       itself rather than through `/task:run` — the delegation loop without going
       through chat. (Was: "show status, dependencies, and trigger sub-agents".)
-- [ ] **Atomic task-set initialization** — `ensureTaskSet` creates the set and
-      writes the owner ref in separate operations, so concurrent peers can race
-      and orphan a set (CodeRabbit on #12752); needs a create-if-absent
-      primitive or a reconcile that adopts the losing set's tasks.
+- [x] **Atomic task-set initialization** — moot: there is no lazy set to create.
+      `Chat.tasks` starts as an empty array in `Chat.make`, so the first recorded
+      task is one array append with nothing to race.
 - [ ] **Data-flow dependencies** — `dependsOn` is scheduling-only today: a
       sub-agent receives just its task title, so a dependent task cannot
       consume a predecessor's result. Render completed dependencies' results
       (held by the supervisor from fold-back exits) into the dependent
       sub-agent's synthesized instructions.
 - [x] **Slash commands** — /task:create, /task:run, /task:delete shipped:
-      client-side execution via shared primitives (TaskSet.addTask/deleteTask,
-      ensureTaskSetSync), `/` completion (non-cycling, mono command column,
+      client-side execution via shared primitives (now Chat.addTask/deleteTask),
+      `/` completion (non-cycling, mono command column,
       grid popover) + atomic dx-tag decoration in the prompt editor; /task:run
       wakes the conversation with a scoped follow-up. Live-verified.
 - [x] **Bind slash commands to operation invocations** — no harness bridge was

@@ -40,9 +40,10 @@ const listStyles = tv({
     listboxContent: 'flex flex-col',
     // `dx-selected` pairs with `aria-selected="true"` set per-option (see
     // `ui-theme/src/css/components/state.md`). `outline-none` removes the native focus
-    // ring; Tabster / `dx-focus-ring` handles keyboard focus at the container level.
+    // ring; `dx-focus-ring-inset` restores a themed indicator on the focused row — without it,
+    // arrow navigation is invisible wherever selection does not follow focus (multi-select).
     listboxItem:
-      'flex items-center dx-hover dx-selected min-h-(--dx-control) px-(--dx-control-pad) cursor-pointer outline-none',
+      'flex items-center dx-hover dx-selected min-h-(--dx-control) px-(--dx-control-pad) cursor-pointer outline-none dx-focus-ring-inset',
     listboxItemLabel: 'grow truncate',
 
     //
