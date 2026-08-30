@@ -70,7 +70,15 @@ export const DebugConsole = ({ onClose }: DebugConsoleProps) => {
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content>
-        <Terminal command={cli.command} layer={cli.layer} name='debug' banner={BANNER} apiRef={apiRef} />
+        <Terminal
+          command={cli.command}
+          layer={cli.layer}
+          name='debug'
+          banner={BANNER}
+          apiRef={apiRef}
+          // Fixed grid so a content-sized host (the status-bar popover) hugs the terminal exactly.
+          dimensions={{ cols: 100, rows: 24 }}
+        />
       </Panel.Content>
     </Panel.Root>
   );

@@ -65,7 +65,9 @@ export const DebugPortStatus = ({ controller = getDebugPortController() }: Debug
       )}
       <Popover.Portal>
         <Popover.Content side='top' align='center'>
-          <Popover.Viewport classNames='w-[40rem] h-[24rem]'>
+          {/* No fixed size: the console's fixed-grid terminal sets the width and height, so the
+              popover hugs the cell grid with no rounding slack at the edges. */}
+          <Popover.Viewport>
             <DebugConsole onClose={handleClose} />
           </Popover.Viewport>
         </Popover.Content>

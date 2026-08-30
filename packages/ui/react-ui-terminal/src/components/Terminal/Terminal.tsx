@@ -42,6 +42,12 @@ export type TerminalProps<Name extends string, Input, ContextInput, E, R> = Them
   prompt?: string;
   banner?: string;
   fontSize?: number;
+  /**
+   * Fixed cell grid. With this the terminal renders exactly `cols × rows` and the element hugs the
+   * grid, so a host sized by its content (a popover) shows no rounding slack; without it the
+   * terminal fits itself to the container, whose trailing partial cells read as a gap.
+   */
+  dimensions?: { cols: number; rows: number };
   /** Receives the live {@link TerminalApi} while mounted; a plain ref so writes never re-run the terminal effect. */
   apiRef?: MutableRefObject<TerminalApi | null>;
 }>;
@@ -61,6 +67,7 @@ export const Terminal = <Name extends string, Input, ContextInput, E, R>({
   prompt,
   banner,
   fontSize = 13,
+  dimensions,
   apiRef,
 }: TerminalProps<Name, Input, ContextInput, E, R>) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -82,17 +89,21 @@ export const Terminal = <Name extends string, Input, ContextInput, E, R>({
       fontSize,
       fontFamily: styles.getPropertyValue('--font-mono').trim() || 'monospace',
       cursorBlink: true,
+      ...dimensions,
     });
 
-    const fitAddon = new FitAddon();
-    xterm.loadAddon(fitAddon);
+    // Fixed-grid mode needs no fitting: the terminal is its own size and the host hugs it.
+    const fitAddon = dimensions ? undefined : new FitAddon();
+    if (fitAddon) {
+      xterm.loadAddon(fitAddon);
+    }
     xterm.open(container);
 
     // Fitting a zero-sized container pins the terminal to its one-column minimum, and fitting
     // before xterm's render service exists throws, so the observer's initial callback — which
     // lands once the element is measurable and the renderer is up — drives the first fit too.
     const fit = () => {
-      if (container.clientWidth > 0 && container.clientHeight > 0) {
+      if (fitAddon && container.clientWidth > 0 && container.clientHeight > 0) {
         fitAddon.fit();
       }
     };
@@ -147,7 +158,12 @@ export const Terminal = <Name extends string, Input, ContextInput, E, R>({
         ),
       );
     };
-  }, [command, layer, name, version, prompt, banner, fontSize]);
+  }, [command, layer, name, version, prompt, banner, fontSize, dimensions?.cols, dimensions?.rows]);
 
-  return <div ref={containerRef} className={mx('grow w-full h-full overflow-hidden bg-base-surface', classNames)} />;
+  return (
+    <div
+      ref={containerRef}
+      className={mx('overflow-hidden bg-base-surface', dimensions ? 'w-max h-max' : 'grow w-full h-full', classNames)}
+    />
+  );
 };
