@@ -429,6 +429,22 @@ describe('ManagerImpl', () => {
   );
 
   it.effect(
+    'terminating a process cascades to its non-terminal children but not its terminated ones',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+      const parent = yield* manager.spawn(makeWaitingExecutable());
+      const runningChild = yield* manager.spawn(makeWaitingExecutable(), { parentProcessId: parent.pid });
+      const finishedChild = yield* manager.spawn(makeWaitingExecutable(), { parentProcessId: parent.pid });
+      yield* finishedChild.terminate();
+      expect(finishedChild.status.state).toEqual(Process.State.TERMINATED);
+
+      yield* parent.terminate();
+      expect(parent.status.state).toEqual(Process.State.TERMINATED);
+      expect(runningChild.status.state).toEqual(Process.State.TERMINATED);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
     'terminate fires the run Cancellation signal',
     Effect.fn(function* ({ expect }) {
       const manager = yield* ProcessManager.Service;
@@ -492,6 +508,34 @@ describe('ManagerImpl', () => {
       expect(handles.map((handle) => handle.pid)).toContain(handle2.pid);
       yield* handle1.terminate();
       yield* handle2.terminate();
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'filters listed processes by parentProcessId, state, and target',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+      const executable = makeWaitingExecutable();
+      const target = Key.URI.make('echo://BBBBBBBBBBBBBBBBBBBBBBBBBB/01JTESTTARGET000000000000');
+
+      const parent = yield* manager.spawn(executable);
+      const child = yield* manager.spawn(executable, { parentProcessId: parent.pid });
+      const targeted = yield* manager.spawn(executable, { target });
+
+      const childrenOfParent = yield* manager.list({ parentProcessId: parent.pid });
+      expect(childrenOfParent.map((handle) => handle.pid)).toEqual([child.pid]);
+
+      const hibernating = yield* manager.list({ state: Process.State.HYBERNATING });
+      expect(new Set(hibernating.map((handle) => handle.pid))).toEqual(new Set([parent.pid, child.pid, targeted.pid]));
+      const succeeded = yield* manager.list({ state: Process.State.SUCCEEDED });
+      expect(succeeded).toEqual([]);
+
+      const byTarget = yield* manager.list({ target });
+      expect(byTarget.map((handle) => handle.pid)).toEqual([targeted.pid]);
+
+      yield* parent.terminate();
+      yield* child.terminate();
+      yield* targeted.terminate();
     }, Effect.provide(TestLayer)),
   );
 
@@ -559,6 +603,33 @@ describe('ManagerImpl', () => {
         expect(pretty).toContain('[in:1 out:1 wall:');
 
         yield* handle.terminate();
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'processTree serializes a FAILED process error from the underlying Error object',
+      Effect.fn(function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        const monitor = yield* Process.ProcessMonitorService;
+        const executable = Process.make(
+          { key: 'test.explicit-fail', input: Schema.Void, output: Schema.Void, services: [] },
+          (ctx) =>
+            Effect.succeed({
+              onSpawn: () => Effect.sync(() => ctx.fail(new Error('boom failure'))),
+              onInput: () => Effect.void,
+              onAlarm: () => Effect.void,
+              onChildEvent: () => Effect.void,
+            }),
+        );
+
+        const handle = yield* manager.spawn(executable);
+        expect(handle.status.state).toEqual(Process.State.FAILED);
+
+        const tree = yield* monitor.processTree;
+        const info = tree.find((node) => node.pid === handle.pid);
+        expect(info?.error?.name).toEqual('Error');
+        expect(info?.error?.message).toEqual('boom failure');
+        expect(info?.error?.stack).toContain('boom failure');
       }, Effect.provide(TestLayer)),
     );
   });
@@ -1168,6 +1239,27 @@ describe('reentrancy', () => {
       const restored = yield* dormant[0].hydrate(executable);
       const outputs = yield* restored.runAndExit({ inputs: [1] }).pipe(Stream.runCollect);
       expect(outputs).toEqual([1]);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'startup after shutdown resets the manager so a later shutdown suspends newly spawned processes',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+      const executable = makeSumAggregator();
+      yield* manager.spawn(executable);
+      yield* manager.shutdown();
+      yield* manager.startup();
+
+      // Spawned only after the reset, so this handle is only ever suspended by the SECOND shutdown below.
+      const handle = yield* manager.spawn(executable);
+      yield* manager.shutdown();
+
+      const attachExit = yield* manager.attach(handle.pid).pipe(Effect.exit);
+      expect(Exit.isFailure(attachExit)).toEqual(true);
+
+      const dormant = yield* manager.list({ key: executable.key });
+      expect(dormant.map((process) => process.pid)).toContain(handle.pid);
     }, Effect.provide(TestLayer)),
   );
 
