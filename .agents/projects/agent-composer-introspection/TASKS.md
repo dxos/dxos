@@ -1,6 +1,6 @@
 # Agent Composer Introspection — Tasks
 
-_Resume: start Composer in debug mode and assess current capabilities (task 3), then diagnose the plugin-enable operation (task 1)._
+_Resume: decide whether to implement DESIGN.md Phase A (`snapshot()` in plugin-debug). Uncommitted: none. Last: disablePlugins landed on the branch + DESIGN.md written._
 
 ## Phase 1: Assessment & plugin management
 
@@ -11,13 +11,18 @@ it does not work — verify, diagnose, and fix.
 
 ### Tasks
 
-- [ ] **Start Composer in debug mode and assess current capabilities**
-  - Dev server from this worktree; drive the page directly (browser pane) or via the debug port.
-  - Inventory: `composer.plugins()`, `composer.operations()`, registry-related operations.
-- [ ] **Verify the plugin enable/disable operation failure**
-  - Find the operation (plugin-registry / Plugin.Service), invoke it, capture the exact failure.
-- [ ] **Diagnose and fix so the agent can list all / list active / enable / disable plugins**
-  - Verify the effect (plugin activates/deactivates live), not the return value.
+- [x] **Start Composer in debug mode and assess current capabilities** — dev server from this
+      worktree (`composer-agent-debug` launch entry); drove the page directly and via the loopback
+      debug port (`composer-recovery.js` round-trip verified). Found: boot stalls in a backgrounded
+      tab (visibility-gated) — front the tab before waiting on boot.
+- [x] **Verify the plugin enable/disable operation failure** — `queryPlugins` /
+      `queryDisabledPlugins` / `enablePlugins` all work at head (chess + `game` dependency enabled
+      live, operations appeared). The reported failure predates #12775, which is when these
+      operations landed; there was no disable operation at all.
+- [x] **Diagnose and fix so the agent can list all / list active / enable / disable plugins** —
+      added `org.dxos.operation.registry.disablePlugins` (definition + handler + 5 node tests,
+      mirrors enable semantics: end-state reply, dependents cascade, core/not-installed rejected).
+      Live-verified: chess deactivates, its operations vanish from the host.
 
 ## Phase 2: App-graph state introspection design
 
@@ -28,10 +33,15 @@ are visible, their context objects, and which operations are reachable
 
 ### Tasks
 
-- [ ] **Survey what state is already reachable** (app graph, layout state, Surface registry, attention)
-- [ ] **Design a debugging API** returning a JSON document of live surface tree + context + data
-- [ ] **Design ARIA / data- attribute conventions** for reliable DOM navigation
-- [ ] **Write DESIGN.md with evaluation criteria vs. the screenshot approach**
+- [x] **Survey what state is already reachable** — DESIGN.md §2 table, all verified live (layout
+      atom, attention, graph actions carrying operation DXNs, `dx-surface` wrappers, testids/ARIA).
+- [x] **Design a debugging API** — DESIGN.md §3.1 `composer.snapshot()` + twin read-only
+      `org.dxos.operation.debug.snapshot`; §3.2 surface registry closing DOM ↔ graph ↔ data.
+- [x] **Design ARIA / data- attribute conventions** — DESIGN.md §3.3 (`data-node-id`,
+      `data-action`, keep `dx-surface` attrs + `data-testid` + ARIA state).
+- [x] **Write DESIGN.md with evaluation criteria vs. the screenshot approach** — §4 criteria table
+  - acceptance test; §5 sequencing (Phase A/B/C).
+- [ ] **Implement Phase A** (`snapshot()` in plugin-debug) — awaiting go-ahead.
 
 ### References
 
