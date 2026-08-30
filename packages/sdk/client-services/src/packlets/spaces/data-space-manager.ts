@@ -239,6 +239,12 @@ export class DataSpaceManager extends Resource {
   /** Roots named by an inviter, to adopt once they replicate; see {@link _anchorSpaceOnRootDocument}. */
   private readonly _pendingSpaceRootUrls = new Map<SpaceId, AutomergeUrl>();
 
+  /**
+   * Spaces whose close has begun. `DataSpace.isOpen` reads the inner space, which closes last, so it
+   * still reads open through `preClose` — the window the anchor's background work resumes in.
+   */
+  private readonly _closingSpaces = new Set<SpaceId>();
+
   private readonly _spaceManager: SpaceManager;
   private readonly _metadataStore: IMetadataStore;
   private readonly _keyring: KeyringApi;
@@ -572,7 +578,7 @@ export class DataSpaceManager extends Resource {
 
       // Re-checked after the adopt/migrate await: the anchor now runs on the manager's context, so a
       // space that started closing during it would otherwise still gain credentials and be reported.
-      if (!space.isOpen) {
+      if (!this._isSpaceLive(space)) {
         return false;
       }
 
@@ -583,6 +589,11 @@ export class DataSpaceManager extends Resource {
       log.warn('failed to anchor space on a root document', { spaceId: space.id, err });
       return false;
     }
+  }
+
+  /** Whether the anchor's background work may still act on this space. */
+  private _isSpaceLive(space: DataSpace): boolean {
+    return space.isOpen && !this._closingSpaces.has(space.id);
   }
 
   /**
@@ -602,7 +613,7 @@ export class DataSpaceManager extends Resource {
     const report = async (): Promise<void> => {
       // A retry outlives the attempt that scheduled it, so it has to re-check: a space closed or
       // removed in between must not be named to edge.
-      if (!space.isOpen) {
+      if (!this._isSpaceLive(space)) {
         return;
       }
       try {
@@ -637,7 +648,7 @@ export class DataSpaceManager extends Resource {
       // write — the same reason `initializeDataPipelineAsync` is parented here.
       const ctx = this._ctx;
       const store = await openCredentialsDocument(ctx, this._echoHost, space.id);
-      if (!space.isOpen) {
+      if (!this._isSpaceLive(space)) {
         return;
       }
       for (const credential of space.inner.spaceState.credentials) {
@@ -927,6 +938,7 @@ export class DataSpaceManager extends Resource {
       }
     });
     dataSpace.preClose.append(async () => {
+      this._closingSpaces.add(dataSpace.id);
       const setting = dataSpace.getEdgeReplicationSetting();
       if (!setting || setting === EdgeReplicationSetting.ENABLED) {
         await this._echoEdgeReplicator?.disconnectFromSpace(dataSpace.id);
@@ -942,6 +954,14 @@ export class DataSpaceManager extends Resource {
     if (metadata.controlTimeframe) {
       dataSpace.inner.controlPipeline.state.setTargetTimeframe(metadata.controlTimeframe);
     }
+
+    // Cleared on the way back up: a closed space can be activated again, and a stale mark would
+    // leave it unanchorable for the session.
+    dataSpace.stateUpdate.on(this._ctx, () => {
+      if (dataSpace.isOpen) {
+        this._closingSpaces.delete(dataSpace.id);
+      }
+    });
 
     // Anchoring materializes credential state, so it waits for the space to be open: a closed space
     // must stay unmaterialized or lazy loading is defeated. Every path that opens a space — load and
