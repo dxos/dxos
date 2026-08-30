@@ -15,6 +15,7 @@ import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Panel, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
+import { createMenuAction } from '@dxos/react-ui-menu';
 import { TaskList } from '@dxos/react-ui-task';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
@@ -108,6 +109,17 @@ const TaskSetView = ({ outline, taskSet }: { outline: Outline.Outline; taskSet?:
     [db],
   );
 
+  const getTaskActions = useCallback(
+    (task: Task.Task) => [
+      createMenuAction(`delete-${task.id}`, () => handleDelete(task), {
+        label: 'Delete task',
+        icon: 'ph--x--regular',
+        testId: 'tasks.task.delete',
+      }),
+    ],
+    [handleDelete],
+  );
+
   return (
     <Panel.Root>
       <Panel.Toolbar />
@@ -116,7 +128,7 @@ const TaskSetView = ({ outline, taskSet }: { outline: Outline.Outline; taskSet?:
           tasks={filtered}
           onTaskCreate={handleCreate}
           onTaskUpdate={handleUpdate}
-          onTaskDelete={handleDelete}
+          getTaskActions={getTaskActions}
         >
           <TaskList.Content />
           <TaskList.Edit />

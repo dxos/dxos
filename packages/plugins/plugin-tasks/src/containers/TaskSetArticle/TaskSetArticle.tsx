@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React from 'react';
+import React, { useCallback } from 'react';
 
 import * as Optimistic from '@dxos/app-framework/Optimistic';
 import { useOperation, useOptimisticOperation, useOptimisticQuery } from '@dxos/app-framework/ui';
@@ -10,11 +10,14 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { Panel, Switch, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
+import { createMenuAction } from '@dxos/react-ui-menu';
 import { TaskList, type TaskPlacement } from '@dxos/react-ui-task';
 import { Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
 import { TaskOperation } from '#types';
+
+import { useTaskActions } from '../../hooks/useTaskActions';
 
 export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet>;
 
@@ -47,6 +50,21 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
     spaceId,
   });
 
+  // Delete is one item among the contributed ones, so a row has a single trailing affordance
+  // whatever any plugin adds to it.
+  const contributed = useTaskActions();
+  const getTaskActions = useCallback(
+    (task: Task.Task) => [
+      ...contributed(task),
+      createMenuAction(`delete-${task.id}`, () => handleDelete(task), {
+        label: t('delete-task.label'),
+        icon: 'ph--x--regular',
+        testId: 'tasks.task.delete',
+      }),
+    ],
+    [contributed, handleDelete, t],
+  );
+
   // The optimistic entry mirrors the MoveTask handler's array write (`TaskSet.reorder` via `reorderItems`),
   // so the dropped row renders in its target position on the drop frame instead of jumping back until
   // the query re-emits the db order.
@@ -74,7 +92,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
       tasks={tasks}
       onTaskCreate={handleCreate}
       onTaskUpdate={handleUpdate}
-      onTaskDelete={handleDelete}
+      getTaskActions={getTaskActions}
       onTaskMove={handleMove}
     >
       <TaskList.Viewport classNames='grid grid-rows-[auto_1fr] gap-2'>

@@ -7,10 +7,12 @@
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import { Chat } from '@dxos/assistant-toolkit';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import { Database, Obj, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
+import { Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 /**
@@ -32,6 +34,29 @@ import { trim } from '@dxos/util';
  * A generic object create makes one empty object; this one returns a whole wired graph, and the
  * navigation path to the result.
  */
+/**
+ * Opens a conversation about one task: a new chat, filed in the space, carrying the task in its
+ * `tasks` checklist so the agent starts with the work already in front of it.
+ *
+ * NOTE: `Chat.tasks` is a `SetParent` field, so the task's ECHO parent moves from its task set to the
+ * chat — the task follows the chat's lifecycle from here on.
+ */
+export const DelegateTaskToChat = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.projects.delegateTaskToChat'),
+    name: 'Delegate Task To Chat',
+    description: 'Creates a chat for a task and places the task in its checklist.',
+    icon: 'ph--chat-text--regular',
+  },
+  services: [Capability.Service, Database.Service],
+  input: Schema.Struct({
+    task: Ref.Ref(Task.Task),
+  }),
+  output: Schema.Struct({
+    chat: Type.getSchema(Chat.Chat),
+  }),
+}).pipe(Operation.mutation('write'));
+
 export const Create = Operation.make({
   meta: {
     // `projectCreate`, not `create`: the whole key derives the tool name, so a bare `create` would
