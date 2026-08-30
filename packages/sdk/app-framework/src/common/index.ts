@@ -4,5 +4,6 @@
 
 export * as Capabilities from './capabilities';
 export * as ActivationEvents from './activation-events';
+export * as Optimistic from './optimistic';
 export * as Role from './Role';
 export { Label } from './translations';
