@@ -1,6 +1,6 @@
 # Agent Composer Introspection — Tasks
 
-_Resume: land PR #12850 (green, review resolved, live evaluation passed). Uncommitted: none. Last: snapshot() live-verified end to end against the running app._
+_Resume: land PR #12850 (green, review resolved, live evaluation passed). Uncommitted: none. Last: snapshot() live-verified end-to-end against the running app._
 
 ## Phase 1: Assessment & plugin management
 
