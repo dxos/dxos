@@ -3,10 +3,11 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { userEvent, within } from 'storybook/test';
+import { expect, userEvent, within } from 'storybook/test';
 
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AppSurface } from '@dxos/app-toolkit/ui';
+import { AiContext } from '@dxos/assistant';
 import {
   DelegationSkill,
   DelegationSkillOperations,
@@ -16,10 +17,13 @@ import {
 } from '@dxos/assistant-toolkit';
 import { Chat as AssistantChat } from '@dxos/assistant-toolkit';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Filter, Ref } from '@dxos/echo';
+import * as Project from '@dxos/compute/Project';
+import { Database, Filter, Obj, Ref } from '@dxos/echo';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import * as MarkdownOperation from '@dxos/plugin-markdown/MarkdownOperation';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import { type Space } from '@dxos/react-client/echo';
-import { Outline, type Task } from '@dxos/types';
+import { Outline, Task, TaskSet } from '@dxos/types';
 
 import { StoryRole } from '../modules';
 import { Calculate, CalculatorSkill, ModuleContainer, config, createDecorators, storyParameters } from '../testing';
@@ -62,6 +66,41 @@ const readChecklist = async (): Promise<Outline.ChecklistItem[]> => {
   }
   const tasks = await Promise.all(chat.tasks.map((ref) => ref.load()));
   return tasks.map((task) => ({ title: task.title, done: task.status === 'done' }));
+};
+
+/**
+ * A project owning a task set owning one task, with the task bound to the chat — the shape
+ * `ProjectOperation.DelegateTaskToChat` produces, seeded here so the story exercises the session
+ * rather than the operation (which its own node test covers).
+ */
+const seedProjectTask = async ({
+  db,
+  chat,
+  binder,
+}: {
+  db: Database.Database;
+  chat: AssistantChat.Chat;
+  binder: AiContext.Binder;
+}) => {
+  const project = db.add(Project.make({ name: 'Coffee launch' }));
+  const taskSet = db.add(TaskSet.make({}));
+  Obj.update(project, (project) => {
+    project.taskSet = Ref.make(taskSet);
+  });
+  Obj.setParent(taskSet, project);
+
+  // A named reviewer is what sends the finished task to `review` rather than `done`.
+  const task = AssistantChat.addTask(db, chat, POEM_TASK_TITLE, {
+    status: 'todo',
+    reviewers: [{ name: 'Rich', role: 'user' }],
+  });
+  Obj.update(taskSet, (taskSet) => {
+    taskSet.tasks = [Ref.make(task)];
+  });
+
+  // The project in context is what gives the artifact verbs something to file into.
+  await binder.bind({ objects: [Ref.make(project)] });
+  await db.flush();
 };
 
 /** Polls the checklist until `predicate` holds, so assertions do not race the agent's writes. */
@@ -620,6 +659,10 @@ export const TestTaskDrainScripted: Story = {
     scripted: [
       ...EXECUTABLE_TASKS.map(subAgentRoute),
       chatNameRoute,
+      // Before the catch-all: the checklist is open for the whole drain, so the planning skill's
+      // reminder fires — and without a route of its own the supervisor answers it, burning one of
+      // the two turns it has. The story then times out waiting for a reply the script cannot give.
+      planReminderRoute,
       {
         name: 'supervisor',
         match: () => true,
@@ -650,5 +693,100 @@ export const TestTaskDrainScripted: Story = {
     if (foldBacks.length !== 3) {
       throw new Error(`Expected three fold-back messages; saw ${foldBacks.length}.`);
     }
+  },
+};
+
+//
+// Project delegation — a task worked in its own chat, with the product filed back.
+//
+
+const POEM_TASK_TITLE = 'Create a markdown document with a short poem';
+const POEM_DOC_NAME = 'Ode to a Coffee Bean';
+const POEM_CONTENT = '# Ode to a Coffee Bean\n\nSmall dark seed,\nthe morning owes you everything.\n';
+
+/**
+ * A task delegated into its own chat, worked end to end: the session reads its checklist, writes a
+ * document, files it as an artifact of the project, and closes the task.
+ *
+ * The whole point is the seam between plugins — plugin-projects contributes the row action,
+ * plugin-tasks owns the capability, and the session reaches the project's artifact verb — so the
+ * assertions are on the DATABASE rather than on the transcript.
+ */
+export const TestProjectTaskDelegationScripted: Story = {
+  decorators: createDecorators({
+    lazyPlugins: async () => {
+      const [MarkdownPlugin, ProjectsPlugin, TasksPlugin, SpacePlugin] = await Promise.all([
+        import('@dxos/plugin-markdown/MarkdownPlugin'),
+        import('@dxos/plugin-projects/ProjectsPlugin'),
+        import('@dxos/plugin-tasks/TasksPlugin'),
+        import('@dxos/plugin-space/SpacePlugin'),
+      ]);
+      return {
+        // Tasks is declared in Projects' `dependsOn`, so the manager refuses to resolve it alone.
+        plugins: [MarkdownPlugin.make(), TasksPlugin.make(), ProjectsPlugin.make(), SpacePlugin.make({})],
+        types: [Project.Project, TaskSet.TaskSet, Task.Task, Markdown.Document],
+      };
+    },
+    skills: [PlanningSkill.key, MarkdownSkill.key],
+    onInit: captureSpace,
+    onChatCreated: seedProjectTask,
+    scripted: [
+      chatNameRoute,
+      planReminderRoute,
+      {
+        name: 'worker',
+        match: () => true,
+        turns: [
+          // Reads the checklist rather than trusting the prompt: the task is bound to the chat, and
+          // the opening prompt deliberately does not restate it.
+          {
+            parts: [
+              toolCall(Operation.toolName(PlanningOperations.UpdateTasks), {
+                tasks: [{ title: POEM_TASK_TITLE, status: 'started' }],
+              }),
+            ],
+          },
+          {
+            parts: [
+              toolCall(Operation.toolName(MarkdownOperation.Create), {
+                name: POEM_DOC_NAME,
+                content: POEM_CONTENT,
+              }),
+            ],
+          },
+          // Filing the document is not scripted here: its URI only exists once the create tool has
+          // run, and a script is fixed before the session starts. `ArtifactAdd`'s own test covers
+          // the task attachment.
+          {
+            parts: [
+              toolCall(Operation.toolName(PlanningOperations.UpdateTasks), {
+                tasks: [{ title: POEM_TASK_TITLE, status: 'done' }],
+              }),
+            ],
+          },
+          { parts: [text('Wrote the poem.')] },
+        ],
+      },
+    ],
+  }),
+  args: {
+    layout: [[StoryRole.Chat], [AppSurface.deckCompanion('trace')]],
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await submitPrompt(canvasElement, 'Work the task on your checklist.');
+
+    await canvas.findByText(/Wrote the poem/i, {}, { timeout: 90_000 });
+
+    // The observable product: a document exists, and the task the session started is no longer todo.
+    await waitForChecklist((items) => items.some(({ title }) => title === POEM_TASK_TITLE), { timeout: 90_000 });
+    const documents = await storySpace!.db.query(Filter.type(Markdown.Document)).run();
+    await expect(documents.map((document) => document.name)).toContain(POEM_DOC_NAME);
+
+    // Finished, not closed: the task named a reviewer, so the session marking it done lands on
+    // `review`. The model asked for `done` and cannot know about reviewers — the rule is the task's.
+    const tasks = await storySpace!.db.query(Filter.type(Task.Task)).run();
+    const worked = tasks.find(({ title }) => title === POEM_TASK_TITLE);
+    await expect(worked?.status).toEqual('review');
   },
 };

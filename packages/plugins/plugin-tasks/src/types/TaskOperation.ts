@@ -44,7 +44,7 @@ export const CreateTask = Operation.make({
     }),
     title: Schema.String,
     description: Schema.optional(Schema.String),
-    priority: Schema.optional(Schema.Literals(['none', 'low', 'medium', 'high', 'urgent'])),
+    priority: Schema.optional(Task.Priority),
     assignee: Schema.optional(Actor.Actor),
     /** Parent task for a sub-task; the task still joins the set's flat `tasks` array. */
     parentTask: Schema.optional(Ref.Ref(Task.Task)),
@@ -67,18 +67,20 @@ export const UpdateTask = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.tasks.update'),
     name: 'Update Task',
-    description: 'Patch task fields: title, description, status, priority, estimate, assignee.',
+    description: 'Patch task fields: title, description, status, priority, estimate, assignee. Null clears a field.',
     icon: 'ph--pencil-simple--regular',
   },
   services: [Database.Service],
   input: Schema.Struct({
     task: Ref.Ref(Task.Task),
     title: Schema.optional(Schema.String),
-    description: Schema.optional(Schema.String),
-    status: Schema.optional(Schema.Literals(['todo', 'started', 'done', 'failed', 'cancelled'])),
-    priority: Schema.optional(Schema.Literals(['none', 'low', 'medium', 'high', 'urgent'])),
-    estimate: Schema.optional(Schema.Number),
-    assignee: Schema.optional(Actor.Actor),
+    // `null` clears an optional field, matching `Task.Edit` — without it the operation can set an
+    // assignee but never remove one.
+    description: Schema.optional(Schema.NullOr(Schema.String)),
+    status: Schema.optional(Task.Status),
+    priority: Schema.optional(Schema.NullOr(Task.Priority)),
+    estimate: Schema.optional(Schema.NullOr(Schema.Number)),
+    assignee: Schema.optional(Schema.NullOr(Actor.Actor)),
     /** Re-file under a milestone; `null` moves the task to the backlog. */
     milestone: Schema.optional(Schema.NullOr(Ref.Ref(Milestone.Milestone))),
     /** Re-parent as a sub-task; `null` promotes the task to a root of its set. */
@@ -195,7 +197,7 @@ export const ListTasks = Operation.make({
     project: Schema.optional(Ref.Ref(Obj.Unknown)).annotate({
       description: 'Project whose task set is listed (org.dxos.type.project).',
     }),
-    status: Schema.optional(Schema.Literals(['todo', 'started', 'done', 'failed', 'cancelled'])),
+    status: Schema.optional(Task.Status),
     /** Matches the assignee by DID, email, or display name — whichever the actor carries. */
     assignee: Schema.optional(Schema.String),
     /** Only tasks under this milestone (inherited by sub-tasks from their nearest ancestor). */

@@ -34,6 +34,51 @@ describe('update-task', () => {
     }).pipe(Effect.provide(testLayer())),
   );
 
+  it.effect('records what the patch changed, and nothing when it changed nothing', () =>
+    Effect.gen(function* () {
+      const taskSet = yield* Database.add(TaskSet.make({}));
+      yield* Database.flush();
+      const { task } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Draft' });
+      // Seeded directly: `CreateTask` takes no status, and a patch to set one would itself be
+      // logged, which is the very thing under test.
+      Obj.update(task, (task) => {
+        task.status = 'todo';
+      });
+
+      yield* updateTask.handler({
+        task: Ref.make(task),
+        status: 'done',
+        assignee: { name: 'Scout', role: 'assistant' },
+      });
+      expect(task.history?.map((entry) => entry.description)).toEqual([
+        'Status changed from todo to done. Assigned to Scout.',
+      ]);
+
+      // Re-applying the same patch is not an event: it left the task exactly as it was.
+      yield* updateTask.handler({ task: Ref.make(task), status: 'done' });
+      expect(task.history).toHaveLength(1);
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('clears an optional field with null', () =>
+    Effect.gen(function* () {
+      const taskSet = yield* Database.add(TaskSet.make({}));
+      yield* Database.flush();
+      const { task } = yield* createTask.handler({
+        taskSet: Ref.make(taskSet),
+        title: 'Draft',
+        assignee: { name: 'Scout' },
+      });
+
+      // Without `null` the operation could set an assignee but never remove one, since `undefined`
+      // means the patch does not mention the field.
+      yield* updateTask.handler({ task: Ref.make(task), assignee: null });
+
+      expect(task.assignee).toBeUndefined();
+      expect(task.history?.at(-1)?.description).toEqual('Unassigned.');
+    }).pipe(Effect.provide(testLayer())),
+  );
+
   it.effect('clearing parentTask clears the lifecycle edge, not just the ref', () =>
     Effect.gen(function* () {
       const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));

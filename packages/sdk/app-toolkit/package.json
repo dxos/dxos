@@ -46,6 +46,11 @@
       "types": "./dist/types/src/app-framework/AppCapability.d.ts",
       "import": "./dist/lib/app-framework/AppCapability.mjs"
     },
+    "./ObjectAction": {
+      "source": "./src/app-framework/ObjectAction.ts",
+      "types": "./dist/types/src/app-framework/ObjectAction.d.ts",
+      "import": "./dist/lib/app-framework/ObjectAction.mjs"
+    },
     "./AppMigrations": {
       "source": "./src/echo/AppMigrations.ts",
       "types": "./dist/types/src/echo/AppMigrations.d.ts",

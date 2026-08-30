@@ -42,35 +42,21 @@ const handler: Operation.WithHandler<typeof TaskOperation.UpdateTask> = TaskOper
 
       const newParent = parentTask ? yield* TaskSet.resolveParentTask(taskSet, task, parentTask) : undefined;
 
-      Obj.update(task, (task) => {
-        if (title !== undefined) {
-          task.title = title;
-        }
-        if (description !== undefined) {
-          task.description = description;
-        }
-        if (status !== undefined) {
-          task.status = status;
-        }
-        if (priority !== undefined) {
-          task.priority = priority;
-        }
-        if (estimate !== undefined) {
-          task.estimate = estimate;
-        }
-        if (assignee !== undefined) {
-          task.assignee = assignee;
-        }
-        // Cleared with `delete`, not by assigning undefined: the property schema is optional rather
-        // than nullable.
-        if (milestone !== undefined) {
+      // Through `Task.edit`, so the change and the log entry that explains it land together and a
+      // no-op patch records nothing. Milestone stays here: it is set membership, not a field edit.
+      Task.update(task, { title, description, status, priority, estimate, assignee });
+
+      if (milestone !== undefined) {
+        Obj.update(task, (task) => {
+          // Cleared with `delete`, not by assigning undefined: the property schema is optional
+          // rather than nullable.
           if (milestone === null) {
             delete task.milestone;
           } else {
             task.milestone = milestone;
           }
-        }
-      });
+        });
+      }
 
       // Set membership is untouched — the task never left; only its place in the tree moved.
       if (parentTask !== undefined) {

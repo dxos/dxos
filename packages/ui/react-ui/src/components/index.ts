@@ -23,6 +23,7 @@ export * from './Link';
 export * from './Main';
 export * from './MediaPlayer';
 export * from './Menu';
+export * from './MenuButton';
 export * from './Banner';
 export * from './Panel';
 export * from './Popover';

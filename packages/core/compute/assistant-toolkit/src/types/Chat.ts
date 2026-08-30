@@ -34,8 +34,14 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
      */
     instructions: Schema.optional(Ref.Ref(Instructions.Instructions).pipe(FormInputAnnotation.set(false))),
 
-    /** The working checklist, flat and ordered; `SetParent` cascades it with the conversation. */
-    tasks: Schema.Array(Ref.Ref(Task.Task)).pipe(Annotation.SetParent.set(true), FormInputAnnotation.set(false)),
+    /**
+     * The working checklist, flat and ordered. Deliberately NOT an owning (`SetParent`) field: a
+     * chat may work on a task that belongs somewhere else — a project's task set delegates one here
+     * — and an owning field re-parents every resolved member on each update of the chat, which
+     * would silently move that task out of the set that owns it. Tasks the chat itself creates are
+     * parented to it explicitly; see {@link addTask}.
+     */
+    tasks: Schema.Array(Ref.Ref(Task.Task)).pipe(FormInputAnnotation.set(false)),
   }).pipe(
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({
@@ -79,7 +85,7 @@ export const linkCompanion = ({ chat, subject }: { chat: Chat; subject: Obj.Unkn
   Obj.setParent(chat, subject);
 };
 
-/** Appends a task to the checklist; the parent edge follows from the field's `SetParent`. */
+/** Creates a task the chat owns and appends it to the checklist. */
 export const addTask = (
   db: Database.Database,
   chat: Chat,
@@ -90,13 +96,19 @@ export const addTask = (
   Obj.update(chat, (chat) => {
     chat.tasks = [...chat.tasks, Ref.make(task)];
   });
+  // Ownership is decided at creation rather than by membership, so a task the chat made cascades
+  // with it while a delegated one keeps the parent it arrived with.
+  Obj.setParent(task, chat);
   return task;
 };
 
 /**
- * Delete a task and its sub-tasks from `tasks`, the chat's checklist loaded in full (see
- * {@link loadTasks}) — an unloaded child is invisible to the walk, and since every member is
- * parented to the chat the cascade would not reach it either, leaving it orphaned in the array.
+ * Remove a task and its sub-tasks from `tasks`, the chat's checklist loaded in full (see
+ * {@link loadTasks}) — an unloaded child is invisible to the walk and would be left orphaned in
+ * the array. Returns everything dropped from the checklist.
+ *
+ * Only members the chat owns are destroyed: a delegated task belongs to the set that parents it,
+ * so taking it off this checklist must not delete it from there.
  */
 export const deleteTask = (
   db: Database.Database,
@@ -115,7 +127,9 @@ export const deleteTask = (
     });
   });
   for (const member of subtree) {
-    db.remove(member);
+    if (Obj.getParent(member)?.id === chat.id) {
+      db.remove(member);
+    }
   }
   return subtree;
 };

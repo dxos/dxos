@@ -57,15 +57,16 @@ describe('project app graph builder', () => {
       GraphNode.qualifyId(GraphNode.qualifyId(GraphNode.RootId, SUBJECT_ID), ARTIFACTS_SEGMENT),
     );
     // Virtual, but it carries the project so the action extension can link what the dialog creates —
-    // wrapped, so the Project-matching extensions do not claim the branch and nest it inside itself.
-    expect(artifacts.data).toEqual({ project });
+    // wrapped, so the Project-matching extensions do not claim the branch and nest it inside itself,
+    // and tagged so a surface can tell it from the Chats branch, which wraps a project the same way.
+    expect(artifacts.data).toEqual({ branch: 'artifacts', project });
     expect(Obj.instanceOf(Project.Project, artifacts.data)).toBe(false);
   });
 
   test('contributes an add-artifact action to the Artifacts branch', async ({ expect }) => {
     const project = Project.make({ name: 'Test' });
     const actions = await getSubjectActions(
-      { project },
+      { branch: 'artifacts', project },
       await EffectEx.runPromise(createProjectArtifactsActionExtension()),
       ARTIFACTS_SECTION_TYPE,
     );

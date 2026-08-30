@@ -7,13 +7,14 @@ import React, { useCallback, useState } from 'react';
 import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { Obj, Ref } from '@dxos/echo';
+import { createMenuAction } from '@dxos/react-ui-menu';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Task } from '@dxos/types';
 
 import { translations } from '#translations';
 
 import { type TaskPlacement } from './hierarchy';
-import { type TaskDraft, type TaskEdit, TaskList } from './TaskList';
+import { TaskList } from './TaskList';
 
 const seed = (): Task.Task[] => [
   Task.make({
@@ -22,6 +23,13 @@ const seed = (): Task.Task[] => [
     priority: 'high',
     description:
       'Two Ethiopian lots and one Colombian, sampled before committing to a full bag. Supplier list: https://example.com/suppliers',
+  }),
+  // Artifacts render as tags beside priority: what the task produced, not what it is.
+  Task.make({
+    title: 'Write the launch poem',
+    status: 'review',
+    reviewers: [{ name: 'Rich', role: 'user' }],
+    artifacts: [Ref.make(Task.make({ title: 'Ode to a Coffee Bean' }))],
   }),
   Task.make({
     title: 'Finalize roast curve',
@@ -55,23 +63,70 @@ const seed = (): Task.Task[] => [
 ];
 
 /**
+ * Ten tasks, one per row and every status represented — enough to fill the viewport, take the
+ * ordinals into double digits, and put more than one task under each group heading, which a
+ * seven-task list does not.
+ */
+const manySeed = (): Task.Task[] => [
+  Task.make({ title: 'Source green coffee', status: 'done', priority: 'high' }),
+  Task.make({ title: 'Cup the samples', status: 'done' }),
+  Task.make({ title: 'Finalize roast curve', status: 'started', priority: 'high' }),
+  Task.make({ title: 'Draft launch email', status: 'started', assignee: { role: 'assistant', name: 'Scout' } }),
+  Task.make({
+    title: 'Write the launch poem',
+    status: 'review',
+    reviewers: [{ name: 'Rich', role: 'user' }],
+    artifacts: [Ref.make(Task.make({ title: 'Ode to a Coffee Bean' }))],
+  }),
+  Task.make({ title: 'Design label', status: 'todo', assignee: { email: 'riley@example.com' } }),
+  Task.make({ title: 'Publish the tasting notes', status: 'todo' }),
+  Task.make({ title: 'Book the launch venue', status: 'todo', priority: 'low' }),
+  Task.make({ title: 'Print run v1', status: 'cancelled' }),
+  Task.make({ title: 'Ship the pre-orders', status: 'failed', priority: 'urgent' }),
+];
+
+/**
  * Two roots with sub-tasks two levels deep. Array order is sibling order only, so the seed
  * deliberately interleaves the two branches — a list that walked the array instead of the tree
  * would render them out of order, which is the bug this story exists to catch.
  */
 const hierarchicalSeed = (): Task.Task[] => {
-  const release = Task.make({ title: 'Ship the spring release', status: 'started', priority: 'high' });
-  const roast = Task.make({ title: 'Dial in the roast', status: 'todo' });
+  const release = Task.make({
+    title: 'Ship the spring release',
+    status: 'started',
+    priority: 'high',
+  });
+  const roast = Task.make({
+    title: 'Dial in the roast',
+    status: 'todo',
+  });
   const notes = Task.make({
     title: 'Write the tasting notes',
     status: 'todo',
     parentTask: Ref.make(release),
     description: 'One paragraph per lot, in the order they are poured.',
   });
-  const sample = Task.make({ title: 'Sample the Ethiopian lots', status: 'done', parentTask: Ref.make(roast) });
-  const label = Task.make({ title: 'Approve the label art', status: 'todo', parentTask: Ref.make(release) });
-  const curve = Task.make({ title: 'Log every profile', status: 'started', parentTask: Ref.make(roast) });
-  const proof = Task.make({ title: 'Proofread the back label', status: 'todo', parentTask: Ref.make(label) });
+  const sample = Task.make({
+    title: 'Sample the Ethiopian lots',
+    status: 'done',
+    parentTask: Ref.make(roast),
+  });
+  const label = Task.make({
+    title: 'Approve the label art',
+    status: 'todo',
+    parentTask: Ref.make(release),
+  });
+  const curve = Task.make({
+    title: 'Log every profile',
+    status: 'started',
+    parentTask: Ref.make(roast),
+  });
+  const proof = Task.make({
+    title: 'Proofread the back label',
+    status: 'todo',
+    parentTask: Ref.make(label),
+  });
+
   return [release, roast, notes, sample, label, curve, proof];
 };
 
@@ -81,6 +136,7 @@ const DefaultStory = ({
   showOrdinals,
   showDescriptions,
   hierarchical,
+  many,
   framed = true,
 }: {
   readonly?: boolean;
@@ -88,24 +144,39 @@ const DefaultStory = ({
   showOrdinals?: boolean;
   showDescriptions?: boolean;
   hierarchical?: boolean;
+  /** Seed the longer, ten-task list instead of the default seven. */
+  many?: boolean;
   /** Insets the pane in a card, as an article does. Off for the tests that measure the pane's own
       columns against a row's, which the inset would offset. */
   framed?: boolean;
 }) => {
-  const [tasks, setTasks] = useState<Task.Task[]>(hierarchical ? hierarchicalSeed : seed);
+  const [tasks, setTasks] = useState<Task.Task[]>(hierarchical ? hierarchicalSeed : many ? manySeed : seed);
   // Selection is what the article wires, and what arrow-key navigation moves.
   const [selected, setSelected] = useState<string>();
 
-  const handleCreate = useCallback(({ title, ...props }: TaskDraft) => {
+  const handleCreate = useCallback(({ title, ...props }: Task.Draft) => {
     setTasks((tasks) => [...tasks, Task.make({ title, status: 'todo', ...props })]);
   }, []);
 
-  const handleUpdate = useCallback((task: Task.Task, patch: TaskEdit) => {
+  const handleUpdate = useCallback((task: Task.Task, patch: Task.Edit) => {
     Obj.update(task, (task) => {
       Object.assign(task, patch);
     });
     setTasks((tasks) => [...tasks]);
   }, []);
+
+  // Delete is an ordinary contributed action now, which is also what a plugin's own actions look like.
+  const getTaskActions = useCallback(
+    (task: Task.Task) => [
+      createMenuAction(`delete-${task.id}`, () => handleDelete(task), {
+        label: 'Delete task',
+        icon: 'ph--x--regular',
+        testId: 'taskList.item.delete',
+      }),
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
 
   const handleDelete = useCallback((task: Task.Task) => {
     setTasks((tasks) => tasks.filter(({ id }) => id !== task.id));
@@ -138,7 +209,7 @@ const DefaultStory = ({
       showDescriptions={showDescriptions}
       onTaskCreate={readonly ? undefined : handleCreate}
       onTaskUpdate={readonly ? undefined : handleUpdate}
-      onTaskDelete={readonly ? undefined : handleDelete}
+      getTaskActions={readonly ? undefined : getTaskActions}
       onTaskMove={readonly || !hierarchical ? undefined : handleMove}
       onTaskSelect={(task) => setSelected(task?.id)}
     >
@@ -150,7 +221,7 @@ const DefaultStory = ({
           <TaskList.Edit classNames='border border-separator rounded-md p-2' />
         </div>
       ) : (
-        <TaskList.Edit />
+        <TaskList.Edit grid />
       )}
     </TaskList.Root>
   );
@@ -168,6 +239,14 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+/** A list long enough to scroll, group and number into double digits. */
+export const TenTasks: Story = {
+  args: {
+    many: true,
+    showOrdinals: true,
+  },
+};
 
 export const Readonly: Story = {
   args: {
@@ -217,6 +296,29 @@ export const TestEdit: Story = {
     // Nothing selected: the pane creates, and has no description to attach one to.
     await expect(title().value).toEqual('');
     await expect(description()).toBeNull();
+
+    // ...and offers no Save/Cancel: with nothing typed there is nothing to save and nothing to
+    // cancel, and two dead controls read as a form to fill in rather than a place to type.
+    const save = () => pane.querySelector<HTMLElement>('[data-testid="taskList.edit.save"]');
+    await expect(save()).toBeNull();
+    await userEvent.click(title());
+    await userEvent.keyboard('Something');
+    await waitFor(async () => expect(save()).not.toBeNull());
+    await userEvent.clear(title());
+    await waitFor(async () => expect(save()).toBeNull());
+
+    // A half-typed title that loses focus creates nothing: leaving the field is not a decision to
+    // add a task. Enter and Save are the deliberate acts, and they still work.
+    const before = rows().length;
+    await userEvent.click(title());
+    await userEvent.keyboard('Stray');
+    await expect(title().value).toEqual('Stray');
+    // Tab rather than `blur()`: a real focus move is what a reader does, and what React's delegated
+    // focusout listens for.
+    await userEvent.tab();
+    await waitFor(async () => expect(title()).not.toEqual(document.activeElement));
+    await expect(rows()).toHaveLength(before);
+    await userEvent.clear(title());
 
     // Selecting a task fills the pane with it.
     const first = rows()[0];

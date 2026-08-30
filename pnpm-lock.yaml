@@ -16284,6 +16284,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -16852,6 +16855,9 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/compute/assistant
+      '@dxos/assistant-toolkit':
+        specifier: workspace:*
+        version: link:../../core/compute/assistant-toolkit
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -22947,6 +22953,9 @@ importers:
       '@dxos/react-ui-markdown':
         specifier: workspace:*
         version: link:../react-ui-markdown
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../react-ui-menu
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
@@ -22956,9 +22965,6 @@ importers:
       '@dxos/ui-types':
         specifier: workspace:*
         version: link:../ui-types
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
       '@radix-ui/react-compose-refs':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.17)(react@19.2.7)

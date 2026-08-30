@@ -5,6 +5,7 @@
 import { EditorView } from '@codemirror/view';
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Option from 'effect/Option';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 
 import { type Chat } from '@dxos/assistant-toolkit';
@@ -12,7 +13,7 @@ import { type Event } from '@dxos/async';
 import * as Project from '@dxos/compute/Project';
 import { type Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
 import {
   ChatEditor,
   type ChatEditorController,
@@ -20,11 +21,12 @@ import {
   ChatStatusIndicator,
   commands,
 } from '@dxos/react-ui-chat';
+import { type ActionGraphProps } from '@dxos/react-ui-menu';
 import { pendingText } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { type Merge } from '@dxos/util';
 
-import { useChatKeymapExtensions, usePlatform } from '#hooks';
+import { useChatKeymapExtensions } from '#hooks';
 import { meta } from '#meta';
 import { AssistantPreset } from '#types';
 
@@ -46,8 +48,12 @@ export type ChatPromptProps = Merge<
     chat?: Chat.Chat;
     processor: AiChatProcessor;
     event: Event<ChatEvent>;
-    /** Read-only indicator of whether the configured provider is the remote (online) service. */
-    online?: boolean;
+    /** Whether the checklist beside the prompt is shown; the toggle renders only when provided. */
+    tasksVisible?: boolean;
+    /** The prompt's graph node, which is what contributed actions are filed under. */
+    attendableId?: string;
+    /** Toolbar actions other plugins filed on this chat's node (see `ChatActions`). */
+    customActions?: Atom.Atom<ActionGraphProps>;
     placeholder?: ChatEditorProps['placeholder'];
     /** Object the chat is attached to; its project instructions (if any) supply sentinel-command completion. */
     companionTo?: Obj.Unknown;
@@ -62,7 +68,9 @@ export const ChatPrompt = ({
   chat,
   processor,
   event,
-  online,
+  tasksVisible,
+  attendableId,
+  customActions,
   placeholder,
   onPresetChange,
   settings = true,
@@ -71,9 +79,6 @@ export const ChatPrompt = ({
   companionTo,
 }: ChatPromptProps) => {
   const { t } = useTranslation(meta.profile.key);
-
-  const platform = usePlatform();
-
   const error = useAtomValue(processor.error).pipe(Option.getOrUndefined);
   const streaming = useAtomValue(processor.streaming);
   const active = useAtomValue(processor.active);
@@ -210,21 +215,14 @@ export const ChatPrompt = ({
 
           <ChatActions
             classNames='col-span-2'
-            microphone={true}
-            docId={docId}
+            attendableId={attendableId}
+            customActions={customActions}
             processing={streaming}
             canSend={canSend}
+            tasksVisible={tasksVisible}
             onSend={handleSend}
             onEvent={handleEvent}
-          >
-            {online !== undefined && platform !== 'mobile' && (
-              <Input.Root>
-                <Input.Label srOnly>{t('online-switch.label')}</Input.Label>
-                {/* Read-only: the provider is configured in Assistant settings, not toggled here. */}
-                <Input.Switch classNames='mx-1' checked={online} disabled />
-              </Input.Root>
-            )}
-          </ChatActions>
+          />
         </div>
       )}
     </div>

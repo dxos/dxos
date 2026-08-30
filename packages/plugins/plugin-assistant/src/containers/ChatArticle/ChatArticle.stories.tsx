@@ -108,7 +108,6 @@ const driveTurns = async (canvasElement: HTMLElement, messages: { prompt: string
 
 /** The chrome the desktop shell wraps the thread in, all of which the mobile app drops. */
 const desktopOnlyChrome = (canvasElement: HTMLElement) => ({
-  onlineSwitch: canvasElement.querySelector('input.dx-checkbox--switch'),
   outlineRail: canvasElement.querySelector('[role="navigation"]'),
   statusPill: canvasElement.querySelector('[data-testid="assistant.chat-status"]'),
 });
@@ -257,11 +256,6 @@ export const Send: Story = {
       interval: 300,
     });
 
-    // No deck plugin here, so the platform capability is absent and the prompt takes the desktop
-    // fallback — which is what keeps the online indicator. Pins the fallback against a regression
-    // that would blank the switch everywhere the deck is not loaded.
-    await expect(canvasElement.querySelector('input.dx-checkbox--switch')).not.toBeNull();
-
     await typePrompt(canvasElement, prompt);
     await waitFor(() => void expect(sendButton(canvasElement).disabled).toBe(false), {
       timeout: 5_000,
@@ -281,9 +275,9 @@ export const Send: Story = {
 };
 
 /**
- * The desktop baseline for the platform-gated chrome: after two turns the marker rail, the floating
- * status pill and the online indicator are all present. Without this, `MobilePlatform`'s absence
- * assertions would pass against a thread that never rendered them in the first place.
+ * The desktop baseline for the platform-gated chrome: after two turns the marker rail and the
+ * floating status pill are both present. Without this, `MobilePlatform`'s absence assertions would
+ * pass against a thread that never rendered them in the first place.
  */
 export const DesktopPlatform: Story = {
   args: {
@@ -294,8 +288,7 @@ export const DesktopPlatform: Story = {
     await driveTurns(canvasElement, messages);
     await waitFor(
       () => {
-        const { onlineSwitch, outlineRail, statusPill } = desktopOnlyChrome(canvasElement);
-        void expect(onlineSwitch).not.toBeNull();
+        const { outlineRail, statusPill } = desktopOnlyChrome(canvasElement);
         void expect(outlineRail).not.toBeNull();
         // Non-empty, not merely present: the wrapper renders whether or not the pill has anything
         // to report, so its text is what proves the pill itself rendered.
@@ -308,10 +301,9 @@ export const DesktopPlatform: Story = {
 
 /**
  * The mobile app's treatment of the same thread. The marker rail (a precision target pinned outside
- * the text column), the floating status pill (which would cover the reply it reports on) and the
- * read-only online indicator are all dropped; the send control stays, being the only submit
- * affordance a touch keyboard has. Keyed to the platform, not the viewport, so a narrowed desktop
- * window is unaffected.
+ * the text column) and the floating status pill (which would cover the reply it reports on) are
+ * dropped; the send control stays, being the only submit affordance a touch keyboard has. Keyed to
+ * the platform, not the viewport, so a narrowed desktop window is unaffected.
  */
 export const MobilePlatform: Story = {
   args: {
@@ -321,8 +313,7 @@ export const MobilePlatform: Story = {
   play: async ({ canvasElement, args: { messages = [] } }) => {
     await driveTurns(canvasElement, messages);
 
-    const { onlineSwitch, outlineRail, statusPill } = desktopOnlyChrome(canvasElement);
-    await expect(onlineSwitch).toBeNull();
+    const { outlineRail, statusPill } = desktopOnlyChrome(canvasElement);
     await expect(outlineRail).toBeNull();
     await expect(statusPill).toBeNull();
 

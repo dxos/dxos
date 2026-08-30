@@ -4,7 +4,6 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { Provider } from '@dxos/ai';
 import { useAtomCapability } from '@dxos/app-framework/ui';
 import { type Chat as ChatTypes } from '@dxos/assistant-toolkit';
 import { Obj } from '@dxos/echo';
@@ -30,7 +29,6 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
   const settings = useAtomCapability(AssistantCapabilities.Settings);
   const runtime = useChatServices({ id: db?.spaceId });
   const { preset, ...chatProps } = usePresets(settings);
-  const online = preset?.provider === Provider.edge.id;
   const registry = useRegistry();
   const processor = useChatProcessor({ chat, preset, runtime, registry, settings });
   // Subscribe via `useObject` so the thread re-renders when ChatOptions changes the view type.
@@ -64,7 +62,7 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
           <Chat.Thread viewType={(chatViewType as ChatView | undefined) ?? settings.chatView} />
         </NaturalChatDialog.Content>
         <NaturalChatDialog.Footer classNames='p-1.5'>
-          <Chat.Prompt {...chatProps} preset={preset?.id} online={online} expandable />
+          <Chat.Prompt {...chatProps} preset={preset?.id} expandable />
         </NaturalChatDialog.Footer>
       </NaturalChatDialog.Root>
     </Chat.Root>
