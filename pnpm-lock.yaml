@@ -22947,9 +22947,6 @@ importers:
       '@dxos/ui-types':
         specifier: workspace:*
         version: link:../ui-types
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
       '@radix-ui/react-compose-refs':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.17)(react@19.2.7)

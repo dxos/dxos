@@ -45,7 +45,6 @@
     "@dxos/types": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/ui-types": "workspace:*",
-    "@dxos/util": "workspace:*",
     "@radix-ui/react-compose-refs": "catalog:",
     "@radix-ui/react-context": "catalog:"
   },
