@@ -97,6 +97,23 @@ Spec = DESIGN.md "Typed binding and modules" (module contract triad + ladder + l
       view-switch, draft-edit-commit, filter, race-guarded async commit; 6-step progressive
       factoring order recorded.
 
+## Phase 7: optimistic operations (design)
+
+- [ ] **Invoker eager dispatch** — investigate running already-loaded, local-only operation
+      handlers synchronously in the dispatch tick (fall back to async path otherwise); fixes the
+      re-render jump for every sync ECHO mutation app-wide. Changes the invoker concurrency
+      contract (`packages/core/compute/operation/src/invoker.test.ts` platform-contract note) —
+      needs its own risk pass.
+- [ ] **Optimistic overlay atom** — generalize `useSetTasks`-style hooks (useQuery + atom) into a
+      reactive atom with optimistic updates: `source query atom × ordered overlay entries`, where
+      `dispatchOptimistic(op, input, apply)` registers an overlay, retires it on the first source
+      emission after the operation settles, and drops it (auto-revert) on failure. Container reads
+      one atom; `useOperation` gains an `optimistic` seam.
+- [ ] **Held objects (secondary)** — the same overlay in `retain` mode: a mutation that would drop
+      a row out of a filtered view (mark done in "active tasks") pins the row as `leaving` for a
+      grace window with an Undo affordance (ties into app-framework UndoRegistry); undo dispatches
+      the inverse operation, expiry releases the row.
+
 ## Parked / later
 
 - [ ] TaskSetArticle scale-down extraction (Experiment 1 follow-up; superseded unless machines revive it).
