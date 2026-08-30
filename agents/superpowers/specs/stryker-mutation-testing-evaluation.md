@@ -11,7 +11,7 @@ than at tool noise.
 
 | Package           | Scope measured                                            | Mutants | Score                        | Wall clock (4 cores)            |
 | ----------------- | --------------------------------------------------------- | ------- | ---------------------------- | ------------------------------- |
-| `compute-runtime` | whole `src` minus tests/`testing`/`LayerStack.ts`         | 2837    | **42.5%** (59.0% of covered) | 43m11s                          |
+| `compute-runtime` | whole `src` minus tests/`testing`/`LayerStack.ts`         | 2759    | **42.5%** (59.0% of covered) | 43m11s                          |
 | `echo-client`     | `util/migrate-document.ts`, `query/query-result-cache.ts` | 63      | **71.0%**                    | 2m45s (2m23s of it the dry run) |
 | `compute-runtime` | `object-template.ts`, `protocol.ts`                       | 262     | 24.4%                        | 1m04s                           |
 
@@ -19,8 +19,9 @@ Baselines for comparison: `moon run compute-runtime:test` = 21s of vitest; `echo
 
 ## What the numbers say
 
-`compute-runtime`, whole package: 1165 killed, 814 survived, 773 never covered by any test,
-7 timeouts, 0 runtime errors. Notable per-file results:
+`compute-runtime`, whole package: 2837 mutants were instrumented and 2759 scored — 1165 killed,
+814 survived, 773 never covered by any test, 7 timeouts, 0 runtime errors; the remaining 78 are
+static mutants that `ignoreStatic` excluded from the run. Notable per-file results:
 
 - Fully unexercised: `url.ts`, `functions-trace.ts`, `services/s3-host.ts`, `services/credentials.ts` (0%).
 - Barely exercised: `trace-buffer.ts` 2.9%, `protocol.ts` 18.2%, `services/credentials.ts` 0%.
