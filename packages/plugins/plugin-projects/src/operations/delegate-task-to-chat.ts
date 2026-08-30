@@ -9,7 +9,6 @@ import * as Exit from 'effect/Exit';
 import * as Capability from '@dxos/app-framework/Capability';
 import { AiContext } from '@dxos/assistant';
 import { Chat } from '@dxos/assistant-toolkit';
-import { getSession } from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import * as Skill from '@dxos/compute/Skill';
@@ -78,22 +77,24 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         yield* bindDelegationContext(chat, project);
         yield* Database.flush();
 
-        // Appending to the feed would leave the message unread: a turn runs when a session is asked
-        // to run one, so the prompt is submitted rather than written.
-        const feed = yield* Database.load(chat.feed);
-        // Best-effort, and deliberately not fatal: the delegation itself is already durable — the
-        // chat exists, carries the task, and is filed under the project — so a host with no agent
-        // runtime (a test harness, an offline client) still delegates and the reader can send the
-        // first turn themselves.
+        // Opens the chat and queues the first turn, rather than submitting to a session here: a
+        // session spawned from this operation carries no model, and `AgentService` terminates the
+        // running process the moment the chat's UI asks for one carrying the user's selected model
+        // — which interrupted the turn mid-flight. Navigating is also what the reader wants: the
+        // work they just delegated is what they are looking at.
         //
-        // `Effect.exit`, not `Effect.catch`: a missing runtime service arrives as a DEFECT (the
-        // process layers are `orDie`), which a failure channel handler never sees.
-        const started = yield* Effect.gen(function* () {
-          const session = yield* getSession(feed, { instructions: chat.instructions });
-          yield* session.submitPrompt([{ _tag: 'text', text: OPENING_PROMPT, disposition: 'synthetic' }]);
+        // Best-effort, and deliberately not fatal: the delegation itself is already durable — the
+        // chat exists, carries the task, and is filed under the project — so a host with no layout
+        // (a test harness, a headless client) still delegates.
+        //
+        // `Effect.exit`, not `Effect.catch`: a missing service arrives as a DEFECT (the process
+        // layers are `orDie`), which a failure channel handler never sees.
+        const started = yield* Operation.invoke(AssistantOperation.RunPromptInChat, {
+          chat,
+          prompt: OPENING_PROMPT,
         }).pipe(Effect.exit);
         if (Exit.isFailure(started)) {
-          log.warn('delegated chat did not start its turn', { cause: Cause.pretty(started.cause) });
+          log.warn('delegated chat did not open', { cause: Cause.pretty(started.cause) });
         }
 
         return { chat };

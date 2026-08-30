@@ -41,9 +41,9 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     invariant(ref, 'Expected the task in the chat checklist.');
     expect(Task.refEntityId(ref)).toBe(task.id);
 
-    // `Chat.tasks` is a `SetParent` field, so delegation MOVES the task: it now follows the chat's
-    // lifecycle rather than the set it came from.
-    expect(Obj.getParent(task)?.id).toBe(chat.id);
+    // The checklist is a plain ref array, so delegation does not claim ownership of the task: an
+    // unparented one stays unparented.
+    expect(Obj.getParent(task)).toBeUndefined();
   });
 
   test('files the chat under the task project, marks it started, and names a reviewer', async ({ expect }) => {
@@ -67,6 +67,10 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
 
     // Filed under the project, so it reaches that project's navtree rather than the space root.
     expect(Obj.getParent(chat)?.id).toBe(project.id);
+
+    // Still owned by the set it came from — the chat works on the task, it does not take it. An
+    // owning checklist would re-parent it and drop it out of the project's task list.
+    expect(Obj.getParent(task)?.id).toBe(taskSet.id);
 
     // Started on delegation, not on completion: the row shows work is underway from the moment the
     // session has it.

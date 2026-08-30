@@ -121,6 +121,31 @@ export const EnsureCompanionChat = Operation.make({
   }),
 });
 
+/**
+ * Opens a chat and queues `prompt` as its first turn, which the chat's UI submits on mount.
+ *
+ * Queued rather than submitted directly to the agent session: the session a caller would spawn
+ * carries no model, while the one the chat's UI creates carries the model the user selected — and
+ * `AgentService` terminates the running process when the two disagree, interrupting the turn.
+ * Routing the prompt through the UI keeps one session per chat, and shows the reader what was
+ * asked.
+ */
+export const RunPromptInChat = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.assistant.runPromptInChat'),
+    name: 'Run Prompt in Chat',
+    icon: 'ph--chat-text--regular',
+    // Navigation: it moves the user, so it is not something an agent should call.
+    skipRegistry: true,
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    chat: Type.getSchema(Chat.Chat),
+    prompt: Schema.String,
+  }),
+  output: Schema.Void,
+});
+
 export const SkillForm = Schema.Struct({
   key: Schema.String,
   name: Schema.String,
