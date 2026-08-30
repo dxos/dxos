@@ -33,17 +33,17 @@ const DefaultStory = () => {
         label={recording ? 'Stop recording' : recordMode === 'hold' ? 'Hold to record' : 'Start recording'}
         recording={recording}
         mode={recordMode}
-        onToggle={() => setRecording((value) => !value)}
         onPressStart={() => setRecording(true)}
         onPressEnd={() => setRecording(false)}
+        onToggle={() => setRecording((value) => !value)}
       />
       <MicSettings
+        devices={DEVICES}
         recordMode={recordMode}
         entityExtraction={entityExtraction}
-        devices={DEVICES}
         selectedDeviceId={selectedDeviceId}
-        onRecordModeChange={setRecordMode}
         onEntityExtractionChange={setEntityExtraction}
+        onRecordModeChange={setRecordMode}
         onSelectDevice={setSelectedDeviceId}
       />
     </Toolbar.Root>

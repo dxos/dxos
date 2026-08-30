@@ -100,8 +100,8 @@ export const Mic = ({ docId }: MicProps) => {
       setMicrophoneDenied(false);
       return true;
     } catch {
-      // Surfaced on the button rather than as a toast: the mobile layout renders no toast surface, so
-      // a refusal there produced no feedback at all — the microphone simply did nothing.
+      // Surfaced on the button rather than as a toast: the mobile layout renders no toast surface,
+      // so a refusal there produced no feedback at all — the microphone simply did nothing.
       setMicrophoneDenied(true);
       return false;
     }
@@ -171,9 +171,9 @@ export const Mic = ({ docId }: MicProps) => {
         data-testid='transcription.record'
       />
       <MicSettings
-        recordMode={recordMode}
-        entityExtraction={entityExtraction}
         devices={devices}
+        entityExtraction={entityExtraction}
+        recordMode={recordMode}
         selectedDeviceId={selectedDeviceId}
         onRecordModeChange={handleRecordModeChange}
         onEntityExtractionChange={handleEntityExtractionChange}

@@ -72,11 +72,12 @@ export const ChatActions = ({
       {tasksVisible !== undefined && (
         <IconButton
           variant='ghost'
-          classNames={mx(TOUCH_TARGET, tasksVisible && 'text-accent-text')}
+          classNames={TOUCH_TARGET}
           icon='ph--list-checks--regular'
           iconOnly
-          // The control's state, for a reader who cannot see the accent: it is a toggle, not a
-          // button that happens to be coloured.
+          // The state, not a colour: `aria-pressed` tells assistive tech what this is, and the
+          // theme already dresses a pressed ghost button (`button.css`). Applying an accent here
+          // too would only fight it.
           aria-pressed={tasksVisible}
           label={t(tasksVisible ? 'hide-tasks.button' : 'show-tasks.button')}
           data-testid='assistant.toggle-tasks'
