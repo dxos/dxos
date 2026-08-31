@@ -54,7 +54,6 @@ export class DxAnchor extends LitElement {
       this.addEventListener('keydown', this.#handleKeyDown);
       this.addEventListener('pointerenter', this.#handlePointerEnter);
       this.addEventListener('pointerleave', this.#handlePointerLeave);
-      this.addEventListener('focus', this.#handleFocus);
       this.addEventListener('blur', this.#handleBlur);
     }
   }
@@ -151,12 +150,9 @@ export class DxAnchor extends LitElement {
     }
   };
 
-  #handleFocus = (): void => {
-    // Keyboard focus opens like a hover (mouse focus is covered by the pointer/click paths).
-    if (this.trigger === 'hover' && !this.#hoverOpen && this.matches(':focus-visible')) {
-      this.#openFromHover();
-    }
-  };
+  // NOTE: Focus deliberately does NOT open the preview: the popover returns focus to the anchor on
+  // every close (Escape, outside click, hover-leave), so a focus-open re-opens what just closed.
+  // Keyboard users open with Enter/Space.
 
   #handleBlur = (): void => {
     if (this.#hoverOpen) {

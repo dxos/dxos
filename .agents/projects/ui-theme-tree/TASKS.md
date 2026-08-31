@@ -17,9 +17,9 @@ Contrast our theme and tree with shadcn/ui and Ark UI to ground the design decis
 
 ## Phase 2: dx-preview hover card
 
-- [ ] **Add hover trigger option (default true)** to the editor preview popover, modeled on shadcn hover-card (openDelay/closeDelay).
-- [ ] **Port shadcn-style open/close animation** (fade + zoom, data-state driven).
-- [ ] **Story coverage** — hover and click variants in the widgets Preview story.
+- [x] **Add hover trigger option (default true)** — `dx-anchor` owns hover intent (`trigger` prop, 400ms open / 300ms grace, doc-level pointerover keeps card alive over `[data-dx-popover-content]`); click pins; focus-open removed deliberately (popover returns focus on close → re-open loop; Enter/Space added instead).
+- [x] **Port shadcn-style open/close animation** — `--animate-popover-in/out` tokens applied in story + deck popover.
+- [x] **Story coverage** — `Preview` (hover default) + `PreviewClickTrigger`; verified 10/10 Playwright checks against worktree storybook.
 
 ## Phase 3: New tree
 
