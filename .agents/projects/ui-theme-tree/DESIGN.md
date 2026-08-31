@@ -8,16 +8,16 @@ composer navtree.
 
 ### 1.1 The three models
 
-| | DXOS | shadcn/ui | Ark UI |
-|---|---|---|---|
-| Token model | 3 tiers: palette ramp → hue roles → semantic surfaces/aspects | Flat semantic pairs (`--card` / `--card-foreground`, …) | **None** — headless, `data-scope`/`data-part`/`data-state` only |
-| Light/dark | `light-dark()` + `.dark` flips `--dx-lift` (derivation direction) | Same vars re-declared under `.dark` | Consumer's problem |
-| Elevation | 6-level lightness ladder (sunken→popup), *lighter = higher in both themes*; chrome sits **below** the canvas | No ladder; `--background`≈`--card`≈`--popover` differ ad hoc per theme | n/a |
-| Hover/selection | **Derived from the host surface** via relative oklch (`--surface-bg` + lift × attenuate × offset) | Fixed (`--accent`, `--muted`) — same color on every surface | n/a |
-| Borders | 4 separator strengths derived per surface | Single `--border` (+`--input`, `--ring`) | n/a |
-| Density | 3 CSS variables (`--dx-control`, `--dx-control-pad`, `--dx-control-leading`), class + data-attr | Per-component cva `size` variants | None |
-| Radius | Static 5-value scale (no `--radius-xs` — silently falls back to Tailwind's) | Single `--radius` knob → derived sm…4xl | n/a |
-| Shadows | None (elevation = lightness + backdrop-blur) | `shadow-md` etc. on components | n/a |
+|                 | DXOS                                                                                                         | shadcn/ui                                                              | Ark UI                                                          |
+| --------------- | ------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- | --------------------------------------------------------------- |
+| Token model     | 3 tiers: palette ramp → hue roles → semantic surfaces/aspects                                                | Flat semantic pairs (`--card` / `--card-foreground`, …)                | **None** — headless, `data-scope`/`data-part`/`data-state` only |
+| Light/dark      | `light-dark()` + `.dark` flips `--dx-lift` (derivation direction)                                            | Same vars re-declared under `.dark`                                    | Consumer's problem                                              |
+| Elevation       | 6-level lightness ladder (sunken→popup), _lighter = higher in both themes_; chrome sits **below** the canvas | No ladder; `--background`≈`--card`≈`--popover` differ ad hoc per theme | n/a                                                             |
+| Hover/selection | **Derived from the host surface** via relative oklch (`--surface-bg` + lift × attenuate × offset)            | Fixed (`--accent`, `--muted`) — same color on every surface            | n/a                                                             |
+| Borders         | 4 separator strengths derived per surface                                                                    | Single `--border` (+`--input`, `--ring`)                               | n/a                                                             |
+| Density         | 3 CSS variables (`--dx-control`, `--dx-control-pad`, `--dx-control-leading`), class + data-attr              | Per-component cva `size` variants                                      | None                                                            |
+| Radius          | Static 5-value scale (no `--radius-xs` — silently falls back to Tailwind's)                                  | Single `--radius` knob → derived sm…4xl                                | n/a                                                             |
+| Shadows         | None (elevation = lightness + backdrop-blur)                                                                 | `shadow-md` etc. on components                                         | n/a                                                             |
 
 ### 1.2 Contrast at elevation (the core question)
 
@@ -36,10 +36,10 @@ aspect = oklch(from var(--surface-bg) calc(l + lift · attenuate(family) · offs
 - Light attenuates per family (state/well ×0.5, separator ×0.75, separator-line ×0.45) because
   lightness deltas read stronger near white.
 
-**Consequence:** the *perceived* ΔL of hover/selection/borders is constant at every elevation — a
+**Consequence:** the _perceived_ ΔL of hover/selection/borders is constant at every elevation — a
 selected row on the popup surface (L 0.242 dark) and on the sunken surface (L 0.145 dark) both sit
 exactly +0.10 above their host. shadcn cannot express this: `--accent` is one fixed color, so on
-any surface that isn't `--background` the hover delta is *whatever happens to result* — on a dark
+any surface that isn't `--background` the hover delta is _whatever happens to result_ — on a dark
 `--card` (L 0.205) vs `--background` (0.145) the same `--accent` (0.269) yields ΔL 0.064 vs 0.124,
 i.e. hover fades as elevation rises, and on the `--popover` in some themes it nearly vanishes.
 
@@ -68,38 +68,38 @@ host surface; `WCAG` = contrast ratio vs the host surface.
 
 **Dark** (attenuation = 1, the reference contract):
 
-| level | bg L | hover ΔL | current ΔL | separator ΔL | subdued-sep ΔL | body-fg WCAG | description WCAG |
-|---|---|---|---|---|---|---|---|
-| sunken | 0.145 | +0.081 | +0.102 | +0.167 | +0.089 | 15.0 | 7.6 |
-| chrome | 0.176 | +0.079 | +0.099 | +0.164 | +0.087 | 14.3 | 7.3 |
-| base | 0.205 | +0.079 | +0.100 | +0.166 | +0.089 | 13.6 | 6.9 |
-| raised | 0.238 | +0.078 | +0.099 | +0.166 | +0.087 | 12.5 | 6.4 |
-| overlay | 0.269 | +0.080 | +0.102 | +0.165 | +0.090 | 11.4 | 5.8 |
-| popup | 0.296 | +0.079 | +0.098 | +0.164 | +0.087 | 10.5 | 5.3 |
+| level   | bg L  | hover ΔL | current ΔL | separator ΔL | subdued-sep ΔL | body-fg WCAG | description WCAG |
+| ------- | ----- | -------- | ---------- | ------------ | -------------- | ------------ | ---------------- |
+| sunken  | 0.145 | +0.081   | +0.102     | +0.167       | +0.089         | 15.0         | 7.6              |
+| chrome  | 0.176 | +0.079   | +0.099     | +0.164       | +0.087         | 14.3         | 7.3              |
+| base    | 0.205 | +0.079   | +0.100     | +0.166       | +0.089         | 13.6         | 6.9              |
+| raised  | 0.238 | +0.078   | +0.099     | +0.166       | +0.087         | 12.5         | 6.4              |
+| overlay | 0.269 | +0.080   | +0.102     | +0.165       | +0.090         | 11.4         | 5.8              |
+| popup   | 0.296 | +0.079   | +0.098     | +0.164       | +0.087         | 10.5         | 5.3              |
 
 **Light** (state ×0.5, separator ×0.75/0.45 attenuation):
 
-| level | bg L | hover ΔL | current ΔL | separator ΔL | subdued-sep ΔL | body-fg WCAG | description WCAG |
-|---|---|---|---|---|---|---|---|
-| sunken | 0.906 | −0.040 | −0.052 | −0.076 | −0.068 | 15.0 | 5.9 |
-| chrome | 0.936 | −0.042 | −0.051 | −0.076 | −0.067 | 16.4 | 6.5 |
-| base | 0.981 | −0.042 | −0.051 | −0.075 | −0.069 | 18.8 | 7.4 |
-| raised | 0.990 | −0.039 | −0.051 | −0.075 | −0.066 | 19.3 | 7.6 |
-| overlay | 0.996 | −0.042 | −0.051 | −0.075 | −0.069 | 19.6 | 7.7 |
-| popup | 1.000 | −0.039 | −0.051 | −0.075 | −0.066 | 19.8 | 7.8 |
+| level   | bg L  | hover ΔL | current ΔL | separator ΔL | subdued-sep ΔL | body-fg WCAG | description WCAG |
+| ------- | ----- | -------- | ---------- | ------------ | -------------- | ------------ | ---------------- |
+| sunken  | 0.906 | −0.040   | −0.052     | −0.076       | −0.068         | 15.0         | 5.9              |
+| chrome  | 0.936 | −0.042   | −0.051     | −0.076       | −0.067         | 16.4         | 6.5              |
+| base    | 0.981 | −0.042   | −0.051     | −0.075       | −0.069         | 18.8         | 7.4              |
+| raised  | 0.990 | −0.039   | −0.051     | −0.075       | −0.066         | 19.3         | 7.6              |
+| overlay | 0.996 | −0.042   | −0.051     | −0.075       | −0.069         | 19.6         | 7.7              |
+| popup   | 1.000 | −0.039   | −0.051     | −0.075       | −0.066         | 19.8         | 7.8              |
 
 Findings:
 
 1. **The invariant holds exactly** — hover/current/separator ΔL is flat across all six levels in
    both themes (±0.003). This is the property shadcn's fixed `--accent`/`--muted`/`--border`
    cannot provide (its deltas drift with whatever surface hosts them, §1.2).
-2. **Perceptual, not photometric, constancy**: the *WCAG ratio* of a fixed ΔL grows with dark-mode
+2. **Perceptual, not photometric, constancy**: the _WCAG ratio_ of a fixed ΔL grows with dark-mode
    elevation (hover 1.16 → 1.35 sunken→popup) — intended, since oklch L is the perceptual axis.
 3. **Text contrast is comfortably conformant everywhere**: body ≥ 10.5:1, description ≥ 5.3:1
    (AA for normal text at every elevation; body clears AAA). The dark popup level is the global
    minimum — the level to watch if the ladder is ever extended upward.
 4. Selection (`current-surface`) at ΔL ≈ 0.10 is a ~1.2–1.5:1 surface-on-surface ratio — below any
-   WCAG threshold for *meaningful* contrast, which is why the `dx-selected`/`dx-current` grammar
+   WCAG threshold for _meaningful_ contrast, which is why the `dx-selected`/`dx-current` grammar
    pairs it with `font-semibold` / the pseudo ring rather than relying on fill alone.
 
 ### 1.4 Density
@@ -114,7 +114,7 @@ pointer-coarse scale everything by root font-size.
 shadcn sizes each component with cva `size` variants (`h-9`/`h-8`/`h-10` hard-coded per
 component) — no shared knob, no subtree density, no coarse-pointer scaling. Ark ships nothing.
 **Verdict: our density model is strictly more capable; nothing to adopt.** The one scar worth
-keeping in mind: `Toolbar.Root` must emit both the class *and* the provider because controls stamp
+keeping in mind: `Toolbar.Root` must emit both the class _and_ the provider because controls stamp
 `data-density` from context (see #12839 finding).
 
 ## 2. dx-preview hover card (implemented)
@@ -137,11 +137,11 @@ Design (shadcn HoverCard semantics, single implementation point):
   Keyboard `:focus-visible` opens like a hover; blur closes with grace.
 - Touch pointers never hover-open.
 - Hosts close immediately on `state: false` (the element owns all grace timing).
-  `EditorPreviewProvider` previously ignored `state` — it would have re-*opened* on the close
+  `EditorPreviewProvider` previously ignored `state` — it would have re-_opened_ on the close
   event; fixed. plugin-preview already handled it (with the activation-sequence race guard).
 - **Animation**: shadcn recipe (fade + zoom-from-95% at the anchor-side transform origin), added as
   theme tokens `--animate-popover-in/out` (150ms) and applied to the preview-card content in both
-  hosts. Deliberately *not* made the `popoverTheme.content` default yet — promoting it repo-wide is
+  hosts. Deliberately _not_ made the `popoverTheme.content` default yet — promoting it repo-wide is
   a follow-up decision (the rename popover keeps its slide motion).
 
 ## 3. Tree: adopt `@ark-ui/react` TreeView (experiment, per user direction)
