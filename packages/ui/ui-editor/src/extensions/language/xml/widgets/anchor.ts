@@ -14,6 +14,8 @@ export class AnchorWidget extends WidgetType {
     readonly _dxn: string,
     /** Overrides the element's default (`hover`) preview trigger. */
     readonly _trigger?: 'hover' | 'click',
+    /** Resolves a display label asynchronously (e.g. the object's name for a bare `#` link). */
+    readonly _resolveLabel?: () => Promise<string | undefined>,
   ) {
     super();
   }
@@ -29,6 +31,14 @@ export class AnchorWidget extends WidgetType {
     root.setAttribute('dxn', this._dxn);
     if (this._trigger) {
       root.setAttribute('trigger', this._trigger);
+    }
+    if (this._resolveLabel) {
+      void this._resolveLabel().then((label) => {
+        // The widget may have been culled/replaced; only retouch a live element.
+        if (label && root.isConnected) {
+          root.textContent = label;
+        }
+      });
     }
     return root;
   }

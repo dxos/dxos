@@ -20,6 +20,7 @@ import {
 } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
 import { Menu } from '@dxos/react-ui-menu';
+import { getStyles } from '@dxos/ui-theme';
 
 import { useDeckState } from '#hooks';
 import { meta } from '#meta';
@@ -82,7 +83,10 @@ export const PopoverContent = () => {
     state.popoverAnchor instanceof Element ? Attention.getRootAttendableId(state.popoverAnchor) : undefined;
   const objectMenuItems = useObjectMenuItems(popoverSubject, pivotId);
   const title = state.popoverTitle ? toLocalizedString(state.popoverTitle, t) : 'Unknown';
-  const icon = isObjectPopover ? (Obj.getIcon(popoverSubject)?.icon ?? 'ph--circle-dashed--regular') : undefined;
+  const iconAnnotation = isObjectPopover ? Obj.getIcon(popoverSubject) : undefined;
+  const icon = isObjectPopover ? (iconAnnotation?.icon ?? 'ph--circle-dashed--regular') : undefined;
+  // Same hue treatment as the masonry ObjectTile, so the card depicts the type consistently.
+  const iconStyles = iconAnnotation?.hue ? getStyles(iconAnnotation.hue) : undefined;
   const content = state.popoverContent;
   // Base and rename popovers render a plugin-provided component; everything else falls through to the card.
   const isComponentPopover =
@@ -156,7 +160,9 @@ export const PopoverContent = () => {
               <Card.Root border={false} classNames='dx-card-popover'>
                 <Card.Header>
                   <Card.Block>
-                    <CardIconSlot subject={popoverSubject}>{icon && <Icon icon={icon} />}</CardIconSlot>
+                    <CardIconSlot subject={popoverSubject}>
+                      {icon && <Icon icon={icon} classNames={iconStyles?.text} />}
+                    </CardIconSlot>
                   </Card.Block>
                   <Card.Title>{title}</Card.Title>
                   {/* TODO(wittjosiah): Reconcile with Card.Menu. */}

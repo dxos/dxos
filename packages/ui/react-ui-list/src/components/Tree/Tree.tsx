@@ -91,18 +91,15 @@ const createTreeWalkAtom = <T extends { id: string }>(
   model: TreeModel<T>,
   rootId: string | undefined,
   rootPath: string[],
-  levelOffset: number,
 ): Atom.Atom<TreeWalkState<T>> =>
   Atom.make((get: any): TreeWalkState<T> => {
     const expanded: string[] = [];
     const selected: string[] = [];
     const byValue = new Map<string, TreeNodeEntry<T>>();
 
-    const walkChildren = (
-      parentId: string | undefined,
-      parentPath: string[],
-      groupDepth: number,
-    ): TreeNodeEntry<T>[] => {
+    // `level` is 1-based visual depth: top rows sit flush, each depth indents one step; group
+    // children stay at their header's level.
+    const walkChildren = (parentId: string | undefined, parentPath: string[], level: number): TreeNodeEntry<T>[] => {
       const childIds: string[] = get(model.childIds(parentId));
       const entries: TreeNodeEntry<T>[] = [];
       for (const id of childIds) {
@@ -120,7 +117,6 @@ const createTreeWalkAtom = <T extends { id: string }>(
         const current: boolean = get(model.itemCurrent(path));
         const group = props.disposition === 'group';
         const branch = !group && !!props.parentOf;
-        const level = path.length - levelOffset - groupDepth;
         const entry: TreeNodeEntry<T> = {
           id,
           value,
@@ -136,13 +132,13 @@ const createTreeWalkAtom = <T extends { id: string }>(
           indexPath: [],
         };
         if (group) {
-          entry.children = walkChildren(id, path, groupDepth + 1);
+          entry.children = walkChildren(id, path, level);
           // An empty group renders nothing — suppress the orphaned section label.
           if (entry.children.length === 0) {
             continue;
           }
         } else if (branch) {
-          entry.children = walkChildren(id, path, groupDepth);
+          entry.children = walkChildren(id, path, level + 1);
           entry.childrenCount = Math.max(entry.children.length, props.parentOf?.length ?? 0);
           if (open) {
             expanded.push(value);
@@ -160,7 +156,7 @@ const createTreeWalkAtom = <T extends { id: string }>(
       return entries;
     };
 
-    const rootChildren = walkChildren(rootId, rootPath, 0);
+    const rootChildren = walkChildren(rootId, rootPath, 1);
     const root: TreeNodeEntry<T> = {
       id: rootId ?? '',
       value: Path.create(...rootPath),
@@ -188,7 +184,6 @@ export type TreeProps<T extends { id: string } = any> = {
   id: string;
   classNames?: string | (string | undefined)[];
   gridTemplateColumns?: string;
-  levelOffset?: number;
   draggable?: boolean;
   selectionMode?: 'single' | 'multiple';
   renderColumns?: ColumnRenderer<T>;
@@ -207,7 +202,6 @@ export const Tree = <T extends { id: string } = any>({
   id,
   classNames,
   gridTemplateColumns = '[tree-row-start] minmax(0, 1fr) min-content [tree-row-end]',
-  levelOffset = 2,
   draggable = false,
   selectionMode = 'single',
   renderColumns,
@@ -219,10 +213,7 @@ export const Tree = <T extends { id: string } = any>({
   onItemHover,
 }: TreeProps<T>) => {
   const treePath = useMemo(() => (path ? [...path, id] : [id]), [id, path]);
-  const walkAtom = useMemo(
-    () => createTreeWalkAtom(model, rootId, treePath, levelOffset),
-    [model, rootId, treePath, levelOffset],
-  );
+  const walkAtom = useMemo(() => createTreeWalkAtom(model, rootId, treePath), [model, rootId, treePath]);
   const { root, expanded, selected, byValue } = useAtomValue(walkAtom);
 
   const collection = useMemo(
@@ -261,6 +252,25 @@ export const Tree = <T extends { id: string } = any>({
     [canSelect, onOpenChange, onSelect],
   );
 
+  // Values whose branch content is running its conceal animation; the model close commits when the
+  // animation finishes (the machine hides content the instant the controlled value shrinks, so an
+  // animated exit has to precede the commit).
+  const [closingValues, setClosingValues] = useState<ReadonlySet<string>>(() => new Set());
+  const commitClose = useCallback(
+    (node: TreeNodeEntry) => {
+      onOpenChange?.({ item: node.item, path: node.path, open: false });
+      setClosingValues((previous) => {
+        if (!previous.has(node.value)) {
+          return previous;
+        }
+        const next = new Set(previous);
+        next.delete(node.value);
+        return next;
+      });
+    },
+    [onOpenChange],
+  );
+
   const handleExpandedChange = useCallback(
     ({ expandedValue }: { expandedValue: string[] }) => {
       const previous = new Set(expanded);
@@ -271,11 +281,13 @@ export const Tree = <T extends { id: string } = any>({
           entry && onOpenChange?.({ item: entry.item, path: entry.path, open: true });
         }
       }
-      for (const value of expanded) {
-        if (!next.has(value)) {
-          const entry = byValue.get(value);
-          entry && onOpenChange?.({ item: entry.item, path: entry.path, open: false });
-        }
+      const removed = expanded.filter((value) => !next.has(value) && byValue.has(value));
+      if (removed.length > 0) {
+        setClosingValues((current) => {
+          const merged = new Set(current);
+          removed.forEach((value) => merged.add(value));
+          return merged;
+        });
       }
     },
     [expanded, byValue, onOpenChange],
@@ -306,7 +318,6 @@ export const Tree = <T extends { id: string } = any>({
   const renderContext = useMemo<TreeRenderContextValue<T>>(
     () => ({
       draggable,
-      levelOffset,
       renderColumns,
       blockInstruction,
       canDrop,
@@ -314,8 +325,20 @@ export const Tree = <T extends { id: string } = any>({
       onItemHover,
       selectNode,
       mountedRef,
+      closingValues,
+      commitClose,
     }),
-    [draggable, levelOffset, renderColumns, blockInstruction, canDrop, onOpenChange, onItemHover, selectNode],
+    [
+      draggable,
+      renderColumns,
+      blockInstruction,
+      canDrop,
+      onOpenChange,
+      onItemHover,
+      selectNode,
+      closingValues,
+      commitClose,
+    ],
   );
 
   return (
@@ -391,29 +414,69 @@ const TreeNodeRow: FC<TreeNodeRowProps> = memo(({ node }) => {
 
 TreeNodeRow.displayName = 'Tree.NodeRow';
 
+/** How long past the conceal animation before the close force-commits (animation may never run). */
+const CONCEAL_COMMIT_TIMEOUT = 300;
+
 /**
  * Branch children container. Disclosure animates height (via `interpolate-size`, opacity-only
  * where unsupported) — but only for content inserted after the initial paint, so a tree restoring
  * persisted open state does not animate every branch on load. The gate is stamped at DOM insertion
- * time because lazy-mounted content attaches long after the row first renders.
+ * time because lazy-mounted content attaches long after the row first renders. A collapse first
+ * runs the conceal animation and only then commits the model close (which is when the machine
+ * actually hides the content).
  */
 const TreeBranchContent: FC<TreeNodeRowProps> = ({ node }) => {
-  const { mountedRef } = useTreeRender();
+  const { mountedRef, closingValues, commitClose } = useTreeRender();
+  const elementRef = useRef<HTMLDivElement | null>(null);
+  const closing = closingValues.has(node.value);
+
   const handleRef = useCallback(
     (element: HTMLDivElement | null) => {
+      elementRef.current = element;
       if (element && mountedRef.current) {
         element.dataset.animate = '';
       }
     },
     [mountedRef],
   );
+
+  useEffect(() => {
+    if (!closing) {
+      return;
+    }
+    const element = elementRef.current;
+    if (!element || element.hidden) {
+      commitClose(node);
+      return;
+    }
+    let done = false;
+    const finish = () => {
+      if (!done) {
+        done = true;
+        commitClose(node);
+      }
+    };
+    const handleAnimationEnd = (event: AnimationEvent) => {
+      if (String(event.animationName).includes('tree-conceal')) {
+        finish();
+      }
+    };
+    element.addEventListener('animationend', handleAnimationEnd);
+    const timer = setTimeout(finish, CONCEAL_COMMIT_TIMEOUT);
+    return () => {
+      element.removeEventListener('animationend', handleAnimationEnd);
+      clearTimeout(timer);
+    };
+  }, [closing, node, commitClose]);
+
   return (
     <TreeView.BranchContent
       ref={handleRef}
       // `[&[hidden]]:hidden` restores the UA collapse that the `grid` display would defeat.
       className={mx(
         'col-[tree-row] grid grid-cols-subgrid [&[hidden]]:hidden',
-        'overflow-y-clip [interpolate-size:allow-keywords] data-[animate]:data-[state=open]:animate-tree-disclose',
+        'overflow-y-clip [interpolate-size:allow-keywords]',
+        closing ? 'animate-tree-conceal' : 'data-[animate]:data-[state=open]:animate-tree-disclose',
       )}
     >
       {node.children?.map((child) => (
@@ -592,8 +655,10 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
       className={mx(
         'grid grid-cols-subgrid col-[tree-row] mt-0.5 outline-none cursor-pointer select-none',
         // Selection keys off zag's `data-selected`: for branches, `aria-selected` lands on the
-        // Branch wrapper (display:contents) while the visible row is the control.
-        'hover:bg-hover-surface focus-within:bg-hover-surface',
+        // Branch wrapper (display:contents) while the visible row is the control. No focus-within
+        // background — after a chevron click focus rests inside the row, and a persistent fill
+        // there reads as selection.
+        'hover:bg-hover-surface',
         'data-[selected]:bg-current-surface data-[selected]:text-current-fg',
         'dx-focus-ring-inset',
         // Highlight the row while a descendant marks an open popover anchor (e.g. inline rename).

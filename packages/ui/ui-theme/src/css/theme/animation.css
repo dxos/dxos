@@ -119,6 +119,18 @@
     }
   }
   --animate-tree-disclose: tree-disclose 200ms ease-out;
+  @keyframes tree-conceal {
+    from {
+      opacity: 1;
+      block-size: auto;
+    }
+    to {
+      opacity: 0;
+      block-size: 0;
+    }
+  }
+  /* `forwards` holds the collapsed frame until the model close lands and the machine hides the content. */
+  --animate-tree-conceal: tree-conceal 200ms ease-in forwards;
 
   /** 
    * Toast 

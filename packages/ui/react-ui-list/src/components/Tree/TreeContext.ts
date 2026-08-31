@@ -86,7 +86,6 @@ export type ColumnRenderer<T extends { id: string } = any> = FC<{
 /** Render-time context threaded to every row. */
 export type TreeRenderContextValue<T extends { id: string } = any> = {
   draggable: boolean;
-  levelOffset: number;
   renderColumns?: ColumnRenderer<T>;
   blockInstruction?: (params: { instruction: Instruction; source: TreeData; target: TreeData }) => boolean;
   canDrop?: (params: { source: TreeData; target: TreeData }) => boolean;
@@ -96,6 +95,10 @@ export type TreeRenderContextValue<T extends { id: string } = any> = {
   selectNode: (node: TreeNodeEntry<T>, modifiers: { option: boolean; shift: boolean }) => void;
   /** False during the tree's initial commit — disclosure inserted then must not animate. */
   mountedRef: MutableRefObject<boolean>;
+  /** Branch values currently running their conceal animation before the close commits. */
+  closingValues: ReadonlySet<string>;
+  /** Commits the model close for a branch once its conceal animation ends. */
+  commitClose: (node: TreeNodeEntry) => void;
 };
 
 const TreeRenderContext = createContext<TreeRenderContextValue | null>(null);

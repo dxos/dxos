@@ -15,7 +15,10 @@ const MIN_BLOCK_SIZE = 8;
 // Card container.
 //
 
-export type CardContainerProps = PropsWithChildren<{ role?: 'popover' | 'intrinsic'; icon?: string }>;
+export type CardContainerProps = PropsWithChildren<{
+  icon?: string;
+  role?: 'popover' | 'intrinsic';
+}>;
 
 export const CardContainer = ({ children, role, icon = 'ph--arrow-line-down--regular' }: CardContainerProps) => {
   switch (role) {
@@ -25,6 +28,7 @@ export const CardContainer = ({ children, role, icon = 'ph--arrow-line-down--reg
           <PopoverCardContainer icon={icon}>{children}</PopoverCardContainer>
         </div>
       );
+
     case 'intrinsic':
     default:
       return <IntrinsicCardContainer>{children}</IntrinsicCardContainer>;
@@ -35,7 +39,9 @@ export const CardContainer = ({ children, role, icon = 'ph--arrow-line-down--reg
 // Popover
 //
 
-export type PopoverCardContainerProps = PropsWithChildren<{ icon?: string }>;
+export type PopoverCardContainerProps = PropsWithChildren<{
+  icon?: string;
+}>;
 
 export const PopoverCardContainer = ({
   children,

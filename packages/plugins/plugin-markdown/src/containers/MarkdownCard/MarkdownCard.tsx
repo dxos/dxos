@@ -9,6 +9,7 @@ import { useObject } from '@dxos/react-client/echo';
 import { Card, useTranslation } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
+import { compactSlots } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
 import { MarkdownEditor, MarkdownEditorProvider } from '#components';
@@ -52,9 +53,9 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
               {(editorRootProps) => (
                 <Editor.Root {...editorRootProps}>
                   <MarkdownEditor.Content
-                    classNames='dx-card-surface'
+                    classNames='bg-transparent'
                     initialValue={snippet}
-                    slots={{ content: { className: 'px-2!' } }}
+                    slots={compactSlots}
                     compact
                   />
                 </Editor.Root>
