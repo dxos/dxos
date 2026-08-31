@@ -13,7 +13,8 @@ import React, {
   useEffect,
 } from 'react';
 
-import { KEYBOARD_MODALITY_ATTR, type ThemedClassName, findFirstFocusable, useForwardedRef } from '@dxos/react-ui';
+import { KEYBOARD_MODALITY_ATTR, findFirstFocusable } from '@dxos/react-focus';
+import { type ThemedClassName, useForwardedRef } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 const VIEWPORT_NAME = 'Viewport';

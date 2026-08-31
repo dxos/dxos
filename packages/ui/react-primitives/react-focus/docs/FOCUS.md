@@ -1,10 +1,10 @@
 # Focus groups in `@dxos/react-ui`
 
-Design record for [`useFocusGroup`](../src/hooks/useFocusGroup.ts) and the DOM primitives it is
-built on ([`util/focus.ts`](../src/util/focus.ts)), which replaced `@fluentui/react-tabster` in
+Design record for [`useFocusGroup`](../src/useFocusGroup.ts) and the DOM primitives it is
+built on ([`util/focus.ts`](../src/focus.ts)), which replaced `@fluentui/react-tabster` in
 August 2026. The measurement that justified the work is in
-[`react-ui-list/docs/TREE.md`](../../react-ui-list/docs/TREE.md) §7; the task ledger is
-[`.agents/projects/ark/TASKS.md`](../../../../.agents/projects/ark/TASKS.md) Phase 5. This document
+[`react-ui-list/docs/TREE.md`](../../../react-ui-list/docs/TREE.md) §7; the task ledger is
+[`.agents/projects/ark/TASKS.md`](../../../../../.agents/projects/ark/TASKS.md) Phase 5. This document
 covers the mechanism, the alternatives that do not work, and what was deliberately left out.
 
 ## 1. What the thing is
@@ -22,14 +22,14 @@ deliberately the same and the mapping is what makes a regression legible.
 A container may be one, the other, or both. `Focus.Group` is both; a listbox `<ul>` is a mover whose
 rows are grouppers; a `Main` landmark is a groupper alone.
 
-| tabster                                | replacement                                                             |
-| -------------------------------------- | ----------------------------------------------------------------------- |
-| `useArrowNavigationGroup({ axis })`    | `useFocusGroup({ axis })`                                               |
-| `useFocusableGroup({ tabBehavior })`   | `useFocusGroup({ tabBehavior })`                                        |
-| `useMergedTabsterAttributes_unstable`  | — one hook takes both, so there is nothing to merge                     |
-| `useFocusFinders().findFirstFocusable` | `findFirstFocusable` (a plain function, no hook, no runtime)            |
-| `TabsterDOMAttribute`                  | `UseFocusGroupResult`                                                   |
-| `keyborg` → `data-w-keyboard`          | `trackKeyboardModality` ([`util/modality.ts`](../src/util/modality.ts)) |
+| tabster                                | replacement                                                        |
+| -------------------------------------- | ------------------------------------------------------------------ |
+| `useArrowNavigationGroup({ axis })`    | `useFocusGroup({ axis })`                                          |
+| `useFocusableGroup({ tabBehavior })`   | `useFocusGroup({ tabBehavior })`                                   |
+| `useMergedTabsterAttributes_unstable`  | — one hook takes both, so there is nothing to merge                |
+| `useFocusFinders().findFirstFocusable` | `findFirstFocusable` (a plain function, no hook, no runtime)       |
+| `TabsterDOMAttribute`                  | `UseFocusGroupResult`                                              |
+| `keyborg` → `data-w-keyboard`          | `trackKeyboardModality` ([`util/modality.ts`](../src/modality.ts)) |
 
 ## 2. Size
 
@@ -49,12 +49,12 @@ with zero tabster or keyborg modules in any preload chunk's sourcemap.
 
 Source cost is 645 lines across three files, plus 140 lines of tests:
 
-| file                                                                  | lines |
-| --------------------------------------------------------------------- | ----: |
-| [`hooks/useFocusGroup.ts`](../src/hooks/useFocusGroup.ts)             |   348 |
-| [`util/focus.ts`](../src/util/focus.ts)                               |   244 |
-| [`util/modality.ts`](../src/util/modality.ts)                         |    53 |
-| [`hooks/useFocusGroup.test.tsx`](../src/hooks/useFocusGroup.test.tsx) |   140 |
+| file                                                            | lines |
+| --------------------------------------------------------------- | ----: |
+| [`hooks/useFocusGroup.ts`](../src/useFocusGroup.ts)             |   348 |
+| [`util/focus.ts`](../src/focus.ts)                              |   244 |
+| [`util/modality.ts`](../src/modality.ts)                        |    53 |
+| [`hooks/useFocusGroup.test.tsx`](../src/useFocusGroup.test.tsx) |   140 |
 
 The ratio is the point of the exercise. Tabster is a general focus-management runtime — modalizers,
 delosers, restorers, observed elements, an uncontrolled-subtree protocol, a global
@@ -164,7 +164,7 @@ subtlest invariant in the module.
 1. **Ark / Zag.** Zag's focus management is per-machine, scoped inside a tree or tabs or listbox
    instance. `focus-trap` is a modal trap, not a roving-tabindex groupper, and there is no
    `useArrowNavigationGroup` equivalent. See
-   [`react-ui-list/docs/MIGRATION.md`](../../react-ui-list/docs/MIGRATION.md) §1. **Do not reopen.**
+   [`react-ui-list/docs/MIGRATION.md`](../../../react-ui-list/docs/MIGRATION.md) §1. **Do not reopen.**
 2. **Roving tabindex over the mover's items.** The standard APG technique, and the first thing to
    reach for. It does not compose with grouppers: a non-current row set to `tabindex=-1` still has
    tabbable buttons inside it, so the browser stops there and the widget is not one tab stop after
@@ -200,25 +200,25 @@ none is a hidden dependency.
 Every call site, and what each asks for. The first four are the boot-reachable ones — the whole
 reason the removal was worth doing; the rest sit in lazy chunks and attributed no boot bytes.
 
-| #   | call site                                                                                | configuration                                                | why                                                                                                   |
-| --- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
-| 1   | [`Focus.Group`](../src/components/Focus/Focus.tsx)                                       | `axis: orientation`, `limited-trap-focus`, `memorizeCurrent` | app chrome's focus zones: one `Tab` in, arrows within, `Escape` out                                   |
-| 2   | [`Focus.Item`](../src/components/Focus/Focus.tsx)                                        | `unlimited`, `ignoreKeys: ['Enter']`                         | boundary only, so the Group's arrows treat the item as one stop; `Enter` selects rather than entering |
-| 3   | [`useLandmarkMover`](../src/components/Main/MainContext.ts)                              | `limited`, `ignoreKeys: ['Tab']`                             | pane chrome; landmark traversal owns `Tab`                                                            |
-| 4   | [`Carousel.Indicators`](../src/components/Carousel/Carousel.tsx)                         | `axis: 'horizontal'`, `memorizeCurrent`                      | the dot strip is one tab stop                                                                         |
-| 5   | [`useListNavigation`](../../react-ui-list/src/hooks/useListNavigation.ts)                | `axis` per mode, `memorizeCurrent`                           | the shared list/listbox/grid keyboard aspect                                                          |
-| 6   | [`Listbox.Item`](../../react-ui-list/src/components/Listbox/Listbox.tsx)                 | `limited`                                                    | a row with its own controls is one arrow step                                                         |
-| 7   | [`OrderedList.Item`](../../react-ui-list/src/components/OrderedList/OrderedListItem.tsx) | `limited`, listbox mode only                                 | same, for reorderable rows                                                                            |
-| 8   | [`Masonry`](../../react-ui-masonry/src/Masonry.tsx)                                      | `axis: 'both'`, `tabbable`, `cyclic`, `memorizeCurrent`      | tiles stay individually tabbable; all four arrows step DOM order                                      |
-| 9   | [`Tooltip`](../../../plugins/plugin-support/src/components/Tooltip/Tooltip.tsx)          | `limited-trap-focus`                                         | the onboarding tooltip holds focus until dismissed                                                    |
-| 10  | `Tooltip` actions row                                                                    | `axis: 'horizontal'`                                         | back / next / close                                                                                   |
-| 11  | [`Tabs`](../../react-ui-tabs/src/Tabs.tsx)                                               | `findFirstFocusable` ×2                                      | move focus to the tablist, or into the active panel                                                   |
-| 12  | [`Treegrid`](../../react-ui-list/src/components/Treegrid/Treegrid.tsx)                   | `findFirstFocusable`                                         | focus the target row's first control on Up/Down                                                       |
-| 13  | [`Matrix`](../../../plugins/plugin-deck/src/components/Matrix/Matrix.tsx)                | `findFirstFocusable`                                         | `scrollTo` focuses a tile so attention follows                                                        |
-| 14  | [`DeckPlank`](../../../plugins/plugin-deck/src/containers/Deck/DeckPlank.tsx)            | `findFirstFocusable`                                         | `Enter` into a plank                                                                                  |
-| 15  | [`Viewport`](../../../sdk/shell/src/components/Viewport/Viewport.tsx)                    | `findFirstFocusable`                                         | focus the active view, keyboard navigation only                                                       |
+| #   | call site                                                                                   | configuration                                                | why                                                                                                   |
+| --- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| 1   | [`Focus.Group`](../../../react-ui/src/components/Focus/Focus.tsx)                           | `axis: orientation`, `limited-trap-focus`, `memorizeCurrent` | app chrome's focus zones: one `Tab` in, arrows within, `Escape` out                                   |
+| 2   | [`Focus.Item`](../../../react-ui/src/components/Focus/Focus.tsx)                            | `unlimited`, `ignoreKeys: ['Enter']`                         | boundary only, so the Group's arrows treat the item as one stop; `Enter` selects rather than entering |
+| 3   | [`useLandmarkMover`](../../../react-ui/src/components/Main/MainContext.ts)                  | `limited`, `ignoreKeys: ['Tab']`                             | pane chrome; landmark traversal owns `Tab`                                                            |
+| 4   | [`Carousel.Indicators`](../../../react-ui/src/components/Carousel/Carousel.tsx)             | `axis: 'horizontal'`, `memorizeCurrent`                      | the dot strip is one tab stop                                                                         |
+| 5   | [`useListNavigation`](../../../react-ui-list/src/hooks/useListNavigation.ts)                | `axis` per mode, `memorizeCurrent`                           | the shared list/listbox/grid keyboard aspect                                                          |
+| 6   | [`Listbox.Item`](../../../react-ui-list/src/components/Listbox/Listbox.tsx)                 | `limited`                                                    | a row with its own controls is one arrow step                                                         |
+| 7   | [`OrderedList.Item`](../../../react-ui-list/src/components/OrderedList/OrderedListItem.tsx) | `limited`, listbox mode only                                 | same, for reorderable rows                                                                            |
+| 8   | [`Masonry`](../../../react-ui-masonry/src/Masonry.tsx)                                      | `axis: 'both'`, `tabbable`, `cyclic`, `memorizeCurrent`      | tiles stay individually tabbable; all four arrows step DOM order                                      |
+| 9   | [`Tooltip`](../../../../plugins/plugin-support/src/components/Tooltip/Tooltip.tsx)          | `limited-trap-focus`                                         | the onboarding tooltip holds focus until dismissed                                                    |
+| 10  | `Tooltip` actions row                                                                       | `axis: 'horizontal'`                                         | back / next / close                                                                                   |
+| 11  | [`Tabs`](../../../react-ui-tabs/src/Tabs.tsx)                                               | `findFirstFocusable` ×2                                      | move focus to the tablist, or into the active panel                                                   |
+| 12  | [`Treegrid`](../../../react-ui-list/src/components/Treegrid/Treegrid.tsx)                   | `findFirstFocusable`                                         | focus the target row's first control on Up/Down                                                       |
+| 13  | [`Matrix`](../../../../plugins/plugin-deck/src/components/Matrix/Matrix.tsx)                | `findFirstFocusable`                                         | `scrollTo` focuses a tile so attention follows                                                        |
+| 14  | [`DeckPlank`](../../../../plugins/plugin-deck/src/containers/Deck/DeckPlank.tsx)            | `findFirstFocusable`                                         | `Enter` into a plank                                                                                  |
+| 15  | [`Viewport`](../../../../sdk/shell/src/components/Viewport/Viewport.tsx)                    | `findFirstFocusable`                                         | focus the active view, keyboard navigation only                                                       |
 
-The exemplar at [`exemplars/focus.stories.tsx`](../src/exemplars/focus.stories.tsx) is a board of
+The exemplar at [`exemplars/focus.stories.tsx`](../../../react-ui/src/exemplars/focus.stories.tsx) is a board of
 columns of cards — a mover of grouppers of grouppers — and is the fastest way to feel all three
 behaviours at once. `useFocusGroup.test.tsx` pins the arrow, `Enter`/`Escape`, nesting and
 text-entry rules; the `Tab` paths need a real browser and were verified by hand.
@@ -229,7 +229,7 @@ text-entry rules; the `Tab` paths need a real browser and were verified by hand.
 performs the traversal. That splits coverage in two, and the split is the reason a green build says
 nothing about this module.
 
-**Automated** — [`useFocusGroup.test.tsx`](../src/hooks/useFocusGroup.test.tsx), happy-dom, nine
+**Automated** — [`useFocusGroup.test.tsx`](../src/useFocusGroup.test.tsx), happy-dom, nine
 tests: arrow movement on the axis, off-axis keys left alone, `cyclic` wrap, `Home`/`End`, `Enter`
 in and `Escape` out of a limited group, `memorizeCurrent` marking and entry resolution, a nested
 group as one arrow step, an entered nested group keeping its keys, and a text field keeping its own

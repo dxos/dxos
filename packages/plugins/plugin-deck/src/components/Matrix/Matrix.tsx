@@ -6,8 +6,9 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
 
 import { Obj } from '@dxos/echo';
+import { findFirstFocusable } from '@dxos/react-focus';
 import { ScrollArea } from '@dxos/react-ui';
-import { composable, composableProps, findFirstFocusable } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { type ComposableProps } from '@dxos/ui-types';

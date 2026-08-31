@@ -13,13 +13,13 @@ import React, {
   useCallback,
 } from 'react';
 
+import { useFocusGroup } from '@dxos/react-focus';
 import {
   IconBlock,
   IconButton,
   type IconButtonProps,
   type ThemedClassName,
   ToggleIconButton,
-  useFocusGroup,
   useMergeRefs,
   useTranslation,
 } from '@dxos/react-ui';

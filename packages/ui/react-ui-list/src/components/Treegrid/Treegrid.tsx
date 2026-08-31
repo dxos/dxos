@@ -8,7 +8,8 @@ import { Slot } from '@radix-ui/react-slot';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type ComponentPropsWithRef, type CSSProperties, type KeyboardEvent, useCallback } from 'react';
 
-import { type ThemedClassName, composable, composableProps, findFirstFocusable, slottable } from '@dxos/react-ui';
+import { findFirstFocusable } from '@dxos/react-focus';
+import { type ThemedClassName, composable, composableProps, slottable } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { treegridTheme } from './Treegrid.theme';

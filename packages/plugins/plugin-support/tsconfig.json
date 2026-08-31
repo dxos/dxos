@@ -70,6 +70,9 @@
       "path": "../../ui/brand"
     },
     {
+      "path": "../../ui/react-primitives/react-focus"
+    },
+    {
       "path": "../../ui/react-primitives/react-hooks"
     },
     {

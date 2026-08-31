@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: react-focus
+    status: active
+    user: burdon
+    host: burdon-mbp-2092
+    created: 2026-08-31
+    summary: "One home below the themed tier for what the user is interacting with and what the keys do — DOM focus groups, attention/selection state, and hotkeys. Grew out of ark Phase 5 (the @fluentui/react-tabster replacement), which is this project's Phase 1."
+    tasks: .agents/projects/react-focus/TASKS.md
+    design: packages/ui/react-primitives/react-focus/docs/FOCUS.md
+    prs: [12884]
+    resume: 'PHASE 1 DONE on branch claude/goofy-swartz-03a570 (not merged): @dxos/react-focus exists in packages/ui/react-primitives/ holding focus.ts + useFocusGroup + modality.ts, all 15 call sites import it directly (no compat re-exports), and the tabster/keyborg removal it came from is complete — 68,256 bytes out of the eager boot graph against ~6.2 KB in, deps gone from every package.json + catalog + lockfile. THE PACKAGE IS PUBLIC, NOT PRIVATE, deliberately: check-public-dependencies.mjs forbids a public package (react-ui) depending on a private one, so the AGENTS.md private-by-default rule cannot apply here — every sibling in react-primitives/ is public for the same reason. NEXT IS PHASE 2, and it is cheap: @dxos/react-ui-attention touches @dxos/react-ui in exactly TWO places (ThemedClassName in AttentionProvider.tsx, which really belongs to @dxos/ui-types, and Icon in AttentionGlyph.tsx), so moving AttentionGlyph up into react-ui makes the whole attention state layer headless. PHASE 3 is hotkeys on Ark — @ark-ui/react@5.39.1 ships useHotkeys/HotkeyStore/useHotkeyRegistrations/useHotkeyRecorder over @zag-js/hotkeys (framework-agnostic, and the Zag runtime is already paid for by the Tree migration); SPIKE FIRST against disableInput, nestKeyboardContext''s context nesting, and whether store scoping can express "only while attended". PHASE 4 (folding attention into react-focus by name) is ~152 import rewrites across 47 packages, is pure churn, and is deliberately last. DO NOT MERGE focus and attention conceptually: a focus group moves DOM focus, attention/selection is state, a hotkey is a named command — useArticleKeyboardNavigation is a hotkey scoped by attention that moves a selection and never touches focus. UNVERIFIED: the running Composer app (Deck panes were checked through the Main story only). PR #12884 predates the package and still describes the react-ui layout.'
   - name: ark
     status: active
     user: burdon

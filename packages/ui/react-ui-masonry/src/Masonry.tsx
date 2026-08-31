@@ -17,8 +17,9 @@ import React, {
 } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
+import { useFocusGroup } from '@dxos/react-focus';
 import { ScrollArea, ScrollAreaRootProps, ThemedClassName, usePx } from '@dxos/react-ui';
-import { composable, composableProps, useFocusGroup, useMergeRefs } from '@dxos/react-ui';
+import { composable, composableProps, useMergeRefs } from '@dxos/react-ui';
 import { cardMaxInlineSize, cardMinInlineSize } from '@dxos/ui-theme';
 
 import { prefersReducedMotion, useFlip } from './useFlip';

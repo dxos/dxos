@@ -11,7 +11,8 @@ import { type TooltipRenderProps } from 'react-joyride';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import _typefest from 'type-fest';
 
-import { Button, Icon, IconButton, useFocusGroup, useMergeRefs } from '@dxos/react-ui';
+import { useFocusGroup } from '@dxos/react-focus';
+import { Button, Icon, IconButton, useMergeRefs } from '@dxos/react-ui';
 
 // TODO(burdon): Add info link to docs.
 export const Tooltip = forwardRef<HTMLDivElement, TooltipRenderProps>(

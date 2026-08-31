@@ -4,10 +4,11 @@
 
 import React, { type PropsWithChildren, createContext, useEffect, useMemo } from 'react';
 
+import { trackKeyboardModality } from '@dxos/react-focus';
 import { type Density, type Elevation, type ThemeFunction, type ThemeMode } from '@dxos/ui-types';
 
 import { type SafeAreaPadding, useSafeArea } from '../../hooks';
-import { hasIosKeyboard, trackKeyboardModality } from '../../util';
+import { hasIosKeyboard } from '../../util';
 import { DensityProvider } from '../DensityProvider';
 import { ElevationProvider } from '../ElevationProvider';
 import { IconRegistryProvider } from './IconRegistry';

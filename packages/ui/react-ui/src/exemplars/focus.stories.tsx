@@ -5,12 +5,10 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { forwardRef, useEffect, useMemo, useRef } from 'react';
 
+import { findFirstFocusable, useFocusGroup } from '@dxos/react-focus';
 import { Input, ScrollArea, useMergeRefs } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
-
-import { useFocusGroup } from '../hooks';
-import { findFirstFocusable } from '../util';
 
 // TODO(burdon): Implement horizontal movement between columns when column is selected.
 // TODO(burdon): Prevent tab out of app.

@@ -12,8 +12,7 @@ import {
 } from 'react';
 
 import { log } from '@dxos/log';
-
-import { useFocusGroup } from '../../hooks';
+import { useFocusGroup } from '@dxos/react-focus';
 
 export const MAIN_NAME = 'Main';
 

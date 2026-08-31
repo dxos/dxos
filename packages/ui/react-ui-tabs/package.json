@@ -25,6 +25,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/react-focus": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@radix-ui/react-context": "catalog:",
     "@radix-ui/react-slot": "catalog:",

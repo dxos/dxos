@@ -4,7 +4,7 @@
 
 import { type FocusEvent, useCallback, useMemo } from 'react';
 
-import { type UseFocusGroupResult, useFocusGroup } from '@dxos/react-ui';
+import { type UseFocusGroupResult, useFocusGroup } from '@dxos/react-focus';
 
 export type ListNavigationMode = 'list' | 'listbox' | 'grid';
 

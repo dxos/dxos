@@ -5,7 +5,7 @@
 import { renderHook } from '@testing-library/react';
 import { describe, test } from 'vitest';
 
-import { FOCUS_MOVER_ATTR } from '@dxos/react-ui';
+import { FOCUS_MOVER_ATTR } from '@dxos/react-focus';
 
 import { useListNavigation } from './useListNavigation';
 

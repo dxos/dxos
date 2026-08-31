@@ -1,7 +1,7 @@
 {
-  "name": "@dxos/react-ui-masonry",
+  "name": "@dxos/react-focus",
   "version": "0.11.1",
-  "description": "A masonry component.",
+  "description": "Composite-widget focus management primitives for React.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -24,26 +24,15 @@
     "dist",
     "src"
   ],
-  "dependencies": {
-    "@dxos/react-focus": "workspace:*",
-    "@radix-ui/react-context": "catalog:",
-    "react-resize-detector": "catalog:"
-  },
+  "dependencies": {},
   "devDependencies": {
-    "@dxos/random": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
-    "@dxos/ui-theme": "workspace:*",
-    "@storybook/react-vite": "catalog:",
+    "@testing-library/react": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "react": "catalog:",
-    "react-dom": "catalog:",
-    "vite": "catalog:"
+    "react-dom": "catalog:"
   },
   "peerDependencies": {
-    "@dxos/react-ui": "workspace:^",
-    "@dxos/ui-theme": "workspace:^",
-    "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

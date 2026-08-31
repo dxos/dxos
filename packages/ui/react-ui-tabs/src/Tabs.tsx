@@ -8,6 +8,7 @@ import * as TabsPrimitive from '@radix-ui/react-tabs';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type ComponentPropsWithoutRef, type MouseEvent, useCallback, useLayoutEffect } from 'react';
 
+import { findFirstFocusable } from '@dxos/react-focus';
 import {
   Button,
   type ButtonProps,
@@ -16,7 +17,6 @@ import {
   type SlottableProps,
   type ThemedClassName,
   composableProps,
-  findFirstFocusable,
   slottable,
   useForwardedRef,
 } from '@dxos/react-ui';

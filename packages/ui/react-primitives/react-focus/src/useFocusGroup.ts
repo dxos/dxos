@@ -22,7 +22,7 @@ import {
   isEntered,
   isFocusGroup,
   isTabbable,
-} from '../util';
+} from './focus';
 
 export type FocusGroupKey = 'Tab' | 'Enter' | 'Escape';
 

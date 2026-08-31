@@ -16,11 +16,11 @@ import React, {
   useState,
 } from 'react';
 
+import { useFocusGroup } from '@dxos/react-focus';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { useFocusGroup } from '../../hooks';
 import { useTranslation } from '../../primitives';
 import { type ThemedClassName, composable, composableProps } from '../../util';
 import { IconButton } from '../Button';

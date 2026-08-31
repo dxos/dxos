@@ -135,6 +135,7 @@
       "@dxos/react-client",
       "@dxos/react-edge-client",
       "@dxos/react-error-boundary",
+      "@dxos/react-focus",
       "@dxos/react-hooks",
       "@dxos/react-input",
       "@dxos/react-list",

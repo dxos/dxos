@@ -6,7 +6,7 @@ import { cleanup, fireEvent, render } from '@testing-library/react';
 import React from 'react';
 import { afterEach, describe, expect, test } from 'vitest';
 
-import { FOCUS_CURRENT_ATTR, getEntryTarget } from '../util';
+import { FOCUS_CURRENT_ATTR, getEntryTarget } from './focus';
 import { type UseFocusGroupOptions, useFocusGroup } from './useFocusGroup';
 
 const Group = ({ options, rows = 3 }: { options: UseFocusGroupOptions; rows?: number }) => {

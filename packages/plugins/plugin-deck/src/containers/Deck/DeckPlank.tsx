@@ -8,7 +8,8 @@ import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NotFound from '@dxos/app-toolkit/NotFound';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { type ThemedClassName, findFirstFocusable } from '@dxos/react-ui';
+import { findFirstFocusable } from '@dxos/react-focus';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
 
 import { Plank } from '#components';

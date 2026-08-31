@@ -58,6 +58,7 @@ import React, {
   useMemo,
 } from 'react';
 
+import { useFocusGroup } from '@dxos/react-focus';
 import { List, ListItem } from '@dxos/react-list';
 import {
   Icon,
@@ -67,7 +68,6 @@ import {
   type ThemedClassName,
   composable,
   composableProps,
-  useFocusGroup,
   useMergeRefs,
 } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';

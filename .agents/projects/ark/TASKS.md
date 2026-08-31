@@ -102,7 +102,8 @@ to re-derive:
 ## Phase 5: Replace `@fluentui/react-tabster` — done
 
 Design record:
-[`packages/ui/react-ui/docs/FOCUS.md`](../../../packages/ui/react-ui/docs/FOCUS.md) — the mechanism
+[`packages/ui/react-primitives/react-focus/docs/FOCUS.md`](../../../packages/ui/react-primitives/react-focus/docs/FOCUS.md)
+— the mechanism
 (sentinels, the `Tab` hand-off, what "entered" means), the alternatives that do not work, the
 size accounting, and every call site.
 
@@ -159,6 +160,9 @@ Two defects the keyboard verification caught, neither of which the build or the 
 Verified by keyboard in Storybook against the exemplar, `Focus`, `Main`, `Carousel` and `Listbox`:
 arrow traversal and its axis/edge behaviour, `Escape` out of a row, the trap's wrap, landmark `Tab`
 between panes, a listbox as a single tab stop, and re-entry landing on the memorized row.
+
+Phase 5 grew into its own project: the code now lives in `@dxos/react-focus`, and attention and
+hotkeys join it there. See [`.agents/projects/react-focus/TASKS.md`](../react-focus/TASKS.md).
 
 ## Phase 6: Theme variants for `react-ui-list`
 

@@ -19,13 +19,14 @@ import React, {
 } from 'react';
 
 import { addEventListener } from '@dxos/async';
+import { FOCUS_GROUP_ATTR, KEYBOARD_MODALITY_ATTR } from '@dxos/react-focus';
 import { useMediaQuery, useMergeRefs } from '@dxos/react-hooks';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { useThemeContext } from '../../hooks';
 import { type Label, toLocalizedString, useTranslation } from '../../primitives';
 import { type MainStyleProps } from '../../theme';
-import { FOCUS_GROUP_ATTR, KEYBOARD_MODALITY_ATTR, type ThemedClassName } from '../../util';
+import { type ThemedClassName } from '../../util';
 import { MAIN_NAME, MainProvider, type SidebarState, useLandmarkMover, useMainContext } from './MainContext';
 import { useSwipeToDismiss } from './useSwipeToDismiss';
 

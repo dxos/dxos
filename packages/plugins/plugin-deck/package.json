@@ -170,6 +170,7 @@
     "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
+    "@dxos/react-focus": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-dnd": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",

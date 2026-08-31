@@ -4,7 +4,6 @@
 
 export * from './useDensityContext';
 export * from './useElevationContext';
-export * from './useFocusGroup';
 export * from './useIconHref';
 export * from './useSafeArea';
 export * from './useSafeCollisionPadding';

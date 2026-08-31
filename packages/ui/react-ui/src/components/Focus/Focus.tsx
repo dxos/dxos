@@ -7,9 +7,10 @@ import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, { type FocusEvent, type KeyboardEvent, type MouseEvent, useCallback, useRef, useState } from 'react';
 
+import { useFocusGroup } from '@dxos/react-focus';
 import { type Axis } from '@dxos/ui-types';
 
-import { useFocusGroup, useThemeContext } from '../../hooks';
+import { useThemeContext } from '../../hooks';
 import { composableProps, slottable } from '../../util';
 import { FOCUS_STATE_ATTR, FocusContext, type FocusState } from './FocusContext';
 
