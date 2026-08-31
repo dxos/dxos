@@ -70,6 +70,10 @@ Contrast our theme and tree with shadcn/ui and Ark UI to ground the design decis
       `MarkdownEditor — WithEmbed` + unit tests pin the first-mount path.
 - [ ] Follow-ups tracked in DESIGN.md §3.5 (animated exit, multi-select, popover motion promotion,
       end-of-row keyboard access).
+- [ ] **Flake (repo-wide, not this project)**: `stories-assistant:test-storybook` intermittently
+      fails all CI attempts with `EdgeClient._connect` errors from story decorators (shard 3 red on
+      both PRs 2026-08-31; passes locally on retry). Candidate for trunk quarantine or stubbing the
+      EDGE connection in decorators.
 
 ### References
 
