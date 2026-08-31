@@ -109,13 +109,28 @@ describe('move-task', () => {
       yield* Database.flush();
       const [first, , third] = yield* seedTasks(taskSet, ['a', 'b', 'c']);
 
-      // runSync throws on ANY async boundary — this is the regression test for the operation's
-      // synchronous contract (see TaskOperation.MoveTask).
+      // runSync throws on ANY async boundary — this is the regression test for the loaded-refs
+      // sync path (see TaskOperation.MoveTask): Database.load short-circuits and the parent
+      // validation walks only loaded refs.
       const { task } = Effect.runSync(
         moveTask.handler({ taskSet: Ref.make(taskSet), task: Ref.make(third), before: Ref.make(first) }),
       );
       expect(task.id).toEqual(third.id);
       expect(titles(TaskSet.resolveTasks(taskSet))).toEqual(['c', 'a', 'b']);
+
+      // Re-parenting exercises resolveParentTask's ancestor walk under runSync too.
+      Effect.runSync(
+        moveTask.handler({ taskSet: Ref.make(taskSet), task: Ref.make(third), parentTask: Ref.make(first) }),
+      );
+      const tasks = TaskSet.resolveTasks(taskSet);
+      expect(
+        titles(
+          Task.subTasks(
+            tasks,
+            tasks.find(({ title }) => title === 'a')!,
+          ),
+        ),
+      ).toEqual(['c']);
     }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 

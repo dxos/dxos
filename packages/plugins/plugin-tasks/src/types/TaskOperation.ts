@@ -154,9 +154,10 @@ export const RestoreTasks = Operation.make({
  * `UpdateTask` then `MoveTask` leaves a window where the task hangs at the end of its new parent
  * before the position lands, and costs two undo entries for one gesture.
  *
- * Synchronous: the input carries every object the write touches (all refs must be loaded), so the
- * handler needs no services and a drop can run it in the gesture frame — the write lands before
- * the frame paints, with no optimistic overlay.
+ * The input carries every object the write touches, so the handler needs no query and no
+ * services. With loaded refs it completes without an async boundary — a drop runs it under
+ * `Effect.runSync` so the write lands in the gesture frame, with no optimistic overlay — while
+ * unloaded refs (e.g. an agent caller) load asynchronously through the same path.
  */
 export const MoveTask = Operation.make({
   meta: {

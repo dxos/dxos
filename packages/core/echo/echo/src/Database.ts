@@ -448,7 +448,10 @@ export const resolve: {
  */
 export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Error.EntityNotFoundError, never> = Effect.fn('Database.load')(
   function* (ref) {
-    const object = yield* Effect.promise(() => ref.tryLoad());
+    // Sync fast path: a ref whose target is already in the working set resolves without an async
+    // boundary, so an effect built only from loaded refs can run under `Effect.runSync` (e.g. a
+    // mutation in a gesture frame); unloaded refs fall back to the async load.
+    const object = ref.target ?? (yield* Effect.promise(() => ref.tryLoad()));
     if (!object) {
       return yield* Effect.fail(new Error.EntityNotFoundError(ref.uri));
     }
