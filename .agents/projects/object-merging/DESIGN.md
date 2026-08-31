@@ -81,8 +81,9 @@
      rewriting is an optimization and the old-client compatibility path, as
      designed. `rewriteReferences` also now recurses into arrays and nested
      records (a collection's members live in an array).
-  3. **Objects only, enforced.** `Entity.setConvergenceKey` rejects relations/types
-     and empty keys; detection filters `entityKind`; the worker re-verifies
+  3. **Objects only, enforced.** The then-extant setter rejected relations/types
+     and empty keys (accessors dropped 2026-08-31 — engine-layer guards are the
+     enforcement); detection filters `entityKind`; the worker re-verifies
      `system.kind` — previously a keyed relation would have been merged with its
      endpoints unreconciled.
      Also fixed: worker `_clone` flattened `RawString` (>300k-char strings) into
@@ -213,6 +214,32 @@
   an advanced, mostly-internal feature. Everything renamed in one pass
   (accessors, index column, intent store, merger class, migrations) — safe while
   nothing has shipped.
+- **2026-08-31 (dmaretskyi second review round; Josiah ratified the API change)** —
+  Structural follow-ups, all landed:
+  1. **The `Entity.get/setConvergenceKey` accessors are dropped.** The setter
+     wrapped `Entity.update`, which defeats batching (house rule: the consumer
+     owns the update callback), and its validation was advisory, not
+     load-bearing — detection, the worker, and the client executor each ignore
+     keyed relations and empty strings, because the field replicates from peers
+     that cannot be trusted to have validated it. The API is the meta field
+     itself: `Entity.update(x, (x) => { Entity.getMeta(x).convergenceKey = '…' })`.
+     Accepted cost: no fail-fast throw on a mistaken key; the schema field's doc
+     comment carries the contract.
+  2. **`internal/Merge/` → `internal/common/merge.ts`** — the directory implied a
+     `Merge` API module that no longer exists.
+  3. **Merge/convergence suites moved to `echo-client-e2e`**, beside the other
+     integration suites; the merge executor is exported from `@dxos/echo-client`
+     for them.
+  4. **Worker success-path logging**: merged groups (key/winner/losers), serviced
+     redirects (folded fields, tombstone re-assertion), intent take/clear.
+  5. **`_queryIncludesDeleted` walks the typed `QueryAST`** via its visitor.
+  6. Intent semantics documented at the reviewer's request (an intent means
+     "check this group", not "duplicates exist").
+     **Open from the same round**: `db.mergeDuplicates()`'s `Filter.everything()`
+     scan (Josiah: a footgun to design away — see §4.11) and, contingent on that,
+     moving the shared merge core host-side (blocked today by the client executor's
+     use of it; the resolver's `resolveMergeRedirect` is the only load-bearing
+     client dependency).
 
 ---
 
@@ -682,7 +709,7 @@ Rules the implementation had to learn (each one a bug first):
   show what was merged away; the option can sit at any AST depth because scoping
   wraps it.
 - **Objects only, and only automerge-backed ones** — enforced, not assumed:
-  `Entity.setConvergenceKey` rejects relations and types, detection filters on
+  keyed relations and types are ignored at every engine layer, detection filters on
   `entityKind`, and the worker re-verifies `system.kind` against the document.
   (An earlier draft claimed reading meta off a relation throws — it does not;
   without the explicit guards a keyed relation was merged with its endpoints
@@ -763,8 +790,9 @@ whatever the code happens to do:
 None of these corrupts data or breaks resolution — the failure mode is stranded
 late edits on a tombstone whose group no longer contains its winner. If key
 mutation ever becomes a real workflow, the candidate hard guard is
-`Entity.setConvergenceKey` throwing on a merged-away entity (needs `mergedInto`
-visibility at the `Obj` layer — not currently exposed there).
+a write-time guard throwing on a merged-away entity — which would first require
+reintroducing a setter (accessors dropped 2026-08-31) and `mergedInto` visibility
+at the `Obj` layer, neither currently exposed.
 
 ### 4.6 Principal risks
 

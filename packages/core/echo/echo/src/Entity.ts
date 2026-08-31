@@ -243,37 +243,6 @@ export function getMeta(entity: Unknown | Snapshot | Mutable<Unknown>): internal
 export const getKeys = (entity: Unknown | Snapshot, source: string): ForeignKey[] => internal.getKeys(entity, source);
 
 /**
- * Read the convergence key an entity declares, if any.
- *
- * The convergence key is a caller-supplied domain identity, unique within a space: two entities
- * carrying the same convergence key are the same entity and eventually converge to one. It sits
- * alongside the entity's id, which is a surrogate — system-minted, random, and meaningless
- * outside the database.
- */
-export const getConvergenceKey = (entity: Unknown | Snapshot): string | undefined => getMeta(entity).convergenceKey;
-
-/**
- * Declare an entity's convergence key, or clear it when passed `undefined`.
- *
- * Objects only: relations and types are not merge subjects yet — merging a relation would
- * tombstone it without reconciling its endpoints, and merging a type would break schema
- * resolution for its instances.
- *
- * @throws On a non-object entity, or an empty-string key (which would group unrelated entities).
- */
-export const setConvergenceKey = (entity: Unknown, convergenceKey: string | undefined): void => {
-  if (internal.getEntityKindBrand(entity) !== internal.EntityKind.Object) {
-    throw new TypeError('Convergence keys are limited to objects; relations and types are not merge subjects.');
-  }
-  if (convergenceKey !== undefined && convergenceKey.length === 0) {
-    throw new TypeError('Convergence key must be a non-empty string.');
-  }
-  update(entity, (entity) => {
-    getMeta(entity).convergenceKey = convergenceKey;
-  });
-};
-
-/**
  * Check if an entity is deleted.
  */
 export const isDeleted = (entity: Unknown | Snapshot): boolean => internal.isDeleted(entity);

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Entity, Obj, Ref } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { PROPERTY_ID } from '@dxos/echo-protocol';
 import { mergeCandidates, resolveMergeRedirect, toMergeCandidate } from '@dxos/echo/internal';
 import { EID, type EntityId } from '@dxos/keys';
@@ -51,7 +51,7 @@ export const mergeDuplicates = (entities: readonly Obj.Unknown[]): MergePassResu
   // are duplicated.
   const groups = new Map<string, Obj.Unknown[]>();
   for (const entity of entities) {
-    const convergenceKey = Entity.getConvergenceKey(entity);
+    const convergenceKey = Obj.getMeta(entity).convergenceKey;
     // The empty string is not a key — grouping on it would merge unrelated entities.
     if (convergenceKey === undefined || convergenceKey.length === 0) {
       continue;

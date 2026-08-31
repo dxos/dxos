@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { waitForCondition } from '@dxos/async';
-import { Database, Entity, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
+import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { getMergedFrom, mergeDuplicates, resolveMerged, rewriteReferences } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { findMergeDuplicates, mergeCandidates, toMergeCandidate } from '@dxos/echo/internal';
@@ -24,6 +24,12 @@ describe('convergence-key merging', () => {
     await builder.close();
   });
 
+  // The field is assigned through meta inside an update — there is deliberately no dedicated setter.
+  const setConvergenceKey = (object: Obj.Unknown, convergenceKey: string | undefined) =>
+    Obj.update(object, (object) => {
+      Obj.getMeta(object).convergenceKey = convergenceKey;
+    });
+
   // The convergence key rides in `@meta`, so it has to survive create -> add -> flush -> query.
   test('a convergence key round-trips through the database', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [TestSchema.Task] });
@@ -31,14 +37,14 @@ describe('convergence-key merging', () => {
 
     await Effect.gen(function* () {
       const task = Obj.make(TestSchema.Task, { title: 'seeded' });
-      Entity.setConvergenceKey(task, 'org.example.seed');
+      setConvergenceKey(task, 'org.example.seed');
       const added = yield* Database.add(task);
-      expect(Entity.getConvergenceKey(added)).toBe('org.example.seed');
+      expect(Obj.getMeta(added).convergenceKey).toBe('org.example.seed');
 
       yield* Database.flush();
 
       const [queried] = yield* Database.query(Filter.type(TestSchema.Task)).run;
-      expect(Entity.getConvergenceKey(queried)).toBe('org.example.seed');
+      expect(Obj.getMeta(queried).convergenceKey).toBe('org.example.seed');
     }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
   });
 
@@ -48,7 +54,7 @@ describe('convergence-key merging', () => {
 
     await Effect.gen(function* () {
       const task = Obj.make(TestSchema.Task, { title: 'seeded' });
-      Entity.setConvergenceKey(task, 'org.example.seed');
+      setConvergenceKey(task, 'org.example.seed');
       yield* Database.add(task);
       yield* Database.flush();
     }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
@@ -59,7 +65,7 @@ describe('convergence-key merging', () => {
 
     await Effect.gen(function* () {
       const [queried] = yield* Database.query(Filter.type(TestSchema.Task)).run;
-      expect(Entity.getConvergenceKey(queried)).toBe('org.example.seed');
+      expect(Obj.getMeta(queried).convergenceKey).toBe('org.example.seed');
     }).pipe(Effect.provide(Database.layer(reopened)), EffectEx.runAndForwardErrors);
   });
 
@@ -70,11 +76,11 @@ describe('convergence-key merging', () => {
 
     await Effect.gen(function* () {
       const first = Obj.make(TestSchema.Task, { title: 'from the first writer' });
-      Entity.setConvergenceKey(first, 'org.example.seed');
+      setConvergenceKey(first, 'org.example.seed');
       yield* Database.add(first);
 
       const second = Obj.make(TestSchema.Task, { title: 'from the second writer', description: 'only here' });
-      Entity.setConvergenceKey(second, 'org.example.seed');
+      setConvergenceKey(second, 'org.example.seed');
       yield* Database.add(second);
 
       yield* Database.flush();
@@ -99,11 +105,11 @@ describe('convergence-key merging', () => {
 
     await Effect.gen(function* () {
       const first = Obj.make(TestSchema.Task, { title: 'from the first writer' });
-      Entity.setConvergenceKey(first, 'org.example.seed');
+      setConvergenceKey(first, 'org.example.seed');
       yield* Database.add(first);
 
       const second = Obj.make(TestSchema.Task, { title: 'from the second writer', description: 'only here' });
-      Entity.setConvergenceKey(second, 'org.example.seed');
+      setConvergenceKey(second, 'org.example.seed');
       yield* Database.add(second);
 
       // Same tick as the adds, before the worker can see the documents; either engine computes
@@ -132,11 +138,11 @@ describe('convergence-key merging', () => {
     await Effect.gen(function* () {
       // Ids are ULIDs minted in creation order, so the first-created duplicate wins the merge.
       const winner = Obj.make(TestSchema.Person, { name: 'Alice (first writer)' });
-      Entity.setConvergenceKey(winner, 'org.example.alice');
+      setConvergenceKey(winner, 'org.example.alice');
       yield* Database.add(winner);
 
       const loser = Obj.make(TestSchema.Person, { name: 'Alice (second writer)' });
-      Entity.setConvergenceKey(loser, 'org.example.alice');
+      setConvergenceKey(loser, 'org.example.alice');
       yield* Database.add(loser);
 
       const org = yield* Database.add(Obj.make(TestSchema.Organization, { name: 'DXOS' }));
@@ -172,11 +178,11 @@ describe('convergence-key merging', () => {
 
     await Effect.gen(function* () {
       const winner = Obj.make(TestSchema.Person, { name: 'Alice (first writer)' });
-      Entity.setConvergenceKey(winner, 'org.example.alice');
+      setConvergenceKey(winner, 'org.example.alice');
       yield* Database.add(winner);
 
       const loser = Obj.make(TestSchema.Person, { name: 'Alice (second writer)' });
-      Entity.setConvergenceKey(loser, 'org.example.alice');
+      setConvergenceKey(loser, 'org.example.alice');
       yield* Database.add(loser);
 
       const child = yield* Database.add(Obj.make(TestSchema.Task, { title: 'filed under Alice' }));
@@ -197,7 +203,7 @@ describe('convergence-key merging', () => {
 
     const tasks = ['first', 'second', 'third'].map((title) => {
       const task = db.add(Obj.make(TestSchema.Task, { title }));
-      Entity.setConvergenceKey(task, 'org.example.seed');
+      setConvergenceKey(task, 'org.example.seed');
       return task;
     });
     await db.flush();
@@ -221,7 +227,7 @@ describe('convergence-key merging', () => {
       const first = Obj.make(TestSchema.Task, { title: 'first' });
       const second = Obj.make(TestSchema.Task, { title: 'second' });
       for (const task of [first, second]) {
-        Entity.setConvergenceKey(task, 'org.example.seed');
+        setConvergenceKey(task, 'org.example.seed');
         yield* Database.add(task);
       }
       mergeDuplicates([first, second]);
@@ -242,7 +248,7 @@ describe('convergence-key merging', () => {
       const first = Obj.make(TestSchema.Task, { title: 'first' });
       const second = Obj.make(TestSchema.Task, { title: 'second' });
       for (const task of [first, second]) {
-        Entity.setConvergenceKey(task, 'org.example.seed');
+        setConvergenceKey(task, 'org.example.seed');
         yield* Database.add(task);
       }
 
@@ -272,7 +278,7 @@ describe('convergence-key merging', () => {
       const first = Obj.make(TestSchema.Task, { title: 'first' });
       const second = Obj.make(TestSchema.Task, { title: 'second' });
       for (const task of [first, second]) {
-        Entity.setConvergenceKey(task, 'org.example.seed');
+        setConvergenceKey(task, 'org.example.seed');
         yield* Database.add(task);
       }
       const referrer = Obj.make(TestSchema.Task, { title: 'referrer', previous: Ref.make(second) });
@@ -298,7 +304,7 @@ describe('convergence-key merging', () => {
       const first = Obj.make(TestSchema.Task, { title: 'first' });
       const second = Obj.make(TestSchema.Task, { title: 'second' });
       for (const task of [first, second]) {
-        Entity.setConvergenceKey(task, 'org.example.seed');
+        setConvergenceKey(task, 'org.example.seed');
         yield* Database.add(task);
       }
 
@@ -337,13 +343,13 @@ describe('convergence-key merging', () => {
       const targetWinner = Obj.make(TestSchema.Task, { title: 'target winner' });
       const targetLoser = Obj.make(TestSchema.Task, { title: 'target loser' });
       for (const task of [targetWinner, targetLoser]) {
-        Entity.setConvergenceKey(task, 'org.example.target');
+        setConvergenceKey(task, 'org.example.target');
         yield* Database.add(task);
       }
       const referrerWinner = Obj.make(TestSchema.Task, { title: 'referrer winner', previous: Ref.make(targetLoser) });
       const referrerLoser = Obj.make(TestSchema.Task, { title: 'referrer loser', previous: Ref.make(targetLoser) });
       for (const task of [referrerWinner, referrerLoser]) {
-        Entity.setConvergenceKey(task, 'org.example.referrer');
+        setConvergenceKey(task, 'org.example.referrer');
         yield* Database.add(task);
       }
       mergeDuplicates([targetWinner, targetLoser, referrerWinner, referrerLoser]);
@@ -367,7 +373,7 @@ describe('convergence-key merging', () => {
     const first = db.add(Obj.make(TestSchema.Task, { title: 'first' }));
     const second = db.add(Obj.make(TestSchema.Task, { title: 'second', description: 'only here' }));
     for (const task of [first, second]) {
-      Entity.setConvergenceKey(task, 'org.example.seed');
+      setConvergenceKey(task, 'org.example.seed');
     }
     const referrer = db.add(Obj.make(TestSchema.Task, { title: 'referrer', previous: Ref.make(second) }));
     await db.flush();
@@ -404,7 +410,7 @@ describe('convergence-key merging', () => {
 
     const tasks = ['first', 'second', 'third'].map((title) => {
       const task = db.add(Obj.make(TestSchema.Task, { title }));
-      Entity.setConvergenceKey(task, 'org.example.seed');
+      setConvergenceKey(task, 'org.example.seed');
       return task;
     });
 
@@ -434,7 +440,7 @@ describe('convergence-key merging', () => {
 
     const tasks = ['a', 'b', 'c'].map((title) => {
       const task = db.add(Obj.make(TestSchema.Task, { title }));
-      Entity.setConvergenceKey(task, 'org.example.seed');
+      setConvergenceKey(task, 'org.example.seed');
       return task;
     });
     const [smallest, middle, largest] = [...tasks].sort((a, b) => (a.id < b.id ? -1 : 1));
@@ -471,7 +477,7 @@ describe('convergence-key merging', () => {
 
       const tasks = ['first', 'second'].map((title) => {
         const task = db.add(Obj.make(TestSchema.Task, { title, description: title }));
-        Entity.setConvergenceKey(task, 'org.example.seed');
+        setConvergenceKey(task, 'org.example.seed');
         return task;
       });
       await db.flush();
@@ -490,7 +496,7 @@ describe('convergence-key merging', () => {
 
       for (const title of ['first', 'second', 'third']) {
         const task = db.add(Obj.make(TestSchema.Task, { title }));
-        Entity.setConvergenceKey(task, 'org.example.seed');
+        setConvergenceKey(task, 'org.example.seed');
       }
       await db.flush();
       await waitForLiveCount(db, 1);
@@ -508,7 +514,7 @@ describe('convergence-key merging', () => {
 
       for (const title of ['first', 'second']) {
         const task = db.add(Obj.make(TestSchema.Task, { title }));
-        Entity.setConvergenceKey(task, 'org.example.seed');
+        setConvergenceKey(task, 'org.example.seed');
       }
       await db.flush();
       await waitForLiveCount(db, 1);
@@ -542,7 +548,7 @@ describe('convergence-key merging', () => {
 
       for (const convergenceKey of ['org.example.seed', 'org.example.seed@2']) {
         const task = db.add(Obj.make(TestSchema.Task, { title: convergenceKey }));
-        Entity.setConvergenceKey(task, convergenceKey);
+        setConvergenceKey(task, convergenceKey);
       }
       await db.flush();
 
@@ -557,7 +563,7 @@ describe('convergence-key merging', () => {
     await Effect.gen(function* () {
       for (const convergenceKey of ['org.example.seed', 'org.example.seed@2', 'org.example.other']) {
         const task = Obj.make(TestSchema.Task, { title: convergenceKey });
-        Entity.setConvergenceKey(task, convergenceKey);
+        setConvergenceKey(task, convergenceKey);
         yield* Database.add(task);
       }
       yield* Database.flush();

@@ -7,7 +7,6 @@ import { describe, test } from 'vitest';
 import { type ForeignKey } from '@dxos/echo-protocol';
 import { type EntityId } from '@dxos/keys';
 
-import * as Entity from '../../Entity';
 import * as Obj from '../../Obj';
 import { TestSchema } from '../../testing';
 import {
@@ -17,6 +16,12 @@ import {
   resolveMergeRedirect,
   toMergeCandidate,
 } from './merge';
+
+// The field is assigned through meta inside an update — there is deliberately no dedicated setter.
+const setConvergenceKey = (object: Obj.Unknown, convergenceKey: string | undefined) =>
+  Obj.update(object, (object) => {
+    Obj.getMeta(object).convergenceKey = convergenceKey;
+  });
 
 // Ids are compared lexicographically, so fixed ULID-shaped literals keep the ordering readable:
 // `idA < idB < idC`.
@@ -45,7 +50,7 @@ describe('merge core', () => {
   describe('toMergeCandidate', () => {
     test('builds a candidate from a live object', ({ expect }) => {
       const object = Obj.make(TestSchema.Task, { title: 'one' });
-      Entity.setConvergenceKey(object, 'org.example.seed');
+      setConvergenceKey(object, 'org.example.seed');
       const candidate = toMergeCandidate(object);
       expect(candidate.id).toBe(object.id);
       expect(candidate.convergenceKey).toBe('org.example.seed');
@@ -56,7 +61,7 @@ describe('merge core', () => {
       const first = Obj.make(TestSchema.Task, { title: 'first' });
       const second = Obj.make(TestSchema.Task, { title: 'second', description: 'only on second' });
       for (const object of [first, second]) {
-        Entity.setConvergenceKey(object, 'org.example.seed');
+        setConvergenceKey(object, 'org.example.seed');
       }
       // Ids are ULIDs minted in creation order, so `first` is the winner.
       const result = mergeCandidates([toMergeCandidate(second), toMergeCandidate(first)]);

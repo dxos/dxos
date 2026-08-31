@@ -1,6 +1,6 @@
 # object-merging — Tasks
 
-_Resume: worker-side merging is live and hardened through three review rounds (§4.8; 2026-08-02, 2026-08-03 ×2); dmaretskyi's 2026-08-13 PR review drove a behavior-preserving restructuring (public API = `Entity.get/setConvergenceKey`, machinery internal, index-name versioning, `ConvergenceKeyIntentStore`, `ConvergenceKeyMerger` class) and the field was renamed `naturalKey` → `meta.convergenceKey` (Josiah, 2026-08-13, after declining `singletonKey`). Open: singleton APIs vs Phase-2 `db.ensure`; then the backlog — doctor diagnostic, property-based determinism, relation endpoints as rewrite targets, collaborative-text policy, mixed-version tests. Uncommitted: none. All suites green._
+_Resume: worker-side merging is live and hardened through three review rounds (§4.8) plus dmaretskyi's structural rounds (2026-08-13, 2026-08-31). The field is `meta.convergenceKey` with NO dedicated accessors (assign via `Entity.getMeta` inside an update — 2026-08-31, per review); machinery internal (`internal/common/merge.ts`); `ConvergenceKeyMerger` worker class; `ConvergenceKeyIntentStore`; suites in echo-client-e2e. OPEN (Josiah 2026-08-31): design an index-driven replacement for `db.mergeDuplicates()`'s `Filter.everything()` scan (reference rewriting via the reverse-ref index; worker-side vs targeted-client — DESIGN §4.11 when written); contingent: move the merge core host-side. Then the backlog — singleton/ensure APIs, doctor diagnostic, property-based determinism, relation endpoints, collaborative-text policy, mixed-version tests. Uncommitted: none. All suites green._
 
 Design + feasibility research: [`DESIGN.md`](./DESIGN.md)
 (includes the decision log, merge algorithm, convergence argument, test plan, and
@@ -48,7 +48,8 @@ than by a spike.
 
 - [x] Dedicated identity field on `EntityMeta` — `meta.convergenceKey`, a single optional
       string, with get/set accessors and grouping helpers (now
-      `Entity.get/setConvergenceKey` + internal `findMergeDuplicates`).
+      meta-field assignment + internal `findMergeDuplicates`; the dedicated
+      accessors were dropped 2026-08-31 — the meta field is the API).
       Two hand-maintained meta field lists had to learn about it (see below).
 - [x] Pure merge core (`echo/src/Merge.ts`) — `selectWinner` (min id),
       set-wise `merge` (permutation-independent, not a pairwise fold),

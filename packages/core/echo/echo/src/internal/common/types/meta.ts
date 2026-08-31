@@ -66,7 +66,14 @@ export const EntityMetaSchema = Schema.Struct({
 
   /**
    * Caller-supplied domain identity, unique within a space: two entities carrying the same
-   * convergence key are the same entity and are merged into one (declared via `Entity.setConvergenceKey`).
+   * convergence key are the same entity and are merged into one. Declared by assigning this
+   * field inside an update callback — `Entity.update(x, (x) => { Entity.getMeta(x).convergenceKey = '…' })`
+   * — so it batches with the caller's other writes; there is deliberately no dedicated setter.
+   *
+   * Objects only: the merge engine ignores the field on relations and types (not merge subjects
+   * yet), and treats the empty string as no key — both are verified at detection, in the worker,
+   * and in the client executor rather than at write time, since the field replicates from peers
+   * that cannot be trusted to have validated it.
    *
    * Opaque to the storage engine — callers that need generations encode them in the string
    * (e.g. `com.example.seed@2`), which yields distinct entities because the strings differ.
