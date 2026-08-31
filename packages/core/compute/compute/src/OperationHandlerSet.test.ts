@@ -238,6 +238,29 @@ describe('OperationHandlerSet.reactive getHandlerFor identity', () => {
     expect((await after)?.meta.key).toEqual(KEY_B);
   });
 
+  test('a rejection after invalidation does not evict the replacement promise', async ({ expect }) => {
+    const registry = Registry.make();
+    let rejectFirst!: (err: Error) => void;
+    const pendingChild: OperationHandlerSet.OperationHandlerSet = {
+      [OperationHandlerSet.TypeId]: OperationHandlerSet.TypeId,
+      definitions: () => [],
+      getHandlerFor: () => new Promise((_, reject) => (rejectFirst = reject)),
+      getHandlers: () => Promise.resolve([]),
+      handlers: Effect.succeed([]),
+    };
+    const atom = Atom.make<readonly OperationHandlerSet.OperationHandlerSet[]>([pendingChild]).pipe(Atom.keepAlive);
+    registry.mount(atom);
+
+    const reactive = OperationHandlerSet.reactive(registry, atom);
+    const first = reactive.getHandlerFor(KEY_A);
+    // Invalidate while the first lookup is in flight, then memoize a replacement.
+    registry.set(atom, [OperationHandlerSet.make(makeHandler(KEY_A, 'A'))]);
+    const replacement = reactive.getHandlerFor(KEY_A);
+    rejectFirst(new Error('late'));
+    await expect(first).rejects.toThrow('late');
+    expect(reactive.getHandlerFor(KEY_A)).toBe(replacement);
+  });
+
   test('a rejection is not memoized', async ({ expect }) => {
     const registry = Registry.make();
     let calls = 0;

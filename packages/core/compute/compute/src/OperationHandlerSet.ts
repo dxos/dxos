@@ -128,8 +128,11 @@ export const reactive = (
         promise = resolveFromSets(registry.get(atom), normalized).then(
           (handler) => handler,
           (err) => {
-            // Evict so a transient failure is not memoized.
-            perKey.delete(normalized);
+            // Evict so a transient failure is not memoized — but only this entry: an atom change
+            // mid-flight clears the map, and a replacement promise must not be evicted with it.
+            if (perKey.get(normalized) === promise) {
+              perKey.delete(normalized);
+            }
             throw err;
           },
         );

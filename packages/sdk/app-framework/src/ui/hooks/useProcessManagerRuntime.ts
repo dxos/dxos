@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { type DependencyList, use, useCallback, useMemo } from 'react';
 
+import type { ServiceNotAvailableError } from '@dxos/compute/errors';
 import * as Operation from '@dxos/compute/Operation';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { EffectEx } from '@dxos/effect';
@@ -25,6 +26,11 @@ export const useProcessManagerRuntime = (): Capabilities.ProcessManagerRuntime =
  * Build a callback that runs an effect on the {@link Capabilities.ProcessManagerRuntime}
  * with space-scoped services resolved via {@link ServiceResolver.provide}.
  *
+ * Arguments passed to the returned callback are forwarded to `fn`, and the effect's result comes
+ * back as the callback's promise — rejecting with the effect's failure (`E`), with
+ * {@link ServiceNotAvailableError} when a tag cannot be resolved for the space, or with a
+ * `TypeError` when called while `spaceId` is still `undefined`.
+ *
  * The `tags` tuple must list every service the effect requires (beyond the
  * fixed {@link Capabilities.ProcessManagerRuntimeServices}); these services are
  * resolved for the given `spaceId` through the runtime's service resolver.
@@ -39,12 +45,13 @@ export const useSpaceCallback = <
   const Tags extends readonly Context.Key<any, any>[],
   TArgs extends readonly unknown[],
   T,
+  E,
 >(
   spaceId: SpaceId | undefined,
   tags: Tags,
   fn: (
     ...args: TArgs
-  ) => Effect.Effect<T, any, Context.Service.Identifier<Tags[number]> | Capabilities.ProcessManagerRuntimeServices>,
+  ) => Effect.Effect<T, E, Context.Service.Identifier<Tags[number]> | Capabilities.ProcessManagerRuntimeServices>,
   deps?: DependencyList,
 ): ((...args: TArgs) => Promise<T>) => {
   const runtime = useProcessManagerRuntime();
@@ -57,7 +64,11 @@ export const useSpaceCallback = <
         ServiceResolver.provide({ space: spaceId }, ...tags),
         Operation.withInvocationOptions({ spaceId }),
       );
-      return runtime.runPromise(fn(...args).pipe(Effect.provide(layer)) as Effect.Effect<T, any, any>);
+      // The cast erases only the requirements channel: the layer satisfies the tags and the
+      // runtime carries {@link Capabilities.ProcessManagerRuntimeServices}.
+      return runtime.runPromise(
+        fn(...args).pipe(Effect.provide(layer)) as Effect.Effect<T, E | ServiceNotAvailableError, any>,
+      );
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [runtime, spaceId, ...(deps ?? [])],
