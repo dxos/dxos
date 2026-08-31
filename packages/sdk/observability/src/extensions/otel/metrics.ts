@@ -228,4 +228,3 @@ export class OtelMetrics {
     return instrument;
   }
 }
-
