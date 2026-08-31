@@ -46,9 +46,11 @@ export const RunResults = ({ run }: RunResultsProps) => {
     if (!invokePromise) {
       return;
     }
-    void invokePromise(QaOperation.CompleteRun, { run: Ref.make(run) }, { spaceId: Obj.getDatabase(run)?.spaceId }).then(
-      ({ error }) => setError(error ? String(error) : undefined),
-    );
+    void invokePromise(
+      QaOperation.CompleteRun,
+      { run: Ref.make(run) },
+      { spaceId: Obj.getDatabase(run)?.spaceId },
+    ).then(({ error }) => setError(error ? String(error) : undefined));
   }, [invokePromise, run]);
 
   return (
