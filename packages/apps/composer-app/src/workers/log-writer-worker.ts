@@ -21,7 +21,7 @@ const handleMessage = (event: MessageEvent<LogWriterMessage>): void => {
   // Hot path: a bare string is one pre-serialized JSONL line.
   if (typeof data === 'string') {
     store.append(data);
-  } else if (data.type === 'flush') {
+  } else if (data != null && data.type === 'flush') {
     // Fire-and-forget, mirroring the sender's pagehide semantics; `flush` never rejects.
     void store.flush();
   }
