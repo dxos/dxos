@@ -135,6 +135,7 @@ const DefaultStory = ({
   showGroupLabels,
   showOrdinals,
   showDescriptions,
+  showDescription = true,
   hierarchical,
   many,
   framed = true,
@@ -143,6 +144,8 @@ const DefaultStory = ({
   showGroupLabels?: boolean;
   showOrdinals?: boolean;
   showDescriptions?: boolean;
+  /** Edit the selected task's description in the pane; the pane's own prop, not the rows'. */
+  showDescription?: boolean;
   hierarchical?: boolean;
   /** Seed the longer, ten-task list instead of the default seven. */
   many?: boolean;
@@ -218,10 +221,13 @@ const DefaultStory = ({
       </TaskList.Viewport>
       {framed ? (
         <div className='p-2'>
-          <TaskList.Edit classNames='border border-separator rounded-md p-2' />
+          <TaskList.Edit
+            showDescription={showDescription}
+            classNames='bg-input-surface border border-separator rounded-md p-2'
+          />
         </div>
       ) : (
-        <TaskList.Edit grid />
+        <TaskList.Edit grid showDescription={showDescription} />
       )}
     </TaskList.Root>
   );
@@ -309,9 +315,10 @@ export const TestEdit: Story = {
     };
     const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]'));
 
-    // Nothing selected: the pane creates, and has no description to attach one to.
+    // Nothing selected: the pane creates. Its description belongs to the task being created, so it
+    // starts empty rather than absent (see `TestCreateWithDescription`).
     await expect(title().value).toEqual('');
-    await expect(description()).toBeNull();
+    await waitFor(async () => expect(description()).not.toBeNull());
 
     // ...and offers no Save/Cancel: with nothing typed there is nothing to save and nothing to
     // cancel, and two dead controls read as a form to fill in rather than a place to type.
@@ -350,8 +357,7 @@ export const TestEdit: Story = {
     // Escape gives the reader a way back out: the selection clears and the pane returns to creating.
     first.focus();
     first.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-    await waitFor(async () => expect(description()).toBeNull());
-    await expect(title().value).toEqual('');
+    await waitFor(async () => expect(title().value).toEqual(''));
     await expect(canvasElement.querySelectorAll('[aria-selected="true"]')).toHaveLength(0);
 
     // Re-select for the remaining assertions.
@@ -399,8 +405,11 @@ export const TestEdit: Story = {
       throw new Error('Task edit save button not found.');
     }
     await userEvent.click(saveButton);
-    await waitFor(async () => expect(description()).toBeNull());
-    await expect(title().value).toEqual('');
+    await waitFor(async () => expect(title().value).toEqual(''));
+    await expect(canvasElement.querySelectorAll('[aria-selected="true"]')).toHaveLength(0);
+    // The pane is creating again, so the field it kept is the new task's and holds none of the
+    // edited one's text.
+    await expect(text()).not.toContain('KEEP');
 
     // Cancel leaves the same way but throws the pending edit away. The buttons must not take focus:
     // the fields commit on blur, so a Cancel that stole focus would have written the very text it is
@@ -414,7 +423,7 @@ export const TestEdit: Story = {
       throw new Error('Task edit cancel button not found.');
     }
     await userEvent.click(cancelButton);
-    await waitFor(async () => expect(description()).toBeNull());
+    await waitFor(async () => expect(title().value).toEqual(''));
     await expect(canvasElement.querySelectorAll('[aria-selected="true"]')).toHaveLength(0);
 
     // ...so what Save wrote survived and what Cancel discarded did not.
@@ -422,6 +431,135 @@ export const TestEdit: Story = {
     await waitFor(async () => expect(description()).not.toBeNull());
     await waitFor(async () => expect(text()).toContain('KEEP'));
     await expect(text()).not.toContain('THROW');
+  },
+};
+
+/**
+ * Creating with a description: the pane's description field is present with nothing selected, and
+ * what is typed into it reaches `onTaskCreate` as part of the same draft as the title.
+ */
+export const TestCreateWithDescription: Story = {
+  args: { showGroupLabels: false, showDescriptions: true },
+  play: async ({ canvasElement }) => {
+    const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
+    const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]')!;
+    const description = () => pane.querySelector<HTMLElement>('[data-testid="taskList.edit.description"]');
+    const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]'));
+
+    // Nothing selected, and the field is there anyway — a new task can be given a description.
+    await expect(title().value).toEqual('');
+    await waitFor(async () => expect(description()).not.toBeNull());
+    const content = () => description()!.querySelector<HTMLElement>('.cm-content')!;
+    await waitFor(async () => expect(content()).not.toBeNull());
+
+    // Type the description FIRST, then the title, and create from the title with Enter — the field
+    // is still held open at that point, so the create is what has to commit it.
+    const before = rows().length;
+    await userEvent.click(content());
+    await userEvent.keyboard('Roast it twice');
+    await userEvent.click(title());
+    await userEvent.keyboard('New task{Enter}');
+
+    await waitFor(async () => expect(rows()).toHaveLength(before + 1));
+    // Found by title, not by position: the list groups by status, so a new todo lands in its group
+    // rather than at the end.
+    const created = rows().find((row) => row.textContent?.includes('New task'));
+    await expect(created).not.toBeUndefined();
+    await expect(created!.textContent).toContain('Roast it twice');
+
+    // ...and the pane resets, so the next task does not inherit the last one's description. The
+    // field is not empty-stringed: CodeMirror paints the placeholder inside `.cm-content`.
+    await expect(title().value).toEqual('');
+    await waitFor(async () => expect(content().textContent).not.toContain('Roast it twice'));
+  },
+};
+
+/**
+ * A description typed while creating, then abandoned by selecting a row, must not ride along into
+ * the NEXT task created. The field remounts empty on the way back, but committing an already-empty
+ * field never calls back — so the mirror the create reads has to be cleared with the selection.
+ */
+export const TestAbandonedDescriptionDoesNotLeak: Story = {
+  args: { showGroupLabels: false, showDescriptions: true },
+  play: async ({ canvasElement }) => {
+    const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
+    const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]')!;
+    const description = () => pane.querySelector<HTMLElement>('[data-testid="taskList.edit.description"]');
+    const content = () => description()!.querySelector<HTMLElement>('.cm-content')!;
+    const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]'));
+
+    await waitFor(async () => expect(content()).not.toBeNull());
+
+    // Type a description with no title, then commit it by leaving the field — nothing is created,
+    // but the create row's mirror now holds the text.
+    await userEvent.click(content());
+    await userEvent.keyboard('LEAKED');
+    await userEvent.click(title());
+
+    // Select a row and come back out: the pane is creating again, with an empty field.
+    const first = rows()[0];
+    first.click();
+    await waitFor(async () => expect(title().value).not.toEqual(''));
+    first.focus();
+    first.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await waitFor(async () => expect(title().value).toEqual(''));
+
+    // Create with a title alone. The abandoned description must not be attached to it.
+    const before = rows().length;
+    await userEvent.click(title());
+    await userEvent.keyboard('Clean task{Enter}');
+    await waitFor(async () => expect(rows()).toHaveLength(before + 1));
+    const created = rows().find((row) => row.textContent?.includes('Clean task'));
+    await expect(created).not.toBeUndefined();
+    await expect(created!.textContent).not.toContain('LEAKED');
+  },
+};
+
+/**
+ * With `showDescription` off the pane is title-only, even for a selected task the list can update —
+ * which is what a host with no room for a markdown field (the chat strip) renders.
+ */
+export const TestEditWithoutDescription: Story = {
+  args: { showGroupLabels: false, showDescription: false },
+  play: async ({ canvasElement }) => {
+    const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
+    const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]')!;
+    const description = () => pane.querySelector<HTMLElement>('[data-testid="taskList.edit.description"]');
+    const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]'));
+
+    const first = rows()[0];
+    const firstTitle = first.querySelector('.truncate')!.textContent;
+    first.click();
+
+    // The task IS selected — the title proves the pane followed the selection — and the description
+    // is still absent, so its absence is the prop and not a pane that failed to select.
+    await waitFor(async () => expect(title().value).toEqual(firstTitle));
+    await expect(description()).toBeNull();
+
+    // Editing still works without it: the pane is title-only, not read-only.
+    await userEvent.click(title());
+    await userEvent.keyboard(' EDITED');
+    await userEvent.tab();
+    await waitFor(async () => expect(first.textContent).toContain('EDITED'));
+  },
+};
+
+/**
+ * Status grouping reorders rows against the set's array, so the gutter has to number what is on
+ * screen: 1..N from the top, with no gaps and nothing out of sequence.
+ */
+export const TestOrdinalsAreLinear: Story = {
+  args: { many: true, showOrdinals: true },
+  play: async ({ canvasElement }) => {
+    const ordinals = () =>
+      Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]')).map(
+        (row) => row.querySelector('.tabular-nums')?.textContent ?? '',
+      );
+
+    await waitFor(async () => expect(ordinals().length).toBeGreaterThan(1));
+    // Built from the count rather than hardcoded, so the seed can grow without editing the test.
+    const expected = ordinals().map((_, index) => String(index + 1));
+    await expect(ordinals()).toEqual(expected);
   },
 };
 
@@ -457,8 +595,9 @@ export const TestHierarchy: Story = {
       'Log every profile:2',
     ]);
 
-    // Ordinals stay flat — position in the set, so a task keeps its number as the tree changes.
-    await expect(rows().map(({ ordinal }) => ordinal)).toEqual(['1', '3', '5', '7', '2', '4', '6']);
+    // Ordinals run 1..N down the list as rendered, not by position in the set's array — the walk
+    // interleaves the two branches, so the two orders differ.
+    await expect(rows().map(({ ordinal }) => ordinal)).toEqual(['1', '2', '3', '4', '5', '6', '7']);
 
     // Collapsing a branch hides its descendants and marks the row.
     toggle(rows()[0].row).click();
