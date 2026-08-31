@@ -298,6 +298,7 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
     hierarchical,
     showGutter,
     isCollapsed,
+    dragging,
   } = useTaskListContext('TaskList.Content');
   // Collapsed ids are read through the context callback rather than held here, so the walk still
   // re-runs when one flips; the set itself lives in `Root`.
@@ -322,8 +323,12 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
   // ordinal names a task ("run 3"), where a `1.2.1` path would renumber a whole branch.
   const ordinals = useMemo(() => {
     const ordered = rows ? rows.map((row) => row.task) : groups.flatMap((group) => group.tasks);
-    return new Map(ordered.map((task, index) => [task.id, index + 1]));
-  }, [rows, groups]);
+    // A dragged row and its sub-tasks are hidden rather than unmounted (the gesture is anchored to
+    // the row's handle), so they are still in `ordered` — numbering them would leave gaps in the
+    // column the reader can actually see.
+    const visible = dragging.size > 0 ? ordered.filter((task) => !dragging.has(task.id)) : ordered;
+    return new Map(visible.map((task, index) => [task.id, index + 1]));
+  }, [rows, groups, dragging]);
 
   return (
     <Listbox.Content
