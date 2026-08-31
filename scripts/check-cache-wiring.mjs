@@ -1,5 +1,7 @@
 // Every job that calls the setup action must either see all three remote-cache credentials or opt out
-// at that call site. A job that does neither runs with no remote cache, silently and green.
+// at that call site. The setup action does fail red at runtime when they are missing, but only when
+// that job next runs — this catches the miswiring in the lint gate, before a schedule-only or release
+// job sits broken for weeks.
 //
 // Scoped per job rather than per file: env can be set at workflow or job level, and one job opting
 // out must not excuse another job in the same file that did not.
@@ -8,7 +10,7 @@ import { join } from 'node:path';
 import { parse } from 'yaml';
 
 const DIRS = ['.github/workflows', '.depot/workflows'];
-const SETUP = ['./.github/actions/setup', './.depot/actions/setup'];
+const SETUP = './.depot/actions/setup';
 const REQUIRED = ['MOON_CACHE_CA_PEM', 'MOON_CACHE_CLIENT_PEM', 'MOON_CACHE_CLIENT_KEY'];
 const problems = [];
 let callSites = 0;
@@ -23,7 +25,7 @@ for (const dir of DIRS.filter((candidate) => existsSync(candidate))) {
     const workflow = parse(readFileSync(join(dir, file), 'utf8'));
     for (const [jobName, job] of Object.entries(workflow?.jobs ?? {})) {
       for (const step of flatten(job?.steps)) {
-        if (!SETUP.includes(step?.uses)) continue;
+        if (step?.uses !== SETUP) continue;
         callSites++;
 
         // `remote-cache` is per call site, so an opt-out elsewhere cannot cover this one.
@@ -43,7 +45,7 @@ for (const dir of DIRS.filter((candidate) => existsSync(candidate))) {
 
 if (callSites === 0) {
   console.error(`No setup call sites found in ${DIRS.join(', ')} — this check is matching nothing.`);
-  console.error(`Looked for a step with \`uses\` of: ${SETUP.join(' or ')}.`);
+  console.error(`Looked for a step with \`uses: ${SETUP}\`.`);
   process.exit(1);
 }
 

@@ -571,8 +571,9 @@ jobs:
           all: ${{ inputs.e2e }}
 
       # No bundle step: the `e2e-ci` targets declare `bundle-e2e` as a dep, so moon hydrates it from the
-      # cache `e2e-bundle` warmed. Step `id`s and outputs survive the block: Depot snapshots each unit's
-      # env and outputs and merges them back on join.
+      # cache `e2e-bundle` warmed. Step `id`s and outputs survive the block (Depot merges each unit's env
+      # and outputs back on join); were the shard output ever lost, the Test step's interpolation leaves
+      # `moon exec` with no targets, which exits 1 in a non-TTY rather than running nothing green.
       - parallel:
           # Only this cell's browser — the other two engines' downloads are dead weight here.
           - name: Install Playwright

@@ -45,15 +45,18 @@ const main = () => {
   }
 
   const head = args.head ?? 'HEAD';
+  // Export the fork point rather than the raw base: moon merge-bases a resolvable base with HEAD
+  // itself (2.5.2), so this is behaviour-neutral, and the logged range is the range moon diffs even
+  // when the base branch has advanced past the fork.
   const fork = tryGit('merge-base', base, head) ?? base;
   const range = args.head ? [fork, args.head] : [fork];
   const changed =
     tryGit('diff', '--name-only', ...range)
       ?.split('\n')
       .filter(Boolean) ?? [];
-  note(`Affected run — ${reason} (${base.slice(0, 8)}..${head}, ${changed.length} changed files).`);
+  note(`Affected run — ${reason} (${fork.slice(0, 8)}..${head}, ${changed.length} changed files).`);
 
-  emit(args, { MOON_AFFECTED: 'remote', MOON_BASE: base, ...(args.head ? { MOON_HEAD: args.head } : {}) });
+  emit(args, { MOON_AFFECTED: 'remote', MOON_BASE: fork, ...(args.head ? { MOON_HEAD: args.head } : {}) });
 };
 
 const resolve = ({ args, event, branch, defaultBranch }) => {
@@ -68,10 +71,10 @@ const resolve = ({ args, event, branch, defaultBranch }) => {
   switch (event) {
     case 'pull_request':
     case 'pull_request_target':
-      return fromRevision(payload.pull_request?.base?.sha, `${event} base branch`, branch, defaultBranch);
+      return fromRevision(payload.pull_request?.base?.sha, `${event} base branch`, defaultBranch);
 
     case 'merge_group':
-      return fromRevision(payload.merge_group?.base_sha, 'merge queue base', branch, defaultBranch);
+      return fromRevision(payload.merge_group?.base_sha, 'merge queue base', defaultBranch);
 
     case 'schedule':
       return { base: FULL_RUN, reason: 'scheduled run' };
@@ -80,11 +83,11 @@ const resolve = ({ args, event, branch, defaultBranch }) => {
       if (branch === defaultBranch) {
         return { base: FULL_RUN, reason: `${event} on ${defaultBranch}` };
       }
-      return fromMergeBase(branch, defaultBranch, `${event} on ${branch ?? 'a detached HEAD'}`);
+      return fromMergeBase(defaultBranch, `${event} on ${branch ?? 'a detached HEAD'}`);
   }
 };
 
-const fromRevision = (revision, reason, branch, defaultBranch) => {
+const fromRevision = (revision, reason, defaultBranch) => {
   const resolved = resolveCommit(revision);
   if (resolved) {
     return { base: resolved, reason };
@@ -93,10 +96,10 @@ const fromRevision = (revision, reason, branch, defaultBranch) => {
     return { base: FULL_RUN, reason: `${reason} (${revision ?? 'absent'}) does not resolve` };
   }
   note(`${reason} (${revision ?? 'absent'}) does not resolve here — falling back to the merge-base.`);
-  return fromMergeBase(branch, defaultBranch, reason);
+  return fromMergeBase(defaultBranch, reason);
 };
 
-const fromMergeBase = (branch, defaultBranch, reason) => {
+const fromMergeBase = (defaultBranch, reason) => {
   // `origin/` first: a checkout's local `main` is whatever the clone left behind, and in a worktree it
   // is routinely stale.
   for (const ref of [`origin/${defaultBranch}`, defaultBranch]) {
