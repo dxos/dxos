@@ -282,6 +282,32 @@ describe('xmlTags decorations', () => {
       view.destroy();
     });
 
+    // The frame before the opening tag is even complete. A chunk boundary can land mid-tag, so the
+    // tail is `<reasoni` with no `>` yet; the scan matches on a complete opening tag, so that text
+    // was left undecorated and rendered as literal markup until the `>` arrived — the same flash as
+    // the declining-factory case above, one tick earlier.
+    test('a partially received opening tag is hidden', async ({ expect }) => {
+      const doc = 'intro\n\n<thin';
+      const view = createView(doc, { registry: withFactory({ think: { streaming: true } }) });
+      const decorations = await rebuild(view);
+      expect(decorations).toHaveLength(1);
+      const [decoration] = decorations;
+      expect(decoration.streaming).toBe(true);
+      expect(decoration.from).toBe(doc.indexOf('<thin'));
+      expect(decoration.to).toBe(doc.length);
+      view.destroy();
+    });
+
+    // A partial tag is only hidden while it can still become one of the registered tags: `<thinking`
+    // shares no prefix with `think` past `<thin`, but prose like `a < b` must never be swallowed.
+    test('a partial tag that cannot become a registered tag is left alone', async ({ expect }) => {
+      const doc = 'intro\n\n5 < 6 and 7 <';
+      const view = createView(doc, { registry: withFactory({ think: { streaming: true } }) });
+      const decorations = await rebuild(view);
+      expect(decorations).toHaveLength(0);
+      view.destroy();
+    });
+
     test('only the first unclosed streaming tag is decorated', async ({ expect }) => {
       const doc = '<think>one</think>\n\n<think>two unclosed';
       const view = createView(doc, { registry: withFactory({ think: { streaming: true } }) });
