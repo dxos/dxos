@@ -644,13 +644,12 @@ describe('Query', () => {
 
     test('threads ordered by most recent message (group order follows the preceding orderBy, not the key)', async () => {
       const { db } = await builder.createDatabase();
-      const makeMessage = (threadId: string, sentAt: number) => Obj.make(TestSchema.Expando, { threadId, sentAt });
 
-      db.add(makeMessage('thread-a', 1000));
-      db.add(makeMessage('thread-b', 3000));
-      db.add(makeMessage('thread-a', 2000));
-      db.add(makeMessage('thread-c', 1500));
-      db.add(makeMessage('thread-b', 4000));
+      db.add(Obj.make(TestSchema.Expando, { threadId: 'thread-a', sentAt: 1000 }));
+      db.add(Obj.make(TestSchema.Expando, { threadId: 'thread-b', sentAt: 3000 }));
+      db.add(Obj.make(TestSchema.Expando, { threadId: 'thread-a', sentAt: 2000 }));
+      db.add(Obj.make(TestSchema.Expando, { threadId: 'thread-c', sentAt: 1500 }));
+      db.add(Obj.make(TestSchema.Expando, { threadId: 'thread-b', sentAt: 4000 }));
       await db.flush();
 
       const groups = await db
@@ -671,13 +670,12 @@ describe('Query', () => {
 
     test('orders threads by a max aggregate, in both directions, independent of within-group order', async () => {
       const { db } = await builder.createDatabase();
-      const makeMessage = (threadId: string, sentAt: number) => Obj.make(TestSchema.Expando, { threadId, sentAt });
       // thread-a latest 2000, thread-b latest 4000, thread-c latest 1500.
-      db.add(makeMessage('thread-a', 1000));
-      db.add(makeMessage('thread-b', 3000));
-      db.add(makeMessage('thread-a', 2000));
-      db.add(makeMessage('thread-c', 1500));
-      db.add(makeMessage('thread-b', 4000));
+      db.add(Obj.make(TestSchema.Expando, { threadId: 'thread-a', sentAt: 1000 }));
+      db.add(Obj.make(TestSchema.Expando, { threadId: 'thread-b', sentAt: 3000 }));
+      db.add(Obj.make(TestSchema.Expando, { threadId: 'thread-a', sentAt: 2000 }));
+      db.add(Obj.make(TestSchema.Expando, { threadId: 'thread-c', sentAt: 1500 }));
+      db.add(Obj.make(TestSchema.Expando, { threadId: 'thread-b', sentAt: 4000 }));
       await db.flush();
 
       const grouped = Query.select(Filter.everything())
@@ -704,11 +702,10 @@ describe('Query', () => {
 
     test('a min aggregate exposes the earliest member and can order groups', async () => {
       const { db } = await builder.createDatabase();
-      const makeMessage = (threadId: string, sentAt: number) => Obj.make(TestSchema.Expando, { threadId, sentAt });
-      db.add(makeMessage('thread-a', 1000));
-      db.add(makeMessage('thread-a', 5000));
-      db.add(makeMessage('thread-b', 2000));
-      db.add(makeMessage('thread-b', 3000));
+      db.add(Obj.make(TestSchema.Expando, { threadId: 'thread-a', sentAt: 1000 }));
+      db.add(Obj.make(TestSchema.Expando, { threadId: 'thread-a', sentAt: 5000 }));
+      db.add(Obj.make(TestSchema.Expando, { threadId: 'thread-b', sentAt: 2000 }));
+      db.add(Obj.make(TestSchema.Expando, { threadId: 'thread-b', sentAt: 3000 }));
       await db.flush();
 
       const groups = await db
@@ -727,13 +724,12 @@ describe('Query', () => {
 
     test('aggregate ordering pages over whole groups (limit + skip)', async () => {
       const { db } = await builder.createDatabase();
-      const makeMessage = (threadId: string, sentAt: number) => Obj.make(TestSchema.Expando, { threadId, sentAt });
       // Four threads whose latest messages are a:100, b:400, c:300, d:200.
-      db.add(makeMessage('a', 50));
-      db.add(makeMessage('a', 100));
-      db.add(makeMessage('b', 400));
-      db.add(makeMessage('c', 300));
-      db.add(makeMessage('d', 200));
+      db.add(Obj.make(TestSchema.Expando, { threadId: 'a', sentAt: 50 }));
+      db.add(Obj.make(TestSchema.Expando, { threadId: 'a', sentAt: 100 }));
+      db.add(Obj.make(TestSchema.Expando, { threadId: 'b', sentAt: 400 }));
+      db.add(Obj.make(TestSchema.Expando, { threadId: 'c', sentAt: 300 }));
+      db.add(Obj.make(TestSchema.Expando, { threadId: 'd', sentAt: 200 }));
       await db.flush();
 
       const page = await db
@@ -4012,9 +4008,8 @@ describe('Query', () => {
       const { db: db1 } = await builder.createDatabase();
       const { db: db2 } = await builder.createDatabase();
 
-      const query = () => Query.select(Filter.type(TestSchema.Expando, { value: 100 }));
-      const result1 = db1.query(query());
-      const result2 = db2.query(query());
+      const result1 = db1.query(Query.select(Filter.type(TestSchema.Expando, { value: 100 })));
+      const result2 = db2.query(Query.select(Filter.type(TestSchema.Expando, { value: 100 })));
       expect(result2).not.toBe(result1);
       expect(result2.atom).not.toBe(result1.atom);
     });

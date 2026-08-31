@@ -20,22 +20,26 @@ import {
 } from './pos';
 
 describe('posAnalysisField', () => {
-  const make = (doc = 'hello world') => EditorState.create({ doc, extensions: [posAnalysisField] });
-
   test('setAnalysis adds a span', ({ expect }) => {
-    const state = make().update({ effects: setAnalysis.of({ from: 0, to: 5, document: docFor('hello') }) }).state;
+    const state = EditorState.create({ doc: 'hello world', extensions: [posAnalysisField] }).update({
+      effects: setAnalysis.of({ from: 0, to: 5, document: docFor('hello') }),
+    }).state;
     expect(posSpans(state)).toHaveLength(1);
     expect(posSpans(state)[0]).toMatchObject({ from: 0, to: 5, stale: false });
   });
 
   test('span offsets are mapped through an insertion before them', ({ expect }) => {
-    const withSpan = make().update({ effects: setAnalysis.of({ from: 6, to: 11, document: docFor('world') }) }).state;
+    const withSpan = EditorState.create({ doc: 'hello world', extensions: [posAnalysisField] }).update({
+      effects: setAnalysis.of({ from: 6, to: 11, document: docFor('world') }),
+    }).state;
     const afterEdit = withSpan.update({ changes: { from: 0, insert: 'XXX' } }).state;
     expect(posSpans(afterEdit)[0]).toMatchObject({ from: 9, to: 14 });
   });
 
   test('clearAnalysis removes all spans', ({ expect }) => {
-    const withSpan = make().update({ effects: setAnalysis.of({ from: 0, to: 5, document: docFor('hello') }) }).state;
+    const withSpan = EditorState.create({ doc: 'hello world', extensions: [posAnalysisField] }).update({
+      effects: setAnalysis.of({ from: 0, to: 5, document: docFor('hello') }),
+    }).state;
     const cleared = withSpan.update({ effects: clearAnalysis.of(null) }).state;
     expect(posSpans(cleared)).toHaveLength(0);
   });

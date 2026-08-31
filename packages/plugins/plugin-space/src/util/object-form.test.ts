@@ -15,9 +15,6 @@ class TestObject extends Type.makeObject<TestObject>(DXN.make('com.example.type.
 
 const spy = () => vi.fn<(result?: Ref.Ref<Obj.Unknown>) => void>();
 
-/** Deterministically flushes `object-form.ts`'s internal zero-delay `setTimeout`. */
-const tick = () => vi.advanceTimersByTimeAsync(0);
-
 describe('makeObjectFormHandle', () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -43,7 +40,8 @@ describe('makeObjectFormHandle', () => {
 
     handle.dismiss();
     expect(onSettled).not.toHaveBeenCalled();
-    await tick();
+    // Deterministically flushes `object-form.ts`'s internal zero-delay `setTimeout`.
+    await vi.advanceTimersByTimeAsync(0);
     expect(onSettled).toHaveBeenCalledWith(undefined);
   });
 
@@ -55,11 +53,11 @@ describe('makeObjectFormHandle', () => {
 
     handle.dismiss();
     handle.retain();
-    await tick();
+    await vi.advanceTimersByTimeAsync(0);
     expect(onSettled).not.toHaveBeenCalled();
 
     handle.dismiss();
-    await tick();
+    await vi.advanceTimersByTimeAsync(0);
     expect(onSettled).toHaveBeenCalledTimes(1);
   });
 
@@ -70,7 +68,7 @@ describe('makeObjectFormHandle', () => {
 
     handle.confirm();
     handle.dismiss();
-    await tick();
+    await vi.advanceTimersByTimeAsync(0);
     expect(onSettled).not.toHaveBeenCalled();
 
     const object = Obj.make(TestObject, {});
@@ -84,7 +82,7 @@ describe('makeObjectFormHandle', () => {
 
     handle.settle(Obj.make(TestObject, {}));
     handle.dismiss();
-    await tick();
+    await vi.advanceTimersByTimeAsync(0);
     expect(onSettled).toHaveBeenCalledTimes(1);
     expect(onSettled.mock.calls[0][0]).toBeDefined();
   });

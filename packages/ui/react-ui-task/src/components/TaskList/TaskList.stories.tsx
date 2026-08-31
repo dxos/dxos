@@ -294,9 +294,25 @@ export const TestEdit: Story = {
   // The pane is the detail half: it creates when nothing is selected and edits the selection
   // otherwise, which is the whole reason editing moved out of the row.
   play: async ({ canvasElement }) => {
-    const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
-    const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]')!;
+    const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]');
+    if (!pane) {
+      throw new Error('Task edit pane not found.');
+    }
+    const title = () => {
+      const input = pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]');
+      if (!input) {
+        throw new Error('Task edit title input not found.');
+      }
+      return input;
+    };
     const description = () => pane.querySelector<HTMLElement>('[data-testid="taskList.edit.description"]');
+    const requireDescription = () => {
+      const element = description();
+      if (!element) {
+        throw new Error('Task description editor not found.');
+      }
+      return element;
+    };
     const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]'));
 
     // Nothing selected: the pane creates. Its description belongs to the task being created, so it
@@ -329,7 +345,11 @@ export const TestEdit: Story = {
 
     // Selecting a task fills the pane with it.
     const first = rows()[0];
-    const firstTitle = first.querySelector('.truncate')!.textContent;
+    const firstTitleElement = first.querySelector('.truncate');
+    if (!firstTitleElement) {
+      throw new Error('Task title element not found.');
+    }
+    const firstTitle = firstTitleElement.textContent;
     first.click();
     await waitFor(async () => expect(title().value).toEqual(firstTitle));
     await waitFor(async () => expect(description()).not.toBeNull());
@@ -346,29 +366,45 @@ export const TestEdit: Story = {
 
     // The description is a markdown editor, held open — the pane IS the editor, so there is nothing
     // to click into.
-    await waitFor(async () => expect(description()!.querySelector('.cm-content')).not.toBeNull());
+    await waitFor(async () => expect(requireDescription().querySelector('.cm-content')).not.toBeNull());
 
     // ...and its text starts where the title's does. CodeMirror insets its own content, which would
     // otherwise sit the description further in than the field above it.
     const left = (element: Element) => Math.round(element.getBoundingClientRect().left);
-    await expect(left(description()!.querySelector('.cm-line')!)).toEqual(left(title()));
+    const descriptionLine = requireDescription().querySelector('.cm-line');
+    if (!descriptionLine) {
+      throw new Error('Description editor line not found.');
+    }
+    await expect(left(descriptionLine)).toEqual(left(title()));
 
     // Tab moves from the title into the description's TEXT. The editor otherwise puts its tab stop
     // on a wrapper that needs a further Enter to get into, so the caret was two keys away.
     title().focus();
     await userEvent.tab();
-    await waitFor(async () => expect(document.activeElement).toEqual(description()!.querySelector('.cm-content')));
+    await waitFor(async () =>
+      expect(document.activeElement).toEqual(requireDescription().querySelector('.cm-content')),
+    );
 
     // ...and Tab leaves again rather than indenting, so the field is not a trap.
     await userEvent.tab();
-    await waitFor(async () => expect(description()!.contains(document.activeElement)).toBeFalsy());
+    await waitFor(async () => expect(requireDescription().contains(document.activeElement)).toBeFalsy());
 
     // Save writes the pending description and leaves, dropping the pane back to creating.
-    const content = () => description()!.querySelector<HTMLElement>('.cm-content')!;
+    const content = () => {
+      const cmContent = requireDescription().querySelector<HTMLElement>('.cm-content');
+      if (!cmContent) {
+        throw new Error('Description editor content not found.');
+      }
+      return cmContent;
+    };
     const text = () => content().textContent ?? '';
     await userEvent.click(content());
     await userEvent.keyboard(' KEEP');
-    await userEvent.click(pane.querySelector<HTMLElement>('[data-testid="taskList.edit.save"]')!);
+    const saveButton = pane.querySelector<HTMLElement>('[data-testid="taskList.edit.save"]');
+    if (!saveButton) {
+      throw new Error('Task edit save button not found.');
+    }
+    await userEvent.click(saveButton);
     await waitFor(async () => expect(title().value).toEqual(''));
     await expect(canvasElement.querySelectorAll('[aria-selected="true"]')).toHaveLength(0);
     // The pane is creating again, so the field it kept is the new task's and holds none of the
@@ -382,7 +418,11 @@ export const TestEdit: Story = {
     await waitFor(async () => expect(description()).not.toBeNull());
     await userEvent.click(content());
     await userEvent.keyboard(' THROW');
-    await userEvent.click(pane.querySelector<HTMLElement>('[data-testid="taskList.edit.cancel"]')!);
+    const cancelButton = pane.querySelector<HTMLElement>('[data-testid="taskList.edit.cancel"]');
+    if (!cancelButton) {
+      throw new Error('Task edit cancel button not found.');
+    }
+    await userEvent.click(cancelButton);
     await waitFor(async () => expect(title().value).toEqual(''));
     await expect(canvasElement.querySelectorAll('[aria-selected="true"]')).toHaveLength(0);
 
@@ -639,8 +679,15 @@ export const TestHierarchy: Story = {
 
     // The pane carries its own columns rather than the list's: it is a card below the list, so it
     // has no ordinal gutter and does not step in with the tree. Only its own two cells line up.
-    const create = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
-    const paneInput = create.querySelector('input')!.getBoundingClientRect();
+    const create = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]');
+    if (!create) {
+      throw new Error('Task edit pane not found.');
+    }
+    const paneInputElement = create.querySelector('input');
+    if (!paneInputElement) {
+      throw new Error('Task edit pane input not found.');
+    }
+    const paneInput = paneInputElement.getBoundingClientRect();
     await expect(Math.round(paneInput.left)).toBeGreaterThan(Math.round(create.getBoundingClientRect().left));
 
     // Every row carries a handle in the ordinal's own gutter — the ordinal and the handle share one

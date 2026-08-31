@@ -1207,9 +1207,8 @@ const makeNotes = (
 ): NotesBundle => {
   // Helpers — produce markdown link / block-embed syntax that the editor understands.
   // Use space-relative URIs so links remain valid when the snapshot is imported into a new space.
-  const localDxn = (obj: Obj.Unknown) => EID.make({ entityId: obj.id });
-  const lnk = (label: string, obj: Obj.Unknown) => `[${label}](${localDxn(obj)})`;
-  const emb = (label: string, obj: Obj.Unknown) => `![${label}](${localDxn(obj)})`;
+  const lnk = (label: string, obj: Obj.Unknown) => `[${label}](${EID.make({ entityId: obj.id })})`;
+  const emb = (label: string, obj: Obj.Unknown) => `![${label}](${EID.make({ entityId: obj.id })})`;
 
   const cuppingNotes = Markdown.make({
     name: 'Cupping notes — Finca Esperanza Lot #42',
@@ -1317,10 +1316,9 @@ const makeRoastLogs = (type: Type.AnyObj, people: Record<PersonKey, Person.Perso
   // Stamp objects with the persisted type entity so their `@type` is the space-relative EID,
   // matching how Composer creates objects of database types and the EID the type's views query by.
   // Building from the static schema would stamp the typename DXN instead and miss those filters.
-  const make = (props: Obj.MakeProps<typeof RoastLog>): Obj.Any => Obj.make(type, props);
   return [
     // --- approved: past batches that cleared QC ---
-    make({
+    Obj.make(type, {
       title: 'Finca Esperanza Lot #42 — Batch 1',
       date: daysAgo(28),
       origin: 'Colombia / Finca Esperanza / Lot #42',
@@ -1337,7 +1335,7 @@ const makeRoastLogs = (type: Type.AnyObj, people: Record<PersonKey, Person.Perso
       notes:
         'Clean reference curve for the Spring Blend. Berry up front, long chocolate finish. Approved for production.',
     }),
-    make({
+    Obj.make(type, {
       title: 'Finca Esperanza Lot #42 — Batch 2',
       date: daysAgo(21),
       origin: 'Colombia / Finca Esperanza / Lot #42',
@@ -1354,7 +1352,7 @@ const makeRoastLogs = (type: Type.AnyObj, people: Record<PersonKey, Person.Perso
       notes:
         'Confirmed the curve. Added 5 s to development — slightly more body, stone fruit more pronounced. Approved.',
     }),
-    make({
+    Obj.make(type, {
       title: 'Sidamo Coop Natural — Lot 12A',
       date: daysAgo(14),
       origin: 'Ethiopia / Sidamo Cooperative / Natural Lot 12A',
@@ -1372,7 +1370,7 @@ const makeRoastLogs = (type: Type.AnyObj, people: Record<PersonKey, Person.Perso
         'Blueberry and lemon zest on the nose. Very clean natural process — excellent for the single-origin filter menu.',
     }),
     // --- cupped: awaiting final approval ---
-    make({
+    Obj.make(type, {
       title: 'Spring Blend — Production Run 1',
       date: daysAgo(5),
       origin: 'Colombia / Finca Esperanza + Ethiopia / Sidamo (70/30)',
@@ -1390,7 +1388,7 @@ const makeRoastLogs = (type: Type.AnyObj, people: Record<PersonKey, Person.Perso
         'First full blend run. Cupped this morning — jasmine and dark cacao hitting the brief. Slight unevenness in the drum; next run increase charge rate 2 %.',
     }),
     // --- roasted: cooling / resting, not yet cupped ---
-    make({
+    Obj.make(type, {
       title: 'Finca Esperanza Lot #42 — Dev Batch',
       date: daysAgo(2),
       origin: 'Colombia / Finca Esperanza / Lot #42',
@@ -1405,7 +1403,7 @@ const makeRoastLogs = (type: Type.AnyObj, people: Record<PersonKey, Person.Perso
       status: 'roasted',
       notes: 'Longer development trial for espresso use. Resting — cup on day 4.',
     }),
-    make({
+    Obj.make(type, {
       title: 'Honduras El Puente — Sample Lot',
       date: daysAgo(1),
       origin: 'Honduras / Cooperativa El Puente / Sample',
@@ -1421,7 +1419,7 @@ const makeRoastLogs = (type: Type.AnyObj, people: Record<PersonKey, Person.Perso
       notes: 'New origin evaluation. Resting overnight before cupping.',
     }),
     // --- planned: upcoming ---
-    make({
+    Obj.make(type, {
       title: 'Spring Blend — Production Run 2',
       date: daysFromNow(3),
       origin: 'Colombia / Finca Esperanza + Ethiopia / Sidamo (70/30)',
@@ -1431,7 +1429,7 @@ const makeRoastLogs = (type: Type.AnyObj, people: Record<PersonKey, Person.Perso
       status: 'planned',
       notes: 'Increase charge rate 2 % vs Run 1 to address drum unevenness. Schedule cupping on day 5.',
     }),
-    make({
+    Obj.make(type, {
       title: 'Colombia Huila — Pre-production',
       date: daysFromNow(7),
       origin: 'Colombia / Huila Region / New lot (TBC)',

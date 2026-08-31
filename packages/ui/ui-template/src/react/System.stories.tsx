@@ -348,7 +348,7 @@ const FilterModule: ModuleDef<Db> = {
   capabilities: {},
 };
 
-const registry: Registry<Db, Schema.Codec<any, any>> = {
+const registry: Registry<Db, Schema.Codec<unknown, unknown>> = {
   schemas: {
     [TASK]: TaskForm,
     [TEXT]: Schema.String,
