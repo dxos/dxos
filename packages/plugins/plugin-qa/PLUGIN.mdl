@@ -106,6 +106,15 @@ type TestPlan
 ```
 
 ```mdl
+type Actor
+  desc: >
+    Not defined here — `Actor` from @dxos/types (name / email / identityDid / contact / role),
+    the same type a Message sender uses. A run's runner is a person or an agent like any other
+    actor in the system, so it takes that type rather than a QA-local convention string.
+  extends: [org.dxos.types.Actor]
+```
+
+```mdl
 type TestTarget
   desc: >
     What a run was executed against. The field people filter on six months later, so it is
@@ -162,7 +171,7 @@ type TestRun
     status: TestStatus         # `running` until finished; then the rollup below
     cases: string[]            # case keys the run set out to cover, captured at startRun
     target?: TestTarget
-    runner?: string            # "human:alice" | "agent:claude" | CI job id
+    runner?: Actor             # who ran it — `Actor` from @dxos/types, not a QA-local string
     stages?: string[]          # which of before/test/after actually ran (QA dialect Rule 8)
     startedAt: string          # ISO-8601
     finishedAt?: string
@@ -295,7 +304,7 @@ op startRun
     planId: string
     cases?: string[]           # case keys to cover; defaults to the plan's full case list
     target?: TestTarget
-    runner?: string
+    runner?: Actor
     stages?: string[]
   output: { runId: string, cases: string[] }
   errors:
@@ -419,7 +428,7 @@ component TestPlanArticle
     │ QA-2  Link two documents              ✗    │
     ├────────────────────────────────────────────┤
     │ Runs                                       │
-    │ ● 2026-08-31  main@a1b2c3   7/8   agent    │
+    │ ● 2026-08-31  main@a1b2c3   7/8   qa-flow  │
     │ ● 2026-08-30  main@9f0e1d   8/8   agent    │
     └────────────────────────────────────────────┘
 ```
@@ -516,7 +525,7 @@ flow QA-1: Record a run against a plan
   test:
     - name: Start a run
       do: Click "Run" on the plan.
-      invoke: [op:startRun] { planId: $plan.plan.id, runner: "agent:qa-flow" }
+      invoke: [op:startRun] { planId: $plan.plan.id, runner: { name: "qa-flow", role: "assistant" } }
       capture: run
       expect: a run row appears in the feed with status `running`
       assert: return typeof $run.runId === 'string'
