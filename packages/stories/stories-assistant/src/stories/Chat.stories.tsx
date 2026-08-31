@@ -780,12 +780,15 @@ export const TestProjectTaskDelegationScripted: Story = {
 
     // The observable product: a document exists, and the task the session started is no longer todo.
     await waitForChecklist((items) => items.some(({ title }) => title === POEM_TASK_TITLE), { timeout: 90_000 });
-    const documents = await storySpace!.db.query(Filter.type(Markdown.Document)).run();
+    if (!storySpace) {
+      throw new Error('Story space not captured.');
+    }
+    const documents = await storySpace.db.query(Filter.type(Markdown.Document)).run();
     await expect(documents.map((document) => document.name)).toContain(POEM_DOC_NAME);
 
     // Finished, not closed: the task named a reviewer, so the session marking it done lands on
     // `review`. The model asked for `done` and cannot know about reviewers — the rule is the task's.
-    const tasks = await storySpace!.db.query(Filter.type(Task.Task)).run();
+    const tasks = await storySpace.db.query(Filter.type(Task.Task)).run();
     const worked = tasks.find(({ title }) => title === POEM_TASK_TITLE);
     await expect(worked?.status).toEqual('review');
   },

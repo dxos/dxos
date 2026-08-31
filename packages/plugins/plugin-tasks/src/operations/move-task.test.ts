@@ -12,8 +12,6 @@ import { Milestone, Task, TaskSet } from '@dxos/types';
 import createTask from './create-task';
 import moveTask from './move-task';
 
-const testLayer = () => TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] });
-
 describe('move-task', () => {
   it.effect('reorders within the set, since array order is the task order', () =>
     Effect.gen(function* () {
@@ -31,7 +29,7 @@ describe('move-task', () => {
 
       yield* moveTask.handler({ task: Ref.make(third) });
       expect(titles(TaskSet.resolveTasks(taskSet))).toEqual(['a', 'b', 'c']);
-    }).pipe(Effect.provide(testLayer())),
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 
   it.effect('re-parents and repositions in one call, so a drop is a single mutation', () =>
@@ -53,7 +51,7 @@ describe('move-task', () => {
       const promoted = TaskSet.resolveTasks(taskSet);
       expect(titles(promoted)).toEqual(['a', 'b', 'c']);
       expect(titles(Task.rootTasks(promoted))).toEqual(['a', 'b', 'c']);
-    }).pipe(Effect.provide(testLayer())),
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 
   it.effect('a moved task keeps its sub-tasks: the subtree travels with it', () =>
@@ -78,7 +76,7 @@ describe('move-task', () => {
       const [movedChild] = Task.subTasks(tasks, movedParent);
       expect(movedChild.title).toEqual('b');
       expect(titles(Task.subTasks(tasks, movedChild))).toEqual(['c']);
-    }).pipe(Effect.provide(testLayer())),
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 
   it.effect('the optimistic reorder transform predicts the handler resulting order', () =>
@@ -97,7 +95,7 @@ describe('move-task', () => {
       const unanchored = TaskSet.reorderItems(TaskSet.resolveTasks(taskSet), (row) => row.id, fourth.id, undefined);
       yield* moveTask.handler({ task: Ref.make(fourth) });
       expect(titles(TaskSet.resolveTasks(taskSet))).toEqual(titles(unanchored));
-    }).pipe(Effect.provide(testLayer())),
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 
   it.effect('rejects a parent inside its own subtree, leaving the order untouched', () =>
@@ -114,7 +112,7 @@ describe('move-task', () => {
       expect(result._tag).toEqual('Failure');
       // The reorder must not have run either: the whole gesture is rejected, not half-applied.
       expect(titles(TaskSet.resolveTasks(taskSet))).toEqual(before);
-    }).pipe(Effect.provide(testLayer())),
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 });
 

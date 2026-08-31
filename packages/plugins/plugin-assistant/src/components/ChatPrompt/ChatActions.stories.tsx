@@ -3,11 +3,14 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useState } from 'react';
 import { expect, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { corePlugins } from '@dxos/plugin-testing';
+import { type ActionGraphProps } from '@dxos/react-ui-menu';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -15,7 +18,7 @@ import { translations } from '#translations';
 import { type ChatEvent } from '../Chat';
 import { ChatActions, type ChatActionsProps } from './ChatActions';
 
-type StoryArgs = Pick<ChatActionsProps, 'processing' | 'canSend' | 'tasksVisible' | 'debug'>;
+type StoryArgs = Pick<ChatActionsProps, 'processing' | 'canSend' | 'tasksVisible' | 'debug' | 'customActions'>;
 
 const DefaultStory = ({ tasksVisible: initialTasksVisible, ...args }: StoryArgs) => {
   // Held here rather than fixed by args so the toggle can be clicked and seen to change.
@@ -31,11 +34,11 @@ const DefaultStory = ({ tasksVisible: initialTasksVisible, ...args }: StoryArgs)
 
 const meta = {
   title: 'plugins/plugin-assistant/components/ChatActions',
-  component: ChatActions as any,
+  component: ChatActions,
   render: DefaultStory,
   decorators: [withTheme(), withPluginManager({ plugins: corePlugins() })],
   parameters: { layout: 'centered', translations },
-} satisfies Meta<typeof DefaultStory>;
+} satisfies Meta<typeof ChatActions>;
 
 export default meta;
 
@@ -94,5 +97,34 @@ export const TaskToggleFlips: Story = {
     await expect(toggle).toHaveAttribute('aria-pressed', 'true');
     await userEvent.click(toggle);
     await expect(canvas.getByTestId('assistant.toggle-tasks')).toHaveAttribute('aria-pressed', 'false');
+  },
+};
+
+/** A contributed action with no `custom` render, the way plugin-review files "Add comment". */
+const plainContributedActions = Atom.make<ActionGraphProps>({
+  nodes: [
+    {
+      id: 'story-action',
+      type: AppGraphNode.ActionType,
+      data: () => {},
+      properties: { label: 'Story action', icon: 'ph--chat-text--regular', testId: 'story.contributed-action' },
+    },
+  ],
+  edges: [{ source: 'root', target: 'story-action', relation: 'child' }],
+}).pipe(Atom.keepAlive);
+
+/**
+ * Plain contributed items render `Toolbar.*` primitives, which need the roving-focus context from
+ * the row's `Menu.Toolbar` — without it this story crashes the way the assistant companion did on
+ * commentable objects.
+ */
+export const ContributedPlainAction: Story = {
+  args: { canSend: true, tasksVisible: true },
+  render: (args) => <DefaultStory {...args} customActions={plainContributedActions} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const action = await canvas.findByTestId('story.contributed-action', {}, { timeout: 10_000 });
+    await expect(action).toBeEnabled();
+    await expect(canvas.getByTestId('assistant.send')).toBeInTheDocument();
   },
 };

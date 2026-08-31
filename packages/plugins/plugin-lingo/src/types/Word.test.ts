@@ -6,8 +6,7 @@ import { describe, test } from 'vitest';
 
 import { Word } from '#types';
 
-const at = (iso: string) => new Date(iso);
-const NOW = at('2026-01-01T00:00:00.000Z');
+const NOW = new Date('2026-01-01T00:00:00.000Z');
 
 // The drill's whole schedule lives in `applyReview` + `isDue`, and both are pure — so the Leitner
 // behaviour is worth pinning down here rather than through the article that renders it.
@@ -34,7 +33,7 @@ describe('Word scheduling', () => {
     // `applyReview` still stamps a `dueAt` — the last interval is what a card in the final box would
     // wait — so reaching BOX_COUNT is what has to take the word out of the drill, not the date.
     const word = { progress };
-    expect(Word.isDue(word, at('2100-01-01T00:00:00.000Z'))).toBe(false);
+    expect(Word.isDue(word, new Date('2100-01-01T00:00:00.000Z'))).toBe(false);
   });
 
   test('a never-drilled word is always due', ({ expect }) => {
@@ -44,6 +43,6 @@ describe('Word scheduling', () => {
   test('a word below the last box comes due once its interval has passed', ({ expect }) => {
     const progress = Word.applyReview(undefined, true, NOW);
     expect(Word.isDue({ progress }, NOW)).toBe(false);
-    expect(Word.isDue({ progress }, at('2026-01-03T00:00:00.000Z'))).toBe(true);
+    expect(Word.isDue({ progress }, new Date('2026-01-03T00:00:00.000Z'))).toBe(true);
   });
 });
