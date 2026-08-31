@@ -128,7 +128,7 @@ const makeLanguageModelFixtureMiddleware = (
   ctx: TestContext,
   options: Pick<AgentTestOptions, 'inferenceProvider' | 'disableLlmMemoization'>,
 ): Promise<(_upstream: AiService.Service) => AiService.Service> =>
-  AiService.AiService.pipe(
+  AiService.tag.pipe(
     Effect.provide(
       // `dynamicValuePatterns` defaults to LanguageModelFixture.DEFAULT_DYNAMIC_VALUE_PATTERNS
       // (space keys, entity IDs, UUIDs, timestamps) — the ids that differ across runs are
@@ -230,7 +230,7 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
     options.model ??
     (options.inferenceProvider === 'ollama'
       ? DXN.make('com.openai.model.gpt-oss-20b.default')
-      : DXN.make('com.anthropic.model.claude-opus-4-8.default'));
+      : DXN.make('com.anthropic.model.claude-opus-5.default'));
 
   const OutputSchema = Schema.Struct({
     completedCriteria: Schema.Struct({

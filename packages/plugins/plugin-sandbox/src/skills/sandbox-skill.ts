@@ -6,9 +6,7 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
 
-import { Sandbox } from '#types';
-
-import { CreateSandbox, DownloadFile, Exec, UploadFile } from './functions';
+import { Sandbox, SandboxOperation } from '#types';
 
 const make = () =>
   Skill.make({
@@ -16,7 +14,12 @@ const make = () =>
     name: 'Sandbox',
     agentCanEnable: true,
     tools: Skill.toolDefinitions({
-      operations: [CreateSandbox, Exec, UploadFile, DownloadFile],
+      operations: [
+        SandboxOperation.CreateSandbox,
+        SandboxOperation.Exec,
+        SandboxOperation.UploadFile,
+        SandboxOperation.DownloadFile,
+      ],
     }),
     instructions: Template.make({
       source: trim`

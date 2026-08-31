@@ -3,7 +3,9 @@
 //
 
 import { type Extension } from '@codemirror/state';
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Schema from 'effect/Schema';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { memo, useCallback, useMemo, useState } from 'react';
 
 import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
@@ -13,7 +15,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Chat } from '@dxos/assistant-toolkit';
 import * as Project from '@dxos/compute/Project';
 import { Obj, Ref, Type } from '@dxos/echo';
-import { useObject, useObjects } from '@dxos/echo-react';
+import { useObject, useResolveRef } from '@dxos/echo-react';
 import { SchemaAST } from '@dxos/effect';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
@@ -59,18 +61,17 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   const [project, updateProject] = useObject(subject);
   const db = Obj.getDatabase(subject);
   // Resolve reactively: on a cold load (deep link) the owned ref's target is not yet in memory,
-  // and a sync `.target` read would leave the section permanently missing.
-  // The sub-editor mutates the instructions in place, so unwrap the snapshot back to the live entity.
-  const [instructionsSnapshot] = useObject(project.instructions);
-  const instructions = Obj.getReactiveOrUndefined(instructionsSnapshot);
+  // and a sync `.target` read would leave the section permanently missing. `useResolveRef` tracks
+  // loading without tracking mutations — the sub-editors and section surfaces subscribe themselves,
+  // so an edit inside instructions/outline/tasks re-renders those, not this article.
+  const instructions = useResolveRef(project.instructions);
   // The Tasks section embeds plugin-tasks' section surface for the linked TaskSet (never its
   // components — the boundary is surfaces/operations only).
-  const [taskSetSnapshot] = useObject(project.taskSet);
-  const taskSet = Obj.getReactiveOrUndefined(taskSetSnapshot);
-  // The project's scratch outline (created lazily by its chats). Resolved reactively, as above.
-  const [outlineSnapshot] = useObject(project.outline);
-  const outline = Obj.getReactiveOrUndefined(outlineSnapshot);
-  const milestoneRefs = taskSetSnapshot?.milestones ?? [];
+  const taskSet = useResolveRef(project.taskSet);
+  // The project's scratch outline (created lazily by its chats).
+  const outline = useResolveRef(project.outline);
+  // Membership only: fires when a milestone is added or removed, not on milestone edits.
+  const [milestoneRefs = []] = useObject(taskSet, 'milestones');
 
   // Read once per project identity; the uncontrolled form owns edits after mount.
   const defaultValues = useMemo<Partial<HeaderValues>>(
@@ -172,9 +173,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
               <Menu.Items />
             </Menu.Toolbar>
           </Panel.Toolbar>
-          {/* A column: the tasks tab's list scrolls while its create row stays on screen, which a
-              plain block would push past the panel's bottom edge. */}
-          <Panel.Content classNames='flex flex-col min-h-0'>
+          <Panel.Content classNames='flex flex-col'>
             {/* Rendered by hand rather than through `Tabs.Panel`: Radix mounts its content
                 hidden for a frame, and the artifact gallery's masonry measures zero there and
                 never recovers. The tablist still owns the switching. */}
@@ -307,7 +306,7 @@ const useToolbarActions = (project: Project.Project, onAddArtifact: () => void) 
           'create-chat',
           {
             label: ['create-chat.label', { ns: meta.profile.key }],
-            icon: 'ph--chat-text--regular',
+            icon: 'ph--sparkle--regular',
             disposition: 'toolbar',
             testId: 'projectsPlugin.createChat',
           },
@@ -342,17 +341,18 @@ type ObjectGalleryProps = {
  */
 const ObjectGallery = ({ refs, onOpen, onDelete }: ObjectGalleryProps) => {
   // Resolve reactively: on a cold load the targets are not yet in memory, and reading `.target`
-  // synchronously would leave the gallery permanently empty. The card needs the live entity, so
-  // unwrap each loaded snapshot rather than re-reading `.target` — the refs come off a snapshot of
-  // the project, which carries no resolver, so `.target` is undefined there even once loaded.
-  const loaded = useObjects(refs);
+  // synchronously would leave the gallery permanently empty (the refs come off a snapshot of the
+  // project, which carries no resolver, so `.target` is undefined there even once loaded).
+  // `ref.atom` yields the live entity and tracks loading without tracking mutations — a rename
+  // re-renders just its card, since `ObjectCard` subscribes itself.
+  const objectsAtom = useMemo(
+    () => Atom.make((get) => refs.map((ref) => get(ref.atom)).filter((object): object is Obj.Unknown => !!object)),
+    [refs],
+  );
+  const objects = useAtomValue(objectsAtom);
   const items = useMemo<ObjectTileData[]>(
-    () =>
-      loaded
-        .map((snapshot) => Obj.getReactiveOrUndefined(snapshot))
-        .filter((object): object is Obj.Unknown => !!object)
-        .map((object) => ({ object, onClick: () => onOpen(object), onDelete: () => onDelete(object) })),
-    [loaded, onOpen, onDelete],
+    () => objects.map((object) => ({ object, onClick: () => onOpen(object), onDelete: () => onDelete(object) })),
+    [objects, onOpen, onDelete],
   );
 
   if (items.length === 0) {

@@ -74,7 +74,8 @@ export const MasterDetail = <T extends MasterDetailRecord>({
   detail,
 }: MasterDetailProps<T>) => {
   const list = (items.length === 0 && <Empty label={emptyLabel} />) || (
-    <OrderedList.Root<T> items={items}>
+    // The list carries a selection, so a reader arrows between entries rather than their menus.
+    <OrderedList.Root<T> items={items} navigationMode='listbox'>
       {({ items }) => (
         <OrderedList.Content>
           {items.map((item) => (

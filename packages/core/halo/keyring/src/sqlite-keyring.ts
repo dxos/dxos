@@ -88,7 +88,7 @@ export class SqliteKeyring implements KeyringApi {
       }),
     );
     return rows.map((row) => {
-      const record = decodeCompat(KeyRecordSchema, row.record);
+      const record = decodeCompat<KeyRecord>(KeyRecordSchema, row.record);
       // Never expose private key material to callers.
       return { publicKey: record.publicKey };
     });
@@ -112,7 +112,7 @@ export class SqliteKeyring implements KeyringApi {
       throw new Error(`Key not found: ${keyHex}`);
     }
 
-    const record = decodeCompat(KeyRecordSchema, rows[0].record);
+    const record = decodeCompat<KeyRecord>(KeyRecordSchema, rows[0].record);
     const publicKey = PublicKey.from(record.publicKey);
     invariant(key.equals(publicKey), 'Corrupted keyring: key mismatch');
     invariant(record.privateKey, 'Corrupted keyring: missing private key');

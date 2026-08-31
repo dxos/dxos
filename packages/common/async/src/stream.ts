@@ -9,6 +9,9 @@ import { type MaybePromise, throwUnhandledError } from '@dxos/util';
 
 import { Trigger } from './trigger';
 
+/** Narrows a caught `unknown` to `Error` — a thrown value is not guaranteed to be one. */
+const toCaughtError = (err: unknown): Error => (err instanceof Error ? err : new Error(String(err)));
+
 type Callbacks<T> = {
   ctx: Context;
 
@@ -230,9 +233,9 @@ export class Stream<T> {
           if (this._messageHandler) {
             try {
               this._messageHandler(msg);
-            } catch (err: any) {
+            } catch (err: unknown) {
               // Stop error propagation.
-              throwUnhandledError(err);
+              throwUnhandledError(toCaughtError(err));
             }
           } else {
             invariant(this._buffer);
@@ -250,9 +253,9 @@ export class Stream<T> {
           this._producerCleanup?.(err);
           try {
             this._closeHandler?.(err);
-          } catch (err: any) {
+          } catch (err: unknown) {
             // Stop error propagation.
-            throwUnhandledError(err);
+            throwUnhandledError(toCaughtError(err));
           }
           void this._ctx.dispose();
         },
@@ -261,8 +264,8 @@ export class Stream<T> {
       if (producerCleanup) {
         this._producerCleanup = producerCleanup;
       }
-    } catch (err: any) {
-      this._ctx.raise(err);
+    } catch (err: unknown) {
+      this._ctx.raise(toCaughtError(err));
     }
   }
 
@@ -283,9 +286,9 @@ export class Stream<T> {
     for (const message of this._buffer) {
       try {
         onMessage(message);
-      } catch (err: any) {
+      } catch (err: unknown) {
         // Stop error propagation.
-        throwUnhandledError(err);
+        throwUnhandledError(toCaughtError(err));
       }
     }
 

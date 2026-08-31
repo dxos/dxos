@@ -38,6 +38,7 @@ import {
   composable,
   composableProps,
   useId,
+  useThemeContext,
 } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
@@ -139,12 +140,27 @@ type ComboboxContentProps = PopoverContentProps & {
 };
 
 const ComboboxContent = composable<HTMLDivElement, ComboboxContentProps>(
-  ({ children, resetSelectionOnChange, ...props }, forwardedRef) => {
+  ({ children, classNames, resetSelectionOnChange, collisionPadding = 0, ...props }, forwardedRef) => {
     const { modalId } = useComboboxContext(COMBOBOX_CONTENT_NAME);
 
     return (
-      <Popover.Content {...composableProps(props, { id: modalId })} ref={forwardedRef}>
-        <Popover.Viewport classNames='w-(--radix-popover-trigger-width)'>
+      <Popover.Content
+        {...props}
+        // Zero, not the Popover default of 8: the content is exactly trigger-width, so a trigger
+        // flush with a viewport edge would otherwise be shifted sideways out of alignment.
+        collisionPadding={collisionPadding}
+        id={modalId}
+        // `classNames`, never `composableProps`: `Popover.Content` computes its own `className`
+        // and silently drops an incoming one. Width sits on the CONTENT so the border stays
+        // inside the trigger's footprint; the chrome matches `Select.Content` (1px separator
+        // border, overlay surface) since the two controls sit side by side in forms.
+        classNames={[
+          'w-(--radix-popover-trigger-width) box-border border border-separator bg-(--dx-surface-overlay)',
+          classNames,
+        ]}
+        ref={forwardedRef}
+      >
+        <Popover.Viewport classNames='w-full min-w-0'>
           <Picker.Root resetSelectionOnChange={resetSelectionOnChange}>{children}</Picker.Root>
         </Popover.Viewport>
       </Popover.Content>
@@ -161,8 +177,12 @@ ComboboxContent.displayName = COMBOBOX_CONTENT_NAME;
 type ComboboxTriggerProps = ButtonProps;
 
 const ComboboxTrigger = composable<HTMLButtonElement, ComboboxTriggerProps>(
-  ({ children, onClick, ...props }, forwardedRef) => {
+  ({ children, classNames, onClick, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
     const { modalId, open, onOpenChange, placeholder, value, displayValue } = useComboboxContext(COMBOBOX_TRIGGER_NAME);
+    // Nullish, matching the `??` that picks the children below: `false`/`0`/`''` suppress the
+    // fallback caret without being a caret of their own, so the column has to collapse for them too.
+    const custom = children !== null && children !== undefined;
     const handleClick = useCallback(
       (event: Parameters<Exclude<ButtonProps['onClick'], undefined>>[0]) => {
         onClick?.(event);
@@ -175,6 +195,11 @@ const ComboboxTrigger = composable<HTMLButtonElement, ComboboxTriggerProps>(
       <Popover.Trigger asChild>
         <Button
           {...props}
+          // The `Select` trigger slot, so the two controls are indistinguishable in a form
+          // (input surface, 1fr/auto grid, control sizing). That second column belongs to the caret
+          // below, so a caller supplying its own children collapses it — otherwise the column sits
+          // empty and its gap paints a strip of trigger surface beside the content.
+          classNames={tx('select.triggerButton', {}, [custom && 'grid-cols-[1fr] gap-0', classNames])}
           role='combobox'
           aria-expanded={open}
           aria-controls={modalId}
@@ -184,7 +209,9 @@ const ComboboxTrigger = composable<HTMLButtonElement, ComboboxTriggerProps>(
         >
           {children ?? (
             <>
-              <span className={styles.comboboxTriggerText({ class: !value && 'text-subdued' })}>
+              {/* `text-placeholder` is the host-derived placeholder role real inputs use, so the
+                  trigger's placeholder tracks the same contrast as the form fields beside it. */}
+              <span className={styles.comboboxTriggerText({ class: !value && 'text-placeholder' })}>
                 {displayValue || value || placeholder}
               </span>
               <Icon icon='ph--caret-down--bold' size={3} />
@@ -232,8 +259,6 @@ const ComboboxList = forwardRef<HTMLDivElement, ComboboxListProps>(
       <ScrollArea.Root
         {...composableProps(props, { classNames: styles.comboboxList({ class: classNames }) })}
         role='listbox'
-        centered
-        padding
         thin
         ref={forwardedRef}
       >

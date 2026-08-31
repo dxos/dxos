@@ -31,7 +31,7 @@ Already had flows before this branch: plugin-chess, plugin-deepseek, plugin-mark
 ### Batch 01
 
 - [x] `plugin-chess-com`
-- [x] `plugin-claude-agents`
+- [x] `plugin-claude`
 - [x] `plugin-code`
 - [x] `plugin-commerce`
 - [x] `plugin-computer`

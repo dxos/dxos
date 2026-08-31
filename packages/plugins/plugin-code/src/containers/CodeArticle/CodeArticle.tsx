@@ -14,7 +14,7 @@ import { useObject } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
-import { Panel, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { Grid, Panel, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import {
   createBasicExtensions,
@@ -225,8 +225,8 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
           />
         </Panel.Toolbar>
         <Panel.Content asChild>
-          <div className='dx-container grid grid-cols-[30rem_1fr] divide-x divide-separator'>
-            <div className='dx-container grid grid-rows-[1fr_2fr] divide-y divide-subdued-separator'>
+          <Grid cols={['30rem', '1fr']} classNames='divide-x divide-separator'>
+            <Grid rows={[1, 2]} classNames='divide-y divide-subdued-separator'>
               <div role='region' aria-label={t('browse-pane.label')} className='dx-container grid overflow-auto'>
                 <FileTree
                   files={fileEntries}
@@ -238,7 +238,7 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
               <div role='region' aria-label={t('inspect-pane.label')} className='dx-container grid overflow-hidden'>
                 <BuildOutput state={projectState} />
               </div>
-            </div>
+            </Grid>
             <div
               role='region'
               aria-label={t('output-pane.label')}
@@ -246,7 +246,7 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
             >
               {selected ? <FileEditor file={selected} role={role} /> : null}
             </div>
-          </div>
+          </Grid>
         </Panel.Content>
       </Panel.Root>
     );

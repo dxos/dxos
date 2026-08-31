@@ -4,9 +4,20 @@
 
 import { describe, test } from 'vitest';
 
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { Timeframe } from '@dxos/timeframe';
 
+import { type Invitation } from '../proto/gen/dxos/client/services.ts';
+import { type FeedMessage } from '../proto/gen/dxos/echo/feed.ts';
+import { type EchoMetadata, type LargeSpaceMetadata, type SpaceMetadata } from '../proto/gen/dxos/echo/metadata.ts';
+import { type EchoObject } from '../proto/gen/dxos/echo/object.ts';
+import { type Heads } from '../proto/gen/dxos/echo/query.ts';
+import { type Claim, type Credential } from '../proto/gen/dxos/halo/credentials.ts';
+import { type KeyRecord } from '../proto/gen/dxos/halo/keyring.ts';
+import { type ReliablePayload } from '../proto/gen/dxos/mesh/messaging.ts';
+import { type Command } from '../proto/gen/dxos/mesh/muxer.ts';
+import { type RpcMessage } from '../proto/gen/dxos/rpc.ts';
 import { schema } from '../proto/index.ts';
 import { InvitationSchema } from './proto/gen/dxos/client/invitation_pb.ts';
 import { FeedMessageSchema } from './proto/gen/dxos/echo/feed_pb.ts';
@@ -22,8 +33,12 @@ import { ClaimSchema, CredentialSchema } from './proto/gen/dxos/halo/credentials
 import { KeyRecordSchema } from './proto/gen/dxos/halo/keyring_pb.ts';
 import { ReliablePayloadSchema } from './proto/gen/dxos/mesh/messaging_pb.ts';
 import { CommandSchema } from './proto/gen/dxos/mesh/muxer_pb.ts';
+import { AuthenticateRequestSchema } from './proto/gen/dxos/mesh/teleport/auth_pb.ts';
 import { RpcMessageSchema } from './proto/gen/dxos/rpc_pb.ts';
 import { AnyEncodingError, decodeCompat, encodeCompat } from './shape-compat.ts';
+
+/** The buf `{ case, value }` oneof group must not leak into the decoded shape. */
+type CommandDecoded = Command & { payload?: unknown };
 
 // Byte equality alone would miss a substitution decoding to the wrong JS type, and shape equality
 // alone would miss a field-numbering divergence between the two generators, so both are asserted.
@@ -55,8 +70,14 @@ describe('buf shape-compat', () => {
     const bufBytes = encodeCompat(KeyRecordSchema, value);
     expect(new Uint8Array(bufBytes)).toEqual(new Uint8Array(legacyBytes));
 
-    expect(decodeCompat(KeyRecordSchema, legacyBytes)).toMatchObject(value);
-    expect(codec.decode(bufBytes)).toMatchObject(value);
+    // Compared field-wise, because both codecs return `bytes` as a view into the buffer they were
+    // handed: the view type tracks the input, so the two decodes below differ in view type while
+    // carrying the same bytes. `bytes decode preserves the input's view type` pins that down.
+    const legacyDecoded = codec.decode(legacyBytes);
+    const compatDecoded = decodeCompat<KeyRecord>(KeyRecordSchema, legacyBytes);
+    invariant(compatDecoded.privateKey && legacyDecoded.privateKey, 'expected both private keys');
+    expect(Buffer.from(compatDecoded.publicKey).equals(Buffer.from(legacyDecoded.publicKey))).toBe(true);
+    expect(Buffer.from(compatDecoded.privateKey).equals(Buffer.from(legacyDecoded.privateKey))).toBe(true);
   });
 
   test('Heads round-trips identically (no substituted fields)', ({ expect }) => {
@@ -67,7 +88,7 @@ describe('buf shape-compat', () => {
     const bufBytes = encodeCompat(HeadsSchema, value);
     expect(new Uint8Array(bufBytes)).toEqual(new Uint8Array(legacyBytes));
 
-    expect(decodeCompat(HeadsSchema, legacyBytes).hashes).toEqual(value.hashes);
+    expect(decodeCompat<Heads>(HeadsSchema, legacyBytes).hashes).toEqual(value.hashes);
     expect(codec.decode(bufBytes).hashes).toEqual(value.hashes);
   });
 
@@ -87,12 +108,12 @@ describe('buf shape-compat', () => {
     const bufBytes = encodeCompat(SpaceMetadataSchema, value);
     expect(new Uint8Array(bufBytes)).toEqual(new Uint8Array(legacyBytes));
 
-    const decoded = decodeCompat(SpaceMetadataSchema, legacyBytes);
+    const decoded = decodeCompat<SpaceMetadata>(SpaceMetadataSchema, legacyBytes);
     expect(PublicKey.isPublicKey(decoded.key)).toBe(true);
     expect(decoded.key.equals(spaceKey)).toBe(true);
-    expect(decoded.feedKeys.every((key: unknown) => PublicKey.isPublicKey(key))).toBe(true);
+    expect(decoded.feedKeys?.every((key: unknown) => PublicKey.isPublicKey(key))).toBe(true);
     expect(decoded.dataTimeframe).toBeInstanceOf(Timeframe);
-    expect(decoded.dataTimeframe.get(feedKey)).toBe(7);
+    expect(decoded.dataTimeframe?.get(feedKey)).toBe(7);
 
     const legacyDecoded = codec.decode(bufBytes);
     expect(legacyDecoded.key.equals(spaceKey)).toBe(true);
@@ -126,10 +147,17 @@ describe('buf shape-compat', () => {
     // record). The two remain wire-compatible, which is what a persisted profile needs, so this
     // asserts that both codecs read each other rather than that they agree byte-for-byte.
     const legacyBytes = codec.encode(value);
-    const decoded = decodeCompat(EchoMetadataSchema, legacyBytes);
+    const decoded = decodeCompat<EchoMetadata>(EchoMetadataSchema, legacyBytes);
+    invariant(decoded.identity);
+    invariant(decoded.spaces);
+    invariant(decoded.deletedSpaces);
+    invariant(decoded.created);
+    invariant(decoded.updated);
+    const decodedSpace = decoded.spaces[0];
+    invariant(decodedSpace?.dataTimeframe);
     expect(decoded.identity.identityKey.equals(identityKey)).toBe(true);
-    expect(decoded.spaces[0].dataTimeframe).toBeInstanceOf(Timeframe);
-    expect(decoded.spaces[0].dataTimeframe.get(feedKey)).toBe(12);
+    expect(decodedSpace.dataTimeframe).toBeInstanceOf(Timeframe);
+    expect(decodedSpace.dataTimeframe.get(feedKey)).toBe(12);
     expect(decoded.deletedSpaces.every((key: unknown) => PublicKey.isPublicKey(key))).toBe(true);
     expect(decoded.created.getTime()).toBe(1_700_000_000_000);
     expect(decoded.updated.getTime()).toBe(1_700_000_060_500);
@@ -146,8 +174,11 @@ describe('buf shape-compat', () => {
   test('a pre-epoch Timestamp keeps nanos in proto range', ({ expect }) => {
     // protobuf.js emits negative nanos before the epoch and decodes a second early; the layer
     // canonicalises instead, so this case deliberately diverges from the legacy codec.
-    const decoded = decodeCompat(InvitationSchema, encodeCompat(InvitationSchema, { created: new Date(-1) }));
-    expect(decoded.created.getTime()).toBe(-1);
+    const decoded = decodeCompat<Invitation>(
+      InvitationSchema,
+      encodeCompat(InvitationSchema, { created: new Date(-1) }),
+    );
+    expect(decoded.created?.getTime()).toBe(-1);
   });
 
   test('a selected oneof member round-trips as a flat field', ({ expect }) => {
@@ -158,15 +189,14 @@ describe('buf shape-compat', () => {
     const bufBytes = encodeCompat(CommandSchema, value);
     expect(new Uint8Array(bufBytes)).toEqual(new Uint8Array(legacyBytes));
 
-    // The buf `{ case, value }` group must not leak into the decoded shape.
-    const decoded = decodeCompat(CommandSchema, legacyBytes);
+    const decoded = decodeCompat<CommandDecoded>(CommandSchema, legacyBytes);
     expect(decoded.payload).toBeUndefined();
-    expect(decoded.data.channelId).toBe(7);
+    expect(decoded.data?.channelId).toBe(7);
     expect(codec.decode(bufBytes).data?.channelId).toBe(7);
   });
 
   test('an unset oneof stays absent', ({ expect }) => {
-    const decoded = decodeCompat(CommandSchema, encodeCompat(CommandSchema, {}));
+    const decoded = decodeCompat<CommandDecoded>(CommandSchema, encodeCompat(CommandSchema, {}));
     expect(decoded.payload).toBeUndefined();
     expect(decoded.data).toBeUndefined();
   });
@@ -188,7 +218,7 @@ describe('buf shape-compat', () => {
     expect(new Uint8Array(encodeCompat(ClaimSchema, value))).toEqual(new Uint8Array(legacyBytes));
 
     // The packed payload's own substituted fields must come back substituted too.
-    const decoded = decodeCompat(ClaimSchema, legacyBytes);
+    const decoded = decodeCompat<Claim>(ClaimSchema, legacyBytes);
     expect(decoded.assertion['@type']).toBe('dxos.halo.credentials.SpaceMember');
     expect(PublicKey.from(decoded.assertion.spaceKey).equals(spaceKey)).toBe(true);
     expect(decoded.assertion.spaceKey).toBeInstanceOf(PublicKey);
@@ -226,7 +256,7 @@ describe('buf shape-compat', () => {
     const bufBytes = encodeCompat(CredentialSchema, value);
     expect(new Uint8Array(bufBytes)).toEqual(new Uint8Array(legacyBytes));
 
-    const decoded = decodeCompat(CredentialSchema, legacyBytes);
+    const decoded = decodeCompat<Credential>(CredentialSchema, legacyBytes);
     expect(decoded.issuanceDate).toBeInstanceOf(Date);
     expect(decoded.issuer).toBeInstanceOf(PublicKey);
     expect(decoded.subject.assertion['@type']).toBe('dxos.halo.credentials.AuthorizedDevice');
@@ -240,7 +270,7 @@ describe('buf shape-compat', () => {
       assertion: { '@type': 'google.protobuf.Any', 'type_url': 'com.example.Unknown', 'value': new Uint8Array([1]) },
     };
 
-    const decoded = decodeCompat(ClaimSchema, encodeCompat(ClaimSchema, value));
+    const decoded = decodeCompat<Claim>(ClaimSchema, encodeCompat(ClaimSchema, value));
     expect(decoded.assertion['@type']).toBe('google.protobuf.Any');
     expect(decoded.assertion.type_url).toBe('com.example.Unknown');
     expect(new Uint8Array(decoded.assertion.value)).toEqual(new Uint8Array([1]));
@@ -255,7 +285,9 @@ describe('buf shape-compat', () => {
     const legacyBytes = codec.encode(value);
     expect(new Uint8Array(encodeCompat(EchoObject_SnapshotSchema, value))).toEqual(new Uint8Array(legacyBytes));
 
-    const decoded = decodeCompat(EchoObject_SnapshotSchema, legacyBytes);
+    // The compat layer normalises the packed bytes to a `Uint8Array`, where protobuf.js hands back
+    // a `Buffer` view.
+    const decoded = decodeCompat<EchoObject.Snapshot>(EchoObject_SnapshotSchema, legacyBytes);
     expect(decoded.model['@type']).toBe('google.protobuf.Any');
     expect(decoded.model.type_url).toBe('com.example.Model');
     expect(decoded.model.value).toEqual(codec.decode(legacyBytes).model.value);
@@ -292,7 +324,9 @@ describe('buf shape-compat', () => {
     const legacyBytes = codec.encode(value);
     expect(new Uint8Array(encodeCompat(LargeSpaceMetadataSchema, value))).toEqual(new Uint8Array(legacyBytes));
 
-    const decoded = decodeCompat(LargeSpaceMetadataSchema, legacyBytes);
+    const decoded = decodeCompat<LargeSpaceMetadata>(LargeSpaceMetadataSchema, legacyBytes);
+    invariant(decoded.controlPipelineSnapshot);
+    invariant(decoded.controlPipelineSnapshot.messages);
     expect(decoded.controlPipelineSnapshot.timeframe).toBeInstanceOf(Timeframe);
     const message = decoded.controlPipelineSnapshot.messages[0];
     expect(message.feedKey).toBeInstanceOf(PublicKey);
@@ -323,12 +357,13 @@ describe('buf shape-compat', () => {
     expect(new Uint8Array(encodeCompat(FeedMessageSchema, value))).toEqual(new Uint8Array(legacyBytes));
 
     // The `payload` oneof must stay flat and its packed credential resolved.
-    const decoded = decodeCompat(FeedMessageSchema, legacyBytes);
+    const decoded = decodeCompat<FeedMessage>(FeedMessageSchema, legacyBytes);
+    invariant(decoded.payload?.credential);
     expect(decoded.timeframe).toBeInstanceOf(Timeframe);
     expect(decoded.payload.credential.credential.subject.assertion['@type']).toBe('dxos.halo.credentials.SpaceGenesis');
   });
 
-  test('the RPC envelope round-trips byte-identically with preserveAny', ({ expect }) => {
+  test('the RPC envelope preserves Any with wire-compatible encoding', ({ expect }) => {
     // `RpcMessage` frames every RPC between peers and its protos carry no `preserve_any`, so the
     // caller option is the only thing keeping the payload packed. Byte equality is NOT asserted:
     // protobuf.js writes the non-optional `stream: false` explicitly (`20 00`) where buf omits the
@@ -352,12 +387,15 @@ describe('buf shape-compat', () => {
     const bufBytes = encodeCompat(RpcMessageSchema, value, options);
 
     // The payload must come back packed rather than resolved, in both directions.
-    const decoded = decodeCompat(RpcMessageSchema, legacyBytes, options);
+    const decoded = decodeCompat<RpcMessage>(RpcMessageSchema, legacyBytes, options);
+    invariant(decoded.request);
     expect(decoded.request.payload['@type']).toBe('google.protobuf.Any');
     expect(decoded.request.payload.type_url).toBe('example.testing.data.TestPayload');
     expect(new Uint8Array(decoded.request.payload.value)).toEqual(new Uint8Array([1, 2, 3, 4]));
     expect(codec.decode(bufBytes, options).request?.payload?.type_url).toBe('example.testing.data.TestPayload');
-    expect(decodeCompat(RpcMessageSchema, bufBytes, options).request.stream).toBe(false);
+    const redecoded = decodeCompat<RpcMessage>(RpcMessageSchema, bufBytes, options);
+    invariant(redecoded.request);
+    expect(redecoded.request.stream).toBe(false);
 
     // The packed bytes keep the legacy `Buffer` shape an RPC handler compares against.
     expect(Buffer.isBuffer(decoded.request.payload.value)).toBe(true);
@@ -377,7 +415,7 @@ describe('buf shape-compat', () => {
 
     const legacyBytes = codec.encode(value, options);
     expect(new Uint8Array(encodeCompat(ReliablePayloadSchema, value, options))).toEqual(new Uint8Array(legacyBytes));
-    expect(decodeCompat(ReliablePayloadSchema, legacyBytes, options).payload.type_url).toBe(
+    expect(decodeCompat<ReliablePayload>(ReliablePayloadSchema, legacyBytes, options).payload.type_url).toBe(
       'example.testing.data.TestPayload',
     );
   });
@@ -393,12 +431,50 @@ describe('buf shape-compat', () => {
       },
     };
 
-    const decoded = decodeCompat(RpcMessageSchema, encodeCompat(RpcMessageSchema, value));
+    const decoded = decodeCompat<RpcMessage>(RpcMessageSchema, encodeCompat(RpcMessageSchema, value));
+    invariant(decoded.request);
     expect(decoded.request.payload['@type']).toBe('dxos.echo.query.Heads');
     expect(decoded.request.payload.hashes).toEqual(['aaa']);
   });
 
   test('packing an Any without an @type fails rather than writing an empty payload', ({ expect }) => {
     expect(() => encodeCompat(ClaimSchema, { id: PublicKey.random(), assertion: {} })).toThrow(AnyEncodingError);
+  });
+
+  // The shape assertions above compare through `canonicalStringify`, which renders a Buffer and a
+  // bare Uint8Array identically and so cannot see this. Flattening a Buffer here drops the methods
+  // `AuthExtension` needs to verify a credential against the challenge it sent, and the error is
+  // swallowed as an auth failure — so assert the view type, matching what the legacy codec returns.
+  test("bytes decode preserves the input's view type", ({ expect }) => {
+    const challenge = new Uint8Array(32).map((_, index) => (index * 7 + 3) & 0xff);
+    const wire = encodeCompat(AuthenticateRequestSchema, { challenge });
+
+    const fromBuffer = decodeCompat<{ challenge: Uint8Array }>(AuthenticateRequestSchema, Buffer.from(wire));
+    expect(Buffer.isBuffer(fromBuffer.challenge)).toBe(true);
+    expect(Buffer.from(fromBuffer.challenge).equals(Buffer.from(challenge))).toBe(true);
+
+    // A plain input stays plain, as protobuf.js does — nothing is coerced to Buffer.
+    const fromPlain = decodeCompat<{ challenge: Uint8Array }>(AuthenticateRequestSchema, new Uint8Array(wire));
+    expect(Buffer.isBuffer(fromPlain.challenge)).toBe(false);
+    expect(Buffer.from(fromPlain.challenge).equals(Buffer.from(challenge))).toBe(true);
+  });
+
+  // A resolved `Any` payload decodes from the outer message's buffer, so unpacking it must not
+  // flatten that view either -- a credential's signature reaches its verifier through this path.
+  test("bytes inside a resolved Any payload keep the input's view type", ({ expect }) => {
+    const challenge = new Uint8Array([1, 2, 3, 4]);
+    const value = {
+      id: PublicKey.random(),
+      assertion: { '@type': 'dxos.mesh.teleport.auth.AuthenticateRequest', 'challenge': challenge },
+    };
+
+    const codec = schema.getCodecForType('dxos.halo.credentials.Claim');
+    const legacyBytes = Buffer.from(codec.encode(value));
+    const legacyDecoded = codec.decode(legacyBytes);
+    const compatDecoded = decodeCompat<Claim>(ClaimSchema, legacyBytes);
+
+    expect(Buffer.isBuffer(legacyDecoded.assertion.challenge)).toBe(true);
+    expect(Buffer.isBuffer(compatDecoded.assertion.challenge)).toBe(true);
+    expect(Buffer.from(compatDecoded.assertion.challenge).equals(Buffer.from(challenge))).toBe(true);
   });
 });

@@ -8,6 +8,8 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as AssistantEvents from '@dxos/plugin-assistant/AssistantEvents';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
+import * as TasksCapabilities from '@dxos/plugin-tasks/TasksCapabilities';
+import * as TasksEvents from '@dxos/plugin-tasks/TasksEvents';
 
 import { translations } from '#translations';
 import { ProjectCapabilities, ProjectsEvents } from '#types';
@@ -22,6 +24,7 @@ export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
   environments: [],
 });
+export const NavigationTargetResolver = AppCapability.navigationResolver(() => import('./navigation-target-resolver'));
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
 });
@@ -34,6 +37,12 @@ export const SubjectContext = Capability.lazyModule(
   'SubjectContext',
   { provides: [AssistantCapabilities.SubjectContext], activatesOn: AssistantEvents.Start },
   () => import('./subject-context'),
+);
+export const TaskAction = Capability.lazyModule(
+  'TaskAction',
+  // Rides the tasks feature it contributes to: the entry is unreachable until a task list renders.
+  { provides: [TasksCapabilities.TaskAction], activatesOn: TasksEvents.Start },
+  () => import('./task-action'),
 );
 export const Templates = Capability.lazyModule(
   'Templates',

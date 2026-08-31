@@ -654,10 +654,7 @@ const syncTeamBinding = Effect.fn(function* (binding: Cursor.ExternalCursor) {
           tasks: syncResult.success.pushedTasks,
         },
       };
-    }).pipe(
-      Effect.provide(Database.layer(db)),
-      Effect.provide(LinearApi.LinearCredentials.fromAccessToken(binding.spec.source)),
-    ),
+    }).pipe(Effect.provide(Database.layer(db)), Effect.provide(LinearApi.fromAccessToken(binding.spec.source))),
   );
 
   if (outcome._tag === 'Success') {

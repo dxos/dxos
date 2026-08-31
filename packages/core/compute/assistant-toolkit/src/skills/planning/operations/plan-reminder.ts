@@ -16,7 +16,7 @@ import { Chat } from '../../../types';
 import { PlanReminder } from './definitions';
 
 /**
- * End-request hook for the planning skill. When the conversation's working task set still has
+ * End-request hook for the planning skill. When the conversation's checklist still has
  * open tasks, an ephemeral check asks the model — given the full conversation — whether the
  * agent should keep working: a deterministic reminder alone would trap an agent that legitimately
  * finishes with open items in an unbreakable re-prompt loop. On "continue" it enqueues a
@@ -32,7 +32,6 @@ export default PlanReminder.pipe(
         if (!chat) {
           return;
         }
-        // Only consult tasks that already exist — the reminder never creates the set.
         const tasks = yield* Chat.loadTasks(chat);
         if (!tasks.some(Chat.isOpenTask)) {
           return;
@@ -56,7 +55,7 @@ export default PlanReminder.pipe(
           ],
         });
       },
-      Effect.provide(AiService.model('com.anthropic.model.claude-sonnet-4-6.default')),
+      Effect.provide(AiService.model('com.anthropic.model.claude-sonnet-5.default')),
     ),
   ),
 );

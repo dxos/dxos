@@ -5,8 +5,9 @@
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext, type SignalManager } from '@dxos/messaging';
-import { schema } from '@dxos/protocols/proto';
+import { getBufService } from '@dxos/protocols/buf-service';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
+import { type BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { type ProtoRpcPeer, createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
 import { ComplexMap } from '@dxos/util';
 
@@ -97,7 +98,7 @@ export class TestPeer {
           this._proxy = createProtoRpcPeer({
             port: proxyPort,
             requested: {
-              BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
+              BridgeService: getBufService<BridgeService>('dxos.mesh.bridge.BridgeService'),
             },
             noHandshake: true,
             encodingOptions: {
@@ -108,7 +109,7 @@ export class TestPeer {
           this._service = createProtoRpcPeer({
             port: servicePort,
             exposed: {
-              BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
+              BridgeService: getBufService<BridgeService>('dxos.mesh.bridge.BridgeService'),
             },
             handlers: { BridgeService: new RtcTransportService() },
             noHandshake: true,

@@ -305,7 +305,7 @@ const InternalAiServiceLayer = (functionsAiService: EdgeFunctionEnv.FunctionsAiS
     Layer.provide(httpClient),
   );
   const resolver = AnthropicResolver.make().pipe(Layer.provide(anthropicClient));
-  return AiModelResolver.AiModelResolver.buildAiService.pipe(Layer.provide(resolver));
+  return AiModelResolver.buildAiService.pipe(Layer.provide(resolver));
 };
 
 /**

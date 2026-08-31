@@ -7,6 +7,7 @@ import { rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
+import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import {
   type DatabaseDirectory,
@@ -16,6 +17,7 @@ import {
   isSpaceRoot,
 } from '@dxos/echo-protocol';
 import { PublicKey, SpaceId } from '@dxos/keys';
+import { openAndClose } from '@dxos/test-utils';
 
 import { AutomergeHost } from '../automerge';
 import { createTestSqliteRuntime } from '../testing';
@@ -52,7 +54,7 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
         links: {},
       });
       docId = handle.documentId;
-      const query = automergeHost.findWithProgress<DatabaseDirectory>(handle.documentId);
+      const query = automergeHost.acquireDoc<DatabaseDirectory>(handle.documentId);
 
       const manager = new SpaceStateManager({ runtime });
       await manager.open(Context.default());
@@ -134,7 +136,7 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
           objects: {},
           links: {},
         });
-        return automergeHost.findWithProgress<DatabaseDirectory>(handle.documentId);
+        return automergeHost.acquireDoc<DatabaseDirectory>(handle.documentId);
       };
 
       // The refs are opaque URLs to the store, so real documents stand in for the root and credentials.
@@ -370,5 +372,47 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
       await host.close();
       await dispose();
     }
+  });
+
+  test('two spaces sharing one root keep independent contexts', async ({ expect }) => {
+    // The contexts are per space, not per document: keyed by the root's id, removing either space
+    // would tear down the listener the other one still reads its directory through.
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const automergeHost = new AutomergeHost({ runtime });
+    await openAndClose(automergeHost);
+    const manager = new SpaceStateManager({ runtime });
+    await openAndClose(manager);
+
+    using created = await automergeHost.createDoc<DatabaseDirectory>({
+      version: SpaceDocVersion.CURRENT,
+      objects: {},
+      links: {},
+    });
+    const spaceA = SpaceId.random();
+    const spaceB = SpaceId.random();
+    await manager.assignRootToSpace(spaceA, automergeHost.acquireDoc<DatabaseDirectory>(created.documentId));
+    const rootB = await manager.assignRootToSpace(
+      spaceB,
+      automergeHost.acquireDoc<DatabaseDirectory>(created.documentId),
+    );
+
+    const updates: SpaceId[] = [];
+    manager.spaceDocumentListUpdated.on(({ spaceId }) => {
+      updates.push(spaceId);
+    });
+
+    await manager.removeSpace(spaceA);
+
+    // The surviving space still reports its documents, which requires both its context and the root.
+    expect(rootB.isLoaded).toBe(true);
+    created.change((doc) => {
+      doc.links = { ...(doc.links ?? {}), someObject: `automerge:${created.documentId}` };
+    });
+    await expect.poll(() => updates.includes(spaceB), { timeout: 2_000 }).toBe(true);
+    // The scheduler the removed space owned runs on the same tick as the survivor's: give it room to
+    // fire, so a context that outlived its space surfaces here rather than after the test.
+    await sleep(200);
+    expect(updates).not.toContain(spaceA);
   });
 });

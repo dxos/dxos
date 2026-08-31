@@ -44,6 +44,15 @@ export interface Service {
 export class AiService extends Context.Service<AiService, Service>()('@dxos/ai/AiService') {}
 
 /**
+ * Module-level alias for the tag itself (usable as `Effect<Service, never, AiService>`) so
+ * callers importing the namespace avoid the doubled `AiService.AiService`.
+ */
+export const tag: Effect.Effect<Service, never, AiService> = AiService;
+
+/** Module-level alias for the tag's own `key`, so callers avoid the doubled `AiService.AiService.key`. */
+export const key = AiService.key;
+
+/**
  * Resolves a model layer from a bare NSID name — validated at compile time like {@link DXN.make} and
  * constructed to a model DXN internally. Call sites pass the literal id; a value already held as a
  * `DXN.DXN` is resolved via the service's {@link Service.model} (or `DXN.getName` for the helper).

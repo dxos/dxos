@@ -3,7 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-import { describe, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
 import { DXN, Obj, type Ref, Type } from '@dxos/echo';
 
@@ -15,9 +15,15 @@ class TestObject extends Type.makeObject<TestObject>(DXN.make('com.example.type.
 
 const spy = () => vi.fn<(result?: Ref.Ref<Obj.Unknown>) => void>();
 
-const tick = () => new Promise((resolve) => setTimeout(resolve, 10));
-
 describe('makeObjectFormHandle', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   test('settles synchronously with a ref to the object', ({ expect }) => {
     const onSettled = spy();
     const handle = makeObjectFormHandle(onSettled);
@@ -34,7 +40,8 @@ describe('makeObjectFormHandle', () => {
 
     handle.dismiss();
     expect(onSettled).not.toHaveBeenCalled();
-    await tick();
+    // Deterministically flushes `object-form.ts`'s internal zero-delay `setTimeout`.
+    await vi.advanceTimersByTimeAsync(0);
     expect(onSettled).toHaveBeenCalledWith(undefined);
   });
 
@@ -46,11 +53,11 @@ describe('makeObjectFormHandle', () => {
 
     handle.dismiss();
     handle.retain();
-    await tick();
+    await vi.advanceTimersByTimeAsync(0);
     expect(onSettled).not.toHaveBeenCalled();
 
     handle.dismiss();
-    await tick();
+    await vi.advanceTimersByTimeAsync(0);
     expect(onSettled).toHaveBeenCalledTimes(1);
   });
 
@@ -61,7 +68,7 @@ describe('makeObjectFormHandle', () => {
 
     handle.confirm();
     handle.dismiss();
-    await tick();
+    await vi.advanceTimersByTimeAsync(0);
     expect(onSettled).not.toHaveBeenCalled();
 
     const object = Obj.make(TestObject, {});
@@ -75,7 +82,7 @@ describe('makeObjectFormHandle', () => {
 
     handle.settle(Obj.make(TestObject, {}));
     handle.dismiss();
-    await tick();
+    await vi.advanceTimersByTimeAsync(0);
     expect(onSettled).toHaveBeenCalledTimes(1);
     expect(onSettled.mock.calls[0][0]).toBeDefined();
   });

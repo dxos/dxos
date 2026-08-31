@@ -7,7 +7,6 @@ import { type AutomergeUrl } from '@automerge/automerge-repo';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
-import * as Record from 'effect/Record';
 import * as Scope from 'effect/Scope';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
@@ -41,7 +40,7 @@ describe('RepoProxy', () => {
     const hostHandle = await host.loadDoc<{ text: string }>(Context.default(), clientHandle.url!);
     invariant(hostHandle);
     log.break();
-    await hostHandle.whenReady();
+    await hostHandle.waitUntilReady();
 
     log.break();
     const receivedChange = new Trigger();
@@ -318,7 +317,7 @@ describe('RepoProxy', () => {
     await receiveChanges();
     await handle.whenReady();
     expect(handle.doc()?.host).to.equal(numberOfUpdates);
-    await hostHandle.whenReady();
+    await hostHandle.waitUntilReady();
     expect(handle.doc()?.client).to.equal(numberOfUpdates);
   });
 
@@ -336,7 +335,7 @@ describe('RepoProxy', () => {
 
     const hostHandle = await host.loadDoc<{ text: string }>(Context.default(), cloneHandle.url!);
     invariant(hostHandle);
-    await hostHandle.whenReady();
+    await hostHandle.waitUntilReady();
     await expect.poll(() => hostHandle.doc()?.text).toEqual(text);
   });
 
@@ -376,9 +375,9 @@ describe('RepoProxy', () => {
       }),
     );
 
-    for (const handle of hostHandles) {
-      await handle.whenReady();
-      await expect.poll(() => handle.doc()?.text, { timeout: 1000 }).toEqual(text);
+    for (const lease of hostHandles) {
+      await lease.waitUntilReady();
+      await expect.poll(() => lease.doc()?.text, { timeout: 1000 }).toEqual(text);
     }
   });
 
@@ -480,7 +479,7 @@ const setup = async (runtime?: ReturnType<typeof createTestSqliteRuntime>['runti
   );
 
   const refreshCollectionState = async () => {
-    const documentIds = Record.keys(host.handles);
+    const documentIds = host.loadedDocumentIds;
     log('refreshCollectionState', { documentIds });
     await host.updateLocalCollectionState('default', documentIds);
   };

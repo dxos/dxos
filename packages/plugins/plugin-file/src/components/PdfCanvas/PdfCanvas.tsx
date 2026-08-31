@@ -588,7 +588,7 @@ export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(
         // `forwardedRef` belongs to whatever slotted this in.
         ref={composeRefs(containerRef, forwardedRef)}
       >
-        <div role='none' className={single ? 'contents' : 'flex flex-col items-center gap-4 py-4'}>
+        <div className={single ? 'contents' : 'flex flex-col items-center gap-4 py-4'}>
           {shown.map((index) => (
             <div
               key={index}

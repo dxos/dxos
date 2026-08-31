@@ -9,7 +9,7 @@
       "name": "dxos",
       "source": "./tools/claude/plugins/dxos",
       "description": "Durable, resumable project and task tracking for coding agents: a committed registry of work-streams plus a TASKS.md ledger per project, driven by one /dxos:project command. Bundles the DXOS Composer connector that serves the `mcp` backend.",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "author": {
         "name": "DXOS"
       }

@@ -214,6 +214,44 @@ describe('DataSpaceManager', () => {
     expect(attempts.length).to.be.greaterThan(1);
   });
 
+  test('an accepted space anchors on a root that replicates after the invitation context is gone', async ({
+    expect,
+  }) => {
+    const builder = new TestBuilder();
+
+    const peer1 = builder.createPeer({ dataSpaceProps: { automergeCredentials: true } });
+    await peer1.createIdentity();
+    const peer2 = builder.createPeer({ dataSpaceProps: { automergeCredentials: true } });
+    await peer2.createIdentity();
+    await openAndClose(peer1.echoHost, peer1.dataSpaceManager, peer2.echoHost, peer2.dataSpaceManager);
+
+    const space1 = await peer1.dataSpaceManager.createSpace(new Context());
+    await space1.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
+
+    const memberCredential = await peer1.dataSpaceManager.admitMember({
+      spaceKey: space1.key,
+      identityKey: peer2.identity.identityKey,
+      role: SpaceMember.Role.ADMIN,
+    });
+    const assertion = getCredentialAssertion(memberCredential) as SpaceMemberAssertion;
+
+    // Accepted before the peers can replicate, so the named root cannot be adopted on the first
+    // attempt: only a retry that outlives the invitation can anchor this space.
+    const invitationCtx = new Context();
+    const space2 = await peer2.dataSpaceManager.acceptSpace(invitationCtx, {
+      spaceKey: space1.key,
+      genesisFeedKey: space1.inner.genesisFeedKey,
+      spaceRootUrl: assertion.spaceRootUrl,
+    });
+    await invitationCtx.dispose();
+    expect(peer2.echoHost.getSpaceRootRefs(space2.id)).to.be.undefined;
+
+    await connectReplicators([peer1, peer2]);
+    await expect
+      .poll(() => peer2.echoHost.getSpaceRootRefs(space2.id)?.spaceRootDocUrl, { timeout: 10_000 })
+      .to.equal(assertion.spaceRootUrl);
+  });
+
   test('a legacy hypercore space migrates onto a space root document, keeping its id', async () => {
     const builder = new TestBuilder();
 
@@ -266,7 +304,7 @@ describe('DataSpaceManager', () => {
     const objectId = PublicKey.random().toHex();
     const objectUrl = (await peer.echoHost.createDoc({})).url;
     const before = await peer.echoHost.openSpaceRoot(new Context(), space.id);
-    before.handle.change((draft: DatabaseDirectory) => {
+    before.change((draft: DatabaseDirectory) => {
       draft.links ??= {};
       draft.links[objectId] = objectUrl;
     });

@@ -13,6 +13,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
+import { invariant } from '@dxos/invariant';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
@@ -51,20 +52,21 @@ describe('project app graph builder', () => {
     const nodes = await getSubjectChildren(project, await EffectEx.runPromise(createProjectArtifactsExtension()));
 
     const artifacts = nodes.find((node) => node.type === ARTIFACTS_SECTION_TYPE);
-    expect(artifacts).toBeDefined();
-    expect(artifacts!.id).toEqual(
+    invariant(artifacts);
+    expect(artifacts.id).toEqual(
       GraphNode.qualifyId(GraphNode.qualifyId(GraphNode.RootId, SUBJECT_ID), ARTIFACTS_SEGMENT),
     );
     // Virtual, but it carries the project so the action extension can link what the dialog creates —
-    // wrapped, so the Project-matching extensions do not claim the branch and nest it inside itself.
-    expect(artifacts!.data).toEqual({ project });
-    expect(Obj.instanceOf(Project.Project, artifacts!.data)).toBe(false);
+    // wrapped, so the Project-matching extensions do not claim the branch and nest it inside itself,
+    // and tagged so a surface can tell it from the Chats branch, which wraps a project the same way.
+    expect(artifacts.data).toEqual({ branch: 'artifacts', project });
+    expect(Obj.instanceOf(Project.Project, artifacts.data)).toBe(false);
   });
 
   test('contributes an add-artifact action to the Artifacts branch', async ({ expect }) => {
     const project = Project.make({ name: 'Test' });
     const actions = await getSubjectActions(
-      { project },
+      { branch: 'artifacts', project },
       await EffectEx.runPromise(createProjectArtifactsActionExtension()),
       ARTIFACTS_SECTION_TYPE,
     );
