@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import React, {
   Children,
   type KeyboardEvent,
@@ -21,6 +20,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
+import { useFocusGroup } from '../../hooks';
 import { useTranslation } from '../../primitives';
 import { type ThemedClassName, composable, composableProps } from '../../util';
 import { IconButton } from '../Button';
@@ -424,7 +424,7 @@ export type CarouselIndicatorsProps = ThemedClassName<{}>;
 const CarouselIndicators = ({ classNames }: CarouselIndicatorsProps) => {
   const { t } = useTranslation(translationKey);
   const { count, index, setIndex } = useCarousel();
-  const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'horizontal', memorizeCurrent: true });
+  const { ref: focusGroupRef, ...focusGroupProps } = useFocusGroup({ axis: 'horizontal', memorizeCurrent: true });
   if (count <= 1) {
     return null;
   }
@@ -432,10 +432,11 @@ const CarouselIndicators = ({ classNames }: CarouselIndicatorsProps) => {
   return (
     <div className='col-start-2 overflow-hidden'>
       <div
-        {...arrowNavigationAttrs}
+        {...focusGroupProps}
         className={mx('flex items-center justify-center', classNames)}
         role='tablist'
         aria-label={t('carousel-indicators.label')}
+        ref={focusGroupRef}
       >
         {Array.from({ length: count }).map((_, i) => (
           <IconButton
