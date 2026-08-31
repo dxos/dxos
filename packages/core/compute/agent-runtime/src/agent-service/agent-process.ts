@@ -160,7 +160,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         let delegations: Delegation[] = [...(yield* DelegationsCell.get)];
 
         const requestModelLayer = AiService.model(
-          options.model ? DXN.getName(options.model) : 'com.anthropic.model.claude-opus-4-8.default',
+          options.model ? DXN.getName(options.model) : 'com.anthropic.model.claude-opus-5.default',
           {
             provider: options.provider,
           },
