@@ -19,4 +19,6 @@ sampleDraws: 12
 maxRuntimeMs: 900000
 quiescenceTimeoutMs: 90000
 checkpoints: true
+# On until finding 5 (a cut link crashes the peer) is fixed; see RESULTS.md.
+partitions: false
 cleanup: true

@@ -9,6 +9,7 @@ import { type Platform, type ReplicantBrain } from '../../plan';
 import { type ClientReplicant, type SpaceDigest } from '../../replicants/client-replicant';
 import {
   type ClientIndex,
+  type IdentityIndex,
   type Model,
   canonical,
   expectedDigest,
@@ -78,6 +79,8 @@ export type Real = {
   replicants: ReplicantBrain<ClientReplicant>[];
   spaceIds: string[];
   invitationCodes: string[];
+  /** Which client created each space, so cleanup can authenticate as somebody who may delete it. */
+  spaceOwners: ClientIndex[];
   /** DIDs of the identities this run minted, in creation order; only cleanup reads them. */
   identityDids: string[];
   trace: (entry: Record<string, unknown>) => void;
@@ -174,44 +177,70 @@ export const quiesce = async (real: Real, spaceSlot: number, clients: ClientInde
 };
 
 /**
- * Delete what the run created, through the same admin API the CLI speaks: `X-Admin-Key` plus an
- * envelope-wrapped response (`packages/devtools/cli/src/commands/admin/util.ts`).
+ * Delete what the run created, so a shared environment is left as it was found.
  *
- * Spaces go first — deleting an identity that still owns spaces would orphan them. Nothing here
- * throws: a cleanup failure must never mask the run's own result, so it is logged and traced.
+ * Self-serve first: each identity's first device deletes the spaces its identity created and then
+ * itself, authenticating with a verifiable presentation it signs (`/data/space/:id`,
+ * `/data/identity/:did`). That needs no shared secret — but those routes also require the identity
+ * to be bound to a Hub account, and an identity minted by `halo.createIdentity` is not, so against
+ * a deployed EDGE they answer 403 (measured on dev). `DX_HUB_API_KEY`, when set, mops up whatever
+ * self-serve refused, through the admin API (`Authorization: Bearer`, envelope-wrapped response).
+ *
+ * Nothing here throws: a cleanup failure must never mask the run's own result.
  */
-export const cleanupRun = async (real: Real, adminKey: string): Promise<void> => {
-  const remove = async (path: string): Promise<boolean> => {
-    try {
-      const response = await fetch(new URL(path, real.spec.edgeUrl), {
-        method: 'DELETE',
-        headers: { 'X-Admin-Key': adminKey },
-      });
-      const envelope = (await response.json().catch(() => ({}))) as { success?: boolean; message?: string };
-      if (!response.ok || envelope.success === false) {
-        log.warn('cleanup request failed', { path, status: response.status, message: envelope.message });
-        return false;
-      }
-      return true;
-    } catch (err) {
-      log.warn('cleanup request threw', { path, err });
-      return false;
+export const cleanupRun = async (model: Model, real: Real): Promise<void> => {
+  const spacesByIdentity = new Map<IdentityIndex, string[]>();
+  real.spaceIds.forEach((spaceId, slot) => {
+    if (!spaceId) {
+      return;
     }
-  };
+    const identity = identityOf(model, real.spaceOwners[slot]);
+    spacesByIdentity.set(identity, [...(spacesByIdentity.get(identity) ?? []), spaceId]);
+  });
 
-  const spaces = real.spaceIds.filter(Boolean);
-  const identities = real.identityDids.filter(Boolean);
-  let deleted = 0;
-  for (const spaceId of spaces) {
-    deleted += (await remove(`/admin/spaces/${spaceId}`)) ? 1 : 0;
+  const refused: string[] = [];
+  let accepted = 0;
+  for (const [identity, { devices }] of model.identities.entries()) {
+    const spaceIds = spacesByIdentity.get(identity) ?? [];
+    try {
+      const result = await real.replicants[devices[0]].brain.deleteOwnData({ spaceIds });
+      accepted += result.accepted.length;
+      refused.push(...result.refused);
+    } catch (err) {
+      log.warn('self-serve cleanup threw', { identity, err });
+      refused.push(...spaceIds, real.identityDids[identity]);
+    }
   }
-  for (const identityDid of identities) {
-    deleted += (await remove(`/admin/identities/${identityDid}`)) ? 1 : 0;
+
+  const adminKey = process.env.DX_HUB_API_KEY;
+  if (refused.length > 0 && adminKey) {
+    for (const id of refused) {
+      // Identity DIDs and space ids never collide, so one pass over both is unambiguous.
+      const path = id.startsWith('did:') ? `/admin/identities/${id}` : `/admin/spaces/${id}`;
+      try {
+        const response = await fetch(new URL(path, real.spec.edgeUrl), {
+          method: 'DELETE',
+          // Canonical `edgeAuth` admin form. `X-Admin-Key` also works today but is legacy and is
+          // rejected wherever a route sets `legacyHeaders: false`.
+          headers: { Authorization: `Bearer ${adminKey}` },
+        });
+        const envelope = (await response.json().catch(() => ({}))) as { success?: boolean; message?: string };
+        if (!response.ok || envelope.success === false) {
+          log.warn('admin cleanup failed', { path, status: response.status, message: envelope.message });
+        } else {
+          accepted++;
+        }
+      } catch (err) {
+        log.warn('admin cleanup threw', { path, err });
+      }
+    }
+  } else if (refused.length > 0) {
+    log.warn('cleanup incomplete and no DX_HUB_API_KEY to fall back on', { refused });
   }
 
   // Deletion is enqueued rather than synchronous, so this counts requests accepted, not state gone.
-  real.trace({ event: 'cleanup', spaces: spaces.length, identities: identities.length, accepted: deleted });
-  log.info('cleanup done', { spaces: spaces.length, identities: identities.length, accepted: deleted });
+  real.trace({ event: 'cleanup', spaces: real.spaceIds.filter(Boolean).length, accepted, refused });
+  log.info('cleanup done', { accepted, refused });
 };
 
 //

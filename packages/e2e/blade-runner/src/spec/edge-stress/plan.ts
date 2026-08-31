@@ -92,6 +92,7 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
       deadline: Number.MAX_SAFE_INTEGER,
       spaceIds: [],
       invitationCodes: [],
+      spaceOwners: [],
       identityDids,
       trace,
       counters: { commands: 0, documents: 0 },
@@ -119,14 +120,8 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
     } finally {
       trace({ event: 'done', planned: plan.length, commands: real.counters.commands });
       // Runs even when an assertion threw, which is exactly when a shared environment would leak.
-      const adminKey = process.env.DX_HUB_API_KEY;
-      if (spec.cleanup && adminKey) {
-        await cleanupRun(real, adminKey);
-      } else if (spec.cleanup) {
-        log.warn('cleanup skipped: DX_HUB_API_KEY is not set', {
-          spaces: real.spaceIds.length,
-          identities: real.identityDids.length,
-        });
+      if (spec.cleanup) {
+        await cleanupRun(model, real);
       }
       traceStream.end();
     }
@@ -202,7 +197,7 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
     const replicants: ReplicantBrain<ClientReplicant>[] = [];
     for (let index = 0; index < model.clients.length; index++) {
       const replicant = await env.spawn(ClientReplicant, { platform: spec.platform });
-      await replicant.brain.init({ edgeUrl: spec.edgeUrl, agents: spec.agents });
+      await replicant.brain.init({ edgeUrl: spec.edgeUrl, agents: spec.agents, partitions: spec.partitions });
       replicants.push(replicant);
     }
 

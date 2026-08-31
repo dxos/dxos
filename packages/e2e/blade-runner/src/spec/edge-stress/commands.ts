@@ -381,6 +381,7 @@ export const execute = async (command: Command, model: Model, real: Real): Promi
       const { invitationCode } = await brain.shareSpace({ spaceId });
       real.spaceIds[slot] = spaceId;
       real.invitationCodes[slot] = invitationCode;
+      real.spaceOwners[slot] = command.client;
       await performJoins(real, transition.joins);
       break;
     }

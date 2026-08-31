@@ -1,0 +1,16 @@
+# Smallest run that exercises setup and cleanup against the deployed dev EDGE: one identity, one
+# device, one space, one command. Use it to prove cleanup works before a full run leaves state in
+# a shared environment.
+platform: nodejs
+edgeUrl: https://dev.dxos.network
+devicesPerIdentity: [1]
+agents: false
+maxSpaces: 1
+maxDocumentsPerSpace: 1
+maxCommands: 1
+sampleDraws: 4
+maxRuntimeMs: 300000
+quiescenceTimeoutMs: 90000
+checkpoints: false
+partitions: false
+cleanup: true

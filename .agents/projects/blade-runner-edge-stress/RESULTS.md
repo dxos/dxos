@@ -226,6 +226,33 @@ EditCounter(0,1,1) EditText(0,0,1,0)
    succeeds. Seen on every run; the delegated join still completes, so it is not blocking. Not
    filed — needs a look at the local stack's own logs first.
 
+## 4b. Against deployed dev EDGE (dev.dxos.network)
+
+`edge dev` was redeployed (all 12 workers), and a minimal probe — one identity, one device, one
+space, `configs/edge-stress-dev-probe.yml` — was run against it. Two things came out of it, both
+fixed or characterised; the probe itself failed and its space and identity are still there
+(`BLHSBW7YTLRFZZVFWT4M4MRVX5OO2XJHB`, `did:halo:BDFMLFLXMZ5NOCYIF3VLBN6KYPG5XXEPC`), pending a key.
+
+1. **The offline proxy cannot front an `https:` endpoint.** Every replicant routed EDGE through a
+   loopback TCP pipe so `goOffline` can cut it. Against `https://dev.dxos.network` the client
+   offered a TLS handshake to a plain socket and sent `Host: localhost`, so the websocket flapped
+   on code 1006 and `getSyncState` reported `connected: false` forever. The port default was 80
+   regardless of scheme, too. The proxy now exists only when `partitions` is on, and asserts a
+   plain-http endpoint; a run without partitions dials EDGE directly.
+2. **Self-serve cleanup 403s for an identity EDGE has not bound to a Hub account.** The
+   data-management API has exactly the endpoint a run wants — `DELETE /data/space/:id` and
+   `DELETE /data/identity/:did`, authenticated by a verifiable presentation the identity signs, no
+   shared secret. The replicant now mints that presentation itself
+   (`createEdgeIdentity` + `authenticateViaChallengeEndpoint` + `encodeAuthHeader`, all public) and
+   deletes its own data. Measured against dev: **403 on both**, which matches the middleware's
+   documented gate — `edgeAuth({ lookupAccount: accountLookupViaHubService() })` rejects an
+   identity with no Account, and `halo.createIdentity` creates one. So a run against a deployed
+   environment needs `DX_HUB_API_KEY` after all; cleanup falls back to it automatically
+   (`Authorization: Bearer`, the canonical form — `X-Admin-Key` is legacy).
+
+Setup against dev is fast: identity minted and space created in **4.9 s**, against 15–21 s for a
+3-client fleet locally.
+
 ## 5. Harness gaps found
 
 - `blade-runner:build` is a no-op, so the documented entry point does not exist.

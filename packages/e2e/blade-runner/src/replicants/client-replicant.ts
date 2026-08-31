@@ -9,11 +9,13 @@ import net from 'node:net';
 import { Trigger, waitForCondition } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
 import { type CancellableInvitation, InvitationEncoder } from '@dxos/client-protocol';
+import { createEdgeIdentity } from '@dxos/client/edge';
 import { LocalClientServices } from '@dxos/client/local';
 import { waitForSpace } from '@dxos/client/testing';
 import { DXN, Filter, Obj, Query, Type } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { isEdgePeerId } from '@dxos/echo-protocol';
+import { authenticateViaChallengeEndpoint, encodeAuthHeader } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { createRtcTransportFactory } from '@dxos/network-manager';
@@ -73,7 +75,7 @@ export class ClientReplicant {
   #env: ReplicantEnv;
   #client?: Client = undefined;
   #services?: LocalClientServices = undefined;
-  #config?: { edgeUrl: string; agents: boolean } = undefined;
+  #config?: { edgeUrl: string; agents: boolean; partitions: boolean } = undefined;
   /** Held open so late guests can still redeem a multi-use invitation. */
   #hostedInvitations = new Map<string, CancellableInvitation>();
   /**
@@ -94,10 +96,22 @@ export class ClientReplicant {
   //
 
   @trace.span()
-  async init({ edgeUrl, agents }: { edgeUrl: string; agents: boolean }): Promise<void> {
+  async init({
+    edgeUrl,
+    agents,
+    partitions,
+  }: {
+    edgeUrl: string;
+    agents: boolean;
+    partitions: boolean;
+  }): Promise<void> {
     invariant(!this.#client, 'client already initialized');
-    this.#config = { edgeUrl, agents };
-    const proxiedUrl = await this.#startProxy(edgeUrl);
+    this.#config = { edgeUrl, agents, partitions };
+    // The proxy exists only so `goOffline` can cut the wire, and it is a raw byte pipe — it cannot
+    // stand in front of an `https:` endpoint, where the client would offer a TLS handshake to a
+    // plain socket and send `Host: localhost`. A run without partitions needs no proxy, so dial
+    // EDGE directly and keep the deployed environments reachable.
+    const proxiedUrl = partitions ? await this.#startProxy(edgeUrl) : edgeUrl;
 
     // Storage lives under the replicant's own out dir so a destroy/init cycle recovers from disk
     // rather than starting empty — that is what makes `Restart` a crash-recovery test.
@@ -168,6 +182,7 @@ export class ClientReplicant {
    */
   @trace.span()
   async goOffline(): Promise<void> {
+    invariant(this.#proxy, 'no offline proxy: this replicant was initialized with partitions off');
     this.#proxyLive = false;
     for (const socket of this.#sockets) {
       socket.destroy();
@@ -362,6 +377,55 @@ export class ClientReplicant {
     await (await this.#getSpace(spaceId)).db.flush();
   }
 
+  /**
+   * Delete this identity and the spaces it names, through EDGE's self-serve data-management API.
+   *
+   * Self-serve rather than admin-key: the endpoints authenticate with a verifiable presentation
+   * the identity signs, and the replicant is the only party holding those credentials. That is
+   * what lets a run against a shared environment clean up after itself with no shared secret.
+   *
+   * Spaces first — deleting an identity that still owns spaces would orphan them. Nothing here
+   * throws: a cleanup failure must never mask the run's own result.
+   */
+  @trace.span()
+  async deleteOwnData({ spaceIds }: { spaceIds: string[] }): Promise<{ accepted: string[]; refused: string[] }> {
+    invariant(this.#config, 'never initialized');
+    const edgeUrl = this.#config.edgeUrl;
+    const client = this.#getClient();
+    const identity = client.halo.identity.get();
+    invariant(identity, 'no identity to delete');
+
+    const accepted: string[] = [];
+    const refused: string[] = [];
+    const authentication = await authenticateViaChallengeEndpoint(edgeUrl, createEdgeIdentity(client));
+    if (!authentication) {
+      log.warn('cleanup: edge issued no auth challenge', { edgeUrl });
+      return { accepted, refused: [...spaceIds, identity.did] };
+    }
+    const authorization = encodeAuthHeader(authentication.presentation);
+
+    const remove = async (path: string, label: string): Promise<void> => {
+      try {
+        const response = await fetch(new URL(path, edgeUrl), { method: 'DELETE', headers: { authorization } });
+        if (response.ok) {
+          accepted.push(label);
+          return;
+        }
+        refused.push(label);
+        log.warn('cleanup request refused', { path, status: response.status });
+      } catch (err) {
+        refused.push(label);
+        log.warn('cleanup request threw', { path, err });
+      }
+    };
+
+    for (const spaceId of spaceIds) {
+      await remove(`/data/space/${spaceId}`, spaceId);
+    }
+    await remove(`/data/identity/${identity.did}`, identity.did);
+    return { accepted, refused };
+  }
+
   //
   // Observation.
   //
@@ -418,6 +482,10 @@ export class ClientReplicant {
    */
   async #startProxy(edgeUrl: string): Promise<string> {
     const target = new URL(edgeUrl);
+    invariant(
+      target.protocol === 'http:',
+      `partitions need a plain-http EDGE endpoint; the offline proxy cannot front ${target.protocol}//`,
+    );
     const port = Number(target.port !== '' ? target.port : 80);
     this.#proxyLive = true;
 
