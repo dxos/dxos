@@ -88,8 +88,11 @@ type TestCase
     title: string
     description?: string
     steps: TestStep[]
-    tags?: string[]
     source?: DXN               # the spec this case was authored from (a PLUGIN.mdl document)
+  note: >
+    No `tags` field — ECHO carries tags in every object's meta (`Obj.getMeta(case).tags`, refs to
+    Tag objects), so a QA-local string array would be a second, weaker tagging system that the
+    rest of Composer cannot see.
 ```
 
 ```mdl
@@ -263,7 +266,7 @@ op upsertCase
     title: string
     description?: string
     steps: TestStep[]
-    tags?: string[]
+    tags?: DXN[]               # Tag objects to set in the case's meta, not a field on the case
   output: { case: TestCase, created: boolean }
   effects: [echo:write]
 ```
