@@ -20,7 +20,7 @@ import {
 } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
 import { Menu } from '@dxos/react-ui-menu';
-import { getStyles } from '@dxos/ui-theme';
+import { getStyles, mx } from '@dxos/ui-theme';
 
 import { useDeckState } from '#hooks';
 import { meta } from '#meta';
@@ -122,31 +122,31 @@ export const PopoverContent = () => {
     [handleClose],
   );
 
+  const roundedClassNames = 'rounded-md';
+
   return (
     <Popover.Portal>
       <Popover.Content
         side={side}
         sticky='always'
         hideWhenDetached
-        // Rename focuses its input; other popovers keep focus where it was.
         onOpenAutoFocus={isRename ? undefined : (event) => event.preventDefault()}
         onInteractOutside={handleInteractOutside}
         onEscapeKeyDown={handleInteractOutside}
-        // Rename reuses the dialog's enter/exit motion so it does not flicker on open; preview
-        // cards get the hover-card fade+zoom anchored at the trigger.
-        classNames={
-          isRename
-            ? ['data-[state=open]:animate-slide-up-and-fade', 'data-[state=closed]:animate-slide-down-and-fade']
-            : [
-                'origin-(--radix-popover-content-transform-origin)',
-                'data-[state=open]:animate-popover-in',
-                'data-[state=closed]:animate-popover-out',
-              ]
-        }
+        classNames={[
+          roundedClassNames,
+          !isRename && [
+            'origin-(--radix-popover-content-transform-origin)',
+            'data-[state=open]:animate-popover-in',
+            'data-[state=closed]:animate-popover-out',
+          ],
+        ]}
       >
         <Popover.Viewport>
           {isComponentPopover && content && 'component' in content ? (
-            /* Base popover: a plugin-provided component (e.g. editor link preview). */
+            /*
+             * Base popover: a plugin-provided component (e.g., editor link preview).
+             */
             <Surface.Surface type={AppSurface.Popover} data={content} limit={1} />
           ) : (
             /*
@@ -157,7 +157,7 @@ export const PopoverContent = () => {
              * objects like a raw Feed that have no registered card and no renderable fields).
              */
             <Menu.Root>
-              <Card.Root border={false} classNames='dx-card-popover'>
+              <Card.Root border={false} classNames={['dx-card-popover', roundedClassNames]}>
                 <Card.Header>
                   <Card.Block>
                     <CardIconSlot subject={popoverSubject}>
@@ -181,6 +181,7 @@ export const PopoverContent = () => {
                 </Card.Header>
 
                 {content && 'subject' in content ? (
+                  /** CardContent must render the Card.Body. */
                   <Surface.Surface type={AppSurface.CardContent} data={content} limit={1} />
                 ) : (
                   <Card.Body classNames='min-h-8'>

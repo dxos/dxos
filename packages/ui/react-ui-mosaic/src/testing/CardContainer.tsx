@@ -5,7 +5,7 @@
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type PropsWithChildren } from 'react';
 
-import { Icon, Popover } from '@dxos/react-ui';
+import { Card, Icon, Popover } from '@dxos/react-ui';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
 
 const DEFAULT_BLOCK_SIZE = 22;
@@ -54,7 +54,19 @@ export const PopoverCardContainer = ({
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Content onOpenAutoFocus={(event: Event) => event.preventDefault()}>
-          <Popover.Viewport classNames='dx-card-popover'>{children}</Popover.Viewport>
+          <Popover.Viewport>
+            {/* Mirrors the deck's popover card host (plugin-deck Overlays/Popover.tsx) so card
+                stories exercise the real composition: Card.Root grid + header + content. */}
+            <Card.Root border={false} classNames='dx-card-popover'>
+              <Card.Header>
+                <Card.Block>
+                  <Icon icon={icon} />
+                </Card.Block>
+                <Card.Title>Popover</Card.Title>
+              </Card.Header>
+              {children}
+            </Card.Root>
+          </Popover.Viewport>
           <Popover.Arrow />
         </Popover.Content>
       </Popover.Portal>

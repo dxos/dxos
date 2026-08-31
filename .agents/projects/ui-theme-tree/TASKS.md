@@ -55,6 +55,14 @@ Contrast our theme and tree with shadcn/ui and Ark UI to ground the design decis
 - [ ] **PR** — before/after screenshots in description (tree story + navtree pair captured in
       `temp/`), then `submit-pr`. Confirm with user whether hover-default ships app-wide at once.
 - [ ] **Human drag check** — real DnD drop in the sidebar (native drag not automatable).
+- [ ] **Popover closes when clicking the card menu** (user, 2026-08-31) — the pin-on-pointerdown in
+      `dx-anchor` covers `[data-dx-popover-content]`, but the deck popover's dismiss path
+      (`handleInteractOutside` → pointer-down outside the content) still closes when the click
+      lands on the PORTALED `Menu.Content`; needs the Radix layer branch check or menu-aware
+      `onPointerDownOutside` in `plugin-deck/src/containers/Overlays/Popover.tsx`.
+- [ ] **Inline chess embed does not render** (user, 2026-08-31) — `![…](echo:…)` block widget for a
+      Game object shows the collapsed stub (caret + estimated height) instead of the board; trace
+      `PreviewComponent` → Surface resolution for Game/Chess in the document context.
 - [ ] Follow-ups tracked in DESIGN.md §3.5 (animated exit, multi-select, popover motion promotion,
       end-of-row keyboard access).
 
