@@ -194,6 +194,14 @@ export interface Ref<T> extends Pipeable.Pipeable {
   get target(): T | undefined;
 
   /**
+   * @returns The target when it is already materialized: the pinned target, or a side-effect-free
+   * working-set lookup. Never throws and never triggers loading — the synchronous counterpart of
+   * {@link tryLoad}. A just-added object can resolve here before it has settled into its own
+   * document; callers that need a settled document must load instead.
+   */
+  peek(): T | undefined;
+
+  /**
    * @returns Promise that will resolves with the target object.
    * Will load the object from disk if it is not present in the working set.
    * Short-circuits immediately when the target is already loaded.
@@ -541,6 +549,26 @@ export class RefImpl<T> implements Ref<T> {
 
     invariant(this.#resolver, 'Resolver is not set');
     return this.#resolver.resolveSync(this.#uri, true, this.#resolverCallback) as T | undefined;
+  }
+
+  /**
+   * @inheritdoc
+   */
+  peek(): T | undefined {
+    if (this.#target) {
+      return this.#target;
+    }
+    if (!this.#resolver) {
+      return undefined;
+    }
+    try {
+      // No load flag and no callback: a pure working-set read with no side effects.
+      return this.#resolver.resolveSync(this.#uri, false, undefined) as T | undefined;
+    } catch {
+      // Not synchronously resolvable (e.g. a feed-context ref with no space) — peek's contract is
+      // best-effort, so this is the miss case, not an error to surface.
+      return undefined;
+    }
   }
 
   /**
