@@ -34,7 +34,7 @@ export const metricDataToAttributes = (data?: MetricData): Attributes => {
 
 /**
  * Producer-side metrics forwarder: implements the `TRACE_PROCESSOR.remoteMetrics` processor
- * contract by posting each instrument call to the log-writer worker, where an
+ * contract by posting each instrument call to the telemetry worker, where an
  * `OtelMetricsSink` hosts the real `MeterProvider` and export timer. The post happens
  * synchronously inside the instrumented code, so a realm blocked by a long synchronous task
  * keeps landing datapoints while its own timers are stalled.
