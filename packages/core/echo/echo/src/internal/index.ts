@@ -8,7 +8,6 @@ export * from './Entity';
 export * from './Filter';
 export * from './Format';
 export * from './JsonSchema';
-export * from './Merge';
 // TODO(wittjosiah): Required to ensure types are portable (need to export all types required for downstream inference).
 export * from './Obj';
 export { prettyFilter, prettyQuery } from './Query/pretty';

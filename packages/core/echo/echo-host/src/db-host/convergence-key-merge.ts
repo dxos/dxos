@@ -331,6 +331,7 @@ export class ConvergenceKeyMerger {
       }
     }
 
+    log('merged group', { convergenceKey, winner: result.winner, losers: result.losers });
     return true;
   }
 
@@ -436,6 +437,12 @@ export class ConvergenceKeyMerger {
     // The durability rule's dual, as in `#mergeCandidates`: the watermark advance and re-asserted
     // tombstone must be on disk before the intent that claims this fold happened can be cleared.
     await this.#deps.flushDoc(ctx, handle.documentId);
+    log('serviced redirected entity', {
+      loserId,
+      winnerId,
+      foldedFields: applied ? changedFields : [],
+      tombstoneReasserted: needsTombstone,
+    });
     return true;
   }
 }

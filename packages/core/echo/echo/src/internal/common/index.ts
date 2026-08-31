@@ -5,3 +5,4 @@
 export * from './api';
 export * from './proxy';
 export * from './types';
+export * from './merge';

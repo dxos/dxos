@@ -6,8 +6,8 @@ import { type ForeignKey, PROPERTY_ID } from '@dxos/echo-protocol';
 import { type EntityId } from '@dxos/keys';
 
 import type * as Entity from '../../Entity';
-import { getMetaChecked } from '../common';
-import { getSnapshot } from '../Obj';
+import { getSnapshot } from '../Obj/snapshot';
+import { getMetaChecked } from './api/meta';
 
 /**
  * Storage-independent view of one entity participating in a merge.

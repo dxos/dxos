@@ -887,7 +887,7 @@ export class EchoHost extends Resource {
           .pipe(RuntimeProvider.runPromise(this._runtime));
         _mergeInto(combinedResult, result);
 
-        // Natural-key duplicates are born from replication, and a replicated write is exactly what
+        // Convergence-key duplicates are born from replication, and a replicated write is exactly what
         // was just indexed — so this is the earliest a duplicate can be detected on this device.
         // The trigger is the durable intent log written in the same transaction as the index
         // cursors: a crash or a faulted merge pass leaves the intents in place, and this pass —
@@ -898,14 +898,22 @@ export class EchoHost extends Resource {
           .takeConvergenceKeyIntents()
           .pipe(RuntimeProvider.runPromise(this._runtime));
         if (intents.size > 0) {
+          log('servicing convergence-key intents', {
+            spaces: intents.size,
+            keys: [...intents.values()].reduce((count, keys) => count + keys.size, 0),
+            upToId: maxId,
+          });
           const { serviced } = await this._convergenceKeyMerger.mergeDuplicates(this._ctx, intents);
+          let cleared = 0;
           for (const [spaceId, keys] of serviced) {
             for (const key of keys) {
               await this._indexEngine
                 .clearConvergenceKeyIntents(spaceId, key, maxId)
                 .pipe(RuntimeProvider.runPromise(this._runtime));
+              cleared++;
             }
           }
+          log('cleared serviced convergence-key intents', { cleared, upToId: maxId });
         }
         performance.measure('Index Automerge', {
           start: 'indexEngine.update.automerge:start',
