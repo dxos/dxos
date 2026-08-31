@@ -18377,9 +18377,6 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../common/codec-protobuf
       '@dxos/credentials':
         specifier: workspace:*
         version: link:../../core/halo/credentials

@@ -520,12 +520,12 @@ want the same thing from it, each independently landable. Measured on `main`: 29
 outside the package, of which 7 are the package's own machinery reached through the generated barrel
 and die with it.
 
-| Slice                       | Symbols                                                                        | Consumers                                                                                                               | What the upstream change is                                                                                                                                                                                                                                                                |
-| --------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **A. Value codecs**         | `Codec`, `EncodingOptions`                                                     | `hypercore/crypto.ts`, `hypercore.test.ts`, `feed-store/testing/test-generator.ts`, `client-services/pipeline/codec.ts` | None of it is about protobuf: a `Codec` is `encode`/`decode`. Declare the structural type where the parameter lives and drop `EncodingOptions`, which only ever carried protobuf.js's `preserveAny`.                                                                                       |
-| **B. The `Any` envelope**   | `Any`, `WithTypeUrl`, `TaggedType`                                             | `messaging` (4 files), `rpc` (3), `blade-runner` (2), `teleport-extension-gossip`                                       | Real shape change: the legacy `Any` is `{ type_url, value }` and buf's is `{ $typeName, typeUrl, value }`. Consumers move to buf's `Any` from `@bufbuild/protobuf/wkt`, and `{ '@type': … }` tagging goes with `preserveAny`.                                                              |
-| **C. The RPC seam**         | `RequestOptions`, `ServiceBackend`, `ServiceProvider`, `ServiceDescriptorLike` | `rpc/service.ts`, `client-protocol` (2), `protocols/buf/service.ts`                                                     | Interlocked with B, since `ServiceBackend.call(method, request: Any)` is typed on the envelope. `RequestOptions` is protobuf.js encoding options threaded through RPC; on buf there are none, so the parameter is removed rather than retyped. **Must fix the generator too** — see below. |
-| **D. The generated barrel** | `TypedProtoMessage`, `Schema`, `decompressSchema`, the `*Substitutions`        | `protocols/proto/{gen,substitutions,types}.ts`, `protobuf-compiler`                                                     | Not a migration: these are protobuf.js by definition and are deleted with the two packages.                                                                                                                                                                                                |
+| Slice                       | Symbols                                                                        | Consumers                                                                                                               | What the upstream change is                                                                                                                                                                                                                                                                                                               |
+| --------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **A. Value codecs**         | `Codec`, `EncodingOptions`                                                     | `hypercore/crypto.ts`, `hypercore.test.ts`, `feed-store/testing/test-generator.ts`, `client-services/pipeline/codec.ts` | None of it is about protobuf: a `Codec` is `encode`/`decode`. Declare the structural type where the parameter lives and drop `EncodingOptions`, which only ever carried protobuf.js's `preserveAny`.                                                                                                                                      |
+| **B. The `Any` envelope**   | `Any`, `WithTypeUrl`, `TaggedType`                                             | `messaging` (4 files), `rpc` (3), `blade-runner` (2), `teleport-extension-gossip`                                       | Real shape change: the legacy `Any` is `{ type_url, value }` and buf's is `{ $typeName, typeUrl, value }`. Consumers move to buf's `Any` from `@bufbuild/protobuf/wkt`, and `{ '@type': … }` tagging goes with `preserveAny`.                                                                                                             |
+| **C. The RPC seam**         | `RequestOptions`, `ServiceBackend`, `ServiceProvider`, `ServiceDescriptorLike` | `rpc/service.ts`, `client-protocol` (2), `protocols/buf/service.ts`                                                     | Interlocked with B, since `ServiceBackend.call(method, request: Any)` is typed on the envelope. `RequestOptions` is **not** encoding options: it is `{ timeout, ctx }` timeout/trace plumbing that survives the migration, so it is **re-homed to `@dxos/async`** (done) rather than removed. **Must fix the generator too** — see below. |
+| **D. The generated barrel** | `TypedProtoMessage`, `Schema`, `decompressSchema`, the `*Substitutions`        | `protocols/proto/{gen,substitutions,types}.ts`, `protobuf-compiler`                                                     | Not a migration: these are protobuf.js by definition and are deleted with the two packages.                                                                                                                                                                                                                                               |
 
 Order: A, then B+C together, then D. A is independent of everything. D is last by construction.
 
@@ -541,12 +541,28 @@ sweep:
   replicated between peers. Slice A makes its _type_ buf-agnostic, which is what had blocked it, but
   swapping the codec instance itself still wants cross-version fixtures of real feeds.
 
-### The generator re-establishes slice C on every run
+### The generator re-established slice C on every run — fixed
 
-`protobuf-compiler`'s `file-generator.ts` emits `import type { RequestOptions } from '@dxos/codec-protobuf'`
+`protobuf-compiler`'s `file-generator.ts` emitted `import type { RequestOptions } from '@dxos/codec-protobuf'`
 into every generated service stub, from a single `CODEC_MODULE` constant that also serves the
 serializer machinery. Fixing the call sites without fixing the generator means the next `prebuild`
 puts the import back. Slice C is therefore a generator change first and a consumer change second.
+
+`RequestOptions` is `{ timeout?: number; ctx?: Context }` — per-call timeout and trace plumbing
+threaded through the generated stubs, with nothing protobuf about it. It is not encoding options and
+does not disappear on buf, so slice C.0 **re-homed it to `@dxos/async`** (alongside `Stream`, which
+moved the same way) instead of deleting it. Its two runtime call sites, both in `rpc/src/rpc.ts`,
+are the evidence:
+
+- `timeout` drives the per-call deadline: `const timeout = options?.timeout ?? this._params.timeout`,
+  then `asyncTimeout(responseReceived, timeout ?? DEFAULT_TIMEOUT)`.
+- `ctx` is encoded as `traceContext` for distributed tracing —
+  `options?.ctx ? ContextRpcCodec.encode(options.ctx) : undefined` on the request, decoded back into
+  a `Context` in `_getHandlerRpcOptions` on the handler side.
+
+`file-generator.ts` now emits `import type { RequestOptions, Stream } from '@dxos/async'` as a single
+merged import and no longer references `CODEC_MODULE`; the constant stays in `module-specifier.ts`
+for the serializer, which is a later slice.
 
 ### What `Compat<T>` established before it was dropped
 

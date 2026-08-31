@@ -5,13 +5,8 @@
 import { type DescMethod, type DescService } from '@bufbuild/protobuf';
 
 import { Stream } from '@dxos/async';
-import {
-  type Any,
-  type EncodingOptions,
-  type RequestOptions,
-  type ServiceBackend,
-  type ServiceProvider,
-} from '@dxos/codec-protobuf';
+import { type RequestOptions } from '@dxos/async';
+import { type Any, type EncodingOptions, type ServiceBackend, type ServiceProvider } from '@dxos/codec-protobuf';
 import { invariant } from '@dxos/invariant';
 import { getAsyncProviderValue } from '@dxos/util';
 

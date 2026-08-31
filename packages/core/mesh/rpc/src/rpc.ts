@@ -4,7 +4,8 @@
 
 import { Trigger, asyncTimeout, synchronized } from '@dxos/async';
 import { Stream } from '@dxos/async';
-import { type Any, type RequestOptions } from '@dxos/codec-protobuf';
+import { type RequestOptions } from '@dxos/async';
+import { type Any } from '@dxos/codec-protobuf';
 import { type Context, ContextRpcCodec } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';

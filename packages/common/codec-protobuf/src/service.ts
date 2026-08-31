@@ -5,11 +5,11 @@
 import type pb from 'protobufjs';
 
 import { Stream } from '@dxos/async';
+import type { RequestOptions } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { getAsyncProviderValue } from '@dxos/util';
 
 import { type Any, type EncodingOptions } from './common';
-import { type RequestOptions } from './request-options';
 import type { Schema } from './schema';
 
 /**
