@@ -287,6 +287,9 @@ export class Session extends Resource {
         ),
       ),
       Effect.withSpan('AiSession.createRequest'),
+      // Read by the AI telemetry span processor (maps to PostHog `$ai_session_id`), grouping this
+      // conversation's model-call spans across turns.
+      Effect.annotateSpans('dxos.ai.session_id', Obj.getURI(this._feed).toString()),
     );
   }
 }

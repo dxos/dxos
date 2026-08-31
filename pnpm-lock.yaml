@@ -4338,6 +4338,9 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../protocols
+      '@opentelemetry/sdk-trace-base':
+        specifier: 'catalog:'
+        version: 2.10.0(@opentelemetry/api@1.9.1)
       '@types/parsimmon':
         specifier: 'catalog:'
         version: 1.10.9
@@ -13059,6 +13062,9 @@ importers:
 
   packages/plugins/plugin-observability:
     dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../core/compute/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework

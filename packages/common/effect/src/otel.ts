@@ -4,10 +4,11 @@
 
 import * as Tracer from '@effect/opentelemetry/OtelTracer';
 import * as Resource from '@effect/opentelemetry/Resource';
-import { type Attributes, trace } from '@opentelemetry/api';
+import { type Attributes, type TracerProvider, trace } from '@opentelemetry/api';
 import * as Effect from 'effect/Effect';
 import type * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
+import type * as EffectTracer from 'effect/Tracer';
 
 export interface Configuration {
   readonly resource?:
@@ -43,3 +44,11 @@ export const layerOtel: {
       },
     ),
   );
+
+/**
+ * Effect `Tracer` backed by an explicit OTel provider, for injection via
+ * `Effect.provideService(Tracer.Tracer, ...)` — unlike {@link layerOtel}, which reads the global
+ * provider, this lets a caller scope tracing to its own provider (and processors).
+ */
+export const makeTracer = (provider: TracerProvider, name = '@dxos/effect'): EffectTracer.Tracer =>
+  Effect.runSync(Tracer.make.pipe(Effect.provideService(Tracer.OtelTracer, provider.getTracer(name))));

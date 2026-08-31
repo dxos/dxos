@@ -33,6 +33,18 @@ export const ClientReady = Capability.lazyModule(
   },
   () => import('./client-ready'),
 );
+// Startup so the contributed middleware is visible to plugin-assistant's `AiService` module,
+// which snapshots its multi-arity `AiServiceMiddleware` require once during startup.
+export const AiObservability = Capability.lazyModule(
+  'AiObservability',
+  {
+    environments: [],
+    requires: [ObservabilityCapabilities.Observability],
+    provides: [AppCapabilities.AiServiceMiddleware],
+    activatesOn: ActivationEvents.Startup,
+  },
+  () => import('./ai-observability'),
+);
 export const InvocationListener = Capability.lazyModule(
   'InvocationListener',
   {

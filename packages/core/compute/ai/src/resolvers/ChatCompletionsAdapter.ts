@@ -15,6 +15,7 @@ import * as IdGenerator from 'effect/unstable/ai/IdGenerator';
 import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 import type * as Prompt from 'effect/unstable/ai/Prompt';
 import type * as Response from 'effect/unstable/ai/Response';
+import * as Telemetry from 'effect/unstable/ai/Telemetry';
 import * as Tool from 'effect/unstable/ai/Tool';
 import * as HttpClient from 'effect/unstable/http/HttpClient';
 import * as HttpClientError from 'effect/unstable/http/HttpClientError';
@@ -654,6 +655,7 @@ export const make = (model: string) =>
       generateText: (options) =>
         Effect.gen(function* () {
           const idGen = yield* IdGenerator.IdGenerator;
+          annotateRequest(options.span, model, config.apiFormat);
 
           const messages = promptToMessages(options.prompt, config.apiFormat);
           const jsonFormat = options.responseFormat.type === 'json';
@@ -689,6 +691,7 @@ export const make = (model: string) =>
             response,
             config.apiFormat,
           );
+          annotateResponse(options.span, { inputTokens, outputTokens, finishReason });
 
           const parts: Response.PartEncoded[] = [];
           if (reasoning && reasoning.length > 0) {
@@ -724,6 +727,7 @@ export const make = (model: string) =>
         Stream.unwrap(
           Effect.gen(function* () {
             const idGen = yield* IdGenerator.IdGenerator;
+            annotateRequest(options.span, model, config.apiFormat);
 
             const messages = promptToMessages(options.prompt, config.apiFormat);
             const jsonFormat = options.responseFormat.type === 'json';
@@ -922,6 +926,11 @@ export const make = (model: string) =>
                       }
                       openAiCalls.clear();
 
+                      annotateResponse(options.span, {
+                        inputTokens: parsed.inputTokens,
+                        outputTokens: parsed.outputTokens,
+                        finishReason: parsed.finishReason ?? 'stop',
+                      });
                       parts.push({
                         type: 'finish',
                         reason: parsed.finishReason ?? 'stop',
@@ -949,6 +958,23 @@ export const make = (model: string) =>
           }),
         ),
     });
+  });
+
+/** GenAI span annotations (OTel semantic conventions), matching what `@effect/ai-anthropic` emits. */
+const annotateRequest = (span: LanguageModel.ProviderOptions['span'], model: string, apiFormat: ApiFormat): void =>
+  Telemetry.addGenAIAnnotations(span, {
+    system: apiFormat,
+    operation: { name: 'chat' },
+    request: { model },
+  });
+
+const annotateResponse = (
+  span: LanguageModel.ProviderOptions['span'],
+  { inputTokens, outputTokens, finishReason }: { inputTokens?: number; outputTokens?: number; finishReason?: string },
+): void =>
+  Telemetry.addGenAIAnnotations(span, {
+    response: { finishReasons: finishReason ? [finishReason] : undefined },
+    usage: { inputTokens, outputTokens },
   });
 
 /**

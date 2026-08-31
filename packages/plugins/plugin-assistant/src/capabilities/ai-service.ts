@@ -17,6 +17,7 @@ import { AssistantOptions } from '#types';
 export default Capability.makeModule(
   Effect.fnUntraced(function* (options: AssistantOptions.AssistantPluginOptions | void) {
     const resolvers = yield* Capability.getAll(AppCapabilities.AiModelResolver);
+    const middlewares = yield* Capability.getAll(AppCapabilities.AiServiceMiddleware);
 
     // TODO(dmaretskyi): Extract function to reduce them.
     const combinedLayer = resolvers.reduce(
@@ -25,17 +26,8 @@ export default Capability.makeModule(
       AiModelResolver.fromModelMap({ name: 'Fallback' }, Provider.edge.id, Effect.succeed({})),
     );
 
-    let aiServiceLayer: Layer.Layer<AiService.AiService, never, Credential.CredentialsService> =
+    const baseLayer: Layer.Layer<AiService.AiService, never, Credential.CredentialsService> =
       AiModelResolver.buildAiService.pipe(Layer.provide(combinedLayer));
-
-    const aiServiceMiddleware = options?.aiServiceMiddleware;
-    if (aiServiceMiddleware) {
-      // Rebuilt rather than mapped in place: reading the service back out of its own layer would
-      // add `AiService` to the layer's own requirements.
-      aiServiceLayer = Layer.effect(AiService.AiService, Effect.map(AiService.AiService, aiServiceMiddleware)).pipe(
-        Layer.provide(aiServiceLayer),
-      );
-    }
 
     const aiServiceSpec = LayerSpec.make(
       {
@@ -43,7 +35,22 @@ export default Capability.makeModule(
         requires: [Credential.CredentialsService],
         provides: [AiService.AiService],
       },
-      () => aiServiceLayer,
+      (context) => {
+        const aiServiceMiddleware = options?.aiServiceMiddleware;
+        if (!aiServiceMiddleware && middlewares.length === 0) {
+          return baseLayer;
+        }
+        const decorate = (service: AiService.Service): AiService.Service =>
+          middlewares.reduce(
+            (acc, middleware) => middleware(acc, { space: context.space }),
+            aiServiceMiddleware ? aiServiceMiddleware(service) : service,
+          );
+        // Rebuilt rather than mapped in place: reading the service back out of its own layer would
+        // add `AiService` to the layer's own requirements.
+        return Layer.effect(AiService.AiService, Effect.map(AiService.AiService, decorate)).pipe(
+          Layer.provide(baseLayer),
+        );
+      },
     );
 
     return Capability.contribute(Capabilities.LayerSpec, aiServiceSpec);

@@ -58,10 +58,16 @@ export type Errors = {
 };
 
 /**
+ * Wider than {@link Attributes}: event properties carry structured values (message arrays,
+ * nested objects), not just scalars.
+ */
+export type EventAttributes = Record<string, unknown>;
+
+/**
  * Events extension API (kind-specific methods only).
  */
 export type Events = {
-  captureEvent(event: string, attributes?: Attributes): void;
+  captureEvent(event: string, attributes?: EventAttributes): void;
 };
 
 /**

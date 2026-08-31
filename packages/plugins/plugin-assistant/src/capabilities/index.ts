@@ -41,7 +41,7 @@ export const AiContext = AppCapability.layerSpec(() => import('./ai-context'), {
 });
 export const AiService = AppCapability.layerSpec(() => import('./ai-service'), {
   name: 'AiService',
-  requires: [AppCapabilities.AiModelResolver],
+  requires: [AppCapabilities.AiModelResolver, AppCapabilities.AiServiceMiddleware],
 });
 export const Connector = Capability.lazyModule(
   'AnthropicConnector',
