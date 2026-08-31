@@ -28,8 +28,8 @@ export type Init = {
 };
 
 /**
- * Control-plane messages the Otel extension posts to the telemetry worker when log export
- * runs there (see the extension's `telemetryWorker` option). Log lines themselves are not part of
+ * Control-plane messages the Otel extension posts to the observability worker when log export
+ * runs there (see the extension's `observabilityWorker` option). Log lines themselves are not part of
  * this union — they arrive as bare JSONL strings on the same port, shipped by the log
  * processor.
  */
@@ -49,7 +49,7 @@ export type Options = {
 };
 
 /**
- * Worker-side OTel log pipeline: turns the JSONL lines the telemetry worker already
+ * Worker-side OTel log pipeline: turns the JSONL lines the observability worker already
  * receives into OTLP log records. Runs on the worker's own event loop, so batching and
  * export keep going while the producing realm is blocked by a long synchronous task — the
  * lines it logged from inside that task were posted synchronously and export in

@@ -229,7 +229,7 @@ export default defineConfig((env) => ({
         './src/main.tsx',
         './src/workers/dedicated-worker.ts',
         './src/workers/coordinator-worker.ts',
-        './src/workers/telemetry-worker.ts',
+        './src/workers/observability-worker.ts',
         `./${pluginSetFile}`,
       ],
     },

@@ -181,24 +181,24 @@ const createAssetCache = async (isPwa: boolean, isTauri: boolean): Promise<Plugi
 };
 
 /**
- * Spin up the telemetry worker backing the {@link WorkerLogProcessor}. SharedWorker where the
+ * Spin up the observability worker backing the {@link WorkerLogProcessor}. SharedWorker where the
  * platform has it (one writer for all tabs, survives a single tab's close, so flush-at-unload
  * is more durable); dedicated Worker otherwise (unload race is no worse than in-thread writes).
  */
-const createTelemetryWorker = (): Worker | MessagePort => {
+const createObservabilityWorker = (): Worker | MessagePort => {
   // WKWebView can crash instantiating a SharedWorker (FB11723920), so mobile Tauri always
   // takes the dedicated path — this runs before config load, hence the sync platform probes.
   if (typeof SharedWorker !== 'undefined' && !(isTauri$() && isMobile$())) {
-    return new SharedWorker(new URL('./workers/telemetry-worker', import.meta.url), {
+    return new SharedWorker(new URL('./workers/observability-worker', import.meta.url), {
       type: 'module',
       // Dev: SharedWorkers are keyed by (URL, name) and outlive vite restarts; suffixing the
       // boot id gives a restarted server a fresh writer instead of a stale-generation one.
-      name: `dxos-telemetry${__DX_DEV_SERVER_BOOT_ID__ && `-${__DX_DEV_SERVER_BOOT_ID__}`}`,
+      name: `dxos-observability${__DX_DEV_SERVER_BOOT_ID__ && `-${__DX_DEV_SERVER_BOOT_ID__}`}`,
     }).port;
   }
-  return new Worker(new URL('./workers/telemetry-worker', import.meta.url), {
+  return new Worker(new URL('./workers/observability-worker', import.meta.url), {
     type: 'module',
-    name: 'dxos-telemetry',
+    name: 'dxos-observability',
   });
 };
 
@@ -244,8 +244,8 @@ const main = async () => {
   // downloads and feedback exports (IDB keeps the data); the worker owns writes and eviction,
   // so the read handle's own sweep is disabled.
   const logStore = new IdbLogStore({ dbName: LOG_STORE_DB_NAME, evictionInterval: 0 });
-  const telemetryWorker = createTelemetryWorker();
-  const logProcessor = new WorkerLogProcessor({ worker: telemetryWorker });
+  const observabilityWorker = createObservabilityWorker();
+  const logProcessor = new WorkerLogProcessor({ worker: observabilityWorker });
   log.addProcessor(logProcessor.processor);
 
   // Devtools convenience — also surfaced via the help panel and ResetDialog UI.
@@ -337,7 +337,7 @@ const main = async () => {
   // Intentionally do not await; the buffering backend in TRACE_PROCESSOR captures
   // early spans and replays them once the real OTEL backend registers.
   const observability = initializeObservability(config, isTauri, logStore, observabilityDisabled, {
-    post: (message) => telemetryWorker.postMessage(message),
+    post: (message) => observabilityWorker.postMessage(message),
   });
 
   // Capture a one-shot `composer.startup` event when the framework dispatches

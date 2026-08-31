@@ -10,9 +10,9 @@ import type * as OtelSpanSink from '@dxos/observability/OtelSpanSink';
 // Direct module import: the util barrel would pull the whole config/observability graph into
 // this worker's bundle.
 import { LOG_STORE_DB_NAME, LOG_STORE_MAX_BYTES } from '../util/constants';
-import { type TelemetryWorkerMessage } from '../util/worker-log-processor';
+import { type ObservabilityWorkerMessage } from '../util/worker-log-processor';
 
-// Telemetry worker: owns log persistence (queue, flush timer, chunked IDB writes, eviction —
+// Observability worker: owns log persistence (queue, flush timer, chunked IDB writes, eviction —
 // see DX-1224) and, once a connection sends its `otel-*-init` messages, OTLP export of that
 // connection's logs, metrics, and spans. Everything runs on this worker's own event loop, so
 // persistence and export keep going while a producing realm is blocked by a long synchronous
@@ -71,7 +71,7 @@ const fireFlush = (result: Promise<void>): void => {
 
 // Per connection: a SharedWorker serves one producing realm per port, each with its own
 // resource identity (process type, session id), so sink state cannot be shared.
-const createMessageHandler = (): ((event: MessageEvent<TelemetryWorkerMessage>) => void) => {
+const createMessageHandler = (): ((event: MessageEvent<ObservabilityWorkerMessage>) => void) => {
   const logs = lazySink<OtelLogSink.Init, string | Tags | Flush>((init) =>
     import('@dxos/observability/OtelLogSink').then(({ Sink }) => {
       const sink = new Sink(init);
@@ -100,7 +100,7 @@ const createMessageHandler = (): ((event: MessageEvent<TelemetryWorkerMessage>) 
     }),
   );
 
-  return (event: MessageEvent<TelemetryWorkerMessage>): void => {
+  return (event: MessageEvent<ObservabilityWorkerMessage>): void => {
     const data = event.data;
     // Hot path: a bare string is one pre-serialized JSONL line.
     if (typeof data === 'string') {

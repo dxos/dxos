@@ -10,7 +10,7 @@ export default defineConfig({
     'observability': 'src/observability.ts',
     'observability-extension': 'src/observability-extension.ts',
     'providers': 'src/providers/index.ts',
-    // Standalone sink entries: the telemetry worker imports these without dragging the rest
+    // Standalone sink entries: the observability worker imports these without dragging the rest
     // of the package (PostHog, providers) into its bundle.
     'extensions/otel/OtelLogSink': 'src/extensions/otel/OtelLogSink.ts',
     'extensions/otel/OtelMetricsSink': 'src/extensions/otel/OtelMetricsSink.ts',
