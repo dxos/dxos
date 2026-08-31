@@ -42,18 +42,6 @@ const toolkitLayer = TestToolkit.toLayer({
   Echo: ({ value }) => Effect.succeed({ value }),
 });
 
-/**
- * The failure the Anthropic adapter raises while decoding a response that calls a tool the toolkit
- * does not contain — the shape reproduced here, since the provider raises it before any tool call
- * reaches the loop and no scripted tool call can stand in for it.
- */
-const toolNotFound = (toolName: string, availableTools: string[]): AiError.AiError =>
-  new AiError.AiError({
-    module: 'AnthropicLanguageModel',
-    method: 'makeResponse',
-    reason: new AiError.ToolNotFoundError({ toolName, availableTools }),
-  });
-
 // Drives the real `AiRequest` loop against a scripted model instead of a live/memoized provider.
 const testLayer = (turns: readonly ScriptedLanguageModel.ScriptedTurn[]) =>
   Layer.empty.pipe(
@@ -203,6 +191,18 @@ describe('AiRequest loop (scripted model)', () => {
     ),
   );
 });
+
+/**
+ * The failure the Anthropic adapter raises while decoding a response that calls a tool the toolkit
+ * does not contain — the shape reproduced here, since the provider raises it before any tool call
+ * reaches the loop and no scripted tool call can stand in for it.
+ */
+const toolNotFound = (toolName: string, availableTools: string[]): AiError.AiError =>
+  new AiError.AiError({
+    module: 'AnthropicLanguageModel',
+    method: 'makeResponse',
+    reason: new AiError.ToolNotFoundError({ toolName, availableTools }),
+  });
 
 const textOf = (messages: readonly Message.Message[]): string =>
   messages

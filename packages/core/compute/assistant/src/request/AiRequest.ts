@@ -257,10 +257,6 @@ export class Request {
     }).pipe(Effect.withSpan('AiRequest.begin'));
 
   /**
-   * Execute a single turn: one LLM generation followed by tool execution.
-   * The toolkit and system prompt can be updated between turns to reflect context changes (e.g. dynamically enabled skills).
-   */
-  /**
    * Reports a tool call the toolkit could not resolve back to the model, as a turn it can correct.
    *
    * The provider raises this while DECODING its own response — it needs the tool's schema to decode
@@ -289,6 +285,10 @@ export class Request {
       return { messages: [], done: false };
     });
 
+  /**
+   * Execute a single turn: one LLM generation followed by tool execution.
+   * The toolkit and system prompt can be updated between turns to reflect context changes (e.g. dynamically enabled skills).
+   */
   runAgentTurn = <const R = never>({
     system,
     toolkit: opaqueToolkit,
