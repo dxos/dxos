@@ -71,8 +71,9 @@ every test matrix row below keys off, and the rollback lever if the new path mis
 
 1. Doc-backed credential source for the `SpaceStateMachine` DO, behind the same
    per-space selector; feed path retained.
-2. Auth negative-cache invalidation on credential apply
-   (`automerge-replicator-auth.ts`).
+2. ~~Auth negative-cache invalidation on credential apply
+   (`automerge-replicator-auth.ts`).~~ MOOT — dxos/edge#990 deleted the classical
+   `AutomergeReplicator` and its authenticator outright; subduction has no such cache.
 3. A space mid-flip refuses admissions.
 
 PR A can land first and is independently testable — a space that has flipped simply has no
@@ -229,11 +230,12 @@ migration; crash mid-migration and resume.
       directory but is a separate hand-written contract consumed by deployed functions, so it is left
       alone rather than widened into this change.
 - [x] `createAdmissionCredentials` is now 10 positional parameters — convert to an options bag.
-- [x] **EDGE auth negative cache — already fixed, now covered.** `automerge-replicator-auth.ts`
-      caches only an allow; a denial re-queries, so a joiner that dialled before its admission
-      landed is no longer refused for the rest of the 60s TTL. Verified by
-      `automerge-replicator-auth.workerd.test.ts`, which denies a joiner, applies the admission,
-      and re-asks with the same authenticator instance.
+- [x] **EDGE auth negative cache — no longer a thing to fix.** The fix (cache only an allow, so a
+      joiner that dialled before its admission landed is not refused for the rest of the 60s TTL)
+      and its `automerge-replicator-auth.workerd.test.ts` were both dropped when edge#945 was
+      rebased: dxos/edge#990 deleted `AutomergeReplicator` and `AutomergeReplicationAuthenticator`
+      with it. Subduction carries no per-identity auth cache, so there is nothing left to
+      invalidate. Re-check if one is ever introduced there.
 - [ ] Replication: credentials doc joins normal subduction; fresh-joiner test that reads
       credentials before being admitted to anything else.
 - [x] Replay test: replaying the document into a fresh `SpaceStateMachine` reaches the same genesis,
@@ -290,6 +292,13 @@ migration; crash mid-migration and resume.
       and `orderCredentials` are DUPLICATED in the edge repo, because the catalog pins `@dxos/echo-protocol`
       to a commit predating them. A document write is not gated the way feed admission gates a block, so
       every credential is signature-verified before it reaches a processor.
+- [x] **Rebased onto subduction** (2026-08-31) — dxos/edge#990 removed the classical
+      `AutomergeReplicator`, which had held both the documents and the `getSpaceCredentials` RPC.
+      `SpaceCredentialsSource` now reads through `initSubductionReplicator(spaceId).getDocumentsBytes`
+      and holds no durable-object state, so `SpaceStateMachine` constructs one directly instead of
+      paying a cross-DO hop; it moved to `worker/space/` beside the state machine to say so. The
+      registry is what makes this work: it already held the root record precisely because the reader
+      lives in a different durable object from the replicator.
 - [x] **Edge is told the space root** — write-once record (`COALESCE`, returns the id in force), genesis
       credential checked against the space's known space key, cached in `GlobalKv` (safe without
       invalidation precisely because the record is write-once).
