@@ -242,10 +242,7 @@ export const AiModelResolver = Capability$.make<
  * middleware), e.g. telemetry instrumentation. Applied per space — the context carries the space
  * the service instance is scoped to, so policy (like content-capture gating) can vary by space.
  */
-export type AiServiceMiddleware = (
-  service: AiService$.Service,
-  context: { space?: SpaceId },
-) => AiService$.Service;
+export type AiServiceMiddleware = (service: AiService$.Service, context: { space?: SpaceId }) => AiService$.Service;
 
 export const AiServiceMiddleware = Capability$.make<AiServiceMiddleware>()(
   'org.dxos.app-framework.capability.aiServiceMiddleware',

@@ -46,10 +46,8 @@ const wrapLanguageModel = (
 });
 
 // Delegating through a wrapper erases overload signatures; the cast restores them unchanged.
-const wrapMethod = <F extends (...args: never[]) => unknown>(
-  method: F,
-  decorate: (result: any) => unknown,
-): F => ((...args: never[]) => decorate(method(...args))) as F;
+const wrapMethod = <F extends (...args: never[]) => unknown>(method: F, decorate: (result: any) => unknown): F =>
+  ((...args: never[]) => decorate(method(...args))) as F;
 
 const provide = <A, E, R>(
   effect: Effect.Effect<A, E, R>,

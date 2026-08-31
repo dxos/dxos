@@ -4,12 +4,7 @@
 
 import { type Context } from '@opentelemetry/api';
 import { SpanStatusCode } from '@opentelemetry/api';
-import {
-  BasicTracerProvider,
-  type ReadableSpan,
-  type Span,
-  type SpanProcessor,
-} from '@opentelemetry/sdk-trace-base';
+import { BasicTracerProvider, type ReadableSpan, type Span, type SpanProcessor } from '@opentelemetry/sdk-trace-base';
 
 /**
  * AI telemetry capture — data policy.
