@@ -1065,9 +1065,13 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
     // the field remounts empty on the way back to creating, but `commit()` on an already-empty field
     // never calls back — so text abandoned before a selection would otherwise ride along, unseen,
     // into the next task created.
-    const editingId = useRef<string | undefined>(undefined);
-    if (editingId.current !== current?.id) {
-      editingId.current = current?.id;
+    //
+    // State rather than a ref for the previous id (React's adjust-state-on-prop-change pattern): a
+    // render React abandons leaves a ref already mutated, so the retry would skip the reset and the
+    // pane would keep the previous task's text.
+    const [editingId, setEditingId] = useState<string | undefined>(undefined);
+    if (editingId !== current?.id) {
+      setEditingId(current?.id);
       setDraft(current?.title ?? '');
       draftDescription.current = '';
     }

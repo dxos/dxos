@@ -8,6 +8,7 @@ import React, {
   type PointerEvent,
   forwardRef,
   useCallback,
+  useEffect,
   useRef,
   useState,
 } from 'react';
@@ -176,30 +177,37 @@ type ClipboardIconButtonProps = StaticPresetProps & {
 };
 
 const ClipboardIconButton = forwardRef<HTMLButtonElement, ClipboardIconButtonProps>(
-  ({ label, onCopy, ...props }, forwardedRef) => {
+  ({ label, onCopy, classNames, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const [copied, setCopied] = useState(false);
 
     const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+    // Confirmed only once the write resolves: `writeText` rejects when the document is not focused
+    // or the permission is refused, and a checkmark shown before that reports a copy that never
+    // happened — besides leaving the rejection unhandled.
     const handleCopy = useCallback(() => {
       const text = onCopy();
-      if (text) {
-        setCopied(true);
-        void navigator.clipboard.writeText(text);
+      if (!text) {
+        return;
       }
 
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = setTimeout(() => {
-        setCopied(false);
-      }, 1_000);
+      void navigator.clipboard
+        .writeText(text)
+        .then(() => {
+          setCopied(true);
+          clearTimeout(timeoutRef.current);
+          timeoutRef.current = setTimeout(() => setCopied(false), 1_000);
+        })
+        .catch(() => setCopied(false));
+    }, [onCopy]);
 
-      return () => clearTimeout(timeoutRef.current);
-    }, [onCopy, setCopied]);
+    // The pending reset outlives an unmount otherwise, setting state on a gone component.
+    useEffect(() => () => clearTimeout(timeoutRef.current), []);
 
     return (
       <IconButton
         {...props}
-        classNames={copied && 'text-green-500'}
+        classNames={[copied && 'text-green-500', classNames]}
         icon={copied ? 'ph--check--regular' : 'ph--clipboard--regular'}
         label={label ?? t('system-button.clipboard.label')}
         onClick={handleCopy}
@@ -333,6 +341,11 @@ const MicIconButton = forwardRef<HTMLButtonElement, MicIconButtonProps>(
     }, [onPressEnd]);
     const handlePointerDown = useCallback(
       (event: PointerEvent<HTMLButtonElement>) => {
+        // Primary button only: a right- or middle-click does not activate a button, so it must not
+        // start recording either — and its release would not arrive as the `pointerup` that ends it.
+        if (event.button !== 0) {
+          return;
+        }
         // Capture so the matching release fires on this button even if the pointer leaves it.
         event.currentTarget.setPointerCapture(event.pointerId);
         beginPress();

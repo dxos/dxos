@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
+import { expect, within } from 'storybook/test';
 
 import { translations } from '#translations';
 
@@ -99,3 +100,22 @@ export default meta;
 type Story = StoryObj<StoryArgs>;
 
 export const Default: Story = {};
+
+/**
+ * The disclosure reports `aria-expanded`, which is what makes it a disclosure rather than a caret
+ * that happens to rotate — the label alone leaves the state implicit. Star is a toggle button, not
+ * a disclosure, so it must NOT carry it.
+ */
+export const TestDisclosureReportsExpanded: Story = {
+  play: async ({ canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+    const disclosure = await canvas.findByRole('button', { name: 'Expand' }, { timeout: 10_000 });
+    await expect(disclosure).toHaveAttribute('aria-expanded', 'false');
+
+    await userEvent.click(disclosure);
+    const expanded = await canvas.findByRole('button', { name: 'Collapse' }, { timeout: 10_000 });
+    await expect(expanded).toHaveAttribute('aria-expanded', 'true');
+
+    await expect(canvas.getByRole('button', { name: 'Star' })).not.toHaveAttribute('aria-expanded');
+  },
+};
