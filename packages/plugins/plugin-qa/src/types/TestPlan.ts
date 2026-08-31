@@ -29,13 +29,18 @@ export class TestPlan extends Type.makeObject<TestPlan>(DXN.make('org.dxos.type.
 ) {}
 
 /** Props a caller supplies; the feed and the empty case list are the plan's own to create. */
+/**
+ * What the create dialog asks for. `source` is deliberately absent: it is set by the operation that
+ * generates a plan from a spec, never typed by a person.
+ */
 export const CreateTestPlanSchema = Schema.Struct({
   name: Schema.optional(Schema.String.pipe(Schema.annotate({ title: 'Name' }))),
   description: Schema.optional(Schema.String.pipe(Schema.annotate({ title: 'Description' }))),
-  /** The spec document this plan tracks, when generated from one. */
-  source: Schema.optional(Schema.String),
 });
-export interface CreateTestPlanProps extends Schema.Schema.Type<typeof CreateTestPlanSchema> {}
+export interface CreateTestPlanProps extends Schema.Schema.Type<typeof CreateTestPlanSchema> {
+  /** Set by the operation that generates a plan from a spec, not by the create dialog. */
+  readonly source?: string;
+}
 
 /** Creates a plan with its backing feed. */
 export const make = ({ name, description, source }: CreateTestPlanProps = {}): TestPlan =>

@@ -12,7 +12,7 @@ import { Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { Icon, Panel } from '@dxos/react-ui';
 
-import { StatusBadge } from '#components';
+import { RunRow } from '#components';
 import { QaOperation, type TestCase, TestPlan, TestRun } from '#types';
 
 export type TestPlanArticleProps = AppSurface.ObjectArticleProps<TestPlan.TestPlan>;
@@ -22,6 +22,9 @@ export const TestPlanArticle = ({ role, subject }: TestPlanArticleProps) => {
   const { invokePromise } = useOperationInvoker();
   const [plan] = useObject(subject);
   const [starting, setStarting] = useState(false);
+  const [caseKey, setCaseKey] = useState('');
+  const [caseTitle, setCaseTitle] = useState('');
+  const [expanded, setExpanded] = useState<string | undefined>();
   // Each case resolves through its own atom, so the list re-renders per ref rather than wholesale.
   const cases: Obj.Snapshot<TestCase.TestCase>[] = useAtomValue(
     useMemo(
@@ -45,6 +48,20 @@ export const TestPlanArticle = ({ role, subject }: TestPlanArticleProps) => {
   );
   // The feed appends in execution order; the surface reads newest first.
   const newestFirst = useMemo(() => [...runs].reverse(), [runs]);
+
+  const handleAddCase = useCallback(() => {
+    if (!invokePromise || caseKey.trim().length === 0) {
+      return;
+    }
+    void invokePromise(
+      QaOperation.SetCase,
+      { plan: Ref.make(subject), key: caseKey.trim(), title: caseTitle.trim() || caseKey.trim() },
+      { spaceId: Obj.getDatabase(subject)?.spaceId },
+    ).then(() => {
+      setCaseKey('');
+      setCaseTitle('');
+    });
+  }, [invokePromise, subject, caseKey, caseTitle]);
 
   const handleStartRun = useCallback(() => {
     if (!invokePromise) {
@@ -72,6 +89,31 @@ export const TestPlanArticle = ({ role, subject }: TestPlanArticleProps) => {
 
         <section>
           <h2 className='text-sm text-subdued'>Cases</h2>
+          <div className='flex gap-2 py-2'>
+            <input
+              className='dx-input w-24'
+              placeholder='Key'
+              value={caseKey}
+              onChange={(event) => setCaseKey(event.target.value)}
+              data-testid='qa.plan.case-key'
+            />
+            <input
+              className='dx-input grow'
+              placeholder='Title'
+              value={caseTitle}
+              onChange={(event) => setCaseTitle(event.target.value)}
+              data-testid='qa.plan.case-title'
+            />
+            <button
+              className='dx-button'
+              disabled={caseKey.trim().length === 0}
+              onClick={handleAddCase}
+              data-testid='qa.plan.add-case'
+            >
+              <Icon icon='ph--plus--regular' size={4} />
+              <span>Add case</span>
+            </button>
+          </div>
           {cases.length === 0 ? (
             <p className='text-subdued' data-testid='qa.plan.no-cases'>
               No cases yet.
@@ -97,19 +139,15 @@ export const TestPlanArticle = ({ role, subject }: TestPlanArticleProps) => {
             </p>
           ) : (
             <ul data-testid='qa.plan.runs'>
-              {newestFirst.map((run) => {
-                const { passed, total } = TestRun.tally(run);
-                return (
-                  <li key={run.id} className='flex items-center gap-2 py-1' data-testid='qa.plan.run'>
-                    <StatusBadge status={run.status} />
-                    <span className='font-mono text-sm'>{run.startedAt.slice(0, 19).replace('T', ' ')}</span>
-                    <span className='grow text-subdued text-sm'>{run.target?.ref ?? run.runner?.name ?? ''}</span>
-                    <span className='font-mono text-sm'>
-                      {passed}/{total}
-                    </span>
-                  </li>
-                );
-              })}
+              {newestFirst.map((run) => (
+                <li key={run.id} data-testid='qa.plan.run'>
+                  <RunRow
+                    run={run}
+                    expanded={expanded === run.id}
+                    onToggle={() => setExpanded((current) => (current === run.id ? undefined : run.id))}
+                  />
+                </li>
+              ))}
             </ul>
           )}
         </section>

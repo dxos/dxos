@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Ref } from '@dxos/echo';
+import { Database, Feed, Ref } from '@dxos/echo';
 
 import { QaOperation, TestRun } from '#types';
 
@@ -34,21 +34,20 @@ const handler: Operation.WithHandler<typeof QaOperation.StartRun> = QaOperation.
         return yield* Effect.fail(new Error(`Not in the plan: ${unknown.join(', ')}.`));
       }
 
-      const run = yield* Database.add(
-        TestRun.make({
-          plan: Ref.make(plan),
-          status: 'running',
-          cases: requested,
-          target,
-          runner,
-          stages: stages ? [...stages] : undefined,
-          startedAt: new Date().toISOString(),
-          results: [],
-        }),
-      );
-
+      // The run belongs to the feed, so it is appended rather than added: `Database.add` would give
+      // it an identity the feed then refuses to assign a position to.
+      const run = TestRun.make({
+        plan: Ref.make(plan),
+        status: 'running',
+        cases: requested,
+        target,
+        runner,
+        stages: stages ? [...stages] : undefined,
+        startedAt: new Date().toISOString(),
+        results: [],
+      });
       const feed = yield* loadFeed(plan);
-      yield* Database.appendToFeed(feed, [run]);
+      yield* Feed.append(feed, [run]);
 
       return { run: Ref.make(run), cases: requested };
     }),

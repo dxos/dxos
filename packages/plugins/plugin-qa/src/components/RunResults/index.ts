@@ -3,5 +3,3 @@
 //
 
 export * from './RunResults';
-export * from './RunRow';
-export * from './StatusBadge';
