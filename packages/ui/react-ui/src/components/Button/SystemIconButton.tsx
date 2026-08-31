@@ -360,7 +360,7 @@ const MicIconButton = forwardRef<HTMLButtonElement, MicIconButtonProps>(
     );
 
     // Highlight with the error (rose) tone while recording.
-    const recordingClassNames = recording ? 'bg-error-surface' : undefined;
+    const recordingClassNames = recording ? 'bg-error-surface text-error-fg' : undefined;
     const holdHandlers =
       mode === 'hold'
         ? {
@@ -382,7 +382,7 @@ const MicIconButton = forwardRef<HTMLButtonElement, MicIconButtonProps>(
         {...props}
         {...holdHandlers}
         classNames={[recordingClassNames, classNames]}
-        icon='ph--microphone--regular'
+        icon={recording ? 'ph--microphone--duotone' : 'ph--microphone--regular'}
         ref={forwardedRef}
       />
     );
