@@ -57,7 +57,12 @@ const Frame = ({ title, note, children }: PropsWithChildren<{ title: string; not
   <div className='flex flex-col gap-1'>
     <div className='text-sm font-medium'>{title}</div>
     {note && <div className='text-xs text-description'>{note}</div>}
-    <div className='border border-separator' style={{ height: PARENT_SIZE, width: 220 }}>
+    {/*
+      The clip belongs here, on the frame, and never on the measured element: a non-visible
+      overflow zeroes an item's own automatic minimum size, so clipping the subject would
+      constrain every variant and the story would demonstrate nothing.
+    */}
+    <div className='border border-separator overflow-hidden' style={{ height: PARENT_SIZE, width: 220 }}>
       {children}
     </div>
   </div>
@@ -87,7 +92,7 @@ export const ParentTypes = {
         <Frame title='flex parent' note='flex-1 sizes it; min-h-0 lets it shrink'>
           <div className='flex flex-col h-full'>
             <div className='h-10 shrink-0 bg-neutral-500/20 p-2 text-xs'>header</div>
-            <Measured label='dx-expand' classNames='dx-expand overflow-hidden'>
+            <Measured label='dx-expand' classNames='dx-expand'>
               <Tall />
             </Measured>
           </div>
@@ -96,7 +101,7 @@ export const ParentTypes = {
         <Frame title='grid parent' note='flex-1 is ignored; min-h-0 does all the work'>
           <div className='grid grid-rows-[auto_1fr] h-full'>
             <div className='h-10 bg-neutral-500/20 p-2 text-xs'>header</div>
-            <Measured label='dx-expand' classNames='dx-expand overflow-hidden'>
+            <Measured label='dx-expand' classNames='dx-expand'>
               <Tall />
             </Measured>
           </div>
@@ -104,7 +109,7 @@ export const ParentTypes = {
 
         <Frame title='block parent' note='h-full is the only live property'>
           <div className='h-full'>
-            <Measured label='dx-fill' classNames='dx-fill overflow-hidden'>
+            <Measured label='dx-fill' classNames='dx-fill'>
               <Tall />
             </Measured>
           </div>
@@ -137,7 +142,7 @@ export const WhichPropertyFires = {
           <Frame key={label} title={label}>
             <div className='grid grid-rows-[auto_1fr] h-full'>
               <div className='h-10 bg-neutral-500/20 p-2 text-xs'>header</div>
-              <Measured label={label || '(none)'} classNames={mx('overflow-hidden', cls)}>
+              <Measured label={label || '(none)'} classNames={cls}>
                 <Tall />
               </Measured>
             </div>
@@ -192,7 +197,7 @@ export const Fullscreen = {
       </p>
       <Frame title='dx-fullscreen' note='absolute inset-0 against a positioned ancestor'>
         <div className='relative h-full'>
-          <Measured label='dx-fullscreen' classNames='dx-fullscreen overflow-hidden'>
+          <Measured label='dx-fullscreen' classNames='dx-fullscreen'>
             <Tall />
           </Measured>
         </div>

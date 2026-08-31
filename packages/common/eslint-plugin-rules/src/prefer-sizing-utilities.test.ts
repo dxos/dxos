@@ -34,7 +34,7 @@ describe('prefer-sizing-utilities', () => {
         { filename, code: "<div className='dx-expand overflow-hidden' />" },
         { filename, code: "<div className='dx-fullscreen overflow-hidden' />" },
         // Not a class-bearing attribute.
-        { filename, code: "<div title='dx-fill' />" },
+        { filename, code: "<div title='h-full w-full' />" },
       ],
       invalid: [],
     });
@@ -61,8 +61,8 @@ describe('prefer-sizing-utilities', () => {
         },
         {
           filename,
-          code: "<div className='dx-fill' />",
-          errors: [{ messageId: 'handRolled', data: { classes: 'dx-fill', suggestion: 'dx-fill' } }],
+          code: "<div className='h-full w-full' />",
+          errors: [{ messageId: 'handRolled', data: { classes: 'h-full w-full', suggestion: 'dx-fill' } }],
         },
         {
           filename,
@@ -72,19 +72,19 @@ describe('prefer-sizing-utilities', () => {
         // The longest match wins, so one class list yields one suggestion rather than a cascade.
         {
           filename,
-          code: "<div className='flex-1 min-h-0 min-w-0 dx-fill' />",
+          code: "<div className='flex-1 min-h-0 min-w-0 h-full w-full' />",
           errors: [
             {
               messageId: 'handRolled',
-              data: { classes: 'flex-1 min-h-0 min-w-0 dx-fill', suggestion: 'dx-expand' },
+              data: { classes: 'flex-1 min-h-0 min-w-0 h-full w-full', suggestion: 'dx-expand' },
             },
           ],
         },
         // `classNames` and `mx()` are checked too.
         {
           filename,
-          code: "<div classNames={mx('dx-fill')} />",
-          errors: [{ messageId: 'handRolled', data: { classes: 'dx-fill', suggestion: 'dx-fill' } }],
+          code: "<div classNames={mx('h-full w-full')} />",
+          errors: [{ messageId: 'handRolled', data: { classes: 'h-full w-full', suggestion: 'dx-fill' } }],
         },
       ],
     });
