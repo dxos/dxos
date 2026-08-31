@@ -278,6 +278,29 @@ export const assertEqualsModel = (model: Model, spaceSlot: number, client: Clien
 };
 
 /**
+ * Retry an assertion until it holds or the quiescence budget runs out.
+ *
+ * Convergence is a temporal property: a peer agrees *eventually*, and `quiesce` only proves that
+ * each peer has nothing outstanding against EDGE — a document EDGE has not yet offered to the
+ * other device leaves both sides reporting caught up while their digests differ. A failure here
+ * means it never converged, which is the property worth asserting.
+ */
+const untilConverged = async (real: Real, check: () => Promise<void>): Promise<void> => {
+  const deadline = Date.now() + real.spec.quiescenceTimeoutMs;
+  for (;;) {
+    try {
+      await check();
+      return;
+    } catch (err) {
+      if (Date.now() > deadline) {
+        throw err;
+      }
+      await sleep(500);
+    }
+  }
+};
+
+/**
  * Mid-run assertion: quiesce every online member of every space against EDGE and require them to
  * agree with each other and to hold nothing the model does not know about.
  */
@@ -288,16 +311,18 @@ export const runCheckpoint = async (model: Model, real: Real): Promise<void> => 
       continue;
     }
     await quiesce(real, slot, devices);
-    const digests = await Promise.all(
-      devices.map(async (client) => ({
-        client,
-        digest: await real.replicants[client].brain.digest({ spaceId: real.spaceIds[slot] }),
-      })),
-    );
-    assertDigestsAgree(digests, slot);
-    for (const { client, digest } of digests) {
-      assertSubsetOfModel(model, slot, client, digest);
-    }
+    await untilConverged(real, async () => {
+      const digests = await Promise.all(
+        devices.map(async (client) => ({
+          client,
+          digest: await real.replicants[client].brain.digest({ spaceId: real.spaceIds[slot] }),
+        })),
+      );
+      assertDigestsAgree(digests, slot);
+      for (const { client, digest } of digests) {
+        assertSubsetOfModel(model, slot, client, digest);
+      }
+    });
   }
 };
 
@@ -324,9 +349,11 @@ export const assertFullyReplicated = async (model: Model, real: Real): Promise<v
     log.info('final assertion', { space: slot, devices });
     await awaitSpaceOnAllDevices(real, slot, devices);
     await quiesce(real, slot, devices);
-    for (const client of devices) {
-      const digest = await real.replicants[client].brain.digest({ spaceId: real.spaceIds[slot] });
-      assertEqualsModel(model, slot, client, digest);
-    }
+    await untilConverged(real, async () => {
+      for (const client of devices) {
+        const digest = await real.replicants[client].brain.digest({ spaceId: real.spaceIds[slot] });
+        assertEqualsModel(model, slot, client, digest);
+      }
+    });
   }
 };
