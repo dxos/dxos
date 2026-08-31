@@ -30,11 +30,11 @@ evalite.each<VariantConfig>([
     input: { model: DXN.make('com.anthropic.model.claude-haiku-4-5.default') },
   },
   {
-    name: 'claude-sonnet-4-5',
+    name: 'claude-sonnet-5',
     input: { model: DXN.make('com.anthropic.model.claude-sonnet-5.default') },
   },
   {
-    name: 'claude-opus-4-6',
+    name: 'claude-opus-5',
     input: { model: DXN.make('com.anthropic.model.claude-opus-5.default') },
   },
 ])('Question answering', {
