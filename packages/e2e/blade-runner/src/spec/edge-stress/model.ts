@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { invariant } from '@dxos/invariant';
+
 import { type SpaceDigest } from '../../replicants/client-replicant';
 
 /**
@@ -85,8 +87,28 @@ export const makeFleetModel = ({
   return model;
 };
 
-/** Globally unique, so a token proves which client authored it and cannot collide with another. */
-export const token = (client: ClientIndex, seq: number): string => `⟦c${client}-${seq}⟧`;
+/**
+ * One character per operation, drawn from a private-use block.
+ *
+ * Single-character on purpose: an edit inserts at `positionRatio * content.length`, which lands
+ * mid-token as soon as a peer has received someone else's edit, and a multi-character token
+ * spliced into another is no longer recoverable from the text. That made a correct merge look like
+ * CRDT interleaving. A character cannot be split, so the set of characters present is exactly the
+ * set of operations applied, whatever order they merged in — which is the property the model needs.
+ */
+export const token = (client: ClientIndex, seq: number): string => {
+  const codePoint = TOKEN_BASE + client * TOKEN_STRIDE + seq;
+  // Outside the BMP a code point is a surrogate pair, and a splice can land between the halves —
+  // which would split the very thing this makes unsplittable.
+  invariant(codePoint <= TOKEN_LAST, `token space exhausted at client ${client}, op ${seq}`);
+  return String.fromCharCode(codePoint);
+};
+
+/** The BMP private use area: one UTF-16 unit each, and no document text will contain them. */
+const TOKEN_BASE = 0xe000;
+const TOKEN_LAST = 0xf8ff;
+/** Operations per client before two clients' tokens could collide; six clients fit. */
+const TOKEN_STRIDE = 1024;
 
 export const documentId = (spaceSlot: number, documentSlot: number): string => `s${spaceSlot}-d${documentSlot}`;
 

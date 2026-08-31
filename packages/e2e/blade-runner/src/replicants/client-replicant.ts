@@ -471,7 +471,8 @@ export class ClientReplicant {
     const docs: Record<string, DocumentDigest> = {};
     for (const object of objects) {
       docs[object.docId] = {
-        tokens: (object.content?.match(/⟦[^⟧]*⟧/g) ?? []).sort(),
+        // Every token is one character, so the text splits into them with no parsing to get wrong.
+        tokens: [...(object.content ?? '')].sort(),
         counters: [...object.counters],
         content: object.content ?? '',
       };

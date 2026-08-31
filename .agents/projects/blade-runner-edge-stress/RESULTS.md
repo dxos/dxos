@@ -274,57 +274,52 @@ fixed or characterised; the probe itself failed and its space and identity are s
 Setup against dev is fast: identity minted and space created in **4.9 s**, against 15–21 s for a
 3-client fleet locally.
 
-## 4c. Minimal reproduction, and a sharper finding (run H)
+## 4c. Minimal reproduction — and a bug in the test, not the product
 
-`spec.planFile` replays a recorded plan instead of drawing one — the plan trace entry now carries
-the commands structurally as well as readably, and a replayed plan is simulated before execution so
-an edited one reports which command cannot run. That turns a counterexample into a fixture, which
-is what a sampled sequence otherwise lacks: there is no fast-check shrinker to lean on.
+`spec.planFile` replays a recorded plan instead of drawing one: the plan trace entry now carries the
+commands structurally as well as readably, and a replayed plan is simulated before execution so an
+edited one reports which command cannot run. That turns a counterexample into a fixture, which a
+sampled sequence otherwise lacks — there is no fast-check shrinker to lean on.
 
-Hand-shrinking run F/G's 25-command plan to five commands
+Hand-shrinking run F/G's 25-command plan to five
 (`configs/plans/finding-6-candidate.json`, `configs/edge-stress-finding-6.yml`):
 
 ```
 CreateSpace(2)  CreateDocument(2, 0)  EditText(0, 0, 0, 0.5)  EditText(1, 0, 0, 0.5)  EditCounter(0, 0, 0)
 ```
 
-Two devices of one identity insert at the same offset of the same document, in a space owned by a
-second identity.
-
-**This plan fails intermittently, not every time** — a rerun of the identical plan (run J) passed,
-executing all five commands with the final assertion green in 12.5 s. So what follows is a race, not
-a property of the sequence; §4d has the measured rate. On the run that failed, all three replicants
-logged `diverged document has no subduction retry path`, and the final assertion failed on a
-**different mode** than run F/G, and a worse one:
+Four of five runs failed, always with the same corrupted text:
 
 ```
 client 0 diverged from the model on space 0:
-  model:  [["s0-d0",["⟦c0-1⟧","⟦c1-2⟧"],[1,0,0]]]
-  client: [["s0-d0",["⟦c0⟦c1-2⟧"],[1,0,0]]]
+  model:  [["s0-d0",["c0-1","c1-2"],[1,0,0]]]
+  client: [["s0-d0",["c0(c1-2)"],[1,0,0]]]
+  raw:
+    s0-d0: "(c0(c1-2)-1)"
 ```
 
-The peers **converged, to a corrupted value**: client 1's token was spliced into the middle of
-client 0's, so `⟦c0-1⟧` and `⟦c1-2⟧` merged into `⟦c0⟦c1-2⟧-1⟧`. Two concurrent inserts at the same
-index interleaved character by character — the anomaly Automerge's sequence CRDT is specifically
-designed to prevent. The counters on the same document are correct (`[1,0,0]`), so this is the text
-path alone.
+**This was the test's fault, and it was briefly written up here as an Automerge interleaving
+anomaly. It is not one.** `editDocumentText` inserts at `floor(positionRatio * content.length)`
+computed from the client's *local* text. Once a peer has received the first client's six-character
+token, a ratio of 0.5 resolves to index 3, which is inside it — and splicing the second token there
+produces exactly the observed string, reproduced by arithmetic alone. The runs that passed are the
+ones where the second client had not yet received the first's edit, so both inserted at index 0 and
+the tokens landed adjacent.
 
-Caveats, all worth closing before this is filed:
+The merge was correct every time. What was wrong was the model's assumption that a multi-character
+token stays contiguous and recoverable by regex, which a mid-token insert makes false.
 
-- The digest extracts tokens with `/⟦[^⟧]*⟧/g`, so `⟦c0⟦c1-2⟧` is what the regex made of the merged
-  content, not the content itself. `digest` now also returns the raw string and `assertEqualsModel`
-  prints it, so the next failing run shows the exact interleaving — but it has not been captured yet.
-- Run F/G failed with `differentDocuments: 1` and never converged; run H converged to the wrong
-  value. They may share a root cause but that is not established.
-- It is intermittent (above), so a fix cannot be validated by one green run.
+Fixed by making a token **one character** (BMP private use area, so one UTF-16 unit — outside the
+BMP a splice could land between surrogate halves). A character cannot be split, so the set of
+characters in the text is exactly the set of operations applied, whatever order they merged in, and
+the digest reads `[...content]` with no parsing to get wrong.
 
-### An assertion against a stuck peer hung the run
+Two lessons worth keeping:
 
-Runs I and J sat in the final assertion for over fifteen minutes with no output. RPC to a replicant
-is created with `timeout: 0`, and the scheduler only rescues the run when a replicant *dies* — a
-peer alive but stuck inside `flush` or a query hangs the orchestrator indefinitely, with nothing to
-diagnose from. Every assertion-side call (`hasSpace`, `flush`, `getSyncState`, `digest`) now carries
-a deadline naming the peer and the call. It has not fired yet, so it is in but unproven.
+- A model-based test's own encoding is part of the model. A delimited multi-character token quietly
+  asserted "an insert never lands inside a token", which nothing guaranteed.
+- The counters on the same document were correct in every failing run. That should have been the
+  clue: a CRDT that interleaved text would not keep per-writer registers exact.
 
 ## 5. Harness gaps found
 
