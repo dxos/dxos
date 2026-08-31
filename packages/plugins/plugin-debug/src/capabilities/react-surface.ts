@@ -10,7 +10,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { type IdbLogStore } from '@dxos/log-store-idb';
+import { type LogStore } from '@dxos/log-store-idb';
 import { type Space, isSpace } from '@dxos/react-client/echo';
 import { Position } from '@dxos/util';
 
@@ -41,7 +41,7 @@ const isSpaceDebug = (data: unknown): data is SpaceDebug =>
   isSpace(data.space);
 
 type ReactSurfaceOptions = {
-  logStore?: IdbLogStore;
+  logStore?: LogStore;
 };
 
 export default Capability.makeModule(

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type IdbLogStore, MANUAL_LOG_EXPORT_MAX_BYTES } from '@dxos/log-store-idb';
+import { type LogStore, MANUAL_LOG_EXPORT_MAX_BYTES } from '@dxos/log-store-idb';
 import { downloadBlob } from '@dxos/util';
 
 export { MANUAL_LOG_EXPORT_MAX_BYTES };
@@ -17,7 +17,7 @@ export const triggerNdjsonDownload = (blob: Blob, fileName = composerLogFileName
   downloadBlob(blob, fileName);
 
 /** Export logs for a user-initiated download, capped at {@link MANUAL_LOG_EXPORT_MAX_BYTES}. */
-export const exportManualLogDownload = (logStore: IdbLogStore): Promise<Blob> =>
+export const exportManualLogDownload = (logStore: LogStore): Promise<Blob> =>
   logStore.exportBlob({ maxSize: MANUAL_LOG_EXPORT_MAX_BYTES });
 
 /**
@@ -25,7 +25,7 @@ export const exportManualLogDownload = (logStore: IdbLogStore): Promise<Blob> =>
  * Used by both the in-app download buttons and the `globalThis.downloadLogs`
  * devtools hook.
  */
-export const downloadLogs = async (logStore: IdbLogStore): Promise<void> => {
+export const downloadLogs = async (logStore: LogStore): Promise<void> => {
   const blob = await exportManualLogDownload(logStore);
   await triggerNdjsonDownload(blob);
 };

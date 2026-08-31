@@ -4,6 +4,9 @@
     "lib": [
       "DOM",
       "es2022"
+    ],
+    "types": [
+      "sharedworker"
     ]
   },
   "include": [

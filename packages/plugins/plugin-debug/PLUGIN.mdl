@@ -29,7 +29,7 @@ type Settings
 ```mdl
 type DebugPluginOptions
   fields:
-    logStore?: IdbLogStore      # shared persistent log store for capturing and downloading logs
+    logStore?: LogStore      # shared persistent log store for capturing and downloading logs
     persistStats?: boolean      # persist the stats-panel store to localStorage (default true)
 ```
 

@@ -8,7 +8,7 @@ import * as Match from 'effect/Match';
 
 import { DXOS_VERSION, Remote } from '@dxos/client';
 import { Config, Defaults, Envs, Local, Storage, getEnvString } from '@dxos/config';
-import { type IdbLogStore } from '@dxos/log-store-idb';
+import { type LogStore } from '@dxos/log-store-idb';
 import { Observability, ObservabilityExtension, ObservabilityProvider } from '@dxos/observability';
 import { getHostPlatform } from '@dxos/util';
 
@@ -83,7 +83,7 @@ const feedbackLogsEndpoint = (config: Config, isTauri: boolean): string | undefi
 export const initializeObservability = async (
   config: Config,
   isTauri: boolean,
-  logStore?: IdbLogStore,
+  logStore?: LogStore,
   observabilityDisabled = false,
 ) =>
   Function.pipe(

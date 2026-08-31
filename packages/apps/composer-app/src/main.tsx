@@ -25,7 +25,7 @@ import * as UrlLoader from '@dxos/app-framework/UrlLoader';
 import { EdgeHttpClient } from '@dxos/edge-client/http';
 import { EffectEx } from '@dxos/effect';
 import { LogLevel, log } from '@dxos/log';
-import { IdbLogStore } from '@dxos/log-store-idb';
+import { WorkerLogStore } from '@dxos/log-store-idb';
 import { Observability } from '@dxos/observability';
 import { translations as observabilityTranslations } from '@dxos/plugin-observability/translations';
 import { ErrorBoundary, ErrorFallback } from '@dxos/react-error-boundary';
@@ -179,6 +179,26 @@ const createAssetCache = async (isPwa: boolean, isTauri: boolean): Promise<Plugi
   return PluginAssetCache.noop();
 };
 
+/**
+ * Spin up the log-writer worker backing the {@link WorkerLogStore}. SharedWorker where the
+ * platform has it (one writer for all tabs, survives a single tab's close, so flush-at-unload
+ * is more durable); dedicated Worker otherwise (unload race is no worse than in-thread writes).
+ */
+const createLogWriterWorker = (): Worker | MessagePort => {
+  if (typeof SharedWorker !== 'undefined') {
+    return new SharedWorker(new URL('./workers/log-writer-worker', import.meta.url), {
+      type: 'module',
+      // Dev: SharedWorkers are keyed by (URL, name) and outlive vite restarts; suffixing the
+      // boot id gives a restarted server a fresh writer instead of a stale-generation one.
+      name: `dxos-log-writer${__DX_DEV_SERVER_BOOT_ID__ && `-${__DX_DEV_SERVER_BOOT_ID__}`}`,
+    }).port;
+  }
+  return new Worker(new URL('./workers/log-writer-worker', import.meta.url), {
+    type: 'module',
+    name: 'dxos-log-writer',
+  });
+};
+
 const main = async () => {
   if (import.meta.env?.DEV) {
     log('composer main: main() running', { bootId: BOOT_ID });
@@ -215,7 +235,11 @@ const main = async () => {
 
   TRACE_PROCESSOR.setInstanceTag('app');
 
-  const logStore = new IdbLogStore({ dbName: LOG_STORE_DB_NAME });
+  // Log persistence runs in its own worker so lines survive main-thread saturation: each
+  // pre-serialized line is handed off via postMessage inside the log call, and the worker
+  // flushes to IDB while this thread is still blocked. A SharedWorker consolidates
+  // multi-tab writers and outlives a single tab's close; dedicated Worker is the fallback.
+  const logStore = new WorkerLogStore({ dbName: LOG_STORE_DB_NAME, worker: createLogWriterWorker() });
   log.addProcessor(logStore.processor);
 
   // Devtools convenience — also surfaced via the help panel and ResetDialog UI.

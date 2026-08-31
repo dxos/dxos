@@ -9,7 +9,7 @@ import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type ConfigInit, SaveConfig, Storage, defs } from '@dxos/config';
 import { log } from '@dxos/log';
-import { type IdbLogStore, MANUAL_LOG_EXPORT_MAX_BYTES } from '@dxos/log-store-idb';
+import { type LogStore, MANUAL_LOG_EXPORT_MAX_BYTES } from '@dxos/log-store-idb';
 import { useClient } from '@dxos/react-client';
 import { IconButton, Input, Select, Toast, useFileDownload, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
@@ -34,7 +34,7 @@ const StorageAdapters = {
 export type DebugSettingsProps = AppSurface.SettingsProps<
   Settings.Settings,
   {
-    logStore: IdbLogStore;
+    logStore: LogStore;
     onUpload?: AppCapabilities.FileUploader;
   }
 >;
