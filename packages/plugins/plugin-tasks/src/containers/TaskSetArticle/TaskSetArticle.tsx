@@ -2,10 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
-import React, { useCallback } from 'react';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import React, { useCallback, useMemo } from 'react';
 
-import { useOperation, useOperationHandler, useOptimisticQuery } from '@dxos/app-framework/ui';
+import { useOperation, useOperationHandler } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { Panel, Switch, Toolbar, useTranslation } from '@dxos/react-ui';
@@ -134,17 +136,16 @@ TaskSetArticle.displayName = 'TaskSetArticle';
  * only, never on a member's edit — `TaskList` rows subscribe themselves.
  */
 const useTasks = (taskSet: TaskSet.TaskSet): readonly Task.Task[] => {
-  const { objects } = useOptimisticQuery(
-    Obj.getDatabase(taskSet),
-    Filter.and(Filter.type(Task.Task), Filter.childOf(taskSet)),
-    // Subscribes each member's `parentTask` (the set's array does not carry hierarchy)
-    // and orders by the set's canonical array.
-    (get, tasks) => {
+  const atom = useMemo(() => {
+    const query = Obj.getDatabase(taskSet)?.query(Filter.and(Filter.type(Task.Task), Filter.childOf(taskSet)));
+    return Atom.make((get): readonly Task.Task[] => {
+      const tasks: readonly Task.Task[] = query ? get(query.atom) : [];
+      // Subscribes each member's `parentTask` (the set's array does not carry hierarchy)
+      // and orders by the set's canonical array.
       tasks.forEach((task) => get(Obj.atomProperty(task, 'parentTask')));
       return Task.orderTasks(tasks, get(Obj.atomProperty(taskSet, 'tasks')) ?? []);
-    },
-    [taskSet],
-  );
+    });
+  }, [taskSet]);
 
-  return objects;
+  return useAtomValue(atom);
 };
