@@ -25,40 +25,38 @@ export default DoctorOperation.QueryComposerLogs.pipe(
       const direction: 'next' | 'prev' = !queryInput.groupBy && queryInput.order === 'desc' ? 'prev' : 'next';
       const limit = Math.min(queryInput.limit ?? 100, HARD_LIMIT_ENTRIES);
 
-      const opened = yield* Effect.tryPromise({
-        try: () =>
-          readLogRows({
-            dbName: queryInput.dbName,
-            direction,
-            onRow: (row) => {
-              try {
-                const record = JSON.parse(row.line) as LogRecord;
-                records.push(record);
-                // Cheap early exit when we know we won't need more rows.
-                // Filtering still happens in runQuery, but bounding the read keeps memory
-                // and time linear in the requested output for non-aggregating queries.
-                if (
-                  !queryInput.groupBy &&
-                  !queryInput.filters?.length &&
-                  !queryInput.grep?.length &&
-                  !queryInput.messageRegex &&
-                  !queryInput.levels?.length &&
-                  !queryInput.tabId &&
-                  queryInput.since === undefined &&
-                  queryInput.until === undefined &&
-                  records.length >= limit
-                ) {
-                  return false;
-                }
-              } catch {
-                // Skip malformed rows but count them so `total` reflects the underlying store.
-                malformed += 1;
+      const opened = yield* Effect.tryPromise(() =>
+        readLogRows({
+          dbName: queryInput.dbName,
+          direction,
+          onRow: (row) => {
+            try {
+              const record = JSON.parse(row.line) as LogRecord;
+              records.push(record);
+              // Cheap early exit when we know we won't need more rows.
+              // Filtering still happens in runQuery, but bounding the read keeps memory
+              // and time linear in the requested output for non-aggregating queries.
+              if (
+                !queryInput.groupBy &&
+                !queryInput.filters?.length &&
+                !queryInput.grep?.length &&
+                !queryInput.messageRegex &&
+                !queryInput.levels?.length &&
+                !queryInput.tabId &&
+                queryInput.since === undefined &&
+                queryInput.until === undefined &&
+                records.length >= limit
+              ) {
+                return false;
               }
-              return undefined;
-            },
-          }),
-        catch: (err) => err,
-      }).pipe(
+            } catch {
+              // Skip malformed rows but count them so `total` reflects the underlying store.
+              malformed += 1;
+            }
+            return undefined;
+          },
+        }),
+      ).pipe(
         Effect.catch((err) =>
           Effect.sync(() => {
             log.warn('plugin-doctor: log-reader threw', { err });

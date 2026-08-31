@@ -98,10 +98,9 @@ const make = (
       invokeTrigger: (options: Trigger.InvokeOptions) =>
         // Manual invocation of a remote trigger maps onto force-running its cron on the EDGE
         // dispatcher; refresh the view promptly afterwards.
-        Effect.tryPromise({
-          try: () => getEdgeClient().forceRunCronTrigger(DxosContext.default(), spaceId, options.trigger.id),
-          catch: (error) => error,
-        }).pipe(
+        Effect.tryPromise(() =>
+          getEdgeClient().forceRunCronTrigger(DxosContext.default(), spaceId, options.trigger.id),
+        ).pipe(
           Effect.tapError((error) =>
             Effect.sync(() => log.warn('edge force-run failed; retrying', { triggerId: options.trigger.id, error })),
           ),

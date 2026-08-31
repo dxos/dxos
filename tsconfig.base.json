@@ -72,12 +72,7 @@
           // parameter's default, the `any` in AnyTag, or Contributions<T> as MultiTag's
           // key value. Removing the MultiTag arm clears it, so the cause is in how a
           // multi capability's identifier reaches Requirements.
-          "missingEffectContext": "off",
-          // TODO(wittjosiah): Re-enable once cleared. 7 findings across the three,
-          // so these are the cheapest to retire.
-          "unknownInEffectCatch": "off",
-          "layerMergeAllWithDependencies": "off",
-          "lazyPromiseInEffectSync": "off"
+          "missingEffectContext": "off"
         }
       }
     ]
