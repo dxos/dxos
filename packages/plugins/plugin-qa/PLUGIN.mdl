@@ -141,6 +141,16 @@ type TestArtifactRef
 ```
 
 ```mdl
+type CapturedCase
+  desc: >
+    A case the run set out to cover, captured at `startRun`. It carries the case's identity as well
+    as its key, so a `removeCase` mid-run cannot strand a result the rollup still counts.
+  fields:
+    key: string
+    case: Ref<TestCase>
+```
+
+```mdl
 type TestStepResult
   desc: Per-step outcome within a TestResult. Positional — index n corresponds to TestCase.steps[n].
   fields:
@@ -172,7 +182,7 @@ type TestRun
   fields:
     plan: Ref<TestPlan>
     status: TestStatus         # `running` until finished; then the rollup below
-    cases: string[]            # case keys the run set out to cover, captured at startRun
+    cases: CapturedCase[]      # the cases the run set out to cover, captured at startRun
     target?: TestTarget
     runner?: Actor             # who ran it — `Actor` from @dxos/types, not a QA-local string
     stages?: string[]          # which of before/test/after actually ran (QA dialect Rule 8)
@@ -186,8 +196,8 @@ type TestRun
     Precedence is failed > blocked > skipped > passed, and an empty `cases` is `skipped` before
     that precedence is consulted — otherwise a run covering nothing would fall through to
     `passed`. So `passed` requires a non-empty capture in which every case reported `passed`.
-    `cases` is also the authority for `pushResult`: what the run may report on is what it
-    captured, not what the plan currently holds.
+    `cases` is also the authority for `pushResult`: what the run may report on, and which TestCase
+    a result points at, both come from the capture rather than from what the plan currently holds.
 ```
 
 ## Features
@@ -293,6 +303,8 @@ op setCaseOrder
   output: { plan: TestPlan }
   errors:
     UnknownCaseError: a key in the ordering is not in the plan
+    DuplicateCaseError: >
+      a key appears twice, which would store one case twice and drop another
   effects: [echo:write]
 ```
 

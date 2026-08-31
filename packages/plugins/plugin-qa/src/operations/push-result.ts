@@ -9,8 +9,6 @@ import { Database, Obj, Ref } from '@dxos/echo';
 
 import { QaOperation, TestRun } from '#types';
 
-import { findCase } from './util';
-
 /**
  * Validated against the run's captured `cases`, never against the plan's current membership: a
  * `removeCase` mid-run must not reject a result for a case the rollup still counts as unreported.
@@ -22,18 +20,14 @@ const handler: Operation.WithHandler<typeof QaOperation.PushResult> = QaOperatio
       if (run.status !== 'running') {
         return yield* Effect.fail(new Error('Run is already finished; a correction is a new run.'));
       }
-      if (!run.cases.includes(caseKey)) {
+      // The capture, not the plan, decides what this run may report on.
+      const captured = run.cases.find((candidate) => candidate.key === caseKey);
+      if (!captured) {
         return yield* Effect.fail(new Error(`Case ${caseKey} is not in this run's captured cases.`));
       }
 
-      const plan = yield* Database.load(run.plan);
-      const testCase = yield* findCase(plan, caseKey);
-      if (!testCase) {
-        return yield* Effect.fail(new Error(`Case ${caseKey} no longer resolves in the plan.`));
-      }
-
       const result: TestRun.Result = {
-        case: Ref.make(testCase),
+        case: captured.case,
         caseKey,
         status,
         steps: steps ? [...steps] : undefined,

@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Obj, Ref } from '@dxos/echo';
+import { Database, Obj, Ref, type Tag } from '@dxos/echo';
 
 import { QaOperation, TestCase } from '#types';
 
@@ -18,7 +18,7 @@ import { findCase } from './util';
  */
 const handler: Operation.WithHandler<typeof QaOperation.SetCase> = QaOperation.SetCase.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ plan: planRef, key, title, description, steps }) {
+    Effect.fnUntraced(function* ({ plan: planRef, key, title, description, steps, tags }) {
       const plan = yield* Database.load(planRef);
       const existing = yield* findCase(plan, key);
       if (existing) {
@@ -30,10 +30,12 @@ const handler: Operation.WithHandler<typeof QaOperation.SetCase> = QaOperation.S
           }
         });
 
+        applyTags(existing, tags);
         return { case: Ref.make(existing), created: false };
       }
 
       const created = yield* Database.add(TestCase.make({ key, title, description, steps: steps ? [...steps] : [] }));
+      applyTags(created, tags);
       Obj.update(plan, (plan) => {
         plan.cases = [...plan.cases, Ref.make(created)];
       });
@@ -44,3 +46,13 @@ const handler: Operation.WithHandler<typeof QaOperation.SetCase> = QaOperation.S
 );
 
 export default handler;
+
+/** Tags live in the object's meta, so they are set there rather than as a field on the case. */
+const applyTags = (testCase: TestCase.TestCase, tags: readonly Ref.Ref<Tag.Tag>[] | undefined): void => {
+  if (!tags) {
+    return;
+  }
+
+  const meta = Obj.getMeta(testCase);
+  meta.tags = [...tags];
+};

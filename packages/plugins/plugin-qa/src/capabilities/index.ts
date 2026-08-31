@@ -9,6 +9,7 @@ import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
+// The spec is package data rather than a module, so it is read relative to the package root.
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
 

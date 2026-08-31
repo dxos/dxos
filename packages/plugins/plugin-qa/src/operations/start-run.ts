@@ -21,17 +21,25 @@ const handler: Operation.WithHandler<typeof QaOperation.StartRun> = QaOperation.
   Operation.withHandler(
     Effect.fnUntraced(function* ({ plan: planRef, cases, target, runner, stages }) {
       const plan = yield* Database.load(planRef);
-      const planKeys = (yield* loadCases(plan)).map((testCase) => testCase.key);
+      const planCases = yield* loadCases(plan);
+      const byKey = new Map(planCases.map((testCase) => [testCase.key, testCase]));
 
-      const requested = cases ? [...cases] : planKeys;
-      const duplicate = requested.find((key, index) => requested.indexOf(key) !== index);
+      const requestedKeys = cases ? [...cases] : planCases.map((testCase) => testCase.key);
+      const duplicate = requestedKeys.find((key, index) => requestedKeys.indexOf(key) !== index);
       if (duplicate !== undefined) {
         // A repeated key would be counted twice by the rollup.
         return yield* Effect.fail(new Error(`Duplicate case key: ${duplicate}.`));
       }
-      const unknown = requested.filter((key) => !planKeys.includes(key));
-      if (unknown.length > 0) {
-        return yield* Effect.fail(new Error(`Not in the plan: ${unknown.join(', ')}.`));
+
+      // Capture identity, not just the key: pushResult resolves the case from here, so a
+      // removeCase mid-run cannot strand a result for a case the rollup still counts.
+      const captured: TestRun.CapturedCase[] = [];
+      for (const key of requestedKeys) {
+        const testCase = byKey.get(key);
+        if (!testCase) {
+          return yield* Effect.fail(new Error(`Not in the plan: ${key}.`));
+        }
+        captured.push({ key, case: Ref.make(testCase) });
       }
 
       // The run belongs to the feed, so it is appended rather than added: `Database.add` would give
@@ -39,7 +47,7 @@ const handler: Operation.WithHandler<typeof QaOperation.StartRun> = QaOperation.
       const run = TestRun.make({
         plan: Ref.make(plan),
         status: 'running',
-        cases: requested,
+        cases: captured,
         target,
         runner,
         stages: stages ? [...stages] : undefined,
@@ -49,7 +57,7 @@ const handler: Operation.WithHandler<typeof QaOperation.StartRun> = QaOperation.
       const feed = yield* loadFeed(plan);
       yield* Feed.append(feed, [run]);
 
-      return { run: Ref.make(run), cases: requested };
+      return { run: Ref.make(run), cases: requestedKeys };
     }),
   ),
 );

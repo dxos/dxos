@@ -18,6 +18,11 @@ const handler: Operation.WithHandler<typeof QaOperation.SetCaseOrder> = QaOperat
       const cases = yield* loadCases(plan);
       const byKey = new Map(cases.map((testCase) => [testCase.key, testCase]));
 
+      // A repeat would store the same case twice and drop another, so the ordering is a permutation.
+      const duplicate = keys.find((key, index) => keys.indexOf(key) !== index);
+      if (duplicate !== undefined) {
+        return yield* Effect.fail(new Error(`Duplicate case key: ${duplicate}.`));
+      }
       // A partial ordering would silently drop the cases it omits, so the ordering must name them all.
       if (keys.length !== cases.length) {
         return yield* Effect.fail(new Error(`Ordering names ${keys.length} of ${cases.length} cases.`));

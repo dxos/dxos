@@ -36,6 +36,16 @@ export const ArtifactRef = Schema.Struct({
 });
 export interface ArtifactRef extends Schema.Schema.Type<typeof ArtifactRef> {}
 
+/**
+ * A case the run set out to cover, captured at `startRun`. It holds the case's identity as well as
+ * its key, so a `removeCase` mid-run cannot strand a result the rollup still counts.
+ */
+export const CapturedCase = Schema.Struct({
+  key: Schema.String,
+  case: Ref.Ref(TestCase.TestCase),
+});
+export interface CapturedCase extends Schema.Schema.Type<typeof CapturedCase> {}
+
 /** Per-step outcome. Positional — index n corresponds to `TestCase.steps[n]`. */
 export const StepResult = Schema.Struct({
   status: TestCase.ResultStatus,
@@ -68,11 +78,11 @@ export class TestRun extends Type.makeObject<TestRun>(DXN.make('org.dxos.type.qa
     plan: Ref.Ref(TestPlan.TestPlan),
     status: TestCase.Status,
     /**
-     * Case keys the run set out to cover, captured at `startRun`. The rollup and `pushResult`
+     * The cases the run set out to cover, captured at `startRun`. The rollup and `pushResult`
      * validation both read this rather than the plan, so editing the plan mid-run cannot change
-     * what the run was measured against.
+     * what the run was measured against — nor reject a result for a case it still counts.
      */
-    cases: Schema.mutable(Schema.Array(Schema.String)),
+    cases: Schema.mutable(Schema.Array(CapturedCase)),
     target: Schema.optional(Target),
     /** Who ran it — a person or an agent, like any other actor in the system. */
     runner: Schema.optional(Actor.Actor),
@@ -95,13 +105,16 @@ export const instanceOf = (value: unknown): value is TestRun => Obj.instanceOf(T
  * otherwise a run covering nothing would fall through to `passed`. So `passed` requires a
  * non-empty capture in which every case reported `passed`.
  */
-export const rollup = (cases: readonly string[], results: readonly Result[]): TestCase.ResultStatus => {
+export const rollup = (
+  cases: readonly { readonly key: string }[],
+  results: readonly Result[],
+): TestCase.ResultStatus => {
   if (cases.length === 0) {
     return 'skipped';
   }
 
   const byKey = new Map(results.map((result) => [result.caseKey, result.status]));
-  const statuses = cases.map((key) => byKey.get(key) ?? 'skipped');
+  const statuses = cases.map(({ key }) => byKey.get(key) ?? 'skipped');
   for (const status of ['failed', 'blocked', 'skipped'] as const) {
     if (statuses.includes(status)) {
       return status;
@@ -112,13 +125,19 @@ export const rollup = (cases: readonly string[], results: readonly Result[]): Te
 };
 
 /** Captured case keys that never received a result. */
-export const unreported = (run: Pick<TestRun, 'cases' | 'results'>): string[] => {
+export const unreported = (run: {
+  readonly cases: readonly { readonly key: string }[];
+  readonly results: readonly Result[];
+}): string[] => {
   const reported = new Set(run.results.map((result) => result.caseKey));
-  return run.cases.filter((key) => !reported.has(key));
+  return run.cases.filter(({ key }) => !reported.has(key)).map(({ key }) => key);
 };
 
 /** Counts for the feed row: how many of the captured cases passed. */
-export const tally = (run: Pick<TestRun, 'cases' | 'results'>): { passed: number; total: number } => ({
+export const tally = (run: {
+  readonly cases: readonly unknown[];
+  readonly results: readonly Result[];
+}): { passed: number; total: number } => ({
   passed: run.results.filter((result) => result.status === 'passed').length,
   total: run.cases.length,
 });

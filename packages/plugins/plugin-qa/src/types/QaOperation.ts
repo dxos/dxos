@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, DXN, Ref } from '@dxos/echo';
+import { Database, DXN, Ref, Tag } from '@dxos/echo';
 // Person is referenced in Actor.Actor's inferred type; importing it keeps that type nameable.
 import { Actor, type Person } from '@dxos/types';
 
@@ -48,6 +48,8 @@ export const SetCase = Operation.make({
     title: Schema.String,
     description: Schema.optional(Schema.String),
     steps: Schema.optional(Schema.Array(TestCase.Step)),
+    /** Tag objects to set in the case's ECHO meta — tags are not a field on the case. */
+    tags: Schema.optional(Schema.Array(Ref.Ref(Tag.Tag))),
   }),
   output: Schema.Struct({
     case: Ref.Ref(TestCase.TestCase),

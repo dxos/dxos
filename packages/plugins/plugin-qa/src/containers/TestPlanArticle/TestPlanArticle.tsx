@@ -25,6 +25,7 @@ export const TestPlanArticle = ({ role, subject }: TestPlanArticleProps) => {
   const [caseKey, setCaseKey] = useState('');
   const [caseTitle, setCaseTitle] = useState('');
   const [expanded, setExpanded] = useState<string | undefined>();
+  const [error, setError] = useState<string | undefined>();
   // Each case resolves through its own atom, so the list re-renders per ref rather than wholesale.
   const cases: Obj.Snapshot<TestCase.TestCase>[] = useAtomValue(
     useMemo(
@@ -57,9 +58,13 @@ export const TestPlanArticle = ({ role, subject }: TestPlanArticleProps) => {
       QaOperation.SetCase,
       { plan: Ref.make(subject), key: caseKey.trim(), title: caseTitle.trim() || caseKey.trim() },
       { spaceId: Obj.getDatabase(subject)?.spaceId },
-    ).then(() => {
-      setCaseKey('');
-      setCaseTitle('');
+    ).then(({ error }) => {
+      // invokePromise resolves handler failures as `{ error }` rather than rejecting.
+      setError(error ? String(error) : undefined);
+      if (!error) {
+        setCaseKey('');
+        setCaseTitle('');
+      }
     });
   }, [invokePromise, subject, caseKey, caseTitle]);
 
@@ -72,7 +77,9 @@ export const TestPlanArticle = ({ role, subject }: TestPlanArticleProps) => {
       QaOperation.StartRun,
       { plan: Ref.make(subject) },
       { spaceId: Obj.getDatabase(subject)?.spaceId },
-    ).finally(() => setStarting(false));
+    )
+      .then(({ error }) => setError(error ? String(error) : undefined))
+      .finally(() => setStarting(false));
   }, [invokePromise, subject]);
 
   return (
@@ -86,6 +93,12 @@ export const TestPlanArticle = ({ role, subject }: TestPlanArticleProps) => {
             <span>Run</span>
           </button>
         </header>
+
+        {error && (
+          <p className='text-redText text-sm' role='alert' data-testid='qa.plan.error'>
+            {error}
+          </p>
+        )}
 
         <section>
           <h2 className='text-sm text-subdued'>Cases</h2>

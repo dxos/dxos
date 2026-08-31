@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Obj, Ref } from '@dxos/echo';
@@ -21,6 +21,7 @@ export type RunResultsProps = { run: TestRun.TestRun };
  */
 export const RunResults = ({ run }: RunResultsProps) => {
   const { invokePromise } = useOperationInvoker();
+  const [error, setError] = useState<string | undefined>();
   // Read through the snapshot so results appearing on the run re-render this list; the operations
   // still take a ref to the live object.
   const [snapshot] = useObject(run);
@@ -31,11 +32,12 @@ export const RunResults = ({ run }: RunResultsProps) => {
       if (!invokePromise) {
         return;
       }
+      // invokePromise resolves handler failures as `{ error }` rather than rejecting.
       void invokePromise(
         QaOperation.PushResult,
         { run: Ref.make(run), caseKey, status },
         { spaceId: Obj.getDatabase(run)?.spaceId },
-      );
+      ).then(({ error }) => setError(error ? String(error) : undefined));
     },
     [invokePromise, run],
   );
@@ -44,7 +46,9 @@ export const RunResults = ({ run }: RunResultsProps) => {
     if (!invokePromise) {
       return;
     }
-    void invokePromise(QaOperation.CompleteRun, { run: Ref.make(run) }, { spaceId: Obj.getDatabase(run)?.spaceId });
+    void invokePromise(QaOperation.CompleteRun, { run: Ref.make(run) }, { spaceId: Obj.getDatabase(run)?.spaceId }).then(
+      ({ error }) => setError(error ? String(error) : undefined),
+    );
   }, [invokePromise, run]);
 
   return (
@@ -66,7 +70,15 @@ export const RunResults = ({ run }: RunResultsProps) => {
       {unreported.map((caseKey) => (
         <div key={caseKey} className='flex items-center gap-2' data-testid='qa.run.unreported'>
           <span className='font-mono text-sm w-20 shrink-0'>{caseKey}</span>
-          <StatusBadge status='skipped' />
+          {/* `skipped` is a terminal outcome, and a case can still report while the run is open. */}
+          {snapshot.status === 'running' ? (
+            <span className='flex items-center gap-1 text-subdued'>
+              <Icon icon='ph--circle-dashed--regular' size={4} />
+              <span className='text-sm'>pending</span>
+            </span>
+          ) : (
+            <StatusBadge status='skipped' />
+          )}
           <span className='grow text-subdued text-sm'>unreported</span>
           {snapshot.status === 'running' && (
             <>
@@ -91,6 +103,12 @@ export const RunResults = ({ run }: RunResultsProps) => {
       )}
 
       {snapshot.summary && <p className='text-subdued text-sm'>{snapshot.summary}</p>}
+
+      {error && (
+        <p className='text-redText text-sm' role='alert' data-testid='qa.run.error'>
+          {error}
+        </p>
+      )}
     </div>
   );
 };
