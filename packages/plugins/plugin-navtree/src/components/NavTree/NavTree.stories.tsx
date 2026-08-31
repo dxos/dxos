@@ -184,13 +184,13 @@ export const Default: Story = {
   play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     const canvas = within(canvasElement);
 
-    // Plugin startup is async; the tree only appears after the Startup event
+    // Plugin startup is async; the treegrid only appears after the Startup event
     // fires and the graph is built. Use a generous timeout so slower CI runners
     // don't race the default 1 s limit.
-    const treeElement = await canvas.findByRole('tree', {}, { timeout: 10000 });
-    const treeParent = treeElement.parentElement;
-    if (treeParent) {
-      await userEvent.click(treeParent);
+    const treegridElement = await canvas.findByRole('treegrid', {}, { timeout: 10000 });
+    const treegridParent = treegridElement.parentElement;
+    if (treegridParent) {
+      await userEvent.click(treegridParent);
     }
 
     // Press Escape

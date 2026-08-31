@@ -14,8 +14,8 @@ projects:
     summary: 'UI theme + components pass: audit surfaces/density against shadcn and Ark UI; add a hover-card option (default) to the editor dx-preview popover with shadcn-style animation; audit react-ui-list Tree vs @ark-ui tree-view and rebuild the tree on the modern list concepts to replace the composer navtree.'
     tasks: .agents/projects/ui-theme-tree/TASKS.md
     design: .agents/projects/ui-theme-tree/DESIGN.md
-    prs: [12858]
-    resume: 'Phases 1-3 DONE and verified (hover card 10/10, tree 17/17, navtree play 7/7, full build green). PR #12858 OPEN — watch Check; embed/menu defect chain fixed and user-confirmed in-app. NEXT: CI green + land; follow-ups: de-vendor Popover + converge dismissable-layer versions, DESIGN.md §3.5 items, human drag check.'
+    prs: [12858, 12873]
+    resume: 'Phases 1-3 DONE and verified. Work split: PR #12858 = hover cards + embed/menu defect chain (user-confirmed in-app); PR #12873 = Ark tree rebuild (branch claude/tree-ark-rebuild-00e588, built by plumbing — never checked out locally). NEXT: both Checks green + land; follow-ups: de-vendor Popover + converge dismissable-layer versions, DESIGN.md §3.5 items, human drag check.'
   - name: blob
     status: active
     user: burdon

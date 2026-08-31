@@ -1,5 +1,4 @@
 ---
-'@dxos/react-ui-list': minor
 '@dxos/lit-ui': minor
 '@dxos/react-ui': patch
 '@dxos/ui-theme': patch
@@ -8,8 +7,7 @@
 '@dxos/ui-types': patch
 ---
 
-Tree rebuilt on `@ark-ui/react` TreeView — full APG keyboard navigation (arrows, Home/End,
-typeahead, `*`), machine-managed focus and ARIA, atom-model walk into a controlled TreeCollection,
-pragmatic-drag-and-drop retained; `TreeItemHeading`/`TreeItemById` removed. `dx-anchor` preview
-cards now open on hover by default (`trigger='click'` opts out) with a shadcn-style fade+zoom
-animation; hosts close on `state: false`.
+`dx-anchor` preview cards now open on hover by default (`trigger='click'` opts out) with a
+shadcn-style fade+zoom animation; hosts close on `state: false`. Editor block widgets survive
+replacement (root-keyed unmount) and suspending portals; `#`/`@` link chips resolve the linked
+object's label.

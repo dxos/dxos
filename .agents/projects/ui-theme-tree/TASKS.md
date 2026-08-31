@@ -1,6 +1,7 @@
 # ui-theme-tree — Tasks
 
-_Resume: PR #12858 OPEN. Uncommitted: none. Last: embed/menu defect chain fixed, user-confirmed in-app._
+_Resume: split into two PRs — #12858 (hover cards + embed/menu fixes) and #12873 (Ark tree rebuild,
+branch `claude/tree-ark-rebuild-00e588`). Uncommitted: none. Last: tree work extracted from #12858._
 
 ## Phase 1: Audits
 
