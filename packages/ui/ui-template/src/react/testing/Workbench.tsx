@@ -117,7 +117,7 @@ export const Editor = ({ value, extensions, onChange }: EditorProps) => {
     [themeMode, extensions, readOnly, readOnly ? value : null],
   );
 
-  return <div ref={parentRef} className='flex-1 min-h-0 overflow-auto' />;
+  return <div ref={parentRef} className='dx-grow overflow-auto' />;
 };
 
 //

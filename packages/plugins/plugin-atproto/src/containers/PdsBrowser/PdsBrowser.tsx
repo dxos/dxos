@@ -198,7 +198,7 @@ export const PdsBrowser = ({ role, space }: PdsBrowserProps) => {
     : undefined;
 
   const recordDetail = record ? (
-    <ScrollArea.Root orientation='vertical' classNames='flex-1 min-h-0 overflow-hidden'>
+    <ScrollArea.Root orientation='vertical' classNames='dx-grow overflow-hidden'>
       <ScrollArea.Viewport classNames='p-2'>
         <Flex column gap='sm'>
           <span className='font-mono text-xs text-description truncate'>{record.uri}</span>
@@ -259,7 +259,7 @@ export const PdsBrowser = ({ role, space }: PdsBrowserProps) => {
         {error && <div className='px-2 pb-2 text-sm text-error-text'>{error}</div>}
         <MasterDetail<CollectionItem>
           orientation='horizontal'
-          classNames='flex-1 min-h-0'
+          classNames='dx-grow'
           items={collectionItems}
           selectedId={collection}
           onSelect={setCollection}
@@ -271,7 +271,7 @@ export const PdsBrowser = ({ role, space }: PdsBrowserProps) => {
             collection ? (
               <MasterDetail<RecordItem>
                 orientation='horizontal'
-                classNames='flex-1 min-h-0'
+                classNames='dx-grow'
                 items={recordItems}
                 selectedId={recordUri}
                 onSelect={setRecordUri}

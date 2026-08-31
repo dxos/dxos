@@ -38,7 +38,7 @@ const DefaultStory = ({ count = 500, width }: StoryArgs) => {
   return (
     <div className='flex h-full gap-2 p-2'>
       <Window
-        classNames='grow min-h-0'
+        classNames='dx-grow'
         model={model}
         extents={{ of: EXTENT, exact: true }}
         onChange={setState}

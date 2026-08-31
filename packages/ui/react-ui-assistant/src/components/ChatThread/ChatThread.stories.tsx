@@ -148,7 +148,7 @@ const DefaultStory = ({
           </Panel.Toolbar>
 
           <Panel.Content classNames='flex flex-col'>
-            <div className='relative grow min-h-0'>
+            <div className='relative dx-grow'>
               <PromptOutline model={model} />
               <ChatThread.Viewport classNames='absolute inset-0' padding />
               {debug && <Probes model={model} />}

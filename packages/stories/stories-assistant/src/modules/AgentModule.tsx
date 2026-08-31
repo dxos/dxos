@@ -146,7 +146,7 @@ export const AgentModule = () => {
         </div>
       </Panel.Toolbar>
 
-      <div ref={scroller} className='flex-1 min-h-0 overflow-y-auto p-2'>
+      <div ref={scroller} className='dx-grow overflow-y-auto p-2'>
         <div className='flex flex-col gap-3'>
           {rows.map(({ role, block, superseded }, index) => (
             <div key={index} className='flex flex-col gap-1'>

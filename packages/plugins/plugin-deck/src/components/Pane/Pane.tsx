@@ -74,7 +74,7 @@ PaneToolbar.displayName = 'Pane.Toolbar';
 const PaneContent = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const Comp = asChild ? Slot : 'div';
   return (
-    <Comp {...composableProps(props, { classNames: 'flex-1 min-h-0' })} ref={forwardedRef}>
+    <Comp {...composableProps(props, { classNames: 'dx-grow' })} ref={forwardedRef}>
       {children}
     </Comp>
   );

@@ -175,7 +175,7 @@ const ChatThreadViewport = ({ children, classNames, overlay, ...props }: ChatThr
           default, and a caller's classNames extend or override it. */}
       <MessageList.Viewport
         {...props}
-        classNames={['grow min-h-0', classNames]}
+        classNames={['dx-grow', classNames]}
         overlay={
           <>
             <ScrollToBottom />

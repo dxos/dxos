@@ -80,7 +80,7 @@ const DefaultStory = ({ splitter }: StoryArgs) => {
 
   if (splitter) {
     return (
-      <div className='flex grow min-h-0 dx-base-surface'>
+      <div className='flex dx-grow dx-base-surface'>
         <Splitter orientation='vertical' panes={[list, detail]} />
       </div>
     );
@@ -88,7 +88,7 @@ const DefaultStory = ({ splitter }: StoryArgs) => {
 
   return (
     <div className='flex flex-col w-96 min-h-0 dx-base-surface divide-y divide-separator border-e border-separator'>
-      <div className='flex flex-col grow min-h-0'>{list}</div>
+      <div className='flex flex-col dx-grow'>{list}</div>
       <div className='p-2 text-xs font-mono text-description'>
         {selection.size > 0 ? [...selection].join(', ') : 'Nothing selected.'}
       </div>
