@@ -314,6 +314,13 @@ BMP a splice could land between surrogate halves). A character cannot be split, 
 characters in the text is exactly the set of operations applied, whatever order they merged in, and
 the digest reads `[...content]` with no parsing to get wrong.
 
+Measured, same plan, same local stack:
+
+| tokens | runs | diverged |
+| --- | --- | --- |
+| multi-character (`⟦c0-1⟧`) | 5 | 4 |
+| single character | 6 | **0** |
+
 Two lessons worth keeping:
 
 - A model-based test's own encoding is part of the model. A delimited multi-character token quietly
