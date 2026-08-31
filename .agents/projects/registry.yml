@@ -554,6 +554,16 @@ projects:
       op key gap is everywhere — chess declares six operations of which one has a runtime counterpart
       and startGame has none. NEXT: run the three unverified flows, then routine part (a) (reconcile a
       PLUGIN.mdl against Operation.make), then composer-app/APP.mdl."
+  - name: agent-composer-introspection
+    status: active
+    user: burdon
+    host: burdon-mbp-2092
+    created: 2026-08-30
+    summary: 'Make the agent a first-class Composer operator: fix the plugin enable/disable operation path (list all / list active / enable / disable via the debug port), and design an app-graph-driven state-introspection API (JSON surface/context/operations snapshot + ARIA/data- attributes) that replaces screenshot-based inspection.'
+    tasks: .agents/projects/agent-composer-introspection/TASKS.md
+    design: packages/sdk/app-framework/docs/INTROSPECTION.md
+    prs: []
+    resume: 'PR #12850 OPEN, Check green (shard-3 red was flaky TestTaskDrainScripted — passes attempt 2 locally with and without this change; retriggered green). SHIPPED IN IT: disablePlugins (definition+handler+5 tests, live-verified — chess deactivates, ops vanish) AND Phase A snapshot: org.dxos.operation.debug.snapshot + composer.snapshot() sugar in plugin-debug (layout/attention/planks-with-actions/surfaces/plugin-counts, per-section degradation, headless-harness test green). Design at packages/sdk/app-framework/docs/INTROSPECTION.md (§3.2 surface registry + §3.3 data-node-id/data-action attrs are Phases B/C, unbuilt). FINDING for #12845: boot is visibility-gated — hidden tab suspends rAF, app sits on boot screen with manager fully active (startup+idle fired); a late rAF shim cannot rescue the already-pending callback. NEXT: live snapshot() evaluation per INTROSPECTION.md §4 acceptance test (needs a VISIBLE Browser pane), then land #12850.'
 ended:
   - name: task-planning-skill
     user: burdon

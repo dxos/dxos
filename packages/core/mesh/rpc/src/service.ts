@@ -4,8 +4,8 @@
 
 import {
   type EncodingOptions,
-  type ServiceDescriptor,
-  type ServiceHandler,
+  type ServiceBackend,
+  type ServiceDescriptorLike,
   type ServiceProvider,
 } from '@dxos/codec-protobuf';
 import { invariant } from '@dxos/invariant';
@@ -16,7 +16,7 @@ import { RpcPeer, type RpcPeerOptions } from './rpc';
  * Map of service definitions.
  */
 // TODO(burdon): Rename ServiceMap.
-export type ServiceBundle<Services> = { [Key in keyof Services]: ServiceDescriptor<Services[Key]> };
+export type ServiceBundle<Services> = { [Key in keyof Services]: ServiceDescriptorLike<Services[Key]> };
 
 export type ServiceHandlers<Services> = { [ServiceName in keyof Services]: ServiceProvider<Services[ServiceName]> };
 
@@ -88,12 +88,11 @@ export const createProtoRpcPeer = <Client = {}, Server = {}>({
   ...rest
 }: ProtoRpcPeerOptions<Client, Server>): ProtoRpcPeer<Client> => {
   // Create map of RPCs.
-  const exposedRpcs: Record<string, ServiceHandler<any>> = {};
+  const exposedRpcs: Record<string, ServiceBackend> = {};
   if (exposed) {
     invariant(handlers);
     for (const serviceName of Object.keys(exposed) as (keyof Server)[]) {
-      // Get full service name with the package name without '.' at the beginning.
-      const serviceFqn = exposed[serviceName].serviceProto.fullName.slice(1);
+      const serviceFqn = exposed[serviceName].name;
       const serviceProvider = handlers[serviceName];
       exposedRpcs[serviceFqn] = exposed[serviceName].createServer(serviceProvider, encodingOptions);
     }
@@ -125,8 +124,7 @@ export const createProtoRpcPeer = <Client = {}, Server = {}>({
   const requestedRpcs: Client = {} as Client;
   if (requested) {
     for (const serviceName of Object.keys(requested) as (keyof Client)[]) {
-      // Get full service name with the package name without '.' at the beginning.
-      const serviceFqn = requested[serviceName].serviceProto.fullName.slice(1);
+      const serviceFqn = requested[serviceName].name;
 
       requestedRpcs[serviceName] = requested[serviceName].createClient(
         {
@@ -161,7 +159,7 @@ export const parseMethodName = (method: string): [serviceName: string, methodNam
  * @deprecated Use createProtoRpcPeer instead.
  */
 export const createRpcClient = <S>(
-  serviceDef: ServiceDescriptor<S>,
+  serviceDef: ServiceDescriptorLike<S>,
   options: Omit<RpcPeerOptions, 'callHandler'>,
 ): ProtoRpcPeer<S> => {
   const peer = new RpcPeer({
@@ -183,7 +181,7 @@ export const createRpcClient = <S>(
  * @deprecated
  */
 export interface RpcServerOptions<S> extends Omit<RpcPeerOptions, 'callHandler'> {
-  service: ServiceDescriptor<S>;
+  service: ServiceDescriptorLike<S>;
   handlers: S;
 }
 
@@ -228,10 +226,9 @@ export interface RpcBundledServerOptions<S> extends Omit<RpcPeerOptions, 'callHa
  */
 // TODO(burdon): Support late-binding via providers.
 export const createBundledRpcServer = <S>({ services, handlers, ...rest }: RpcBundledServerOptions<S>): RpcPeer => {
-  const rpc: Record<string, ServiceHandler<any>> = {};
+  const rpc: Record<string, ServiceBackend> = {};
   for (const serviceName of Object.keys(services) as (keyof S)[]) {
-    // Get full service name with the package name without '.' at the beginning.
-    const serviceFqn = services[serviceName].serviceProto.fullName.slice(1);
+    const serviceFqn = services[serviceName].name;
     rpc[serviceFqn] = services[serviceName].createServer(handlers[serviceName] as any);
   }
 

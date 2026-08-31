@@ -6715,6 +6715,9 @@ importers:
       '@dxos/timeframe':
         specifier: workspace:*
         version: link:../../common/timeframe
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
     devDependencies:
       '@bufbuild/buf':
         specifier: 'catalog:'
@@ -9684,6 +9687,9 @@ importers:
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/compute/operation
+      '@dxos/plugin-attention':
+        specifier: workspace:*
+        version: link:../plugin-attention
       '@dxos/plugin-connector':
         specifier: workspace:*
         version: link:../plugin-connector
@@ -9744,6 +9750,9 @@ importers:
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../ui/react-ui-syntax-highlighter
+      '@dxos/react-ui-terminal':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-terminal
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
