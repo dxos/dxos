@@ -5,6 +5,7 @@
 import { IdbLogStore } from '@dxos/log-store-idb';
 import { type OtelLogSink, type OtelLogSinkMessage } from '@dxos/observability/otel-log-sink';
 import { type OtelMetricRecord, type OtelMetricsSink } from '@dxos/observability/otel-metrics-sink';
+import { type OtelSpanRecord, type OtelSpanSink } from '@dxos/observability/otel-span-sink';
 
 // Direct module import: the util barrel would pull the whole config/observability graph into
 // this worker's bundle.
@@ -33,12 +34,14 @@ const MAX_PENDING = 5_000;
 const createMessageHandler = (): ((event: MessageEvent<LogWriterMessage>) => void) => {
   let logSink: OtelLogSink | undefined;
   let metricsSink: OtelMetricsSink | undefined;
+  let spanSink: OtelSpanSink | undefined;
   // Set when the matching init arrives; each holds messages in arrival order until the
   // dynamic import resolves, then replays them into the sink. Messages arriving before any
   // init are persisted (logs) or dropped (metrics) — same as the in-process pipelines,
   // which only start once observability initializes.
   let pendingLogs: (string | Exclude<OtelLogSinkMessage, { type: 'otel-init' }>)[] | undefined;
   let pendingMetrics: OtelMetricRecord[] | undefined;
+  let pendingSpans: OtelSpanRecord[] | undefined;
 
   const toLogSink = (message: string | Exclude<OtelLogSinkMessage, { type: 'otel-init' }>): void => {
     if (logSink) {
@@ -53,9 +56,10 @@ const createMessageHandler = (): ((event: MessageEvent<LogWriterMessage>) => voi
   };
 
   // Fire-and-forget, mirroring the sender's pagehide semantics; a failed export retries on
-  // the sink's own timer.
-  const flushMetrics = (): void => {
+  // the sinks' own timers.
+  const flushTelemetry = (): void => {
     void metricsSink?.flush().catch(() => {});
+    void spanSink?.flush().catch(() => {});
   };
 
   return (event: MessageEvent<LogWriterMessage>): void => {
@@ -74,7 +78,7 @@ const createMessageHandler = (): ((event: MessageEvent<LogWriterMessage>) => voi
         // Fire-and-forget, mirroring the sender's pagehide semantics; `flush` never rejects.
         void store.flush();
         toLogSink({ type: 'otel-flush' });
-        flushMetrics();
+        flushTelemetry();
         break;
       }
       case 'otel-init': {
@@ -130,9 +134,36 @@ const createMessageHandler = (): ((event: MessageEvent<LogWriterMessage>) => voi
         metricsSink?.setTags(data.tags);
         break;
       }
+      case 'otel-traces-init': {
+        if (spanSink !== undefined || pendingSpans !== undefined) {
+          break;
+        }
+        pendingSpans = [];
+        void import('@dxos/observability/otel-span-sink')
+          .then(({ OtelSpanSink }) => {
+            spanSink = new OtelSpanSink(data);
+            for (const record of pendingSpans ?? []) {
+              spanSink.append(record);
+            }
+            pendingSpans = undefined;
+          })
+          .catch(() => {
+            // No OTel span export for this connection.
+            pendingSpans = undefined;
+          });
+        break;
+      }
+      case 'otel-span': {
+        if (spanSink) {
+          spanSink.append(data);
+        } else if (pendingSpans && pendingSpans.length < MAX_PENDING) {
+          pendingSpans.push(data);
+        }
+        break;
+      }
       case 'otel-flush': {
         toLogSink(data);
-        flushMetrics();
+        flushTelemetry();
         break;
       }
     }

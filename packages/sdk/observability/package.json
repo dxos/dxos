@@ -24,6 +24,10 @@
     "./otel-metrics-sink": {
       "types": "./dist/types/src/extensions/otel/metrics-sink.d.ts",
       "import": "./dist/lib/otel-metrics-sink.mjs"
+    },
+    "./otel-span-sink": {
+      "types": "./dist/types/src/extensions/otel/span-sink.d.ts",
+      "import": "./dist/lib/otel-span-sink.mjs"
     }
   },
   "browser": {

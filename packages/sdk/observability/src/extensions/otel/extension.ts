@@ -21,9 +21,10 @@ import { type OtelLogSinkMessage } from './log-sink';
 import { type OtelMetrics } from './metrics';
 import { type OtelMetricsSinkMessage } from './metrics-sink';
 import { RemoteMetricsForwarder } from './remote-metrics';
+import { type OtelSpanSinkMessage } from './span-sink';
 
 /** Everything the producing realm posts to the log-writer worker's OTel sinks. */
-export type OtelWorkerMessage = OtelLogSinkMessage | OtelMetricsSinkMessage;
+export type OtelWorkerMessage = OtelLogSinkMessage | OtelMetricsSinkMessage | OtelSpanSinkMessage;
 
 export type ExtensionsOptions = {
   /** For the OTEL, the name of the entity for which signals (metrics or trace) are collected. */
@@ -170,6 +171,8 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
         headers: resolvedHeaders,
         resource,
         getTags: () => Object.fromEntries(tags),
+        // Sampling, IDs, and propagation stay local; only batching and export move out.
+        spanSink: logWriter ? { post: (record) => logWriter.post(record) } : undefined,
       })
     : undefined;
 
@@ -204,6 +207,14 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
           });
         }
         if (traces) {
+          if (logWriter) {
+            logWriter.post({
+              type: 'otel-traces-init',
+              endpoint: resolvedEndpoint,
+              headers: resolvedHeaders,
+              resourceAttributes: { ...baseAttributes, 'session.id': sessionId },
+            });
+          }
           traces.start();
         }
       }),

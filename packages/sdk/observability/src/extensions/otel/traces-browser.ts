@@ -28,12 +28,21 @@ import { type RemoteSpan, type StartSpanOptions, TRACE_ALL_KEY, TRACE_PROCESSOR 
 
 import { type OtelOptions, resolveOtlpUrl } from './otel';
 import { TagInjectorSpanProcessor } from './span-processors';
+import { PortSpanProcessor, type SpanSinkHandle } from './span-sink';
+
+export type OtelTracesOptions = OtelOptions & {
+  /**
+   * When set, ended spans are posted to the log-writer worker's `OtelSpanSink` instead of
+   * being batched and exported here. Sampling, IDs, and propagation stay in this realm.
+   */
+  spanSink?: SpanSinkHandle;
+};
 
 export class OtelTraces {
   private _tracer: Tracer;
   private readonly _tracerProvider: WebTracerProvider;
 
-  constructor(private readonly options: OtelOptions) {
+  constructor(private readonly options: OtelTracesOptions) {
     propagation.setGlobalPropagator(new W3CTraceContextPropagator());
 
     const forceTraceAll = typeof localStorage !== 'undefined' && localStorage.getItem(TRACE_ALL_KEY) === 'true';
@@ -45,14 +54,16 @@ export class OtelTraces {
       }),
       spanProcessors: [
         new TagInjectorSpanProcessor(this.options.getTags),
-        new BatchSpanProcessor(
-          new OTLPTraceExporter({
-            url: resolveOtlpUrl(this.options.endpoint + '/v1/traces'),
-            headers: this.options.headers,
-            concurrencyLimit: 10,
-          }),
-          { scheduledDelayMillis: 5_000 },
-        ),
+        options.spanSink
+          ? new PortSpanProcessor(options.spanSink.post)
+          : new BatchSpanProcessor(
+              new OTLPTraceExporter({
+                url: resolveOtlpUrl(this.options.endpoint + '/v1/traces'),
+                headers: this.options.headers,
+                concurrencyLimit: 10,
+              }),
+              { scheduledDelayMillis: 5_000 },
+            ),
       ],
     });
 
