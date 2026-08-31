@@ -3,7 +3,7 @@
 //
 
 import { type URI } from '@dxos/keys';
-import { type MessageRenderer } from '@dxos/react-ui-feed';
+import { type MessageRenderer, isPrompt } from '@dxos/react-ui-feed';
 import { type ContentBlock, type Message } from '@dxos/types';
 
 import { type ChatView } from './types';
@@ -117,9 +117,15 @@ const blockToMarkdown = (
   switch (block._tag) {
     case 'text': {
       if (message.sender.role === 'user') {
-        // Synthetic context (a selection, an encoded event) is the chrome's: it renders as its own
-        // panel above the bubble, so the bubble frames only the reader's words.
-        return block.disposition === 'synthetic' ? undefined : tag('prompt', block.text, block);
+        if (block.disposition !== 'synthetic') {
+          return tag('prompt', block.text, block);
+        }
+        // Synthetic context riding ON a prompt is the chrome's: it renders as its own panel above
+        // the bubble, so the bubble frames only the reader's words. A message that is ONLY synthetic
+        // is not the reader speaking at all (a trigger, a continuation nudge), so it renders as its
+        // own panel row — emitted here, since a message the renderer maps to nothing is dropped as
+        // an empty row, which left the answer to it reading as unprompted.
+        return isPrompt(message) ? undefined : tag('synthetic', block.text, block);
       }
       return block.text.trim() || undefined;
     }
