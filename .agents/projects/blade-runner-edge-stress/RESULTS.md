@@ -5,9 +5,11 @@ built EDGE stack. Design: [DESIGN.md](./DESIGN.md); ledger: [TASKS.md](./TASKS.m
 
 ## Status
 
-- **Runs against local EDGE end to end.** Orchestrator + 2–3 replicant processes, each a real
-  `@dxos/client`, authenticating to a local EDGE worker stack, creating identities, pairing
-  devices, creating spaces, joining across identities, and executing a seeded command sequence.
+- **Reaches local EDGE.** Orchestrator + 2–3 replicant processes, each a real `@dxos/client`,
+  authenticate to a local EDGE worker stack, create identities, pair devices, and execute a
+  seeded command sequence. Read the next bullet before treating that as "working": of 16 local
+  runs, 13 died before writing `test.json`, and the three that finished executed 0, 3 and 5
+  commands and created **zero spaces**.
 - **Reproducibility is proven** (§2) — the point of the exercise; the recorded hashes predate
   the generator change in §3 and need re-measuring, but the property itself is verified.
 - **Not yet green.** The final convergence assertion has not passed: the run stops on real
@@ -61,13 +63,19 @@ Notes that cost time to find:
 The full drawn sequence is written to `command-trace.jsonl` as a `plan` entry before execution, so
 a seed's sequence is provable regardless of how far the run gets.
 
-| Run | Seed | Commands | Plan sha256 (16) |
-| --- | --- | --- | --- |
-| A | `pbt-seed-alpha` | 24 | `51effd99bdbfa5f7` |
-| B | `pbt-seed-alpha` | 24 | `51effd99bdbfa5f7` |
-| C | `different-seed-zeta` | 24 | `805143c4ef8a9d62` |
+| Run | Seed | Planned | Executed | Plan sha256 (16) |
+| --- | --- | --- | --- | --- |
+| A | `pbt-seed-alpha` | 24 | 3 | `e5bb5c0b5ee82e56` |
+| B | `pbt-seed-alpha` | 24 | 3 | `e5bb5c0b5ee82e56` |
+| C | `different-seed-zeta` | 24 | 5 | `e559958fd52cb246` |
 
-A and B also produced a **byte-identical executed trace**. Same seed, same operations order;
+Recomputed from the surviving run directories. **Planned is not executed**: `fc.asyncModelRun`
+discards a command whose `check(model)` fails, and a drawn sequence opens with `JoinSpace` and
+`EditText` before any space exists, so most of it is skipped. `maxCommands` bounds what is drawn,
+never what runs — an earlier version of this table showed only the planned count, which read as
+though 24 operations had been exercised.
+
+A and B produced identical plans and identical executed traces. Same seed, same operations order;
 different seed, different order.
 
 The seed fixes the sequence, not the timing — a run against a live service is not bit-reproducible,
@@ -108,7 +116,8 @@ re-measured on the next run against EDGE.
 1. **A sibling device never receives its identity's space.** Client 0 joins space 0 by invitation;
    client 1, a second device of the same identity, never sees it — 60s, both online, on the final
    assertion. Either HALO space-list replication between devices does not work in this
-   configuration, or it needs something the harness is not doing.
+   configuration, or it needs something the harness is not doing. Re-test after the storage fix in
+   §5: the run that produced this was using in-memory SQLite.
 2. **`client.destroy()` throws when EDGE is unreachable.** Teardown leaves its swarms over EDGE
    (`SpaceProtocol.stop` -> `leaveSwarm` -> `EdgeSignalManager.leave` -> `EdgeClient.send`) and
    fails with `Edge connection closed` when the link is down. Worked around by restoring the link
@@ -134,3 +143,11 @@ re-measured on the next run against EDGE.
 - The RPC codec silently corrupted two common types rather than rejecting them: `PublicKey` has a
   `toJSON` returning hex, so a key arrived as an indistinguishable string, and a `Uint8Array`
   arrived as `{"0":1,...}`. Now tagged and round-tripped (`redis/rpc-codec.ts`, nine tests).
+- **Every local run used in-memory SQLite.** The replicant set `persistent: true` and a `dataRoot`,
+  but `LocalClientServices` selects the backend from `runtime.client.storage.sqlite_mode`, which
+  defaults to in-memory — it only logs `sqlite_mode not set, using in-memory SQLite` at warn level.
+  So `Restart` destroyed a client and re-initialised an **empty** one: it never tested crash
+  recovery, and a restarted client losing its data would fail convergence for the wrong reason.
+  Fixed by setting `sqliteMode: FILE` plus an explicit `sqlitePath` — FILE reads the path from the
+  `LocalClientServices` constructor, not from `data_root`, despite what its own error message says.
+  Verified: `index.sqlite` now appears on disk where nothing did before.
