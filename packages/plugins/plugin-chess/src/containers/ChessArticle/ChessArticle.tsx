@@ -103,7 +103,8 @@ export const ChessArticle = ({ role, variant }: ChessArticleProps) => {
                   min={8}
                   max={8}
                   onOrientationChange={setOrientation}
-                  onClose={() => setShowInfo(false)}
+                  // Only the article toolbar can re-open the panel, so sections must not close it.
+                  onClose={role === AppSurface.Article.role ? () => setShowInfo(false) : undefined}
                   onSelect={handleSelect}
                 />
               </div>

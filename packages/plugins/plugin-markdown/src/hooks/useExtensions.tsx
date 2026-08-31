@@ -222,14 +222,18 @@ const createBaseExtensions = ({
             'link-preview': {
               block: false,
               urlSchemes: ['dxn:', 'echo:'],
-              // A bare `#`/`@` label is a name-less link; resolve the object's actual label once loaded.
+              // A bare `#`/`@` label is a name-less link; resolve the object's actual label once
+              // loaded. The resolver is only created when a db exists so `AnchorWidget.eq` sees the
+              // db's arrival as a change and rebuilds the chip.
               factory: ({ label, dxn }: XmlWidgetProps<{ label: string; dxn: string }>) =>
                 label && dxn
                   ? new AnchorWidget(
                       label,
                       dxn,
                       undefined,
-                      label === '#' || label === '@' ? createAnchorLabelResolver(space?.db, dxn) : undefined,
+                      (label === '#' || label === '@') && space?.db
+                        ? createAnchorLabelResolver(space.db, dxn)
+                        : undefined,
                     )
                   : null,
             },
@@ -279,10 +283,10 @@ const selectionChange = (viewState: ViewState.Manager) => {
   });
 };
 
-/** Resolves an anchor's display label from the linked object (for name-less `#` links). */
-const createAnchorLabelResolver = (db: Space['db'] | undefined, dxn: string) => async () => {
+/** Resolves an anchor's display label from the linked object (for name-less `#`/`@` links). */
+const createAnchorLabelResolver = (db: Space['db'], dxn: string) => async () => {
   const eid = EID.tryParse(dxn);
-  if (!db || !eid) {
+  if (!eid) {
     return undefined;
   }
   try {

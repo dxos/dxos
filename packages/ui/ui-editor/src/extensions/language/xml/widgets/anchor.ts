@@ -21,7 +21,14 @@ export class AnchorWidget extends WidgetType {
   }
 
   override eq(other: this) {
-    return this._dxn === other._dxn && this._label === other._label && this._trigger === other._trigger;
+    // Resolver presence participates: when the database arrives after the first build, the rebuilt
+    // widget gains a resolver, and an id-only match would keep the old DOM with the bare label.
+    return (
+      this._dxn === other._dxn &&
+      this._label === other._label &&
+      this._trigger === other._trigger &&
+      !!this._resolveLabel === !!other._resolveLabel
+    );
   }
 
   override toDOM(_view: EditorView) {

@@ -24,7 +24,7 @@ composer navtree.
 DXOS's distinctive mechanism: every interaction aspect is computed **relative to the surface that
 hosts it** —
 
-```
+```text
 aspect = oklch(from var(--surface-bg) calc(l + lift · attenuate(family) · offset) c h)
 ```
 
@@ -126,15 +126,17 @@ was already the close contract.
 Design (shadcn HoverCard semantics, single implementation point):
 
 - **The Lit element owns hover intent** — works identically under both hosts with zero host
-  logic. New `trigger` property: `'hover'` (default) | `'click'`. Open delay 400ms (in-repo
-  `HOVER_CARD_DELAY` precedent; shadcn 700, Ark 600), close grace 300ms (= shadcn/Ark).
+  logic. New `trigger` property: `'hover'` (default) | `'click'`. Open delay 100ms (tuned down from
+  the 400ms `HOVER_CARD_DELAY` precedent; shadcn 700, Ark 600), close grace 300ms (= shadcn/Ark).
 - While hover-open, a document-level `pointerover` listener keeps the card alive when the pointer
   is over the anchor **or** any `[data-dx-popover-content]` element (attribute now stamped by
   `Popover.Content`; the constant lives in `@dxos/ui-types`, the shared dependency of `lit-ui` and
   `react-ui`). Anything else re-arms the 300ms close.
 - **Click pins**: a click (or Enter/Space — added, since `role=button` on a non-button gets no
-  native key activation) opens without leave-to-close; dismissal reverts to outside-click/Escape.
-  Keyboard `:focus-visible` opens like a hover; blur closes with grace.
+  native key activation) opens without leave-to-close, and any pointer-down inside the open card
+  pins it too (portaled menus opened from the card must not re-arm leave-to-close); dismissal
+  reverts to outside-click/Escape. Focus deliberately does NOT open: the popover returns focus to
+  the anchor on every close, so a focus-open re-opens what just closed.
 - Touch pointers never hover-open.
 - Hosts close immediately on `state: false` (the element owns all grace timing).
   `EditorPreviewProvider` previously ignored `state` — it would have re-_opened_ on the close
@@ -174,8 +176,10 @@ top: theme tokens, pragmatic-dnd, atoms/ECHO state, end-of-row menus. Rationale:
 Known gaps accepted up front:
 
 1. **No measured-height disclosure animation** — BranchContent is `hidden`-toggled with no
-   `--height` var. v1 ships an enter animation (`data-state=open` fade/slide keyframes); animated
-   exit needs our own measurement and is a follow-up.
+   `--height` var. As built, enter animates `block-size: 0 → auto` via
+   `interpolate-size: allow-keywords` (opacity carries the reveal where unsupported), and exit runs
+   a conceal animation first: expansion is controlled, so the model close commits only when the
+   animation (or its timeout) completes.
 2. Zag's roving tabindex owns item focus; end-of-row menu buttons are `tabIndex=-1` (APG-correct)
    rather than tabster-groupper steps. Noted as an experiment finding either way.
 3. Ark keys state by node **value**, not path — we use the joined path as the value, which
@@ -231,7 +235,6 @@ Known gaps accepted up front:
 
 ### 3.5 Open items
 
-- Animated exit (measured-height collapse) — enter-only animation shipped.
 - Multi-select (`selectionMode='multiple'` is plumbed but unused; Shift+Arrow range selection
   untested against navtree semantics).
 - Consider promoting the popover fade+zoom to `popoverTheme.content` as the default popover motion.

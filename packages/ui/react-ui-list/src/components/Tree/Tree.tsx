@@ -374,9 +374,10 @@ export const Tree = <T extends { id: string } = any>({
 const TreeSectionHeader = ({ label }: { label: Label }) => {
   const { t } = useTranslation();
   return (
+    // `presentation`: a heading is not a permitted child of `role=tree`, and the label is
+    // decorative — the group's items remain individually labeled.
     <div
-      role='heading'
-      aria-level={2}
+      role='presentation'
       className='col-[tree-row] pl-7 pt-3 pb-0.5 text-xs uppercase tracking-widest text-subdued hover:text-description select-none'
     >
       {toLocalizedString(label, t)}
@@ -466,6 +467,11 @@ const TreeBranchContent: FC<TreeNodeRowProps> = ({ node }) => {
     return () => {
       element.removeEventListener('animationend', handleAnimationEnd);
       clearTimeout(timer);
+      // Unmounting mid-conceal (the ref is already detached) would otherwise strand the model
+      // open and the value in `closingValues`; a dep-change re-run keeps the element and re-arms.
+      if (!elementRef.current) {
+        finish();
+      }
     };
   }, [closing, node, commitClose]);
 

@@ -337,8 +337,8 @@ describe('xmlTags decorations', () => {
     test('block and inline widgets build on first mount without a rebuild effect', async ({ expect }) => {
       const doc = '# Title\n\nsee [x](dxn:123)\n\n![label](dxn:456)\n';
       const view = createView(doc, { registry });
-      // Allow background parsing and the parse-completion microtask to run.
-      await new Promise((resolve) => setTimeout(resolve, 250));
+      // Deterministic: complete the parse synchronously; the parse-completion listener then rebuilds.
+      forceParsing(view, view.state.doc.length, 5_000);
       await flush();
       const decorations = xmlDecorations(view);
       expect(decorations.some((decoration) => !decoration.block)).toBe(true);
@@ -363,7 +363,7 @@ describe('xmlTags decorations', () => {
         },
       };
       const view = createView(doc, { registry: componentRegistry, setWidgets: (next) => (widgets = next) });
-      await new Promise((resolve) => setTimeout(resolve, 250));
+      forceParsing(view, view.state.doc.length, 5_000);
       await flush();
       const decorations = xmlDecorations(view);
       expect(decorations.some((decoration) => decoration.block)).toBe(true);
