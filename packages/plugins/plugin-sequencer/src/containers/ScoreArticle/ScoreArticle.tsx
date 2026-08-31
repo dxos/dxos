@@ -12,6 +12,7 @@ import { Oscilloscope, OscilloscopeMode } from '@dxos/react-ui-audio';
 import { type ToggleMode } from '@dxos/react-ui-canvas';
 import { Menu, MenuBuilder, type ToolbarMenuActionGroupProperties, useMenuBuilder } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
+import { downloadBlob } from '@dxos/util';
 
 import { SequenceGrid, TrackList } from '#components';
 import { Score, Sequence, Track } from '#types';
@@ -190,16 +191,7 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
     const document = scoreToLeadSheet(score);
     const text = formatLeadSheet(document, { beatsPerBar });
     const filename = `${(score.name ?? 'score').replace(/[^a-z0-9-_]+/gi, '_').slice(0, 60) || 'score'}.txt`;
-    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const anchor = window.document.createElement('a');
-    anchor.href = url;
-    anchor.download = filename;
-    anchor.style.display = 'none';
-    window.document.body.appendChild(anchor);
-    anchor.click();
-    window.document.body.removeChild(anchor);
-    URL.revokeObjectURL(url);
+    void downloadBlob(new Blob([text], { type: 'text/plain;charset=utf-8' }), filename);
   }, [score, beatsPerBar]);
 
   const handleImport = useCallback(() => {
