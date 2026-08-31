@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: ui-theme-tree
+    status: active
+    user: burdon
+    host: burdon-mbp-2092
+    created: 2026-08-30
+    summary: 'UI theme + components pass: audit surfaces/density against shadcn and Ark UI; add a hover-card option (default) to the editor dx-preview popover with shadcn-style animation; audit react-ui-list Tree vs @ark-ui tree-view and rebuild the tree on the modern list concepts to replace the composer navtree.'
+    tasks: .agents/projects/ui-theme-tree/TASKS.md
+    design: .agents/projects/ui-theme-tree/DESIGN.md
+    prs: []
+    resume: 'Research phase — parallel audits of theme surfaces/density, dx-preview popover mechanism, and Tree/navtree vs ark-ui tree-view.'
   - name: blob
     status: active
     user: burdon
