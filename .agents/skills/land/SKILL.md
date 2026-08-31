@@ -31,8 +31,10 @@ Use `mcp__github__pull_request_read` with `{ owner: "dxos", repo: "dxos", pullNu
 
 If the PR is already merged or closed, tell the user and stop.
 
-If `baseRefName` is not `main`, the PR is part of a stack (GitHub native
-stacked PRs) or targets one — see **Stacked PRs** below before Step 8.
+Check whether the PR belongs to a stack (GitHub native stacked PRs): the stack
+map on the PR page is the test — `baseRefName` ≠ `main` is only a hint, and a
+stack's bottom PR targets `main`. For any stack member, see **Stacked PRs**
+below before Step 8.
 
 ---
 
@@ -243,11 +245,18 @@ A stacked PR (GitHub native stacks, `gh stack` — public preview since 2026-07,
 postdates model training) merges through its stack, not through this skill's
 auto-merge step. The fix loop (Steps 4–7) applies unchanged; for merging:
 
-- Enable auto-merge only on a PR whose base is `main`. For a mid-stack PR,
-  green it, then ask the user whether to merge the whole stack.
-- The stack merges as one all-or-nothing operation: `gh stack merge` locally
-  (it enqueues the stack when a merge queue is active), or the stack merge
-  control on the PR page. `gh stack` is a gh CLI extension
+- Membership: the stack map on the PR page (or `gh stack view` locally) is the
+  test. `baseRefName` is only a hint — a stack's bottom PR targets `main`, and
+  a PR based on another PR's branch is not necessarily in a stack.
+- Skip `enable_pr_auto_merge` for every stack member, the bottom PR included.
+  Green the PR, then ask the user which contiguous group of the stack to merge.
+- Merging happens through the stack: `gh stack merge` locally, or the stack
+  merge control on the PR page. A direct merge is atomic for the selected
+  contiguous group starting at the lowest unmerged PR — merging just the bottom
+  of a stack is supported. With a merge queue the stack is enqueued instead,
+  and a large stack is split across consecutive merge groups: earlier groups
+  can land while a later one fails, so recheck the stack state after a queued
+  merge. `gh stack` is a gh CLI extension
   (`gh extension install github/gh-stack`) — in remote environments without
   `gh`, hand the merge to the user.
 - Sync against the PR's own base branch, not `main`, when resolving conflicts

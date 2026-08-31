@@ -16,8 +16,11 @@ runs in. To land (merge) an existing PR, use the `land` skill.
 
 ## Steps
 
-1. **Sync with base.** Merge `origin/main` into the current branch and resolve
-   any conflicts.
+1. **Sync with base.** Merge the branch's base into it and resolve any
+   conflicts: `origin/main` for a standalone or bottom-of-stack branch; for a
+   branch stacked on another open PR, merge that parent PR's head branch
+   instead — merging `main` into a stacked child duplicates the parent's
+   commits into its PR.
 2. **Format.** Run `pnpm format` (oxfmt — CI checks `oxfmt --check`).
 3. **Lint.** `moon run :lint -- --fix` must succeed.
 4. **Test.** `moon run :test` must pass.
@@ -59,7 +62,10 @@ Arguments run bottom-to-top; each may be a PR number, PR URL, or branch name.
 `link` pushes the branch, creates its PR if missing, chains the base branches,
 and registers the stack with GitHub — stack map in the PR UI, CI as if
 targeting `main`, one-click whole-stack merge. Linking is what makes it a
-stack; a PR merely based on another PR's branch is not one. Docs:
+stack; a PR merely based on another PR's branch is not one. A PR that `link`
+creates gets an auto-generated title and body — follow up with
+`gh pr edit <pr> --title --body` so it meets step 8's standards (scope-prefixed
+title, summary, reasoning, Linear link). Docs:
 <https://docs.github.com/en/pull-requests/how-tos/stacked-pull-requests>.
 
 ## Composer PR deploy URL — always surface
