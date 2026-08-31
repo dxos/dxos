@@ -3,6 +3,7 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
+import type * as Effect from 'effect/Effect';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import { use, useCallback, useRef } from 'react';
 
@@ -133,6 +134,8 @@ export const useOperationInvoker = (): Capabilities.OperationInvoker => useCapab
 
 /**
  * Suspensefully resolves an operation's handler as an effect fn: `(input) => Effect<Output>`.
+ * With `map`, binds the component's callback arguments to the operation input instead:
+ * `(...args) => Effect<Output>`.
  *
  * Resolves against the merged {@link Capabilities.OperationHandlers} set. Handler sets are all
  * registered by startup (only handler BODIES load lazily), so the component suspends only while
@@ -144,16 +147,25 @@ export const useOperationInvoker = (): Capabilities.OperationInvoker => useCapab
  * {@link useSpaceCallback} or the {@link Capabilities.ProcessManagerRuntime}.
  *
  * @example const moveTask = useOperationHandler(TaskOperation.MoveTask);
+ * @example const move = useOperationHandler(TaskOperation.MoveTask, (task: Task) => ({ task: Ref.make(task) }));
  */
-export const useOperationHandler = <const Def extends Operation.Definition.Any>(
+export const useOperationHandler: {
+  <const Def extends Operation.Definition.Any>(operation: Def): Operation.Definition.HandlerType<Def>;
+  <const Def extends Operation.Definition.Any, TArgs extends readonly unknown[]>(
+    operation: Def,
+    map: (...args: TArgs) => Operation.Definition.Input<Def>,
+  ): (...args: TArgs) => Effect.Effect<Operation.Definition.Output<Def>, any, Operation.Definition.Services<Def>>;
+} = <const Def extends Operation.Definition.Any, TArgs extends readonly unknown[]>(
   operation: Def,
-): Operation.Definition.HandlerType<Def> => {
+  map?: (...args: TArgs) => Operation.Definition.Input<Def>,
+): any => {
   const handlers = useCapability(Capabilities.OperationHandlers);
   const withHandler = use(OperationHandlerSet.findHandler(handlers, operation));
   if (!withHandler) {
     throw new NoHandlerError(operation.meta.key);
   }
-  return withHandler.handler;
+  const handler = withHandler.handler;
+  return map ? (...args: TArgs) => handler(map(...args)) : handler;
 };
 
 /**

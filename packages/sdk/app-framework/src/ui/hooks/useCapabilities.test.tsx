@@ -63,6 +63,14 @@ const Probe = ({ onResolve }: { onResolve: (handler: AddFn) => void }) => {
   return <span data-testid='resolved' />;
 };
 
+type MappedAddFn = ReturnType<typeof useMappedAdd>;
+const useMappedAdd = () => useOperationHandler(Add, (a: number, b: number) => ({ a, b }));
+
+const MappedProbe = ({ onResolve }: { onResolve: (handler: MappedAddFn) => void }) => {
+  onResolve(useMappedAdd());
+  return <span data-testid='resolved' />;
+};
+
 describe('useCapabilities', () => {
   test('useOperationHandler resolves a lazy handler to a callable effect fn', async ({ expect }) => {
     await using harness = await createTestApp({ plugins: [ProcessManagerPlugin(), HandlerPlugin()] });
@@ -82,6 +90,24 @@ describe('useCapabilities', () => {
     expect(result).toEqual({ sum: 5 });
     // Unmount before the harness disposes: shutdown removes the contribution and a still-mounted
     // Probe would re-render into a boundary-less NoHandlerError.
+    view.unmount();
+  });
+
+  test('useOperationHandler with map binds callback args to the operation input', async ({ expect }) => {
+    await using harness = await createTestApp({ plugins: [ProcessManagerPlugin(), HandlerPlugin()] });
+    let handler: MappedAddFn | undefined;
+    let view!: RenderResult;
+    await act(async () => {
+      view = render(
+        harness,
+        <Suspense fallback={<span data-testid='loading' />}>
+          <MappedProbe onResolve={(fn) => (handler = fn)} />
+        </Suspense>,
+      );
+    });
+    await view.findByTestId('resolved');
+    const result = await EffectEx.runPromise(handler!(40, 2));
+    expect(result).toEqual({ sum: 42 });
     view.unmount();
   });
 });

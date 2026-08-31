@@ -4,7 +4,6 @@
 
 import React, { useCallback } from 'react';
 
-import * as Optimistic from '@dxos/app-framework/Optimistic';
 import { useOperation, useOperationHandler, useOptimisticQuery, useSpaceCallback } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
@@ -32,7 +31,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
   const { t } = useTranslation(meta.profile.key);
   const { hasAttention } = useAttention(attendableId);
   const spaceId = Obj.getDatabase(taskSet)?.spaceId;
-  const { tasks, overlay } = useTasks(taskSet);
+  const tasks = useTasks(taskSet);
 
   const handleCreate = useOperation(
     TaskOperation.CreateTask,
@@ -65,33 +64,16 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
     [contributed, handleDelete, t],
   );
 
-  const moveTask = useOperationHandler(TaskOperation.MoveTask);
-  const runMove = useSpaceCallback(
+  // The handler runs directly against the local db, so the array write lands before the drop
+  // frame paints — no optimistic overlay needed to hold the row in place.
+  const handleMove = useSpaceCallback(
     spaceId,
     [Database.Service],
-    (task: Task.Task, { parentTask, before }: TaskPlacement) =>
-      moveTask({
-        task: Ref.make(task),
-        parentTask: parentTask ? Ref.make(parentTask) : null,
-        ...(before ? { before: Ref.make(before) } : {}),
-      }),
-    [moveTask],
-  );
-  // The optimistic entry mirrors the MoveTask handler's array write (`TaskSet.reorder` via `reorderItems`),
-  // so the dropped row renders in its target position on the drop frame instead of jumping back until
-  // the query re-emits the db order. It retires when the handler settles: success commits (the next
-  // source emission carries the real order), failure reverts.
-  const handleMove = useCallback(
-    (task: Task.Task, placement: TaskPlacement) => {
-      const handle = overlay.mutate({
-        apply: (rows) => TaskSet.reorderItems(rows, (row) => row.id, task.id, placement.before?.id),
-      });
-      runMove(task, placement).then(
-        () => handle.commit(),
-        () => handle.revert(),
-      );
-    },
-    [overlay, runMove],
+    useOperationHandler(TaskOperation.MoveTask, (task: Task.Task, { parentTask, before }: TaskPlacement) => ({
+      task: Ref.make(task),
+      parentTask: parentTask ? Ref.make(parentTask) : null,
+      ...(before ? { before: Ref.make(before) } : {}),
+    })),
   );
 
   const content = (
@@ -142,15 +124,10 @@ TaskSetArticle.displayName = 'TaskSetArticle';
 /**
  * The set's tasks via `childOf` — membership is the ECHO parent edge, and transitive tolerates
  * legacy sub-tasks still parented to their parent task. The query re-emits on membership changes
- * only, never on a member's edit — `TaskList` rows subscribe themselves. The ordered query atom
- * is wrapped in an optimistic overlay: the source must stay stable across emissions (hence
- * `query.atom` instead of `useQuery`, whose fresh arrays would rebuild the overlay and lose
- * pending entries mid-operation).
+ * only, never on a member's edit — `TaskList` rows subscribe themselves.
  */
-const useTasks = (
-  taskSet: TaskSet.TaskSet,
-): { tasks: readonly Task.Task[]; overlay: Optimistic.Overlay<Task.Task> } => {
-  const { objects, overlay } = useOptimisticQuery(
+const useTasks = (taskSet: TaskSet.TaskSet): readonly Task.Task[] => {
+  const { objects } = useOptimisticQuery(
     Obj.getDatabase(taskSet),
     Filter.and(Filter.type(Task.Task), Filter.childOf(taskSet)),
     // Subscribes each member's `parentTask` (the set's array does not carry hierarchy)
@@ -162,5 +139,5 @@ const useTasks = (
     [taskSet],
   );
 
-  return { tasks: objects, overlay };
+  return objects;
 };
