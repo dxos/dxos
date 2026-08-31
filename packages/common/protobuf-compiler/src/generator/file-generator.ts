@@ -6,7 +6,7 @@ import * as ts from '@typescript/typescript6';
 import { dirname, join } from 'path';
 import type pb from 'protobufjs';
 
-import { ASYNC_MODULE, CODEC_MODULE, ModuleSpecifier } from '../module-specifier';
+import { ASYNC_MODULE, ModuleSpecifier } from '../module-specifier';
 import { getSafeNamespaceIdentifier, parseFullyQualifiedName } from '../namespaces';
 import { type SubstitutionsMap } from '../parser';
 import { type GeneratorContext } from './context';
@@ -119,17 +119,11 @@ const createRuntimeImports = () => [
     f.createImportClause(
       true,
       undefined,
-      f.createNamedImports([f.createImportSpecifier(false, undefined, f.createIdentifier('Stream'))]),
+      f.createNamedImports([
+        f.createImportSpecifier(false, undefined, f.createIdentifier('RequestOptions')),
+        f.createImportSpecifier(false, undefined, f.createIdentifier('Stream')),
+      ]),
     ),
     f.createStringLiteral(ASYNC_MODULE.importSpecifier('')),
-  ),
-  f.createImportDeclaration(
-    [],
-    f.createImportClause(
-      true,
-      undefined,
-      f.createNamedImports([f.createImportSpecifier(false, undefined, f.createIdentifier('RequestOptions'))]),
-    ),
-    f.createStringLiteral(CODEC_MODULE.importSpecifier('')),
   ),
 ];

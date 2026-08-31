@@ -12,4 +12,3 @@ export * from './schema';
 export * from './service';
 export * from './substitutions';
 export * from './compression';
-export type * from './request-options';
