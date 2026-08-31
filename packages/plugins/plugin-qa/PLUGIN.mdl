@@ -53,12 +53,20 @@ TestPlan ──cases[]──▶ TestCase
 ## Types
 
 ```mdl
+type TestResultStatus
+  desc: >
+    A terminal outcome — the only thing a case or a step can be reported as. `blocked` is distinct
+    from `failed`: nothing was tested, so it must not be counted as a defect.
+  literals: passed | failed | skipped | blocked
+```
+
+```mdl
 type TestStatus
   desc: >
-    Outcome of a case, a step, or a whole run. `blocked` is distinct from `failed`: nothing was
-    tested, so it must not be counted as a defect. `running` appears only on a TestRun that has
-    not been finished.
-  literals: passed | failed | skipped | blocked | running
+    A run's status: any terminal outcome, or `running` while it is open. `running` is deliberately
+    absent from TestResultStatus — a case result that could be `running` would be counted as
+    non-failing by the rollup, and a run could seal as `passed` with nothing actually finished.
+  literals: TestResultStatus | running
 ```
 
 ```mdl
@@ -124,7 +132,7 @@ type TestArtifactRef
 type TestStepResult
   desc: Per-step outcome within a TestResult. Positional — index n corresponds to TestCase.steps[n].
   fields:
-    status: TestStatus
+    status: TestResultStatus
     note?: string              # why it failed, or the constraint that blocked it
     artifacts?: TestArtifactRef[]
 ```
@@ -136,7 +144,7 @@ type TestResult
     an object of its own.
   fields:
     case: Ref<TestCase>
-    status: TestStatus
+    status: TestResultStatus
     steps?: TestStepResult[]
     note?: string              # failure summary, or `blocked` reason (QA dialect Rule 9)
     durationMs?: number
@@ -151,7 +159,8 @@ type TestRun
     rollup, written when the run is finished.
   fields:
     plan: Ref<TestPlan>
-    status: TestStatus         # `running` until finished; then failed > blocked > passed rollup
+    status: TestStatus         # `running` until finished; then the rollup below
+    cases: string[]            # case keys the run set out to cover, captured at startRun
     target?: TestTarget
     runner?: string            # "human:alice" | "agent:claude" | CI job id
     stages?: string[]          # which of before/test/after actually ran (QA dialect Rule 8)
@@ -159,6 +168,11 @@ type TestRun
     finishedAt?: string
     results: TestResult[]
     summary?: string           # one-paragraph verdict, for the feed row
+  note: >
+    The rollup runs over `cases`, not over `results`: a key in `cases` with no result counts as
+    `skipped`. Rolling up over `results` alone would seal a run that reported nothing as `passed`.
+    Precedence is failed > blocked > skipped > passed, so `passed` requires every captured case to
+    have reported `passed`.
 ```
 
 ## Features
@@ -180,8 +194,10 @@ feat F-2: Record runs
     its id; every later push names that id.
   req F-2.2: A result is pushed per case, incrementally, so a long run is observable while it is
     still going.
-  req F-2.3: Finishing a run computes `status` as a rollup — `failed` if any result failed, else
-    `blocked` if any is blocked, else `passed` — and stamps `finishedAt`.
+  req F-2.3: Finishing a run computes `status` as a rollup over the case keys captured at
+    `startRun` — `failed` if any failed, else `blocked` if any is blocked, else `skipped` if any
+    case went unreported, else `passed` — and stamps `finishedAt`. A run that reported nothing
+    therefore seals as `skipped`, never `passed`.
   req F-2.4: A run is immutable once finished; a correction is a new run, not an edit.
 
 feat F-3: Evidence
@@ -266,13 +282,17 @@ op reorderCases
 ```mdl
 op startRun
   key: org.dxos.operation.qa.startRun
-  desc: Appends a `running` TestRun to the plan's feed and returns its id.
+  desc: >
+    Appends a `running` TestRun to the plan's feed and returns its id. Captures the plan's case
+    keys onto the run, so a later edit to the plan cannot change what this run was measured
+    against. `cases` narrows that capture for a partial run.
   input:
     planId: string
+    cases?: string[]           # case keys to cover; defaults to the plan's full case list
     target?: TestTarget
     runner?: string
     stages?: string[]
-  output: { runId: string }
+  output: { runId: string, cases: string[] }
   effects: [echo:write]
 ```
 
@@ -285,7 +305,7 @@ op pushResult
   input:
     runId: string
     caseKey: string
-    status: TestStatus
+    status: TestResultStatus
     steps?: TestStepResult[]
     note?: string
     durationMs?: number
@@ -300,11 +320,16 @@ op pushResult
 ```mdl
 op finishRun
   key: org.dxos.operation.qa.finishRun
-  desc: Rolls up `status`, stamps `finishedAt`, and seals the run.
+  desc: >
+    Rolls up `status` over the run's captured `cases`, stamps `finishedAt`, and seals the run.
+    A captured case with no result counts as `skipped`, so an empty or partial run cannot seal as
+    `passed`.
   input:
     runId: string
     summary?: string
-  output: { run: TestRun }
+  output: { run: TestRun, unreported: string[] }   # case keys that never received a result
+  errors:
+    RunFinishedError: the run is already sealed
   effects: [echo:write]
 ```
 
@@ -420,17 +445,22 @@ test T-2: A failure dominates a block
   when: results are pushed as failed and blocked
   then: finishRun sets the run status to failed
 
-test T-3: A finished run is immutable
+test T-3: An unreported case cannot seal as passed
+  given: a run started over three cases
+  when: one result is pushed as passed and the run is finished
+  then: the run status is skipped, and `unreported` names the two cases that never reported
+
+test T-4: A finished run is immutable
   given: a finished run
   when: pushResult is invoked for one of its cases
   then: it fails with RunFinishedError and the run is unchanged
 
-test T-4: Re-generation preserves case identity
+test T-5: Re-generation preserves case identity
   given: a plan whose case QA-1 has results in two past runs
   when: upsertCase is invoked with key QA-1 and a changed title
   then: the same TestCase object is updated, and both past results still resolve to it
 
-test T-5: Artifacts are references, not copies
+test T-6: Artifacts are references, not copies
   given: a Document in the space
   when: a result is pushed with that document as an artifact
   then: the result holds a Ref to the existing object and no new object is created
