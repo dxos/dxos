@@ -222,14 +222,14 @@ const createBaseExtensions = ({
             'link-preview': {
               block: false,
               urlSchemes: ['dxn:', 'echo:'],
-              // A bare `#` label is a name-less link; resolve the object's actual label once loaded.
+              // A bare `#`/`@` label is a name-less link; resolve the object's actual label once loaded.
               factory: ({ label, dxn }: XmlWidgetProps<{ label: string; dxn: string }>) =>
                 label && dxn
                   ? new AnchorWidget(
                       label,
                       dxn,
                       undefined,
-                      label === '#' ? createAnchorLabelResolver(space?.db, dxn) : undefined,
+                      label === '#' || label === '@' ? createAnchorLabelResolver(space?.db, dxn) : undefined,
                     )
                   : null,
             },

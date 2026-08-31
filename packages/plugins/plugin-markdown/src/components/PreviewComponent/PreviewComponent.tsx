@@ -86,7 +86,9 @@ export const PreviewComponent = ({
   const uri = useMemo(() => (dxn ? URI.make(dxn) : undefined), [dxn]);
   const ref = useMemo(() => (uri && db ? db.makeRef<Obj.Unknown>(uri) : undefined), [uri, db]);
   const object = useResolveRef(ref);
-  const subject = useObject(object);
+  // Tuple, not the snapshot itself: binding the array as `subject` made every surface filter's
+  // instanceOf check fail, so embeds rendered nothing.
+  const [subject] = useObject(object);
 
   // px per rem; ResizeHandle works in rem while the persisted height is in px.
   const remSize = useMemo(() => parseFloat(getComputedStyle(document.documentElement).fontSize) || 16, []);
