@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import type * as Effect from 'effect/Effect';
 
 import { type CleanupFn } from '@dxos/async';

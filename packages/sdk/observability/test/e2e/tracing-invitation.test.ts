@@ -16,7 +16,7 @@ import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 
 import * as Otel from '../../src/extensions/otel';
-import { type Observability, addExtension, initialize, make } from '../../src/observability';
+import * as observability from '../../src/observability';
 import { identityProvider } from '../../src/providers/client-observability';
 
 // Dev-only: this suite is permanently skipped in CI. It boots two Clients against
@@ -58,10 +58,10 @@ const createEdgeConfig = () =>
 // Initialize observability once per process. OtelTraces mutates process-global state
 // (`trace.setGlobalTracerProvider` and `TRACE_PROCESSOR.tracingBackend`), so running
 // this more than once in a single Node test would overwrite the first setup.
-const initTracing = (config: Config): Promise<Observability> =>
+const initTracing = (config: Config): Promise<observability.Observability> =>
   Function.pipe(
-    make(),
-    addExtension(
+    observability.make(),
+    observability.addExtension(
       Otel.extensions({
         serviceName: 'composer',
         serviceVersion: DXOS_VERSION,
@@ -70,7 +70,7 @@ const initTracing = (config: Config): Promise<Observability> =>
         traces: true,
       }),
     ),
-    initialize,
+    observability.initialize,
     EffectEx.runAndForwardErrors,
   );
 

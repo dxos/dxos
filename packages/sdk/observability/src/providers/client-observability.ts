@@ -20,7 +20,7 @@ import {
   SpaceState,
 } from '@dxos/protocols/proto/dxos/client/services';
 
-import { type DataProvider } from '../observability';
+import * as Observability from '../Observability';
 import { EventLoopLagTracker, LAG_SAMPLE_INTERVAL_MS, LAG_WINDOW_MS } from './event-loop-lag';
 import { type CrossRealmMemory, measureCrossRealmMemory, readHeap, supportsCrossRealmMemory } from './memory';
 import { SyncEpisodeTracker } from './sync-episodes';
@@ -44,7 +44,7 @@ const SECONDS = { unit: 's' } as const;
 //  - Identifier can be synced via HALO to allow for correlation of events bewteen devices.
 //  - Identifier should also be stored outside of HALO such that it is available immediately on startup.
 /** Subscribes to identity and device changes and sets observability tags accordingly. */
-export const identityProvider = (clientServices: Partial<ClientServices>): DataProvider =>
+export const identityProvider = (clientServices: Partial<ClientServices>): Observability.DataProvider =>
   Effect.fn(function* (observability) {
     // TODO(wittjosiah): RPC subscribe returns void; cleanup requires upstream API change.
     clientServices.IdentityService!.queryIdentity().subscribe((idqr) => {
@@ -75,7 +75,7 @@ export const identityProvider = (clientServices: Partial<ClientServices>): DataP
   });
 
 /** Periodically publishes network connection and buffer metrics. */
-export const networkMetricsProvider = (clientServices: Partial<ClientServices>): DataProvider =>
+export const networkMetricsProvider = (clientServices: Partial<ClientServices>): Observability.DataProvider =>
   Effect.fn(function* (observability) {
     const ctx = new Context();
     let lastNetworkStatus: NetworkStatus | undefined;
@@ -135,7 +135,7 @@ export const networkMetricsProvider = (clientServices: Partial<ClientServices>):
   });
 
 /** Periodically publishes platform and heap memory metrics. */
-export const runtimeMetricsProvider = (clientServices: Partial<ClientServices>): DataProvider =>
+export const runtimeMetricsProvider = (clientServices: Partial<ClientServices>): Observability.DataProvider =>
   Effect.fn(function* (observability) {
     const ctx = new Context();
     log('runtimeMetricsProvider: requesting platform from SystemService');
@@ -212,7 +212,7 @@ export const runtimeMetricsProvider = (clientServices: Partial<ClientServices>):
   });
 
 /** Periodically publishes space membership, object count, and pipeline progress metrics. */
-export const spacesMetricsProvider = (client: Client): DataProvider =>
+export const spacesMetricsProvider = (client: Client): Observability.DataProvider =>
   Effect.fn(function* (observability) {
     const ctx = new Context();
     // Pipeline subscriptions only; the gauges below read the live space list at collection time.
@@ -290,7 +290,7 @@ export const spacesMetricsProvider = (client: Client): DataProvider =>
   });
 
 /** Publishes the document backlog folded across every space. */
-export const documentsMetricsProvider = (client: Client): DataProvider =>
+export const documentsMetricsProvider = (client: Client): Observability.DataProvider =>
   Effect.fn(function* (observability) {
     const ctx = new Context();
     const { summary } = subscribeSyncSummary(client, ctx);
@@ -332,7 +332,7 @@ export const documentsMetricsProvider = (client: Client): DataProvider =>
  * so the same provider distinguishes the tab from the shared and dedicated workers without any
  * per-realm wiring.
  */
-export const eventLoopLagProvider = (): DataProvider =>
+export const eventLoopLagProvider = (): Observability.DataProvider =>
   Effect.fn(function* (observability) {
     const ctx = new Context();
     const lag = new EventLoopLagTracker(LAG_SAMPLE_INTERVAL_MS);
@@ -426,7 +426,7 @@ export const eventLoopLagProvider = (): DataProvider =>
  * Both are needed. `episode.duration` records only when a backlog clears, so a client that never
  * finishes syncing contributes nothing to it — `stalled.duration` is what makes that client visible.
  */
-export const syncMetricsProvider = (client: Client): DataProvider =>
+export const syncMetricsProvider = (client: Client): Observability.DataProvider =>
   Effect.fn(function* (observability) {
     const ctx = new Context();
     const episodes = new SyncEpisodeTracker();

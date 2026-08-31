@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
@@ -10,16 +12,7 @@ import { type CleanupFn, SubscriptionList } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import {
-  type Attributes,
-  type Errors,
-  type Events,
-  type Extension,
-  type ExtensionApi,
-  type Feedback,
-  type Kind,
-  type Metrics,
-} from './observability-extension';
+import * as ObservabilityExtension from './ObservabilityExtension';
 
 export * from './storage';
 
@@ -43,21 +36,25 @@ export interface Observability {
   disable(): Effect.Effect<void>;
   flush(): Effect.Effect<void>;
   addDataProvider(dataProvider: DataProvider): Effect.Effect<void, Error>;
-  identify(distinctId: string, attributes?: Attributes, setOnceAttributes?: Attributes): void;
+  identify(
+    distinctId: string,
+    attributes?: ObservabilityExtension.Attributes,
+    setOnceAttributes?: ObservabilityExtension.Attributes,
+  ): void;
   alias(distinctId: string, previousId?: string): void;
-  setTags(tags: Attributes, kind?: Kind): void;
+  setTags(tags: ObservabilityExtension.Attributes, kind?: ObservabilityExtension.Kind): void;
   enabled: boolean;
-  errors: Errors;
-  events: Events;
-  feedback: Feedback;
+  errors: ObservabilityExtension.Errors;
+  events: ObservabilityExtension.Events;
+  feedback: ObservabilityExtension.Feedback;
   /** True if at least one extension of the given kind reports as available. */
-  isAvailable(kind: Kind): Effect.Effect<boolean>;
-  metrics: Metrics;
+  isAvailable(kind: ObservabilityExtension.Kind): Effect.Effect<boolean>;
+  metrics: ObservabilityExtension.Metrics;
 }
 
 class ObservabilityImpl implements Observability {
   private _initialized = false;
-  private readonly _extensions: Extension[] = [];
+  private readonly _extensions: ObservabilityExtension.Extension[] = [];
   private readonly _dataProviders: DataProvider[] = [];
   private readonly _subscriptions = new SubscriptionList();
 
@@ -66,7 +63,7 @@ class ObservabilityImpl implements Observability {
       return Effect.succeed(undefined);
     }
 
-    const initializedExtensions: Extension[] = [];
+    const initializedExtensions: ObservabilityExtension.Extension[] = [];
 
     return Effect.gen({ self: this }, function* () {
       for (const extension of this._extensions) {
@@ -138,7 +135,7 @@ class ObservabilityImpl implements Observability {
     });
   }
 
-  _addExtension(extension: Extension): void {
+  _addExtension(extension: ObservabilityExtension.Extension): void {
     invariant(!this._initialized, 'Observability is already initialized');
     this._extensions.push(extension);
   }
@@ -161,7 +158,11 @@ class ObservabilityImpl implements Observability {
     });
   }
 
-  identify(distinctId: string, attributes?: Attributes, setOnceAttributes?: Attributes): void {
+  identify(
+    distinctId: string,
+    attributes?: ObservabilityExtension.Attributes,
+    setOnceAttributes?: ObservabilityExtension.Attributes,
+  ): void {
     for (const extension of this._extensions) {
       extension.identify?.(distinctId, attributes, setOnceAttributes);
     }
@@ -173,7 +174,7 @@ class ObservabilityImpl implements Observability {
     }
   }
 
-  setTags(tags: Attributes, kind?: Kind): void {
+  setTags(tags: ObservabilityExtension.Attributes, kind?: ObservabilityExtension.Kind): void {
     for (const extension of this._extensions) {
       if (kind && !extension.apis.some((api) => api.kind === kind)) {
         continue;
@@ -192,7 +193,7 @@ class ObservabilityImpl implements Observability {
     return this._extensions.every((extension) => extension.enabled);
   }
 
-  get errors(): Errors {
+  get errors(): ObservabilityExtension.Errors {
     return {
       captureException: (error, attributes) => {
         for (const extension of this._getExtensions('errors')) {
@@ -202,7 +203,7 @@ class ObservabilityImpl implements Observability {
     };
   }
 
-  get events(): Events {
+  get events(): ObservabilityExtension.Events {
     return {
       captureEvent: (event, attributes) => {
         for (const extension of this._getExtensions('events')) {
@@ -212,7 +213,7 @@ class ObservabilityImpl implements Observability {
     };
   }
 
-  get feedback(): Feedback {
+  get feedback(): ObservabilityExtension.Feedback {
     return {
       captureUserFeedback: async (form) => {
         let eventUuid: string | undefined;
@@ -224,7 +225,7 @@ class ObservabilityImpl implements Observability {
     };
   }
 
-  isAvailable(kind: Kind): Effect.Effect<boolean> {
+  isAvailable(kind: ObservabilityExtension.Kind): Effect.Effect<boolean> {
     const apis = this._getExtensions(kind);
     if (apis.length === 0) {
       return Effect.succeed(false);
@@ -240,7 +241,7 @@ class ObservabilityImpl implements Observability {
     });
   }
 
-  get metrics(): Metrics {
+  get metrics(): ObservabilityExtension.Metrics {
     return {
       gauge: (name, value, attributes, meta) => {
         for (const extension of this._getExtensions('metrics')) {
@@ -270,18 +271,20 @@ class ObservabilityImpl implements Observability {
     };
   }
 
-  private _getExtensions<T extends Kind>(kind: T): Extract<ExtensionApi, { kind: T }>[] {
+  private _getExtensions<T extends ObservabilityExtension.Kind>(
+    kind: T,
+  ): Extract<ObservabilityExtension.ExtensionApi, { kind: T }>[] {
     return Function.pipe(
       this._extensions,
       Array.flatMap((extension) => extension.apis),
-      Array.filter((api): api is Extract<ExtensionApi, { kind: T }> => api.kind === kind),
+      Array.filter((api): api is Extract<ObservabilityExtension.ExtensionApi, { kind: T }> => api.kind === kind),
     );
   }
 }
 
 export const make = (): Effect.Effect<Observability> => Effect.succeed(new ObservabilityImpl());
 
-export const addExtension = (_extension: Effect.Effect<Extension>) =>
+export const addExtension = (_extension: Effect.Effect<ObservabilityExtension.Extension>) =>
   Effect.fn(function* (_observability: Effect.Effect<Observability>) {
     const observability = yield* _observability;
     const extension = yield* _extension;

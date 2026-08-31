@@ -26,7 +26,7 @@ import { EdgeHttpClient } from '@dxos/edge-client/http';
 import { EffectEx } from '@dxos/effect';
 import { LogLevel, log } from '@dxos/log';
 import { IdbLogStore } from '@dxos/log-store-idb';
-import { Observability } from '@dxos/observability';
+import * as Observability from '@dxos/observability/Observability';
 import { translations as observabilityTranslations } from '@dxos/plugin-observability/translations';
 import { ErrorBoundary, ErrorFallback } from '@dxos/react-error-boundary';
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';

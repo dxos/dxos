@@ -16,7 +16,24 @@
     ".": {
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
-    }
+    },
+    "./AiObservability": {
+      "types": "./dist/types/src/ai/AiObservability.d.ts",
+      "import": "./dist/lib/ai/AiObservability.mjs"
+    },
+    "./Observability": {
+      "types": "./dist/types/src/Observability.d.ts",
+      "import": "./dist/lib/Observability.mjs"
+    },
+    "./ObservabilityExtension": {
+      "types": "./dist/types/src/ObservabilityExtension.d.ts",
+      "import": "./dist/lib/ObservabilityExtension.mjs"
+    },
+    "./ObservabilityProvider": {
+      "types": "./dist/types/src/providers/ObservabilityProvider.d.ts",
+      "import": "./dist/lib/providers/ObservabilityProvider.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "browser": {
     "./src/storage/node.ts": "./src/storage/browser.ts",

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-export * as AiObservability from './ai';
-export * as Observability from './observability';
-export * as ObservabilityExtension from './observability-extension';
-export * as ObservabilityProvider from './providers';
+export * from './ai';
+export * as Observability from './Observability';
+export * as ObservabilityExtension from './ObservabilityExtension';
+export * from './providers';

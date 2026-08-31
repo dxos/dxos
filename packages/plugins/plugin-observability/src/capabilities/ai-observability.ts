@@ -8,7 +8,7 @@ import { AiTelemetry } from '@dxos/ai';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { makeTracer } from '@dxos/effect';
-import { AiObservability } from '@dxos/observability';
+import * as AiObservability from '@dxos/observability/AiObservability';
 
 import { ObservabilityCapabilities } from '#types';
 
