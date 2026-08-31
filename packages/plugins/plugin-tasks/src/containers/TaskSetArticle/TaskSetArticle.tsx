@@ -101,7 +101,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
       <div className='p-2 pt-0'>
         <TaskList.Edit
           showDescription
-          classNames='dx-document border border-separator rounded-md p-2'
+          classNames='dx-document bg-input-surface border border-separator rounded-md p-2'
           placeholder={t('task-create.placeholder')}
         />
       </div>

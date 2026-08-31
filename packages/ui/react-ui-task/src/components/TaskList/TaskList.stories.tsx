@@ -221,7 +221,10 @@ const DefaultStory = ({
       </TaskList.Viewport>
       {framed ? (
         <div className='p-2'>
-          <TaskList.Edit showDescription={showDescription} classNames='border border-separator rounded-md p-2' />
+          <TaskList.Edit
+            showDescription={showDescription}
+            classNames='bg-input-surface border border-separator rounded-md p-2'
+          />
         </div>
       ) : (
         <TaskList.Edit grid showDescription={showDescription} />
