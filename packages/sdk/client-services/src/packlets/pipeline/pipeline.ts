@@ -379,7 +379,8 @@ export class Pipeline implements PipelineAccessor {
     // Iteration counter to make a busy loop visible in debug logs.
     let iteration = 0;
     while (!this._isStopping) {
-      log('consume iteration', { iteration: iteration++ });
+      iteration += 1;
+      log('consume iteration', { iteration });
       await this._pauseTrigger.wait();
 
       // Iterator might have been changed while we were waiting for the processing to complete.
