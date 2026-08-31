@@ -84,5 +84,4 @@ describe('useCapabilities', () => {
     // Probe would re-render into a boundary-less NoHandlerError.
     view.unmount();
   });
-
 });

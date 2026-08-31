@@ -229,7 +229,10 @@ describe('OperationHandlerSet.reactive getHandlerFor identity', () => {
     expect(reactive.getHandlerFor(KEY_B)).toBe(before);
     expect(await before).toBeUndefined();
 
-    registry.set(atom, [OperationHandlerSet.make(makeHandler(KEY_A, 'A')), OperationHandlerSet.make(makeHandler(KEY_B, 'B'))]);
+    registry.set(atom, [
+      OperationHandlerSet.make(makeHandler(KEY_A, 'A')),
+      OperationHandlerSet.make(makeHandler(KEY_B, 'B')),
+    ]);
     const after = reactive.getHandlerFor(KEY_B);
     expect(after).not.toBe(before);
     expect((await after)?.meta.key).toEqual(KEY_B);
