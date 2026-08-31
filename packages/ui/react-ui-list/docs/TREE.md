@@ -97,6 +97,114 @@ Known gaps accepted up front:
   untested against navtree semantics).
 - Tabster-groupper equivalent for end-of-row controls (currently reachable by pointer only, per
   APG); evaluate zag's expectations before wiring tabster inside machine-owned rows.
+- The `NavTree` Default story takes >30 s to boot from cold in a headless probe, which exceeds the
+  play function's 10 s `findByRole('tree')` timeout. It does render and pass once warm; whether the
+  cold-start cost can trip CI is unmeasured.
+
+## 6. Bundle cost
+
+Both branches built with `moon run composer-app:bundle` and the emitted assets diffed — measured,
+not estimated.
+
+|                  | main                   | branch                 | delta            |
+| ---------------- | ---------------------- | ---------------------- | ---------------- |
+| All JS (raw)     | 66,609,021             | 66,691,226             | +82,205 (+0.12%) |
+| All CSS          | 633,414                | 633,957                | +543             |
+| Eager boot graph | 4,382,549 (22 entries) | 4,384,201 (22 entries) | +1,652 (+0.04%)  |
+
+`scripts/check-boot-budget.mjs` reads 4.18 MB against its 4.45 MB ceiling on both sides: Ark lands in
+a lazy chunk, so the boot budget is untouched.
+
+The cost concentrates in the one chunk holding `@dxos/react-ui-list`:
+
+|        | main   | branch  | delta           |
+| ------ | ------ | ------- | --------------- |
+| raw    | 44,758 | 111,917 | +67,159 (+150%) |
+| gzip   | 14,744 | 34,487  | +19,743         |
+| brotli | 13,398 | 30,580  | +17,182         |
+
+That chunk is not modulepreloaded, but 119 chunks import it and it sits in the entry's
+`__vitePreload` dependency list, so it is fetched as soon as the shell renders the sidebar — a cost
+paid on essentially every session, just not before first paint.
+
+Attributed through the chunk's sourcemap mappings (minified, pre-gzip): `@zag-js/tree-view` 21,792 ·
+`@zag-js/collection` 11,657 · `@ark-ui/react` 8,136 · `@zag-js/dom-query` 6,538 ·
+`@zag-js/collapsible` 4,934 · `@zag-js/react` 4,848 · `@zag-js/core` 3,708 · `@zag-js/utils` 2,274 ·
+`anatomy`+`types` ~742 — **~64.6 KB**. Bundling `@ark-ui/react/tree-view` + `createTreeCollection`
+standalone with React externalized gives 66,493 raw / 18,003 brotli, within ~1% of the in-app delta,
+which is what makes the attribution evidence rather than a guess.
+
+Two things check out clean: **no duplicate Zag runtime** (the 78 `@zag-js/*` lockfile entries are
+install-graph only and all resolve to `1.43.3`, the catalog pin `ui-template` already uses; ten reach
+the bundle), and **the barrel tree-shakes** — `import { TreeView } from '@ark-ui/react'` bundles to
+66,445 bytes against 66,493 for the deep subpaths, so the usual barrel footgun does not apply here.
+
+## 7. Wider Ark adoption is not a saving
+
+The amortization argument fails from both ends. Ark's shared Zag runtime is ~24.5 KB raw (Accordion
+alone costs 32,580; added on top of the Tree it costs 8,125) — and the Tree has already bought all of
+it. Every further machine is marginal cost against a much smaller hand-rolled component:
+
+| component | Ark marginal (raw / gzip) | displaces (attributed)              | net     |
+| --------- | ------------------------- | ----------------------------------- | ------- |
+| Accordion | +8,125 / +2,038           | `@radix-ui/react-accordion` — 3,509 | +4.6 KB |
+| Listbox   | +22,470 / +5,330          | custom `Listbox.tsx` — 2,493        | +20 KB  |
+| Combobox  | +87,936 / +26,847         | custom `Combobox.tsx` — 3,236       | +85 KB  |
+
+Combobox is the outlier because it drags in a floating layer the Tree never needed —
+`@zag-js/popper` + `@zag-js/dismissable` + `@floating-ui/core` + `@floating-ui/dom`, ~27.5 KB of its
+105 KB standalone size — and only two chunks in the app reference floating-ui today, so there is no
+dedupe waiting.
+
+### The tabster lever, measured
+
+The one lever that would justify a sweep is dropping `@fluentui/react-tabster`. Attributed through
+the boot chunks' sourcemaps, what actually ships is **68,256 bytes minified in the eager boot
+graph** — `tabster` 59,820 + `keyborg` 6,298 in `boot-4`, plus the 2,138-byte fluentui wrapper in
+`boot-5`. The used API surface (`useArrowNavigationGroup`, `useFocusFinders`, `useFocusableGroup`,
+`useMergedTabsterAttributes_unstable`) bundles standalone to 76,623 raw / 21,736 gzip / 19,392
+brotli.
+
+That is a **larger prize than the whole Ark Tree migration cost, in the more expensive location** —
+the eager graph the boot budget governs, rather than a lazy chunk.
+
+Two findings decide how to go after it:
+
+1. **Only three files keep it in boot**, all in `@dxos/react-ui`: `Focus/Focus.tsx`,
+   `Main/MainContext.ts` (a single `useFocusableGroup` call) and `Carousel/Carousel.tsx`. The other
+   ten importers — `plugin-deck`, `plugin-support`, `sdk/shell`, `react-ui-tabs`, `react-ui-masonry`
+   and **all four in `react-ui-list`** — are in lazy chunks and attribute **zero** boot bytes.
+   Migrating `react-ui-list` off tabster therefore saves nothing at all.
+2. **Ark cannot replace it.** Zag's focus management is per-machine, scoped inside a tree/tabs/
+   listbox. Tabster's job in those three boot-critical files is generic composite-widget focus zones
+   over app chrome — a roving-tabindex/groupper layer. Ark ships `focus-trap` (a trap, not a
+   groupper) and has no `useArrowNavigationGroup`/`useFocusableGroup` equivalent.
+
+So a tabster removal is worth doing and is **not an Ark project**: it means writing a small
+roving-tabindex/groupper hook for `Focus.Group` and `MainContext`, with Ark's `carousel` as a
+plausible answer for the third file. It also does not get cheaper by migrating more of this package.
+
+**Migrate a component to Ark for its behavior, not to spread a fixed cost. There is none left to
+spread.**
+
+## 8. `Treegrid` after the rebuild
+
+`Tree.tsx` now has zero `Treegrid` references, where `main` rendered `Treegrid.Root` +
+`Treegrid.Row`/`Cell`; the Ark markup absorbed the column layout via `grid-cols-subgrid`. Verified in
+Storybook: the Tree renders 1 `role="tree"` and 4 `role="treeitem"`, with zero
+`treegrid`/`row`/`gridcell`.
+
+That decoupling had one consequence worth recording. `plugin-navtree`'s `NavTreeItemColumns` wrapped
+its output in `Treegrid.Cell`, which was valid while the enclosing row was a `Treegrid.Row` and
+became an orphaned `role="gridcell"` — no `row` ancestor — the moment the row became an Ark
+`treeitem`. `display: contents` hid it from layout but not from the accessibility tree. The wrappers
+are removed; the empty one is now a plain `<div />` holding the actions column in the subgrid.
+
+`Treegrid` is left a standalone multi-column grid primitive with three consumers, only one of which
+is a hierarchy — devtools `ObjectsTree`; `plugin-assistant`'s `ProcessTree` pre-flattens its rows and
+has no disclosure, and `plugin-atproto`'s `AtprotoCompanion` is a flat field table whose `depth` is
+inline padding. Disposition (rename to match what it is, or migrate `ObjectsTree` onto `Tree` and
+delete it) is tracked in the `ark` project ledger.
 
 ## References
 

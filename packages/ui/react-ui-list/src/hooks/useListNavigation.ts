@@ -97,7 +97,7 @@ const findListboxEntryTarget = (container: HTMLElement): HTMLElement | null => {
  * child; first-entry is the consumer's responsibility).
  *
  * The canonical roving-tabindex keyboard aspect. Currently consumed by `Listbox` and
- * `OrderedList`; `Tree` (Treegrid), `Picker`/`Combobox` (input-driven virtual focus), and
+ * `OrderedList`; `Tree` (Ark TreeView machine), `Picker`/`Combobox` (input-driven virtual focus), and
  * `Mosaic.Stack` still ship bespoke navigation — see `react-ui-list/AUDIT.md` for the
  * convergence analysis. Non-list focus zones — e.g. Composer's multi-pane chrome — keep
  * their own Tabster wiring (`Focus.Group`).
