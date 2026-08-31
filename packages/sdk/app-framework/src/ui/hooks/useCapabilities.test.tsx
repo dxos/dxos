@@ -56,20 +56,7 @@ const HandlerPlugin = Plugin.define(testMeta).pipe(
 );
 
 type AddFn = Operation.Definition.HandlerType<typeof Add>;
-
-const Probe = ({ onResolve }: { onResolve: (handler: AddFn) => void }) => {
-  const handler = useOperationHandler(Add);
-  onResolve(handler);
-  return <span data-testid='resolved' />;
-};
-
 type MappedAddFn = ReturnType<typeof useMappedAdd>;
-const useMappedAdd = () => useOperationHandler(Add, (a: number, b: number) => ({ a, b }));
-
-const MappedProbe = ({ onResolve }: { onResolve: (handler: MappedAddFn) => void }) => {
-  onResolve(useMappedAdd());
-  return <span data-testid='resolved' />;
-};
 
 describe('useCapabilities', () => {
   test('useOperationHandler resolves a lazy handler to a callable effect fn', async ({ expect }) => {
@@ -111,3 +98,16 @@ describe('useCapabilities', () => {
     view.unmount();
   });
 });
+
+const Probe = ({ onResolve }: { onResolve: (handler: AddFn) => void }) => {
+  const handler = useOperationHandler(Add);
+  onResolve(handler);
+  return <span data-testid='resolved' />;
+};
+
+const useMappedAdd = () => useOperationHandler(Add, (a: number, b: number) => ({ a, b }));
+
+const MappedProbe = ({ onResolve }: { onResolve: (handler: MappedAddFn) => void }) => {
+  onResolve(useMappedAdd());
+  return <span data-testid='resolved' />;
+};
