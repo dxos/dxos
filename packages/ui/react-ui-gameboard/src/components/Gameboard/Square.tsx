@@ -63,7 +63,7 @@ export const Square = memo(({ location, bounds, label, classNames }: SquareProps
       ref={ref}
       style={bounds}
       className={mx(
-        'absolute flex justify-center items-center border-2 box-border select-none ring-2 ring-red-500',
+        'absolute flex justify-center items-center border-2 box-border select-none',
         state === 'validMove' ? 'border-neutral-800' : 'border-transparent',
         classNames,
       )}
