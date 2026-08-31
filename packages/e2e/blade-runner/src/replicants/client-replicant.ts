@@ -60,6 +60,7 @@ export type SpaceDigest = {
 
 const INVITATION_TIMEOUT = 60_000;
 const SPACE_READY_TIMEOUT = 60_000;
+const DOCUMENT_READY_TIMEOUT = 60_000;
 
 /**
  * One real `@dxos/client` peer, driven entirely over RPC by the `edgeStress` plan.
@@ -480,10 +481,25 @@ export class ClientReplicant {
     return space;
   }
 
+  /**
+   * Wait for the document to arrive, rather than requiring it to be here already.
+   *
+   * A peer cannot edit an object another peer created until replication delivers it — issuing the
+   * edit the moment the model knows about the document made an ordinary propagation delay look
+   * like a missing object. A timeout here is the real finding: replication never delivered.
+   */
   async #findDocument(spaceId: string, docId: string): Promise<EdgeStressDocument> {
-    const objects = await (await this.#getSpace(spaceId)).db.query(Query.select(Filter.type(EdgeStressDocument))).run();
-    const doc = objects.find((object: EdgeStressDocument) => object.docId === docId);
-    invariant(doc, `document not found: ${docId}`);
+    const db = (await this.#getSpace(spaceId)).db;
+    const doc = await waitForCondition({
+      condition: async () => {
+        const objects = await db.query(Query.select(Filter.type(EdgeStressDocument))).run();
+        return objects.find((object: EdgeStressDocument) => object.docId === docId);
+      },
+      timeout: DOCUMENT_READY_TIMEOUT,
+      interval: 100,
+      error: new Error(`document never replicated: ${docId}`),
+    });
+    invariant(doc, `document never replicated: ${docId}`);
     return doc;
   }
 
