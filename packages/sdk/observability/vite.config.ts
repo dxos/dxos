@@ -10,6 +10,7 @@ export default defineConfig({
     'ai/AiObservability': 'src/ai/AiObservability.ts',
     'Observability': 'src/Observability.ts',
     'ObservabilityExtension': 'src/ObservabilityExtension.ts',
+    'providers/ObservabilityClientProvider': 'src/providers/ObservabilityClientProvider.ts',
     'providers/ObservabilityProvider': 'src/providers/ObservabilityProvider.ts',
   },
   test: { node: true },

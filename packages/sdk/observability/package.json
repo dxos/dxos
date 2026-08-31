@@ -25,6 +25,10 @@
       "types": "./dist/types/src/Observability.d.ts",
       "import": "./dist/lib/Observability.mjs"
     },
+    "./ObservabilityClientProvider": {
+      "types": "./dist/types/src/providers/ObservabilityClientProvider.d.ts",
+      "import": "./dist/lib/providers/ObservabilityClientProvider.mjs"
+    },
     "./ObservabilityExtension": {
       "types": "./dist/types/src/ObservabilityExtension.d.ts",
       "import": "./dist/lib/ObservabilityExtension.mjs"
