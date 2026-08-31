@@ -19,11 +19,21 @@ import { type GlobalOptions, type Platform, type ReplicantProps, type ReplicantR
 
 const DEBUG_PORT_START = 9229;
 
+export type ProcessExit = { exitCode: number | null; signal: NodeJS.Signals | null };
+
 export type ProcessHandle = {
   /**
    * Kill the replicant process/browser.
    */
   kill: (signal?: NodeJS.Signals | number) => void;
+
+  /**
+   * Resolves when the process/browser ends, for any reason.
+   *
+   * RPC to a replicant has no timeout, so a peer that dies mid-run leaves the orchestrator waiting
+   * on a reply that will never come; the scheduler uses this to abort the peer instead.
+   */
+  exited: Promise<ProcessExit>;
 };
 
 export type RunProps = {
@@ -60,15 +70,19 @@ export const runNode = (params: RunProps): ProcessHandle => {
   childProcess.on('error', (err) => {
     log.info('child process error', { err });
   });
-  childProcess.on('exit', async (exitCode, signal) => {
-    if (exitCode == null) {
-      log.warn('agent exited with signal', { signal });
-    } else if (exitCode !== 0) {
-      log.warn('agent exited with non-zero exit code', { exitCode });
-    }
+  const exited = new Promise<ProcessExit>((resolve) => {
+    childProcess.on('exit', (exitCode, signal) => {
+      if (exitCode == null) {
+        log.warn('agent exited with signal', { signal });
+      } else if (exitCode !== 0) {
+        log.warn('agent exited with non-zero exit code', { exitCode });
+      }
+      resolve({ exitCode, signal });
+    });
   });
 
   return {
+    exited,
     kill: (signal?: NodeJS.Signals | number) => {
       log.trace('dxos.blade-runner.kill-replicant', { signal });
       childProcess.kill(signal);
@@ -78,6 +92,11 @@ export const runNode = (params: RunProps): ProcessHandle => {
 
 export const runBrowser = async ({ replicantProps, options }: RunProps): Promise<ProcessHandle> => {
   const ctx = new Context();
+  let ended: (exit: ProcessExit) => void;
+  const exited = new Promise<ProcessExit>((resolve) => {
+    ended = resolve;
+  });
+  ctx.onDispose(() => ended({ exitCode: 0, signal: null }));
 
   const start = Date.now();
   invariant(replicantProps.runtime.platform);
@@ -92,6 +111,7 @@ export const runBrowser = async ({ replicantProps, options }: RunProps): Promise
 
   page.on('crash', () => {
     log.error('page crashed');
+    ended({ exitCode: null, signal: null });
   });
   page.on('console', (msg) => {
     if (msg.type() === 'error') {
@@ -164,6 +184,7 @@ export const runBrowser = async ({ replicantProps, options }: RunProps): Promise
   });
 
   return {
+    exited,
     kill: apis.dx_runner_done,
   };
 };

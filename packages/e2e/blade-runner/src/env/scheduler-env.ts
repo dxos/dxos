@@ -231,9 +231,22 @@ export class SchedulerEnvImpl<S> extends Resource implements SchedulerEnv {
       });
     }
 
+    let killed = false;
+    // RPC to a replicant has no timeout, so a peer that crashes mid-call leaves the orchestrator
+    // waiting forever and the whole run hangs on one dead process. Aborting the peer rejects the
+    // in-flight call, so the plan fails where the crash happened.
+    void processHandle.exited.then(async ({ exitCode, signal }) => {
+      if (killed) {
+        return;
+      }
+      log.error('replicant exited unexpectedly', { replicantId, exitCode, signal });
+      await rpcHandle[close]().catch((err) => log.catch(err));
+    });
+
     const replicantHandle = {
       brain: rpcHandle as RpcHandle<T>,
       kill: (signal?: NodeJS.Signals | number) => {
+        killed = true;
         rpcRequests.disconnect();
         rpcResponses.disconnect();
         processHandle.kill(signal);

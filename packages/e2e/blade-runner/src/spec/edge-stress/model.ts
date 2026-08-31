@@ -30,6 +30,15 @@ export type ModelSpace = {
   members: Set<IdentityIndex>;
   /** Identities that should join at their next opportunity — decision D2. */
   pending: Set<IdentityIndex>;
+  /**
+   * Devices that hold the space locally.
+   *
+   * Membership is a property of the identity, but a *device* only has the space once it has
+   * received it, and a device that was offline when its identity joined cannot have. Without this
+   * the plan issues edits against a space the target peer has never seen, which reads as a sync
+   * failure and is really a modelling error.
+   */
+  knownBy: Set<ClientIndex>;
   documents: ModelDocument[];
 };
 
@@ -91,6 +100,10 @@ export const isMember = (model: Model, client: ClientIndex, spaceSlot: number): 
   model.spaces[spaceSlot]?.members.has(identityOf(model, client)) ?? false;
 
 export const canAct = (model: Model, client: ClientIndex): boolean => model.clients[client].state !== 'down';
+
+/** Whether this specific device has the space, not merely whether its identity is a member. */
+export const holdsSpace = (model: Model, client: ClientIndex, spaceSlot: number): boolean =>
+  model.spaces[spaceSlot]?.knownBy.has(client) ?? false;
 
 export const liveDocument = (model: Model, spaceSlot: number, documentSlot: number): ModelDocument | undefined => {
   const document = model.spaces[spaceSlot]?.documents[documentSlot];

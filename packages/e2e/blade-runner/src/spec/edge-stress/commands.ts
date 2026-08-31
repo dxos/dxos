@@ -9,6 +9,7 @@ import { invariant } from '@dxos/invariant';
 
 import {
   type ClientIndex,
+  type IdentityIndex,
   type Model,
   type ModelDocument,
   type ModelSpace,
@@ -16,12 +17,13 @@ import {
   identityOf,
   canAct,
   hasAdmittingDevice,
+  holdsSpace,
   isMember,
   liveDocument,
   resolvablePendingSpaces,
   token,
 } from './model';
-import { type Real, BudgetExhausted, runCheckpoint } from './system';
+import { type Real, BudgetExhausted, awaitSpaceOnAllDevices, runCheckpoint } from './system';
 
 /**
  * The operation vocabulary, as Effect schemas: one declaration defines what may be generated, what
@@ -87,6 +89,13 @@ const COMMAND_WEIGHTS: Record<Command['_tag'], number> = {
   DeleteDocument: 1,
 };
 
+/**
+ * Cuts or restores a peer's link. Excluded by a `partitions: false` run, which isolates the
+ * convergence property from the partition-tolerance one — useful when a defect in the second
+ * blocks every run before it can test the first.
+ */
+const PARTITION_COMMANDS = new Set(['GoOffline', 'GoOnline', 'Restart']);
+
 /** Mutates replicated state — what a plan has to reach for convergence to be tested at all. */
 export const mutatesData = (command: Command): boolean =>
   command._tag === 'CreateDocument' ||
@@ -100,11 +109,15 @@ export const mutatesData = (command: Command): boolean =>
  */
 export const makeCommandArbitrary = ({
   checkpoints,
+  partitions,
   ...slots
-}: Parameters<typeof makeCommandSchema>[0] & { checkpoints: boolean }): FastCheck.Arbitrary<Command> => {
+}: Parameters<typeof makeCommandSchema>[0] & {
+  checkpoints: boolean;
+  partitions: boolean;
+}): FastCheck.Arbitrary<Command> => {
   const weights = new Map(Object.entries(COMMAND_WEIGHTS));
   const cases = Object.entries(makeCommandSchema(slots).cases)
-    .filter(([tag]) => tag !== 'Checkpoint' || checkpoints)
+    .filter(([tag]) => (tag !== 'Checkpoint' || checkpoints) && (partitions || !PARTITION_COMMANDS.has(tag)))
     .map(([tag, member]) => {
       const weight = weights.get(tag);
       invariant(weight !== undefined, `no draw weight for ${tag}`);
@@ -135,7 +148,7 @@ export const canRun = (command: Command, model: Model): boolean => {
       return (
         canAct(model, command.client) &&
         command.space < model.spaces.length &&
-        isMember(model, command.client, command.space) &&
+        holdsSpace(model, command.client, command.space) &&
         model.spaces[command.space].documents.length < model.limits.maxDocumentsPerSpace
       );
     case 'EditText':
@@ -143,7 +156,7 @@ export const canRun = (command: Command, model: Model): boolean => {
     case 'DeleteDocument':
       return (
         canAct(model, command.client) &&
-        isMember(model, command.client, command.space) &&
+        holdsSpace(model, command.client, command.space) &&
         liveDocument(model, command.space, command.document) !== undefined
       );
     case 'Checkpoint':
@@ -157,6 +170,8 @@ export const canRun = (command: Command, model: Model): boolean => {
  */
 export type Transition = {
   joins: { client: ClientIndex; space: number }[];
+  /** Devices that should now receive the space through HALO rather than by joining it. */
+  learned: { client: ClientIndex; space: number }[];
   spaceSlot?: number;
   documentSlot?: number;
   token?: string;
@@ -171,6 +186,16 @@ export type Transition = {
  */
 export const advance = (command: Command, model: Model): Transition => {
   const joins: Transition['joins'] = [];
+  const learned: Transition['learned'] = [];
+  /** A space reaches every *online* device of a member identity; an offline one has to wait. */
+  const learn = (space: number, identity: IdentityIndex): void => {
+    for (const device of model.identities[identity].devices) {
+      if (model.clients[device].state === 'online' && !model.spaces[space].knownBy.has(device)) {
+        model.spaces[space].knownBy.add(device);
+        learned.push({ client: device, space });
+      }
+    }
+  };
   // The precondition already guarantees the document is live; asserting says so rather than
   // asking the type-checker to take it on faith.
   const documentAt = (spaceSlot: number, documentSlot: number): ModelDocument => {
@@ -182,7 +207,9 @@ export const advance = (command: Command, model: Model): Transition => {
     const identity = identityOf(model, client);
     model.spaces[space].pending.delete(identity);
     model.spaces[space].members.add(identity);
+    model.spaces[space].knownBy.add(client);
     joins.push({ client, space });
+    learn(space, identity);
   };
 
   switch (command._tag) {
@@ -197,6 +224,13 @@ export const advance = (command: Command, model: Model): Transition => {
       for (const slot of resolvablePendingSpaces(model, command.client)) {
         join(command.client, slot);
       }
+      // Back online, it catches up on every space its identity joined while it was away.
+      const identity = identityOf(model, command.client);
+      model.spaces.forEach((space, slot) => {
+        if (space.members.has(identity)) {
+          learn(slot, identity);
+        }
+      });
       break;
     }
 
@@ -206,9 +240,11 @@ export const advance = (command: Command, model: Model): Transition => {
       const space: ModelSpace = {
         members: new Set([creator]),
         pending: new Set(model.identities.map((_, index) => index).filter((index) => index !== creator)),
+        knownBy: new Set([command.client]),
         documents: [],
       };
       model.spaces.push(space);
+      learn(spaceSlot, creator);
 
       // Every other identity that can join right now does; the rest stay pending (D2).
       for (const identity of [...space.pending]) {
@@ -219,7 +255,7 @@ export const advance = (command: Command, model: Model): Transition => {
           join(device, spaceSlot);
         }
       }
-      return { joins, spaceSlot };
+      return { joins, learned, spaceSlot };
     }
 
     case 'JoinSpace': {
@@ -231,13 +267,13 @@ export const advance = (command: Command, model: Model): Transition => {
       const documents = model.spaces[command.space].documents;
       const documentSlot = documents.length;
       documents.push({ deleted: false, tokens: new Set(), counters: new Map() });
-      return { joins, documentSlot };
+      return { joins, learned, documentSlot };
     }
 
     case 'EditText': {
       const value = token(command.client, ++model.opSeq);
       documentAt(command.space, command.document).tokens.add(value);
-      return { joins, token: value };
+      return { joins, learned, token: value };
     }
 
     case 'EditCounter': {
@@ -255,7 +291,7 @@ export const advance = (command: Command, model: Model): Transition => {
       break;
   }
 
-  return { joins };
+  return { joins, learned };
 };
 
 /**
@@ -284,6 +320,23 @@ export const simulate = (commands: readonly Command[], model: Model, limit = Num
 const performJoins = async (real: Real, joins: Transition['joins']): Promise<void> => {
   for (const { client, space } of joins) {
     await real.replicants[client].brain.joinSpace({ invitationCode: real.invitationCodes[space] });
+  }
+};
+
+/**
+ * Block until the sibling devices the model just credited with a space actually hold it.
+ *
+ * The model credits them the moment their identity joins, because that is what HALO replication
+ * promises; waiting here is what turns a broken promise into a failure at the command that made
+ * it, rather than an unexplained timeout several commands later.
+ */
+const settleLearned = async (real: Real, learned: Transition['learned']): Promise<void> => {
+  const bySpace = new Map<number, ClientIndex[]>();
+  for (const { client, space } of learned) {
+    bySpace.set(space, [...(bySpace.get(space) ?? []), client]);
+  }
+  for (const [space, clients] of bySpace) {
+    await awaitSpaceOnAllDevices(real, space, clients);
   }
 };
 
@@ -384,6 +437,8 @@ export const execute = async (command: Command, model: Model, real: Real): Promi
       break;
     }
   }
+
+  await settleLearned(real, transition.learned);
 };
 
 export const describe = (command: Command): string => {

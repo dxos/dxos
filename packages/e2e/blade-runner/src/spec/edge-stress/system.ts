@@ -44,6 +44,8 @@ export type EdgeStressSpec = {
   quiescenceTimeoutMs: number;
   /** Mid-run quiesce-and-assert over the online members. */
   checkpoints: boolean;
+  /** Draw `GoOffline`/`GoOnline`/`Restart`. Off isolates convergence from partition tolerance. */
+  partitions: boolean;
   /**
    * Delete the spaces and identities the run created. A no-op without `DX_HUB_API_KEY`, so it is
    * safe to leave on for local EDGE, where the state is ephemeral anyway.

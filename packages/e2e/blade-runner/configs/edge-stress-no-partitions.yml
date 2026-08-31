@@ -1,0 +1,17 @@
+# Convergence only: no GoOffline/GoOnline/Restart.
+#
+# Isolates the replication property from partition tolerance, which is blocked by the
+# EdgeFeedReplicator crash in RESULTS.md finding 5.
+platform: nodejs
+edgeUrl: http://localhost:8787
+devicesPerIdentity: [2, 1]
+agents: false
+maxSpaces: 2
+maxDocumentsPerSpace: 4
+maxCommands: 25
+sampleDraws: 12
+maxRuntimeMs: 600000
+quiescenceTimeoutMs: 60000
+checkpoints: true
+partitions: false
+cleanup: true

@@ -54,6 +54,7 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
       maxRuntimeMs: 10 * 60_000,
       quiescenceTimeoutMs: 60_000,
       checkpoints: true,
+      partitions: true,
       cleanup: true,
     };
   }
@@ -152,6 +153,7 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
       spaces: spec.maxSpaces,
       documents: spec.maxDocumentsPerSpace,
       checkpoints: spec.checkpoints,
+      partitions: spec.partitions,
     });
     const pool = FastCheck.array(command, {
       minLength: spec.maxCommands,
