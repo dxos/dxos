@@ -10,11 +10,14 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { Panel, Switch, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { type TaskDraft, type TaskEdit, TaskList, type TaskPlacement } from '@dxos/react-ui-task';
+import { createMenuAction } from '@dxos/react-ui-menu';
+import { TaskList, type TaskPlacement } from '@dxos/react-ui-task';
 import { Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
 import { TaskOperation } from '#types';
+
+import { useTaskActions } from '../../hooks/useTaskActions';
 
 export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet>;
 
@@ -33,19 +36,34 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
 
   const handleCreate = useOperation(
     TaskOperation.CreateTask,
-    (props: TaskDraft) => ({ taskSet: Ref.make(taskSet), ...props }),
+    (props: Task.Draft) => ({ taskSet: Ref.make(taskSet), ...props }),
     { spaceId },
   );
 
   const handleUpdate = useOperation(
     TaskOperation.UpdateTask,
-    (task: Task.Task, props: TaskEdit) => ({ task: Ref.make(task), ...props }),
+    (task: Task.Task, props: Task.Edit) => ({ task: Ref.make(task), ...props }),
     { spaceId },
   );
 
   const handleDelete = useOperation(TaskOperation.DeleteTask, (task: Task.Task) => ({ task: Ref.make(task) }), {
     spaceId,
   });
+
+  // Delete is one item among the contributed ones, so a row has a single trailing affordance
+  // whatever any plugin adds to it.
+  const contributed = useTaskActions();
+  const getTaskActions = useCallback(
+    (task: Task.Task) => [
+      ...contributed(task),
+      createMenuAction(`delete-${task.id}`, () => handleDelete(task), {
+        label: t('delete-task.label'),
+        icon: 'ph--x--regular',
+        testId: 'tasks.task.delete',
+      }),
+    ],
+    [contributed, handleDelete, t],
+  );
 
   const moveTask = useOperationHandler(TaskOperation.MoveTask);
   const runMove = useSpaceCallback(
@@ -84,15 +102,16 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
       tasks={tasks}
       onTaskCreate={handleCreate}
       onTaskUpdate={handleUpdate}
-      onTaskDelete={handleDelete}
+      getTaskActions={getTaskActions}
       onTaskMove={handleMove}
     >
-      <TaskList.Viewport classNames='grid grid-rows-[auto_1fr] gap-2'>
+      <TaskList.Viewport>
         <TaskList.Content classNames='dx-document' />
       </TaskList.Viewport>
-      <div className='p-2'>
+      <div className='p-2 pt-0'>
         <TaskList.Edit
-          classNames='dx-document border border-separator rounded-md p-2'
+          showDescription
+          classNames='dx-document bg-input-surface border border-separator rounded-md p-2'
           placeholder={t('task-create.placeholder')}
         />
       </div>

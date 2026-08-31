@@ -433,14 +433,17 @@ describe('Database', () => {
 
   describe('object collections', () => {
     test('assignment', async () => {
-      const root = newTask();
+      const root = Obj.make(TestSchema.Task, { subTasks: [] });
       expect(root.subTasks).to.have.length(0);
 
       Obj.update(root, (root) => {
         const { subTasks } = root;
         invariant(subTasks);
-        range(3).forEach(() => subTasks.push(Ref.make(newTask())));
-        subTasks.push(Ref.make(newTask()), Ref.make(newTask()));
+        range(3).forEach(() => subTasks.push(Ref.make(Obj.make(TestSchema.Task, { subTasks: [] }))));
+        subTasks.push(
+          Ref.make(Obj.make(TestSchema.Task, { subTasks: [] })),
+          Ref.make(Obj.make(TestSchema.Task, { subTasks: [] })),
+        );
       });
 
       const { subTasks } = root;
@@ -473,14 +476,14 @@ describe('Database', () => {
     });
 
     test('splice', async () => {
-      const root = newTask();
+      const root = Obj.make(TestSchema.Task, { subTasks: [] });
       Obj.update(root, (root) => {
-        root.subTasks = range(3).map((_i) => Ref.make(newTask()));
+        root.subTasks = range(3).map((_i) => Ref.make(Obj.make(TestSchema.Task, { subTasks: [] })));
       });
       Obj.update(root, (root) => {
         const { subTasks } = root;
         invariant(subTasks);
-        subTasks.splice(0, 2, Ref.make(newTask()));
+        subTasks.splice(0, 2, Ref.make(Obj.make(TestSchema.Task, { subTasks: [] })));
       });
       expect(root.subTasks).to.have.length(2);
       await addToDatabase(root);
@@ -752,5 +755,3 @@ const expectObjects = <T>(echoObjects: readonly T[], expectedObjects: unknown): 
 const mapEchoToPlainJsObject = <T>(array: readonly T[]): unknown[] => {
   return array.map((entry) => (Array.isArray(entry) ? mapEchoToPlainJsObject(entry) : { ...entry }));
 };
-
-const newTask = () => Obj.make(TestSchema.Task, { subTasks: [] });

@@ -306,7 +306,7 @@ const useToolbarActions = (project: Project.Project, onAddArtifact: () => void) 
           'create-chat',
           {
             label: ['create-chat.label', { ns: meta.profile.key }],
-            icon: 'ph--chat-text--regular',
+            icon: 'ph--sparkle--regular',
             disposition: 'toolbar',
             testId: 'projectsPlugin.createChat',
           },

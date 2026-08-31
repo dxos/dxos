@@ -13,8 +13,6 @@ import { Outline } from '@dxos/types';
 
 import updateOutline from './update-outline';
 
-const testLayer = () => TestDatabaseLayer({ types: [Outline.Outline, Text.Text] });
-
 describe('update-outline', () => {
   it.effect('upserts items in place and preserves prose', () =>
     Effect.gen(function* () {
@@ -29,7 +27,7 @@ describe('update-outline', () => {
       });
 
       expect(result.content.split('\n')).toEqual(['intro', '- [x] first', '- [ ] second', '- [ ] third']);
-    }).pipe(Effect.provide(testLayer())),
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Outline.Outline, Text.Text] }))),
   );
 
   it.effect('replaces wholesale with content, and rejects both/neither', () =>
@@ -46,7 +44,7 @@ describe('update-outline', () => {
 
       const neither = yield* Effect.exit(updateOutline.handler({ outline: Ref.make(outline) }));
       expect(neither._tag).toBe('Failure');
-    }).pipe(Effect.provide(testLayer())),
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Outline.Outline, Text.Text] }))),
   );
 
   it.effect('validates arguments before touching the database', () =>
@@ -60,7 +58,7 @@ describe('update-outline', () => {
         expect(exit._tag).toBe('Failure');
         expect(String(exit)).toContain('InvalidOperationInput');
       }
-    }).pipe(Effect.provide(testLayer())),
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Outline.Outline, Text.Text] }))),
   );
 });
 

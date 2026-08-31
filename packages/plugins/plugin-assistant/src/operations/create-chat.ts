@@ -8,7 +8,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { AiContext } from '@dxos/assistant';
-import { AgentWizardSkill, AlarmSkill, Chat, ChatContextSkill } from '@dxos/assistant-toolkit';
+import { AlarmSkill, Chat, ChatContextSkill } from '@dxos/assistant-toolkit';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Ref } from '@dxos/echo';
@@ -50,7 +50,6 @@ const handler: Operation.WithHandler<typeof AssistantOperation.CreateChat> = Ass
               AssistantSkill,
               DatabaseSkill,
               ChatContextSkill,
-              AgentWizardSkill,
               SkillManagerSkill,
               AlarmSkill,
               ...(pluginManagerContributed ? [PluginManagerSkill] : []),

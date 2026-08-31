@@ -124,7 +124,7 @@ const CallTranscriptionView = ({ meeting, transcript }: CallTranscriptionViewPro
           disabled={!callManager}
           onClick={handleStartCall}
         />
-        {/* TODO(burdon): Replace with MicButton. */}
+        {/* TODO(burdon): Replace with SystemIconButton.Mic. */}
         <IconButton
           icon={recording ? 'ph--stop--regular' : 'ph--microphone--regular'}
           label={recording ? 'Stop transcription' : 'Start transcription'}

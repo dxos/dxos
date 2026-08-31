@@ -12,9 +12,6 @@ import { type ContentBlock, Message } from '@dxos/types';
 
 import { ExecutionGraph } from './execution-graph';
 
-// Helper function to create valid object IDs for testing.
-const createTestId = () => EntityId.random();
-
 const SKIP_BLOCKS: ContentBlock.Any['_tag'][] = [];
 
 describe('ExecutionGraph', () => {
@@ -29,7 +26,7 @@ describe('ExecutionGraph', () => {
 
     it('should add a simple user message', () => {
       const graph = new ExecutionGraph(SKIP_BLOCKS);
-      const messageId = createTestId();
+      const messageId = EntityId.random();
       const message = Obj.make(Message.Message, {
         id: messageId,
         created: '2025-01-01T00:00:00Z',
@@ -93,7 +90,7 @@ describe('ExecutionGraph', () => {
 
     it('should add an assistant message with text', () => {
       const graph = new ExecutionGraph(SKIP_BLOCKS);
-      const messageId = createTestId();
+      const messageId = EntityId.random();
       const message = Obj.make(Message.Message, {
         id: messageId,
         created: '2025-01-01T00:00:00Z',
@@ -123,7 +120,7 @@ describe('ExecutionGraph', () => {
   describe('sequential chaining within messages', () => {
     it('should chain blocks within a message', () => {
       const graph = new ExecutionGraph(SKIP_BLOCKS);
-      const messageId = createTestId();
+      const messageId = EntityId.random();
       const message = Obj.make(Message.Message, {
         id: messageId,
         created: '2025-01-01T00:00:00Z',
@@ -173,7 +170,7 @@ describe('ExecutionGraph', () => {
       const graph = new ExecutionGraph(SKIP_BLOCKS);
 
       // First message
-      const message1Id = createTestId();
+      const message1Id = EntityId.random();
       const message1 = Obj.make(Message.Message, {
         id: message1Id,
         created: '2025-01-01T00:00:00Z',
@@ -183,7 +180,7 @@ describe('ExecutionGraph', () => {
       });
 
       // Second message
-      const message2Id = createTestId();
+      const message2Id = EntityId.random();
       const message2 = Obj.make(Message.Message, {
         id: message2Id,
         created: '2025-01-01T00:01:00Z',
@@ -215,9 +212,9 @@ describe('ExecutionGraph', () => {
     it('should handle tool calls and results with proper parent relationships', () => {
       const graph = new ExecutionGraph(SKIP_BLOCKS);
 
-      const message1Id = createTestId();
-      const message2Id = createTestId();
-      const statusId = createTestId();
+      const message1Id = EntityId.random();
+      const message2Id = EntityId.random();
+      const statusId = EntityId.random();
       const toolCallId = 'tool1';
 
       // Assistant message with tool call
@@ -300,9 +297,9 @@ describe('ExecutionGraph', () => {
     it('should handle tool errors with proper parent relationships', () => {
       const graph = new ExecutionGraph(SKIP_BLOCKS);
 
-      const message1Id = createTestId();
-      const message2Id = createTestId();
-      const statusId = createTestId();
+      const message1Id = EntityId.random();
+      const message2Id = EntityId.random();
+      const statusId = EntityId.random();
       const toolCallId = 'tool1';
 
       // Assistant message with tool call
@@ -377,9 +374,9 @@ describe('ExecutionGraph', () => {
     it('should handle AgentStatus processed after tool result', () => {
       const graph = new ExecutionGraph(SKIP_BLOCKS);
 
-      const message1Id = createTestId();
-      const message2Id = createTestId();
-      const statusId = createTestId();
+      const message1Id = EntityId.random();
+      const message2Id = EntityId.random();
+      const statusId = EntityId.random();
       const toolCallId = 'tool1';
 
       // Tool call message
@@ -436,9 +433,9 @@ describe('ExecutionGraph', () => {
     it('should handle AgentStatus processed before tool result', () => {
       const graph = new ExecutionGraph(SKIP_BLOCKS);
 
-      const message1Id = createTestId();
-      const message2Id = createTestId();
-      const statusId = createTestId();
+      const message1Id = EntityId.random();
+      const message2Id = EntityId.random();
+      const statusId = EntityId.random();
       const toolCallId = 'tool1';
 
       // Tool call message
@@ -497,13 +494,13 @@ describe('ExecutionGraph', () => {
     it('should handle multiple tool calls in sequence', () => {
       const graph = new ExecutionGraph(SKIP_BLOCKS);
 
-      const msg1Id = createTestId();
-      const msg2Id = createTestId();
-      const msg3Id = createTestId();
-      const msg4Id = createTestId();
-      const msg5Id = createTestId();
-      const status1Id = createTestId();
-      const status2Id = createTestId();
+      const msg1Id = EntityId.random();
+      const msg2Id = EntityId.random();
+      const msg3Id = EntityId.random();
+      const msg4Id = EntityId.random();
+      const msg5Id = EntityId.random();
+      const status1Id = EntityId.random();
+      const status2Id = EntityId.random();
 
       const events = [
         // User message
@@ -609,7 +606,7 @@ describe('ExecutionGraph', () => {
     it('should handle mixed block types in a message', () => {
       const graph = new ExecutionGraph(SKIP_BLOCKS);
 
-      const messageId = createTestId();
+      const messageId = EntityId.random();
       const message = Obj.make(Message.Message, {
         id: messageId,
         created: '2025-01-01T00:00:00Z',
@@ -646,7 +643,7 @@ describe('ExecutionGraph', () => {
     it('should handle empty text blocks', () => {
       const graph = new ExecutionGraph(SKIP_BLOCKS);
 
-      const messageId = createTestId();
+      const messageId = EntityId.random();
       const message = Obj.make(Message.Message, {
         id: messageId,
         created: '2025-01-01T00:00:00Z',
@@ -670,7 +667,7 @@ describe('ExecutionGraph', () => {
     it('should handle messages with no blocks', () => {
       const graph = new ExecutionGraph(SKIP_BLOCKS);
 
-      const messageId = createTestId();
+      const messageId = EntityId.random();
       const message = Obj.make(Message.Message, {
         id: messageId,
         created: '2025-01-01T00:00:00Z',
@@ -688,10 +685,10 @@ describe('ExecutionGraph', () => {
     it('should handle getGraph with lastRequest filter', () => {
       const graph = new ExecutionGraph(SKIP_BLOCKS);
 
-      const msg1Id = createTestId();
-      const msg2Id = createTestId();
-      const msg3Id = createTestId();
-      const msg4Id = createTestId();
+      const msg1Id = EntityId.random();
+      const msg2Id = EntityId.random();
+      const msg3Id = EntityId.random();
+      const msg4Id = EntityId.random();
 
       const events = [
         Obj.make(Message.Message, {
