@@ -14,14 +14,13 @@ import { type PluginConfig, getCorePlugins } from './plugin-defs.core';
 export type { PluginConfig, State } from './plugin-defs.core';
 
 /**
- * Fixed mobile set — not extensible, no registry: core infrastructure (with `isMobile` selecting
- * headless Deck + `MobilePlugin` as the root renderer) plus Assistant (chat), Markdown (chat
- * content), Projects with the Tasks it declares as a dependency, and Transcription (voice input).
- * Selection is build-time — swapping this file in via `DX_PLUGIN_SET=mobile` — rather than a
- * runtime flag, so a plugin with no mobile surface never enters the bundle.
+ * Fixed mobile set: core infrastructure (with `isMobile` selecting headless Deck + `MobilePlugin` as
+ * the root renderer) plus Assistant, Markdown, Projects with the Tasks it declares as a dependency,
+ * and Transcription. Selection is build-time — swapping this file in via `DX_PLUGIN_SET=mobile` —
+ * rather than a runtime flag, so a plugin with no mobile surface never enters the bundle.
  */
 export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => [
-  ...getCorePlugins({ ...config, isExtensible: false }),
+  ...getCorePlugins({ ...config, externalPlugins: false }),
   // `Agent` and `Sequence` are unfinished, so the mobile set does not offer creating them either.
   AssistantPlugin.make({ experimentalTypes: false }),
   MarkdownPlugin.make(),
