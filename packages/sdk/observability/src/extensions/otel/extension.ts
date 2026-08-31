@@ -23,7 +23,7 @@ import { type OtelMetricsSinkMessage } from './metrics-sink';
 import { RemoteMetricsForwarder } from './remote-metrics';
 import { type OtelSpanSinkMessage } from './span-sink';
 
-/** Everything the producing realm posts to the log-writer worker's OTel sinks. */
+/** Everything the producing realm posts to the telemetry worker's OTel sinks. */
 export type OtelWorkerMessage = OtelLogSinkMessage | OtelMetricsSinkMessage | OtelSpanSinkMessage;
 
 export type ExtensionsOptions = {
@@ -40,14 +40,14 @@ export type ExtensionsOptions = {
   /** Minimum log level to export. Defaults to INFO (i.e. info, warn, error). */
   logLevel?: LogLevel;
   /**
-   * When set, OTLP export runs in the log-writer worker instead of this realm: the resolved
+   * When set, OTLP export runs in the telemetry worker instead of this realm: the resolved
    * options are posted over this handle for the worker to build the sinks, and no local
    * pipelines are installed. Logs ride the JSONL lines the realm's log processor already
    * ships; metric instrument calls are forwarded as messages. Batching and export happen on
    * the worker's own event loop, so export keeps up while this realm is blocked by a long
    * synchronous task.
    */
-  logWriter?: { post: (message: OtelWorkerMessage) => void };
+  telemetryWorker?: { post: (message: OtelWorkerMessage) => void };
   metrics?: boolean;
   traces?: boolean;
 };
@@ -66,7 +66,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   //   - logs should be flushed to the server if user opts to include them in a bug report
   logs: logsEnabled = false,
   logLevel = LogLevel.INFO,
-  logWriter,
+  telemetryWorker,
   metrics: metricsEnabled = false,
   traces: tracesEnabled = false,
 }) {
@@ -137,9 +137,9 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   const sessionId = crypto.randomUUID();
   const { resource, metricsResource } = createResources(baseAttributes, sessionId);
 
-  // Remote takes precedence: with a log writer, the worker owns the whole log pipeline and
+  // Remote takes precedence: with a telemetry worker, the worker owns the whole log pipeline and
   // this realm installs no processor at all.
-  const remoteLogs = logsEnabled ? logWriter : undefined;
+  const remoteLogs = logsEnabled ? telemetryWorker : undefined;
   const logs =
     logsEnabled && !remoteLogs
       ? new OtelLogs({
@@ -154,9 +154,9 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   // Constructed eagerly (mirroring OtelMetrics, which registers with TRACE_PROCESSOR at
   // construction) but only when telemetry is on — a disabled session forwards nothing.
   const remoteMetrics =
-    metricsEnabled && logWriter && !disabled ? new RemoteMetricsForwarder(logWriter.post) : undefined;
+    metricsEnabled && telemetryWorker && !disabled ? new RemoteMetricsForwarder(telemetryWorker.post) : undefined;
   const metrics =
-    metricsEnabled && !logWriter
+    metricsEnabled && !telemetryWorker
       ? new OtelMetrics({
           endpoint: resolvedEndpoint,
           headers: resolvedHeaders,
@@ -172,7 +172,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
         resource,
         getTags: () => Object.fromEntries(tags),
         // Sampling, IDs, and propagation stay local; only batching and export move out.
-        spanSink: logWriter ? { post: (record) => logWriter.post(record) } : undefined,
+        spanSink: telemetryWorker ? { post: (record) => telemetryWorker.post(record) } : undefined,
       })
     : undefined;
 
@@ -197,7 +197,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
           });
         }
         if (remoteMetrics) {
-          logWriter?.post({
+          telemetryWorker?.post({
             type: 'otel-metrics-init',
             endpoint: resolvedEndpoint,
             headers: resolvedHeaders,
@@ -207,8 +207,8 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
           });
         }
         if (traces) {
-          if (logWriter) {
-            logWriter.post({
+          if (telemetryWorker) {
+            telemetryWorker.post({
               type: 'otel-traces-init',
               endpoint: resolvedEndpoint,
               headers: resolvedHeaders,

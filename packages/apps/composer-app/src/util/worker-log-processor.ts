@@ -19,13 +19,13 @@ import { type OtelSpanSinkMessage } from '@dxos/observability/otel-span-sink';
 const DEFAULT_LOG_FILTER = 'debug';
 
 /**
- * Sender → log-writer worker: a bare string is one pre-serialized JSONL log line (hot path —
+ * Sender → telemetry worker: a bare string is one pre-serialized JSONL log line (hot path —
  * no envelope), `{ type: 'flush' }` asks the worker to flush its queue now. The `otel-*`
  * messages are the Otel extension's worker-side OTLP export: control plane for the log
- * lines, plus forwarded metric instrument calls and ended spans (posted via the `logWriter`
+ * lines, plus forwarded metric instrument calls and ended spans (posted via the `telemetryWorker`
  * handle `initializeObservability` wires up).
  */
-export type LogWriterMessage =
+export type TelemetryWorkerMessage =
   | string
   | { type: 'flush' }
   | OtelLogSinkMessage
@@ -33,7 +33,7 @@ export type LogWriterMessage =
   | OtelSpanSinkMessage;
 
 export type WorkerLogProcessorOptions = {
-  /** The log-writer worker (`workers/log-writer-worker.ts`), or the `port` of a SharedWorker running it. */
+  /** The telemetry worker (`workers/telemetry-worker.ts`), or the `port` of a SharedWorker running it. */
   worker: Worker | MessagePort;
   /** Identifier embedded in every record's `i` field. Defaults to {@link inferEnvironmentName}. */
   tabId?: string;
@@ -42,7 +42,7 @@ export type WorkerLogProcessorOptions = {
 };
 
 /**
- * Log processor that forwards each pre-serialized JSONL line to the log-writer worker, which
+ * Log processor that forwards each pre-serialized JSONL line to the telemetry worker, which
  * owns the queue, flush timer, IDB writes and eviction. `postMessage` enqueues synchronously
  * inside the log call and delivery does not need this thread's event loop to turn, so the
  * worker keeps persisting while this thread is blocked by a long synchronous task. Filtering
@@ -91,7 +91,7 @@ export class WorkerLogProcessor {
     this.#post({ type: 'flush' });
   }
 
-  #post(message: LogWriterMessage): void {
+  #post(message: TelemetryWorkerMessage): void {
     try {
       this.#worker.postMessage(message);
     } catch {
