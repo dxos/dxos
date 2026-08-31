@@ -33,13 +33,13 @@ export type ExtensionsOptions = {
   /** Minimum log level to export. Defaults to INFO (i.e. info, warn, error). */
   logLevel?: LogLevel;
   /**
-   * When set (and `logs` is on), log export runs in the log-writer worker instead of this
+   * When set (and `logs` is on), log export runs in the telemetry worker instead of this
    * realm: the resolved options are posted over this handle for the worker to build an
    * `OtelLogSink`, and no local pipeline or log processor is installed. The worker exports
    * the JSONL lines the realm's log processor already ships it, on its own event loop — so
    * export keeps up while this realm is blocked by a long synchronous task.
    */
-  logWriter?: { post: (message: OtelLogSinkMessage) => void };
+  telemetryWorker?: { post: (message: OtelLogSinkMessage) => void };
   metrics?: boolean;
   traces?: boolean;
 };
@@ -58,7 +58,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   //   - logs should be flushed to the server if user opts to include them in a bug report
   logs: logsEnabled = false,
   logLevel = LogLevel.INFO,
-  logWriter,
+  telemetryWorker,
   metrics: metricsEnabled = false,
   traces: tracesEnabled = false,
 }) {
@@ -129,9 +129,9 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   const sessionId = crypto.randomUUID();
   const { resource, metricsResource } = createResources(baseAttributes, sessionId);
 
-  // Remote takes precedence: with a log writer, the worker owns the whole log pipeline and
+  // Remote takes precedence: with a telemetry worker, the worker owns the whole log pipeline and
   // this realm installs no processor at all.
-  const remoteLogs = logsEnabled ? logWriter : undefined;
+  const remoteLogs = logsEnabled ? telemetryWorker : undefined;
   const logs =
     logsEnabled && !remoteLogs
       ? new OtelLogs({
