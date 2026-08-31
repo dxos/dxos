@@ -55,14 +55,18 @@ Contrast our theme and tree with shadcn/ui and Ark UI to ground the design decis
 - [ ] **PR** — before/after screenshots in description (tree story + navtree pair captured in
       `temp/`), then `submit-pr`. Confirm with user whether hover-default ships app-wide at once.
 - [ ] **Human drag check** — real DnD drop in the sidebar (native drag not automatable).
-- [ ] **Popover closes when clicking the card menu** (user, 2026-08-31) — the pin-on-pointerdown in
-      `dx-anchor` covers `[data-dx-popover-content]`, but the deck popover's dismiss path
-      (`handleInteractOutside` → pointer-down outside the content) still closes when the click
-      lands on the PORTALED `Menu.Content`; needs the Radix layer branch check or menu-aware
-      `onPointerDownOutside` in `plugin-deck/src/containers/Overlays/Popover.tsx`.
-- [ ] **Inline chess embed does not render** (user, 2026-08-31) — `![…](echo:…)` block widget for a
-      Game object shows the collapsed stub (caret + estimated height) instead of the board; trace
-      `PreviewComponent` → Surface resolution for Game/Chess in the document context.
+- [x] **Popover closes when clicking the card menu** — root precondition: the workspace resolves
+      FOUR copies of `@radix-ui/react-dismissable-layer` (vendored Popover + DropdownMenu forks),
+      so Radix's nested-layer registries are disjoint and a portaled-menu click reads as
+      "outside". Deck `handleInteractOutside` now ignores pointer-downs inside
+      `[data-radix-popper-content-wrapper]`/`[data-radix-menu-content]`. FOLLOW-UP: dedupe the
+      dismissable-layer versions (pnpm catalog/overrides) so layer coordination works natively.
+- [x] **Inline embed does not render on first document mount** — `useOperationInvoker()` SUSPENDS
+      (capability wait) inside the block portal, and an un-bounded suspension held the whole
+      editor tree un-committed until a view-mode toggle rebuilt it. Fixed twice over:
+      `PreviewComponent` uses the optional capability, and `Editor.Blocks` wraps every portal in
+      its own `Suspense` (plus `data-testid=editor.blocks.portal`). Story
+      `MarkdownEditor — WithEmbed` + unit tests pin the first-mount path.
 - [ ] Follow-ups tracked in DESIGN.md §3.5 (animated exit, multi-select, popover motion promotion,
       end-of-row keyboard access).
 
