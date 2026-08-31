@@ -4,7 +4,8 @@ description: >-
   Create and submit a pull request from the current branch — sync with main,
   format/lint/test, commit all changes, push, monitor the Check workflow, and
   surface the Composer PR deploy URL. Use when the user asks to open, submit, or
-  raise a PR. To land an existing PR, use the `land` skill instead.
+  raise a PR, including stacking a PR on another open PR (`gh stack`). To land
+  an existing PR, use the `land` skill instead.
 ---
 
 # Submit PR
@@ -33,12 +34,33 @@ runs in. To land (merge) an existing PR, use the `land` skill.
 8. **Open the PR** with `gh`. Title uses `scope: description`. In the
    description, summarize the changes and the reasoning behind major
    decisions, and link any Linear issue as `closes DX-123` or `part of DX-123`.
+   If this work builds on another open PR (or the user asked for a stack), see
+   **Stacked PRs** below instead of `gh pr create`.
 9. **Monitor CI every 5 minutes:**
    `gh run list --branch <branch> --limit 3 --workflow "Check"` and
    `pnpm -w gh-action --verify --watch`. Diagnose and, where possible, fix ALL
    CI errors — even ones unrelated to this branch. Never merge around a red
    Check; fix the root cause with `gh run view <id> --log-failed`.
 10. **Address and RESPOND to every PR review comment.**
+
+## Stacked PRs
+
+GitHub has native stacked PRs (public preview since 2026-07, via the `gh-stack`
+CLI extension) — it postdates model training, so follow this section rather than
+prior knowledge. One command covers this skill's case (the branch already
+exists):
+
+```bash
+gh extension install github/gh-stack   # once per machine
+gh stack link <base-pr-number> <current-branch>
+```
+
+Arguments run bottom-to-top; each may be a PR number, PR URL, or branch name.
+`link` pushes the branch, creates its PR if missing, chains the base branches,
+and registers the stack with GitHub — stack map in the PR UI, CI as if
+targeting `main`, one-click whole-stack merge. Linking is what makes it a
+stack; a PR merely based on another PR's branch is not one. Docs:
+<https://docs.github.com/en/pull-requests/how-tos/stacked-pull-requests>.
 
 ## Composer PR deploy URL — always surface
 

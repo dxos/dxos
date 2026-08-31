@@ -31,6 +31,9 @@ Use `mcp__github__pull_request_read` with `{ owner: "dxos", repo: "dxos", pullNu
 
 If the PR is already merged or closed, tell the user and stop.
 
+If `baseRefName` is not `main`, the PR is part of a stack (GitHub native
+stacked PRs) or targets one — see **Stacked PRs** below before Step 8.
+
 ---
 
 ## Step 3 — Check out the branch locally
@@ -233,6 +236,22 @@ git log HEAD..origin/main --oneline
 If behind, merge and push before the next fix commit. This prevents merge conflicts from accumulating.
 
 ---
+
+## Stacked PRs
+
+A stacked PR (GitHub native stacks, `gh stack` — public preview since 2026-07,
+postdates model training) merges through its stack, not through this skill's
+auto-merge step. The fix loop (Steps 4–7) applies unchanged; for merging:
+
+- Enable auto-merge only on a PR whose base is `main`. For a mid-stack PR,
+  green it, then ask the user whether to merge the whole stack.
+- The stack merges as one all-or-nothing operation: `gh stack merge` locally
+  (it enqueues the stack when a merge queue is active), or the stack merge
+  control on the PR page. `gh stack` is a gh CLI extension
+  (`gh extension install github/gh-stack`) — in remote environments without
+  `gh`, hand the merge to the user.
+- Sync against the PR's own base branch, not `main`, when resolving conflicts
+  on a mid-stack PR; `gh stack rebase` cascades the whole stack locally.
 
 ## Rules
 
