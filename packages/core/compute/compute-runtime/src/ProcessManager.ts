@@ -105,9 +105,9 @@ export interface Handle<_Input, _Output, _Rpcs extends Rpc.Any> {
   readonly params: Process.Params;
 
   /**
-   * Environment influences what services are available to the process.
+   * What the process is running on behalf of. See {@link Process.Environment}.
    */
-  readonly environment: Environment;
+  readonly environment: Process.Environment;
 
   submitInput(input: _Input): Effect.Effect<void>;
   subscribeOutputs(): Stream.Stream<_Output>;
@@ -177,14 +177,6 @@ export namespace Handle {
 }
 
 /**
- * Environment influences what services are available to the process.
- */
-export interface Environment {
-  readonly space?: SpaceId;
-  readonly conversation?: URI.URI;
-}
-
-/**
  * Options for spawning a process.
  */
 export interface SpawnOptions {
@@ -208,7 +200,7 @@ export interface SpawnOptions {
    */
   readonly traceMeta?: Trace.Meta;
 
-  readonly environment?: Environment;
+  readonly environment?: Process.Environment;
 
   /**
    * User-facing notifications requested for this process's lifecycle phases.
@@ -513,7 +505,7 @@ export class ProcessManagerImpl implements Manager {
 
       const parentHandle =
         options?.parentProcessId !== undefined ? this.#handles.get(options.parentProcessId) : undefined;
-      const environment: Environment = {
+      const environment: Process.Environment = {
         ...(parentHandle !== undefined ? parentHandle.environment : {}),
         ...options?.environment,
       };
@@ -596,7 +588,7 @@ export class ProcessManagerImpl implements Manager {
       }
 
       const builtinTagKeys = new Set([
-        StorageService.StorageService.key,
+        StorageService.key,
         Scope.Scope.key,
         Trace.TraceService.key,
         Operation.Service.key,
@@ -738,7 +730,7 @@ export class ProcessManagerImpl implements Manager {
       const parentOption = Option.fromNullishOr(record.parentId);
       // Deserialization boundary: schema stores space/conversation as plain strings;
       // cast back to opaque branded types.
-      const environment: Environment = {
+      const environment: Process.Environment = {
         space: record.environment.space as SpaceId | undefined,
         conversation: record.environment.conversation as URI.URI | undefined,
       };
@@ -806,7 +798,7 @@ export class ProcessManagerImpl implements Manager {
       }
 
       const builtinTagKeys = new Set([
-        StorageService.StorageService.key,
+        StorageService.key,
         Scope.Scope.key,
         Trace.TraceService.key,
         Operation.Service.key,
@@ -1036,7 +1028,7 @@ class DormantHandle<I, O> implements Handle<I, O, any> {
   readonly parentId: Process.ID | null;
   readonly key: string;
   readonly params: Process.Params;
-  readonly environment: Environment;
+  readonly environment: Process.Environment;
   readonly status: Status;
   readonly statusAtom: Atom.Atom<Status>;
   // Dormant handles expose no live RPC surface; the empty client serves no requests. Stored untyped

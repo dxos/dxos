@@ -9,7 +9,6 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import {
-  EchoEdgeReplicatorLayer,
   EchoEdgeSubductionReplicatorLayer,
   EchoHostLayer,
   EchoHostService,
@@ -27,9 +26,8 @@ import { KeyringApiService, SqliteKeyring, SqliteKeyringLayer } from '@dxos/keyr
 import { SignalManagerService } from '@dxos/messaging';
 import { SwarmNetworkManagerService } from '@dxos/network-manager';
 import { FeedProtocol } from '@dxos/protocols';
-import { type Runtime } from '@dxos/protocols/proto/dxos/config';
+import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
 import { SqlTransaction } from '@dxos/sql-sqlite';
-import { BlobStoreApiService, SqliteBlobStore, SqliteBlobStoreLayer } from '@dxos/teleport-extension-object-sync';
 
 import { EdgeAgentManagerLayer, EdgeAgentManagerService } from '../agents';
 import {
@@ -90,7 +88,7 @@ export class StorageMigrationService extends EffectContext.Service<
 >()('@dxos/client-services/StorageMigration') {}
 
 export type ServiceContextLayerOptions = ServiceContextRuntimeProps & {
-  edgeFeatures?: Runtime.Client.EdgeFeatures;
+  edgeFeatures?: Runtime_Client_EdgeFeatures;
   edgeConnection?: EdgeConnection;
   edgeHttpClient?: EdgeHttpClient;
 };
@@ -113,7 +111,6 @@ export type ServiceContextStackContext =
   | CrossDeviceSpaceSynchronizerService
   | SigningContextProviderService
   | IMetadataStoreService
-  | BlobStoreApiService
   | FeedStoreService
   | StorageMigrationService;
 
@@ -148,6 +145,7 @@ export const ServiceContextLayer = (
         devicePresenceOfflineTimeout: options.devicePresenceOfflineTimeout,
         devicePresenceAnnounceInterval: options.devicePresenceAnnounceInterval,
         edgeFeatures: options.edgeFeatures,
+        automergeCredentials: options.automergeCredentials,
       }),
     ),
     Layer.provideMerge(SpaceManagerLayer({ disableP2pReplication: options.disableP2pReplication })),
@@ -167,13 +165,7 @@ export const ServiceContextLayer = (
     syncNamespaces: [FeedProtocol.WellKnownNamespaces.data, FeedProtocol.WellKnownNamespaces.trace],
   }).pipe(
     Layer.provideMerge(core),
-    Layer.provideMerge(
-      options.edgeFeatures?.subductionReplicator
-        ? EchoEdgeSubductionReplicatorLayer()
-        : options.edgeFeatures?.echoReplicator
-          ? EchoEdgeReplicatorLayer()
-          : Layer.empty,
-    ),
+    Layer.provideMerge(options.edgeFeatures?.subductionReplicator ? EchoEdgeSubductionReplicatorLayer() : Layer.empty),
     Layer.provideMerge(
       Layer.mergeAll(
         Layer.succeed(EdgeConnectionService, edgeConnection),
@@ -206,7 +198,6 @@ const storageMigrationLayer = Layer.effect(
     return Effect.all(
       [
         new SqliteMetadataStore({ runtime }).migrate,
-        new SqliteBlobStore({ runtime }).migrate,
         new SqliteKeyring({ runtime }).migrate,
         new SqliteStorage({ runtime }).migrate,
       ],
@@ -223,7 +214,6 @@ const storageLayer = Layer.empty.pipe(
   Layer.provideMerge(FeedFactoryLayer({ hypercore: { valueEncoding, stats: true } })),
   Layer.provideMerge(FeedStorageDirectoryLayer()),
   Layer.provideMerge(SqliteMetadataStoreLayer()),
-  Layer.provideMerge(SqliteBlobStoreLayer()),
   Layer.provideMerge(SqliteKeyringLayer()),
   Layer.provideMerge(SqliteStorageLayer()),
   Layer.provideMerge(storageMigrationLayer),
@@ -245,6 +235,11 @@ const echoHostLayer = (options: { useSubduction?: boolean }) =>
         Effect.promise(() => echoHost.open()),
         () => Effect.promise(() => echoHost.close()),
       );
+
+      // Points back down the stack, like the feed sync handlers above: the identity manager anchors
+      // the HALO space on a root document and needs the open host to do it.
+      const identityManager = yield* IdentityManagerService;
+      yield* Effect.promise(() => identityManager.setEchoHost(echoHost));
     }),
   ).pipe(
     Layer.provideMerge(

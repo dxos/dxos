@@ -12,24 +12,9 @@ import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import {
-  type BatchedDocumentUpdates,
-  type CreateDocumentRequest,
-  type CreateDocumentResponse,
-  type FlushRequest,
-  type GetDocumentHeadsRequest,
-  type GetDocumentHeadsResponse,
-  type GetSpaceSyncStateRequest,
-  type ReIndexHeadsRequest,
-  type SpaceSyncState,
-  type SubscribeRequest,
-  type UpdateRequest,
-  type UpdateSubscriptionRequest,
-  type WaitUntilHeadsReplicatedRequest,
-} from '@dxos/protocols/proto/dxos/echo/service';
 import { type DataService } from '@dxos/protocols/rpc';
 
-import { type AutomergeHost, deriveCollectionIdFromSpaceId } from '../automerge';
+import { type AutomergeHost, type DocumentLease, deriveCollectionIdFromSpaceId } from '../automerge';
 import { DocumentsSynchronizer } from './documents-synchronizer';
 import { type SpaceStateManager } from './space-state-manager';
 
@@ -55,6 +40,13 @@ export class DataServiceImpl implements DataService.Handlers {
    */
   private readonly '_subscriptions' = new Map<string, DocumentsSynchronizer>();
 
+  /**
+   * Leases on documents created for a client that has not subscribed to them yet. A created document
+   * lives only in memory until it is saved, and its creator subscribes in a later call, so releasing
+   * it at creation lets the host evict it out from under the write that follows.
+   */
+  private readonly '_pendingCreations' = new Map<DocumentId, DocumentLease>();
+
   private readonly '_automergeHost': AutomergeHost;
   private readonly '_spaceStateManager': SpaceStateManager;
   private readonly '_updateIndexes': () => Promise<void>;
@@ -72,8 +64,10 @@ export class DataServiceImpl implements DataService.Handlers {
     this._runGarbageCollection = params.runGarbageCollection;
   }
 
-  ['DataService.subscribe'](request: SubscribeRequest): EffectStream.Stream<BatchedDocumentUpdates, Error> {
-    return EffectEx.streamFromEmitter<BatchedDocumentUpdates, Error>((emit) => {
+  ['DataService.subscribe'](
+    request: DataService.SubscribeRequest,
+  ): EffectStream.Stream<DataService.BatchedDocumentUpdates, Error> {
+    return EffectEx.streamFromEmitter<DataService.BatchedDocumentUpdates, Error>((emit) => {
       const synchronizer = new DocumentsSynchronizer({
         automergeHost: this._automergeHost,
         sendUpdates: (updates) => void emit.single(updates),
@@ -91,17 +85,37 @@ export class DataServiceImpl implements DataService.Handlers {
           log.catch(err);
           void emit.fail(err);
         });
-      return Effect.sync(() => void synchronizer.close());
+      return Effect.sync(() => {
+        // Guarded by identity: a reconnect re-subscribes under the same id before this finalizer
+        // runs, and an unconditional delete would drop the replacement.
+        if (this._subscriptions.get(request.subscriptionId) === synchronizer) {
+          this._subscriptions.delete(request.subscriptionId);
+        }
+        // Nothing is left to subscribe to a created document once the last client is gone, so its
+        // creation lease would otherwise outlive every reader.
+        if (this._subscriptions.size === 0) {
+          for (const lease of this._pendingCreations.values()) {
+            lease[Symbol.dispose]();
+          }
+          this._pendingCreations.clear();
+        }
+        void synchronizer.close();
+      });
     });
   }
 
-  ['DataService.updateSubscription'](request: UpdateSubscriptionRequest): Effect.Effect<void, Error> {
+  ['DataService.updateSubscription'](request: DataService.UpdateSubscriptionRequest): Effect.Effect<void, Error> {
     return Effect.promise(async () => {
       const synchronizer = this._subscriptions.get(request.subscriptionId);
       invariant(synchronizer, 'Subscription not found');
 
       if (request.addIds?.length) {
         await synchronizer.addDocuments(request.addIds as DocumentId[]);
+        // The subscription now holds each document, so the creation lease has nothing left to guard.
+        for (const documentId of request.addIds as DocumentId[]) {
+          this._pendingCreations.get(documentId)?.[Symbol.dispose]();
+          this._pendingCreations.delete(documentId);
+        }
       }
       if (request.removeIds?.length) {
         await synchronizer.removeDocuments(request.removeIds as DocumentId[]);
@@ -109,14 +123,17 @@ export class DataServiceImpl implements DataService.Handlers {
     });
   }
 
-  ['DataService.createDocument'](request: CreateDocumentRequest): Effect.Effect<CreateDocumentResponse, Error> {
+  ['DataService.createDocument'](
+    request: DataService.CreateDocumentRequest,
+  ): Effect.Effect<DataService.CreateDocumentResponse, Error> {
     return Effect.promise(async () => {
-      const handle = await this._automergeHost.createDoc(request.initialValue);
-      return { documentId: handle.documentId };
+      const created = await this._automergeHost.createDoc(request.initialValue);
+      this._pendingCreations.set(created.documentId, created);
+      return { documentId: created.documentId };
     });
   }
 
-  ['DataService.update'](request: UpdateRequest): Effect.Effect<void, Error> {
+  ['DataService.update'](request: DataService.UpdateRequest): Effect.Effect<void, Error> {
     return Effect.promise(async () => {
       if (!request.updates) {
         return;
@@ -128,13 +145,15 @@ export class DataServiceImpl implements DataService.Handlers {
     });
   }
 
-  ['DataService.flush'](request: FlushRequest): Effect.Effect<void, Error> {
+  ['DataService.flush'](request: DataService.FlushRequest): Effect.Effect<void, Error> {
     return Effect.promise(async () => {
       await this._automergeHost.flush(Context.default(), request);
     });
   }
 
-  ['DataService.getDocumentHeads'](request: GetDocumentHeadsRequest): Effect.Effect<GetDocumentHeadsResponse, Error> {
+  ['DataService.getDocumentHeads'](
+    request: DataService.GetDocumentHeadsRequest,
+  ): Effect.Effect<DataService.GetDocumentHeadsResponse, Error> {
     return Effect.promise(async () => {
       const documentIds = request.documentIds;
       if (!documentIds) {
@@ -149,13 +168,15 @@ export class DataServiceImpl implements DataService.Handlers {
     });
   }
 
-  ['DataService.waitUntilHeadsReplicated'](request: WaitUntilHeadsReplicatedRequest): Effect.Effect<void, Error> {
+  ['DataService.waitUntilHeadsReplicated'](
+    request: DataService.WaitUntilHeadsReplicatedRequest,
+  ): Effect.Effect<void, Error> {
     return Effect.promise(async () => {
       await this._automergeHost.waitUntilHeadsReplicated(Context.default(), request.heads);
     });
   }
 
-  ['DataService.reIndexHeads'](request: ReIndexHeadsRequest): Effect.Effect<void, Error> {
+  ['DataService.reIndexHeads'](request: DataService.ReIndexHeadsRequest): Effect.Effect<void, Error> {
     return Effect.promise(async () => {
       await this._automergeHost.reIndexHeads((request.documentIds ?? []) as DocumentId[]);
     });
@@ -194,9 +215,9 @@ export class DataServiceImpl implements DataService.Handlers {
   }
 
   ['DataService.subscribeSpaceSyncState'](
-    request: GetSpaceSyncStateRequest,
-  ): EffectStream.Stream<SpaceSyncState, Error> {
-    return EffectEx.streamFromEmitter<SpaceSyncState, Error>((emit) => {
+    request: DataService.GetSpaceSyncStateRequest,
+  ): EffectStream.Stream<DataService.SpaceSyncState, Error> {
+    return EffectEx.streamFromEmitter<DataService.SpaceSyncState, Error>((emit) => {
       const ctx = Context.default();
       const spaceId = request.spaceId;
       invariant(SpaceId.isValid(spaceId));

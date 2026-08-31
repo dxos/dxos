@@ -11,7 +11,7 @@ import { trim } from '@dxos/util';
 
 export const SetAlarm = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.alarm.setAlarm'),
+    key: DXN.make('org.dxos.operation.assistantToolkit.setAlarm'),
     name: 'Set alarm',
     icon: 'ph--alarm--regular',
     description: trim`
@@ -44,7 +44,7 @@ export const SetAlarm = Operation.make({
 
 export const GetCurrentDate = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.alarm.getCurrentDate'),
+    key: DXN.make('org.dxos.operation.assistantToolkit.getCurrentDate'),
     name: 'Get current date',
     icon: 'ph--clock--regular',
     description: 'Get the current date and time as an ISO-8601 string.',

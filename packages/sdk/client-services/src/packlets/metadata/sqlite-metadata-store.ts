@@ -16,7 +16,8 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { DataCorruptionError, STORAGE_VERSION } from '@dxos/protocols';
-import { schema } from '@dxos/protocols/proto';
+import { compatCodec } from '@dxos/protocols/buf-shape-compat';
+import { EchoMetadataSchema, LargeSpaceMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import {
   type ControlPipelineSnapshot,
@@ -24,7 +25,6 @@ import {
   type EdgeReplicationSetting,
   type IdentityRecord,
   type LargeSpaceMetadata,
-  type SpaceCache,
   type SpaceMetadata,
 } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { SqlTransaction } from '@dxos/sql-sqlite';
@@ -48,8 +48,8 @@ const emptyEchoMetadata = (): EchoMetadata => ({
 
 const emptyLargeSpaceMetadata = (): LargeSpaceMetadata => ({});
 
-const EchoMetadataCodec = schema.getCodecForType('dxos.echo.metadata.EchoMetadata');
-const LargeSpaceMetadataCodec = schema.getCodecForType('dxos.echo.metadata.LargeSpaceMetadata');
+const EchoMetadataCodec = compatCodec<EchoMetadata>(EchoMetadataSchema);
+const LargeSpaceMetadataCodec = compatCodec<LargeSpaceMetadata>(LargeSpaceMetadataSchema);
 
 const MAIN_KEY = 'main';
 const largeKey = (spaceKey: PublicKey) => `large:${spaceKey.toHex()}`;
@@ -217,11 +217,6 @@ export class SqliteMetadataStore implements IMetadataStore {
 
   async setSpaceControlLatestTimeframe(spaceKey: PublicKey, timeframe: Timeframe): Promise<void> {
     this.#getSpace(spaceKey).controlTimeframe = timeframe;
-    await this._save();
-  }
-
-  async setCache(spaceKey: PublicKey, cache: SpaceCache): Promise<void> {
-    this.#getSpace(spaceKey).cache = cache;
     await this._save();
   }
 

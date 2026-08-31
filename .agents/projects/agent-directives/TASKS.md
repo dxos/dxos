@@ -168,6 +168,40 @@ it contained `"$project"` in prose and fired `$project list`. Same fix as
       PR that did the conversion. **Rule:** refresh the resume pointer in the
       commit that invalidates it, not at hydrate time.
 
+## Phase 5: `/mode focus` (2026-08-28)
+
+Terseness governs the SHAPE of a reply; nothing governed its SCOPE. A session
+told to land a PR would still pick up adjacent fixes and poll CI between turns.
+`focus` adds the missing axis by pinning one task.
+
+### Tasks
+
+- [x] **`focus` is terse plus a pin, not a third mode value** — the hook writes
+      `terse` to `.claude/.mode` and the task to `.claude/.focus`, so the mode
+      keeps two values and every existing reader is untouched; the pin is the
+      second file existing, and `context` appends a `FOCUS:` clause when it does.
+- [x] **Bare `/mode focus` pins the previous instruction** — read from the
+      event's `transcript_path`, filtering meta entries, tool results and slash
+      commands. Deriving it in the hook keeps the pin interception; asking the
+      agent to remember what to pin would demote it to persuasion. Nothing
+      pinnable means terse with no pin, said out loud.
+- [x] **Any mode write clears the pin** — naming a verbosity is how you leave
+      focus. The clear runs AFTER the mode write, so a half-applied change ends
+      unpinned rather than stuck in a task nobody can exit.
+- [x] **The pin bans scope creep and CI polling** — no adjacent work, no
+      offering it, no monitoring CI/PR/background state unless that IS the pin,
+      and an off-task request gets one line plus a numbered choice.
+- [x] **`scripts/mode.test.sh`** — 36 assertions feeding the hook the event's
+      JSON, run against a throwaway `CLAUDE_PROJECT_DIR` so a test run cannot
+      clobber the state of the session running it.
+
+- [ ] **The pin is per-worktree, like the mode** — concurrent sessions in one
+      worktree share it. Acceptable for a verbosity, more surprising for a task.
+      Not solved; revisit if it actually bites.
+- [ ] **Auto-clear on completion is deliberately absent** — the agent would have
+      to write its own state, which the "never set the mode yourself" rule
+      forbids. Cost: a stale pin can outlive the work it named.
+
 ### References
 
 - `DESIGN.md` — findings, the control-point taxonomy, and the state-machine argument.

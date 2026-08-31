@@ -18,15 +18,15 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
   EdgeAuthChallengeError,
+  EdgeCallFailedError,
   type RecoverIdentityRequest as EdgeRecoverIdentityRequest,
+  InvalidRecoveryTokenError,
   type RecoverIdentityResponseBody,
 } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
-import {
-  type CreateRecoveryCredentialRequest,
-  type RecoverIdentityRequest,
-} from '@dxos/protocols/proto/dxos/client/services';
+import { type RecoverIdentityRequest } from '@dxos/protocols/proto/dxos/client/services';
 import { type Credential, IdentityRecovery } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type IdentityService } from '@dxos/protocols/rpc';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexSet } from '@dxos/util';
 
@@ -61,7 +61,7 @@ export class EdgeIdentityRecoveryManager {
 
   public async createRecoveryCredential({
     data,
-  }: CreateRecoveryCredentialRequest): Promise<{ recoveryCode: string | undefined }> {
+  }: IdentityService.CreateRecoveryCredentialRequest): Promise<{ recoveryCode: string | undefined }> {
     const identity = this._identityProvider();
     invariant(identity);
 
@@ -239,6 +239,7 @@ export class EdgeIdentityRecoveryManager {
       deviceKey,
       controlFeedKey,
       dataFeedKey: await this._keyring.createKey(),
+      haloSpaceRootUrl: response.haloSpaceRootUrl,
     });
   }
 
@@ -261,7 +262,13 @@ export class EdgeIdentityRecoveryManager {
       ...fields,
     };
 
-    const response = await this._edgeClient.recoverIdentity(ctx, request);
+    const response = await this._edgeClient.recoverIdentity(ctx, request).catch((error) => {
+      // Rethrow the registered class so the token-rejection identity survives the services RPC boundary.
+      if (error instanceof EdgeCallFailedError && InvalidRecoveryTokenError.is(error.cause)) {
+        throw new InvalidRecoveryTokenError({ cause: error });
+      }
+      throw error;
+    });
 
     await this.#acceptRecoveredIdentity({
       authorizedDeviceCredential: decodeCredential(response.deviceAuthCredential),

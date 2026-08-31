@@ -21,6 +21,16 @@ export type GuardedType<T> = T extends ((value: any) => value is infer R) ? R : 
 export type Merge<A, B = unknown, C = unknown, D = unknown, E = unknown> = A & B & C & D & E;
 
 /**
+ * Make the named keys required (and non-nullable) while leaving the rest of `T` unchanged.
+ */
+export type MakeRequired<T, K extends keyof T> = Omit<T, K> & { [P in K]-?: NonNullable<T[P]> };
+
+/**
+ * Make specified keys optional.
+ */
+export type MakeOptional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
+
+/**
  * Removes readonly modifiers from top-level properties of T.
  * Also converts readonly arrays at the top level to mutable arrays.
  * For nested properties, mutability depends on the schema definition.
@@ -57,12 +67,6 @@ export type Simplify<A> = { [K in keyof A]: A[K] } extends infer B ? B : never;
  * Replace types of specified keys.
  */
 export type Specialize<T, U> = Simplify<Omit<T, keyof U> & U>;
-
-/**
- * Make specified keys optional.
- */
-// TODO(burdon): Wrapping with Simplify fails.
-export type MakeOptional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
 /**
  * All types that evaluate to false when cast to a boolean.

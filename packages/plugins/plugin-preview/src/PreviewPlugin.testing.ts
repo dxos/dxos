@@ -3,8 +3,7 @@
 //
 
 import { meta as pluginMeta } from '#meta';
-
-import { PreviewPlugin } from './plugin';
+import { PreviewPlugin } from '#plugin';
 
 /** Plugin metadata, available without loading the plugin body. */
 export const meta = pluginMeta;

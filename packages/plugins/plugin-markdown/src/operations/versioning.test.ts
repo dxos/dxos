@@ -10,6 +10,7 @@ import { WithProperties } from '@dxos/app-toolkit/testing';
 import { SpaceProperties } from '@dxos/client-protocol';
 import * as Operation from '@dxos/compute/Operation';
 import { Collection, Database, Feed, Ref, URI } from '@dxos/echo';
+import { getObjectOnBranch } from '@dxos/echo-client';
 import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
@@ -20,7 +21,7 @@ import { Markdown, MarkdownOperation } from '#types';
 
 const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',
-  operationHandlers: MarkdownOperationHandlerSet,
+  operationHandlers: MarkdownOperationHandlerSet.handlers,
   types: [SpaceProperties, Collection.Collection, Markdown.Document, Text.Text, HasSubject.HasSubject, Feed.Feed],
 });
 
@@ -49,12 +50,16 @@ describe('versioning operations', () => {
         expect(canonicalText.id).toBe(rootText.id);
 
         // The agent flow: edit the BRANCH via the update operation's branchId; main is untouched.
-        const { newContent: branchContent } = yield* Operation.invoke(MarkdownOperation.Update, {
+        // Read back from the branch rather than from the operation, which returns a receipt.
+        yield* Operation.invoke(MarkdownOperation.Update, {
           doc: Ref.make(doc),
           edits: [{ oldString: 'bravo\n', newString: 'bravo\ncharlie\n' }],
           branchId,
         });
-        expect(branchContent).toBe('alpha\nbravo\ncharlie\n');
+        const branchData = (yield* Effect.promise(() => getObjectOnBranch(rootText, branchId))) as {
+          content?: string;
+        };
+        expect(branchData.content).toBe('alpha\nbravo\ncharlie\n');
         expect(rootText.content).toBe('alpha\nbravo\n');
 
         const { conflicts, newContent } = yield* Operation.invoke(MarkdownOperation.MergeBranch, {

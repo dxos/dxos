@@ -27,11 +27,17 @@ export interface GenerateGmailDatasetOptions {
   idPrefix?: string;
 }
 
+// Every real account carries these, whether or not a fixture message uses them — and the label
+// dictionary, not the messages, is what `syncLabels` maps into tags. A label missing here is simply
+// not syncable, which silently disables tag reconciliation for it.
 const SYSTEM_LABELS: readonly GoogleMail.Label[] = [
   { id: 'INBOX', type: 'system', name: 'INBOX' },
   { id: 'SENT', type: 'system', name: 'SENT' },
   { id: 'IMPORTANT', type: 'system', name: 'IMPORTANT' },
   { id: 'UNREAD', type: 'system', name: 'UNREAD' },
+  { id: 'STARRED', type: 'system', name: 'STARRED' },
+  { id: 'SPAM', type: 'system', name: 'SPAM' },
+  { id: 'TRASH', type: 'system', name: 'TRASH' },
 ];
 
 /**

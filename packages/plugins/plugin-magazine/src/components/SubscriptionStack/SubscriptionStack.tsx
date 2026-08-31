@@ -64,7 +64,6 @@ export const SubscriptionStack = composable<HTMLDivElement, SubscriptionStackPro
             <ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={SubscriptionTile}
-                classNames='my-2'
                 gap={8}
                 items={items}
                 draggable={false}

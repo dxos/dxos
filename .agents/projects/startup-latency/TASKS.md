@@ -67,6 +67,87 @@ got here — checkpoints, measurements and findings, not work items.
       via `react-aria-components`. Detail under
       [Wave 3](#wave-3--eager-core-ui-laziness-audit).
 
+- [x] **A12 — plugin body imports were serialized by `lazyLoadLock` (2026-08-17; landed in
+      PR #12656, lock REMOVED).** `Plugin.resolveLazy` held a 1-permit semaphore around every body
+      `import()` (added inside the Effect-4 migration `a3b6ef05f2` for WebKit bug 242740). Measured
+      on chromium: 33 bodies loaded strictly back to back (span 2.75 s ≈ sum) — the whole startup
+      pass — and the 7 core plugins, queued first at 391 ms, starved behind content plugins until
+      ~2.8 s. Research: the bug is https://bugs.webkit.org/show_bug.cgi?id=242740, fixed by
+      https://github.com/WebKit/WebKit/pull/57827 (311236@main, 2026-04-14), in Safari 27 (beta as
+      of 2026-08-17; not in 26.6). Build-graph analysis: the only TLA chunk any plugin body reaches
+      is `boot-8` (both automerge wasm glue modules), which `main.tsx` statically imports — so it is
+      fully evaluated before any body `import()` and the race is unreachable on the bundle.
+      Verified: 9/9 lock-off cold runs on Playwright's pre-fix WebKit (webkit-2227, Dec 2025), 226
+      modules and all 14 space modules every time. Lock and its `webkitCheck` deleted outright, with
+      no note at the call site (user-directed: the removed code needs no comment). A/B/A/B chromium
+      3+3+3+3: `profilerTotal` 3135 → 2621 (−514 ms, ranges disjoint), `navToReady` 4733 → 4255,
+      core plugins done at 793 ms instead of 3397; webkit cold −380 ms. Composer's `syncWasmInit` is
+      gone: #12684 replaced it with `slimWasm`, which resolves the three automerge packages to their
+      `slim` entrypoints and calls `initAutomergeWasm()` per realm, so the bundle carries no
+      top-level await at all and the bug is unreachable by construction rather than mitigated. Its
+      comment now carries both links. No retire-when-Safari-27 TODO: `slimWasm` also earns its keep
+      on bundle size and single-wasm-instance grounds, so the WebKit fix does not retire it. Files:
+      `app-framework/src/core/plugin.ts`, `composer-app/vite.config.ts`.
+- [ ] **A5/A15/A11 — leaves lazy by construction** (2026-08-17). Census over 45 plugins: surface
+      indices are 25.5 MB heavier than operation indices; ~75% is `react-ui-form` → CodeMirror /
+      mdast / motion / syntax-highlighter reached through a STATIC component import in a descriptor
+      file (15 plugins at ~1.4 MB each; schemas are ~3%). Same disease in `ReactRoot` (support and
+      space roots: 1.5 MB closures on the Startup pass) and in 4 graph builders (transcription 881 KB
+      via `<Mic/>` in `render:`, review 437 KB via `createComment` in `data:`). One-line leaf-lazy
+      each: kanban surface 1415 → 59 KB, support root 1514 → 9 KB, space root 1467 → 43 KB,
+      transcription builder 881 → 34 KB, review 437 → 71 KB. Fix by construction, as
+      `OperationHandlerSet.lazy` already does for handlers: `Surface.create` takes a component
+      LOADER; ReactRoot renders a lazy component; graph action `render:` takes a component loader
+      and `data:` a handler loader (extension body lazy is OPT-IN — 61% of bodies do not run
+      pre-ready in a fresh profile, but bodies are 0.6–7.7 KB so a chunk each is a round-trip for
+      nothing). Then the 15 static `#containers` barrels fall out.
+- [ ] **A7 — `react-ui-form` statically drags the editor stack (~1.4 MB) and sets the pre-ready
+      byte floor.** After leaf-lazying both 1.5 MB roots, transferred-before-ready was UNCHANGED at
+      22.8 MB under a 4G profile: the editor still arrives pre-ready by another route. Text/markdown
+      field must load its editor lazily; acceptance = transferred bytes at the 4G profile.
+- [ ] **A10 — definition modules must be light** (`types/**`, `*Operation.ts`, schema modules).
+      Assistant's builder is 84 ch / 804 KB beyond boot and moving `Chat`/`RunInstructions` to
+      light subpaths changed nothing: `AssistantOperation.ts` imports `AiService` from the
+      `@dxos/ai` barrel for a service TAG, `compute/types/Skill.ts` imports `McpServer`,
+      `@dxos/conductor` has no `./Sequence` subpath. Same reason assistant's OPERATION index was
+      the census outlier (756 KB vs 4–60). Light subpaths for tags/schemas/op-defs; a lint that
+      `src/types/**` imports only effect/echo/keys/other types/declared light subpaths.
+- [ ] **A4 — deprecate `@dxos/app-toolkit/ui` barrel; subpath per component/namespace**
+      (user-directed 2026-08-17, Radix-style). Importing `AppSurface` through it hoisted 14 chunks /
+      23 KB onto support's body; via a dedicated `./AppSurface` subpath, 4 chunks / 4.6 KB. Every
+      surface index pays ~17 KB for this barrel.
+- [ ] **A1–A3 — makers become inline for `Startup`-gated index modules** (`Settings`,
+      `OperationHandler`; user-directed: change the makers TO the inline form, not an optional
+      variant). Support: −133/−357 ms (h1), −401/−522 (h2), body +1.3 KB, boot graph +0; `HelpState`
+      −73/−81 more. Aggregate codemod over 22+14 modules: ~−110 ms median, noisy, and
+      `modulesAtReady` went nondeterministic (222–226; the settle loop reorders) — name those before
+      shipping. Do AFTER A12 (with bodies fetched in parallel the extra bytes cost nothing).
+      Constraint: the inlined body's static imports must be already-loaded or light (a UI barrel is
+      neither — inline4 regressed +102/+458 through `./ui`).
+- [ ] **A14 — `activatesOn: Idle` is not a deferral.** With cause instrumentation, 226 of 226 module
+      activations in the full run had `parentEvent = event.startup` — all Idle-declared modules
+      included; `event.idle` dispatches after everything already ran. Moving a module to Idle only
+      moves it out of `profilerTotal`, never off the ready path. If a genuinely-late wave is wanted
+      it must be built (post-first-interactive event; narrow the baseline rule so Idle providers are
+      pulled only when required). Related open item above ("Make `activatesOn` genuinely optional").
+- [x] **A13 — activation-cause / builder-body marks in the startup profile** (2026-08-17, landed).
+      `module-cause:<module>` at `module:start`, carrying the activating event in `detail.event`
+      (a DXN has colons of its own, so it cannot ride in the mark name), and
+      `graph-body:<kind>:<id>` the first time an extension body runs; the profiler
+      collects them as `moduleCauses` / `graphBodies` beside the catalog's pre-existing
+      `plugin-load:` → `pluginLoads` (which was already in the report, unread until today), and the
+      harness carries all three. Always-on like the existing `module:*` marks. Throttled-cold
+      profile env-tunable (`DX_HARNESS_LATENCY_MS/_DOWN_MBPS/_UP_KBPS/_CPU`, Fast 3G default).
+      One run: 226 causes (all `event.startup` — see A14), 20 bodies, 33 loads.
+- [ ] **A8 — harness: `pluginSet` column in `appendBenchmarkRow`; keep the env-tunable throttle
+      profile** (`DX_HARNESS_LATENCY_MS/_DOWN_MBPS/_UP_KBPS/_CPU`, Fast 3G default). Fast 3G + 2×
+      CPU cannot reach ready within `waitForReady`'s 300 s on the current bundle (three attempts,
+      each exactly 300 s); a 4G profile (40 ms / 10 Mbps / 2×) completes at profilerTotal 5.4 s,
+      navToReady 12.4 s — everything localhost hides is 2–3×, and the serial body queue is 4.6 s.
+- [ ] **B9 — `system` tag scope** (product). 21 plugins are `system`-tagged and always enabled;
+      they are 1754 of the 2978 ms serial body floor. atproto's body import is the largest of ANY
+      plugin (576 ms) and it is system by tag only; routine 200, preview 74, support 37 likewise.
+
 Deliberately NOT tracked as tasks: the measurement-discipline items (boot waterfall, lab TBT,
 time-to-first-meaningful-action, RUM, per-commit trend line) are one blocked thing, not five — they
 need a fixed CI runner that does not exist, so they live under
@@ -1173,3 +1254,38 @@ promoted `import type * as Voxel` to a value import, which is what made an erase
       CI. Extend it to `packages/plugins` with `#` self-reference resolution. Baseline before
       turning it on: 15 pre-existing cycles in plugins (barrel <-> component/hook cycles), so it
       needs an allowlist or those fixed first.
+
+## Finding 2026-08-17 (registry size vs enabled set; the serial body queue; leaves not bodies)
+
+Session log: `PLUGIN-COST-BASELINE.md`, `SURFACE-SEGMENTATION.md`, `STARTUP-TASKS.md` in the
+session scratchpad; all experiment edits in the worktree stash `startup experiments 2026-08-17`.
+Commit `48ea128db8`, chromium, `vite preview`, warm-cold, 5-run medians unless noted. Dev
+defaults (`DX_ENVIRONMENT` unset ⇒ debug + devtools enabled) inflate `profilerTotal` by ~525 ms
+(dev 2972 vs production-defaults 2448); deltas hold, absolutes shift.
+
+- **Registering a plugin is nearly free; enabling one is not.** Full (96 registered) vs minimal
+  (28): boot graph 4.04 vs 3.93 MB (+1.6 KB per `Plugin.lazy` stub), preload entries 20 both;
+  total shipped 137 vs 43 MB (+1.38 MB per plugin). Startup −50% `profilerTotal` (2954 → 1490) —
+  entirely the 10 fewer default-enabled plugins, ~146 ms each; transferred bytes moved 5%.
+- **One system-tagged plugin (support) in the minimal set:** +186/+422 ms lazy; ~0 after inlining
+  its three `Startup`-gated index modules. `run ≈ import` for 97% of the 226 modules (sum run
+  20.2 s, sum import 19.7 s, body 0.5 s, wait 39 ms): the cost is the round-trip, not the bytes
+  — and it GREW under HTTP/2 (−401/−522 vs −133/−357), so it is not connection queuing.
+- **The plugin body queue IS the startup pass** — see A12 above. Discovered by instrumenting
+  `resolveLazy`; the catalog had been measuring it as `plugin-load:<id>` all along.
+- **Idle is not a wave** — see A14. The `event.idle` measure at ~3.5 s is a no-op dispatch.
+- **Graph-builder bodies:** 17 builder modules, 85 extension bodies declared, 33 ran before ready
+  (39%) in a fresh profile — matchers on navigated-to nodes defer the rest. Bodies are trivial;
+  the heavy four are leaves (component behind `render:`, handler behind `data:`).
+- **Rejected by data:** per-role surface segmentation (multiplies round-trips); typename-based
+  filters (schemas ~3% of surface-index weight); inlining `SurfacesRequested`-gated modules
+  (neutral at best; hoists closures when the descriptor imports a barrel).
+- **WebKit bug behind `lazyLoadLock`:** https://bugs.webkit.org/show_bug.cgi?id=242740, fixed by
+  https://github.com/WebKit/WebKit/pull/57827 (311236@main), Safari 27 beta notes: "Fixed multiple
+  top-level await correctness bugs with a rewrite of the ES module loader for standards
+  compliance"; not in shipping 26.6 (2026-08-17). `modulepreload` fetches/parses but does not
+  evaluate, so prefetch is safe on old WebKit but cannot lift the serial evaluation. In the
+  production bundle the only TLA chunk plugin bodies reach is `boot-8` (both automerge wasm glue
+  modules, `browser` condition), which is in `main.tsx`'s static closure — evaluated before any
+  body `import()`; the sync `initSync` entries used by `syncWasmInit()` in serve would remove the
+  TLA entirely at ~33% wasm-size cost.

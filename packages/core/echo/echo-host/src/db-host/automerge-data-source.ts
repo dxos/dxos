@@ -51,8 +51,45 @@ export class AutomergeDataSource implements IndexDataSource {
 
   readonly #automergeHost: AutomergeHost;
 
+  /**
+   * Heads for every document, captured once per `IndexEngine.update` pass. `listDocumentHeads()` is
+   * an unbounded scan of `automerge_heads` and is cursor-independent, so re-reading it for each
+   * index in a pass doubles the cost for an identical result. Held only for the pass — a document
+   * saved mid-pass is still picked up next pass, since `documentsSaved` schedules one.
+   */
+  #passHeads: Promise<{ documentId: DocumentId; heads: A.Heads }[]> | null = null;
+  #passActive = false;
+
   constructor(automergeHost: AutomergeHost) {
     this.#automergeHost = automergeHost;
+  }
+
+  beginPass(): void {
+    this.#passActive = true;
+    this.#passHeads = null;
+  }
+
+  endPass(): void {
+    this.#passActive = false;
+    this.#passHeads = null;
+  }
+
+  /** Caches the promise, not the result, so concurrent callers in one pass share a single scan. */
+  #listAllDocumentHeads(): Promise<{ documentId: DocumentId; heads: A.Heads }[]> {
+    if (this.#passHeads) {
+      return this.#passHeads;
+    }
+    const scan = (async () => {
+      const entries: { documentId: DocumentId; heads: A.Heads }[] = [];
+      for await (const entry of this.#automergeHost.listDocumentHeads()) {
+        entries.push(entry);
+      }
+      return entries;
+    })();
+    if (this.#passActive) {
+      this.#passHeads = scan;
+    }
+    return scan;
   }
 
   getChangedObjects(
@@ -69,22 +106,19 @@ export class AutomergeDataSource implements IndexDataSource {
         }
       }
 
-      // Find changed documents by iterating all documents from SqliteHeadsStore.
-      const changedDocuments = yield* Effect.promise(async () => {
-        const result: { documentId: DocumentId; heads: A.Heads }[] = [];
-        const limit = opts?.limit ?? Infinity;
-
-        for await (const { documentId, heads } of this.#automergeHost.listDocumentHeads()) {
-          const existingCursor = cursorMap.get(documentId);
-          if (hasChanged(existingCursor, heads)) {
-            result.push({ documentId, heads });
-            if (result.length >= limit) {
-              break;
-            }
+      // Find changed documents by diffing every document's heads against this index's cursors. The
+      // scan is shared across the pass; the diff is not, since cursors are per-index.
+      const allDocumentHeads = yield* Effect.promise(() => this.#listAllDocumentHeads());
+      const changedDocuments: { documentId: DocumentId; heads: A.Heads }[] = [];
+      const limit = opts?.limit ?? Infinity;
+      for (const { documentId, heads } of allDocumentHeads) {
+        if (hasChanged(cursorMap.get(documentId), heads)) {
+          changedDocuments.push({ documentId, heads });
+          if (changedDocuments.length >= limit) {
+            break;
           }
         }
-        return result;
-      });
+      }
 
       // Load changed documents and extract objects.
       const objects: IndexerObject[] = [];
@@ -92,11 +126,11 @@ export class AutomergeDataSource implements IndexDataSource {
 
       for (const { documentId, heads: docHeads } of changedDocuments) {
         try {
-          const handle = yield* Effect.promise(() => this.#automergeHost.loadDoc<DatabaseDirectory>(ctx, documentId));
-          if (!handle) {
+          using lease = yield* Effect.promise(() => this.#automergeHost.loadDoc<DatabaseDirectory>(ctx, documentId));
+          if (!lease) {
             continue;
           }
-          const doc = handle.doc();
+          const doc: DatabaseDirectory = lease.doc();
 
           // Skip outdated docs.
           if (doc.version !== SpaceDocVersion.CURRENT) {
@@ -124,6 +158,7 @@ export class AutomergeDataSource implements IndexDataSource {
               documentId,
               queueId: null,
               queueNamespace: null,
+              queuePosition: null,
               recordId: null,
               data: objectStructureToJson(objectId, structure),
               createdAt: typeof storedCreatedAt === 'number' ? storedCreatedAt : null,

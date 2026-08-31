@@ -60,7 +60,7 @@ export const CallArticle = ({ roomId }: CallArticleProps) => {
             ) : (
               <>
                 <Lobby.Preview />
-                <Lobby.Toolbar roomId={roomId} onJoin={handleJoin} />
+                <Lobby.Toolbar roomId={roomId} onJoin={handleJoin} joinDisabled={!provider} />
               </>
             )}
           </Call.Viewport>

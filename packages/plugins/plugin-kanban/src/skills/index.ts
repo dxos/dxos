@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export { default as KanbanSkill } from './kanban-skill';
+export * as KanbanSkill from './KanbanSkill';

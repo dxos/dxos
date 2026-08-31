@@ -8,13 +8,13 @@ import * as Option from 'effect/Option';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as Graph from '@dxos/app-graph/Graph';
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceEvents from '@dxos/plugin-space/SpaceEvents';
 
@@ -75,12 +75,14 @@ export default Capability.makeModule(
       // Eagerly expand the graph so the exemplar space's content is visible in the navtree
       // as soon as the user opens it, without waiting for a lazy expansion pass.
       const exemplarSpace = client.spaces.get().find((space) => space.tags.includes(AppSpace.EXEMPLAR_SPACE_TAG));
-      graph.pipe(Graph.expandSync(Node.RootId, 'child'), Graph.expandSync(defaultSpace.id, 'child'));
+      AppGraph.expandSync(graph, GraphNode.RootId, 'child');
+      AppGraph.expandSync(graph, defaultSpace.id, 'child');
       if (exemplarSpace) {
-        graph.pipe(Graph.expandSync(exemplarSpace.id, 'child'));
+        AppGraph.expandSync(graph, exemplarSpace.id, 'child');
       }
     } else {
-      graph.pipe(Graph.expandSync(Node.RootId, 'child'), Graph.expandSync(defaultSpace.id, 'child'));
+      AppGraph.expandSync(graph, GraphNode.RootId, 'child');
+      AppGraph.expandSync(graph, defaultSpace.id, 'child');
     }
 
     const homePath = GraphPath.getSpaceHomePath(defaultSpace.id);

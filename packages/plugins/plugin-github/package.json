@@ -15,8 +15,14 @@
   "type": "module",
   "imports": {
     "#capabilities": {
-      "source": "./src/capabilities/index.ts",
+      "source": {
+        "workerd": "./src/capabilities/gen/workerd.ts",
+        "node": "./src/capabilities/gen/node.ts",
+        "default": "./src/capabilities/index.ts"
+      },
       "types": "./dist/types/src/capabilities/index.d.ts",
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
+      "node": "./dist/lib/capabilities.node.mjs",
       "default": "./dist/lib/capabilities.mjs"
     },
     "#meta": {
@@ -72,6 +78,11 @@
       "source": "./src/GitHubPlugin.ts",
       "types": "./dist/types/src/GitHubPlugin.d.ts",
       "import": "./dist/lib/GitHubPlugin.mjs"
+    },
+    "./extensions": {
+      "source": "./src/extensions/index.ts",
+      "types": "./dist/types/src/extensions/index.d.ts",
+      "import": "./dist/lib/extensions.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -92,6 +103,9 @@
     "PLUGIN.mdl"
   ],
   "dependencies": {
+    "@codemirror/language": "catalog:",
+    "@codemirror/state": "catalog:",
+    "@codemirror/view": "catalog:",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
@@ -101,6 +115,7 @@
     "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
+    "@dxos/plugin-markdown": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
@@ -110,7 +125,8 @@
     "@dxos/echo-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
-    "@dxos/plugin-testing": "workspace:*"
+    "@dxos/plugin-testing": "workspace:*",
+    "@dxos/ui-editor": "workspace:*"
   },
   "peerDependencies": {
     "effect": "catalog:"

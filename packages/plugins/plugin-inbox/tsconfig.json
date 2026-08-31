@@ -32,6 +32,9 @@
       "path": "../../common/errors"
     },
     {
+      "path": "../../common/graph"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -77,9 +80,6 @@
       "path": "../../core/compute/pipeline-email"
     },
     {
-      "path": "../../core/compute/pipeline-rdf"
-    },
-    {
       "path": "../../core/echo/echo"
     },
     {
@@ -95,9 +95,6 @@
       "path": "../../core/echo/echo-react"
     },
     {
-      "path": "../../core/protocols"
-    },
-    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -108,9 +105,6 @@
     },
     {
       "path": "../../sdk/client"
-    },
-    {
-      "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/react-client"

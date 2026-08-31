@@ -11,11 +11,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Script from '@dxos/compute/Script';
 import { Database, DXN, Type } from '@dxos/echo';
 
-import { meta } from '#meta';
-
 import { templates } from '../templates';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 export const ScriptProps = Schema.Struct({
   name: Schema.optional(Schema.String),
@@ -31,7 +27,11 @@ export const NotebookProps = Schema.Struct({
 });
 
 export const CreateScript = Operation.make({
-  meta: { key: makeKey('createScript'), name: 'Create Script', icon: 'ph--code--regular' },
+  meta: {
+    key: DXN.make('org.dxos.operation.script.create'),
+    name: 'Create Script',
+    icon: 'ph--code--regular',
+  },
   input: ScriptProps.mapFields(
     Struct.assign({
       db: Database.Database,

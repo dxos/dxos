@@ -2,7 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createAnnotationHelper } from '@dxos/echo/internal';
+import * as Schema from 'effect/Schema';
+
+import { Annotation } from '@dxos/echo';
 
 /**
  * A field's visibility across the ECHO → atproto publishing boundary. One of:
@@ -24,4 +26,8 @@ import { createAnnotationHelper } from '@dxos/echo/internal';
 export type AtprotoVisibility = 'publish' | 'mirror' | 'private';
 
 export const AtprotoVisibilityAnnotationId = '@dxos/schema/annotation/AtprotoVisibility';
-export const AtprotoVisibilityAnnotation = createAnnotationHelper<AtprotoVisibility>(AtprotoVisibilityAnnotationId);
+export const AtprotoVisibilityAnnotation = Annotation.make({
+  id: AtprotoVisibilityAnnotationId,
+  schema: Schema.Literals(['publish', 'mirror', 'private']),
+  legacyId: true,
+});

@@ -5,7 +5,7 @@ tags:
 tasks:
   build:
     deps:
-      - prebuild
+      - ~:#prebuild
     options:
       mergeOutputs: replace
     outputs: []
@@ -28,6 +28,8 @@ tasks:
       - '@group(sources)'
     outputs:
       - .astro
+    tags:
+      - prebuild
   serve:
     command: pnpm exec astro dev
     deps:

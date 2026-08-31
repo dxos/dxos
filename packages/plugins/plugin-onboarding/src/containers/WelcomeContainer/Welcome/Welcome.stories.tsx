@@ -47,9 +47,17 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+/** Presence of these handlers is what renders the sign-up tab. */
+const signupArgs: Partial<WelcomeScreenProps> = {
+  onValidateInvitationCode: () => true,
+  onCreateAccount: () => console.log('create account'),
+  onJoinWaitlist: () => console.log('join waitlist'),
+};
+
 export const Default: Story = {
   decorators: [withClientProvider()],
   args: {
+    ...signupArgs,
     onPasskey: () => console.log('passkey'),
     onJoinIdentity: () => console.log('join identity'),
     onRecoverIdentity: () => console.log('recover identity'),
@@ -60,6 +68,7 @@ export const Default: Story = {
 export const PasskeyRejected: Story = {
   decorators: [withClientProvider()],
   args: {
+    ...signupArgs,
     error: 'passkey-rejected',
     onPasskey: () => console.log('passkey'),
     onJoinIdentity: () => console.log('join identity'),
@@ -71,13 +80,29 @@ export const PasskeyRejected: Story = {
 export const EmailPrimary: Story = {
   decorators: [withClientProvider()],
   args: {
+    ...signupArgs,
     onJoinIdentity: () => console.log('join identity'),
     onRecoverIdentity: () => console.log('recover identity'),
-    onRecoverWithOAuth: async () => console.log('recover oauth'),
+    onRecoverWithOAuth: () => console.log('recover oauth'),
+  },
+};
+
+/**
+ * The iOS app's restricted screen: passkey login only — no sign-up tab and no alternative login
+ * methods. `onEmailLogin` is explicitly cleared because the story wrapper supplies one by default.
+ */
+export const PasskeyOnly: Story = {
+  decorators: [withClientProvider()],
+  args: {
+    onEmailLogin: undefined,
+    onPasskey: () => console.log('passkey'),
   },
 };
 
 export const WithIdentity: Story = {
   decorators: [withClientProvider({ createIdentity: true })],
-  args: {},
+  // Mirrors what the screen passes once an identity exists: email login plus the waitlist.
+  args: {
+    onJoinWaitlist: () => console.log('join waitlist'),
+  },
 };

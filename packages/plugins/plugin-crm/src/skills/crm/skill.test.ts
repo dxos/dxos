@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { DatabaseHandlers, DatabaseSkill, WebSearchSkill } from '@dxos/assistant-toolkit';
+import { ChatContextHandlers, ChatContextSkill, WebSearchSkill } from '@dxos/assistant-toolkit';
 import * as Skill from '@dxos/compute/Skill';
 import { Feed, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -32,7 +32,7 @@ EntityId.dangerouslyDisableRandomness();
  */
 const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',
-  operationHandlers: DatabaseHandlers,
+  operationHandlers: ChatContextHandlers,
   types: [
     Skill.Skill,
     Feed.Feed,
@@ -42,7 +42,7 @@ const TestLayer = AssistantTestLayer({
     Person.Person,
     ProfileOf.ProfileOf,
   ],
-  skills: [CrmSkill.make(), DatabaseSkill.make(), WebSearchSkill.make()],
+  skills: [CrmSkill.make(), ChatContextSkill.make(), WebSearchSkill.make()],
   tracing: 'pretty',
 });
 
@@ -53,7 +53,7 @@ describe('CRM Skill', () => {
       Effect.fnUntraced(
         function* (_) {
           const agent = yield* AgentService.createSession({
-            skills: [CrmSkill.make(), DatabaseSkill.make(), WebSearchSkill.make()],
+            skills: [CrmSkill.make(), ChatContextSkill.make(), WebSearchSkill.make()],
           });
           const msg = makeEmailMessage(fixture);
           yield* agent.submitPrompt(
@@ -79,7 +79,7 @@ describe('CRM Skill', () => {
     Effect.fnUntraced(
       function* (_) {
         const agent = yield* AgentService.createSession({
-          skills: [CrmSkill.make(), DatabaseSkill.make(), WebSearchSkill.make()],
+          skills: [CrmSkill.make(), ChatContextSkill.make(), WebSearchSkill.make()],
         });
         yield* agent.submitPrompt('research priya.adebayo@ventura-advisors.example');
         yield* agent.waitForCompletion();

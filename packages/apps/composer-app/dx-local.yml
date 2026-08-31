@@ -7,6 +7,9 @@ runtime:
 
   app:
     env:
+      # Labels dev telemetry as `local` so it is separable from deployed traffic; `dx-local.yml`
+      # is only loaded when NODE_ENV is not production, so this never reaches a prod bundle.
+      DX_ENVIRONMENT: 'local'
       # Disable PWA/service-worker in local dev — VitePWA doesn't register a SW
       # in vite serve mode, so navigator.serviceWorker.ready never resolves and
       # the registry Install action hangs indefinitely. The noop cache is used
@@ -16,8 +19,8 @@ runtime:
   services:
     agentHosting:
       type: LOCAL_TESTING
-    # NOTE: For local testing use the DX_EDGE_BASE_URL environment variable.
+    # EDGE preview by default. Point at EDGE dev or a local EDGE with DX_EDGE_BASE_URL.
     edge:
-      url: https://main.dxos.network
+      url: https://preview.dxos.network/
     sandbox:
       url: https://sandbox-service.dxos.workers.dev

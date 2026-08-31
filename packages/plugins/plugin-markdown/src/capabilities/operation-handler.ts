@@ -11,6 +11,6 @@ import { MarkdownOperationHandlerSet } from '#operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contribute(Capabilities.OperationHandler, MarkdownOperationHandlerSet);
+    return Capability.contribute(Capabilities.OperationHandler, MarkdownOperationHandlerSet.handlers);
   }),
 );

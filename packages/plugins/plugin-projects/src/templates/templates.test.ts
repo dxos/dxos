@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
-import { Collection, Database, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Text } from '@dxos/schema';
@@ -15,7 +15,7 @@ import { TaskSet } from '@dxos/types';
 
 import { ProjectCapabilities } from '#types';
 
-import { blank, defaultTemplates, scaffoldProject } from './index';
+import { defaultTemplate, defaultTemplates, scaffoldProject } from './index';
 
 describe('project templates', () => {
   let builder: EchoTestBuilder;
@@ -30,15 +30,15 @@ describe('project templates', () => {
 
   const createDatabase = async () => {
     const { db } = await builder.createDatabase({
-      types: [Project.Project, Instructions.Instructions, Collection.Collection, Text.Text],
+      types: [Project.Project, Instructions.Instructions, Text.Text, TaskSet.TaskSet],
     });
     return db;
   };
 
-  test('ships a Blank template', ({ expect }) => {
-    const found = defaultTemplates.find((template) => template.id === ProjectCapabilities.BlankTemplateId);
-    expect(found).toBe(blank);
-    expect(blank.label).toBe('Blank');
+  test('ships a Default template', ({ expect }) => {
+    const found = defaultTemplates.find((template) => template.id === ProjectCapabilities.DefaultTemplateId);
+    expect(found).toBe(defaultTemplate);
+    expect(defaultTemplate.label).toBe('Default');
   });
 
   test('scaffoldProject wires the owned graph so one add cascades it', async ({ expect }) => {
@@ -47,28 +47,26 @@ describe('project templates', () => {
     await db.flush();
 
     const instructions = await project.instructions?.tryLoad();
-    const artifacts = await project.artifacts?.tryLoad();
     const taskSet = await project.taskSet?.tryLoad();
     expect(instructions).toBeDefined();
-    expect(artifacts).toBeDefined();
     expect(taskSet).toBeDefined();
     expect(Obj.getParent(instructions!)?.id).toBe(project.id);
-    expect(Obj.getParent(artifacts!)?.id).toBe(project.id);
     expect(Obj.getParent(taskSet!)?.id).toBe(project.id);
+    // Artifacts start empty and are appended as the project produces them.
+    expect(project.artifacts).toEqual([]);
 
     // Deletion cascades back through the same parent edges.
     db.remove(project);
     await db.flush();
     expect((await db.query(Filter.type(Instructions.Instructions)).run()).length).toBe(0);
-    expect((await db.query(Filter.type(Collection.Collection)).run()).length).toBe(0);
     expect((await db.query(Filter.type(TaskSet.TaskSet)).run()).length).toBe(0);
   });
 
-  test('blank template seeds a creation subject as standing context', async ({ expect }) => {
+  test('default template seeds a creation subject as standing context', async ({ expect }) => {
     const db = await createDatabase();
     const subject = db.add(Obj.make(Text.Text, { content: 'subject' }));
     const project = await EffectEx.runPromise(
-      blank
+      defaultTemplate
         .scaffold({ name: 'Scoped', subject })
         .pipe(Effect.provideService(Database.Service, Database.makeService(db))),
     );

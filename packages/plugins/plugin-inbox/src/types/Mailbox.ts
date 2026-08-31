@@ -6,14 +6,17 @@ import * as Schema from 'effect/Schema';
 
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as Instructions from '@dxos/compute/Instructions';
+import * as Skill from '@dxos/compute/Skill';
 import { Annotation, type Database, DXN, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
-import { connectorIdsForTarget } from '@dxos/plugin-connector';
 import * as ConnectorAnnotations from '@dxos/plugin-connector/ConnectorAnnotations';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { FeedAnnotation, Tagging, TagIndex } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
 export const SKILL_KEY = 'org.dxos.skill.inbox';
+
+// TOOD(burdon): Factor out Message/Email utils with tests.
 
 // TODO(burdon): Implement as labels?
 export enum MessageState {
@@ -23,7 +26,6 @@ export enum MessageState {
   SPAM = 3,
 }
 
-/** Mailbox object schema. */
 /**
  * A message filter — an exclusion rule applied across the mailbox UI, sync, and analysis. Kept
  * intentionally small; expected to grow (subject, labels, date, …), so match logic lives in the
@@ -46,66 +48,119 @@ export const Subscription = Schema.Struct({
 });
 export interface Subscription extends Schema.Schema.Type<typeof Subscription> {}
 
+/** Mailbox object schema. */
 export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.mailbox', '0.1.0'))(
   Schema.Struct({
+    /** Display name; falls back to the bound account's address when absent. */
     name: Schema.String.pipe(Schema.optional),
-    feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
-    // Inverse tag index for immutable feed Messages: tag id (a `Tag` object's URI) → message ids.
-    // Messages are immutable Queue items, so their tag associations live in a child `TagIndex` object
-    // (the `meta.tags` augmentation for feed objects). Tag labels/hues live on the `Tag` objects.
-    tags: Ref.Ref(TagIndex.TagIndex).pipe(FormInputAnnotation.set(false)),
+
+    /** The durable message log. Every pipeline in `docs/PIPELINE.md` reads from (or writes to) this. */
+    feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(true), FormInputAnnotation.set(false)),
+
+    /**
+     * Append-only feed of derived annotations about the messages in {@link feed} — summaries today
+     * (see {@link makeSummary}), each a Message whose `parentMessage` names its subject.
+     *
+     * A second feed rather than a record on this object: annotations are immutable and unbounded, so
+     * they belong in an append-only structure instead of growing the mailbox document, and
+     * re-deriving one (better model, changed prompt) appends a new version rather than destroying the
+     * old. The primary feed stays pure — no reader has to filter annotations out of the message list.
+     * Provisioned lazily on first annotation, like {@link tags}.
+     */
+    annotations: Ref.Ref(Feed.Feed).pipe(
+      Annotation.SetParent.set(true),
+      FormInputAnnotation.set(false),
+      Schema.optional,
+    ),
+
+    /**
+     * Inverse tag index for immutable feed Messages: tag id (a `Tag` object's URI) → message ids.
+     *
+     * Messages are immutable Queue items, so their tag associations cannot live on the message and
+     * live in a child `TagIndex` object instead (the `meta.tags` augmentation for feed objects). Tag
+     * labels and hues live on the `Tag` objects themselves.
+     */
+    tags: Ref.Ref(TagIndex.TagIndex).pipe(Annotation.SetParent.set(true), FormInputAnnotation.set(false)),
+
+    /**
+     * Which contributed object extractors run over this mailbox, and the confidence a match must
+     * clear before its result is kept.
+     */
     extractors: Schema.Struct({
       enabled: Schema.Array(Schema.String),
       threshold: Schema.Number.pipe(Schema.check(Schema.isBetween({ minimum: 0, maximum: 1 }))),
     }).pipe(FormInputAnnotation.set(false), Schema.optional),
-    // Exclusion filters (see {@link Filter}) honored across the UI, sync, and analysis — messages
-    // matching any filter are hidden and never committed / enriched.
-    messageFilters: Schema.optional(Schema.Array(Filter)),
-    // Optional per-mailbox reply guidance (tone, standing facts, sign-off, skills). A shared
-    // `Instructions` object can be referenced by several mailboxes, or a distinct one created per
-    // mailbox; the reply generator merges its text + skills into the session prompt.
-    instructions: Ref.Ref(Instructions.Instructions).pipe(Schema.annotate({ title: 'Instructions' }), Schema.optional),
-    // Provenance for extracted objects, keyed by message id → extracted object ids. Feed-stored
-    // Messages are immutable Queue items and cannot be ECHO relation endpoints, so (like `tags`)
-    // the association lives here on the mutable Mailbox. The referenced objects are space-db
-    // objects resolved by id (`db.getObjectById`).
+
+    /**
+     * Provenance for extracted objects: message id → extracted object ids.
+     *
+     * Feed-stored Messages are immutable Queue items and cannot be ECHO relation endpoints, so — as
+     * with {@link tags} — the association lives here on the mutable Mailbox. The referenced objects
+     * are space-db objects resolved by id (`db.getObjectById`).
+     */
     extracted: Schema.Record(Schema.String, Schema.Array(Schema.String)).pipe(
       FormInputAnnotation.set(false),
       Schema.optional,
     ),
-    // Bulk-mail subscriptions extracted from the feed (`ExtractSubscriptions`): one entry per sender
-    // with an unsubscribe affordance (header or body link). Replaced wholesale each run — persisted
-    // derived state for the UI, never a source of truth.
-    subscriptions: Schema.Array(Subscription).pipe(FormInputAnnotation.set(false), Schema.optional),
-    // Append-only feed of derived annotations about the messages in `feed` — summaries today (see
-    // {@link makeSummary}), each a Message whose `parentMessage` names its subject. A second feed
-    // rather than a record on this object: annotations are immutable and unbounded, so they belong
-    // in an append-only structure instead of growing the mailbox document, and re-deriving one
-    // (better model, changed prompt) appends a new version rather than destroying the old. The
-    // primary feed stays pure — no reader has to filter annotations out of the message list.
-    // Provisioned lazily on first annotation, like `tags`.
-    annotations: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false), Schema.optional),
+
+    /**
+     * SAVED VIEWS, shown as named children under the mailbox in the navtree. Each is a serialized
+     * query string the user built in the filter bar and named (`SaveFilterPopover`); selecting one
+     * scopes the list to it. Additive and presentational — a saved view narrows what you are LOOKING
+     * at and never changes what the mailbox contains.
+     *
+     * Not to be confused with {@link messageFilters} below, which is the opposite in every respect.
+     */
     // TODO(wittjosiah): Factor out to relation?
-    filters: Schema.Array(
-      Schema.Struct({
-        name: Schema.String,
-        filter: Schema.String,
-      }),
-    ).pipe(FormInputAnnotation.set(false)),
+    filters: Schema.Array(Schema.Struct({ name: Schema.String, filter: Schema.String })).pipe(
+      FormInputAnnotation.set(false),
+    ),
+
+    /**
+     * EXCLUSION RULES (see {@link Filter}), honored across the UI, sync and analysis — a message
+     * matching any of them is hidden everywhere, never committed to the feed, and never scanned by a
+     * pipeline. This is the "ignore this sender" list, subtractive and global.
+     *
+     * The distinction from {@link filters} above: a saved view is a lens the user points at the
+     * mailbox and can switch away from; an exclusion rule removes mail from the mailbox entirely, for
+     * every surface and every pass, until the rule itself is deleted.
+     */
+    messageFilters: Schema.optional(Schema.Array(Filter)),
+
+    /**
+     * Optional per-mailbox reply guidance: tone, standing facts, sign-off, skills.
+     *
+     * A shared `Instructions` object can be referenced by several mailboxes, or a distinct one
+     * created per mailbox; the reply generator merges its text and skills into the session prompt.
+     */
+    instructions: Ref.Ref(Instructions.Instructions).pipe(Schema.annotate({ title: 'Instructions' }), Schema.optional),
+
+    /**
+     * Bulk-mail subscriptions extracted from the feed by `ExtractSubscriptions`: one entry per sender
+     * carrying an unsubscribe affordance (header or body link).
+     *
+     * Replaced wholesale each run — persisted derived state for the UI, never a source of truth,
+     * which is why that pass must see every message and cannot take a feed cursor.
+     */
+    subscriptions: Schema.Array(Subscription).pipe(FormInputAnnotation.set(false), Schema.optional),
   }).pipe(
+    FeedAnnotation.set({ property: 'feed' }),
     Annotation.IconAnnotation.set({ icon: 'ph--tray--regular', hue: 'rose' }),
-    // Reading a mailbox is a chain: the message replaces the message plank rather than growing the
-    // deck, and picking a different message drops the attachment that belonged to the last one.
+    /**
+     * Reading a mailbox is a chain: the message replaces the message plank rather than growing the
+     * deck, and picking a different message drops the attachment that belonged to the last one.
+     */
     AppAnnotation.DeckAnnotation.set({
       levels: [{ key: 'mailbox' }, { key: 'message' }, { key: 'attachment' }],
     }),
-    FeedAnnotation.set(true),
-    AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
-    // Offer "Connect" in the mailbox toolbar; bind the mailbox as the new connection's sync target.
-    // Providers are resolved from the registry (any connector whose `sync.targetTypename` is this
-    // type), so a mail provider registers itself rather than being named here.
+    Skill.SkillsAnnotation.set([SKILL_KEY]),
+    /**
+     * Offer "Connect" in the mailbox toolbar; bind the mailbox as the new connection's sync target.
+     * Providers are resolved from the registry (any connector whose `sync.targetTypename` is this
+     * type), so a mail provider registers itself rather than being named here.
+     */
     ConnectorAnnotations.ConnectorAuthAnnotation.set({
-      connectorIds: connectorIdsForTarget,
+      connectorIds: ConnectorSpec.idsForTarget,
       bindTarget: true,
     }),
   ),
@@ -127,18 +182,13 @@ type MailboxProps = Omit<Obj.MakeProps<typeof Mailbox>, 'feed' | 'tags' | 'filte
 export const make = (props: MailboxProps = {}) => {
   const feed = Feed.make();
   const tags = TagIndex.make();
-  const mailbox = Obj.make(Mailbox, {
+  // The feed and tag index are children (`SetParent`): both cascade-delete with the mailbox.
+  return Obj.make(Mailbox, {
     feed: Ref.make(feed),
     tags: Ref.make(tags),
     filters: [],
     ...props,
   });
-
-  // TODO(wittjosiah): Parent should be declarative in the schema.
-  Obj.setParent(feed, mailbox);
-  // Tag index is a child: cascade-deleted with the mailbox.
-  Obj.setParent(tags, mailbox);
-  return mailbox;
 };
 
 //
@@ -178,6 +228,7 @@ export const recordExtraction = (mailbox: Mailbox, messageId: string, objectIds:
   if (objectIds.length === 0) {
     return;
   }
+
   Obj.update(mailbox, (mailbox) => {
     if (!mailbox.extracted) {
       mailbox.extracted = {};
@@ -218,6 +269,7 @@ export const buildMessageTagsIndex = (mailbox: Mailbox | Obj.Snapshot<Mailbox>):
       (index[messageId] ??= []).push(uri);
     }
   }
+
   return index;
 };
 
@@ -271,6 +323,7 @@ export const ignoreSender = (mailbox: Mailbox, email: string): void => {
   if (email.length === 0 || (mailbox.messageFilters ?? []).some((filter) => filter.from === email)) {
     return;
   }
+
   Obj.update(mailbox, (mailbox) => {
     (mailbox.messageFilters ??= []).push({ from: email });
   });
@@ -297,6 +350,7 @@ export const isOrgSender = (message: MessageLike): boolean => {
   if (localPart && ROLE_LOCALPART_RE.test(localPart)) {
     return true;
   }
+
   const name = message.sender?.name;
   return !!name && ORG_NAME_RE.test(name);
 };
@@ -315,6 +369,7 @@ export const isReplyable = (message: MessageLike, options: { senderClass?: 'pers
   if (properties.noReply === true || hasUnsubscribe || isNoReplyAddress(message.sender?.email)) {
     return false;
   }
+
   // A classified type (from the LLM stage) wins over the heuristic; otherwise fall back to it.
   return options.senderClass ? options.senderClass === 'person' : !isOrgSender(message);
 };
@@ -374,11 +429,12 @@ export const findOrCreateAnnotations = (mailbox: Mailbox, db: Pick<Database.Data
   if (existing) {
     return existing;
   }
+
   const feed = db.add(Feed.make());
-  Obj.setParent(feed, mailbox);
   Obj.update(mailbox, (mailbox) => {
     mailbox.annotations = Ref.make(feed);
   });
+
   return feed;
 };
 
@@ -461,6 +517,7 @@ export const conversationSummary = (
     if (newest && Date.parse(annotation.created) <= Date.parse(newest.created)) {
       continue;
     }
+
     const model = annotation.properties?.model;
     newest = {
       summary,
@@ -506,6 +563,7 @@ export function* mergeAnnotations(
       byParent.set(parent, [annotation]);
     }
   }
+
   for (const list of byParent.values()) {
     list.sort((left, right) => Date.parse(right.created) - Date.parse(left.created));
   }
@@ -538,6 +596,7 @@ export const parseUnsubscribe = (header: string): { http?: string; mailto?: stri
       targets.mailto = url;
     }
   }
+
   // A body-extracted affordance is a bare URL with no angle brackets.
   const bare = header.trim();
   if (!targets.http && !targets.mailto) {
@@ -547,6 +606,7 @@ export const parseUnsubscribe = (header: string): { http?: string; mailto?: stri
       targets.mailto = bare;
     }
   }
+
   return targets;
 };
 
@@ -597,6 +657,7 @@ export const deriveSubscriptions = (
       byEmail.set(email, { email, name: message.sender?.name, unsubscribe: target, count: 1 });
     }
   }
+
   // Count ties break alphabetically (then by email, so case-insensitively equal names stay
   // deterministic): Map insertion order follows message order, which is unstable across syncs and
   // reads as an unsorted list.

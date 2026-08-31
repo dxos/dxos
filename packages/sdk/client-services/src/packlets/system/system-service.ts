@@ -2,23 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import * as Effect from 'effect/Effect';
 import * as EffectStream from 'effect/Stream';
 
 import { type Event } from '@dxos/async';
 import { type Config } from '@dxos/config';
 import { EffectEx } from '@dxos/effect';
-import {
-  GetDiagnosticsRequest,
-  type GetDiagnosticsResponse,
-  type Platform,
-  type QueryStatusRequest,
-  type QueryStatusResponse,
-  type SystemStatus,
-  type UpdateStatusRequest,
-} from '@dxos/protocols/proto/dxos/client/services';
-import { type Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
-import { type SystemService } from '@dxos/protocols/rpc';
+import { type Config as ConfigProto, ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
+import { type Platform, type SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { SystemService } from '@dxos/protocols/rpc';
 import { type MaybePromise, jsonKeyReplacer } from '@dxos/util';
 
 import { type Diagnostics } from '../diagnostics';
@@ -59,7 +52,7 @@ export class SystemServiceImpl implements SystemService.Handlers {
 
   ['SystemService.getConfig'](): Effect.Effect<ConfigProto, Error> {
     return Effect.tryPromise({
-      try: async () => (await this._config?.())?.values ?? {},
+      try: async () => (await this._config?.())?.values ?? create(ConfigSchema, {}),
       catch: (error) => error as Error,
     });
   }
@@ -67,7 +60,10 @@ export class SystemServiceImpl implements SystemService.Handlers {
   /**
    * NOTE: Since this is serialized as a JSON object, we allow the option to serialize keys.
    */
-  ['SystemService.getDiagnostics']({ keys }: GetDiagnosticsRequest = {}): Effect.Effect<GetDiagnosticsResponse, Error> {
+  ['SystemService.getDiagnostics']({ keys }: SystemService.GetDiagnosticsRequest = {}): Effect.Effect<
+    SystemService.GetDiagnosticsResponse,
+    Error
+  > {
     return Effect.tryPromise({
       try: async () => {
         const diagnostics = await this._getDiagnostics();
@@ -77,8 +73,8 @@ export class SystemServiceImpl implements SystemService.Handlers {
             JSON.stringify(
               diagnostics,
               jsonKeyReplacer({
-                truncate: keys === GetDiagnosticsRequest.KEY_OPTION.TRUNCATE,
-                humanize: keys === GetDiagnosticsRequest.KEY_OPTION.HUMANIZE,
+                truncate: keys === SystemService.KeyOption.enums.TRUNCATE,
+                humanize: keys === SystemService.KeyOption.enums.HUMANIZE,
               }),
             ),
           ),
@@ -95,7 +91,7 @@ export class SystemServiceImpl implements SystemService.Handlers {
     });
   }
 
-  ['SystemService.updateStatus']({ status }: UpdateStatusRequest): Effect.Effect<void, Error> {
+  ['SystemService.updateStatus']({ status }: SystemService.UpdateStatusRequest): Effect.Effect<void, Error> {
     return Effect.tryPromise({
       try: async () => {
         await this._onUpdateStatus(status);
@@ -105,11 +101,11 @@ export class SystemServiceImpl implements SystemService.Handlers {
   }
 
   // TODO(burdon): Standardize interval option in stream request?
-  ['SystemService.queryStatus']({ interval = 3_000 }: QueryStatusRequest = {}): EffectStream.Stream<
-    QueryStatusResponse,
+  ['SystemService.queryStatus']({ interval = 3_000 }: SystemService.QueryStatusRequest = {}): EffectStream.Stream<
+    SystemService.QueryStatusResponse,
     Error
   > {
-    return EffectEx.streamFromEmitter<QueryStatusResponse, Error>((emit) => {
+    return EffectEx.streamFromEmitter<SystemService.QueryStatusResponse, Error>((emit) => {
       const update = () => {
         void emit.single({ status: this._getCurrentStatus() });
       };

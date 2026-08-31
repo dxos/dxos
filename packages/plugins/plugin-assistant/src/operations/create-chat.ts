@@ -6,35 +6,39 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { AiContext } from '@dxos/assistant';
-import { AgentWizardSkill, AlarmSkill, Chat, DatabaseSkill } from '@dxos/assistant-toolkit';
+import { AlarmSkill, Chat, ChatContextSkill } from '@dxos/assistant-toolkit';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
-import { Database, Feed, Obj, Ref } from '@dxos/echo';
-import { invariant } from '@dxos/invariant';
-import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import { Database, Feed, Ref } from '@dxos/echo';
+import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
 
-import { AssistantSkill } from '#skills';
+import { AssistantSkill, PluginManagerSkill } from '#skills';
 import { AssistantOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof AssistantOperation.CreateChat> = AssistantOperation.CreateChat.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ db, name, instructions, addToSpace = true }) {
+    Effect.fnUntraced(function* ({ name, instructions }) {
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
-      const client = yield* Capability.get(ClientCapabilities.Client);
-      const space = client.spaces.get(db.spaceId);
-      invariant(space, 'Space not found');
-      const feed = space.db.add(Feed.make());
+      const { db } = yield* Database.Service;
+
+      // The chat is left for the caller to add (`SpaceOperation.AddObject`); the feed is added here only
+      // because the default bindings below are written immediately, and `Feed.query` asserts a stored feed.
+      // TODO(wittjosiah): Defer binding until the caller has added the chat, so the feed can stay in
+      //  memory too — nothing needs to write to a feed before its chat is in the database.
+      const feed = db.add(Feed.make());
       const chat = Chat.make({ name, feed: Ref.make(feed), instructions });
-      Obj.setParent(feed, chat);
-      if (addToSpace) {
-        space.db.add(chat);
-      }
 
       // Dynamic import to avoid circular dependency with the barrel that also exports SkillManagerHandlers.
       const { SkillManagerSkill } = yield* Effect.promise(() => import('@dxos/assistant-toolkit'));
 
-      const runtime = yield* Effect.context<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
+      // Only an extensible host contributes the plugin-manager skill, since its tools resolve to the
+      // registry plugin's handlers; binding it elsewhere would bind a skill that cannot run.
+      const contributed = yield* Capability.getAll(AppCapabilities.SkillDefinition);
+      const pluginManagerContributed = contributed.some(({ key }) => key === PluginManagerSkill.key);
+
+      const runtime = yield* Effect.context<Database.Service>();
       const binder = new AiContext.Binder({ feed, runtime, registry });
 
       // Bind default skills via registry refs — no DB clone needed since the ECHO ref
@@ -42,9 +46,14 @@ const handler: Operation.WithHandler<typeof AssistantOperation.CreateChat> = Ass
       yield* Effect.promise(() =>
         binder.use((b: AiContext.Binder) =>
           b.bind({
-            skills: [AssistantSkill, DatabaseSkill, AgentWizardSkill, SkillManagerSkill, AlarmSkill].map(({ key }) =>
-              Ref.fromURI(Skill.registryURI(key)),
-            ),
+            skills: [
+              AssistantSkill,
+              DatabaseSkill,
+              ChatContextSkill,
+              SkillManagerSkill,
+              AlarmSkill,
+              ...(pluginManagerContributed ? [PluginManagerSkill] : []),
+            ].map(({ key }) => Ref.fromURI(Skill.registryURI(key))),
             objects: [Ref.make(chat)],
           }),
         ),

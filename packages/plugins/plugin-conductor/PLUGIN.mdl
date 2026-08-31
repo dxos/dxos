@@ -18,6 +18,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `test`      | `org.dxos.mdl.test@1.0`        |
 | `component` | `org.dxos.mdl.component@1.0`   |
 | `op`        | `org.dxos.mdl.op@1.0`          |
+| `flow`      | `org.dxos.mdl.flow@1.0`        |
 
 ## Types
 
@@ -177,15 +178,6 @@ op ifElseSelect
 ```
 
 Effectful operations — mutate persistent state or call external services.
-
-```mdl
-op createComputeGraph
-  desc: Creates a new CanvasBoard with an empty ComputeGraph and adds it to the target space.
-  input:
-    target?: Space | Collection
-  output: string                     # DXN of created CanvasBoard
-  effects: [echo:write]
-```
 
 ```mdl
 op appendToQueue
@@ -392,6 +384,67 @@ test T-8: NotExecuted propagation
   then:
     - text node receives a NotExecuted marker
     - text node renders nothing (no error thrown)
+```
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Build and run a small compute graph
+  desc: |
+    The core canvas round-trip — create a graph, wire a constant into a JSON transform, and read
+    the reactive result. None of the node kernels (`evalConstant`, `jsonTransform`, ...) are
+    registered operations: they run inside the graph's own reactive controller when the canvas
+    triggers evaluation, not through the operation invoker, so this flow is entirely human — the
+    same gap plugin-chess documents for move-less game creation.
+  actors: human
+  covers: [F-1.1, F-1.2, F-1.3, F-2.1, F-2.2, F-3.1, F-3.2, T-1, T-2]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - no CanvasBoard named "QA Graph" exists — ABORT rather than deleting one this flow did not
+      create
+  test:
+    - name: Create the graph
+      do: In the navtree, click + on a collection and choose Compute Graph. Name it "QA Graph".
+      expect: an empty CanvasBoard/ComputeGraph opens on the canvas
+      note: |
+        NO `invoke` — "Create object" for CanvasBoard constructs the object locally and only
+        calls `space.addObject` (see `create-object.ts`); there is no dedicated
+        `createComputeGraph` operation despite F-1.1's phrasing, so this step is human-only.
+    - name: Add a constant node
+      do: Drag "Constant" from the node palette onto the canvas. Set its value to 42 and
+        valueType to "number".
+      expect: a constant node appears on the canvas showing 42
+    - name: Add a JSON transform node
+      do: Drag "JSON Transform" onto the canvas. Set its expression to "$".
+      expect: a JSON transform node appears on the canvas
+    - name: Wire them together
+      do: Drag from the constant node's output port to the JSON transform node's input port.
+      expect: a ComputeEdge connects the two nodes
+    - name: Read the result
+      do: Click the JSON transform node to inspect its output, or connect a text/output node to it.
+      expect: the transform node's output shows 42 (its own re-evaluation, triggered by the
+        upstream constant, per F-3.1's topological order)
+  after:
+    - name: Delete the graph
+      do: Right-click "QA Graph" in the navtree and choose Delete.
+      invoke: |
+        org.dxos.operation.space.removeObjects {
+          objects: [(await space.db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.canvasBoard'))).run()).objects
+            .find((o) => o.name === 'QA Graph')
+            ?? (() => { throw new Error("CanvasBoard QA Graph not found — refusing to remove an unrelated object"); })()],
+          target: $given.collection
+        }
+      expect: the row leaves the navtree and its plank closes
+      note: |
+        No captured id exists — the create step has no `invoke` (see above) — so this resolves
+        "QA Graph" by typename AND name — a name match alone would delete any object carrying it, and throws rather than removing anything when the name does not
+        match, since `given` guarantees no pre-existing board carries it.
 ```
 
 ---

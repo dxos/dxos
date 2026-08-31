@@ -116,17 +116,17 @@ const localModelsFor = (provider: DXN.DXN, backend: (model: (typeof LOCAL_MODELS
  */
 export const all: readonly Model[] = [
   // Edge — Anthropic Claude via the DXOS edge intermediary.
-  make('com.anthropic.model.claude-opus-4-8.default', {
+  make('com.anthropic.model.claude-opus-5.default', {
     provider: Provider.edge.id,
-    backend: 'claude-opus-4-8',
-    label: 'Claude Opus',
+    backend: 'claude-opus-5',
+    label: 'Claude Opus 5',
     characteristics: { maxTokens: 16_384, thinking: true, tools: true },
   }),
-  make('com.anthropic.model.claude-sonnet-4-6.default', {
+  make('com.anthropic.model.claude-sonnet-5.default', {
     provider: Provider.edge.id,
-    backend: 'claude-sonnet-4-6',
-    label: 'Claude Sonnet',
-    characteristics: { maxTokens: 16_384, tools: true },
+    backend: 'claude-sonnet-5',
+    label: 'Claude Sonnet 5',
+    characteristics: { maxTokens: 16_384, thinking: true, tools: true },
   }),
   make('com.anthropic.model.claude-haiku-4-5.default', {
     provider: Provider.edge.id,
@@ -162,7 +162,7 @@ export const get = (provider: DXN.DXN, id: DXN.DXN): Model | undefined =>
 export const byId = (id: DXN.DXN): Model[] => all.filter((model) => model.id === id);
 
 // Default model per provider, used when no explicit selection is configured.
-export const DEFAULT_EDGE: DXN.DXN = DXN.make('com.anthropic.model.claude-sonnet-4-6.default');
+export const DEFAULT_EDGE: DXN.DXN = DXN.make('com.anthropic.model.claude-sonnet-5.default');
 export const DEFAULT_OLLAMA: DXN.DXN = DXN.make('com.meta.model.llama-3-2-1b.instruct');
 export const DEFAULT_LMSTUDIO: DXN.DXN = DXN.make('com.meta.model.llama-3-2-3b.instruct');
 

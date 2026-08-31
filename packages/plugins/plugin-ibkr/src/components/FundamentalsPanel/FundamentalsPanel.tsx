@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Format, TypeEnum } from '@dxos/echo/Format';
-import { IconButton, Message, Status, useTranslation } from '@dxos/react-ui';
+import { Banner, IconButton, Progress, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldProvider } from '@dxos/react-ui-form';
 import { formatForDisplay } from '@dxos/schema';
 
@@ -117,21 +117,21 @@ export const FundamentalsPanel = ({ snapshot, loading, error, onRefresh }: Funda
           </div>
 
           {loading ? (
-            <Status indeterminate aria-label={t('fundamentals.heading')} />
+            <Progress indeterminate aria-label={t('fundamentals.heading')} />
           ) : error ? (
-            <Message.Root valence='error'>
-              <Message.Content>
-                <Message.Title icon='ph--warning-circle--duotone'>{t('fundamentals.heading')}</Message.Title>
-                <Message.Body>{error}</Message.Body>
-              </Message.Content>
-            </Message.Root>
+            <Banner.Root valence='error'>
+              <Banner.Content>
+                <Banner.Title icon='ph--warning-circle--duotone'>{t('fundamentals.heading')}</Banner.Title>
+                <Banner.Body>{error}</Banner.Body>
+              </Banner.Content>
+            </Banner.Root>
           ) : empty ? (
-            <Message.Root valence='neutral'>
-              <Message.Content>
-                <Message.Title icon='ph--chart-bar--duotone'>{t('fundamentals.heading')}</Message.Title>
-                <Message.Body>{t('fundamentals.empty.label')}</Message.Body>
-              </Message.Content>
-            </Message.Root>
+            <Banner.Root valence='neutral'>
+              <Banner.Content>
+                <Banner.Title icon='ph--chart-bar--duotone'>{t('fundamentals.heading')}</Banner.Title>
+                <Banner.Body>{t('fundamentals.empty.label')}</Banner.Body>
+              </Banner.Content>
+            </Banner.Root>
           ) : (
             <Form.FieldSet readonly fieldProvider={fieldProvider} />
           )}

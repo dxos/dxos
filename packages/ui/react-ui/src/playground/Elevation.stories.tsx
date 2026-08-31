@@ -10,6 +10,7 @@ import { mx } from '@dxos/ui-theme';
 
 import {
   Avatar,
+  Banner,
   Button,
   Card,
   Dialog,
@@ -18,7 +19,6 @@ import {
   IconButton,
   Input,
   Main,
-  Message,
   Panel,
   ScrollArea,
   Select,
@@ -184,7 +184,6 @@ const SettingsDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: (
  */
 const Rail = ({ side }: { side: 'l0' | 'r0' }) => (
   <div
-    role='none'
     className={mx(
       'shrink-0 grid grid-rows-[1fr_min-content] place-items-center py-2 w-(--dx-rail-size)',
       side === 'l0' ? 'dx-l0-surface' : 'dx-r0-surface',
@@ -278,12 +277,12 @@ const AppFrame = () => {
           </Panel.Toolbar>
 
           <Panel.Content>
-            <Message.Root valence='warning'>
-              <Message.Content>
-                <Message.Title>Message.Root</Message.Title>
-                <Message.Body>A valence surface nested inside a card.</Message.Body>
-              </Message.Content>
-            </Message.Root>
+            <Banner.Root valence='warning'>
+              <Banner.Content>
+                <Banner.Title>Banner.Root</Banner.Title>
+                <Banner.Body>A valence surface nested inside a card.</Banner.Body>
+              </Banner.Content>
+            </Banner.Root>
             <ScrollArea.Root centered>
               <ScrollArea.Viewport classNames='flex flex-col gap-trim-md'>
                 <ContactCard />

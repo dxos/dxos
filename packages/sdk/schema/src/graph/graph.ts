@@ -4,15 +4,17 @@
 
 import { Entity, Ref, Type } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
-import { Graph, GraphModel } from '@dxos/graph';
+import * as GraphEdge from '@dxos/graph/GraphEdge';
+import * as GraphModel from '@dxos/graph/GraphModel';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import { log } from '@dxos/log';
 
 /**
  * Creates a new reactive graph from a set of ECHO objects.
  * References are mapped onto graph edges.
  */
-export const createGraph = <T extends Entity.Unknown>(objects: T[]): GraphModel.GraphModel<Graph.Node.Node<T>> => {
-  const graph = new GraphModel.GraphModel<Graph.Node.Node<T>>({ nodes: [], edges: [] });
+export const createGraph = <T extends Entity.Unknown>(objects: T[]): GraphModel.GraphModel<GraphNode.Of<T>> => {
+  const graph = new GraphModel.GraphModel<GraphNode.Of<T>>();
 
   // Map objects.
   objects.forEach((object) => {
@@ -35,7 +37,7 @@ export const createGraph = <T extends Entity.Unknown>(objects: T[]): GraphModel.
         const target = (object as any)[prop.name]?.target;
         if (target) {
           graph.addEdge({
-            id: Graph.createEdgeId({ source: source.id, target: target.id, relation: String(prop.name) }),
+            id: GraphEdge.createId({ source: source.id, target: target.id, relation: String(prop.name) }),
             source: source.id,
             target: target.id,
           });

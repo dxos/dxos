@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Cause from 'effect/Cause';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
@@ -14,7 +15,7 @@ import * as Prompt from 'effect/unstable/cli/Prompt';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Account from '@dxos/app-toolkit/Account';
-import { CommandConfig, FormBuilder, flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
+import { CommandConfig, FormBuilder, print, syncAllToEdge, withTypes } from '@dxos/cli-util';
 import { performRegisterOAuthFlow } from '@dxos/cli-util/oauth';
 import { type Client, ClientService } from '@dxos/client';
 import { type Identity } from '@dxos/client/halo';
@@ -103,9 +104,20 @@ export const signup = Command.make(
     // (a retry could not redeem again). Composer re-provisions the agent on every boot.
     yield* invoke(ClientOperation.CreateAgent).pipe(
       Effect.catch((error) =>
-        Console.log(
-          `Warning: account created, but the EDGE agent could not be provisioned (${String(error)}). ` +
+        warn(
+          `account created, but the EDGE agent could not be provisioned (${String(error)}). ` +
             'Opening Composer will retry automatically.',
+        ),
+      ),
+    );
+
+    // `dx` force-exits as soon as the command returns, so the identity's spaces only reach EDGE if
+    // they are drained here. Caught by cause: a sync timeout surfaces as a defect, not a typed error.
+    yield* syncAllToEdge().pipe(
+      Effect.catchCause((cause) =>
+        warn(
+          `account created, but the spaces could not be synced to EDGE (${Cause.pretty(cause)}). ` +
+            'They will sync the next time this profile connects.',
         ),
       ),
     );
@@ -132,6 +144,9 @@ export const signup = Command.make(
   // The Atmosphere method writes the connected account's credential to the default space.
   Command.provideEffectDiscard(() => withTypes(AccessToken.AccessToken, Connection.Connection)),
 );
+
+/** Non-fatal notice, on stderr so that `--json` leaves the account document alone on stdout. */
+const warn = (message: string) => Console.error(`Warning: ${message}`);
 
 const printAccount = (account: Omit<Account.SignUpResult, 'accountId'> & { identityDid: string }) =>
   FormBuilder.make({ title: 'Account' }).pipe(
@@ -210,18 +225,12 @@ const signUpWithAtmosphere = Effect.fn(function* ({
     Effect.mapError((error) => new Error(`${error.message} ${RECOVERY}`)),
   );
 
-  const result = yield* Account.redeemAccessCode({ hub, identity, email, code }).pipe(
+  // The credential written to the default space rides out with the command's `syncAllToEdge`.
+  return yield* Account.redeemAccessCode({ hub, identity, email, code }).pipe(
     Effect.catchTag('AccountRedemptionError', (error) =>
       Effect.fail(new Error(`Could not redeem the access code for ${email} (${error.message}). ${RECOVERY}`)),
     ),
   );
-  // `spaceLayer(none, true)` resolves to the default space — where the credential was written.
-  // Non-fatal: the Account is already minted; the credential syncs on the next client run anyway.
-  yield* flushAndSync({ indexes: true }).pipe(
-    Effect.provide(spaceLayer(Option.none(), true)),
-    Effect.catch((error) => Console.log(`Warning: could not flush the credential to EDGE (${String(error)}).`)),
-  );
-  return result;
 });
 
 /** Create the local identity unless this profile already has one. */

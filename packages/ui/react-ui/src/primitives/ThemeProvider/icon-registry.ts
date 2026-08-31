@@ -21,8 +21,8 @@ const SYMBOL_PATTERN = /^([a-z0-9]+)--([a-z0-9-]+)--([a-z]+)$/;
 export type IconSource = {
   /** Symbol-name prefix, e.g. `ph` for `ph--house--regular`. */
   iconSet: string;
-  /** Resolves a parsed symbol name to a URL. */
-  url: (name: string, variant: string) => string;
+  /** Resolves a parsed symbol name to a URL, or undefined for a variant the set does not carry. */
+  url: (name: string, variant: string) => string | undefined;
 };
 
 /**
@@ -33,7 +33,19 @@ export const phosphorIconSource = (route = '/phosphor'): IconSource => ({
   url: (name, variant) => `${route}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
 });
 
-export const defaultSources: IconSource[] = [phosphorIconSource()];
+/**
+ * `@dxos/ui-icons`' layout: a flat `{name}.svg`, since the set is drawn at the `regular` weight only.
+ *
+ * A non-regular variant resolves to nothing rather than to the regular file, so `px--x--bold` fails
+ * visibly instead of quietly rendering the wrong weight (the runtime symbol grammar accepts any
+ * variant, unlike the build-time pattern).
+ */
+export const extendedIconSource = (route = '/px-icons'): IconSource => ({
+  iconSet: 'px',
+  url: (name, variant) => (variant === 'regular' ? `${route}/${name}.svg` : undefined),
+});
+
+export const defaultSources: IconSource[] = [phosphorIconSource(), extendedIconSource()];
 
 export type IconRegistry = {
   hasIcon(name: string): boolean;
@@ -166,9 +178,15 @@ const resolveDynamic = async (state: RegistryState, staticReady: Promise<void>, 
     state.failed.add(name);
     return;
   }
+  const url = source.url(parsed.iconName, parsed.variant);
+  if (!url) {
+    // A variant the set does not carry can never resolve, so never retry it.
+    state.failed.add(name);
+    return;
+  }
   let svgText: string;
   try {
-    const response = await fetch(source.url(parsed.iconName, parsed.variant));
+    const response = await fetch(url);
     if (!response.ok) {
       if (response.status === 404) {
         state.failed.add(name);

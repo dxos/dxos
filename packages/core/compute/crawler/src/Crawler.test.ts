@@ -11,7 +11,7 @@ import { expect } from 'vitest';
 import { Pipeline } from '@dxos/pipeline';
 import { FactStore } from '@dxos/pipeline-rdf';
 
-import { AgentRegistry } from './AgentRegistry';
+import * as AgentRegistry from './AgentRegistry';
 import * as Crawler from './Crawler';
 import { CrawlError, StageError } from './errors';
 import { Source } from './Source';
@@ -19,7 +19,7 @@ import { tapStage } from './Stage';
 import { agentProfileStage } from './stages/agent-profile';
 import { extractFactsStage } from './stages/extract-facts';
 import { extractTopics } from './stages/topics';
-import { StateStore } from './StateStore';
+import * as StateStore from './StateStore';
 import { TestLayer, THREADED_FIXTURE, servicesLayer } from './testing';
 import type * as Type from './types';
 
@@ -57,8 +57,8 @@ describe('Crawler', () => {
       function* () {
         const summary = yield* runCrawl(CONFIG);
         const store = yield* FactStore;
-        const registry = yield* AgentRegistry;
-        const state = yield* StateStore;
+        const registry = yield* AgentRegistry.AgentRegistry;
+        const state = yield* StateStore.StateStore;
 
         const agents = yield* registry.list();
         const facts = yield* store.query({});
@@ -123,7 +123,7 @@ describe('Crawler', () => {
         const second = yield* runCrawl(CONFIG);
         expect(second.done).toBe(true);
 
-        const registry = yield* AgentRegistry;
+        const registry = yield* AgentRegistry.AgentRegistry;
         const agents = yield* registry.list();
         const alice = agents.find((agent) => agent.label === 'Alice');
         // No message was processed twice across the stop/resume boundary.
@@ -140,7 +140,7 @@ describe('Crawler', () => {
       function* () {
         // Drain two events (ChannelStart + first Message) WITHOUT the commit sink.
         yield* Crawler.stream(CONFIG).pipe(Stream.take(2), Stream.runDrain);
-        const state = yield* StateStore;
+        const state = yield* StateStore.StateStore;
         const before = yield* state.listTargets();
         // The fetch happened, but nothing was committed: no durable cursor movement.
         expect(before.find((target) => target.id === 'chan-1')?.cursor).toBeUndefined();
@@ -148,7 +148,7 @@ describe('Crawler', () => {
         // A full run over the same store refetches from scratch and counts each message once.
         const summary = yield* runCrawl(CONFIG);
         expect(summary.done).toBe(true);
-        const registry = yield* AgentRegistry;
+        const registry = yield* AgentRegistry.AgentRegistry;
         const agents = yield* registry.list();
         expect(agents.reduce((total, agent) => total + agent.messageCount, 0)).toBe(4);
       },
@@ -161,7 +161,7 @@ describe('Crawler', () => {
     Effect.fnUntraced(
       function* () {
         const summary = yield* runCrawl({ channels: ['chan-1'], descendThreads: false });
-        const state = yield* StateStore;
+        const state = yield* StateStore.StateStore;
         const targets = yield* state.listTargets();
         expect(summary.done).toBe(true);
         expect(summary.errored).toBe(1);
@@ -177,7 +177,7 @@ describe('Crawler', () => {
     Effect.fnUntraced(
       function* () {
         const summary = yield* runCrawl({ channels: ['chan-1'], descendThreads: false });
-        const state = yield* StateStore;
+        const state = yield* StateStore.StateStore;
         const targets = yield* state.listTargets();
         expect(summary.done).toBe(true);
         expect(summary.errored).toBe(1);
@@ -198,13 +198,13 @@ describe('Crawler', () => {
         );
         yield* Crawler.stream(CONFIG).pipe(boom, agentProfileStage(), Pipeline.run({ sink: Crawler.commit }));
         const summary = yield* Crawler.summarize();
-        const state = yield* StateStore;
+        const state = yield* StateStore.StateStore;
         const targets = yield* state.listTargets();
 
         expect(summary.done).toBe(true);
         expect(targets.find((target) => target.id === 'chan-1')?.lastError).toContain('boom: kaput');
         // Later messages still flowed through the stage that follows the failing one.
-        const registry = yield* AgentRegistry;
+        const registry = yield* AgentRegistry.AgentRegistry;
         const agents = yield* registry.list();
         expect(agents.reduce((total, agent) => total + agent.messageCount, 0)).toBe(4);
       },
@@ -222,7 +222,7 @@ describe('Crawler', () => {
 
         yield* runCrawl(CONFIG);
         const after = (yield* store.query({})).length;
-        const registry = yield* AgentRegistry;
+        const registry = yield* AgentRegistry.AgentRegistry;
         const agents = yield* registry.list();
         expect(after).toBe(before);
         expect(agents.reduce((total, agent) => total + agent.messageCount, 0)).toBe(4);

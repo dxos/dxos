@@ -5,10 +5,10 @@
 import react from '@vitejs/plugin-react';
 import { createReadStream, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { ResolverFactory } from 'oxc-resolver';
 // import sourcemaps from 'rollup-plugin-sourcemaps';
 import { visualizer } from 'rollup-plugin-visualizer';
-import { type ConfigEnv, type PluginOption, defineConfig, searchForWorkspaceRoot } from 'vite';
+import { type ConfigEnv, type PluginOption, type Rollup, defineConfig, searchForWorkspaceRoot } from 'vite';
 // import devtoolsJson from 'vite-plugin-devtools-json';
 import inspect from 'vite-plugin-inspect';
 import { VitePWA } from 'vite-plugin-pwa';
@@ -19,32 +19,92 @@ import { bootLoaderPlugin, importMapPlugin } from '@dxos/app-framework/vite-plug
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
 import { isNonNullable } from '@dxos/util';
-import { IconsPlugin } from '@dxos/vite-plugin-icons';
+import { IconsPlugin, iconSymbolPattern } from '@dxos/vite-plugin-icons';
 import importSource from '@dxos/vite-plugin-import-source';
 import { DxosLogPlugin } from '@dxos/vite-plugin-log';
 import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
 
-import { createConfig as createTestConfig } from '../../../vitest.base.config';
-import { bootChunking } from './src/vite/boot-chunking';
-import { optimizeDepsInclude } from './src/vite/optimize-deps';
-import { traceBootLeak } from './src/vite/trace-boot-leak';
+import { createConfig as createTestConfig } from '../../../vitest.base.config.ts';
+import { bootChunking } from './src/vite/boot-chunking.ts';
+import { bootMarkPath, channelFaviconPlugin, channelVariant } from './src/vite/channel-branding.ts';
+import { debugPortSidecarPlugin, resolveDebugPortSession } from './src/vite/debug-port.ts';
+import { optimizeDepsInclude } from './src/vite/optimize-deps.ts';
+import { traceBootLeak } from './src/vite/trace-boot-leak.ts';
 
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFalse = (str?: string) => str === 'false' || str === '0';
 const isFastBundle = isTrue(process.env.DX_FASTBUNDLE);
-// Opt-in `DX_PLUGIN_SET=minimal` swaps the full plugin registry for plugin-defs.minimal.tsx
-// without touching main.tsx — for a faster boot when the full registry is not needed.
-const isMinimalPluginSet = process.env.DX_PLUGIN_SET === 'minimal';
-const pluginSetFile = isMinimalPluginSet ? 'src/plugin-defs.minimal.tsx' : 'src/plugin-defs.tsx';
+// `DX_PLUGIN_SET=<name>` swaps in that set's definitions at build time (not a runtime flag), so a
+// plugin outside the set never enters the bundle. Unset (or unknown) selects the full catalog.
+const PLUGIN_SETS: Record<string, string> = {
+  production: 'src/plugin-defs.production.tsx',
+  mobile: 'src/plugin-defs.mobile.tsx',
+};
+const pluginSetFile = PLUGIN_SETS[process.env.DX_PLUGIN_SET ?? ''] ?? 'src/plugin-defs.tsx';
+// Non-empty only when a dev server is launched with the debug-port flag; see `src/vite/debug-port.ts`.
+const debugPortSession = resolveDebugPortSession();
+const isReducedPluginSet = pluginSetFile !== 'src/plugin-defs.tsx';
 
 const rootDir = searchForWorkspaceRoot(process.cwd());
 const phosphorIconsCore = path.join(rootDir, '/node_modules/@phosphor-icons/core/assets');
 const dxosIcons = path.join(rootDir, '/packages/ui/brand/assets/icons');
+const extendedIcons = path.join(rootDir, '/packages/ui/ui-icons/assets');
 
-const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+const dirname = import.meta.dirname;
 
 // Boot-path chunk grouping; `entry` is the page whose static closure defines the boot set.
 const boot = bootChunking({ entry: path.resolve(dirname, 'src/main.tsx') });
+
+// These packages' `browser`-conditioned entrypoints initialize their wasm with top-level await.
+// Besides its bundle cost, top-level await is what trips WebKit's out-of-order evaluation under
+// concurrent dynamic imports before Safari 27 (TDZ, "undefined is not an object" at plugin
+// activation: https://bugs.webkit.org/show_bug.cgi?id=242740, fixed by the module-loader rewrite
+// in https://github.com/WebKit/WebKit/pull/57827). Resolving to `slim` and initializing explicitly
+// per realm via `initAutomergeWasm()` before the client boots avoids both.
+const SLIM_WASM_PACKAGES = ['@automerge/automerge', '@automerge/automerge-repo', '@automerge/automerge-subduction'];
+
+/**
+ * Resolves {@link SLIM_WASM_PACKAGES} to `slim`, and their subpaths without the `browser`
+ * condition — subduction's `browser`-conditioned `/slim` is still the top-level-await bundler
+ * glue, so pinning the non-browser resolution keeps one wasm instance shared by every importer.
+ */
+const slimWasm = (): PluginOption => {
+  // `browser` is deliberately absent; the rest mirrors what vite would apply for the client.
+  const resolver = new ResolverFactory({ conditionNames: ['source', 'import', 'module', 'default'] });
+  let isBuild = false;
+
+  return {
+    name: 'dxos-slim-wasm',
+    enforce: 'pre',
+    configResolved: (config) => {
+      isBuild = config.command === 'build';
+    },
+    resolveId: {
+      order: 'pre',
+      handler: (source, importer) => {
+        if (!importer) {
+          return null;
+        }
+        const pkg = SLIM_WASM_PACKAGES.find((name) => source === name || source.startsWith(`${name}/`));
+        if (!pkg) {
+          return null;
+        }
+        // automerge-repo is redirected only at build: a serve-time redirect would hand out a raw
+        // `/@fs` path that bypasses its optimizer chunk, and repo's dist imports CJS deps
+        // (`debug`, …) that only the prebundle's ESM interop makes importable. The prebundled
+        // fullfat chunk's automerge/subduction imports are externalized and still land here.
+        if (pkg === '@automerge/automerge-repo' && !isBuild) {
+          return null;
+        }
+        // Subpaths resolve as requested (`/slim`, `/slim/next`); asset requests (`?url`) fail the
+        // resolver and fall through to vite.
+        const target = source === pkg ? `${pkg}/slim` : source;
+        const resolved = resolver.sync(path.dirname(importer), target);
+        return resolved.error || !resolved.path ? null : resolved.path;
+      },
+    },
+  };
+};
 
 /**
  * Transpile targets for oxc (dev) and Rolldown (build).
@@ -52,12 +112,12 @@ const boot = bootChunking({ entry: path.resolve(dirname, 'src/main.tsx') });
 const browserTargets = ['chrome108', 'edge107', 'firefox104', 'safari16'] as const;
 
 /**
- * Glob matching the entry of every plugin the minimal registry can reach, for optimize-deps
- * scanning. Derived from the registry sources so adding a plugin to `plugin-defs.minimal.tsx`
- * needs no edit here; a specifier scan is enough because a missed plugin costs a
- * "discovered new dependencies" reload rather than a wrong build.
+ * Glob matching the entry of every plugin the selected set can reach, for optimize-deps scanning.
+ * Derived from the set's own sources so adding a plugin to it needs no edit here; a specifier scan
+ * is enough because a missed plugin costs a "discovered new dependencies" reload rather than a wrong
+ * build.
  */
-const minimalPluginEntries = () => {
+const reducedPluginEntries = () => {
   const names = new Set<string>();
   for (const file of [pluginSetFile, 'src/plugin-defs.core.tsx']) {
     const source = readFileSync(path.join(dirname, file), 'utf8');
@@ -92,6 +152,9 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
   importSource({
     include: isFastBundle ? ['#*'] : ['@dxos/**', '#*'],
   }),
+  // WebKit evaluates a module before its dependencies when a graph reached by concurrent dynamic
+  // imports contains top-level await, leaving bindings in TDZ.
+  slimWasm(),
   // Dev log file sink (serve only) + Rolldown log-meta injection (serve + build).
   DxosLogPlugin(),
   wasm(),
@@ -109,6 +172,8 @@ export default defineConfig((env) => ({
     // coordinator instead of attaching to a stale-code instance (SharedWorkers are keyed by
     // URL + name). Empty in production builds — the name must stay stable across deploys.
     __DX_DEV_SERVER_BOOT_ID__: JSON.stringify(env.command === 'serve' ? Date.now().toString(36) : ''),
+    // Hardcoded empty for `build`: the port is arbitrary eval and must not reach a deployed origin.
+    __DX_DEBUG_PORT_SESSION__: JSON.stringify(env.command === 'serve' ? debugPortSession : ''),
   },
   server: {
     host: true,
@@ -229,7 +294,13 @@ export default defineConfig((env) => ({
     },
   },
   optimizeDeps: {
-    exclude: ['@dxos/wa-sqlite'],
+    // The wasm packages `slimWasm` redirects must not be pre-bundled: the optimizer resolves
+    // with its own pipeline (the `browser` condition, so the bundler entry) and importers would
+    // land on that chunk's top-level await regardless of what the plugin resolves. automerge-repo
+    // is deliberately NOT excluded: it has CJS deps (`debug`, …) that need the prebundle's ESM
+    // interop, and its prebundled chunk's externalized automerge/subduction imports still resolve
+    // through `slimWasm` at serve time.
+    exclude: ['@dxos/wa-sqlite', '@automerge/automerge', '@automerge/automerge-subduction'],
     // The full set of dep entrypoints the app reaches, so vite's optimize-deps phase pre-bundles
     // them up front rather than discovering them mid-load (when a dynamic import unwraps a new
     // subpath), which forces a full page reload with the "Discovered new dependencies" banner —
@@ -248,9 +319,9 @@ export default defineConfig((env) => ({
     // also listed as direct deps of composer-app in package.json. An entry that stops resolving
     // costs a warning per start, not a failed scan.
     //
-    // `DX_PLUGIN_SET=minimal` keeps the scan instead: the list covers the full registry, and
-    // pre-bundling all of it is the cost that mode exists to avoid.
-    include: isMinimalPluginSet ? undefined : optimizeDepsInclude,
+    // A reduced `DX_PLUGIN_SET` keeps the scan instead: the list covers the full registry, and
+    // pre-bundling all of it is the cost those sets exist to avoid.
+    include: isReducedPluginSet ? undefined : optimizeDepsInclude,
     // Scan the auxiliary HTML entrypoints during pre-bundle so navigations
     // to `internal.html` / `devtools.html` / `reset.html` don't trip a
     // "discovered new dependencies" reload mid-session.
@@ -269,10 +340,10 @@ export default defineConfig((env) => ({
       './devtools.html',
       './reset.html',
       './recovery.html',
-      // Under DX_PLUGIN_SET=minimal, scan only the plugins the minimal registry can reach,
-      // read from the registry sources themselves — the hand-maintained list this replaces
-      // had drifted from them (missing `tasks`/`progress`, still naming a removed `outliner`).
-      isMinimalPluginSet ? minimalPluginEntries() : path.resolve(rootDir, 'packages/plugins/*/src/index.{ts,tsx}'),
+      // Under a reduced DX_PLUGIN_SET, scan only the plugins that set can reach, read from its
+      // sources themselves — the hand-maintained list this replaces had drifted from them
+      // (missing `tasks`/`progress`, still naming a removed `outliner`).
+      isReducedPluginSet ? reducedPluginEntries() : path.resolve(rootDir, 'packages/plugins/*/src/index.{ts,tsx}'),
     ],
   },
   resolve: {
@@ -281,7 +352,9 @@ export default defineConfig((env) => ({
     // Use regex `find: /^util$/` (array form) to bind the bare module name only and let Vite's
     // native node: polyfill layer handle subpaths like `node:util/types`.
     alias: [
-      ...(isMinimalPluginSet ? [{ find: /^\.\/plugin-defs$/, replacement: path.resolve(dirname, pluginSetFile) }] : []),
+      // Applies to `build` as much as `serve`: this alias is the whole mechanism by which a reduced
+      // set's module graph never reaches a plugin outside it.
+      ...(isReducedPluginSet ? [{ find: /^\.\/plugin-defs$/, replacement: path.resolve(dirname, pluginSetFile) }] : []),
       { find: /^node-fetch$/, replacement: 'isomorphic-fetch' },
       { find: /^node:util$/, replacement: '@dxos/node-std/util' },
       { find: /^node:path$/, replacement: '@dxos/node-std/path' },
@@ -320,12 +393,36 @@ export default defineConfig((env) => ({
     ShutdownPlugin(),
     ...sharedPlugins(env),
 
+    // Hosts the Claude Agent SDK in the dev server, so the app reaches it same-origin. Dev only —
+    // a deployed Composer has no vite server, and needs the standalone managed process instead.
+    // Turns are confined to DX_AGENT_CWD (default: the workspace root); the host refuses any
+    // requested directory outside it.
+    {
+      name: 'dx-agent-claude',
+      apply: 'serve',
+      // Imported dynamically so only `serve` pays for it: a static import would load the agent SDK
+      // whenever this config is evaluated, including every `vite build` and `vite preview`.
+      configureServer: async (server) => {
+        const { Middleware } = await import('@dxos/agent-claude');
+        server.middlewares.use(Middleware.make({ cwd: process.env.DX_AGENT_CWD ?? rootDir }));
+      },
+    },
+
+    // Hosts the computer harness's shell route against the vite process cwd. Imported dynamically
+    // because this config's static imports are bundled as CJS `require` and the package is ESM-only.
+    import('@dxos/plugin-computer/vite-plugin').then(({ ComputerShellPlugin }) => ComputerShellPlugin()),
+
     // RSS proxy middleware for CORS-free feed fetching.
     {
       name: 'rss-proxy',
       configureServer(server) {
         server.middlewares.use('/api/rss', async (req, res) => {
-          const url = new URL(req.url!, `http://${req.headers.host}`);
+          if (!req.url) {
+            res.statusCode = 400;
+            res.end('Missing request URL');
+            return;
+          }
+          const url = new URL(req.url, `http://${req.headers.host}`);
           const feedUrl = url.searchParams.get('url');
           if (!feedUrl) {
             res.statusCode = 400;
@@ -347,6 +444,9 @@ export default defineConfig((env) => ({
         });
       },
     },
+
+    // Dev-only: publish the debug-port session id for an agent that cannot read this process's env.
+    debugPortSidecarPlugin(debugPortSession, rootDir),
 
     // Dev-only: serve forensics test profile for recovery import testing.
     {
@@ -429,7 +529,10 @@ export default defineConfig((env) => ({
     // without it.
     bootLoaderPlugin({
       markSvg: (() => {
-        const markPath = path.join(rootDir, 'packages/ui/brand/assets/icons/composer-icon.svg');
+        // A prerelease bundle brands its own; production and any dev server get the released mark.
+        const markPath =
+          bootMarkPath(dirname, channelVariant(env.command)) ??
+          path.join(rootDir, 'packages/ui/brand/assets/icons/composer-icon.svg');
         try {
           return readFileSync(markPath, 'utf8');
         } catch (error) {
@@ -439,6 +542,8 @@ export default defineConfig((env) => ({
         }
       })(),
     }),
+
+    channelFaviconPlugin(dirname, channelVariant(env.command)),
 
     VitePWA({
       // No PWA for e2e tests because it slows them down (especially waiting to clear toasts).
@@ -535,14 +640,14 @@ export default defineConfig((env) => ({
     }),
 
     IconsPlugin({
-      // The leading negative lookahead restricts the `dx` set to the `regular` weight only (custom
-      // brand SVGs have no weight variants); the `ph` set retains all Phosphor weights.
-      symbolPattern:
-        '(?!dx--[a-z]+[a-z-]*--(?:bold|duotone|fill|light|thin))(ph|dx)--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
+      // Built rather than written out: `ph` carries every weight while `dx` and `px` are regular-only.
+      symbolPattern: iconSymbolPattern({ sets: ['ph', 'dx', 'px'], regularOnly: ['dx', 'px'] }),
       assetPath: (iconSet, name, variant) => {
         switch (iconSet) {
           case 'dx':
             return `${dxosIcons}/${name}.svg`;
+          case 'px':
+            return `${extendedIcons}/${name}.svg`;
           default:
             return `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`;
         }
@@ -553,9 +658,13 @@ export default defineConfig((env) => ({
         path.join(rootDir, '/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}'),
         path.join(rootDir, '/{packages,tools}/**/dx.config.{ts,tsx,js,jsx}'),
       ],
-      // Serves /phosphor/ for the runtime icon resolver in @dxos/react-ui; assets are copied
-      // into the build output and cached at runtime by sw.ts (excluded from the precache).
-      assets: [{ route: '/phosphor', dir: phosphorIconsCore }],
+      // Keeps every `PxIcons` entry in the sprite so the app paints without a round trip.
+      scanPaths: [path.join(rootDir, '/packages/ui/ui-icons/src/index.ts')],
+      // Serves both catalogs so `@dxos/react-ui`'s resolver can fetch a glyph the scanner never saw.
+      assets: [
+        { route: '/phosphor', dir: phosphorIconsCore },
+        { route: '/px-icons', dir: extendedIcons },
+      ],
       // verbose: true,
     }),
 
@@ -571,9 +680,9 @@ export default defineConfig((env) => ({
  * Generate nicer chunk names.
  * Default makes most chunks have names like index-[hash].js.
  */
-function chunkFileNames(chunkInfo: any) {
+function chunkFileNames(chunkInfo: Rollup.PreRenderedChunk) {
   if (chunkInfo.facadeModuleId && chunkInfo.facadeModuleId.match(/index\.[^/]+$/gm)) {
-    let segments: any[] = chunkInfo.facadeModuleId.split('/').reverse().slice(1);
+    let segments: string[] = chunkInfo.facadeModuleId.split('/').reverse().slice(1);
     const nodeModulesIdx = segments.indexOf('node_modules');
     if (nodeModulesIdx !== -1) {
       segments = segments.slice(0, nodeModulesIdx);

@@ -16,11 +16,13 @@ import * as HasConnection from './HasConnection';
 import * as HasRelationship from './HasRelationship';
 import * as HasSubject from './HasSubject';
 import * as Message from './Message';
+import * as Milestone from './Milestone';
 import * as Organization from './Organization';
 import * as Outline from './Outline';
 import * as Person from './Person';
 import * as Pipeline from './Pipeline';
 import * as Provider from './Provider';
+import * as Repo from './Repo';
 import * as Task from './Task';
 import * as TaskSet from './TaskSet';
 import * as Thread from './Thread';
@@ -58,11 +60,13 @@ export {
   HasRelationship,
   HasSubject,
   Message,
+  Milestone,
   Organization,
   Outline,
   Person,
   Pipeline,
   Provider,
+  Repo,
   Task,
   TaskSet,
   Thread,

@@ -4,7 +4,7 @@
 
 import { type ClientServicesProvider } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
-import { GetDiagnosticsRequest } from '@dxos/protocols/proto/dxos/client/services';
+import { SystemService } from '@dxos/protocols/rpc';
 import { type JsonKeyOptions, jsonKeyReplacer } from '@dxos/util';
 
 import { createCollectDiagnosticsBroadcastSender } from './diagnostics-broadcast';
@@ -31,9 +31,9 @@ export class DiagnosticsCollector {
     const serviceDiagnostics = await services?.services?.SystemService?.getDiagnostics(
       {
         keys: options.humanize
-          ? GetDiagnosticsRequest.KEY_OPTION.HUMANIZE
+          ? SystemService.KeyOption.enums.HUMANIZE
           : options.truncate
-            ? GetDiagnosticsRequest.KEY_OPTION.TRUNCATE
+            ? SystemService.KeyOption.enums.TRUNCATE
             : undefined,
       },
       { timeout: GET_DIAGNOSTICS_RPC_TIMEOUT },

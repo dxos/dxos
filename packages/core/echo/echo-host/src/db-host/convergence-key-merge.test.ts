@@ -443,6 +443,7 @@ describe('ConvergenceKeyMerger.mergeDuplicates', () => {
       version: 0,
       createdAt: null,
       updatedAt: null,
+      queuePosition: null,
     });
     const rows = [
       ...good.group.map(({ objectId, documentId }) => makeRow(objectId, documentId, goodKey)),

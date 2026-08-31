@@ -14,3 +14,14 @@ declare module '*.json?raw' {
   const content: string;
   export default content;
 }
+
+// Support for Vite asset-url imports (the automerge wasm binaries).
+declare module '*.wasm?url' {
+  const url: string;
+  export default url;
+}
+
+declare module '*/wasm?url' {
+  const url: string;
+  export default url;
+}

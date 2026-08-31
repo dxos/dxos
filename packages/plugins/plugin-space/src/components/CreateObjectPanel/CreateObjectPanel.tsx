@@ -2,13 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
+import type * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
-import { type Collection, type Database, Obj } from '@dxos/echo';
+import { type Collection, type Database, Obj, type Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { type Space } from '@dxos/react-client/echo';
 import { Icon, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
-import { Form, omitId } from '@dxos/react-ui-form';
+import { Form, ObjectForm, omitId } from '@dxos/react-ui-form';
 import { Picker } from '@dxos/react-ui-list';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { getStyles } from '@dxos/ui-theme';
@@ -39,7 +40,21 @@ export type CreateObjectPanelProps = {
   spaces: Space[];
   typename?: string;
   target?: Database.Database | Collection.Collection;
+  /** Whether the object is built from the form's values on submit (`draft`) or already exists (`live`). */
+  mode?: 'draft' | 'live';
   initialFormValues?: Partial<AnyProperties>;
+  /**
+   * Form schema, overriding the create entry's `inputSchema` (draft) or the object's own schema
+   * (live). Typically a projection of the type, e.g. `Type.getSchema(T).pipe(Schema.pick(...))`.
+   */
+  schema?: Schema.Codec<any, any>;
+  /**
+   * The live object being edited, once the dialog has added it to the database. Its presence is what
+   * switches the panel from building a draft on submit to writing through to a real object.
+   */
+  object?: Obj.Unknown;
+  /** The live object's type; required alongside `object`. */
+  type?: Type.AnyEntity;
   resolve?: (typename: string) => Metadata | undefined;
   onTargetChange?: (target: Database.Database) => void;
   onTypenameChange?: (typename: string) => void;
@@ -51,7 +66,11 @@ export const CreateObjectPanel = ({
   spaces,
   typename,
   target,
+  mode = 'draft',
   initialFormValues: initialFormValuesProp,
+  schema,
+  object,
+  type,
   resolve,
   onTargetChange,
   onTypenameChange,
@@ -75,29 +94,51 @@ export const CreateObjectPanel = ({
   const handleSelectOption = useCallback(
     async (id: string) => {
       const metadata = resolve?.(id);
-      if (metadata && !metadata.inputSchema && !metadata.customPanel) {
+      // A live create always has a form to show — the object's own — so only a draft can skip
+      // straight to creating from an entry that declares no inputs.
+      if (mode !== 'live' && metadata && !metadata.inputSchema && !metadata.customPanel && !schema) {
         await onCreateObject?.({ metadata });
       } else {
         onTypenameChange?.(id);
       }
     },
-    [resolve, onCreateObject],
+    [mode, schema, resolve, onCreateObject, onTypenameChange],
   );
 
-  const inputSchema = useMemo(
-    () => (metadata && typeof metadata === 'object' && metadata.inputSchema ? omitId(metadata.inputSchema) : undefined),
-    [metadata],
-  );
+  const inputSchema = useMemo(() => {
+    const base = schema ?? (metadata && typeof metadata === 'object' ? metadata.inputSchema : undefined);
+    return base ? omitId(base) : undefined;
+  }, [schema, metadata]);
   const inputSurfaceLookup = useInputSurfaceLookup({ target });
 
   // TODO(wittjosiah): Extends and use react-ui-form to handle variants.
 
-  if (!metadata) {
+  // The live object edits in place, so the type is settled and the submit lives in the dialog's
+  // action bar rather than in the form.
+  if (object && type) {
+    return <ObjectForm object={object} type={type} schema={schema} showTags={false} />;
+  }
+
+  // The type picker belongs to the case where no type has been chosen. Gating it on the entry
+  // instead would also catch a dialog opened *for* a type whose plugin is still activating, and
+  // flash the full list of every creatable type into a dialog already titled after one of them.
+  if (!typename) {
     return <SelectType options={sortedOptions} onChange={handleSelectOption} />;
+  }
+
+  // A live create is driven by the type entity rather than a registered create entry, so only a
+  // draft waits on one; until it resolves there is nothing correct to draw.
+  if (mode !== 'live' && !metadata) {
+    return null;
   }
 
   if (!target) {
     return <SelectSpace spaces={spaces} onChange={onTargetChange} />;
+  }
+
+  // Live: both pickers are answered and the dialog is adding the object; it arrives next render.
+  if (!metadata) {
+    return null;
   }
 
   if (metadata.customPanel) {
@@ -111,7 +152,7 @@ export const CreateObjectPanel = ({
     );
   }
 
-  if (metadata.inputSchema) {
+  if (inputSchema) {
     return (
       <Form.Root
         autoFocus

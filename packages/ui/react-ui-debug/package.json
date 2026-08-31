@@ -12,13 +12,22 @@
   "author": "DXOS.org",
   "type": "module",
   "imports": {
-    "#translations": "./src/translations.ts"
+    "#translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "default": "./dist/lib/translations.mjs"
+    }
   },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./log-buffer": {
+      "source": "./src/components/Logger/log-buffer.ts",
+      "types": "./dist/types/src/components/Logger/log-buffer.d.ts",
+      "import": "./dist/lib/log-buffer.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",

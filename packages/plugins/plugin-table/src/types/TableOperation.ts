@@ -12,8 +12,6 @@ import { Database, DXN, Format, Type, View } from '@dxos/echo';
 import * as SpaceForm from '@dxos/plugin-space/SpaceForm';
 import { Table } from '@dxos/react-ui-table/types';
 
-import { meta } from '#meta';
-
 export const CreateTableSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
   // TODO(wittjosiah): This should be a query input instead.
@@ -28,10 +26,12 @@ export const CreateTableSchema = Schema.Struct({
 
 export type CreateTableType = Schema.Schema.Type<typeof CreateTableSchema>;
 
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
-
 export const OnTypeAdded = Operation.make({
-  meta: { key: makeKey('onTypeAdded'), name: 'On Type Added', icon: 'ph--table--regular' },
+  meta: {
+    key: DXN.make('org.dxos.operation.table.handleTypeAdded'),
+    name: 'On Type Added',
+    icon: 'ph--table--regular',
+  },
   input: Schema.Struct({
     db: Database.Database,
     type: Schema.Any,
@@ -41,7 +41,7 @@ export const OnTypeAdded = Operation.make({
 });
 
 export const Create = Operation.make({
-  meta: { key: makeKey('create'), name: 'Create Table', icon: 'ph--table--regular' },
+  meta: { key: DXN.make('org.dxos.operation.table.create'), name: 'Create Table', icon: 'ph--table--regular' },
   input: Schema.Struct({
     db: Database.Database,
   }).mapFields(Struct.assign(CreateTableSchema.fields)),
@@ -52,7 +52,7 @@ export const Create = Operation.make({
 
 // TODO(wittjosiah): This appears to be unused.
 export const AddRow = Operation.make({
-  meta: { key: makeKey('addRow'), name: 'Add Row', icon: 'ph--plus--regular' },
+  meta: { key: DXN.make('org.dxos.operation.table.addRow'), name: 'Add Row', icon: 'ph--plus--regular' },
   input: Schema.Struct({
     view: Type.getSchema(View.View),
     data: Schema.Any,
@@ -72,7 +72,7 @@ export const ExportColumnSchema = Schema.Struct({
 
 export const ExportRows = Operation.make({
   meta: {
-    key: makeKey('exportRows'),
+    key: DXN.make('org.dxos.operation.table.exportRows'),
     name: 'Export Rows',
     description: 'Exports table rows as CSV, JSON (.dx.json), or XML.',
     icon: 'ph--export--regular',

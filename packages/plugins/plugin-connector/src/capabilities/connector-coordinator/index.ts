@@ -8,10 +8,18 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { ConnectorCoordination } from '#types';
 
+// Coordination drives an interactive OAuth flow through the shell, as does `OAuthRedirect`, which
+// requires it.
 export const Coordinator = Capability.lazyModule(
   'ConnectorCoordination.ConnectorCoordinator',
   {
-    requires: [ClientCapabilities.Client, Capabilities.OperationInvoker, Capabilities.ServiceResolver],
+    environments: [],
+    requires: [
+      ClientCapabilities.Client,
+      ClientCapabilities.IdentityService,
+      Capabilities.OperationInvoker,
+      Capabilities.ServiceResolver,
+    ],
     provides: [ConnectorCoordination.ConnectorCoordinator],
   },
   () => import('./connector-coordinator'),

@@ -763,6 +763,87 @@ describe('json-to-effect', () => {
     const decoded = Schema.decodeUnknownSync(toEffectSchema(jsonSchema))({ properties: { any: 1, keys: 'ok' } });
     expect(decoded).to.deep.eq({ properties: { any: 1, keys: 'ok' } });
   });
+
+  // The same v4 omission hits a struct's rest signature, where the round-trip silently dropped
+  // every undeclared field (`addObject`'s draft kept only `@type`). The restore is unambiguous:
+  // a closed struct always carries `additionalProperties: false` explicitly.
+  test('a struct with an open rest signature survives the round-trip', ({ expect }) => {
+    const input = Schema.Struct({
+      draft: Schema.StructWithRest(Schema.Struct({ '@type': Schema.String }), [
+        Schema.Record(Schema.String, Schema.Unknown),
+      ]),
+      closed: Schema.Struct({ name: Schema.String }),
+    });
+
+    const jsonSchema = toJsonSchema(input);
+    expect(jsonSchema.properties?.draft?.additionalProperties).to.eq(true);
+    expect(jsonSchema.properties?.closed?.additionalProperties).to.eq(false);
+
+    // Lossless: re-serializing the decoded schema reproduces the document.
+    expect(toJsonSchema(toEffectSchema(jsonSchema))).to.deep.eq(jsonSchema);
+
+    // The undeclared fields survive decode; the closed struct still rejects them.
+    const decoded = Schema.decodeUnknownSync(toEffectSchema(jsonSchema))({
+      draft: { '@type': 'org.dxos.type.task', 'title': 'Fix the schema' },
+      closed: { name: 'ok' },
+    });
+    expect(decoded).to.deep.eq({
+      draft: { '@type': 'org.dxos.type.task', 'title': 'Fix the schema' },
+      closed: { name: 'ok' },
+    });
+    const stripped = Schema.decodeUnknownSync(toEffectSchema(jsonSchema))({
+      draft: { '@type': 'org.dxos.type.task' },
+      closed: { name: 'ok', extra: 'stripped' },
+    });
+    expect((stripped as { closed: Record<string, unknown> }).closed).to.deep.eq({ name: 'ok' });
+  });
+
+  // A `$ref` is only ever emitted for a genuine cycle (an acyclic suspend is inlined), so the
+  // decoder must reach every `$ref` through a suspend -- inlining the definition eagerly recurses
+  // until the stack blows.
+  test('decode a self-referential schema', () => {
+    interface Node {
+      readonly name: string;
+      readonly child?: Node;
+    }
+    const Node: Schema.Codec<Node> = Schema.Struct({
+      name: Schema.String,
+      child: Schema.optional(Schema.suspend((): Schema.Codec<Node> => Node)),
+    });
+
+    const jsonSchema = toJsonSchema(Node);
+    const decoded = toEffectSchema(jsonSchema);
+    expect(Schema.decodeUnknownSync(decoded)({ name: 'root', child: { name: 'leaf' } })).to.deep.eq({
+      name: 'root',
+      child: { name: 'leaf' },
+    });
+  });
+
+  test('decode a pair of mutually-recursive schemas', () => {
+    interface A {
+      readonly kind: 'a';
+      readonly b?: B;
+    }
+    interface B {
+      readonly kind: 'b';
+      readonly a?: A;
+    }
+    const A: Schema.Codec<A> = Schema.Struct({
+      kind: Schema.Literal('a'),
+      b: Schema.optional(Schema.suspend((): Schema.Codec<B> => B)),
+    });
+    const B: Schema.Codec<B> = Schema.Struct({
+      kind: Schema.Literal('b'),
+      a: Schema.optional(Schema.suspend((): Schema.Codec<A> => A)),
+    });
+
+    const jsonSchema = toJsonSchema(A);
+    const decoded = toEffectSchema(jsonSchema);
+    expect(Schema.decodeUnknownSync(decoded)({ kind: 'a', b: { kind: 'b' } })).to.deep.eq({
+      kind: 'a',
+      b: { kind: 'b' },
+    });
+  });
 });
 
 describe('reference', () => {
@@ -823,6 +904,31 @@ describe('reference', () => {
     const schema = Ref(TestSchema.Person);
     const jsonSchema = toJsonSchema(schema);
     const deserializedSchema = toEffectSchema(jsonSchema);
+    const refAst = getReferenceAst(deserializedSchema.ast);
+    expect(refAst).toEqual({
+      typename: Type.getTypename(TestSchema.Person),
+      version: Type.getVersion(TestSchema.Person),
+    });
+  });
+
+  test('widened reference node still decodes as a reference', () => {
+    // A wire boundary (e.g. the MCP tool-schema projection) may widen a reference with the
+    // structural keywords so schema-unaware consumers see an object. Decoding must still match the
+    // sentinel before the generic object branch, or the reference rebuilds as a plain struct.
+    const widened = {
+      $id: '/schemas/echo/ref',
+      $ref: '/schemas/echo/ref',
+      type: 'object',
+      properties: { '/': { type: 'string' } },
+      required: ['/'],
+      reference: {
+        schema: {
+          $ref: 'dxn:com.example.type.person',
+        },
+        schemaVersion: '0.1.0',
+      },
+    } as JsonSchemaType;
+    const deserializedSchema = toEffectSchema(widened);
     const refAst = getReferenceAst(deserializedSchema.ast);
     expect(refAst).toEqual({
       typename: Type.getTypename(TestSchema.Person),

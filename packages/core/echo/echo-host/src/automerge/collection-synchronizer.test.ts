@@ -103,7 +103,8 @@ describe('CollectionSynchronizer', () => {
     peer.onConnectionOpen(peerId2);
 
     peer.setLocalCollectionState(collectionId, STATE_1);
-    await sleep(10);
+    // Flushes the single `queueMicrotask` hop `_scheduleBroadcast`/`onConnectionOpen` schedule.
+    await Promise.resolve();
 
     expect(sentStates.map((m) => m.peerId).sort()).to.deep.equal([peerId1, peerId2].sort());
     // `_broadcastLocalState` wraps in `withoutEmptyHeads`, so compare against the
@@ -142,11 +143,13 @@ describe('CollectionSynchronizer', () => {
     // microtask adds peers to `interestedPeers` without ever calling
     // `_broadcastLocalState` (so `lastBroadcast` stays unset for them).
     peer.setLocalCollectionState(collectionId, STATE_1);
-    await sleep(10);
+    // Flushes the single `queueMicrotask` hop `_scheduleBroadcast`/`onConnectionOpen` schedule.
+    await Promise.resolve();
 
     peer.onConnectionOpen(peerId1);
     peer.onConnectionOpen(peerId2);
-    await sleep(10);
+    // Flushes the single `queueMicrotask` hop `_scheduleBroadcast`/`onConnectionOpen` schedule.
+    await Promise.resolve();
 
     connected.delete(peerId2);
     peer.onConnectionClosed(peerId2);
@@ -154,9 +157,84 @@ describe('CollectionSynchronizer', () => {
     // Without the fix, peer2 is still in `interestedPeers` with no `lastBroadcast`
     // entry, so the broadcast gate passes and `sendCollectionState` throws.
     peer.setLocalCollectionState(collectionId, STATE_2);
-    await sleep(10);
+    // Flushes the single `queueMicrotask` hop `_scheduleBroadcast`/`onConnectionOpen` schedule.
+    await Promise.resolve();
 
     expect(sentTo).to.deep.equal([peerId1]);
+  });
+
+  test('re-emits for a stalled peer that keeps repeating an out-of-sync state', async ({ expect }) => {
+    // Regression: `onRemoteStateReceived` used to skip the diff whenever the incoming state
+    // matched the previous one, regardless of whether that state was in sync with ours. A peer
+    // stuck advertising stale heads therefore silenced `peerCollectionStateUpdated` — and with
+    // it the `_handleCollectionSync` replication retry — no matter how often the poll re-queried
+    // it. Observed in the wild as a document stalled for 10 minutes across ~48 identical polls,
+    // cleared only by a reconnect.
+    const peerId = 'peer1' as PeerId;
+    const collectionId = 'collection-test';
+
+    const peer = await new CollectionSynchronizer({
+      queryCollectionState: () => {},
+      sendCollectionState: () => {},
+      shouldSyncCollection: () => true,
+    }).open();
+    onTestFinished(async () => {
+      await peer.close();
+    });
+
+    const updates: PeerId[] = [];
+    peer.peerCollectionStateUpdated.on((ev) => {
+      updates.push(ev.peerId);
+    });
+
+    peer.onConnectionOpen(peerId);
+    peer.setLocalCollectionState(collectionId, STATE_1);
+    // Flushes the single `queueMicrotask` hop `_scheduleBroadcast`/`onConnectionOpen` schedule.
+    await Promise.resolve();
+    updates.length = 0;
+
+    // STATE_2 diverges from STATE_1 on `b`, and is missing `c` entirely.
+    peer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_2));
+    expect(updates).to.deep.equal([peerId]);
+
+    // The poll re-delivers the identical (still diverging) state; each delivery must retry.
+    peer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_2));
+    peer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_2));
+    expect(updates).to.deep.equal([peerId, peerId, peerId]);
+  });
+
+  test('dedupes an unchanged state once the peer is in sync', async ({ expect }) => {
+    // The complement of the regression above: repeating an already-converged state must stay
+    // silent, or every healthy peer re-triggers replication on each poll.
+    const peerId = 'peer1' as PeerId;
+    const collectionId = 'collection-test';
+
+    const peer = await new CollectionSynchronizer({
+      queryCollectionState: () => {},
+      sendCollectionState: () => {},
+      shouldSyncCollection: () => true,
+    }).open();
+    onTestFinished(async () => {
+      await peer.close();
+    });
+
+    const updates: PeerId[] = [];
+    peer.peerCollectionStateUpdated.on((ev) => {
+      updates.push(ev.peerId);
+    });
+
+    peer.onConnectionOpen(peerId);
+    peer.setLocalCollectionState(collectionId, STATE_1);
+    // Flushes the single `queueMicrotask` hop `_scheduleBroadcast`/`onConnectionOpen` schedule.
+    await Promise.resolve();
+    updates.length = 0;
+
+    peer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_1));
+    expect(updates).to.deep.equal([peerId]);
+
+    peer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_1));
+    peer.onRemoteStateReceived(collectionId, peerId, structuredClone(STATE_1));
+    expect(updates).to.deep.equal([peerId]);
   });
 
   test('diff collection state', ({ expect }) => {
@@ -226,9 +304,9 @@ describe('CollectionSynchronizer', () => {
   });
 
   test('peerCollectionStateUpdated fires with newDocsAppeared=false for edge peer orphans', async ({ expect }) => {
-    // peerId prefix must satisfy `isEdgePeerId` — anchored on the AUTOMERGE_REPLICATOR
+    // peerId prefix must satisfy `isEdgePeerId` — anchored on the SUBDUCTION_REPLICATOR
     // service name from `@dxos/protocols`.
-    const edgePeerId = 'automerge-replicator:edge-space-1:abc' as PeerId;
+    const edgePeerId = 'subduction-replicator:edge-space-1:abc' as PeerId;
     const collectionId = 'collection-test';
 
     const peer = await new CollectionSynchronizer({
@@ -265,6 +343,43 @@ describe('CollectionSynchronizer', () => {
 
     const event = await eventPromise;
     expect(event.newDocsAppeared).to.equal(false);
+  });
+
+  // Field regression (stuck-sync report): an edge peer's `getAllHeads()` mixes raw commit tips
+  // with fragment heads, so it legitimately reports a superset of the host's change tips —
+  // sharing one head is convergence. Sharing none is real divergence, and only that case may be
+  // reported as `different`; conflating the two either spams repair or hides a stuck document.
+  describe('edge head-set asymmetry', () => {
+    const documentId = 'doc-1' as DocumentId;
+    const localHeads = TEST_HEADS[0];
+    const asEdge = { isEdgePeer: true };
+
+    test('a superset that shares a head is not different', ({ expect }) => {
+      const diff = diffCollectionStateForPeer(
+        { documents: { [documentId]: localHeads } as Record<DocumentId, A.Heads> },
+        {
+          documents: {
+            [documentId]: [...localHeads, ...TEST_HEADS[1], ...TEST_HEADS[2], ...TEST_HEADS[3]],
+          } as Record<DocumentId, A.Heads>,
+        },
+        asEdge,
+      );
+      expect(diff.different).toEqual([]);
+      expect(diff.missingOnLocal).toEqual([]);
+      expect(diff.missingOnRemote).toEqual([]);
+    });
+
+    test('a disjoint head set is different, and stays different when re-diffed', ({ expect }) => {
+      const local = { documents: { [documentId]: localHeads } as Record<DocumentId, A.Heads> };
+      const remote = { documents: { [documentId]: TEST_HEADS[1] } as Record<DocumentId, A.Heads> };
+
+      // The observed failure re-diffs identically every poll: the diff is a pure function of the
+      // two states, so nothing about repeating it converges. Repair has to come from elsewhere.
+      for (const _pass of range(3)) {
+        const diff = diffCollectionStateForPeer(local, remote, asEdge);
+        expect(diff.different).toEqual([documentId]);
+      }
+    });
   });
 });
 

@@ -1,11 +1,15 @@
 layer: library
 language: typescript
 tags:
+  - composer-plugin
   - ts-vite-build
   - ts-test
   - ts-test-storybook
   - pack
   - storybook
+  # Selected by the `#model-fixture:test` CI target; without it the two model-fixture
+  # suites in this package are never picked up.
+  - model-fixture
 tasks:
   check-module-structure:
     # Fail when the ./plugin export pulls in `@dxos/react-ui`. The plugin entry must
@@ -14,7 +18,8 @@ tasks:
       pnpm exec dx-trace-imports
       --export ./InboxPlugin
       --to "@dxos/react-ui"
-      --conditions workerd,worker,node
+      --conditions workerd,worker
+      --conditions node
       --fail-on present
     deps:
       - dx-trace-imports:build

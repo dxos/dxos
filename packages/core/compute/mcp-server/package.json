@@ -1,0 +1,45 @@
+{
+  "name": "@dxos/mcp-server",
+  "version": "0.11.1",
+  "description": "DXOS MCP server: the tool and prompt surface projected from the operation registry.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "info@dxos.org",
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
+    },
+    "./McpServer": {
+      "source": "./src/McpServer.ts",
+      "types": "./dist/types/src/McpServer.d.ts",
+      "import": "./dist/lib/McpServer.mjs"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/compute": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/effect": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "beast": {}
+}

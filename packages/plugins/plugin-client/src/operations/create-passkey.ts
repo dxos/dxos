@@ -4,16 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
+import * as Option from 'effect/Option';
 
-import * as Capability from '@dxos/app-framework/Capability';
 import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
-import { PublicKey } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
+import { Identity } from '@dxos/halo';
 import { invariant } from '@dxos/invariant';
-import { IdentityRecovery } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { PublicKey } from '@dxos/keys';
 import { getHostPlatform } from '@dxos/util';
-
-import { ClientCapabilities } from '#types';
 
 import { CreatePasskey } from './definitions';
 
@@ -37,8 +35,7 @@ const defaultPasskeyLabel = (): string => {
 const handler: Operation.WithHandler<typeof CreatePasskey> = CreatePasskey.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
-      const client = yield* Capability.get(ClientCapabilities.Client);
-      const identity = client.halo.identity.get();
+      const identity = Option.getOrUndefined(yield* Identity.getSnapshot);
       invariant(identity, 'Identity not available');
 
       const lookupKey = PublicKey.random();
@@ -71,7 +68,7 @@ const handler: Operation.WithHandler<typeof CreatePasskey> = CreatePasskey.pipe(
                   user: {
                     id: lookupKey.asUint8Array() as Uint8Array<ArrayBuffer>,
                     name: identity.did,
-                    displayName: identity.profile?.displayName ?? '',
+                    displayName: identity.displayName ?? '',
                   },
                   pubKeyCredParams: [
                     { type: 'public-key', alg: -8 },
@@ -93,18 +90,15 @@ const handler: Operation.WithHandler<typeof CreatePasskey> = CreatePasskey.pipe(
         ),
       );
 
-      invariant(client.services.services.IdentityService, 'IdentityService not available');
-      yield* Effect.promise(() =>
-        client.services.services.IdentityService!.createRecoveryCredential({
-          data: {
-            recoveryKey,
-            algorithm,
-            lookupKey,
-            label: defaultPasskeyLabel(),
-            kind: IdentityRecovery.Kind.PASSKEY,
-          },
-        }),
-      );
+      yield* Identity.createRecoveryCredential({
+        externalKey: {
+          recoveryKey: recoveryKey.toHex(),
+          lookupKey: lookupKey.toHex(),
+          algorithm,
+          label: defaultPasskeyLabel(),
+          kind: 'passkey',
+        },
+      });
     }),
   ),
 );

@@ -4,7 +4,7 @@
 
 import { Duplex } from 'node:stream';
 
-import { Stream } from '@dxos/codec-protobuf/stream';
+import { Stream } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

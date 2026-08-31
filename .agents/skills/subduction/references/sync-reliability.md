@@ -137,6 +137,65 @@ waiting for recv-drain before flushing) turns that into a deterministic stall.
   arrives later, so `loadDoc(fetchFromNetwork)` racing a not-yet-pushed doc hangs unboundedly. Tests
   must barrier on the push landing (`waitForEdgeSyncPeer`) before fetching.
 
+## 10. Diagnosing a non-converging document from logs
+
+Symptom: a `(collection, peer)` pair diffs forever. `collection-synchronizer.ts` re-queries every
+~10 s, the diff reports the same `different` document each pass, and nothing else changes. Observed
+persisting **3 days across app restarts** with zero `E`/`W` lines in the client bundle.
+
+**The identifier trap.** Collection sync speaks `DocumentId` (base58check); subduction speaks
+`SedimentreeId` (the 16-byte DocumentId zero-padded to 32, lowercase hex — `documentIdToSedimentreeIdHex`).
+Grepping a bundle for the DocumentId therefore finds collection-sync lines and **no subduction
+lines at all**, which reads as "subduction never touched this document" when it is only an encoding
+mismatch. Always translate first; the non-convergence warning now emits `sedimentreeIds` for exactly
+this reason.
+
+**What each layer can and cannot tell you:**
+
+| Question                                    | Where                                                                                      | Available?                                                                                            |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| Do the heads differ, and how?               | `diffCollectionState` / `onRemoteStateReceived`                                            | yes, both sides' heads                                                                                |
+| Is the document loaded?                     | `handleStates` on the sync logs (`getHandleState`, never `DocHandle.state`)                | yes                                                                                                   |
+| Did subduction load the sedimentree?        | `sqlite query` on `subduction-{commits,fragments,blobs,fragment-blobs,remote-heads}-<hex>` | yes, by hex                                                                                           |
+| Did a head exchange with the peer complete? | `subduction remote-heads persisted`                                                        | yes, per document                                                                                     |
+| Was the document refused?                   | `subduction authorizeFetch` / `filterAuthorizedFetch` / share-policy probe                 | yes, per document                                                                                     |
+| Did a specific document cross the wire?     | `sending...` / `received subduction batch`                                                 | **no** — batch logs carry only `frames` and `remoteId`; sedimentree ids stay inside the WASM protocol |
+
+**Absence of `remote-heads` writes does not mean refused.** In one bundle 19 of 404 active
+sedimentrees had zero `remote-heads` writes after a reload — including every space _root_ document
+and all four documents of a space that converged normally. Treat it as a lead needing a control, not
+a verdict; see the discipline note under "Reproduce / validate".
+
+**Subduction denials are invisible by default.** `authorizeFetch` throws a bare `Error`, and the
+peer-side WASM `not authorized to access sedimentree` WARN is deliberately suppressed unless
+`localStorage.debug` matches `/subduction/i` (it fans out across every space-scoped peer each round).
+Set that before any reproduction attempt, and check the `subduction log level` startup line to learn
+whether a bundle you were handed had it suppressed.
+
+**Correlate with the edge on attributes, not body text.** Edge logs carry `ctx.spaceId`,
+`ctx.collectionId`, `ctx.documentCount`, `ctx.identityDid`; a SigNoz full-text search for a spaceId
+matches only the HTTP lines whose body embeds it, missing every `SubductionAutomergeReplicator`
+line. Filter `attribute.ctx.spaceId = '<id>'` instead. The edge has **no per-document heads
+logging**, so it can confirm delivery (`subduction: collection-state sent`, `deliveryResult`) but
+cannot tell you what diverged.
+
+**A client-visible stall can be an edge-side dropped session.** Watch for `subduction: dropping
+frame for unknown connectionId` with `ctx.liveConnectionIds: "[]"`, alongside `subduction error
+sent` carrying `subduction: session lost` / `unknown connectionId`: the client keeps shipping frames
+into a connectionId the edge no longer holds and they are discarded, while the alarm-driven
+`collection-state sent` path keeps answering normally. Collection sync therefore looks healthy —
+responses arrive every round — while no document bytes land. Check timestamps before blaming it for
+an older divergence: in the observed case the drops began ~22 min _after_ the divergence was already
+3 days old, making it a second, later fault rather than the cause.
+
+**Reconnecting does not fix a diverged document, so do not add a stall-triggered reconnect.** One
+bundle contained a full client + WebSocket + subduction reconnect (new host peer, new
+`subduction-replicator:<space>-<uuid>`, `resetConnection` on every feed replicator) and the same
+document diverged identically across it. A stall detector keyed on "no progress" fires on a healthy
+connection — bytes were flowing both ways the whole time — and reconnects cost a ~1451-line/second
+burst per cycle while resetting the very evidence needed to diagnose. Gate any such watchdog on _no
+progress **and** no traffic_.
+
 ## Reproduce / validate
 
 `packages/services/edge/test/stress/edge-subduction-sync.test.ts`, gated by

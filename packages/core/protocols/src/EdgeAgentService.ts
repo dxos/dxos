@@ -10,8 +10,9 @@ import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 import { protoMessage, serviceError } from './service-rpc.ts';
 
 /**
- * Effect RPC definitions for `dxos.client.services.EdgeAgentService`.
- * Shared proto types remain protobuf-encoded on the wire.
+ * Effect RPC definitions for the EDGE agent service (formerly `dxos.client.services.EdgeAgentService`).
+ * All methods take no payload; responses reuse the shared `QueryEdgeStatusResponse` /
+ * `QueryAgentStatusResponse` proto types.
  */
 export class Rpcs extends RpcGroup.make(
   Rpc.make('queryEdgeStatus', {

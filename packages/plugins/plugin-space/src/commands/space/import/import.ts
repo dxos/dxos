@@ -12,7 +12,7 @@ import * as Options from 'effect/unstable/cli/Flag';
 
 import { CommandConfig, FormBuilder, formatBytes, print, withTimeout } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
-import { type SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
+import { type SpacesService } from '@dxos/protocols/rpc';
 
 export type ImportArgs = {
   file: string;
@@ -28,7 +28,7 @@ export const handler = Effect.fn(function* ({ file, tags }: ImportArgs) {
 
   const contents = yield* fs.readFile(file);
   // Format is left unset so the host detects it from the extension, falling back to sniffing contents.
-  const archive: SpaceArchive = { filename: path.basename(file), contents };
+  const archive: SpacesService.SpaceArchive = { filename: path.basename(file), contents };
   const space = yield* Effect.tryPromise(() =>
     client.spaces.import(archive, tags.length > 0 ? { tags: [...tags] } : undefined),
   );

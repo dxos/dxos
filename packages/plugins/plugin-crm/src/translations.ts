@@ -12,6 +12,7 @@ export const translations = [
       [meta.profile.key]: {
         'plugin.name': 'CRM',
         'nav-tree-group-crm.label': 'CRM',
+        'research.label': 'Research',
       },
     },
   },

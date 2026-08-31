@@ -10,6 +10,8 @@ import type * as Atom from 'effect/unstable/reactivity/Atom';
 import { type ReactNode } from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import type * as Operation from '@dxos/compute/Operation';
+import { type Label } from '@dxos/react-ui';
 import { type ViewModeItem } from '@dxos/react-ui-editor';
 import { type Text } from '@dxos/schema';
 import { type EditorStateStore } from '@dxos/ui-editor';
@@ -74,6 +76,35 @@ export type ViewModeExtension = {
 export const ViewModeExtension = Capability.make<ViewModeExtension>()(
   `${meta.profile.key}.capability.viewModeExtension`,
 );
+
+/**
+ * A contributed entry for the editor's slash-command popup.
+ *
+ * The entry names an {@link Operation} rather than carrying a callback, so a contributed command is
+ * the same thing everywhere else in the app: listed by `composer.operations()`, invocable from a
+ * skill, the debug port or a QA flow, and typed at its boundary. A closure would be none of those.
+ *
+ * The operation is invoked with {@link MarkdownOperation.EditorCommandInput} — the attendable id of
+ * the surface and the offset the trigger was consumed at — and reaches the live view through
+ * {@link EditorViews}, as `scrollToAnchor` does.
+ */
+export type MenuExtension = {
+  /** Stable id, unique across contributions. */
+  id: string;
+  label: Label;
+  icon?: string;
+  /**
+   * Group heading. One group per contributing plugin: pass the plugin's own key and name, and
+   * several commands from one plugin merge under a single heading rather than each growing its own.
+   */
+  group: { id: string; label: Label };
+  /** Sort order within the group. */
+  order?: number;
+  /** Invoked on select, with {@link MarkdownOperation.EditorCommandInput}. */
+  operation: Operation.Definition.Any;
+};
+
+export const MenuExtension = Capability.make<MenuExtension>()(`${meta.profile.key}.capability.menuExtension`);
 
 /** Per-document editing posture (Google-Docs-style); the review semantics are owned by contributors. */
 export type ReviewMode = 'editing' | 'suggesting' | 'viewing';

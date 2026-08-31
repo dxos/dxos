@@ -6,7 +6,7 @@ import type * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import * as SchemaTransformation from 'effect/SchemaTransformation';
 
-import { Database, type Err, Obj, Ref, type Type } from '@dxos/echo';
+import { Database, type Error as EchoError, Obj, Ref, type Type } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { SchemaAST } from '@dxos/effect';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
@@ -28,7 +28,7 @@ const ArtifactURI: Schema.Schema<string> & {
   resolve: <S extends Type.AnyEntity>(
     schema: S,
     ref: ArtifactURI,
-  ) => Effect.Effect<Type.InstanceType<S>, Err.EntityNotFoundError, Database.Service>;
+  ) => Effect.Effect<Type.InstanceType<S>, EchoError.EntityNotFoundError, Database.Service>;
 } = class extends Schema.String.annotate({
   // TODO(dmaretskyi): This section gets overriden.
   description: trim`
@@ -78,7 +78,7 @@ const ArtifactURI: Schema.Schema<string> & {
   static resolve<S extends Type.AnyEntity>(
     schema: S,
     ref: ArtifactURI,
-  ): Effect.Effect<Type.InstanceType<S>, Err.EntityNotFoundError, Database.Service> {
+  ): Effect.Effect<Type.InstanceType<S>, EchoError.EntityNotFoundError, Database.Service> {
     const uri = ArtifactURI.toEchoURI(ref);
     return Database.resolve(Ref.fromURI(uri), schema);
   }

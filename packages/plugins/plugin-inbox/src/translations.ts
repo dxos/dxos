@@ -52,25 +52,20 @@ export const translations = [
 
         'no-message.message': 'Select a message to view it',
 
-        'action-archive.menu': 'Archive',
         'action-delete.menu': 'Delete',
         'action-mark-read.menu': 'Mark as read',
         'message.label': 'Message',
         'draft.label': 'New message',
         'event.label': 'Event',
         'facts.label': 'Facts',
-        'inbox.label': 'Inbox',
 
         'no-connections.label': 'No connections configured',
 
         'sync-mailbox.label': 'Sync',
-        'empty-mailbox.message': 'Mailbox empty',
+        'empty-mailbox.message': 'No messages',
 
-        'process-mailbox.label': 'Process',
-        'stop-process-mailbox.label': 'Stop',
-        'reset-process-cursor.label': 'Reset process cursor',
-        'enrich-mailbox.label': 'Enrich',
-        'stop-enrich-mailbox.label': 'Stop',
+        'analyze-mailbox.label': 'Analyze',
+        'stop-analyze-mailbox.label': 'Stop',
         'sync-calendar.label': 'Sync calendar',
         'empty-calendar.message': 'Calendar empty',
 
@@ -91,7 +86,6 @@ export const translations = [
 
         'view-mode.menu': 'View mode',
         'view-mode-html.menu': 'HTML',
-        'view-mode-enriched.menu': 'Enriched',
         'view-mode-markdown.menu': 'Markdown',
         'view-mode-plain.menu': 'Plain text',
 
@@ -120,6 +114,9 @@ export const translations = [
         'message-toolbar-reply-all.menu': 'Reply All',
         'message-toolbar-forward.menu': 'Forward',
         'message-toolbar-ai-reply.menu': 'AI reply',
+        'message-toolbar-archive.menu': 'Archive',
+        'message-toolbar-create-project.menu': 'Create Project',
+        'message-toolbar-move-to-inbox.menu': 'Move to Inbox',
         'draft-toolbar.label': 'Draft toolbar',
         'draft-toolbar-generate.menu': 'Generate reply',
         'message-toolbar-delete.menu': 'Delete',
@@ -142,6 +139,9 @@ export const translations = [
         'delete-filter.label': 'Delete filter',
 
         'mailboxes-section.label': 'Mailboxes',
+        'inbox.label': 'Inbox',
+        'starred.label': 'Starred',
+        'important.label': 'Important',
         'all-mail.label': 'All Mail',
         'sent.label': 'Sent',
         'drafts.label': 'Drafts',

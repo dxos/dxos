@@ -14,6 +14,7 @@ export * from './InboxStack';
 export * from './ObjectArticle';
 export * from './RelatedContacts';
 export * from './RelatedEvents';
+export * from './Attachment';
 export * from './RelatedMessages';
 export * from './Toolbar';
 export * from './ViewMode';

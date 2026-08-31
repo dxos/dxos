@@ -10,7 +10,7 @@ import { expect } from 'vitest';
 
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { StateStore } from './StateStore';
+import * as StateStore from './StateStore';
 import type * as Type from './types';
 
 const target = (id: string, over: Partial<Type.Target> = {}): Type.Target => ({
@@ -21,12 +21,12 @@ const target = (id: string, over: Partial<Type.Target> = {}): Type.Target => ({
   ...over,
 });
 
-const suite = (name: string, layer: Layer.Layer<StateStore>) =>
+const suite = (name: string, layer: Layer.Layer<StateStore.StateStore>) =>
   describe(name, () => {
     it.effect(
       'pushes targets LIFO and peeks the top actionable',
       Effect.fnUntraced(function* () {
-        const store = yield* StateStore;
+        const store = yield* StateStore.StateStore;
         yield* store.pushTargets([target('chan-1'), target('chan-2')]);
         // LIFO: the last pushed target is on top of the frontier.
         expect((yield* store.nextActionable())?.id).toBe('chan-2');
@@ -41,7 +41,7 @@ const suite = (name: string, layer: Layer.Layer<StateStore>) =>
     it.effect(
       'setCursor stamps lastRunAt and preserves lastError as a diagnostic',
       Effect.fnUntraced(function* () {
-        const store = yield* StateStore;
+        const store = yield* StateStore.StateStore;
         yield* store.pushTargets([target('chan-1')]);
         yield* store.setStatus('chan-1', 'error', 'boom');
         yield* store.setCursor('chan-1', '1000');
@@ -58,7 +58,7 @@ const suite = (name: string, layer: Layer.Layer<StateStore>) =>
     it.effect(
       'setStatus records lastError on failure and preserves it on later status writes',
       Effect.fnUntraced(function* () {
-        const store = yield* StateStore;
+        const store = yield* StateStore.StateStore;
         yield* store.pushTargets([target('chan-1')]);
         yield* store.setStatus('chan-1', 'active', 'stage: boom');
         yield* store.setStatus('chan-1', 'done');
@@ -71,7 +71,7 @@ const suite = (name: string, layer: Layer.Layer<StateStore>) =>
     it.effect(
       'hasActionable reflects pending/active only',
       Effect.fnUntraced(function* () {
-        const store = yield* StateStore;
+        const store = yield* StateStore.StateStore;
         yield* store.pushTargets([target('chan-1')]);
         expect(yield* store.hasActionable()).toBe(true);
         yield* store.setStatus('chan-1', 'done');
@@ -83,7 +83,7 @@ const suite = (name: string, layer: Layer.Layer<StateStore>) =>
     it.effect(
       'tracks run status',
       Effect.fnUntraced(function* () {
-        const store = yield* StateStore;
+        const store = yield* StateStore.StateStore;
         expect(yield* store.getRunStatus()).toBe('idle');
         yield* store.setRunStatus('running');
         expect(yield* store.getRunStatus()).toBe('running');
@@ -116,13 +116,13 @@ describe('StateStore', () => {
           const shared = yield* Layer.build(client);
 
           yield* Effect.gen(function* () {
-            const store = yield* StateStore;
+            const store = yield* StateStore.StateStore;
             yield* store.pushTargets([target('chan-1')]);
             yield* store.setCursor('chan-1', '42');
           }).pipe(Effect.provide(StateStore.layerSql), Effect.provide(shared));
 
           yield* Effect.gen(function* () {
-            const store = yield* StateStore;
+            const store = yield* StateStore.StateStore;
             const [entry] = yield* store.listTargets();
             expect(entry.cursor).toBe('42');
           }).pipe(Effect.provide(StateStore.layerSql), Effect.provide(shared));

@@ -8,6 +8,7 @@ import React from 'react';
 import { type ChromaticPalette } from '@dxos/ui-types';
 
 import { withLayout, withTheme } from '../../testing';
+import { type Gap, gapClasses } from '../layout';
 import { Flex } from './Flex';
 
 const Cell = ({ label, hue }: { label: string; hue: ChromaticPalette }) => (
@@ -17,7 +18,7 @@ const Cell = ({ label, hue }: { label: string; hue: ChromaticPalette }) => (
 );
 
 const RowStory = () => (
-  <Flex classNames='gap-2 p-2'>
+  <Flex gap='sm' classNames='p-2'>
     <Cell label='A' hue='red' />
     <Cell label='B' hue='green' />
     <Cell label='C' hue='blue' />
@@ -25,7 +26,7 @@ const RowStory = () => (
 );
 
 const ColumnStory = () => (
-  <Flex column classNames='gap-2 p-2'>
+  <Flex column gap='sm' classNames='p-2'>
     <Cell label='A' hue='red' />
     <Cell label='B' hue='green' />
     <Cell label='C' hue='blue' />
@@ -33,12 +34,43 @@ const ColumnStory = () => (
 );
 
 const GrowStory = () => (
-  <Flex column grow classNames='gap-2 p-2'>
+  <Flex column grow gap='sm' classNames='p-2'>
     <Cell label='Header' hue='yellow' />
     <Flex grow>
       <Cell label='Content (grows)' hue='blue' />
     </Flex>
     <Cell label='Footer' hue='orange' />
+  </Flex>
+);
+
+/** Every step of the ramp, so a gap change is visible rather than inferred. */
+const GapsStory = () => (
+  <Flex column gap='lg' classNames='p-2'>
+    {(Object.keys(gapClasses) as Gap[]).map((gap) => (
+      <Flex key={gap} gap={gap} align='center'>
+        <div className='w-28 shrink-0 font-mono text-xs text-description'>{gap}</div>
+        <Cell label='A' hue='red' />
+        <Cell label='B' hue='green' />
+        <Cell label='C' hue='blue' />
+      </Flex>
+    ))}
+  </Flex>
+);
+
+/** The empty-state shape: one centered child filling the available block size. */
+const CenterStory = () => (
+  <Flex center classNames='h-[10rem] m-2 text-subdued border border-separator rounded-sm'>
+    Nothing here yet
+  </Flex>
+);
+
+/** `asChild` projects the layout onto a semantic element without adding a wrapper. */
+const AsChildStory = () => (
+  <Flex asChild gap='sm' justify='end' classNames='p-2'>
+    <footer>
+      <Cell label='Cancel' hue='indigo' />
+      <Cell label='Save' hue='green' />
+    </footer>
   </Flex>
 );
 
@@ -55,3 +87,6 @@ type Story = StoryObj<typeof meta>;
 export const Row: Story = { render: RowStory };
 export const Column: Story = { render: ColumnStory };
 export const Grow: Story = { render: GrowStory };
+export const Gaps: Story = { render: GapsStory };
+export const Center: Story = { render: CenterStory };
+export const AsChild: Story = { render: AsChildStory };

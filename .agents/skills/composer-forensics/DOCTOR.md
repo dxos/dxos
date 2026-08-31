@@ -30,7 +30,7 @@ There are two mounts for the same port and protocol. Pick by whether the app boo
 
 **Safe mode** (app won't boot, or you need storage-level helpers) — ask the user to:
 
-1. Open their Composer origin (e.g. `https://main.composer.space/recovery.html` or local dev).
+1. Open their Composer origin (e.g. `https://preview.composer.space/recovery.html` or local dev).
 2. Click **Open Debug Port** (leave the tab open; it long-polls `127.0.0.1:9321`).
 3. Tell you **what’s wrong** in their own words.
 

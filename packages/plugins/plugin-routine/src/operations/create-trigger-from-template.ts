@@ -57,10 +57,7 @@ const handler: Operation.WithHandler<typeof RoutineOperation.CreateTriggerFromTe
           }
         }
 
-        yield* Operation.invoke(SpaceOperation.AddObject, {
-          object: trigger,
-          target: db,
-        });
+        yield* Operation.invoke(SpaceOperation.AddObject, { object: trigger }, { spaceId: db.spaceId });
         yield* Operation.invoke(LayoutOperation.Open, {
           subject: [getRoutinesSettingsPath(db.spaceId)],
           workspace: GraphPath.getSpacePath(db.spaceId),

@@ -6,21 +6,22 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { EXA_API_KEY } from '@dxos/ai/testing';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { DatabaseSkill, RunInstructions, WebSearchSkill } from '@dxos/assistant-toolkit';
+import { ChatContextSkill, RunInstructions, WebSearchSkill } from '@dxos/assistant-toolkit';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Routine from '@dxos/compute/Routine';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Feed, Filter, JsonSchema, Obj, Query, Ref, Tag, View } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
-import { AssistantSkill } from '@dxos/plugin-assistant';
+import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
 import { CrmSkill } from '@dxos/plugin-crm';
 import * as ProfileOf from '@dxos/plugin-crm/ProfileOf';
-import { InboxSkill } from '@dxos/plugin-inbox';
+import * as InboxSkill from '@dxos/plugin-inbox/InboxSkill';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
-import { MarkdownSkill } from '@dxos/plugin-markdown';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import { meta as automationMeta } from '@dxos/plugin-routine';
+import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
 import { ViewModel } from '@dxos/schema';
 import { Cell } from '@dxos/storybook-testing';
 import { Employer, HasConnection, HasSubject, Message, Organization, Person, Pipeline } from '@dxos/types';
@@ -83,9 +84,9 @@ export const WithResearch: Story = {
       space.db.add(Obj.make(Organization.Organization, { name: 'BlueYard Capital' }));
       space.db.add(Markdown.make({ name: 'DXOS', content: DXOS_DOCUMENT }));
     },
-    onChatCreated: async ({ space, binder }) => {
-      const organizations = await space.db.query(Filter.type(Organization.Organization)).run();
-      const documents = await space.db.query(Filter.type(Markdown.Document)).run();
+    onChatCreated: async ({ db, binder }) => {
+      const organizations = await db.query(Filter.type(Organization.Organization)).run();
+      const documents = await db.query(Filter.type(Markdown.Document)).run();
       await binder.bind({ objects: [...organizations, ...documents].map((object) => Ref.make(object)) });
     },
     skills: [
@@ -358,14 +359,22 @@ export const WithCRM: Story = {
   decorators: createDecorators({
     importSnapshot: loadMockInbox,
     lazyPlugins: async () => {
-      const [CrmPlugin, InboxPlugin, MarkdownPlugin, TablePlugin] = await Promise.all([
+      const [CrmPlugin, InboxPlugin, MarkdownPlugin, SpacePlugin, TablePlugin] = await Promise.all([
         import('@dxos/plugin-crm/CrmPlugin'),
         import('@dxos/plugin-inbox/InboxPlugin'),
         import('@dxos/plugin-markdown/MarkdownPlugin'),
+        // Registers the object-verb handlers behind the Database skill.
+        import('@dxos/plugin-space/SpacePlugin'),
         import('@dxos/plugin-table/TablePlugin'),
       ]);
       return {
-        plugins: [CrmPlugin.make(), InboxPlugin.make(), MarkdownPlugin.make(), TablePlugin.make()],
+        plugins: [
+          CrmPlugin.make(),
+          InboxPlugin.make(),
+          MarkdownPlugin.make(),
+          SpacePlugin.make({}),
+          TablePlugin.make(),
+        ],
       };
     },
     types: [
@@ -386,15 +395,10 @@ export const WithCRM: Story = {
       // cells always have a subject to render.
       const [existing] = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
       const mailbox = existing ?? space.db.add(Mailbox.make({ name: 'Mailbox' }));
-      return [
-        [StoryRole.Chat],
-        [Cell.article(mailbox)],
-        [Cell.companion(mailbox, 'automation'), AppSurface.deckCompanion('trace')],
-        [StoryRole.Database],
-      ];
+      return [[StoryRole.Chat], [Cell.article(mailbox)], [AppSurface.deckCompanion('trace')], [StoryRole.Database]];
     },
-    onChatCreated: async ({ space, binder }) => {
-      const mailboxes = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
+    onChatCreated: async ({ db, binder }) => {
+      const mailboxes = await db.query(Filter.type(Mailbox.Mailbox)).run();
       const mailbox = mailboxes[0];
       if (mailbox) {
         await binder.bind({ objects: [Ref.make(mailbox)] });
@@ -404,6 +408,7 @@ export const WithCRM: Story = {
       AssistantSkill.key,
       CrmSkill.key,
       DatabaseSkill.key,
+      ChatContextSkill.key,
       InboxSkill.key,
       MarkdownSkill.key,
       WebSearchSkill.key,

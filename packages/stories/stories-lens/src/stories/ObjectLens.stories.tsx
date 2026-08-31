@@ -125,9 +125,9 @@ export const Spec: Story = {
 
     // Both panels are the same `Form` component and differ only in the schema they are given, so the
     // fields are addressed by their schema-declared labels — all a form consumer knows about them.
-    // `status: 'in-progress'` reads as `done: false` through the lens.
+    // `status: 'started'` reads as `done: false` through the lens.
     await expect(control(lensed, 'Done')).not.toBeChecked();
-    await expect(selectValue(lensed, 'Stage')).toBe('in-progress');
+    await expect(selectValue(lensed, 'Stage')).toBe('started');
 
     // Completing it through the lens writes `status` on the base object — visible in both other panes.
     await userEvent.click(control(lensed, 'Done'));

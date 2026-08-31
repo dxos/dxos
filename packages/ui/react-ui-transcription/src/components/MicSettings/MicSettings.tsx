@@ -4,19 +4,15 @@
 
 import React from 'react';
 
-import { DropdownMenu, Icon, IconButton, useTranslation } from '@dxos/react-ui';
+import { MenuButton, type MenuButtonItem, useTranslation } from '@dxos/react-ui';
+
+import { type AudioInputDevice } from '../../capture';
+import { translationKey } from '../../translations';
 
 /** Recording trigger mode: toggle on/off, or hold-to-record (push-to-talk). */
 export type RecordMode = 'toggle' | 'hold';
 
-export type AudioInputDevice = {
-  deviceId: string;
-  label: string;
-};
-
 export type MicSettingsProps = {
-  /** Translation namespace for the option labels (owned by the consuming plugin). */
-  translationNs: string;
   recordMode: RecordMode;
   entityExtraction: boolean;
   devices: AudioInputDevice[];
@@ -28,11 +24,13 @@ export type MicSettingsProps = {
 };
 
 /**
- * Dropdown of recording options for the mic: record mode (toggle/push-to-talk), the input device,
- * and whether entity extraction is applied. Presentational — state lives in the consumer.
+ * Recording options for the mic: record mode (toggle/push-to-talk), the input device, and whether
+ * entity extraction is applied. Presentational — state lives in the consumer.
+ *
+ * The menu itself is `MenuButton`: what is specific here is which options exist, not how a caret
+ * opens a list of them.
  */
 export const MicSettings = ({
-  translationNs,
   recordMode,
   entityExtraction,
   devices,
@@ -41,86 +39,60 @@ export const MicSettings = ({
   onEntityExtractionChange,
   onSelectDevice,
 }: MicSettingsProps) => {
-  const { t } = useTranslation(translationNs);
+  const { t } = useTranslation(translationKey);
+
+  const items: MenuButtonItem[] = [
+    { type: 'group', label: t('record-mode.label') },
+    {
+      type: 'option',
+      label: t('record-mode.toggle.label'),
+      selected: recordMode === 'toggle',
+      onSelect: () => onRecordModeChange('toggle'),
+    },
+    {
+      type: 'option',
+      label: t('record-mode.hold.label'),
+      selected: recordMode === 'hold',
+      onSelect: () => onRecordModeChange('hold'),
+    },
+    {
+      type: 'separator',
+    },
+    {
+      type: 'group',
+      label: t('audio-device.label'),
+    },
+    {
+      type: 'option',
+      label: t('audio-device.default.label'),
+      selected: selectedDeviceId === '',
+      onSelect: () => onSelectDevice(''),
+    },
+    ...devices.map((device): MenuButtonItem => ({
+      type: 'option',
+      label: device.label,
+      selected: selectedDeviceId === device.deviceId,
+      onSelect: () => onSelectDevice(device.deviceId),
+    })),
+    { type: 'separator' },
+    {
+      type: 'checkbox',
+      label: t('settings.entity-extraction.label'),
+      checked: entityExtraction,
+      onCheckedChange: onEntityExtractionChange,
+      testId: 'transcription.entity-extraction',
+    },
+  ];
 
   return (
-    <DropdownMenu.Root>
-      <DropdownMenu.Trigger asChild>
-        <IconButton
-          icon='ph--caret-down--regular'
-          iconOnly
-          label={t('recording-options.label')}
-          variant='ghost'
-          // Half-width slim caret abutting the mic (split-control affordance).
-          classNames='w-4'
-          data-testid='transcription.record.options'
-        />
-      </DropdownMenu.Trigger>
-      <DropdownMenu.Portal>
-        <DropdownMenu.Content>
-          <DropdownMenu.Viewport>
-            <DropdownMenu.GroupLabel>{t('record-mode.label')}</DropdownMenu.GroupLabel>
-            <SelectableItem
-              label={t('record-mode.toggle.label')}
-              selected={recordMode === 'toggle'}
-              onSelect={() => onRecordModeChange('toggle')}
-            />
-            <SelectableItem
-              label={t('record-mode.hold.label')}
-              selected={recordMode === 'hold'}
-              onSelect={() => onRecordModeChange('hold')}
-            />
-
-            <DropdownMenu.Separator />
-
-            <DropdownMenu.GroupLabel>{t('audio-device.label')}</DropdownMenu.GroupLabel>
-            <SelectableItem
-              label={t('audio-device.default.label')}
-              selected={selectedDeviceId === ''}
-              onSelect={() => onSelectDevice('')}
-            />
-            {devices.map((device) => (
-              <SelectableItem
-                key={device.deviceId}
-                label={device.label}
-                selected={selectedDeviceId === device.deviceId}
-                onSelect={() => onSelectDevice(device.deviceId)}
-              />
-            ))}
-
-            <DropdownMenu.Separator />
-
-            <DropdownMenu.CheckboxItem
-              checked={entityExtraction}
-              onCheckedChange={onEntityExtractionChange}
-              classNames='gap-2'
-              data-testid='transcription.entity-extraction'
-            >
-              <span className='grow truncate'>{t('settings.entity-extraction.label')}</span>
-              <DropdownMenu.ItemIndicator asChild>
-                <Icon icon='ph--check--regular' size={4} />
-              </DropdownMenu.ItemIndicator>
-            </DropdownMenu.CheckboxItem>
-          </DropdownMenu.Viewport>
-          <DropdownMenu.Arrow />
-        </DropdownMenu.Content>
-      </DropdownMenu.Portal>
-    </DropdownMenu.Root>
+    <MenuButton
+      icon='ph--caret-down--regular'
+      iconOnly
+      compact
+      variant='ghost'
+      label={t('recording-options.label')}
+      data-testid='transcription.record.options'
+      items={items}
+    />
   );
 };
-
-type SelectableItemProps = {
-  label: string;
-  selected: boolean;
-  onSelect: () => void;
-};
-
-// The design system's `DropdownMenu.RadioItem` renders a plain item (no radio semantics), so
-// single-select is modelled with a plain item and an explicit trailing check. `onSelect` (not
-// `onClick`) so keyboard activation works.
-const SelectableItem = ({ label, selected, onSelect }: SelectableItemProps) => (
-  <DropdownMenu.Item classNames='gap-2' onSelect={onSelect}>
-    <span className='grow truncate'>{label}</span>
-    {selected && <Icon icon='ph--check--regular' size={4} />}
-  </DropdownMenu.Item>
-);

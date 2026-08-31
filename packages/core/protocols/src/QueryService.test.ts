@@ -40,22 +40,17 @@ describe('QueryService wire schema', () => {
     expect(() => JSON.parse(decoded.results?.[0]?.documentJson ?? '')).not.toThrow();
   });
 
-  // Documents the root cause the inline Effect schema replaces: the protobuf codec that previously backed
-  // the query wire corrupts the same payload via `@protobufjs/utf8.read`. The bug surfaces only on the JS
-  // Reader path (a plain Uint8Array, as arrives over the browser worker MessagePort), not Node's native
-  // BufferReader — which is why it broke the browser mailbox story but not Node tests. Guards against
-  // regressing the wire encoding back to protobuf.
-  test('protobuf codec corrupts the same payload on the browser Reader path (root cause)', () => {
+  // A plain `Uint8Array`, as arrives over the browser worker MessagePort, takes protobufjs's JS
+  // Reader rather than Node's native BufferReader, which is the path that corrupted this payload.
+  test('the protoMessage codec no longer corrupts the same payload on the browser Reader path', () => {
     const documentJson = buildLargeString();
     const message = protoMessage('dxos.echo.query.QueryResponse');
     const encoded = Schema.encodeSync(message)({
       results: [{ id: 'obj1', spaceId: 'space1', rank: 0, documentJson }],
     });
 
-    // A plain (non-Buffer) Uint8Array forces protobufjs's JS Reader (utf8.read) instead of Node's
-    // native BufferReader, matching the structured-clone bytes delivered over the worker MessagePort.
     const decoded = Schema.decodeSync(message)(new Uint8Array(encoded));
-    expect(decoded.results?.[0]?.documentJson).not.toEqual(documentJson);
+    expect(decoded.results?.[0]?.documentJson).toEqual(documentJson);
   });
 });
 

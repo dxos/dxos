@@ -21,7 +21,7 @@ import * as positionIndexInternal from '../internal/position-index';
 EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
-  operationHandlers: ChessOperationHandlerSet,
+  operationHandlers: ChessOperationHandlerSet.handlers,
   types: [Chess.State, Game.Game, PlayerReview.Review, ChessPositionIndex.PositionIndex],
   disableLlmMemoization: true,
 });

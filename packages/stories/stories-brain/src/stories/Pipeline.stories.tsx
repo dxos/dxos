@@ -32,7 +32,6 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Provider } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapability } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Obj } from '@dxos/echo';
@@ -50,18 +49,14 @@ import {
 } from '@dxos/pipeline-transcription';
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
 import * as BrainPlugin from '@dxos/plugin-brain/BrainPlugin';
-import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import * as ProgressPlugin from '@dxos/plugin-progress/ProgressPlugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { corePlugins } from '@dxos/plugin-testing';
-import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import * as TranscriptionPlugin from '@dxos/plugin-transcription/TranscriptionPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
-import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
-import { ModuleContainer } from '@dxos/storybook-testing';
+import { ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
 import { type ContentBlock, Message, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -507,34 +502,25 @@ const TranscriptView = ({ lines, summary }: { lines: readonly string[]; summary?
 const meta = {
   title: 'stories/stories-brain/Pipeline',
   render: DefaultStory,
-  decorators: [
-    withLayout({ layout: 'fullscreen' }),
-    withPluginManager({
-      plugins: [
-        ...corePlugins(),
-        ClientPlugin.make({
-          types: [Markdown.Document, Text.Text, Person.Person, Organization.Organization, Thread],
-          onClientInitialized: ({ client }) =>
-            Effect.gen(function* () {
-              const { defaultSpace: space } = yield* initializeIdentity(client);
-              // Seed a couple of entities so the transcription pipeline has something to link against
-              // and the Objects tab is populated before the email pipeline runs.
-              // TODO(burdon): From const.
-              space.db.add(Obj.make(Organization.Organization, { name: 'Lyceum' }));
-              space.db.add(Obj.make(Person.Person, { fullName: 'Socrates' }));
-              yield* Effect.promise(() => space.db.flush({ indexes: true }));
-            }),
-        }),
-        SpacePlugin({}),
-        MarkdownPlugin.make(),
-        TranscriptionPlugin.make(),
-        BrainPlugin.make(),
-        ProgressPlugin.make(),
-        StoryModulesPlugin(),
-        StorybookPlugin.make({}),
-      ],
-    }),
-  ],
+  decorators: createStoryDecorators({
+    types: [Markdown.Document, Text.Text, Person.Person, Organization.Organization, Thread],
+    onInit: async ({ space }) => {
+      // Seed a couple of entities so the transcription pipeline has something to link against
+      // and the Objects tab is populated before the email pipeline runs.
+      // TODO(burdon): From const.
+      space.db.add(Obj.make(Organization.Organization, { name: 'Lyceum' }));
+      space.db.add(Obj.make(Person.Person, { fullName: 'Socrates' }));
+      await space.db.flush({ indexes: true });
+    },
+    plugins: [
+      SpacePlugin({}),
+      MarkdownPlugin.make(),
+      TranscriptionPlugin.make(),
+      BrainPlugin.make(),
+      ProgressPlugin.make(),
+      StoryModulesPlugin(),
+    ],
+  }),
   args: {
     ai: { preset: 'edge-remote' },
   },

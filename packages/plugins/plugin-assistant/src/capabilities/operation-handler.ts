@@ -9,12 +9,10 @@ import * as Capability from '@dxos/app-framework/Capability';
 import {
   AgentHandlers,
   AgentSkillHandlers,
-  AgentWizardHandlers,
   AlarmHandlers,
-  DatabaseHandlers,
-  DelegationHandlers,
+  ChatContextHandlers,
+  DelegationSkillHandlers,
   PlanningHandlers,
-  ProjectHandlers,
   SkillManagerHandlers,
   WebSearchHandlers,
 } from '@dxos/assistant-toolkit';
@@ -32,13 +30,11 @@ export default Capability.makeModule(
       AgentHandlers,
       AgentSkillHandlers,
       SkillManagerHandlers,
-      DatabaseHandlers,
+      ChatContextHandlers,
       WebSearchHandlers,
-      AgentWizardHandlers,
-      DelegationHandlers,
+      DelegationSkillHandlers,
       PlanningHandlers,
       AlarmHandlers,
-      ProjectHandlers,
     ]);
   }),
 );

@@ -6,56 +6,27 @@
 
 import * as Schema from 'effect/Schema';
 
-import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN, Ref, Type } from '@dxos/echo';
 import { AccessToken, Connection } from '@dxos/link';
-
-import { meta } from '#meta';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
-
-/**
- * Syncs every external-sync cursor authenticated by a Connection. Centralises the fan-out so the
- * graph-builder action and the React hook share the same code path. A cursor whose sync Routine
- * exists is synced by force-running that Routine's trigger, so the run is driven by the trigger
- * dispatcher exactly as a scheduled fire would be; a cursor with no Routine falls back to invoking
- * {@link ConnectorEntry.sync} directly. `Capability.Service` is declared as a service so the handler
- * can resolve the connector entry and the trigger monitor at invocation time.
- */
-export const SyncConnection = Operation.make({
-  meta: {
-    key: makeKey('syncConnection'),
-    name: 'Sync Connection',
-    description: 'Runs the sync operation for all sync bindings of a connection.',
-    icon: 'ph--arrows-clockwise--regular',
-  },
-  input: Schema.Struct({
-    connection: Ref.Ref(Connection.Connection),
-  }),
-  output: Schema.Struct({
-    synced: Schema.Number,
-  }),
-  services: [Capability.Service],
-});
 
 /**
  * Generic create operation: produces a Connection bound to the given AccessToken.
  */
 export const CreateConnection = Operation.make({
   meta: {
-    key: makeKey('createConnection'),
-    name: 'Create Connection',
+    key: DXN.make('org.dxos.operation.connector.createConnection'),
+    name: 'Create connection',
     description: 'Creates a new Connection bound to an existing AccessToken.',
     icon: 'ph--plugs-connected--regular',
   },
   input: Schema.Struct({
-    accessToken: Ref.Ref(AccessToken.AccessToken).annotate({
-      description: 'The access token this Connection uses to authenticate to its service.',
-    }),
     name: Schema.String.annotate({
       description: 'Optional user-friendly label.',
     }).pipe(Schema.optional),
+    accessToken: Ref.Ref(AccessToken.AccessToken).annotate({
+      description: 'The access token this Connection uses to authenticate to its service.',
+    }),
   }),
   output: Type.getSchema(Connection.Connection),
 });

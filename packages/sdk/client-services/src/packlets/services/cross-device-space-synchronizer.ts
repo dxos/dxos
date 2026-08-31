@@ -103,6 +103,7 @@ class CrossDeviceSpaceSynchronizerImpl extends Resource implements CrossDeviceSp
       await this.dataSpaceManager.acceptSpace(this._ctx, {
         spaceKey: assertion.spaceKey,
         genesisFeedKey: assertion.genesisFeedKey,
+        spaceRootUrl: assertion.spaceRootUrl,
         tags: assertion.tags,
       });
     } catch (err) {

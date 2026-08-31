@@ -8,9 +8,10 @@ import { SupportOperation } from '#types';
  * Collapse a {@link SupportOperation.SupportRequest} into the legacy `{ message, includeLogs }`
  * shape consumed by the Observability backend and the Discord help-thread service. Triage
  * metadata (type/severity/area/version) is embedded as a Markdown trailer so the
- * single-string `message` carries the full context.
+ * single-string `message` carries the full context. `screenshotUrl`, when supplied, is
+ * embedded as a Markdown image so the attachment survives the single-string channel.
  */
-export const formatRequestMessage = (values: SupportOperation.SupportRequest): string => {
+export const formatRequestMessage = (values: SupportOperation.SupportRequest, screenshotUrl?: string): string => {
   const trailer = [
     `**Type:** ${values.type}`,
     `**Severity:** ${values.severity}`,
@@ -20,5 +21,6 @@ export const formatRequestMessage = (values: SupportOperation.SupportRequest): s
     .filter(Boolean)
     .join('\n');
   const heading = `# ${values.title}`;
-  return [heading, values.body, '---', trailer].filter(Boolean).join('\n\n');
+  const image = screenshotUrl && `![Screenshot](${screenshotUrl})`;
+  return [heading, image, values.body, '---', trailer].filter(Boolean).join('\n\n');
 };

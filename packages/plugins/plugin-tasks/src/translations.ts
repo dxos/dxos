@@ -4,12 +4,14 @@
 
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
+import { translations as taskTranslations } from '@dxos/react-ui-task/translations';
 import { Outline } from '@dxos/types';
 
 import { meta } from '#meta';
 import { Journal } from '#types';
 
 export const translations = [
+  ...taskTranslations,
   {
     'en-US': {
       [Type.getTypename(Journal.Journal)]: {
@@ -38,12 +40,12 @@ export const translations = [
         'plugin.name': 'Tasks',
         'task-set.tasks.label': 'Tasks',
         'task-create.placeholder': 'Add task',
-        'task-status.todo.label': 'Todo',
-        'task-status.in-progress.label': 'In progress',
-        'task-status.done.label': 'Done',
-        'task-status.failed.label': 'Failed',
-        'task-status.cancelled.label': 'Cancelled',
+        'backlog.label': 'Backlog',
+        'milestone-progress.label': '{{done}}/{{total}}',
         'delete-object.label': 'Delete object',
+        'delete-task.label': 'Delete task',
+        'task-deleted.label': 'Task deleted',
+        'tasks-deleted.label': 'Tasks deleted',
         'create-outline.label': 'Create outline',
         'text.placeholder': 'Enter text...',
         'menu.label': 'Menu',

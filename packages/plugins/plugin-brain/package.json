@@ -15,8 +15,14 @@
   "type": "module",
   "imports": {
     "#capabilities": {
-      "source": "./src/capabilities/index.ts",
+      "source": {
+        "workerd": "./src/capabilities/gen/workerd.ts",
+        "node": "./src/capabilities/gen/node.ts",
+        "default": "./src/capabilities/index.ts"
+      },
       "types": "./dist/types/src/capabilities/index.d.ts",
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
+      "node": "./dist/lib/capabilities.node.mjs",
       "default": "./dist/lib/capabilities.mjs"
     },
     "#containers": {
@@ -67,11 +73,6 @@
       "types": "./dist/types/src/containers/index.d.ts",
       "default": "./dist/lib/neutral/containers/index.mjs"
     },
-    "./operations": {
-      "source": "./src/operations/index.ts",
-      "types": "./dist/types/src/operations/index.d.ts",
-      "import": "./dist/lib/operations.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
@@ -107,6 +108,16 @@
       "source": "./src/types/BrainSurface.ts",
       "types": "./dist/types/src/types/BrainSurface.d.ts",
       "import": "./dist/lib/BrainSurface.mjs"
+    },
+    "./BrainOperationHandlerSet": {
+      "source": "./src/operations/BrainOperationHandlerSet.ts",
+      "types": "./dist/types/src/operations/BrainOperationHandlerSet.d.ts",
+      "import": "./dist/lib/BrainOperationHandlerSet.mjs"
+    },
+    "./BrainSkill": {
+      "source": "./src/skills/BrainSkill.ts",
+      "types": "./dist/types/src/skills/BrainSkill.d.ts",
+      "import": "./dist/lib/BrainSkill.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -143,6 +154,8 @@
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/link": "workspace:*",
+    "@dxos/pipeline-email": "workspace:*",
     "@dxos/pipeline-rdf": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-projects": "workspace:*",

@@ -8,4 +8,3 @@ export * from './fader';
 export * from './hashtag';
 export * from './marker';
 export * from './pos';
-export * from './replacer';

@@ -1,6 +1,7 @@
 layer: library
 language: typescript
 tags:
+  - typetest
   - vite-plugin
   - pack
   - ts-vite-build
@@ -12,6 +13,7 @@ tasks:
   build:
     deps:
       - compile-plugin
+      - compile-plugin-cli
   compile-plugin:
     command: dx-compile
     args:
@@ -23,6 +25,20 @@ tasks:
       - dx-compile:build
     outputs:
       - dist/plugin
+  # The `dx-plugin` bin — the plugin-authoring CLI shipped with the package so out-of-repo plugin
+  # authors run the same toolchain; in-repo, the composer-plugin tag's `prebuild` depends on this.
+  compile-plugin-cli:
+    command: dx-compile
+    args:
+      - '--entryPoint=src/plugin-cli/main.ts'
+      - '--outputPath=dist/plugin-cli'
+      - '--platform=node'
+    deps:
+      - dx-compile:build
+    inputs:
+      - src/plugin-cli/**/*
+    outputs:
+      - dist/plugin-cli
   check-module-structure:
     # Verify headless entrypoints resolve under workerd conditions (post-build artifacts
     # must exist — catches stale `./workerd` export paths like the removed browser bundle).
@@ -31,7 +47,7 @@ tasks:
       pnpm exec dx-trace-imports \
         --export . \
         --to "{react,react-dom}" \
-        --conditions workerd,worker,node \
+        --conditions workerd,worker \
         --fail-on present
     deps:
       - dx-trace-imports:build

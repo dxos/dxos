@@ -8,9 +8,8 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import {
   AgentHandlers,
   AgentSkillHandlers,
-  AgentWizardHandlers,
-  DatabaseHandlers,
-  DelegationHandlers,
+  ChatContextHandlers,
+  DelegationSkillHandlers,
   SkillManagerHandlers,
   WebSearchHandlers,
 } from '@dxos/assistant-toolkit';
@@ -25,10 +24,9 @@ const handlerSet = OperationHandlerSet.merge(
   AgentHandlers,
   AgentSkillHandlers,
   SkillManagerHandlers,
-  DatabaseHandlers,
+  ChatContextHandlers,
   WebSearchHandlers,
-  AgentWizardHandlers,
-  DelegationHandlers,
+  DelegationSkillHandlers,
 );
 
 describe('operation registry round-trip', () => {

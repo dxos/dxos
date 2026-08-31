@@ -54,6 +54,18 @@ export const discordErrorStatus = (error: unknown): number | undefined => {
   return undefined;
 };
 
+/** The binding names no Discord channel: its cursor carries no `externalId`. */
+export class DiscordChannelUnresolvedError extends BaseError.extend(
+  'DiscordChannelUnresolvedError',
+  'Binding does not name a Discord channel.',
+) {}
+
+/** The binding's target is not a Channel, so there is nothing to sync into. */
+export class DiscordTargetInvalidError extends BaseError.extend(
+  'DiscordTargetInvalidError',
+  'Binding target is not a Channel.',
+) {}
+
 /**
  * User-facing / persisted diagnostic string for failures from Discord sync paths.
  */

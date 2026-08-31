@@ -1,0 +1,71 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "DEUS MDL block",
+  "scopeName": "source.mdl-block",
+  "patterns": [
+    { "include": "#comment" },
+    { "include": "#header" },
+    { "include": "#list-item" },
+    { "include": "#field" }
+  ],
+  "repository": {
+    "comment": {
+      "comment": "A whole-line comment, or a trailing one after two spaces.",
+      "patterns": [
+        { "match": "^\\s*#.*$", "name": "comment.line.number-sign.mdl" },
+        { "match": "(?<=\\s)#.*$", "name": "comment.line.number-sign.mdl" }
+      ]
+    },
+    "header": {
+      "comment": "First body line: <type> [<id>][: <title>]. Anchored to column 0, which is what separates it from a nested step field.",
+      "match": "^(\\w+)(?:[ \\t]+([\\w][\\w.-]*))?(?:([ \\t]*:)[ \\t]*(.*))?$",
+      "captures": {
+        "1": { "name": "keyword.control.block.mdl" },
+        "2": { "name": "entity.name.type.mdl" },
+        "3": { "name": "punctuation.separator.key-value.mdl" },
+        "4": { "name": "entity.name.section.mdl" }
+      }
+    },
+    "list-item": {
+      "comment": "A `- ` item; its value may itself be `key: value` (a step in a stage).",
+      "match": "^(\\s+)(-)[ \\t]+(?:([\\w][\\w-]*)(\\??)([ \\t]*:))?",
+      "captures": {
+        "2": { "name": "punctuation.definition.list.begin.mdl" },
+        "3": { "name": "variable.other.property.mdl" },
+        "4": { "name": "keyword.operator.optional.mdl" },
+        "5": { "name": "punctuation.separator.key-value.mdl" }
+      }
+    },
+    "field": {
+      "comment": "key[?]: value, indented. The optional second word is a nested block id (req F-1.1:).",
+      "begin": "^(\\s+)([\\w][\\w-]*)(?:[ \\t]+([\\w][\\w.-]*))?(\\??)([ \\t]*:)",
+      "beginCaptures": {
+        "2": { "name": "variable.other.property.mdl" },
+        "3": { "name": "entity.name.type.mdl" },
+        "4": { "name": "keyword.operator.optional.mdl" },
+        "5": { "name": "punctuation.separator.key-value.mdl" }
+      },
+      "end": "$",
+      "patterns": [{ "include": "#value" }]
+    },
+    "value": {
+      "patterns": [
+        { "include": "#comment" },
+        { "match": "\\|", "name": "keyword.operator.union.mdl" },
+        { "match": "[\\[\\],{}]", "name": "punctuation.separator.mdl" },
+        { "match": "\\$[\\w.]+", "name": "variable.other.capture.mdl" },
+        {
+          "comment": "A DXN or dotted URI reads as a constant, not prose.",
+          "match": "\\b(?:dxn|echo|org)[\\w.:/-]*",
+          "name": "support.constant.reference.mdl"
+        },
+        {
+          "match": "\\b(?:Prose|Identifier|URI|NSID|SemVer|Boolean|TypeExpr|FieldMap|UnionList|ProseList|GivenList|StepList|CodeBlock|ExtRef|TagList|Step|Label)\\b",
+          "name": "support.type.primitive.mdl"
+        },
+        { "match": "\\b(?:true|false)\\b", "name": "constant.language.mdl" },
+        { "match": "\"[^\"]*\"", "name": "string.quoted.double.mdl" }
+      ]
+    }
+  }
+}

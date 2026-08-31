@@ -1,0 +1,98 @@
+---
+id: org.dxos.review.code-style
+name: CodeStyle
+version: 0.1.0
+---
+
+Repo-wide review rules derived from the `code-style` skill — the authoring
+conventions a linter cannot express. Each `rule` block below is discovered by the
+agentic-review harness, matched against the files its globs select, and applied
+by a focused subagent.
+
+## Extensions
+
+| Term   | URI                   |
+| ------ | --------------------- |
+| `rule` | org.dxos.mdl.rule@1.0 |
+
+## Rules
+
+```mdl
+rule namespace-service-layers: Layer constructors are module-level exports, never class statics
+  In a module marked `@import-as-namespace`, the `Context.Service` tag class
+  carries the module's own name, so anything hung off it as a `static` forces
+  consumers to spell that name twice — `StateStore.StateStore.layerSql` instead
+  of `StateStore.layerSql`. Export layer constructors (`layerMemory`,
+  `layerSql`, `layer`, …) as module-level `const`s beside the tag, leaving the
+  class body empty, and give the service's operations module-level accessors
+  built on `Context.Service.use` for the same reason. Flag a `static layer…`
+  member on a `Context.Service` subclass, and flag any call site that repeats a
+  namespace as `Name.Name.member`. A bare `Name.Name` in a TYPE position is not
+  a violation — the tag genuinely is the type, and there is nowhere else to put
+  it.
+  scope: repo
+  files:
+    - packages/**/*.ts
+    - packages/**/*.tsx
+  grep: static layer|([A-Z]\w+)\.\1\.
+  severity: warn
+```
+
+```mdl
+rule no-trivial-wrappers-over-official-apis: Do not extract a helper that only forwards to an official API
+  A one-line local helper whose body is a single call to a public API
+  (`const makeBody = (text: string) => Obj.make(Body, { text })`, and then
+  `makeBody('x')` at four call sites) does not remove duplication — it renames
+  the API. The reader now has to jump to the definition to learn which API is
+  under test and what it was passed, and a file with several of these grows an
+  ad-hoc DSL that only its author can read. Inline it: `Obj.make(Body, { text:
+  'x' })` at the call site is longer and clearer, and it keeps the API being
+  exercised visible in the assertion's own scope. This is most acute in tests,
+  where the call being made IS the thing under test, but it applies anywhere.
+  Flag a module- or describe-local arrow/function whose body is one expression
+  wrapping a single call, adding no branching, no error handling, no derived
+  values, and no non-trivial defaults. A helper that composes several calls,
+  encodes a non-obvious setup sequence, or is exported for reuse across files
+  is NOT a violation, and neither is a named factory that a package publishes
+  as its own API (`Obj.make` wrappers such as `File.make`).
+  scope: repo
+  files:
+    - packages/**/*.ts
+    - packages/**/*.tsx
+  severity: warn
+```
+
+```mdl
+rule operations-take-refs-not-ids: Operations identify objects by Ref, never by a raw id string
+  An operation input that names an object takes `Ref.Ref(Type)`, not a `string`
+  id. A `Ref` carries the type alongside the identity, resolves through the
+  database on its own, and still serializes to a DXN — so it crosses an RPC or
+  MCP boundary exactly as cheaply as the string it replaces, while a bare
+  `spaceId`-less `objectId: string` names nothing in particular and forces every
+  handler to re-derive what it points at. Flag an `Operation.make` input field
+  whose name ends in `Id`/`Ids` (or is `id`) and whose schema is
+  `Schema.String`, where the thing identified is an ECHO object. A `spaceId`, a
+  foreign id from an external system (a Gmail message id, a GitHub node id), an
+  id inside a stored record rather than an operation input, and an opaque handle
+  the operation itself minted are NOT violations.
+  scope: repo
+  files:
+    - packages/**/*Operation.ts
+    - packages/**/operations/**/*.ts
+  grep: Operation\.make|Id: Schema\.String|Ids: Schema\.Array
+  severity: warn
+```
+
+## Appendix
+
+```mdl
+ext rule
+  uri: org.dxos.mdl.rule@1.0
+  desc: A machine-checked review rule applied by an LLM subagent to changed files.
+  inline-prose: true
+  fields:
+    files:      Glob | Glob[]     # paths this rule reviews, relative to `scope`
+    grep?:      Prose             # optional regex pre-filter over file contents
+    severity?:  warn | error      # defaults to warn
+    scope?:     dir | repo        # glob base: this file's dir (default) or repo root
+```

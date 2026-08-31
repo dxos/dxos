@@ -130,8 +130,8 @@ export const PostArticle = ({ role, subject, attendableId }: PostArticleProps) =
         onSetStarred={handleSetStarred}
         onSetArchived={handleSetArchived}
         onMarkUnread={handleMarkUnread}
-        onRefresh={() => void handleRefresh()}
         onOpenOriginal={handleOpenOriginal}
+        onRefresh={() => void handleRefresh()}
       />
       <Panel.Content asChild>
         <PostContent post={subject} metadata={feedName ? [feedName] : undefined} />

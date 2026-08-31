@@ -27,6 +27,9 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/graph"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -69,6 +72,9 @@
       "path": "../../sdk/client"
     },
     {
+      "path": "../../sdk/config"
+    },
+    {
       "path": "../../sdk/migrations"
     },
     {
@@ -103,9 +109,6 @@
     },
     {
       "path": "../plugin-client"
-    },
-    {
-      "path": "../plugin-connector"
     },
     {
       "path": "../plugin-illustrator"

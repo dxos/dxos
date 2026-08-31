@@ -3,4 +3,5 @@
 //
 
 export * from './AboutDialog';
+export * from './AuthorizingDeviceDialog';
 export * from './NativeRedirectDialog';

@@ -3,7 +3,6 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import {
   AnchorSort,
@@ -12,39 +11,30 @@ import {
   CreateObject,
   Markdown,
   OperationHandler,
+  PluginAsset,
   ReactSurface,
   Schema,
   SheetState,
   SkillDefinition,
+  Translations,
   UndoMappings,
 } from '#capabilities';
 import { meta } from '#meta';
-import { translations } from '#translations';
-
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const SheetPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(SkillDefinition),
-  Plugin.addModule(CommentConfig),
-  Plugin.addModule(CreateObject),
-  Plugin.addModule(OperationHandler),
-  Plugin.addModule(UndoMappings),
-  Plugin.addModule(Schema),
-  Plugin.addModule(ReactSurface),
-  Plugin.addModule(AppCapability.translations(translations)),
-  Plugin.addModule(SheetState),
-  Plugin.addModule(ComputeGraphRegistry),
-  Plugin.addModule(Markdown),
   Plugin.addModule(AnchorSort),
-  Plugin.addModule(
-    AppCapability.pluginAsset({
-      pluginId: meta.profile.key,
-      path: 'PLUGIN.mdl',
-      content: pluginSpec,
-      mimeType: 'application/x-mdl',
-    }),
-  ),
+  Plugin.addModule(CommentConfig),
+  Plugin.addModule(ComputeGraphRegistry),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(Markdown),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(PluginAsset),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(Schema),
+  Plugin.addModule(SheetState),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(Translations),
+  Plugin.addModule(UndoMappings),
   Plugin.make,
 );
 

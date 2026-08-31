@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -27,7 +27,7 @@ import { SpaceSchema } from '#types';
  * plugin (general, members) and by other plugins (automation, functions).
  */
 export const createSettingsExtensions = Effect.fnUntraced(function* () {
-  const sectionExtension = yield* GraphBuilder.createExtension({
+  const sectionExtension = yield* AppGraphBuilder.createExtension({
     id: 'settingsSection',
     match: AppNodeMatcher.whenSpace,
     connector: (space) =>
@@ -47,13 +47,13 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
 
   // General and Members are separate extensions rather than one so each can be an id-less key (a single
   // id-less key can address only one fixed node — its terminal segment IS the key).
-  const generalExtension = yield* GraphBuilder.createExtension({
+  const generalExtension = yield* AppGraphBuilder.createExtension({
     id: 'settingsGeneral',
     url: { key: 'settings', kind: 'singleton', path: [SpaceSchema.SETTINGS_SECTION_ID] },
     match: AppNodeMatcher.whenSpaceSettings,
     connector: (space) =>
       Effect.succeed([
-        Node.make({
+        AppGraphNode.make({
           id: 'settings',
           type: `${meta.profile.key}.general`,
           data: `${meta.profile.key}.general`,
@@ -69,7 +69,7 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
       ]),
   });
 
-  const membersExtension = yield* GraphBuilder.createExtension({
+  const membersExtension = yield* AppGraphBuilder.createExtension({
     id: 'settingsMembers',
     url: { key: 'members', kind: 'singleton', path: [SpaceSchema.SETTINGS_SECTION_ID] },
     match: AppNodeMatcher.whenSpaceSettings,
@@ -79,7 +79,7 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
         space.membershipPolicy === MembershipPolicy.LOCKED
           ? []
           : [
-              Node.make({
+              AppGraphNode.make({
                 id: 'members',
                 type: `${meta.profile.key}.members`,
                 data: `${meta.profile.key}.members`,

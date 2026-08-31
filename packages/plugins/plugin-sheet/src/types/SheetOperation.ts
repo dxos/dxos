@@ -11,17 +11,13 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
-import { meta } from '#meta';
-
 import * as Sheet from './Sheet';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 // TODO(wittjosiah): Factor out. This is `DxGridAxis` from `@dxos/react-ui-grid`.
 const Axis = Schema.Union([Schema.Literal('row'), Schema.Literal('col')]);
 
 export const InsertAxis = Operation.make({
-  meta: { key: makeKey('axisInsert'), name: 'Insert Axis', icon: 'ph--plus--regular' },
+  meta: { key: DXN.make('org.dxos.operation.sheet.insertAxis'), name: 'Insert Axis', icon: 'ph--plus--regular' },
   input: Schema.Struct({
     model: Schema.Any,
     axis: Axis,
@@ -43,7 +39,7 @@ export type DropAxisOutput = Schema.Schema.Type<typeof DropAxisOutput>;
 
 export const DropAxis = Operation.make({
   meta: {
-    key: makeKey('axisDrop'),
+    key: DXN.make('org.dxos.operation.sheet.dropAxis'),
     name: 'Drop Axis',
     icon: 'ph--trash--regular',
   },
@@ -57,7 +53,7 @@ export const DropAxis = Operation.make({
 
 export const ScrollToAnchor = Operation.make({
   meta: {
-    key: makeKey('scrollToAnchor'),
+    key: DXN.make('org.dxos.operation.sheet.scrollToAnchor'),
     name: 'Scroll To Anchor',
     icon: 'ph--anchor-simple--regular',
   },
@@ -72,7 +68,7 @@ export const ScrollToAnchor = Operation.make({
 
 export const Create = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.sheet.create'),
+    key: DXN.make('org.dxos.operation.sheet.create'),
     name: 'Create',
     description: 'Creates a new sheet and adds it to the space.',
     icon: 'ph--grid-nine--regular',
@@ -90,7 +86,7 @@ export const Create = Operation.make({
 
 export const GetValues = Operation.make({
   meta: {
-    key: makeKey('rangeGet'),
+    key: DXN.make('org.dxos.operation.sheet.getRange'),
     name: 'Get Range Values',
     description: 'Returns cell values from a sheet as a 2D array. Defaults to the entire occupied area.',
     icon: 'ph--table--regular',
@@ -113,7 +109,7 @@ export const GetValues = Operation.make({
 
 export const SetValues = Operation.make({
   meta: {
-    key: makeKey('rangeSet'),
+    key: DXN.make('org.dxos.operation.sheet.setRange'),
     name: 'Set Range Values',
     description: 'Sets multiple cell values in a sheet at once.',
     icon: 'ph--pencil--regular',
@@ -133,7 +129,7 @@ export const SetValues = Operation.make({
  */
 export const RestoreAxis = Operation.make({
   meta: {
-    key: makeKey('restoreAxis'),
+    key: DXN.make('org.dxos.operation.sheet.restoreAxis'),
     name: 'Restore Axis',
     icon: 'ph--clock-counter-clockwise--regular',
   },

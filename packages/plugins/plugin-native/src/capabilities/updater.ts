@@ -20,7 +20,7 @@ import { log } from '@dxos/log';
 import { meta } from '#meta';
 import { NativeCapabilities, Update } from '#types';
 
-import { TAURI_LOCALHOST_PORT } from '../constants';
+import { TAURI_LOCALHOST_PORTS } from '../constants';
 
 const SUPPORTS_OTA = ['linux', 'macos', 'windows'];
 
@@ -62,15 +62,17 @@ const formatError = (error: unknown): string => {
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const platform = type();
-    const isDevServer = window.location.port !== TAURI_LOCALHOST_PORT;
+    const isDevServer = !TAURI_LOCALHOST_PORTS.includes(window.location.port);
     const enabled = SUPPORTS_OTA.includes(platform) && !isDevServer;
 
     const registry = yield* Capabilities.AtomRegistry;
     const { invoke } = yield* Capabilities.OperationInvoker;
 
-    const statusAtom = Atom.make<Update.Status>(enabled ? { kind: 'idle' } : { kind: 'unsupported' }).pipe(
-      Atom.keepAlive,
-    );
+    // The two disabled states are distinct to the reader: a dev server on macOS would update fine
+    // once packaged, so reporting it as an unsupported platform is wrong.
+    const disabledStatus: Update.Status = SUPPORTS_OTA.includes(platform) ? { kind: 'dev' } : { kind: 'unsupported' };
+
+    const statusAtom = Atom.make<Update.Status>(enabled ? { kind: 'idle' } : disabledStatus).pipe(Atom.keepAlive);
 
     // Updater.Update is a class with instance methods (downloadAndInstall) and can't live in an
     // atom value; cache it here between check and install.

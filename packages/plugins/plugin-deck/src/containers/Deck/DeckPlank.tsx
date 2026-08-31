@@ -7,6 +7,7 @@ import React, { type KeyboardEvent, memo, useCallback, useEffect, useMemo, useRe
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as NotFound from '@dxos/app-toolkit/NotFound';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
@@ -56,6 +57,8 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
   const rootRef = useRef<HTMLDivElement>(null);
   const {
     node,
+    unresolved,
+    notFoundNode,
     capabilities,
     sigilActions,
     popoverAnchorId,
@@ -112,10 +115,18 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
     [findFirstFocusable],
   );
 
-  // Stable reference so Plank's useMemo on articleData doesn't bust every render.
-  const articleData = useMemo(() => ({ path }), [path]);
+  // Stable reference so Plank's useMemo on articleData doesn't bust every render. An unresolved plank
+  // addresses the not-found article rather than its own (absent) node, while the shell below stays
+  // keyed to the real plank id so close, focus and attention keep working.
+  const articleData = useMemo(
+    () => (unresolved ? { path, attendableId: NotFound.NOT_FOUND_PATH } : { path }),
+    [path, unresolved],
+  );
 
-  if (!node) {
+  // Borrowed for its label and icon; the plank is still the one the URL asked for.
+  const shellNode = node ?? (unresolved ? notFoundNode : undefined);
+  if (!shellNode) {
+    // Absent is indefinite until the restore says it gave up, so the loader is the default.
     return PLANK_LOADING;
   }
 
@@ -131,11 +142,17 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
 
   const navbarEnd =
     part !== 'complementary' ? (
-      <Surface.Surface type={AppSurface.NavbarEnd} data={{ subject: node.data } satisfies AppSurface.NavbarEndData} />
+      <Surface.Surface
+        type={AppSurface.NavbarEnd}
+        data={{ subject: shellNode.data } satisfies AppSurface.NavbarEndData}
+      />
     ) : undefined;
 
   const sigilFooter = (
-    <Surface.Surface type={AppSurface.MenuFooter} data={{ subject: node.data } satisfies AppSurface.MenuFooterData} />
+    <Surface.Surface
+      type={AppSurface.MenuFooter}
+      data={{ subject: shellNode.data } satisfies AppSurface.MenuFooterData}
+    />
   );
 
   // In fullscreen the toolbar is hidden so the content fills the viewport.
@@ -144,7 +161,7 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
   return (
     <Plank
       ref={rootRef}
-      node={node}
+      node={shellNode}
       attendableId={id}
       related={part === 'complementary'}
       actions={sigilActions}

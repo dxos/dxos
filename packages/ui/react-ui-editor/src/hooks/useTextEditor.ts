@@ -19,10 +19,10 @@ import {
 import { log } from '@dxos/log';
 import {
   type EditorSelection,
-  createEditorStateTransaction,
   debugDispatcher,
   documentId,
   modalStateField,
+  restoreEditorState,
 } from '@dxos/ui-editor';
 import { type MaybeProvider, getProviderValue, isTruthy } from '@dxos/util';
 
@@ -49,6 +49,7 @@ export type UseTextEditorProps = Pick<EditorStateConfig, 'extensions'> & {
   initialValue?: string;
   autoFocus?: boolean;
   scrollTo?: number;
+  scrollOffset?: number;
   selection?: EditorSelection;
   selectionEnd?: boolean;
   debug?: boolean;
@@ -61,7 +62,7 @@ export const useTextEditor = (
   props: MaybeProvider<UseTextEditorProps> = {},
   deps: DependencyList = [],
 ): UseTextEditor => {
-  const { id, doc, initialValue, extensions, autoFocus, scrollTo, selection, selectionEnd, debug } =
+  const { id, doc, initialValue, extensions, autoFocus, scrollTo, scrollOffset, selection, selectionEnd, debug } =
     useMemo<UseTextEditorProps>(() => getProviderValue(props), deps ?? []);
 
   // NOTE: Increments by 2 in strict mode.
@@ -74,15 +75,14 @@ export const useTextEditor = (
     if (parentRef.current) {
       log('create', { id, instanceId, doc: initialValue?.length ?? 0 });
 
+      // Only records whether an explicit selection governs, so that `selectionEnd` defers to it; the
+      // effect below applies it. `!== undefined`, since an explicit `{ anchor: 0 }` is a selection.
+      const length = (doc ?? initialValue)?.length ?? 0;
       let initialSelection;
-      if (selection?.anchor && initialValue?.length) {
-        if (selection.anchor <= initialValue.length && (selection?.head ?? 0) <= initialValue.length) {
+      if (selection?.anchor !== undefined && length) {
+        if (selection.anchor <= length && (selection?.head ?? 0) <= length) {
           initialSelection = selection;
         }
-      } else if (selectionEnd && selection === undefined) {
-        const index = initialValue?.indexOf('\n');
-        const anchor = !index || index === -1 ? 0 : index;
-        initialSelection = { anchor };
       }
 
       // https://codemirror.net/docs/ref/#state.EditorStateConfig
@@ -103,16 +103,15 @@ export const useTextEditor = (
       view = new EditorView({
         parent: parentRef.current,
         state,
-        scrollTo: scrollTo ? EditorView.scrollIntoView(scrollTo, { yMargin: 96 }) : undefined, // TODO(burdon): Const.
+        // `scrollTo` is the position recorded at the top of the viewport, so restore it there.
+        scrollTo: scrollTo != null ? EditorView.scrollIntoView(scrollTo, { y: 'start', yMargin: 0 }) : undefined,
         dispatchTransactions: debug ? debugDispatcher : undefined,
       });
 
       // Move to end of line after document loaded (unless selection is specified).
       if (selectionEnd && !initialSelection) {
         const { to } = view.state.doc.lineAt(0);
-        if (to) {
-          view.dispatch({ selection: { anchor: to } });
-        }
+        view.dispatch({ selection: { anchor: to } });
       }
 
       setView(view);
@@ -126,16 +125,16 @@ export const useTextEditor = (
 
   useEffect(() => {
     if (view) {
-      if (scrollTo || selection) {
+      if (scrollTo != null || selection) {
         if (selection && selection.anchor > view.state.doc.length) {
           log.warn('invalid selection', { length: view.state.doc.length, scrollTo, selection });
           return;
         }
 
-        view.dispatch(createEditorStateTransaction({ scrollTo, selection }));
+        restoreEditorState(view, { scrollTo, scrollOffset, selection });
       }
     }
-  }, [view, scrollTo, selection]);
+  }, [view, scrollTo, scrollOffset, selection]);
 
   useEffect(() => {
     if (view && autoFocus) {

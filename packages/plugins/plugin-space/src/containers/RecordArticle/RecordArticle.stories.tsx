@@ -4,13 +4,16 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import React from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { Filter } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
+import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -27,7 +30,9 @@ import { RecordArticle } from './RecordArticle';
 
 random.seed(0);
 
-const PERSON_COUNT = 100;
+// Kept small deliberately: the storybook client takes ~5s just to open the space, and seeding on top of
+// that pushes the plugin manager past its 30s startup budget.
+const PERSON_COUNT = 8;
 
 const DefaultStory = () => {
   const spaces = useSpaces();
@@ -38,8 +43,42 @@ const DefaultStory = () => {
     return <Loading />;
   }
 
-  return <RecordArticle role='article' subject={org} attendableId='story' />;
+  // The toolbar reads actions off the node named by `attendableId`, so the story must name the node the
+  // extension below contributes to — not an arbitrary string, which would render an empty toolbar.
+  return <RecordArticle role='article' subject={org} attendableId={Obj.getURI(org).toString()} />;
 };
+
+/**
+ * Stands in for a donor plugin (plugin-crm contributes the real Enrich action this way). plugin-space
+ * must not depend on plugin-crm — that separation is the point of sourcing toolbar actions from the
+ * graph — so the story contributes its own action rather than importing one.
+ */
+const storyGraphBuilders = () =>
+  Effect.runSync(
+    Effect.all([
+      AppGraphBuilder.createExtension({
+        id: 'storyRecordActions',
+        match: (node) =>
+          Obj.instanceOf(Organization.Organization, node.data) ? Option.some(node.data) : Option.none(),
+        actions: () =>
+          Effect.succeed([
+            {
+              id: 'storyResearch',
+              data: Effect.fnUntraced(function* () {
+                log.info('enrich invoked');
+              }),
+              properties: {
+                label: 'Research',
+                icon: 'ph--sparkle--regular',
+                disposition: ['toolbar', 'list-item'],
+                presentation: { toolbar: { variant: 'primary', iconOnly: false } },
+                testId: 'story.record.research',
+              },
+            },
+          ]),
+      }),
+    ]),
+  );
 
 const meta = {
   title: 'plugins/plugin-space/containers/RecordArticle',
@@ -47,7 +86,10 @@ const meta = {
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
-      capabilities: [Capability.contribute(AppCapabilities.Translations, translations)],
+      capabilities: [
+        Capability.contribute(AppCapabilities.Translations, translations),
+        Capability.contribute(AppCapabilities.AppGraphBuilder, storyGraphBuilders()),
+      ],
       plugins: [
         ...corePlugins(),
         StorybookPlugin.make({}),

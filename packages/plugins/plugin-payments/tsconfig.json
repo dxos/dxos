@@ -28,6 +28,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/halo/halo"
+    },
+    {
       "path": "../../core/mesh/edge-client"
     },
     {
@@ -40,13 +43,13 @@
       "path": "../../sdk/client"
     },
     {
-      "path": "../../sdk/react-client"
-    },
-    {
       "path": "../../ui/react-ui"
     },
     {
       "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../plugin-client"
     }
   ]
 }

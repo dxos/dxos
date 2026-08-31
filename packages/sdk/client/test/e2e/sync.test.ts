@@ -5,8 +5,8 @@
 import { describe, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
+import { Stream } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
-import { Stream } from '@dxos/codec-protobuf/stream';
 import { Database, Obj } from '@dxos/echo';
 import type { SpaceSyncState } from '@dxos/echo-client';
 import { isEdgePeerId } from '@dxos/echo-protocol';
@@ -26,7 +26,7 @@ describe('sync', { timeout: 120_000, retry: 0, tags: ['sync-e2e'] }, async () =>
       version: 1,
       runtime: {
         services: {
-          edge: { url: LOCAL ? 'http://localhost:8787' : 'https://edge.dxos.workers.dev' },
+          edge: { url: LOCAL ? 'http://localhost:8787' : 'https://dev.dxos.network' },
         },
         client: {
           edgeFeatures: {

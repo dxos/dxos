@@ -19,7 +19,13 @@ export class HubApiError extends BaseError.extend('HubApiError', 'Hub API error'
 
 const hubBaseUrl = Effect.gen(function* () {
   const config = yield* ConfigService;
-  return config.values?.runtime?.services?.hub?.url ?? 'https://hub.dxos.network';
+  const url = config.values?.runtime?.services?.hub?.url;
+  if (!url) {
+    // The CLI writes a hub URL into every profile it creates, so an absent one means the profile
+    // was edited — report that rather than silently substituting a DXOS-operated host.
+    return yield* Effect.fail(new HubApiError({ message: 'Hub URL is not configured (runtime.services.hub.url).' }));
+  }
+  return url;
 });
 
 /**
@@ -58,7 +64,7 @@ export const hubApiRequest = <T>(
 
     const envelope = result as unknown as EdgeEnvelope<T>;
     if (!envelope.success) {
-      yield* Effect.fail(new HubApiError({ message: envelope.message }));
+      return yield* Effect.fail(new HubApiError({ message: envelope.message }));
     }
     return envelope.data as T;
   });

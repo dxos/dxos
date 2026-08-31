@@ -152,6 +152,48 @@ export const sendMessage = Effect.fn('sendMessage')(function* (
 });
 
 /**
+ * Adds and/or removes labels on one message (requires the `gmail.modify` scope).
+ * https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages/modify
+ *
+ * `SPAM` is accepted here as an ordinary label (verified against a live account); `TRASH` is not —
+ * that is {@link trashMessage}.
+ */
+export const modifyMessage = Effect.fn('modifyMessage')(function* (
+  userId: string,
+  messageId: string,
+  labels: { addLabelIds?: readonly string[]; removeLabelIds?: readonly string[] },
+) {
+  const url = createUrl([API_URL, 'users', userId, 'messages', messageId, 'modify']).toString();
+  return yield* makeGoogleApiRequest(url, {
+    method: 'POST',
+    body: JSON.stringify({ addLabelIds: labels.addLabelIds ?? [], removeLabelIds: labels.removeLabelIds ?? [] }),
+  }).pipe(Effect.flatMap(decodeAndHandleErrors(Message)));
+});
+
+/**
+ * Applies the same label changes to up to 1000 messages in one call (requires `gmail.modify`).
+ * https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages/batchModify
+ *
+ * Returns `204 No Content` with an empty body on success, so unlike {@link modifyMessage} there is
+ * nothing to decode — the response is discarded and only its status matters.
+ */
+export const batchModifyMessages = Effect.fn('batchModifyMessages')(function* (
+  userId: string,
+  messageIds: readonly string[],
+  labels: { addLabelIds?: readonly string[]; removeLabelIds?: readonly string[] },
+) {
+  const url = createUrl([API_URL, 'users', userId, 'messages', 'batchModify']).toString();
+  yield* makeGoogleApiRequest(url, {
+    method: 'POST',
+    body: JSON.stringify({
+      ids: [...messageIds],
+      addLabelIds: labels.addLabelIds ?? [],
+      removeLabelIds: labels.removeLabelIds ?? [],
+    }),
+  });
+});
+
+/**
  * Moves a message to the trash (requires the `gmail.modify` scope).
  * https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages/trash
  */

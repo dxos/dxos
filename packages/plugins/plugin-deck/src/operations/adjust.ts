@@ -8,19 +8,19 @@ import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as Graph from '@dxos/app-graph/Graph';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
-import { Attention } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention/types';
 import { Position } from '@dxos/util';
 
 import { CompanionViewState, DeckCapabilities, DeckOperation, DeckSchema } from '#types';
 
 import { incrementPlank } from '../layout';
-import { computeActiveUpdates } from '../util';
-import { addCompanionPlank, updateActiveDeck } from './helpers';
+import { computeActiveUpdates, isCompanionOpen, openCompanionPlank } from '../util';
+import { updateActiveDeck } from './helpers';
 
 const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperation.Adjust.pipe(
   Operation.withHandler(
@@ -30,8 +30,9 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
       const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
 
       if (input.type === 'increment-end' || input.type === 'increment-start') {
+        const { flatten } = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
         const next = incrementPlank(deck.active, input);
-        const { deckUpdates } = computeActiveUpdates({ next, deck, attention });
+        const { deckUpdates } = computeActiveUpdates({ next, deck, attention, flatten });
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => updateActiveDeck(state, deckUpdates));
       }
 
@@ -64,11 +65,12 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
         // selected variant (global view state); if none is selected yet (or the stored one is not a
         // companion of this plank), seed it with this plank's first companion so the URL and render
         // agree. `UpdateCompanion` (tab switch) overrides it thereafter.
-        if (!deck.companionPlanks.includes(input.id)) {
+        const { flatten } = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
+        if (!isCompanionOpen(deck.companionPlanks, flatten, input.id)) {
           const companions = Function.pipe(
-            Graph.getNode(graph, input.id),
+            AppGraph.getNode(graph, input.id),
             Option.map((node) =>
-              Graph.getConnections(graph, node.id, 'child')
+              AppGraph.getConnections(graph, node.id, 'child')
                 .filter((n) => n.type === DeckSchema.PLANK_COMPANION_TYPE)
                 .toSorted((a, b) =>
                   Position.compare({ position: a.properties?.position }, { position: b.properties?.position }),
@@ -92,7 +94,13 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
               }));
             }
             yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
-              updateActiveDeck(state, { companionPlanks: addCompanionPlank(state, input.id) }),
+              updateActiveDeck(state, {
+                companionPlanks: openCompanionPlank(
+                  state.decks[state.activeDeck]?.companionPlanks ?? [],
+                  flatten,
+                  input.id,
+                ),
+              }),
             );
           }
         }

@@ -13,7 +13,7 @@ import * as AiError from 'effect/unstable/ai/AiError';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
-import { type AiService, Model, type OpaqueToolkit } from '@dxos/ai';
+import { AiModelNotAvailableError, type AiService, Model, type OpaqueToolkit } from '@dxos/ai';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import {
   AiContext,
@@ -43,16 +43,6 @@ import { AssistantOperation } from '#types';
 
 import { findInCause } from '../util/error-cause';
 import { type ProcessorRequestContext, createPromptContent } from './prompt';
-
-/**
- * @deprecated Services type for the old direct-conversation processor path.
- * Retained for backward compatibility with CLI and update-name.
- */
-export type AiChatServices =
-  | Credential.CredentialsService
-  | Database.Service
-  | AiService.AiService
-  | Trace.TraceService;
 
 /**
  * Space-scoped services materialised by the layer passed into
@@ -137,10 +127,31 @@ const describeAiError = (err: AiError.AiError): string =>
   ('description' in err.reason ? err.reason.description : undefined) ?? err.message;
 
 /**
+ * Matches an {@link AiModelNotAvailableError} in error text. Like the quota case, the typed error
+ * does not always survive the agent-process boundary — the failure is rendered with `Cause.pretty`,
+ * which drops nested causes — so detection also reads the message it stringifies to.
+ */
+const MODEL_UNAVAILABLE_PATTERN = /AI Model not available:\s*(\S+?):?(?=\s|$)/i;
+
+/** The displayable text of a failure, which reaches the chat either typed or already stringified. */
+const errorText = (err: unknown): string => (typeof err === 'string' ? err : err instanceof Error ? err.message : '');
+
+/** The model of a model-unavailable rejection, by typed context or message text. */
+const unavailableModel = (err: unknown): string | undefined => {
+  const typed = findInCause(err, AiModelNotAvailableError.is);
+  if (typed) {
+    return String(typed.context.model);
+  }
+  return errorText(err).match(MODEL_UNAVAILABLE_PATTERN)?.[1];
+};
+
+/**
  * Maps a failure from the agent fiber to an error suitable for display.
  * An over-quota (HTTP 429) rejection is surfaced as an actionable usage-limit message; the typed
  * {@link UsageQuotaExceededError} only survives on the direct path, so {@link isQuotaError} also
  * recognizes the stringified 429 the chat receives across the agent-process boundary.
+ * A model the configured provider does not serve names that model, since the fix is to pick another
+ * one in settings.
  * Other {@link AiError}s originate from the AI service and are actionable by the user
  * (e.g., "model 'x' not found", "Connection refused"), so their detail is propagated.
  * Any other failure is treated as an internal/unexpected error and reported generically
@@ -150,6 +161,11 @@ export const parseError = (err: unknown): Error => {
   const quotaError = findInCause(err, UsageQuotaExceededError.is);
   if (quotaError || isQuotaError(err)) {
     return new AiUsageQuotaError(quotaError?.message?.trim() || QUOTA_EXCEEDED_MESSAGE, { cause: err });
+  }
+
+  const model = unavailableModel(err);
+  if (model) {
+    return new Error(`The model is not available: ${model}`, { cause: err });
   }
 
   let message: string | undefined;
@@ -189,6 +205,9 @@ export class AiChatProcessor {
 
   /** Currently active request fiber. */
   #requestFiber: Fiber.Fiber<void, unknown> | undefined;
+
+  /** Fiber following a turn this processor did not issue ({@link adopt}). */
+  #observeFiber: Fiber.Fiber<void, unknown> | undefined;
 
   /** Last request (for retries). */
   #lastRequest: ProcessorRequest | undefined;
@@ -312,26 +331,8 @@ export class AiChatProcessor {
           model: this._options.model,
           provider: this._options.provider,
         });
-        const session = yield* AgentService.getSession(this._feed, {
-          model: this._options.model,
-          provider: this._options.provider,
-          instructions: this._options.chat?.target?.instructions,
-        });
-        const ephemeralStream = session.subscribeEphemeral();
-        yield* ephemeralStream.pipe(
-          Stream.runForEach((message) =>
-            Effect.sync(() => {
-              for (const event of message.events) {
-                if (Trace.isOfType(PartialBlock, event)) {
-                  this.#handleEphemeralMessage(event.data);
-                } else if (Trace.isOfType(McpServerError, event)) {
-                  this.#handleMcpError(event.data);
-                }
-              }
-            }),
-          ),
-          Effect.forkChild,
-        );
+        const session = yield* this.#getSession();
+        yield* this.#forkEphemeralCollector(session);
 
         log('chat processor submitting prompt', { length: requestProp.message.length });
         yield* session.submitPrompt(createPromptContent(requestProp));
@@ -379,6 +380,117 @@ export class AiChatProcessor {
   }
 
   /**
+   * Mirrors turns this processor did not initiate into its own state: active/streaming state is
+   * per-processor ({@link useChatProcessor} builds one per mount) while the agent process outlives
+   * the mount, so a chat remounted mid-turn would otherwise render as idle.
+   *
+   * Returns a disposer that stops observing.
+   */
+  adopt(): () => void {
+    let disposed = false;
+    let unsubscribe: (() => void) | undefined;
+    void this._runtime
+      .runPromise(this.#getSession().pipe(Effect.provide(this._spaceLayer)))
+      .then((session) => {
+        if (disposed) {
+          return;
+        }
+
+        unsubscribe = this.#registry.subscribe(
+          session.running,
+          (running) => {
+            if (running) {
+              void this.#observe(session);
+            }
+          },
+          // The turn is normally already in flight when a remounted chat gets here.
+          { immediate: true },
+        );
+      })
+      .catch((err) => log.warn('failed to attach to agent session', { error: err }));
+
+    return () => {
+      disposed = true;
+      unsubscribe?.();
+      // The collector and its stream subscription outlive the unmount otherwise — one per remount,
+      // all feeding atoms nothing reads any more.
+      const fiber = this.#observeFiber;
+      if (fiber) {
+        this.#observeFiber = undefined;
+        void this._runtime.runPromise(Fiber.interrupt(fiber));
+      }
+    };
+  }
+
+  /**
+   * Follows a turn started elsewhere to completion, surfacing its streamed blocks here.
+   * A turn this processor issued is owned by {@link request}, which reports its own errors.
+   */
+  async #observe(session: AgentService.Session): Promise<void> {
+    if (this.#requestFiber || this.#observeFiber || this.#registry.get(this.active)) {
+      return;
+    }
+
+    log.info('observing agent turn', { feed: Obj.getURI(this._feed) });
+    try {
+      this.#registry.set(this.active, true);
+      const effect = Effect.gen({ self: this }, function* () {
+        yield* this.#forkEphemeralCollector(session);
+        yield* session.waitForCompletion();
+        this.#flushStreaming();
+      });
+
+      // Tracked apart from `#requestFiber` so `cancel` keeps meaning "stop the request this chat
+      // issued", and so the disposer interrupts only the observer.
+      this.#observeFiber = this._runtime.runFork(effect.pipe(Effect.provide(this._spaceLayer)));
+      const exit = await this._runtime.runPromise(Fiber.await(this.#observeFiber));
+      if (Exit.isFailure(exit) && !Cause.hasInterruptsOnly(exit.cause)) {
+        throw EffectEx.causeToError(exit.cause);
+      }
+    } catch (err) {
+      // Reported but not surfaced as this chat's error: the mount that issued the turn owns that.
+      log.warn('failed to observe agent turn', { error: err });
+    } finally {
+      this.#registry.set(this.active, false);
+      this.#observeFiber = undefined;
+    }
+  }
+
+  /**
+   * Resolves the agent session for this chat's feed, reusing the process a previous mount left
+   * running and spawning one only when there is none.
+   */
+  #getSession(): Effect.Effect<AgentService.Session, never, AgentService.AgentService> {
+    return AgentService.getSession(this._feed, {
+      model: this._options.model,
+      provider: this._options.provider,
+      instructions: this._options.chat?.target?.instructions,
+    });
+  }
+
+  /**
+   * Forks the collector for the session's ephemeral trace events (streaming blocks and MCP
+   * failures) as a child of the calling fiber.
+   */
+  #forkEphemeralCollector(session: AgentService.Session): Effect.Effect<void> {
+    return session.subscribeEphemeral().pipe(
+      Stream.runForEach((message) =>
+        Effect.sync(() => {
+          for (const event of message.events) {
+            if (Trace.isOfType(PartialBlock, event)) {
+              this.#handleEphemeralMessage(event.data);
+            } else if (Trace.isOfType(McpServerError, event)) {
+              this.#handleMcpError(event.data);
+            }
+          }
+        }),
+      ),
+      Effect.forkChild,
+      Effect.asVoid,
+    );
+  }
+
+  /**
    * Cancels the current request.
    */
   async cancel(): Promise<void> {
@@ -388,7 +500,14 @@ export class AiChatProcessor {
         if (this.#requestFiber) {
           yield* Fiber.interrupt(this.#requestFiber);
         }
-        const session = yield* AgentService.getSession(this._feed);
+        // Same options as `request`: looked up bare, a differing model/provider/instructions reads as
+        // a reconfiguration, which tears down the running process and spawns a replacement purely to
+        // terminate it again.
+        const session = yield* AgentService.getSession(this._feed, {
+          model: this._options.model,
+          provider: this._options.provider,
+          instructions: this._options.chat?.target?.instructions,
+        });
         yield* session.terminate();
       }).pipe(Effect.provide(this._spaceLayer)),
     );

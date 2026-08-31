@@ -23,14 +23,10 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ApiError, runServiceCall, subscribeStream } from '@dxos/protocols';
-import {
-  Invitation,
-  type Space as SerializedSpace,
-  type SpaceArchive,
-  SpaceState,
-} from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation, type Space as SerializedSpace, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type SpacesService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
 import { RPC_TIMEOUT } from '../common';
@@ -96,7 +92,9 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       this._setupSpacesStream();
     });
 
-    await this._setupInvitationProxy();
+    // Not awaited: its initial snapshot is not needed to use spaces, and awaiting it put the whole
+    // app boot behind the invitations stream, so a stalled snapshot made the app unbootable.
+    void this._setupInvitationProxy().catch((error) => log.warn('failed to open invitation proxy', { error }));
 
     // Subscribe to spaces and create proxies.
     const gotInitialUpdate = new Trigger();
@@ -113,8 +111,10 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
    * Set up the invitation proxy. Called on initial open and reconnect.
    */
   private async _setupInvitationProxy(): Promise<void> {
-    await this._invitationProxy?.close();
     invariant(this._serviceProvider.services.InvitationsService, 'InvitationsService is not available.');
+    const previous = this._invitationProxy;
+    // Assigned before the first await: the caller no longer waits for this method, so `join` would
+    // otherwise see a window where the proxy is missing and throw 'Client not open.'.
     this._invitationProxy = new InvitationsProxy(
       this._serviceProvider.services.InvitationsService,
       this._serviceProvider.services.IdentityService,
@@ -122,6 +122,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
         kind: Invitation.Kind.SPACE,
       }),
     );
+    await previous?.close();
     await this._invitationProxy.open();
   }
 
@@ -296,7 +297,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   /**
    * @internal
    */
-  async import(archive: SpaceArchive, options?: { tags?: string[] }): Promise<Space> {
+  async import(archive: SpacesService.SpaceArchive, options?: { tags?: string[] }): Promise<Space> {
     const { newSpaceId } = await runServiceCall(
       this._runtime,
       this._serviceProvider.rpc['SpacesService.importSpace']({ archive, tags: options?.tags }),

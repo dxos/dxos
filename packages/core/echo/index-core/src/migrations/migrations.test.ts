@@ -58,6 +58,7 @@ const DESIRED_COLUMNS = [
   'parent',
   'queueId',
   'queueNamespace',
+  'queuePosition',
   'recordId',
   'source',
   'spaceId',

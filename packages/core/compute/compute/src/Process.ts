@@ -19,7 +19,7 @@ import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
 import { Annotation } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
-import { DXN, URI } from '@dxos/keys';
+import { DXN, type SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { SerializedError } from '@dxos/protocols';
 
@@ -156,6 +156,19 @@ export interface Params {
    * Can only be set when the process is spawned.
    */
   readonly annotations: Annotation.Dictionary;
+}
+
+/**
+ * What the process is running on behalf of, fixed at spawn and inherited by child processes.
+ *
+ * Determines which services the runtime can provide (a space-scoped database, a conversation's harness).
+ */
+export interface Environment {
+  /** Space the process is scoped to; absent for app-level work. */
+  readonly space?: SpaceId;
+
+  /** URI of the conversation feed (queue) the process is serving; absent outside a conversation. */
+  readonly conversation?: URI.URI;
 }
 
 /**
@@ -505,6 +518,11 @@ export interface Info {
    * Parameters of the process.
    */
   readonly params: Params;
+
+  /**
+   * What the process is running on behalf of. See {@link Environment}.
+   */
+  readonly environment: Environment;
 
   /**
    * State of the process.

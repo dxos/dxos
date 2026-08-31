@@ -2,27 +2,29 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event, MulticastObservable, type Observable, PushStream, Trigger } from '@dxos/async';
+import { Event, MulticastObservable, type Observable, PushStream, Trigger, asyncTimeout } from '@dxos/async';
+import { type Stream } from '@dxos/async';
 import {
   AuthenticatingInvitation,
   CancellableInvitation,
+  type ClientServices,
   InvitationEncoder,
   type Invitations,
 } from '@dxos/client-protocol';
-import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import {
-  type IdentityService,
-  Invitation,
-  type InvitationsService,
-  QueryInvitationsResponse,
-} from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation, QueryInvitationsResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { RPC_TIMEOUT } from '../common';
+
+/**
+ * Budget for the initial invitations snapshot. Bounded because `open()` sits on the client
+ * initialization path, which the whole app boot waits on.
+ */
+const INITIAL_SNAPSHOT_TIMEOUT = 10_000;
 
 /**
  * Create an observable from an RPC stream.
@@ -62,8 +64,8 @@ export class InvitationsProxy implements Invitations {
   private _opened = false;
 
   constructor(
-    private readonly _invitationsService: InvitationsService,
-    private readonly _identityService: IdentityService | undefined,
+    private readonly _invitationsService: ClientServices['InvitationsService'],
+    private readonly _identityService: ClientServices['IdentityService'] | undefined,
     private readonly _getInvitationContext: () => Partial<Invitation> & Pick<Invitation, 'kind'>,
   ) {}
 
@@ -98,58 +100,85 @@ export class InvitationsProxy implements Invitations {
     // TODO(nf): actually needed?
     const initialAcceptedReceived = new Trigger();
 
+    // A stream that fails or closes must not leave `open()` pending: the caller chain
+    // (SpaceList._open -> Client.initialize) blocks the whole app boot on it.
+    const streamTerminated = new Trigger<Error | undefined>();
+
     const stream = this._invitationsService.queryInvitations(undefined, { timeout: RPC_TIMEOUT });
-    stream.subscribe(({ action, type, invitations, existing }: QueryInvitationsResponse) => {
-      switch (action) {
-        case QueryInvitationsResponse.Action.ADDED: {
-          log('remote invitations added', { type, invitations });
-          invitations
-            ?.filter((invitation) => this._matchesInvitationContext(invitation))
-            .filter((invitation) => !this._invitations.has(invitation.invitationId))
-            .forEach((invitation) => {
-              type === QueryInvitationsResponse.Type.CREATED ? this.share(invitation) : this.join(invitation);
-            });
-          if (existing) {
-            type === QueryInvitationsResponse.Type.CREATED
-              ? initialCreatedReceived.wake()
-              : initialAcceptedReceived.wake();
+    stream.subscribe(
+      ({ action, type, invitations, existing }: QueryInvitationsResponse) => {
+        switch (action) {
+          case QueryInvitationsResponse.Action.ADDED: {
+            log('remote invitations added', { type, invitations });
+            invitations
+              ?.filter((invitation) => this._matchesInvitationContext(invitation))
+              .filter((invitation) => !this._invitations.has(invitation.invitationId))
+              .forEach((invitation) => {
+                type === QueryInvitationsResponse.Type.CREATED ? this.share(invitation) : this.join(invitation);
+              });
+            if (existing) {
+              type === QueryInvitationsResponse.Type.CREATED
+                ? initialCreatedReceived.wake()
+                : initialAcceptedReceived.wake();
+            }
+            break;
           }
-          break;
+          case QueryInvitationsResponse.Action.REMOVED: {
+            log('remote invitations removed', { type, invitations });
+            const cache = type === QueryInvitationsResponse.Type.CREATED ? this._created : this._accepted;
+            const cacheUpdate =
+              type === QueryInvitationsResponse.Type.CREATED ? this._createdUpdate : this._acceptedUpdate;
+            invitations?.forEach((removed) => {
+              const index = cache
+                .get()
+                .findIndex((invitation) => invitation.get().invitationId === removed.invitationId);
+              void cache.get()[index]?.cancel();
+              index >= 0 &&
+                cacheUpdate.emit([
+                  ...cache.get().slice(0, index),
+                  ...cache.get().slice(index + 1),
+                ] as AuthenticatingInvitation[]);
+            });
+            existing && initialAcceptedReceived.wake();
+            break;
+          }
+          case QueryInvitationsResponse.Action.LOAD_COMPLETE: {
+            persistentLoaded.wake();
+            break;
+          }
+          case QueryInvitationsResponse.Action.SAVED: {
+            log('remote invitations saved', { invitations });
+            this._savedUpdate.emit(invitations ?? []);
+            break;
+          }
         }
-        case QueryInvitationsResponse.Action.REMOVED: {
-          log('remote invitations removed', { type, invitations });
-          const cache = type === QueryInvitationsResponse.Type.CREATED ? this._created : this._accepted;
-          const cacheUpdate =
-            type === QueryInvitationsResponse.Type.CREATED ? this._createdUpdate : this._acceptedUpdate;
-          invitations?.forEach((removed) => {
-            const index = cache.get().findIndex((invitation) => invitation.get().invitationId === removed.invitationId);
-            void cache.get()[index]?.cancel();
-            index >= 0 &&
-              cacheUpdate.emit([
-                ...cache.get().slice(0, index),
-                ...cache.get().slice(index + 1),
-              ] as AuthenticatingInvitation[]);
-          });
-          existing && initialAcceptedReceived.wake();
-          break;
-        }
-        case QueryInvitationsResponse.Action.LOAD_COMPLETE: {
-          persistentLoaded.wake();
-          break;
-        }
-        case QueryInvitationsResponse.Action.SAVED: {
-          log('remote invitations saved', { invitations });
-          this._savedUpdate.emit(invitations ?? []);
-          break;
-        }
-      }
-    });
+      },
+      (error?: Error) => streamTerminated.wake(error),
+    );
 
     this._ctx.onDispose(() => stream.close());
-    await persistentLoaded.wait();
-    // wait until remote invitations are added and removed in case .created is called early.
-    await initialAcceptedReceived.wait();
-    await initialCreatedReceived.wait();
+
+    // Invitations are not required for the client to be usable, so a snapshot that never arrives
+    // degrades to "no invitations known yet" instead of blocking initialization forever. The
+    // subscription stays live, so a late snapshot is still applied.
+    try {
+      await asyncTimeout(
+        Promise.race([
+          // Wait until remote invitations are added and removed in case .created is called early.
+          Promise.all([persistentLoaded.wait(), initialAcceptedReceived.wait(), initialCreatedReceived.wait()]),
+          streamTerminated.wait().then((error) => {
+            throw error ?? new Error('invitations stream closed before the initial snapshot');
+          }),
+        ]),
+        INITIAL_SNAPSHOT_TIMEOUT,
+      );
+    } catch (error) {
+      log.warn('proceeding without the initial invitations snapshot', {
+        error,
+        ...this._getInvitationContext(),
+      });
+    }
+
     this._opened = true;
     log('opened', this._getInvitationContext());
   }

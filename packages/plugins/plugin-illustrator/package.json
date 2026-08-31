@@ -14,8 +14,14 @@
   "type": "module",
   "imports": {
     "#capabilities": {
-      "source": "./src/capabilities/index.ts",
+      "source": {
+        "workerd": "./src/capabilities/gen/workerd.ts",
+        "node": "./src/capabilities/gen/node.ts",
+        "default": "./src/capabilities/index.ts"
+      },
       "types": "./dist/types/src/capabilities/index.d.ts",
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
+      "node": "./dist/lib/capabilities.node.mjs",
       "default": "./dist/lib/capabilities.mjs"
     },
     "#components": {
@@ -44,14 +50,8 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": {
-        "workerd": "./src/plugin.workerd.tsx",
-        "node": "./src/plugin.node.tsx",
-        "default": "./src/plugin.tsx"
-      },
+      "source": "./src/plugin.tsx",
       "types": "./dist/types/src/plugin.d.ts",
-      "workerd": "./dist/lib/plugin.workerd.mjs",
-      "node": "./dist/lib/plugin.node.mjs",
       "default": "./dist/lib/plugin.mjs"
     },
     "#skills": {
@@ -69,7 +69,11 @@
       "types": "./dist/types/src/types/index.d.ts",
       "default": "./dist/lib/types.mjs"
     },
-    "#util": "./src/util/index.ts"
+    "#util": {
+      "source": "./src/util/index.ts",
+      "types": "./dist/types/src/util/index.d.ts",
+      "default": "./dist/lib/util.mjs"
+    }
   },
   "exports": {
     ".": {
@@ -152,6 +156,7 @@
     "PLUGIN.mdl"
   ],
   "dependencies": {
+    "@dagrejs/dagre": "catalog:",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
@@ -165,12 +170,14 @@
     "@dxos/react-ui-search": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "elkjs": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-client": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "react": "catalog:",

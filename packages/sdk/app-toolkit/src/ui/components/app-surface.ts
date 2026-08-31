@@ -429,6 +429,20 @@ export type ObjectPropertiesProps<
 // Card
 //
 
+/**
+ * Role token for the card header's leading depiction — a person's avatar, an organization's logo,
+ * a type's glyph.
+ *
+ * Scoped to the card deliberately, rather than declared once per type: how an object is depicted
+ * depends on the space it gets. A 6-unit card block affords initials or a photograph; a 16px navtree
+ * row does not, and those surfaces keep resolving `IconAnnotation` through `Obj.getIcon`. A type
+ * contributing here says how it looks IN A CARD, and says nothing about anywhere else.
+ *
+ * Unlike {@link CardContent}, a miss is not "render nothing" — every object needs some depiction —
+ * so hosts check {@link Surface.useIsAvailable} and fall back. `CardIconSlot` packages that pair.
+ */
+export const CardIcon: Role.Role<CardData<any>> = Role.make('org.dxos.role.cardIcon');
+
 /** Role token for the card slot. */
 export const CardContent: Role.Role<CardData<any>> = Role.make('org.dxos.role.cardContent');
 

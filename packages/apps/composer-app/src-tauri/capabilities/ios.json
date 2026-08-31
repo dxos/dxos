@@ -2,12 +2,21 @@
   "$schema": "../gen/schemas/ios-schema.json",
   "identifier": "ios-capability",
   "permissions": [
+    "core:default",
     "haptics:allow-impact-feedback",
     "haptics:allow-notification-feedback",
     "haptics:allow-selection-feedback",
     "haptics:allow-vibrate",
     "web-auth:allow-authenticate",
-    "web-auth:default"
+    "web-auth:default",
+    "allow-cache-plugin-assets",
+    "allow-evict-plugin",
+    "allow-resolve-cached-url",
+    "allow-list-cached-plugins",
+    "allow-list-audio-inputs",
+    "allow-set-preferred-audio-input",
+    "allow-start-microphone-bridge",
+    "allow-stop-microphone-bridge"
   ],
   "platforms": ["iOS"],
   "windows": ["main"]

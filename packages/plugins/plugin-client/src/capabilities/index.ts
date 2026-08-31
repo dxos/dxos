@@ -8,6 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
+import { translations } from '#translations';
 import { ClientCapabilities, ClientEvents, ClientOptions } from '#types';
 
 export const AccountCache = Capability.lazyModule(
@@ -20,7 +21,9 @@ export const AccountCache = Capability.lazyModule(
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
   activatesOn: ClientEvents.Initialized,
 });
-export const Commands = AppCapability.commands(() => import('./commands'));
+// `#commands` resolves per condition: a node host has the OAuth callback server and filesystem the
+// browser command set omits (`account`, `profile`).
+export const Commands = AppCapability.commands(() => import('#commands'));
 export const HubHttpClient = Capability.lazyModule(
   'HubHttpClient',
   {
@@ -43,10 +46,13 @@ export const Client = Capability.lazyModule(
       ClientCapabilities.IdentityService,
       ClientCapabilities.SpaceService,
     ],
+    environments: ['node'],
   },
   () => import('./client'),
 );
-export const LayerSpecs = AppCapability.layerSpec(() => import('./layer-specs'), { name: 'LayerSpecs' });
+export const LayerSpecs = AppCapability.layerSpec(() => import('./layer-specs'), {
+  name: 'LayerSpecs',
+});
 export const Migrations = Capability.lazyModule(
   'Migrations',
   {
@@ -56,6 +62,7 @@ export const Migrations = Capability.lazyModule(
     // client initialization to have completed — the same point it ran at when the startup pass
     // awaited initialize.
     activatesOn: ClientEvents.Initialized,
+    environments: ['node'],
   },
   () => import('./migrations'),
 );
@@ -87,12 +94,19 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
 });
 export const SchemaDefs = Capability.lazyModule(
   'SchemaDefs',
-  { requires: [Capabilities.AtomRegistry, ClientCapabilities.Client, AppCapabilities.Schema], provides: [] },
+  {
+    requires: [Capabilities.AtomRegistry, ClientCapabilities.Client, AppCapabilities.Schema],
+    provides: [ClientCapabilities.SchemaRegistered],
+    environments: ['node'],
+  },
   () => import('./schema-defs'),
 );
 export const RemoteTraceMonitor = Capability.lazyModule(
   'RemoteTraceMonitor',
-  { provides: [Capabilities.RemoteTraceMonitor] },
+  // Startup: the process-manager runtime snapshots this capability once, in the Startup pass, and
+  // bakes a no-op remote source if it has not been contributed yet — demand activation always loses
+  // that race, silencing remote traces for every ProcessMonitor consumer.
+  { provides: [Capabilities.RemoteTraceMonitor], activatesOn: ActivationEvents.Startup },
   () => import('./remote-trace-monitor'),
 );
 export const SpaceReplicationProgress = Capability.lazyModule(
@@ -110,8 +124,7 @@ export const SpaceReplicationProgress = Capability.lazyModule(
 export const TraceProgress = Capability.lazyModule(
   'TraceProgress',
   {
-    // ProgressRegistry is resolved lazily per trace message, so a host without it degrades to a
-    // no-op sink rather than failing to activate.
+    // ProgressRegistry is resolved lazily per message (a host without it degrades to a no-op sink).
     requires: [Capabilities.ProcessMonitor, Capabilities.ProcessManagerRuntime, Capabilities.ServiceResolver],
     provides: [],
     // Same activation as SpaceReplicationProgress: process-manager runtime, monitor, and
@@ -120,3 +133,4 @@ export const TraceProgress = Capability.lazyModule(
   },
   () => import('./trace-progress'),
 );
+export const Translations = AppCapability.translations(translations);

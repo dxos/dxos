@@ -60,11 +60,11 @@ const ErrorComponent = () => {
   );
 };
 
-type StoryProps = {
+type StoryArgs = {
   debug?: boolean;
 };
 
-const DefaultStory = ({ debug: debugProp }: StoryProps) => {
+const DefaultStory = ({ debug: debugProp }: StoryArgs) => {
   const manager = usePluginManager();
   const surfaces = useSurfaces();
   const [selected, setSelected] = useState<string | undefined>();

@@ -1,6 +1,7 @@
 layer: library
 language: typescript
 tags:
+  - composer-plugin
   - ts-vite-build
   - ts-test
   - ts-test-storybook
@@ -14,7 +15,8 @@ tasks:
       pnpm exec dx-trace-imports
       --export ./MarkdownPlugin
       --to "@dxos/react-ui"
-      --conditions workerd,worker,node
+      --conditions workerd,worker
+      --conditions node
       --fail-on present
     deps:
       - dx-trace-imports:build

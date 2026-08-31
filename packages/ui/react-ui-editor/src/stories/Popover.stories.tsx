@@ -84,21 +84,19 @@ const LinkStory = (args: StoryArgs) => {
       const items = result
         .filter((object) => object.name.toLowerCase().includes(name))
         .sort((a, b) => a.name.localeCompare(b.name))
-        .map(
-          (object): EditorMenuItem => ({
-            id: object.id,
-            label: object.name,
-            icon: 'ph--user--regular',
-            onSelect: ({ view, head }) => {
-              const link = `[${object.name}](${Obj.getURI(object)})`;
-              if (text?.startsWith('@')) {
-                insertAtLineStart(view, head, `!${link}\n`);
-              } else {
-                insertAtCursor(view, head, `${link} `);
-              }
-            },
-          }),
-        );
+        .map((object): EditorMenuItem => ({
+          id: object.id,
+          label: object.name,
+          icon: 'ph--user--regular',
+          onSelect: ({ view, head }) => {
+            const link = `[${object.name}](${Obj.getURI(object)})`;
+            if (text?.startsWith('@')) {
+              insertAtLineStart(view, head, `!${link}\n`);
+            } else {
+              insertAtCursor(view, head, `${link} `);
+            }
+          },
+        }));
 
       // Mirrors the plugin's picker, where this opens the app's create-object dialog.
       const createItem: EditorMenuItem = {

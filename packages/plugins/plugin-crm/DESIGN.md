@@ -192,7 +192,7 @@ schemas; remove `instructions.ts` outright.
 
 ### 5.2 `CrmOperation.ResearchPerson` / `ResearchOrganization`
 
-- Keys `org.dxos.function.plugin-crm.researchPerson` / `.researchOrganization`.
+- Keys `org.dxos.operation.crm.researchPerson` / `.researchOrganization`.
 - Input `{ subject: Ref<Person|Organization> }`; output `{ profile: Ref<Markdown.Document>,
 created: boolean }`. Services: `[Database.Service]`.
 - Deterministic behaviour: find the existing `ProfileOf` relation for the subject, else create a
@@ -210,7 +210,7 @@ created: boolean }`. Services: `[Database.Service]`.
 The CRM sibling of `AnalyzeMailbox` — the answer to "trigger the pipeline from the Mailbox with a
 cursor tracking the message Feed".
 
-- Key `org.dxos.function.plugin-crm.processMailbox`. Input `{ mailbox: Ref<Mailbox>, pageSize?,
+- Key `org.dxos.operation.crm.processMailbox`. Input `{ mailbox: Ref<Mailbox>, pageSize?,
 research? }`; output `{ processed, contacts, profiles }`. Services: `[Database.Service]`.
 - Handler:
   1. Resolve mailbox → feed; find-or-create a **feed `Cursor`** (`spec.source` = the mailbox

@@ -15,7 +15,7 @@ import { AiService } from '@dxos/ai';
 import { LanguageModelFixture, TestAiService } from '@dxos/ai/testing';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import { type TestHarness } from '@dxos/app-framework/testing';
-import { Chat, DatabaseSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
+import { Chat, ChatContextSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
 import { type ClientOptions } from '@dxos/client';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -33,6 +33,7 @@ import { initializeIdentity } from '@dxos/plugin-client/testing';
 import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
+import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -44,7 +45,7 @@ const MEMOIZED_TEST_TIMEOUT = 60_000;
 
 export const getDefaultSkills = (): Ref.Ref<Skill.Skill>[] => [
   Ref.make(SkillManagerSkill.make()),
-  Ref.make(DatabaseSkill.make()),
+  Ref.make(ChatContextSkill.make()),
 ];
 
 const INSTRUCTIONS = trim`
@@ -127,7 +128,7 @@ const makeLanguageModelFixtureMiddleware = (
   ctx: TestContext,
   options: Pick<AgentTestOptions, 'inferenceProvider' | 'disableLlmMemoization'>,
 ): Promise<(_upstream: AiService.Service) => AiService.Service> =>
-  AiService.AiService.pipe(
+  AiService.tag.pipe(
     Effect.provide(
       // `dynamicValuePatterns` defaults to LanguageModelFixture.DEFAULT_DYNAMIC_VALUE_PATTERNS
       // (space keys, entity IDs, UUIDs, timestamps) — the ids that differ across runs are
@@ -161,6 +162,7 @@ const createDefaultPlugins = async (ctx: TestContext, options: AgentTestOptions)
   }),
   RoutinePlugin.make(),
   InboxPlugin.make(),
+  SpacePlugin.make({}),
   ...(options.plugins ?? []),
 ];
 
@@ -228,7 +230,7 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
     options.model ??
     (options.inferenceProvider === 'ollama'
       ? DXN.make('com.openai.model.gpt-oss-20b.default')
-      : DXN.make('com.anthropic.model.claude-opus-4-8.default'));
+      : DXN.make('com.anthropic.model.claude-opus-5.default'));
 
   const OutputSchema = Schema.Struct({
     completedCriteria: Schema.Struct({

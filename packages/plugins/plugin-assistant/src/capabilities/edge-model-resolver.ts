@@ -10,7 +10,6 @@ import * as Option from 'effect/Option';
 import { AnthropicResolver } from '@dxos/ai/resolvers';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { createEdgeIdentity } from '@dxos/client/edge';
 import * as Header from '@dxos/compute/Header';
 import { EdgeAiHttpClient, EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
@@ -39,8 +38,9 @@ const edgeModelResolver = Capability.makeModule(
         invariant(edgeUrl, 'EDGE services are not configured.');
         const created = new EdgeHttpClient(edgeUrl);
         const updateIdentity = () => {
-          if (Option.isSome(haloIdentity.getSnapshot())) {
-            created.setIdentity(createEdgeIdentity(client));
+          const edgeIdentity = haloIdentity.getEdgeIdentity();
+          if (Option.isSome(edgeIdentity)) {
+            created.setIdentity(edgeIdentity.value);
           }
         };
         updateIdentity();

@@ -50,13 +50,15 @@ test.describe('HALO tests', () => {
 
     await host.openUserDevices();
     const invitationCode = await host.createDeviceInvitation();
-    const authCode = await host.getAuthCode();
     await guest.openUserDevices();
     // joinNewIdentity resets storage and reloads into the device-invitation shell. The shell's
     // invitation input only mounts after that reload, so acceptDeviceInvitation's fill auto-waits
     // for it — no need to race the reload against a fixed deadline.
     await guest.joinNewIdentity();
     await guest.shell.acceptDeviceInvitation(invitationCode);
+    // Read after the guest connects: the host learns the auth code from `readyForAuthentication`,
+    // which the flow only reaches once there is a guest on the other side.
+    const authCode = await host.getAuthCode();
     await guest.shell.authenticateDevice(authCode);
 
     await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
@@ -81,13 +83,15 @@ test.describe('HALO tests', () => {
 
     await host.openUserDevices();
     const invitationCode = await host.createDeviceInvitation();
-    const authCode = await host.getAuthCode();
     await guest.openUserDevices();
     // joinNewIdentity resets storage and reloads into the device-invitation shell. The shell's
     // invitation input only mounts after that reload, so acceptDeviceInvitation's fill auto-waits
     // for it — no need to race the reload against a fixed deadline.
     await guest.joinNewIdentity();
     await guest.shell.acceptDeviceInvitation(invitationCode);
+    // Read after the guest connects: the host learns the auth code from `readyForAuthentication`,
+    // which the flow only reaches once there is a guest on the other side.
+    const authCode = await host.getAuthCode();
     await guest.shell.authenticateDevice(authCode);
 
     // Both devices see the shared space.

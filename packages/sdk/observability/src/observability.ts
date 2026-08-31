@@ -242,20 +242,30 @@ class ObservabilityImpl implements Observability {
 
   get metrics(): Metrics {
     return {
-      gauge: (name, value, attributes) => {
+      gauge: (name, value, attributes, meta) => {
         for (const extension of this._getExtensions('metrics')) {
-          extension.gauge(name, value, attributes);
+          extension.gauge(name, value, attributes, meta);
         }
       },
-      increment: (name, value, attributes) => {
+      increment: (name, value, attributes, meta) => {
         for (const extension of this._getExtensions('metrics')) {
-          extension.increment(name, value, attributes);
+          extension.increment(name, value, attributes, meta);
         }
       },
-      distribution: (name, value, attributes) => {
+      distribution: (name, value, attributes, meta) => {
         for (const extension of this._getExtensions('metrics')) {
-          extension.distribution(name, value, attributes);
+          extension.distribution(name, value, attributes, meta);
         }
+      },
+      observe: (name, callback, attributes, meta) => {
+        const cleanups = this._getExtensions('metrics').map((extension) =>
+          extension.observe(name, callback, attributes, meta),
+        );
+        return () => {
+          for (const cleanup of cleanups) {
+            cleanup();
+          }
+        };
       },
     };
   }

@@ -11,7 +11,7 @@ import { type CellAddress, type CompleteCellRange, inRange } from '@dxos/compute
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import * as CommentOperation from '@dxos/plugin-review/CommentOperation';
-import { Attention } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention/types';
 import { AnchoredTo, Thread } from '@dxos/types';
 
 import { useSheetContext } from '#components';

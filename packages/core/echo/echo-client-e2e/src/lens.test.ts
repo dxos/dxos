@@ -28,9 +28,9 @@ class GtdTask extends Type.makeObject<GtdTask>(DXN.make('org.dxos.test.GtdTask',
   Schema.Struct({
     title: Schema.String,
     description: Schema.optional(Schema.String),
-    /** Lossy: `false` cannot say whether the task is `todo` or `in-progress`. */
+    /** Lossy: `false` cannot say whether the task is `todo` or `started`. */
     done: Schema.optional(Schema.Boolean),
-    stage: Schema.optional(Schema.Literals(['todo', 'in-progress', 'done'])),
+    stage: Schema.optional(Schema.Literals(['todo', 'started', 'done'])),
     urgency: Schema.optional(Schema.Number),
     /** Neither of these exists on `Task` — both are overlay-backed. */
     context: Schema.optional(Schema.Literals(['@home', '@work'])),
@@ -57,7 +57,7 @@ const taskAsGtd = () =>
     stage: {
       from: ['status'],
       get: ({ status }) => status,
-      put: (stage: 'todo' | 'in-progress' | 'done' | undefined) => ({ status: stage }),
+      put: (stage: 'todo' | 'started' | 'done' | undefined) => ({ status: stage }),
     },
   });
 
@@ -65,7 +65,7 @@ const makeTask = () =>
   Task.make({
     title: 'Land the object lens',
     description: 'One object, two interfaces.',
-    status: 'in-progress',
+    status: 'started',
     priority: 'high',
   });
 
@@ -93,7 +93,7 @@ describe('object lens over a database-backed object', () => {
     expect(Obj.getTypename(gtd)).to.eq('org.dxos.test.GtdTask');
     expect(Obj.getURI(gtd)).to.eq(Obj.getURI(task));
     expect(gtd.done).to.eq(false);
-    expect(gtd.stage).to.eq('in-progress');
+    expect(gtd.stage).to.eq('started');
     expect(gtd.urgency).to.eq(4);
 
     Obj.update(gtd, (gtd) => {
@@ -137,7 +137,7 @@ describe('object lens over a database-backed object', () => {
     expect(view.waitingOn).to.eq('review');
     // The base properties are intact too — the overlay is stored beside them, not instead of them.
     expect(view.title).to.eq('Land the object lens');
-    expect(view.stage).to.eq('in-progress');
+    expect(view.stage).to.eq('started');
   });
 
   test('a lensed write touches only the properties it names', async ({ expect }) => {
@@ -180,7 +180,7 @@ describe('object lens over a database-backed object', () => {
 
     // Peer 2 drives the object through the lens; peer 1 stays on the canonical type.
     const gtd2 = Lens.of(task2, lens);
-    expect(gtd2.stage).to.eq('in-progress');
+    expect(gtd2.stage).to.eq('started');
 
     // Concurrent, non-conflicting edits: peer 1 renames through `Task`, peer 2 completes through the
     // lens. A snapshot-style write from either side would have clobbered the other's property.

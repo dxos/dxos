@@ -1,5 +1,5 @@
 {
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "$schema": "./node_modules/@effect/tsgo/oxlint-schema.json",
   "categories": {},
   "env": {
     "builtin": true
@@ -44,7 +44,9 @@
     "@dxos/eslint-plugin-rules/header": "warn",
     "@dxos/eslint-plugin-rules/import-as-namespace": "warn",
     "@dxos/eslint-plugin-rules/no-bare-dot-imports": "error",
+    "@dxos/eslint-plugin-rules/no-dead-tailwind-logical": "error",
     "@dxos/eslint-plugin-rules/no-effect-run-promise": "error",
+    "@dxos/eslint-plugin-rules/operation-key-shape": "error",
     "@dxos/eslint-plugin-rules/no-empty-promise-catch": "error",
     "@dxos/eslint-plugin-rules/translation-key-format": "warn",
     "eslint/curly": ["error", "all"],

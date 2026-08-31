@@ -10,13 +10,13 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Filter, Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
-import { useObject } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
-import { getSpace, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Panel, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
-import { TaskList, type TaskPatch } from '@dxos/react-ui-task';
+import { createMenuAction } from '@dxos/react-ui-menu';
+import { TaskList } from '@dxos/react-ui-task';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Outline, Task, TaskSet } from '@dxos/types';
@@ -38,14 +38,18 @@ const CONTENT = trim`
   - [ ] Schedule the retro
 `;
 
-type DefaultStoryProps = {
+type StoryArgs = {
   content?: string;
   name?: string;
 };
 
-const DefaultStory = ({ content, name }: DefaultStoryProps) => {
+const DefaultStory = ({ content, name }: StoryArgs) => {
   const [space] = useSpaces();
   const outline = useMemo(() => space && space.db.add(Outline.make({ name, content })), [space, name, content]);
+  // An outline owns no task set — promotion files into the ledger of whatever embeds it — so the
+  // story plays the embedder and supplies one. Passing `undefined` instead is the degraded case:
+  // the outline renders with no convert affordance at all.
+  const taskSet = useMemo(() => space && space.db.add(TaskSet.make({ name: 'Story tasks' })), [space]);
   if (!outline?.content.target) {
     return null;
   }
@@ -53,13 +57,13 @@ const DefaultStory = ({ content, name }: DefaultStoryProps) => {
   return (
     <div className='dx-container grid grid-cols-3 gap-3 p-3'>
       <Column>
-        <OutlineArticle role='article' subject={outline} attendableId='story' />
+        <OutlineArticle role='article' subject={outline} taskSet={taskSet} attendableId='story' />
       </Column>
       <Column>
         <SourceView text={outline.content.target} />
       </Column>
       <Column>
-        <TaskSetView outline={outline} />
+        <TaskSetView outline={outline} taskSet={taskSet} />
       </Column>
     </div>
   );
@@ -70,33 +74,29 @@ const Column = ({ children }: PropsWithChildren) => (
 );
 
 /**
- * The durable side of the outline: the tasks promoted out of it, which the outliner files into a
- * lazily created `TaskSet`. Nothing renders until the first conversion creates that set.
+ * The durable side of the outline: the tasks promoted out of it, which the outliner files into the
+ * task set the embedder supplied.
  */
-const TaskSetView = ({ outline }: { outline: Outline.Outline }) => {
-  const space = getSpace(outline);
-  // The set is created on the first conversion, so resolve the ref reactively rather than reading
-  // `.target` once.
-  const [taskSet] = useObject(outline.taskSet);
-  // Membership is the parent edge, but `children()` does not re-emit when a child's own property
-  // changes — so a task renamed through the form would not update here. Query by type and filter
-  // by parent instead.
-  const tasks = useQuery(space?.db, Filter.type(Task.Task));
-  const filtered = useMemo(
-    () => (taskSet ? tasks.filter((task) => Obj.getParent(task)?.id === taskSet.id) : []),
-    [tasks, taskSet],
-  );
+const TaskSetView = ({ outline, taskSet }: { outline: Outline.Outline; taskSet?: TaskSet.TaskSet }) => {
+  const db = Obj.getDatabase(outline);
+  // Queried by type and filtered to the set's members: `useQuery` re-emits on membership changes
+  // but not on a member's property change, and the form edits titles in place.
+  const tasks = useQuery(db, Filter.type(Task.Task));
+  const filtered = useMemo(() => {
+    const members = new Set(taskSet?.tasks.map((ref) => ref.target?.id));
+    return tasks.filter((task) => members.has(task.id));
+  }, [tasks, taskSet]);
 
   const handleCreate = useCallback(
-    (title: string) => {
-      if (space) {
-        void Outline.createTask(outline, space.db, title);
+    ({ title, ...props }: Task.Draft) => {
+      if (db && taskSet) {
+        TaskSet.addTask(db, taskSet, title, props);
       }
     },
-    [outline, space],
+    [db, taskSet],
   );
 
-  const handleUpdate = useCallback((task: Task.Task, patch: TaskPatch) => {
+  const handleUpdate = useCallback((task: Task.Task, patch: Task.Edit) => {
     Obj.update(task, (task) => {
       Object.assign(task, patch);
     });
@@ -104,9 +104,20 @@ const TaskSetView = ({ outline }: { outline: Outline.Outline }) => {
 
   const handleDelete = useCallback(
     (task: Task.Task) => {
-      space?.db.remove(task);
+      db?.remove(task);
     },
-    [space],
+    [db],
+  );
+
+  const getTaskActions = useCallback(
+    (task: Task.Task) => [
+      createMenuAction(`delete-${task.id}`, () => handleDelete(task), {
+        label: 'Delete task',
+        icon: 'ph--x--regular',
+        testId: 'tasks.task.delete',
+      }),
+    ],
+    [handleDelete],
   );
 
   return (
@@ -117,12 +128,10 @@ const TaskSetView = ({ outline }: { outline: Outline.Outline }) => {
           tasks={filtered}
           onTaskCreate={handleCreate}
           onTaskUpdate={handleUpdate}
-          onTaskDelete={handleDelete}
+          getTaskActions={getTaskActions}
         >
-          {/* <TaskList.Viewport> */}
           <TaskList.Content />
-          {/* </TaskList.Viewport> */}
-          <TaskList.Create />
+          <TaskList.Edit grid />
         </TaskList.Root>
       </Panel.Content>
     </Panel.Root>

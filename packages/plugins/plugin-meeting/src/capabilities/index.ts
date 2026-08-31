@@ -10,7 +10,12 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
 import * as CallsEvents from '@dxos/plugin-calls/CallsEvents';
 
+import { meta } from '#meta';
+import { translations } from '#translations';
 import { MeetingCapabilities, MeetingEvents } from '#types';
+
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../../PLUGIN.mdl?raw';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
   // Call manager read optionally in the body (absence-guarded atom) — see plugin-thread's note.
@@ -34,6 +39,12 @@ export const MeetingSettings = Capability.lazyModule(
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
 });
+export const PluginAsset = AppCapability.pluginAsset({
+  pluginId: meta.profile.key,
+  path: 'PLUGIN.mdl',
+  content: pluginSpec,
+  mimeType: 'application/x-mdl',
+});
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article'],
 });
@@ -47,3 +58,4 @@ export const MeetingState = Capability.lazyModule(
   () => import('./state'),
 );
 export const Schema = AppCapability.schema(() => import('./schema'));
+export const Translations = AppCapability.translations(translations);

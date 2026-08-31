@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as Graph from '@dxos/app-graph/Graph';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -20,8 +20,14 @@ import * as ObservabilityOperation from '@dxos/plugin-observability/Observabilit
 
 import { DeckCapabilities } from '#types';
 
-import { addSubjectsToActiveDeck, resolveLevelOpen, resolveSeededPlanks, updatePlankNames } from '../layout';
-import { computeActiveUpdates, openableChildren, resolveDeckSpec } from '../util';
+import {
+  addSubjectsToActiveDeck,
+  pushSubjectsToStack,
+  resolveLevelOpen,
+  resolveSeededPlanks,
+  updatePlankNames,
+} from '../layout';
+import { computeActiveUpdates, openableChildren, openCompanionPlank, resolveDeckSpec } from '../util';
 import { updateActiveDeck } from './helpers';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperation.Open.pipe(
@@ -30,6 +36,9 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       log('LayoutOperation.Open handler start');
       const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
       const attention = yield* Capability.get(AttentionCapabilities.Attention);
+      const platform = yield* Capability.get(DeckCapabilities.Platform).pipe(
+        Effect.catch(() => Effect.succeed('desktop' as const)),
+      );
 
       // Validate navigation targets, redirecting to 404 if not found. Existence/loading is delegated
       // to the NavigationTargetLoader capability (contributed by plugin-client) so this layout plugin
@@ -47,7 +56,9 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
                   return false;
                 }
                 for (const loader of loaders) {
-                  if (yield* loader.load({ spaceId, entityId })) {
+                  // Anything short of a store answering "no" counts as existing: a 404 here replaces
+                  // the plank outright, so an unreachable edge must not be able to trigger one.
+                  if ((yield* loader.load({ spaceId, entityId })) !== 'absent') {
                     return true;
                   }
                 }
@@ -146,7 +157,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         // the documents it contains rather than a plank showing the collection itself.
         const seeded = resolveSeededPlanks({
           initial: resolveDeckSpec(
-            input.subject[0] ? Option.getOrUndefined(Graph.getNode(graph, input.subject[0])) : undefined,
+            input.subject[0] ? Option.getOrUndefined(AppGraph.getNode(graph, input.subject[0])) : undefined,
           )?.initial,
           addBesideOrigin,
           children: input.subject.length === 1 && input.subject[0] ? openableChildren(graph, input.subject[0]) : [],
@@ -160,7 +171,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
             ? resolveLevelOpen({
                 active: deck.active,
                 plankNames: deck.plankNames,
-                spec: resolveDeckSpec(Option.getOrUndefined(Graph.getNode(graph, input.root))),
+                spec: resolveDeckSpec(Option.getOrUndefined(AppGraph.getNode(graph, input.root))),
                 root: input.root,
                 level: input.level,
                 subjectId: input.subject[0],
@@ -168,7 +179,11 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
             : undefined;
 
         let next: string[];
-        if (levelOpen) {
+        if (platform === 'mobile') {
+          // A stack has one open semantic: push (or surface) the subjects; solo-replace, pivots, and
+          // seeded side-by-side planks are deck-geometry concepts with no stack analog.
+          next = pushSubjectsToStack(deck.active, input.subject);
+        } else if (levelOpen) {
           next = levelOpen.next;
         } else if (seeded) {
           next = seeded;
@@ -182,7 +197,8 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           next = navigateSolo(deck.active);
         }
 
-        const { deckUpdates } = computeActiveUpdates({ next, deck, attention });
+        const { flatten } = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
+        const { deckUpdates } = computeActiveUpdates({ next, deck, attention, flatten });
         // Rebound after the fact so the name follows whichever plank actually ended up holding it, and
         // so names whose plank this open closed are dropped rather than left dangling.
         // A level open binds the name the level owns; an ordinary open binds whatever the caller passed.
@@ -197,7 +213,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         // one-frame snap measured at exactly the lost width.
         const companionPlanks =
           levelOpen?.replacedId && input.subject[0] && deck.companionPlanks.includes(levelOpen.replacedId)
-            ? [...deckUpdates.companionPlanks, input.subject[0]]
+            ? openCompanionPlank(deckUpdates.companionPlanks, flatten, input.subject[0])
             : deckUpdates.companionPlanks;
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
           updateActiveDeck(state, { ...deckUpdates, companionPlanks, plankNames }),
@@ -223,7 +239,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         }
 
         for (const subjectId of newlyOpen) {
-          const typename = Option.match(Graph.getNode(graph, subjectId), {
+          const typename = Option.match(AppGraph.getNode(graph, subjectId), {
             onNone: () => undefined,
             onSome: (node) => {
               const active = node.data;

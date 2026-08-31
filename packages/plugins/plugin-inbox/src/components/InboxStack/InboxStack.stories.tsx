@@ -23,7 +23,7 @@ import { Mailbox } from '#types';
 
 import { InboxStack, type InboxStackItem, InboxStackProps } from './InboxStack';
 
-type DefaultStoryProps = InboxStackProps & {
+type StoryArgs = InboxStackProps & {
   count?: number;
   options?: MessagesOptions;
   /** Group the generated messages by thread id, mirroring the mailbox's conversation query. */
@@ -35,7 +35,7 @@ type DefaultStoryProps = InboxStackProps & {
   knownSenders?: number;
 };
 
-const DefaultStory = ({ count = 0, options, groupByThread, knownSenders, ...props }: DefaultStoryProps) => {
+const DefaultStory = ({ count = 0, options, groupByThread, knownSenders, ...props }: StoryArgs) => {
   const { space } = useClientStory();
   const onContactCreate = useContactCreate(space?.db);
   const [items] = useState<InboxStackItem[] | undefined>(() => {

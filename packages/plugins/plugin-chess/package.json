@@ -15,11 +15,13 @@
   "imports": {
     "#capabilities": {
       "source": {
-        "node": "./src/capabilities/node.ts",
+        "workerd": "./src/capabilities/gen/workerd.ts",
+        "node": "./src/capabilities/gen/node.ts",
         "default": "./src/capabilities/index.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "node": "./dist/lib/capabilities/node.mjs",
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
+      "node": "./dist/lib/capabilities.node.mjs",
       "default": "./dist/lib/capabilities.mjs"
     },
     "#components": {
@@ -43,14 +45,8 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": {
-        "workerd": "./src/plugin.workerd.ts",
-        "node": "./src/plugin.node.ts",
-        "default": "./src/plugin.tsx"
-      },
+      "source": "./src/plugin.tsx",
       "types": "./dist/types/src/plugin.d.ts",
-      "workerd": "./dist/lib/plugin.workerd.mjs",
-      "node": "./dist/lib/plugin.node.mjs",
       "default": "./dist/lib/plugin.mjs"
     },
     "#skills": {
@@ -76,16 +72,6 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./operations": {
-      "source": "./src/operations/index.ts",
-      "types": "./dist/types/src/operations/index.d.ts",
-      "import": "./dist/lib/operations.mjs"
-    },
-    "./skills": {
-      "source": "./src/skills/index.ts",
-      "types": "./dist/types/src/skills/index.d.ts",
-      "import": "./dist/lib/skills.mjs"
-    },
     "./testing": {
       "source": "./src/testing.ts",
       "types": "./dist/types/src/testing.d.ts",
@@ -126,6 +112,16 @@
       "source": "./src/types/PlayerReview.ts",
       "types": "./dist/types/src/types/PlayerReview.d.ts",
       "import": "./dist/lib/PlayerReview.mjs"
+    },
+    "./ChessOperationHandlerSet": {
+      "source": "./src/operations/ChessOperationHandlerSet.ts",
+      "types": "./dist/types/src/operations/ChessOperationHandlerSet.d.ts",
+      "import": "./dist/lib/ChessOperationHandlerSet.mjs"
+    },
+    "./ChessSkill": {
+      "source": "./src/skills/ChessSkill.ts",
+      "types": "./dist/types/src/skills/ChessSkill.d.ts",
+      "import": "./dist/lib/ChessSkill.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

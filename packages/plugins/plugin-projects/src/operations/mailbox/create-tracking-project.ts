@@ -5,8 +5,9 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
+import * as Project from '@dxos/compute/Project';
 import * as Trigger from '@dxos/compute/Trigger';
-import { Database, type DXN, Obj, Ref } from '@dxos/echo';
+import { Database, type DXN, Ref } from '@dxos/echo';
 import { extractDomain, isFreeMailDomain, normalizeEmail, organizationNameFromDomain } from '@dxos/extractor-lib';
 import { log } from '@dxos/log';
 import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
@@ -14,7 +15,7 @@ import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { makeRoutine } from '@dxos/plugin-routine';
 import { trim } from '@dxos/util';
 
-import { ProjectOperation } from '#types';
+import { ProjectMailboxOperation } from '#types';
 
 import { scaffoldProject } from '../../templates';
 import { syncProjectTasks } from './update-project-tasks';
@@ -32,7 +33,7 @@ const INSTRUCTIONS = (label: string, senders: readonly string[]) => trim`
  * product without teaching the operation anything about projects.
  */
 const PIPELINES: Record<
-  ProjectOperation.TrackingPipeline,
+  ProjectMailboxOperation.TrackingPipeline,
   (context: { mailbox: Mailbox.Mailbox; senders: readonly string[] }) => {
     runnable: DXN.DXN;
     input: Record<string, unknown>;
@@ -41,13 +42,13 @@ const PIPELINES: Record<
   }
 > = {
   tasks: ({ mailbox, senders }) => ({
-    runnable: ProjectOperation.UpdateProjectTasks.meta.key,
+    runnable: ProjectMailboxOperation.UpdateProjectTasks.meta.key,
     input: { mailbox: Ref.make(mailbox), senders },
     suffix: 'Requests',
     routineLabel: 'Track',
   }),
   summaries: ({ mailbox, senders }) => ({
-    runnable: ProjectOperation.UpdateInvestorLog.meta.key,
+    runnable: ProjectMailboxOperation.UpdateInvestorLog.meta.key,
     input: { mailbox: Ref.make(mailbox), domains: senders },
     suffix: 'Conversations',
     routineLabel: 'Summarize',
@@ -68,7 +69,7 @@ const PIPELINES: Record<
  * routine binds `UpdateProjectTasks` (kind: runnable — no model between trigger and pipeline), and
  * an initial backfill fills the task set from the existing feed.
  */
-const handler = ProjectOperation.CreateTrackingProject.pipe(
+const handler = ProjectMailboxOperation.CreateTrackingProject.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ mailbox: mailboxRef, message, scope, pipeline = 'tasks', name }) {
       const mailbox = yield* Database.load(mailboxRef);
@@ -110,10 +111,7 @@ const handler = ProjectOperation.CreateTrackingProject.pipe(
           concurrency: 1,
         }),
       });
-      Obj.setParent(routine, project);
-      Obj.update(project, (project) => {
-        project.routines = [...project.routines, Ref.make(routine)];
-      });
+      Project.addRoutine(project, routine);
 
       // Initial backfill, for the pipeline that has one: the feed's existing history becomes the
       // starting task set, so the project is useful before its first trigger fires.

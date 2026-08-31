@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import React, { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type ReactNode, useCallback, useMemo, useRef, useState } from 'react';
 
 import {
   useAtomCapability,
@@ -16,7 +16,7 @@ import {
 } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type AppSurface, ProgressMeter, useAppGraph, useProgressMonitor, useShowItem } from '@dxos/app-toolkit/ui';
+import { type AppSurface, useAppGraph, useProgressMonitor, useShowItem } from '@dxos/app-toolkit/ui';
 import { Aggregate, Database, Ref as EchoRef, Filter, Obj, Order, Query, Scope, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { usePagination, useQuery, useResolveRef } from '@dxos/echo-react';
@@ -25,8 +25,9 @@ import { type EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { AtomState, useAtomState } from '@dxos/react-hooks';
-import { ElevationProvider, Panel } from '@dxos/react-ui';
+import { Deferred, ElevationProvider, Panel } from '@dxos/react-ui';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
+import { ProgressMeter } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
 import {
   Menu,
@@ -54,7 +55,13 @@ import { InboxCapabilities, InboxOperation, Mailbox, SystemTags } from '#types';
 import { POPOVER_SAVE_FILTER } from '../../constants';
 import { messageMatchesQuery } from '../../util';
 import { InitializeMailbox } from './InitializeMailbox';
-import { buildMailboxSelection, buildSystemTagSelection, buildThreadSemiJoin, getSearchText } from './mailbox-search';
+import {
+  buildMailboxSelection,
+  buildSystemTagSelection,
+  buildThreadSemiJoin,
+  getFilterTagUris,
+  getSearchText,
+} from './mailbox-search';
 import { MailboxFilter } from './MailboxFilter';
 
 /** Messages per page for the lazily-loaded message window. */
@@ -90,14 +97,13 @@ export const MailboxArticle = ({
   const showItem = useShowItem();
   const runAction = useActionRunner();
 
-  // Gmail sync (`#sync`), the process pipeline (`#process`) and the enrichment cascade (`#enrich`)
+  // Mail sync (`#sync`), the process pipeline (`#process`) and the analyze cascade (`#analyze`)
   // register monitors keyed by the mailbox URI; the statusbar shows whichever run is active, sync
   // first — it is the one that changes what the list contains rather than what is known about it.
   const syncProgress = useProgressMonitor(createSyncProgressKey(mailbox));
-  const processProgress = useProgressMonitor(InboxOperation.createProcessProgressKey(mailbox));
-  const enrichProgress = useProgressMonitor(InboxOperation.createEnrichProgressKey(mailbox));
+  const scanProgress = useProgressMonitor(InboxOperation.createAnalyzeProgressKey(mailbox));
   const isActive = (state: typeof syncProgress) => state?.status === 'running' || state?.status === 'error';
-  const progress = [syncProgress, processProgress, enrichProgress].find(isActive);
+  const progress = [syncProgress, scanProgress].find(isActive);
   // Registry (present when plugin-progress is loaded) lets the meter cancel a cancellable run.
   const progressRegistry = useOptionalCapability(AppCapabilities.ProgressRegistry);
 
@@ -117,6 +123,10 @@ export const MailboxArticle = ({
   const starredUri = useSystemTagUri(db, 'starred');
   const starredAtom = useMemo(() => SystemTags.tagAtom(tagIndex, starredUri), [tagIndex, starredUri]);
 
+  // Inbox membership drives the tile menu's archive direction; archiving is this tag coming off.
+  const inboxUri = useSystemTagUri(db, 'inbox');
+  const inboxAtom = useMemo(() => SystemTags.tagAtom(tagIndex, inboxUri), [tagIndex, inboxUri]);
+
   // This view's canonical system tag, resolved by id (`undefined` until sync/first draft creates it).
   const systemTagUri = useSystemTagUri(db, systemTag);
   const systemTagIds = useTaggedIds(tagIndex, systemTagUri);
@@ -124,11 +134,10 @@ export const MailboxArticle = ({
   // Filter.
   const builder = useMemo(() => new QueryBuilder(tagMap), [tagMap]);
   const [filterText, setFilterText] = useState<string>(filterProp ?? '');
-  const [filter, setFilter] = useState<Filter.Any>();
-  useEffect(() => {
-    const { filter } = builder.build(filterText);
-    setFilter(filter);
-  }, [filterText, builder]);
+  // Supplied by the query editor, which already parses the DSL to decorate it — deriving the filter
+  // here as well parsed every keystroke twice. `builder` remains for the seeds below, which are set
+  // programmatically and so produce no editor event.
+  const [filter, setFilter] = useState<Filter.Any | undefined>(() => builder.build(filterProp ?? '').filter);
 
   // Whether messages are grouped into conversations (threads). On by default.
   const conversations = settings.conversations ?? true;
@@ -148,6 +157,27 @@ export const MailboxArticle = ({
   // the virtualizer bound only what's rendered, not what's fetched. Bounded-memory windowing isn't
   // possible here — ordering threads by a `max(created)` aggregate needs the full set to rank them.
 
+  // Read reactively so a text search scoped to a tag's members (see `buildMailboxSelection`)
+  // re-runs when that tag's membership changes.
+  const filterTagUris = useMemo(() => getFilterTagUris(debouncedFilter), [debouncedFilter]);
+  const filterTagUrisKey = filterTagUris.join(',');
+  const filterTagIdsAtom = useMemo(
+    () =>
+      tagIndex && filterTagUris.length > 0
+        ? Atom.make((get) =>
+            filterTagUris.map((tagUri) => [tagUri, get(TagIndex.taggedIdsAtom(tagIndex, tagUri))] as const),
+          )
+        : EMPTY_TAG_IDS_ATOM,
+    // filterTagUris is a fresh array each render; key on its membership (filterTagUrisKey) instead.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [tagIndex, filterTagUrisKey],
+  );
+  const filterTagIds = useAtomValue(filterTagIdsAtom);
+  const resolveTagIds = useCallback(
+    (tagUri: string) => filterTagIds.find(([uri]) => uri === tagUri)?.[1],
+    [filterTagIds],
+  );
+
   // True while the filter box still shows its seeded text (`'#inbox'` etc.) unedited, so the tag-id
   // selection applies; editing away falls back to normal text/tag parsing (Drafts hides the box).
   const isUnmodifiedSystemTagView = systemTag !== undefined && debouncedFilterText === (filterProp ?? '');
@@ -156,10 +186,10 @@ export const MailboxArticle = ({
     () =>
       isUnmodifiedSystemTagView
         ? buildSystemTagSelection(systemTagIds)
-        : buildMailboxSelection(debouncedFilterText, debouncedFilter),
+        : buildMailboxSelection(debouncedFilterText, debouncedFilter, { resolveTagIds }),
     // systemTagIds is a fresh array each render; key on its membership (systemTagIdsKey) instead.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [isUnmodifiedSystemTagView, systemTagIdsKey, debouncedFilterText, debouncedFilter],
+    [isUnmodifiedSystemTagView, systemTagIdsKey, debouncedFilterText, debouncedFilter, resolveTagIds],
   );
   const searchQuery = useMemo(() => getSearchText(debouncedFilter), [debouncedFilter]);
 
@@ -188,7 +218,11 @@ export const MailboxArticle = ({
       ? conversations
         ? source
             .aggregate({
-              threadId: Aggregate.group('threadId'),
+              // Falling back to the message id keeps every threadless message (drafts,
+              // transcriptions, assistant-authored) its own conversation; grouping on `threadId`
+              // alone pools them all under the `null` key, where `items`' preview cap would silently
+              // drop all but the first few.
+              threadId: Aggregate.group({ coalesce: ['threadId', 'id'] }),
               lastMessageAt: Aggregate.max('created'),
               count: Aggregate.count(),
               items: Aggregate.items({
@@ -203,18 +237,16 @@ export const MailboxArticle = ({
   );
 
   // The aggregate query already orders threads (by latest message) and their members (newest-first),
-  // so entries map straight to stack items. Messages without a `threadId` share the aggregate's
-  // single `null`-key group; split them back into singleton conversations at that group's position.
-  // A thread's preview is capped at `MAILBOX_THREAD_PREVIEW_COUNT`; `count` carries the full size.
+  // and its group key falls back to the message id, so a threadless message arrives as its own
+  // one-member group — entries map straight to stack items. A thread's preview is capped at
+  // `MAILBOX_THREAD_PREVIEW_COUNT`; `count` carries the full size.
   const items = useMemo<InboxStackItem[]>(() => {
     const result: InboxStackItem[] = [];
     for (const entry of pagination.items) {
-      if (!isThreadGroup(entry)) {
-        result.push(entry);
-      } else if (entry.threadId == null) {
-        result.push(...entry.items.map((message) => ({ id: message.id, messages: [message] })));
-      } else {
+      if (isThreadGroup(entry)) {
         result.push({ id: entry.threadId, messages: entry.items, total: entry.count });
+      } else {
+        result.push(entry);
       }
     }
     return applyPostFilters(result, mailbox, searchQuery);
@@ -225,14 +257,34 @@ export const MailboxArticle = ({
 
   // Drives an in-flow spinner in the list, never a full-panel fallback — a page fetch or a
   // background refresh must not blank the list. `source` is undefined until a free-text feed resolves.
+  //
+  // Deliberately NOT widened to cover the feed's own resolution: a system-tag view degrades to a
+  // space-only scope while `mailbox.feed` loads, which answers immediately with nothing (measured on
+  // a live profile: 0 messages space-only vs 432 feed-scoped) — but spinning through that window
+  // just trades a flash of the empty panel for a flash of the spinner. The `Deferred` below holds
+  // the panel back instead, which costs no visible state at all.
   const loading = !source || pagination.isLoading;
   // Show the empty-mailbox panel only once the query has settled with nothing, never mid-load.
   const showEmptyState = !loading && messages.length === 0;
 
-  const handleClear = useCallback(() => {
-    setFilterText(filterProp ?? '');
-    setFilter(builder.build(filterProp ?? '').filter);
-  }, [filterProp, builder]);
+  // Text set from here rather than typed reaches the editor imperatively — a controlled `value` would
+  // race fast typing — and raises no editor event, so the parse the editor normally hands back has to
+  // be done here too, or `filter` (which gates Save) keeps describing the previous text.
+  const applyFilterText = useCallback(
+    (text: string) => {
+      setFilterText(text);
+      setFilter(builder.build(text).filter);
+      filterEditorRef.current?.setText(text);
+    },
+    [builder],
+  );
+
+  // Read by `select-tag`, which appends to the current text from a handler that must not be rebuilt
+  // on every keystroke.
+  const filterTextRef = useRef(filterText);
+  filterTextRef.current = filterText;
+
+  const handleClear = useCallback(() => applyFilterText(filterProp ?? ''), [filterProp, applyFilterText]);
 
   const handleNavigate = useCallback(
     (messageId: string, newPlank = false) => {
@@ -284,6 +336,16 @@ export const MailboxArticle = ({
           break;
         }
 
+        case 'archive': {
+          const message = messages.find((message) => message.id === action.messageId);
+          if (message && db) {
+            void Effect.runFork(
+              SystemTags.toggleTag(mailbox, message, 'inbox').pipe(Effect.provide(Database.layer(db))),
+            );
+          }
+          break;
+        }
+
         case 'ignore-sender': {
           const message = messages.find((message) => message.id === action.messageId);
           const email = message?.sender?.email;
@@ -319,15 +381,12 @@ export const MailboxArticle = ({
         }
 
         case 'select-tag': {
-          setFilterText((prevFilterText) => {
-            // Check if tag already exists.
-            const tags = prevFilterText.split(/\s+/).filter(Boolean);
-            if (tags.at(-1)?.toLowerCase() === '#' + action.label.toLowerCase()) {
-              return prevFilterText;
-            } else {
-              return [prevFilterText.trim(), '#' + action.label].filter(Boolean).join(' ') + ' ';
-            }
-          });
+          const previous = filterTextRef.current;
+          // Check if tag already exists.
+          const tags = previous.split(/\s+/).filter(Boolean);
+          if (tags.at(-1)?.toLowerCase() !== '#' + action.label.toLowerCase()) {
+            applyFilterText([previous.trim(), '#' + action.label].filter(Boolean).join(' ') + ' ');
+          }
           filterEditorRef.current?.focus();
           break;
         }
@@ -344,7 +403,7 @@ export const MailboxArticle = ({
         }
       }
     },
-    [db, id, mailbox, messages, invokePromise, showItem, handleNavigate],
+    [db, id, mailbox, messages, invokePromise, showItem, handleNavigate, applyFilterText],
   );
 
   const handleSaveFilter = useCallback(() => {
@@ -363,6 +422,7 @@ export const MailboxArticle = ({
         value={filterText}
         filter={filter}
         onChange={setFilterText}
+        onFilterChange={setFilter}
         onSave={handleSaveFilter}
         onClear={handleClear}
         editorRef={filterEditorRef}
@@ -390,37 +450,32 @@ export const MailboxArticle = ({
           </Panel.Toolbar>
         </Menu.Root>
       </ElevationProvider>
-      <Panel.Content asChild>
-        {showEmptyState ? (
-          <InitializeMailbox mailbox={mailbox} />
-        ) : (
-          // Always keep the list mounted (even with no items yet); `loading` renders an in-flow
-          // spinner at the end of the list rather than replacing the whole panel — so a page fetch
-          // or a mid-sync refresh never blanks what's already shown.
+      <Panel.Content>
+        <Deferred pending={showEmptyState} fallback={() => <InitializeMailbox mailbox={mailbox} />}>
           <InboxStack
             id={id}
             items={items}
             currentId={currentId}
             tagsAtom={tagsAtom}
             starredAtom={starredAtom}
+            inboxAtom={inboxAtom}
             pagination={pagination}
             loading={loading}
+            enableArchive
             enableIgnoreSender
             enableCreateTopic
             searchQuery={searchQuery}
             onAction={handleAction}
           />
-        )}
+        </Deferred>
       </Panel.Content>
-      {progress && (progress.status === 'running' || progress.status === 'error') && (
-        <Panel.Statusbar asChild>
-          <ProgressMeter
-            state={progress}
-            classNames='border-t border-separator'
-            onCancel={progressRegistry ? () => progressRegistry.cancel(progress.name) : undefined}
-          />
-        </Panel.Statusbar>
-      )}
+      <Panel.Statusbar asChild>
+        <ProgressMeter
+          classNames='border-t border-subdued-separator'
+          state={progress?.status === 'running' || progress?.status === 'error' ? progress : undefined}
+          onCancel={progressRegistry ? () => progress && progressRegistry.cancel(progress.name) : undefined}
+        />
+      </Panel.Statusbar>
     </Panel.Root>
   );
 };
@@ -429,7 +484,8 @@ MailboxArticle.displayName = 'MailboxArticle';
 
 /** One thread's worth of results from the conversation-aggregated message query (see the query above). */
 type ThreadGroup = {
-  threadId: string | null | undefined;
+  /** The thread's id, or the message's own id for a message that carries no `threadId`. */
+  threadId: string;
   lastMessageAt: string | null;
   count: number;
   /** Capped preview (see `MAILBOX_THREAD_PREVIEW_COUNT`); `count` carries the full thread size. */
@@ -523,6 +579,7 @@ const useSystemTagUri = (
 };
 
 const EMPTY_IDS_ATOM = Atom.make((): readonly EntityId[] => []);
+const EMPTY_TAG_IDS_ATOM = Atom.make((): readonly (readonly [string, readonly EntityId[]])[] => []);
 
 /**
  * Reactive ids carrying `tagUri` in `tagIndex`. Feed/space messages have no `meta.tags` of their own —

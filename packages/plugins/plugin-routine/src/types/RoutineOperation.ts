@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Chat from '@dxos/assistant-toolkit/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -18,16 +19,12 @@ import { Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 // otherwise needs a transitive `@dxos/keys` import that's hard for d.ts emit to surface.
 import { EID as _EchoURIReference } from '@dxos/keys';
 
-import { meta } from '#meta';
-
 import { TriggerTemplate } from './Routine';
 export { _EchoURIReference };
 
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
-
 export const CreateTriggerFromTemplate = Operation.make({
   meta: {
-    key: makeKey('createTriggerFromTemplate'),
+    key: DXN.make('org.dxos.operation.routine.createTriggerFromTemplate'),
     name: 'Create Trigger From Template',
     icon: 'ph--lightning--regular',
   },
@@ -46,27 +43,28 @@ export const CreateTriggerFromTemplate = Operation.make({
 // ownership are established in one place. Output mirrors `SpaceCapabilities.CreateObjectResult`.
 export const CreateRoutine = Operation.make({
   meta: {
-    key: makeKey('createAutomation'),
+    key: DXN.make('org.dxos.operation.routine.createAutomation'),
     name: 'Create Routine',
     icon: 'ph--lightning--regular',
   },
-  services: [Capability.Service],
+  services: [Capability.Service, Plugin.Service],
   input: Schema.Struct({
     db: Database.Database,
     templateId: Schema.String,
     name: Schema.optional(Schema.String),
     subject: Schema.optional(Obj.Unknown),
+    /** Values for the template's `inputSchema`. */
+    input: Schema.optional(Schema.Unknown),
   }),
   output: Schema.Struct({
     id: Schema.String,
-    subject: Schema.Array(Schema.String),
     object: Obj.Unknown,
   }),
 });
 
 export const RunPromptInNewChat = Operation.make({
   meta: {
-    key: makeKey('runPromptInNewChat'),
+    key: DXN.make('org.dxos.operation.routine.runPromptInNewChat'),
     name: 'Run Prompt In New Chat',
     icon: 'ph--chat-text--regular',
   },
@@ -96,7 +94,7 @@ export const RunPromptInNewChat = Operation.make({
 // would silently run an edge routine on the client.
 export const RunRoutine = Operation.make({
   meta: {
-    key: makeKey('runAutomation'),
+    key: DXN.make('org.dxos.operation.routine.runAutomation'),
     name: 'Run Routine',
     icon: 'ph--play--regular',
   },

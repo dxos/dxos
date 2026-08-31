@@ -22,7 +22,7 @@ const output = Schema.Struct({
 
 export const AddPersonFromSnapshot = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.plugin.crx.operation.addPersonFromSnapshot'),
+    key: DXN.make('org.dxos.operation.crx.addPersonFromSnapshot'),
     name: 'Add person',
     description: 'Create a person from a page snapshot.',
     icon: 'ph--user--regular',
@@ -33,7 +33,7 @@ export const AddPersonFromSnapshot = Operation.make({
 
 export const AddOrganizationFromSnapshot = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.plugin.crx.operation.addOrganizationFromSnapshot'),
+    key: DXN.make('org.dxos.operation.crx.addOrganizationFromSnapshot'),
     name: 'Add organization',
     description: 'Create an organization from a page snapshot.',
     icon: 'ph--building-office--regular',
@@ -44,7 +44,7 @@ export const AddOrganizationFromSnapshot = Operation.make({
 
 export const AddNoteFromSnapshot = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.plugin.crx.operation.addNoteFromSnapshot'),
+    key: DXN.make('org.dxos.operation.crx.addNoteFromSnapshot'),
     name: 'Add note',
     description: 'Create a markdown note from a page snapshot.',
     icon: 'ph--note--regular',

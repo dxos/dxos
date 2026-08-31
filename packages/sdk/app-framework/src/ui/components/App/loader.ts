@@ -16,6 +16,11 @@ declare global {
       range?: { index: number; total: number };
     }) => void;
     progress: (fraction?: number) => void;
+    /**
+     * Report that startup has outrun its budget without failing it, offering `onAbort` as the way
+     * out. Dev-only — see the canonical doc on `BootLoaderApi.stalled`.
+     */
+    stalled: (onAbort: () => void) => void;
     ready: () => void;
     dismiss: () => void;
   }

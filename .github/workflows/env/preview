@@ -1,0 +1,25 @@
+# All referenced variables must be set or the script will fail.
+CLOUDFLARE_ACCOUNT_ID=${CLOUDFLARE_ACCOUNT_ID}
+CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}
+COMPOSER_APP_POSTHOG_API_KEY=${COMPOSER_APP_TEST_POSTHOG_API_KEY}
+COMPOSER_APP_POSTHOG_FEEDBACK_SURVEY_ID=0199be95-be15-0000-56ca-1f0dfde8731f
+COMPOSER_APP_POSTHOG_PROJECT_ID=93152
+DOCS_POSTHOG_API_KEY=phc_5PMOqYy30CdIv0hIzqspq0Go8LKbNKG8bISJb5CViTQ
+POSTHOG_CLI_API_KEY=${POSTHOG_CLI_API_KEY}
+DX_HUB_URL="https://dxos.network/hub/"
+DX_IPDATA_API_KEY=${IPDATA_API_KEY}
+# Native builds cannot use the relative /api path — they serve their own frontend — and each
+# deployment binds its own feedback-logs R2 bucket, so the channel names its own.
+DX_FEEDBACK_LOGS_ENDPOINT=https://preview.composer.space/api/feedback-logs
+DX_OTEL_ENDPOINT=/api/otel
+# Stamped on every metric, log and trace as `deployment.environment`; without it every
+# deployed client reports `unknown` and production is indistinguishable from preview.
+DX_ENVIRONMENT=preview
+DX_POSTHOG_API_HOST=https://o.composer.space
+IPFS_API_SECRET=${IPFS_API_SECRET}
+# End common vars
+DX_PWA=false
+DX_MINIFY=true
+# Preview runs against EDGE production — same backend as composer.space, so a dogfooder's data is
+# the data they see in production.
+DX_EDGE_BASE_URL="https://dxos.network/"

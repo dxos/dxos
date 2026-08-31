@@ -2,7 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
-import { type Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
+import { type JsonObject, type MessageInitShape } from '@bufbuild/protobuf';
+
+import { type Config as ConfigProto, type ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
 
 export const FILE_DEFAULTS = 'defaults.yml';
 export const FILE_ENVS = 'envs-map.yml';
@@ -15,12 +17,15 @@ type DotPrefix<T extends string> = T extends '' ? '' : `.${T}`;
  *
  * Read more: https://stackoverflow.com/a/68404823.
  */
+// Repeated fields are leaves: a config key addresses the list itself, never an index into it.
 type DotNestedKeys<T> = (
-  T extends object
-    ? {
-        [K in Exclude<keyof T, symbol>]: `${K}${DotPrefix<DotNestedKeys<T[K]>>}`;
-      }[Exclude<keyof T, symbol>]
-    : ''
+  T extends readonly any[]
+    ? ''
+    : T extends object
+      ? {
+          [K in Exclude<keyof T, symbol>]: `${K}${DotPrefix<DotNestedKeys<T[K]>>}`;
+        }[Exclude<keyof T, symbol>]
+      : ''
 ) extends infer D
   ? Extract<D, string>
   : never;
@@ -50,8 +55,21 @@ export type DeepIndex<T, KS extends Keys, Fail = undefined> = KS extends [infer 
     : Fail
   : T;
 
+/** Plain object accepted wherever a config is supplied -- a loaded YAML file, a test literal. */
+export type ConfigInit = MessageInitShape<typeof ConfigSchema>;
+
+// buf's bookkeeping fields are dropped before walking the tree: `$typeName` is a string literal
+// and `$unknown` a list of wire records, neither of which is addressable by a config key.
+type ConfigFields<T> = T extends readonly (infer Element)[]
+  ? ConfigFields<Element>[]
+  : T extends JsonObject
+    ? Record<string, any>
+    : {
+        [Key in keyof T as Key extends '$typeName' | '$unknown' ? never : Key]: ConfigFields<T[Key]>;
+      };
+
 /**
  * Any nested dot separated key that can be in config.
  */
 // TODO(egorgripasov): Clean once old config deprecated.
-export type ConfigKey = DotNestedKeys<ConfigProto>;
+export type ConfigKey = DotNestedKeys<ConfigFields<ConfigProto>>;

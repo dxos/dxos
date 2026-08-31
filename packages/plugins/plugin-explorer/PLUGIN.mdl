@@ -21,6 +21,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.0`         |
+| `flow`      | `org.dxos.mdl.flow@1.0`       |
 
 ## Types
 
@@ -268,6 +269,58 @@ test T-7: Model closed on unmount
   then:
     - SpaceGraphModel.close() is called
     - no lingering ECHO subscriptions remain
+```
+
+---
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+plugin-explorer is not in `getDefaults` or the dev-only default set (see
+`packages/apps/composer-app/src/plugin-defs.tsx`) — it is OFF by default. Neither `createGraph` nor
+`buildFilter` is a registered runtime `Operation` (no `DXN.make` key exists in
+`src/`) — creation goes through the generic `CreateObjectEntry` capability
+(`src/capabilities/create-object.ts`), a UI-driven path with no operation key to invoke, and the
+query editor calls `buildFilter` as a plain in-process function. Both steps are human-only.
+
+```mdl
+flow QA-1: Create a Graph and switch layout variants
+  desc: The core explorer round-trip — create a Graph object, watch it render, switch between layout variants.
+  actors: human
+  covers: [F-1.1, F-1.2, F-1.3, F-3.1, T-1, T-2, T-3]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open, containing at least one object of some typename to visualize
+    - no Graph named "QA Graph" exists — ABORT rather than reusing one this flow did not create
+  test:
+    - name: Create the Graph
+      do: In the navtree, click + on the space and choose Explorer > Graph. Name it "QA Graph" and pick a typename to seed the view.
+      expect: a Graph object named "QA Graph" is created and opens as an article, rendering an SVG force-directed graph of matching objects
+      note: |
+        NO `invoke` — `createGraph` has no runtime operation key; the navtree action calls the
+        `CreateObjectEntry` capability directly (see above).
+    - name: Switch to the cluster variant
+      do: Click the "cluster" tab in the variant toolbar.
+      expect: the projector swaps to radial cluster layout; nodes tween from their force positions rather than jumping; no pan/zoom wrapper is present
+    - name: Switch to the lattice variant
+      do: Click the "lattice" tab.
+      expect: nodes render as small rounded rectangles, grouped by typename then sorted alphabetically by label
+    - name: Hover a node
+      do: Move the pointer over any node with an underlying ECHO object.
+      expect: an anchor-card preview appears showing the object's label
+  after:
+    - name: Delete the Graph
+      do: Right-click "QA Graph" in the navtree and choose Delete.
+      expect: the row leaves the navtree and its plank closes
+      note: |
+        NO `invoke` here either — the flow never captured a live reference to the Graph (its
+        creation had no `invoke`/`capture`), so a runner must resolve it by querying
+        `space.db.query(dxos.Filter.everything())` for the object named "QA Graph" and call
+        `org.dxos.operation.space.removeObjects` with that reference, rather than the flow
+        guessing an id it was never given.
 ```
 
 ---

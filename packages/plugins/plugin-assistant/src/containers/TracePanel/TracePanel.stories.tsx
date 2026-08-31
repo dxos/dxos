@@ -37,11 +37,11 @@ import { initClientFromSpaceSnapshot } from '../../testing/snapshot';
 import { PLAYBACK_INTERVAL_MS, SimulatedAgent, STEP_STORAGE_KEY, useLocalStorageNumber } from './testing';
 import { TracePanel } from './TracePanel';
 
-type BaseStoryProps = PropsWithChildren<{
+type BaseStoryArgs = PropsWithChildren<{
   toolbar: ReactNode;
 }>;
 
-const BaseStory = ({ children, toolbar }: BaseStoryProps) => (
+const BaseStory = ({ children, toolbar }: BaseStoryArgs) => (
   <Panel.Root classNames='h-full min-h-0'>
     <Panel.Toolbar asChild>{toolbar}</Panel.Toolbar>
     <Panel.Content asChild classNames='min-h-0'>

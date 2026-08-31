@@ -15,17 +15,14 @@
   "imports": {
     "#capabilities": {
       "source": {
-        "node": "./src/capabilities/node.ts",
+        "workerd": "./src/capabilities/gen/workerd.ts",
+        "node": "./src/capabilities/gen/node.ts",
         "default": "./src/capabilities/index.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "node": "./dist/lib/capabilities/node.mjs",
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
+      "node": "./dist/lib/capabilities.node.mjs",
       "default": "./dist/lib/capabilities.mjs"
-    },
-    "#capabilities/node": {
-      "source": "./src/capabilities/node.ts",
-      "types": "./dist/types/src/capabilities/node.d.ts",
-      "default": "./dist/lib/capabilities/node.mjs"
     },
     "#components": {
       "source": "./src/components/index.ts",
@@ -42,6 +39,11 @@
       "types": "./dist/types/src/hooks/index.d.ts",
       "default": "./dist/lib/hooks.mjs"
     },
+    "#dashboard": {
+      "source": "./src/dashboard/index.ts",
+      "types": "./dist/types/src/dashboard/index.d.ts",
+      "default": "./dist/lib/dashboard.mjs"
+    },
     "#meta": {
       "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
@@ -53,20 +55,19 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": {
-        "workerd": "./src/plugin.workerd.ts",
-        "node": "./src/plugin.node.ts",
-        "default": "./src/plugin.ts"
-      },
+      "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
-      "workerd": "./dist/lib/plugin.workerd.mjs",
-      "node": "./dist/lib/plugin.node.mjs",
       "default": "./dist/lib/plugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#skills": {
+      "source": "./src/skills/index.ts",
+      "types": "./dist/types/src/skills/index.d.ts",
+      "default": "./dist/lib/skills.mjs"
     },
     "#types": {
       "source": "./src/types/index.ts",
@@ -107,6 +108,11 @@
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
+    "./DatabaseSkill": {
+      "source": "./src/skills/DatabaseSkill.ts",
+      "types": "./dist/types/src/skills/DatabaseSkill.d.ts",
+      "import": "./dist/lib/DatabaseSkill.mjs"
+    },
     "./CollectionOperation": {
       "source": "./src/types/CollectionOperation.ts",
       "types": "./dist/types/src/types/CollectionOperation.d.ts",
@@ -137,6 +143,11 @@
       "types": "./dist/types/src/types/SpaceForm.d.ts",
       "import": "./dist/lib/SpaceForm.mjs"
     },
+    "./SpaceOperationHandlerSet": {
+      "source": "./src/operations/SpaceOperationHandlerSet.ts",
+      "types": "./dist/types/src/operations/SpaceOperationHandlerSet.d.ts",
+      "import": "./dist/lib/SpaceOperationHandlerSet.mjs"
+    },
     "./SpaceOperation": {
       "source": "./src/types/SpaceOperation.ts",
       "types": "./dist/types/src/types/SpaceOperation.d.ts",
@@ -156,6 +167,11 @@
       "source": "./src/types/SpaceSurface.ts",
       "types": "./dist/types/src/types/SpaceSurface.d.ts",
       "import": "./dist/lib/SpaceSurface.mjs"
+    },
+    "./dashboard": {
+      "source": "./src/dashboard/index.ts",
+      "types": "./dist/types/src/dashboard/index.d.ts",
+      "import": "./dist/lib/dashboard.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -200,10 +216,12 @@
     "@dxos/display-name": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
+    "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/extractor": "workspace:*",
+    "@dxos/graph": "workspace:*",
     "@dxos/halo": "workspace:*",
     "@dxos/halo-react": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -216,6 +234,7 @@
     "@dxos/plugin-observability": "workspace:*",
     "@dxos/plugin-settings": "workspace:*",
     "@dxos/plugin-status-bar": "workspace:*",
+    "@dxos/progress": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",

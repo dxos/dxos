@@ -12,7 +12,11 @@
   "author": "DXOS.org",
   "type": "module",
   "imports": {
-    "#translations": "./src/translations.ts"
+    "#translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "default": "./dist/lib/translations.mjs"
+    }
   },
   "exports": {
     ".": {
@@ -46,6 +50,7 @@
     "@dxos/echo-query": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/progress": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/ui": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
@@ -57,8 +62,7 @@
     "dompurify": "catalog:",
     "effect": "catalog:",
     "json5": "catalog:",
-    "motion": "catalog:",
-    "react-resize-detector": "catalog:"
+    "motion": "catalog:"
   },
   "devDependencies": {
     "@dxos/ai": "workspace:*",

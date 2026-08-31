@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import * as Skill from '@dxos/compute/Skill';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { DescriptionAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { CardAnnotation, CollectionItemAnnotation, Text } from '@dxos/schema';
@@ -26,13 +27,14 @@ export class Document extends Type.makeObject<Document>(DXN.make('org.dxos.type.
     name: Schema.optional(Schema.String),
     description: Schema.optional(Schema.String),
     fallbackName: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
-    content: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
+    /** Owned body: `SetParent` cascades it with the document. */
+    content: Ref.Ref(Text.Text).pipe(Annotation.SetParent.set(true), FormInputAnnotation.set(false)),
     history: History.History.pipe(FormInputAnnotation.set(false), Schema.optional),
   }).pipe(
     LabelAnnotation.set(['name', 'fallbackName']),
     DescriptionAnnotation.set('description'),
     Annotation.IconAnnotation.set({ icon: 'ph--text-aa--regular', hue: 'indigo' }),
-    AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
+    Skill.SkillsAnnotation.set([SKILL_KEY]),
     AppAnnotation.GraphPropsAnnotation.set({ managesAutofocus: true }),
     CardAnnotation.set(true),
     CollectionItemAnnotation.set(true),
@@ -46,8 +48,5 @@ export const make = ({
   content = '',
   ...props
 }: Partial<{ name: string; fallbackName: string; content: string }> = {}) => {
-  const doc = Obj.make(Document, { ...props, content: Ref.make(Text.make({ content })) });
-  // TODO(dmaretskyi): We need a better way to set parents when creating hierarchies.
-  Obj.setParent(doc.content.target!, doc);
-  return doc;
+  return Obj.make(Document, { ...props, content: Ref.make(Text.make({ content })) });
 };

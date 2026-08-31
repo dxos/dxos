@@ -154,6 +154,24 @@ export interface FilterTimestamp extends Schema.Schema.Type<typeof FilterTimesta
 export const FilterTimestamp: Schema.Codec<FilterTimestamp> = FilterTimestamp_;
 
 /**
+ * Filter feed items to a cursor range — cursors being the positions the position authority assigned
+ * the blocks (`Feed.getCursor`). Both bounds name an item and are exclusive of it, so a reader
+ * resumes with the last cursor it consumed as `begin` without re-reading that item. Only meaningful
+ * against a feed scope: an automerge object has no position, so the query planner rejects this
+ * filter over a space's documents.
+ */
+const FilterFeedCursor_ = Schema.Struct({
+  type: Schema.Literal('feed-cursor'),
+  /** Read after this cursor. The empty string is the start sentinel and bounds nothing. */
+  begin: Schema.optional(Schema.String),
+  /** Read up to but not including this cursor. */
+  end: Schema.optional(Schema.String),
+});
+
+export interface FilterFeedCursor extends Schema.Schema.Type<typeof FilterFeedCursor_> {}
+export const FilterFeedCursor: Schema.Codec<FilterFeedCursor> = FilterFeedCursor_;
+
+/**
  * Text search.
  */
 const FilterTextSearch_ = Schema.Struct({
@@ -214,6 +232,20 @@ export interface FilterChildOf extends Schema.Schema.Type<typeof FilterChildOf_>
 export const FilterChildOf: Schema.Codec<FilterChildOf> = FilterChildOf_;
 
 /**
+ * Filter objects by whether they have a parent at all, regardless of which object it is.
+ * The parent lives on the object's own structure (`system.parent`), so this is a local predicate —
+ * no traversal, unlike {@link FilterChildOf}.
+ */
+const FilterHasParent_ = Schema.Struct({
+  type: Schema.Literal('has-parent'),
+  /** True matches objects with a parent; false matches unparented (root) objects. */
+  value: Schema.Boolean,
+});
+
+export interface FilterHasParent extends Schema.Schema.Type<typeof FilterHasParent_> {}
+export const FilterHasParent: Schema.Codec<FilterHasParent> = FilterHasParent_;
+
+/**
  * Union of filters.
  */
 export const Filter = Schema.Union([
@@ -225,8 +257,10 @@ export const Filter = Schema.Union([
   FilterTag,
   FilterRange,
   FilterTimestamp,
+  FilterFeedCursor,
   FilterTextSearch,
   FilterChildOf,
+  FilterHasParent,
   FilterNot,
   FilterAnd,
   FilterOr,
@@ -445,7 +479,7 @@ export const QuerySkipClause: Schema.Codec<QuerySkipClause> = QuerySkipClause_;
  * result record (`row[name]`) and orderable via a following `orderBy(Order.property(name))`. A
  * tagged union per kind — `property`/`limit`/`order` are present exactly when the kind uses them,
  * so read sites narrow by `kind` instead of guarding an unused optional field.
- * - `group` partitions members by a scalar `property`; its coerced key value is the field's value.
+ * - `group` partitions members by a scalar key; its coerced key value is the field's value.
  *   Composite keys are formed from multiple `group` entries. A query with no `group` entries
  *   aggregates its entire input into a single row.
  * - `max`/`min` reduce a scalar member `property`.
@@ -458,7 +492,13 @@ export const QuerySkipClause: Schema.Codec<QuerySkipClause> = QuerySkipClause_;
 const GroupAggregateGroup_ = Schema.Struct({
   name: Schema.String,
   kind: Schema.Literal('group'),
-  property: Schema.String,
+  /**
+   * Fallback chain: the first property holding a scalar value supplies this key component (`a ?? b`),
+   * so a single entry is the plain property form. Composite keys come from multiple `group` entries,
+   * never from this list. Non-empty — an empty chain has no key to read and would silently degrade
+   * to a single `null`-keyed group.
+   */
+  properties: Schema.NonEmptyArray(Schema.String),
 });
 const GroupAggregateMax_ = Schema.Struct({ name: Schema.String, kind: Schema.Literal('max'), property: Schema.String });
 const GroupAggregateMin_ = Schema.Struct({ name: Schema.String, kind: Schema.Literal('min'), property: Schema.String });

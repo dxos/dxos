@@ -118,7 +118,7 @@ describe('DiscordSource live crawl', () => {
             Pipeline.run({ sink: Crawler.commit }),
           );
           const summary = yield* Crawler.summarize();
-          const registry = yield* AgentRegistry;
+          const registry = yield* AgentRegistry.AgentRegistry;
           const agents = yield* registry.list();
           const report = yield* extractTopics({ limit: 15 });
           const facts = dumpFacts ? yield* listFacts() : [];

@@ -13,7 +13,6 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Role from '@dxos/app-framework/Role';
-import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
@@ -24,7 +23,6 @@ import { Feed, Filter, Obj, Tag, Type } from '@dxos/echo';
 import { type ObjectExtractor } from '@dxos/extractor';
 import { mockAiService } from '@dxos/extractor/testing';
 import { DXN } from '@dxos/keys';
-import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { MessageArticle } from '@dxos/plugin-inbox/containers';
 import * as ExtractedFrom from '@dxos/plugin-inbox/ExtractedFrom';
 import * as InboxCapabilities from '@dxos/plugin-inbox/InboxCapabilities';
@@ -35,16 +33,14 @@ import { translations as inboxTranslations } from '@dxos/plugin-inbox/translatio
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { corePlugins } from '@dxos/plugin-testing';
-import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import * as Booking from '@dxos/plugin-trip/Booking';
 import * as Segment from '@dxos/plugin-trip/Segment';
 import { TripPlugin } from '@dxos/plugin-trip/testing';
 import * as Trip from '@dxos/plugin-trip/Trip';
 import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
-import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Loading } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
-import { ModuleContainer } from '@dxos/storybook-testing';
+import { ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
 import { ModuleRole, moduleSurfaces } from '@dxos/storybook-testing/modules';
 import { Message as MessageType, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -258,58 +254,46 @@ const DefaultStory = () => {
 const meta = {
   title: 'stories/stories-inbox/MessageExtractor',
   render: DefaultStory,
-  decorators: [
-    withLayout({ layout: 'fullscreen' }),
-    withTheme(),
-    withPluginManager({
-      setupEvents: [
-        // TripPlugin contributes TripMessageExtractor on Startup; fire it explicitly so the
-        // capability is contributed before MessageArticle's toolbar reads the extractor list.
-        ActivationEvents.Startup,
-      ],
-      plugins: [
-        ...corePlugins(),
-        ClientPlugin.make({
-          types: [
-            Feed.Feed,
-            // Tags are created as Tag objects (Mailbox.applyTag → Tag.findOrCreate), so the schema
-            // must be registered for the extractor's tagging to round-trip.
-            Tag.Tag,
-            Mailbox.Mailbox,
-            MessageType.Message,
-            Person.Person,
-            ExtractedFrom.ExtractedFrom,
-            Booking.Booking,
-            Segment.Segment,
-            Trip.Trip,
-            // Markdown.Document is the output of SummarizeMessageExtractor; its `content`
-            // field is a `Ref(Text.Text)`, so both schemas must be registered for the doc
-            // to round-trip through the database.
-            Markdown.Document,
-            Text.Text,
-          ],
-          onClientInitialized: ({ client }) =>
-            Effect.gen(function* () {
-              const { defaultSpace } = yield* initializeIdentity(client);
-              yield* Effect.promise(async () => {
-                defaultSpace.db.add(Mailbox.make());
-                seedMessage(defaultSpace);
-                await defaultSpace.db.flush({ indexes: true });
-              });
-            }),
-        }),
-        StorybookPlugin.make({}),
-        InboxPlugin(),
-        MarkdownPlugin.make(),
-        TripPlugin(),
-        PreviewPlugin.make(),
-        MockDeckOperationsPlugin(),
-        ImportantExtractorPlugin(),
-        MockAiServicePlugin(),
-        StoryExtractMessagePlugin(),
-      ],
-    }),
-  ],
+  decorators: createStoryDecorators({
+    setupEvents: [
+      // TripPlugin contributes TripMessageExtractor on Startup; fire it explicitly so the
+      // capability is contributed before MessageArticle's toolbar reads the extractor list.
+      ActivationEvents.Startup,
+    ],
+    types: [
+      Feed.Feed,
+      // Tags are created as Tag objects (Mailbox.applyTag → Tag.findOrCreate), so the schema
+      // must be registered for the extractor's tagging to round-trip.
+      Tag.Tag,
+      Mailbox.Mailbox,
+      MessageType.Message,
+      Person.Person,
+      ExtractedFrom.ExtractedFrom,
+      Booking.Booking,
+      Segment.Segment,
+      Trip.Trip,
+      // Markdown.Document is the output of SummarizeMessageExtractor; its `content`
+      // field is a `Ref(Text.Text)`, so both schemas must be registered for the doc
+      // to round-trip through the database.
+      Markdown.Document,
+      Text.Text,
+    ],
+    onInit: async ({ space }) => {
+      space.db.add(Mailbox.make());
+      seedMessage(space);
+      await space.db.flush({ indexes: true });
+    },
+    plugins: [
+      InboxPlugin(),
+      MarkdownPlugin.make(),
+      TripPlugin(),
+      PreviewPlugin.make(),
+      MockDeckOperationsPlugin(),
+      ImportantExtractorPlugin(),
+      MockAiServicePlugin(),
+      StoryExtractMessagePlugin(),
+    ],
+  }),
   parameters: {
     layout: 'fullscreen',
     translations: inboxTranslations,

@@ -79,6 +79,9 @@
       "path": "../../core/echo/echo-client"
     },
     {
+      "path": "../../core/echo/echo-doc"
+    },
+    {
       "path": "../../core/echo/echo-host"
     },
     {
@@ -107,9 +110,6 @@
     },
     {
       "path": "../../core/mesh/teleport-extension-gossip"
-    },
-    {
-      "path": "../../core/mesh/teleport-extension-object-sync"
     },
     {
       "path": "../../core/mesh/teleport-extension-replicator"

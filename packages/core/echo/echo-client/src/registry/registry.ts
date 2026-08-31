@@ -116,9 +116,9 @@ export class RegistryImpl implements Registry.Registry {
     this.prototype.query = this.prototype._query;
   }
 
-  private _query(query: Query.Any | Filter.Any): QueryResult.QueryResult<any> {
+  private _query(query: Query.Any | Filter.Any): QueryResult.QueryResult<unknown> {
     const normalized: Query.Any = Query.is(query) ? query : Query.select(query as Filter.Any);
-    return this.#queryResultCache.getOrCreate(normalized, () => new RegistryQueryResult<any>(this, normalized));
+    return this.#queryResultCache.getOrCreate(normalized, () => new RegistryQueryResult<unknown>(this, normalized));
   }
 
   getByURI(uri: string): Entity.Unknown | undefined {
@@ -209,8 +209,8 @@ const getEntityKeyDXNs = (entity: Entity.Unknown): DXN.DXN[] => {
   }
   const version = meta?.version;
   const dxns: DXN.DXN[] = [];
-  // `key` may be either a raw nsid (`org.example.function`) or an already-canonical
-  // DXN (`dxn:org.example.function`); normalize to the bare nsid for construction.
+  // `key` may be either a raw nsid (`com.example.function`) or an already-canonical
+  // DXN (`dxn:com.example.function`); normalize to the bare nsid for construction.
   const nsid = DXN.isDXN(key) ? key.slice('dxn:'.length) : key;
   const unversioned = DXN.tryMake(`dxn:${nsid}`);
   if (unversioned != null) {
@@ -266,7 +266,8 @@ const normalizeURI = (uri: string): URI.URI => DXN.tryMake(uri) ?? EID.tryParse(
  * - `from` and `options` clauses — unwrapped; scope is ignored (a direct registry query always
  *   targets the registry's own entities).
  *
- * Server-side concerns such as traversal, ordering, and text/timestamp filters are not supported.
+ * Full-text filters evaluate in memory as case-insensitive all-terms containment, not ranked FTS.
+ * Vector search, traversal, ordering, and timestamp filters are not supported.
  */
 class RegistryQueryResult<T> implements QueryResult.QueryResult<T> {
   readonly #registry: Registry.Registry;
@@ -294,18 +295,20 @@ class RegistryQueryResult<T> implements QueryResult.QueryResult<T> {
   }
 
   runSync(): T[] {
-    return this.runSyncEntries().map((entry) => entry.result!);
+    return this.runSyncEntries()
+      .filter((entry): entry is QueryResult.Entry<T> & { result: T } => entry.result !== undefined)
+      .map((entry) => entry.result);
   }
 
   runSyncEntries(): QueryResult.Entry<T>[] {
     const matches = executeQuery(this.#registry, this.#query.ast);
-    return matches.map(
-      (entity): QueryResult.Entry<T> => ({
-        id: getEntityId(entity),
-        result: entity as unknown as T,
-        resolution: { source: 'local', time: 0 },
-      }),
-    );
+    return matches.map((entity): QueryResult.Entry<T> => ({
+      id: getEntityId(entity),
+      // `executeQuery` only knows `Entity.Unknown`; the caller's `T` is verified by `#query`'s own
+      // filter/select AST at construction time, not by the compiler.
+      result: entity as T,
+      resolution: { source: 'local', time: 0 },
+    }));
   }
 
   async first(): Promise<T> {

@@ -22,7 +22,11 @@ export class Review extends Type.makeObject<Review>(DXN.make('org.dxos.type.ches
     playerIdentity: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
     /** Display name fallback when identity is absent (e.g. Chess.com username). */
     playerName: Schema.String.pipe(Schema.optional),
-    positionIndex: Ref.Ref(ChessPositionIndex.PositionIndex).pipe(FormInputAnnotation.set(false)),
+    /** Owned index: `SetParent` cascades it with the review. */
+    positionIndex: Ref.Ref(ChessPositionIndex.PositionIndex).pipe(
+      Annotation.SetParent.set(true),
+      FormInputAnnotation.set(false),
+    ),
   }).pipe(
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--chart-polar--regular', hue: 'amber' }),
@@ -38,11 +42,9 @@ export type MakeReviewProps = {
 /** Creates a player review with an empty child position index. */
 export const makeReview = (props: MakeReviewProps = {}): Review => {
   const positionIndex = ChessPositionIndex.make();
-  const review = Obj.make(Review, {
+  return Obj.make(Review, {
     ...props,
     name: props.name ?? props.playerName ?? 'Player review',
     positionIndex: Ref.make(positionIndex),
   });
-  Obj.setParent(positionIndex, review);
-  return review;
 };

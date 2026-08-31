@@ -7,9 +7,7 @@
 // per leaf field, with nested Struct fields contributing a header row plus
 // recursively-indented children, and arrays expanded as `[index]` rows.
 //
-// Designed to drive a hierarchical editor over schemas produced by
-// `@dxos/effect-proto` (e.g. the proto-generated `dxos.config.Config`
-// schema), but works for any Effect Struct schema.
+// Works for any Effect Struct schema.
 
 import * as Schema from 'effect/Schema';
 import React, { type ReactElement, type ReactNode, type RefAttributes } from 'react';

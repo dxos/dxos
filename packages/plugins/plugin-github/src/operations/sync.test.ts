@@ -9,11 +9,11 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
-import { Organization, Person, Task, TaskSet } from '@dxos/types';
+import { Milestone, Organization, Person, Task, TaskSet } from '@dxos/types';
 
 import { GITHUB_SOURCE } from '../constants';
 import { GitHubApi } from '../services';
-import { pushRepoUpdates } from './sync';
+import { pushRepoUpdates, setTaskContainer, upsertMilestone, upsertTask } from './sync';
 
 const repo = (overrides: Partial<GitHubApi.GitHubRepo> = {}): GitHubApi.GitHubRepo => ({
   id: 1234,
@@ -30,6 +30,16 @@ const issue = (overrides: Partial<GitHubApi.GitHubIssue> = {}): GitHubApi.GitHub
   title: 'Investigate flake',
   body: 'desc',
   state: 'open',
+  ...overrides,
+});
+
+const milestone = (overrides: Partial<GitHubApi.GitHubMilestone> = {}): GitHubApi.GitHubMilestone => ({
+  id: 91011,
+  number: 3,
+  title: 'v1.0',
+  description: 'first stable release',
+  state: 'open',
+  due_on: '2026-06-01T07:00:00Z',
   ...overrides,
 });
 
@@ -59,11 +69,12 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
       Person.Person,
       TaskSet.TaskSet,
       Task.Task,
+      Milestone.Milestone,
     ]);
     const token = db.add(Obj.make(AccessToken.AccessToken, { source: GITHUB_SOURCE, token: 'tok' }));
     const connection = db.add(Obj.make(Connection.Connection, { connectorId: 'github', accessToken: Ref.make(token) }));
     const project = db.add(
-      Obj.make(TaskSet.TaskSet, {
+      TaskSet.make({
         [Obj.Meta]: { keys: [{ source: GITHUB_SOURCE, id: String(repo().id) }] },
         name: repo().full_name,
         // Seed description to match a prior pull so tests that only diverge `name`
@@ -332,5 +343,71 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
 
     expect(result.tasks).toBe(0);
     expect(calls).toBe(0);
+  });
+
+  test('pull adds the task to the set once, however many passes run', async ({ expect }) => {
+    const { db, binding, project } = await setup({});
+    const layer = Database.layer(db);
+
+    const task = await Effect.gen(function* () {
+      const { task } = yield* upsertTask(binding, issue(), undefined, undefined);
+      yield* setTaskContainer(task, project);
+      yield* setTaskContainer(task, project);
+      return task;
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
+
+    expect(project.tasks.map((ref) => ref.target?.id)).toEqual([task.id]);
+    // The parent edge rides along so the task cascades with the set.
+    expect(Obj.getParent(task)?.id).toBe(project.id);
+  });
+
+  test('an issue moved between repos moves its ref', async ({ expect }) => {
+    const { db, binding, project } = await setup({});
+    const layer = Database.layer(db);
+    const other = db.add(TaskSet.make({ name: 'dxos/other' }));
+
+    const task = await Effect.gen(function* () {
+      const { task } = yield* upsertTask(binding, issue(), undefined, undefined);
+      yield* setTaskContainer(task, project);
+      yield* Database.flush();
+      yield* setTaskContainer(task, other);
+      return task;
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
+
+    expect(project.tasks).toEqual([]);
+    expect(other.tasks.map((ref) => ref.target?.id)).toEqual([task.id]);
+    expect(Obj.getParent(task)?.id).toBe(other.id);
+  });
+
+  test('milestones are mirrored onto the set with a date-only target', async ({ expect }) => {
+    const { db, binding, project } = await setup({});
+    const layer = Database.layer(db);
+
+    const { task, local } = await Effect.gen(function* () {
+      const local = yield* upsertMilestone(project, milestone());
+      // Re-pull to prove the ref is not appended twice.
+      yield* upsertMilestone(project, milestone({ title: 'v1.0.1' }));
+      const { task } = yield* upsertTask(binding, issue({ milestone: milestone() }), undefined, local);
+      return { task, local };
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
+
+    expect(project.milestones.map((ref) => ref.target?.id)).toEqual([local.id]);
+    expect(local.name).toBe('v1.0.1');
+    expect(local.targetDate).toBe('2026-06-01');
+    expect(task.milestone?.target?.id).toBe(local.id);
+  });
+
+  test('an issue unassigned from its milestone remotely is cleared locally', async ({ expect }) => {
+    const { db, binding, project } = await setup({});
+    const layer = Database.layer(db);
+
+    const task = await Effect.gen(function* () {
+      const local = yield* upsertMilestone(project, milestone());
+      const { task } = yield* upsertTask(binding, issue({ milestone: milestone() }), undefined, local);
+      yield* upsertTask(binding, issue(), undefined, undefined);
+      return task;
+    }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
+
+    expect(task.milestone).toBeUndefined();
   });
 });

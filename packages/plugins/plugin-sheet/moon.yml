@@ -1,6 +1,7 @@
 layer: library
 language: typescript
 tags:
+  - composer-plugin
   - e2e
   - ts-vite-build
   - ts-test
@@ -16,7 +17,8 @@ tasks:
       pnpm exec dx-trace-imports
       --export ./SheetPlugin
       --to "{react,react-dom}"
-      --conditions workerd,worker,node
+      --conditions workerd,worker
+      --conditions node
       --fail-on present
     deps:
       - dx-trace-imports:build
@@ -32,7 +34,7 @@ tasks:
     # taking the web server down with it.
     deps:
       - '#vendor:build'
-      - '#storybook:prebuild'
+      - '#storybook:#prebuild'
     inputs:
       - .storybook/*
       - /tools/storybook-react/.storybook/main.ts

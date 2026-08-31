@@ -18,11 +18,12 @@ import { Obj, Type } from '@dxos/echo';
 import { ConnectionTestError } from '@dxos/plugin-connector';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as Calendar from '@dxos/plugin-inbox/Calendar';
-import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { MAIL_AUTO_SYNC, MAIL_REMOTE_SYNC, MAIL_SYNC_CRON } from '@dxos/plugin-inbox/sync';
 import * as SyncOptions from '@dxos/plugin-inbox/SyncOptions';
 import { OAuthProvider } from '@dxos/protocols';
+
+import { GoogleOperation } from '#types';
 
 import {
   GMAIL_CONNECTOR_ID,
@@ -30,6 +31,7 @@ import {
   GOOGLE_CONTACTS_CONNECTOR_ID,
   GOOGLE_INTEGRATION_SOURCE,
 } from '../constants';
+import { GMAIL_OAUTH_SCOPES, GOOGLE_CALENDAR_OAUTH_SCOPES, GOOGLE_CONTACTS_OAUTH_SCOPES } from '../scopes';
 
 const GoogleUserInfo = Schema.Struct({
   email: Schema.optional(Schema.String),
@@ -129,21 +131,15 @@ export default Capability.makeModule(
         label: 'Gmail',
         oauth: {
           provider: OAuthProvider.GOOGLE,
-          scopes: [
-            'https://www.googleapis.com/auth/gmail.readonly',
-            'https://www.googleapis.com/auth/gmail.send',
-            // `gmail.modify` is required to move messages to the trash (delete).
-            'https://www.googleapis.com/auth/gmail.modify',
-            'https://www.googleapis.com/auth/userinfo.email',
-          ],
+          scopes: [...GMAIL_OAUTH_SCOPES],
         },
         sync: {
-          operation: InboxOperation.GoogleMailSync,
+          operation: GoogleOperation.GoogleMailSync,
           // What this connector binds — how `Mailbox` discovers it without naming Gmail.
           targetTypename: Type.getTypename(Mailbox.Mailbox),
           // Single-target connector: no `getTargets`. The coordinator calls `materializeTarget`
           // (no remoteTarget) to create the Mailbox, then binds.
-          materializeTarget: InboxOperation.MaterializeGmailTarget,
+          materializeTarget: GoogleOperation.MaterializeGmailTarget,
           optionsSchema: SyncOptions.SyncOptions,
           auto: MAIL_AUTO_SYNC,
           trigger: Trigger.specTimer(MAIL_SYNC_CRON),
@@ -158,19 +154,13 @@ export default Capability.makeModule(
         label: 'Google Calendar',
         oauth: {
           provider: OAuthProvider.GOOGLE,
-          scopes: [
-            // `calendar.readonly` is required to list the user's calendars (GetGoogleCalendars);
-            // `calendar.events` adds read/write on events so draft events can be created remotely.
-            'https://www.googleapis.com/auth/calendar.readonly',
-            'https://www.googleapis.com/auth/calendar.events',
-            'https://www.googleapis.com/auth/userinfo.email',
-          ],
+          scopes: [...GOOGLE_CALENDAR_OAUTH_SCOPES],
         },
         sync: {
-          operation: InboxOperation.GoogleCalendarSync,
+          operation: GoogleOperation.GoogleCalendarSync,
           targetTypename: Type.getTypename(Calendar.Calendar),
-          getTargets: InboxOperation.GetGoogleCalendars,
-          materializeTarget: InboxOperation.MaterializeCalendarTarget,
+          getTargets: GoogleOperation.GetGoogleCalendars,
+          materializeTarget: GoogleOperation.MaterializeGoogleCalendarTarget,
           optionsSchema: SyncOptions.CalendarSyncOptions,
         },
         onTokenCreated,
@@ -182,16 +172,13 @@ export default Capability.makeModule(
         label: 'Google Contacts',
         oauth: {
           provider: OAuthProvider.GOOGLE,
-          scopes: [
-            'https://www.googleapis.com/auth/contacts.readonly',
-            'https://www.googleapis.com/auth/userinfo.email',
-          ],
+          scopes: [...GOOGLE_CONTACTS_OAUTH_SCOPES],
         },
         sync: {
           // Targetless: no `targetTypename`, since synced `Person` objects land directly in the space
           // rather than under a bound root.
-          operation: InboxOperation.GoogleContactsSync,
-          getTargets: InboxOperation.GetGoogleContactGroups,
+          operation: GoogleOperation.GoogleContactsSync,
+          getTargets: GoogleOperation.GetGoogleContactGroups,
           // Targetless connector: no dedicated local root type, so no `materializeTarget`.
           // `reconcileCursors` binds the connection itself; synced `Person` objects land directly in
           // the space keyed by foreign id.

@@ -5,13 +5,12 @@
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 
-import * as Capability from '@dxos/app-framework/Capability';
 import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
-import { PublicKey } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
-import { invariant } from '@dxos/invariant';
+import { Identity } from '@dxos/halo';
+import { PublicKey } from '@dxos/keys';
 
-import { ClientCapabilities, PasskeyError } from '#types';
+import { PasskeyError } from '#types';
 
 import { RedeemPasskey } from './definitions';
 
@@ -89,33 +88,25 @@ const webAssertion = (challenge: string): Effect.Effect<Assertion, PasskeyError.
 const handler: Operation.WithHandler<typeof RedeemPasskey> = RedeemPasskey.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
-      const client = yield* Capability.get(ClientCapabilities.Client);
-      const identityService = client.services.services.IdentityService;
-      invariant(identityService, 'IdentityService not available');
-
-      const { deviceKey, controlFeedKey, challenge } = yield* Effect.tryPromise({
-        try: () => identityService.requestRecoveryChallenge(),
-        catch: PasskeyError.LoginFailed.wrap({ message: 'Failed to request a recovery challenge.' }),
-      });
+      const recoveryChallenge = yield* Effect.mapError(
+        Identity.requestRecoveryChallenge,
+        PasskeyError.LoginFailed.wrap({ message: 'Failed to request a recovery challenge.' }),
+      );
 
       const assertion = yield* Match.value(NativePasskey.supportsNativePasskeys()).pipe(
-        Match.when(true, () => nativeAssertion(challenge)),
-        Match.orElse(() => webAssertion(challenge)),
+        Match.when(true, () => nativeAssertion(recoveryChallenge.challenge)),
+        Match.orElse(() => webAssertion(recoveryChallenge.challenge)),
       );
 
       // EDGE refuses the assertion when the passkey isn't registered as a recovery credential.
-      yield* Effect.tryPromise({
-        try: () =>
-          identityService.recoverIdentity(
-            { external: { ...assertion, deviceKey, controlFeedKey } },
-            { timeout: RECOVER_IDENTITY_RPC_TIMEOUT },
-          ),
-        catch: PasskeyError.Rejected.wrap(),
-      });
+      yield* Effect.mapError(
+        Identity.recover({
+          passkey: { ...assertion, lookupKey: assertion.lookupKey.toHex(), challenge: recoveryChallenge },
+        }),
+        PasskeyError.Rejected.wrap(),
+      );
     }),
   ),
 );
 
 export default handler;
-
-const RECOVER_IDENTITY_RPC_TIMEOUT = 20_000;

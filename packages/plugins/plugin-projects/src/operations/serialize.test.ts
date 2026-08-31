@@ -13,7 +13,7 @@ describe('operation serialization', () => {
   // registered handler before invoking any of them, so an operation that cannot serialize breaks
   // the whole registry — not just its own verb.
   test('every handler serializes into a PersistentOperation record', async ({ expect }) => {
-    const handlers = await ProjectOperationHandlerSet.getHandlers();
+    const handlers = await ProjectOperationHandlerSet.handlers.getHandlers();
     expect(handlers.length).toBeGreaterThan(0);
     const failures = handlers
       .filter((handler) => {
@@ -29,16 +29,17 @@ describe('operation serialization', () => {
     expect(failures).toEqual([]);
   });
 
-  // The projection marker must survive serialization: the edge reads it off the operation
-  // registry rather than a curated table (MILESTONE-5.md §7.4).
-  test('MCP-projected verbs carry their annotation through serialize', async ({ expect }) => {
-    const handlers = await ProjectOperationHandlerSet.getHandlers();
-    const projected = handlers
-      .map((handler) => Operation.getMcpTool(Operation.serialize(handler)))
-      .filter((tool): tool is NonNullable<typeof tool> => tool !== undefined)
-      .map((tool) => tool.name)
-      .sort();
+  // An unclassified operation reaches an MCP client badged as possibly destructive.
+  test('every handler declares a mutation class, and it survives serialize', async ({ expect }) => {
+    const handlers = await ProjectOperationHandlerSet.handlers.getHandlers();
+    const classified = Object.fromEntries(
+      handlers.map((handler) => [String(handler.meta.key), Operation.getMutation(Operation.serialize(handler))]),
+    );
 
-    expect(projected).toEqual(['projectGet', 'projectList', 'projectUpdate']);
+    expect(Object.entries(classified).filter(([, mutation]) => mutation === undefined)).toEqual([]);
+    expect(classified['dxn:org.dxos.operation.projects.create']).toBe('write');
+    expect(classified['dxn:org.dxos.operation.projects.get']).toBe('none');
+    expect(classified['dxn:org.dxos.operation.projects.addArtifact']).toBe('write');
+    expect(classified['dxn:org.dxos.operation.projects.listArtifact']).toBe('none');
   });
 });

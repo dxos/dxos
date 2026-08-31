@@ -11,10 +11,21 @@ import * as InboxEvents from '@dxos/plugin-inbox/InboxEvents';
 import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
 import * as ProjectsEvents from '@dxos/plugin-projects/ProjectsEvents';
 
+import { meta } from '#meta';
+import { translations } from '#translations';
 import { BrainCapabilities } from '#types';
+
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../../PLUGIN.mdl?raw';
 
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
+});
+export const PluginAsset = AppCapability.pluginAsset({
+  pluginId: meta.profile.key,
+  path: 'PLUGIN.mdl',
+  content: pluginSpec,
+  mimeType: 'application/x-mdl',
 });
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 // No `export * from './fact-store'` here: that barrel re-export made the module a static import of
@@ -32,17 +43,23 @@ export const Settings = AppCapability.settings(() => import('./settings'), {
   activatesOn: ActivationEvents.Idle,
   provides: [BrainCapabilities.Settings],
 });
-export const MailboxAction = Capability.lazyModule(
-  'MailboxAction',
+export const MailboxProcessor = Capability.lazyModule(
+  'MailboxProcessor',
   {
     requires: [Capabilities.AtomRegistry],
-    provides: [InboxCapabilities.MailboxAction],
+    provides: [InboxCapabilities.MailboxProcessor],
     activatesOn: InboxEvents.Start,
   },
-  () => import('./mailbox-action'),
+  () => import('./mailbox-processor'),
+);
+export const ReplyGenerator = Capability.lazyModule(
+  'ReplyGenerator',
+  { provides: [InboxCapabilities.ReplyGenerator], activatesOn: InboxEvents.Start },
+  () => import('./reply-generator'),
 );
 export const ProjectTemplates = Capability.lazyModule(
   'ProjectTemplates',
   { provides: [ProjectCapabilities.Template], activatesOn: ProjectsEvents.Start },
   () => import('./project-templates'),
 );
+export const Translations = AppCapability.translations(translations);

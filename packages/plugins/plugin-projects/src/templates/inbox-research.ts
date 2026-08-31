@@ -5,9 +5,10 @@
 import * as Effect from 'effect/Effect';
 
 import * as Instructions from '@dxos/compute/Instructions';
+import * as Project from '@dxos/compute/Project';
 import * as Skill from '@dxos/compute/Skill';
 import * as Trigger from '@dxos/compute/Trigger';
-import { Database, Obj, Ref } from '@dxos/echo';
+import { Database, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { makeRoutine } from '@dxos/plugin-routine';
@@ -20,7 +21,7 @@ import { scaffoldProject } from './scaffold';
 /**
  * Skill keys composed into the project's instructions (chat sessions) and the starter routine.
  * Plain dotted keys (not skill imports) so plugin-inbox does not depend on the plugins that own
- * them — the `ARTIFACT_SKILL_KEYS` idiom.
+ * them — the `SkillsAnnotation` idiom.
  */
 const PROJECT_SKILL_KEYS = ['org.dxos.skill.inbox', 'org.dxos.skill.table'] as const;
 const ROUTINE_SKILL_KEYS = ['org.dxos.skill.table', 'org.dxos.skill.project'] as const;
@@ -89,12 +90,7 @@ export const inboxResearch: ProjectCapabilities.Template = {
           concurrency: 1,
         }),
       });
-      // Owned by the project (cascade-deletes with it) AND linked, so it shows in the article's
-      // routines gallery like a toolbar-created routine.
-      Obj.setParent(routine, project);
-      Obj.update(project, (project) => {
-        project.routines = [...project.routines, Ref.make(routine)];
-      });
+      Project.addRoutine(project, routine);
 
       return project;
     }),

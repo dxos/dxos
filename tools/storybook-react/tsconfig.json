@@ -21,6 +21,12 @@
       "path": "../../packages/common/storybook-addon-logger"
     },
     {
+      "path": "../../packages/core/compute/agent-claude"
+    },
+    {
+      "path": "../../packages/sdk/app-framework"
+    },
+    {
       "path": "../../packages/ui/ui-theme"
     },
     {

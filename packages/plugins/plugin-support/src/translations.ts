@@ -63,6 +63,8 @@ export const translations = [
         'download-logs.label': 'Download logs',
         'feedback-toast.label': 'Thank you for your feedback!',
         'feedback-toast.description': 'We will review your feedback and get back to you as soon as possible.',
+        'feedback-toast-no-screenshot.description':
+          'We will review your feedback and get back to you as soon as possible. (Screenshot could not be attached.)',
         'discord-feedback-toast.label': 'Help thread started in Discord',
         'discord-feedback-toast.description': 'Your thread is now open in Discord.',
         // Welcome tour + keyboard shortcuts (absorbed from plugin-help).

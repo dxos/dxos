@@ -93,6 +93,10 @@ const renderUpdateRow = (
       description: t('settings.updates.unsupported.message'),
       button: checkButton(true),
     })),
+    Match.when({ kind: 'dev' }, () => ({
+      description: t('settings.updates.dev.message'),
+      button: checkButton(true),
+    })),
     Match.when({ kind: 'idle' }, () => ({
       description: isChecking ? t('settings.updates.checking.message') : t('settings.updates.idle.message'),
       button: checkButton(),

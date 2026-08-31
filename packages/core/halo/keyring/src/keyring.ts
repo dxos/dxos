@@ -5,17 +5,15 @@
 import * as EffectContext from 'effect/Context';
 
 import { Event, synchronized } from '@dxos/async';
-import { type ProtoCodec } from '@dxos/codec-protobuf';
 import { type Signer, subtleCrypto } from '@dxos/crypto';
 import { todo } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { schema } from '@dxos/protocols/proto';
+import { decodeCompat, encodeCompat } from '@dxos/protocols/buf-shape-compat';
+import { KeyRecordSchema } from '@dxos/protocols/buf/dxos/halo/keyring_pb';
 import { type KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';
 import { type Directory, StorageType, createStorage } from '@dxos/random-access-storage';
 import { ComplexMap, arrayToBuffer } from '@dxos/util';
-
-const KeyRecord: ProtoCodec<KeyRecord> = schema.getCodecForType('dxos.halo.keyring.KeyRecord');
 
 /**
  * Shared public API for keyring implementations.
@@ -91,7 +89,7 @@ export class Keyring implements KeyringApi {
       const recordBytes = await file.read(0, size);
       await file.close();
 
-      const record = KeyRecord.decode(recordBytes);
+      const record = decodeCompat<KeyRecord>(KeyRecordSchema, recordBytes);
       const publicKey = PublicKey.from(record.publicKey);
       invariant(key.equals(publicKey), 'Corrupted keyring: Key mismatch');
       invariant(record.privateKey, 'Corrupted keyring: Missing private key');
@@ -135,7 +133,7 @@ export class Keyring implements KeyringApi {
     };
 
     const file = this._storage.getOrCreateFile(publicKey.toHex());
-    await file.write(0, arrayToBuffer(KeyRecord.encode(record)));
+    await file.write(0, arrayToBuffer(encodeCompat(KeyRecordSchema, record)));
     await file.close();
     await file.flush?.();
     this.keysUpdate.emit();

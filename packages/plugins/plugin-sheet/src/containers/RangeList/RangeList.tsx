@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 
 import { rangeToA1Notation } from '@dxos/compute-hyperformula';
 import { useObject } from '@dxos/echo-react';
-import { Input, Message, useTranslation } from '@dxos/react-ui';
+import { Banner, Flex, Input, useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
@@ -37,11 +37,11 @@ export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
         <Input.Label>{t('range-list.heading')}</Input.Label>
       </Input.Root>
       {sheet.ranges.length === 0 ? (
-        <Message.Root>
-          <Message.Content>
-            <Message.Title>{t('no-ranges.message')}</Message.Title>
-          </Message.Content>
-        </Message.Root>
+        <Banner.Root>
+          <Banner.Content>
+            <Banner.Title>{t('no-ranges.message')}</Banner.Title>
+          </Banner.Content>
+        </Banner.Root>
       ) : (
         <OrderedList.Root<Sheet.Range> items={sheet.ranges} isItem={Schema.is(Sheet.Range)}>
           {({ items: ranges }) => (
@@ -62,13 +62,13 @@ export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
                     classNames='flex items-center cursor-pointer'
                     onClick={() => handleSelectRange(range)}
                   >
-                    <div className='flex grow items-center truncate px-2'>
+                    <Flex align='center' classNames='grow truncate px-2'>
                       {t('range.title', {
                         position: rangeToA1Notation(SheetUtil.rangeFromIndex(sheetProp, range.range)),
                         key: t(`range-key.${range.key}.label`),
                         value: t(`range-value.${range.value}.label`),
                       })}
-                    </div>
+                    </Flex>
                     <OrderedList.DeleteButton onClick={() => handleDeleteRange(range)} />
                   </OrderedList.Item>
                 );

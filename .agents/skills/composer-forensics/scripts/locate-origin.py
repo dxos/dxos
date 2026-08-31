@@ -39,8 +39,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--origin",
-        default="https://main.composer.space",
-        help="Origin URL (default: https://main.composer.space)",
+        default="https://composer.space",
+        help="Origin URL (default: https://composer.space)",
     )
     parser.add_argument(
         "--profile",

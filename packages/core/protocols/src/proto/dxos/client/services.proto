@@ -4,25 +4,18 @@
 
 syntax = "proto3";
 
-import "google/protobuf/any.proto";
-import "google/protobuf/empty.proto";
 import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
 
 import "dxos/client/invitation.proto";
-import "dxos/config.proto";
 import "dxos/devtools/swarm.proto";
 import "dxos/echo/metadata.proto";
 import "dxos/echo/timeframe.proto";
-import "dxos/edge/messenger.proto";
-import "dxos/edge/signal.proto";
 import "dxos/error.proto";
 import "dxos/halo/credentials.proto";
 import "dxos/keys.proto";
 import "dxos/mesh/signal.proto";
 import "dxos/mesh/presence.proto";
-import "dxos/mesh/teleport/gossip.proto";
-import "dxos/value.proto";
 
 // TODO(burdon): Reorganize packages (e.g., client.services, echo.database).
 
@@ -38,33 +31,6 @@ package dxos.client.services;
 enum SystemStatus {
   INACTIVE = 0;
   ACTIVE = 1;
-}
-
-message UpdateStatusRequest {
-  SystemStatus status = 1;
-}
-
-message QueryStatusRequest {
-  optional int32 interval = 1;
-}
-
-message QueryStatusResponse {
-  SystemStatus status = 1;
-}
-
-message GetDiagnosticsRequest {
-  enum KEY_OPTION {
-    NONE = 0;
-    TRUNCATE = 1;
-    HUMANIZE = 2;
-  }
-
-  optional KEY_OPTION keys = 1;
-}
-
-message GetDiagnosticsResponse {
-  google.protobuf.Timestamp timestamp = 1;
-  google.protobuf.Struct diagnostics = 2;
 }
 
 message Platform {
@@ -92,30 +58,6 @@ message Platform {
   optional google.protobuf.Struct memory = 7;
 }
 //
-// System
-//
-
-service SystemService {
-  /// Get the static config of the client.
-  rpc GetConfig(google.protobuf.Empty) returns (dxos.config.Config);
-
-  /// Get the diagnostics snapshot.
-  rpc GetDiagnostics(GetDiagnosticsRequest) returns (GetDiagnosticsResponse);
-
-  /// Update the status of the client. Used to re-activate an inactive client.
-  rpc UpdateStatus(UpdateStatusRequest) returns (google.protobuf.Empty);
-
-  /// Stream the status of the client.
-  rpc QueryStatus(QueryStatusRequest) returns (stream QueryStatusResponse);
-
-  /// Reset the client.
-  rpc Reset(google.protobuf.Empty) returns (google.protobuf.Empty);
-
-  /// Get platform Information
-  rpc GetPlatform(google.protobuf.Empty) returns (Platform);
-}
-
-//
 // Halo
 //
 
@@ -124,12 +66,6 @@ message Identity {
   dxos.keys.PublicKey identity_key = 1;
   optional dxos.keys.PublicKey space_key = 2;
   optional halo.credentials.ProfileDocument profile = 3;
-}
-
-message RequestRecoveryChallengeResponse {
-  dxos.keys.PublicKey device_key = 1;
-  dxos.keys.PublicKey control_feed_key = 2;
-  string challenge = 3;
 }
 
 message RecoverIdentityRequest {
@@ -150,66 +86,6 @@ message RecoverIdentityRequest {
     /// One-time proof minted by edge kms-service after a successful OAuth recovery flow.
     string recovery_proof = 4;
   }
-}
-
-message RecoveryCredentialData {
-  /// Recovery key used to validate recovery challenge signature.
-  dxos.keys.PublicKey recovery_key = 1;
-
-  /// Public key used to identify the recovery key.
-  dxos.keys.PublicKey lookup_key = 2;
-
-  /// Algorithm used to generate the recovery key.
-  string algorithm = 3;
-
-  /// User-visible name, without which credentials are told apart only by issuance date.
-  optional string label = 4;
-
-  /// How the recovery key is held.
-  optional dxos.halo.credentials.IdentityRecovery.Kind kind = 5;
-}
-
-message CreateRecoveryCredentialRequest {
-  /// If not provided, a new key will be generated.
-  optional RecoveryCredentialData data = 1;
-}
-
-message CreateRecoveryCredentialResponse {
-  optional string recovery_code = 1;
-}
-
-message RevokeRecoveryCredentialRequest {
-  /// Lookup key of the credential to revoke.
-  dxos.keys.PublicKey lookup_key = 1;
-}
-
-message QueryIdentityResponse {
-  optional Identity identity = 1;
-}
-
-message SignPresentationRequest {
-  dxos.halo.credentials.Presentation presentation = 1;
-  optional bytes nonce = 2;
-}
-
-message CreateIdentityRequest {
-  optional halo.credentials.ProfileDocument profile = 1;
-
-  reserved 2; // Removed use_automerge flag.
-  optional halo.credentials.DeviceProfileDocument device_profile = 3;
-}
-
-// TODO(wittjosiah): Align pluralization with other services.
-service IdentityService {
-  rpc CreateIdentity(CreateIdentityRequest) returns (Identity);
-  rpc RequestRecoveryChallenge(google.protobuf.Empty) returns (RequestRecoveryChallengeResponse);
-  rpc RecoverIdentity(RecoverIdentityRequest) returns (Identity);
-  rpc CreateRecoveryCredential(CreateRecoveryCredentialRequest) returns (CreateRecoveryCredentialResponse);
-  rpc RevokeRecoveryCredential(RevokeRecoveryCredentialRequest) returns (google.protobuf.Empty);
-  rpc QueryIdentity(google.protobuf.Empty) returns (stream QueryIdentityResponse);
-  rpc UpdateProfile(halo.credentials.ProfileDocument) returns (Identity);
-  rpc SignPresentation(SignPresentationRequest) returns (dxos.halo.credentials.Presentation);
-  rpc CreateAuthCredential(google.protobuf.Empty) returns (dxos.halo.credentials.Credential);
 }
 
 //
@@ -236,15 +112,6 @@ message Device {
   PresenceState presence = 4;
 }
 
-message QueryDevicesResponse {
-  repeated Device devices = 1;
-}
-
-service DevicesService {
-  rpc UpdateDevice(halo.credentials.DeviceProfileDocument) returns (Device);
-  rpc QueryDevices(google.protobuf.Empty) returns (stream QueryDevicesResponse);
-}
-
 //
 // Contacts
 //
@@ -257,11 +124,6 @@ message Contact {
 
 message ContactBook {
   repeated Contact contacts = 1;
-}
-
-service ContactsService {
-  rpc GetContacts(google.protobuf.Empty) returns (ContactBook);
-  rpc QueryContacts(google.protobuf.Empty) returns (stream ContactBook);
 }
 
 //
@@ -337,8 +199,9 @@ message Space {
     /// All mutations known to exist on the network.
     optional dxos.echo.timeframe.TimeframeVector known_data_timeframe = 17;
 
-    /// URL of the current space root automerge document.
-    optional string space_root_url = 22;
+    /// URL of the space's automerge directory document.
+    /// NOT the space root document — that is `SpaceMember.space_root_url`, a different document.
+    optional string directory_url = 22;
   }
 
   string id = 5;
@@ -353,77 +216,19 @@ message Space {
   repeated SpaceMember members = 10;
   optional dxos.keys.PublicKey creator = 11;
 
-  optional dxos.echo.metadata.SpaceCache cache = 20;
   Metrics metrics = 21;
 }
 
 // TODO(burdon): Create type for epoch?
 
-message CreateSpaceRequest {
-  repeated string tags = 1;
-  dxos.halo.credentials.MembershipPolicy membership_policy = 2;
-}
-
-message UpdateSpaceRequest {
-  dxos.keys.PublicKey space_key = 1;
-
-  /// Allowed values: ACTIVE, INACTIVE.
-  optional SpaceState state = 2;
-
-  optional dxos.echo.metadata.EdgeReplicationSetting edge_replication = 3;
-}
+// `SpacesService`'s RPC surface is defined as an Effect RPC group (see `SpacesService.ts`); its
+// request/response payloads are inlined there. The messages below are the ones still referenced
+// via `protoMessage(...)` because they're returned by that RPC group but shared/embedded types
+// (e.g. `Space`, which embeds the `Timeframe` proto substitution) that have no inline Effect
+// equivalent.
 
 message QuerySpacesResponse {
   repeated Space spaces = 1;
-}
-
-message PostMessageRequest {
-  dxos.keys.PublicKey space_key = 1;
-  string channel = 2;
-  google.protobuf.Any message = 3;
-}
-
-message SubscribeMessagesRequest {
-  dxos.keys.PublicKey space_key = 1;
-  string channel = 2;
-}
-
-message WriteCredentialsRequest {
-  dxos.keys.PublicKey space_key = 1;
-  repeated dxos.halo.credentials.Credential credentials = 2;
-}
-
-message QueryCredentialsRequest {
-  dxos.keys.PublicKey space_key = 1;
-  optional bool no_tail = 2;
-}
-
-message CreateEpochRequest {
-  enum Migration {
-    NONE = 0;
-
-    /// Init empty automerge document as the space root. Disables legacy ECHO snapshot creation.
-    INIT_AUTOMERGE = 1;
-
-    /// Init new automerge root by clonning the current space root. History is pruned.
-    PRUNE_AUTOMERGE_ROOT_HISTORY = 2;
-
-    /// Create a new space root and move objects from the current space root to separate automerge documents and.
-    FRAGMENT_AUTOMERGE_ROOT = 3;
-
-    /// Replace the current automerge root with a new one specified by the user.
-    REPLACE_AUTOMERGE_ROOT = 4;
-
-    /// Upgrade references data structure
-    MIGRATE_REFERENCES_TO_DXN = 5;
-  }
-
-  dxos.keys.PublicKey space_key = 1;
-
-  optional Migration migration = 2;
-
-  /// For REPLACE_AUTOMERGE_ROOT migration.
-  optional string automerge_root_url = 3;
 }
 
 message CreateEpochResponse {
@@ -431,18 +236,6 @@ message CreateEpochResponse {
   optional dxos.halo.credentials.Credential epoch_credential = 1;
   /// Control pipeline timeframe.
   optional dxos.echo.timeframe.TimeframeVector control_timeframe = 2;
-}
-
-message UpdateMemberRoleRequest {
-  dxos.keys.PublicKey space_key = 1;
-  dxos.keys.PublicKey member_key = 2;
-  dxos.halo.credentials.SpaceMember.Role new_role = 3;
-}
-
-message AdmitContactRequest {
-  Contact contact = 1;
-  dxos.halo.credentials.SpaceMember.Role role = 2;
-  dxos.keys.PublicKey space_key = 3;
 }
 
 message ContactAdmission {
@@ -453,70 +246,6 @@ message JoinSpaceResponse {
   Space space = 1;
 }
 
-message JoinBySpaceKeyRequest {
-  dxos.keys.PublicKey space_key = 1;
-}
-
-message SpaceArchive {
-  enum Format {
-    // Tar-based binary archive (default).
-    BINARY = 0;
-    // JSON encoding of {@link dxos.echo.db.SerializedSpace}.
-    JSON = 1;
-  }
-
-  string filename = 1;
-  bytes contents = 2;
-  optional Format format = 3;
-}
-
-message ExportSpaceRequest {
-  string space_id = 1;
-  // Archive format to produce. Defaults to BINARY.
-  optional SpaceArchive.Format format = 2;
-}
-
-message ExportSpaceResponse {
-  SpaceArchive archive = 1;
-}
-
-message ImportSpaceRequest {
-  SpaceArchive archive = 1;
-  /// Immutable tags to set on the imported space at creation time.
-  repeated string tags = 2;
-}
-
-message ImportSpaceResponse {
-  /// the ID of the new space.
-  string new_space_id = 1;
-}
-
-service SpacesService {
-  rpc CreateSpace(CreateSpaceRequest) returns (Space);
-  rpc UpdateSpace(UpdateSpaceRequest) returns (google.protobuf.Empty);
-  rpc QuerySpaces(google.protobuf.Empty) returns (stream QuerySpacesResponse);
-
-  rpc UpdateMemberRole(UpdateMemberRoleRequest) returns (google.protobuf.Empty);
-
-  rpc AdmitContact(AdmitContactRequest) returns (google.protobuf.Empty);
-  rpc JoinBySpaceKey(JoinBySpaceKeyRequest) returns (JoinSpaceResponse);
-
-  /// Broadcast an ephemeral message to the space swarm.
-  rpc PostMessage(PostMessageRequest) returns (google.protobuf.Empty);
-  /// Subscribe to messages from the space swarm.
-  rpc SubscribeMessages(SubscribeMessagesRequest) returns (stream dxos.mesh.teleport.gossip.GossipMessage);
-
-  /// Write credentials to the space control feed.
-  rpc WriteCredentials(WriteCredentialsRequest) returns (google.protobuf.Empty);
-  /// Query credentials from the space control feed.
-  rpc QueryCredentials(QueryCredentialsRequest) returns (stream dxos.halo.credentials.Credential);
-
-  rpc CreateEpoch(CreateEpochRequest) returns (CreateEpochResponse);
-
-  rpc ExportSpace(ExportSpaceRequest) returns (ExportSpaceResponse);
-  rpc ImportSpace(ImportSpaceRequest) returns (ImportSpaceResponse);
-}
-
 //
 // Invitations (Halo and Data Spaces).
 //
@@ -525,20 +254,6 @@ service SpacesService {
 //  dxos.keys.PublicKey public_key = 1;
 //  optional dxos.keys.PrivateKey private_key = 2;
 //}
-
-message AcceptInvitationRequest {
-  Invitation invitation = 1;
-  optional dxos.halo.credentials.DeviceProfileDocument device_profile = 2;
-}
-
-message AuthenticationRequest {
-  string invitation_id = 1;
-  string auth_code = 2;
-}
-
-message CancelInvitationRequest {
-  string invitation_id = 1;
-}
 
 message InvitationMethod {
   oneof kind {
@@ -572,14 +287,6 @@ message LoadPersistentInvitationsResponse {
   repeated Invitation invitations = 1;
 }
 
-service InvitationsService {
-  rpc CreateInvitation(Invitation) returns (stream Invitation);
-  rpc AcceptInvitation(AcceptInvitationRequest) returns (stream Invitation);
-  rpc Authenticate(AuthenticationRequest) returns (google.protobuf.Empty);
-  rpc CancelInvitation(CancelInvitationRequest) returns (google.protobuf.Empty);
-  rpc QueryInvitations(google.protobuf.Empty) returns (stream QueryInvitationsResponse);
-}
-
 //
 // MESH
 //
@@ -600,35 +307,6 @@ message NetworkStatus {
   ConnectionState swarm = 1;
   repeated Signal signaling = 2;
   repeated dxos.devtools.swarm.SwarmInfo connection_info = 3;
-}
-
-message UpdateConfigRequest {
-  ConnectionState swarm = 1;
-}
-
-message SubscribeSwarmStateRequest {
-  dxos.keys.PublicKey topic = 1;
-}
-
-// TODO(burdon): Widen API (too heavy for single feature: e.g., status).
-service NetworkService {
-  rpc UpdateConfig(UpdateConfigRequest) returns (google.protobuf.Empty);
-  rpc QueryStatus(google.protobuf.Empty) returns (stream NetworkStatus);
-  rpc JoinSwarm(dxos.edge.signal.JoinRequest) returns (google.protobuf.Empty);
-  rpc LeaveSwarm(dxos.edge.signal.LeaveRequest) returns (google.protobuf.Empty);
-  /**
-   * Query the swarm state without joining it.
-   */ 
-  rpc QuerySwarm(dxos.edge.signal.QueryRequest) returns (dxos.edge.messenger.SwarmResponse);
-  rpc SubscribeSwarmState(SubscribeSwarmStateRequest) returns (stream dxos.edge.messenger.SwarmResponse);
-  rpc SendMessage(dxos.edge.signal.Message) returns (google.protobuf.Empty);
-  rpc SubscribeMessages(dxos.edge.messenger.Peer) returns (stream dxos.edge.signal.Message);
-}
-
-service EdgeAgentService {
-  rpc QueryEdgeStatus(google.protobuf.Empty) returns (stream QueryEdgeStatusResponse);
-  rpc CreateAgent(google.protobuf.Empty) returns (google.protobuf.Empty);
-  rpc QueryAgentStatus(google.protobuf.Empty) returns (stream QueryAgentStatusResponse);
 }
 
 message EdgeStatus {

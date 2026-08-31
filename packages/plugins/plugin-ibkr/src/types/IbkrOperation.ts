@@ -17,12 +17,10 @@ const ForeignKey = Schema.Struct({
   id: Schema.String,
 });
 
-const makeKey = (name: string) => DXN.make(`org.dxos.function.ibkr.${name}`);
-
 /** Fetches a fresh Flex report from IBKR and appends it to the feed; driven by the daily timer trigger. */
 export const SyncPortfolioReport = Operation.make({
   meta: {
-    key: makeKey('syncPortfolioReport'),
+    key: DXN.make('org.dxos.operation.ibkr.syncPortfolioReport'),
     name: 'Sync IBKR portfolio',
     description: 'Fetch the latest Interactive Brokers Flex report and store it for offline reads.',
     icon: 'ph--arrows-clockwise--regular',
@@ -40,7 +38,7 @@ export const SyncPortfolioReport = Operation.make({
 /** Appends a manually supplied raw Flex report XML to the feed, bypassing the rate-limited IBKR fetch. */
 export const ImportPortfolioReport = Operation.make({
   meta: {
-    key: makeKey('importPortfolioReport'),
+    key: DXN.make('org.dxos.operation.ibkr.importPortfolioReport'),
     name: 'Import IBKR report',
     description: 'Store a raw Interactive Brokers Flex report XML for offline reads, without calling IBKR.',
     icon: 'ph--upload-simple--regular',
@@ -61,7 +59,7 @@ export const ImportPortfolioReport = Operation.make({
 /** Returns the open positions and cash balances from the most recent stored report. */
 export const GetPortfolio = Operation.make({
   meta: {
-    key: makeKey('getPortfolio'),
+    key: DXN.make('org.dxos.operation.ibkr.getPortfolio'),
     name: 'Get IBKR portfolio',
     description: 'Read the current Interactive Brokers open positions and cash balances from the latest sync.',
     icon: 'ph--chart-pie--regular',
@@ -78,7 +76,7 @@ export const GetPortfolio = Operation.make({
 /** Returns the trade history from the most recent stored report. */
 export const GetTrades = Operation.make({
   meta: {
-    key: makeKey('getTrades'),
+    key: DXN.make('org.dxos.operation.ibkr.getTrades'),
     name: 'Get IBKR trades',
     description: 'Read the Interactive Brokers trade history from the latest sync.',
     icon: 'ph--receipt--regular',
@@ -94,7 +92,7 @@ export const GetTrades = Operation.make({
 /** Find-or-create an Instrument keyed by a foreign id. */
 export const MaterializeInstrument = Operation.make({
   meta: {
-    key: makeKey('materializeInstrument'),
+    key: DXN.make('org.dxos.operation.ibkr.materializeInstrument'),
     name: 'Materialize instrument',
     description: 'Find or create a tradable Instrument keyed by ticker/exchange foreign id (idempotent).',
     icon: 'ph--chart-line-up--regular',
@@ -117,7 +115,7 @@ export const MaterializeInstrument = Operation.make({
 /** Fetches a compact fundamentals snapshot for an Instrument from SEC EDGAR. */
 export const GetInstrumentFundamentals = Operation.make({
   meta: {
-    key: makeKey('getInstrumentFundamentals'),
+    key: DXN.make('org.dxos.operation.ibkr.getInstrumentFundamentals'),
     name: 'Get instrument fundamentals',
     description: 'Fetch filing-based fundamentals for a tradable Instrument from SEC EDGAR company facts.',
     icon: 'ph--chart-bar--regular',
@@ -132,7 +130,7 @@ export const GetInstrumentFundamentals = Operation.make({
 /** Syncs tax lots from the portfolio's latest stored Flex report into persisted Lot objects. */
 export const SyncLots = Operation.make({
   meta: {
-    key: makeKey('syncLots'),
+    key: DXN.make('org.dxos.operation.ibkr.syncLots'),
     name: 'Sync IBKR lots',
     description: 'Materialize tax lots from the latest stored Flex report as child Lot objects on the portfolio.',
     icon: 'ph--stack--regular',

@@ -358,7 +358,7 @@ export type EntityMeta = {
   tags?: (EncodedReference | string)[];
 
   /**
-   * Fully-qualified registry key for the object (FQN format, e.g. `org.example.type.foo`).
+   * Fully-qualified registry key for the object (FQN format, e.g. `com.example.type.foo`).
    * Identifies the canonical registry entry the object instance was created from.
    */
   key?: string;
@@ -406,7 +406,7 @@ export type EntitySystem = {
    * entity instantiates.
    *
    * - For `kind === 'object'` / `'relation'` instances, this is the URI of the
-   *   user-defined schema the entity was created from (e.g. `dxn:org.example.Person:1.0.0`).
+   *   user-defined schema the entity was created from (e.g. `dxn:com.example.Person:1.0.0`).
    * - For `kind === 'type'` entities (persisted Type.Type meta-instances) this
    *   is always the URI of the `TypeSchema` meta-schema itself
    *   (`dxn:org.dxos.type.schema:0.1.0`). The kind that the meta-instance

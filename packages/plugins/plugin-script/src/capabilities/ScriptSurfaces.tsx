@@ -6,12 +6,12 @@
 
 import React from 'react';
 
-import { useAtomCapability, useSettingsState } from '@dxos/app-framework/ui';
+import { useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import type * as Script from '@dxos/compute/Script';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Feed } from '@dxos/echo';
-import { useClient } from '@dxos/react-client';
+import { ClientOperation } from '@dxos/plugin-client';
 import { getSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 
@@ -19,23 +19,22 @@ import { NotebookArticle, ScriptArticle, ScriptSettings } from '#containers';
 import { useCompiler } from '#hooks';
 import { Notebook, ScriptCapabilities, Settings } from '#types';
 
-import { getAccessCredential } from '../util';
+const HUB_SERVER_NAME = 'hub.dxos.network';
 
 export type ScriptSettingsSurfaceProps = {
   subject: AppCapabilities.Settings;
 };
 
+/** Hub authentication is a write, so it is dispatched as an operation rather than mapped as props. */
 export const ScriptSettingsSurface = ({ subject }: ScriptSettingsSurfaceProps) => {
   const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
-  const client = useClient();
+  const { invokePromise } = useOperationInvoker();
   // TODO(burdon): Check token.
   const handleAuthenticate = async () => {
-    const identity = client.halo.identity.get();
-    if (!identity) {
-      return;
-    }
-
-    await client.halo.writeCredentials([getAccessCredential(identity.identityKey)]);
+    await invokePromise(ClientOperation.GrantServiceAccess, {
+      serverName: HUB_SERVER_NAME,
+      capabilities: ['composer:beta'],
+    });
   };
 
   return <ScriptSettings settings={settings} onSettingsChange={updateSettings} onAuthenticate={handleAuthenticate} />;

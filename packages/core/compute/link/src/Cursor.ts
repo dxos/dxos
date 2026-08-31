@@ -49,6 +49,15 @@ export const ExternalSpec = Schema.Struct({
    * to the date-window scan. Forward-only, so it cannot drive backfill.
    */
   token: Schema.String.pipe(Schema.optional),
+  /**
+   * Automerge heads of the target's tag index as of the last completed sync — the base for
+   * bidirectional tag reconciliation (`plugin-inbox/docs/TAG-SYNC.md`). Read back with
+   * `Obj.getVersion` to recover what the index looked like then, without storing a shadow copy.
+   *
+   * Written only together with {@link token} (see {@link writeSyncState}): the two describe the same
+   * position, and advancing one without the other lets a run diff a fresh delta against a stale base.
+   */
+  tagHeads: Schema.Array(Schema.String).pipe(Schema.optional),
 });
 export type ExternalSpec = Schema.Schema.Type<typeof ExternalSpec>;
 
@@ -194,6 +203,22 @@ export const writeSnapshot = (cursor: ExternalCursor, foreignId: string, snapsho
   });
 };
 
+/**
+ * Points an external cursor at a new credential, keeping every progress field (`max`/`min`,
+ * `snapshots`, `token`) so the next run resumes instead of re-walking the horizon. Clears `lastError`,
+ * which described the run that failed under the old credential. The caller owns the check that the new
+ * credential is for the same remote account — resuming another account's watermark would skip its data.
+ */
+export const rebindSource = (cursor: ExternalCursor, source: Ref.Ref<AccessToken.AccessToken>): void => {
+  Obj.update(cursor, (cursor) => {
+    if (cursor.spec.kind !== 'external') {
+      return;
+    }
+    cursor.spec.source = source;
+    cursor.lastError = undefined;
+  });
+};
+
 /** Reads the opaque delta-resume token, or undefined when no incremental sync has captured one yet. */
 export const readToken = (cursor: ExternalCursor): string | undefined => cursor.spec.token;
 
@@ -204,6 +229,38 @@ export const writeToken = (cursor: ExternalCursor, token: string): void => {
       return;
     }
     cursor.spec.token = token;
+  });
+};
+
+/** Reads the tag-reconciliation base heads, or undefined before the first tag-aware sync completed. */
+export const readTagHeads = (cursor: ExternalCursor): readonly string[] | undefined => cursor.spec.tagHeads;
+
+/**
+ * Advances the delta token and the tag-reconciliation base **together**, in one `Obj.update`.
+ *
+ * They describe the same position, so a crash between two separate writes leaves the cursor
+ * self-inconsistent. The damaging order is token-then-heads: the next run reads its delta from the
+ * advanced token while diffing against stale heads, so every tag the previous run pulled reads as a
+ * local-only change. Usually that re-pushes a tag the provider already has (a no-op), but if the
+ * remote moved in between it re-applies a tag the provider deliberately removed — and the diff sees no
+ * conflict, so nothing catches it. One update makes the pair advance or neither.
+ *
+ * Omitted fields are left untouched, so a provider with no delta token can still record heads.
+ */
+export const writeSyncState = (
+  cursor: ExternalCursor,
+  { token, tagHeads }: { token?: string; tagHeads?: readonly string[] },
+): void => {
+  Obj.update(cursor, (cursor) => {
+    if (cursor.spec.kind !== 'external') {
+      return;
+    }
+    if (token !== undefined) {
+      cursor.spec.token = token;
+    }
+    if (tagHeads !== undefined) {
+      cursor.spec.tagHeads = [...tagHeads];
+    }
   });
 };
 

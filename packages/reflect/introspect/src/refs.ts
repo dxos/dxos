@@ -12,7 +12,7 @@
 //   plugin:<id>                              — `plugin:org.dxos.plugin.markdown`
 //   surface:<plugin-id-or-pkg>:<surface-id>  — `surface:org.dxos.plugin.markdown:surface.document`
 //   capability:<key>@<plugin-id-or-pkg>      — `capability:Capabilities.ReactSurface@org.dxos.plugin.markdown`
-//   operation:<key>                          — `operation:org.dxos.function.markdown.create`
+//   operation:<key>                          — `operation:org.dxos.operation.markdown.create`
 
 export type SymbolRefParts = {
   kind: 'symbol';

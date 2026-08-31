@@ -146,4 +146,4 @@ assert a `Topic` is created and `TopicArticle` opens.
 
 Phases land as separate commits on the branch, each build/lint/fmt clean with its storybook play test
 green. The implementation plan (per-phase task breakdown) lives in
-`packages/stories/stories-brain/TASKS.md` under "Topics UX v2" — no separate plan file.
+`packages/stories/stories-brain/docs/TASKS.md` under "Topics UX v2" — no separate plan file.

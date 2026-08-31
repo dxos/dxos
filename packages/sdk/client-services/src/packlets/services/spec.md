@@ -36,7 +36,6 @@ Status: `done` | `todo`
 | Component                                | Tag                     | Layer                           | Options | Requirements                  | Status |
 | ---------------------------------------- | ----------------------- | ------------------------------- | ------- | ----------------------------- | ------ |
 | `IMetadataStore` / `SqliteMetadataStore` | `IMetadataStoreService` | `SqliteMetadataStoreLayer()`    | —       | `SqlClient \| SqlTransaction` | done   |
-| `BlobStoreApi` / `SqliteBlobStore`       | `BlobStoreApiService`   | `SqliteBlobStoreLayer()`        | —       | `SqlClient \| SqlTransaction` | done   |
 | `KeyringApi` / `SqliteKeyring`           | `KeyringApiService`     | `SqliteKeyringLayer()`          | —       | `SqlClient \| SqlTransaction` | done   |
 | `SqliteStorage`                          | `SqliteStorageService`  | `SqliteStorageLayer({ path? })` | `path?` | `SqlClient \| SqlTransaction` | done   |
 
@@ -50,13 +49,12 @@ Status: `done` | `todo`
 
 ### Spaces / echo
 
-| Component                      | Tag                              | Layer                                                                    | Options                  | Requirements                                                                                     | Status |
-| ------------------------------ | -------------------------------- | ------------------------------------------------------------------------ | ------------------------ | ------------------------------------------------------------------------------------------------ | ------ |
-| `SpaceManager`                 | `SpaceManagerService`            | `SpaceManagerLayer({ disableP2pReplication? })`                          | `disableP2pReplication?` | `FeedStoreService`, `SwarmNetworkManagerService`, `IMetadataStoreService`, `BlobStoreApiService` | done   |
-| `EchoHost`                     | `EchoHostService`                | `EchoHostLayer({ ...callbacks, useSubduction?, assignQueuePositions? })` | callbacks, flags         | `SqlClient \| SqlTransaction`                                                                    | done   |
-| `MeshEchoReplicator`           | `AutomergeReplicatorService`     | `MeshEchoReplicatorLayer()`                                              | —                        | —                                                                                                | done   |
-| `EchoEdgeReplicator`           | `EdgeAutomergeReplicatorService` | `EchoEdgeReplicatorLayer({ disableSharePolicy? })`                       | `disableSharePolicy?`    | `EdgeConnectionService`, `EdgeHttpClientService`                                                 | done   |
-| `EchoEdgeSubductionReplicator` | `EdgeAutomergeReplicatorService` | `EchoEdgeSubductionReplicatorLayer({ disableSharePolicy? })`             | `disableSharePolicy?`    | `EdgeConnectionService`, `EdgeHttpClientService`                                                 | done   |
+| Component                      | Tag                              | Layer                                                                    | Options                  | Requirements                                                              | Status |
+| ------------------------------ | -------------------------------- | ------------------------------------------------------------------------ | ------------------------ | ------------------------------------------------------------------------- | ------ |
+| `SpaceManager`                 | `SpaceManagerService`            | `SpaceManagerLayer({ disableP2pReplication? })`                          | `disableP2pReplication?` | `FeedStoreService`, `SwarmNetworkManagerService`, `IMetadataStoreService` | done   |
+| `EchoHost`                     | `EchoHostService`                | `EchoHostLayer({ ...callbacks, useSubduction?, assignQueuePositions? })` | callbacks, flags         | `SqlClient \| SqlTransaction`                                             | done   |
+| `MeshEchoReplicator`           | `AutomergeReplicatorService`     | `MeshEchoReplicatorLayer()`                                              | —                        | —                                                                         | done   |
+| `EchoEdgeSubductionReplicator` | `EdgeAutomergeReplicatorService` | `EchoEdgeSubductionReplicatorLayer({ disableSharePolicy? })`             | `disableSharePolicy?`    | `EdgeConnectionService`, `EdgeHttpClientService`                          | done   |
 
 ### Identity / invitations / spaces (client-services)
 
@@ -88,7 +86,6 @@ Status: `done` | `todo`
 ```ts
 const ServiceContextLive = Layer.mergeAll(
   SqliteMetadataStoreLayer(),
-  SqliteBlobStoreLayer(),
   SqliteKeyringLayer(),
   SqliteStorageLayer(),
   FeedFactoryLayer({ hypercore: { valueEncoding, stats: true } }),

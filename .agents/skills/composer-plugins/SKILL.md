@@ -73,13 +73,30 @@ A plugin's design is captured in two artifacts across its lifecycle — a
 superpowers **design doc** during the initial build, then a durable
 **`PLUGIN.mdl`** that outlives the first session.
 
+### Package docs go in `docs/`, never the package root
+
+Every markdown file a plugin owns other than `README.md` lives under
+`packages/plugins/plugin-<name>/docs/` — `docs/DESIGN.md`, `docs/AUDIT.md`,
+`docs/TESTING.md`, and so on (see `plugin-assistant/docs/`, `plugin-inbox/docs/`).
+The package root holds only `README.md`, `PLUGIN.mdl`, and build config; a
+`DESIGN.md` sitting beside `package.json` is a mistake to move, not a variant to
+match. `README.md` links into `docs/` rather than restating it.
+
+This is about the package root staying scannable — a reader opening the plugin
+should see config and `src/`, with prose one directory away.
+
 ### Initial plugin creation (first session)
 
 When creating a brand-new plugin, do NOT start with `PLUGIN.mdl`. Instead:
 
-1. Run the `superpowers:brainstorming` flow and write the approved design to a
-   separate design doc under `agents/superpowers/specs/YYYY-MM-DD-<name>-design.md`
-   (the DXOS override of the superpowers default `docs/superpowers/…` path).
+1. Run the `superpowers:brainstorming` flow and write the approved design to
+   `packages/plugins/plugin-<name>/docs/DESIGN.md`, then add a short stub at
+   `agents/superpowers/specs/YYYY-MM-DD-<name>-design.md` that links to it. The
+   doc ships with the package it describes and the specs index still finds it;
+   the stub carries a link and nothing else, so there is one source of truth.
+   (`agents/superpowers/specs/` is the DXOS override of the superpowers default
+   `docs/superpowers/…` path; a design doc that belongs to no package is written
+   there directly.)
 2. The user approves that design doc before any code is written.
 3. Implement Phase 1 against the design doc.
 4. **At the end of Phase 1, before opening the PR**, author
@@ -101,8 +118,8 @@ The authoritative references live under [`packages/reflect/deus/`](../../../pack
 Use the template as the starting structure and `packages/plugins/plugin-chess/PLUGIN.mdl`
 as a reference. `PLUGIN.mdl` is a **record of what has been built — not a
 working document**. Design exploration for new features (in any session) happens
-in a design doc under `agents/superpowers/specs/`; `PLUGIN.mdl` is updated only
-after the design AND implementation have settled. It must be:
+in a design doc under the plugin's `docs/` (indexed from `agents/superpowers/specs/`);
+`PLUGIN.mdl` is updated only after the design AND implementation have settled. It must be:
 
 - **Present before a new plugin's first PR merges** — created at the close of
   Phase 1 as described above; never omitted.
@@ -113,9 +130,38 @@ after the design AND implementation have settled. It must be:
 - **Used for testing** — derive user feature tests and acceptance criteria from
   the spec's `feat`, `req`, and `test` blocks.
 
+### Every new plugin ships a QA flow and a demo video
+
+Two artifacts, both authored at the close of Phase 1 alongside `PLUGIN.mdl` and
+both required before the plugin's first PR merges:
+
+1. **A `## QA` section in `PLUGIN.mdl`** holding at least one `flow QA-n` block
+   in the QA dialect ([`lang/qa.mdl`](../../../packages/reflect/deus/lang/qa.mdl);
+   `plugin-chess/PLUGIN.mdl` is the reference). One flow covering the plugin's
+   primary user journey end to end is the minimum. Its execution rules are not
+   style advice — read them before authoring, especially Rule 5 (assertions must
+   be falsifiable against a dirty fixture) and Rule 7 (`before` / `test` /
+   `after`).
+2. **A recorded demo of that flow** against the running app, per the
+   `recording-demos` skill: drive the flow's `do:` steps one gesture at a time,
+   caption each step with its `do:` text verbatim, and judge `expect:` from the
+   screen. Attach the `.webm` to the conversation and commit a contact sheet or
+   stills for the PR body — never the video.
+
+**Write the flow first, then record it.** A demo improvised against the app
+proves the app runs; a demo that executes a written flow proves the spec and the
+app agree, and the recording is what sets the flow's `status:`. Where they
+disagree, that is a finding — report it, and fix whichever is wrong.
+
 ## Workflow
 
 - Use `/superpowers:writing-plans` (Subagent-Driven) for non-trivial plugin work.
+- **Show the change running, in the PR.** A plugin PR is a change to what the app renders, so a
+  reviewer should not have to build it to see it. Record the flow or take the stills with
+  **recording-demos**, then publish them per **hosting-artifacts**
+  (`.agents/skills/hosting-artifacts/SKILL.md`) and link them from the PR body — never commit a video
+  or a screenshot to make it visible. For a fix to rendered output, a before/after pair from one build
+  (see **composer-ui**) beats a clip.
 
 ## Creating a New Plugin
 
@@ -124,7 +170,7 @@ Specification above), then start with a minimal skeleton before adding features.
 `PLUGIN.mdl` is NOT part of the initial skeleton — it is authored at the end of
 Phase 1, before the PR. The skeleton should include:
 
-1. `README.md` — brief description of the plugin's purpose.
+1. `README.md` — brief description of the plugin's purpose, linking to `docs/DESIGN.md`.
 2. `dx.config.ts` — `Config2.make({ plugin: { … } })` with key, name, author, description, icon, and a **quality tier tag** (see below).
 3. `package.json` — with `"private": true`, `#plugin` import alias, `./plugin` export subpath, and minimal dependencies.
 4. `moon.yml` — with `compile` entry points for both `src/index.ts` and `src/plugin.ts`.
@@ -141,7 +187,7 @@ Phase 1, before the PR. The skeleton should include:
 
 Build and lint the skeleton before adding features.
 Add capabilities incrementally as needed (operations, skills, settings, etc.).
-Register the plugin with `composer-app`.
+Register the plugin with `composer-app`: `FooPlugin.make()` in `getPlugins`, and its key in the `isDev` block of `getDefaults` unless the plugin hits a permission-gated API on activation (rule 5 under **Activation waves**).
 
 Once the plugin contributes a navtree section, apply both rules under **App graph** below — gate the section on a non-empty query, and default the create-object `targetNodeId` to the node that lists the objects.
 
@@ -180,6 +226,9 @@ plugin-foo/
   moon.yml
   dx.config.ts             # Plugin manifest; carries the quality tier in `plugin.tags`.
   PLUGIN.mdl
+  README.md                # The only markdown at the root; links into docs/.
+  docs/                    # Everything else the package documents.
+    DESIGN.md
   src/
     index.ts                # Root entrypoint; exports only meta and types/operations — never the plugin instance.
     plugin.ts               # Plugin.lazy() wrapper; consumed via @dxos/plugin-foo/plugin.
@@ -268,6 +317,13 @@ toolbar wiring (threading `attendableId`), schema-driven `Form` editing (no nati
 3-slot subgrid, icons, attention/density, reactivity (`useObject` for ECHO objects passed into
 components), translations, and storybook setup. For authoring brand-new `@dxos/react-ui` primitives, see
 the **composite-components** skill.
+
+**Before committing UI, grep the diff for dead classes.** The `tailwindcss-logical` dialect
+(`pis-*`, `pbs-*`, `pli-*`, `mis-*`, `is-*`, `bs-*`, `min-bs-*`, …) was dropped in the Tailwind v4
+migration and now compiles to nothing — silently, so nothing errors and nothing lints. It is the
+highest-frequency UI regression in this repo, and worst when the dead class was load-bearing (a
+`min-bs-*` height floor, a `min-is-0` letting a grid child shrink), because the failure surfaces far
+from its cause. Replacement table and the grep are in **composer-ui** § "Sizing vs logical utilities".
 
 ### Capability (`src/capabilities/`)
 
@@ -475,7 +531,7 @@ Modules come from **makers** in `AppCapability` (loader-based) or `Capability.la
 the app is interactive, and is pullable earlier as a dependency. That is the right default for
 almost everything; the exceptions are listed above and are baked into the makers.
 
-Four rules, each learned from a shipped regression:
+Five rules, each learned from a shipped regression:
 
 1. **Use the maker.** A module that builds its spec by hand (`Capability.lazyModule({ provides:
 [Capabilities.ReactContext] })`) bypasses the maker's gate and silently inherits the idle
@@ -493,6 +549,12 @@ Four rules, each learned from a shipped regression:
 4. **Cross-plugin contributions ride the CONSUMING plugin's start event** — a skill rides the
    assistant's, a markdown extension rides markdown's — so the contribution costs nothing until its
    host is in use.
+5. **Permission-gated APIs wait for a user action.** A prompt raised from `activate` has no
+   context to justify it, so the user Blocks it and the block sticks for the whole origin. Covers
+   `getUserMedia`, `getDisplayMedia`, notifications, geolocation, clipboard reads,
+   `bluetooth`/`usb`/`serial`/`hid`/`midi`, `storage.persist()`, and any `fetch` or `WebSocket` to
+   localhost or a LAN address, which raises Chrome's local network prompt with no permission API in
+   the code. Such a plugin also stays out of `getDefaults` in every environment.
 
 A plugin's own `<Plugin>Events.Start` fires on demand: the module loader fires it when one of the
 plugin's modules contributes a `ReactSurface`. An unvisited feature never starts.
@@ -632,7 +694,8 @@ See: `plugin-chess/moon.yml`
 - Avoid default exports in `src/components/`. The only default exports are in container `index.ts` files (for `React.lazy`).
 - Container-to-container imports use the default import: `import X from '../X';`.
 - Use `Panel.Root` with `role` prop in container article/section components.
-- All ECHO interfaces must be reactive. Use `useQuery`, `useObject`, atoms, etc.
+- All ECHO interfaces must be reactive. Use `useQuery`, `useObject`, atoms, etc. — patterns and
+  anti-patterns in the [reactivity](../reactivity/SKILL.md) skill.
 - Never hand-roll native `<input>`/`<textarea>`/`<select>` or invent color tokens (`bg-input`, `text-primary`). Edit objects with `Form` + schema and use `@dxos/react-ui` primitives / real `@dxos/react-ui-theme` tokens. See the **composer-ui** skill.
 
 ## Build & Test

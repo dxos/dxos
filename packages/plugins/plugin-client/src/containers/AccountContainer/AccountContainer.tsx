@@ -9,7 +9,7 @@ import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Context } from '@dxos/context';
 import { useIdentity } from '@dxos/halo-react';
-import { Button, Icon, IconButton, Input, Message, useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { Banner, Button, Flex, Icon, IconButton, Input, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -120,12 +120,12 @@ export const AccountContainer = () => {
           <Form.Section title={t('account-section.title')} description={t('account-section.description')}>
             {accountState === 'loading' ? null : accountState === 'missing' ? (
               <>
-                <Message.Root valence='warning'>
-                  <Message.Content>
-                    <Message.Title icon='ph--warning--duotone'>{t('no-edge-access.title')}</Message.Title>
-                    <Message.Body>{t('no-edge-access.description')}</Message.Body>
-                  </Message.Content>
-                </Message.Root>
+                <Banner.Root valence='warning'>
+                  <Banner.Content>
+                    <Banner.Title icon='ph--warning--duotone'>{t('no-edge-access.title')}</Banner.Title>
+                    <Banner.Body>{t('no-edge-access.description')}</Banner.Body>
+                  </Banner.Content>
+                </Banner.Root>
                 <Form.Row label={t('request-access.label')} description={t('request-access.description')}>
                   {requestSubmitted ? (
                     <span className='text-sm text-description'>{t('access-request-submitted.message')}</span>
@@ -138,7 +138,7 @@ export const AccountContainer = () => {
                           placeholder={t('access-request-email.placeholder')}
                           value={requestEmail}
                           onChange={(event) => setRequestEmail(event.target.value)}
-                          classNames='min-w-64'
+                          classNames='w-64 max-w-full min-w-0'
                         />
                       </Input.Root>
                       <Button type='submit' density='sm'>
@@ -149,19 +149,19 @@ export const AccountContainer = () => {
                 </Form.Row>
               </>
             ) : accountState === 'error' && !account ? (
-              <Message.Root valence='error'>
-                <Message.Content>
-                  <Message.Title icon='ph--cloud-x--duotone'>{t('account-offline.title')}</Message.Title>
-                  <Message.Body>{t('account-offline.description')}</Message.Body>
-                </Message.Content>
-              </Message.Root>
+              <Banner.Root valence='error'>
+                <Banner.Content>
+                  <Banner.Title icon='ph--cloud-x--duotone'>{t('account-offline.title')}</Banner.Title>
+                  <Banner.Body>{t('account-offline.description')}</Banner.Body>
+                </Banner.Content>
+              </Banner.Root>
             ) : account ? (
               <>
                 <Form.Row label={t('email.label')} description={account.email}>
                   {account.emailVerified ? (
                     <Icon icon='ph--check-circle--duotone' size={5} classNames='text-success-text justify-self-end' />
                   ) : (
-                    <div className='flex flex-col gap-1 items-end'>
+                    <Flex column gap='xs' align='end'>
                       <IconButton
                         icon='ph--paper-plane-tilt--regular'
                         label={t('resend-verification.label')}
@@ -169,11 +169,11 @@ export const AccountContainer = () => {
                         density='sm'
                       />
                       {resendStatus ? <span className='text-xs text-description'>{resendStatus}</span> : null}
-                    </div>
+                    </Flex>
                   )}
                 </Form.Row>
                 <Form.Row label={t('delete-account.label')} description={t('delete-account.description')}>
-                  <Button variant='destructive' density='sm' onClick={handleDeleteAccount}>
+                  <Button variant='destructive' onClick={handleDeleteAccount}>
                     {t('delete-account.label')}
                   </Button>
                 </Form.Row>

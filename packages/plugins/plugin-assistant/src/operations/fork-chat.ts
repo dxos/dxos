@@ -40,10 +40,12 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = Assis
 
       // Create a new chat, then apply source bindings and session link.
       const sourceName = Obj.getLabel(chat);
-      const { object: newChat } = yield* Operation.invoke(AssistantOperation.CreateChat, {
-        db,
-        name: sourceName ? `${sourceName} (fork)` : undefined,
-      });
+      const { object: newChat } = yield* Operation.invoke(
+        AssistantOperation.CreateChat,
+        { name: sourceName ? `${sourceName} (fork)` : undefined },
+        { spaceId: db.spaceId },
+      );
+      yield* Operation.invoke(SpaceOperation.AddObject, { object: newChat }, { spaceId: db.spaceId });
       const newFeed = yield* Database.load(newChat.feed);
 
       if (sorted.length > 0) {
@@ -85,12 +87,8 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = Assis
 
       if (companionTo) {
         // Wire the forked chat as a companion and switch to it without navigating away.
-        yield* Operation.invoke(SpaceOperation.AddRelation, {
-          db,
-          schema: Chat.CompanionTo,
-          source: newChat,
-          target: companionTo,
-        });
+        Chat.linkCompanion({ chat: newChat, subject: companionTo });
+        yield* Database.flush();
         const operationInvoker = yield* Capability.get(Capabilities.OperationInvoker);
         yield* Effect.promise(() =>
           operationInvoker.invokePromise(AssistantOperation.SetCurrentChat, { companionTo, chat: newChat }),

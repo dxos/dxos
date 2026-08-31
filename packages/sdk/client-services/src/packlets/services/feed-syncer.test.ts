@@ -67,6 +67,8 @@ const createEdgeConnection = ({
       messagesReceived: 0,
     },
     setIdentity: () => {},
+    // Reports CONNECTED above, so the syncer's initial round runs without waiting for a dial.
+    startNetworking: () => {},
     open: async () => {},
     close: async () => {},
     send: async (ctx, routerMessage: RouterMessage) => {

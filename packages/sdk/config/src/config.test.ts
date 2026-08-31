@@ -2,7 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
+import { createRegistry, fromJson, toJson } from '@bufbuild/protobuf';
+import { StructSchema, anyPack } from '@bufbuild/protobuf/wkt';
 import { expect, test } from 'vitest';
+
+import { ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
 
 import { Config, mapFromKeyValues, mapToKeyValues } from './config';
 // @ts-ignore
@@ -35,7 +39,7 @@ test('Basic config', () => {
     },
   );
 
-  expect(config.values).toEqual({
+  expect(toJson(ConfigSchema, config.values)).toEqual({
     version: 1,
     runtime: {
       app: {
@@ -55,11 +59,7 @@ test('Runtime and module config', () => {
         modules: [
           {
             name: 'example:app/tasks',
-            record: {
-              web: {
-                entryPoint: 'main.js',
-              },
-            },
+            record: anyPack(StructSchema, fromJson(StructSchema, { web: { entryPoint: 'main.js' } })),
           },
         ],
       },
@@ -77,16 +77,15 @@ test('Runtime and module config', () => {
     },
   );
 
-  expect(config.values).toEqual({
+  expect(toJson(ConfigSchema, config.values, { registry: createRegistry(StructSchema) })).toEqual({
     version: 1,
     package: {
       modules: [
         {
           name: 'example:app/tasks',
           record: {
-            web: {
-              entryPoint: 'main.js',
-            },
+            '@type': 'type.googleapis.com/google.protobuf.Struct',
+            'value': { web: { entryPoint: 'main.js' } },
           },
         },
       ],

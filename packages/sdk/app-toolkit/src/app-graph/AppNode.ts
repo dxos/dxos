@@ -10,9 +10,9 @@ export type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-
 import * as Option from 'effect/Option';
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { type Space } from '@dxos/client/echo';
-import { Annotation, Collection, type Database, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Collection, type Database, Obj, Ref, Registry, Type } from '@dxos/echo';
 import { Attention } from '@dxos/react-ui-attention/types';
 import { type TreeData } from '@dxos/react-ui-list';
 import { CollectionItemAnnotation } from '@dxos/schema';
@@ -76,7 +76,8 @@ export const ACCEPT_ECHO_CLASS: Set<string> = new Set(['echo']);
 /** Stable Set instances keyed by spaceId. */
 export const getAcceptPersistenceKey = createFactory((spaceId: string) => new Set([spaceId]));
 
-export const CAN_DROP_OBJECT = (source: TreeData) => Node.isGraphNode(source.item) && Obj.isObject(source.item.data);
+export const CAN_DROP_OBJECT = (source: TreeData) =>
+  AppGraphNode.isGraphNode(source.item) && Obj.isObject(source.item.data);
 
 /**
  * Returns true when the object is eligible to live inside a collection:
@@ -95,7 +96,7 @@ export const isCollectionItem = (object: Obj.Unknown): boolean => {
 
 /** Like {@link CAN_DROP_OBJECT} but restricted to collection-eligible types. */
 export const CAN_DROP_COLLECTION_ITEM = (source: TreeData) =>
-  Node.isGraphNode(source.item) && Obj.isObject(source.item.data) && isCollectionItem(source.item.data);
+  AppGraphNode.isGraphNode(source.item) && Obj.isObject(source.item.data) && isCollectionItem(source.item.data);
 
 //
 // Module-level caches.
@@ -124,7 +125,7 @@ export const buildCollectionPartials = (collection: Collection.Collection, db: D
   acceptPersistenceKey: getAcceptPersistenceKey(db.spaceId),
   role: 'branch' as const,
   canDrop: CAN_DROP_COLLECTION_ITEM,
-  onTransferStart: (child: Node.Node<Obj.Unknown>, index?: number) => {
+  onTransferStart: (child: AppGraphNode.Node<Obj.Unknown>, index?: number) => {
     if (!isCollectionItem(child.data)) {
       return;
     }
@@ -138,7 +139,7 @@ export const buildCollectionPartials = (collection: Collection.Collection, db: D
       }
     });
   },
-  onTransferEnd: (child: Node.Node<Obj.Unknown>, _destination: Node.Node) => {
+  onTransferEnd: (child: AppGraphNode.Node<Obj.Unknown>, _destination: AppGraphNode.Node) => {
     Obj.update(collection, (collection) => {
       const idx = collection.objects.findIndex((object) => object.target === child.data);
       if (idx > -1) {
@@ -147,7 +148,7 @@ export const buildCollectionPartials = (collection: Collection.Collection, db: D
     });
   },
   // TODO(wittjosiah): Reimplement once ECHO supports native object cloning.
-  // onCopy: async (child: Node.Node<Obj.Unknown>, index?: number) => {
+  // onCopy: async (child: AppGraphNode.Node<Obj.Unknown>, index?: number) => {
   //   const newObject = await cloneObject(child.data, resolve, db);
   //   db.add(newObject);
   //   Obj.update(collection, (collection) => {
@@ -218,16 +219,14 @@ export const makeObject = ({
     return null;
   }
 
+  // Read through the atom because `Obj.getType` is a live but non-reactive lookup, so a node built
+  // before its schema registered would keep the fallback icon.
+  const registered = get(Registry.typeAtom(db.graph.registry, typename));
   // Obj.getType uses the stored type URI to look up the schema. For database-registered
   // (dynamic) schemas the stored TypeSchema jsonSchema.$id is the echo:/<objectId> EID, so an
-  // id-based lookup can miss. Fall back to a typename query against the registry which matches
+  // id-based lookup can miss. Fall back to the typename-keyed registry entry, which matches
   // the TypeSchema.typename field.
-  const type =
-    Obj.getType(object) ??
-    db.graph.registry
-      .list()
-      .filter(Type.isType)
-      .find((t) => Type.getTypename(t) === typename);
+  const type = Obj.getType(object) ?? registered;
   const schema = type && Type.getSchema(type);
   const staticIcon = schema ? Option.getOrUndefined(Annotation.IconAnnotation.get(schema)) : undefined;
   const iconFromRefProp = schema ? Option.getOrUndefined(Annotation.IconFromRefAnnotation.get(schema)) : undefined;
@@ -316,7 +315,7 @@ export const makeCompanion = <TData = string>({
   icon: string;
   data: TData;
   position?: Position.Position;
-}): Node.NodeArg<TData> => ({
+}): AppGraphNode.NodeArg<TData> => ({
   id: Attention.linkedSegment(variant),
   type: PLANK_COMPANION_TYPE,
   data,
@@ -343,7 +342,7 @@ export const makeDeckCompanion = <TData = any>({
   data: TData;
   position?: Position.Position;
   joyride?: string;
-}): Node.NodeArg<TData> => ({
+}): AppGraphNode.NodeArg<TData> => ({
   id,
   type: DECK_COMPANION_TYPE,
   data,
@@ -370,20 +369,25 @@ export const makeGroup = ({
   id,
   type,
   label,
+  icon,
   space,
   position,
 }: {
   id: string;
   type: string;
   label: Translations.Label;
+  /** Mobile renders a group as a NavBranch list row (desktop shows only the dense label), so an
+   * omitted icon falls back to a letter avatar there. */
+  icon?: string;
   space: Space;
   position?: Position.Position;
-}): Node.NodeArg<null> => ({
+}): AppGraphNode.NodeArg<null> => ({
   id,
   type,
   data: null,
   properties: {
     label,
+    ...(icon !== undefined && { icon }),
     disposition: 'group',
     draggable: false,
     droppable: false,
@@ -415,7 +419,7 @@ export const makeSection = ({
   space: Space;
   position?: Position.Position;
   testId?: string;
-}): Node.NodeArg<null> => ({
+}): AppGraphNode.NodeArg<null> => ({
   id,
   type,
   data: null,
@@ -455,7 +459,7 @@ export const makeSettingsPanel = ({
   /** Hue for the panel's icon. Omit to leave unset (default rendering). */
   iconHue?: string;
   position?: Position.Position;
-}): Node.NodeArg<string> => ({
+}): AppGraphNode.NodeArg<string> => ({
   id,
   type,
   data: type,
@@ -479,11 +483,11 @@ const MENU_SEPARATOR_TYPE = '@dxos/react-ui-toolbar/separator';
 /**
  * Build a toolbar action node — a graph action that opts into the object toolbar
  * (`disposition: 'toolbar'`) instead of context-menu-only placement. Return these from a
- * `GraphBuilder.createExtension`/`createTypeExtension` `actions:` callback.
+ * `AppGraphBuilder.createExtension`/`createTypeExtension` `actions:` callback.
  *
  * @idiom org.dxos.app-toolkit.toolbarGraphAction
  *   applies: Contributing a toolbar action from an app-graph-builder extension
- *   instead-of: Hand-rolling `Node.makeAction({ ..., properties: { disposition: 'toolbar', ... } })`
+ *   instead-of: Hand-rolling `AppGraphNode.makeAction({ ..., properties: { disposition: 'toolbar', ... } })`
  *   uses: {@link makeToolbarAction}
  *   related: org.dxos.react-ui-menu.graphActionsToolbar
  */
@@ -499,19 +503,21 @@ export const makeToolbarAction = <R = never>({
   id: string;
   label: Translations.Label;
   icon?: string;
-  data: Node.ActionData<R>;
+  data: AppGraphNode.ActionData<R>;
   disabled?: boolean;
   testId?: string;
   keyBinding?: string;
-}): Node.NodeArg<Node.ActionData<R>> =>
-  Node.makeAction({
+}): AppGraphNode.NodeArg<AppGraphNode.ActionData<R>> =>
+  AppGraphNode.makeAction({
     id,
     data,
     properties: {
       label,
       disposition: TOOLBAR_DISPOSITION,
+      // Always emitted, since a re-offered node merges over its previous properties and an omitted
+      // `disabled` cannot clear an earlier `true`; the identity fields below never need clearing.
+      disabled: disabled ?? false,
       ...(icon !== undefined && { icon }),
-      ...(disabled !== undefined && { disabled }),
       ...(testId !== undefined && { testId }),
       ...(keyBinding !== undefined && { keyBinding }),
     },
@@ -520,9 +526,9 @@ export const makeToolbarAction = <R = never>({
 /**
  * Build a toolbar action-GROUP node (a dropdown of child actions) that opts into the object
  * toolbar. Unlike a flat {@link makeToolbarAction}, a group MUST be returned from a `connector:`
- * extension callback — not `actions:`, which always stamps `type: Node.ActionType` on every
+ * extension callback — not `actions:`, which always stamps `type: AppGraphNode.ActionType` on every
  * returned node and would clobber the group's type — with the extension's `relation` set to
- * `Node.actionRelation()` so `graph.actions(nodeId)` picks the group up as one of the node's
+ * `AppGraphNode.actionRelation()` so `graph.actions(nodeId)` picks the group up as one of the node's
  * actions. The group's own nested `actions` are wired automatically by `@dxos/app-graph` (it
  * recurses into any `NodeArg.actions` field), so the children need no separate extension.
  */
@@ -531,6 +537,7 @@ export const makeToolbarActionGroup = ({
   label,
   icon,
   iconOnly = true,
+  disabled,
   testId,
   actions,
 }: {
@@ -540,11 +547,14 @@ export const makeToolbarActionGroup = ({
   /** Render the trigger as icon-only (label becomes tooltip/aria). Defaults to `true` for compact
    * toolbars; set `false` to show the label text next to the icon. */
   iconOnly?: boolean;
+  /** Render the trigger disabled, so the toolbar can keep showing an affordance that currently has
+   * nothing to offer (paired with an empty `actions`) rather than dropping the control entirely. */
+  disabled?: boolean;
   /** Test id for the group's dropdown trigger. */
   testId?: string;
-  actions: Node.NodeArg<Node.ActionData<any>>[];
-}): Node.NodeArg<typeof Node.actionGroupSymbol> =>
-  Node.makeActionGroup({
+  actions: AppGraphNode.NodeArg<AppGraphNode.ActionData<any>>[];
+}): AppGraphNode.NodeArg<typeof AppGraphNode.actionGroupSymbol> =>
+  AppGraphNode.makeActionGroup({
     id,
     actions,
     properties: {
@@ -555,6 +565,9 @@ export const makeToolbarActionGroup = ({
       variant: 'dropdownMenu',
       iconOnly,
       disposition: TOOLBAR_DISPOSITION,
+      // Always emitted, since a re-offered node merges over its previous properties (see `addNode`) and
+      // an omitted `disabled` cannot clear an earlier `true`.
+      disabled: disabled ?? false,
       ...(icon !== undefined && { icon }),
       ...(testId !== undefined && { testId }),
     },
@@ -566,7 +579,7 @@ export const makeToolbarActionGroup = ({
 export const makeToolbarSeparator = (
   id: string,
   variant: 'gap' | 'line' = 'line',
-): Node.NodeArg<Node.ActionData<any>> => ({
+): AppGraphNode.NodeArg<AppGraphNode.ActionData<any>> => ({
   id,
   type: MENU_SEPARATOR_TYPE,
   properties: { variant, disposition: TOOLBAR_DISPOSITION },
@@ -577,7 +590,7 @@ export const makeToolbarSeparator = (
 //
 
 /** Build the not-found sentinel node. */
-export const makeNotFound = (): Node.NodeArg<null> => ({
+export const makeNotFound = (): AppGraphNode.NodeArg<null> => ({
   id: NotFound.NOT_FOUND_NODE_ID,
   type: NotFound.NOT_FOUND_NODE_TYPE,
   data: null,

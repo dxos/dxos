@@ -210,7 +210,7 @@ export const EditorMenuProvider = ({
                 ref={searchInputRef}
                 density='sm'
                 variant='subdued'
-                classNames='shrink-0 mbe-1'
+                classNames='shrink-0 mb-1'
                 value={query}
                 placeholder={searchPlaceholder}
                 // Placeholder text is not a persistent accessible name, and it is optional — fall

@@ -19,8 +19,14 @@
       "default": "./dist/lib/apis.mjs"
     },
     "#capabilities": {
-      "source": "./src/capabilities/index.ts",
+      "source": {
+        "workerd": "./src/capabilities/gen/workerd.ts",
+        "node": "./src/capabilities/gen/node.ts",
+        "default": "./src/capabilities/index.ts"
+      },
       "types": "./dist/types/src/capabilities/index.d.ts",
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
+      "node": "./dist/lib/capabilities.node.mjs",
       "default": "./dist/lib/capabilities.mjs"
     },
     "#meta": {
@@ -47,6 +53,11 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -69,15 +80,20 @@
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
-    "./operations": {
-      "source": "./src/operations/index.ts",
-      "types": "./dist/types/src/operations/index.d.ts",
-      "import": "./dist/lib/operations.mjs"
-    },
     "./GooglePlugin": {
       "source": "./src/GooglePlugin.ts",
       "types": "./dist/types/src/GooglePlugin.d.ts",
       "import": "./dist/lib/GooglePlugin.mjs"
+    },
+    "./GoogleOperationHandlerSet": {
+      "source": "./src/operations/GoogleOperationHandlerSet.ts",
+      "types": "./dist/types/src/operations/GoogleOperationHandlerSet.d.ts",
+      "import": "./dist/lib/GoogleOperationHandlerSet.mjs"
+    },
+    "./GoogleOperation": {
+      "source": "./src/types/GoogleOperation.ts",
+      "types": "./dist/types/src/types/GoogleOperation.d.ts",
+      "import": "./dist/lib/GoogleOperation.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -86,6 +102,9 @@
     "dx.config.ts",
     "src"
   ],
+  "scripts": {
+    "import-mbox": "vite-node ./scripts/import-mbox-space.ts --"
+  },
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
@@ -126,7 +145,9 @@
     "@opentelemetry/sdk-node": "catalog:",
     "@opentelemetry/sdk-trace-base": "catalog:",
     "@opentelemetry/semantic-conventions": "catalog:",
+    "@types/mailparser": "catalog:",
     "effect": "catalog:",
+    "mailparser": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {

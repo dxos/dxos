@@ -26,8 +26,6 @@ const makeCommit = (id: string, opts: Partial<Commit> = {}): Commit => ({
   ...opts,
 });
 
-const ids = (commits: Commit[]) => commits.map((commit) => commit.id);
-
 const renderGraph = (messages: Trace.Message[], collapseCompletedSpans = false) => {
   const { commits, branches } = buildExecutionGraph({ traceMessages: messages, collapseCompletedSpans });
   return renderTimelineAscii(commits, branches);
@@ -149,7 +147,11 @@ describe('CommitSelector', () => {
       const a = makeCommit('a');
       const b = makeCommit('b');
       const c = makeCommit('c');
-      expect(ids(CommitSelector.last().select([a, b, c]))).toEqual(['c']);
+      expect(
+        CommitSelector.last()
+          .select([a, b, c])
+          .map((commit) => commit.id),
+      ).toEqual(['c']);
     });
 
     test('produces the most recent commit on a branch when composed', ({ expect }) => {
@@ -157,7 +159,7 @@ describe('CommitSelector', () => {
       const b = makeCommit('b', { branch: 'main' });
       const c = makeCommit('c', { branch: 'main' });
       const selector = CommitSelector.branch('main').pipe(CommitSelector.compose(CommitSelector.last()));
-      expect(ids(selector.select([a, b, c]))).toEqual(['c']);
+      expect(selector.select([a, b, c]).map((commit) => commit.id)).toEqual(['c']);
     });
   });
 
@@ -166,7 +168,12 @@ describe('CommitSelector', () => {
       const a = makeCommit('a', { branch: 'main' });
       const b = makeCommit('b', { branch: 'feature' });
       const selector = CommitSelector.unionAll(CommitSelector.branch('main'), CommitSelector.branch('feature'));
-      expect(ids(selector.select([a, b])).toSorted()).toEqual(['a', 'b']);
+      expect(
+        selector
+          .select([a, b])
+          .map((commit) => commit.id)
+          .toSorted(),
+      ).toEqual(['a', 'b']);
     });
 
     test('dedupes by id', ({ expect }) => {
@@ -186,6 +193,7 @@ const makeActiveProcess = (
 ): Process.Info => ({
   parentPid: null,
   params: { name: null, annotations: {} },
+  environment: {},
   error: null,
   startedAt: 0,
   completedAt: Option.none(),

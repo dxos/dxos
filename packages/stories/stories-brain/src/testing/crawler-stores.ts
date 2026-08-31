@@ -19,7 +19,12 @@ import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
  * (per-space, via {@link BrainCapabilities.FactStoreRegistry}). This story-local plugin provides the
  * remaining stores so a Facts-story module can run a crawl whose facts land in Brain's `FactStore`.
  */
-export type CrawlerStoreServices = StateStore | AgentRegistry | MessageStore | QuestionStore | ExtractedQuestionStore;
+export type CrawlerStoreServices =
+  | StateStore.StateStore
+  | AgentRegistry.AgentRegistry
+  | MessageStore.MessageStore
+  | QuestionStore.QuestionStore
+  | ExtractedQuestionStore.ExtractedQuestionStore;
 
 /** All crawler stores (minus `FactStore`) over one shared in-memory wasm SQLite client. */
 const crawlerStoresLayer = (): Layer.Layer<CrawlerStoreServices> =>

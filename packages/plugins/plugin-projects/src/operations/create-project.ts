@@ -16,20 +16,20 @@ import { ProjectCapabilities, ProjectOperation } from '#types';
 
 // Leaf import: the templates barrel pulls `inbox-research` (plugin-inbox/plugin-routine) into the
 // bundle, which a worker registering this handler cannot load.
-import { blank } from '../templates/blank';
+import { defaultTemplate } from '../templates/default';
 
 const handler: Operation.WithHandler<typeof ProjectOperation.Create> = ProjectOperation.Create.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ name, templateId, subject }) {
       const { db } = yield* Database.Service;
 
-      // Contributed templates plus the built-in blank fallback, so the operation works even before
+      // Contributed templates plus the built-in default fallback, so the operation works even before
       // (or without) the plugin's own template module activating.
       const contributed = yield* Capability.getAll(ProjectCapabilities.Template);
-      const templates = contributed.some((template) => template.id === ProjectCapabilities.BlankTemplateId)
+      const templates = contributed.some((template) => template.id === ProjectCapabilities.DefaultTemplateId)
         ? contributed
-        : [...contributed, blank];
-      const template = templates.find((entry) => entry.id === (templateId ?? ProjectCapabilities.BlankTemplateId));
+        : [...contributed, defaultTemplate];
+      const template = templates.find((entry) => entry.id === (templateId ?? ProjectCapabilities.DefaultTemplateId));
       invariant(template, `Unknown project template: ${templateId}`);
 
       // The scaffold returns a fully-wired in-memory project graph (owned instructions, artifacts
@@ -38,13 +38,18 @@ const handler: Operation.WithHandler<typeof ProjectOperation.Create> = ProjectOp
         .scaffold({ name, subject })
         .pipe(Effect.provideService(Database.Service, Database.makeService(db)));
 
-      const result = yield* Operation.invoke(SpaceOperation.AddObject, {
-        object: draft,
-        target: db,
-        targetNodeId: GraphPath.getSpacePath(db.spaceId, GraphPath.GroupSegments.ai, Type.getTypename(Project.Project)),
-      });
+      const result = yield* Operation.invoke(SpaceOperation.AddObject, { object: draft }, { spaceId: db.spaceId });
       invariant(Obj.instanceOf(Project.Project, result.object), 'Expected a Project.');
-      return { id: result.id, subject: result.subject, project: result.object };
+      const nodePath = GraphPath.getSpacePath(
+        db.spaceId,
+        GraphPath.GroupSegments.ai,
+        Type.getTypename(Project.Project),
+      );
+      return {
+        id: result.id,
+        subject: [GraphPath.getCollectionObjectPath(nodePath, result.object.id)],
+        project: result.object,
+      };
     }),
   ),
 );

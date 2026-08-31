@@ -5,7 +5,7 @@
 import * as Option from 'effect/Option';
 import { describe, test } from 'vitest';
 
-import * as Graph from '@dxos/app-graph/Graph';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import { Key } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 
@@ -56,8 +56,8 @@ describe('GraphPath', () => {
     const spaceId = Key.SpaceId.random();
     const objectId = Key.EntityId.random();
     // Seed via addNode: the GraphProps.nodes constructor option does not register nodes (latent upstream bug).
-    const graph = Graph.make();
-    Graph.addNode(graph, { id: `root/${spaceId}`, type: 'test.workspace', properties: {} });
+    const graph = AppGraph.make();
+    AppGraph.addNode(graph, { id: `root/${spaceId}`, type: 'test.workspace', properties: {} });
 
     test('parses a canonical database path', ({ expect }) => {
       const path = `root/${spaceId}/system/database/test.document/${objectId}`;
@@ -79,6 +79,48 @@ describe('GraphPath', () => {
     test('rejects a path whose trailing segment is not a valid entity id', ({ expect }) => {
       const path = `root/${spaceId}/system/database/test.document/not-an-entity-id`;
       expect(Option.isNone(GraphPath.tryGetEid(graph, path))).toBe(true);
+    });
+
+    // Backs plank dedup, where two views of one object are deliberately different planks.
+    test('does not look past a view discriminator', ({ expect }) => {
+      const path = `root/${spaceId}/communications/mailboxes/${objectId}/sent`;
+      expect(Option.isNone(GraphPath.tryGetEid(graph, path))).toBe(true);
+    });
+  });
+
+  describe('tryGetEidCandidates', () => {
+    const spaceId = Key.SpaceId.random();
+    const objectId = Key.EntityId.random();
+    const graph = AppGraph.make();
+    AppGraph.addNode(graph, { id: `root/${spaceId}`, type: 'test.workspace', properties: {} });
+
+    test('a canonical path yields its trailing object', ({ expect }) => {
+      const path = `root/${spaceId}/system/database/test.document/${objectId}`;
+      expect(GraphPath.tryGetEidCandidates(graph, path)).toEqual([EID.make({ spaceId, entityId: objectId })]);
+    });
+
+    // The mailbox-view shape: the object id is interior.
+    test('finds an object id behind a view discriminator', ({ expect }) => {
+      const path = `root/${spaceId}/communications/mailboxes/${objectId}/sent`;
+      expect(GraphPath.tryGetEidCandidates(graph, path)).toEqual([EID.make({ spaceId, entityId: objectId })]);
+    });
+
+    test('orders candidates terminal-first so the canonical answer stays preferred', ({ expect }) => {
+      const containerId = Key.EntityId.random();
+      const path = `root/${spaceId}/content/collections/${containerId}/${objectId}`;
+      expect(GraphPath.tryGetEidCandidates(graph, path)).toEqual([
+        EID.make({ spaceId, entityId: objectId }),
+        EID.make({ spaceId, entityId: containerId }),
+      ]);
+    });
+
+    test('rejects a path with no known workspace node', ({ expect }) => {
+      const path = `root/${Key.SpaceId.random()}/system/database/test.document/${objectId}`;
+      expect(GraphPath.tryGetEidCandidates(graph, path)).toEqual([]);
+    });
+
+    test('yields nothing for a path naming no object', ({ expect }) => {
+      expect(GraphPath.tryGetEidCandidates(graph, `root/${spaceId}/system/database`)).toEqual([]);
     });
   });
 });

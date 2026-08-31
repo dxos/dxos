@@ -13,14 +13,13 @@ import { type DelegateInvitationCredential, type MemberInfo, getCredentialAssert
 import { failUndefined } from '@dxos/debug';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { type FeedStore, FeedStoreService } from '@dxos/feed-store';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type SwarmNetworkManager, SwarmNetworkManagerService } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import type { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type Teleport } from '@dxos/teleport';
-import { type BlobStoreApi, BlobStoreApiService } from '@dxos/teleport-extension-object-sync';
 import { ComplexMap } from '@dxos/util';
 
 import { type IMetadataStore, IMetadataStoreService } from '../metadata';
@@ -32,8 +31,6 @@ export type SpaceManagerProps = {
   feedStore: FeedStore<FeedMessage>;
   networkManager: SwarmNetworkManager;
   metadataStore: IMetadataStore;
-
-  blobStore: BlobStoreApi;
 
   disableP2pReplication?: boolean;
 };
@@ -74,15 +71,13 @@ export class SpaceManager {
   private readonly _feedStore: FeedStore<FeedMessage>;
   private readonly _networkManager: SwarmNetworkManager;
   private readonly _metadataStore: IMetadataStore;
-  private readonly _blobStore: BlobStoreApi;
   private readonly _disableP2pReplication: boolean;
 
-  constructor({ feedStore, networkManager, metadataStore, blobStore, disableP2pReplication }: SpaceManagerProps) {
+  constructor({ feedStore, networkManager, metadataStore, disableP2pReplication }: SpaceManagerProps) {
     // TODO(burdon): Assert.
     this._feedStore = feedStore;
     this._networkManager = networkManager;
     this._metadataStore = metadataStore;
-    this._blobStore = blobStore;
     this._disableP2pReplication = disableP2pReplication ?? false;
   }
 
@@ -114,14 +109,14 @@ export class SpaceManager {
     const genesisFeed = await this._feedStore.openFeed(metadata.genesisFeedKey ?? failUndefined());
 
     const spaceKey = metadata.key;
-    const spaceId = await createIdFromSpaceKey(spaceKey);
+    // The carried id is primary; derive only for a space recorded before the field existed.
+    const spaceId = metadata.spaceId ? SpaceId.make(metadata.spaceId) : await createIdFromSpaceKey(spaceKey);
     const protocol = new SpaceProtocol({
       topic: spaceKey,
       swarmIdentity,
       networkManager: this._networkManager,
       onSessionAuth: onAuthorizedConnection,
       onAuthFailure,
-      blobStore: this._blobStore,
       disableP2pReplication: this._disableP2pReplication,
     });
 
@@ -162,7 +157,6 @@ export class SpaceManager {
         );
       },
       onAuthFailure: (session: Teleport) => session.close(),
-      blobStore: this._blobStore,
       disableP2pReplication: this._disableP2pReplication,
     });
 
@@ -200,23 +194,17 @@ export type SpaceManagerLayerOptions = Pick<SpaceManagerProps, 'disableP2pReplic
  */
 export const SpaceManagerLayer = (
   options: SpaceManagerLayerOptions = {},
-): Layer.Layer<
-  SpaceManagerService,
-  never,
-  FeedStoreService | SwarmNetworkManagerService | IMetadataStoreService | BlobStoreApiService
-> =>
+): Layer.Layer<SpaceManagerService, never, FeedStoreService | SwarmNetworkManagerService | IMetadataStoreService> =>
   Layer.effect(
     SpaceManagerService,
     Effect.gen(function* () {
       const feedStore = yield* FeedStoreService;
       const networkManager = yield* SwarmNetworkManagerService;
       const metadataStore = yield* IMetadataStoreService;
-      const blobStore = yield* BlobStoreApiService;
       return new SpaceManager({
         feedStore,
         networkManager,
         metadataStore,
-        blobStore,
         disableP2pReplication: options.disableP2pReplication,
       });
     }),

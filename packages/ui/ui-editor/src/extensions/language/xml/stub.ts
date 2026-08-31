@@ -64,6 +64,13 @@ export class StubWidget<TProps extends XmlWidgetProps> extends WidgetType {
      * otherwise it collapses to the 24px minimum, causing scroll jitter and a blank on scroll-back.
      */
     readonly blockHeight?: number,
+    /**
+     * How `blockHeight` is applied. `fixed` (the default) pins the box, which is right when the
+     * height is known up front — an image, a chart. `min` makes it a floor, for content that can
+     * legitimately grow after it mounts: a disclosure the reader opens is pinned shut by `fixed`,
+     * and clipped by its `overflow: hidden`.
+     */
+    readonly heightMode?: 'fixed' | 'min',
     /** When true, trace the widget's DOM lifecycle to diagnose scroll-cull jitter/jump (see PreviewScrollSurface). */
     readonly debug?: boolean,
   ) {
@@ -166,11 +173,17 @@ export class StubWidget<TProps extends XmlWidgetProps> extends WidgetType {
     if (!this.#root) {
       this.#root = this.block ? Domino.of('div').classNames('min-h-[24px]').root : Domino.of('span').root;
       if (this.block && this.blockHeight != null) {
-        // Fixed (not min) height: give CM an authoritative, content-independent measurement so an async
-        // widget that mounts / re-lays-out later cannot perturb the heightmap (we know the height up
-        // front). `overflow: hidden` keeps content that briefly overshoots from changing the measured box.
-        this.#root.style.height = `${this.blockHeight}px`;
-        this.#root.style.overflow = 'hidden';
+        if (this.heightMode === 'min') {
+          // A floor rather than a pin: the box cannot be measured empty while its portaled content
+          // is still to paint, and can still grow when that content changes size.
+          this.#root.style.minHeight = `${this.blockHeight}px`;
+        } else {
+          // Fixed (not min) height: give CM an authoritative, content-independent measurement so an async
+          // widget that mounts / re-lays-out later cannot perturb the heightmap (we know the height up
+          // front). `overflow: hidden` keeps content that briefly overshoots from changing the measured box.
+          this.#root.style.height = `${this.blockHeight}px`;
+          this.#root.style.overflow = 'hidden';
+        }
       }
     }
     const props = Object.assign({}, this.props, { view }) as TProps;

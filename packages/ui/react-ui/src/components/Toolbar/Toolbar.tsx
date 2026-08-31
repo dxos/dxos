@@ -14,6 +14,7 @@ import { type SlottableProps } from '@dxos/ui-types';
 import { translationKey } from '#translations';
 
 import { useThemeContext } from '../../hooks';
+import { DensityProvider } from '../../primitives/DensityProvider';
 import { type ToolbarStyleProps } from '../../theme';
 import { composable, composableProps, slottable } from '../../util';
 import {
@@ -46,14 +47,22 @@ const ToolbarRoot = composable<HTMLDivElement, ToolbarRootProps>(
     return (
       <ToolbarPrimitive.Root
         {...rest}
-        // Only pass role when explicitly set; radix provides role="toolbar" by default.
-        {...(role !== 'none' && { role })}
+        // Radix sets role="toolbar" before spreading props, so an undefined `role` erases it —
+        // omit the key entirely in that case. Every role the caller does set is forwarded,
+        // `role=''` included: dropping it would leave the default in place and silently
+        // invert the caller's intent.
+        {...(role !== undefined && { role })}
         orientation={orientation}
         data-arrow-keys={orientation === 'vertical' ? 'up down' : 'left right'}
         className={tx('toolbar.root', { density, disabled, layoutManaged }, className)}
         ref={forwardedRef}
       >
-        {children}
+        {/* The class alone cannot resize the bar's controls: `Button` and `Input` stamp
+            `data-density` from context — `md` from the root provider unless something nearer says
+            otherwise — and that stamp sits ON the control, so it shadows the `--dx-control` the bar's
+            class set around it. The context is what those controls read, so the bar provides both:
+            the class for descendants that only read the variable, the context for those that stamp. */}
+        {density ? <DensityProvider density={density}>{children}</DensityProvider> : children}
       </ToolbarPrimitive.Root>
     );
   },

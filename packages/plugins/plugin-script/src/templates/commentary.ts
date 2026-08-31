@@ -30,7 +30,7 @@ import { trim } from '@dxos/util';
 
 const Commentary = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.chess.commentary'),
+    key: DXN.make('com.example.operation.script.commentary'),
     name: 'Commentary',
     description: 'Adds commentary about the most recent move to a markdown document associated with the chess game.',
   },

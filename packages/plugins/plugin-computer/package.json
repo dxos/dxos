@@ -1,0 +1,116 @@
+{
+  "name": "@dxos/plugin-computer",
+  "version": "0.11.1",
+  "private": true,
+  "description": "Dev-only coding harness: a bash tool and a multi-string-replace tool backed by a vite dev-server route.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "type": "module",
+  "imports": {
+    "#capabilities": {
+      "source": "./src/capabilities/index.ts",
+      "types": "./dist/types/src/capabilities/index.d.ts",
+      "default": "./dist/lib/capabilities.mjs"
+    },
+    "#meta": {
+      "source": "./src/meta.ts",
+      "types": "./dist/types/src/meta.d.ts",
+      "default": "./dist/lib/meta.mjs"
+    },
+    "#operations": {
+      "source": "./src/operations/index.ts",
+      "types": "./dist/types/src/operations/index.d.ts",
+      "default": "./dist/lib/operations.mjs"
+    },
+    "#plugin": {
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
+    },
+    "#shell": {
+      "source": "./src/shell/index.ts",
+      "types": "./dist/types/src/shell/index.d.ts",
+      "default": "./dist/lib/shell.mjs"
+    },
+    "#skills": {
+      "source": "./src/skills/index.ts",
+      "types": "./dist/types/src/skills/index.d.ts",
+      "default": "./dist/lib/skills.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
+    }
+  },
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
+    },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./package.json": "./package.json",
+    "./shell": {
+      "source": "./src/shell/index.ts",
+      "types": "./dist/types/src/shell/index.d.ts",
+      "import": "./dist/lib/shell.mjs"
+    },
+    "./vite-plugin": {
+      "types": "./dist/types/src/vite-plugin/index.d.ts",
+      "import": "./dist/lib/vite-plugin.mjs"
+    },
+    "./ComputerOperation": {
+      "source": "./src/types/ComputerOperation.ts",
+      "types": "./dist/types/src/types/ComputerOperation.d.ts",
+      "import": "./dist/lib/ComputerOperation.mjs"
+    },
+    "./ComputerPlugin": {
+      "source": "./src/ComputerPlugin.ts",
+      "types": "./dist/types/src/ComputerPlugin.d.ts",
+      "import": "./dist/lib/ComputerPlugin.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "ComputerOperation": [
+        "dist/types/src/types/ComputerOperation.d.ts"
+      ],
+      "shell": [
+        "dist/types/src/shell/index.d.ts"
+      ],
+      "vite-plugin": [
+        "dist/types/src/vite-plugin/index.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "dx.config.ts",
+    "src",
+    "PLUGIN.mdl"
+  ],
+  "dependencies": {
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
+    "@dxos/compute": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/errors": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/effect": "workspace:*",
+    "vite": "catalog:",
+    "vitest": "catalog:"
+  }
+}

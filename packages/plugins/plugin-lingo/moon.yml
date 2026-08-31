@@ -1,0 +1,29 @@
+layer: library
+language: typescript
+tags:
+  - composer-plugin
+  - ts-vite-build
+  - ts-test
+  - ts-test-storybook
+  - storybook
+
+tasks:
+  check-module-structure:
+    # The plugin generates node and workerd capability barrels, so its headless entry must stay
+    # UI-free: fail if React ever becomes reachable from it under either condition.
+    command: >-
+      pnpm exec dx-trace-imports
+      --export ./LingoPlugin
+      --to "{react,react-dom}"
+      --conditions workerd,worker
+      --conditions node
+      --fail-on present
+    deps:
+      - dx-trace-imports:build
+      - build
+    inputs:
+      - tsconfig.json
+      - '@group(production)'
+      - /pnpm-lock.yaml
+    options:
+      timeout: 60

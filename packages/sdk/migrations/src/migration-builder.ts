@@ -7,7 +7,7 @@ import { type AnyDocumentId, type DocumentId } from '@automerge/automerge-repo';
 import type * as Schema from 'effect/Schema';
 
 import { type Space } from '@dxos/client/echo';
-import { CreateEpochRequest } from '@dxos/client/halo';
+import { SpacesService } from '@dxos/client/halo';
 import { type DocHandleProxy, ObjectCore, type RepoProxy, migrateDocument } from '@dxos/echo-client/internal';
 import { type DatabaseDirectory, EncodedReference, type EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
 import { getSchemaURI } from '@dxos/echo/internal';
@@ -176,7 +176,7 @@ export class MigrationBuilder {
     // Create new epoch.
     invariant(this._newRoot.url, 'New root URL not available');
     await this._space.internal.createEpoch({
-      migration: CreateEpochRequest.Migration.REPLACE_AUTOMERGE_ROOT,
+      migration: SpacesService.Migration.enums.REPLACE_AUTOMERGE_ROOT,
       automergeRootUrl: this._newRoot.url,
     });
   }

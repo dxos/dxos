@@ -6,59 +6,42 @@ import * as Effect from 'effect/Effect';
 import { pipe } from 'effect/Function';
 import * as Option from 'effect/Option';
 
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
-import * as Node from '@dxos/app-graph/Node';
-import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
 import * as TypeSection from '@dxos/app-toolkit/TypeSection';
 import { Chat, RunInstructions } from '@dxos/assistant-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
-import * as Project from '@dxos/compute/Project';
 import { Sequence } from '@dxos/conductor';
-import { Database, DXN, Filter, Obj, Query, type Ref, Type } from '@dxos/echo';
+import { Database, DXN, Filter, Obj, type Ref, Type } from '@dxos/echo';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { invariant } from '@dxos/invariant';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Attention } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention/types';
+import { AI_ACTION_ICON } from '@dxos/ui-types';
 import { Position } from '@dxos/util';
 
 import { ASSISTANT_COMPANION_VARIANT, meta } from '#meta';
 import { AssistantCapabilities, AssistantOperation } from '#types';
 
-import { getChatsPath } from '../paths';
-
 /** Operation definitions to seed as `PersistentOperation` records for automation / triggers. */
 const computeOperationsToImport = [RunInstructions] as const;
 
-/**
- * Chats belonging to the top-level Chats section: every chat minus the two kinds that already appear
- * elsewhere in the tree. A chat sourcing a `CompanionTo` relation belongs to its primary object's
- * companion panel; a chat parented to a `Project` is that project's navtree child (plugin-projects
- * `projectChats`). Without the second exclusion a project chat appears twice.
- *
- * The project exclusion subtracts every project child rather than just chats — `children()` takes no
- * type filter, and subtracting a non-chat from a chat-typed source is a no-op.
- */
-export const standaloneChatsQuery = Query.without(
-  Query.without(
-    Query.select(Filter.type(Chat.Chat)),
-    Query.select(Filter.type(Chat.Chat)).sourceOf(Chat.CompanionTo).source(),
-  ),
-  Query.select(Filter.type(Project.Project)).children(),
-);
-
 /** Match ECHO objects that are NOT chats. */
-const whenNonChatObject = NodeMatcher.whenAll(
-  NodeMatcher.whenEchoObject,
-  NodeMatcher.whenNot(NodeMatcher.whenEchoTypeMatches(Chat.Chat)),
+const whenNonChatObject = GraphNodeMatcher.whenAll(
+  AppNodeMatcher.whenEchoObject,
+  GraphNodeMatcher.whenNot(AppNodeMatcher.whenEchoTypeMatches(Chat.Chat)),
 );
 
 export default Capability.makeModule(
@@ -71,7 +54,7 @@ export default Capability.makeModule(
 
     const extensions = yield* Effect.all([
       // AI section group — created here so it shows only when the assistant plugin is active.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: GraphPath.GroupSegments.ai,
         match: AppNodeMatcher.whenSpace,
         connector: (space) =>
@@ -80,18 +63,19 @@ export default Capability.makeModule(
               id: GraphPath.GroupSegments.ai,
               type: GraphPath.GroupTypes.ai,
               label: ['nav-tree-group-ai.label', { ns: meta.profile.key }],
+              icon: AI_ACTION_ICON,
               space,
               position: 300,
             }),
           ]),
       }),
 
-      GraphBuilder.createTypeExtension({
+      AppGraphBuilder.createTypeExtension({
         id: 'root',
         type: Chat.Chat,
         actions: (chat) => {
           return Effect.succeed([
-            Node.makeAction({
+            AppGraphNode.makeAction({
               id: AssistantOperation.UpdateChatName.meta.key,
               data: () =>
                 Effect.gen(function* () {
@@ -110,12 +94,12 @@ export default Capability.makeModule(
         },
       }),
 
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'assistant',
-        match: NodeMatcher.whenRoot,
+        match: GraphNodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
-            Node.makeAction({
+            AppGraphNode.makeAction({
               id: 'importComputeOperations',
               data: Effect.fnUntraced(function* () {
                 const capabilities = yield* Capability.Service;
@@ -129,9 +113,8 @@ export default Capability.makeModule(
                   if (!key) {
                     continue;
                   }
-                  const existing = yield* Effect.promise(
-                    (): Promise<Operation.PersistentOperation[]> =>
-                      space.db.query(Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(key))).run(),
+                  const existing = yield* Effect.promise((): Promise<Operation.PersistentOperation[]> =>
+                    space.db.query(Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(key))).run(),
                   );
                   if (existing.length === 0) {
                     space.db.add(Operation.serialize(definition));
@@ -144,11 +127,18 @@ export default Capability.makeModule(
                 icon: 'ph--download-simple--regular',
               },
             }),
-            Node.makeAction({
-              id: AssistantOperation.ToggleTracePanelDebug.meta.key,
-              data: () => Operation.invoke(AssistantOperation.ToggleTracePanelDebug, {}),
+            AppGraphNode.makeAction({
+              id: AssistantOperation.SetTracePanelDebug.meta.key,
+              // The menu item flips, so it reads the current value and states the one it wants.
+              data: () =>
+                Effect.gen(function* () {
+                  const settings = yield* Capabilities.getAtomValue(AssistantCapabilities.Settings);
+                  yield* Operation.invoke(AssistantOperation.SetTracePanelDebug, {
+                    state: !settings.tracePanelDebug,
+                  });
+                }),
               properties: {
-                label: ['toggle-trace-panel-debug.label', { ns: meta.profile.key }],
+                label: ['set-trace-panel-debug.label', { ns: meta.profile.key }],
                 icon: 'ph--brackets-curly--regular',
               },
             }),
@@ -156,7 +146,7 @@ export default Capability.makeModule(
       }),
 
       // Don't show assistant companion when a chat is already the primary object.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'companionChat',
         match: whenNonChatObject,
         connector: (object, get) =>
@@ -193,11 +183,11 @@ export default Capability.makeModule(
           }).pipe(Effect.orDie),
       }),
 
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'invocations',
-        match: NodeMatcher.whenAny(
-          NodeMatcher.whenEchoTypeMatches(Sequence.Sequence),
-          NodeMatcher.whenEchoTypeMatches(Instructions.Instructions),
+        match: GraphNodeMatcher.whenAny(
+          AppNodeMatcher.whenEchoTypeMatches(Sequence.Sequence),
+          AppNodeMatcher.whenEchoTypeMatches(Instructions.Instructions),
         ),
         connector: () =>
           Effect.succeed([
@@ -210,9 +200,9 @@ export default Capability.makeModule(
           ]),
       }),
 
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'trace',
-        match: NodeMatcher.whenRoot,
+        match: GraphNodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
             AppNode.makeDeckCompanion({
@@ -225,16 +215,14 @@ export default Capability.makeModule(
           ]),
       }),
 
-      // Section node: standalone Chat.Chat objects per AI group (companions and project chats excluded).
       TypeSection.createTypeSectionExtension(Chat.Chat, {
-        query: standaloneChatsQuery,
         match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.ai),
         groupSegment: GraphPath.GroupSegments.ai,
         urlKey: 'chat',
       }),
 
       // Create-chat action on the Chats section header.
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'chatsSectionActions',
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
@@ -242,25 +230,29 @@ export default Capability.makeModule(
         },
         actions: (space) =>
           Effect.succeed([
-            Node.makeAction({
+            AppGraphNode.makeAction({
               id: 'create-chat',
               data: () =>
                 Effect.gen(function* () {
                   const { object: chat } = yield* Operation.invoke(
                     AssistantOperation.CreateChat,
-                    { db: space.db },
+                    {},
                     { spaceId: space.db.spaceId },
                   );
-                  const { subject } = yield* Operation.invoke(
-                    SpaceOperation.AddObject,
-                    { object: chat, target: space.db, targetNodeId: getChatsPath(space.db.spaceId) },
+                  yield* Operation.invoke(SpaceOperation.AddObject, { object: chat }, { spaceId: space.db.spaceId });
+                  const { targets } = yield* Operation.invoke(
+                    NavigationOperation.ResolveNavigationTargets,
+                    { query: { uri: Obj.getURI(chat) } },
                     { spaceId: space.db.spaceId },
                   );
-                  yield* Operation.invoke(
-                    LayoutOperation.Open,
-                    { subject: [...subject] },
-                    { spaceId: space.db.spaceId },
-                  );
+                  const navigationTarget = targets[0];
+                  if (navigationTarget) {
+                    yield* Operation.invoke(
+                      LayoutOperation.Open,
+                      { subject: [navigationTarget.path] },
+                      { spaceId: space.db.spaceId },
+                    );
+                  }
                 }),
               properties: {
                 label: ['create-chat.label', { ns: meta.profile.key }],

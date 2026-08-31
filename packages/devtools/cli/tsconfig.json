@@ -62,6 +62,9 @@
       "path": "../../core/compute/edge-compute"
     },
     {
+      "path": "../../core/compute/mcp-server"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
@@ -110,6 +113,9 @@
       "path": "../../plugins/plugin-observability"
     },
     {
+      "path": "../../plugins/plugin-projects"
+    },
+    {
       "path": "../../plugins/plugin-registry"
     },
     {
@@ -131,6 +137,9 @@
       "path": "../../plugins/plugin-table"
     },
     {
+      "path": "../../plugins/plugin-tasks"
+    },
+    {
       "path": "../../plugins/plugin-transcription"
     },
     {
@@ -138,6 +147,9 @@
     },
     {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-toolkit"
     },
     {
       "path": "../../sdk/client"

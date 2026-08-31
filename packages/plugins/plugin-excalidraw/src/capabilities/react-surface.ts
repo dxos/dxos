@@ -16,7 +16,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'plugin-settings',
+        id: 'pluginSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
         component: ExcalidrawSettings,
         props: ({ data: { subject } }) => ({ subject }),

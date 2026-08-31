@@ -55,7 +55,7 @@ describe('topics + persons over ECHO', () => {
         yield* replayTopics;
         yield* replayTopics;
 
-        const registry = yield* AgentRegistry;
+        const registry = yield* AgentRegistry.AgentRegistry;
         const agents = yield* registry.list();
 
         const topics = yield* Database.query(Query.select(Filter.type(Topic.Topic))).run.pipe(

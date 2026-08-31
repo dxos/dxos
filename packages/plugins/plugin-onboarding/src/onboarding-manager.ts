@@ -9,22 +9,22 @@ import * as HubAccount from '@dxos/app-toolkit/Account';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { SubscriptionList, type Trigger } from '@dxos/async';
+import { type Client } from '@dxos/client';
+import { type Credential, DeviceType, type Identity } from '@dxos/client/halo';
 import { Context } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ClientOperation } from '@dxos/plugin-client';
 import * as Account from '@dxos/plugin-client/Account';
+import { ClientOperation } from '@dxos/plugin-client/ClientOperation';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import * as HelpOperation from '@dxos/plugin-support/HelpOperation';
-import { type Client } from '@dxos/react-client';
-import { type Credential, DeviceType, type Identity } from '@dxos/react-client/halo';
 import { osTranslations } from '@dxos/ui-theme';
 
 import hero from '../assets/hero.webp?url';
-import { WELCOME_SCREEN } from './constants';
+import { AUTHORIZING_DEVICE_DIALOG, WELCOME_SCREEN } from './constants';
 import { meta } from './meta';
-import { queryAllCredentials, removeQueryParamByValue } from './util';
+import { isInvalidRecoveryToken, queryAllCredentials, removeQueryParamByValue } from './util';
 
 export type OnboardingManagerProps = {
   invokePromise: Capabilities.OperationInvoker['invokePromise'];
@@ -160,7 +160,14 @@ export class OnboardingManager {
     } else if (!this._skipAuth && this._deviceInvitationCode === undefined) {
       // No identity yet: show welcome. Skipped when a device invitation is pending, since both dialog
       // updates then race through the operation layer and a welcome landing second hides the join.
-      await this._showWelcome();
+      // A `?token=...` param means a magic-link redemption is about to run: show the "authorizing"
+      // dialog instead of the login form, so the multi-second server + HALO-replication wait doesn't
+      // look like a stuck login gate.
+      if (this._token) {
+        await this._showAuthorizingDevice();
+      } else {
+        await this._showWelcome();
+      }
       if (aborted()) {
         return;
       }
@@ -201,8 +208,14 @@ export class OnboardingManager {
       // the existing identity. Awaiting `_login()` lets HALO finish replicating
       // any pre-existing IdentityRecovery credentials before `_setupRecovery`
       // checks them, so we don't prompt a user who already has a passkey.
-      await this._login();
-      await this._setupRecovery();
+      const result = await this._login();
+      if (result === 'ok') {
+        await this._setupRecovery();
+      } else {
+        // Fall back to the login form rather than leaving the user on the "authorizing" dialog forever.
+        await this._showLoginFailedToast(result);
+        await this._showWelcome();
+      }
     }
     if (aborted()) {
       return;
@@ -250,11 +263,18 @@ export class OnboardingManager {
     });
   }
 
-  private async _login(): Promise<void> {
+  /** `invokePromise` resolves with `{ error }` rather than rejecting, so the result must be
+   * inspected or a failed redemption is silently swallowed. */
+  private async _login(): Promise<'ok' | 'invalid-token' | 'failed'> {
     invariant(this._token);
-    await this._invokePromise(ClientOperation.RedeemToken, { token: this._token });
-    this._token && removeQueryParamByValue(this._token);
+    const { error } = await this._invokePromise(ClientOperation.RedeemToken, { token: this._token });
+    removeQueryParamByValue(this._token);
     removeQueryParamByValue('login');
+    if (error) {
+      log.warn('token redemption failed', { error });
+      return isInvalidRecoveryToken(error) ? 'invalid-token' : 'failed';
+    }
+    return 'ok';
   }
 
   /**
@@ -357,6 +377,27 @@ export class OnboardingManager {
 
   private async _closeWelcome(): Promise<void> {
     await this._invokePromise(LayoutOperation.UpdateDialog, { state: false });
+  }
+
+  /** Shown in place of the login form while a `?token=...` magic-link redemption is in flight. */
+  private async _showAuthorizingDevice(): Promise<void> {
+    await this._invokePromise(LayoutOperation.UpdateDialog, {
+      subject: AUTHORIZING_DEVICE_DIALOG,
+      type: 'alert',
+      overlayClasses: 'dark bg-neutral-950! bg-no-repeat bg-center',
+      overlayStyle: { backgroundImage: `url(${hero})` },
+    });
+  }
+
+  private async _showLoginFailedToast(reason: 'invalid-token' | 'failed'): Promise<void> {
+    const id = reason === 'invalid-token' ? 'login-link-expired-toast' : 'login-failed-toast';
+    await this._invokePromise(LayoutOperation.AddToast, {
+      id,
+      title: [`${id}.title`, { ns: meta.profile.key }],
+      description: [`${id}.description`, { ns: meta.profile.key }],
+      icon: 'ph--warning--regular',
+      closeLabel: ['close.label', { ns: osTranslations }],
+    });
   }
 
   private async _createIdentity(): Promise<void> {

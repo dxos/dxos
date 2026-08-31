@@ -9,6 +9,7 @@ export * from './useDeckCompanions';
 export * from './useDeckPresentation';
 export * from './useDeckSettings';
 export * from './useDeckState';
+export * from './useDismissToast';
 export * from './useMainSize';
 export * from './useNodeActionExpander';
 export * from './useSelectedCompanion';

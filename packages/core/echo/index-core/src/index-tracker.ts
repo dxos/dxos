@@ -75,15 +75,54 @@ export class IndexTracker {
             AND (${resourceIdParam} IS NULL OR resourceId = ${resourceIdParam})
         `;
 
-        return rows.map(
-          (row): IndexCursor => ({
+        return rows.map((row): IndexCursor => ({
+          indexName: row.indexName,
+          spaceId: row.spaceId === '' ? null : Schema.decodeSync(SpaceId)(row.spaceId!),
+          sourceName: row.sourceName,
+          resourceId: row.resourceId === '' ? null : row.resourceId,
+          cursor: row.cursor,
+        }));
+      }),
+  );
+
+  /**
+   * Cursors for every index of one source, keyed by `indexName`. `IndexEngine.update` refreshes all
+   * of a source's indexes together, so querying per index re-scans `indexCursor` once per index for
+   * a result the caller can partition itself.
+   */
+  queryCursorsBySource = Effect.fn('IndexTracker.queryCursorsBySource')(
+    (query: {
+      sourceName: string;
+      spaceId?: SpaceId | null;
+    }): Effect.Effect<Map<string, IndexCursor[]>, SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+
+        const spaceIdParam = query.spaceId === undefined ? null : (query.spaceId ?? '');
+
+        const rows = yield* sql<IndexCursor>`
+            SELECT * FROM indexCursor
+            WHERE sourceName = ${query.sourceName}
+            AND (${spaceIdParam} IS NULL OR spaceId = ${spaceIdParam})
+        `;
+
+        const byIndex = new Map<string, IndexCursor[]>();
+        for (const row of rows) {
+          const cursor: IndexCursor = {
             indexName: row.indexName,
             spaceId: row.spaceId === '' ? null : Schema.decodeSync(SpaceId)(row.spaceId!),
             sourceName: row.sourceName,
             resourceId: row.resourceId === '' ? null : row.resourceId,
             cursor: row.cursor,
-          }),
-        );
+          };
+          const existing = byIndex.get(row.indexName);
+          if (existing) {
+            existing.push(cursor);
+          } else {
+            byIndex.set(row.indexName, [cursor]);
+          }
+        }
+        return byIndex;
       }),
   );
 

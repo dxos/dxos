@@ -2,6 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './aspects';
+export * from './hooks';
 export * from './components';
 export * from './util';

@@ -15,7 +15,7 @@ import {
   type SpaceArchiveMetadata,
   SpaceArchiveVersion,
 } from '@dxos/protocols';
-import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
+import { SpacesService } from '@dxos/protocols/rpc';
 import { createFilename } from '@dxos/util';
 
 export type SpaceArchiveBeginProps = {
@@ -92,7 +92,7 @@ export class SpaceArchiveWriter extends Resource {
     }
   }
 
-  async finish(): Promise<SpaceArchive> {
+  async finish(): Promise<SpacesService.SpaceArchive> {
     assertState(this._archive, 'Not open');
     assertState(this._meta, 'Not started');
     assertState(this._meta.spaceId, 'No space ID set');
@@ -115,7 +115,7 @@ export class SpaceArchiveWriter extends Resource {
     return {
       filename: createFilename({ parts: [this._meta.spaceId], ext: 'tar' }),
       contents: binary,
-      format: SpaceArchive.Format.BINARY,
+      format: SpacesService.SpaceArchiveFormat.enums.BINARY,
     };
   }
 }

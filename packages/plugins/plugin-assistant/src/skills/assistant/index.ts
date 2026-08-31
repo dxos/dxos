@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export { default as AssistantSkill } from './skill';
+export * as AssistantSkill from './AssistantSkill';

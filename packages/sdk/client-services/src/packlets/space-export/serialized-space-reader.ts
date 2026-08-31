@@ -7,7 +7,7 @@ import { type SerializedSpace } from '@dxos/echo-client';
 import { type DatabaseDirectory, type EntityStructure } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
 import { URI } from '@dxos/keys';
-import { type SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
+import { type SpacesService } from '@dxos/protocols/rpc';
 
 const ATTR_TYPE = '@type';
 const ATTR_META = '@meta';
@@ -41,7 +41,7 @@ const INTERNAL_KEYS: ReadonlySet<string> = new Set([
  * The archive contents are expected to be the UTF-8 encoding of
  * `JSON.stringify(serializedSpace)`.
  */
-export const readSerializedSpaceArchive = (archive: SpaceArchive): SerializedSpace => {
+export const readSerializedSpaceArchive = (archive: SpacesService.SpaceArchive): SerializedSpace => {
   const text = new TextDecoder().decode(archive.contents);
   const parsed = JSON.parse(text) as SerializedSpace;
   assertArgument(typeof parsed === 'object' && parsed !== null, 'archive', 'Invalid JSON archive payload');

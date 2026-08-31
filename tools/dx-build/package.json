@@ -16,5 +16,8 @@
   "types": "dist/src/index.d.ts",
   "bin": {
     "dx-build": "cli.js"
+  },
+  "dependencies": {
+    "@typescript/typescript6": "catalog:"
   }
 }

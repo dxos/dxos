@@ -11,12 +11,8 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
-import { meta } from '#meta';
-
 import { Provider, RequestMapping, ResultMapping } from './Provider';
 import { Search } from './Search';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 /**
  * Fetches a page's HTML, rendering via the composer-crx extension when available. Hosted by the
@@ -25,7 +21,7 @@ const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name
  */
 export const RenderPage = Operation.make({
   meta: {
-    key: makeKey('renderPage'),
+    key: DXN.make('org.dxos.operation.commerce.renderPage'),
     name: 'Render Page',
     description: 'Fetches a page, rendering it via the browser extension when available.',
     icon: 'ph--browser--regular',
@@ -42,7 +38,7 @@ export const RenderPage = Operation.make({
 /** Executes one provider template against a search and returns result objects. */
 export const RunProviderSearch = Operation.make({
   meta: {
-    key: makeKey('runProviderSearch'),
+    key: DXN.make('org.dxos.operation.commerce.runProviderSearch'),
     name: 'Run Provider Search',
     description: 'Executes one provider template against a search, appending new results to its feed.',
     icon: 'ph--play--regular',
@@ -59,7 +55,7 @@ export const RunProviderSearch = Operation.make({
 /** Runs all enabled providers for a search and links the results. */
 export const RunSearch = Operation.make({
   meta: {
-    key: makeKey('runSearch'),
+    key: DXN.make('org.dxos.operation.commerce.runSearch'),
     name: 'Run Search',
     description: 'Runs all enabled providers for a search and links the results.',
     icon: 'ph--shopping-cart--regular',
@@ -72,7 +68,7 @@ export const RunSearch = Operation.make({
 /** Fetches a provider's vendor site so the agent can derive its template. */
 export const AnalyzeProvider = Operation.make({
   meta: {
-    key: makeKey('analyzeProvider'),
+    key: DXN.make('org.dxos.operation.commerce.analyzeProvider'),
     name: 'Analyze Provider',
     description: "Fetches the provider's vendor site and returns the page source for the agent to inspect.",
     icon: 'ph--brain--regular',
@@ -85,7 +81,7 @@ export const AnalyzeProvider = Operation.make({
 /** Runs the provider skill agent to analyze the site and populate the search template. */
 export const GenerateProviderTemplate = Operation.make({
   meta: {
-    key: makeKey('generateProviderTemplate'),
+    key: DXN.make('org.dxos.operation.commerce.generateProviderTemplate'),
     name: 'Generate Provider Template',
     description: 'Runs the provider skill agent to analyze the site and populate the search template.',
     icon: 'ph--sparkle--regular',
@@ -98,7 +94,7 @@ export const GenerateProviderTemplate = Operation.make({
 /** Persists a derived provider template (search schema + request + result mappings). */
 export const SetProviderTemplate = Operation.make({
   meta: {
-    key: makeKey('setProviderTemplate'),
+    key: DXN.make('org.dxos.operation.commerce.setProviderTemplate'),
     name: 'Set Provider Template',
     description: 'Persists the derived search schema, request mapping, and result mapping onto a provider.',
     icon: 'ph--floppy-disk--regular',

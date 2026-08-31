@@ -9,7 +9,7 @@ import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { type AgentRegistryApi, type Identifier, type Observation, type Profile } from '../AgentRegistry';
+import type * as AgentRegistry from '../AgentRegistry';
 import { StateError } from '../errors';
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/agent-registry';
 
@@ -49,7 +49,7 @@ type IdentifierRow = {
   readonly agent_id: string;
 };
 
-const identifierKey = (identifier: Identifier) => `${identifier.namespace}:${identifier.value}`;
+const identifierKey = (identifier: AgentRegistry.Identifier) => `${identifier.namespace}:${identifier.value}`;
 
 const earliest = (a?: string, b?: string) => (a === undefined ? b : b === undefined ? a : a < b ? a : b);
 const latest = (a?: string, b?: string) => (a === undefined ? b : b === undefined ? a : a > b ? a : b);
@@ -57,7 +57,7 @@ const latest = (a?: string, b?: string) => (a === undefined ? b : b === undefine
 const fail = (message: string) => (cause: unknown) =>
   cause instanceof StateError ? cause : new StateError({ message, cause });
 
-export const makeSql = (sql: SqlClient.SqlClient): AgentRegistryApi => {
+export const makeSql = (sql: SqlClient.SqlClient): AgentRegistry.Service => {
   const identifiersOf = (agentId: string) =>
     sql<IdentifierRow>`SELECT * FROM agent_identifier WHERE agent_id = ${agentId} AND kind = 'identifier' ORDER BY rowid ASC`.pipe(
       Effect.map((rows) =>
@@ -69,17 +69,15 @@ export const makeSql = (sql: SqlClient.SqlClient): AgentRegistryApi => {
 
   const toProfile = (row: AgentRow) =>
     identifiersOf(row.id).pipe(
-      Effect.map(
-        (identifiers): Profile => ({
-          id: row.id,
-          ...(row.label !== null ? { label: row.label } : {}),
-          identifiers,
-          messageCount: row.message_count,
-          ...(row.first_seen !== null ? { firstSeen: row.first_seen } : {}),
-          ...(row.last_seen !== null ? { lastSeen: row.last_seen } : {}),
-          ...(row.ref !== null ? { ref: row.ref } : {}),
-        }),
-      ),
+      Effect.map((identifiers): AgentRegistry.Profile => ({
+        id: row.id,
+        ...(row.label !== null ? { label: row.label } : {}),
+        identifiers,
+        messageCount: row.message_count,
+        ...(row.first_seen !== null ? { firstSeen: row.first_seen } : {}),
+        ...(row.last_seen !== null ? { lastSeen: row.last_seen } : {}),
+        ...(row.ref !== null ? { ref: row.ref } : {}),
+      })),
     );
 
   const agentRow = (id: string) =>
@@ -99,7 +97,7 @@ export const makeSql = (sql: SqlClient.SqlClient): AgentRegistryApi => {
       Effect.map((rows) => rows[0]?.agent_id),
     );
 
-  const findByIdentifiers = (identifiers: readonly Identifier[]) =>
+  const findByIdentifiers = (identifiers: readonly AgentRegistry.Identifier[]) =>
     Effect.gen(function* () {
       for (const identifier of identifiers) {
         const id = yield* canonicalId(identifierKey(identifier));
@@ -110,7 +108,7 @@ export const makeSql = (sql: SqlClient.SqlClient): AgentRegistryApi => {
       return undefined;
     });
 
-  const insertIdentifiers = (agentId: string, identifiers: readonly Identifier[]) =>
+  const insertIdentifiers = (agentId: string, identifiers: readonly AgentRegistry.Identifier[]) =>
     Effect.forEach(
       identifiers,
       (identifier) =>
@@ -120,7 +118,12 @@ export const makeSql = (sql: SqlClient.SqlClient): AgentRegistryApi => {
       { discard: true },
     );
 
-  const upsert = (identifiers: readonly Identifier[], label: string | undefined, at?: string, bump = false) =>
+  const upsert = (
+    identifiers: readonly AgentRegistry.Identifier[],
+    label: string | undefined,
+    at?: string,
+    bump = false,
+  ) =>
     sql.withTransaction(
       Effect.gen(function* () {
         const existing = yield* findByIdentifiers(identifiers);
@@ -148,7 +151,7 @@ export const makeSql = (sql: SqlClient.SqlClient): AgentRegistryApi => {
       identifiers.length === 0
         ? Effect.fail(new StateError({ message: 'resolve requires at least one identifier' }))
         : upsert(identifiers, label).pipe(Effect.mapError(fail('Failed to resolve agent'))),
-    observe: ({ identifiers, label, at }: Observation) =>
+    observe: ({ identifiers, label, at }: AgentRegistry.Observation) =>
       identifiers.length === 0
         ? Effect.fail(new StateError({ message: 'observe requires at least one identifier' }))
         : upsert(identifiers, label, at, true).pipe(Effect.mapError(fail('Failed to observe agent'))),

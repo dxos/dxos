@@ -297,7 +297,7 @@ export class ChatCompletionsClient extends Context.Service<
  * result messages are mapped to the OpenAI function-calling convention which
  * Ollama also accepts.
  */
-const promptToMessages = (prompt: Prompt.Prompt): ChatMessage[] => {
+const promptToMessages = (prompt: Prompt.Prompt, apiFormat: ApiFormat): ChatMessage[] => {
   const messages: ChatMessage[] = [];
 
   for (const message of prompt.content) {
@@ -331,7 +331,7 @@ const promptToMessages = (prompt: Prompt.Prompt): ChatMessage[] => {
             type: 'function',
             function: {
               name: part.name,
-              arguments: encodeToolParams(part),
+              arguments: encodeToolParams(part, apiFormat),
             },
           });
         }
@@ -363,7 +363,27 @@ const promptToMessages = (prompt: Prompt.Prompt): ChatMessage[] => {
   return messages;
 };
 
-const encodeToolParams = (part: Prompt.ToolCallPart): string => {
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+/**
+ * Ollama decodes `tool_calls[].function.arguments` into a map and rejects a string with 400, while
+ * OpenAI specifies that string — so the encoding follows the format rather than the value.
+ */
+const encodeToolParams = (part: Prompt.ToolCallPart, apiFormat: ApiFormat): string | Record<string, unknown> => {
+  if (apiFormat === 'ollama') {
+    if (isRecord(part.params)) {
+      return part.params;
+    }
+    // An empty map, since a string that does not parse to an object has no map form.
+    try {
+      const parsed = typeof part.params === 'string' ? Tool.unsafeSecureJsonParse(part.params) : undefined;
+      return isRecord(parsed) ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+
   if (typeof part.params === 'string') {
     return part.params;
   }
@@ -635,7 +655,7 @@ export const make = (model: string) =>
         Effect.gen(function* () {
           const idGen = yield* IdGenerator.IdGenerator;
 
-          const messages = promptToMessages(options.prompt);
+          const messages = promptToMessages(options.prompt, config.apiFormat);
           const jsonFormat = options.responseFormat.type === 'json';
           const tools = toolsToRequest(options.tools);
           const requestBody = buildRequestBody(model, messages, false, jsonFormat, config.apiFormat, tools);
@@ -705,7 +725,7 @@ export const make = (model: string) =>
           Effect.gen(function* () {
             const idGen = yield* IdGenerator.IdGenerator;
 
-            const messages = promptToMessages(options.prompt);
+            const messages = promptToMessages(options.prompt, config.apiFormat);
             const jsonFormat = options.responseFormat.type === 'json';
             const tools = toolsToRequest(options.tools);
             const requestBody = buildRequestBody(model, messages, true, jsonFormat, config.apiFormat, tools);

@@ -48,23 +48,32 @@ export const isExemplarSpace = (space: Space): boolean => hasTag(space, EXEMPLAR
 export const isSettingsSpace = (space: Space): boolean => hasTag(space, SETTINGS_SPACE_TAG);
 
 /**
- * Find the settings space.
+ * All settings-tagged spaces, ordered by id — code-unit comparison, never locale collation, since
+ * duplicate healing deletes every space but the first and the order must be identical on every device.
+ */
+export const getSettingsSpaces = (client: { spaces: { get(): Space[] } }): Space[] =>
+  client.spaces
+    .get()
+    .filter((space) => isSettingsSpace(space))
+    .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+
+/**
+ * Find the settings space to read app configuration from.
  *
- * Profiles that hit the duplicate-creation race carry two tagged spaces; the one holding the
- * default-space designation is canonical, so it wins over list order.
+ * On a profile carrying duplicates this is a device-local read heuristic while healing converges;
+ * deletion decisions must instead use the {@link getSettingsSpaces} order, which is a pure function
+ * of replicated state.
  */
 export const getSettingsSpace = (client: { spaces: { get(): Space[] } }): Space | undefined => {
-  const tagged = client.spaces.get().filter((space) => isSettingsSpace(space));
+  const tagged = getSettingsSpaces(client);
   if (tagged.length <= 1) {
     return tagged[0];
   }
 
-  // Properties are unreadable until the space is ready, so an unopened duplicate cannot be judged
-  // and the first tagged space stands in until one proves canonical.
-  return (
-    tagged.find((space) => space.state.get() === SpaceState.SPACE_READY && getDefaultSpaceId(space) !== undefined) ??
-    tagged[0]
-  );
+  // Properties are unreadable until a space is ready, so among the readable duplicates the
+  // designation-holder wins — and any readable one beats waiting on an unopened one.
+  const ready = tagged.filter((space) => space.state.get() === SpaceState.SPACE_READY);
+  return ready.find((space) => getDefaultSpaceId(space) !== undefined) ?? ready[0] ?? tagged[0];
 };
 
 /**
@@ -126,9 +135,9 @@ export const getDefaultSpace = (client: SpaceResolver): Space | undefined => {
 /**
  * Create the two spaces every profile starts with, and designate the second as the default.
  *
- * Shared by the app's identity-created module, the `halo create` CLI command and the story/test
- * harnesses so the shape of a new profile is defined once. It lives here rather than in
- * plugin-space because plugin-client (CLI, test harness) cannot depend on plugin-space.
+ * Shared by the app's identity-created module and the story/test harnesses so the shape of a new
+ * profile is defined once. It lives here rather than in plugin-space because plugin-client (CLI,
+ * test harness) cannot depend on plugin-space.
  *
  * Both are locked at genesis: the settings space holds configuration that must never be shared,
  * and the first space is private until the user decides otherwise. Both replicate through EDGE so

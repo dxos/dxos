@@ -20,7 +20,6 @@ import { AiService, OpaqueToolkit } from '@dxos/ai';
 import {
   AgentRequestBegin,
   AgentRequestEnd,
-  AiSession,
   HarnessControl,
   SkillHooks,
   getOperationFromTool,
@@ -36,17 +35,24 @@ import * as Process from '@dxos/compute/Process';
 import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ContentBlock } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { type DelegationStrategy } from './delegation-strategy';
+import { type MakeTurnProducer, makeAiSessionTurnProducer } from './turn-producer';
 
 interface AgentProcessOptions {
   // TODO(burdon): Instructions?
   systemPrompt?: string;
+
+  /**
+   * Produces each turn. Defaults to {@link makeAiSessionTurnProducer}; substituting it swaps the
+   * engine (e.g. a Claude Agent SDK host) while leaving the queue, alarms, redelivery, delegation
+   * and hydration around it untouched.
+   */
+  makeTurnProducer?: MakeTurnProducer;
 
   /** Model identifier. */
   model?: DXN.DXN;
@@ -125,9 +131,9 @@ export const AgentProcess = (options: AgentProcessOptions) =>
             )
           : undefined;
         const runtime = yield* Effect.context<Database.Service>();
-        const session = yield* EffectEx.acquireReleaseResource(
-          () => new AiSession.Session({ feed, runtime, instructions: instructions ? [instructions] : [] }),
-        );
+        const makeTurnProducer = options.makeTurnProducer ?? makeAiSessionTurnProducer;
+        // Scoped acquisition: the producer's teardown registers with this process's scope.
+        const session = yield* makeTurnProducer({ feed, runtime, instructions: instructions ? [instructions] : [] });
         let inputQueue: AgentEvent[] = [...(yield* AgentEventsCell.get)];
         const storageService = yield* StorageService.StorageService;
         const toolCallManager = new ToolCallManager(storageService);
@@ -154,7 +160,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         let delegations: Delegation[] = [...(yield* DelegationsCell.get)];
 
         const requestModelLayer = AiService.model(
-          options.model ? DXN.getName(options.model) : 'com.anthropic.model.claude-opus-4-8.default',
+          options.model ? DXN.getName(options.model) : 'com.anthropic.model.claude-opus-5.default',
           {
             provider: options.provider,
           },
@@ -168,7 +174,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         // keeps the process alive past this turn.
         const runEndRequestHooks = Effect.gen(function* () {
           yield* SkillHooks.runHooks({
-            skills: session.context.getSkills(),
+            skills: session.getSkills(),
             phase: 'end-request',
             invoke: (operation, input) =>
               Effect.gen(function* () {
@@ -181,7 +187,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 // of the failure being silently discarded.
                 const exit = yield* fiber.await;
                 if (Exit.isFailure(exit)) {
-                  yield* Effect.failCause(exit.cause);
+                  return yield* Effect.failCause(exit.cause);
                 }
               }).pipe(Effect.asVoid, Effect.orDie),
           });
@@ -262,7 +268,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               log('trace agent request begin');
               yield* Trace.write(AgentRequestBegin, {});
               yield* session
-                .createRequest({
+                .runTurn({
                   prompt,
                   // TODO(dmaretskyi): Polling currently broken, agent relies on completion notifications being delivered.
                   // toolkit: AsynchronousExectionToolkit,
@@ -330,6 +336,19 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 const exit = yield* fiber.await;
                 if (Option.isSome(strategy)) {
                   yield* strategy.value.onComplete(feed, delegation.id, exit);
+                  // Re-reconcile: work that was waiting on this delegation (e.g. a dependent task)
+                  // spawns now rather than on the next conversational turn — this is what lets a
+                  // batch of delegated tasks drain without further prompting.
+                  const activeIds = new Set(delegations.map((delegation) => delegation.id));
+                  const pending = yield* strategy.value.reconcile(feed, activeIds);
+                  for (const next of pending) {
+                    const pid = yield* next.spawn;
+                    delegations.push({ pid, id: next.id });
+                    log('delegated work', { pid, id: next.id });
+                  }
+                  if (pending.length > 0) {
+                    yield* DelegationsCell.set(delegations);
+                  }
                 }
                 log('delegated work completed', { pid: event.pid, id: delegation.id, success: Exit.isSuccess(exit) });
                 yield* maybeComplete;

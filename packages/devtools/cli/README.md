@@ -22,6 +22,150 @@ DX_DEBUG=debug ./bin/dx chat
 in `src/commands/plugin-defs.ts` and lives in the plugin package — e.g. `dx registry publish` is
 `packages/plugins/plugin-registry/src/commands/registry/`. Run `dx --help` for the merged topic list.
 
+## Serve as an MCP server
+
+`dx mcp serve` exposes your spaces to an MCP client over stdio — the local twin of the
+deployed server at `mcp.dxos.org`. Both are hosts over the same `@dxos/mcp-server` package, so the
+tools, prompts and `loadSkill` output are identical; what differs is host-layer only (no OAuth here,
+and operations run in-process). A skill projects as a prompt and the operations it names are rows
+`queryOperations` returns, so a plugin you enable shows up without touching this command.
+
+Two things follow from stdio and are worth knowing before you debug it:
+
+- **stdout is the protocol.** Logs go to stderr, so `DX_DEBUG=debug` is safe to leave on; anything a
+  command prints to stdout is not.
+- **The server is unauthenticated and runs as you.** It reads and writes every visible space in the
+  profile it starts with (HALO and settings spaces excluded). Point a client at it only if you would
+  give that client your identity.
+
+The setup below assumes `dx` is installed globally and on your `PATH`:
+
+```bash
+npm i -g @dxos/cli
+dx mcp serve   # sits waiting for a client, which is correct — Ctrl-C out
+```
+
+### Claude Code
+
+```bash
+claude mcp add dxos --scope user -- dx mcp serve
+claude mcp list   # dxos: dx mcp serve - ✓ Connected
+```
+
+`--scope user` makes it available in every project; drop it for the current project only, or use
+`--scope project` to write a checked-in `.mcp.json` for the whole team. Remove with
+`claude mcp remove dxos`.
+
+### Claude Desktop
+
+Settings → Developer → Edit Config, or edit the file directly
+(`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS,
+`%APPDATA%\Claude\claude_desktop_config.json` on Windows):
+
+```json
+{
+  "mcpServers": {
+    "dxos": {
+      "command": "/absolute/path/to/dx",
+      "args": ["mcp", "serve"]
+    }
+  }
+}
+```
+
+Restart Claude Desktop; the tools appear under the connector menu and skills as slash commands.
+
+`command` must be **absolute** — `which dx` (`where.exe dx` on Windows) gives the path. A GUI app is not launched from your
+shell, so it does not inherit your `PATH` and a bare `dx` will not resolve.
+
+### Other clients
+
+Anything speaking MCP over stdio works — the command is `dx mcp serve` with no arguments.
+`src/commands/mcp/serve.test.ts` drives a raw session over a pipe if you want the wire shape.
+
+### Choosing a profile
+
+`dx mcp serve` serves whichever profile it starts with, so a client wired to it sees that profile's
+identity and spaces. Set `DX_PROFILE` if the default is not the one you want:
+
+```bash
+claude mcp add dxos --scope user --env DX_PROFILE=main -- dx mcp serve
+```
+
+```json
+{ "mcpServers": { "dxos": { "command": "…", "args": ["mcp", "serve"], "env": { "DX_PROFILE": "main" } } } }
+```
+
+Set it in the client's `env` rather than exporting it: neither client is launched from your shell, so
+an exported variable does not reach the server.
+
+### Running from source
+
+`bin/dx` runs the CLI from source with no build step, so a rebuilt tree is picked up on the client's
+next connection. Substitute its absolute path for `dx` everywhere above — the wrapper resolves the
+repo relative to itself, so it works from any directory:
+
+```bash
+claude mcp add dxos-dev -- /path/to/dxos/packages/devtools/cli/bin/dx mcp serve
+```
+
+Register it under a distinct name if you also have the released `dx` configured; two servers offering
+the same tool names leave the client to disambiguate.
+
+Add `--watch` to pick up an edit without restarting the client:
+
+```bash
+claude mcp add dxos-dev -- /path/to/dxos/packages/devtools/cli/bin/dx mcp serve --watch
+```
+
+The server runs as a child of a supervisor that holds the client's stdio. When the child reloads,
+the supervisor replays the MCP handshake into the new one and emits `tools/list_changed` and
+`prompts/list_changed`, so the client never reconnects and never re-initializes. In-flight requests
+are answered with an error rather than left hanging, so retry them. Each reload is a full server
+start — identity, storage and plugin activation — so expect the first request after an edit to wait
+on that.
+
+What counts as a change depends on which `dx` you are running, because what can change differs:
+
+|                | watched                                                | how                                                                         |
+| -------------- | ------------------------------------------------------ | --------------------------------------------------------------------------- |
+| from source    | every source file the server imported                  | `bun --watch`, which reloads in place — same pid, same pipes, wiped JS realm |
+| released binary| the directories of your `--dev`-installed plugins       | the supervisor re-runs the binary and watches those directories itself       |
+
+### From source
+
+**`--watch` runs the child with `--conditions=source`**, unlike a plain `bin/dx`. Without it every
+`@dxos/*` import resolves to that package's `dist`, so editing a plugin's source would change
+nothing the watcher tracks until you rebuilt it — the reload would fire on builds rather than on
+edits. Set `DX_SOURCE=0` to opt back out and get the rebuild-triggered loop instead.
+
+Only files the server actually imported are watched, and **the CLI imports subpaths rather than
+barrels** (`@dxos/plugin-projects/operations`, not `@dxos/plugin-projects`). Editing a package's
+`src/index.ts` therefore reloads nothing if nothing imports it; edit the module that is really on
+the path.
+
+### From the released binary
+
+A shipped `dx` has no sources, and bun's watcher is not in the artifact — a compiled binary treats a
+`--watch` token as ordinary program argv, not as bun's own flag. So the supervisor re-runs the binary itself and
+watches the only on-disk code a shipped `dx` can see change: the plugins you installed with
+`dx plugin add --dev <path>`, which are read in place rather than copied.
+
+```bash
+dx plugin add --dev ~/src/my-plugin     # a link, not a copy
+claude mcp add dxos -- dx mcp serve --watch
+```
+
+Edit anything under `~/src/my-plugin` and the server restarts with your change, keeping the client's
+session. The directories come from the running server rather than from config the supervisor reads
+itself, so adding or removing a dev plugin re-arms the watch on the next reload. `copy` installs
+(`dx plugin add <url>`) are deliberately not watched: they are snapshots the CLI owns, and only
+`add` rewrites them.
+
+`globalThis.DX_CLI_BUNDLED`, substituted by the `define` in `scripts/build.ts`, is what picks the
+strategy. It is substituted while bundling rather than read at startup, so nothing in the
+environment can flip it.
+
 ## Release
 
 ```bash

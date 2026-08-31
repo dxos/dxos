@@ -86,8 +86,7 @@ export const layer = Layer.effect(
         task.state = 'completed';
         const result = getTestData().research[task.website];
         if (!result) {
-          yield* Effect.die(new Error(`No research found for ${task.website}`));
-          return;
+          return yield* Effect.die(new Error(`No research found for ${task.website}`));
         }
         yield* Deferred.succeed(task.deferred, result);
       });

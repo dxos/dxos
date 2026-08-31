@@ -3,6 +3,12 @@
 //
 
 /**
+ * The glyph for "run AI over this subject", named here because operation and graph-action metadata
+ * carry it as a string, where no shared component can hold the convention.
+ */
+export const AI_ACTION_ICON = 'ph--sparkle--regular';
+
+/**
  * https://phosphoricons.com
  * NOTE: Select icons that we are unlikely to use for the UI.
  */

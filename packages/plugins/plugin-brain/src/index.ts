@@ -4,5 +4,4 @@
 
 export * as BrainPlugin from './BrainPlugin';
 export * from '#meta';
-export * from '#skills';
 export * from '#types';

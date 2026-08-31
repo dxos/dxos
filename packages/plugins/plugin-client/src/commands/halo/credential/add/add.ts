@@ -44,7 +44,7 @@ export const handler = Effect.fn(function* ({ credential }: { credential: Option
 
     const verifyError = codec.protoType.verify(credentialBytes);
     if (verifyError) {
-      yield* Effect.fail(new Error(verifyError));
+      return yield* Effect.fail(new Error(verifyError));
     }
 
     const credentialObj = yield* Effect.try({
@@ -79,7 +79,7 @@ export const handler = Effect.fn(function* ({ credential }: { credential: Option
         } else {
           yield* Console.log('Invalid credential.');
         }
-        yield* Effect.fail(error);
+        return yield* Effect.fail(error);
       }),
     ),
   );

@@ -3,7 +3,7 @@
 //
 
 import { next as A } from '@automerge/automerge';
-import { type DocHandle, type DocumentId } from '@automerge/automerge-repo';
+import { type DocumentId } from '@automerge/automerge-repo';
 
 import { type Context } from '@dxos/context';
 import { type DatabaseDirectory, type EntityStructure, PROPERTY_ID } from '@dxos/echo-protocol';
@@ -12,8 +12,19 @@ import { type EntityMeta } from '@dxos/index-core';
 import { type EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
+/**
+ * The document surface a merge needs — structurally satisfied by the host's `DocumentLease`
+ * (whose disposal the merge honors) and by a bare `DocHandle` in tests.
+ */
+export type MergeDocumentRef = {
+  readonly documentId: DocumentId;
+  doc(): A.Doc<DatabaseDirectory>;
+  change(callback: A.ChangeFn<DatabaseDirectory>): void;
+  [Symbol.dispose]?: () => void;
+};
+
 export type ConvergenceKeyMergerDeps = {
-  loadDoc: (ctx: Context, documentId: DocumentId) => Promise<DocHandle<DatabaseDirectory> | null>;
+  loadDoc: (ctx: Context, documentId: DocumentId) => Promise<MergeDocumentRef | null>;
 
   /**
    * Persist a document's pending changes durably. Winner and loser live in different documents
@@ -143,39 +154,51 @@ export class ConvergenceKeyMerger {
     // Load phase: awaited doc loads, during which replicated changes are free to land — nothing
     // has been read yet. The index row is derived state and can trail the truth, so everything is
     // re-verified against the documents below.
-    const handles = new Map<EntityId, DocHandle<DatabaseDirectory>>();
-    for (const { objectId, documentId } of group) {
-      const handle = await this.#deps.loadDoc(ctx, documentId as DocumentId);
-      if (handle && !handles.has(objectId)) {
+    const handles = new Map<EntityId, MergeDocumentRef>();
+    try {
+      for (const { objectId, documentId } of group) {
+        const handle = await this.#deps.loadDoc(ctx, documentId as DocumentId);
+        if (!handle) {
+          continue;
+        }
+        if (handles.has(objectId)) {
+          handle[Symbol.dispose]?.();
+          continue;
+        }
         handles.set(objectId, handle);
       }
-    }
 
-    // Classification reads current state, and `#mergeCandidates` computes the merge from these
-    // same reads synchronously — replicated changes apply through the event loop, so nothing can
-    // land between a read and the write derived from it. `#foldRedirected` re-reads on its own:
-    // by the time it runs, awaits inside `#mergeCandidates` may have let changes land — including
-    // the redirects the merge itself just wrote, which a fold must follow to their live end.
-    const candidates: GroupMember[] = [];
-    const redirectedIds: EntityId[] = [];
-    for (const [objectId, handle] of handles) {
-      const entity = _readEntity(handle, objectId, convergenceKey);
-      if (!entity) {
-        continue;
+      // Classification reads current state, and `#mergeCandidates` computes the merge from these
+      // same reads synchronously — replicated changes apply through the event loop, so nothing can
+      // land between a read and the write derived from it. `#foldRedirected` re-reads on its own:
+      // by the time it runs, awaits inside `#mergeCandidates` may have let changes land — including
+      // the redirects the merge itself just wrote, which a fold must follow to their live end.
+      const candidates: GroupMember[] = [];
+      const redirectedIds: EntityId[] = [];
+      for (const [objectId, handle] of handles) {
+        const entity = _readEntity(handle, objectId, convergenceKey);
+        if (!entity) {
+          continue;
+        }
+        if (entity.system?.mergedInto !== undefined) {
+          redirectedIds.push(objectId);
+        } else if (!entity.system?.deleted) {
+          // A user-deleted entity without a redirect is neither: deletion is respected, not merged.
+          candidates.push({ objectId, handle, entity });
+        }
       }
-      if (entity.system?.mergedInto !== undefined) {
-        redirectedIds.push(objectId);
-      } else if (!entity.system?.deleted) {
-        // A user-deleted entity without a redirect is neither: deletion is respected, not merged.
-        candidates.push({ objectId, handle, entity });
-      }
-    }
 
-    let changed = candidates.length >= 2 && (await this.#mergeCandidates(ctx, convergenceKey, candidates));
-    for (const objectId of redirectedIds) {
-      changed = (await this.#foldRedirected(ctx, objectId, handles, convergenceKey)) || changed;
+      let changed = candidates.length >= 2 && (await this.#mergeCandidates(ctx, convergenceKey, candidates));
+      for (const objectId of redirectedIds) {
+        changed = (await this.#foldRedirected(ctx, objectId, handles, convergenceKey)) || changed;
+      }
+      return changed;
+    } finally {
+      // Leased documents must be returned or the host keeps them resident forever.
+      for (const handle of handles.values()) {
+        handle[Symbol.dispose]?.();
+      }
     }
-    return changed;
   }
 
   /**
@@ -355,7 +378,7 @@ export class ConvergenceKeyMerger {
   async #foldRedirected(
     ctx: Context,
     loserId: EntityId,
-    handles: ReadonlyMap<EntityId, DocHandle<DatabaseDirectory>>,
+    handles: ReadonlyMap<EntityId, MergeDocumentRef>,
     convergenceKey: string,
   ): Promise<boolean> {
     const handle = handles.get(loserId);
@@ -449,7 +472,7 @@ export class ConvergenceKeyMerger {
 
 type GroupMember = {
   objectId: EntityId;
-  handle: DocHandle<DatabaseDirectory>;
+  handle: MergeDocumentRef;
 
   /** Current entity state, read in the same synchronous block as the merge computed from it. */
   entity: EntityStructure;
@@ -464,7 +487,7 @@ type GroupMember = {
  * indexing loop on one corrupt entity.
  */
 const _readEntity = (
-  handle: DocHandle<DatabaseDirectory>,
+  handle: MergeDocumentRef,
   objectId: EntityId,
   convergenceKey: string,
 ): EntityStructure | undefined => {

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { syntaxTree, syntaxTreeAvailable } from '@codemirror/language';
+import { ensureSyntaxTree, syntaxTree, syntaxTreeAvailable } from '@codemirror/language';
 import { type EditorState, type Extension, Prec, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state';
 import {
   Decoration,
@@ -111,6 +111,13 @@ export type XmlWidgetDef = {
    * Only meaningful for block widgets.
    */
   estimatedHeight?: (props: XmlWidgetProps) => number | undefined;
+
+  /**
+   * How `estimatedHeight` is applied: `fixed` (default) pins the block, `min` treats it as a floor.
+   * Use `min` for a widget whose height changes after it mounts — a disclosure, a growing log —
+   * since a pinned box cannot open and clips what it holds.
+   */
+  heightMode?: 'fixed' | 'min';
 };
 
 export type XmlWidgetRegistry = Record<string, XmlWidgetDef>;
@@ -503,7 +510,8 @@ const createWidgetDecorationsField = (registry: XmlWidgetRegistry = {}, notifier
 
   return StateField.define<WidgetDecorationSet>({
     create: (state) => {
-      return buildDecorations(state, { from: 0, to: state.doc.length }, registry, notifier, urlSchemeMap);
+      // Forced only here, so a streamed chunk is not charged for a parse it will get anyway.
+      return buildDecorations(state, { from: 0, to: state.doc.length }, registry, notifier, urlSchemeMap, true);
     },
     update: ({ from, streamingFrom, decorations }, tr) => {
       // Check for reset effect.
@@ -565,6 +573,9 @@ const createWidgetDecorationsField = (registry: XmlWidgetRegistry = {}, notifier
   });
 };
 
+/** Ceiling on parsing ahead of the background parser; past it `createParseCompletionPlugin` rebuilds. */
+const PARSE_BUDGET = 50;
+
 /**
  * Creates widget decorations for XML tags in the document using the syntax tree.
  * After the tree walk, scans for unclosed streaming tags and creates provisional decorations.
@@ -575,12 +586,16 @@ const buildDecorations = (
   registry: XmlWidgetRegistry,
   notifier: XmlWidgetNotifier,
   urlSchemeMap: Map<string, [string, XmlWidgetDef][]>,
+  /** Parse ahead of the background parser rather than reading a partial tree — see {@link PARSE_BUDGET}. */
+  forceParse = false,
 ): WidgetDecorationSet => {
   const context = state.field(widgetContextStateField, false);
   const widgetStateMap = state.field(widgetStateMapStateField, false) ?? {};
   const builder = new RangeSetBuilder<Decoration>();
 
-  const tree = syntaxTree(state);
+  // A fresh view has parsed only about a viewport, so a large payload's `Element` is absent at
+  // first paint and its markup renders raw until a rebuild — the flash on a remounted row.
+  const tree = (forceParse ? ensureSyntaxTree(state, range.to, PARSE_BUDGET) : null) ?? syntaxTree(state);
   if (!tree || (tree.type.name === 'Program' && tree.length === 0)) {
     return { from: range.from, decorations: Decoration.none };
   }
@@ -632,7 +647,17 @@ const buildDecorations = (
                 const widget: WidgetType | undefined = factory
                   ? (factory(props) ?? undefined)
                   : Component
-                    ? new StubWidget(widgetId, Component, props, notifier, false, !!block, blockHeight, def.debug)
+                    ? new StubWidget(
+                        widgetId,
+                        Component,
+                        props,
+                        notifier,
+                        false,
+                        !!block,
+                        blockHeight,
+                        def.heightMode,
+                        def.debug,
+                      )
                     : undefined;
 
                 // Add decoration.
@@ -704,7 +729,17 @@ const buildDecorations = (
           const widget: WidgetType | undefined = def.factory
             ? (def.factory(props) ?? undefined)
             : def.Component
-              ? new StubWidget(widgetId, def.Component, props, notifier, false, isBlock, blockHeight, def.debug)
+              ? new StubWidget(
+                  widgetId,
+                  def.Component,
+                  props,
+                  notifier,
+                  false,
+                  isBlock,
+                  blockHeight,
+                  def.heightMode,
+                  def.debug,
+                )
               : undefined;
           if (widget) {
             builder.add(
@@ -766,28 +801,40 @@ const buildDecorations = (
         const widget: WidgetType | undefined = def.factory
           ? (def.factory(mergedProps) ?? undefined)
           : def.Component
-            ? new StubWidget(widgetId, def.Component, mergedProps, notifier, true, undefined, undefined, def.debug)
+            ? new StubWidget(
+                widgetId,
+                def.Component,
+                mergedProps,
+                notifier,
+                true,
+                undefined,
+                undefined,
+                def.heightMode,
+                def.debug,
+              )
             : undefined;
 
-        if (widget) {
-          builder.add(
-            absoluteFrom,
-            range.to,
-            Decoration.replace({
-              widget,
-              block: def.block,
-              atomic: true,
-              inclusive: true,
-              tag: tagName,
-              streaming: true,
-              contentFrom,
-            }),
-          );
+        // Decorated even when the factory declined: a factory may return null while the tag is still
+        // empty (`<reasoning>` with no text yet), and leaving the range undecorated renders the raw
+        // markup to the reader for exactly as long as that lasts — the flash this scan exists to
+        // prevent. Without a widget it is an inline replace that simply hides the text; `block` needs
+        // a widget to size the line, so it is only claimed when there is one.
+        builder.add(
+          absoluteFrom,
+          range.to,
+          Decoration.replace({
+            ...(widget ? { widget, block: def.block } : {}),
+            atomic: true,
+            inclusive: true,
+            tag: tagName,
+            streaming: true,
+            contentFrom,
+          }),
+        );
 
-          // Set from to just before the streaming tag so next rebuild covers it.
-          streamingFrom = absoluteFrom;
-          last = absoluteFrom;
-        }
+        // Set from to just before the streaming tag so next rebuild covers it.
+        streamingFrom = absoluteFrom;
+        last = absoluteFrom;
 
         // Only one streaming tag at a time.
         break;

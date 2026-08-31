@@ -35,6 +35,9 @@ echo "Copying iOS extensions to $IOS_SOURCES..."
 # Copy keyboard handler (pure Obj-C, auto-initializes via +load).
 cp "$SRC_TAURI/ios/KeyboardHandler.m" "$IOS_SOURCES/"
 
+# Native microphone capture bridged into the webview (simulator development aid).
+cp "$SRC_TAURI/ios/MicrophoneBridge.m" "$IOS_SOURCES/"
+
 #
 # Regenerate Xcode project to include new files.
 #

@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback } from 'react';
 
-import { Message, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Banner, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -32,10 +32,10 @@ export const ChatMcpErrors = ({ classNames, processor }: ChatMcpErrorsProps) => 
   }
 
   return (
-    <Message.Root valence='warning'>
-      <Message.Content classNames={['m-1', classNames]}>
-        <Message.Title onClose={handleDismiss}>{t('mcp-server-error.label')}</Message.Title>
-        <Message.Body asChild>
+    <Banner.Root valence='warning'>
+      <Banner.Content classNames={['m-1', classNames]}>
+        <Banner.Title onClose={handleDismiss}>{t('mcp-server-error.label')}</Banner.Title>
+        <Banner.Body asChild>
           <ul className='flex flex-col gap-0.5 text-sm'>
             {errors.map((error) => (
               <li key={`${error.url}::${error.protocol}`} className='truncate'>
@@ -45,8 +45,8 @@ export const ChatMcpErrors = ({ classNames, processor }: ChatMcpErrorsProps) => 
               </li>
             ))}
           </ul>
-        </Message.Body>
-      </Message.Content>
-    </Message.Root>
+        </Banner.Body>
+      </Banner.Content>
+    </Banner.Root>
   );
 };

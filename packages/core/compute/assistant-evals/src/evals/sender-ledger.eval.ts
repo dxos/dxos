@@ -6,10 +6,10 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { evalite } from 'evalite';
 
-import { ProjectSkill } from '@dxos/assistant-toolkit';
 import * as Project from '@dxos/compute/Project';
-import { Collection, Database, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
+import * as ProjectSkill from '@dxos/plugin-projects/ProjectSkill';
 import * as TablePlugin from '@dxos/plugin-table/TablePlugin';
 import { Table } from '@dxos/react-ui-table/types';
 import { trim } from '@dxos/util';
@@ -70,20 +70,12 @@ const task = createEvalRunner({
   output: Schema.Unknown,
   skills: [...getDefaultSkills(), Ref.make(ProjectSkill.make())],
   plugins: [TablePlugin.make()],
-  types: [Project.Project, Collection.Collection, Table.Table],
+  types: [Project.Project, Table.Table],
   // Multi-tool scenario (create table + file + upserts), so allow more round-trips.
   timeout: 150_000,
   seed: ({ instructions }) =>
     Effect.gen(function* () {
-      const collection = yield* Database.add(Collection.make());
-      const project = yield* Database.add(
-        Project.make({
-          name: PROJECT_NAME,
-          instructions: Ref.make(instructions),
-          artifacts: Ref.make(collection),
-        }),
-      );
-      Obj.setParent(collection, project);
+      const project = yield* Database.add(Project.make({ name: PROJECT_NAME, instructions: Ref.make(instructions) }));
       yield* Database.flush();
       return { objects: [Ref.make(project)] };
     }),
@@ -107,12 +99,11 @@ const task = createEvalRunner({
       const rowUpserted =
         senderRows.length === 1 && rowCount === MESSAGES.length && String(row?.lastSeen ?? '').startsWith('2026-07-02');
 
-      if (!project?.artifacts) {
+      if (!project) {
         return { tableCount: tables.length, filedCount: 0, senderRowCount: senderRows.length, rowUpserted };
       }
-      const artifacts = yield* Database.load(project.artifacts);
       const tableIds = new Set(tables.map((table) => entityId(Obj.getURI(table))));
-      const filedCount = artifacts.objects.filter((ref) => tableIds.has(entityId(ref.uri))).length;
+      const filedCount = project.artifacts.filter((ref) => tableIds.has(entityId(ref.uri))).length;
       return { tableCount: tables.length, filedCount, senderRowCount: senderRows.length, rowUpserted };
     }),
 });
@@ -128,7 +119,7 @@ evalite('Projects — sender-ledger routine maintains one filed table', {
     },
     {
       name: 'ledger-filed',
-      description: "The ledger table is in the project's artifacts collection.",
+      description: "The ledger table is in the project's artifacts.",
       scorer: ({ output }) => (output.dbQuery.filedCount > 0 ? 1 : 0),
     },
     {

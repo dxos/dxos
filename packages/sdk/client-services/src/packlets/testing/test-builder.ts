@@ -12,6 +12,7 @@ import { Context } from '@dxos/context';
 import { CredentialGenerator, createCredentialSignerWithChain } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { EchoHost, MeshEchoReplicator } from '@dxos/echo-host';
+import { type EdgeHttpClient } from '@dxos/edge-client';
 import { RuntimeProvider } from '@dxos/effect';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { SqliteKeyring } from '@dxos/keyring';
@@ -21,7 +22,6 @@ import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { StorageType } from '@dxos/random-access-storage';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
-import { SqliteBlobStore } from '@dxos/teleport-extension-object-sync';
 
 import { InvitationsHandler, InvitationsManager, SpaceInvitationProtocol } from '../invitations';
 import { SqliteMetadataStore } from '../metadata';
@@ -88,14 +88,18 @@ export const createServiceContext = async ({
   return host;
 };
 
-export const createPeers = async (numPeers: number, signalManagerFactory?: () => Promise<SignalManager>) => {
+export const createPeers = async (
+  numPeers: number,
+  signalManagerFactory?: () => Promise<SignalManager>,
+  runtimeProps?: ServiceContextRuntimeProps,
+) => {
   if (!signalManagerFactory) {
     const signalContext = new MemorySignalManagerContext();
     signalManagerFactory = async () => new MemorySignalManager(signalContext);
   }
   return await Promise.all(
     Array.from(Array(numPeers)).map(async () => {
-      const peer = await createServiceContext({ signalManagerFactory });
+      const peer = await createServiceContext({ signalManagerFactory, runtimeProps });
       await peer.open(new Context());
       return peer;
     }),
@@ -125,6 +129,7 @@ export class TestBuilder {
 export type TestPeerOpts = {
   dataStore?: StorageType;
   dataSpaceProps?: DataSpaceManagerRuntimeProps;
+  edgeHttpClient?: EdgeHttpClient;
 };
 
 export type TestPeerProps = {
@@ -135,7 +140,6 @@ export type TestPeerProps = {
   spaceManager?: SpaceManager;
   dataSpaceManager?: DataSpaceManager;
   signingContext?: SigningContext;
-  blobStore?: SqliteBlobStore;
   echoHost?: EchoHost;
   meshEchoReplicator?: MeshEchoReplicator;
   invitationsManager?: InvitationsManager;
@@ -179,10 +183,6 @@ export class TestPeer {
     return (this._props.metadataStore ??= new SqliteMetadataStore({ runtime: this._runtime.contextEffect }));
   }
 
-  get blobStore() {
-    return (this._props.blobStore ??= new SqliteBlobStore({ runtime: this._runtime.contextEffect }));
-  }
-
   get networkManager() {
     return (this._props.networkManager ??= new SwarmNetworkManager({
       signalManager: new MemorySignalManager(this._signalContext),
@@ -195,7 +195,6 @@ export class TestPeer {
       feedStore: this.feedStore,
       networkManager: this.networkManager,
       metadataStore: this.metadataStore,
-      blobStore: this.blobStore,
     }));
   }
 
@@ -225,6 +224,7 @@ export class TestPeer {
       edgeConnection: undefined,
       meshReplicator: this.meshEchoReplicator,
       echoEdgeReplicator: undefined,
+      edgeHttpClient: this._opts.edgeHttpClient,
       runtimeProps: this._opts.dataSpaceProps,
     }));
   }
@@ -255,7 +255,7 @@ export class TestPeer {
 
   async migrate(): Promise<void> {
     await RuntimeProvider.runPromise(this._runtime.contextEffect)(
-      Effect.all([this.metadataStore.migrate, this.blobStore.migrate, this.keyring.migrate, this._feedStorage.migrate]),
+      Effect.all([this.metadataStore.migrate, this.keyring.migrate, this._feedStorage.migrate]),
     );
   }
 

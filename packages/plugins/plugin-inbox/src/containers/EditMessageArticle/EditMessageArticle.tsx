@@ -11,11 +11,12 @@ import { useQuery } from '@dxos/echo-react';
 import { Panel } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { type Message } from '@dxos/types';
+import { AI_ACTION_ICON } from '@dxos/ui-types';
 
 import { EditMessage } from '#components';
 import { useEmailComposerExtensions, useSendEmail } from '#hooks';
 import { meta } from '#meta';
-import { InboxCapabilities, InboxOperation, Mailbox } from '#types';
+import { InboxCapabilities, Mailbox } from '#types';
 
 import { REPLY_REGEXP } from '../../util';
 
@@ -29,6 +30,9 @@ export const EditMessageArticle = ({ role, subject, attendableId }: EditMessageA
   const runtime = useProcessManagerRuntime();
   const extensions = useEmailComposerExtensions(runtime, subject);
   const sendOperations = useCapabilities(InboxCapabilities.MailSendOperation);
+  // No contributed generator means nothing to invoke, so the affordance is omitted rather than shown
+  // and failing — the same reason the send action is gated on a provider.
+  const replyGenerator = useCapabilities(InboxCapabilities.ReplyGenerator)[0];
   const onSend = useSendEmail(runtime, subject, sendOperations);
 
   // Generate: fill the reply draft's body from the message it replies to (thread + facts grounded).
@@ -36,15 +40,15 @@ export const EditMessageArticle = ({ role, subject, attendableId }: EditMessageA
   const { invokePromise } = useOperationInvoker();
   const mailboxes = useQuery(db, Filter.type(Mailbox.Mailbox));
   const mailbox = mailboxes.find((candidate) => Obj.getURI(candidate) === subject.properties?.mailbox);
-  const canGenerate = mailbox !== undefined && !!subject.properties?.inReplyTo;
+  const canGenerate = mailbox !== undefined && !!subject.properties?.inReplyTo && replyGenerator !== undefined;
   // Remounts the editor after a generated body lands (the editor only reads its initial value).
   const [generation, setGeneration] = useState(0);
   const handleGenerate = useCallback(async () => {
-    if (!mailbox || !spaceId) {
+    if (!mailbox || !spaceId || !replyGenerator) {
       return;
     }
     const result = await invokePromise(
-      InboxOperation.GenerateReply,
+      replyGenerator.getOperation(),
       { mailbox: Ref.make(mailbox), message: subject },
       { spaceId },
     );
@@ -63,7 +67,7 @@ export const EditMessageArticle = ({ role, subject, attendableId }: EditMessageA
       });
       setGeneration((current) => current + 1);
     }
-  }, [invokePromise, mailbox, spaceId, subject]);
+  }, [invokePromise, mailbox, replyGenerator, spaceId, subject]);
 
   const menuActions = useMenuBuilder(
     () =>
@@ -76,7 +80,7 @@ export const EditMessageArticle = ({ role, subject, attendableId }: EditMessageA
                 'generate',
                 {
                   label: ['draft-toolbar-generate.menu', { ns: meta.profile.key }],
-                  icon: 'ph--sparkle--regular',
+                  icon: AI_ACTION_ICON,
                   testId: 'inbox.draft.generate',
                 },
                 handleGenerate,

@@ -2,15 +2,24 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+
+import { translations } from '#translations';
 
 // Definitions only — bodies load lazily so the plugin definition stays out of the boot
 // evaluation floor (this def chunk was 177 kB when the bodies were inline).
 export const ProgressRegistry = Capability.lazyModule(
   'ProgressRegistry',
-  { requires: [Capabilities.AtomRegistry], provides: [AppCapabilities.ProgressRegistry] },
+  // Startup: every consumer reads the registry optionally, so no dependency edge ever pulls this module.
+  {
+    requires: [Capabilities.AtomRegistry],
+    provides: [AppCapabilities.ProgressRegistry],
+    activatesOn: ActivationEvents.Startup,
+  },
   () => import('./progress-registry'),
 );
 export const TraceProgressSink = Capability.lazyModule(
@@ -23,3 +32,4 @@ export const ReactSurface = Capability.lazyModule(
   { provides: [Capabilities.ReactSurface] },
   () => import('./react-surface'),
 );
+export const Translations = AppCapability.translations(translations);

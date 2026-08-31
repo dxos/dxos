@@ -135,8 +135,12 @@ export interface TypedObjectSerializer<T extends Obj.Unknown = Obj.Unknown> {
  */
 export type CreateObjectResult = {
   id: string;
-  subject: readonly string[];
-  object: Obj.Unknown;
+  /**
+   * Absent where the create only starts the work and the object appears out of band — a connector
+   * handing off to an OAuth popup or a credential dialog is the case in tree. Callers must not
+   * navigate to it without checking.
+   */
+  object?: Obj.Unknown;
 };
 
 /**
@@ -147,7 +151,8 @@ export type CreateObject = (
   props: any,
   options: {
     db: Database.Database;
-    target: Database.Database | Collection.Collection;
+    /** The collection to file into; absent files at the space root of `db`. */
+    target?: Collection.Collection;
     targetNodeId?: string;
   },
 ) => Effect.Effect<CreateObjectResult, Error, Capability.Service | Operation.Service>;

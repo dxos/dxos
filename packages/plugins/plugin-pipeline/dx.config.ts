@@ -22,7 +22,6 @@ export default Config2.make({
 
       A built-in Research template scaffolds a four-column pipeline wired to the Mailbox, Contacts,
       Organizations, and Notes objects in the space, providing an out-of-the-box CRM-style workflow.
-      Pipeline articles also expose Invocations and Automation companion tabs for AI-driven automation.
     `,
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-pipeline',
     icon: { key: 'ph--path--regular', hue: 'purple' },

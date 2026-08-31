@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
-import { Icon, useTranslation } from '@dxos/react-ui';
+import { Flex, Icon, useTranslation } from '@dxos/react-ui';
 
 import { ConnectorAuthMenu } from '#components';
 import { meta } from '#meta';
@@ -15,6 +15,10 @@ import { meta } from '#meta';
 export type IntegrationPromptProps = {
   /** Service the agent needs access to, e.g. `gmail.com`. */
   service?: string;
+  /** Permissions the credential must grant, e.g. `['Contents: read and write']`. */
+  scopes?: string[];
+  /** One sentence on why the agent needs the service. */
+  reason?: string;
 };
 
 /**
@@ -23,7 +27,7 @@ export type IntegrationPromptProps = {
  * the shared connector-auth menu, so the user can grant access inline instead of the agent failing
  * silently.
  */
-export const IntegrationPrompt = ({ service }: IntegrationPromptProps) => {
+export const IntegrationPrompt = ({ service, scopes, reason }: IntegrationPromptProps) => {
   const { t } = useTranslation(meta.profile.key);
   const space = useActiveSpace();
   const connectors = useCapabilities(ConnectorSpec.Connector).flat();
@@ -37,24 +41,36 @@ export const IntegrationPrompt = ({ service }: IntegrationPromptProps) => {
   const label = matched[0]?.label ?? service;
 
   return (
-    <div role='group' className='flex flex-col gap-2 my-2 p-3 border border-subdued-separator rounded-sm'>
-      <div className='flex items-center gap-2'>
+    <Flex role='group' column gap='sm' classNames='my-2 p-3 border border-subdued-separator rounded-sm'>
+      <Flex gap='sm' align='center'>
         <Icon icon='ph--plugs--regular' size={5} classNames='shrink-0 text-subdued' />
-        <div className='flex flex-col min-w-0'>
+        <Flex column classNames='min-w-0'>
           <p className='text-sm font-medium truncate'>{t('integration-prompt.title', { service: label })}</p>
           <p className='text-sm text-subdued'>
+            {/* With no connector matched, nothing can satisfy the request, so the unavailable
+                message outranks the agent's reason. */}
             {connectorIds.length > 0
-              ? t('integration-prompt.description', { service: label })
+              ? (reason ?? t('integration-prompt.description', { service: label }))
               : t('integration-prompt.unavailable', { service: label })}
           </p>
-        </div>
-      </div>
-      {connectorIds.length > 0 && (
-        <div className='flex justify-end'>
-          <ConnectorAuthMenu connectorIds={connectorIds} db={space?.db} />
+        </Flex>
+      </Flex>
+      {scopes && scopes.length > 0 && (
+        <div>
+          <p className='text-sm text-subdued'>{t('integration-prompt.scopes')}</p>
+          <ul className='text-sm text-subdued list-disc list-inside'>
+            {scopes.map((scope) => (
+              <li key={scope}>{scope}</li>
+            ))}
+          </ul>
         </div>
       )}
-    </div>
+      {connectorIds.length > 0 && (
+        <Flex justify='end'>
+          <ConnectorAuthMenu connectorIds={connectorIds} db={space?.db} />
+        </Flex>
+      )}
+    </Flex>
   );
 };
 

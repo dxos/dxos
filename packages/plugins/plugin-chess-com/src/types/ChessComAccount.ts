@@ -43,7 +43,7 @@ export class Account extends Type.makeObject<Account>(DXN.make('org.dxos.type.ch
       Schema.optional,
     ),
     /** Backing queue of synced {@link org.dxos.type.game} objects. */
-    games: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
+    games: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(true), FormInputAnnotation.set(false)),
   }).pipe(
     LabelAnnotation.set(['username']),
     Annotation.IconAnnotation.set({ icon: 'ph--horse--regular', hue: 'green' }),
@@ -70,13 +70,13 @@ export type AccountProfile = Pick<
 export const makeAccount = (props: Omit<Obj.MakeProps<typeof Account>, 'games'> & { username: string }): Account => {
   const gamesFeed = Feed.make();
   const username = normalizeUsername(props.username);
+  // `SetParent` on `games` makes the feed a child, cascading with the account.
   const account = Obj.make(Account, {
     ...props,
     username,
     games: Ref.make(gamesFeed),
     [Obj.Meta]: { keys: [{ source: CHESS_COM_SOURCE, id: username }] },
   });
-  Obj.setParent(gamesFeed, account);
   return account;
 };
 

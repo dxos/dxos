@@ -4,6 +4,7 @@
 
 import { type ComponentType, lazy } from 'react';
 
+export const AttachmentArticle: ComponentType<any> = lazy(() => import('./AttachmentArticle'));
 export const CalendarArticle: ComponentType<any> = lazy(() => import('./CalendarArticle'));
 export const CalendarProperties: ComponentType<any> = lazy(() => import('./CalendarProperties'));
 export const EditMessageArticle: ComponentType<any> = lazy(() => import('./EditMessageArticle'));

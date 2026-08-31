@@ -17,12 +17,34 @@ import * as PasskeyError from '@dxos/plugin-client/PasskeyError';
 import { useClient } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { ThemeProvider, defaultTx } from '@dxos/react-ui';
+import { getHostPlatform, isTauri } from '@dxos/util';
 
 import { joinWaitlist, login } from '../../credentials';
 import { useForceDarkTheme } from '../../hooks';
 import { OnboardingOperation } from '../../operations';
 import { translations } from '../../translations';
 import { Welcome, type WelcomeError, WelcomeState, passkeyError } from './Welcome';
+
+const hostPlatform = isTauri() ? getHostPlatform() : undefined;
+
+/**
+ * The native iOS app is scoped down to passkey login while the other flows are unsupported there: no
+ * sign-up, and no login method other than a passkey. iPadOS reports itself as macOS, so a multi-touch
+ * screen tells it apart from a real Mac (which reports no touch points even with a trackpad).
+ */
+const passkeyOnly = hostPlatform === 'ios' || (hostPlatform === 'macos' && navigator.maxTouchPoints > 1);
+
+/**
+ * Whether the native app offers email sign-in. Off because the emailed link can only return to a web
+ * origin — the app's own origin is a bundled `localhost` asset server no mail client can usefully
+ * open — and the web app hands a link back to the native app only when `enableNativeRedirect` is
+ * set, which still defaults to false. Until then the link would strand the user in a browser tab
+ * instead of the app they started from, so the option is hidden rather than offered broken. Flip
+ * this to true once native redirects are the default.
+ */
+const NATIVE_EMAIL_LOGIN_ENABLED: boolean = false;
+
+const emailLoginEnabled = !passkeyOnly && (!isTauri() || NATIVE_EMAIL_LOGIN_ENABLED);
 
 export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
   const client = useClient();
@@ -270,15 +292,15 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
         state={state}
         error={error}
         identity={identity}
-        onEmailLogin={handleLogin}
+        onEmailLogin={emailLoginEnabled ? handleLogin : undefined}
         onPasskey={!identity ? handlePasskey : undefined}
-        onJoinIdentity={!identity ? handleJoinIdentity : undefined}
-        onRecoverIdentity={!identity ? handleRecoverIdentity : undefined}
-        onRecoverWithOAuth={!identity ? handleRecoverWithOAuth : undefined}
-        onValidateInvitationCode={!identity ? handleValidateInvitationCode : undefined}
-        onCreateAccount={!identity ? handleCreateAccount : undefined}
-        onCreateAccountWithOAuth={!identity ? handleCreateAccountWithOAuth : undefined}
-        onJoinWaitlist={handleJoinWaitlist}
+        onJoinIdentity={!identity && !passkeyOnly ? handleJoinIdentity : undefined}
+        onRecoverIdentity={!identity && !passkeyOnly ? handleRecoverIdentity : undefined}
+        onRecoverWithOAuth={!identity && !passkeyOnly ? handleRecoverWithOAuth : undefined}
+        onValidateInvitationCode={!identity && !passkeyOnly ? handleValidateInvitationCode : undefined}
+        onCreateAccount={!identity && !passkeyOnly ? handleCreateAccount : undefined}
+        onCreateAccountWithOAuth={!identity && !passkeyOnly ? handleCreateAccountWithOAuth : undefined}
+        onJoinWaitlist={!passkeyOnly ? handleJoinWaitlist : undefined}
       />
     </ThemeProvider>
   );

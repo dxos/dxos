@@ -6,10 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import {
   ClientReady,
+  InvocationListener,
   Namespace,
   Observability,
   ObservabilitySettings,
@@ -17,18 +17,22 @@ import {
   OperationHandler,
   PrivacyNotice,
   ReactSurface,
+  Translations,
 } from '#capabilities';
 import { meta } from '#meta';
-import { translations } from '#translations';
 import { ObservabilityCapabilities, ObservabilityOptions } from '#types';
 
 export const ObservabilityPlugin = Plugin.define<ObservabilityOptions.ObservabilityPluginOptions>(meta).pipe(
-  Plugin.addModule(ReactSurface),
-  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(ClientReady),
+  Plugin.addModule(InvocationListener),
+  Plugin.addModule(Namespace),
   Plugin.addModule(Observability),
   Plugin.addModule(ObservabilitySettings),
   Plugin.addModule(ObservabilityState),
-  Plugin.addModule(Namespace),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(PrivacyNotice),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(Translations),
   Plugin.addModule(({ downloadLogs }: ObservabilityOptions.ObservabilityPluginOptions) => ({
     id: 'log-downloader',
     requires: [],
@@ -40,9 +44,6 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityOptions.Observabil
           : [],
       ),
   })),
-  Plugin.addModule(OperationHandler),
-  Plugin.addModule(PrivacyNotice),
-  Plugin.addModule(ClientReady),
   Plugin.make,
 );
 

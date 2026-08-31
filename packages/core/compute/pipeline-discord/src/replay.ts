@@ -8,7 +8,7 @@ import * as Stream from 'effect/Stream';
 import { type StateError, StateStore, type Type } from '@dxos/crawler';
 
 import { type StoreError } from './errors';
-import { MessageStore, type StoredMessage } from './stores';
+import { MessageStore } from './stores';
 
 export type ReplayOptions = {
   /** Restrict the replay to these target (channel/thread) ids. */
@@ -16,7 +16,7 @@ export type ReplayOptions = {
 };
 
 // The stored columns are the crawl-message fields; `raw` stays for future full-fidelity needs.
-const toCrawlMessage = (stored: StoredMessage): Type.Message => ({
+const toCrawlMessage = (stored: MessageStore.StoredMessage): Type.Message => ({
   id: stored.id,
   text: stored.text,
   author: {
@@ -36,18 +36,16 @@ const toCrawlMessage = (stored: StoredMessage): Type.Message => ({
  */
 export const replayStream = (
   options: ReplayOptions = {},
-): Stream.Stream<Type.Event, StoreError | StateError, MessageStore | StateStore> =>
+): Stream.Stream<Type.Event, StoreError | StateError, MessageStore.MessageStore | StateStore.StateStore> =>
   Stream.unwrap(
     Effect.gen(function* () {
-      const state = yield* StateStore;
-      const messages = yield* MessageStore;
-      const targets = (yield* state.listTargets()).filter(
+      const targets = (yield* StateStore.listTargets()).filter(
         (target) => !options.targetIds || options.targetIds.includes(target.id),
       );
       return Stream.fromIterable(targets).pipe(
         Stream.flatMap((target) =>
           Stream.unwrap(
-            messages.listByTarget(target.id).pipe(
+            MessageStore.listByTarget(target.id).pipe(
               Effect.map((stored) => {
                 const open: Type.Event = target.threadId
                   ? { _tag: 'ThreadStart', target, parentMessageId: target.parentMessageId }

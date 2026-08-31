@@ -584,6 +584,28 @@ const hashKey = async (key: string): Promise<string> => {
   return createHash('sha256').update(key).digest('hex');
 };
 
+/**
+ * Provider HTTP transport envelopes carried on encoded response parts: `request` (method, url and
+ * request headers) on `response-metadata`, `response` (status and response headers) on `finish`.
+ */
+const TRANSPORT_FIELDS: ReadonlySet<string> = new Set(['request', 'response']);
+
+/**
+ * Drops the transport envelopes from the response parts on their way into the committed store.
+ * Replay reads none of them, while they carry account and trace identifiers
+ * (`anthropic-organization-id`, `anthropic-workspace-id`, `cf-ray`, `request-id`, `traceparent`/`b3`)
+ * plus per-request rate-limit state that would otherwise be published in a public repo. Stripping on
+ * write rather than on receipt leaves the live in-process response exactly as the provider sent it.
+ */
+const stripTransportMetadata = (parts: readonly unknown[]): unknown[] =>
+  parts.map((part) => {
+    if (part === null || typeof part !== 'object' || Array.isArray(part)) {
+      return part;
+    }
+    const retained = Object.entries(part).filter(([key]) => !TRANSPORT_FIELDS.has(key));
+    return retained.length === Object.keys(part).length ? part : Object.fromEntries(retained);
+  });
+
 const decodeConversation = (data: string): FixtureConversation =>
   Schema.decodeSync(Schema.fromJsonString(FixtureConversation))(data);
 
@@ -718,7 +740,11 @@ class FixtureStore {
       const dir = await this.#dir();
       await mkdir(dir, { recursive: true });
       const file = join(dir, `${await hashKey(matchKey(conversation, this.#dynamicMatcher))}.json`);
-      await writeFile(file, encodeConversation(conversation));
+      // The hash keys on parameters + prompt only, so sanitizing the response cannot move the file.
+      await writeFile(
+        file,
+        encodeConversation({ ...conversation, response: stripTransportMetadata(conversation.response) }),
+      );
     });
   }
 

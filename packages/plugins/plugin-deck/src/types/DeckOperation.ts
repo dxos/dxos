@@ -10,10 +10,6 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
-import { meta } from '#meta';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
-
 const PartAdjustmentSchema = Schema.Union([
   Schema.Literal('close').annotate({ description: 'Close the plank.' }),
   Schema.Literal('companion').annotate({ description: 'Open the companion plank side-by-side.' }),
@@ -29,7 +25,7 @@ export type PartAdjustment = Schema.Schema.Type<typeof PartAdjustmentSchema>;
 
 export const Adjust = Operation.make({
   meta: {
-    key: makeKey('adjust'),
+    key: DXN.make('org.dxos.operation.deck.adjust'),
     name: 'Adjust',
     description: 'Adjust the layout of a plank.',
     icon: 'ph--layout--regular',
@@ -44,7 +40,7 @@ export const Adjust = Operation.make({
 
 export const UpdatePlankSize = Operation.make({
   meta: {
-    key: makeKey('updatePlankSize'),
+    key: DXN.make('org.dxos.operation.deck.updatePlankSize'),
     name: 'Update Plank Size',
     description: 'Update the size of a plank.',
     icon: 'ph--arrows-out--regular',
@@ -57,24 +53,25 @@ export const UpdatePlankSize = Operation.make({
   output: Schema.Void,
 });
 
-export const ToggleExpose = Operation.make({
+export const SetExpose = Operation.make({
   meta: {
-    key: makeKey('toggleExpose'),
-    name: 'Toggle Exposé',
+    key: DXN.make('org.dxos.operation.deck.setExpose'),
+    name: 'Set Exposé',
     description: 'Show every plank at once as shrunk-to-fit tiles, or return to the deck.',
     icon: 'ph--squares-four--regular',
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    /** Explicit state; toggles when absent. */
-    expose: Schema.optional(Schema.Boolean),
+    // Required: an absent value used to mean "flip", making the result depend on state the caller
+    // had not read.
+    expose: Schema.Boolean,
   }),
   output: Schema.Void,
 });
 
 export const UpdatePlankSizes = Operation.make({
   meta: {
-    key: makeKey('updatePlankSizes'),
+    key: DXN.make('org.dxos.operation.deck.updatePlankSizes'),
     name: 'Update Plank Sizes',
     description: 'Update the sizes of several planks at once.',
     icon: 'ph--arrows-out--regular',

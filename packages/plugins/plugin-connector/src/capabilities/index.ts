@@ -5,34 +5,61 @@
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
+import * as RoutineEvents from '@dxos/plugin-routine/RoutineEvents';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
+import { meta } from '#meta';
+import { translations } from '#translations';
 import { ConnectorCoordination, ConnectorEvents, ConnectorSpec } from '#types';
+
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../../PLUGIN.mdl?raw';
 
 export * from './connector-coordinator';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
   requires: [ConnectorSpec.Connector],
+  environments: ['node'],
 });
 export const BuiltinConnectors = Capability.lazyModule(
   'BuiltinConnectors',
   { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
   () => import('./connectors'),
 );
-// Empty in the browser: `connector oauth` needs a Bun callback server, so only the
-// node barrel loads the command graph. The export still has to exist here — `#capabilities`
-// resolves its types through this file for both variants.
-export const Commands = AppCapability.commands([]);
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+// `#commands` resolves to `commands.browser.ts` under the browser: `connector oauth` needs a Bun
+// callback server, so only headless runtimes get the real command graph.
+export const Commands = AppCapability.commands(() => import('#commands'));
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
+  environments: ['node'],
+});
 export const OAuthRedirect = Capability.lazyModule(
   'OAuthRedirect',
-  { requires: [ConnectorCoordination.ConnectorCoordinator], provides: [], activatesOn: ConnectorEvents.Start },
+  {
+    requires: [ConnectorCoordination.ConnectorCoordinator],
+    provides: [],
+    activatesOn: ConnectorEvents.Start,
+    environments: [],
+  },
   () => import('./oauth-redirect'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
 });
+export const RoutineTemplate = Capability.lazyModule(
+  'RoutineTemplate',
+  { provides: [RoutineCapabilities.Template], activatesOn: RoutineEvents.Start },
+  () => import('./routine-template'),
+);
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.dialog', 'org.dxos.role.formInput'],
 });
 export const Schema = AppCapability.schema(() => import('./schema'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
+export const Translations = AppCapability.translations(translations);
+export const PluginAsset = AppCapability.pluginAsset({
+  pluginId: meta.profile.key,
+  path: 'PLUGIN.mdl',
+  content: pluginSpec,
+  mimeType: 'application/x-mdl',
+});

@@ -6,22 +6,12 @@ import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
-import { DXN, Ref } from '@dxos/echo';
-import {
-  // Unused by name, but the emitted declarations reference it — dropping the import breaks
-  // declaration emit (TS2742).
-  // eslint-disable-next-line unused-imports/no-unused-imports
-  Connection,
-  Cursor,
-} from '@dxos/link';
-// Unused by name, but the emitted declarations reference it — dropping the import breaks
-// declaration emit (TS2742). The suppression rode the pre-subpath barrel import too.
+import { DXN } from '@dxos/echo';
+// Referenced in the emitted .d.ts of the operations (via `ConnectorSpec`'s schemas); importing it
+// lets TypeScript name it (TS2883).
 // eslint-disable-next-line unused-imports/no-unused-imports
+import { Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
-
-import { meta } from '#meta';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 /**
  * Discovery — list the available Bluesky sync targets reachable from a
@@ -34,7 +24,7 @@ const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name
  */
 export const GetBlueskyTargets = Operation.make({
   meta: {
-    key: makeKey('getBlueskyTargets'),
+    key: DXN.make('org.dxos.operation.bluesky.getTargets'),
     name: 'Get Bluesky Targets',
     description: "List the user's Bluesky timeline / likes / bookmarks plus saved custom feeds.",
     icon: 'ph--butterfly--regular',
@@ -53,7 +43,7 @@ export const GetBlueskyTargets = Operation.make({
  */
 export const MaterializeBlueskyTarget = Operation.make({
   meta: {
-    key: makeKey('materializeBlueskyTarget'),
+    key: DXN.make('org.dxos.operation.bluesky.materializeTarget'),
     name: 'Materialize Bluesky Target',
     description: 'Create the empty local Subscription feed bound to a selected Bluesky target.',
     icon: 'ph--butterfly--regular',
@@ -63,26 +53,25 @@ export const MaterializeBlueskyTarget = Operation.make({
 });
 
 /**
- * Pull-only sync of a single Bluesky feed bound by a {@link Cursor.Cursor}.
- * Fetches posts via XRPC (public for the user's own feed; via Edge atproto
- * proxy for `getActorLikes` / `getBookmarks` / `getFeed`) and appends new
- * Posts to the backing `Subscription.Feed` queue (the cursor's target).
- * Updates the cursor's `value` / `lastTick` / `lastError`.
+ * Pull-only sync of every Bluesky target bound to a connection. Fans out over
+ * the connection's sync cursors, fetching posts via XRPC (public for the
+ * user's own feed; via Edge atproto proxy for `getActorLikes` /
+ * `getBookmarks` / `getFeed`) and appending new Posts to each backing
+ * `Subscription.Feed` queue (the cursor's target). Updates each cursor's
+ * `value` / `lastTick` / `lastError`.
  */
 export const SyncBlueskyTargets = Operation.make({
   meta: {
-    key: makeKey('syncBlueskyTargets'),
+    key: DXN.make('org.dxos.operation.bluesky.syncTargets'),
     name: 'Sync Bluesky',
-    description: 'Pull posts for the Bluesky feed bound by a sync cursor.',
+    description: 'Pull posts for every Bluesky target bound to a connection.',
     icon: 'ph--arrows-clockwise--regular',
   },
   // Handler resolves the Composer `Client` via `Capability.get`.
   services: [Capability.Service],
-  input: Schema.Struct({
-    binding: Ref.Ref(Cursor.Cursor),
-  }),
+  input: ConnectorSpec.SyncInput,
   output: Schema.Struct({
-    /** Total posts appended for this binding's target. */
+    /** Total posts appended across the connection's targets. */
     appended: Schema.Number,
   }),
 }).pipe(Operation.visible);

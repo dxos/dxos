@@ -148,6 +148,16 @@ export class Rpcs extends RpcGroup.make(
     success: FeedQueryResult,
     error: serviceError,
   }),
+  /**
+   * Pushes a new query snapshot whenever the feed's contents change, so a client can subscribe
+   * instead of polling {@link queryFeed} on a timer.
+   */
+  Rpc.make('subscribeFeed', {
+    payload: QueryFeedRequest,
+    success: FeedQueryResult,
+    error: serviceError,
+    stream: true,
+  }),
   Rpc.make('insertIntoFeed', {
     payload: InsertIntoFeedRequest,
     error: serviceError,
@@ -164,6 +174,16 @@ export class Rpcs extends RpcGroup.make(
     payload: GetSyncStateRequest,
     success: GetSyncStateResponse,
     error: serviceError,
+  }),
+  /**
+   * Pushes a new sync-state snapshot whenever the feed backlog changes, so a client can subscribe
+   * instead of polling {@link getSyncState} on a timer.
+   */
+  Rpc.make('subscribeSyncState', {
+    payload: GetSyncStateRequest,
+    success: GetSyncStateResponse,
+    error: serviceError,
+    stream: true,
   }),
 ).prefix('FeedService.') {}
 

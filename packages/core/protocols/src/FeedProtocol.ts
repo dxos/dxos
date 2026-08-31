@@ -6,14 +6,13 @@ export {
   type DeleteFromFeedRequest,
   type FeedNamespaceSyncState,
   type FeedQuery,
-  type FeedService,
   type GetSyncStateRequest,
   type GetSyncStateResponse,
   type InsertIntoFeedRequest,
   type QueryFeedRequest,
   type FeedQueryResult as QueryResult,
   type SyncFeedRequest,
-} from './proto/gen/dxos/client/services.js';
+} from './FeedService.ts';
 
 export const KEY_QUEUE_POSITION = 'org.dxos.key.queue-position';
 

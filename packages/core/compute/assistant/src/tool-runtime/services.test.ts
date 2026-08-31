@@ -2,23 +2,33 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 import * as AnthropicStructuredOutput from 'effect/unstable/ai/AnthropicStructuredOutput';
 import * as Tool from 'effect/unstable/ai/Tool';
 import { describe, test } from 'vitest';
 
+import { OpaqueToolkit, ToolId, ToolResolverService } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
-import { Obj, Ref } from '@dxos/echo';
+import { Obj, Ref, Registry } from '@dxos/echo';
+import { makeRegistry } from '@dxos/echo-client';
+import { EffectEx } from '@dxos/effect';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 
-import { createStructFieldsFromSchema, projectFunctionToTool } from './services';
+import {
+  createStructFieldsFromSchema,
+  isHandlerLike,
+  makeToolResolverFromOperations,
+  projectFunctionToTool,
+} from './services';
 
 describe('createStructFieldsFromSchema', () => {
   const SPACE = SpaceId.random();
   const OBJECT = EntityId.random();
 
   // Projects a tool input schema for the LLM and decodes the given `in` value the way a tool call would.
-  const decodeIn = (schema: Schema.Codec<any, any>, value: unknown): any[] => {
+  const decodeIn = (schema: Schema.Codec<unknown, unknown>, value: unknown) => {
     const fields = createStructFieldsFromSchema(schema);
     const decoded: any = Schema.decodeUnknownSync(Schema.Struct(fields))({ in: value });
     return decoded.in;
@@ -95,7 +105,7 @@ describe('projectFunctionToTool', () => {
   // single parameterless operation would break every agent request.
   test('a parameterless operation emits a schema that satisfies strict mode', ({ expect }) => {
     const Parameterless = Operation.make({
-      meta: { key: DXN.make('org.dxos.test.function.noParams') },
+      meta: { key: DXN.make('com.example.operation.test.noParams') },
       input: Schema.Void,
       output: Schema.Void,
     });
@@ -105,13 +115,43 @@ describe('projectFunctionToTool', () => {
     expect(emitted.type).toBe('object');
   });
 
+  // `Schema.Void` does not survive the registry round trip: `Operation.serialize` renders it through
+  // JSON Schema as `{type: 'null'}` and `deserialize` reads that back as `Schema.Null`, while an
+  // operation persisted without an `inputSchema` reads back as `Schema.Unknown`. Neither tag is the
+  // one the operation was authored with, and an unhandled tag threw — failing not just this tool but
+  // every agent request that offered it, since all tools are sent together.
+  for (const [name, input] of [
+    ['void', Schema.Void],
+    ['null (a round-tripped void)', Schema.Null],
+    ['unknown (persisted without an input schema)', Schema.Unknown],
+  ] as const) {
+    test(`a no-input operation projects to empty parameters: ${name}`, ({ expect }) => {
+      const NoInput = Operation.make({
+        meta: { key: DXN.make('com.example.operation.test.noInput') },
+        input,
+        output: Schema.Void,
+      });
+
+      expect(createStructFieldsFromSchema(input)).toEqual({});
+      const emitted = Tool.getJsonSchema(projectFunctionToTool(NoInput));
+      expect(emitted.type).toBe('object');
+      expect(strictOffenders(emitted)).toEqual([]);
+    });
+  }
+
+  // The projection is the last line of defence, so a genuinely unprojectable input still throws —
+  // `makeToolResolverFromOperations` catches that and drops the single tool.
+  test('an input that is neither a struct nor empty still fails', ({ expect }) => {
+    expect(() => createStructFieldsFromSchema(Schema.String)).toThrow(/Unsupported schema AST: String/);
+  });
+
   // An operation taking arbitrary JSON cannot be described under a provider's strict mode: the value
   // slot emits the empty schema, which Anthropic rejects ("Empty schema ({}) that accepts any JSON
   // value is not supported"). Strict is therefore off for projected operations — re-enabling it makes
   // every request fail, since all tools are sent together.
   test('an operation taking arbitrary JSON is not advertised as strict', ({ expect }) => {
     const PropertyBag = Operation.make({
-      meta: { key: DXN.make('org.dxos.test.function.propertyBag') },
+      meta: { key: DXN.make('com.example.operation.test.propertyBag') },
       input: Schema.Struct({ properties: Schema.Record(Schema.String, Schema.Any) }),
       output: Schema.Void,
     });
@@ -126,7 +166,7 @@ describe('projectFunctionToTool', () => {
   // therefore project to dynamic tools, whose JSON Schema the provider must use verbatim.
   test('the advertised schema is what the model is validated against', ({ expect }) => {
     const Mixed = Operation.make({
-      meta: { key: DXN.make('org.dxos.test.function.mixed') },
+      meta: { key: DXN.make('com.example.operation.test.mixed') },
       input: Schema.Struct({
         typename: Schema.String,
         properties: Schema.Record(Schema.String, Schema.Any),
@@ -155,5 +195,141 @@ describe('projectFunctionToTool', () => {
       properties: { any: 1 },
     });
     expect(decoded.properties).toEqual({ any: 1 });
+  });
+});
+
+describe('makeToolResolverFromOperations', () => {
+  const op = (key: string) =>
+    Operation.serialize(
+      Operation.make({
+        meta: { key: DXN.make(key), name: 'Display Copy' },
+        input: Schema.Struct({ value: Schema.String }),
+        output: Schema.Struct({ ok: Schema.Boolean }),
+      }),
+    );
+
+  /** Runs `body` against one resolver instance, so a cached index persists across its resolutions. */
+  const withResolver = <A>(
+    registry: ReturnType<typeof makeRegistry>,
+    body: (resolve: (id: string) => Effect.Effect<Tool.Any, any>) => Effect.Effect<A, any>,
+  ) =>
+    Effect.gen(function* () {
+      const resolver = yield* ToolResolverService;
+      return yield* body((id) => resolver.resolve(ToolId.make(id)));
+    }).pipe(
+      Effect.provide(makeToolResolverFromOperations().pipe(Layer.provide(Layer.succeed(Registry.Service, registry)))),
+      Effect.provide(OpaqueToolkit.providerLayer(OpaqueToolkit.empty)),
+      EffectEx.runPromise,
+    );
+
+  test('resolves an operation the registry carries, by its derived tool name', async ({ expect }) => {
+    const registry = makeRegistry({ initial: [op('org.dxos.operation.markdown.create')] });
+    const tool = await withResolver(registry, (resolve) => resolve('markdown-create'));
+    expect(tool.name).toBe('markdown-create');
+  });
+
+  // The query is an await point, so a registration landing mid-build must not be lost: clearing the
+  // cache alone would be undone by the assignment of the snapshot taken before the change.
+  test('a collision registered while the index was being built still fails', async ({ expect }) => {
+    const registry = makeRegistry({ initial: [op('org.dxos.operation.webSearch.fetch')] });
+    // Fires the registration inside the first query, after the snapshot is taken but before it is cached.
+    let pending: (() => void) | undefined = () => registry.add([op('org.dxos.operation.web-search.fetch')]);
+    const query = registry.query.bind(registry);
+    registry.query = (...args: Parameters<typeof query>) => {
+      const result = query(...args);
+      const run = result.run.bind(result);
+      result.run = async () => {
+        const records = await run();
+        pending?.();
+        pending = undefined;
+        return records;
+      };
+      return result;
+    };
+
+    const attempt = withResolver(registry, (resolve) => resolve('web-search-fetch'));
+    await expect(attempt).rejects.toThrow(/claimed by 2 operations/);
+  });
+
+  // Both resolutions share one resolver, so the second reads an index the first already built: without
+  // invalidation the stale hit would silently pick one of two claimants instead of reporting the
+  // ambiguity. A resolver per call would pass either way, since the second would build a fresh index.
+  test('a collision registered after the index was built still fails', async ({ expect }) => {
+    const registry = makeRegistry({ initial: [op('org.dxos.operation.webSearch.fetch')] });
+    const attempt = withResolver(registry, (resolve) =>
+      Effect.gen(function* () {
+        const first = yield* resolve('web-search-fetch');
+        yield* Effect.sync(() => registry.add([op('org.dxos.operation.web-search.fetch')]));
+        return { first: first.name, second: yield* Effect.result(resolve('web-search-fetch')) };
+      }),
+    );
+    await expect(attempt).rejects.toThrow(/claimed by 2 operations/);
+  });
+
+  // A recursive input renders as `$ref: '#/$defs/…'` with the bodies in the document's separate
+  // `definitions` record. Keeping only the root advertised a reference to nothing -- and a model can
+  // still answer correctly by inferring the shape from the prompt, so a passing end-to-end test is no
+  // evidence the schema itself resolves.
+  test('a recursive operation input advertises the definitions its refs point at', ({ expect }) => {
+    interface Node {
+      readonly text: string;
+      readonly child?: Node;
+    }
+    const Node: Schema.Codec<Node> = Schema.Struct({
+      text: Schema.String,
+      child: Schema.optional(Schema.suspend((): Schema.Codec<Node> => Node)),
+    });
+
+    const Recursive = Operation.make({
+      meta: { key: DXN.make('com.example.operation.test.recursive') },
+      input: Schema.Struct({ node: Node }),
+      output: Schema.Void,
+    });
+
+    const advertised = Tool.getJsonSchema(projectFunctionToTool(Recursive));
+    expect(danglingRefs(advertised)).toEqual([]);
+    // The recursion is expressed by reference, not inlined to some arbitrary depth.
+    expect(Object.keys((advertised as Record<string, any>).$defs ?? {})).not.toHaveLength(0);
+  });
+
+  /** Reports every `$ref` in the document that no `$defs` entry defines. */
+  const danglingRefs = (document: unknown): string[] => {
+    const defs = new Set(Object.keys(((document as Record<string, unknown>).$defs ?? {}) as object));
+    const collect = (node: unknown): string[] => {
+      if (Array.isArray(node)) {
+        return node.flatMap(collect);
+      }
+      if (typeof node !== 'object' || node === null) {
+        return [];
+      }
+      return Object.entries(node as Record<string, unknown>).flatMap(([key, value]) =>
+        key === '$ref' && typeof value === 'string'
+          ? defs.has(value.replace('#/$defs/', ''))
+            ? []
+            : [value]
+          : collect(value),
+      );
+    };
+    return collect(document);
+  };
+});
+
+describe('isHandlerLike', () => {
+  test('accepts a value with a tools object and a handle function', ({ expect }) => {
+    expect(isHandlerLike({ tools: {}, handle: () => {} })).toBe(true);
+  });
+
+  test('rejects a value whose tools is null', ({ expect }) => {
+    expect(isHandlerLike({ tools: null, handle: () => {} })).toBe(false);
+  });
+
+  test('rejects a value with no handle function', ({ expect }) => {
+    expect(isHandlerLike({ tools: {} })).toBe(false);
+  });
+
+  test('rejects primitives', ({ expect }) => {
+    expect(isHandlerLike(null)).toBe(false);
+    expect(isHandlerLike(undefined)).toBe(false);
+    expect(isHandlerLike('toolkit')).toBe(false);
   });
 });

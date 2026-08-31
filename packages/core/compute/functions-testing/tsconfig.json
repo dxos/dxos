@@ -25,6 +25,9 @@
       "path": "../../../common/util"
     },
     {
+      "path": "../../../plugins/plugin-space"
+    },
+    {
       "path": "../../../sdk/client"
     },
     {

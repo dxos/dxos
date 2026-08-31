@@ -23,7 +23,7 @@ export type CompactDocumentsResult = {
 
 /**
  * Re-materializes linked object documents into fresh Automerge docs (no history) and commits
- * a new space epoch with {@link CreateEpochRequest.Migration.REPLACE_AUTOMERGE_ROOT}.
+ * a new space epoch with {@link SpacesService.Migration.enums.REPLACE_AUTOMERGE_ROOT}.
  */
 export const compactDocumentsEpochMigration = async (
   space: Space,

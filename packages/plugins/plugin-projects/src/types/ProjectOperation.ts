@@ -6,32 +6,78 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AiService } from '@dxos/ai';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Chat } from '@dxos/assistant-toolkit';
+import { AgentService } from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
-import * as Routine from '@dxos/compute/Routine';
 import { Database, Obj, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
-import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
-import { Message } from '@dxos/types';
+import { Task } from '@dxos/types';
+import { trim } from '@dxos/util';
 
-import { meta } from '#meta';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
+/**
+ * Every project verb the project skill drives, and the only module it needs for them.
+ *
+ * `Create` is the one that reaches beyond compute/echo: templates are a capability, so it declares
+ * `Capability.Service`. That costs a remote host (edge operation-service, workerd) nothing it does
+ * not already load — the workerd capability barrel imports `@dxos/app-framework/Capability`
+ * itself — and a host contributing no templates still creates a blank project, because the handler
+ * appends the built-in blank as a fallback. The mailbox pipelines, which do pull an app-only graph
+ * (`@dxos/plugin-inbox`, `@dxos/ai`), live in `ProjectMailboxOperation` for that reason.
+ */
 
 /**
  * Programmatic project creation — the entry point other plugins use to create (and pre-wire)
- * projects without reaching into plugin internals. Resolves the template (blank by default),
+ * projects without reaching into plugin internals. Resolves the template (the default one when unspecified),
  * scaffolds the owned instructions/artifacts graph, and files the project in the Projects section.
+ *
+ * A generic object create makes one empty object; this one returns a whole wired graph, and the
+ * navigation path to the result.
  */
+/**
+ * Opens a conversation about one task: a new chat, filed in the space, carrying the task in its
+ * `tasks` checklist so the agent starts with the work already in front of it.
+ *
+ * NOTE: `Chat.tasks` is a `SetParent` field, so the task's ECHO parent moves from its task set to the
+ * chat — the task follows the chat's lifecycle from here on.
+ */
+export const DelegateTaskToChat = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.projects.delegateTaskToChat'),
+    name: 'Delegate Task To Chat',
+    description: 'Creates a chat for a task and places the task in its checklist.',
+    icon: 'ph--chat-text--regular',
+  },
+  // `AgentService` because the operation runs the chat's first turn: a message written to the feed
+  // is a message nobody read.
+  // `AgentService` because the operation runs the chat's first turn: a message written to the
+  // feed is a message nobody read.
+  services: [Capability.Service, Database.Service, AgentService],
+  input: Schema.Struct({
+    task: Ref.Ref(Task.Task),
+  }),
+  output: Schema.Struct({
+    chat: Type.getSchema(Chat.Chat),
+  }),
+}).pipe(Operation.mutation('write'));
+
 export const Create = Operation.make({
-  meta: { key: makeKey('create'), name: 'Create Project', icon: 'ph--stack--regular' },
+  meta: {
+    // `projectCreate`, not `create`: the whole key derives the tool name, so a bare `create` would
+    // read as `projects-create` — accurate, but the verb alone is too generic to stand on its own.
+    key: DXN.make('org.dxos.operation.projects.create'),
+    name: 'Create Project',
+    description:
+      'Creates a project and its owned graph: agent instructions, an artifacts collection, and a ' +
+      'task set for its tasks. Returns the project with a `taskSet` reference — pass that reference ' +
+      'to taskCreate to record work against it.',
+    icon: 'ph--stack--regular',
+  },
   services: [Capability.Service, Database.Service],
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
-    /** Template id (`ProjectCapabilities.Template`); defaults to the blank template. */
+    /** Template id (`ProjectCapabilities.Template`); defaults to the default template. */
     templateId: Schema.optional(Schema.String),
     /** The object the project is created for (passed to the template's `appliesTo`/`scaffold`). */
     subject: Schema.optional(Obj.Unknown),
@@ -41,160 +87,114 @@ export const Create = Operation.make({
     subject: Schema.Array(Schema.String),
     project: Type.getSchema(Project.Project),
   }),
-});
+}).pipe(Operation.mutation('write'));
 
-export const CreateChat = Operation.make({
-  meta: { key: makeKey('createChat'), name: 'Create Project Chat', icon: 'ph--chat-text--regular' },
-  services: [Capability.Service, Database.Service],
-  input: Schema.Struct({
-    project: Type.getSchema(Project.Project),
-  }),
-  output: Schema.Struct({
-    chat: Type.getSchema(Chat.Chat),
-  }),
-});
-
-export const CreateRoutine = Operation.make({
-  meta: { key: makeKey('createRoutine'), name: 'Create Project Routine', icon: 'ph--lightning--regular' },
-  services: [Capability.Service, Database.Service],
-  input: Schema.Struct({
-    project: Type.getSchema(Project.Project),
-  }),
-  output: Schema.Struct({
-    routine: Type.getSchema(Routine.Routine),
-  }),
-});
-
-//
-// Mailbox pipelines that contribute to a project (see `operations/mailbox/`): each scans the
-// mailbox feed and creates/updates an artifact owned by the project. Designed as routine runnables —
-// a project's routine binds one of these operations (kind: runnable) on a feed or timer trigger.
-//
-
-export const UpdateProjectTasks = Operation.make({
+/**
+ * The detail read behind a project reference: per-task-set open/total counts, the outline's text,
+ * and the artifact inventory with typenames — derived figures and a ref walk that a generic read
+ * would leave the caller to do one object at a time.
+ */
+export const GetProject = Operation.make({
   meta: {
-    key: makeKey('updateProjectTasks'),
-    name: 'Update Project Tasks',
-    description:
-      "Tracks requests from the given senders as tasks in the project's task set (one task per message, idempotent).",
-    icon: 'ph--check-square-offset--regular',
+    key: DXN.make('org.dxos.operation.projects.get'),
+    name: 'Get Project',
+    description: 'Read a project in full: status, task-set summary (open/total per set), outline, and artifacts.',
+    icon: 'ph--info--regular',
   },
   services: [Database.Service],
   input: Schema.Struct({
-    project: Ref.Ref(Project.Project).annotate({ description: 'Project whose task set receives the tasks.' }),
-    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({ description: 'Mailbox whose feed is scanned.' }),
-    senders: Schema.Array(Schema.String).annotate({
-      description: 'Sender email addresses or bare domains whose messages are tracked as requests.',
-    }),
+    project: Ref.Ref(Project.Project),
   }),
   output: Schema.Struct({
-    scanned: Schema.Number,
-    matched: Schema.Number,
-    /** Tasks created this run (existing tasks are never duplicated). */
-    created: Schema.Number,
-  }),
-}).pipe(Operation.idempotent);
-
-export const UpdateTravelLog = Operation.make({
-  meta: {
-    key: makeKey('updateTravelLog'),
-    name: 'Update Travel Log',
-    description:
-      "Regenerates the project's Travel Bookings document from the travel-service messages in the mailbox feed.",
-    icon: 'ph--airplane-tilt--regular',
-  },
-  services: [Database.Service],
-  input: Schema.Struct({
-    project: Ref.Ref(Project.Project).annotate({ description: 'Project owning the Travel Bookings artifact.' }),
-    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({ description: 'Mailbox whose feed is scanned.' }),
-  }),
-  output: Schema.Struct({
-    scanned: Schema.Number,
-    /** Travel messages found (rows in the regenerated document). */
-    matched: Schema.Number,
-  }),
-}).pipe(Operation.idempotent);
-
-export const UpdateInvestorLog = Operation.make({
-  meta: {
-    key: makeKey('updateInvestorLog'),
-    name: 'Update Investor Log',
-    description:
-      "Extracts contacts for investor-domain senders and regenerates the project's Investor Conversations document (one section per thread, optional LLM summaries).",
-    icon: 'ph--handshake--regular',
-  },
-  services: [AiService.AiService, Database.Service],
-  input: Schema.Struct({
-    project: Ref.Ref(Project.Project).annotate({
-      description: 'Project owning the Investor Conversations artifact.',
-    }),
-    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({ description: 'Mailbox whose feed is scanned.' }),
-    domains: Schema.Array(Schema.String).annotate({
-      description: 'Investor email addresses or bare domains to track.',
-    }),
-    summarize: Schema.optional(
-      Schema.Boolean.annotate({
-        description: 'Generate an LLM summary per conversation; defaults to a deterministic digest.',
+    id: Schema.String,
+    name: Schema.optional(Schema.String),
+    status: Schema.optional(Project.ProjectStatus),
+    description: Schema.optional(Schema.String),
+    taskSet: Schema.optional(
+      Schema.Struct({
+        id: Schema.String,
+        name: Schema.optional(Schema.String),
+        openCount: Schema.Number,
+        totalCount: Schema.Number,
       }),
     ),
-    model: Schema.optional(Schema.String.annotate({ description: 'Summary model name; defaults to Claude Haiku.' })),
+    /** The project's checklist markdown, when it has an outline. */
+    outline: Schema.optional(Schema.Struct({ id: Schema.String, content: Schema.String })),
+    artifacts: Schema.Array(Schema.Struct({ id: Schema.String, typename: Schema.String })),
   }),
-  output: Schema.Struct({
-    scanned: Schema.Number,
-    matched: Schema.Number,
-    threads: Schema.Number,
-    /** Person objects created for investor senders (never duplicated). */
-    contacts: Schema.Number,
-  }),
-}).pipe(Operation.idempotent);
+}).pipe(Operation.mutation('none'));
+
+//
+// Artifacts — the project's work products. The skill's own verbs: `Project.artifacts` is a plain
+// ref array, but adding is idempotent by entity id, which a generic object patch cannot be.
+//
 
 /**
- * Who the project follows, derived from the seed message:
- *
- * - `domain` — the sender's organization (them and their colleagues); falls back to the individual
- *   for a free-mail sender, whose domain identifies no organization.
- * - `sender` — that person only.
+ * Files an object into `Project.artifacts`, idempotently. The array is plain refs, but membership is
+ * compared by entity id — the same object can be addressed local or space-qualified — so a generic
+ * patch would need a read-modify-write and would still double-file a differently-spelled URI.
  */
-export const TrackingScope = Schema.Literals(['domain', 'sender']);
-export type TrackingScope = Schema.Schema.Type<typeof TrackingScope>;
-
-/**
- * The pipeline the project's routine runs over the tracked mail. Each names an operation to bind as
- * the routine's runnable — this is what "a project is a policy over pipelines" means concretely: the
- * capability is mailbox-global, the project fixes its scope, its artifacts and its schedule.
- */
-export const TrackingPipeline = Schema.Literals(['tasks', 'summaries', 'contacts']);
-export type TrackingPipeline = Schema.Schema.Type<typeof TrackingPipeline>;
-
-export const CreateTrackingProject = Operation.make({
+export const ArtifactAdd = Operation.make({
   meta: {
-    key: makeKey('createTrackingProject'),
-    name: 'Create Tracking Project',
-    description:
-      "Creates a project that follows a message's sender (or their whole domain): scaffolds the project, wires a feed-triggered routine binding the chosen pipeline, and backfills from the existing feed.",
+    key: DXN.make('org.dxos.operation.projects.addArtifact'),
+    name: 'Add project artifact',
     icon: 'ph--stack-plus--regular',
+    description: trim`
+      Files an object into a project's artifacts collection.
+      Use this after creating an object (document, outline, sheet, contact, …) while working in a
+      project's context, so the project owns it and it appears in the project's artifacts list.
+      When the object was produced for a task on your checklist, pass that task too, so the finished
+      task shows what it made. Adding the same object twice is a no-op.
+    `,
   },
-  services: [Database.Service],
   input: Schema.Struct({
-    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({ description: 'Mailbox the project tracks.' }),
-    message: Type.getSchema(Message.Message).annotate({
-      description: 'Message whose sender seeds the project.',
+    project: Ref.Ref(Project.Project).annotate({
+      description: 'The project to file into (its reference is in the chat context).',
     }),
-    scope: Schema.optional(TrackingScope).annotate({
-      description: "Who to follow; defaults to the sender's domain when it identifies an organization.",
+    object: Ref.Ref(Obj.Unknown).annotate({
+      description: 'The object to file as an artifact.',
     }),
-    pipeline: Schema.optional(TrackingPipeline).annotate({
-      description: 'Pipeline the scaffolded routine runs; defaults to request tracking (tasks).',
+    task: Schema.optional(
+      Ref.Ref(Task.Task).annotate({
+        description:
+          'The task this object was produced for, when working one — records it on the task as well, ' +
+          'so a finished task shows what it made.',
+      }),
+    ),
+  }),
+  output: Schema.Void,
+  services: [Database.Service],
+}).pipe(Operation.mutation('write'));
+
+/** One artifact row: enough to identify and load the object, without inlining its content. */
+export const ArtifactInfo = Schema.Struct({
+  dxn: Schema.String,
+  typename: Schema.optional(Schema.String),
+  label: Schema.optional(Schema.String),
+});
+
+/**
+ * Lists the project's artifacts as identity-only rows (DXN, typename, label) rather than inlining
+ * their content, and degrades a broken ref to a placeholder row instead of failing the listing.
+ */
+export const ArtifactList = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.projects.listArtifact'),
+    name: 'List project artifacts',
+    icon: 'ph--stack--regular',
+    description: trim`
+      Lists the objects in a project's artifacts collection (DXN, type, and label per artifact).
+      Use this to find what the project already holds before searching the whole space; load an
+      artifact's content with the database-load tool when needed.
+    `,
+  },
+  input: Schema.Struct({
+    project: Ref.Ref(Project.Project).annotate({
+      description: 'The project whose artifacts to list (its reference is in the chat context).',
     }),
-    name: Schema.optional(Schema.String).annotate({ description: 'Project name; defaults from the scope.' }),
   }),
   output: Schema.Struct({
-    projectId: Schema.String,
-    /** The sender entries (domain or address) the project tracks. */
-    senders: Schema.Array(Schema.String),
-    /** The pipeline bound to the project's routine. */
-    pipeline: TrackingPipeline,
-    /** Tasks created by the initial backfill (task pipeline only). */
-    tasks: Schema.Number,
+    artifacts: Schema.Array(ArtifactInfo),
   }),
-});
+  services: [Database.Service],
+}).pipe(Operation.mutation('none'));

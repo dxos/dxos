@@ -6,21 +6,20 @@ import { DiscordREST } from 'dfx';
 import type { MessageResponse } from 'dfx/types';
 import * as Effect from 'effect/Effect';
 
-import * as Capability from '@dxos/app-framework/Capability';
+import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { EID } from '@dxos/keys';
 import { Cursor } from '@dxos/link';
-import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as Binding from '@dxos/plugin-connector/Binding';
 import { Channel, ContentBlock, Message } from '@dxos/types';
 
 import { meta } from '#meta';
 import { DiscordOperation } from '#types';
 
 import { DEFAULT_DAYS, DISCORD_SOURCE, snowflakeForTimestamp } from '../constants';
-import { formatDiscordSyncFailure } from '../errors';
+import { DiscordChannelUnresolvedError, DiscordTargetInvalidError, formatDiscordSyncFailure } from '../errors';
 import { makeDiscordLayerFromToken } from '../services';
 
 /**
@@ -127,119 +126,130 @@ export const findChannelForDiscordChannel: (
 );
 
 /**
- * Reconciles messages for the single Discord channel bound by a {@link Cursor.Cursor}.
+ * Reconciles messages for every Discord channel bound to a connection.
  *
- * Pull-only:
- *  1. Load the binding; its source is the `AccessToken`, its target the
- *     local `Channel`, and `binding.spec.externalId` is the Discord channel id.
+ * Fans out over the connection's external-sync cursors (see `Binding.syncAll`);
+ * per binding, pull-only:
+ *  1. Its source is the `AccessToken`, its target the local `Channel`, and
+ *     `binding.spec.externalId` is the Discord channel id.
  *  2. Ask Discord for messages with id greater than `binding.max` (or from
  *     "now minus maxDays" on first sync).
  *  3. Map each Discord message → `@dxos/types` Message and append the batch to
  *     the channel's feed.
  *  4. Advance `binding.max` to the largest id seen so the next sync is incremental.
  *
- * Success/failure status is written back onto the binding via `Cursor.advance`/
+ * Success/failure status is written back onto each binding via `Cursor.advance`/
  * `Cursor.recordError` (`value`/`lastTick`/`lastError`).
  */
 const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel> =
   DiscordOperation.SyncDiscordChannel.pipe(
-    Operation.withHandler(
-      Effect.fn(function* ({ binding: bindingRef }) {
-        const bindingTarget = bindingRef.target;
-        const db = bindingTarget ? Obj.getDatabase(bindingTarget) : undefined;
-        invariant(db, 'No database for binding ref — invoker did not provide Database.layer.');
-
-        const client = yield* Capability.get(ClientCapabilities.Client);
-        const space = client.spaces.get(db.spaceId);
-        invariant(space, 'Space not found');
-
-        const toastIdSuffix = EID.getEntityId(EID.parse(bindingRef.uri)) ?? 'unknown';
-
-        // Resolve the binding's endpoints up front: the source access token
-        // supplies the credential for the Discord layer, the target is the
-        // local Channel, and `externalId` is the Discord channel id to pull.
-        const binding = yield* Database.load(bindingRef).pipe(Effect.provide(Database.layer(db)));
-        invariant(Cursor.isExternal(binding), 'Cursor is missing an external-sync spec for Discord channel.');
-        const accessToken = yield* Database.load(binding.spec.source).pipe(Effect.provide(Database.layer(db)));
-        const localRoot = yield* Database.load(binding.spec.target).pipe(Effect.provide(Database.layer(db)));
-        const externalId = binding.spec.externalId;
-        invariant(externalId, 'Cursor is missing an externalId for Discord channel.');
-        invariant(Channel.instanceOf(localRoot), 'Cursor target is not a Channel.');
-
-        // Captured on the success path so the cursor's value + run status advance in one atomic update.
-        let newestId: string | undefined;
-        const outcome = yield* Effect.result(
+    Operation.withHandler(({ connection, priority }) =>
+      Binding.syncAll({
+        connection,
+        priority,
+        sync: (binding) =>
           Effect.gen(function* () {
-            const rest = yield* DiscordREST;
-
-            const initialAfter = computeInitialCursor(binding.max, binding.spec.options);
-
-            // Drain message pagination. Discord returns newest-first within a
-            // page even when paging by `after`; sort each page ascending so the
-            // final list is chronological and the cursor we persist is the
-            // largest id seen.
-            const messages: MessageResponse[] = [];
-            let after = initialAfter;
-            while (true) {
-              const page = yield* rest.listMessages(externalId, { after, limit: MESSAGE_PAGE_LIMIT });
-              if (page.length === 0) {
-                break;
-              }
-              const sorted = [...page].sort((left, right) => (left.id < right.id ? -1 : left.id > right.id ? 1 : 0));
-              messages.push(...sorted);
-              if (sorted.length < MESSAGE_PAGE_LIMIT) {
-                break;
-              }
-              after = sorted[sorted.length - 1].id;
+            const db = Obj.getDatabase(binding);
+            if (!db) {
+              return yield* Effect.fail(new SyncDatabaseMissingError());
             }
 
-            if (messages.length === 0) {
-              return { pulled: { added: 0 } };
+            // Resolve the binding's endpoints up front: the source access token
+            // supplies the credential for the Discord layer, the target is the
+            // local Channel, and `externalId` is the Discord channel id to pull.
+            const accessToken = yield* Database.load(binding.spec.source).pipe(Effect.provide(Database.layer(db)));
+            const localRoot = yield* Database.load(binding.spec.target).pipe(Effect.provide(Database.layer(db)));
+            const externalId = binding.spec.externalId;
+            // Typed rather than an `invariant` defect, so a misconfigured binding records its reason
+            // and the account's other channels still sync.
+            if (!externalId) {
+              return yield* Effect.fail(new DiscordChannelUnresolvedError());
+            }
+            if (!Channel.instanceOf(localRoot)) {
+              return yield* Effect.fail(new DiscordTargetInvalidError());
             }
 
-            const mapped = messages
-              .map(mapDiscordMessage)
-              .filter((message): message is Message.Message => message !== undefined);
+            // Captured on the success path so the cursor's value + run status advance in one atomic update.
+            let newestId: string | undefined;
+            const outcome = yield* Effect.result(
+              Effect.gen(function* () {
+                const rest = yield* DiscordREST;
 
-            if (mapped.length === 0) {
-              return { pulled: { added: 0 } };
+                const initialAfter = computeInitialCursor(binding.max, binding.spec.options);
+
+                // Drain message pagination. Discord returns newest-first within a
+                // page even when paging by `after`; sort each page ascending so the
+                // final list is chronological and the cursor we persist is the
+                // largest id seen.
+                const messages: MessageResponse[] = [];
+                let after = initialAfter;
+                while (true) {
+                  const page = yield* rest.listMessages(externalId, { after, limit: MESSAGE_PAGE_LIMIT });
+                  if (page.length === 0) {
+                    break;
+                  }
+                  const sorted = [...page].sort((left, right) =>
+                    left.id < right.id ? -1 : left.id > right.id ? 1 : 0,
+                  );
+                  messages.push(...sorted);
+                  if (sorted.length < MESSAGE_PAGE_LIMIT) {
+                    break;
+                  }
+                  after = sorted[sorted.length - 1].id;
+                }
+
+                if (messages.length === 0) {
+                  return { pulled: { added: 0 } };
+                }
+
+                const mapped = messages
+                  .map(mapDiscordMessage)
+                  .filter((message): message is Message.Message => message !== undefined);
+
+                if (mapped.length === 0) {
+                  return { pulled: { added: 0 } };
+                }
+
+                yield* Database.load(localRoot.backend.config);
+                const feed = Channel.getFeed(localRoot);
+                invariant(feed, 'Channel is not feed-backed');
+                yield* Feed.append(feed, mapped);
+
+                newestId = messages[messages.length - 1].id;
+
+                return { pulled: { added: mapped.length } };
+              }).pipe(Effect.provide(Database.layer(db)), Effect.provide(makeDiscordLayerFromToken(accessToken.token))),
+            );
+
+            if (outcome._tag === 'Success') {
+              Cursor.advance(binding, newestId);
+              yield* Effect.ignore(
+                Operation.invoke(LayoutOperation.AddToast, {
+                  id: `${meta.profile.key}.sync-success`,
+                  icon: 'ph--check--regular',
+                  title: ['sync-toast.success.label', { ns: meta.profile.key }],
+                }),
+              );
+              return outcome.success;
+            } else {
+              const message = formatDiscordSyncFailure(outcome.failure);
+              Cursor.recordError(binding, message);
+              yield* Effect.ignore(
+                Operation.invoke(LayoutOperation.AddToast, {
+                  id: `${meta.profile.key}.sync-error`,
+                  icon: 'ph--warning--regular',
+                  title: ['sync-toast.error.label', { ns: meta.profile.key }],
+                  description: message,
+                }),
+              );
+              return yield* Effect.fail(outcome.failure);
             }
-
-            yield* Database.load(localRoot.backend.config);
-            const feed = Channel.getFeed(localRoot);
-            invariant(feed, 'Channel is not feed-backed');
-            yield* Feed.append(feed, mapped);
-
-            newestId = messages[messages.length - 1].id;
-
-            return { pulled: { added: mapped.length } };
-          }).pipe(Effect.provide(Database.layer(db)), Effect.provide(makeDiscordLayerFromToken(accessToken.token))),
-        );
-
-        if (outcome._tag === 'Success') {
-          Cursor.advance(binding, newestId);
-          yield* Effect.ignore(
-            Operation.invoke(LayoutOperation.AddToast, {
-              id: `${meta.profile.key}.sync-success.${toastIdSuffix}`,
-              icon: 'ph--check--regular',
-              title: ['sync-toast.success.label', { ns: meta.profile.key }],
-            }),
-          );
-          return outcome.success;
-        } else {
-          const message = formatDiscordSyncFailure(outcome.failure);
-          Cursor.recordError(binding, message);
-          yield* Effect.ignore(
-            Operation.invoke(LayoutOperation.AddToast, {
-              id: `${meta.profile.key}.sync-error.${toastIdSuffix}`,
-              icon: 'ph--warning--regular',
-              title: ['sync-toast.error.label', { ns: meta.profile.key }],
-              description: message,
-            }),
-          );
-          return yield* Effect.fail(outcome.failure);
-        }
-      }),
+          }),
+      }).pipe(
+        Effect.map(({ outputs }) => ({
+          pulled: { added: outputs.reduce((total, output) => total + output.pulled.added, 0) },
+        })),
+      ),
     ),
   );
 

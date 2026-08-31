@@ -436,8 +436,8 @@ const CardText = slottable<HTMLDivElement, CardTextProps>(
     const Comp = asChild ? Slot : Primitive.div;
 
     return (
-      <Comp {...rest} role={role ?? 'none'} className={tx('card.text', { variant }, className)} ref={forwardedRef}>
-        <span className={tx('card.text-span', { variant, truncate })}>{children}</span>
+      <Comp {...rest} role={role ?? 'none'} className={tx('card.text', { variant })} ref={forwardedRef}>
+        <span className={tx('card.text-span', { variant, truncate }, className)}>{children}</span>
       </Comp>
     );
   },
@@ -532,6 +532,12 @@ const CARD_ACTION_NAME = 'Card.Action';
 
 type CardActionProps = {
   icon?: string;
+  /**
+   * Leading gutter content, taking precedence over `icon` — e.g. a person's avatar, which reads better
+   * than a generic glyph on a row that stands for someone. Must be non-interactive: the row is itself a
+   * button, so anything focusable here would nest inside it.
+   */
+  leading?: ReactNode;
   label: string;
   /** Short trailing text (e.g. an age); kept at full width while the label truncates around it. */
   annotation?: string;
@@ -539,15 +545,22 @@ type CardActionProps = {
   onClick?: () => void;
 };
 
-function CardAction({ icon, actionIcon = 'ph--arrow-right--regular', label, annotation, onClick }: CardActionProps) {
+function CardAction({
+  icon,
+  leading,
+  actionIcon = 'ph--arrow-right--regular',
+  label,
+  annotation,
+  onClick,
+}: CardActionProps) {
   const { tx } = useThemeContext();
+  // Resolved once so the guard and the content cannot disagree: the guard used `||` while the content
+  // used `??`, so a falsy-but-valid `leading` (0, '', false) rendered nothing at all. Also drops a
+  // non-null assertion on `icon`.
+  const gutter = leading ?? (icon ? <Icon icon={icon} size={4} /> : undefined);
   return (
     <Button variant='ghost' classNames={tx('card.action', {})} onClick={onClick}>
-      {icon && (
-        <CardBlock>
-          <Icon icon={icon} size={4} />
-        </CardBlock>
-      )}
+      {gutter !== undefined && <CardBlock>{gutter}</CardBlock>}
       <span className={tx('card.action-content', {})}>
         <span className={tx('card.action-label', {})}>{label}</span>
         {annotation && <span className={tx('card.action-annotation', {})}>{annotation}</span>}

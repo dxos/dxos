@@ -16,15 +16,29 @@ import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 import * as RoutineEvents from '@dxos/plugin-routine/RoutineEvents';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
+import { meta } from '#meta';
+import { translations } from '#translations';
 import { AssistantCapabilities, AssistantEvents } from '#types';
+
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../../PLUGIN.mdl?raw';
 
 export const AgentHydrator = Capability.lazyModule(
   'AgentHydrator',
-  { requires: [Capabilities.ProcessManagerRuntime], provides: [], activatesOn: AssistantEvents.Start },
+  {
+    requires: [Capabilities.ProcessManagerRuntime],
+    provides: [],
+    activatesOn: AssistantEvents.Start,
+    environments: ['node'],
+  },
   () => import('./agent-hydrator'),
 );
-export const AgentRuntime = AppCapability.layerSpec(() => import('./agent-service'), { name: 'AgentRuntime' });
-export const AiContext = AppCapability.layerSpec(() => import('./ai-context'), { name: 'AiContext' });
+export const AgentRuntime = AppCapability.layerSpec(() => import('./agent-service'), {
+  name: 'AgentRuntime',
+});
+export const AiContext = AppCapability.layerSpec(() => import('./ai-context'), {
+  name: 'AiContext',
+});
 export const AiService = AppCapability.layerSpec(() => import('./ai-service'), {
   name: 'AiService',
   requires: [AppCapabilities.AiModelResolver],
@@ -34,13 +48,20 @@ export const Connector = Capability.lazyModule(
   { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
   () => import('./connector'),
 );
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+  environments: ['node'],
+});
 export const AutomationTemplates = Capability.lazyModule(
   'AutomationTemplates',
   { provides: [RoutineCapabilities.Template], activatesOn: RoutineEvents.Start },
   () => import('./automation-templates'),
 );
 export const Schema = AppCapability.schema(() => import('./schema-defs'));
+export const SubjectContext = Capability.lazyModule(
+  'SubjectContext',
+  { provides: [AssistantCapabilities.SubjectContext], activatesOn: AssistantEvents.Start },
+  () => import('./subject-context'),
+);
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
   provides: [RoutineCapabilities.AgentDelegationStrategy],
 });
@@ -63,15 +84,21 @@ export const CompanionChatProvisioner = Capability.lazyModule(
   },
   () => import('./companion-chat-provisioner'),
 );
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
+  environments: ['node'],
+});
+// Startup, not `AssistantEvents.Start`: `AiService` snapshots its multi-arity `AiModelResolver`
+// require once during startup, so a resolver contributed in a later round is invisible to it.
+// TODO(burdon): Defer past startup again so a user who never opens a chat does not pay for the
+//   provider client bindings; needs the AI service to read resolvers per request, not snapshot them.
 export const EdgeModelResolver = Capability.lazyModule(
   'EdgeModelResolver',
-  { provides: [AppCapabilities.AiModelResolver], activatesOn: AssistantEvents.Start },
+  { provides: [AppCapabilities.AiModelResolver], activatesOn: ActivationEvents.Startup },
   () => import('./edge-model-resolver'),
 );
 export const LocalModelResolver = Capability.lazyModule(
   'LocalModelResolver',
-  { provides: [AppCapabilities.AiModelResolver], activatesOn: AssistantEvents.Start },
+  { provides: [AppCapabilities.AiModelResolver], activatesOn: ActivationEvents.Startup },
   () => import('./local-model-resolver'),
 );
 export const MarkdownExtension = Capability.lazyModule(
@@ -112,6 +139,17 @@ export const AssistantState = Capability.lazyModule(
 );
 export const Toolkit = Capability.lazyModule(
   'Toolkit',
-  { provides: [AppCapabilities.Toolkit], activatesOn: AssistantEvents.Start },
+  {
+    provides: [AppCapabilities.Toolkit],
+    activatesOn: AssistantEvents.Start,
+    environments: ['node', 'workerd'],
+  },
   () => import('./toolkit'),
 );
+export const Translations = AppCapability.translations(translations);
+export const PluginAsset = AppCapability.pluginAsset({
+  pluginId: meta.profile.key,
+  path: 'PLUGIN.mdl',
+  content: pluginSpec,
+  mimeType: 'application/x-mdl',
+});

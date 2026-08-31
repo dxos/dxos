@@ -44,11 +44,10 @@ describe('progress keys', () => {
     const absolute = Obj.getURI(mailbox, { prefer: 'absolute' }).toString();
     expect(absolute).toContain('//');
     for (const key of [
-      InboxOperation.createEnrichProgressKey(mailbox),
-      InboxOperation.createProcessProgressKey(mailbox),
+      InboxOperation.createAnalyzeProgressKey(mailbox),
       InboxOperation.createSummarizeProgressKey(mailbox),
       InboxOperation.createClassifyProgressKey(mailbox),
-      InboxOperation.createAnalyzeProgressKey(mailbox),
+      InboxOperation.createFactsProgressKey(mailbox),
       InboxOperation.createCorrespondentsProgressKey(mailbox),
       InboxOperation.createSubscriptionsProgressKey(mailbox),
       createSyncProgressKey(mailbox),
@@ -62,7 +61,7 @@ describe('progress keys', () => {
     const reloaded = await EffectEx.runAndForwardErrors(
       Database.load(Ref.make(mailbox)).pipe(Effect.provide(Database.layer(db))),
     );
-    expect(InboxOperation.createEnrichProgressKey(reloaded)).toBe(InboxOperation.createEnrichProgressKey(mailbox));
+    expect(InboxOperation.createAnalyzeProgressKey(reloaded)).toBe(InboxOperation.createAnalyzeProgressKey(mailbox));
     expect(createSyncProgressKey(reloaded)).toBe(createSyncProgressKey(mailbox));
   });
 });

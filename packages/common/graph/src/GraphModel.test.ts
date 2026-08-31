@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
@@ -9,13 +10,10 @@ import { describe, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 
-import * as Graph from './Graph';
 import * as GraphModel from './GraphModel';
+import * as GraphNode from './GraphNode';
 
-// Create a registry for tests.
-const createRegistry = () => Registry.make();
-
-const TestNode = Graph.Node.mapFields(Struct.assign({ value: Schema.String }));
+const TestNode = GraphNode.GraphNode.mapFields(Struct.assign({ value: Schema.String }));
 
 type TestNode = Schema.Schema.Type<typeof TestNode>;
 
@@ -36,10 +34,10 @@ describe('Graph', () => {
   });
 
   test('reactive model', async ({ expect }) => {
-    const registry = createRegistry();
-    const graph = new GraphModel.ReactiveGraphModel(registry);
+    const registry = Registry.make();
+    const graph = new GraphModel.GraphModel({ registry });
 
-    const done = new Trigger<Graph.Any>();
+    const done = new Trigger<GraphModel.AnyData>();
     const unsubscribe = graph.subscribe((model, g) => {
       if (g.edges.length === 2) {
         done.wake(g);
@@ -67,8 +65,8 @@ describe('Graph', () => {
   });
 
   test('reactive model fires immediately with fire option', ({ expect }) => {
-    const registry = createRegistry();
-    const graph = new GraphModel.ReactiveGraphModel(registry);
+    const registry = Registry.make();
+    const graph = new GraphModel.GraphModel({ registry });
     graph.addNode({ id: 'node-1' });
 
     let callCount = 0;
@@ -90,8 +88,8 @@ describe('Graph', () => {
   });
 
   test('reactive model tracks node additions', ({ expect }) => {
-    const registry = createRegistry();
-    const graph = new GraphModel.ReactiveGraphModel(registry);
+    const registry = Registry.make();
+    const graph = new GraphModel.GraphModel({ registry });
 
     const nodeCountHistory: number[] = [];
     const unsubscribe = graph.subscribe((model) => {
@@ -109,8 +107,8 @@ describe('Graph', () => {
   });
 
   test('reactive model tracks node removals', ({ expect }) => {
-    const registry = createRegistry();
-    const graph = new GraphModel.ReactiveGraphModel(registry);
+    const registry = Registry.make();
+    const graph = new GraphModel.GraphModel({ registry });
     graph.addNode({ id: 'node-1' });
     graph.addNode({ id: 'node-2' });
     graph.addNode({ id: 'node-3' });
@@ -130,8 +128,8 @@ describe('Graph', () => {
   });
 
   test('reactive model unsubscribe stops notifications', ({ expect }) => {
-    const registry = createRegistry();
-    const graph = new GraphModel.ReactiveGraphModel(registry);
+    const registry = Registry.make();
+    const graph = new GraphModel.GraphModel({ registry });
 
     let callCount = 0;
     const unsubscribe = graph.subscribe(() => {
@@ -152,8 +150,8 @@ describe('Graph', () => {
   });
 
   test('reactive model supports multiple subscribers', ({ expect }) => {
-    const registry = createRegistry();
-    const graph = new GraphModel.ReactiveGraphModel(registry);
+    const registry = Registry.make();
+    const graph = new GraphModel.GraphModel({ registry });
 
     let subscriber1Count = 0;
     let subscriber2Count = 0;
@@ -177,26 +175,27 @@ describe('Graph', () => {
 
   test('optional', ({ expect }) => {
     {
-      const graph = new GraphModel.GraphModel<Graph.Node.Node<string>>();
+      const graph = new GraphModel.GraphModel<GraphNode.Of<string>>();
       const node = graph.addNode({ id: 'test', data: 'test' });
       expect(node.data.length).to.eq(4);
     }
 
     {
-      const graph = new GraphModel.GraphModel<Graph.Node.Any>();
+      const graph = new GraphModel.GraphModel<GraphNode.Any>();
       const node = graph.addNode({ id: 'test' });
       expect(node.data?.length).to.be.undefined;
     }
   });
 
   test('add and remove subgraphs', ({ expect }) => {
-    const graph = new GraphModel.GraphModel<Graph.Node.Node<TestData>>();
-    graph.builder
-      .addNode({ id: 'node1', data: { value: 'test' } })
-      .addNode({ id: 'node2', data: { value: 'test' } })
-      .addNode({ id: 'node3', data: { value: 'test' } })
-      .addEdge({ source: 'node1', target: 'node2' })
-      .addEdge({ source: 'node2', target: 'node3' });
+    const graph = new GraphModel.GraphModel<GraphNode.Of<TestData>>();
+    graph.pipe(
+      GraphModel.addNode({ id: 'node1', data: { value: 'test' } }),
+      GraphModel.addNode({ id: 'node2', data: { value: 'test' } }),
+      GraphModel.addNode({ id: 'node3', data: { value: 'test' } }),
+      GraphModel.addEdge({ source: 'node1', target: 'node2' }),
+      GraphModel.addEdge({ source: 'node2', target: 'node3' }),
+    );
     expect(graph.nodes).to.have.length(3);
     expect(graph.edges).to.have.length(2);
     const pre = graph.toJSON();
@@ -221,24 +220,23 @@ describe('Graph', () => {
 
   test('traverse', ({ expect }) => {
     const graph = new GraphModel.GraphModel();
-    graph.builder
-      .addNode({ id: 'a' })
-      .addNode({ id: 'b' })
-      .addNode({ id: 'c' })
-      .addNode({ id: 'd' })
-      .addNode({ id: 'e' })
-      .addNode({ id: 'f' })
-      .addNode({ id: 'g' })
-      .addNode({ id: 'h' })
-      // Sub-graph 1.
-      .addEdge({ source: 'a', target: 'b' })
-      .addEdge({ source: 'a', target: 'c' })
-      .addEdge({ source: 'c', target: 'd' })
-      .addEdge({ source: 'd', target: 'e' })
-      .addEdge({ source: 'd', target: 'a' })
-      // Sub-graph 2.
-      .addEdge({ source: 'f', target: 'g' })
-      .addEdge({ source: 'g', target: 'h' });
+    graph.pipe(
+      GraphModel.addNode({ id: 'a' }),
+      GraphModel.addNode({ id: 'b' }),
+      GraphModel.addNode({ id: 'c' }),
+      GraphModel.addNode({ id: 'd' }),
+      GraphModel.addNode({ id: 'e' }),
+      GraphModel.addNode({ id: 'f' }),
+      GraphModel.addNode({ id: 'g' }),
+      GraphModel.addNode({ id: 'h' }),
+      GraphModel.addEdge({ source: 'a', target: 'b' }),
+      GraphModel.addEdge({ source: 'a', target: 'c' }),
+      GraphModel.addEdge({ source: 'c', target: 'd' }),
+      GraphModel.addEdge({ source: 'd', target: 'e' }),
+      GraphModel.addEdge({ source: 'd', target: 'a' }),
+      GraphModel.addEdge({ source: 'f', target: 'g' }),
+      GraphModel.addEdge({ source: 'g', target: 'h' }),
+    );
 
     const count = graph.nodes.length;
 
@@ -257,5 +255,143 @@ describe('Graph', () => {
       graph.removeNodes(nodes.map((node) => node.id));
       expect(graph.nodes).to.have.length(count - 3);
     }
+  });
+  test('batch emits a single notification', ({ expect }) => {
+    const registry = Registry.make();
+    const graph = new GraphModel.GraphModel({ registry });
+
+    let count = 0;
+    const unsubscribe = graph.subscribe(() => {
+      count++;
+    });
+
+    graph.batch(() => {
+      graph.addNode({ id: 'node-1' });
+      graph.addNode({ id: 'node-2' });
+      graph.addEdge({ source: 'node-1', target: 'node-2' });
+    });
+
+    expect(count).to.eq(1);
+    expect(graph.nodes).to.have.length(2);
+    unsubscribe();
+  });
+
+  test('node atoms recompute only for the model version', ({ expect }) => {
+    const registry = Registry.make();
+    const graph = new GraphModel.GraphModel<TestNode>({ registry });
+    graph.addNode({ id: 'node-1', value: 'one' });
+    graph.addNode({ id: 'node-2', value: 'two' });
+
+    const atom = graph.nodeAtom('node-1');
+    expect(registry.get(atom)?.value).to.eq('one');
+    expect(graph.nodeAtom('node-1')).to.eq(atom);
+
+    graph.removeNode('node-1');
+    expect(registry.get(atom)).to.be.undefined;
+  });
+
+  test('edges may precede their endpoints', ({ expect }) => {
+    const graph = new GraphModel.GraphModel();
+    graph.addEdge({ id: 'edge-1', source: 'node-1', target: 'node-2' });
+    expect(graph.nodes).to.have.length(0);
+    expect(graph.edges).to.have.length(1);
+
+    graph.addNode({ id: 'node-1' });
+    graph.addNode({ id: 'node-2' });
+    expect(graph.nodes).to.have.length(2);
+    expect(graph.filterEdges({ source: 'node-1' })).to.have.length(1);
+  });
+
+  test('topoLevels groups mutually unordered nodes', ({ expect }) => {
+    const graph = new GraphModel.GraphModel();
+    graph.pipe(
+      GraphModel.addNode({ id: 'a' }),
+      GraphModel.addNode({ id: 'b' }),
+      GraphModel.addNode({ id: 'c' }),
+      GraphModel.addNode({ id: 'd' }),
+      GraphModel.addEdge({ id: 'a-c', source: 'a', target: 'c' }),
+      GraphModel.addEdge({ id: 'b-c', source: 'b', target: 'c' }),
+      GraphModel.addEdge({ id: 'c-d', source: 'c', target: 'd' }),
+    );
+
+    const levels = graph.topoLevels();
+    expect(Option.isSome(levels)).to.be.true;
+    expect(Option.getOrThrow(levels).map((level) => level.toSorted())).to.deep.eq([['a', 'b'], ['c'], ['d']]);
+  });
+
+  test('topoLevels honours the edge filter and reports cycles', ({ expect }) => {
+    const graph = new GraphModel.GraphModel();
+    graph.pipe(
+      GraphModel.addNode({ id: 'a' }),
+      GraphModel.addNode({ id: 'b' }),
+      GraphModel.addEdge({ id: 'hard', type: 'hard', source: 'a', target: 'b' }),
+      GraphModel.addEdge({ id: 'soft', type: 'soft', source: 'b', target: 'a' }),
+    );
+
+    const hardOnly = graph.topoLevels((edge) => edge.type === 'hard');
+    expect(Option.getOrThrow(hardOnly)).to.deep.eq([['a'], ['b']]);
+
+    // Both kinds together close the loop.
+    expect(Option.isNone(graph.topoLevels())).to.be.true;
+  });
+
+  test('findCycle names the loop in order', ({ expect }) => {
+    const graph = new GraphModel.GraphModel();
+    graph.pipe(
+      GraphModel.addNode({ id: 'x' }),
+      GraphModel.addNode({ id: 'y' }),
+      GraphModel.addEdge({ id: 'x-y', source: 'x', target: 'y' }),
+      GraphModel.addEdge({ id: 'y-x', source: 'y', target: 'x' }),
+    );
+
+    const cycle = graph.findCycle();
+    expect(cycle.map((step) => step.node)).to.deep.eq(['x', 'y']);
+    expect(cycle.map((step) => step.edge.id)).to.deep.eq(['x-y', 'y-x']);
+
+    graph.removeEdge('y-x');
+    expect(graph.findCycle()).to.have.length(0);
+  });
+
+  test('mirrors structural mutations into the backing source', ({ expect }) => {
+    const source: GraphModel.AnyData = { nodes: [], edges: [] };
+    let transactions = 0;
+    const graph = new GraphModel.GraphModel({
+      graph: source,
+      change: (fn) => {
+        transactions++;
+        fn();
+      },
+    });
+
+    graph.addNode({ id: 'node-1' });
+    graph.addNode({ id: 'node-2' });
+    graph.addEdge({ id: 'edge-1', source: 'node-1', target: 'node-2' });
+    expect(source.nodes.map((node) => node.id)).to.deep.eq(['node-1', 'node-2']);
+    expect(source.edges.map((edge) => edge.id)).to.deep.eq(['edge-1']);
+    expect(transactions).to.eq(3);
+
+    graph.removeNode('node-1');
+    expect(source.nodes.map((node) => node.id)).to.deep.eq(['node-2']);
+    expect(source.edges).to.have.length(0);
+  });
+
+  test('sync reloads only when the source diverges', ({ expect }) => {
+    const source: GraphModel.AnyData = { nodes: [{ id: 'node-1' }], edges: [] };
+    const graph = new GraphModel.GraphModel({ graph: source, change: (fn) => fn() });
+    expect(graph.nodes).to.have.length(1);
+
+    // A field edit reaches the model through the node object it already holds.
+    expect(graph.sync()).to.be.false;
+
+    source.nodes.push({ id: 'node-2' });
+    source.edges.push({ id: 'edge-1', source: 'node-1', target: 'node-2' });
+    expect(graph.sync()).to.be.true;
+    expect(graph.nodes.map((node) => node.id)).to.deep.eq(['node-1', 'node-2']);
+    expect(graph.edges).to.have.length(1);
+    expect(graph.sync()).to.be.false;
+
+    source.nodes.splice(0, 1);
+    expect(graph.sync()).to.be.true;
+    expect(graph.nodes.map((node) => node.id)).to.deep.eq(['node-2']);
   });
 });

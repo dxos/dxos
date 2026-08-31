@@ -12,7 +12,7 @@ export type SpinnerState = 'pulse' | 'spin' | 'flash' | 'error';
 
 const stateClassNames: Record<SpinnerState, string> = {
   pulse: 'bg-primary-500',
-  spin: 'bg-amber-500',
+  spin: 'bg-lime-500',
   flash: 'bg-primary-500',
   error: 'bg-rose-700 border-2 border-rose-bg',
 };

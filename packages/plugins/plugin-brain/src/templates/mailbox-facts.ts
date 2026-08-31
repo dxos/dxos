@@ -4,16 +4,18 @@
 
 import * as Effect from 'effect/Effect';
 
+import * as Project from '@dxos/compute/Project';
 import * as Skill from '@dxos/compute/Skill';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import type * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
 import { scaffoldProject } from '@dxos/plugin-projects/templates';
 import { makeRoutine } from '@dxos/plugin-routine';
 import { trim } from '@dxos/util';
+
+import { BrainOperation } from '#types';
 
 /** Chats get the brain (fact query/summarize) and inbox (read mail) skills. */
 const PROJECT_SKILL_KEYS = ['org.dxos.skill.brain', 'org.dxos.skill.inbox'] as const;
@@ -32,7 +34,7 @@ const PROJECT_INSTRUCTIONS = trim`
 
 /**
  * "Mailbox facts" project template: the mailbox as standing context, brain + inbox skills for its
- * chats, and a starter routine that runs `InboxOperation.AnalyzeMailbox` on a schedule.
+ * chats, and a starter routine that runs `BrainOperation.AnalyzeMailbox` on a schedule.
  *
  * The routine binds the operation directly rather than an instructions prompt, so the trigger loop
  * is deterministic — the extraction model runs inside the operation, not around it. Extracted facts
@@ -63,17 +65,14 @@ export const mailboxFacts: ProjectCapabilities.Template = {
       // ref baked in at scaffold time; the persisted cursor makes re-runs incremental.
       const routine = makeRoutine({
         name: 'Analyze Mailbox',
-        spec: { kind: 'runnable', runnable: Ref.fromURI(InboxOperation.AnalyzeMailbox.meta.key) },
+        spec: { kind: 'runnable', runnable: Ref.fromURI(BrainOperation.AnalyzeMailbox.meta.key) },
         trigger: Trigger.make({
           enabled: false,
           spec: Trigger.specTimer(DEFAULT_CRON),
           input: { mailbox: Ref.make(mailbox) },
         }),
       });
-      Obj.setParent(routine, project);
-      Obj.update(project, (project) => {
-        project.routines = [...project.routines, Ref.make(routine)];
-      });
+      Project.addRoutine(project, routine);
 
       return project;
     }),

@@ -21,8 +21,6 @@ Core tables that should exist in a mature profile:
 | `indexCursor`                                                     | Index tracker             |
 | `space_metadata`                                                  | Space metadata            |
 | `space_large`                                                     | Large space payloads      |
-| `blobs_meta`                                                      | Blob metadata             |
-| `blobs_data`                                                      | Blob bytes                |
 | `hypercore_files`                                                 | Client services storage   |
 | `keyring`                                                         | Halo keys (**sensitive**) |
 | `delete`                                                          | Tombstones / delete queue |
@@ -88,13 +86,6 @@ LIMIT 20;
 ```sql
 SELECT COUNT(*) AS chunks, SUM(LENGTH(data)) AS bytes FROM automerge_chunks;
 SELECT COUNT(*) AS heads FROM automerge_heads;
-```
-
-### Blobs
-
-```sql
-SELECT COUNT(*) FROM blobs_meta;
-SELECT SUM(LENGTH(data)) FROM blobs_data;
 ```
 
 ## Forensics report template

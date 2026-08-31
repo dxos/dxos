@@ -6,12 +6,6 @@ import { invariant } from '@dxos/invariant';
 
 import { DeckSchema } from '#types';
 
-/** The active deck's `companionPlanks` with `plankId` marked open, idempotently. */
-export const addCompanionPlank = (current: DeckSchema.StoredDeckState, plankId: string): string[] => {
-  const open = current.decks[current.activeDeck]?.companionPlanks ?? [];
-  return open.includes(plankId) ? [...open] : [...open, plankId];
-};
-
 export const updateActiveDeck = (
   current: DeckSchema.StoredDeckState,
   deckUpdates: Partial<DeckSchema.DeckState>,

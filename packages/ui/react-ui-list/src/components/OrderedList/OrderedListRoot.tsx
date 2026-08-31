@@ -13,7 +13,7 @@ import {
 } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { useListDisclosure, useListNavigation, useReorderAutoScroll, useReorderList } from '../../aspects';
+import { useListDisclosure, useListNavigation, useReorderAutoScroll, useReorderList } from '../../hooks';
 import { listTheme } from '../List.theme';
 import { type ListItemRecord, OrderedListProvider, useOrderedListContext } from './OrderedListContext';
 
@@ -37,6 +37,13 @@ export type OrderedListRootProps<T extends ListItemRecord> = ThemedClassName<{
   getId?: (item: T) => string;
   onMove?: (fromIndex: number, toIndex: number) => void;
   readonly?: boolean;
+  /**
+   * Keyboard grammar. `list` (default) leaves the rows themselves unfocusable, so arrows move among
+   * whatever interactive controls a row holds. `listbox` makes each row a stop — the right mode when
+   * the list carries a selection, since a reader then arrows between entries rather than between
+   * their buttons.
+   */
+  navigationMode?: 'list' | 'listbox';
   /** Controlled expanded item id (single-expand). */
   expandedId?: string;
   defaultExpandedId?: string;
@@ -62,6 +69,7 @@ export const OrderedListRoot = <T extends ListItemRecord>({
   getId = defaultGetId,
   onMove = noopMove,
   readonly,
+  navigationMode = 'list',
   expandedId,
   defaultExpandedId,
   onExpandedChange,
@@ -81,7 +89,7 @@ export const OrderedListRoot = <T extends ListItemRecord>({
     onValueChange: (next) => onExpandedChange?.(next),
   });
 
-  const navigation = useListNavigation({ mode: 'list' });
+  const navigation = useListNavigation({ mode: navigationMode });
 
   // Memoise the context value so identity-stable items don't re-render on aspect re-renders
   // that don't affect their bindings (e.g. an unrelated drag-state change).
@@ -90,11 +98,12 @@ export const OrderedListRoot = <T extends ListItemRecord>({
       reorder: controller,
       disclosure,
       navigation,
+      navigationMode,
       readonly,
       active,
       getId,
     }),
-    [controller, disclosure, navigation, readonly, active, getId],
+    [controller, disclosure, navigation, navigationMode, readonly, active, getId],
   );
 
   return <OrderedListProvider {...context}>{children({ items })}</OrderedListProvider>;

@@ -7,17 +7,36 @@ import * as Effect from 'effect/Effect';
 import { Event, scheduleTaskInterval } from '@dxos/async';
 import { type Client, type ClientServices } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { DeviceKind } from '@dxos/client/halo';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ConnectionState, type NetworkStatus, Platform } from '@dxos/protocols/proto/dxos/client/services';
+// Value imports come straight from protocols: reaching them through the `@dxos/client` barrels
+// puts echo-client (and wa-sqlite, automerge-repo with it) in the app's eager boot graph.
+import {
+  ConnectionState,
+  DeviceKind,
+  type NetworkStatus,
+  Platform,
+  SpaceState,
+} from '@dxos/protocols/proto/dxos/client/services';
 
 import { type DataProvider } from '../observability';
+import { EventLoopLagTracker, LAG_SAMPLE_INTERVAL_MS, LAG_WINDOW_MS } from './event-loop-lag';
+import { type CrossRealmMemory, measureCrossRealmMemory, readHeap, supportsCrossRealmMemory } from './memory';
+import { SyncEpisodeTracker } from './sync-episodes';
+import { subscribeSyncSummary } from './sync-state';
 
 const SPACE_METRICS_MIN_INTERVAL = 1000 * 60 * 10; // 10 minutes
 const NETWORK_METRICS_MIN_INTERVAL = 1000 * 60 * 10; // 10 minutes
 const RUNTIME_METRICS_MIN_INTERVAL = 1000 * 60 * 10; // 10 minutes
+
+/** Under the 60s export interval, so an observed gauge never reports a stale sample. */
+const MEMORY_SAMPLE_INTERVAL = 1000 * 30;
+
+const BYTES = { unit: 'By' } as const;
+const SPACES = { unit: '{space}' } as const;
+const DOCUMENTS = { unit: '{document}' } as const;
+const SECONDS = { unit: 's' } as const;
 
 // TODO(wittjosiah): Improve privacy of telemetry identifiers.
 //  - Identifier should be generated client-side with no attachment to identity.
@@ -131,30 +150,61 @@ export const runtimeMetricsProvider = (clientServices: Partial<ClientServices>):
       runtime: platform.runtime,
     });
 
-    scheduleTaskInterval(
-      ctx,
-      async () => {
-        if (clientServices.constructor.name === 'WorkerClientServices') {
-          const memory = (window.performance as any).memory;
-          if (memory) {
-            observability.metrics.gauge('dxos.client.runtime.heapTotal', memory.totalJSHeapSize);
-            observability.metrics.gauge('dxos.client.runtime.heapUsed', memory.usedJSHeapSize);
-            observability.metrics.gauge('dxos.client.runtime.heapSizeLimit', memory.jsHeapSizeLimit);
-          }
-        }
+    // Heap is a synchronous read, so the gauge reads it directly at collection time.
+    const heapGauges = [
+      ['dxos.client.runtime.heapUsed', () => readHeap().used],
+      ['dxos.client.runtime.heapTotal', () => readHeap().total],
+      ['dxos.client.runtime.heapSizeLimit', () => readHeap().limit],
+    ] as const;
+    for (const [name, read] of heapGauges) {
+      ctx.onDispose(observability.metrics.observe(name, read, undefined, BYTES));
+    }
 
-        clientServices.SystemService?.getPlatform()
-          .then((platform) => {
-            if (platform.memory) {
-              observability.metrics.gauge('dxos.client.services.runtime.rss', platform.memory.rss);
-              observability.metrics.gauge('dxos.client.services.runtime.heapTotal', platform.memory.heapTotal);
-              observability.metrics.gauge('dxos.client.services.runtime.heapUsed', platform.memory.heapUsed);
-            }
-          })
-          .catch((error) => log('platform error', { error }));
-      },
-      RUNTIME_METRICS_MIN_INTERVAL,
-    );
+    // The platform reading is an RPC and cross-realm memory waits for a GC, so both are sampled on
+    // their own cadence and the gauges read the latest sample.
+    let platformMemory: Platform['memory'];
+    let crossRealmMemory: CrossRealmMemory | undefined;
+
+    const servicesGauges = [
+      ['dxos.client.services.runtime.heapUsed', () => platformMemory?.heapUsed],
+      ['dxos.client.services.runtime.heapTotal', () => platformMemory?.heapTotal],
+      ['dxos.client.services.runtime.rss', () => platformMemory?.rss],
+    ] as const;
+    for (const [name, read] of servicesGauges) {
+      ctx.onDispose(observability.metrics.observe(name, read, undefined, BYTES));
+    }
+
+    if (supportsCrossRealmMemory()) {
+      for (const scope of ['window', 'shared-worker', 'dedicated-worker', 'other'] as const) {
+        ctx.onDispose(
+          observability.metrics.observe(
+            'dxos.client.runtime.memory.bytes',
+            () => crossRealmMemory?.[scope],
+            { scope },
+            BYTES,
+          ),
+        );
+      }
+    }
+
+    const sample = async () => {
+      try {
+        const platform = await clientServices.SystemService?.getPlatform();
+        platformMemory = platform?.memory;
+      } catch (error) {
+        log('platform error', { error });
+      }
+
+      try {
+        crossRealmMemory = await measureCrossRealmMemory();
+      } catch (error) {
+        // Not cross-origin isolated, or a measurement is already in flight; neither is retryable here.
+        log('cross-realm memory unavailable', { error });
+      }
+    };
+
+    scheduleTaskInterval(ctx, sample, MEMORY_SAMPLE_INTERVAL);
+    void sample();
 
     return async () => {
       await ctx.dispose();
@@ -165,22 +215,50 @@ export const runtimeMetricsProvider = (clientServices: Partial<ClientServices>):
 export const spacesMetricsProvider = (client: Client): DataProvider =>
   Effect.fn(function* (observability) {
     const ctx = new Context();
-    // TODO(nf): update subscription on new spaces
+    // Pipeline subscriptions only; the gauges below read the live space list at collection time.
     const spaces = client.spaces.get();
     const subscriptions = new Map<string, { unsubscribe: () => void }>();
     ctx.onDispose(() => subscriptions.forEach((subscription) => subscription.unsubscribe()));
 
+    // Read at collection time. The gap between the two is the "known but not opened" signal.
+    ctx.onDispose(
+      observability.metrics.observe('dxos.client.spaces.count', () => client.spaces.get().length, undefined, SPACES),
+    );
+    ctx.onDispose(
+      observability.metrics.observe(
+        'dxos.client.spaces.ready.count',
+        () => client.spaces.get().filter((space) => space.state.get() === SpaceState.SPACE_READY).length,
+        undefined,
+        SPACES,
+      ),
+    );
+
     const updateSpaceMetrics = new Event<Space>().debounce(SPACE_METRICS_MIN_INTERVAL);
     updateSpaceMetrics.on(ctx, async () => {
       log('send space metrics');
-      for (const data of mapSpaces(spaces, { truncateKeys: true })) {
-        observability.metrics.gauge('dxos.client.space.members', data.members, { key: data.key });
-        observability.metrics.gauge('dxos.client.space.objects', data.objects, { key: data.key });
-        observability.metrics.gauge('dxos.client.space.epoch', data.epoch, { key: data.key });
-        observability.metrics.gauge('dxos.client.space.currentDataMutations', data.currentDataMutations, {
-          key: data.key,
-        });
-      }
+      // Reported as device-wide totals rather than per space: the previous `key` attribute cost one
+      // series per space per device, unbounded in the number of spaces a user creates.
+      const mapped = mapSpaces(client.spaces.get(), { truncateKeys: true });
+      const total = (pick: (data: (typeof mapped)[number]) => number | undefined) =>
+        mapped.reduce((sum, data) => sum + (pick(data) ?? 0), 0);
+
+      observability.metrics.gauge(
+        'dxos.client.space.members',
+        total((data) => data.members),
+      );
+      observability.metrics.gauge(
+        'dxos.client.space.objects',
+        total((data) => data.objects),
+      );
+      observability.metrics.gauge(
+        'dxos.client.space.currentDataMutations',
+        total((data) => data.currentDataMutations),
+      );
+      // Max, not a sum: epochs are per-space sequence numbers, so adding them means nothing.
+      observability.metrics.gauge(
+        'dxos.client.space.epoch',
+        mapped.reduce((max, data) => Math.max(max, data.epoch ?? 0), 0),
+      );
     });
 
     const subscribeToSpaceUpdate = (space: Space) =>
@@ -205,6 +283,182 @@ export const spacesMetricsProvider = (client: Client): DataProvider =>
     });
 
     scheduleTaskInterval(ctx, async () => updateSpaceMetrics.emit(), SPACE_METRICS_MIN_INTERVAL);
+
+    return async () => {
+      await ctx.dispose();
+    };
+  });
+
+/** Publishes the document backlog folded across every space. */
+export const documentsMetricsProvider = (client: Client): DataProvider =>
+  Effect.fn(function* (observability) {
+    const ctx = new Context();
+    const { summary } = subscribeSyncSummary(client, ctx);
+
+    ctx.onDispose(
+      observability.metrics.observe(
+        'dxos.echo.documents.count',
+        () => summary().localDocumentCount,
+        { location: 'local' },
+        DOCUMENTS,
+      ),
+    );
+    ctx.onDispose(
+      observability.metrics.observe(
+        'dxos.echo.documents.count',
+        () => summary().remoteDocumentCount,
+        { location: 'remote' },
+        DOCUMENTS,
+      ),
+    );
+    ctx.onDispose(
+      observability.metrics.observe(
+        'dxos.echo.documents.unsynced.count',
+        () => summary().unsyncedDocumentCount,
+        undefined,
+        DOCUMENTS,
+      ),
+    );
+
+    return async () => {
+      await ctx.dispose();
+    };
+  });
+
+/**
+ * Publishes how long this realm's event loop was blocked.
+ *
+ * Reports peak lag per export window, tagged only by the `dxos.process.type` resource attribute —
+ * so the same provider distinguishes the tab from the shared and dedicated workers without any
+ * per-realm wiring.
+ */
+export const eventLoopLagProvider = (): DataProvider =>
+  Effect.fn(function* (observability) {
+    const ctx = new Context();
+    const lag = new EventLoopLagTracker(LAG_SAMPLE_INTERVAL_MS);
+
+    scheduleTaskInterval(ctx, async () => lag.sample(Date.now()), LAG_SAMPLE_INTERVAL_MS);
+
+    // Belt to the tracker's braces. The clamp inside `sample` is what actually guarantees a frozen
+    // tab is not reported as lag — checking visibility when the probe fires cannot, since a frozen
+    // timer does not fire until the tab is visible again. This listener additionally drops the
+    // reference timestamp the moment visibility changes, so a gap under the clamp is discarded too.
+    const doc = (globalThis as { document?: EventTarget & { visibilityState?: string } }).document;
+    if (doc) {
+      const onVisibilityChange = () => lag.suspend();
+      doc.addEventListener('visibilitychange', onVisibilityChange);
+      ctx.onDispose(() => doc.removeEventListener('visibilitychange', onVisibilityChange));
+    }
+
+    // #region DEBUG
+    // [DEBUG H-suspend] Dual-clock suspension probe, shipped temporarily to confirm the
+    // native-app freeze diagnosis in the wild — WKWebView's WebContent process suspended while
+    // the window sits hidden — before the fix lands. Remove together with the Rust host
+    // heartbeat in composer-app's src-tauri/lib.rs. Runs in every realm (tab + workers); logs
+    // only on a wake after a ≥15s execution gap and on visibility transitions, so steady state
+    // is silent. Reading a gap line in a downloaded bundle:
+    //   - wallDeltaMs ≈ monoDeltaMs → the realm did not run while both clocks did ⇒ process
+    //     suspension (a 2026-08-29 dev soak showed multi-hour WebContent freezes this way,
+    //     with the Rust host heartbeat clean throughout).
+    //   - wallDeltaMs >> monoDeltaMs → the machine slept; not an app fault.
+    const DEBUG_PROBE_INTERVAL_MS = 5_000;
+    const DEBUG_GAP_MS = 15_000;
+    let debugLastWall = Date.now();
+    let debugLastMono = performance.now();
+    scheduleTaskInterval(
+      ctx,
+      async () => {
+        const wall = Date.now();
+        const mono = performance.now();
+        const wallDeltaMs = Math.round(wall - debugLastWall);
+        const monoDeltaMs = Math.round(mono - debugLastMono);
+        debugLastWall = wall;
+        debugLastMono = mono;
+        if (wallDeltaMs > DEBUG_GAP_MS || monoDeltaMs > DEBUG_GAP_MS) {
+          log.info('[DEBUG H-suspend] js wake after gap', {
+            wallDeltaMs,
+            monoDeltaMs,
+            // Portion of the gap the monotonic clock did not tick — the asleep share.
+            sleptMs: wallDeltaMs - monoDeltaMs,
+            visibility: doc?.visibilityState ?? 'no-document',
+            hasFocus: (doc as { hasFocus?: () => boolean } | undefined)?.hasFocus?.() ?? null,
+          });
+        }
+      },
+      DEBUG_PROBE_INTERVAL_MS,
+    );
+    if (doc) {
+      // The production listener above only drops the lag reference; this one records the
+      // transition itself, so the bundle shows whether WebKit ever marked the page hidden.
+      const onDebugVisibility = () =>
+        log.info('[DEBUG H-suspend] visibilitychange', { visibility: doc.visibilityState });
+      doc.addEventListener('visibilitychange', onDebugVisibility);
+      ctx.onDispose(() => doc.removeEventListener('visibilitychange', onDebugVisibility));
+      // Page lifecycle freeze/resume — Chromium-only events today, registered anyway so a WebKit
+      // release that adds them shows up rather than silently discriminating nothing.
+      const onDebugFreeze = () => log.info('[DEBUG H-suspend] page freeze');
+      const onDebugResume = () => log.info('[DEBUG H-suspend] page resume');
+      doc.addEventListener('freeze', onDebugFreeze);
+      doc.addEventListener('resume', onDebugResume);
+      ctx.onDispose(() => {
+        doc.removeEventListener('freeze', onDebugFreeze);
+        doc.removeEventListener('resume', onDebugResume);
+      });
+    }
+    // #endregion DEBUG
+
+    // Window rotation is driven here rather than by the read, so the gauge callback stays a plain
+    // idempotent getter — see EventLoopLagTracker.
+    scheduleTaskInterval(ctx, async () => lag.rotate(), LAG_WINDOW_MS);
+
+    ctx.onDispose(
+      observability.metrics.observe('dxos.client.runtime.eventLoop.lag', () => lag.peakMs / 1_000, undefined, SECONDS),
+    );
+
+    return async () => {
+      await ctx.dispose();
+    };
+  });
+
+/**
+ * Publishes how long a client takes to sync, and how long it has been stuck.
+ *
+ * Both are needed. `episode.duration` records only when a backlog clears, so a client that never
+ * finishes syncing contributes nothing to it — `stalled.duration` is what makes that client visible.
+ */
+export const syncMetricsProvider = (client: Client): DataProvider =>
+  Effect.fn(function* (observability) {
+    const ctx = new Context();
+    const episodes = new SyncEpisodeTracker();
+    let pending = 0;
+
+    // Fed on every sync-state emission rather than at collection time: an episode that opens and
+    // closes inside one 60s export window would otherwise never be seen at all.
+    subscribeSyncSummary(client, ctx, (summary) => {
+      pending = summary.pendingWorkCount;
+      const closed = episodes.observe(Date.now(), summary.pendingWorkCount);
+      if (closed) {
+        log('sync episode closed', { durationMs: closed.durationMs, truncated: closed.truncated });
+        observability.metrics.distribution(
+          'dxos.echo.sync.episode.duration',
+          closed.durationMs / 1_000,
+          undefined,
+          SECONDS,
+        );
+      }
+    });
+
+    ctx.onDispose(
+      observability.metrics.observe('dxos.echo.sync.pending.count', () => pending, undefined, { unit: '{item}' }),
+    );
+    ctx.onDispose(
+      observability.metrics.observe(
+        'dxos.echo.sync.stalled.duration',
+        () => episodes.stalledForMs(Date.now()) / 1_000,
+        undefined,
+        SECONDS,
+      ),
+    );
 
     return async () => {
       await ctx.dispose();

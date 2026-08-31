@@ -43,13 +43,10 @@ import { log } from '@dxos/log';
 import { decodeError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import {
   type Contact,
-  CreateEpochRequest,
   Invitation,
-  SpaceArchive,
   type Space as SpaceData,
   type SpaceMember,
   SpaceState,
-  type UpdateMemberRoleRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
@@ -60,6 +57,7 @@ import {
   MembershipPolicy,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import { SpacesService } from '@dxos/protocols/rpc';
 import { Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 
@@ -76,9 +74,9 @@ const EPOCH_CREATION_TIMEOUT = 60_000;
  * helper is retained only for callers that need {@link Space} proxy members
  * (`properties`, `members`, `key`, `state`, `listen`, identity).
  *
- * @deprecated Use {@link Obj.getSpace} instead.
+ * @deprecated Use {@link Obj.getDatabase} instead.
  */
-// TODO(burdon): Hypergraph.getSpace().
+// TODO(burdon): Hypergraph.getSpace()?
 export const getSpace = (object?: any): Space | undefined => {
   if (!object) {
     return undefined;
@@ -386,7 +384,7 @@ export class SpaceProxy implements Space, CustomInspectable {
 
     if (this._initialized) {
       // Transition onto new automerge root.
-      const automergeRoot = space.pipeline?.spaceRootUrl;
+      const automergeRoot = space.pipeline?.directoryUrl;
       if (automergeRoot) {
         log('set space root', { spaceKey: this.key, automergeRoot });
         // NOOP if the root is the same.
@@ -431,7 +429,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     this._databaseOpen = true;
 
     {
-      const automergeRoot = this._data.pipeline?.spaceRootUrl;
+      const automergeRoot = this._data.pipeline?.directoryUrl;
       if (automergeRoot !== undefined) {
         await this._db.setSpaceRoot(automergeRoot);
       } else {
@@ -599,7 +597,7 @@ export class SpaceProxy implements Space, CustomInspectable {
   /**
    * Requests member role update.
    */
-  updateMemberRole(request: Omit<UpdateMemberRoleRequest, 'spaceKey'>): Promise<void> {
+  updateMemberRole(request: Omit<SpacesService.UpdateMemberRoleRequest, 'spaceKey'>): Promise<void> {
     this._throwIfNotInitialized();
     return runServiceCall(
       this._runtime,
@@ -636,7 +634,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     migration,
     automergeRootUrl,
   }: {
-    migration?: CreateEpochRequest.Migration;
+    migration?: SpacesService.Migration;
     automergeRootUrl?: string;
   } = {}): Promise<void> {
     await this._createEpochInternal(this._ctx, { migration, automergeRootUrl });
@@ -649,7 +647,7 @@ export class SpaceProxy implements Space, CustomInspectable {
       migration,
       automergeRootUrl,
     }: {
-      migration?: CreateEpochRequest.Migration;
+      migration?: SpacesService.Migration;
       automergeRootUrl?: string;
     } = {},
   ): Promise<void> {
@@ -691,7 +689,7 @@ export class SpaceProxy implements Space, CustomInspectable {
 
   private async _migrate(): Promise<void> {
     await this._createEpoch({
-      migration: CreateEpochRequest.Migration.MIGRATE_REFERENCES_TO_DXN,
+      migration: SpacesService.Migration.enums.MIGRATE_REFERENCES_TO_DXN,
     });
 
     // Needed to have space root set to be able to make next check.
@@ -699,7 +697,7 @@ export class SpaceProxy implements Space, CustomInspectable {
 
     if (this._db.getNumberOfInlineObjects() > 1) {
       await this._createEpoch({
-        migration: CreateEpochRequest.Migration.FRAGMENT_AUTOMERGE_ROOT,
+        migration: SpacesService.Migration.enums.FRAGMENT_AUTOMERGE_ROOT,
       });
     }
   }
@@ -791,13 +789,13 @@ export class SpaceProxy implements Space, CustomInspectable {
     }
   }
 
-  private async _export(options?: ExportSpaceOptions): Promise<SpaceArchive> {
+  private async _export(options?: ExportSpaceOptions): Promise<SpacesService.SpaceArchive> {
     await this._db.flush();
     const { archive } = await runServiceCall(
       this._runtime,
       this._clientServices.rpc['SpacesService.exportSpace']({
         spaceId: this.id,
-        format: options?.format ?? SpaceArchive.Format.BINARY,
+        format: options?.format ?? SpacesService.SpaceArchiveFormat.enums.BINARY,
       }),
       { label: 'SpacesService.exportSpace' },
     );

@@ -24,7 +24,9 @@ const formStyles = tv({
     fieldSet: '',
     field: '',
     // Columns: label (fills) → optional `labelEnd` readout → error icon (or its spacer) → optional trailing `button`.
-    fieldLabel: 'min-h-(--dx-control) grid grid-cols-[1fr_auto_auto_auto] items-center',
+    // Height comes from the label cell (`Input.Label` is a control-height row); this only lays the
+    // columns out and centres the trailing cells against it.
+    fieldLabel: 'grid grid-cols-[1fr_auto_auto_auto] items-center',
     fieldLabelText: '',
     fieldDescription: 'text-description',
     fieldControl: '',
@@ -63,8 +65,14 @@ const formStyles = tv({
         ),
         fieldLabel: '[grid-area:header]',
         fieldLabelText: 'text-base-fg text-lg',
-        fieldDescription: '[grid-area:description] pt-trim-xs text-description',
-        fieldControl: '[grid-area:control] flex justify-end items-start pt-trim-md md:pt-0',
+        // `min-w-0` on both cells: a grid track is `minmax(auto, 1fr)`, so its automatic MINIMUM is
+        // the content's min-content width — a control wider than half the row (a DID, a long URL)
+        // pushes its track past `1fr` and overflows the field's own border rather than shrinking.
+        fieldDescription: '[grid-area:description] min-w-0 pt-trim-xs text-description',
+        // The child needs it too: a flex item's default `min-width: auto` reintroduces the same floor
+        // one level down, so the cell would shrink while the control inside it would not.
+        fieldControl:
+          '[grid-area:control] flex justify-end items-start min-w-0 [&>*]:min-w-0 [&>*]:max-w-full pt-trim-md md:pt-0',
         fieldValidation: '[grid-area:validation]',
       },
     },

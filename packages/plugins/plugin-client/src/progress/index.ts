@@ -3,3 +3,4 @@
 //
 
 export * from './progress-keys';
+export * from './space-sync-progress';

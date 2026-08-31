@@ -8,6 +8,7 @@ import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { AiContext } from '@dxos/assistant';
 import { ProcessManager } from '@dxos/compute-runtime';
@@ -29,6 +30,7 @@ import type { ContentBlock } from '@dxos/types';
 
 import { AGENT_PROCESS_KEY, AgentProcess } from './agent-process';
 import { type DelegationStrategy } from './delegation-strategy';
+import { type MakeTurnProducer } from './turn-producer';
 
 /** The RPC control surface declared by {@link AgentProcess}, recovered from the executable type. */
 type AgentRpcs = ReturnType<typeof AgentProcess> extends Process.Process<any, any, any, infer Rpcs> ? Rpcs : never;
@@ -36,8 +38,13 @@ type AgentRpcs = ReturnType<typeof AgentProcess> extends Process.Process<any, an
 /** Live handle to a spawned {@link AgentProcess}, carrying its `HarnessControl` RPC surface. */
 type AgentHandle = ProcessManager.Handle<string | ContentBlock.Any[], void, AgentRpcs>;
 
+// TERMINATING counts as terminal: the handle is already `#finished`, so adopting one would drop
+// every submitted input and leave the turn waiting for a process that will never run again.
 const isTerminalProcess = (state: Process.State): boolean =>
-  state === Process.State.SUCCEEDED || state === Process.State.FAILED || state === Process.State.TERMINATED;
+  state === Process.State.SUCCEEDED ||
+  state === Process.State.FAILED ||
+  state === Process.State.TERMINATED ||
+  state === Process.State.TERMINATING;
 
 // TODO(burdon): Agent identity?
 export interface CreateSessionOptions {
@@ -73,6 +80,12 @@ export const createSession: (
 
 export interface AgentServiceOptions {
   systemPrompt?: string;
+
+  /**
+   * Produces each turn. Defaults to DXOS's own `AiSession`; substituting it swaps the engine while
+   * the process keeps ownership of the queue, alarms, redelivery, delegation and hydration.
+   */
+  makeTurnProducer?: MakeTurnProducer;
 
   /**
    * Default model used by sessions that don't specify one explicitly.
@@ -126,6 +139,7 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
       const makeExecutable = (model?: DXN.DXN, provider?: DXN.DXN) =>
         AgentProcess({
           systemPrompt: opts?.systemPrompt,
+          makeTurnProducer: opts?.makeTurnProducer,
           model: model ?? opts?.model,
           provider: provider ?? opts?.provider,
           getMcpServers: opts?.getMcpServers,
@@ -262,6 +276,12 @@ const makeSession = (process: AgentHandle, feed: Feed.Feed, releaseSession: () =
       );
     }).pipe(Effect.scoped),
   submitPrompt: (prompt: string | ContentBlock.Any[]) => process.submitInput(prompt),
+  // Derived from the process's status atom, written on the app-wide registry the UI reads.
+  running: Atom.make(
+    (get) =>
+      get(process.statusAtom).state === Process.State.RUNNING ||
+      get(process.statusAtom).state === Process.State.HYBERNATING,
+  ),
   // Settle when the turn's reply is complete; do NOT block on background sub-agents
   // (a supervisor delegates work that runs after the turn and reports back out of band).
   waitForCompletion: () => process.runUntilSettled(),

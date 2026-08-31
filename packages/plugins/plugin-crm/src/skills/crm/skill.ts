@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
@@ -9,7 +10,7 @@ import { trim } from '@dxos/util';
 import { type ResearchSource, defaultResearchSources } from '#sources';
 import { CrmOperation } from '#types';
 
-const SKILL_KEY = 'org.dxos.skill.crm';
+import { CRM_SKILL_KEY as SKILL_KEY } from '../keys';
 
 /**
  * Skill instructions are deliberately thin: entity shapes, dedup, and profile structure are owned
@@ -32,7 +33,7 @@ const INSTRUCTIONS = trim`
   - Enrich Profile documents in place: extend the skeleton's sections (Overview, Details, Key
     Links, Notes, Sources) with researched content, record every contributing URL under Sources,
     and mirror it into the ProfileOf relation's sources.
-  - Attach an avatar or logo with the attach-image tool when web research surfaces a good https
+  - Attach an avatar or logo with the ${Operation.toolName(CrmOperation.AttachImage)} tool when web research surfaces a good https
     candidate; failures are non-fatal.
   - Reply with a short summary and DXN references to the objects you created or updated.
 `;
@@ -62,11 +63,9 @@ export const makeCrmSkill = (researchSources: ReadonlyArray<ResearchSource> = de
     }),
   });
 
-const make = () => makeCrmSkill();
-
 const skill: Skill.Definition = {
   key: SKILL_KEY,
-  make,
+  make: makeCrmSkill,
 };
 
 export default skill;

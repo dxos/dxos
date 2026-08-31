@@ -48,6 +48,11 @@
       "types": "./dist/types/src/plugin-process-manager/history/history-tracker.d.ts",
       "import": "./dist/lib/plugin-process-manager/history/history-tracker.mjs"
     },
+    "./Optimistic": {
+      "source": "./src/common/optimistic.ts",
+      "types": "./dist/types/src/common/optimistic.d.ts",
+      "import": "./dist/lib/common/optimistic.mjs"
+    },
     "./Plugin": {
       "source": "./src/core/plugin.ts",
       "types": "./dist/types/src/core/plugin.d.ts",
@@ -77,6 +82,11 @@
       "source": "./src/common/Role.ts",
       "types": "./dist/types/src/common/Role.d.ts",
       "import": "./dist/lib/common/Role.mjs"
+    },
+    "./SharedPackages": {
+      "source": "./src/vite-plugin/packages.ts",
+      "types": "./dist/types/src/vite-plugin/packages.d.ts",
+      "import": "./dist/lib/vite-plugin/packages.mjs"
     },
     "./UndoMapping": {
       "source": "./src/plugin-process-manager/history/undo-mapping.ts",
@@ -125,6 +135,9 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "bin": {
+    "dx-plugin": "./bin/dx-plugin.mjs"
+  },
   "scripts": {
     "typedoc": "typedoc --out typedoc"
   },
@@ -162,15 +175,16 @@
     "@dxos/echo": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
-    "@dxos/storybook-addon-logger": "workspace:*",
     "@effect/atom-react": "catalog:",
     "@effect/vitest": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@testing-library/react": "catalog:",
     "@types/react": "catalog:",
+    "@typescript/typescript6": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
+    "storybook-solidjs-vite": "catalog:",
     "typedoc": "catalog:",
     "vite": "catalog:"
   },

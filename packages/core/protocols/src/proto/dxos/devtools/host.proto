@@ -4,169 +4,25 @@
 
 syntax = "proto3";
 
-import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
-import "dxos/devtools/swarm.proto";
 import "dxos/echo/feed.proto";
 import "dxos/echo/metadata.proto";
 import "dxos/echo/snapshot.proto";
 import "dxos/echo/timeframe.proto";
-import "dxos/echo/blob.proto";
-import "dxos/halo/keyring.proto";
-import "dxos/halo/signed.proto";
 import "dxos/keys.proto";
 import "dxos/mesh/signal.proto";
-import "dxos/rpc.proto";
 
 package dxos.devtools.host;
 
 //
 // DevtoolsHost
 //
-
-service DevtoolsHost {
-  //
-  // General
-  //
-
-  // Subscribe to server-to-client events.
-  rpc Events(google.protobuf.Empty) returns (stream Event);
-
-  // Get client config.
-  rpc GetConfig(google.protobuf.Empty) returns (GetConfigResponse);
-
-  rpc GetStorageInfo(google.protobuf.Empty) returns (StorageInfo);
-  rpc ResetStorage(ResetStorageRequest) returns (google.protobuf.Empty);
-
-  rpc GetBlobs(google.protobuf.Empty) returns (GetBlobsResponse);
-  rpc GetSnapshots(google.protobuf.Empty) returns (GetSnapshotsResponse);
-
-  // TODO(burdon): Single RPC with action.
-  rpc EnableDebugLogging(EnableDebugLoggingRequest) returns (EnableDebugLoggingResponse);
-  rpc DisableDebugLogging(EnableDebugLoggingRequest) returns (EnableDebugLoggingResponse);
-
-  // TODO(burdon): Rename SubscribeToX as QueryX.
-
-  //
-  // HALO
-  //
-
-  rpc SubscribeToKeyringKeys(SubscribeToKeyringKeysRequest) returns (stream SubscribeToKeyringKeysResponse);
-  rpc SubscribeToCredentialMessages(SubscribeToCredentialMessagesRequest) returns (stream SubscribeToCredentialMessagesResponse);
-
-  //
-  // ECHO
-  //
-
-  rpc SubscribeToSpaces(SubscribeToSpacesRequest) returns (stream SubscribeToSpacesResponse);
-  rpc SubscribeToItems(SubscribeToItemsRequest) returns (stream SubscribeToItemsResponse);
-  rpc SubscribeToFeeds(SubscribeToFeedsRequest) returns (stream SubscribeToFeedsResponse);
-  rpc SubscribeToFeedBlocks(SubscribeToFeedBlocksRequest) returns (stream SubscribeToFeedBlocksResponse);
-  rpc SubscribeToMetadata(google.protobuf.Empty) returns (stream SubscribeToMetadataResponse);
-
-  rpc GetSpaceSnapshot(GetSpaceSnapshotRequest) returns (GetSpaceSnapshotResponse);
-  rpc SaveSpaceSnapshot(SaveSpaceSnapshotRequest) returns (SaveSpaceSnapshotResponse);
-  rpc ClearSnapshots(ClearSnapshotsRequest) returns (google.protobuf.Empty);
-
-  //
-  // MESH
-  //
-
-  rpc GetNetworkPeers(GetNetworkPeersRequest) returns (GetNetworkPeersResponse);
-  rpc SubscribeToNetworkTopics(google.protobuf.Empty) returns (stream SubscribeToNetworkTopicsResponse);
-  rpc SubscribeToSignalStatus(google.protobuf.Empty) returns (stream SubscribeToSignalStatusResponse);
-  rpc SubscribeToSignal(google.protobuf.Empty) returns (stream SignalResponse);
-  rpc SubscribeToSwarmInfo(SubscribeToSwarmInfoRequest) returns (stream SubscribeToSwarmInfoResponse);
-
-  //
-  // SQLite
-  //
-
-  rpc ExportSqliteDatabase(google.protobuf.Empty) returns (ExportSqliteDatabaseResponse);
-  rpc RunSqliteQuery(RunSqliteQueryRequest) returns (RunSqliteQueryResponse);
-}
-
-message Event {
-  oneof payload {
-    ReadyEvent ready = 1;
-  }
-}
-
-message ReadyEvent {}
-
-message GetConfigResponse {
-  // JSON-encoded configuration object.
-  string config = 1;
-}
-
-message StorageInfo {
-  string type = 1;
-  uint32 storage_usage = 2;
-  uint32 origin_usage = 3;
-  uint32 usage_quota = 4;
-}
-
+// The `DevtoolsHost` RPC surface is defined as an Effect RPC group (see `DevtoolsHost.ts`).
+// This file only retains message bodies still referenced via `protoMessage(...)`: they embed
+// proto substitution types (`Timeframe`, etc.) with no inline Effect equivalent, so they stay
+// protobuf-encoded on the wire.
 //
-// Logging
-//
-
-message EnableDebugLoggingRequest {
-  optional string namespaces = 1;
-}
-
-message EnableDebugLoggingResponse {
-  optional string enabled_namespaces = 1;
-}
-
-message DisableDebugLoggingRequest {
-  optional string namespaces = 1;
-}
-
-message DisableDebugLoggingResponse {
-  optional string enabled_namespaces = 1;
-}
-
-//
-// Keys
-//
-
-message SubscribeToKeyringKeysRequest {}
-
-message SubscribeToKeyringKeysResponse {
-  repeated dxos.halo.keyring.KeyRecord keys = 1;
-}
-
-//
-// Credentials
-//
-
-message SubscribeToCredentialMessagesRequest {
-  optional dxos.keys.PublicKey space_key = 1;
-}
-
-message SubscribeToCredentialMessagesResponse {
-  repeated dxos.halo.signed.SignedMessage messages = 1;
-}
-
-//
-// Storage
-//
-
-message ResetStorageRequest {}
-
-message StoredSnapshotInfo {
-  string key = 1;
-  uint32 size = 2;
-}
-
-message GetBlobsResponse {
-  repeated dxos.echo.blob.BlobMeta blobs = 1;
-}
-
-message GetSnapshotsResponse {
-  repeated StoredSnapshotInfo snapshots = 1;
-}
 
 //
 // Metadata
@@ -179,10 +35,6 @@ message SubscribeToMetadataResponse {
 //
 // Spaces
 //
-
-message SubscribeToSpacesRequest {
-  repeated dxos.keys.PublicKey space_keys = 1;
-}
 
 message SubscribeToSpacesResponse {
   message SpaceInfo {
@@ -198,49 +50,8 @@ message SubscribeToSpacesResponse {
 }
 
 //
-// Items
-//
-
-message SubscribeToItemsRequest {}
-
-message SubscribeToItemsResponse {
-  // JSON-encoded payload.
-  string data = 1;
-}
-
-//
 // Feeds
 //
-
-// TODO(burdon): How to filter by space?
-message SubscribeToFeedsRequest {
-  repeated dxos.keys.PublicKey feed_keys = 1;
-}
-
-message SubscribeToFeedsResponse {
-  message FeedOwner {
-    dxos.keys.PublicKey identity = 1;
-    dxos.keys.PublicKey device = 2;
-  }
-
-  message Feed {
-    dxos.keys.PublicKey feed_key = 1;
-    int32 length = 2;
-    int32 bytes = 3;
-
-    /// Bitfield of downloaded blocks.
-    bytes downloaded = 4;
-    optional FeedOwner owner = 5;
-  }
-
-  repeated Feed feeds = 1;
-}
-
-message SubscribeToFeedBlocksRequest {
-  optional dxos.keys.PublicKey space_key = 1;
-  optional dxos.keys.PublicKey feed_key = 2;
-  optional int32 max_blocks = 3;
-}
 
 message SubscribeToFeedBlocksResponse {
   message Block {
@@ -256,76 +67,17 @@ message SubscribeToFeedBlocksResponse {
 // Snapshots
 //
 
-message GetSpaceSnapshotRequest {
-  dxos.keys.PublicKey space_key = 1;
-}
-
 message GetSpaceSnapshotResponse {
   optional dxos.echo.snapshot.SpaceSnapshot snapshot = 1;
-}
-
-message SaveSpaceSnapshotRequest {
-  dxos.keys.PublicKey space_key = 1;
 }
 
 message SaveSpaceSnapshotResponse {
   optional dxos.echo.snapshot.SpaceSnapshot snapshot = 1;
 }
 
-message ClearSnapshotsRequest {}
-
-//
-// Network
-//
-
-message GetNetworkPeersRequest {
-  bytes topic = 1;
-}
-
-message GetNetworkPeersResponse {
-  message PeerInfo {
-    dxos.keys.PublicKey id = 1;
-
-    // PeerState enum.
-    string state = 2;
-
-    repeated bytes connections = 3;
-  }
-
-  repeated PeerInfo peers = 1;
-}
-
-message SubscribeToNetworkTopicsResponse {
-  message Topic {
-    dxos.keys.PublicKey topic = 1;
-    optional string label = 2;
-  }
-
-  repeated Topic topics = 1;
-}
-
 //
 // Signaling
 //
-
-message SubscribeToSignalStatusResponse {
-  message SignalServer {
-    string host = 1;
-
-    dxos.mesh.signal.SignalState state = 2;
-
-    optional string error = 3;
-
-    // Number of milliseconds before reconnection.
-    // TODO(dmaretskyi): Represent as absolute timestamp.
-    int32 reconnect_in = 4;
-
-    google.protobuf.Timestamp connection_started = 5;
-    google.protobuf.Timestamp last_state_change = 6;
-  }
-
-  repeated SignalServer servers = 1;
-}
 
 message SignalResponse {
   oneof data {
@@ -334,34 +86,4 @@ message SignalResponse {
   }
   google.protobuf.Timestamp received_at = 3;
   optional bytes topic = 4;
-}
-
-//
-// Swarm
-//
-
-message SubscribeToSwarmInfoRequest {}
-
-message SubscribeToSwarmInfoResponse {
-  repeated dxos.devtools.swarm.SwarmInfo data = 1;
-}
-
-//
-// SQLite
-//
-
-message ExportSqliteDatabaseResponse {
-  bytes data = 1;
-}
-
-message RunSqliteQueryRequest {
-  string query = 1;
-  // JSON-encoded array of query parameters.
-  optional string params = 2;
-}
-
-message RunSqliteQueryResponse {
-  // JSON-encoded array of row objects.
-  string rows = 1;
-  optional string error = 2;
 }

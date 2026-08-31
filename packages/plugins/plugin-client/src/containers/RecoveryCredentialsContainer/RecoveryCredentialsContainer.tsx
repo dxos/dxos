@@ -8,7 +8,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type Identity } from '@dxos/halo';
 import { useCredentials } from '@dxos/halo-react';
 import { log } from '@dxos/log';
-import { Icon, IconButton, Message, useTranslation } from '@dxos/react-ui';
+import { Banner, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 
@@ -82,12 +82,12 @@ export const RecoveryCredentialsContainer = () => {
           </Form.Section>
           <Form.Section title={t('credentials-list.label')}>
             {recoveryCredentials.length < 1 ? (
-              <Message.Root valence='error'>
-                <Message.Content>
-                  <Message.Title icon='ph--shield-warning--duotone'>{t('no-credentials.title')}</Message.Title>
-                  <Message.Body>{t('no-credentials.message')}</Message.Body>
-                </Message.Content>
-              </Message.Root>
+              <Banner.Root valence='error'>
+                <Banner.Content>
+                  <Banner.Title icon='ph--shield-warning--duotone'>{t('no-credentials.title')}</Banner.Title>
+                  <Banner.Body>{t('no-credentials.message')}</Banner.Body>
+                </Banner.Content>
+              </Banner.Root>
             ) : (
               <Listbox.Root>
                 <Listbox.Content classNames='gap-1'>
@@ -123,18 +123,18 @@ export const RecoveryCredentialsContainer = () => {
               </Listbox.Root>
             )}
             {revokeError && (
-              <Message.Root valence='error'>
-                <Message.Content>
-                  <Message.Body>{revokeError}</Message.Body>
-                </Message.Content>
-              </Message.Root>
+              <Banner.Root valence='error'>
+                <Banner.Content>
+                  <Banner.Body>{revokeError}</Banner.Body>
+                </Banner.Content>
+              </Banner.Root>
             )}
             {activeCount === 1 && (
-              <Message.Root valence='warning'>
-                <Message.Content>
-                  <Message.Body>{t('last-credential.message')}</Message.Body>
-                </Message.Content>
-              </Message.Root>
+              <Banner.Root valence='warning'>
+                <Banner.Content>
+                  <Banner.Body>{t('last-credential.message')}</Banner.Body>
+                </Banner.Content>
+              </Banner.Root>
             )}
             {recoveryCredentials.length > 0 && (
               <Form.Row label={t('manage-passkeys.label')} description={t('manage-passkeys.description')}>

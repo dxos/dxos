@@ -24,7 +24,7 @@ export const del = Command.make(
   },
   Effect.fn(function* ({ identityKey, force }) {
     if (!force) {
-      yield* Effect.fail(new Error('This action is irreversible. Pass --force to confirm.'));
+      return yield* Effect.fail(new Error('This action is irreversible. Pass --force to confirm.'));
     }
 
     const result = yield* adminRequest<DeleteIdentityResponse | LegacyDeleteIdentityResponse>(

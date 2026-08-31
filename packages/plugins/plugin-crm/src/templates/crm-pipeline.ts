@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
+import * as Project from '@dxos/compute/Project';
 import * as Skill from '@dxos/compute/Skill';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Obj, Ref } from '@dxos/echo';
@@ -71,10 +72,7 @@ export const crmPipeline: ProjectCapabilities.Template = {
           concurrency: 1,
         }),
       });
-      Obj.setParent(routine, project);
-      Obj.update(project, (project) => {
-        project.routines = [...project.routines, Ref.make(routine)];
-      });
+      Project.addRoutine(project, routine);
 
       return project;
     }),

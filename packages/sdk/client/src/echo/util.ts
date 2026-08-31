@@ -5,7 +5,8 @@
 import { type SpaceSyncState } from '@dxos/echo-client';
 import { type SpaceId } from '@dxos/keys';
 
-export type PeerSyncState = Omit<SpaceSyncState.PeerState, 'peerId'>;
+type PeerCounts = Omit<SpaceSyncState.PeerState, 'peerId'>;
+export type PeerSyncState = { -readonly [Key in keyof PeerCounts]: PeerCounts[Key] };
 
 export type SpaceSyncStateMap = Record<SpaceId, PeerSyncState>;
 

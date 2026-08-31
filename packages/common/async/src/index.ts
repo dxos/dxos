@@ -14,6 +14,7 @@ export * from './observable';
 export * from './observable-value';
 export * from './persistent-lifecycle';
 export * from './push-iterable';
+export * from './stream';
 export * from './stream-to-array';
 export * from './task-scheduling';
 export * from './testing';

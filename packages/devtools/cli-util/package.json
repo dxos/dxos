@@ -29,6 +29,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./callback": {
+      "source": "./src/callback/index.ts",
+      "types": "./dist/types/src/callback/index.d.ts",
+      "import": "./dist/lib/callback.mjs"
+    },
     "./oauth": {
       "source": "./src/oauth/index.ts",
       "types": "./dist/types/src/oauth/index.d.ts",

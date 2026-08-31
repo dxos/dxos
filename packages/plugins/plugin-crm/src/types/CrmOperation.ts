@@ -23,7 +23,7 @@ import * as ProfileOf from './ProfileOf';
  */
 export const AttachImage = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.plugin-crm.attachImage'),
+    key: DXN.make('org.dxos.operation.crm.attachImage'),
     name: 'Attach image',
     icon: 'ph--image--regular',
     description: trim`
@@ -62,7 +62,7 @@ export const AttachImage = Operation.make({
  */
 export const EnrichImages = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.plugin-crm.enrichImages'),
+    key: DXN.make('org.dxos.operation.crm.enrichImages'),
     name: 'Enrich images',
     icon: 'ph--user-circle--regular',
     description: trim`
@@ -102,7 +102,7 @@ export const EnrichImages = Operation.make({
  */
 export const ResearchPerson = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.plugin-crm.researchPerson'),
+    key: DXN.make('org.dxos.operation.crm.researchPerson'),
     name: 'Research person',
     icon: 'ph--user-focus--regular',
     description: trim`
@@ -133,7 +133,7 @@ export const ResearchPerson = Operation.make({
  */
 export const ResearchOrganization = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.plugin-crm.researchOrganization'),
+    key: DXN.make('org.dxos.operation.crm.researchOrganization'),
     name: 'Research organization',
     icon: 'ph--buildings--regular',
     description: trim`
@@ -170,7 +170,7 @@ export const DEFAULT_PROCESS_MAILBOX_PAGE_SIZE = 20;
  */
 export const ProcessMailbox = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.plugin-crm.processMailbox'),
+    key: DXN.make('org.dxos.operation.crm.processMailbox'),
     name: 'Process mailbox',
     icon: 'ph--address-book--regular',
     description: trim`

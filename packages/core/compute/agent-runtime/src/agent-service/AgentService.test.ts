@@ -5,6 +5,7 @@
 import { describe, it } from '@effect/vitest';
 import * as Clock from 'effect/Clock';
 import * as DateTime from 'effect/DateTime';
+import * as Deferred from 'effect/Deferred';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -12,6 +13,7 @@ import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
+import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { expect } from 'vitest';
 
 import { LanguageModelFixture } from '@dxos/ai/testing';
@@ -29,7 +31,7 @@ import { Annotation, Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
-import { Message, Organization } from '@dxos/types';
+import { ContentBlock, Message, Organization } from '@dxos/types';
 
 import { AssistantTestLayer, waitForMessage } from '../testing';
 import * as ResearchService from '../testing/ResearchService';
@@ -41,7 +43,7 @@ EntityId.dangerouslyDisableRandomness();
 
 const Research = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.research'),
+    key: DXN.make('com.example.operation.research'),
     name: 'Research',
     description: 'Research an organization',
   },
@@ -58,7 +60,7 @@ const Research = Operation.make({
  */
 const DelegatedWork = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.delegatedWork'),
+    key: DXN.make('com.example.operation.delegatedWork'),
     name: 'Delegated work',
     description: 'Performs a delegated unit of work',
   },
@@ -66,7 +68,53 @@ const DelegatedWork = Operation.make({
   output: Schema.String,
 });
 
+/**
+ * A no-input operation, whose `Schema.Void` input is the case that survives in-process but not the
+ * registry round trip: `Operation.serialize` renders it as `{type: 'null'}` and `deserialize` reads
+ * it back as `Schema.Null`, so the tool projection sees a tag the authored operation never had.
+ */
+const Ping = Operation.make({
+  meta: {
+    key: DXN.make('com.example.operation.ping'),
+    name: 'Ping',
+    description: 'Pings the service and returns its status. Takes no arguments.',
+  },
+  input: Schema.Void,
+  output: Schema.String,
+});
+
+/** Set by {@link Ping}'s handler so a test can assert the model actually reached the tool. */
+let pingCount = 0;
+
+/**
+ * A tool that does not unwind on interrupt. Terminating while it runs leaves the process scope
+ * pinned open, which is the mid-turn cancel that produced the wedged-chat bug: teardown blocks, and
+ * anything reading the handle's state meanwhile decides whether the next prompt reaches a process.
+ */
+const Stall = Operation.make({
+  meta: {
+    key: DXN.make('com.example.operation.stall'),
+    name: 'Stall',
+    description: 'Runs a long job and returns when it finishes. Takes no arguments.',
+  },
+  input: Schema.Void,
+  output: Schema.String,
+});
+
+/** Resolved by the test to let the stalled tool — and with it the blocked teardown — finish. */
+let stallRelease: Deferred.Deferred<void> | undefined;
+/** Fulfilled once the tool is actually running, so the test stops at the right moment. */
+let stallStarted: Deferred.Deferred<void> | undefined;
+
 const handlers = OperationHandlerSet.make(
+  Ping.pipe(
+    Operation.withHandler(
+      Effect.fnUntraced(function* () {
+        pingCount++;
+        return 'pong';
+      }),
+    ),
+  ),
   Research.pipe(
     Operation.withHandler(
       Effect.fnUntraced(function* ({ website }) {
@@ -83,6 +131,15 @@ const handlers = OperationHandlerSet.make(
       }),
     ),
   ),
+  Stall.pipe(
+    Operation.withHandler(
+      Effect.fnUntraced(function* () {
+        yield* Deferred.succeed(stallStarted!, undefined);
+        yield* Deferred.await(stallRelease!).pipe(Effect.uninterruptible);
+        return 'finished';
+      }),
+    ),
+  ),
 );
 
 const ResearchSkill = Skill.make({
@@ -91,12 +148,24 @@ const ResearchSkill = Skill.make({
   tools: Skill.toolDefinitions({ operations: [Research] }),
 });
 
+const PingSkill = Skill.make({
+  key: 'org.dxos.skill.ping',
+  name: 'Ping',
+  tools: Skill.toolDefinitions({ operations: [Ping] }),
+});
+
+const StallSkill = Skill.make({
+  key: 'org.dxos.skill.stall',
+  name: 'Stall',
+  tools: Skill.toolDefinitions({ operations: [Stall] }),
+});
+
 const assistantTestLayerOptions = {
   types: [Organization.Organization, Feed.Feed, Skill.Skill, Instructions.Instructions, Text.Text],
   tracing: 'pretty' as const,
   aiServicePreset: 'edge-remote' as const,
   operationHandlers: [handlers],
-  skills: [ResearchSkill],
+  skills: [ResearchSkill, PingSkill],
   extraServices: ResearchService.layer,
 };
 
@@ -105,6 +174,13 @@ const TestLayer = ({ enableToolBackgrounding = false }: { enableToolBackgroundin
     ...assistantTestLayerOptions,
     agent: { enableToolBackgrounding },
   });
+
+// Separate layer so the extra registry seed lands after every other fixture test's ids: the module
+// PRNG is shared file-wide, and reseeding earlier would invalidate their recorded conversations.
+const StallTestLayer = AssistantTestLayer({
+  ...assistantTestLayerOptions,
+  skills: [...assistantTestLayerOptions.skills, StallSkill],
+});
 
 //
 // Delegation (supervisor) fixtures.
@@ -514,7 +590,11 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
         const target = Obj.getURI(session.feed);
         // `list` erases the RPC group to `any`, which Effect 4 resolves to an `unknown` requirement
         // on every call; naming the group restores it.
-        const handles: readonly ProcessManager.Handle<any, any, HarnessControlRpcs>[] = yield* processManager.list({
+        const handles: readonly ProcessManager.Handle<
+          string | readonly ContentBlock.Any[],
+          void,
+          HarnessControlRpcs
+        >[] = yield* processManager.list({
           target,
           key: AGENT_PROCESS_KEY,
         });
@@ -543,10 +623,107 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
       TestHelpers.provideTestContext,
     ),
   );
+
+  it.effect(
+    'calls a tool whose operation takes no input',
+    Effect.fnUntraced(
+      function* (_) {
+        pingCount = 0;
+        const session = yield* AgentService.createSession({ skills: [PingSkill] });
+        yield* session.submitPrompt('Ping the service and tell me what it returned.');
+        yield* session.waitForCompletion();
+
+        expect(pingCount).toBe(1);
+        const messages = yield* Feed.query(session.feed, Filter.type(Message.Message)).run;
+        expect(messages.map(Message.extractText).join('\n').toLocaleLowerCase()).toContain('pong');
+      },
+      Effect.provide(TestLayer()),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
+  );
+
+  // Stopping mid-tool-call finishes the handle while its teardown is still blocked on the in-flight
+  // turn. A handle left readable as live is adopted by the next session, whose prompt is then dropped
+  // by the `#finished` guard — the conversation wedges with no error until the page reloads. Uses a
+  // tool that ignores interruption, since a tool that unwinds lets teardown complete and never
+  // produces the stranded handle. The runtime seam is covered in ProcessManager.test.ts.
+  it.effect(
+    'accepts a new prompt after being stopped mid-tool-call',
+    Effect.fnUntraced(
+      function* (_) {
+        stallStarted = yield* Deferred.make<void>();
+        stallRelease = yield* Deferred.make<void>();
+
+        const session = yield* AgentService.createSession({ skills: [StallSkill] });
+        const processManager = yield* ProcessManager.ProcessManagerService;
+        const [handle] = yield* processManager.list({ target: Obj.getURI(session.feed), key: AGENT_PROCESS_KEY });
+
+        yield* session.submitPrompt('Run the stall tool.');
+        yield* Deferred.await(stallStarted);
+
+        // The stop button returns at once; `terminate` does not, because the tool holds the scope
+        // open. Forking is what the UI effectively does — and what leaves the handle observable
+        // mid-teardown. `terminate` publishes the state before its first yield, so one turn is enough.
+        const stopping = yield* Effect.forkChild(session.terminate());
+        yield* Effect.yieldNow;
+        expect(handle.status.state).not.toBe(Process.State.RUNNING);
+
+        // Same feed: the user typing again after hitting stop. The stopped handle must not be
+        // adopted — neither from the session cache nor by the remount lookup that follows it.
+        const resumed = yield* getSession(session.feed);
+        expect(resumed).not.toBe(session);
+
+        yield* resumed.submitPrompt('What is the capital of France? Reply with just the city name.');
+        yield* resumed.waitForCompletion();
+        const messages = yield* Feed.query(resumed.feed, Filter.type(Message.Message)).run;
+        expect(messages.map(Message.extractText).join('\n').toLocaleLowerCase()).toContain('paris');
+
+        // Let the stalled tool finish so the blocked teardown can complete with the test.
+        yield* Deferred.succeed(stallRelease, undefined);
+        yield* Fiber.join(stopping);
+      },
+      Effect.provide(StallTestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : 30_000 },
+  );
 });
 
 // Control-plane coverage (no LLM turn), so it runs ungated in CI unlike the replay suite above.
 describe('Agent Service (control plane)', () => {
+  it.effect(
+    'reports whether the session is working on a turn',
+    Effect.fnUntraced(
+      function* (_) {
+        const registry = yield* Registry.AtomRegistry;
+        const processManager = yield* ProcessManager.ProcessManagerService;
+        const feed = yield* Database.add(Feed.make());
+        yield* Database.flush();
+        const target = Obj.getURI(feed);
+
+        const session = yield* getSession(feed);
+        const [handle] = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
+
+        // Spawned but not prompted: live, awaiting input, so not working on a turn.
+        expect(handle.status.state).toBe(Process.State.IDLE);
+        expect(registry.get(session.running)).toBe(false);
+
+        // Derived from the process's status atom, not fixed at the time the session was resolved.
+        const observed: boolean[] = [];
+        const unsubscribe = registry.subscribe(session.running, (running) => observed.push(running), {
+          immediate: true,
+        });
+        yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribe()));
+        yield* handle.terminate();
+        expect(registry.get(session.running)).toBe(false);
+        expect(observed).toEqual([false]);
+      },
+      Effect.provide(TestLayer()),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
   // Exercises the instruction-aware reuse identity on both paths — the session cache and the
   // remount (rediscovered process) path.
   it.effect(

@@ -8,6 +8,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Filter, Tag } from '@dxos/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
+import { Toolbar } from '@dxos/react-ui';
 import { type EditorController } from '@dxos/react-ui-editor';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -22,36 +23,41 @@ const createTags = (): Tag.Map => ({
   tag_2: Tag.make({ label: 'Investor' }),
 });
 
-// Wires the extracted filter row to local state, standing in for the parent `MailboxArticle`'s
-// filter/save/clear handlers.
-const DefaultStory = () => {
+type StoryArgs = {
+  value?: string;
+};
+
+const DefaultStory = ({ value: valueProp = '' }: StoryArgs) => {
   const { space } = useClientStory();
   const [tags] = useState<Tag.Map>(createTags);
-  const [value, setValue] = useState('');
-  const [lastAction, setLastAction] = useState<string>('none');
+  const [value, setValue] = useState(valueProp);
+  // The editor's own parse, so the story exercises the real save-gating rather than a stand-in.
+  const [filter, setFilter] = useState<Filter.Any>();
   const editorRef = useRef<EditorController>(null);
   const saveButtonRef = useRef<HTMLButtonElement>(null);
 
   return (
-    <div className='flex flex-col gap-2'>
-      <div className='flex items-center'>
+    <div>
+      <Toolbar.Root>
         <MailboxFilter
           db={space?.db}
           tags={tags}
+          filter={filter}
           value={value}
-          filter={value ? Filter.text(value) : undefined}
           onChange={setValue}
-          onSave={() => setLastAction('save')}
+          onFilterChange={setFilter}
+          onSave={() => console.log('save')}
           onClear={() => {
             setValue('');
-            setLastAction('clear');
+            setFilter(undefined);
           }}
           editorRef={editorRef}
           saveButtonRef={saveButtonRef}
         />
-      </div>
-      <div data-testid='filter-value'>{value}</div>
-      <div data-testid='last-action'>{lastAction}</div>
+      </Toolbar.Root>
+      <pre className='p-2' data-testid='filter-value'>
+        {JSON.stringify({ value, parses: !!filter }, null, 2)}
+      </pre>
     </div>
   );
 };
@@ -61,7 +67,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme(),
-    withLayout({ layout: 'column', classNames: 'p-2' }),
+    withLayout({ layout: 'column' }),
     withClientProvider({ createIdentity: true, createSpace: true }),
   ],
   parameters: {
@@ -75,6 +81,12 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
+  args: {
+    value: '#important foo',
+  },
+};
+
+export const Test: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 

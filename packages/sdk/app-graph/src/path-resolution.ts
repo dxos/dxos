@@ -10,13 +10,13 @@ import * as Option from 'effect/Option';
 import * as Record from 'effect/Record';
 
 import { EffectEx } from '@dxos/effect';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import { EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Position } from '@dxos/util';
 
-import * as Graph from './graph';
-import * as GraphBuilder from './graph-builder';
-import * as Node from './node';
+import * as Graph from './AppGraph';
+import * as GraphBuilder from './AppGraphBuilder';
 
 /**
  * A single `(prefix, id?)` pair as parsed by `@dxos/app-toolkit`'s `UrlPath.parse`. Kept as a
@@ -37,6 +37,17 @@ export type UrlPair = {
 export type ResolvedPair = {
   pairIndex: number;
   nodeId: string;
+};
+
+/**
+ * One pair's outcome. Exactly one of `nodeId`/`candidateId` is set — `candidateId` is the id the node
+ * *would* have, so callers can keep addressing an unresolved pair by what it asked for. A pair with
+ * no candidate at all (an unknown key) is `null`.
+ */
+export type PairResolution = {
+  pairIndex: number;
+  nodeId?: string;
+  candidateId?: string;
 };
 
 /** The graph-path representation of a node, the reverse of a `UrlPair` (`id` is absent for singleton keys). */
@@ -64,10 +75,10 @@ const isReservedUrlKey = (key: string): boolean =>
  * resolution matches a node produced by any of them. Shared with {@link buildUrlKeyTable} so the
  * reservation rule is expressed exactly once.
  */
-type UrlKeyedExtension = GraphBuilder.BuilderExtension & { url: GraphBuilder.UrlBinding };
+type UrlKeyedExtension = GraphBuilder.BuilderExtension & { meta: GraphBuilder.UrlBinding };
 
 /** Narrows to an extension that declared a URL binding, so callers need no non-null assertion. */
-const isUrlKeyed = (extension: GraphBuilder.BuilderExtension): extension is UrlKeyedExtension => !!extension.url?.key;
+const isUrlKeyed = (extension: GraphBuilder.BuilderExtension): extension is UrlKeyedExtension => !!extension.meta?.key;
 
 const getKeyedExtensions = (builder: GraphBuilder.GraphBuilder): UrlKeyedExtension[] => {
   const extensions = Function.pipe(Record.values(builder.getExtensions()), Array.sortBy(Position.compare));
@@ -77,8 +88,8 @@ const getKeyedExtensions = (builder: GraphBuilder.GraphBuilder): UrlKeyedExtensi
     if (!isUrlKeyed(extension)) {
       continue;
     }
-    if (isReservedUrlKey(extension.url.key)) {
-      log.warn('reserved URL prefix key', { key: extension.url.key, extension: extension.id });
+    if (isReservedUrlKey(extension.meta.key)) {
+      log.warn('reserved URL prefix key', { key: extension.meta.key, extension: extension.id });
       continue;
     }
     keyed.push(extension);
@@ -96,7 +107,7 @@ const getKeyedExtensions = (builder: GraphBuilder.GraphBuilder): UrlKeyedExtensi
 const buildKeyTable = (builder: GraphBuilder.GraphBuilder): Map<string, string[]> => {
   const table = new Map<string, string[]>();
   for (const extension of getKeyedExtensions(builder)) {
-    const key = extension.url.key;
+    const key = extension.meta.key;
     const existing = table.get(key);
     if (existing) {
       existing.push(extension.id);
@@ -132,9 +143,9 @@ export const buildUrlKeyTable = (builder: GraphBuilder.GraphBuilder): Map<string
     table.set(linkedKey, { key: linkedKey, hasId: true, anchor: false });
   }
   for (const extension of getKeyedExtensions(builder)) {
-    const key = extension.url.key;
+    const key = extension.meta.key;
     // The tokenizer's flat lookup is derived from `kind`: a singleton has no id.
-    const hasId = extension.url.kind !== 'singleton';
+    const hasId = extension.meta.kind !== 'singleton';
     const anchor = false;
     const existing = table.get(key);
     if (existing && existing.hasId !== hasId) {
@@ -198,7 +209,7 @@ const resolveKeyId = async (
   extensions: ReadonlyArray<KeyedExtension>,
   id: string,
   wait?: Duration.Input,
-): Promise<string | null> => {
+): Promise<{ nodeId?: string; candidateId?: string }> => {
   // 1. Static segments: an exact candidate, no search (type sections, database/inbox objects, etc.).
   const idSegments = id.split(builder.urlGrammar.tailSeparator);
   const candidateIds: string[] = extensions
@@ -224,22 +235,26 @@ const resolveKeyId = async (
   for (const candidateId of candidateIds) {
     const resolved = await materializeCandidate(builder, candidateId);
     if (resolved) {
-      return resolved;
+      return { nodeId: resolved };
     }
   }
+  // Highest precedence, so it is the id this pair would have had; reported whether or not the wait
+  // below succeeds, so an unresolved pair still names the node it was asking for.
+  const candidateId = candidateIds[0];
   if (wait === undefined || candidateIds.length === 0) {
-    return null;
+    return { candidateId };
   }
 
   // One deadline for the pair, raced across every candidate — per-candidate waits run serially, so
   // N key-sharing extensions would multiply the caller's bound by N. Dynamic candidates wait too:
   // they name the recursive shapes (nested collections) whose containers are the slowest to
   // materialize, which is exactly what the wait exists for.
-  return EffectEx.runPromise(
+  const waited = await EffectEx.runPromise(
     Effect.raceAll(
-      candidateIds.map((candidateId) => Graph.waitFor(builder.graph, candidateId).pipe(Effect.as(candidateId))),
+      candidateIds.map((candidate) => Graph.waitFor(builder.graph, candidate).pipe(Effect.as(candidate))),
     ).pipe(Effect.timeoutOrElse({ duration: wait, orElse: () => Effect.succeed<string | null>(null) })),
   );
+  return waited ? { nodeId: waited } : { candidateId };
 };
 
 /**
@@ -267,10 +282,10 @@ const resolveUrlAsync = async (
   builder: GraphBuilder.GraphBuilder,
   parsed: { workspace: string; pairs: ReadonlyArray<UrlPair> },
   options?: ResolveUrlOptions,
-): Promise<Array<ResolvedPair | null>> => {
+): Promise<Array<PairResolution | null>> => {
   const keyTable = buildKeyTable(builder);
   const allExtensions = builder.getExtensions();
-  const results: Array<ResolvedPair | null> = parsed.pairs.map(() => null);
+  const results: Array<PairResolution | null> = parsed.pairs.map(() => null);
 
   // The chain partitions into `[item, linked*]` groups: a linked pair resolves against the
   // preceding ITEM, and item pairs resolve against the workspace base, so groups are independent.
@@ -286,7 +301,7 @@ const resolveUrlAsync = async (
     }
   });
 
-  const resolveItem = async (pairIndex: number): Promise<string | null> => {
+  const resolveItem = async (pairIndex: number): Promise<{ nodeId?: string; candidateId?: string } | null> => {
     const pair = parsed.pairs[pairIndex];
     const extensionIdList = keyTable.get(pair.key);
     if (!extensionIdList || extensionIdList.length === 0) {
@@ -294,10 +309,10 @@ const resolveUrlAsync = async (
       return null;
     }
 
-    const workspaceBaseId = `${Node.RootId}/${pair.workspace}`;
+    const workspaceBaseId = `${GraphNode.RootId}/${pair.workspace}`;
     const extensions: KeyedExtension[] = [];
     for (const extensionId of extensionIdList) {
-      const url = allExtensions[extensionId]?.url;
+      const url = allExtensions[extensionId]?.meta;
       if (url) {
         extensions.push({ id: extensionId, path: url.path });
       }
@@ -320,11 +335,16 @@ const resolveUrlAsync = async (
       const headPair = parsed.pairs[headIndex];
       // A leading linked pair has no item to attach to (groups only start with one when the chain
       // opens with it), so it resolves to nothing rather than against a stale base.
-      const headNodeId = headPair.key === builder.urlGrammar.linkedKey ? null : await resolveItem(headIndex);
-      results[headIndex] = headNodeId ? { pairIndex: headIndex, nodeId: headNodeId } : null;
+      const head = headPair.key === builder.urlGrammar.linkedKey ? null : await resolveItem(headIndex);
+      const headNodeId = head?.nodeId;
+      results[headIndex] = head?.nodeId
+        ? { pairIndex: headIndex, nodeId: head.nodeId }
+        : head?.candidateId
+          ? { pairIndex: headIndex, candidateId: head.candidateId }
+          : null;
 
       // Linked pairs attach to this group's item, and to each other in order.
-      let lastItemNodeId = headNodeId ?? undefined;
+      let lastItemNodeId = headNodeId;
       for (const pairIndex of linkedIndexes) {
         const pair = parsed.pairs[pairIndex];
         const nodeId = lastItemNodeId && pair.id ? await resolveLinked(builder, lastItemNodeId, pair.id) : null;
@@ -359,7 +379,7 @@ export const resolveUrl = (
   builder: GraphBuilder.GraphBuilder,
   parsed: { workspace: string; pairs: ReadonlyArray<UrlPair> },
   options?: ResolveUrlOptions,
-): Effect.Effect<Array<ResolvedPair | null>> => Effect.promise(() => resolveUrlAsync(builder, parsed, options));
+): Effect.Effect<Array<PairResolution | null>> => Effect.promise(() => resolveUrlAsync(builder, parsed, options));
 
 /**
  * Reverse-map a graph node id back to its `(key, id?, workspace)` representation, the inverse of
@@ -391,7 +411,7 @@ export const representNode = (builder: GraphBuilder.GraphBuilder, nodeId: string
   if (!extensionId) {
     return Option.none();
   }
-  const url = builder.getExtensions()[extensionId]?.url;
+  const url = builder.getExtensions()[extensionId]?.meta;
   if (!url) {
     return Option.none();
   }

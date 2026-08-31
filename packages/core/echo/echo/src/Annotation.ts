@@ -26,6 +26,7 @@ export {
   ReferenceAnnotation,
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,
+  SetParentAnnotation as SetParent,
   TypeAnnotation,
   getDescriptionWithSchema,
   getLabelWithSchema,
@@ -102,6 +103,8 @@ export type Key = Schema.Schema.Type<typeof Key>;
 interface MakeProps<T> {
   id: string;
   schema: Schema.Codec<T, any, never>;
+  /** Skips the FQN id-format check, for a pre-existing id that may already be embedded in persisted schemas. */
+  legacyId?: boolean;
 }
 
 /**

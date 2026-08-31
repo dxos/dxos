@@ -8,7 +8,7 @@ import { type ComponentProps } from 'react';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Position } from '@dxos/util';
 
@@ -34,7 +34,7 @@ export default Capability.makeModule(() =>
         id: 'documentTitle',
         filter: Surface.makeFilter(AppSurface.DocumentTitle),
         component: NavTreeDocumentTitle,
-        props: ({ data: { subject } }) => ({ node: Node.isGraphNode(subject) ? subject : undefined }),
+        props: ({ data: { subject } }) => ({ node: AppGraphNode.isGraphNode(subject) ? subject : undefined }),
       }),
       Surface.create({
         id: 'searchInput',

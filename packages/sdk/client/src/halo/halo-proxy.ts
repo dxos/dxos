@@ -6,7 +6,7 @@ import * as EffectContext from 'effect/Context';
 import { inspect } from 'node:util';
 
 import { Event, MulticastObservable, SubscriptionList, Trigger, asyncTimeout } from '@dxos/async';
-import { AUTH_TIMEOUT, type ClientServicesProvider, type Halo } from '@dxos/client-protocol';
+import { AUTH_TIMEOUT, type ClientServicesProvider, type Halo, type RecoverIdentityArgs } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
@@ -274,9 +274,7 @@ export class HaloProxy implements Halo {
     return identity;
   }
 
-  async recoverIdentity(
-    args: { recoveryCode: string } | { recoveryProof: string } | { token: string },
-  ): Promise<Identity> {
+  async recoverIdentity(args: RecoverIdentityArgs): Promise<Identity> {
     const identity = await runServiceCall(
       this._runtime,
       this._serviceProvider.rpc['IdentityService.recoverIdentity'](args),

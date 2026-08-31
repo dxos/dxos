@@ -12,7 +12,7 @@ import React, {
 } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import type * as Node from '@dxos/app-graph/Node';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { AppSurface, AttentionSigil, type AttentionSigilAction } from '@dxos/app-toolkit/ui';
 import { Breadcrumb, Icon, Popover, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
@@ -24,7 +24,7 @@ import { Pane } from '../Pane';
 type SurfaceProps = ComponentProps<typeof Surface.Surface>;
 
 export type PlankProps = ThemedClassName<{
-  node: Node.Node;
+  node: AppGraphNode.Node;
   /** Attendable id; defaults to the node id. */
   attendableId?: string;
   /** Grouped sigil menu actions; when present the sigil opens a menu, otherwise it is a plain button. */
@@ -133,7 +133,9 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
               // Flat mode: the navigation history plus the current plank as one Breadcrumb. The trail
               // scrolls horizontally when it overflows (see the theme); the current plank stays the
               // attention-aware Pane.Title, sized to its content so it keeps a stable width.
-              <Breadcrumb.Root aria-label={t('breadcrumbs.label')} classNames='ps-2'>
+              // `ps-1`, matching `Pane.Title`'s own `px-1`: the two branches below render at the same
+              // origin, so the leading label must not shift as a trail appears or disappears.
+              <Breadcrumb.Root aria-label={t('breadcrumbs.label')} classNames='ps-1'>
                 <Breadcrumb.List classNames='gap-1'>
                   {breadcrumbs.map((crumb) => (
                     <Fragment key={crumb.id}>

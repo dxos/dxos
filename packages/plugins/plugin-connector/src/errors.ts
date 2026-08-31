@@ -20,6 +20,11 @@ const TEST_FAILED_MESSAGE = 'Connection test failed.' as const;
 
 const SYNC_FAILED_MESSAGE = 'Connection sync could not be run.' as const;
 
+const SYNC_ROUTINE_MISSING_MESSAGE = 'No sync routine exists for the connection.' as const;
+const ACCOUNT_MISMATCH_MESSAGE = 'Target is already synced from a different account.' as const;
+
+const SYNC_SCAFFOLD_MESSAGE = 'Sync routine could not be scaffolded.' as const;
+
 /**
  * A connector's {@link TestConnection} probe rejected the stored credential or could not reach the
  * service. Its `message` is the user-facing reason shown in the connection UI.
@@ -36,6 +41,40 @@ export class ConnectionSyncError extends BaseError.extend('ConnectionSyncError',
     super({ context: { connectorId: input.connectorId }, cause: input.cause });
   }
 }
+
+/**
+ * A trigger-declaring connector's connection has no sync routine (deleted, or declined at creation).
+ * Sync is driven by the routine's trigger, and routines are only created through the create-routine
+ * form — never silently — so the caller must (re)create it first: UI callers offer the seeded form
+ * (see `Binding.syncOrOfferRoutine`), headless callers skip the connection.
+ */
+export class SyncRoutineMissingError extends BaseError.extend('SyncRoutineMissingError', SYNC_ROUTINE_MISSING_MESSAGE) {
+  constructor(input: { connectorId?: string } = {}) {
+    super({ context: { connectorId: input.connectorId } });
+  }
+}
+
+/**
+ * A bind was attempted between a target and a credential for a different remote account than the one
+ * the target already syncs. Refused rather than reconciled: the target's feed holds the other account's
+ * data, and binding here would merge two accounts into one object. A new target is the way to sync a
+ * second account.
+ */
+export class TargetAccountMismatchError extends BaseError.extend(
+  'TargetAccountMismatchError',
+  ACCOUNT_MISMATCH_MESSAGE,
+) {
+  constructor(input: { targetId: string; expected: string; actual: string }) {
+    super({ context: { targetId: input.targetId, expected: input.expected, actual: input.actual } });
+  }
+}
+
+/**
+ * The sync template could not build its routine draft: no subject, a subject with no connection to
+ * sync, or a connector that declares no sync schedule. `message` carries the specific reason; one tag
+ * suffices since every caller (the create-routine picker) handles the cases identically.
+ */
+export class SyncTemplateScaffoldError extends BaseError.extend('SyncTemplateScaffoldError', SYNC_SCAFFOLD_MESSAGE) {}
 
 /** No Connector capability row matches the requested `connectorId`. */
 export class ConnectorNotFoundError extends BaseError.extend('ConnectorNotFoundError', NO_CONNECTOR_MESSAGE) {
@@ -99,9 +138,10 @@ export class ConnectionAuthExpiredError extends BaseError.extend('ConnectionAuth
 /**
  * Detects HTTP 401 across the ad-hoc error shapes providers raise for auth failures: `GoogleApiError`/
  * `JmapApiError`-style `code`/`status` fields (mirrored onto `BaseError.context`), and
- * `@effect/platform`'s `ResponseError`.
+ * `@effect/platform`'s `ResponseError`. Walks the `cause` chain (bounded), since wrappers like
+ * `MailSyncError.wrap` bury the provider error one level down without copying its fields.
  */
-export const isUnauthorizedError = (error: unknown): boolean => {
+export const isUnauthorizedError = (error: unknown, depth: number = 4): boolean => {
   if (!Predicate.isObject(error)) {
     return false;
   }
@@ -111,5 +151,8 @@ export const isUnauthorizedError = (error: unknown): boolean => {
   if (Predicate.isObject(error.context) && (error.context.code === 401 || error.context.status === 401)) {
     return true;
   }
-  return error._tag === 'ResponseError' && Predicate.isObject(error.response) && error.response.status === 401;
+  if (error._tag === 'ResponseError' && Predicate.isObject(error.response) && error.response.status === 401) {
+    return true;
+  }
+  return depth > 0 && isUnauthorizedError(error.cause, depth - 1);
 };

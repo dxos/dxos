@@ -6,11 +6,11 @@ import { jwtDecode } from 'jwt-decode';
 
 import { synchronized } from '@dxos/async';
 import { type Halo } from '@dxos/client-protocol';
-import { type Config } from '@dxos/config';
+import { type Config, getEnvString } from '@dxos/config';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols/proto';
+import { getBufService } from '@dxos/protocols/buf-service';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type AgentManager, InitAuthSequenceResponse } from '@dxos/protocols/proto/dxos/service/agentmanager';
 import { type WebsocketRpcClient } from '@dxos/websocket-rpc';
@@ -71,13 +71,14 @@ export class AgentManagerClient implements AgentHostingProviderClient {
     private readonly _clientConfig: Config,
     private readonly _halo: Halo,
   ) {
+    const password = getEnvString(this._clientConfig, 'DX_AGENTHOSTING_PASSWORD');
     const runtimeAgentHostingConfig = this._clientConfig.get('runtime.services.agentHosting');
     invariant(runtimeAgentHostingConfig, 'agentHosting config not found');
     invariant(runtimeAgentHostingConfig.server, 'agentHosting server not found');
     this._config = {
       ...defaultConfig,
       baseUrl: runtimeAgentHostingConfig.server,
-      password: this._clientConfig.get('runtime.app.env.DX_AGENTHOSTING_PASSWORD'),
+      password,
     };
 
     // Ensure trailing slash to ensure proper path joining with URL() constructor.
@@ -210,7 +211,7 @@ export class AgentManagerClient implements AgentHostingProviderClient {
     const { WebsocketRpcClient } = await import('@dxos/websocket-rpc');
     this._rpc = new WebsocketRpcClient({
       url: this._wsDxrpcUrl,
-      requested: { AgentManager: schema.getService('dxos.service.agentmanager.AgentManager') },
+      requested: { AgentManager: getBufService<AgentManager>('dxos.service.agentmanager.AgentManager') },
       noHandshake: true,
     });
 

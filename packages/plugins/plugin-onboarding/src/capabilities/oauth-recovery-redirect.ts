@@ -4,16 +4,18 @@
 
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
+import * as Stream from 'effect/Stream';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Account from '@dxos/app-toolkit/Account';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as NativeOAuth from '@dxos/app-toolkit/NativeOAuth';
 import { type Client } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ClientOperation } from '@dxos/plugin-client';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import { ClientOperation } from '@dxos/plugin-client/ClientOperation';
 
 import { OnboardingOperation } from '../operations';
 import {
@@ -34,11 +36,26 @@ type RedirectParams = {
 };
 
 /**
+ * Decode the OAuth-recovery redirect params from a callback URL. Yields params only when a
+ * `registrationToken` (register flow), `recoveryProof` (recovery flow), or `error` is present.
+ */
+const parseRedirectParams = (url: URL): RedirectParams | undefined => {
+  const accessTokenId = url.searchParams.get('accessTokenId') ?? undefined;
+  const registrationToken = url.searchParams.get('registrationToken') ?? undefined;
+  const recoveryProof = url.searchParams.get('recoveryProof') ?? undefined;
+  const error = url.searchParams.get('error') ?? undefined;
+  if (!registrationToken && !recoveryProof && !error) {
+    log.warn('oauth recovery redirect: missing registrationToken/recoveryProof/error', { accessTokenId });
+    return undefined;
+  }
+  return { accessTokenId, registrationToken, recoveryProof, error };
+};
+
+/**
  * Read and consume the OAuth-recovery redirect params from the current URL.
  *
  * Rewrites the URL to `/` synchronously (regardless of outcome) so the deck doesn't try to resolve
- * `/redirect/oauth-recovery` as a workspace. Returns the params only when a `registrationToken`
- * (register flow) or `recoveryProof` (recovery flow) is present.
+ * `/redirect/oauth-recovery` as a workspace.
  */
 const readRedirectParams = (): RedirectParams | undefined => {
   if (typeof window === 'undefined') {
@@ -48,19 +65,12 @@ const readRedirectParams = (): RedirectParams | undefined => {
   if (url.pathname !== OAUTH_RECOVERY_REDIRECT_PATH) {
     return undefined;
   }
-  const accessTokenId = url.searchParams.get('accessTokenId') ?? undefined;
-  const registrationToken = url.searchParams.get('registrationToken') ?? undefined;
-  const recoveryProof = url.searchParams.get('recoveryProof') ?? undefined;
-  const error = url.searchParams.get('error') ?? undefined;
+  const params = parseRedirectParams(url);
 
   // Strip the redirect params regardless, so the deck doesn't interpret the path.
   window.history.replaceState(null, '', '/');
 
-  if (!registrationToken && !recoveryProof && !error) {
-    log.warn('oauth recovery redirect: missing registrationToken/recoveryProof/error', { accessTokenId });
-    return undefined;
-  }
-  return { accessTokenId, registrationToken, recoveryProof, error };
+  return params;
 };
 
 const readSnapshot = (accessTokenId: string | undefined): OAuthRecoveryPendingSnapshot | undefined => {
@@ -96,14 +106,48 @@ const describeError = (error: unknown): string => {
 };
 
 /**
+ * Complete one captured callback against the running client. The params are in hand before the
+ * client is, so this waits for it rather than holding up plugin startup.
+ */
+const finalize = Effect.fnUntraced(function* (params: RedirectParams) {
+  log('oauth recovery redirect: capturing params', {
+    accessTokenId: params.accessTokenId,
+    flow: params.error ? 'error' : params.registrationToken ? 'register' : 'recovery',
+    error: params.error,
+  });
+  const client = yield* Capability.waitFor(ClientCapabilities.Client);
+  const invoker = yield* Capability.waitFor(Capabilities.OperationInvoker);
+  // The capability is contributed while the forked initialization is still running;
+  // `halo` reads below need it complete.
+  yield* Effect.promise(() => client.waitUntilInitialized());
+  yield* finalizeRedirect(client, invoker, params).pipe(
+    Effect.catch((error) =>
+      Effect.gen(function* () {
+        log.error('oauth recovery finalize failed', { error: describeError(error) });
+        yield* invoker
+          .invoke(LayoutOperation.AddToast, {
+            id: 'oauth-recovery-error-unknown',
+            title: 'OAuth recovery failed',
+            description: 'Something went wrong completing sign-in. Please try again.',
+            icon: 'ph--warning-circle--regular',
+            duration: 10_000,
+          })
+          .pipe(Effect.ignore);
+      }),
+    ),
+    Effect.ensuring(Effect.sync(() => deleteSnapshot(params.accessTokenId))),
+  );
+});
+
+/**
  * Startup module that finalizes redirect-flow OAuth-recovery callbacks.
  *
  * atproto/bsky nullifies `window.opener`, so the register / recovery flows cannot relay their
- * result back via `postMessage`. Instead kms-service redirects the auth tab to
- * `/redirect/oauth-recovery`, reloading the app fresh. This module captures the redirect params
- * synchronously on Startup (rewriting the URL to `/`), then on a daemon fiber waits for the client
- * + operation invoker and completes the flow from the params plus the `localStorage` snapshot the
- * initiating operation persisted:
+ * result back via `postMessage`. Instead kms-service redirects to `/redirect/oauth-recovery`: in
+ * the browser that reloads the app fresh and the params are read off the location here (rewriting
+ * the URL to `/`); on desktop the shell cancels that navigation and relays the URL as an event
+ * instead. Either way a daemon fiber waits for the client + operation invoker and completes the
+ * flow from the params plus the `localStorage` snapshot the initiating operation persisted:
  *
  * - register: create the local identity (if needed), complete OAuth registration, then redeem the
  *   stashed invitation code with the provider-verified email to mint the hub Account.
@@ -114,38 +158,27 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const params = readRedirectParams();
     if (params) {
-      log('oauth recovery redirect: capturing params', {
-        accessTokenId: params.accessTokenId,
-        flow: params.error ? 'error' : params.registrationToken ? 'register' : 'recovery',
-        error: params.error,
-      });
+      yield* Effect.forkDetach(finalize(params));
+    }
+
+    if (NativeOAuth.supportsNativeOAuth()) {
+      // The shell cancels the callback navigation rather than booting a second copy of the app in
+      // its OAuth window, so on desktop the params arrive as an event instead of a page load.
       yield* Effect.forkDetach(
-        Effect.gen(function* () {
-          const client = yield* Capability.waitFor(ClientCapabilities.Client);
-          const invoker = yield* Capability.waitFor(Capabilities.OperationInvoker);
-          // The capability is contributed while the forked initialization is still running;
-          // `halo` reads below need it complete.
-          yield* Effect.promise(() => client.waitUntilInitialized());
-          yield* finalizeRedirect(client, invoker, params).pipe(
-            Effect.catch((error) =>
-              Effect.gen(function* () {
-                log.error('oauth recovery finalize failed', { error: describeError(error) });
-                yield* invoker
-                  .invoke(LayoutOperation.AddToast, {
-                    id: 'oauth-recovery-error-unknown',
-                    title: 'OAuth recovery failed',
-                    description: 'Something went wrong completing sign-in. Please try again.',
-                    icon: 'ph--warning-circle--regular',
-                    duration: 10_000,
-                  })
-                  .pipe(Effect.ignore);
-              }),
-            ),
-            Effect.ensuring(Effect.sync(() => deleteSnapshot(params.accessTokenId))),
-          );
-        }),
+        NativeOAuth.nativeOAuthCallbacks(OAUTH_RECOVERY_REDIRECT_PATH).pipe(
+          Stream.runForEach((url) =>
+            Effect.suspend(() => {
+              const callbackParams = parseRedirectParams(url);
+              return callbackParams ? finalize(callbackParams) : Effect.void;
+            }),
+          ),
+          Effect.catch((error) =>
+            Effect.sync(() => log.warn('oauth recovery: native callback stream failed', { error })),
+          ),
+        ),
       );
     }
+
     return [];
   }),
 );

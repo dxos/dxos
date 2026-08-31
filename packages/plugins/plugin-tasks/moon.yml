@@ -1,8 +1,34 @@
 layer: library
 language: typescript
 tags:
+  - composer-plugin
   - ts-vite-build
   - ts-test
   - ts-test-storybook
   - pack
   - storybook
+tasks:
+  # The edge operation-service imports these entries directly rather than activating the plugin —
+  # its React surfaces cannot load in a worker bundle — so they are the seam that headless host
+  # depends on. Keep them UI-free: a leak here breaks that host at build time, far from this
+  # package, with an error naming neither.
+  check-module-structure:
+    # Handler set registered by the headless host.
+    command: >-
+      pnpm exec dx-trace-imports
+      --export ./TasksOperationHandlerSet
+      --to "@dxos/react-ui"
+      --to react
+      --to react-dom
+      --conditions workerd,worker
+      --conditions node
+      --fail-on present
+    deps:
+      - dx-trace-imports:build
+      - build
+    inputs:
+      - tsconfig.json
+      - '@group(production)'
+      - /pnpm-lock.yaml
+    options:
+      timeout: 60

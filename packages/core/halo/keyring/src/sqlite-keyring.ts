@@ -13,15 +13,14 @@ import { subtleCrypto } from '@dxos/crypto';
 import { RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { schema } from '@dxos/protocols/proto';
+import { decodeCompat, encodeCompat } from '@dxos/protocols/buf-shape-compat';
+import { KeyRecordSchema } from '@dxos/protocols/buf/dxos/halo/keyring_pb';
 import { type KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 import { ComplexMap, arrayToBuffer } from '@dxos/util';
 
 import { type KeyringApi, KeyringApiService } from './keyring';
 import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations';
-
-const KeyRecordCodec = schema.getCodecForType('dxos.halo.keyring.KeyRecord');
 
 // SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
 type SqlTransactionTag = SqlTransaction.SqlTransaction;
@@ -89,7 +88,7 @@ export class SqliteKeyring implements KeyringApi {
       }),
     );
     return rows.map((row) => {
-      const record = KeyRecordCodec.decode(row.record);
+      const record = decodeCompat<KeyRecord>(KeyRecordSchema, row.record);
       // Never expose private key material to callers.
       return { publicKey: record.publicKey };
     });
@@ -113,7 +112,7 @@ export class SqliteKeyring implements KeyringApi {
       throw new Error(`Key not found: ${keyHex}`);
     }
 
-    const record = KeyRecordCodec.decode(rows[0].record);
+    const record = decodeCompat<KeyRecord>(KeyRecordSchema, rows[0].record);
     const publicKey = PublicKey.from(record.publicKey);
     invariant(key.equals(publicKey), 'Corrupted keyring: key mismatch');
     invariant(record.privateKey, 'Corrupted keyring: missing private key');
@@ -150,7 +149,7 @@ export class SqliteKeyring implements KeyringApi {
     };
 
     const keyHex = publicKey.toHex();
-    const encodedRecord = arrayToBuffer(KeyRecordCodec.encode(record));
+    const encodedRecord = arrayToBuffer(encodeCompat(KeyRecordSchema, record));
     await RuntimeProvider.runPromise(this.#runtime)(
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;

@@ -17,8 +17,7 @@ import { assertState, invariant } from '@dxos/invariant';
 import { DXN, type EntityId, type IdentityDid, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FeedProtocol, makeInProcessClient } from '@dxos/protocols';
-import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
-import { FeedService } from '@dxos/protocols/rpc';
+import { FeedService, SpacesService } from '@dxos/protocols/rpc';
 import { createFilename } from '@dxos/util';
 
 import { type DataSpace } from '../spaces/data-space';
@@ -93,7 +92,7 @@ export type WriteSerializedSpaceArchiveOptions = {
  */
 export const writeSerializedSpaceArchive = async (
   options: WriteSerializedSpaceArchiveOptions,
-): Promise<SpaceArchive> => {
+): Promise<SpacesService.SpaceArchive> => {
   const { space, echoHost, exportedBy } = options;
 
   const rootUrl = space.automergeSpaceState.lastEpoch?.subject.assertion.automergeRoot;
@@ -109,13 +108,12 @@ export const writeSerializedSpaceArchive = async (
   collectObjectsFromDoc(rootDoc, objects);
 
   for (const linkedUrl of databaseRoot.getAllLinkedDocuments()) {
-    const handle = await echoHost.loadDoc<DatabaseDirectory>(Context.default(), linkedUrl as AutomergeUrl);
-    if (!handle) {
+    using lease = await echoHost.loadDoc<DatabaseDirectory>(Context.default(), linkedUrl as AutomergeUrl);
+    if (!lease) {
       log.warn('linked document handle not available; skipping', { url: linkedUrl });
       continue;
     }
-    const doc = handle.doc();
-    collectObjectsFromDoc(doc, objects);
+    collectObjectsFromDoc(lease.doc(), objects);
   }
 
   // Export queue/feed messages for every Feed object in the space.
@@ -135,7 +133,7 @@ export const writeSerializedSpaceArchive = async (
   return {
     filename: createFilename({ parts: [space.id], ext: 'dx.json' }),
     contents: encoded,
-    format: SpaceArchive.Format.JSON,
+    format: SpacesService.SpaceArchiveFormat.enums.JSON,
   };
 };
 

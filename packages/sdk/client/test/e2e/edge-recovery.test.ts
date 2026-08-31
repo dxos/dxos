@@ -18,7 +18,7 @@ import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata
 import { LocalClientServices } from '../../src/services/local';
 
 const LOCAL = false;
-const EDGE_URL = LOCAL ? 'http://localhost:8787' : 'https://edge.dxos.workers.dev';
+const EDGE_URL = LOCAL ? 'http://localhost:8787' : 'https://dev.dxos.network';
 
 const createEdgeConfig = () =>
   new Config({

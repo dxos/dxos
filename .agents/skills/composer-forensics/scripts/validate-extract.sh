@@ -44,7 +44,7 @@ echo "tables: $TABLE_COUNT"
 
 CORE_TABLES=(
   feeds blocks objectMeta automerge_chunks automerge_heads
-  space_metadata blobs_meta blobs_data keyring
+  space_metadata keyring
 )
 MISSING=()
 for table in "${CORE_TABLES[@]}"; do
@@ -68,8 +68,7 @@ UNION ALL SELECT 'blocks', COUNT(*) FROM blocks
 UNION ALL SELECT 'objectMeta', COUNT(*) FROM objectMeta
 UNION ALL SELECT 'objectMeta_deleted', COUNT(*) FROM objectMeta WHERE deleted != 0
 UNION ALL SELECT 'automerge_chunks', COUNT(*) FROM automerge_chunks
-UNION ALL SELECT 'space_metadata', COUNT(*) FROM space_metadata
-UNION ALL SELECT 'blobs_meta', COUNT(*) FROM blobs_meta;
+UNION ALL SELECT 'space_metadata', COUNT(*) FROM space_metadata;
 " 2>/dev/null || echo "(some count queries failed — schema may differ)"
 
 echo

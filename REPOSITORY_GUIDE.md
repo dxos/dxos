@@ -71,14 +71,76 @@ pnpm watch
 
 Examples of ways to start up different workloads in dev mode:
 
-| Command                       | Description                           |
-| :---------------------------- | :------------------------------------ |
-| `moon run tasks-app:serve`    | Runs the `tasks-app` in dev mode      |
-| `moon run composer-app:serve` | Runs the `composer-app` in dev mode   |
-| `moon run docs:serve`         | Runs the `docs` astro app in dev mode |
+| Command                            | Description                                              |
+| :--------------------------------- | :------------------------------------------------------- |
+| `moon run tasks-app:serve`         | Runs the `tasks-app` in dev mode                         |
+| `moon run composer-app:serve`      | Runs the `composer-app` in dev mode                      |
+| `moon run composer-app:serve-prod` | Same, with the curated plugin set `composer.space` ships |
+| `moon run docs:serve`              | Runs the `docs` astro app in dev mode                    |
 
 Use `--quiet` to suppress progress output (recommended for LLMs to keep context fresh).
 Use `--on-failure=continue` to continue running other unrelated tasks even if some fail.
+
+### Plugin sets
+
+Composer builds one of **three plugin sets**, chosen at build time by `DX_PLUGIN_SET`:
+
+| Set            | Selected by                | Plugins                                                   | Registry                         |
+| :------------- | :------------------------- | :-------------------------------------------------------- | :------------------------------- |
+| full (default) | `DX_PLUGIN_SET` unset      | `src/plugin-defs.tsx` — the whole catalog                 | yes, incl. the dev plugin loader |
+| curated        | `DX_PLUGIN_SET=production` | `src/plugin-defs.production.tsx`                          | no                               |
+| mobile         | `DX_PLUGIN_SET=mobile`     | `src/plugin-defs.mobile.tsx` — chat and its content types | yes                              |
+
+`vite.config.ts` aliases `./plugin-defs` to the selected file, so **selection is build-time, not a
+runtime flag** — a plugin the chosen set doesn't name never enters the module graph (that's the
+bundle-size half of it; a runtime toggle would ship everything and merely hide the UI).
+`composer-app:check-plugin-set` reads the build's own sourcemaps and fails if a plugin outside the
+**production** set leaks in — it only guards that one set, never whichever set a given build actually
+chose; **Check** runs it beside `check-boot-budget`.
+
+Consequences worth knowing before you debug something:
+
+- **`composer.space` and every iOS build ship the curated set**; `preview`, `dev` and `staging` ship
+  the full one. So the plugin registry, the dev plugin loader and most plugins are simply absent from
+  production — not broken.
+- **Both talk to Edge prod**, so an object created on preview can be opened in production with no
+  plugin that renders it. plugin-preview contributes a last-resort notice for that case rather than
+  failing.
+- **`serve-prod` is the local equivalent** of a production build, so a plugin missing from the
+  curated set surfaces before a deploy rather than after.
+
+Enabled-by-default plugins are a separate axis from bundled ones: `getDefaults` in `plugin-defs.tsx`
+turns the dev-only set on for the `dev` environment only. Locally, opt in with `DX_DEV=true` — a
+plain `serve` deliberately keeps the lean set so local development isn't weighed down by plugins
+you're not looking at.
+
+### Vite's native config loader
+
+`composer-app` loads `vite.config.ts` with `--configLoader native`, so node imports the config
+directly (type stripping only) instead of Vite pre-bundling it with Rolldown first. Vite plans to
+make this the default. Every `vite` invocation for the app passes the flag — `serve`, `bundle` and
+`preview` in `moon.yml`, the Playwright `webServer` commands, and Tauri's `beforeDevCommand` — so
+dev and production evaluate the config identically.
+
+A config loaded this way is an ordinary ESM module in node, which constrains it and everything it
+imports (here: `vite.base.config.ts`, `vitest.base.config.ts`, `vitest.tags.ts` and
+`src/vite/*.ts`):
+
+- relative imports carry their `.ts` extension, and directory-index imports name the index file;
+- `import.meta.dirname` / `import.meta.filename` rather than `__dirname` / `__filename`;
+- type-only named imports are marked `type`, since nothing erases them for node;
+- JSON imports need `with { type: 'json' }`.
+
+Packages still on the default `bundle` loader get these same rules as a warning at config-load
+time, listing every offending line — Vite emits it whenever a config would not survive the switch.
+
+Vite also asks for `"type": "module"` on the root `package.json`, which the root-level `.ts`
+configs would otherwise miss (node reparses each as ESM after failing to parse it as CommonJS, and
+says so). **Do not add it.** Rolldown picks a module's interop mode from the nearest `package.json`
+that actually carries a `type` field, not the nearest one that exists — so declaring it at the root
+flips every package that does not declare its own, and their `bundle`-loaded configs then read a
+default-exported plugin as `{ __esModule, default }` instead of the function
+(`PluginImportSource is not a function`). The reparse notice is the cheaper cost.
 
 ## Test commands
 
@@ -156,6 +218,24 @@ pnpm i
 
 NOTE: Do not use `pnpm up` since it will update more than the targeted dependencies.
 
+## Resetting stale build state
+
+`pnpm install` reports "Already up to date" in two situations where the workspace is in fact
+broken, because neither is tracked by the lockfile:
+
+- A dependency version bump leaves per-package `node_modules/.bin/*` shims pointing at a store
+  path pnpm has since removed — the build fails with `MODULE_NOT_FOUND` on a path containing the
+  _old_ version.
+- Generated sources (e.g. `packages/core/protocols/src/proto/gen`) go stale while moon's cache
+  hash still matches, so every run restores the stale output rather than regenerating it.
+
+```bash
+pnpm reset          # prune dead .bin shims, reinstall, clear .moon/cache, regenerate protobuf
+pnpm reset --deep   # also delete every package dist and reinstall node_modules from scratch
+```
+
+Stop any running dev server first — `reset` reinstalls `node_modules` underneath it.
+
 ## Folders
 
 | Folder                  | Description                                                                                    |
@@ -191,7 +271,7 @@ DXOS is **trunk-based**: `main` is the only long-lived integration branch.
 - Work happens on feature branches that merge to `main` via PRs; the **Check** workflow (build, test, lint, fmt) must pass. External contributors fork and PR from their fork.
 - Feature branches are **squashed** on merge, keeping `main` linear.
 - Consumer-relevant changes carry a `.changeset/*.md` — see the [changeset authoring guide](./agents/instructions/changesets.md). PR titles and commit messages use `scope: description`.
-- `labs` / `staging` / `production` are **deploy environments**, not long-lived branches — you deploy a chosen commit to one via the Deploy Apps workflow, and "what's deployed where" is tracked by floating `<app>/<environment>` git tags.
+- `dev` / `preview` / `staging` / `production` are **deploy environments**, not long-lived branches — `preview` deploys `main`'s tip daily on a schedule, the rest deploy a chosen commit via the Deploy Apps workflow, and "what's deployed where" is tracked by floating `<app>/<environment>` git tags.
 
 Full design (versioning policy, publish groups, cross-repo contract): [`.github/RELEASE-SPEC.md`](./.github/RELEASE-SPEC.md).
 
@@ -209,30 +289,36 @@ Packages ship as two lockstep groups — **A: Core/SDK** (`@dxos/echo`, `@dxos/c
 
 **Deploy apps.** One entry point: the **Deploy Apps** workflow (`deploy-apps.yml`) — pick an environment and the app set follows. Deploys go to Cloudflare Workers Static Assets, decoupled from npm; "what's deployed where" is tracked by floating `<app>/<env>` git tags. Deployable apps are listed in [`.github/workflows/scripts/apps.mjs`](./.github/workflows/scripts/apps.mjs); everything else — Worker name, bundle task, output dir, target environments — derives from each app's `wrangler.jsonc`.
 
-Because these tags are force-moved on every deploy, a plain `git pull`/`git fetch` will reject them once your local clone has a stale copy (`! [rejected] composer/labs -> composer/labs (would clobber existing tag)`). Turn off automatic tag-following once per clone so routine fetches stay quiet:
+Because these tags are force-moved on every deploy, a plain `git pull`/`git fetch` will reject them once your local clone has a stale copy (`! [rejected] composer/preview -> composer/preview (would clobber existing tag)`). Turn off automatic tag-following once per clone so routine fetches stay quiet:
 
 ```bash
 git config remote.origin.tagOpt --no-tags
 ```
 
-You can still pull a specific one on demand: `git fetch origin tag composer/labs --force` (still needs
+You can still pull a specific one on demand: `git fetch origin tag composer/preview --force` (still needs
 `--force` — an explicit fetch doesn't skip the clobber check, only the automatic tag-following does), or
 check without touching local refs at all: `git ls-remote --tags origin 'composer/*'`.
 
-| Env            | Trigger                | Apps               | Notes                                    |
-| -------------- | ---------------------- | ------------------ | ---------------------------------------- |
-| **main**       | auto on push to `main` | all `main`-enabled | rolling preview; no native build         |
-| **labs**       | manual → `labs`        | composer           | prerelease Tauri build; iOS → TestFlight |
-| **staging**    | manual → `staging`     | composer + docs    | prerelease Tauri build                   |
-| **production** | manual → `production`  | all                | cuts a versioned Composer release        |
+| Env            | URL                      | EDGE         | Trigger                           | Apps                  | Notes                                                                                       |
+| -------------- | ------------------------ | ------------ | --------------------------------- | --------------------- | ------------------------------------------------------------------------------------------- |
+| **dev**        | `composer-dev…`          | EDGE preview | manual → `dev`                    | composer              | desktop + iOS → TestFlight; iOS ships the curated plugin set                                |
+| **preview**    | `preview.composer.space` | EDGE prod    | auto, 07:00 UTC daily from `main` | all `preview`-enabled | dogfood build; desktop only                                                                 |
+| **staging**    | `staging.composer.space` | EDGE prod    | manual → `staging`                | composer + docs       | kept, deliberately unused                                                                   |
+| **production** | `composer.space`         | EDGE prod    | manual → `production`             | all                   | cuts a versioned Composer release; **curated plugin set** (see [Plugin sets](#plugin-sets)) |
 
-**Composer is the only versioned app.** A **production** deploy also cuts its release: the `release` job bumps `composer-app`/`crx` by the dispatch's `bump` input, commits to `main`, tags `composer-v<x>`, then builds + deploys that commit (web + desktop + iOS via `deploy-tauri.yaml`, CrabNebula). This is the only path that advances Composer's version — it is not a Changesets package.
+Local dev talks to EDGE preview by default; point it at EDGE dev or a local EDGE with `DX_EDGE_BASE_URL`.
 
-**Triggering a deploy with `gh`.** The `workflow_dispatch` inputs are `environment` (`labs` \| `staging` \| `production`, default `labs`), `app` (`all` default, or one of `composer` / `docs` / `storybook` / `todomvc` / `tasks` / `testbench`), and `bump` (`patch` \| `minor` \| `major`, used only by the production Composer release). `--ref` selects the commit to deploy — it defaults to `main`, and also determines which version of the workflow runs.
+**`preview` titles the environment above and nothing else.** Per-PR deploys are Cloudflare Worker preview versions of `env.dev` — literally previews, and their internals say so — but they are titled for their trigger, not for that: `pr-build.yml` builds them and `pr-deploy.yml` deploys them to `pr-<n>-composer-dev.dxos.workers.dev`.
+
+Every environment ships a **desktop** Composer on its own CrabNebula channel, so a dogfooder on preview gets the same daily build the web deploy does. Non-production builds are versioned `<base>-<env>.<build>` — one version per run, carried by the web bundle and the native build alike, so About and the updater agree. `<base>` is the _next_ patch, so preview leads the stable it was built from; `<build>` counts that channel's builds of that base version and is claimed by an immutable `composer-<env>-<base>-<build>` git tag (`git ls-remote --tags origin 'refs/tags/composer-preview-*'` lists them), restarting at 0 when a production release bumps the base. Each non-production channel installs as its **own app** — suffixed bundle identifier, its own name and icon (purple for preview, rust otherwise) — so it runs beside the released one with its own data instead of sharing (and migrating) its storage; running a channel means installing that channel's app. **iOS** builds on `dev` alone and goes to TestFlight; the app is not shipped yet, so the other environments have nothing to release to. Once it ships, the intent is preview and staging on their own TestFlight streams and production on the App Store.
+
+**Composer is the only versioned app.** A **production** deploy also cuts its release: the `release` job bumps `composer-app`/`crx` by the dispatch's `bump` input, commits to `main`, tags `composer-v<x>`, then builds + deploys that commit (web + desktop via `deploy-tauri.yaml`, CrabNebula; iOS builds on `dev` alone). This is the only path that advances Composer's version — it is not a Changesets package.
+
+**Triggering a deploy with `gh`.** The `workflow_dispatch` inputs are `environment` (`dev` \| `preview` \| `staging` \| `production`, default `dev`), `app` (`all` default, or one of `composer` / `docs` / `storybook` / `todomvc` / `tasks` / `testbench`), and `bump` (`patch` \| `minor` \| `major`, used only by the production Composer release). `--ref` selects the commit to deploy — it defaults to `main`, and also determines which version of the workflow runs.
 
 ```bash
-# Composer → labs (the default env). `app` defaults to `all`, which for labs is just composer.
-gh workflow run deploy-apps.yml -f environment=labs
+# Composer → dev (the default env). `app` defaults to `all`, which for dev is just composer.
+gh workflow run deploy-apps.yml -f environment=dev
 
 # Composer + docs → staging.
 gh workflow run deploy-apps.yml -f environment=staging
@@ -251,25 +337,27 @@ gh run list --workflow=deploy-apps.yml --limit 1
 gh run watch
 ```
 
-Handy as aliases — e.g. `gh alias set deploy-labs 'workflow run deploy-apps.yml -f environment=labs'`, then just `gh deploy-labs`.
+Handy as aliases — e.g. `gh alias set deploy-dev 'workflow run deploy-apps.yml -f environment=dev'`, then just `gh deploy-dev`.
 
-**Worker secrets.** `pnpm secrets` (`scripts/secrets.mjs`) populates a Cloudflare Worker's secrets (e.g. composer's `SIGNOZ_INGESTION_KEY`, docs' `DX_POSTHOG_API_KEY`) from a 1Password item, matched by section label — a field under "shared" applies to every target, a field under a section named after the raw Worker name (e.g. `composer-main`) applies only there. `remote` defaults to `all` — every app (from `.github/workflows/scripts/apps.mjs`) that defines the given env — or name one app to restrict it; `dev` always requires an app (there's no "all" for local `wrangler dev`). Defaults to the "dxos app worker secrets" item (pinned by UUID — stable even if the item is renamed); pass `--item` to target a different one. Requires `CLOUDFLARE_ACCOUNT_ID` in the environment (same variable CI uses):
+**Worker secrets.** `pnpm secrets` (`scripts/secrets.mjs`) populates a Cloudflare Worker's secrets (e.g. composer's `SIGNOZ_INGESTION_KEY`, docs' `DX_POSTHOG_API_KEY`) from a 1Password item, matched by section label — a field under "shared" applies to every target, a field under a section named after the raw Worker name (e.g. `composer-preview`) applies only there. `remote <env>` defaults to `all` — every app (from `.github/workflows/scripts/apps.mjs`) that defines the given env — or name one app to restrict it. The `dev` MODE (`pnpm secrets dev <app>`, which writes `.dev.vars` for local `wrangler dev`) always requires an app; note this is a different `dev` from the `dev` ENVIRONMENT in `pnpm secrets remote dev`, which takes the usual `all` default. Defaults to the "dxos app worker secrets" item (pinned by UUID — stable even if the item is renamed); pass `--item` to target a different one. Requires `CLOUDFLARE_ACCOUNT_ID` in the environment (same variable CI uses):
+
+`secret put` both creates a version and deploys it, so Cloudflare refuses it when a Worker's latest version is not the deployed one. That is the normal state for `composer-dev`, which per-PR deploys upload versions to — promoting the latest there would push whichever PR version happens to be on top. `pnpm secrets` detects that specific refusal and writes the secret with `wrangler versions secret put` instead, which does not deploy; it then says so, because the secret only reaches the running Worker on the next deploy or `versions upload`. Any other failure is reported and exits non-zero as before.
 
 ```bash
-# Push secrets to every app that has a labs env (currently just composer).
-pnpm secrets remote labs
+# Push secrets to every app that has a dev env (currently just composer).
+pnpm secrets remote dev
 
 # Push secrets to one specific Worker.
 pnpm secrets remote staging docs
 
 # See what would be pushed, for the whole environment, without making any change.
-pnpm secrets remote main --dry-run
+pnpm secrets remote preview --dry-run
 
 # Write .dev.vars for local `wrangler dev` (app is required).
 pnpm secrets dev composer
 
 # Target a different 1Password item.
-pnpm secrets remote labs --item "some other item"
+pnpm secrets remote dev --item "some other item"
 ```
 
 ### New npm packages
@@ -301,7 +389,9 @@ Examples:
 
 ## CI
 
-See [CI docs](./.github/workflows/README.md).
+The build/test pipeline runs on Depot CI. See [`.depot/README.md`](./.depot/README.md), including how to
+run a workflow off uncommitted changes without pushing. What is still on GitHub Actions, and why, is in
+[`.github/workflows/README.md`](./.github/workflows/README.md).
 
 ## Trunk (flaky test quarantining / CI Autopilot)
 

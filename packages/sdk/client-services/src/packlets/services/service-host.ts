@@ -77,7 +77,6 @@ import {
 } from '@dxos/protocols/rpc';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
-import { type BlobStoreApi, BlobStoreApiService } from '@dxos/teleport-extension-object-sync';
 import { trace as Trace } from '@dxos/tracing';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
@@ -142,6 +141,13 @@ export type ClientServicesHostProps = {
   connectionLog?: boolean;
   lockKey?: string;
   callbacks?: ClientServicesHostCallbacks;
+  /**
+   * Start edge networking as soon as the stack is open. Set `false` when the embedder drives it via
+   * {@link ClientServicesHost.startNetworking} — the worker does, so the dial cannot compete with
+   * the boot RPCs the tab is waiting on.
+   * @default true
+   */
+  autoConnect?: boolean;
   runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlExport.SqlExport | SqlTransaction.SqlTransaction>;
   runtimeProps?: ServiceContextRuntimeProps;
 };
@@ -205,8 +211,13 @@ export class ClientServicesHost {
 
   // Stack components, resolved from the layer runtime on open. Present after `open` starts.
   #ctx?: Context;
+
+  /** Guards {@link startNetworking} so repeated calls cannot start two connection loops. */
+  #networkingStarted = false;
+
+  /** See {@link ClientServicesHostProps.autoConnect}. */
+  readonly #autoConnect: boolean;
   #metadataStore?: IMetadataStore;
-  #blobStore?: BlobStoreApi;
   #keyring?: KeyringApi;
   #feedStore?: FeedStore<any>;
   #spaceManager?: SpaceManager;
@@ -236,10 +247,12 @@ export class ClientServicesHost {
     // TODO(wittjosiah): Turn this on by default.
     lockKey,
     callbacks,
+    autoConnect = true,
     runtime,
     runtimeProps,
   }: ClientServicesHostProps) {
     this.#callbacks = callbacks;
+    this.#autoConnect = autoConnect;
     this.#runtime = runtime;
     this.#runtimeProps = runtimeProps ?? {};
 
@@ -330,10 +343,6 @@ export class ClientServicesHost {
     return this.#metadataStore ?? failUndefined();
   }
 
-  get blobStore(): BlobStoreApi {
-    return this.#blobStore ?? failUndefined();
-  }
-
   get recoveryManager(): EdgeIdentityRecoveryManager {
     return this.#recoveryManager ?? failUndefined();
   }
@@ -419,6 +428,9 @@ export class ClientServicesHost {
       if (this.#runtimeProps.enableVectorIndexing === undefined) {
         this.#runtimeProps.enableVectorIndexing = config?.get('runtime.client.enableVectorIndexing', false);
       }
+      if (this.#runtimeProps.automergeCredentials === undefined) {
+        this.#runtimeProps.automergeCredentials = config?.get('runtime.client.automergeCredentials', false);
+      }
 
       invariant(!this.#config, 'config already set');
       this.#config = config;
@@ -427,7 +439,13 @@ export class ClientServicesHost {
     const endpoint = config?.get('runtime.services.edge.url');
     if (endpoint) {
       const clientTag = resolveTelemetryTag(config);
-      this.#edgeConnection = new EdgeClient(createStubEdgeIdentity(), { socketEndpoint: endpoint, clientTag });
+      // Dialing is driven by `startNetworking()` rather than `open()`, so the host controls when
+      // outbound work is allowed to compete with boot.
+      this.#edgeConnection = new EdgeClient(createStubEdgeIdentity(), {
+        socketEndpoint: endpoint,
+        clientTag,
+        deferConnect: true,
+      });
       this.#edgeHttpClient = new EdgeHttpClient(endpoint, { clientTag });
     }
 
@@ -508,7 +526,6 @@ export class ClientServicesHost {
       Effect.all({
         // Components.
         metadataStore: IMetadataStoreService,
-        blobStore: BlobStoreApiService,
         keyring: KeyringApiService,
         feedStore: FeedStoreService,
         spaceManager: SpaceManagerService,
@@ -540,7 +557,6 @@ export class ClientServicesHost {
     );
 
     this.#metadataStore = resolved.metadataStore;
-    this.#blobStore = resolved.blobStore;
     this.#keyring = resolved.keyring;
     this.#feedStore = resolved.feedStore;
     this.#spaceManager = resolved.spaceManager;
@@ -630,6 +646,24 @@ export class ClientServicesHost {
     log('opened', { deviceKey });
   }
 
+  /**
+   * Allows outbound network activity to begin. Idempotent. Called automatically when the stack opens
+   * unless {@link ClientServicesHostProps.autoConnect} is `false`, in which case the embedder decides
+   * when connecting is safe (and owns any delay).
+   *
+   * Only the edge dial needs gating: subduction defers while the socket is not `CONNECTED` and
+   * resumes from its reconnect handler, and feed sync starts from `onReconnected`. Both therefore
+   * follow this gate without their own.
+   */
+  startNetworking(): void {
+    if (this.#networkingStarted || !this.#edgeConnection) {
+      return;
+    }
+    this.#networkingStarted = true;
+    log('starting edge networking');
+    this.#edgeConnection.startNetworking();
+  }
+
   @synchronized
   @Trace.span()
   async close(ctx: Context = Context.default()): Promise<void> {
@@ -667,9 +701,6 @@ export class ClientServicesHost {
         // Echo metadata + large space data.
         yield* sql`DELETE FROM space_metadata`;
         yield* sql`DELETE FROM space_large`;
-        // Blob store.
-        yield* sql`DELETE FROM blobs_meta`;
-        yield* sql`DELETE FROM blobs_data`;
         // Keyring.
         yield* sql`DELETE FROM keyring`;
         // Automerge chunks + heads.
@@ -897,6 +928,10 @@ export class ClientServicesHost {
     log('loaded persistent invitations', { count: loadedInvitations.invitations?.length });
 
     log('stack opened');
+
+    if (this.#autoConnect) {
+      this.startNetworking();
+    }
   }
 
   /**

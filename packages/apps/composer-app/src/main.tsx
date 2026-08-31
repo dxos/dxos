@@ -31,6 +31,7 @@ import { translations as observabilityTranslations } from '@dxos/plugin-observab
 import { ErrorBoundary, ErrorFallback } from '@dxos/react-error-boundary';
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui';
+import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
 
@@ -41,6 +42,7 @@ import {
   PARAM_LOG_LEVEL,
   PARAM_PROFILER,
   PARAM_SAFE_MODE,
+  type Profiler,
   defaultStorageIsEmpty,
   downloadLogs,
   initializeObservability,
@@ -54,21 +56,62 @@ import {
   startupProfiler,
   translations,
 } from './util';
+import { initAutomergeWasm } from './util/automerge-wasm';
 
 // Fatal-error-only UI, loaded on demand: its FeedbackForm pulls the whole form stack
 // (react-ui-form, editor, pickers) which must stay out of the static boot graph.
 const ResetDialog = lazy(() => import('./components').then((module) => ({ default: module.ResetDialog })));
 
+/**
+ * Startup deadline override, in SECONDS (`VITE_DX_STARTUP_TIMEOUT=2`).
+ *
+ * Exists to exercise the deadline itself: shortening it does not fake a stall, it moves the line
+ * that startup has genuinely not crossed yet, so the real path runs with real work behind it. Dev
+ * only — in production the deadline is fatal, and a shorter one would just fail a boot sooner.
+ * Seconds rather than milliseconds because it is typed by hand.
+ */
+const startupTimeout = (() => {
+  if (!import.meta.env.DEV) {
+    return undefined;
+  }
+  const seconds = Number(import.meta.env.VITE_DX_STARTUP_TIMEOUT);
+  // The CONVERTED value is checked, not the input: 1e308 is finite and 1e308 * 1_000 is not.
+  const timeout = seconds * 1_000;
+  return Number.isFinite(timeout) && timeout > 0 ? timeout : undefined;
+})();
+
 // Injected by the `define` block in vite.config.ts; '' in production builds.
 declare const __DX_DEV_SERVER_BOOT_ID__: string;
+
+// Session id for the agent debug port when the dev server was launched with the debug-port flag.
+// Always '' in production builds, so the port cannot be auto-started on a deployed origin.
+declare const __DX_DEBUG_PORT_SESSION__: string;
+
+// Merged onto `@dxos/app-framework`'s `ComposerDevtools` (the type behind `globalThis.composer`)
+// rather than declared fresh — a second `declare global { var composer }` here would collide with
+// its declaration and resolve every member to `{}` (see `playwright/globals.d.ts`).
+declare module '@dxos/app-framework' {
+  interface ComposerDevtools {
+    profiler?: Profiler;
+    otel?: {
+      enableDebugLogs: () => void;
+      disableDebugLogs: () => void;
+      getLogLevel: () => Promise<string | null>;
+    };
+  }
+}
 
 declare global {
   interface ImportMeta {
     env: ImportMetaEnv;
+    /** Vite HMR API — present only in dev, `undefined` in production bundles. */
+    hot?: { dispose(cb: () => void): void };
   }
 
   interface ImportMetaEnv {
     DEV: string;
+    /** Startup deadline override in SECONDS, dev only — see `startupTimeout` below. */
+    VITE_DX_STARTUP_TIMEOUT?: string;
   }
 
   // Debug hook: run `downloadLogs()` from devtools to save buffered logs (same as Reset dialog).
@@ -90,9 +133,8 @@ const BOOT_ID = import.meta.env?.DEV ? Math.random().toString(36).slice(2, 10) :
 const MODULE_EVAL_TIME = Date.now();
 if (import.meta.env?.DEV) {
   log('composer main: module evaluated', { bootId: BOOT_ID, t: MODULE_EVAL_TIME });
-  const importMeta = import.meta as any;
-  if (importMeta.hot) {
-    importMeta.hot.dispose(() => {
+  if (import.meta.hot) {
+    import.meta.hot.dispose(() => {
       log('composer main: hmr dispose', { bootId: BOOT_ID, ageMs: Date.now() - MODULE_EVAL_TIME });
     });
   }
@@ -182,14 +224,15 @@ const main = async () => {
   profiler?.mark('dynamic-imports:start');
   bootStatus('Loading framework…');
 
-  // Load these in parallel; HTTP/2 multiplexes the four chunks and even on
-  // local-disk the parser can interleave parses.
-  const [{ Config, defs, SaveConfig }, { Client, createClientServices }, { Migrations }, { __COMPOSER_MIGRATIONS__ }] =
+  // Load these in parallel; HTTP/2 multiplexes the three chunks and even on
+  // local-disk the parser can interleave parses. The wasm init rides the same wave: it must
+  // complete before anything touches automerge (slim entrypoints — see util/automerge-wasm.ts).
+  const [{ Config, defs, SaveConfig, getEnvString }, { Client, createClientServices }, AppMigrations] =
     await Promise.all([
       import('@dxos/config'),
       import('@dxos/react-client'),
-      import('@dxos/migrations'),
-      import('./migrations'),
+      import('@dxos/app-toolkit/AppMigrations'),
+      initAutomergeWasm(),
     ]);
 
   profiler?.mark('dynamic-imports:end');
@@ -214,15 +257,15 @@ const main = async () => {
       return level;
     },
   };
-  (window as any).composer = { profiler, otel };
+  globalThis.composer = { profiler, otel };
 
-  Migrations.define(APP_KEY, __COMPOSER_MIGRATIONS__);
+  AppMigrations.define();
 
   profiler?.mark('config:start');
   bootStatus('Reading configuration…');
 
   let config = await setupConfig();
-  if (shouldRunStorageResetMigration(config.values.runtime?.app?.env?.DX_ENVIRONMENT)) {
+  if (shouldRunStorageResetMigration(getEnvString(config, 'DX_ENVIRONMENT'))) {
     await runStorageResetMigration();
     window.location.replace(window.location.href);
     return;
@@ -237,7 +280,7 @@ const main = async () => {
     await SaveConfig({
       runtime: {
         client: {
-          storage: { dataStore: defs.Runtime.Client.Storage.StorageDriver.IDB },
+          storage: { dataStore: defs.Runtime_Client_Storage_StorageDriver.IDB },
         },
       },
     });
@@ -342,7 +385,7 @@ const main = async () => {
         return platform === 'android' || platform === 'ios';
       }),
     ),
-    Match.when(false, () => Effect.sync(() => isTrue(config.values.runtime?.app?.env?.DX_MOBILE) || isMobile$())),
+    Match.when(false, () => Effect.sync(() => isTrue(getEnvString(config, 'DX_MOBILE')) || isMobile$())),
     Match.exhaustive,
     EffectEx.runPromise,
   );
@@ -360,10 +403,10 @@ const main = async () => {
   // env / platform constraints. Worker factories are passed unconditionally; the factory only
   // invokes the one required by the configured mode. Host mode (in-thread services) is opt-in via
   // DX_HOST; otherwise services run in a dedicated worker elected via a lock (leader/follower).
-  const useLocalServices = isTrue(config.values.runtime?.app?.env?.DX_HOST);
+  const useLocalServices = isTrue(getEnvString(config, 'DX_HOST'));
   const servicesMode = useLocalServices
-    ? defs.Runtime.Client.ServicesMode.HOST
-    : defs.Runtime.Client.ServicesMode.DEDICATED_WORKER;
+    ? defs.Runtime_Client_ServicesMode.HOST
+    : defs.Runtime_Client_ServicesMode.DEDICATED_WORKER;
 
   config = new Config(
     {
@@ -374,7 +417,7 @@ const main = async () => {
           singleClientMode: useSingleClientMode,
           servicesMode,
           // Host and dedicated worker both use OPFS-backed SQLite.
-          storage: { sqliteMode: defs.Runtime.Client.Storage.SqliteMode.OPFS },
+          storage: { sqliteMode: defs.Runtime_Client_Storage_SqliteMode.OPFS },
         },
       },
     },
@@ -420,9 +463,16 @@ const main = async () => {
   const client = new Client({ config, services });
   void client.initialize().catch((err) => log.catch(err));
 
+  // Started here rather than from plugin-debug, which a plain local `serve` leaves disabled —
+  // tying the flag to it would make the flag silently do nothing.
+  if (__DX_DEBUG_PORT_SESSION__) {
+    const { getDebugPortController } = await import('@dxos/client/devtools');
+    getDebugPortController().start({ session: __DX_DEBUG_PORT_SESSION__, persist: true });
+  }
+
   profiler?.mark('plugins:start');
 
-  const isPwa = !isFalse(config.values.runtime?.app?.env?.DX_PWA);
+  const isPwa = !isFalse(getEnvString(config, 'DX_PWA'));
   // The forked `client.initialize()` runs outside the render tree: a failure or a stalled worker
   // handshake reaches no error boundary, leaving suspended consumers spinning. Plugins raise it
   // here, and `Main` swaps the app for the same fatal dialog the app boundary would have shown.
@@ -438,14 +488,15 @@ const main = async () => {
     logStore,
     onFatalError: (error) => raiseFatalError(error),
 
-    isDev: !['production', 'staging'].includes(config.values.runtime?.app?.env?.DX_ENVIRONMENT),
+    // Strictly the `dev` cloud environment (not preview) or a local `DX_DEV=true` opt-in, so a plain
+    // local `serve` keeps the lean default plugin set (see `getDefaults` in plugin-defs.tsx).
+    isDev: getEnvString(config, 'DX_ENVIRONMENT') === 'dev' || isTrue(getEnvString(config, 'DX_DEV')),
     isLocal: !isTauri && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'),
     isPwa,
     isTauri,
     isPopover,
     isMobile,
-    isLabs: isTrue(config.values.runtime?.app?.env?.DX_LABS),
-    isStrict: !isFalse(config.values.runtime?.app?.env?.DX_STRICT),
+    isStrict: !isFalse(getEnvString(config, 'DX_STRICT')),
   };
 
   // `getPlugins` is synchronous: each plugin's main entry exposes only
@@ -517,7 +568,14 @@ const main = async () => {
         }
         fallbackRender={(props) => <ErrorFallback {...props} error={error} />}
       >
-        <ThemeProvider tx={defaultTx} resourceExtensions={[...translations, ...observabilityTranslations]}>
+        {/* `react-ui`'s own namespace ships with no plugin to register it, unlike every sibling
+            (`react-ui-card`, `-form`, …) which a plugin re-exports — so without this the primitives'
+            keys (`system-button.*`, `toolbar-*`) render raw as the accessible name of every
+            icon-only button. */}
+        <ThemeProvider
+          tx={defaultTx}
+          resourceExtensions={[...reactUiTranslations, ...translations, ...observabilityTranslations]}
+        >
           <Tooltip.Provider>
             {/* If the lazy chunk fails to load (broken deploy, offline), the throw reaches the
                 fatal-dialog boundary above, which shows the original error via ErrorFallback. */}
@@ -559,6 +617,9 @@ const main = async () => {
       // so the gap between `Startup` activated and `<Placeholder>` dismissed is at least 2× debounce.
       // The boot loader covers the pre-React phase, so we don't need a longer fade to hide a flash.
       debounce: 200,
+      // Shortened only to exercise the deadline (`VITE_DX_STARTUP_TIMEOUT=2` puts the loader's
+      // stalled offer two seconds in). `undefined` leaves `useApp` on its own 30s default.
+      timeout: startupTimeout,
     });
 
     // Rendered instead of `App`, not thrown: `Main` sits above the app-level error boundary, so a
@@ -566,7 +627,12 @@ const main = async () => {
     return fatalError ? <Fallback error={fatalError} /> : <App />;
   };
 
-  const root = document.getElementById('root')!;
+  const root = document.getElementById('root');
+  if (!root) {
+    // `index.html` always ships a `#root` element — its absence means the document itself
+    // failed to load correctly, which no in-tree fallback can recover from.
+    throw new Error('composer main: #root element not found');
+  }
   log('composer main: rendering App', { bootId: BOOT_ID, strict: conf.isStrict });
   if (conf.isStrict) {
     createRoot(root).render(

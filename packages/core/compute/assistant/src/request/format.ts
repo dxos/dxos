@@ -11,7 +11,7 @@ import type * as Operation from '@dxos/compute/Operation';
 import * as Template from '@dxos/compute/Template';
 import { Database, Obj, type Registry } from '@dxos/echo';
 import { ObjectVersion } from '@dxos/echo-client';
-import { type EntityNotFoundError } from '@dxos/echo/Err';
+import { type EntityNotFoundError } from '@dxos/echo/Error';
 import { type EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type ContentBlock, Message } from '@dxos/types';

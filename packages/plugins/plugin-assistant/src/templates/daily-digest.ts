@@ -24,7 +24,6 @@ export const dailyDigest: RoutineCapabilities.Template = {
   label: 'Daily Digest',
   icon: 'ph--list-bullets--regular',
   // Scheduled space-level digest — not meaningful for a specific object companion.
-  appliesTo: (subject) => subject == null,
   scaffold: ({ name }) =>
     makeScheduledRoutine({
       name: name ?? 'Daily Digest',

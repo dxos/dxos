@@ -1,0 +1,18 @@
+{
+  "name": "dxos",
+  "displayName": "DXOS Project Tracking",
+  "description": "Durable, resumable project and task tracking for coding agents: a committed registry of work-streams plus a TASKS.md ledger per project, driven by one /dxos:project command. Adds /dxos:qa for running the executable QA flows declared in .mdl specs, and bundles the DXOS Composer connector that serves the `mcp` backend (authenticating it needs a Composer account with a passkey).",
+  "version": "0.2.0",
+  "author": {
+    "name": "DXOS"
+  },
+  "homepage": "https://github.com/dxos/dxos/tree/main/tools/claude/plugins/dxos",
+  "repository": "https://github.com/dxos/dxos",
+  "license": "MIT",
+  "mcpServers": {
+    "composer": {
+      "type": "http",
+      "url": "https://composer.dxos.network/mcp"
+    }
+  }
+}

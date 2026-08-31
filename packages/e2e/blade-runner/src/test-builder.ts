@@ -14,7 +14,7 @@ import {
   type Message,
   type UnsubscribeCallback,
 } from '@dxos/messaging';
-import { type Runtime } from '@dxos/protocols/proto/dxos/config';
+import { type Runtime_Services_Signal } from '@dxos/protocols/buf/dxos/config_pb';
 import { ComplexMap } from '@dxos/util';
 
 import { type TraceEvent } from './analysys';
@@ -61,14 +61,14 @@ export class TestBuilder {
 }
 
 export type TestAgentProps = {
-  signals: Runtime.Services.Signal[];
+  signals: Runtime_Services_Signal[];
   peerId?: PublicKey;
 };
 
 export class TestPeer {
   public readonly signalManager;
   public peerId: PublicKey;
-  public readonly signalServers: Runtime.Services.Signal[];
+  public readonly signalServers: Runtime_Services_Signal[];
   private readonly _ctx = new Context();
   private _messageSubscription?: UnsubscribeCallback;
   constructor({ signals, peerId = PublicKey.random() }: TestAgentProps) {

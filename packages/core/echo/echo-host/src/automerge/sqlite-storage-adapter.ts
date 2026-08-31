@@ -166,19 +166,26 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
     }
     const startMs = Date.now();
     const prefix = encodeKey(keyPrefix);
-    const glob = prefix + '-*';
+    const { lower, upper } = descendantRange(prefix);
+    // Two index seeks unioned, rather than `key = ? OR key GLOB ?`: the OR plans as MULTI-INDEX OR
+    // and discards index ordering, so an SQL `ORDER BY` there materializes a temp B-tree. Sorting in
+    // JS instead is free at the sizes this returns (usually one or two rows) and keeps both branches
+    // plain range seeks. Equivalence with the previous predicate is covered by tests.
     const rows = await RuntimeProvider.runPromise(this.#runtime)(
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
         return yield* sql<{ key: string; data: Uint8Array }>`
-          SELECT key, data FROM automerge_chunks
-          WHERE key = ${prefix} OR key GLOB ${glob}
-          ORDER BY key ASC
+          SELECT key, data FROM automerge_chunks WHERE key = ${prefix}
+          UNION ALL
+          SELECT key, data FROM automerge_chunks WHERE key >= ${lower} AND key < ${upper}
         `;
       }),
     );
+    // SQLite compares TEXT with BINARY collation (byte order). Encoded keys are ASCII for every
+    // segment shape in use, where JS string order agrees with it.
+    const sorted = [...rows].sort((left, right) => (left.key < right.key ? -1 : left.key > right.key ? 1 : 0));
     let bytesLoaded = 0;
-    const chunks: Chunk[] = rows.map((row) => {
+    const chunks: Chunk[] = sorted.map((row) => {
       // SQLite returns BLOB columns as Buffer in Node.js; coerce to plain Uint8Array.
       const data = toUint8Array(row.data);
       bytesLoaded += data.byteLength;
@@ -202,10 +209,10 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
    */
   removeRangeEffect(keyPrefix: StorageKey): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> {
     const prefix = encodeKey(keyPrefix);
-    const glob = prefix + '-*';
+    const { lower, upper } = descendantRange(prefix);
     return Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
-      yield* sql`DELETE FROM automerge_chunks WHERE key = ${prefix} OR key GLOB ${glob}`;
+      yield* sql`DELETE FROM automerge_chunks WHERE key = ${prefix} OR (key >= ${lower} AND key < ${upper})`;
     }).pipe(Effect.withSpan('SqliteStorageAdapter.removeRange'));
   }
 }
@@ -233,15 +240,42 @@ const toUint8Array = (value: Uint8Array): Uint8Array =>
     ? value
     : new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
 
+/** Segment separator. Occurrences inside a segment are escaped to `%2D` (its percent-encoding). */
+const SEPARATOR = '-';
+
 /**
  * Encodes a StorageKey array to a single TEXT key for SQLite storage.
  * Uses '-' as separator; '%' and '-' in values are percent-encoded for safe round-tripping.
  */
 export const encodeKey = (key: StorageKey): string =>
-  key.map((k) => k.replaceAll('%', '%25').replaceAll('-', '%2D')).join('-');
+  key.map((k) => k.replaceAll('%', '%25').replaceAll(SEPARATOR, '%2D')).join(SEPARATOR);
 
 /**
  * Decodes a TEXT key back to a StorageKey array.
  */
 export const decodeKey = (encoded: string): StorageKey =>
-  encoded.split('-').map((k) => k.replaceAll('%2D', '-').replaceAll('%25', '%'));
+  encoded.split(SEPARATOR).map((k) => k.replaceAll('%2D', SEPARATOR).replaceAll('%25', '%'));
+
+/** One past `SEPARATOR` in byte order, so `[prefix + SEPARATOR, prefix + SEPARATOR_UPPER_BOUND)` is a half-open range. */
+const SEPARATOR_UPPER_BOUND = String.fromCharCode(SEPARATOR.charCodeAt(0) + 1);
+
+/**
+ * Half-open bounds selecting exactly the descendants of `prefix` — keys continuing with the
+ * separator, not merely with the same text. Anchoring on `prefix + SEPARATOR` rather than on
+ * `prefix` is what makes this a segment-boundary match: the bounds then differ at the character
+ * immediately after the prefix, so only the separator falls between them. A range anchored on
+ * `prefix` itself would compare nothing past the prefix and so would also return a sibling whose
+ * segment merely starts with the same text (prefix `…-doc1` matching key `…-doc1X-…`) — a different
+ * document's chunks. Since the key layout is protocol, that must not depend on segment charset.
+ *
+ * Exact regardless of what segments contain: a key is in range iff the byte after `prefix` is `>=`
+ * separator and `<` its successor, i.e. is the separator. UTF-8 cannot smuggle those bytes into a
+ * multi-byte sequence (continuation and lead bytes are all `>= 0x80`).
+ *
+ * Excludes `prefix` itself, which callers select separately — {@link loadRange} must still return a
+ * key stored at exactly the queried prefix (the `subduction-ids-<sid>` shape does this).
+ */
+const descendantRange = (prefix: string): { lower: string; upper: string } => ({
+  lower: prefix + SEPARATOR,
+  upper: prefix + SEPARATOR_UPPER_BOUND,
+});

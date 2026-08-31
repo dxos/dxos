@@ -12,11 +12,11 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { SpacesService } from '@dxos/protocols/rpc';
 import { useClient } from '@dxos/react-client';
-import { Button, Dialog, DropdownMenu, Icon, IconButton, Input, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, DropdownMenu, Flex, Icon, IconButton, Input, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
@@ -101,7 +101,7 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
                 value={getValue()}
                 onChange={handleChange}
                 placeholder={t('display-name-input.placeholder')}
-                classNames='min-w-64'
+                classNames='w-64 max-w-full min-w-0'
               />
             </Input.Root>
           </Form.Row>
@@ -153,10 +153,10 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
   );
 
   const handleBackupBinary = useCallback(async () => {
-    await invokePromise(SpaceOperation.ExportSpace, { space, format: SpaceArchive.Format.BINARY });
+    await invokePromise(SpaceOperation.ExportSpace, { space, format: SpacesService.SpaceArchiveFormat.enums.BINARY });
   }, [space, invokePromise]);
   const handleBackupJson = useCallback(async () => {
-    await invokePromise(SpaceOperation.ExportSpace, { space, format: SpaceArchive.Format.JSON });
+    await invokePromise(SpaceOperation.ExportSpace, { space, format: SpacesService.SpaceArchiveFormat.enums.JSON });
   }, [space, invokePromise]);
 
   const repairs = useCapabilities(SpaceCapabilities.Repair);
@@ -207,7 +207,7 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
 
           <Form.Section title={t('space-controls.title')} description={t('space-controls.description')}>
             <Form.Row label={t('space-id.title')} description={t('space-id.description')}>
-              <div className='flex items-center gap-2'>
+              <Flex gap='sm' align='center'>
                 <Input.Root>
                   <Input.TextInput value={space.id} disabled classNames='flex-1 font-mono text-xs' />
                 </Input.Root>
@@ -219,14 +219,14 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
                     void navigator.clipboard.writeText(space.id);
                   }}
                 />
-              </div>
+              </Flex>
             </Form.Row>
             <Form.Row label={t('backup-space.title')} description={t('backup-space.description')}>
               <DropdownMenu.Root>
                 <DropdownMenu.Trigger asChild>
                   <Button>
                     {t('download-backup.label')}
-                    <Icon icon='ph--caret-down--regular' size={4} classNames='mis-2' />
+                    <Icon icon='ph--caret-down--regular' size={4} classNames='ms-2' />
                   </Button>
                 </DropdownMenu.Trigger>
                 <DropdownMenu.Content>
@@ -268,7 +268,7 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
                       </Dialog.Header>
                       <Dialog.Body>
                         <Dialog.Description>{t('delete-space-confirm.description')}</Dialog.Description>
-                        <div className='flex justify-end gap-2 mbs-4'>
+                        <Flex gap='sm' justify='end' classNames='mt-4'>
                           <Dialog.Close asChild>
                             <Button>{t('cancel.label')}</Button>
                           </Dialog.Close>
@@ -279,7 +279,7 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
                           >
                             {t('delete-space.label')}
                           </Button>
-                        </div>
+                        </Flex>
                       </Dialog.Body>
                     </Dialog.Content>
                   </Dialog.Overlay>

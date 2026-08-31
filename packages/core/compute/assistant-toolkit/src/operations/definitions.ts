@@ -16,7 +16,7 @@ import * as Chat from '../types/Chat';
 
 export const RunInstructions = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.runInstructions'),
+    key: DXN.make('org.dxos.operation.assistantToolkit.runInstructions'),
     name: 'Run Instructions',
     description: 'Agentic worker that executes a provided prompt using skills and tools.',
     icon: 'ph--brain--regular',
@@ -36,7 +36,7 @@ export const RunInstructions = Operation.make({
     chat: Schema.optional(Ref.Ref(Chat.Chat)),
 
     /**
-     * @default dxn:com.anthropic.model.claude-opus-4-8.default
+     * @default `dxn:com.anthropic.model.claude-opus-5.default`.
      */
     model: Schema.optional(DXN.Schema),
 

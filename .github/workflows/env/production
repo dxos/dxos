@@ -4,11 +4,20 @@ CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}
 COMPOSER_APP_POSTHOG_API_KEY=${COMPOSER_APP_PROD_POSTHOG_API_KEY}
 COMPOSER_APP_POSTHOG_FEEDBACK_SURVEY_ID=019c52a3-6569-0000-23f4-24890d3f3032
 COMPOSER_APP_POSTHOG_PROJECT_ID=126171
+DOCS_POSTHOG_API_KEY=phc_QsY4GTyDW2Nt6YQ8j8meXZeRFGBbyTNaXSNfJY62pTq
 POSTHOG_CLI_API_KEY=${POSTHOG_CLI_API_KEY}
-DX_DISCORD_WEBHOOK_URL=${DX_DISCORD_WEBHOOK_URL}
-DX_HUB_URL="https://hub.dxos.network/"
+DX_HUB_URL="https://dxos.network/hub/"
 DX_IPDATA_API_KEY=${IPDATA_API_KEY}
+# Native builds cannot use the relative /api path — they serve their own frontend — and each
+# deployment binds its own feedback-logs R2 bucket, so the channel names its own.
+DX_FEEDBACK_LOGS_ENDPOINT=https://composer.space/api/feedback-logs
 DX_OTEL_ENDPOINT=/api/otel
+# Stamped on every metric, log and trace as `deployment.environment`; without it every
+# deployed client reports `unknown` and production is indistinguishable from preview.
+DX_ENVIRONMENT=production
 DX_POSTHOG_API_HOST=https://o.composer.space
 IPFS_API_SECRET=${IPFS_API_SECRET}
 # End common vars
+# The curated, fixed plugin set: no plugin registry, no dev plugin loader, and no non-shipped plugin
+# in the module graph (see plugin-defs.production.tsx). Preview and dev keep the full catalog.
+DX_PLUGIN_SET=production

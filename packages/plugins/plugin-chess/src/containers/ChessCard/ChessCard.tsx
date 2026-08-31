@@ -21,7 +21,9 @@ export const ChessCard = ({ variant }: ChessCardProps) => {
   return (
     <Card.Body>
       <Card.Section classNames='aspect-square'>
-        <Card.Row fullWidth>
+        {/* `self-stretch`: the section centers its rows, so the row would sit at its content height —
+            zero here, since the board sizes itself from the container rather than from its content. */}
+        <Card.Row fullWidth classNames='self-stretch'>
           <Chessboard.Root state={variant}>
             <Chessboard.Content>
               <Chessboard.Board />

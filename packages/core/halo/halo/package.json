@@ -23,6 +23,7 @@
   "dependencies": {
     "@dxos/errors": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "effect": "catalog:"
   },
   "publishConfig": {

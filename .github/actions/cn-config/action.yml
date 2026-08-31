@@ -6,8 +6,17 @@ inputs:
     description: 'Version'
     required: true
   environment:
-    description: Target environment (labs | staging | production) — selects the updater channel.
+    description: Target environment (dev | preview | staging | production) — selects the updater channel.
     required: true
+  suffix-identifier:
+    description: >-
+      Set "false" to keep the stock bundle identifier and icons on a non-production build. iOS does this:
+      an App ID must be registered with Apple and carried by a provisioning profile, so suffixing it would
+      break TestFlight until that registration exists, and `tauri ios init` builds its asset catalog from
+      the icon directory, which only the stock one populates. Desktop wants both — the suffix is what gives
+      each channel its own data container, and the icon is how you tell the channels apart in the dock.
+    required: false
+    default: 'true'
   ios-bundle-version:
     description: >-
       Optional override for bundle.iOS.bundleVersion (Apple's CFBundleVersion, which must be plain digits
@@ -46,6 +55,55 @@ runs:
           ]' \
           "${{ steps.find-tauri-config.outputs.tauri_conf_json_path }}" > "${{ steps.find-tauri-config.outputs.tauri_conf_json_path }}.tmp" && \
         mv "${{ steps.find-tauri-config.outputs.tauri_conf_json_path }}.tmp" "${{ steps.find-tauri-config.outputs.tauri_conf_json_path }}"
+      shell: bash
+
+    # Each non-production channel installs as its own app. macOS keys both the application container and
+    # the WKWebView data store on the bundle identifier, so a distinct one is what lets a preview build
+    # run beside the released one instead of sharing — and migrating — its storage. Production keeps the
+    # bare identifier every existing install already carries.
+    - name: Update identity in tauri.conf.json
+      if: inputs.environment != 'production' && inputs.suffix-identifier != 'false'
+      env:
+        ENVIRONMENT: ${{ inputs.environment }}
+        TAURI_CONF: ${{ steps.find-tauri-config.outputs.tauri_conf_json_path }}
+      run: |
+        case "$ENVIRONMENT" in
+          dev | preview | staging) ;;
+          *) echo "::error::cn-config: unknown environment: $ENVIRONMENT" && exit 1 ;;
+        esac
+        label="$(printf '%s' "${ENVIRONMENT:0:1}" | tr '[:lower:]' '[:upper:]')${ENVIRONMENT:1}"
+        jq \
+          --arg env "$ENVIRONMENT" \
+          --arg label "$label" \
+          '.identifier += "." + $env | .productName += " " + $label' \
+          "$TAURI_CONF" > temp.json && mv temp.json "$TAURI_CONF"
+        echo "identity -> $(jq -r '.identifier + " / " + .productName' "$TAURI_CONF")"
+      shell: bash
+
+    # Side-by-side installs are only useful if you can tell them apart: preview gets the purple mark, every
+    # other prerelease the rust one, and the blue mark stays the released app's alone. The web bundle
+    # brands its favicon and boot loader to match (`src/vite/channel-branding.ts`).
+    - name: Update icon in tauri.conf.json
+      if: inputs.environment != 'production' && inputs.suffix-identifier != 'false'
+      env:
+        ENVIRONMENT: ${{ inputs.environment }}
+        TAURI_CONF: ${{ steps.find-tauri-config.outputs.tauri_conf_json_path }}
+        WORKING_DIRECTORY: ${{ inputs.working-directory }}
+      run: |
+        case "$ENVIRONMENT" in
+          preview) icons=icons-preview ;;
+          *) icons=icons-rust ;;
+        esac
+        for file in 32x32.png 128x128.png 128x128@2x.png icon.icns icon.ico; do
+          if [ ! -f "$WORKING_DIRECTORY/$icons/$file" ]; then
+            echo "::error::cn-config: missing $icons/$file" && exit 1
+          fi
+        done
+        jq --arg icons "$icons" \
+          '.bundle.icon = [$icons + "/32x32.png", $icons + "/128x128.png", $icons + "/128x128@2x.png",
+                           $icons + "/icon.icns", $icons + "/icon.ico"]' \
+          "$TAURI_CONF" > temp.json && mv temp.json "$TAURI_CONF"
+        echo "icon -> $icons"
       shell: bash
 
     - name: Update version in tauri.conf.json

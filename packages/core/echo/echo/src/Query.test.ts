@@ -859,6 +859,24 @@ describe('query api', () => {
       });
     });
 
+    test('hasParent AST, decode, and pretty-print', ({ expect }) => {
+      const filter = Filter.hasParent(false);
+      expect(filter.ast).toMatchObject({ type: 'has-parent', value: false });
+      Schema.decodeSync(Schema.toType(QueryAST.Filter))(filter.ast);
+      expect(Filter.pretty(filter)).toBe('Filter.hasParent(false)');
+      expect(Filter.hasParent().ast).toMatchObject({ type: 'has-parent', value: true });
+    });
+
+    test('hasParent matches via toPredicate', ({ expect }) => {
+      const parent = Obj.make(TestSchema.Person, { name: 'Parent' });
+      const child = Obj.make(TestSchema.Person, { name: 'Child' });
+      Obj.setParent(child, parent);
+      expect(Filter.toPredicate(child, Filter.hasParent())).toBe(true);
+      expect(Filter.toPredicate(child, Filter.hasParent(false))).toBe(false);
+      expect(Filter.toPredicate(parent, Filter.hasParent(false))).toBe(true);
+      expect(Filter.toPredicate(parent, Filter.hasParent())).toBe(false);
+    });
+
     test('childOf pretty-prints correctly', () => {
       const parentRef = Ref.fromURI(EID.make({ spaceId: SpaceId.random(), entityId: EntityId.random() }));
       const filter = Filter.childOf(parentRef);
@@ -889,9 +907,26 @@ describe('query api', () => {
 
         expect(query.ast).toMatchObject({
           type: 'aggregate',
-          aggregates: [{ name: 'email', kind: 'group', property: 'email' }],
+          aggregates: [{ name: 'email', kind: 'group', properties: ['email'] }],
         });
         Schema.decodeSync(Schema.toType(QueryAST.Query))(query.ast);
+      });
+
+      test('group by a coalesce chain carries the whole chain in one entry', () => {
+        const query = Query.select(Filter.type(TestSchema.Person)).aggregate({
+          email: Aggregate.group({ coalesce: ['email', 'name'] }),
+        });
+
+        expect(query.ast).toMatchObject({
+          type: 'aggregate',
+          aggregates: [{ name: 'email', kind: 'group', properties: ['email', 'name'] }],
+        });
+        Schema.decodeSync(Schema.toType(QueryAST.Query))(query.ast);
+
+        // An empty chain has no key to read, so it is rejected at the type level (and by the AST
+        // schema, which declares `properties` non-empty) rather than degrading to one `null` group.
+        // @ts-expect-error - `coalesce` requires at least one property.
+        Aggregate.group({ coalesce: [] });
       });
 
       test('group by multiple properties forms a composite key', () => {
@@ -903,8 +938,8 @@ describe('query api', () => {
         expect(query.ast).toMatchObject({
           type: 'aggregate',
           aggregates: [
-            { name: 'name', kind: 'group', property: 'name' },
-            { name: 'email', kind: 'group', property: 'email' },
+            { name: 'name', kind: 'group', properties: ['name'] },
+            { name: 'email', kind: 'group', properties: ['email'] },
           ],
         });
         Schema.decodeSync(Schema.toType(QueryAST.Query))(query.ast);
@@ -948,7 +983,7 @@ describe('query api', () => {
         expect(query.ast).toMatchObject({
           type: 'aggregate',
           aggregates: [
-            { name: 'email', kind: 'group', property: 'email' },
+            { name: 'email', kind: 'group', properties: ['email'] },
             { name: 'items', kind: 'items', limit: 20 },
           ],
         });
@@ -964,7 +999,7 @@ describe('query api', () => {
         expect(query.ast).toMatchObject({
           type: 'aggregate',
           aggregates: [
-            { name: 'email', kind: 'group', property: 'email' },
+            { name: 'email', kind: 'group', properties: ['email'] },
             {
               name: 'items',
               kind: 'items',
@@ -988,7 +1023,7 @@ describe('query api', () => {
         expect(query.ast).toMatchObject({
           type: 'aggregate',
           aggregates: [
-            { name: 'email', kind: 'group', property: 'email' },
+            { name: 'email', kind: 'group', properties: ['email'] },
             { name: 'latest', kind: 'max', property: 'name' },
             { name: 'earliest', kind: 'min', property: 'name' },
             { name: 'total', kind: 'count' },

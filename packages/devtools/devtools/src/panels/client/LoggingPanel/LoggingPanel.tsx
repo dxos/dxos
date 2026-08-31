@@ -6,7 +6,8 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Format } from '@dxos/echo/Format';
 import { levels, parseFilter } from '@dxos/log';
-import { type LogEntry, LogLevel, type QueryLogsRequest } from '@dxos/protocols/proto/dxos/client/services';
+import { LogLevel } from '@dxos/protocols/buf/dxos/client/logging_pb';
+import { type LogEntry, type QueryLogsRequest } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient } from '@dxos/react-client';
 import { useStream } from '@dxos/react-client/devtools';
 import { Panel, Toolbar, useFileDownload } from '@dxos/react-ui';
@@ -112,7 +113,7 @@ export const LoggingPanel = () => {
       { value: 'error', label: 'Error' },
 
       // TOOD(burdon): Factor out. Move to separate pull down.
-      { value: 'info,echo-edge-replicator:debug', label: 'EDGE Replication' },
+      { value: 'info,echo-edge-subduction-replicator:debug', label: 'EDGE Replication' },
     ],
     [],
   );

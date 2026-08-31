@@ -9,16 +9,15 @@ import * as Prompt from 'effect/unstable/ai/Prompt';
 import { AiPreprocessor, AiService } from '@dxos/ai';
 import { Harness } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
-import { Database } from '@dxos/echo';
-import { ContentBlock, Outline } from '@dxos/types';
+import { ContentBlock } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { Chat } from '../../../types';
 import { PlanReminder } from './definitions';
 
 /**
- * End-request hook for the planning skill. When the conversation's working outline still has
- * unchecked items, an ephemeral check asks the model — given the full conversation — whether the
+ * End-request hook for the planning skill. When the conversation's checklist still has
+ * open tasks, an ephemeral check asks the model — given the full conversation — whether the
  * agent should keep working: a deterministic reminder alone would trap an agent that legitimately
  * finishes with open items in an unbreakable re-prompt loop. On "continue" it enqueues a
  * continuation reminder onto the owning host's queue (HarnessService Tier B), which keeps the
@@ -33,20 +32,16 @@ export default PlanReminder.pipe(
         if (!chat) {
           return;
         }
-        // Only consult an outline that already exists — the reminder never creates one.
-        const outline = yield* resolveExistingOutline(chat);
-        if (!outline) {
+        const tasks = yield* Chat.loadTasks(chat);
+        if (!tasks.some(Chat.isOpenTask)) {
           return;
         }
-        const text = yield* Database.load(outline.content).pipe(Effect.orElseSucceed(() => undefined));
-        if (!text || !Outline.hasOpenItems(text.content)) {
-          return;
-        }
+        const checklist = yield* Chat.formatChecklist(chat);
 
         const history = yield* Harness.history;
         const prompt = Prompt.concat(
           yield* AiPreprocessor.preprocessPrompt(history, { system: checklistCompletionCheckSystem }),
-          checklistCompletionCheckPrompt(text.content),
+          checklistCompletionCheckPrompt(checklist),
         );
         const { text: reply } = yield* Effect.scoped(LanguageModel.generateText({ prompt }));
 
@@ -56,31 +51,21 @@ export default PlanReminder.pipe(
 
         yield* Harness.enqueueMessage({
           content: [
-            ContentBlock.Text.make({ text: checklistContinueReminderPrompt(text.content), disposition: 'synthetic' }),
+            ContentBlock.Text.make({ text: checklistContinueReminderPrompt(checklist), disposition: 'synthetic' }),
           ],
         });
       },
-      Effect.provide(AiService.model('com.anthropic.model.claude-sonnet-4-6.default')),
+      Effect.provide(AiService.model('com.anthropic.model.claude-sonnet-5.default')),
     ),
   ),
 );
 
-/**
- * The working outline, if one exists: the parent project's, else the chat's own. Mirrors
- * {@link Chat.ensureOutline}'s resolution order without the create path.
- */
-const resolveExistingOutline = (chat: Chat.Chat) =>
-  Effect.gen(function* () {
-    const ref = Chat.peekOutlineRef(chat);
-    if (!ref) {
-      return undefined;
-    }
-    return yield* Database.load(ref).pipe(Effect.orElseSucceed(() => undefined));
-  });
-
 const checklistCompletionCheckSystem = trim`
   You decide whether an agent should stop or continue working on its checklist, given the
   conversation so far and the agent's remaining items.
+  The user's request defines the scope: if the user asked for a specific task or subset and that
+  work is complete, the agent must STOP even though other items remain open — open items alone
+  are not a reason to continue.
   Reply with exactly one word: "stop" or "continue". Do not use tools. Do not add explanation.
 `;
 
@@ -91,7 +76,8 @@ const checklistCompletionCheckPrompt = (markdown: string): string => trim`
   ${markdown}
   </checklist>
 
-  Should the agent STOP now (no more work needed) or CONTINUE working on the checklist?
+  Should the agent STOP now (the user's request is fulfilled, even if other items remain open) or
+  CONTINUE working on the checklist (the user asked for more than has been done)?
   Reply with exactly one word: "stop" or "continue".
 `;
 

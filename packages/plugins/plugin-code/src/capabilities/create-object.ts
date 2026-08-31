@@ -21,11 +21,14 @@ export default Capability.makeModule(
           createObject: (props, options) =>
             Effect.gen(function* () {
               const object = Spec.make(props);
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-                targetNodeId: options.targetNodeId,
-              });
+              return yield* Operation.invoke(
+                SpaceOperation.AddObject,
+                {
+                  object,
+                  target: options.target,
+                },
+                { spaceId: options.db.spaceId },
+              );
             }),
         },
         {
@@ -35,16 +38,22 @@ export default Capability.makeModule(
               const spec = Spec.make();
               const project = CodeProject.make({ name: props?.name, spec });
               // Add the linked Spec to the space so the Ref resolves.
-              yield* Operation.invoke(SpaceOperation.AddObject, {
-                object: spec,
-                target: options.target,
-                targetNodeId: options.targetNodeId,
-              });
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object: project,
-                target: options.target,
-                targetNodeId: options.targetNodeId,
-              });
+              yield* Operation.invoke(
+                SpaceOperation.AddObject,
+                {
+                  object: spec,
+                  target: options.target,
+                },
+                { spaceId: options.db.spaceId },
+              );
+              return yield* Operation.invoke(
+                SpaceOperation.AddObject,
+                {
+                  object: project,
+                  target: options.target,
+                },
+                { spaceId: options.db.spaceId },
+              );
             }),
         },
       ]),

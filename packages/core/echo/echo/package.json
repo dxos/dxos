@@ -63,10 +63,10 @@
       "types": "./dist/types/src/Entity.d.ts",
       "import": "./dist/lib/Entity.mjs"
     },
-    "./Err": {
-      "source": "./src/Err.ts",
-      "types": "./dist/types/src/Err.d.ts",
-      "import": "./dist/lib/Err.mjs"
+    "./Error": {
+      "source": "./src/Error.ts",
+      "types": "./dist/types/src/Error.d.ts",
+      "import": "./dist/lib/Error.mjs"
     },
     "./Feed": {
       "source": "./src/Feed.ts",
@@ -175,6 +175,7 @@
   ],
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/blob": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/effect": "workspace:*",

@@ -8,7 +8,6 @@ import * as CollectionModel from '@dxos/app-toolkit/CollectionModel';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { autoBindSingleConnection } from '@dxos/plugin-connector';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 
 import { InboxOperation } from '#types';
@@ -18,20 +17,18 @@ import { getMailboxPath } from '../paths';
 const handler: Operation.WithHandler<typeof InboxOperation.AddMailbox> = InboxOperation.AddMailbox.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
-      const target = input.target as any;
-      const object = input.object as Obj.Unknown;
-      const db = Database.isDatabase(target) ? target : Obj.getDatabase(target);
+      const { target, object } = input;
+      // The database is the runtime's, resolved from the invocation's space id, so the collection
+      // write runs against it without a service override.
+      const { db } = yield* Database.Service;
       invariant(db, 'Database not found.');
+      // The space id names the database, so the target has to live in it; one from another space —
+      // or a detached one — would take the reference somewhere the mailbox is not.
+      if (target && Obj.getDatabase(target)?.spaceId !== db.spaceId) {
+        return yield* Effect.fail(new Error(`Target collection does not belong to space ${db.spaceId}.`));
+      }
 
-      yield* CollectionModel.add({
-        object,
-        target: Database.isDatabase(target) ? undefined : target,
-      }).pipe(Effect.provide(Database.layer(db)));
-
-      // A mailbox is inert until a provider binds it, so when exactly one account is already
-      // authorized for this type there is nothing for the user to choose — bind it here rather than
-      // leaving a Connect menu whose single entry is the only possible answer.
-      yield* autoBindSingleConnection({ target: object }).pipe(Effect.provide(Database.layer(db)));
+      yield* CollectionModel.add({ object, target });
 
       yield* Operation.schedule(ObservabilityOperation.SendEvent, {
         name: 'space.object.add',

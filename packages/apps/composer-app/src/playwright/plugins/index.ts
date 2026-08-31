@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+export * from './assistant';
 export * from './deck';
 export * from './inbox';
 export * from './markdown';

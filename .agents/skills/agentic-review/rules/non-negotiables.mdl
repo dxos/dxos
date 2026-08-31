@@ -66,6 +66,27 @@ rule no-compat-shims: No compatibility re-exports when moving code
 ```
 
 ```mdl
+rule no-echo-internal-in-sdk: SDK and app code uses the public ECHO API
+  `@dxos/echo/internal` is ECHO's private surface and carries no compatibility
+  guarantee, so sdk, plugin, and app code must import from the public entry
+  (`@dxos/echo`) whenever an equivalent exists — e.g. `Annotation.make` in place
+  of `createAnnotationHelper`, `Obj`/`Ref`/`Type` in place of their internal
+  counterparts. Flag an `@dxos/echo/internal` import and name the public
+  alternative. Do not flag an import with no public equivalent; say so instead.
+  Packages under `packages/core/echo/**` are ECHO itself — never flag those.
+  scope: repo
+  files:
+    - packages/sdk/**/*.ts
+    - packages/sdk/**/*.tsx
+    - packages/plugins/**/*.ts
+    - packages/plugins/**/*.tsx
+    - packages/apps/**/*.ts
+    - packages/apps/**/*.tsx
+  grep: '@dxos/echo/internal'
+  severity: warn
+```
+
+```mdl
 rule private-new-packages: New packages must be private
   Every newly-added package must set `"private": true` in its `package.json`;
   the flag is removed manually only once a trusted publisher exists. Flag a

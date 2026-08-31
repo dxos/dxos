@@ -24,11 +24,16 @@ import { createStoryDecorators } from '#testing';
 
 import { renderByline } from '../util';
 
+// The story names its transcription worker explicitly; the app reads it from
+// `runtime.services.edgeServices` and there is no built-in endpoint to fall back on.
+const TRANSCRIPTION_ENDPOINT = 'https://calls.dxos.network';
+
 // Small chunk threshold so the transcriber emits every few seconds while the file plays (streaming),
 // instead of only flushing the whole buffer on stop.
 const STREAMING_TRANSCRIBE_CONFIG: Partial<TranscribeConfig> = {
   transcribeAfterChunksAmount: 25,
   prefixBufferChunksAmount: 10,
+  endpoint: TRANSCRIPTION_ENDPOINT,
 };
 
 // In-memory message buffer + model adapter (production wires up a real space-backed `Feed`).

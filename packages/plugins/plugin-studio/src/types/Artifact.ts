@@ -50,7 +50,11 @@ export class Artifact extends Type.makeObject<Artifact>(DXN.make('org.dxos.type.
     /** Chosen GenerationService id for this kind (passed to op:generate as `provider`). */
     generator: Schema.optional(Schema.String.pipe(FormInputAnnotation.set(false))),
     /** Owned interchangeable alternatives of the primary output; each records its own generation. */
-    variants: Schema.Array(Ref.Ref(Variant.Variant)).pipe(FormInputAnnotation.set(false), Schema.optional),
+    variants: Schema.Array(Ref.Ref(Variant.Variant)).pipe(
+      Annotation.SetParent.set(true),
+      FormInputAnnotation.set(false),
+      Schema.optional,
+    ),
     /** The chosen/primary variant (used for thumbnails). */
     cover: Schema.optional(Ref.Ref(Variant.Variant).pipe(FormInputAnnotation.set(false))),
     /** Downstream products (transcript, summary, caption, upscale, …). */

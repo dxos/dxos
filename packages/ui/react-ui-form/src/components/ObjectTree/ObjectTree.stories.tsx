@@ -3,15 +3,10 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Schema from 'effect/Schema';
 import React from 'react';
 
-import { parseProto } from '@dxos/effect-proto';
 import { log } from '@dxos/log';
-import { type Config as ConfigProto, Runtime } from '@dxos/protocols/proto/dxos/config';
-// Raw .proto source resolved through `@dxos/protocols`'s `./proto/dxos/*.proto`
-// exports entry. Vite's `?raw` query suffix returns the file as a string so we
-// can hand it straight to `parseProto` -- the same flow the unit test uses.
-import configProto from '@dxos/protocols/proto/dxos/config.proto?raw';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -20,27 +15,62 @@ import { translations } from '#translations';
 import { Form } from '../Form';
 import { ObjectTree } from './ObjectTree';
 
-const registry = parseProto(configProto);
-const ConfigSchema = registry.get('dxos.config.Config');
+// Mirrors `dxos.config.Config` so the story exercises nested structs, arrays and enums.
+const ConfigSchema = Schema.Struct({
+  version: Schema.Number,
+  runtime: Schema.Struct({
+    client: Schema.Struct({
+      log: Schema.Struct({ filter: Schema.String, prefix: Schema.String }),
+      storage: Schema.Struct({
+        persistent: Schema.Boolean,
+        sqliteMode: Schema.Literals(['IDB_BATCH_ATOMIC', 'OPFS']),
+        dataRoot: Schema.String,
+      }),
+      edgeFeatures: Schema.Struct({
+        subductionReplicator: Schema.Boolean,
+        signaling: Schema.Boolean,
+      }),
+      servicesMode: Schema.Literals(['LOCAL', 'SHARED_WORKER', 'DEDICATED_WORKER']),
+      enableSnapshots: Schema.Boolean,
+      snapshotInterval: Schema.Number,
+    }),
+    app: Schema.Struct({
+      org: Schema.String,
+      theme: Schema.String,
+      website: Schema.String,
+      build: Schema.Struct({
+        timestamp: Schema.String,
+        commitHash: Schema.String,
+        version: Schema.String,
+        branch: Schema.String,
+      }),
+    }),
+    services: Schema.Struct({
+      edge: Schema.Struct({ url: Schema.String }),
+      signaling: Schema.Array(Schema.Struct({ server: Schema.String, api: Schema.String })),
+      iceProviders: Schema.Array(Schema.Struct({ urls: Schema.String })),
+    }),
+    keys: Schema.Array(Schema.Struct({ name: Schema.String, value: Schema.String })),
+  }),
+});
 
-// A representative Config value that exercises nested messages, arrays, enums
-// (rendered as their string names by the proto codec), and `google.protobuf.Any`.
-const value: ConfigProto = {
+type ConfigType = Schema.Schema.Type<typeof ConfigSchema>;
+
+const value: ConfigType = {
   version: 1,
   runtime: {
     client: {
       log: { filter: 'info', prefix: 'app' },
       storage: {
         persistent: true,
-        sqliteMode: Runtime.Client.Storage.SqliteMode.OPFS,
+        sqliteMode: 'OPFS',
         dataRoot: '/var/lib/dxos',
       },
       edgeFeatures: {
-        echoReplicator: true,
         subductionReplicator: true,
         signaling: true,
       },
-      servicesMode: Runtime.Client.ServicesMode.DEDICATED_WORKER,
+      servicesMode: 'DEDICATED_WORKER',
       enableSnapshots: false,
       snapshotInterval: 60_000,
     },
@@ -102,14 +132,11 @@ export const JSON = () => (
   </Syntax.Root>
 );
 
-// Renders the same proto-derived `ConfigSchema` + `value` through the
-// interactive `Form` component, for side-by-side comparison with the
-// read-only ObjectTree above. `db` is intentionally omitted -- the proto
-// schema is not an ECHO type, so there's no space/database in play.
+// `db` is omitted because `ConfigSchema` is not an ECHO type.
 export const WithForm = () => (
   <Form.Root
-    schema={ConfigSchema as any}
-    defaultValues={value as any}
+    schema={ConfigSchema}
+    defaultValues={value}
     onSave={(next) => log.info('save', { next })}
     onCancel={() => log.info('cancel')}
   >
@@ -123,7 +150,7 @@ export const WithForm = () => (
 );
 
 export const WithReadOnlyForm = () => (
-  <Form.Root schema={ConfigSchema as any} defaultValues={value as any} readonly={true}>
+  <Form.Root schema={ConfigSchema} defaultValues={value} readonly={true}>
     <Form.Viewport>
       <Form.Content>
         <Form.FieldSet />

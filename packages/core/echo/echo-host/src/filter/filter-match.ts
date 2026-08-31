@@ -5,6 +5,7 @@
 import { EntityStructure, type QueryAST } from '@dxos/echo-protocol';
 import {
   ATTR_META,
+  ATTR_PARENT,
   type ObjectJSON,
   compareTypenameStrings,
   filterMatchEntity,
@@ -95,6 +96,10 @@ export const filterMatchDoc = (filter: QueryAST.Filter, obj: MatchedDoc): boolea
       throw new Error('child-of filters must be handled at the executor level, not in-memory matching.');
     }
 
+    case 'has-parent': {
+      return (EntityStructure.getParent(obj.doc) !== undefined) === filter.value;
+    }
+
     case 'in-query': {
       throw new Error('in-query filters must be resolved to a literal `in` by the query executor before matching.');
     }
@@ -145,7 +150,7 @@ export const filterMatchObjectJSON = (filter: QueryAST.Filter, obj: ObjectJSON):
             // ignore meta properties
             continue;
           }
-          const value = (obj as any)[key];
+          const value = obj[key];
           if (!filterMatchValue(valueFilter, value)) {
             return false;
           }
@@ -188,6 +193,10 @@ export const filterMatchObjectJSON = (filter: QueryAST.Filter, obj: ObjectJSON):
 
     case 'child-of': {
       throw new Error('child-of filters must be handled at the executor level, not in-memory matching.');
+    }
+
+    case 'has-parent': {
+      return (obj[ATTR_PARENT] !== undefined) === filter.value;
     }
 
     case 'in-query': {

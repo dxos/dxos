@@ -79,6 +79,9 @@
       "path": "../../common/web-context-solid"
     },
     {
+      "path": "../../core/compute/agent-claude"
+    },
+    {
       "path": "../../core/echo/echo-solid"
     },
     {
@@ -124,6 +127,9 @@
       "path": "../../plugins/plugin-chess-com"
     },
     {
+      "path": "../../plugins/plugin-claude"
+    },
+    {
       "path": "../../plugins/plugin-client"
     },
     {
@@ -131,6 +137,9 @@
     },
     {
       "path": "../../plugins/plugin-commerce"
+    },
+    {
+      "path": "../../plugins/plugin-computer"
     },
     {
       "path": "../../plugins/plugin-conductor"
@@ -149,6 +158,9 @@
     },
     {
       "path": "../../plugins/plugin-deck"
+    },
+    {
+      "path": "../../plugins/plugin-deepseek"
     },
     {
       "path": "../../plugins/plugin-devtools"
@@ -170,6 +182,9 @@
     },
     {
       "path": "../../plugins/plugin-file"
+    },
+    {
+      "path": "../../plugins/plugin-file-system"
     },
     {
       "path": "../../plugins/plugin-freeq"
@@ -211,10 +226,16 @@
       "path": "../../plugins/plugin-kanban"
     },
     {
+      "path": "../../plugins/plugin-lametric"
+    },
+    {
       "path": "../../plugins/plugin-library"
     },
     {
       "path": "../../plugins/plugin-linear"
+    },
+    {
+      "path": "../../plugins/plugin-lingo"
     },
     {
       "path": "../../plugins/plugin-magazine"
@@ -235,10 +256,10 @@
       "path": "../../plugins/plugin-mermaid"
     },
     {
-      "path": "../../plugins/plugin-native"
+      "path": "../../plugins/plugin-mobile"
     },
     {
-      "path": "../../plugins/plugin-native-filesystem"
+      "path": "../../plugins/plugin-native"
     },
     {
       "path": "../../plugins/plugin-navtree"
@@ -274,6 +295,9 @@
       "path": "../../plugins/plugin-pwa"
     },
     {
+      "path": "../../plugins/plugin-qa"
+    },
+    {
       "path": "../../plugins/plugin-registry"
     },
     {
@@ -281,6 +305,9 @@
     },
     {
       "path": "../../plugins/plugin-routine"
+    },
+    {
+      "path": "../../plugins/plugin-s3"
     },
     {
       "path": "../../plugins/plugin-sample"
@@ -307,9 +334,6 @@
       "path": "../../plugins/plugin-sidekick"
     },
     {
-      "path": "../../plugins/plugin-simple-layout"
-    },
-    {
       "path": "../../plugins/plugin-slack"
     },
     {
@@ -326,6 +350,9 @@
     },
     {
       "path": "../../plugins/plugin-status-bar"
+    },
+    {
+      "path": "../../plugins/plugin-stream-deck"
     },
     {
       "path": "../../plugins/plugin-studio"
@@ -398,9 +425,6 @@
     },
     {
       "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../../sdk/schema"
     },
     {
       "path": "../../sdk/shell"

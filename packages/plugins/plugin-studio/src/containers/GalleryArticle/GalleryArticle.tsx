@@ -10,7 +10,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Collection, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
-import { Icon, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Flex, Icon, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useListSelection } from '@dxos/react-ui-list';
 import { Masonry } from '@dxos/react-ui-masonry';
 
@@ -126,9 +126,9 @@ export const GalleryArticle = ({ role, subject: collection }: GalleryArticleProp
       </Panel.Toolbar>
       <Panel.Content>
         {items.length === 0 ? (
-          <div role='status' className='flex items-center justify-center h-full text-subdued'>
+          <Flex role='status' center classNames='h-full text-subdued'>
             {t('empty.message')}
-          </div>
+          </Flex>
         ) : (
           <Masonry.Root Tile={ArtifactTile}>
             <Masonry.Content centered>

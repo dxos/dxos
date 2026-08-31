@@ -25,6 +25,9 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/graph"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -56,6 +59,9 @@
     },
     {
       "path": "../../core/compute/conductor"
+    },
+    {
+      "path": "../../core/compute/link"
     },
     {
       "path": "../../core/compute/operation"
@@ -106,6 +112,9 @@
       "path": "../../ui/react-ui-canvas-editor"
     },
     {
+      "path": "../../ui/react-ui-components"
+    },
+    {
       "path": "../../ui/react-ui-debug"
     },
     {
@@ -121,10 +130,25 @@
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
+      "path": "../../ui/react-ui-terminal"
+    },
+    {
+      "path": "../../ui/ui-editor"
+    },
+    {
       "path": "../../ui/ui-theme"
     },
     {
+      "path": "../plugin-attention"
+    },
+    {
       "path": "../plugin-client"
+    },
+    {
+      "path": "../plugin-connector"
+    },
+    {
+      "path": "../plugin-google"
     },
     {
       "path": "../plugin-illustrator"

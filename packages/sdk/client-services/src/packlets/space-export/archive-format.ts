@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
+import { SpacesService } from '@dxos/protocols/rpc';
 
 const JSON_EXTENSIONS = ['.dx.json', '.dx.json.gz', '.json'];
 const BINARY_EXTENSIONS = ['.tar', '.tar.gz'];
@@ -13,13 +13,15 @@ const BINARY_EXTENSIONS = ['.tar', '.tar.gz'];
  * Uses filename extension as the primary signal, and falls back to sniffing
  * the first bytes of the archive contents to distinguish JSON from tar.
  */
-export const detectSpaceArchiveFormat = (archive: Pick<SpaceArchive, 'filename' | 'contents'>): SpaceArchive.Format => {
+export const detectSpaceArchiveFormat = (
+  archive: Pick<SpacesService.SpaceArchive, 'filename' | 'contents'>,
+): SpacesService.SpaceArchiveFormat => {
   const filename = archive.filename?.toLowerCase() ?? '';
   if (JSON_EXTENSIONS.some((ext) => filename.endsWith(ext))) {
-    return SpaceArchive.Format.JSON;
+    return SpacesService.SpaceArchiveFormat.enums.JSON;
   }
   if (BINARY_EXTENSIONS.some((ext) => filename.endsWith(ext))) {
-    return SpaceArchive.Format.BINARY;
+    return SpacesService.SpaceArchiveFormat.enums.BINARY;
   }
 
   // Fall back to byte sniffing: JSON archives start with '{' (0x7B) or whitespace.
@@ -32,11 +34,11 @@ export const detectSpaceArchiveFormat = (archive: Pick<SpaceArchive, 'filename' 
         continue;
       }
       if (byte === 0x7b /* '{' */) {
-        return SpaceArchive.Format.JSON;
+        return SpacesService.SpaceArchiveFormat.enums.JSON;
       }
       break;
     }
   }
 
-  return SpaceArchive.Format.BINARY;
+  return SpacesService.SpaceArchiveFormat.enums.BINARY;
 };

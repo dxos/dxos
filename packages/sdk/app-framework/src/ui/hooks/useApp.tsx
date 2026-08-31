@@ -20,6 +20,7 @@ import { PluginManagerContext } from '../../context';
 import { type ActivationEvent, type Plugin, PluginManager } from '../../core';
 import { setupDevtools } from '../../devtools';
 import { App, PluginManagerProvider, SurfaceManager, SurfaceManagerProvider } from '../components';
+import { bootLoader } from '../components/App/loader';
 
 const ENABLED_KEY = 'org.dxos.app-framework.enabled';
 
@@ -291,15 +292,39 @@ export const useApp = ({
 
     // Set up a timeout for startup.
     const timeoutId = setTimeout(() => {
-      if (!readyRef.current && !errorRef.current) {
-        log.warn('startup timeout diagnostic', {
-          eventsFired: manager.getEventsFired(),
-          activeModules: manager.getActive(),
-          pendingReset: manager.getPendingReset(),
-        });
+      if (readyRef.current || errorRef.current) {
+        return;
+      }
+
+      log.warn('startup timeout diagnostic', {
+        eventsFired: manager.getEventsFired(),
+        activeModules: manager.getActive(),
+        pendingReset: manager.getPendingReset(),
+      });
+
+      const abort = () => {
         void EffectEx.runAndForwardErrors(Fiber.interrupt(fiber));
         setError(new Error(`Startup timed out after ${timeout}ms`));
+      };
+
+      // In development the deadline is a symptom, not a verdict: a cold OPFS, a rebuild or a paused
+      // debugger all overrun it while the run is perfectly healthy, and killing it discards the
+      // state worth looking at. Startup continues either way and the user decides — the offer raises
+      // exactly the failure this branch used to raise unprompted.
+      //
+      // The missing-`stalled` case does NOT fall through to failing: the loader is inlined into
+      // `index.html` at build time, so a page served before this shipped has the old bundle, and
+      // treating that as fatal would resurrect the dialog precisely where dev asked for a button.
+      if (import.meta.env?.DEV) {
+        if (bootLoader?.stalled) {
+          bootLoader.stalled(abort);
+        } else {
+          log.warn('startup timed out; boot loader cannot offer an abort (stale inlined bundle?)', { timeout });
+        }
+        return;
       }
+
+      abort();
     }, timeout);
 
     return () => {
@@ -315,7 +340,7 @@ export const useApp = ({
   const progressRef = useRef(startupProgress);
   progressRef.current = startupProgress;
 
-  const surfaces = useMemo(() => new SurfaceManager(manager.capabilities), [manager]);
+  const surfaces = useMemo(() => new SurfaceManager(manager.capabilities, manager), [manager]);
 
   return useCallback(
     () => (

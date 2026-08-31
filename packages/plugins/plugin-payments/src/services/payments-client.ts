@@ -4,7 +4,7 @@
 
 import type { WalletClient } from 'viem';
 
-import { type Client } from '@dxos/client';
+import { type Identity } from '@dxos/halo';
 import { log } from '@dxos/log';
 
 import { createEdgeAuthedFetch, getEdgeAuthHeader } from './edge-auth';
@@ -101,7 +101,7 @@ const connectWallet = async (): Promise<{ walletClient: WalletClient; address: `
  * Builds a `fetch` that (1) injects the edge VP `Authorization` header and (2) transparently completes
  * an x402 payment on a 402 response by signing an EIP-3009 USDC transfer with the connected wallet.
  */
-const createPaidFetch = async (client: Client, baseUrl: string): Promise<typeof globalThis.fetch> => {
+const createPaidFetch = async (identity: Identity.EdgeIdentity, baseUrl: string): Promise<typeof globalThis.fetch> => {
   const { walletClient, address } = await connectWallet();
   const [{ createPublicClient, http }, { baseSepolia }] = await viem();
   const publicClient = createPublicClient({ chain: baseSepolia, transport: http() });
@@ -142,7 +142,7 @@ const createPaidFetch = async (client: Client, baseUrl: string): Promise<typeof 
   );
 
   // Base fetch already carries the edge Authorization header; x402 layers X-PAYMENT on the retry.
-  const baseFetch = createEdgeAuthedFetch(client, baseUrl);
+  const baseFetch = createEdgeAuthedFetch(identity, baseUrl);
   return wrapFetchWithPaymentFromConfig(baseFetch, {
     schemes: [{ network: PAYMENTS_NETWORK, client: new ExactEvmScheme(signer) }],
   });
@@ -153,8 +153,8 @@ const createPaidFetch = async (client: Client, baseUrl: string): Promise<typeof 
  * inline x402 payment. When payment is required the server returns 402 + requirements; the x402 wrapper
  * signs the USDC transfer and retries with an `X-PAYMENT` header.
  */
-export const buyPremium = async (client: Client, baseUrl: string): Promise<PremiumResponse> => {
-  const paidFetch = await createPaidFetch(client, baseUrl);
+export const buyPremium = async (identity: Identity.EdgeIdentity, baseUrl: string): Promise<PremiumResponse> => {
+  const paidFetch = await createPaidFetch(identity, baseUrl);
   const response = await paidFetch(new URL('/premium', baseUrl));
   if (!response.ok) {
     const text = await response.text().catch(() => '');
@@ -171,11 +171,11 @@ export const buyPremium = async (client: Client, baseUrl: string): Promise<Premi
  * caller redirects the browser there (`window.location.href = url`).
  */
 export const createStripeCheckout = async (
-  client: Client,
+  identity: Identity.EdgeIdentity,
   baseUrl: string,
   credits = 100,
 ): Promise<{ url: string }> => {
-  const authHeader = await getEdgeAuthHeader(client, baseUrl);
+  const authHeader = await getEdgeAuthHeader(identity, baseUrl);
   const response = await globalThis.fetch(new URL('/stripe/checkout', baseUrl), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': authHeader },

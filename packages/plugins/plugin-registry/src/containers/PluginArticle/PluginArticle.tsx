@@ -10,7 +10,6 @@ import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 
 import { PluginDetail } from '#components';
-import { getPluginPath } from '#meta';
 
 import {
   useCatalogEntry,
@@ -20,6 +19,7 @@ import {
   useRemotePluginIds,
   useVersionPicker,
 } from '../../hooks';
+import { getPluginPath } from '../../paths';
 
 export type PluginArticleProps = { subject: Plugin.Plugin };
 

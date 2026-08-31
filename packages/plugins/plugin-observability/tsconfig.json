@@ -34,6 +34,9 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/compute/operation"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -41,6 +44,9 @@
     },
     {
       "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/observability"

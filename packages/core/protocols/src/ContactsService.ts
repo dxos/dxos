@@ -10,8 +10,8 @@ import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 import { protoMessage, serviceError } from './service-rpc.ts';
 
 /**
- * Effect RPC definitions for `dxos.client.services.ContactsService`.
- * Shared proto types remain protobuf-encoded on the wire.
+ * Effect RPC definitions for the client contacts service (formerly `dxos.client.services.ContactsService`).
+ * Both methods take no payload; the response reuses the shared `ContactBook` proto type.
  */
 export class Rpcs extends RpcGroup.make(
   Rpc.make('getContacts', {

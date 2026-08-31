@@ -12,7 +12,7 @@ runtime:
 
   services:
     edge:
-      url: wss://dxos.network/
+      url: https://dxos.network/
     iceProviders:
       - urls: https://dxos.network/ice
     sandbox:
@@ -26,6 +26,8 @@ runtime:
       - name: transcription
         endpoint: https://calls.dxos.network
       - name: image
-        endpoint: https://image.main.dxos.network
+        endpoint: https://image.dxos.network
       - name: discord
         endpoint: https://discord.dxos.network
+      - name: introspect
+        endpoint: https://introspect.dxos.network/mcp

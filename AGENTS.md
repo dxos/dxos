@@ -19,17 +19,29 @@ This file is the shared, harness-agnostic entrypoint for coding agents.
     the primary checkout instead of the assigned worktree (a known harness
     mis-instantiation; say so once — it affects only Desktop UI pairing, never
     data safety). Never run `git worktree add` to "fix" it.
-  - `main` → STOP, write nothing, tell the user. Never create a worktree or
-    branch to escape — the harness owns those.
+  - `main` → write nothing here. Research (reads, greps, subagents) is fine and
+    is the normal reason a session starts on `main`. The moment the work turns
+    to editing, **call the harness's `EnterWorktree` tool yourself and carry on**
+    — do NOT stop to ask, and do NOT offer "start a new session" or "you make a
+    worktree" as options. That tool is the sanctioned promotion path and is not
+    the `git worktree add` / `git checkout -b` banned under Non-negotiables:
+    those are raw git commands that desync the harness's own record. Ask only if
+    `EnterWorktree` itself fails.
 - **Cloud sandbox sessions differ.** If `CLAUDE_CODE_REMOTE` is set you are in the Claude Code
-  cloud sandbox, where `.claude/settings.json` hooks do NOT run: `/mode` and `/project` are
-  inert, and the branch/worktree guards enforce nothing — you are the only thing upholding the
-  Non-negotiables. `moon`, `gh`, and `oxfmt` are not on `PATH` (use `pnpm exec moon`
-  and the `mcp__github__*` tools), dependencies are installed but not built, and the container
-  is ephemeral, so push before you stop. Full details, including how to reach HTTPS from
-  Chromium → `cloud-sandbox` skill.
+  cloud sandbox. `.claude/settings.json` hooks fire there as they do locally, so `/mode` and the
+  branch/worktree guards behave normally. What is missing is everything outside the clone:
+  `~/.claude` starts empty, so `/dxos:project` answers `Unknown command` until
+  `.claude/scripts/bootstrap-plugins.sh` installs the plugin, and `gh` is absent (use the
+  `mcp__github__*` tools). `moon`, `oxfmt`, and `node_modules` exist only where the environment
+  ran `.config/claude-code-setup.sh` — establish which case you are in before running a build.
+  The container is ephemeral, so push before you stop. Full details, including how to reach HTTPS
+  from Chromium → `cloud-sandbox` skill.
 - First reply: confirm these instructions and follow the reporting rule below.
 - If unsure how to implement something, ask rather than guess.
+- **The only setup question worth asking is whether to register a project.** Not
+  every session earns a `TASKS.md`/`DESIGN.md` and a registry entry. When work
+  begins, ask that one question (numbered, alongside the plan) and decide
+  everything else — worktree, branch, commits — yourself.
 
 ## Responding to the user
 
@@ -46,10 +58,15 @@ a large skill loads mid-session (see `.claude/README.md` §A).
   a-or-b, never a bare open question.
 - **Lead with the answer.** No preamble, no restatement of the request, no
   narration of what you are about to do.
-- **Verbosity is a mode.** `terse` caps a reply at 8 lines with minimal markdown;
-  `normal` (the default) sets no budget but keeps length proportionate — length
-  is earned by content, never by restating. Set it with `/mode terse` /
-  `/mode normal`.
+- **Verbosity is a mode.** `terse` answers in 1–2 sentences, with follow-ups as a
+  short flat numbered list; `normal` (the default) sets no budget but keeps
+  length proportionate — length is earned by content, never by restating. Set it
+  with `/mode terse` / `/mode normal`.
+- **`/mode focus [task]` pins the work as well as the length.** It is `terse`
+  plus one pinned task — with no task on the line, the previous instruction is
+  the pin. While pinned, work on nothing else: no adjacent fixes, no CI or PR
+  polling, and an off-task request gets one line naming the conflict plus a
+  numbered choice. `/mode terse` or `/mode normal` clears the pin.
 - These govern form only. They never override correctness, required safety
   steps, showing test/command output, or reporting a failure honestly.
 
@@ -73,14 +90,19 @@ Treat the user as an expensive, intermittent resource — minimize round-trips.
 ## Non-negotiables
 
 - **Never create, rename, or switch worktrees or branches.** The harness assigns
-  this session's worktree and branch at startup; the Desktop UI pairs them by the
-  convention `branch == claude/<worktree-dir-name>`. Breaking that convention
+  this session's worktree and branch at startup and owns the pairing between
+  them; the branch is named after the originating prompt, not the worktree
+  directory, so the two names routinely differ and that is NOT a fault to
+  "correct". Creating or renaming either breaks the harness's own record and
   makes your work invisible in the UI. Therefore:
   - Do NOT run `git worktree add`, `git checkout -b`/`-B`, `git switch -c`/`-C`,
     or `git branch -m`/`-M` (the `guard-branch.sh` hook denies these).
   - Do NOT create a new branch or a side worktree, even if a skill or tool
-    suggests it. This overrides `superpowers:using-git-worktrees` and the
-    `EnterWorktree`/`ExitWorktree` tools — the workspace already exists.
+    suggests it. This overrides `superpowers:using-git-worktrees` — when the
+    harness already assigned a workspace, it exists and you use it.
+  - **The one exception is `EnterWorktree` on a session sitting on `main`.**
+    There the harness assigned nothing, so the tool is how you get a workspace,
+    not how you escape one. Call it without asking (see Start of session).
   - Work only in the assigned directory; if you need a different branch, ask the
     user rather than switching.
 - **Test after every step.** Never claim work is done without running the
@@ -95,6 +117,11 @@ Treat the user as an expensive, intermittent resource — minimize round-trips.
   teardown race hides real failures). Tolerate a specific known signature only
   via a narrowly-scoped `onUnhandledError`, never a blanket ignore. Full rule →
   `code-style` skill.
+- **Never change or remove a copyright notice.** A contributor's copyright line
+  stays exactly as written. The only permitted edit — when the lint header rule
+  demands it — is ADDING a `Copyright <year> DXOS.org` line alongside the
+  author's, never replacing it. Anything beyond that requires explicit
+  direction from the user.
 - **New packages are private.** Every new package MUST set `"private": true` in
   `package.json`; it is removed manually only after a trusted publisher exists.
 - **Workspace deps use `workspace:*`.** Any in-repo `@dxos` package is added with
@@ -189,6 +216,40 @@ Deeper conventions:
 - Consumer-relevant changes need a `.changeset/*.md` before opening the PR —
   see [`agents/instructions/changesets.md`](agents/instructions/changesets.md)
   for when to add one, which package to name, and bump levels.
+
+## Handing an agent a credential
+
+Put it in **`.secrets/`** at the repo root — never in the chat. Pasting a token into a
+prompt writes it to the transcript permanently; a file can be deleted.
+
+- `.secrets/` is gitignored at every depth. That is default exclusion, not enforcement — `git add -f`
+  would still stage a file, so treat "nothing under `.secrets/` is tracked" as an invariant to uphold
+  rather than a guarantee git gives you. Verify with `git ls-files | grep -i secret`; the only
+  expected hits are `scripts/secrets.mjs` and its edge-compute twin, which are tooling, not
+  credentials.
+- **The user creates the file** (agents cannot sign in or complete an OAuth consent) and
+  names the path in chat. One file per credential, `chmod 600`, `key=value` lines.
+- **The agent deletes it** when the task that needed it is done, and revokes the grant if
+  the credential was minted for that task alone.
+- Prefer a credential that can be renewed over one that expires mid-task: an OAuth access
+  token lasts an hour, so a long task needs the refresh token **plus** the `client_id` and
+  `client_secret` it was minted under — a refresh token alone cannot be exchanged.
+- Never echo a credential's value back into chat, a log, a commit message, or an error
+  report. Read it, use it, delete it.
+
+Example (Gmail, for the live tag-sync test — see `packages/plugins/plugin-inbox/docs/TAG-SYNC.md`):
+
+Create the file in an editor, not a shell command — an interactive shell records a heredoc's
+contents in its history, and a file written before `chmod` is briefly world-readable under the
+default umask:
+
+```bash
+umask 077
+mkdir -p .secrets
+${EDITOR:-vi} .secrets/gmail.env   # add client_id / client_secret / refresh_token here
+```
+
+Do not paste real credential values into any shell command, and do not paste them into chat.
 
 ## Where things live
 

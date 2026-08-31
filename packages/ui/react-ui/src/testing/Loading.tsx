@@ -19,7 +19,7 @@ export const Loading = ({ data }: LoadingProps) => {
   const ownerFrames = parseCaptureOwnerStack(captureOwnerStack());
 
   useEffect(() => {
-    const t = setTimeout(() => setVisible(true), 500);
+    const t = setTimeout(() => setVisible(true), 1000);
     return () => clearTimeout(t);
   }, []);
 

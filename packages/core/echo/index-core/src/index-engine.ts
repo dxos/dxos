@@ -21,6 +21,7 @@ import {
   type FtsQueryResult,
   type Index,
   type IndexerObject,
+  type QueueWindow,
   ReverseRefIndex,
   type ReverseRefQuery,
 } from './indexes';
@@ -113,6 +114,15 @@ export interface DataSourceCursor {
 export interface IndexDataSource {
   readonly sourceName: string; // e.g. queue, automerge, etc.
 
+  /**
+   * Marks the start/end of one `IndexEngine.update` pass, letting a source reuse the
+   * cursor-independent part of its read across every index updated in that pass. Cursors differ per
+   * index, so the diff itself cannot be shared — only the underlying snapshot. Optional: a source
+   * with no expensive shared read can omit both.
+   */
+  beginPass?(): void;
+  endPass?(): void;
+
   getChangedObjects(
     ctx: Context,
     cursors: DataSourceCursor[],
@@ -173,6 +183,7 @@ export class IndexEngine {
     spaceIds: readonly SpaceId[];
     includeAllQueues?: boolean;
     queueIds?: readonly string[] | null;
+    window?: QueueWindow;
   }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.queryAll(query);
   }
@@ -240,6 +251,7 @@ export class IndexEngine {
     inverted?: boolean;
     includeAllQueues?: boolean;
     queueIds?: readonly string[] | null;
+    window?: QueueWindow;
   }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.queryTypes(query);
   }
@@ -324,6 +336,15 @@ export class IndexEngine {
     return Effect.gen({ self: this }, function* () {
       const result = makeEmptyIndexingResult();
 
+      dataSource.beginPass?.();
+
+      // One cursor read serves every index in this pass; the per-index diff still uses its own slice.
+      const cursorsByIndex = yield* this.#tracker.queryCursorsBySource({
+        sourceName: dataSource.sourceName,
+        // Pass undefined to get all cursors when spaceId is null.
+        spaceId: opts.spaceId ?? undefined,
+      });
+
       const {
         updated: updatedFtsIndex,
         done: doneFtsIndex,
@@ -332,6 +353,7 @@ export class IndexEngine {
         indexName: 'fts6',
         spaceId: opts.spaceId,
         limit: opts.limit,
+        cursors: cursorsByIndex.get('fts6') ?? [],
       });
       result.updated += updatedFtsIndex;
       result.done = result.done && doneFtsIndex;
@@ -345,13 +367,19 @@ export class IndexEngine {
         indexName: 'reverseRef2',
         spaceId: opts.spaceId,
         limit: opts.limit,
+        cursors: cursorsByIndex.get('reverseRef2') ?? [],
       });
       result.updated += updatedReverseRefIndex;
       result.done = result.done && doneReverseRefIndex;
       accumulateIndexingResult(result, reverseRefObjects);
 
       return result as IndexingResult;
-    }).pipe(Effect.withSpan('IndexEngine.update'));
+    }).pipe(
+      // The snapshot must be dropped even when a pass fails, or the next pass would diff against
+      // stale heads and silently skip documents changed in between.
+      Effect.ensuring(Effect.sync(() => dataSource.endPass?.())),
+      Effect.withSpan('IndexEngine.update'),
+    );
   }
 
   /**
@@ -367,7 +395,7 @@ export class IndexEngine {
     ctx: Context,
     index: Index,
     source: IndexDataSource,
-    opts: { indexName: string; spaceId: SpaceId | null; limit?: number },
+    opts: { indexName: string; spaceId: SpaceId | null; limit?: number; cursors: IndexCursor[] },
   ): Effect.Effect<
     { updated: number; done: boolean; objects: readonly IndexerObject[] },
     SqlError.SqlError,
@@ -380,13 +408,9 @@ export class IndexEngine {
       // internally (e.g. listDocumentHeads), which creates a fresh Effect fiber with no
       // TransactionConnection context. If those reads ran inside withTransaction, they would
       // try to acquire the same semaphore that the transaction already holds — causing a deadlock.
-      const cursors = yield* this.#tracker.queryCursors({
-        indexName: opts.indexName,
-        sourceName: source.sourceName,
-        // Pass undefined to get all cursors when spaceId is null.
-        spaceId: opts.spaceId ?? undefined,
+      const { objects, cursors: updatedCursors } = yield* source.getChangedObjects(ctx, opts.cursors, {
+        limit: opts.limit,
       });
-      const { objects, cursors: updatedCursors } = yield* source.getChangedObjects(ctx, cursors, { limit: opts.limit });
 
       if (objects.length === 0) {
         return { updated: 0, done: true, objects: [] as readonly IndexerObject[] };
@@ -421,15 +445,13 @@ export class IndexEngine {
 
           yield* index.update(objects);
           yield* this.#tracker.updateCursors(
-            updatedCursors.map(
-              (_): IndexCursor => ({
-                indexName: opts.indexName,
-                spaceId: _.spaceId,
-                sourceName: source.sourceName,
-                resourceId: _.resourceId,
-                cursor: _.cursor,
-              }),
-            ),
+            updatedCursors.map((_): IndexCursor => ({
+              indexName: opts.indexName,
+              spaceId: _.spaceId,
+              sourceName: source.sourceName,
+              resourceId: _.resourceId,
+              cursor: _.cursor,
+            })),
           );
           return { updated: objects.length, done: false, objects };
         }),

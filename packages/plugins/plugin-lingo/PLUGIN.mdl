@@ -1,0 +1,579 @@
+---
+id: org.dxos.plugin.lingo
+name: LingoPlugin
+version: 0.1.0
+---
+
+A Composer plugin for reading in a language you are learning. Vocabulary lives
+in the space as ECHO objects, collected into **word lists** and drilled with
+flashcards on a Leitner schedule. The plugin's centre of gravity is the
+**reading companion**: a read-only pane beside any document, email or
+transcript that holds a whole-passage translation and a structural analysis of
+the source, so hovering a word reveals its meaning and clicking a clause
+highlights the same clause in the translation.
+
+Analysis is a single cheap-model call that returns nested regions quoted
+verbatim; character offsets are computed deterministically from those quotes,
+because a model cannot count characters but can copy a phrase exactly. The
+result is cached on an `Analysis` object keyed by subject and language, so
+reopening a document costs a query rather than a model call.
+
+## Extensions
+
+The following extension dialects are used in this document.
+
+| Term        | URI                          |
+| ----------- | ---------------------------- |
+| `type`      | `org.dxos.mdl.type@1.0`      |
+| `feat`      | `org.dxos.mdl.feat@1.0`      |
+| `test`      | `org.dxos.mdl.test@1.0`      |
+| `component` | `org.dxos.mdl.component@1.0` |
+| `op`        | `org.dxos.mdl.op@1.1`        |
+| `flow`      | `org.dxos.mdl.flow@1.0`      |
+| `step`      | `org.dxos.mdl.step@1.0`      |
+
+## Types
+
+```mdl
+type Level
+  literals: A1 | A2 | B1 | B2 | C1 | C2
+  desc: CEFR proficiency band.
+```
+
+```mdl
+type Language
+  desc: >
+    A language the user is studying. `code` is the study language — the one the
+    source is written in, inferred rather than chosen — and `baseCode` is the
+    target the reader selects. A Spanish-speaker learning German and an
+    English-speaker learning German hold two distinct objects and never share a
+    word list by accident.
+  fields:
+    name: string                    # display name, e.g. "Japanese"
+    code: string                    # BCP-47 tag of the language being studied
+    baseCode?: string               # BCP-47 tag translations are rendered in
+    level?: Level
+    description?: string
+```
+
+```mdl
+type Vocabulary
+  desc: A word list, scoped to one language.
+  fields:
+    name?: string
+    description?: string
+    language: Ref<Language>
+```
+
+```mdl
+type Progress
+  desc: One word's Leitner schedule state.
+  fields:
+    box: number                     # 0..4; 0 repeats within the session
+    reviews: number
+    correct: number
+    streak: number                  # consecutive correct; reset to zero on a miss
+    reviewedAt?: string             # ISO 8601
+    dueAt?: string                  # ISO 8601
+```
+
+```mdl
+type Word
+  desc: >
+    A single vocabulary entry. Deck membership is the word's own `vocabulary`
+    ref rather than an array on the deck, so an append is one write and every
+    deck view is a reactive query. `language` is denormalized alongside it so
+    the reader resolves a term across every deck for the language being read
+    with one query.
+  fields:
+    term: string                    # the word as it appears in text
+    translation: string
+    lemma?: string                  # dictionary form, when `term` was harvested inflected
+    reading?: string                # pronunciation or romanization (furigana, pinyin)
+    partOfSpeech?: PartOfSpeech
+    notes?: string
+    examples?: string[]
+    vocabulary: Ref<Vocabulary>
+    language: Ref<Language>
+    progress?: Progress
+```
+
+```mdl
+type Range
+  desc: Half-open character range `[start, end)` within one text.
+  fields:
+    start: number
+    end: number
+```
+
+```mdl
+type SegmentKind
+  literals: paragraph | sentence | clause | vocab
+  desc: Coarse to fine; a smaller index is a larger region.
+```
+
+```mdl
+type Segment
+  desc: >
+    One analyzed region, carrying its extent in the source and — when the
+    analysis ran over a language pair — the corresponding extent in the
+    translation. The paired range is what makes cross-pane selection possible:
+    selecting a clause in one pane highlights the same clause in the other
+    without re-analyzing or guessing at alignment.
+    Defined in `@dxos/nlp`, not this plugin.
+  fields:
+    id: string                      # stable within one Segmentation
+    kind: SegmentKind
+    parent?: string                 # enclosing segment's id
+    source: Range
+    target?: Range
+    gloss?: string                  # a vocab segment's translation
+    lemma?: string
+    reading?: string
+```
+
+```mdl
+type Analysis
+  desc: >
+    A cached structural analysis of one object's text. Persisted rather than
+    recomputed because it costs a model round-trip on every open and the text
+    usually has not changed; `sourceHash` is what makes that safe, since it is
+    compared against the live text so a stale analysis is detected rather than
+    trusted. Keyed by subject AND language — an object translated into several
+    languages holds one Analysis per language.
+  fields:
+    subject: Ref<Unknown>           # a document, an email, a transcript
+    language: Ref<Language>
+    sourceHash: string
+    targetHash?: string
+    translation?: string            # the exact text the paired offsets point into
+    segments: Segment[]
+```
+
+```mdl
+type Settings
+  desc: Plugin settings, persisted per profile.
+  fields:
+    language?: BCP-47 literal        # the language the reader translates into by default
+    highlightKnownWords?: boolean
+    translateUnknownWords?: boolean
+```
+
+## Components
+
+```mdl
+component ReaderArticle
+  desc: >
+    The reading companion, offered beside any object whose text this plugin can
+    reach. Holds the whole-passage translation and drives analysis; the source
+    document is never written to, so it stays owned by whichever plugin renders
+    it.
+  props:
+    subject: Unknown                # the object being read
+  state:
+    languageCode?: string           # selection; falls back to Settings.language, then 'en'
+    running: boolean                # translate + analyze in flight
+    selected?: string               # committed segment id
+  actions:
+    run()                           # TranslatePassage, then AnalyzeText over the pair
+    addSelection()                  # AddWord for the committed segment
+    delete()                        # drop the translation and its Analysis
+  layout: |
+    ┌──────────────────────────────────────────────┐
+    │ [English ▾] [Word list ▾] [+] [✨] [⋯]       │
+    ├──────────────────────────────────────────────┤
+    │ translated passage, segments decorated,      │
+    │ hovering reveals a gloss popover             │
+    └──────────────────────────────────────────────┘
+```
+
+```mdl
+component ReaderPane
+  desc: >
+    One read-only editor pane with the analysis revealed. Read-only by
+    construction. Callbacks are held in a ref so they stay out of the extension
+    identity — an extension array that changes rebuilds the editor, which would
+    tear down the decorations the selection just produced.
+  props:
+    content: string
+    side: 'source' | 'target'       # which of a segment's two ranges to decorate
+    analysis?: Segmentation
+    selected?: string               # externally-driven, mirroring the other pane
+  emits:
+    onSelect(segment?: Segment)
+    onActivate(segment: Segment)
+```
+
+```mdl
+component VocabularyArticle
+  desc: A word list, ordered by term or by due date.
+  props:
+    vocabulary: Vocabulary
+```
+
+```mdl
+component FlashcardsArticle
+  desc: >
+    Companion drill over a deck's due words. Each answer is written straight
+    through RecordReview, so a session that is abandoned mid-way keeps its
+    progress.
+  props:
+    vocabulary: Vocabulary
+```
+
+## Operations
+
+```mdl
+op AddWord
+  key: org.dxos.operation.lingo.addWord
+  desc: Adds a word to a deck, deduplicating on the term.
+  input:
+    vocabulary: Ref<Vocabulary>
+    term: string
+    translation: string
+    lemma?: string
+    reading?: string
+    partOfSpeech?: PartOfSpeech
+    examples?: string[]
+  output:
+    word: Ref<Word>
+    existing: boolean               # true when the term was already present
+  effects: [echo:write]
+```
+
+```mdl
+op RecordReview
+  key: org.dxos.operation.lingo.recordReview
+  desc: Records one flashcard answer and advances the word's Leitner schedule.
+  input:
+    word: Ref<Word>
+    correct: boolean
+  output:
+    progress: Progress
+  effects: [echo:write]
+```
+
+```mdl
+op TranslateTerm
+  desc: >
+    Translates a single term in context. Backs the reader's hover card for words
+    no deck contains; the result is not persisted until the user adds it.
+  input:
+    term: string
+    language: Ref<Language>
+    context?: string                # the sentence the term appeared in
+  output: Candidate
+  effects: [ai]
+```
+
+```mdl
+op TranslatePassage
+  key: org.dxos.operation.lingo.translatePassage
+  desc: >
+    Translates a whole passage into the base language, preserving its markdown
+    so the two panes line up paragraph for paragraph. Distinct from swapping
+    known terms inline: grammar and word order have to move too, which only a
+    passage-level pass does. The source language is inferred and returned.
+  input:
+    text: string
+    language: Ref<Language>
+  output:
+    text: string
+    sourceCode?: string             # BCP-47 tag detected in the source
+  effects: [ai]
+```
+
+```mdl
+op AnalyzeText
+  key: org.dxos.operation.lingo.analyzeText
+  desc: >
+    Analyzes a passage into nested paragraph / sentence / clause / vocabulary
+    regions and caches the result on an Analysis object. Re-running is cheap by
+    design: an analysis whose hashes still match is returned as-is. Vocabulary
+    is harvested from the analysis rather than by a second model call — the
+    regions were chosen with the whole passage in view and already carry gloss,
+    lemma and reading.
+  input:
+    subject: Ref<Unknown>
+    text: string
+    language: Ref<Language>
+    translation?: string            # enables paired ranges
+    vocabulary?: Ref<Vocabulary>    # where to file harvested terms; omitted, nothing is harvested
+    refresh?: boolean
+  output:
+    analysis: Ref<Analysis>
+    cached: boolean
+    added: number                   # words added to the word list
+  effects: [ai, echo:write]
+```
+
+## Features
+
+```mdl
+feat F-1: Vocabulary
+  desc: Word lists as ECHO objects, scoped to a language.
+
+  req F-1.1: User can create a Language and a Vocabulary via the plugin's create menu.
+  req F-1.2: Deck membership is the Word's `vocabulary` ref; a deck holds no array of words.
+  req F-1.3: Word.language is denormalized so a term resolves across every deck for that language.
+  req F-1.4: AddWord deduplicates on the term and returns the existing Word rather than failing.
+```
+
+```mdl
+feat F-2: Flashcards
+  desc: Leitner drill over a deck's due words.
+
+  req F-2.1: A word with no `progress` is treated as box 0 and is due immediately.
+  req F-2.2: A correct answer advances one box; a miss resets to box 0 and zeroes the streak.
+  req F-2.3: Box intervals are 0, 1, 3, 7 and 21 days.
+  req F-2.4: Each answer is persisted as it is given, not batched at the end of a session.
+```
+
+```mdl
+feat F-3: Reading companion
+  desc: A read-only pane beside any object whose text the plugin can reach.
+
+  req F-3.1: Offered on Markdown documents, Text objects, and any type registered under
+             `AppCapabilities.TextContent` — which is how email, transcripts and magazine posts
+             become readable without this plugin knowing those types exist.
+  req F-3.2: The companion never writes to the object it reads.
+  req F-3.3: The language selector defaults to `Settings.language`, then to English — never to
+             whichever language happens to sort first.
+  req F-3.4: Translating and analyzing is one explicit action; neither runs on open.
+  req F-3.5: The translation and its Analysis can be deleted, returning the pane to its initial state.
+```
+
+```mdl
+feat F-4: Structural selection
+  desc: Hover and click select the most specific analyzed region under the pointer.
+
+  req F-4.1: Hovering outlines the most specific region covering the position; clicking commits it.
+  req F-4.2: The committed selection is distinct from the editor's own text selection.
+  req F-4.3: A committed segment drives the popover, the other pane, and the toolbar actions.
+  req F-4.4: Ranges are NOT mapped through document changes. A whole analysis stops being
+             meaningful once the text moves, so divergence is detected by hash and the decorations
+             dim until a fresh analysis arrives — mapping would keep confident-looking boundaries
+             over text they no longer describe.
+  req F-4.5: Deck vocabulary produces `vocab` segments too, so the editor has one selection
+             mechanism rather than two; those stay deterministic and offline.
+```
+
+```mdl
+feat F-5: Analysis caching
+  desc: One Analysis per subject and language, reused until the text diverges.
+
+  req F-5.1: Analysis is matched by filtering on the subject AND language refs.
+  req F-5.2: A same-space Ref stores an unqualified URI, so matching compares refs rather than
+             `ref.uri` against `Obj.getURI` — the string comparison never matches and every run
+             created a duplicate.
+  req F-5.3: A cached analysis whose `sourceHash` and `targetHash` both match is returned without
+             calling the model.
+  req F-5.4: `refresh` forces a fresh analysis regardless.
+```
+
+## Acceptance
+
+```mdl
+test T-1: Create a word list
+  given: user is in a space in Composer
+  when: user creates a Vocabulary via the plugin's create menu
+  then:
+    - Vocabulary object created in the space
+    - Vocabulary.language is a Ref to a Language object
+```
+
+```mdl
+test T-2: Leitner schedule
+  given: a Word with no progress
+  when: the user answers correctly three times in a row
+  then:
+    - progress.box is 3
+    - progress.streak is 3
+    - progress.dueAt is 7 days after the last answer
+```
+
+```mdl
+test T-3: Leitner reset
+  given: a Word in box 3 with a streak of 3
+  when: the user answers incorrectly
+  then:
+    - progress.box is 0
+    - progress.streak is 0
+```
+
+```mdl
+test T-4: Most specific region wins
+  given: a passage analyzed into paragraph, sentence, clause and vocab regions
+  when: the pointer rests over a word inside a clause inside a sentence
+  then:
+    - the vocab region is outlined, not its enclosing clause
+```
+
+```mdl
+test T-5: Cross-pane selection
+  given: an analysis run over a source and its translation
+  when: a clause is committed in the source pane
+  then:
+    - the paired range is highlighted in the translation pane
+    - no re-analysis is performed
+```
+
+```mdl
+test T-6: Analysis is reused
+  given: an Analysis whose sourceHash matches the document's text
+  when: AnalyzeText runs again for the same subject and language
+  then:
+    - output.cached is true
+    - no model call is made
+    - no second Analysis object is created
+```
+
+```mdl
+test T-7: Stale analysis dims
+  given: a document with an analysis and decorations rendered
+  when: the document text is edited so its hash diverges
+  then:
+    - decorations render dimmed
+    - ranges are not remapped onto the edited text
+```
+
+```mdl
+test T-8: Harvesting from the analysis
+  given: AnalyzeText is given a vocabulary ref
+  when: the analysis produces vocab regions carrying glosses
+  then:
+    - one Word is added per region not already in the deck
+    - output.added counts only the newly added words
+```
+
+## Design Notes
+
+**The model quotes; deterministic code counts.** `segmentText` asks for regions
+quoted verbatim and never for offsets. A model cannot count characters
+reliably but can copy a phrase exactly, so `alignSegments` locates each quote in
+the source and computes the range itself. Children are aligned within their
+parent's extent, and a quote that cannot be located is dropped along with its
+children rather than guessed at.
+
+**Two hashes, not one.** A paired analysis is only valid against the exact
+translation its target ranges point into. Re-translating the same source moves
+those offsets, so `targetHash` is checked alongside `sourceHash`.
+
+**Segmentation is shared, not plugin-local.** `Segment`, `Segmentation` and the
+aligner live in `@dxos/nlp` beside the POS parser, so an extraction pipeline can
+reuse them without depending on a UI plugin.
+
+**Tokenization uses `Intl.Segmenter`.** A `\p{L}+` regex returns a whole
+Japanese sentence as one token, so no deck term ever matched. The segmenter is
+paired with a longest-match over up to four adjacent segments, so compounds ICU
+splits ("パン屋" → "パン" + "屋") still resolve.
+
+**Reading is requested only where it helps.** The analysis prompt asks for a
+`reading` on every vocab region when the script needs one — furigana for
+Japanese, pinyin for Mandarin — and explicitly suppresses it otherwise, since a
+pronunciation guide for a script the learner already reads is noise.
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+plugin-lingo is dev-only in `getDefaults` (`isDev`), so OFF by default for a normal user.
+
+```mdl
+flow QA-1: Add a word to a deck and drill it to box 3
+  desc: The core vocabulary round-trip — create a Language and Vocabulary, add a Word,
+    and answer it correctly three times through the Leitner schedule.
+  actors: human
+  covers: [F-1.1, F-1.4, F-2.1, F-2.2, F-2.3]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - plugin-lingo is enabled — it is OFF by default (isDev-only default). Enabling is a UI
+      action (Settings -> plugin registry).
+    - no Vocabulary named "QA Deck" exists — ABORT rather than deleting one this flow did not create
+  test:
+    - name: Create a Language and Vocabulary
+      do: In the navtree, click + on a collection and choose Vocabulary. Name it "QA Deck" and
+        create a Language "Spanish" (code "es") for it.
+      capture: created
+      expect: a Vocabulary named "QA Deck" appears under the collection, with Vocabulary.language
+        a Ref to the new Language
+      note: |
+        NO `invoke` — no create operation exists for Vocabulary or Language (only op:AddWord and
+        op:RecordReview are registered); the create menu is a UI factory.
+    - name: Add a word
+      do: In the VocabularyArticle, add the term "gato" translated as "cat".
+      invoke: [op:AddWord] { vocabulary: $created.vocabulary, term: "gato", translation: "cat" }
+      capture: added
+      expect: "gato" appears in the word list, due immediately (box 0)
+      assert: return !$added.existing;
+    - name: Answer it correctly (1st)
+      do: Open FlashcardsArticle for "QA Deck" and answer "gato" correctly.
+      invoke: [op:RecordReview] { word: $added.word, correct: true }
+      expect: the word's box advances and its streak is 1
+    - name: Answer it correctly (2nd)
+      do: Answer "gato" correctly again.
+      invoke: [op:RecordReview] { word: $added.word, correct: true }
+      expect: the word's box advances again and its streak is 2
+    - name: Answer it correctly (3rd)
+      do: Answer "gato" correctly a third time in a row.
+      invoke: [op:RecordReview] { word: $added.word, correct: true }
+      expect: after the third correct answer, the word's box is 3, streak is 3, and it is due 7
+        days out
+      assert: return $result.progress.box === 3 && $result.progress.streak === 3;
+  after:
+    - name: Delete the deck
+      do: Right-click "QA Deck" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$created.vocabulary], target: $given.collection }
+      expect: the row leaves the navtree
+```
+
+```mdl
+flow QA-2: Translate and analyze a passage in the reading companion
+  desc: The reading-companion round-trip — open a document, run translate + analyze, and confirm
+    the paired panes and cached Analysis.
+  actors: human
+  covers: [F-3.1, F-3.2, F-3.4, F-5.3]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - document: a Markdown document with a short non-English passage is open (e.g. "Hola, ¿cómo
+        estás?")
+    - text: the passage text, as it appears in the open document
+    - language: an existing Language ("English", code "en") selected as the target in the
+        reading companion
+    - no Analysis exists for this document and "English" — the first run asserts
+      `cached === false`, so a leftover Analysis from an earlier run fails it
+    - plugin-lingo is enabled — it is OFF by default (isDev-only default)
+  test:
+    - name: Open the reading companion and run analysis
+      do: Open the reading companion beside the document, pick "English" as the target language,
+        and click the run action.
+      invoke: [op:TranslatePassage] { text: $given.text, language: Ref.make($given.language) }
+      capture: translated
+      expect: a translated passage renders in the companion pane
+      assert: return !!$translated.text;
+    - name: Analyze the pair
+      do: (the run action chains straight into analysis)
+      invoke: [op:AnalyzeText] { subject: Ref.make($given.document), text: $given.text, language: Ref.make($given.language), translation: $translated.text }
+      capture: analyzed
+      expect: the source pane shows decorated paragraph/sentence/clause/vocab regions; hovering
+        one outlines the most specific region and reveals a gloss
+      assert: return !!$analyzed.analysis && $analyzed.cached === false;
+      note: Coalesced with the previous step — `translated.text` is live and cannot cross a
+        snippet boundary.
+    - name: Re-run and confirm the cache is used
+      do: Click the run action again without editing the document.
+      invoke: [op:AnalyzeText] { subject: Ref.make($given.document), text: $given.text, language: Ref.make($given.language), translation: $translated.text }
+      expect: the same Analysis is reused; no second model call is made
+      assert: return $result.cached === true;
+  after:
+    - name: Delete the translation
+      do: Click the delete action in the reading companion toolbar.
+      expect: the pane returns to its initial (untranslated) state and the Analysis object is removed
+      note: NO `invoke` — deletion is a component action (`delete()`), not a registered op.
+```

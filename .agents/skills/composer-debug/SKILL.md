@@ -105,6 +105,12 @@ comes back `false` — on `/recovery.html` there is no `composer` at all — say
 since `recovery.log('…')` prints into the page the user is already looking at. Either way, tell the
 user in chat that you are connected; the toast supplements that, it does not replace it.
 
+When `plugin-debug` is active the status bar also shows a terminal button with a **red dot while
+the port is open** — persistent, unlike the toast — and clicking it opens the debug console
+popover, whose commands (`snapshot`, `plugins`, `enable`/`disable`, `ops`, `invoke`, `eval`,
+`port`) run through the same operation invoker the agent uses. That console is the user's window
+onto this session: expect them to replay your invocations there when something looks off.
+
 ## 3. Writing snippets
 
 The body runs inside `async () => { … }`, so:
@@ -129,6 +135,7 @@ builders `DXN Type Obj Relation Ref Query Filter Schema Feed getMeta`.
 composer.plugins()                             // id, name, core, enabled, active, moduleIds
 composer.operations(pluginId?)                 // key, name, description, pluginId, moduleId, input, output
 composer.invoke(key, input)                    // DXN-form key or bare NSID
+composer.snapshot()                            // one JSON doc of the live UI state (needs plugin-debug active)
 composer.manager                               // PluginManager (getPlugins/getEnabled/getActive/getModules)
 composer.graph, composer.attention, composer.editorView, composer.profiler, composer.otel
 ```
@@ -159,6 +166,36 @@ Search `<Plugin>Operation` regardless of how the plugin structures it — `plugi
 `list_operations` does _not_ enumerate operations — it returns the handler-file location per plugin.
 
 ## 5. Recipes
+
+### Perceive before you act — `snapshot`, not screenshots
+
+`org.dxos.operation.debug.snapshot` (plugin-debug; also `composer.snapshot()`) returns one JSON
+document of the live UI state: `layout` (mode, sidebars, workspace, `active` plank ids — the ids
+`layout.open` accepts), `attention`, each open plank with its resolved `label`, `subject`
+(`{ dxn, typename, name }`), and the graph `actions` the UI offers **with their operation DXNs and
+disabled state**, plus mounted `dx-surface` entries and plugin counts. The drive loop is
+`snapshot → invoke → snapshot`: read what is open, act by operation key, verify by ids — reach for
+a screenshot only for visual defects. Design + roadmap: `packages/sdk/app-framework/docs/INTROSPECTION.md`.
+
+### Reshaping the host — plugin management
+
+The registry operations let the agent turn capabilities on and off instead of asking the user to
+click through settings. All four are read/write-safe in the operation sense (`enable`/`disable`
+reply with the end state; already-on/off is not a failure; core and not-installed come back
+`rejected` with reasons; dependencies come on with an enable, enabled dependents go off with a
+disable):
+
+```js
+await composer.invoke('org.dxos.operation.registry.queryPlugins', {}); // everything installed
+await composer.invoke('org.dxos.operation.registry.queryDisabledPlugins', {});
+await composer.invoke('org.dxos.operation.registry.enablePlugins', { ids: ['org.dxos.plugin.chess'] });
+await composer.invoke('org.dxos.operation.registry.disablePlugins', { ids: ['org.dxos.plugin.chess'] });
+```
+
+Enablement persists (the browser host writes the enabled set on every change), and a newly enabled
+plugin's operations appear on the host within a second or two — verify with `composer.operations()`
+rather than trusting the reply. `plugin-debug` itself is not enabled on every profile: if
+`composer.snapshot` is missing, enable `org.dxos.plugin.debug` first.
 
 ```js
 // Which plugins are on, and did any fail?
@@ -192,11 +229,30 @@ const space = dxos.client.spaces.get().find((s) => s.properties?.name === 'My Sp
 const objects = await space.db.query(dxos.Filter.everything()).run();
 const collection = objects.find((o) => dxos.Obj.getTypename(o) === 'org.dxos.type.collection');
 
-const { object } = await composer.invoke('org.dxos.plugin.markdown.operation.create', {
+// Gotcha 2's escape hatch, as a helper: exact key match, invoker, explicit spaceId.
+const invokeWithSpace = async (key, input) => {
+  const mgr = composer.manager;
+  const sets = mgr.capabilities.getAll({ identifier: 'org.dxos.app-framework.capability.operationHandler' });
+  const [def, ...rest] = sets.flatMap((set) =>
+    set.definitions().filter((d) => String(d.meta.key).replace(/^dxn:/, '') === key),
+  );
+  if (!def || rest.length) {
+    throw new Error(`expected exactly one operation for ${key}`);
+  }
+  const invoker = mgr.capabilities.get({ identifier: 'org.dxos.app-framework.capability.operationInvoker' });
+  const { data, error } = await invoker.invokePromise(def, input, { spaceId: space.id });
+  if (error) {
+    throw new Error(String(error));
+  }
+  return data;
+};
+
+const { object } = await composer.invoke('org.dxos.operation.markdown.createDraft', {
   name: 'Notes',
   content: '# Notes\n',
 });
-await composer.invoke('org.dxos.plugin.space.operation.addObject', { object, target: collection });
+// `addObject` declares `Database.Service`, so it needs the invoker and a spaceId (gotcha 2).
+await invokeWithSpace('org.dxos.operation.space.addObject', { object, target: collection });
 await space.db.flush();
 
 // Verify placement rather than trusting the return.
@@ -205,27 +261,30 @@ return { placed: after.some((o) => o.id === object.id), collectionCount: collect
 ```
 
 Passing `target: space.db` adds to the space root instead of a collection. `addObject` returns a
-result object, not an id: `{ id, subject, object }`, where `id` is DXN-form
-(`echo://<spaceId>/<objectId>`) rather than the bare object id, and `subject` is the navigation path
-array the next section feeds to `layout.operation.open`.
+result object, not an id: `{ id, object }`, where `id` is DXN-form
+(`echo://<spaceId>/<objectId>`) rather than the bare object id.
 
 ### …and opening it in the navtree
 
-`layout.operation.open` takes **navigation paths**, not object ids:
+`layout.operation.open` takes **navigation paths**, not object ids, and `subject` is an array of
+them:
 
 ```text
 root/BEJ6664GTXJQ3QAKERGFWHXILSL32S6YN/content/collections/01KZHX7Z1XHX0YS9QP9F23PZ7G
 ```
 
-Do not build that string. `addObject` already computed it — resolving the type slug, and for
-view-holding objects the view's target type — and returns it as `subject`, so step two's output
-is step three's input:
+You have to build that string — `addObject` does not return one (its output schema is
+`{ id, object }`):
 
 ```js
-const added = await composer.invoke('org.dxos.plugin.space.operation.addObject', { object, target: collection });
+const added = await invokeWithSpace('org.dxos.operation.space.addObject', { object, target: collection });
 await space.db.flush();
-await composer.invoke('org.dxos.plugin.layout.operation.open', { subject: added.subject });
+const path = `root/${space.id}/content/collections/${object.id}`;
+await composer.invoke('org.dxos.operation.appToolkit.open', { subject: [path] });
 ```
+
+For a view-holding object the slug is the view's target type rather than `collections`; read it off
+an existing navtree entry rather than guessing.
 
 Opening the path is what moves the navtree selection; confirm with `aria-selected`/`aria-current`
 rather than assuming. `layout.operation.select` is a different thing — it applies a selection
@@ -244,7 +303,8 @@ Each of these cost a retry in practice; they are why this file exists.
    `Invalid input for <key> — id: is missing`. It used to return `ok` and render nothing.)
 
 2. **Database-backed operations need a `spaceId`, which `composer.invoke` does not pass.** An
-   operation declaring `services: [Database.Service]` (`markdown.update`, most write paths) fails
+   operation declaring `services: [Database.Service]` (`markdown.update`, `space.addObject`, most
+   write paths) fails
    with `Service not available: @dxos/echo/Database/Service … spawn environment is missing space`.
    Check `services` on the definition via `dxos-introspect` (§4) _before_ invoking —
    `composer.operations()` does not report it, though the runtime definition the snippet below
@@ -296,6 +356,11 @@ Each of these cost a retry in practice; they are why this file exists.
     after the result returns, or raise `COMPOSER_RECOVERY_TIMEOUT` and accept the block.
 11. **`composer` is absent** on `/recovery.html` and until React mounts. Probe for it rather
     than assuming.
+12. **Boot is visibility-gated.** A hidden/backgrounded tab suspends `requestAnimationFrame`, and
+    the app sits on the boot screen indefinitely with the plugin manager fully active underneath
+    (`startup` + `idle` fired, `composer.*` answering) while `main` never mounts. An agent booting
+    Composer in a background tab must front/show the tab before waiting on boot; a late rAF shim
+    cannot rescue the already-pending callback. (Observed 2026-08-30; relevant to #12845.)
 
 ## Checklist
 

@@ -75,7 +75,7 @@ type Story = StoryObj<typeof meta>;
 export const QuotaExceeded: Story = {
   args: {
     rawError:
-      'HttpResponseError: StatusCode: An HTTP response error occurred. (429 POST https://edge.dxos.workers.dev/ai/v1/messages)\nResponse Body: {"error":{"message":"You have exceeded your usage quota."}}',
+      'HttpResponseError: StatusCode: An HTTP response error occurred. (429 POST https://dev.dxos.network/ai/v1/messages)\nResponse Body: {"error":{"message":"You have exceeded your usage quota."}}',
   },
 };
 
@@ -83,6 +83,16 @@ export const QuotaExceeded: Story = {
 export const ModelUnavailable: Story = {
   args: {
     rawError: "UnknownError: ChatCompletionsClient.streamText: model 'gemma3:27b' not found",
+  },
+};
+
+/**
+ * The model resolver chain rejecting the configured model before the request leaves the browser —
+ * the user's fix is to pick a different model in settings, so the toast names the one that failed.
+ */
+export const ModelNotResolved: Story = {
+  args: {
+    rawError: 'AiModelNotAvailableError: AI Model not available: dxn:com.anthropic.model.claude-opus-4-8.default',
   },
 };
 

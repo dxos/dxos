@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { CrawlError, Source, type SourceApi, type ThreadRef, type Type } from '@dxos/crawler';
-import { type Err, type Ref } from '@dxos/echo';
+import { type Error, type Ref } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 
@@ -174,5 +174,5 @@ export const discordSourceLayer = (token: string): Layer.Layer<Source> =>
  */
 export const discordSourceLayerFromConnection = (
   connection: Ref.Ref<Connection.Connection>,
-): Layer.Layer<Source, Err.EntityNotFoundError> =>
+): Layer.Layer<Source, Error.EntityNotFoundError> =>
   Layer.effect(Source, makeSource).pipe(Layer.provide(makeDiscordLayer(connection)));

@@ -10,22 +10,23 @@ import type * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Capability from '@dxos/app-framework/Capability';
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
+import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { type Space, isSpace } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Collection, Entity, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
-import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { EffectEx } from '@dxos/effect';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ViewAnnotation } from '@dxos/schema';
 import { isLabel, toLocalizedString } from '@dxos/ui-types/translations';
-import { createFilename, isNonNullable } from '@dxos/util';
+import { createFilename, downloadBlob, isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
 import { SpaceCapabilities, SpaceEvents, SpaceOperation } from '#types';
@@ -37,7 +38,6 @@ import {
   SCHEMA_NODE_TYPE,
   SNAPSHOT_BY_SCHEMA_LABEL,
   buildViewIndex,
-  downloadBlob,
 } from './shared';
 
 //
@@ -56,7 +56,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
   return yield* Effect.all([
     // System section group — created alongside database/settings so the group always
     // appears when the space plugin is active and hides when there are no children.
-    GraphBuilder.createExtension({
+    AppGraphBuilder.createExtension({
       id: GraphPath.GroupSegments.system,
       match: AppNodeMatcher.whenSpace,
       connector: (space) =>
@@ -65,6 +65,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
             id: GraphPath.GroupSegments.system,
             type: GraphPath.GroupTypes.system,
             label: ['nav-tree-group-system.label', { ns: meta.profile.key }],
+            icon: 'ph--gear--regular',
             space,
             position: 900,
           }),
@@ -72,7 +73,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
     }),
 
     // Types section virtual node under the system group.
-    GraphBuilder.createExtension({
+    AppGraphBuilder.createExtension({
       id: 'databaseSection',
       match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.system),
       connector: (space) => {
@@ -90,7 +91,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
     }),
 
     // Schema nodes under the Types virtual node.
-    GraphBuilder.createExtension({
+    AppGraphBuilder.createExtension({
       id: 'database',
       url: { key: 'type', kind: 'item', path: [GraphPath.GroupSegments.system, GraphPath.Segments.database] },
       match: (node) => {
@@ -109,14 +110,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         );
 
         const userSchemas = allSchemas.filter((type) => {
-          if (Type.isRelation(type)) {
-            return false;
-          }
-          if (Type.isTypeKind(type)) {
-            return false;
-          }
-          const schema = Type.getSchema(type);
-          if (!showHidden && HiddenAnnotation.get(schema).pipe(Option.getOrElse(() => false))) {
+          if (!TypeOptions.isUserType(type, { includeHidden: showHidden })) {
             return false;
           }
           if (Type.getTypename(type) === Type.getTypename(Collection.Collection)) {
@@ -144,7 +138,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         // what users see. Resolved reactively inside the connector (not at factory setup) so the
         // capability — contributed during startup by the theme plugin — is present when this runs.
         const translator = get(capabilities.atom(AppCapabilities.Translator)).at(0);
-        const labelOf = (node: Node.NodeArg<Type.AnyEntity>): string => {
+        const labelOf = (node: AppGraphNode.NodeArg<Type.AnyEntity>): string => {
           const label = node.properties?.label;
           if (translator && isLabel(label)) {
             return toLocalizedString(label, translator.t);
@@ -161,7 +155,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
     }),
 
     // {All} virtual node + view objects under each schema node.
-    GraphBuilder.createExtension({
+    AppGraphBuilder.createExtension({
       id: 'schemaChildren',
       url: { key: 'view', kind: 'item', path: [GraphPath.GroupSegments.system, GraphPath.Segments.database] },
       match: (node) => {
@@ -206,7 +200,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
     // The `db` key names the database subgraph — the generic key that guarantees every ECHO object a
     // URL (see the design's "Unmapped nodes"); `object` addresses the same object via the collection
     // subgraph.
-    GraphBuilder.createExtension({
+    AppGraphBuilder.createExtension({
       id: 'databaseObjects',
       url: { key: 'db', kind: 'item', path: [GraphPath.GroupSegments.system, GraphPath.Segments.database] },
       match: (node) => {
@@ -246,7 +240,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
     }),
 
     // Actions for schema nodes.
-    GraphBuilder.createExtension({
+    AppGraphBuilder.createExtension({
       id: 'schemaActions',
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
@@ -296,7 +290,7 @@ const createSchemaNode = ({
   schema: Type.AnyEntity;
   space: Space;
   get: Atom.AtomContext;
-}): Node.NodeArg<Type.AnyEntity> => {
+}): AppGraphNode.NodeArg<Type.AnyEntity> => {
   const typename = Type.getTypename(schema);
   // The node id doubles as the `types/<slug>` path segment, so it must be slash- and colon-free:
   // a stored schema's entity id, or a static schema's typename.
@@ -328,7 +322,7 @@ const createSchemaNode = ({
   const icon =
     Type.getDatabase(schema) != null ? 'ph--cube--regular' : (iconAnnotation?.icon ?? 'ph--circle-dashed--regular');
   const iconHue = Type.getDatabase(schema) != null ? 'neutral' : iconAnnotation?.hue;
-  return Node.make({
+  return AppGraphNode.make({
     id: nodeId,
     type: SCHEMA_NODE_TYPE,
     data: schema,
@@ -373,26 +367,34 @@ const createSchemaActions = ({
   const createObjectFn = resolvedEntry?.createObject;
   const inputSchema = resolvedEntry?.inputSchema;
 
-  const actions: Node.NodeArg<Node.ActionData<Operation.Service>>[] = [
+  const actions: AppGraphNode.NodeArg<AppGraphNode.ActionData<Operation.Service>>[] = [
     ...(createObjectFn
       ? [
-          Node.makeAction({
-            id: SpaceOperation.OpenCreateObject.meta.key,
+          AppGraphNode.makeAction({
+            id: SpaceOperation.OpenObjectForm.meta.key,
             data: Effect.fnUntraced(function* () {
               if (inputSchema) {
-                yield* Operation.invoke(SpaceOperation.OpenCreateObject, {
+                yield* Operation.invoke(SpaceOperation.OpenObjectForm, {
                   target: space.db,
                   typename,
                 });
               } else {
-                const result = yield* createObjectFn({}, { db: space.db, target: space.db }).pipe(
+                const result = yield* createObjectFn({}, { db: space.db }).pipe(
                   Effect.provideService(Capability.Service, capabilities),
                 );
-                if (result.subject.length > 0) {
-                  yield* Operation.invoke(LayoutOperation.Open, {
-                    subject: [...result.subject],
-                    navigation: 'immediate',
+                // Nothing to navigate to when the create only starts the work and the object
+                // arrives out of band (see `CreateObjectResult.object`).
+                if (result.object) {
+                  const { targets } = yield* Operation.invoke(NavigationOperation.ResolveNavigationTargets, {
+                    query: { uri: Obj.getURI(result.object) },
                   });
+                  const navigationTarget = targets[0];
+                  if (navigationTarget) {
+                    yield* Operation.invoke(LayoutOperation.Open, {
+                      subject: [navigationTarget.path],
+                      navigation: 'immediate',
+                    });
+                  }
                 }
               }
             }),
@@ -410,15 +412,15 @@ const createSchemaActions = ({
           }),
         ]
       : []),
-    Node.makeAction({
+    AppGraphNode.makeAction({
       id: `${SpaceOperation.AddObject.meta.key}-view`,
       data: () =>
-        Operation.invoke(SpaceOperation.OpenCreateObject, {
+        Operation.invoke(SpaceOperation.OpenObjectForm, {
           target: space.db,
           views: true,
           // The type-picker field value is the type URI (see TypeOptions), so seed the default with
           // the URI — not the bare typename — for the option to be pre-selected.
-          initialFormValues: { typename: Type.getURI(type) },
+          defaults: { typename: Type.getURI(type) },
         }),
       properties: {
         label: ADD_VIEW_TO_SCHEMA_LABEL,
@@ -427,9 +429,9 @@ const createSchemaActions = ({
         testId: 'spacePlugin.addViewToSchema',
       },
     }),
-    Node.makeAction({
+    AppGraphNode.makeAction({
       id: SpaceOperation.RenameObject.meta.key,
-      data: (params?: Node.InvokeProps) =>
+      data: (params?: AppGraphNode.InvokeProps) =>
         Type.getDatabase(type) != null
           ? Operation.invoke(SpaceOperation.RenameObject, {
               object: type,
@@ -444,7 +446,7 @@ const createSchemaActions = ({
         testId: 'spacePlugin.renameObject',
       },
     }),
-    Node.makeAction({
+    AppGraphNode.makeAction({
       id: SpaceOperation.RemoveObjects.meta.key,
       data: () =>
         Type.getDatabase(type) != null
@@ -460,7 +462,7 @@ const createSchemaActions = ({
         testId: 'spacePlugin.deleteObject',
       },
     }),
-    Node.makeAction({
+    AppGraphNode.makeAction({
       id: SpaceOperation.Snapshot.meta.key,
       data: Effect.fnUntraced(function* () {
         const result = yield* Operation.invoke(SpaceOperation.Snapshot, {

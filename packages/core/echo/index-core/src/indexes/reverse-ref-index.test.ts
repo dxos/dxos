@@ -272,4 +272,37 @@ describe('ReverseRefIndex', () => {
       expect(results[0].propPath).toBe('ref');
     }).pipe(Effect.provide(TestLayer)),
   );
+
+  it.effect('indexes references to named entities, keyed without the version', () =>
+    Effect.gen(function* () {
+      const reverseRefIndex = new ReverseRefIndex();
+      yield* reverseRefIndex.migrate();
+
+      const sourceObject: IndexerObject = {
+        spaceId: SpaceId.random(),
+        queueId: null,
+        queueNamespace: null,
+        documentId: 'doc-123',
+        recordId: 1,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: {
+          id: EntityId.random(),
+          [ATTR_TYPE]: TYPE_EXAMPLE,
+          runnable: { '/': DXN.make('org.example.operation.foo') },
+          versioned: { '/': DXN.make('org.example.operation.foo', '1.0.0') },
+          other: { '/': DXN.make('org.example.operation.other') },
+        },
+      };
+
+      yield* reverseRefIndex.update([sourceObject]);
+
+      // Both spellings collapse to the unversioned key, so one lookup finds every version.
+      const results = yield* reverseRefIndex.query({ targetDXN: DXN.make('org.example.operation.foo') });
+      expect(results.map((row) => row.propPath).sort()).toEqual(['runnable', 'versioned']);
+
+      const versioned = yield* reverseRefIndex.query({ targetDXN: DXN.make('org.example.operation.foo', '1.0.0') });
+      expect(versioned.length).toBe(2);
+    }).pipe(Effect.provide(TestLayer)),
+  );
 });

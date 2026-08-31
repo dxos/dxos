@@ -12,10 +12,22 @@ import * as Prompt from 'effect/unstable/cli/Prompt';
 import { Ansi, Doc, FormBuilder } from '@dxos/cli-util';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trigger from '@dxos/compute/Trigger';
-import { Annotation, Database, Entity, type Err, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
+import {
+  Annotation,
+  Database,
+  type Error as EchoError,
+  Entity,
+  Feed,
+  Filter,
+  Obj,
+  Query,
+  Ref,
+  Scope,
+  Type,
+} from '@dxos/echo';
 import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
-import { FeedAnnotation } from '@dxos/schema';
+import { getFeedRef, isFeedOwnerSchema } from '@dxos/schema';
 
 export type TriggerRemoteStatus = 'available' | 'not available' | 'n/a';
 
@@ -37,7 +49,7 @@ export const getTriggerRemoteStatus = (trigger: Trigger.Trigger, remoteCronIds: 
 export const printTrigger: (
   trigger: Trigger.Trigger,
   remoteStatus?: TriggerRemoteStatus,
-) => Effect.Effect<Doc.Doc<any>, Err.EntityNotFoundError> = Effect.fn(function* (
+) => Effect.Effect<Doc.Doc<any>, EchoError.EntityNotFoundError> = Effect.fn(function* (
   trigger: Trigger.Trigger,
   remoteStatus?: TriggerRemoteStatus,
 ) {
@@ -356,11 +368,7 @@ export const selectFeed = Effect.fn(function* () {
   const schemas = yield* Database.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry())).run;
 
   // Filter schemas that have FeedAnnotation.
-  const feedSchemas = schemas.filter((type) => {
-    const schema = Type.getSchema(type);
-    const annotation = FeedAnnotation.get(schema);
-    return Option.isSome(annotation) && annotation.value === true;
-  });
+  const feedSchemas = schemas.filter(isFeedOwnerSchema);
 
   if (feedSchemas.length === 0) {
     return yield* Effect.fail(new Error('No schemas with Feed annotation found'));
@@ -375,8 +383,8 @@ export const selectFeed = Effect.fn(function* () {
       const objects = yield* Database.query(Filter.type(Type.getURI(schema))).run;
 
       for (const obj of objects) {
-        // Access the feed property (which is a Ref<Feed>).
-        const feedRef = (obj as any).feed as Ref.Ref<any> | undefined;
+        // Resolved through the property named by `FeedAnnotation`, not a hardcoded `feed`.
+        const feedRef = getFeedRef(obj);
         if (!feedRef) {
           continue;
         }

@@ -6,7 +6,7 @@ import React from 'react';
 
 import * as Routine from '@dxos/compute/Routine';
 import { Obj } from '@dxos/echo';
-import { Icon, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Flex, Icon, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Accordion, Empty, Listbox } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
@@ -53,7 +53,7 @@ export const RoutineTraceCompanion = ({ role, subject }: RoutineTraceCompanionPr
             ) : (
               <Accordion.Root<RoutineRun> items={runs} getId={getRunId}>
                 {({ items }) => (
-                  <div className='flex flex-col'>
+                  <Flex column>
                     {items.map((run) => (
                       <Accordion.Item key={run.pid} item={run} classNames='border-b border-subdued-separator'>
                         <Accordion.ItemHeader hover>
@@ -74,7 +74,7 @@ export const RoutineTraceCompanion = ({ role, subject }: RoutineTraceCompanionPr
                         </Accordion.ItemBody>
                       </Accordion.Item>
                     ))}
-                  </div>
+                  </Flex>
                 )}
               </Accordion.Root>
             )}

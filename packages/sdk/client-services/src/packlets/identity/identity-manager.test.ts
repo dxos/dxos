@@ -4,18 +4,22 @@
 
 import { describe, expect, onTestFinished, test } from 'vitest';
 
+import { waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { getCredentialAssertion } from '@dxos/credentials';
+import { type SpaceRoot, createIdFromSpaceKey, isSpaceRoot } from '@dxos/echo-protocol';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
-import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
 import { MetadataStore } from '../metadata';
 import { valueEncoding } from '../pipeline';
 import { AuthStatus, SpaceManager } from '../space';
+import { openCredentialsDocument } from '../spaces/credentials-document-store';
+import { createServiceContext } from '../testing';
 import { IdentityManager } from './identity-manager';
 
 describe('identity/identity-manager', () => {
@@ -27,7 +31,6 @@ describe('identity/identity-manager', () => {
     storage?: Storage;
   } = {}) => {
     const metadataStore = new MetadataStore(storage.createDirectory('metadata'));
-    const blobStore = new BlobStore(storage.createDirectory('blobs'));
 
     const keyring = new Keyring(storage.createDirectory('keyring'));
     const feedStore = new FeedStore<FeedMessage>({
@@ -49,10 +52,16 @@ describe('identity/identity-manager', () => {
     const spaceManager = new SpaceManager({
       feedStore,
       networkManager,
-      blobStore,
       metadataStore,
     });
-    const identityManager = new IdentityManager({ metadataStore, keyring, feedStore, spaceManager });
+    // The automerge scheme is opt-in in the product; these tests are what cover it.
+    const identityManager = new IdentityManager({
+      metadataStore,
+      keyring,
+      feedStore,
+      spaceManager,
+      automergeCredentials: true,
+    });
 
     return {
       networkManager,
@@ -70,6 +79,42 @@ describe('identity/identity-manager', () => {
 
     const identity = await identityManager.createIdentity();
     expect(identity).to.exist;
+  });
+
+  test('anchors the halo space on a space root document and mirrors its credentials', async () => {
+    const peer = await createServiceContext({ runtimeProps: { automergeCredentials: true } });
+    await peer.open(new Context());
+    onTestFinished(() => peer.close());
+
+    await peer.createIdentity();
+    const identity = peer.identityManager.identity!;
+    const spaceId = identity.haloSpaceId;
+
+    // HALO has never had a directory of its own, so anchoring has to mint one for the root to point at.
+    const refs = peer.echoHost.getSpaceRootRefs(spaceId);
+    expect(refs?.spaceRootDocUrl).to.exist;
+
+    // The id stays key-derived: recovery reconstructs the halo space from `haloSpaceKey` alone, so a
+    // root-derived id would leave a recovering device computing an id no document belongs to.
+    expect(spaceId).to.equal(await createIdFromSpaceKey(identity.haloSpaceKey));
+
+    const root = await peer.echoHost.loadDoc<SpaceRoot>(new Context(), refs!.spaceRootDocUrl);
+    expect(isSpaceRoot(root?.doc())).to.be.true;
+    expect(root!.doc()!.spaceId).to.equal(spaceId);
+
+    // Every credential the control feed carries is mirrored into the credentials document.
+    const store = await openCredentialsDocument(new Context(), peer.echoHost, spaceId);
+    await waitForCondition({ condition: () => store.read().length >= identity.space.spaceState.credentials.length });
+
+    const mirrored = new Set(store.read().map((entry) => entry.id));
+    for (const credential of identity.space.spaceState.credentials) {
+      expect(mirrored.has(credential.id!.toHex())).to.be.true;
+    }
+
+    // The genesis credential is what makes the chain processable on its own.
+    const types = store.read().map((entry) => getCredentialAssertion(entry.credential)['@type']);
+    expect(types).to.include('dxos.halo.credentials.SpaceGenesis');
+    expect(types).to.include('dxos.halo.credentials.AuthorizedDevice');
   });
 
   test('reload from storage', async () => {

@@ -246,6 +246,28 @@ describe('xmlTags decorations', () => {
       view.destroy();
     });
 
+    // Reported from the assistant chat: `<reasoning>` flashed as literal markup for the frame between
+    // the opening tag arriving and its first content character. Streaming factories decline while
+    // their content is empty (`text ? new Widget(text) : null`), and the scan used to skip the
+    // decoration entirely when they did — leaving the raw tag on screen, which is the one thing this
+    // scan exists to prevent.
+    test('an unclosed streaming tag is hidden even when its factory declines', async ({ expect }) => {
+      const doc = 'intro\n\n<think>';
+      const view = createView(doc, {
+        registry: { think: { streaming: true, block: true, factory: () => null } },
+      });
+      const decorations = await rebuild(view);
+      expect(decorations).toHaveLength(1);
+      const [decoration] = decorations;
+      expect(decoration.tag).toBe('think');
+      expect(decoration.streaming).toBe(true);
+      expect(decoration.from).toBe(doc.indexOf('<think>'));
+      expect(decoration.to).toBe(doc.length);
+      // No widget to size a line, so the replacement stays inline rather than claiming a block.
+      expect(decoration.block).toBe(false);
+      view.destroy();
+    });
+
     test('a closed streaming tag decorates the element and is no longer streaming', async ({ expect }) => {
       const doc = '<think>done</think>';
       const view = createView(doc, { registry: withFactory({ think: { streaming: true } }) });

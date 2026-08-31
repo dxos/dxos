@@ -9,7 +9,7 @@ import { describe, test } from 'vitest';
 import * as Routine from '@dxos/compute/Routine';
 import * as Trace from '@dxos/compute/Trace';
 import * as Trigger from '@dxos/compute/Trigger';
-import { Database, Feed, Obj } from '@dxos/echo';
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
@@ -25,19 +25,13 @@ const dbLayer = TestDatabaseLayer({
 const TestLayer = Layer.mergeAll(dbLayer, Trace.writerLayerNoop);
 
 describe('crm routine template', () => {
-  test('applies only to a Mailbox subject', ({ expect }) => {
-    const mailbox = Mailbox.make({ name: 'Test Mailbox' });
-    expect(crm.appliesTo?.(mailbox)).toBe(true);
-    expect(crm.appliesTo?.(undefined)).toBe(false);
-  });
-
   test('scaffolds a routine draft bound to ProcessMailbox with a feed trigger', async ({ expect }) => {
     await Effect.gen(function* () {
       const mailbox = Mailbox.make({ name: 'Test Mailbox' });
       yield* Database.add(mailbox);
       yield* Database.flush();
 
-      const draft = yield* crm.scaffold({ subject: mailbox });
+      const draft = yield* crm.scaffold({ input: { mailbox: Ref.make(mailbox) } });
 
       // The draft is a routine graph with a recognisable name, wired for an operation action.
       expect(Obj.instanceOf(Routine.Routine, draft)).toBe(true);
@@ -50,10 +44,11 @@ describe('crm routine template', () => {
       // No model between trigger and operation: an operation action owns no instructions.
       expect(Routine.instructionsRef(draft)).toBeUndefined();
 
-      // Feed trigger pointing at the mailbox's feed, owned by the routine.
+      // Feed trigger pointing at the mailbox's feed, enabled (the create dialog is the review step),
+      // owned by the routine.
       const trigger = draft.triggers[0]?.target;
       expect(trigger != null && Obj.instanceOf(Trigger.Trigger, trigger)).toBe(true);
-      expect(trigger?.enabled).toBe(false);
+      expect(trigger?.enabled).toBe(true);
       expect(trigger?.spec?.kind).toBe('feed');
       const triggerFeedUri = trigger?.spec?.kind === 'feed' ? trigger.spec.feed?.uri : undefined;
       expect(triggerFeedUri).toBe(mailbox.feed.uri);

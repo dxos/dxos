@@ -9,6 +9,6 @@ import { ChessOperationHandlerSet } from '#operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contribute(Capabilities.OperationHandler, ChessOperationHandlerSet);
+    return Capability.contribute(Capabilities.OperationHandler, ChessOperationHandlerSet.handlers);
   }),
 );

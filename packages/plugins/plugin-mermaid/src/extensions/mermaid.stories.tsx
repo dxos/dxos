@@ -17,8 +17,6 @@ import {
 
 import { mermaid } from './mermaid-extension';
 
-const str = (...lines: string[]) => lines.join('\n');
-
 type StoryArgs = {
   text?: string;
 };
@@ -39,7 +37,7 @@ const DefaultStory = ({ text }: StoryArgs) => {
     [themeMode],
   );
 
-  return <div className='w-[50rem]' ref={parentRef} {...focusAttributes} />;
+  return <div {...focusAttributes} ref={parentRef} />;
 };
 
 const meta = {
@@ -54,7 +52,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    text: str(
+    text: [
       '# Mermaid',
       '',
       'This is a mermaid diagram:',
@@ -71,13 +69,13 @@ export const Default: Story = {
       '',
       'Inside a markdown document.',
       '',
-    ),
+    ].join('\n'),
   },
 };
 
 export const Error: Story = {
   args: {
-    text: str(
+    text: [
       '# Mermaid',
       '',
       'This is a broken mermaid diagram:',
@@ -89,6 +87,6 @@ export const Error: Story = {
       '',
       '',
       '',
-    ),
+    ].join('\n'),
   },
 };

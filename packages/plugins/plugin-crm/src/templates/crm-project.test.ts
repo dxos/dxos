@@ -10,7 +10,7 @@ import * as Project from '@dxos/compute/Project';
 import * as Routine from '@dxos/compute/Routine';
 import * as Skill from '@dxos/compute/Skill';
 import * as Trigger from '@dxos/compute/Trigger';
-import { Collection, Database, Feed, Obj } from '@dxos/echo';
+import { Database, Feed, Filter } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
@@ -36,7 +36,6 @@ describe('crm sender-research project template', () => {
         Instructions.Instructions,
         Routine.Routine,
         Trigger.Trigger,
-        Collection.Collection,
         Mailbox.Mailbox,
         Feed.Feed,
         TagIndex.TagIndex,
@@ -69,18 +68,19 @@ describe('crm sender-research project template', () => {
     expect(projectSkills).toContain(Skill.registryURI('org.dxos.skill.crm').toString());
     expect(projectSkills).toContain(Skill.registryURI('org.dxos.skill.webSearch').toString());
 
-    // Routine: owned + linked; project context; CRM skills PLUS the project skill for artifact filing.
-    expect(project.routines).toHaveLength(1);
-    const routine = await project.routines[0].tryLoad();
-    expect(Obj.getParent(routine!)?.id).toBe(project.id);
-    const routineInstructions = await Routine.instructionsRef(routine!)?.tryLoad();
+    // Routine: standalone, connected by its instructions; CRM skills PLUS the project skill for
+    // artifact filing.
+    const routines = await db.query(Filter.type(Routine.Routine)).run();
+    expect(routines).toHaveLength(1);
+    const routine = routines[0];
+    const routineInstructions = await Routine.instructionsRef(routine)?.tryLoad();
     expect(routineInstructions?.objects?.map((ref) => ref.target?.id)).toEqual([project.id]);
     const routineSkills = routineInstructions?.skills.map((ref) => ref.uri.toString()) ?? [];
     expect(routineSkills).toContain(Skill.registryURI('org.dxos.skill.crm').toString());
     expect(routineSkills).toContain(Skill.registryURI('org.dxos.skill.project').toString());
 
     // Feed trigger, off by default, message as input.
-    const trigger = await routine!.triggers[0].tryLoad();
+    const trigger = await routine.triggers[0].tryLoad();
     expect(trigger?.enabled).toBe(false);
     expect(trigger?.spec?.kind).toBe('feed');
     expect(trigger?.input?.input).toBe('{{event.item}}');

@@ -2,9 +2,29 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Client } from '@dxos/client';
+import { type Credential } from '@dxos/client/halo';
 import { invariant } from '@dxos/invariant';
-import { type Client } from '@dxos/react-client';
-import { type Credential } from '@dxos/react-client/halo';
+import { InvalidRecoveryTokenError } from '@dxos/protocols';
+
+/**
+ * Whether a failed recovery was EDGE refusing the token itself — walks the wrapper chain because
+ * the error arrives wrapped, with the cause under `context` rather than `cause`.
+ */
+export const isInvalidRecoveryToken = (error: unknown): boolean => {
+  // Wrapped errors can produce cyclic chains, so track what has been seen.
+  const seen = new Set<unknown>();
+  let current: unknown = error;
+  while (typeof current === 'object' && current !== null && !seen.has(current)) {
+    seen.add(current);
+    if (InvalidRecoveryTokenError.is(current)) {
+      return true;
+    }
+    const { cause, context } = current as { cause?: unknown; context?: { error?: unknown } };
+    current = cause ?? context?.error;
+  }
+  return false;
+};
 
 export const removeQueryParamByValue = (valueToRemove: string) => {
   if (typeof window === 'undefined') {

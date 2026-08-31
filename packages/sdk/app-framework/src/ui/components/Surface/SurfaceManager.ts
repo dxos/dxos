@@ -4,12 +4,13 @@
 
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Position } from '@dxos/util';
 
-import { Capabilities } from '../../../common';
-import { type CapabilityManager } from '../../../core';
-import { type Definition, isValidLocalId } from './types';
+import { ActivationEvents, Capabilities } from '../../../common';
+import { ActivationEvent, type CapabilityManager, type PluginManager } from '../../../core';
+import { type Definition } from './types';
 
 const EMPTY_CANDIDATES: ReadonlyArray<Definition> = [];
 
@@ -37,6 +38,12 @@ export const indexByRole = (definitions: Definition[]): Map<string, Definition[]
   return index;
 };
 
+/** Whether an activation spec fires on `key` (directly, or as a member of a one-of/all-of). */
+const activatesOn = (events: ActivationEvent.Events, key: string): boolean => {
+  const list = ActivationEvent.isOneOf(events) || ActivationEvent.isAllOf(events) ? events.events : [events];
+  return list.some((event) => String(ActivationEvent.eventKey(event)) === key);
+};
+
 /** Definitions are stable objects, so a bucket is unchanged when it holds the same ones in order. */
 const sameCandidates = (left: ReadonlyArray<Definition>, right: ReadonlyArray<Definition>): boolean =>
   left.length === right.length && left.every((definition, index) => definition === right[index]);
@@ -50,6 +57,7 @@ const sameCandidates = (left: ReadonlyArray<Definition>, right: ReadonlyArray<De
  */
 export class SurfaceManager {
   readonly #capabilities: CapabilityManager.CapabilityManager;
+  readonly #plugins: PluginManager.PluginManager;
 
   // Role index (each bucket position-sorted); rebuilt once per contribution change.
   readonly #index = Atom.make((get) => {
@@ -67,6 +75,22 @@ export class SurfaceManager {
     }).pipe(Atom.withEquality(sameCandidates), Atom.keepAlive),
   );
 
+  // Per-role activation-in-flight atoms; see `pendingAtom`. `modules` carries only enabled,
+  // non-failed plugins' modules (a plugin that fails — including by exceeding the module timeout —
+  // is excluded and auto-disabled), so a role cannot stay pending forever.
+  readonly #pending = Atom.family<string, Atom.Atom<boolean>>((role) =>
+    Atom.make((get) => {
+      if (role === '') {
+        return false;
+      }
+      const key = String(ActivationEvent.eventKey(ActivationEvents.SurfacesRequested(role)));
+      const active = new Set(get(this.#plugins.active));
+      return get(this.#plugins.modules).some(
+        (module) => !active.has(module.id) && activatesOn(module.activation.activatesOn, key),
+      );
+    }).pipe(Atom.keepAlive),
+  );
+
   // Ids already reported as invalid on this manager, so a persistently-malformed
   // contribution warns once rather than on every index rebuild.
   #warnedInvalidIds = new Set<string>();
@@ -75,13 +99,23 @@ export class SurfaceManager {
   // repeated availability checks do not re-activate the role's modules.
   #requestedRoles = new Set<string>();
 
-  constructor(capabilities: CapabilityManager.CapabilityManager) {
+  constructor(capabilities: CapabilityManager.CapabilityManager, plugins: PluginManager.PluginManager) {
     this.#capabilities = capabilities;
+    this.#plugins = plugins;
   }
 
   /** Derived atom yielding the (position-sorted) candidates for a single role. */
   candidatesAtom(role: string): Atom.Atom<ReadonlyArray<Definition>> {
     return this.#candidates(role);
+  }
+
+  /**
+   * Derived atom: true while a module gated on this role's demand event has yet to activate — i.e.
+   * a surface specific to the rendered data may still be coming. Boolean-valued, so subscribers
+   * re-render only when it flips, not on every activation.
+   */
+  pendingAtom(role: string): Atom.Atom<boolean> {
+    return this.#pending(role);
   }
 
   /**
@@ -110,14 +144,17 @@ export class SurfaceManager {
   /** Drops definitions with an invalid local id, warning once per id. */
   #dropInvalid(definitions: Definition[]): Definition[] {
     return definitions.filter((definition) => {
-      if (isValidLocalId(definition.id)) {
+      if (DXN.isValidPath(definition.id)) {
         return true;
       }
       if (!this.#warnedInvalidIds.has(definition.id)) {
         this.#warnedInvalidIds.add(definition.id);
-        log.warn('dropping surface with invalid id; the final segment must be camelCase (no hyphens or underscores)', {
-          id: definition.id,
-        });
+        log.warn(
+          'dropping surface with invalid id; the final segment must be camelCase — letters and digits, starting with a letter',
+          {
+            id: definition.id,
+          },
+        );
       }
       return false;
     });

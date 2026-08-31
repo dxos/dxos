@@ -16,7 +16,7 @@ import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
-import { Message, Outline } from '@dxos/types';
+import { Message, Outline, Task } from '@dxos/types';
 
 import { Agent, Chat } from '../../../types';
 import { PlanReminder } from './definitions';
@@ -78,16 +78,13 @@ describe('PlanReminder', () => {
   );
 });
 
-/** Creates a chat bound to its feed, carrying an outline checklist with the given item states. */
+/** Creates a chat bound to its feed, carrying a checklist with the given item states. */
 const setupChatWithChecklist = Effect.fnUntraced(function* (states: readonly boolean[]) {
   const feed = yield* Database.add(Feed.make());
   const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
-  const { text } = yield* Chat.ensureOutlineText(chat);
-  Obj.update(text, (text) => {
-    text.content = Outline.upsertChecklistItems(
-      text.content,
-      states.map((done, index) => ({ title: `Task ${index}`, done })),
-    );
+  const { db } = yield* Database.Service;
+  states.forEach((done, index) => {
+    Chat.addTask(db, chat, `Task ${index}`, { status: done ? 'done' : 'todo' });
   });
   yield* Database.flush();
 
@@ -101,9 +98,9 @@ const setupChatWithChecklist = Effect.fnUntraced(function* (states: readonly boo
 const types = [
   Agent.Agent,
   Outline.Outline,
+  Task.Task,
   Text.Text,
   Chat.Chat,
-  Chat.CompanionTo,
   Skill.Skill,
   Feed.Feed,
   Message.Message,

@@ -1,35 +1,19 @@
 layer: library
 language: typescript
 tags:
+  - composer-plugin
   - ts-build
   - ts-test
   - pack
 tasks:
-  # Fail when the ./plugin export pulls in React. The node/workerd plugin variant must stay
-  # loadable outside a DOM, and `Capability.lazy` does not stop a bundler walking into a React
-  # surface — only a node-conditioned `#capabilities` barrel does.
-  check-module-structure:
-    command: >-
-      pnpm exec dx-trace-imports
-      --export ./MapPlugin
-      --to "{react,react-dom}"
-      --conditions workerd,worker,node
-      --fail-on present
-    deps:
-      - dx-trace-imports:build
-      - build
-    inputs:
-      - tsconfig.json
-      - '@group(production)'
-      - /pnpm-lock.yaml
-    options:
-      timeout: 60
+  # No `check-module-structure`: this plugin declares no `environments`, so it generates no
+  # headless barrel and its `#capabilities` is the unconditioned default. Tracing it under
+  # node/workerd would assert a property of a bundle no headless host loads — those hosts leave
+  # a browser-only plugin out of their plugin list instead.
   build:
     args:
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/plugin.tsx'
-      - '--entryPoint=src/plugin.node.ts'
-      - '--entryPoint=src/plugin.workerd.ts'
       - '--entryPoint=src/capabilities/index.ts'
       - '--entryPoint=src/components/index.ts'
       - '--entryPoint=src/meta.ts'

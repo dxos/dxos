@@ -1,6 +1,7 @@
 layer: library
 language: typescript
 tags:
+  - composer-plugin
   - ts-vite-build
   - ts-test
   - pack
@@ -13,7 +14,8 @@ tasks:
       pnpm exec dx-trace-imports
       --export ./ChessComPlugin
       --to "{react,react-dom}"
-      --conditions workerd,worker,node
+      --conditions workerd,worker
+      --conditions node
       --fail-on present
     deps:
       - dx-trace-imports:build

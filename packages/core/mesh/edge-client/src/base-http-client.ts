@@ -82,7 +82,9 @@ export abstract class BaseHttpClient {
   private _authPrefetch: Promise<void> | undefined;
 
   constructor(baseUrl: string, options?: BaseHttpClientOptions) {
-    this._baseUrl = getEdgeUrlWithProtocol(baseUrl, 'http');
+    // Slash-terminated: `new URL('account/me', '…/hub')` would otherwise drop the `/hub` prefix.
+    const url = getEdgeUrlWithProtocol(baseUrl, 'http');
+    this._baseUrl = url.endsWith('/') ? url : `${url}/`;
     this._clientTag = options?.clientTag;
     this._apiKey = options?.apiKey;
     log('created', { url: this._baseUrl });
@@ -90,6 +92,32 @@ export abstract class BaseHttpClient {
 
   get baseUrl() {
     return this._baseUrl;
+  }
+
+  /**
+   * The `Authorization` header this client would send on an authenticated call, minting one first
+   * if none is cached or the cached one has gone stale.
+   *
+   * For callers that have to make an EDGE request outside this client — the native OAuth flow
+   * issues `/oauth/initiate` from Rust, the only place the `Origin` header can be set to the
+   * loopback callback server. Resolves undefined when there is nothing to present (no identity, or
+   * the challenge round trip failed), which EDGE endpoints that `skipAuth` accept.
+   */
+  async getAuthHeader(): Promise<string | undefined> {
+    if (this._apiKey) {
+      return undefined;
+    }
+    const identity = this._edgeIdentity;
+    if (!this._authHeader || this._authHeaderIsStale()) {
+      await this._prefetchAuthHeader();
+    }
+    // `setIdentity` may have swapped identities while the prefetch was in flight, so the cached
+    // header now belongs to the new one — handing it back would sign the caller's request, made on
+    // behalf of the old identity, as somebody else.
+    if (this._edgeIdentity !== identity) {
+      return undefined;
+    }
+    return this._authHeader;
   }
 
   setIdentity(identity: EdgeIdentity): void {
@@ -259,11 +287,30 @@ export abstract class BaseHttpClient {
    * Best-effort: a failure here leaves `_authHeader` unset and the request proceeds
    * unauthenticated, falling back to the 401-and-retry path below. That fallback is what keeps
    * this working against servers whose `/auth` only issues a challenge by rejecting.
+   *
+   * The `catch` is what makes that true for *signing* failures, not just network ones:
+   * `fetchAuthChallengeInfo` swallows its own fetch errors, but `presentCredentials` throws on a
+   * device with no HALO chain (mid-invitation), and without this the rejection would surface from
+   * `_call` as a failed request — turning a call that used to succeed unauthenticated into an error.
    */
   private _prefetchAuthHeader(): Promise<void> {
-    return (this._authPrefetch ??= this._prefetchAuthHeaderOnce().finally(() => {
-      this._authPrefetch = undefined;
-    }));
+    if (this._authPrefetch) {
+      return this._authPrefetch;
+    }
+    const prefetch: Promise<void> = this._prefetchAuthHeaderOnce()
+      .catch((err) => {
+        log.verbose('auth prefetch failed; proceeding unauthenticated', { err });
+      })
+      .finally(() => {
+        // Only if this promise still owns the guard: `setIdentity` clears it mid-flight, so a
+        // newer prefetch may already have claimed it, and clearing that one would let concurrent
+        // callers each start their own `/auth` round trip and credential presentation.
+        if (this._authPrefetch === prefetch) {
+          this._authPrefetch = undefined;
+        }
+      });
+    this._authPrefetch = prefetch;
+    return prefetch;
   }
 
   private async _prefetchAuthHeaderOnce(): Promise<void> {
