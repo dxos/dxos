@@ -45,14 +45,6 @@ const setup = Effect.fnUntraced(function* (options: Omit<AiTelemetry.WrapOptions
   return { exporter, provider, wrapped };
 });
 
-const findModelSpan = (exporter: InMemorySpanExporter) => {
-  const span = exporter.getFinishedSpans().find(({ name }) => name === 'LanguageModel.generateText');
-  if (!span) {
-    throw new Error('model span was not exported');
-  }
-  return span;
-};
-
 describe('AiTelemetry', () => {
   it.effect('routes model spans to the wrapped tracer with content and session id', () =>
     Effect.gen(function* () {
@@ -95,3 +87,11 @@ describe('AiTelemetry', () => {
     }),
   );
 });
+
+const findModelSpan = (exporter: InMemorySpanExporter) => {
+  const span = exporter.getFinishedSpans().find(({ name }) => name === 'LanguageModel.generateText');
+  if (!span) {
+    throw new Error('model span was not exported');
+  }
+  return span;
+};
