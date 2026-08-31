@@ -28,9 +28,9 @@ import {
 } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
 import { FeedStore } from '@dxos/feed';
-import { IndexEngine, type IndexingResult } from '@dxos/index-core';
+import { EscapedPropPath, IndexEngine, type IndexingResult } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
-import { type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
+import { EID, type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
 import { type DataService, type FeedService } from '@dxos/protocols/rpc';
@@ -210,6 +210,32 @@ export class EchoHost extends Resource {
     this._convergenceKeyMerger = new ConvergenceKeyMerger({
       queryByConvergenceKeys: (spaceId, keys) =>
         this._indexEngine.queryByConvergenceKeys(spaceId, keys).pipe(RuntimeProvider.runPromise(this._runtime)),
+      queryReferrers: async (spaceId, targetId) => {
+        const rows = await RuntimeProvider.runPromise(this._runtime)(
+          this._indexEngine.queryReverseRef({ targetDXN: EID.make({ entityId: targetId }) }),
+        );
+        if (rows.length === 0) {
+          return [];
+        }
+        const pathsByRecord = new Map<number, string[][]>();
+        for (const row of rows) {
+          const paths = pathsByRecord.get(row.recordId) ?? [];
+          paths.push(EscapedPropPath.unescape(row.propPath));
+          pathsByRecord.set(row.recordId, paths);
+        }
+        const metas = await RuntimeProvider.runPromise(this._runtime)(
+          this._indexEngine.lookupByRecordIds([...pathsByRecord.keys()]),
+        );
+        // Queue entities have no document to rewrite; cross-space rows are out of scope — a
+        // qualified ref from another space is not this merge's to repoint.
+        return metas
+          .filter((meta) => meta.spaceId === spaceId && meta.documentId !== '')
+          .map((meta) => ({
+            objectId: meta.objectId,
+            documentId: meta.documentId,
+            propPaths: pathsByRecord.get(meta.recordId) ?? [],
+          }));
+      },
       loadDoc: (ctx, documentId) => this._automergeHost.loadDoc<DatabaseDirectory>(ctx, documentId),
       flushDoc: (ctx, documentId) => this._automergeHost.flush(ctx, { documentIds: [documentId] }),
     });

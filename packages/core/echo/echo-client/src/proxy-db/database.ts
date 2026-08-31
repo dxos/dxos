@@ -68,7 +68,6 @@ import {
 } from '../echo-handler';
 import { FeedHandle } from '../feed/feed-handle';
 import { type HypergraphImpl } from '../hypergraph';
-import { type MergePassResult, mergeDuplicates, rewriteReferences } from '../merge';
 
 export interface EchoDatabase extends Database.Database {
   /**
@@ -419,35 +418,6 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
         await this._entityManager.updateSpaceState(this._ctx, { rootUrl });
       }
     }
-  }
-
-  /**
-   * Collapse entities that declare the same convergence key into one, and repoint references at the
-   * survivor.
-   *
-   * Merging is automatic — the worker runs it off the indexing stream as duplicates replicate in
-   * (see `echo-host`'s convergence-key merge) — so this explicit pass exists for what the automatic
-   * path deliberately leaves alone: rewriting references to name the survivor directly. Refs to
-   * losers already resolve through the redirect; rewriting them is an optimization and the
-   * compatibility path for clients too old to follow `mergedInto`.
-   *
-   * Being a pure function of the entities it sees, every peer computes the same result, so a
-   * pass racing the worker converges rather than fights, and a pass with nothing to merge
-   * writes nothing. Detection here scans the whole space (hydrating it) — acceptable for an
-   * explicit call; the worker's index point-lookup is what keeps the automatic path cheap.
-   */
-  async mergeDuplicates(): Promise<MergePassResult> {
-    // Includes tombstones: the worker usually merges before this pass ever sees the duplicates,
-    // so what is left is repointing references at the survivors — which needs the losers.
-    const entities = await this.query(Query.select(Filter.everything()).options({ deleted: 'include' })).run();
-    const result = mergeDuplicates(entities);
-    const rewritten = rewriteReferences(entities, entities);
-    if (result.merged.length > 0 || rewritten > 0) {
-      await this.flush();
-      log('merged duplicates', { spaceId: this.spaceId, groups: result.merged.length, rewritten });
-    }
-
-    return result;
   }
 
   // ── User-facing Database API ─────────────────────────────────────────────

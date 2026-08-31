@@ -14,6 +14,7 @@ import { EntityId, SpaceId, URI } from '@dxos/keys';
 import { ConvergenceKeyMerger, type ConvergenceKeyMergerDeps } from './convergence-key-merge';
 
 const KEY = 'example.com/thing/main';
+const SPACE_ID = SpaceId.random();
 
 // Fixed ULIDs with a known ordering: A < B < C, so A is the canonical winner.
 const ID_A = EntityId.make('01J00000000000000000000000');
@@ -53,6 +54,7 @@ const setup = (entities: [EntityId, EntityStructure][]): Fixture => {
       loadDoc: async (_ctx, documentId) => byDocumentId.get(documentId) ?? null,
       flushDoc: async () => {},
       queryByConvergenceKeys: async () => [],
+      queryReferrers: async () => [],
     },
   };
 };
@@ -115,7 +117,9 @@ describe('ConvergenceKeyMerger.mergeGroup', () => {
       },
     };
 
-    expect(await new ConvergenceKeyMerger(context).mergeGroup(Context.default(), KEY, fixture.group)).toBe(true);
+    expect(await new ConvergenceKeyMerger(context).mergeGroup(Context.default(), SPACE_ID, KEY, fixture.group)).toBe(
+      true,
+    );
 
     const winner = entityOf(fixture, ID_A);
     const loser = entityOf(fixture, ID_B);
@@ -124,9 +128,9 @@ describe('ConvergenceKeyMerger.mergeGroup', () => {
     expect(loser?.system?.mergedInto).toBe(ID_A);
     expect(loser?.system?.deleted).toBe(true);
     // Idempotent: the watermark covers the edit, so a re-run writes nothing.
-    expect(await new ConvergenceKeyMerger(fixture.context).mergeGroup(Context.default(), KEY, fixture.group)).toBe(
-      false,
-    );
+    expect(
+      await new ConvergenceKeyMerger(fixture.context).mergeGroup(Context.default(), SPACE_ID, KEY, fixture.group),
+    ).toBe(false);
   });
 
   test('a straggler edit on a chain member collapsed in the same pass reaches the final winner', async ({ expect }) => {
@@ -143,18 +147,18 @@ describe('ConvergenceKeyMerger.mergeGroup', () => {
       entity.data.description = 'straggler';
     });
 
-    expect(await new ConvergenceKeyMerger(fixture.context).mergeGroup(Context.default(), KEY, fixture.group)).toBe(
-      true,
-    );
+    expect(
+      await new ConvergenceKeyMerger(fixture.context).mergeGroup(Context.default(), SPACE_ID, KEY, fixture.group),
+    ).toBe(true);
 
     const winner = entityOf(fixture, ID_A);
     expect(winner?.data.description).toBe('straggler');
     expect(entityOf(fixture, ID_B)?.system?.mergedInto).toBe(ID_A);
     // C's original redirect is preserved; resolution reaches A transitively.
     expect(entityOf(fixture, ID_C)?.system?.mergedInto).toBe(ID_B);
-    expect(await new ConvergenceKeyMerger(fixture.context).mergeGroup(Context.default(), KEY, fixture.group)).toBe(
-      false,
-    );
+    expect(
+      await new ConvergenceKeyMerger(fixture.context).mergeGroup(Context.default(), SPACE_ID, KEY, fixture.group),
+    ).toBe(false);
   });
 
   test('the fold writes the value from the same state as the diff and the watermark', async ({ expect }) => {
@@ -183,12 +187,14 @@ describe('ConvergenceKeyMerger.mergeGroup', () => {
       },
     };
 
-    expect(await new ConvergenceKeyMerger(context).mergeGroup(Context.default(), KEY, fixture.group)).toBe(true);
+    expect(await new ConvergenceKeyMerger(context).mergeGroup(Context.default(), SPACE_ID, KEY, fixture.group)).toBe(
+      true,
+    );
 
     expect(entityOf(fixture, ID_A)?.data.description).toBe('v2');
-    expect(await new ConvergenceKeyMerger(fixture.context).mergeGroup(Context.default(), KEY, fixture.group)).toBe(
-      false,
-    );
+    expect(
+      await new ConvergenceKeyMerger(fixture.context).mergeGroup(Context.default(), SPACE_ID, KEY, fixture.group),
+    ).toBe(false);
   });
 
   test('a fold blocked by a deleted winner leaves the watermark alone for a later pass', async ({ expect }) => {
@@ -212,9 +218,9 @@ describe('ConvergenceKeyMerger.mergeGroup', () => {
       entity.data.description = 'straggler';
     });
 
-    expect(await new ConvergenceKeyMerger(fixture.context).mergeGroup(Context.default(), KEY, fixture.group)).toBe(
-      true,
-    );
+    expect(
+      await new ConvergenceKeyMerger(fixture.context).mergeGroup(Context.default(), SPACE_ID, KEY, fixture.group),
+    ).toBe(true);
     expect(entityOf(fixture, ID_C)?.system?.deleted).toBe(true);
     expect(entityOf(fixture, ID_A)?.data.description).toBeUndefined();
 
@@ -223,9 +229,9 @@ describe('ConvergenceKeyMerger.mergeGroup', () => {
         entity.system.deleted = false;
       }
     });
-    expect(await new ConvergenceKeyMerger(fixture.context).mergeGroup(Context.default(), KEY, fixture.group)).toBe(
-      true,
-    );
+    expect(
+      await new ConvergenceKeyMerger(fixture.context).mergeGroup(Context.default(), SPACE_ID, KEY, fixture.group),
+    ).toBe(true);
     expect(entityOf(fixture, ID_A)?.data.description).toBe('straggler');
   });
 
@@ -245,7 +251,7 @@ describe('ConvergenceKeyMerger.mergeGroup', () => {
       },
     };
 
-    await new ConvergenceKeyMerger(context).mergeGroup(Context.default(), KEY, fixture.group);
+    await new ConvergenceKeyMerger(context).mergeGroup(Context.default(), SPACE_ID, KEY, fixture.group);
 
     const rekeyed = entityOf(fixture, ID_B);
     expect(rekeyed?.system?.mergedInto).toBeUndefined();
@@ -270,7 +276,7 @@ describe('ConvergenceKeyMerger.mergeGroup', () => {
       },
     };
 
-    await new ConvergenceKeyMerger(context).mergeGroup(Context.default(), KEY, fixture.group);
+    await new ConvergenceKeyMerger(context).mergeGroup(Context.default(), SPACE_ID, KEY, fixture.group);
 
     const survivor = entityOf(fixture, ID_B);
     expect(survivor?.system?.mergedInto).toBeUndefined();
@@ -300,7 +306,9 @@ describe('ConvergenceKeyMerger.mergeGroup', () => {
       },
     };
 
-    expect(await new ConvergenceKeyMerger(context).mergeGroup(Context.default(), KEY, fixture.group)).toBe(true);
+    expect(await new ConvergenceKeyMerger(context).mergeGroup(Context.default(), SPACE_ID, KEY, fixture.group)).toBe(
+      true,
+    );
 
     const documentIdOf = (id: EntityId) => fixture.handles.get(id)?.documentId;
     expect(flushed[0]).toBe(documentIdOf(ID_A));
@@ -373,9 +381,9 @@ describe('ConvergenceKeyMerger.mergeGroup', () => {
     expect(loser?.system && A.getConflicts(loser.system, 'mergedAtHeads')).toBeDefined();
 
     // Nothing is above the union, so the pass folds nothing and 'v3' stands.
-    expect(await new ConvergenceKeyMerger(fixture.context).mergeGroup(Context.default(), KEY, fixture.group)).toBe(
-      false,
-    );
+    expect(
+      await new ConvergenceKeyMerger(fixture.context).mergeGroup(Context.default(), SPACE_ID, KEY, fixture.group),
+    ).toBe(false);
     expect(entityOf(fixture, ID_A)?.data.title).toBe('v3');
 
     // The union must not over-suppress: a genuinely new straggler edit, above both watermarks,
@@ -383,9 +391,9 @@ describe('ConvergenceKeyMerger.mergeGroup', () => {
     edit(fixture, ID_B, (entity) => {
       entity.data.description = 'late';
     });
-    expect(await new ConvergenceKeyMerger(fixture.context).mergeGroup(Context.default(), KEY, fixture.group)).toBe(
-      true,
-    );
+    expect(
+      await new ConvergenceKeyMerger(fixture.context).mergeGroup(Context.default(), SPACE_ID, KEY, fixture.group),
+    ).toBe(true);
     expect(entityOf(fixture, ID_A)?.data.description).toBe('late');
     expect(entityOf(fixture, ID_A)?.data.title).toBe('v3');
   });
@@ -409,11 +417,130 @@ describe('ConvergenceKeyMerger.mergeGroup', () => {
       },
     };
 
-    expect(await new ConvergenceKeyMerger(context).mergeGroup(Context.default(), KEY, fixture.group)).toBe(true);
+    expect(await new ConvergenceKeyMerger(context).mergeGroup(Context.default(), SPACE_ID, KEY, fixture.group)).toBe(
+      true,
+    );
 
     expect(entityOf(fixture, ID_A)?.data.title).toBe('straggler');
     const documentIdOf = (id: EntityId) => fixture.handles.get(id)?.documentId;
     expect(flushed).toEqual([documentIdOf(ID_A), documentIdOf(ID_B)]);
+  });
+});
+
+describe('ConvergenceKeyMerger reference rewriting', () => {
+  const REFERRER_KEY = 'example.com/thing/referrer';
+  const ID_REF = EntityId.make('01J00000000000000000000009');
+
+  /** A fixture whose third entity is a referrer outside the merge group. */
+  const setupWithReferrer = (referrerData: Record<string, unknown>) => {
+    const fixture = setup([
+      [ID_A, makeEntity(KEY, { title: 'a' })],
+      [ID_B, makeEntity(KEY, { title: 'b' })],
+      [ID_REF, makeEntity(REFERRER_KEY, referrerData)],
+    ]);
+    const group = fixture.group.slice(0, 2);
+    const referrers = (propPaths: readonly (readonly string[])[]) => async (_spaceId: SpaceId, targetId: EntityId) =>
+      targetId === ID_B ? [{ objectId: ID_REF, documentId: fixture.group[2].documentId, propPaths }] : [];
+    return { fixture, group, referrers };
+  };
+
+  const localRef = (id: EntityId) => ({ '/': `echo:///${id}` });
+
+  test('referrers of a loser are repointed at the winner, nested and array paths included', async ({ expect }) => {
+    const { fixture, group, referrers } = setupWithReferrer({
+      owner: localRef(ID_B),
+      nested: { link: localRef(ID_B) },
+      items: [localRef(ID_B), localRef(ID_A)],
+    });
+    const context: ConvergenceKeyMergerDeps = {
+      ...fixture.context,
+      queryReferrers: referrers([['owner'], ['nested', 'link'], ['items', '0']]),
+    };
+
+    expect(await new ConvergenceKeyMerger(context).mergeGroup(Context.default(), SPACE_ID, KEY, group)).toBe(true);
+
+    const referrer = entityOf(fixture, ID_REF);
+    expect(referrer?.data.owner).toEqual(localRef(ID_A));
+    expect((referrer?.data.nested as { link: unknown }).link).toEqual(localRef(ID_A));
+    expect((referrer?.data.items as unknown[])[0]).toEqual(localRef(ID_A));
+    expect((referrer?.data.items as unknown[])[1]).toEqual(localRef(ID_A));
+  });
+
+  test('a space-qualified reference keeps its qualification', async ({ expect }) => {
+    const { fixture, group, referrers } = setupWithReferrer({
+      owner: { '/': `echo://${SPACE_ID}/${ID_B}` },
+    });
+    const context: ConvergenceKeyMergerDeps = {
+      ...fixture.context,
+      queryReferrers: referrers([['owner']]),
+    };
+
+    await new ConvergenceKeyMerger(context).mergeGroup(Context.default(), SPACE_ID, KEY, group);
+
+    expect(entityOf(fixture, ID_REF)?.data.owner).toEqual({ '/': `echo://${SPACE_ID}/${ID_A}` });
+  });
+
+  test('a stale index row — the path no longer holds a ref to the loser — writes nothing', async ({ expect }) => {
+    const { fixture, group, referrers } = setupWithReferrer({
+      owner: localRef(ID_A),
+      title: 'not a ref',
+    });
+    const context: ConvergenceKeyMergerDeps = {
+      ...fixture.context,
+      queryReferrers: referrers([['owner'], ['title'], ['gone']]),
+    };
+    const before = A.getHeads(fixture.handles.get(ID_REF)!.doc());
+
+    await new ConvergenceKeyMerger(context).mergeGroup(Context.default(), SPACE_ID, KEY, group);
+
+    expect(A.getHeads(fixture.handles.get(ID_REF)!.doc())).toEqual(before);
+  });
+
+  test('a tombstoned referrer is left alone', async ({ expect }) => {
+    const { fixture, group, referrers } = setupWithReferrer({ owner: localRef(ID_B) });
+    edit(fixture, ID_REF, (entity) => {
+      if (entity.system) {
+        entity.system.deleted = true;
+      }
+    });
+    const context: ConvergenceKeyMergerDeps = {
+      ...fixture.context,
+      queryReferrers: referrers([['owner']]),
+    };
+
+    await new ConvergenceKeyMerger(context).mergeGroup(Context.default(), SPACE_ID, KEY, group);
+
+    expect(entityOf(fixture, ID_REF)?.data.owner).toEqual(localRef(ID_B));
+  });
+
+  test('a referrer lookup failure does not fail the merge', async ({ expect }) => {
+    const { fixture, group } = setupWithReferrer({ owner: localRef(ID_B) });
+    const context: ConvergenceKeyMergerDeps = {
+      ...fixture.context,
+      queryReferrers: async () => {
+        throw new Error('index fault');
+      },
+    };
+
+    expect(await new ConvergenceKeyMerger(context).mergeGroup(Context.default(), SPACE_ID, KEY, group)).toBe(true);
+    expect(entityOf(fixture, ID_B)?.system?.mergedInto).toBe(ID_A);
+    // The ref stays behind and still resolves through the redirect.
+    expect(entityOf(fixture, ID_REF)?.data.owner).toEqual(localRef(ID_B));
+  });
+
+  test('servicing a re-indexed loser re-covers referrers that arrived after the merge', async ({ expect }) => {
+    // The merge already happened (B redirected to A); a late referrer to B indexes afterwards and
+    // re-presents the key. The fold pass must rewrite it even with no data edits to fold.
+    const { fixture, group, referrers } = setupWithReferrer({ owner: localRef(ID_B) });
+    redirect(fixture, ID_B, ID_A);
+    const context: ConvergenceKeyMergerDeps = {
+      ...fixture.context,
+      queryReferrers: referrers([['owner']]),
+    };
+
+    await new ConvergenceKeyMerger(context).mergeGroup(Context.default(), SPACE_ID, KEY, group);
+
+    expect(entityOf(fixture, ID_REF)?.data.owner).toEqual(localRef(ID_A));
   });
 });
 
@@ -461,6 +588,7 @@ describe('ConvergenceKeyMerger.mergeDuplicates', () => {
         return good.context.loadDoc(ctx, documentId);
       },
       flushDoc: async () => {},
+      queryReferrers: async () => [],
     });
     const result = await merger.mergeDuplicates(Context.default(), new Map([[spaceId, new Set([goodKey, badKey])]]));
 

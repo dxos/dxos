@@ -10,7 +10,6 @@ export namespace SpaceSyncState {
 }
 
 export * from './automerge';
-export * from './merge';
 export * from './client';
 export {
   type AddCoreOptions,

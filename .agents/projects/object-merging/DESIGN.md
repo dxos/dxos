@@ -241,6 +241,29 @@
      use of it; the resolver's `resolveMergeRedirect` is the only load-bearing
      client dependency).
 
+- **2026-08-31 (§4.11 ratified — Josiah: "that's the filter.everything
+  replacement … Yes build it" — and implemented)** — The worker rewrites
+  references, index-driven; the client merge surface is gone:
+  1. **`ConvergenceKeyMerger` gains `queryReferrers`** (reverse-ref index joined
+     to the object metadata) and repoints each indexed `EncodedReference` at the
+     chain-resolved winner — after a merge's tombstones, and on every
+     `#foldRedirected` service pass, which is what re-covers late referrers.
+     Best-effort by design: failures log and skip, no flush is ordered, and a ref
+     left behind still resolves through the redirect.
+  2. **`db.mergeDuplicates()` and the client executor are deleted** — the last
+     `Filter.everything()` with them. `merge-executor.ts`'s other exports
+     (`resolveMerged`, `getMergedFrom`, `foldLateEdits`, `isMergedAway`) had no
+     production consumers; tests observe the same state via `getObjectCore`.
+  3. **The merge core moved host-side** (`echo-host/src/db-host/merge-core.ts`,
+     unit suite alongside); `@dxos/echo/internal` keeps only
+     `resolveMergeRedirect` — settling the reviewer's layering question.
+  4. **The e2e suites re-targeted the worker path**: rewrites observed via
+     `waitForCondition` on ref URIs; partial-view merges staged through cores;
+     the freshness residual pinned by a late-referrer test. The
+     merged-away-referrer skip rule is asserted at the unit level (worker test),
+     where servicing order is controllable.
+     See §4.11's implementation notes for the mechanics.
+
 ---
 
 ## 1. Problem statement
@@ -809,7 +832,7 @@ at the `Obj` layer, neither currently exposed.
 | Mixed client versions: old clients can't follow `mergedInto` redirects                                                                                                                          | Medium — **open, accepted**    | New clients follow redirects in the resolver (2026-08-02) and in the transitive-deletion walk (2026-08-03), so refs, relations, and children survive merges there. Old clients see losers as deleted (relations/children at a loser vanish for them) and un-rewritten refs dangle; ref rewriting (`db.mergeDuplicates`) is their compat path — and it is only partially built (data refs yes; relation endpoints, `meta.tags`, `@parent` no, §4.1 step 5). Automatic merging runs unflagged (decision log 2026-08-03 item 7); mixed-version tests (§5.7) remain to be written. |
 | Feed-backed objects                                                                                                                                                                             | Out of scope                   | Feeds already collapse by id at the index (`echo-feed-codec.ts:20-24`); feed-object dedup rides on the same identity-key mechanism if needed later.                                                                                                                                                                                                                                                                                                                                                                                                                            |
 
-### 4.11 Index-driven reference rewriting — replace the `Filter.everything()` pass (PROPOSED 2026-08-31)
+### 4.11 Index-driven reference rewriting — replace the `Filter.everything()` pass (RATIFIED & IMPLEMENTED 2026-08-31)
 
 **Problem (Josiah, ratifying dmaretskyi's review):** `db.mergeDuplicates()` hydrates
 the entire space (`Filter.everything()` + tombstones) to do its two jobs, and both
@@ -863,6 +886,29 @@ holding each ref, are one indexed lookup away.
    avoids the raw-document rewriter but keeps the client surface, the manual-call
    footgun, and per-loser client hydration; rejected unless the worker rewriter
    hits an unforeseen wall.
+
+**Implementation notes (2026-08-31):** landed as designed, with these specifics:
+
+- `queryReferrers` is composed in `echo-host.ts` from two existing engine calls —
+  `queryReverseRef({ targetDXN: EID.make({ entityId }) })` then
+  `lookupByRecordIds` — no new SQL. Only same-space rows with a `documentId` are
+  returned (queue entities have no document to rewrite; a qualified ref from
+  another space is not this merge's to repoint).
+- The rewrite preserves the reference's own spelling: a local `echo:///<id>` stays
+  local, a space-qualified `echo://<space>/<id>` stays qualified.
+- `#foldRedirected` rewrites on **every** service pass, including one with nothing
+  to fold — a loser re-indexing is the only signal that re-presents the key, so
+  that is where late referrers (point 4's residual) catch up. Rewrites are
+  idempotent: an already-rewritten ref no longer parses as the loser.
+- The merge core (`MergeCandidate`, `mergeCandidates`, `toMergeCandidate`,
+  `findMergeDuplicates`) now lives in `echo-host/src/db-host/merge-core.ts` with
+  its unit suite; `@dxos/echo/internal`'s `merge.ts` keeps only
+  `resolveMergeRedirect` (consumed by the client's resolution and
+  transitive-deletion walks).
+- The e2e suites observe the worker's rewrites (`waitForCondition` on the ref URI)
+  and stage partial-view merges through `getObjectCore` exactly as a peer's worker
+  would write them; the residual is pinned by a test that adds a referrer _after_
+  convergence and asserts resolution through the redirect.
 
 ---
 

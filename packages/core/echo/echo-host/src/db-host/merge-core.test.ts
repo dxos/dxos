@@ -4,18 +4,13 @@
 
 import { describe, test } from 'vitest';
 
+import { Obj } from '@dxos/echo';
 import { type ForeignKey } from '@dxos/echo-protocol';
+import { resolveMergeRedirect } from '@dxos/echo/internal';
+import { TestSchema } from '@dxos/echo/testing';
 import { type EntityId } from '@dxos/keys';
 
-import * as Obj from '../../Obj';
-import { TestSchema } from '../../testing';
-import {
-  type MergeCandidate,
-  findMergeDuplicates,
-  mergeCandidates,
-  resolveMergeRedirect,
-  toMergeCandidate,
-} from './merge';
+import { type MergeCandidate, findMergeDuplicates, mergeCandidates, toMergeCandidate } from './merge-core';
 
 // The field is assigned through meta inside an update — there is deliberately no dedicated setter.
 const setConvergenceKey = (object: Obj.Unknown, convergenceKey: string | undefined) =>

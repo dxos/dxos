@@ -6,11 +6,19 @@ import { next as A } from '@automerge/automerge';
 import { type DocumentId } from '@automerge/automerge-repo';
 
 import { type Context } from '@dxos/context';
-import { type DatabaseDirectory, type EntityStructure, PROPERTY_ID } from '@dxos/echo-protocol';
-import { mergeCandidates, resolveMergeRedirect } from '@dxos/echo/internal';
+import {
+  type DatabaseDirectory,
+  EncodedReference,
+  type EntityStructure,
+  PROPERTY_ID,
+  isEncodedReference,
+} from '@dxos/echo-protocol';
+import { resolveMergeRedirect } from '@dxos/echo/internal';
 import { type EntityMeta } from '@dxos/index-core';
-import { type EntityId, type SpaceId } from '@dxos/keys';
+import { EID, type EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+
+import { mergeCandidates } from './merge-core';
 
 /**
  * The document surface a merge needs — structurally satisfied by the host's `DocumentLease`
@@ -21,6 +29,17 @@ export type MergeDocumentRef = {
   doc(): A.Doc<DatabaseDirectory>;
   change(callback: A.ChangeFn<DatabaseDirectory>): void;
   [Symbol.dispose]?: () => void;
+};
+
+/**
+ * One object holding references to a merge loser, from the reverse-reference index joined to the
+ * object metadata. `propPaths` are the unescaped property paths within the referrer's data that
+ * the index recorded as pointing at the target.
+ */
+export type Referrer = {
+  objectId: EntityId;
+  documentId: string;
+  propPaths: readonly (readonly string[])[];
 };
 
 export type ConvergenceKeyMergerDeps = {
@@ -38,6 +57,13 @@ export type ConvergenceKeyMergerDeps = {
    * runtime. Promise-typed so tests can supply rows without a database.
    */
   queryByConvergenceKeys: (spaceId: SpaceId, convergenceKeys: readonly string[]) => Promise<readonly EntityMeta[]>;
+
+  /**
+   * Referrers of one entity (`IndexEngine.queryReverseRef` joined to the object metadata for the
+   * referrer's document) — the point lookup behind reference rewriting. Index rows are derived
+   * state; every hit is re-verified against the document before anything is written.
+   */
+  queryReferrers: (spaceId: SpaceId, targetId: EntityId) => Promise<readonly Referrer[]>;
 };
 
 export type ConvergenceKeyMergeResult = {
@@ -123,7 +149,7 @@ export class ConvergenceKeyMerger {
           continue;
         }
         try {
-          if (await this.mergeGroup(ctx, convergenceKey, group)) {
+          if (await this.mergeGroup(ctx, spaceId, convergenceKey, group)) {
             mergedGroups++;
           }
           servicedKeys.add(convergenceKey);
@@ -148,6 +174,7 @@ export class ConvergenceKeyMerger {
    */
   async mergeGroup(
     ctx: Context,
+    spaceId: SpaceId,
     convergenceKey: string,
     group: readonly { objectId: EntityId; documentId: string }[],
   ): Promise<boolean> {
@@ -188,9 +215,9 @@ export class ConvergenceKeyMerger {
         }
       }
 
-      let changed = candidates.length >= 2 && (await this.#mergeCandidates(ctx, convergenceKey, candidates));
+      let changed = candidates.length >= 2 && (await this.#mergeCandidates(ctx, spaceId, convergenceKey, candidates));
       for (const objectId of redirectedIds) {
-        changed = (await this.#foldRedirected(ctx, objectId, handles, convergenceKey)) || changed;
+        changed = (await this.#foldRedirected(ctx, spaceId, objectId, handles, convergenceKey)) || changed;
       }
       return changed;
     } finally {
@@ -211,7 +238,12 @@ export class ConvergenceKeyMerger {
    * The only await is the durability flush between the winner write and the loser tombstones; the
    * loser callbacks re-verify eligibility after it.
    */
-  async #mergeCandidates(ctx: Context, convergenceKey: string, candidates: readonly GroupMember[]): Promise<boolean> {
+  async #mergeCandidates(
+    ctx: Context,
+    spaceId: SpaceId,
+    convergenceKey: string,
+    candidates: readonly GroupMember[],
+  ): Promise<boolean> {
     const result = mergeCandidates(
       candidates.map(({ objectId, entity }) => ({
         id: objectId,
@@ -355,6 +387,14 @@ export class ConvergenceKeyMerger {
     }
 
     log('merged group', { convergenceKey, winner: result.winner, losers: result.losers });
+
+    // References to the losers repoint at the winner now that the tombstones exist. Outside the
+    // durability guarantee by design: resolution follows the redirect regardless, so this is an
+    // optimization plus the compat path for clients too old to follow `mergedInto`.
+    const groupHandles = new Map([...byId].map(([objectId, member]) => [objectId, member.handle]));
+    for (const loserId of result.losers) {
+      await this.#rewriteReferences(ctx, spaceId, loserId, result.winner, groupHandles);
+    }
     return true;
   }
 
@@ -377,6 +417,7 @@ export class ConvergenceKeyMerger {
    */
   async #foldRedirected(
     ctx: Context,
+    spaceId: SpaceId,
     loserId: EntityId,
     handles: ReadonlyMap<EntityId, MergeDocumentRef>,
     convergenceKey: string,
@@ -442,31 +483,107 @@ export class ConvergenceKeyMerger {
     }
 
     const needsTombstone = entity.system?.deleted !== true;
-    if (!applied && !needsTombstone) {
-      return false;
+    if (applied || needsTombstone) {
+      handle.change((target: DatabaseDirectory) => {
+        const targetEntity = target.objects?.[loserId];
+        // A concurrent redirect elsewhere owns the watermark now; leave it to that merge's fold.
+        if (!targetEntity || targetEntity.system === undefined || targetEntity.system.mergedInto !== mergedInto) {
+          return;
+        }
+        if (applied) {
+          // Advance the watermark so the same edit is never folded twice.
+          targetEntity.system.mergedAtHeads = [...currentHeads];
+        }
+        targetEntity.system.deleted = true;
+      });
+      // The durability rule's dual, as in `#mergeCandidates`: the watermark advance and re-asserted
+      // tombstone must be on disk before the intent that claims this fold happened can be cleared.
+      await this.#deps.flushDoc(ctx, handle.documentId);
+      log('serviced redirected entity', {
+        loserId,
+        winnerId,
+        foldedFields: applied ? changedFields : [],
+        tombstoneReasserted: needsTombstone,
+      });
     }
-    handle.change((target: DatabaseDirectory) => {
-      const targetEntity = target.objects?.[loserId];
-      // A concurrent redirect elsewhere owns the watermark now; leave it to that merge's fold.
-      if (!targetEntity || targetEntity.system === undefined || targetEntity.system.mergedInto !== mergedInto) {
-        return;
+
+    // Even a pass with nothing to fold re-covers referrers: a loser re-indexing is the only signal
+    // that re-presents the key, so this is where late referrers (§4.11's freshness residual) catch
+    // up. Idempotent — an already-rewritten ref no longer parses as the loser.
+    if (winnerLive) {
+      await this.#rewriteReferences(ctx, spaceId, loserId, winnerId, handles);
+    }
+    return applied || needsTombstone;
+  }
+
+  /**
+   * Repoint references at a merged-away loser to its winner, index-driven: the reverse-reference
+   * index names each referrer and the property holding the ref, so every rewrite is a point load —
+   * no scan, no client, no hydration.
+   *
+   * Best-effort by design (see §4.11): a ref that stays behind still resolves through the redirect,
+   * and the loser's next re-index re-presents the work — so failures are logged and swallowed, and
+   * no flush is ordered. Only same-space referrers with a document are rewritten; the reference's
+   * own spelling (local or space-qualified) is preserved.
+   */
+  async #rewriteReferences(
+    ctx: Context,
+    spaceId: SpaceId,
+    loserId: EntityId,
+    winnerId: EntityId,
+    handles: ReadonlyMap<EntityId, MergeDocumentRef>,
+  ): Promise<void> {
+    let referrers: readonly Referrer[];
+    try {
+      referrers = await this.#deps.queryReferrers(spaceId, loserId);
+    } catch (err) {
+      log.warn('referrer lookup failed; references stay on the redirect', { spaceId, loserId, err });
+      return;
+    }
+
+    for (const referrer of referrers) {
+      if (referrer.propPaths.length === 0) {
+        continue;
       }
-      if (applied) {
-        // Advance the watermark so the same edit is never folded twice.
-        targetEntity.system.mergedAtHeads = [...currentHeads];
+      // A group member (the winner included) is already loaded; reuse its lease rather than
+      // taking a second one.
+      const shared = handles.get(referrer.objectId);
+      let handle = shared;
+      try {
+        if (!handle) {
+          try {
+            handle = (await this.#deps.loadDoc(ctx, referrer.documentId as DocumentId)) ?? undefined;
+          } catch (err) {
+            log.warn('referrer load failed; references stay on the redirect', { referrer: referrer.objectId, err });
+            continue;
+          }
+        }
+        if (!handle) {
+          continue;
+        }
+        const rewritten: string[] = [];
+        handle.change((doc: DatabaseDirectory) => {
+          const entity = doc.objects?.[referrer.objectId];
+          // A tombstoned or merged-away referrer is left alone — its own merge folds its data,
+          // rewrites included, into wherever it survives.
+          if (!entity || entity.system?.mergedInto !== undefined || entity.system?.deleted || !entity.data) {
+            return;
+          }
+          for (const path of referrer.propPaths) {
+            if (_rewriteReferenceAt(entity.data as Record<string, unknown>, path, loserId, winnerId)) {
+              rewritten.push(path.join('.'));
+            }
+          }
+        });
+        if (rewritten.length > 0) {
+          log('rewrote references', { referrer: referrer.objectId, loserId, winnerId, paths: rewritten });
+        }
+      } finally {
+        if (handle !== undefined && handle !== shared) {
+          handle[Symbol.dispose]?.();
+        }
       }
-      targetEntity.system.deleted = true;
-    });
-    // The durability rule's dual, as in `#mergeCandidates`: the watermark advance and re-asserted
-    // tombstone must be on disk before the intent that claims this fold happened can be cleared.
-    await this.#deps.flushDoc(ctx, handle.documentId);
-    log('serviced redirected entity', {
-      loserId,
-      winnerId,
-      foldedFields: applied ? changedFields : [],
-      tombstoneReasserted: needsTombstone,
-    });
-    return true;
+    }
   }
 }
 
@@ -528,6 +645,46 @@ const _watermarkUnion = (entity: EntityStructure): string[] | undefined => {
     collect(conflicting);
   }
   return [...hashes];
+};
+
+/**
+ * Rewrite the reference at one indexed property path from `loserId` to `winnerId`, preserving the
+ * reference's own spelling (a space-qualified ref stays qualified). Returns whether a write
+ * happened. The index row can trail the document, so a path that no longer holds a ref to the
+ * loser — moved, deleted, already rewritten — is a silent no-op.
+ */
+const _rewriteReferenceAt = (
+  data: Record<string, unknown>,
+  path: readonly string[],
+  loserId: EntityId,
+  winnerId: EntityId,
+): boolean => {
+  if (path.length === 0) {
+    return false;
+  }
+  let container: unknown = data;
+  for (const segment of path.slice(0, -1)) {
+    if (typeof container !== 'object' || container === null) {
+      return false;
+    }
+    container = (container as Record<string, unknown>)[segment];
+  }
+  if (typeof container !== 'object' || container === null) {
+    return false;
+  }
+  const leafKey = path[path.length - 1];
+  const value = (container as Record<string, unknown>)[leafKey];
+  if (!isEncodedReference(value)) {
+    return false;
+  }
+  const uri = EID.tryParse(EncodedReference.toURI(value));
+  if (uri === undefined || EID.getEntityId(uri) !== loserId) {
+    return false;
+  }
+  (container as Record<string, unknown>)[leafKey] = EncodedReference.fromURI(
+    EID.make({ spaceId: EID.getSpaceId(uri), entityId: winnerId }),
+  );
+  return true;
 };
 
 /**

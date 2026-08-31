@@ -7,11 +7,12 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
-import { foldLateEdits, mergeDuplicates, resolveMerged } from '@dxos/echo-client';
+import { getObjectCore } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestReplicationNetwork } from '@dxos/echo-host/testing';
+import { resolveMergeRedirect } from '@dxos/echo/internal';
 import { TestSchema } from '@dxos/echo/testing';
-import { PublicKey } from '@dxos/keys';
+import { type EntityId, PublicKey } from '@dxos/keys';
 
 // The scenario the whole design exists for: peers initialize the same application state without
 // coordinating, so each mints its own object and replication surfaces the duplicates.
@@ -39,6 +40,16 @@ describe('merge convergence', () => {
   };
 
   const liveTasks = (db: any) => db.query(Filter.type(TestSchema.Task)).run();
+
+  // The merge runs in the worker; redirects are read at the storage layer — deliberately, the
+  // client keeps no merge surface beyond the resolver.
+  const resolveMerged = (start: EntityId, entities: readonly Obj.Unknown[]): EntityId => {
+    const byId = new Map(entities.map((entity) => [entity.id, entity]));
+    return resolveMergeRedirect(start, (id) => {
+      const entity = byId.get(id);
+      return entity ? getObjectCore(entity).getMergedInto() : undefined;
+    });
+  };
 
   // Merged-away losers are tombstoned, so following a redirect needs the deleted ones too.
   const allTasks = (db: any) =>
@@ -168,8 +179,12 @@ describe('merge convergence', () => {
       });
     }
 
-    // The watermark advanced, so a manual pass finds nothing left to fold.
-    expect(foldLateEdits(await allTasks(db1))).toBe(0);
+    // The watermark advanced past the fold, so nothing is left above it to fold twice.
+    const folded = (await allTasks(db1)).find((task: any) => task.id === loserId);
+    const foldedCore = getObjectCore(folded);
+    const watermark = foldedCore.getMergedAtHeads();
+    expect(watermark).toBeDefined();
+    expect(watermark && foldedCore.getChangedDataFieldsSince(watermark)).toEqual([]);
   });
 
   test('a restored loser is re-tombstoned and its edits carried to the winner', async ({ expect }) => {
@@ -285,11 +300,14 @@ describe('merge convergence', () => {
 
     // Peer 2 adds two more duplicates and merges only the pair it created, in the same tick — a
     // peer acting on a strict subset of the duplicates, which is what produces redirect chains
-    // rather than one hop.
+    // rather than one hop. Staged through the cores exactly as that peer's worker would write it:
+    // loser redirected under the pre-edit watermark, winner recording what it absorbed.
     const second = seed(db2, 'second');
     const third = seed(db2, 'third');
-    const partial = mergeDuplicates([second, third]);
-    expect(partial.merged).toHaveLength(1);
+    const thirdCore = getObjectCore(third);
+    thirdCore.setMergedInto(second.id, thirdCore.getHeads());
+    thirdCore.setDeleted(true);
+    getObjectCore(second).addMergedFrom([third.id]);
     // A straggler edit on the just-tombstoned deepest loser: the workers collapse the rest of
     // the chain in the same pass, and the fold must follow the redirect written moments earlier
     // to its live end rather than advancing the watermark past the edit on an aborted write.
@@ -343,10 +361,6 @@ describe('merge convergence', () => {
     const sentinelSecond = db.add(Obj.make(TestSchema.Task, { title: 'sentinel second' }));
     setConvergenceKey(sentinelSecond, 'org.example.sentinel');
     await db.flush();
-
-    // The client pass declines the deleted twin outright.
-    const result = mergeDuplicates([deletedTwin, liveTwin]);
-    expect(result.merged).toHaveLength(0);
 
     await waitForCondition({
       condition: async () => {
