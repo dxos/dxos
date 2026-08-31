@@ -31,10 +31,17 @@ import { ComplexMap, reduceGroupBy } from '@dxos/util';
 import { SpaceCapabilities, SpaceOperation } from '#types';
 
 import { migrateToSettingsSpace } from '../migrations/settings-space';
+import { resolveInitialSpace } from '../util/initial-space';
 import { catchNonInterrupt, resolveSettingsSpace, runSettingsSpaceHealing } from '../util/settings-space';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 const WAIT_FOR_OBJECT_TIMEOUT = 5_000;
+
+/**
+ * The layout's "no workspace resolved yet" sentinel (plugin-deck's `DeckSchema.DEFAULT_DECK_ID`),
+ * restated here because plugin-space cannot depend on the layout plugin that owns it.
+ */
+const UNRESOLVED_WORKSPACE = 'default';
 
 const isEchoRef = (id: string) => id.startsWith('echo:/');
 
@@ -106,20 +113,36 @@ export default Capability.makeModule(
     const haloIdentity = yield* ClientCapabilities.IdentityService;
 
     //
-    // Settings space bootstrap — one-shot, deferred until there is something to bootstrap from.
+    // Settings-space bootstrap and the initial workspace — one-shot each, deferred until there is
+    // something to bootstrap from.
     //
 
     // Interrupted in cleanup so they cannot touch the db after client.destroy() closes the repo.
-    let initFiber: Fiber.Fiber<void, unknown> | undefined;
+    let initFibers: Fiber.Fiber<void, unknown>[] | undefined;
 
     const initSettingsSpace = Effect.gen(function* () {
       yield* resolveSettingsSpace(client);
-      const defaultSpace = yield* resolveDefaultSpace(client);
+      yield* resolveDefaultSpace(client);
+    });
 
+    // Landing on a space is what makes the app usable, and it must not wait on the settings-space
+    // bootstrap above: on a login that chain only completes once the settings space has replicated,
+    // opened, and the space it designates has itself arrived, and until then the user sits on an
+    // empty deck. So it runs on its own, with its own fallback.
+    const initWorkspace = Effect.gen(function* () {
       // Only relevant on a cold boot with no workspace in the deck state.
-      if (registry.get(layoutAtom).workspace === 'default') {
-        yield* invoke(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(defaultSpace.id) });
+      if (registry.get(layoutAtom).workspace !== UNRESOLVED_WORKSPACE) {
+        return;
       }
+
+      const space = yield* resolveInitialSpace(client);
+      // Re-checked: resolution waits on replication, and a URL restore or the user may have settled
+      // on a workspace in the meantime.
+      if (registry.get(layoutAtom).workspace !== UNRESOLVED_WORKSPACE) {
+        return;
+      }
+
+      yield* invoke(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(space.id) });
     });
 
     // Concurrent healing can tombstone a space a pass is mid-write on; the raced state is gone, so
@@ -147,10 +170,10 @@ export default Capability.makeModule(
     // Deferred until a space exists to bootstrap from, so a client with no identity does not get a
     // settings space created for it. `subscribe` replays, so this covers the initial pass too.
     const spacesSub = client.spaces.subscribe(() => {
-      if (initFiber || client.spaces.get().length === 0) {
+      if (initFibers || client.spaces.get().length === 0) {
         return;
       }
-      initFiber = Effect.runFork(initSettingsSpaceSupervised);
+      initFibers = [Effect.runFork(initSettingsSpaceSupervised), Effect.runFork(initWorkspace)];
     });
     subscriptions.add(() => spacesSub.unsubscribe());
 
@@ -392,8 +415,8 @@ export default Capability.makeModule(
     yield* Effect.addFinalizer(() =>
       Effect.gen(function* () {
         yield* Fiber.interrupt(healFiber);
-        if (initFiber) {
-          yield* Fiber.interrupt(initFiber);
+        if (initFibers) {
+          yield* Effect.forEach(initFibers, (fiber) => Fiber.interrupt(fiber));
         }
         spaceSubscriptions.clear();
         subscriptions.clear();
