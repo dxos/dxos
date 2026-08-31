@@ -457,22 +457,19 @@ export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Error.EntityNotFoundErro
 );
 
 /**
- * {@link load} with a synchronous fast path: when {@link Ref.peek} finds the target already
- * materialized, the effect completes without an async boundary — so an effect built only from
- * materialized refs runs under `Effect.runSync` (e.g. a mutation in a gesture frame); anything
- * else falls back to the async load. The fast path skips load's settling — a just-added object
- * can resolve before it has its own document — so callers that branch (or otherwise need a
- * settled document) must use {@link load}.
+ * Synchronous working-set read (see {@link Ref.peek}): the materialized target, or `undefined` —
+ * never throws and never triggers loading. Compose with {@link load} for a sync-when-materialized
+ * read with an async fallback, keeping the effect runnable under `Effect.runSync` when every ref
+ * is materialized (e.g. a mutation in a gesture frame):
+ *
+ * ```ts
+ * const task = Database.peek(ref) ?? (yield* Database.load(ref));
+ * ```
+ *
+ * Peek skips {@link load}'s settling — a just-added object can resolve here before it has its own
+ * document — so callers that branch (or otherwise need a settled document) must load.
  */
-export const peekOrLoad: <T>(ref: Ref<T>) => Effect.Effect<T, Error.EntityNotFoundError, never> = Effect.fn(
-  'Database.peekOrLoad',
-)(function* (ref) {
-  const object = ref.peek() ?? (yield* Effect.promise(() => ref.tryLoad()));
-  if (!object) {
-    return yield* Effect.fail(new Error.EntityNotFoundError(ref.uri));
-  }
-  return object;
-});
+export const peek = <T>(ref: Ref<T>): T | undefined => ref.peek();
 
 /**
  * Adds an object or relation to the database.

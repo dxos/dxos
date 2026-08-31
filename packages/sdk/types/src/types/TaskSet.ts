@@ -243,9 +243,9 @@ export class InvalidParentTaskError extends BaseError.extend('InvalidParentTaskE
  *
  * The cycle check walks the candidate's `parentTask` ancestor chain instead of collecting the
  * task's subtree: it is equivalent (the candidate descends from the task iff the task is one of
- * its ancestors), sees cross-set descendants, and — via {@link Database.peekOrLoad} — completes
- * without an async boundary when every ref on the chain is materialized, so callers holding
- * materialized objects can run it under `Effect.runSync`.
+ * its ancestors), sees cross-set descendants, and — resolving each hop as `peek ?? load` —
+ * completes without an async boundary when every ref on the chain is materialized, so callers
+ * holding materialized objects can run it under `Effect.runSync`.
  */
 export const resolveParentTask = (
   taskSet: TaskSet | undefined,
@@ -253,7 +253,7 @@ export const resolveParentTask = (
   parentTask: Ref.Ref<Task.Task>,
 ): Effect.Effect<Task.Task, InvalidParentTaskError | Error.EntityNotFoundError> =>
   Effect.gen(function* () {
-    const candidate = yield* Database.peekOrLoad(parentTask);
+    const candidate = Database.peek(parentTask) ?? (yield* Database.load(parentTask));
     const seen = new Set<string>();
     let ancestor: Task.Task | undefined = candidate;
     while (ancestor && !seen.has(ancestor.id)) {
@@ -263,7 +263,9 @@ export const resolveParentTask = (
         );
       }
       seen.add(ancestor.id);
-      ancestor = ancestor.parentTask ? yield* Database.peekOrLoad(ancestor.parentTask) : undefined;
+      ancestor = ancestor.parentTask
+        ? (Database.peek(ancestor.parentTask) ?? (yield* Database.load(ancestor.parentTask)))
+        : undefined;
     }
     const belongs = taskSet ? taskSet.tasks.some((ref) => Task.refEntityId(ref) === candidate.id) : false;
     if (!belongs) {
