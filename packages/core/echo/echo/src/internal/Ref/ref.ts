@@ -190,6 +190,9 @@ export interface Ref<T> extends Pipeable.Pipeable {
    * @returns The reference target.
    * May return `undefined` if the object is not loaded in the working set.
    * Accessing this property, even if it returns `undefined` will trigger the object to be loaded to the working set.
+   * @deprecated A read with side effects (triggers loading, registers a resolution callback) that
+   * can also throw. Use {@link peek} for a side-effect-free synchronous read, {@link load} to
+   * resolve asynchronously, or the ref's atom for reactive access.
    */
   get target(): T | undefined;
 
