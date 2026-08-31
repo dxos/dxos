@@ -553,6 +553,9 @@
       "path": "packages/plugins/plugin-pwa/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-qa/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-registry/tsconfig.json"
     },
     {
