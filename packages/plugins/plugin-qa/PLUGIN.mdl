@@ -81,7 +81,7 @@ type TestStep
 ```mdl
 type TestCase
   desc: >
-    The definition of one test. Stored with typename org.dxos.type.qa.test-case v0.1.0.
+    The definition of one test. Stored with typename org.dxos.type.qa.testCase v0.1.0.
     Static — an execution never writes here.
   fields:
     key: string                # stable human id, e.g. "QA-3"; unique within a plan
@@ -99,7 +99,7 @@ type TestCase
 type TestPlan
   desc: >
     Root ECHO object and the container the UI opens. Stored with typename
-    org.dxos.type.qa.test-plan v0.1.0.
+    org.dxos.type.qa.testPlan v0.1.0.
   fields:
     name: string
     description?: string
@@ -167,7 +167,7 @@ type TestResult
 type TestRun
   desc: >
     One execution of a plan, appended to TestPlan.feed. Stored with typename
-    org.dxos.type.qa.test-run v0.1.0. Results accumulate as the run proceeds; `status` is a
+    org.dxos.type.qa.testRun v0.1.0. Results accumulate as the run proceeds; `status` is a
     rollup, written when the run is finished.
   fields:
     plan: Ref<TestPlan>
@@ -256,8 +256,8 @@ op createPlan
 ```
 
 ```mdl
-op upsertCase
-  key: org.dxos.operation.qa.upsertCase
+op setCase
+  key: org.dxos.operation.qa.setCase
   desc: >
     Creates or updates a case by `key` within a plan, appending it to `cases` when new. Matching
     on `key` rather than id is what makes re-generation from a spec non-destructive (F-1.3).
@@ -284,8 +284,8 @@ op removeCase
 ```
 
 ```mdl
-op reorderCases
-  key: org.dxos.operation.qa.reorderCases
+op setCaseOrder
+  key: org.dxos.operation.qa.setCaseOrder
   desc: Sets the plan's case ordering.
   input:
     plan: Ref<TestPlan>
@@ -342,8 +342,8 @@ op pushResult
 ```
 
 ```mdl
-op finishRun
-  key: org.dxos.operation.qa.finishRun
+op completeRun
+  key: org.dxos.operation.qa.completeRun
   desc: >
     Rolls up `status` over the run's captured `cases`, stamps `finishedAt`, and seals the run.
     A captured case with no result counts as `skipped`, so an empty or partial run cannot seal as
@@ -372,8 +372,8 @@ op queryRuns
 ```
 
 ```mdl
-op caseHistory
-  key: org.dxos.operation.qa.caseHistory
+op getCaseHistory
+  key: org.dxos.operation.qa.getCaseHistory
   desc: One case's status across runs, newest-first — the query behind F-4.2.
   input:
     plan: Ref<TestPlan>
@@ -396,14 +396,14 @@ skill QaSkill
     - org.dxos.skill.markdown   # authoring the report document an artifact points at
   contributes:
     - plugin-qa/createPlan
-    - plugin-qa/upsertCase
+    - plugin-qa/setCase
     - plugin-qa/removeCase
-    - plugin-qa/reorderCases
+    - plugin-qa/setCaseOrder
     - plugin-qa/startRun
     - plugin-qa/pushResult
-    - plugin-qa/finishRun
+    - plugin-qa/completeRun
     - plugin-qa/queryRuns
-    - plugin-qa/caseHistory
+    - plugin-qa/getCaseHistory
   instructions: >
     Authored in `src/skills/qa/skill.ts`. Covers the run protocol (start once, push per case,
     finish exactly once), the rule that a finished run is never edited, that `blocked` is used
@@ -462,12 +462,12 @@ component TestCaseArticle
 test T-1: A run rolls up to the worst outcome
   given: a plan with three cases, and a started run
   when: results are pushed as passed, blocked, passed
-  then: finishRun sets the run status to blocked, not passed
+  then: completeRun sets the run status to blocked, not passed
 
 test T-2: A failure dominates a block
   given: a started run
   when: results are pushed as failed and blocked
-  then: finishRun sets the run status to failed
+  then: completeRun sets the run status to failed
 
 test T-3: A run covering nothing seals as skipped
   given: a plan with no cases
@@ -487,7 +487,7 @@ test T-5: A finished run is immutable
 
 test T-6: Re-generation preserves case identity
   given: a plan whose case QA-1 has results in two past runs
-  when: upsertCase is invoked with key QA-1 and a changed title
+  when: setCase is invoked with key QA-1 and a changed title
   then: the same TestCase object is updated, and both past results still resolve to it
 
 test T-7: Artifacts are references, not copies
@@ -524,7 +524,7 @@ flow QA-1: Record a run against a plan
       expect: "Smoke" appears as a row under the collection
     - name: Add a case
       do: In the plan, click "Add case" and enter key "QA-1", title "It boots".
-      invoke: [op:upsertCase] { plan: $plan.plan, key: "QA-1", title: "It boots", steps: [{ do: "Open the app", expect: "the app renders" }] }
+      invoke: [op:setCase] { plan: $plan.plan, key: "QA-1", title: "It boots", steps: [{ do: "Open the app", expect: "the app renders" }] }
       expect: the case list shows one row, QA-1
   test:
     - name: Start a run
@@ -539,7 +539,7 @@ flow QA-1: Record a run against a plan
       expect: the run row shows 1/1 while still `running`
     - name: Finish the run
       do: Click "Finish" on the run.
-      invoke: [op:finishRun] { run: $run.run }
+      invoke: [op:completeRun] { run: $run.run }
       expect: the run status becomes `passed` and `finishedAt` is set
     - name: Reject a late push
       do: Try to mark QA-1 as failed on the finished run.
