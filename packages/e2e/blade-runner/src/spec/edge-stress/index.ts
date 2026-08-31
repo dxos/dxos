@@ -5,5 +5,4 @@
 export * from './commands';
 export * from './model';
 export * from './plan';
-export * from './spec';
 export * from './system';

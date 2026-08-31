@@ -3,15 +3,65 @@
 //
 
 import { sleep } from '@dxos/async';
+import { log } from '@dxos/log';
 
-import { type ReplicantBrain } from '../../plan';
-import { type ClientReplicant } from '../../replicants/client-replicant';
-import { type ClientIndex, type Model, identityOf, resolvablePendingSpaces } from './model';
-import { type EdgeStressSpec } from './spec';
+import { type Platform, type ReplicantBrain } from '../../plan';
+import { type ClientReplicant, type SpaceDigest } from '../../replicants/client-replicant';
+import {
+  type ClientIndex,
+  type Model,
+  canonical,
+  expectedDigest,
+  identityOf,
+  onlineMemberDevices,
+  resolvablePendingSpaces,
+} from './model';
+
+//
+// Spec.
+//
+
+export type EdgeStressSpec = {
+  platform: Platform;
+  edgeUrl: string;
+
+  /** Devices per identity; its length is the identity count and its sum the client count. */
+  devicesPerIdentity: number[];
+  /** Create an EDGE agent per identity — an always-online member that can admit late joiners. */
+  agents: boolean;
+
+  maxSpaces: number;
+  maxDocumentsPerSpace: number;
+  maxCommands: number;
+  /**
+   * How many command lists to draw from the seed; the longest is executed. `FastCheck.assert`
+   * biases its first run toward tiny inputs (measured: 2 commands), so drawing and picking is what
+   * actually yields a long sequence — deterministically, since the seed fixes every draw.
+   */
+  sampleDraws: number;
+  /** Wall-clock budget; exhausting it stops issuing commands and proceeds to the final assertion. */
+  maxRuntimeMs: number;
+  quiescenceTimeoutMs: number;
+  /** Mid-run quiesce-and-assert over the online members. */
+  checkpoints: boolean;
+};
+
+export type EdgeStressResult = {
+  seed: string | undefined;
+  commandsExecuted: number;
+  spacesCreated: number;
+  documentsCreated: number;
+  setupTimeMs: number;
+  runTimeMs: number;
+};
+
+//
+// The live fleet.
+//
 
 /**
- * The live fleet the model is checked against, plus the bookkeeping that translates between them:
- * the model only ever names slots, so `spaceIds` and `invitationCodes` hold the real identifiers.
+ * What the model is checked against, plus the bookkeeping that translates between them: the model
+ * only ever names slots, so `spaceIds` and `invitationCodes` hold the real identifiers.
  */
 export type Real = {
   spec: EdgeStressSpec;
@@ -110,4 +160,121 @@ export const quiesce = async (real: Real, spaceSlot: number, clients: ClientInde
       ...pending,
     ])}`,
   );
+};
+
+//
+// Assertions: model versus system.
+//
+
+export const assertDigestsAgree = (
+  digests: { client: ClientIndex; digest: SpaceDigest }[],
+  spaceSlot: number,
+): void => {
+  if (digests.length < 2) {
+    return;
+  }
+  const [reference, ...rest] = digests;
+  for (const other of rest) {
+    const a = canonical(reference.digest);
+    const b = canonical(other.digest);
+    if (a !== b) {
+      throw new Error(
+        `peers disagree on space ${spaceSlot}: client ${reference.client} = ${a}, client ${other.client} = ${b}`,
+      );
+    }
+  }
+};
+
+/**
+ * Everything a peer holds must be something the model knows about. The converse does not hold
+ * mid-run: ops authored by a client that is currently offline may legitimately be missing.
+ */
+export const assertSubsetOfModel = (
+  model: Model,
+  spaceSlot: number,
+  client: ClientIndex,
+  digest: SpaceDigest,
+): void => {
+  const expected = expectedDigest(model, spaceSlot);
+  for (const [docId, actual] of Object.entries(digest.docs)) {
+    const reference = expected.docs[docId];
+    if (!reference) {
+      throw new Error(`client ${client} has unknown or deleted document ${docId} in space ${spaceSlot}`);
+    }
+    for (const value of actual.tokens) {
+      if (!reference.tokens.includes(value)) {
+        throw new Error(`client ${client} has unknown token ${value} in ${docId}`);
+      }
+    }
+    actual.counters.forEach((value, slot) => {
+      const limit = reference.counters[slot] ?? 0;
+      if (value > limit) {
+        throw new Error(`client ${client} counter ${slot} on ${docId} is ${value}, above the model's ${limit}`);
+      }
+    });
+  }
+};
+
+export const assertEqualsModel = (model: Model, spaceSlot: number, client: ClientIndex, digest: SpaceDigest): void => {
+  const expected = canonical(expectedDigest(model, spaceSlot));
+  const actual = canonical(digest);
+  if (expected !== actual) {
+    throw new Error(
+      `client ${client} diverged from the model on space ${spaceSlot}:\n  model:  ${expected}\n  client: ${actual}`,
+    );
+  }
+};
+
+/**
+ * Mid-run assertion: quiesce every online member of every space against EDGE and require them to
+ * agree with each other and to hold nothing the model does not know about.
+ */
+export const runCheckpoint = async (model: Model, real: Real): Promise<void> => {
+  for (let slot = 0; slot < model.spaces.length; slot++) {
+    const devices = await devicesHoldingSpace(real, slot, onlineMemberDevices(model, slot));
+    if (devices.length === 0) {
+      continue;
+    }
+    await quiesce(real, slot, devices);
+    const digests = await Promise.all(
+      devices.map(async (client) => ({
+        client,
+        digest: await real.replicants[client].brain.digest({ spaceId: real.spaceIds[slot] }),
+      })),
+    );
+    assertDigestsAgree(digests, slot);
+    for (const { client, digest } of digests) {
+      assertSubsetOfModel(model, slot, client, digest);
+    }
+  }
+};
+
+/**
+ * The main assertion: bring everybody online, resolve every outstanding join, quiesce, and require
+ * every device of every member identity to equal the model exactly.
+ */
+export const assertFullyReplicated = async (model: Model, real: Real): Promise<void> => {
+  for (let client = 0; client < model.clients.length; client++) {
+    if (model.clients[client].state === 'offline') {
+      await real.replicants[client].brain.goOnline();
+      model.clients[client].state = 'online';
+    } else if (model.clients[client].state === 'down') {
+      await real.replicants[client].brain.restart();
+      model.clients[client].state = 'online';
+    }
+  }
+  for (let client = 0; client < model.clients.length; client++) {
+    await joinPendingSpaces(model, real, client);
+  }
+
+  for (let slot = 0; slot < model.spaces.length; slot++) {
+    const devices = onlineMemberDevices(model, slot);
+    log.info('final assertion', { space: slot, devices });
+    await awaitSpaceOnAllDevices(real, slot, devices);
+    await quiesce(real, slot, devices);
+    for (const client of devices) {
+      const digest = await real.replicants[client].brain.digest({ spaceId: real.spaceIds[slot] });
+      assertEqualsModel(model, slot, client, digest);
+    }
+  }
 };
