@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { InputHTMLAttributes, forwardRef, useCallback, useRef } from 'react';
+import React, { InputHTMLAttributes, forwardRef, useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { AI_ACTION_ICON } from '@dxos/ui-types';
@@ -62,16 +62,22 @@ const BookmarkIconButton = forwardRef<HTMLButtonElement, TogglePresetProps>(
 BookmarkIconButton.displayName = 'SystemIconButton.Bookmark';
 
 //
-// Expander
+// Disclosure
 //
 
-const ExpanderIconButton = forwardRef<HTMLButtonElement, TogglePresetProps>(
+/**
+ * Shows and hides a region — the WAI-ARIA disclosure pattern, which is why it reports
+ * `aria-expanded` rather than the `aria-pressed` a toggle button (Star, Bookmark) carries. Give it
+ * `aria-controls` at the call site where the region has an id: this preset cannot know it.
+ */
+const DisclosureIconButton = forwardRef<HTMLButtonElement, TogglePresetProps>(
   ({ label, active, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     return (
       <ToggleIconButton
         {...props}
         active={active}
+        aria-expanded={active ?? false}
         icon='ph--caret-right--regular'
         label={label ?? t(active ? 'system-button.collapse.label' : 'system-button.expand.label')}
         ref={forwardedRef}
@@ -80,7 +86,7 @@ const ExpanderIconButton = forwardRef<HTMLButtonElement, TogglePresetProps>(
   },
 );
 
-ExpanderIconButton.displayName = 'SystemIconButton.Expander';
+DisclosureIconButton.displayName = 'SystemIconButton.Disclosure';
 
 //
 // Add
@@ -164,16 +170,29 @@ type ClipboardIconButtonProps = StaticPresetProps & {
 const ClipboardIconButton = forwardRef<HTMLButtonElement, ClipboardIconButtonProps>(
   ({ label, onCopy, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
+    const [copied, setCopied] = useState(false);
+
+    const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
     const handleCopy = useCallback(() => {
       const text = onCopy();
       if (text) {
+        setCopied(true);
         void navigator.clipboard.writeText(text);
       }
-    }, [onCopy]);
+
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => {
+        setCopied(false);
+      }, 1_000);
+
+      return () => clearTimeout(timeoutRef.current);
+    }, [onCopy, setCopied]);
+
     return (
       <IconButton
         {...props}
-        icon='ph--clipboard--regular'
+        classNames={copied && 'text-green-500'}
+        icon={copied ? 'ph--check--regular' : 'ph--clipboard--regular'}
         label={label ?? t('system-button.clipboard.label')}
         onClick={handleCopy}
         ref={forwardedRef}
@@ -267,17 +286,17 @@ DownloadIconButton.displayName = 'SystemIconButton.Download';
 //
 
 export const SystemIconButton = {
-  Star: StarIconButton,
-  Bookmark: BookmarkIconButton,
-  Expander: ExpanderIconButton,
   Add: AddIconButton,
   Ai: AiIconButton,
-  Delete: DeleteIconButton,
-  Edit: EditIconButton,
+  Bookmark: BookmarkIconButton,
   Close: CloseIconButton,
   Clipboard: ClipboardIconButton,
-  Upload: UploadIconButton,
+  Delete: DeleteIconButton,
   Download: DownloadIconButton,
+  Edit: EditIconButton,
+  Disclosure: DisclosureIconButton,
+  Star: StarIconButton,
+  Upload: UploadIconButton,
 };
 
 export type {
