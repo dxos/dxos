@@ -8,19 +8,14 @@ import { useConfig } from '@dxos/react-client';
 import { Panel, Toolbar } from '@dxos/react-ui';
 
 import { JsonView } from '../../../components';
-import { EdgeSelector, SubductionSelector, VaultSelector } from '../../../containers';
+import { EdgeSelector, VaultSelector } from '../../../containers';
 
 type ConfigPanelProps = {
   vaultSelector?: boolean;
   edgeSelector?: boolean;
-  subductionSelector?: boolean;
 };
 
-export const ConfigPanel = ({
-  vaultSelector = true,
-  edgeSelector = true,
-  subductionSelector = true,
-}: ConfigPanelProps) => {
+export const ConfigPanel = ({ vaultSelector = true, edgeSelector = true }: ConfigPanelProps) => {
   const config = useConfig();
 
   return (
@@ -29,7 +24,6 @@ export const ConfigPanel = ({
         <Toolbar.Root>
           {vaultSelector && <VaultSelector />}
           {edgeSelector && <EdgeSelector />}
-          {subductionSelector && <SubductionSelector />}
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content>

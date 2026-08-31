@@ -10,7 +10,6 @@ import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { Milestone, Task, TaskSet } from '@dxos/types';
 
 import moveMilestone from './move-milestone';
-import { addMilestoneToSet } from './task-set-membership';
 
 const testLayer = () => TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] });
 
@@ -67,7 +66,7 @@ const seed = (names: readonly string[]) =>
     const milestones = [];
     for (const name of names) {
       const milestone = yield* Database.add(Milestone.make({ name }));
-      addMilestoneToSet(taskSet, milestone);
+      TaskSet.addMilestoneToSet(taskSet, milestone);
       milestones.push(milestone);
     }
     yield* Database.flush();

@@ -8,7 +8,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { resolveSlashCommand } from '@dxos/assistant-toolkit';
+import { Chat as AssistantChat, resolveSlashCommand } from '@dxos/assistant-toolkit';
 import { Event } from '@dxos/async';
 import { type Database, Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
@@ -22,10 +22,16 @@ import {
   type ChatView,
   ChatThread as NaturalChatThread,
 } from '@dxos/react-ui-assistant';
-import { type MessageRange, type OutlineMarker, Outline as OutlineRail, useFeedModel } from '@dxos/react-ui-feed';
+import {
+  type MessageRange,
+  type OutlineMarker,
+  Outline as OutlineRail,
+  isPrompt,
+  useFeedModel,
+} from '@dxos/react-ui-feed';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { TaskList } from '@dxos/react-ui-task';
-import { Message, TaskSet } from '@dxos/types';
+import { Message, Task } from '@dxos/types';
 import { keyToFallback } from '@dxos/util';
 
 import { useChatToolbarActions, useDebug } from '#hooks';
@@ -329,9 +335,18 @@ const PROMPT_SNIPPET_LINES = 3;
 const PROMPT_SNIPPET_CHARS = 280;
 const PROMPT_TITLE_CHARS = 100;
 
+/**
+ * The text the reader actually wrote. Synthetic blocks carry injected context and tool results, so
+ * titling a marker from them would name the machinery rather than the prompt.
+ */
+const authoredText = (message: Message.Message): string =>
+  message.blocks
+    .flatMap((block) => (block._tag === 'text' && block.disposition !== 'synthetic' ? [block.text] : []))
+    .join('\n');
+
 /** First non-empty line of a message's text, truncated for the marker title. */
 const promptTitle = (message: Message.Message): string => {
-  const text = Message.extractText(message).trim();
+  const text = authoredText(message).trim();
   const firstLine = text.split('\n').find((line) => line.trim().length) ?? '';
   return firstLine.length > PROMPT_TITLE_CHARS ? `${firstLine.slice(0, PROMPT_TITLE_CHARS)}…` : firstLine;
 };
@@ -360,16 +375,19 @@ const buildMarkers = (messages: Message.Message[]): OutlineMarker[] => {
   const markers: OutlineMarker[] = [];
   for (let index = 0; index < messages.length; index++) {
     const message = messages[index];
-    if (message.sender.role !== 'user') {
+    // Role alone would also match tool results and injected context, which travel back as
+    // `user`-role messages; `isPrompt` is the feed's single definition of a stop.
+    if (!isPrompt(message)) {
       continue;
     }
 
-    // Extend the turn through the following non-user messages and grab the first assistant reply.
+    // Extend the turn up to the next prompt: a tool-result turn belongs to the turn it serves, so
+    // stopping on any `user`-role message would cut the range at the first tool call.
     let turnTo = index + 1;
     let description: string | undefined;
     for (let next = index + 1; next < messages.length; next++) {
       const nextMessage = messages[next];
-      if (nextMessage.sender.role === 'user') {
+      if (isPrompt(nextMessage)) {
         break;
       }
       turnTo = next + 1;
@@ -588,68 +606,42 @@ ChatPrompt.displayName = CHAT_PROMPT_NAME;
 
 const CHAT_TASK_LIST_NAME = 'Chat.TaskList';
 
-type ChatTaskListProps = {
-  taskSet?: TaskSet.TaskSet;
-};
+const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
+  const { chat } = useChatContext(CHAT_TASK_LIST_NAME);
 
-// TODO(burdon): Project chats keep their working tasks on the parent project's task set —
-//  resolve via the parent edge (needs a reactive parent lookup), not only `chat.taskSet`.
-const ChatTaskList = composable<HTMLDivElement, ChatTaskListProps>(
-  ({ taskSet: taskSetProp, ...props }, forwardedRef) => {
-    const { chat } = useChatContext(CHAT_TASK_LIST_NAME);
+  // Both the chat (membership) and each ref (row objects): a query re-emits only on membership.
+  const [chatSnapshot] = useObject(chat);
+  const taskRefs = chatSnapshot?.tasks;
+  const tasks = useAtomValue(
+    useMemo(() => Atom.make((get) => Task.dedupeById((taskRefs ?? []).map((ref) => get(ref.atom)))), [taskRefs]),
+  );
 
-    const taskSet = useAtomValue(
-      useMemo(
-        () =>
-          Atom.make(
-            (get) =>
-              taskSetProp ??
-              Option.fromNullishOr(chat).pipe(
-                Option.map((_) => get(Obj.atom(_))),
-                Option.flatMapNullishOr((_) => _?.taskSet?.atom),
-                Option.map(get),
-                Option.getOrUndefined,
-              ),
-          ),
-        [chat, taskSetProp],
-      ),
-    );
+  // The same primitive the task commands use, so the parent edge and the refs cannot diverge.
+  const handleCreate = useCallback(
+    ({ title, ...props }: Task.Draft) => {
+      const db = chat && Obj.getDatabase(chat);
+      if (chat && db) {
+        AssistantChat.addTask(db, chat, title, props);
+      }
+    },
+    [chat],
+  );
+  // Rendered even when empty, so `TaskList.Edit` can always add the first task.
+  if (!chat) {
+    return null;
+  }
 
-    // Subscribe to the set (membership) and to each ref (row objects) — a query would only
-    // re-emit on membership changes, leaving row edits stale.
-    const [taskSetSnapshot] = useObject(taskSet);
-    const taskRefs = taskSetSnapshot?.tasks;
-    const tasks = useAtomValue(
-      useMemo(() => Atom.make((get) => TaskSet.dedupeById((taskRefs ?? []).map((ref) => get(ref.atom)))), [taskRefs]),
-    );
-
-    // `TaskSet.addTask` is the shared primitive the task verbs use, so the parent edge and the
-    // set's refs stay consistent without a cross-plugin operation dependency.
-    const handleCreate = useCallback(
-      (title: string) => {
-        const db = taskSet && Obj.getDatabase(taskSet);
-        if (taskSet && db) {
-          TaskSet.addTask(db, taskSet, title);
-        }
-      },
-      [taskSet],
-    );
-    if (!taskSet || tasks.length === 0) {
-      return null;
-    }
-
-    return (
-      <TaskList.Root tasks={tasks} showGroupLabels={false} showOrdinals onTaskCreate={handleCreate}>
-        <div {...composableProps(props, { classNames: 'flex flex-col min-h-0' })} ref={forwardedRef}>
-          <TaskList.Viewport classNames='min-h-0'>
-            <TaskList.Content />
-          </TaskList.Viewport>
-          <TaskList.Create classNames='shrink-0' />
-        </div>
-      </TaskList.Root>
-    );
-  },
-);
+  return (
+    <TaskList.Root tasks={tasks} showGroupLabels={false} showOrdinals onTaskCreate={handleCreate}>
+      <div {...composableProps(props, { classNames: 'flex flex-col min-h-0' })} ref={forwardedRef}>
+        <TaskList.Viewport classNames='min-h-0'>
+          <TaskList.Content />
+        </TaskList.Viewport>
+        <TaskList.Edit classNames='shrink-0' />
+      </div>
+    </TaskList.Root>
+  );
+});
 
 ChatTaskList.displayName = CHAT_TASK_LIST_NAME;
 

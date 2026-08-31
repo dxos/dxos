@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 import { Feed, Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
-import { byAppendOrder, projectThread, resolveRewind } from './thread';
+import { byAppendOrder, collapseToolRuns, projectThread, resolveRewind } from './thread';
 
 describe('byAppendOrder', () => {
   test('orders by feed position when it discriminates', ({ expect }) => {
@@ -112,6 +112,92 @@ let clock = 0;
 
 const message = (text: string, sender: 'user' | 'assistant' = 'user') =>
   Message.make({ created: new Date(clock++).toISOString(), sender, blocks: [{ _tag: 'text', text }] });
+
+describe('collapseToolRuns', () => {
+  test('folds a run of tool-only messages into one, keeping the first message identity', ({ expect }) => {
+    const prompt = message('prompt');
+    const first = toolCall('tc-1');
+    const answer = message('answer', 'assistant');
+    const collapsed = collapseToolRuns([prompt, first, toolResult('tc-1'), toolCall('tc-2'), answer]);
+
+    expect(text([collapsed[0]])).toEqual(['prompt']);
+    expect(collapsed).toHaveLength(3);
+    // The runtime delivers one block per message, so the fold is what gives the panel a run.
+    expect(collapsed[1].blocks.map((block) => block._tag)).toEqual(['toolCall', 'toolResult', 'toolCall']);
+    expect(collapsed[1].id).toBe(first.id);
+    expect(text([collapsed[2]])).toEqual(['answer']);
+  });
+
+  test('a lone tool message is passed through unchanged', ({ expect }) => {
+    const only = toolCall('tc-1');
+    const collapsed = collapseToolRuns([message('prompt'), only]);
+    expect(collapsed[1]).toBe(only);
+  });
+
+  test('a message carrying prose is never folded in', ({ expect }) => {
+    const collapsed = collapseToolRuns([toolCall('tc-1'), message('interrupting', 'assistant'), toolCall('tc-2')]);
+    expect(collapsed).toHaveLength(3);
+  });
+
+  // The model explains itself before each call, so a real run is call/reasoning/call — the shape
+  // that produced one panel per call in the app.
+  test('reasoning between calls does not split the run', ({ expect }) => {
+    const collapsed = collapseToolRuns([
+      message('prompt'),
+      reasoning(),
+      toolCall('tc-1'),
+      toolResult('tc-1'),
+      reasoning(),
+      toolCall('tc-2'),
+      toolResult('tc-2'),
+      message('answer', 'assistant'),
+    ]);
+
+    expect(collapsed).toHaveLength(3);
+    expect(collapsed[1].blocks.map((block) => block._tag)).toEqual([
+      'reasoning',
+      'toolCall',
+      'toolResult',
+      'reasoning',
+      'toolCall',
+      'toolResult',
+    ]);
+  });
+
+  test('two runs separated by prose stay separate', ({ expect }) => {
+    const collapsed = collapseToolRuns([
+      toolCall('tc-1'),
+      toolResult('tc-1'),
+      message('between', 'assistant'),
+      toolCall('tc-2'),
+      toolResult('tc-2'),
+    ]);
+    expect(collapsed).toHaveLength(3);
+    expect(collapsed[0].blocks).toHaveLength(2);
+    expect(collapsed[2].blocks).toHaveLength(2);
+  });
+});
+
+const toolCall = (toolCallId: string) =>
+  Message.make({
+    created: new Date(clock++).toISOString(),
+    sender: 'assistant',
+    blocks: [{ _tag: 'toolCall', toolCallId, name: 'search', input: '{}', providerExecuted: false }],
+  });
+
+const reasoning = () =>
+  Message.make({
+    created: new Date(clock++).toISOString(),
+    sender: 'assistant',
+    blocks: [{ _tag: 'reasoning', reasoningText: 'because' }],
+  });
+
+const toolResult = (toolCallId: string) =>
+  Message.make({
+    created: new Date(clock++).toISOString(),
+    sender: 'user',
+    blocks: [{ _tag: 'toolResult', toolCallId, name: 'search', result: 'ok', providerExecuted: false }],
+  });
 
 /** Stamps the queue position a position authority would have assigned. */
 const positioned = (message: Message.Message, position: number) => {

@@ -5,8 +5,9 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { Database, Ref } from '@dxos/echo';
-import { TestDatabaseLayer } from '@dxos/echo-client/testing';
+import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { TestDatabaseLayer, testStoragePath } from '@dxos/echo-client/testing';
+import { PublicKey, URI } from '@dxos/keys';
 import { Milestone, Task, TaskSet } from '@dxos/types';
 
 import createMilestone from './create-milestone';
@@ -67,6 +68,37 @@ describe('list-tasks', () => {
       const exit = yield* Effect.exit(listTasks.handler({}));
       expect(exit._tag).toBe('Failure');
     }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect(
+    'lists tasks written by a previous session, skipping a dangling ref',
+    Effect.fnUntraced(function* () {
+      const spaceKey = PublicKey.random();
+      const storagePath = testStoragePath({ name: `list-tasks-fresh-session-${Date.now()}` });
+      const sessionLayer = () =>
+        TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet], spaceKey, storagePath });
+
+      yield* Effect.gen(function* () {
+        const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));
+        yield* Database.flush();
+        yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'First' });
+        yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Second' });
+
+        const { db } = yield* Database.Service;
+        Obj.update(taskSet, (taskSet) => {
+          taskSet.tasks = [...taskSet.tasks, db.makeRef(URI.make('echo:///01M122P4GNVZ1P982K1K0QG8AY'))];
+        });
+        yield* Database.flush();
+      }).pipe(Effect.provide(sessionLayer()));
+
+      yield* Effect.gen(function* () {
+        const sets = yield* Database.query(Query.select(Filter.type(TaskSet.TaskSet))).run;
+        expect(sets).toHaveLength(1);
+
+        const { tasks } = yield* listTasks.handler({ taskSet: Ref.make(sets[0]) });
+        expect(titles(tasks).sort()).toEqual(['First', 'Second']);
+      }).pipe(Effect.provide(sessionLayer()));
+    }),
   );
 
   it.effect('filters by milestone', () =>

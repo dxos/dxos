@@ -931,6 +931,8 @@ flow QA-1: Connect, sync, and read the portfolio
     - space: a space is open
     - a valid IBKR Flex Web Service token and query id, with at least one open position and one trade in the last 7 days
     - no Connection exists yet for source "interactivebrokers.com" in this space — ABORT rather than reusing one this flow did not create
+    - no Portfolio exists in this space — ABORT rather than syncing into one this flow did not
+      create, since the sync writes into whichever Portfolio it finds
   test:
     - name: Connect IBKR
       do: Open the IBKR connector's credential form and enter the Flex token and query id.
@@ -957,11 +959,11 @@ flow QA-1: Connect, sync, and read the portfolio
   after:
     - name: Remove the report feed
       do: Right-click the Portfolio and choose "Clear synced data", or delete the Portfolio object entirely.
-      invoke: org.dxos.operation.space.removeObjects { objects: [$given.space] }
       note: |
-        The hidden feed is a child of the Portfolio (feat F-2.6's cascade-delete via
-        `Obj.setParent`); deleting the Portfolio is the operation that actually removes it — there
-        is no dedicated "clear feed" op in this document.
+        NO `invoke` — no operation returns the Portfolio, so an agent run cannot identify the one
+        this flow produced. Resolving it by type would delete whichever Portfolio the space
+        happens to hold first, which may be the user's own; teardown is human-only until an
+        operation yields the Portfolio to capture.
       expect: the PortfolioReport feed and its reports no longer exist; the IBKR account itself is untouched (read-only connection, F-1.3)
     - name: Disconnect IBKR
       do: In Settings -> Connectors -> Interactive Brokers, remove the connection.

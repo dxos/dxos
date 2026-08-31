@@ -6,11 +6,11 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
+import { fromDigestHex } from '@dxos/blob';
 import { Blob, Database, Error } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 
 import { EchoTestBuilder } from '../testing';
-import { fromDigestHex } from './ni-uri';
 
 describe('Blob', () => {
   let builder: EchoTestBuilder;

@@ -28,6 +28,7 @@ export default defineConfig({
     'core/plugin-asset-cache': 'src/core/plugin-asset-cache.ts',
     'core/plugin-manifest': 'src/core/plugin-manifest.ts',
     'core/registry': 'src/core/registry.ts',
+    'common/optimistic': 'src/common/optimistic.ts',
     'common/Role': 'src/common/Role.ts',
     'plugin-process-manager/history/undo-mapping': 'src/plugin-process-manager/history/undo-mapping.ts',
     'plugin-process-manager/history/undo-registry': 'src/plugin-process-manager/history/undo-registry.ts',

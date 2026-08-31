@@ -101,7 +101,8 @@ op create
     db: Database
     name?: string
     typename?: string            # when provided, view is initialised from the schema
-  output: Table
+  output:
+    object: Table
   effects: [echo:write]
 ```
 
@@ -266,7 +267,7 @@ flow QA-1: Create a table bound to a schema and add a row
   desc: The core table round-trip — create a Table over a typename, add a row, read it back.
   actors: agent
   covers: [F-1.1, F-1.2, F-2.2, T-1, T-2]
-  status: unverified
+  status: blocked
   given:
     - an identity exists
     - space: a space is open, with a mutable schema type registered (e.g. Task)
@@ -275,6 +276,11 @@ flow QA-1: Create a table bound to a schema and add a row
     - name: Create the table
       do: In the navtree, click + on the space and choose Table. Select typename "Task" and name it "QA Table".
       invoke: [op:create] { db: $given.space.db, name: "QA Table", typename: "example.com/type/Task" }
+      blocked: |
+        Not runnable through the operation invoker: the handler reaches a schema registry the
+        plain invoke path does not provide, failing with `Cannot read properties of undefined
+        (reading 'addType')`. The human `do:` path works; the agent binding needs the operation
+        to take a typename it can register itself.
       capture: created
       expect: a Table named "QA Table" now exists with columns derived from the Task schema
       assert: return !!$created.object
@@ -347,11 +353,12 @@ ext component
 
 ```mdl
 ext op
-  uri: org.dxos.mdl.op@1.0
+  uri: org.dxos.mdl.op@1.1
   desc: |
     A named operation with typed inputs, outputs, and declared errors.
     Pure ops have no effects or requires. Effectful ops declare both.
   fields:
+    key?: NSID                  # runtime operation key — what the invoker receives
     desc?: Prose
     input?: FieldMap
     output?: TypeExpr

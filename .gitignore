@@ -6,6 +6,8 @@
 
 # Response-verbosity toggle state — per-user runtime, not repo policy.
 .claude/.mode
+# The focus pin that rides alongside it — a task, so even less repo policy.
+.claude/.focus
 # Transitional: pre-rename state file, deleted on first mode.sh run.
 .claude/.response-mode
 

@@ -4,11 +4,13 @@
 
 import React, { type JSX, useCallback, useMemo, useState } from 'react';
 
+import { Provider } from '@dxos/ai';
+import { useAtomCapabilityState, useOptionalCapability } from '@dxos/app-framework/ui';
 import { type AiContext } from '@dxos/assistant';
 import { type Chat as ChatModule, McpServer } from '@dxos/assistant-toolkit';
 import { type Database, Filter, Obj, type Registry, Type, URI } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { IconButton, Input, Popover, Select, useTranslation } from '@dxos/react-ui';
+import { IconButton, Input, Popover, Select, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type ChatView } from '@dxos/react-ui-assistant';
 import { Listbox } from '@dxos/react-ui-list';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
@@ -17,7 +19,9 @@ import { getStyles, mx } from '@dxos/ui-theme';
 
 import { useActiveSkills, useContextObjects, useFilteredTypes, useSkillHandlers, useSkills } from '#hooks';
 import { meta } from '#meta';
-import { Assistant, AssistantPreset } from '#types';
+import { Assistant, AssistantCapabilities, AssistantPreset } from '#types';
+
+import { resolveProvider } from '../../processor';
 
 const styles = {
   panel: 'w-[calc(100dvw-.5rem)] sm:w-max max-w-document-width',
@@ -114,7 +118,9 @@ const SkillsPanel = ({ registry, db, context }: Pick<ChatOptionsProps, 'registry
   return (
     <SearchList.Root onSearch={handleSearch}>
       <SearchList.Content classNames='flex flex-col'>
-        <SearchList.Viewport>
+        {/* Flush to the popover edge, like the sibling `Listbox` panels: this is a menu, not a
+            centered search surface, so the scroll strip is not reserved on both sides. */}
+        <SearchList.Viewport padding={false}>
           {results.map((skill) => {
             const skillKey = Obj.getMeta(skill).key ?? skill.id;
             const isActive = activeSkills.has(skillKey);
@@ -162,16 +168,53 @@ const ModelsPanel = ({
 }: Pick<ChatOptionsProps, 'presets' | 'preset' | 'onPresetChange'>) => {
   const { t } = useTranslation(meta.profile.key);
   return (
-    <Listbox.Root value={preset} onValueChange={onPresetChange} autoFocus>
-      <Listbox.Content aria-label={t('options.chat-model.title')}>
-        {presets?.map(({ id, label }) => (
-          <Listbox.Item key={id} id={id} classNames='px-2 py-1 dx-focus-ring rounded-xs'>
-            <Listbox.ItemLabel>{label}</Listbox.ItemLabel>
-            <Listbox.Indicator />
-          </Listbox.Item>
-        ))}
-      </Listbox.Content>
-    </Listbox.Root>
+    <div className='dx-container flex flex-col'>
+      <Listbox.Root value={preset} onValueChange={onPresetChange} autoFocus>
+        <Listbox.Content aria-label={t('options.chat-model.title')}>
+          {presets?.map(({ id, label }) => (
+            <Listbox.Item key={id} id={id} classNames='px-2 py-1 dx-focus-ring rounded-xs'>
+              <Listbox.ItemLabel>{label}</Listbox.ItemLabel>
+              <Listbox.Indicator />
+            </Listbox.Item>
+          ))}
+        </Listbox.Content>
+      </Listbox.Root>
+      <Toolbar.Root>
+        <OnlineSwitch />
+      </Toolbar.Root>
+    </div>
+  );
+};
+
+/**
+ * Online/offline as the control it looks like. It used to sit on the prompt row as a disabled
+ * switch, which read as broken: the provider is one setting, so it belongs beside the model list
+ * that setting chooses from.
+ *
+ * Off selects whichever local provider this build has — the bundled sidecar on desktop, an external
+ * Ollama elsewhere — which is the same reconciliation `usePresets` does when it reads the setting.
+ */
+const OnlineSwitch = () => {
+  const { t } = useTranslation(meta.profile.key);
+  const [settings, setSettings] = useAtomCapabilityState(AssistantCapabilities.Settings);
+  const hasBuiltIn = useOptionalCapability(AssistantCapabilities.OllamaManager) !== undefined;
+  const online = resolveProvider(settings.modelProvider, hasBuiltIn) === Provider.edge.id;
+
+  const handleChange = useCallback(
+    (checked: boolean) => {
+      const provider = checked ? Provider.edge.id : hasBuiltIn ? Provider.builtIn.id : Provider.ollama.id;
+      setSettings((current) => ({ ...current, modelProvider: provider }));
+    },
+    [setSettings, hasBuiltIn],
+  );
+
+  return (
+    <div className='px-1 flex items-center gap-2'>
+      <Input.Root>
+        <Input.Switch checked={online} onCheckedChange={handleChange} data-testid='assistant.online' />
+        <Input.Label>{t('online-switch.label')}</Input.Label>
+      </Input.Root>
+    </div>
   );
 };
 
@@ -361,8 +404,10 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <SearchList.Content classNames='p-form-chrome [&:has([cmdk-list-sizer]:empty)]:py-0'>
-        <SearchList.Viewport>
+      {/* No chrome padding: the rows align with the toolbar below, which is a sibling of
+          `Content` and so sits flush against the panel edge. */}
+      <SearchList.Content>
+        <SearchList.Viewport padding={false}>
           {results.length ? (
             results.map((object) => {
               const isActive = contextObjects.findIndex((obj) => obj.id === object.id) !== -1;

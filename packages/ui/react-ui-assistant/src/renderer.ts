@@ -32,35 +32,57 @@ export const createRenderer = (
     const segments: string[] = [];
     let tools: ContentBlock.Any[] = [];
 
+    // Emitted after the run they interleave with, so the panel stays whole.
+    let deferred: string[] = [];
+
     const flushTools = () => {
       if (tools.length) {
         segments.push(toolkitTag(tools));
         tools = [];
       }
+      if (deferred.length) {
+        segments.push(...deferred);
+        deferred = [];
+      }
     };
 
     for (const block of blocks) {
-      if (block._tag === 'toolCall' || block._tag === 'toolResult' || (block._tag === 'stats' && tools.length)) {
+      if (block._tag === 'toolCall' || block._tag === 'toolResult') {
         tools.push(block);
         continue;
       }
 
-      flushTools();
-      const rendered = blockToMarkdown(message, block, getObjectLabel);
-      if (rendered) {
-        segments.push(rendered);
+      // Stats belong to their own widget, not the tool panel — but they arrive mid-run, so they
+      // must not flush it either, or a run becomes one panel per call again.
+      if (block._tag === 'stats') {
+        const rendered = blockToMarkdown(message, block, getObjectLabel);
+        if (rendered) {
+          deferred.push(rendered);
+        }
+        continue;
       }
+
+      // Rendered BEFORE the flush: a block that renders to nothing must not end the run. The
+      // runtime interleaves empty text blocks with tool calls, and flushing on one split a single
+      // run into a panel per call with nothing visible between them.
+      const rendered = blockToMarkdown(message, block, getObjectLabel);
+      if (!rendered) {
+        continue;
+      }
+
+      flushTools();
+      segments.push(rendered);
     }
     flushTools();
 
-    // Suggestions are inline widgets meant to flow: a run of them joins on one line and wraps as
-    // chips; everything else is separated by a blank line so each block parses as its own
-    // markdown block.
+    // A run of suggestions joins on one line so the chips flow; everything else is separated by a
+    // blank line so it parses as its own markdown block. No separator character between chips,
+    // because `break-spaces` does not hang a space at a line break — it would indent the next row.
     const text = segments
       .reduce<string[]>((parts, segment) => {
         const previous = parts[parts.length - 1];
         if (previous?.startsWith('<suggestion') && segment.startsWith('<suggestion')) {
-          parts[parts.length - 1] = `${previous} ${segment}`;
+          parts[parts.length - 1] = `${previous}${segment}`;
         } else {
           parts.push(segment);
         }

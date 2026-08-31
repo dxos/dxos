@@ -847,8 +847,11 @@ flow QA-2: Provision a resumable Call without joining
   after:
     - name: Delete the Call
       do: Right-click the Call in the navtree and choose Delete.
-      invoke: org.dxos.operation.space.removeObjects { objects: [$given.call], target: $given.space.db }
       expect: the Call no longer appears in the space
+      note: |
+        NO `invoke` — the Call is provisioned outside plugin-calls' own UI (see the test step
+        above), so there is no bound value for `space.removeObjects` to name; deletion stays
+        human-only like the rest of this flow.
 ```
 
 ---

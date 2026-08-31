@@ -41,7 +41,6 @@ export const bootRecoveryClient = async (): Promise<Client> => {
           signalTelemetryEnabled: false,
           edgeFeatures: {
             feedReplicator: false,
-            echoReplicator: false,
             subductionReplicator: false,
             signaling: false,
             agents: false,

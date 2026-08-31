@@ -87,7 +87,7 @@ flow QA-1: Create a channel and send a message
   covers: [F-1.1]
   status: unverified
   given:
-    - an identity exists
+    - identityDid: an identity exists, its DID used as the message `sender`
     - space: a space is open
     - no Channel named "QA Channel" exists — ABORT rather than deleting one this flow did not create
   test:

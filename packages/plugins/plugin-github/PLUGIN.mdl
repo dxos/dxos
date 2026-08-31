@@ -498,8 +498,17 @@ flow QA-2: Local edit pushes back to GitHub
   covers: [F-6.2, T-5]
   status: unverified
   given:
-    - QA-1 has run through "Sync the connection" and left a synced Project with at least one open (non-PR) Task
-    - the connected GitHub account has write access to the repo
+    - an identity exists
+    - space: a space is open
+    - a GitHub account reachable for OAuth, with write access to a repo owning at least one open
+      (non-PR) issue
+    - no Project with foreign key [source: "github.com", id: <that repo's numeric id>] exists —
+      ABORT rather than reusing a Project this flow did not create
+    - connection: a fresh GitHub Connection, authorized against that account (same human-only
+      OAuth step as QA-1's "Connect a GitHub account")
+    - materialized: the target repo materialized and synced as a Project via
+      op:MaterializeGitHubTarget then op:SyncGitHubRepositories (same steps as QA-1), leaving at
+      least one open (non-PR) Task
   test:
     - name: Edit the task title
       do: Open the synced Task and change its title.
@@ -518,6 +527,23 @@ flow QA-2: Local edit pushes back to GitHub
       do: Edit the issue's title back to its original value directly on github.com, then re-sync.
       invoke: [op:SyncGitHubRepositories] { connection: $given.connection }
       expect: the local Task.title reflects the reverted value
+    - name: Remove the synced Project and its Tasks
+      do: Right-click the Project in the navtree and choose Delete, then repeat for each Task it
+        produced (or delete the containing collection).
+      invoke: |
+        org.dxos.operation.space.removeObjects {
+          refs: [$given.materialized.target,
+            ...(await space.db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.task'))).run()).objects
+              .filter((task) => task.project?.target?.id === $given.materialized.target.target?.id)
+              .map((task) => window.__echo.Ref.make(task))]
+        }
+      note: |
+        `materialized.target` is a Ref, so it travels in `refs`, not `objects`; the synced Tasks
+        are resolved separately because removing the Project does not cascade to them.
+      expect: the Project and its Tasks leave the navtree; the underlying GitHub repo and issues are untouched
+    - name: Disconnect the GitHub account
+      do: In Settings -> Connectors -> GitHub, remove the connection.
+      expect: the Connection object and its stored access token are removed
 ```
 
 ---

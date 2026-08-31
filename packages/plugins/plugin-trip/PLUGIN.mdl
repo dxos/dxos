@@ -626,6 +626,8 @@ flow QA-1: Create a trip and add a segment
     - plugin-trip is enabled — it ships only in the experimental set and is OFF by default; no
       trip operation is registered until it is on
     - no trip named "QA Trip" exists — ABORT rather than deleting one this flow did not create
+    - trip: the Trip "QA Trip" this flow creates — no plain create op exists (human-only step),
+      so the runner binds this once that step completes
   test:
     - name: Create the trip
       do: In the navtree, click + on a collection and choose Trip. Name it "QA Trip".

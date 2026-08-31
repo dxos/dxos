@@ -18,7 +18,7 @@ import { createTestServices } from '@dxos/edge-compute/testing';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
-import { ComputeNodeContext, ValueBag } from '../../types';
+import { ValueBag, layerNoop as computeNodeContextLayerNoop } from '../../types';
 import { type GptInput, gptNode } from './gpt';
 
 const ENABLE_LOGGING = true;
@@ -74,7 +74,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
           expect(output.text.length).toBeGreaterThan(10);
         },
         Effect.provide(Trace.writerLayerNoop),
-        Effect.provide(ComputeNodeContext.layerNoop),
+        Effect.provide(computeNodeContextLayerNoop),
       ),
       60_000,
     );
@@ -112,7 +112,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
           expect(conversationMessages.at(-1)?.sender.role).toEqual('assistant');
         },
         Effect.provide(Trace.writerLayerNoop),
-        Effect.provide(ComputeNodeContext.layerNoop),
+        Effect.provide(computeNodeContextLayerNoop),
       ),
       60_000,
     );

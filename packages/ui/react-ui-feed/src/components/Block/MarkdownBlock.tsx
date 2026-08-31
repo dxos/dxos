@@ -7,14 +7,15 @@ import { EditorView } from '@codemirror/view';
 import React, { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { useThemeContext } from '@dxos/react-ui';
+import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { type XmlWidgetRegistry, type XmlWidgetState } from '@dxos/ui-editor';
+import { mx } from '@dxos/ui-theme';
 
 import { createBlockExtensions } from './extensions';
 import { type HighlightRange, setHighlights } from './highlight';
 import { useSelectionGroup } from './selection-group';
 
-export type MarkdownBlockProps = {
+export type MarkdownBlockProps = ThemedClassName<{
   text: string;
   /**
    * Drip appended text in per frame (the typewriter) instead of dispatching whole deltas. The
@@ -33,7 +34,7 @@ export type MarkdownBlockProps = {
   hits?: readonly HighlightRange[];
   /** Number of block widgets this item currently has mounted; 0 once it unmounts. */
   onWidgetsChange?: (count: number) => void;
-};
+}>;
 
 /**
  * One message as its own markdown document.
@@ -42,7 +43,7 @@ export type MarkdownBlockProps = {
  * single thread-wide document needs a cursor and a range table to know which message it is touching.
  */
 export const MarkdownBlock = memo(
-  ({ text, stream, editable = false, registry, hits, onWidgetsChange }: MarkdownBlockProps) => {
+  ({ classNames, text, stream, editable = false, registry, hits, onWidgetsChange }: MarkdownBlockProps) => {
     const { themeMode } = useThemeContext();
     const [view, setView] = useState<EditorView | null>(null);
     // React widgets render in portals into hosts the extension places in the document, so the item has
@@ -223,7 +224,9 @@ export const MarkdownBlock = memo(
 
     return (
       <>
-        <div ref={rootRef} />
+        {/* No query container here: a prompt's bubble is sized by this element's text, which
+            inline-size containment would stop contributing. */}
+        <div className={mx(classNames)} ref={rootRef} />
         {widgets.map(({ Component, root, id, props }) => (
           <div key={id}>{createPortal(<Component view={view ?? undefined} {...props} />, root)}</div>
         ))}

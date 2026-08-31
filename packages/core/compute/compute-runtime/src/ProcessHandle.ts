@@ -375,7 +375,9 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
     const delay = Math.max(0, dueAt - Date.now());
     this.#alarmDueAt = dueAt;
     log('lifecycle: alarm rearmed', { dueAt, delayMs: delay });
-    this.#alarmFiber = Effect.runFork(this.#makeAlarmSleepEffect(delay));
+    this.#alarmFiber = Effect.runFork(
+      Effect.provideService(this.#makeAlarmSleepEffect(delay), Clock.Clock, this.#clock),
+    );
   }
   /**
    * Re-deliver a persisted event that never settled before shutdown.
@@ -564,9 +566,11 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
     const dueAt = Date.now() + delay;
     this.#alarmDueAt = dueAt;
     log('lifecycle: alarm scheduled', { delayMs: delay, dueAt });
-    // Schedule via `Effect.sleep` on the captured ambient clock instead of `setTimeout` so the alarm
-    // is driven by the Effect runtime's `Clock` (a `TestClock` in tests, the live clock in prod).
-    this.#alarmFiber = Effect.runFork(this.#makeAlarmSleepEffect(delay));
+    // Forked off the default runtime, so the captured ambient clock is provided to the whole effect
+    // (handler included) — otherwise it reverts to the live clock and no `TestClock` reaches it.
+    this.#alarmFiber = Effect.runFork(
+      Effect.provideService(this.#makeAlarmSleepEffect(delay), Clock.Clock, this.#clock),
+    );
   }
 
   #makeAlarmSleepEffect(delay: number): Effect.Effect<void> {
@@ -574,7 +578,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
       // 0ms delays must not block on the TestClock — use yieldNow() so they complete in the
       // current event loop without requiring a TestClock.adjust call from the test.
       if (delay > 0) {
-        yield* Effect.sleep(Duration.millis(delay)).pipe(Effect.provideService(Clock.Clock, this.#clock));
+        yield* Effect.sleep(Duration.millis(delay));
       } else {
         yield* Effect.yieldNow;
       }
@@ -625,10 +629,17 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
       log('lifecycle: child event ignored (already finished)', { tag: event._tag, childPid: event.pid });
       return;
     }
+    // Carries the captured clock for the same reason as the alarm fork above.
     Effect.runFork(
-      this.#persistence
-        .appendEvent({ _tag: 'childEvent', event: toPersistedChildEvent(event) })
-        .pipe(Effect.flatMap((seq) => this.#runHandler('childEvent', () => this.#callbacks.onChildEvent(event), seq))),
+      Effect.provideService(
+        this.#persistence
+          .appendEvent({ _tag: 'childEvent', event: toPersistedChildEvent(event) })
+          .pipe(
+            Effect.flatMap((seq) => this.#runHandler('childEvent', () => this.#callbacks.onChildEvent(event), seq)),
+          ),
+        Clock.Clock,
+        this.#clock,
+      ),
     );
   }
 

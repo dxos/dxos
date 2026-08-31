@@ -217,6 +217,9 @@ Every status message to the user is, in order:
 
 - `debugging` — @dxos/log runtime instrumentation pipeline (app.log / test-browser.log,
   `#region DEBUG` markers, query-logs.mjs) for hypothesis testing at any ladder level.
+- `reactivity` — when the symptom is stale or missing data (updates only after navigating
+  away and back, items absent on cold load), the diagnosis usually lands on one of its
+  numbered anti-patterns; load it before writing the fix.
 - `composer-ui` — storybook setup and story conventions for new fixtures.
 - `browser-e2e-tests` — Playwright targeting rules (data-testid) when a repro
   graduates to a regression spec.

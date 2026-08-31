@@ -111,11 +111,11 @@ op GetBlueskyTargets
     my bookmarks) plus one entry per saved feed generator pulled from the
     user's atproto preferences. Read-only; no ECHO objects are created.
   input:
-    integration: Ref<Integration>
+    connection: Ref<Connection>
   output: GetSyncTargetsOutput
   effects: [http]
   errors:
-    IntegrationDatabaseMissing: integration ref has no resolvable ECHO database
+    IntegrationDatabaseMissing: connection ref has no resolvable ECHO database
     MissingBlueskyHandle: access token has no account (handle/DID) set
     PdsResolutionFailed: could not resolve the user's atproto PDS endpoint
   note: >
@@ -135,18 +135,17 @@ op SyncBlueskyTargets
     Subscription.Feed ECHO object and pins it to target.object. Appended
     posts become Subscription.Post ECHO objects stored in the feed's queue.
   input:
-    integration: Ref<Integration>
+    connection: Ref<Connection>
   output:
     appended: number    # total posts appended across all selected targets
-    failed: number      # targets that produced an error this run
   effects: [http, echo:read, echo:write]
   errors:
-    IntegrationDatabaseMissing: integration ref has no resolvable ECHO database
+    IntegrationDatabaseMissing: connection ref has no resolvable ECHO database
     MissingBlueskyHandle: access token has no account (handle/DID) set
     PdsResolutionFailed: could not resolve the user's atproto PDS endpoint
   note: >
     Per-target failures are collected; a single failing target does not abort
-    the run. Errors are recorded on target.lastError and counted in `failed`.
+    the run. Errors are recorded on target.lastError.
     The page budget for self-targets defaults to 5 pages; custom feed
     generators default to 1 page per sync to avoid runaway pagination on
     algorithmic feeds. Both are capped at 20 pages regardless of options.
@@ -321,9 +320,8 @@ test T-8: Per-target failure is non-fatal
   given: an integration with two selected targets; the first target's XRPC call returns 500
   when: SyncBlueskyTargets is invoked
   then:
-    - failed === 1
+    - the failing target's target.lastError is set
     - second target synced successfully
-    - target.lastError set for the failing target
 ```
 
 ```mdl

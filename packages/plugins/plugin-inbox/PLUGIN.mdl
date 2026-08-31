@@ -1,15 +1,23 @@
 ---
 id: org.dxos.plugin.inbox
 name: InboxPlugin
-version: 0.1.0
+version: 0.2.0
 ---
 
-Unified inbox plugin for `DXOS` Composer — email, calendar, and contacts in one place, surfaced alongside workspace content. Mail syncs from multiple providers (Google/Gmail and JMAP, e.g. Fastmail) into an append-only feed; calendar and contacts sync from Google. AI extractors and a fact-enrichment pass derive structured objects and RDF facts from message content.
+Unified inbox plugin for `DXOS` Composer — email, calendar, and contacts in one place, surfaced
+alongside workspace content. Mail syncs from multiple providers (Google/Gmail and JMAP, e.g.
+Fastmail) into an append-only feed; calendar and contacts sync from Google. AI extractors, a
+cursored processing pipeline, and an enrichment cascade derive structured objects, summaries,
+classifications, and RDF facts from message content.
+
+Entry points: `plugin.tsx` (browser), `plugin.node.ts` (skills/ops/schema only), and
+`plugin.workerd.ts` (ops + schema — lets EDGE run sync remotely).
 
 ## Extensions
 
-The following extension dialects are used in this document.
-Each extension is defined in the Appendix or resolved via its URI.
+The following extension dialects are used in this document. The standard terms are defined in the
+Appendix; the app terms (`node`, `deck`, `plank`, `companion`, `surface`, `menu`) are defined in
+[`packages/reflect/deus/lang/app.mdl`](../../reflect/deus/lang/app.mdl) (`org.dxos.spec.app`).
 
 | Term        | URI                            |
 |-------------|--------------------------------|
@@ -21,920 +29,674 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `op`        | `org.dxos.mdl.op@1.1`          |
 | `flow`      | `org.dxos.mdl.flow@1.0`        |
 | `step`      | `org.dxos.mdl.step@1.0`        |
+| `node`      | `org.dxos.mdl.node@1.0`        |
+| `deck`      | `org.dxos.mdl.deck@1.0`        |
+| `plank`     | `org.dxos.mdl.plank@1.0`       |
+| `companion` | `org.dxos.mdl.companion@1.0`   |
+| `surface`   | `org.dxos.mdl.surface@1.0`     |
+| `menu`      | `org.dxos.mdl.menu@1.0`        |
 
 ## External types
 
-Sync and credentials are owned by `@dxos/plugin-connector`; the inbox binds to them rather than
-defining its own integration type:
-
-- `Connection` — holds provider credentials (an `AccessToken` Ref). Sourced by send/create ops.
-- `SyncBinding` — a relation whose `source` is a `Connection` and whose `target` is the object being
-  synced (a Mailbox or Calendar). Carries the durable sync `Cursor`. Sync ops bind to it.
-
-`Feed`, `Message`, `Event`, `Person`, `Tag`, and `TagIndex` are `@dxos/echo` / `@dxos/types` /
-`@dxos/schema` types. `Fact` and the `FactStore` come from `@dxos/pipeline-rdf`.
+- `Message`, `DraftMessage`, `Event`, `Person`, `Organization` — `@dxos/types`. Messages/events
+  live in feeds; people/organizations in the space. A `DraftMessage` is an unsent `Message`,
+  distinguished by its own instance check rather than by a field.
+- `Feed`, `Tag`, `TagIndex` — `@dxos/echo` / `@dxos/schema`. Feed members are immutable; mutable
+  tag membership lives in the mailbox's `TagIndex` sidecar.
+- `Cursor` (`@dxos/link`) — the sync **binding**: an external cursor whose `spec.target` is the
+  Mailbox/Calendar and whose `spec.source` is the provider access token. Carries sync options and
+  durable window/delta state.
+- `Connection`, `ConnectorSpec` — `@dxos/plugin-connector`. Provider credentials and the connector
+  registry (materialize/sync/trigger declarations live in plugin-google / plugin-jmap).
+- `Instructions`, `Project` — `@dxos/compute`. Reply guidance; extracted project objects.
+- `Fact` / `FactStore` — `@dxos/pipeline-rdf`.
 
 ## Types
 
 ```mdl
-type MessageState
-  literals: none | archived | deleted | spam
-  # Implemented as a numeric enum (none=0, archived=1, deleted=2, spam=3); slated to become labels.
+type Mailbox
+  desc: |
+    The mail container: a named handle onto an append-only message feed plus its mutable
+    sidecars. Declares its deck level chain and its skills.
+  fields:
+    name?: string
+    feed: Ref<Feed>              # immutable synced messages
+    tags: Ref<TagIndex>          # mutable tag membership for feed members
+    annotations?: Ref<Feed>      # lazy append-only feed of derived summaries
+    instructions?: Ref<Instructions>   # reply-drafting guidance
+    extractors?: { enabled: boolean, threshold?: number }
+    messageFilters?: MessageFilter[]   # exclusion rules ("ignore sender")
+    filters?: SavedFilter[]      # saved UI query filters {name, filter}
+    subscriptions?: Subscription[]     # derived bulk-mail senders
+    extracted?: Record<messageId, objectIds>  # extraction provenance record
 ```
 
 ```mdl
-type Filter
-  desc: A saved, named query filter (as in MailboxArticle.activeFilter), NOT a MessageFilter below.
+type SavedFilter
+  desc: A saved, named query string surfacing as a folder node under the mailbox.
   fields:
     name: string
-    filter: string              # query expression
+    filter: string               # query expression (tag/text grammar)
 ```
 
 ```mdl
 type MessageFilter
-  desc: |
-    An exclusion rule applied across the mailbox UI, sync, and analysis — a matching message is
-    hidden and never committed/enriched. Kept intentionally small (currently sender-only); expected
-    to grow. Actual code name is also `Filter` (`Mailbox.ts`) — a real naming collision with the
-    saved-query `Filter` above, disambiguated here as `MessageFilter`.
+  desc: An exclusion rule dropped messages must match (currently a `from` regex).
   fields:
-    from?: string                # case-insensitive regex matched against the sender email
+    from: string
 ```
 
 ```mdl
-type Mailbox
+type SystemTags
   desc: |
-    Feed-backed mailbox. Messages are immutable Queue items in the feed, so their tag associations
-    and extraction provenance cannot live on the messages themselves — they live on the mutable
-    Mailbox in a child TagIndex and the `extracted` map.
-  fields:
-    name?: string
-    feed: Ref<Feed>             # append-only Message stream
-    tags: Ref<TagIndex>         # inverse index: tag uri → message ids (labels/hues live on Tag objects)
-    extractors?:
-      enabled: string[]
-      threshold: number         # 0..1 — AI confidence cutoff
-    messageFilters?: MessageFilter[]
-    instructions?: Ref<Instructions>  # per-mailbox reply guidance; shared or mailbox-specific; the
-                                      # reply generator merges its text + skills into the session prompt
-    extracted?: Map<string, string[]>  # messageId → ids of objects extracted from it (provenance)
-    filters: Filter[]
-  note: |
-    Provider folders/labels map to Tag objects carrying a foreign key: Gmail labels under
-    `com.google.gmail.label`, JMAP mailboxes under `org.ietf.jmap.mailbox`. "Provider" tags have such
-    a key; "user" tags do not.
+    Canonical, provider-agnostic tag registry: starred | inbox | important | sent | draft |
+    personal | social | promotions | updates | forums | spam. Each provider maps its own
+    vocabulary onto these, so a Gmail star and a JMAP $flagged resolve to the same Tag object.
+    Supersedes the legacy MessageState enum. Membership helpers operate over the container's
+    TagIndex (feed members carry no meta.tags of their own).
 ```
 
 ```mdl
 type Calendar
+  desc: Calendar container — same feed + tags shape as Mailbox; no deck chain.
   fields:
     name?: string
-    feed: Ref<Feed>             # append-only stream of synced (Google) Events
-    tags: Ref<TagIndex>         # inverse index for immutable feed Events (e.g. the "starred" tag)
+    feed: Ref<Feed>
+    tags: Ref<TagIndex>
 ```
 
 ```mdl
-type DraftMessage
-  desc: A local (unsent) email. Not a distinct schema — a Message marked as a draft.
-  fields:
-    marker: properties.mailbox is a valid DXN string  # synced mail never sets this
-    subject?: string
-    to?: string
-    body?: string
-    replyTo?: Ref<Message>
-```
-
-```mdl
-# Draft events are the calendar analogue of an email DraftMessage: locally-created Events that
-# have not been pushed to Google. They live in the space db (not the calendar feed), are parented to
-# their Calendar, and carry no Google foreign key (synced feed Events do). Edited offline, overlaid on
-# the calendar, and pushed to Google on save.
-type DraftEvent = Event       # an Event with no google.com foreign key, parented to a Calendar
-```
-
-```mdl
-type Starred
+type DraftEvent
   desc: |
-    A well-known "starred" Tag (foreign key `{ source: 'org.dxos.tag', id: 'starred' }`, from the
-    canonical SystemTag registry — see `SystemTags.ts`) applied to feed Messages or Events via the
-    container's TagIndex. Deduped by identity so every starring site resolves the same Tag.
-    NOTE: `starred` is one of ~10 canonical system tags in that registry (inbox, important, sent,
-    draft, personal, social, promotions, updates, forums); this spec documents only the starring one.
+    Not a schema — a convention with helpers: a space-db Event parented to its Calendar with no
+    provider foreign key is a draft; saving it creates the remote event and the next sync
+    reconciles it.
+```
+
+```mdl
+type ExtractedFrom
+  desc: Provenance relation extracted-object → source Message.
+  fields:
+    extractorId: string
+    extractedAt: string
+    confidence?: number
+```
+
+```mdl
+type SentTag
+  desc: |
+    Foreign key of the tag the provider's own copy of a sent message will carry (Gmail's SENT
+    label, or the JMAP account's Sent folder resolved by role). `label` is a fallback used only
+    before the first sync has seen the tag.
+  fields:
+    source: string
+    id: string
+    label: string
+```
+
+```mdl
+type MailSend
+  desc: Provider-agnostic send contract, routed via the MailSendOperation capability by connector id.
+  fields:
+    input: { message: Message, connection: Connection }
+    output: { id: string, threadId?: string, sentTag?: SentTag }
 ```
 
 ```mdl
 type Settings
+  desc: KVS-backed plugin settings.
   fields:
-    conversations?: boolean     # group messages by conversation; show most recent per thread
-    loadRemoteImages?: boolean  # render remote (http/https) images inline; off by default (anti-tracking)
+    conversations?: boolean      # group messages into threads (default true)
+    loadRemoteImages?: boolean   # default false (tracking pixels)
+```
+
+```mdl
+type SyncOptions
+  desc: Per-binding sync options stored on the Cursor spec.
+  fields:
+    syncBackDays?: number
+    syncForwardDays?: number     # calendar only
+    filter?: string
+```
+
+```mdl
+type SyncStreamConfig
+  desc: Per-provider pipeline tuning (page sizes, fetch concurrency, run caps, date chunking).
+```
+
+Capability tags (`InboxCapabilities`): `Settings` (writable atom), `ObjectExtractor` (multi —
+contact + summarize extractors contributed here; other plugins may add more), `MailboxAction`
+(injected toolbar actions, e.g. plugin-brain's Analyze), `MailSendOperation` (provider send op
+keyed by connector id).
+
+## App graph
+
+Node paths: space → `communications` group → `mailboxes` section → mailbox → child segments.
+System-tag views are pre-seeded, non-removable filter nodes — the same mechanism as saved user
+filters.
+
+```mdl
+node MailboxesSection
+  desc: Nav-tree section shown when any Mailbox exists in the space.
+  source: node:SpaceRoot
+  properties:
+    id: mailboxes
+    icon: ph--tray--regular
+  actions: [op:AddMailbox]
+```
+
+```mdl
+node MailboxNode
+  desc: |
+    One node per Mailbox. The node itself is the Inbox view (filter '#inbox'); children are
+    filter views over the same mailbox subject, so every folder opens MailboxArticle with
+    different filter/systemTag props.
+  source: node:MailboxesSection
+  subject: type:Mailbox
+  properties:
+    role: branch
+    filter: '#inbox'
+    systemTag: inbox
+  children:
+    - AllMail        # filter ''
+    - Sent           # filter '#sent', systemTag sent
+    - Drafts         # filter '', systemTag draft; action: op:DraftEmailAndOpen
+    - Subscriptions  # bulk-mail senders view (own article)
+    - SavedFilters   # one node per mailbox.filters entry; actions: op:RenameFilter, delete
+  actions: [op:GoogleMailSync, op:EnrichMailbox, op:ProcessMailbox, op:ResetFeedCursor]
+```
+
+```mdl
+node MessageNodes
+  desc: |
+    Every feed message (and mailbox-scoped draft) as a hidden child of its mailbox — deep-link
+    resolution only, never shown in the nav tree. Data is the Echo object, so messages pick up
+    the standard object companions (assistant, properties, debug) contributed by other plugins.
+  source: node:MailboxNode
+  subject: type:Message
+  properties:
+    disposition: hidden
+```
+
+```mdl
+node CalendarNode
+  desc: Standard type section for Calendar; events (and draft events) as hidden children.
+  source: node:SpaceRoot
+  subject: type:Calendar
+  children:
+    - EventNodes     # hidden, deep-link resolution only
+  actions: [op:GoogleCalendarSync]
+```
+
+The sync action appears only when an external `Cursor` targets the mailbox/calendar and a matching
+`Connection` exists; its spinner/disabled state reads the `#sync` progress monitor.
+
+## Deck
+
+```mdl
+deck MailboxDeck
+  desc: |
+    Declared on the Mailbox schema (DeckAnnotation). Reading a mailbox is a chain: opening a
+    message replaces the message plank rather than growing the deck, and picking a different
+    message drops the attachment that belonged to the last one. Meta/ctrl-click opts out and
+    opens a free plank. The attachment level is declared but not yet opened by any container.
+  chain: MailboxPlank > MessagePlank > AttachmentPlank  # AttachmentPlank: declared level, no plank yet
+```
+
+```mdl
+plank MailboxPlank
+  subject: type:Mailbox
+  article: component:MailboxArticle
+```
+
+```mdl
+plank MessagePlank
+  subject: type:Message
+  article: component:MessageArticle
+  parent: MailboxPlank
+```
+
+## Companions
+
+This plugin contributes **no companion nodes of its own** — message/event children are ordinary
+hidden nodes, not companions. Companions appearing on inbox objects come from generic
+every-object contributors: plugin-space (properties/info), plugin-assistant (chat),
+plugin-routine (automations — consuming this plugin's Routine templates), plugin-debug. The
+mailbox's create-topic action reveals a `topic` companion contributed externally.
+
+What this plugin does handle is **companion-mode rendering**: `MessageArticle`/`EventArticle`
+accept `companionTo` (the scoping mailbox/calendar, resolved from the graph) and show an
+"open as primary" toolbar action.
+
+## Surfaces
+
+```mdl
+surface MailboxSurface
+  role: article
+  subject: type:Mailbox
+  component: component:MailboxArticle   # receives node filter/systemTag props
+```
+
+```mdl
+surface SubscriptionsSurface
+  role: article
+  subject: type:Mailbox                 # attendableId last segment === 'subscriptions'
+  component: component:SubscriptionsArticle
+```
+
+```mdl
+surface MessageSurface
+  role: article | section
+  subject: type:Message                 # non-draft
+  component: component:MessageArticle   # graph-resolves parent mailbox
+```
+
+```mdl
+surface DraftMessageSurface
+  role: article
+  subject: type:Message                 # DraftMessage.instanceOf
+  component: component:EditMessageArticle
+```
+
+```mdl
+surface CalendarSurface
+  role: article
+  subject: type:Calendar
+  component: component:CalendarArticle
+```
+
+```mdl
+surface EventSurface
+  role: article | section
+  subject: type:Event
+  component: component:EventArticle     # resolves calendar from node or parent
+```
+
+```mdl
+surface MessageCardSurface
+  role: cardContent
+  subject: type:Message
+  component: component:MessageCard
+```
+
+```mdl
+surface EventCardSurface
+  role: cardContent
+  subject: type:Event
+  component: component:EventCard
+```
+
+```mdl
+surface PropertiesSurfaces
+  role: objectProperties
+  subject: type:Mailbox | type:Calendar
+  component: component:MailboxProperties | component:CalendarProperties
+```
+
+```mdl
+surface SaveFilterPopoverSurface
+  role: popover
+  component: component:SaveFilterPopover
+```
+
+```mdl
+surface RelatedSurfaces
+  role: related
+  subject: type:Person | type:Organization
+  component: component:RelatedToContact | component:RelatedToOrganization
+```
+
+## Menus
+
+```mdl
+menu MailboxToolbar
+  of: type:Mailbox
+  disposition: toolbar
+  items:
+    - op:GoogleMailSync        # sync (spinner from #sync monitor)
+    - op:EnrichMailbox         # enrich / stop
+    - sort, load-remote-images # view toggles (settings-backed)
+    - extract group            # ObjectExtractor + injected MailboxAction contributions
+    - op:DraftEmailAndOpen     # compose
+    - filter                   # search box slot (hidden in Drafts view)
+```
+
+```mdl
+menu MailboxContextMenu
+  of: node:MailboxNode
+  disposition: list-item
+  items: [op:GoogleMailSync, op:EnrichMailbox, op:ProcessMailbox, op:ResetFeedCursor]
+```
+
+```mdl
+menu SavedFilterMenu
+  of: node:MailboxNode          # saved-filter child nodes
+  disposition: list-item
+  items: [op:RenameFilter, delete-filter]
 ```
 
 ## Components
 
+Containers (surface-bound, lazy). Presentation state (selection, tags, stars) rides atoms; feed
+reads are paginated.
+
 ```mdl
 component MailboxArticle
-  desc: Inbox surface for a Mailbox — filterable message list with reading pane.
-  props:
-    subject: Mailbox
-    settings: Settings
-  state:
-    selected?: Message
-    activeFilter?: Filter
-  slots:
-    toolbar?: ReactNode         # sync / compose / filter actions
-  actions:
-    selectMessage(message: Message)
-    applyFilter(filter: Filter)
-    compose()
-    reply(message: Message)
-    archive(message: Message)
-    star(message: Message)
-  emits:
-    onOpenContact(actor: Actor)
-  layout: |
-    ┌──────────────┬─────────────────────────┐
-    │ [toolbar]    │                         │
-    ├──────────────┤                         │
-    │ filter chips │  reading pane           │
-    │              │                         │
-    │ message list │  (selected message      │
-    │              │   + related contacts /  │
-    │              │   events / threads)     │
-    │              │                         │
-    └──────────────┴─────────────────────────┘
+  desc: |
+    Paged, thread-grouped message list over the feed (whole-thread semi-join), with filter
+    editor (tag/text grammar, save-as-filter), per-tile tag chips + star toggle, toolbar
+    (menu:MailboxToolbar), and a statusbar ProgressMeter for whichever of sync/process/enrich
+    is active. Empty state: InitializeMailbox (connect an account).
+  props: { subject: Mailbox, filter?: string, systemTag?: SystemTagId }
 ```
 
 ```mdl
 component MessageArticle
   desc: |
-    Reading pane for a single Message, shown as the companion to a MailboxArticle (or standalone
-    when navigated directly). Renders the message body (HtmlViewer / MarkdownViewer, honoring
-    settings.loadRemoteImages) and, alongside it, related contacts / events / thread messages.
-  props:
-    subject: Message
-    companionTo?: Mailbox
+    Conversation (thread) detail: message tiles over a combined space+feed query by threadId,
+    summaries from the annotations feed, AI reply, delete, open-as-plank.
+  props: { subject: Message, companionTo?: Mailbox }
 ```
 
 ```mdl
-component MailboxFactsCompanion
-  desc: |
-    Companion surface off a Mailbox article that renders the RDF facts extracted by op:analyzeMailbox.
-    Reads the shared per-space FactStore and passes the mailbox's facts to a FactViewer. Phase 1 reads
-    once; live streaming into the viewer as enrichment runs is a follow-up.
-  props:
-    mailbox: Mailbox
+component EditMessageArticle
+  desc: Draft composer — subject/to/body editor, send via contributed MailSendOperation, AI generate-reply.
+  props: { subject: DraftMessage }
 ```
 
 ```mdl
 component CalendarArticle
-  desc: |
-    Day/week view of a Calendar. Overlays synced (feed) Events and draft (local) Events on the
-    grid and event list. Toolbar (toolbar idiom) offers "Create event" and, when any draft events
-    exist, "Save events to calendar" (disabled unless a Connection targets the Calendar). The
-    toolbar also slots the connect/sync action (InitializeCalendarAction): "Connect" auth Surface
-    when no Connection targets the Calendar, pull-sync button when one does. Selecting an event in
-    the list scrolls its date into view on the month grid (CalendarController.scrollTo).
-  props:
-    subject: Calendar
-  state:
-    selected?: Event
-    selectedDate?: Date          # default date for newly created events
-    range: { from: Date; to: Date }
-  actions:
-    selectEvent(event: Event)    # selects, opens companion, and scrolls the grid to the event date
-    createEvent()                # creates a draft Event (db, parented to Calendar) and focuses it
-    syncDraft()             # op:syncDraftEvents (spaceId-scoped) for all draft events on this Calendar
-    sync()
+  desc: Calendar grid + event list with range selection; InitializeCalendar empty state.
+  props: { subject: Calendar }
 ```
 
 ```mdl
 component EventArticle
-  desc: |
-    Event detail (companion to a Calendar). When the event is draft the header is an editable form
-    (title · all-day toggle · start · end-or-duration · attendees) and the body is a markdown editor;
-    the toolbar shows a Save action (disabled unless a Connection targets the Calendar). The
-    attendee list always ends with a blank ActorList row (react-ui-components): typing `@` opens a
-    typeahead against Person names/emails; each completed token (an `@<id>` reference or a
-    well-formed email) is committed as an attendee. Toolbar (toolbar idiom): Open (promote from
-    companion), Create note, Save (draft only), Delete. Editing resolves the live db object
-    (useQuery by id) so inputs stay reactive. Operations are invoked with the calendar db's spaceId
-    so their space-affinity services (Database/Feed/Credentials) materialize.
-  props:
-    subject: Event
-    companionTo?: Calendar
-  state:
-    editable: boolean            # true when the event is draft
-    allDay: boolean              # whole-day event (date only); maps to Google start.date/end.date
-    endMode: explicit | duration # specify an explicit end DateTime or a duration preset (end = start + d)
-  actions:
-    open()                       # op:layoutOpen — promote from companion to main view
-    save()                       # op:syncDraftEvents (spaceId-scoped) for this event
-    delete()                     # op:deleteEvent (spaceId-scoped)
-    addAttendee(actor: Actor)    # via the blank ActorList row (Person reference or email)
+  desc: Event detail/editor; draft events are editable and savable (creates the remote event).
+  props: { subject: Event, companionTo?: Calendar }
 ```
 
 ```mdl
-component EditMessage
-  desc: Compose / reply / forward editor for a DraftMessage.
-  props:
-    draft: DraftMessage
-  actions:
-    send()
-    saveDraft()
-    discard()
-  emits:
-    onSent(message: Message)
+component SubscriptionsArticle
+  desc: Bulk-mail subscription list (sender, count); select + unsubscribe.
+  props: { subject: Mailbox }
 ```
+
+Supporting: `MessageCard` / `EventCard` (card bodies), `MailboxProperties` / `CalendarProperties`
+(object-properties panels: sync toggle/trigger), `SaveFilterPopover` (names a filter into
+`mailbox.filters`), `RelatedToContact` / `RelatedToOrganization` (related messages/events/people),
+`InitializeMailbox` / `InitializeCalendar` (connect flows).
 
 ## Services
 
-Injected, per-space singletons shared between operations (writers) and companion surfaces (readers)
-— both run in the same browser main-thread JS context.
-
 ```mdl
-service FactStore
+service MailSyncProvider
   desc: |
-    Per-space RDF fact store written by op:analyzeMailbox and read by MailboxFactsCompanion.
-    In-memory (browser-safe, non-durable) — facts reset on reload. Durable OPFS/SQLite in a worker is
-    the planned follow-up.
-    KNOWN GAP: the store's own `cursor`/`setCursor` (an ingest cursor keyed by source DXN) is NOT what
-    op:analyzeMailbox uses for its high-water progress — see FeedCursors below. The store's cursor and
-    the actual mailbox-analysis cursor are two different, currently-unreconciled mechanisms.
+    Effect service each mail provider implements (gmail in plugin-google, jmap in plugin-jmap):
+    name, SyncStreamConfig, foreignKeySource, and prepare(preparation) → source stream. The
+    provider yields pages + reconciles; the harness owns everything else (see Sync).
   loading: lazy
-  ops:
-    putFacts(facts: Fact[])
-    query(constraints) → Fact[]
-    select(sparql: string) → Fact[]
-    cursor(source: string) → string | undefined
-    setCursor(source: string, hash: string)
-    clear()
 ```
 
 ```mdl
-service FeedCursors
-  desc: |
-    Persisted per-mailbox processing high-water cursor: a real `Cursor` ECHO object (`@dxos/link`,
-    `spec.kind: 'feed'`) whose `source` is the mailbox's feed and `target` is the mailbox itself (there
-    is no dedicated "fact consumer" object, so the mailbox stands in as the association anchor).
-    op:analyzeMailbox finds-or-creates it and advances it as it processes the feed, so re-runs skip
-    already-processed messages. NOT modeled as a named service/tag in code — this block documents the
-    `findOrCreateFeedCursor` convention in `operations/analyze/analyze-mailbox.ts`, not an injected
-    dependency.
-    KNOWN GAP: the cursor is durable (survives reload) but FactStore's facts are in-memory (reset on
-    reload) — a persisted-cursor-over-empty-store skew across a reload. F-9.4 below currently claims
-    this can't happen; it can. Needs a product decision: make facts durable too, or reset the cursor
-    alongside a cleared store, or revise F-9.4.
-  loading: lazy
-  ops:
-    findOrCreate(mailbox: Mailbox) → Cursor
-    advance(cursor: Cursor, max?: string)
+service FactStore
+  desc: Space-level RDF fact store (from @dxos/pipeline-rdf); AnalyzeMailbox writes extracted facts here.
 ```
 
 ## Operations
 
-Effectful operations — mutate persistent state or call external services. Sync operations bind to a
-`SyncBinding` (whose Connection owns credentials, whose target is the Mailbox/Calendar); send/create
-operations source credentials from a `Connection`.
+Keys `org.dxos.operation.inbox.<name>`. Provider-facing ops are defined here but handled in
+plugin-google / plugin-jmap; `GenerateReply` is handled in plugin-brain. Long-running mailbox
+pipelines report through progress monitors keyed `<mailbox uri>#<suffix>` (`sync`, `process`,
+`enrich`, `classify`, `summarize`, `analyze`, `correspondents`, `subscriptions`) and serialize on
+a per-mailbox lock.
+
+### Sync (provider-handled)
 
 ```mdl
-op addMailbox
-  key: org.dxos.operation.inbox.addMailbox
-  desc: Adds a Mailbox to the active space or collection.
-  input:
-    object: Mailbox
-    target: Database | Collection
-  output: { id: string, subject: string[], object: Mailbox }
-  effects: [echo:write]
-```
-
-```mdl
-op draftEmail
-  key: org.dxos.operation.inbox.draftEmail
-  desc: Creates a new draft email scoped to a mailbox.
-  input:
-    subject: string
-    to: string
-    body: string
-    mailbox: Ref<Mailbox>
-    replyTo?: Ref<Message>
-  output: { newMessageDXN: string }
-  effects: [echo:write]
-```
-
-```mdl
-op draftEmailAndOpen
-  desc: |
-    draftEmail then, for a compose draft, opens it in EditMessage as a plank beside the mailbox view
-    named by contextId (UI convenience wrapper). Reply/forward drafts are not navigated to — they
-    render inline in the conversation they join.
-  input:
-    db: Database
-    mode?: compose | reply | reply-all | forward
-    message?: Message
-    subject?: string
-    body?: string
-    mailbox?: Ref<Mailbox>
-    contextId?: string
-  effects: [echo:write]
-```
-
-```mdl
-op generateReply
-  desc: |
-    Drafts a reply to a message, grounded on the thread (same normalized subject from the mailbox
-    feed) and on facts the space fact store knows about the participants. Fact lookup is advisory
-    (degrades to none); the LLM is instructed to hedge non-certain facts and invent nothing.
-  input:
-    mailbox: Ref<Mailbox>
-    message: Message
-  output: { subject: string, body: string }
-  effects: [echo:read, feed:read, factstore:read, llm]
-  requires: [FactStore, AiService]
-```
-
-```mdl
-op readEmail
-  key: org.dxos.operation.inbox.readEmail
-  desc: Reads recent messages from a mailbox as a single text payload.
-  input:
-    mailbox: Ref<Mailbox>
-    skip?: number
-    limit?: number
-  output: { content: string }
-  effects: [echo:read, feed:read]
-```
-
-```mdl
-op renameFilter
-  desc: |
-    Opens the rename popover for a saved filter (prefilled with its current name); the actual rename
-    is applied by the popover's own callback, not synchronously by this op.
-  input:
-    mailbox: Mailbox
-    name: string                # current filter name — both the lookup key and the popover's prefill
-    caller?: string              # anchor id for the popover
-  effects: [echo:write]
-```
-
-```mdl
-op classifyEmail
-  desc: |
-    Picks a tag for a message from the database's tag set (LLM chooses by label match) and applies
-    it via a feed relation.
-    KNOWN GAP: does not gate on `extractors.threshold` — contradicts req F-6.2 below; always applies
-    whatever tag the LLM names, or fails if none matches. Needs a product decision: add the gate back,
-    or revise F-6.2 to match current behavior.
-  input:
-    message: Message
-  output: { tagId: string, tagLabel: string } | void
-  effects: [echo:read, echo:write, feed:write]
-  requires: [AiService]
-```
-
-```mdl
-op googleMailSync
-  desc: |
-    Pulls messages from Gmail into the mailbox feed via the binding's cursor.
-    KNOWN GAP: no after/before/direction override exists — this and F-3.5's "can be overridden to
-    backfill older ranges" describe an unimplemented capability. Walk direction is inferred from the
-    cursor (no cursor → backward/newest-first initial pull; cursor → forward incremental) but cannot
-    currently be overridden.
-  input:
-    binding: Ref<SyncBinding>   # connection owns credentials; target is the Mailbox
-    userId?: string
-    label?: string              # Gmail label; schema annotation says "defaults to inbox" but the
-                                 # handler's actual default is 'all' — the two disagree
+op GoogleMailSync
+  desc: Sync Gmail into the mailbox feed via the shared harness. Idempotent; resumable; capped.
+  input: { binding: Ref<Cursor> }
   output: { newMessages: number }
-  effects: [echo:write, feed:write, http]
 ```
 
 ```mdl
-op jmapSync
-  desc: |
-    Pulls messages from a JMAP server (e.g. Fastmail) into the mailbox feed. JMAP mailbox folders map
-    to provider Tag objects. Same no-override cursor model as googleMailSync (see its KNOWN GAP note).
-  input:
-    binding: Ref<SyncBinding>
+op JmapSync
+  desc: Same contract for JMAP (Fastmail).
+  input: { binding: Ref<Cursor> }
   output: { newMessages: number }
-  effects: [echo:write, feed:write, http]
 ```
 
 ```mdl
-op materializeTarget
-  desc: |
-    Eagerly creates the local Mailbox (materializeGmailTarget / materializeJmapTarget) or Calendar
-    (materializeCalendarTarget) bound to a Connection, so a SyncBinding relation can be created
-    (relations require both endpoints to exist). Single-target connectors create a fresh target,
-    seeding its name from the connection's account.
-  input:
-    connection: Ref<Connection>
-    remoteTarget?: string        # remote id for a multi-target connector's user-selected target
-  output: { target: Ref<Mailbox | Calendar> }
-  effects: [echo:write]
-```
-
-```mdl
-op googleCalendarSync
-  desc: Pulls events from Google Calendar into the calendar feed (stamps a google.com foreign key on each).
-  input:
-    binding: Ref<SyncBinding>
-    googleCalendarId?: string
-    pageSize?: number
-    syncBackDays?: number
-    syncForwardDays?: number
+op GoogleCalendarSync
+  desc: Sync Google Calendar events into the calendar feed (windowed; separate from the mail harness).
+  input: { binding: Ref<Cursor> }
   output: { newEvents: number }
-  effects: [echo:write, feed:write, http]
 ```
 
 ```mdl
-op createGoogleCalendarEvent
-  desc: Creates a single event on Google Calendar (write counterpart to googleCalendarSync). Requires the calendar.events scope.
-  input:
-    event: Event
-    googleCalendarId: string
-    connection: Ref<Connection>
-  output: { id: string }        # remote Google event id
-  effects: [http]
-```
-
-```mdl
-op syncDraftEvents
-  desc: |
-    Pushes draft (local, unsynced) events for a Calendar to Google Calendar (the email draft→send
-    analogue). For each: createGoogleCalendarEvent, stamp the google.com foreign key, then (after a
-    feed re-sync) remove the local draft so the synced feed copy is the source of truth. When `event`
-    is given, only that one is synced. NOTE follow-up: re-anchor an event's note relation onto the
-    synced copy before deleting the local draft.
-  input:
-    calendar: Calendar
-    event?: Event               # when omitted, syncs all draft events on the Calendar
-  output: { synced: number }
-  effects: [echo:write, feed:write, http]
-```
-
-```mdl
-op deleteEvent
-  desc: |
-    Deletes a calendar event. A draft (local) event is removed from the db; a synced event is
-    deleted on Google Calendar by its foreign key and removed from the calendar feed.
-  input:
-    calendar: Calendar
-    event: Event
-  output: { deleted: boolean }
-  effects: [echo:write, feed:write, http]
-```
-
-```mdl
-op deleteEmail
-  desc: |
-    Deletes an email. A draft (local) message is removed from the db. A synced message is removed by
-    foreign key and dropped from the mailbox feed — Gmail-sourced via the Gmail trash (requires
-    gmail.modify scope), JMAP-sourced via trashJmapMessage.
-  input:
-    mailbox: Mailbox
-    message: Message
-  output: { deleted: boolean }
-  effects: [echo:write, feed:write, http]
-```
-
-```mdl
-op googleContactsSync
-  desc: Pulls contacts from a Google contact group into Person objects.
-  input:
-    binding: Ref<SyncBinding>   # connection owns credentials; remoteId is the contact group
-    pageSize?: number
+op GoogleContactsSync
+  desc: Sync a Google contact group into space Person objects (upserts).
   output: { upserted: number }
-  effects: [echo:write, http]
+```
+
+`MaterializeGmailTarget` / `MaterializeJmapTarget` / `MaterializeCalendarTarget` create the local
+Mailbox/Calendar before a cursor exists; `GetGoogleCalendars` / `GetGoogleContactGroups` discover
+remote targets. All are ConnectorSpec plumbing.
+
+### Compose & send
+
+```mdl
+op DraftEmail
+  desc: Agent-facing draft creation (subject/to/body/replyTo).
+  output: { newMessageDXN: DXN }
 ```
 
 ```mdl
-op gmailSend
-  desc: Sends a Message via Gmail using connection credentials.
-  input:
-    message: Message
-    connection: Ref<Connection>
-    userId?: string
-  output: { id: string, threadId: string, sentTag: { source: string, id: string, label: string } }
-  effects: [http]
+op DraftEmailAndOpen
+  desc: Create a draft (compose | reply | reply-all | forward) and open it as a plank.
 ```
 
 ```mdl
-op jmapSend
-  desc: Sends a Message via a JMAP server using connection credentials.
-  input:
-    message: Message
-    connection: Ref<Connection>
-  output: { id: string, threadId: string, sentTag: { source: string, id: string, label: string } }
-  effects: [http]
+op GmailSend
+  desc: Send a draft via Gmail; JmapSend is the JMAP counterpart. Routed by connector id.
+  input: MailSend.Input
+  output: MailSend.Output
 ```
 
 ```mdl
-op extractMessage
+op CreateGoogleCalendarEvent
+  desc: Write counterpart of calendar sync — creates the remote event for a saved draft event.
+```
+
+### Extract, classify, enrich
+
+```mdl
+op ExtractMessage
+  desc: Dispatch one message to the best-matching ObjectExtractor; persist results + ExtractedFrom provenance.
+```
+
+```mdl
+op EnrichMailbox
   desc: |
-    Dispatcher that runs a configured AI extractor over a message and creates/updates structured
-    objects, recording provenance via Mailbox.recordExtraction + an ExtractedFrom relation. Delegates
-    to per-extractor ops: extractContactFromMessage (Person), extractSummaryFromMessage (a summary
-    Markdown.Document), and others registered as ObjectExtractors.
-  input:
-    source: Message             # live object or immutable feed snapshot
-    extractorId?: string        # specific extractor; default runs all enabled
-  output:
-    extractorId: string
-    created: number
-    updated: number
-    summary?: string
-  effects: [echo:write]
-  requires: [AiService]
+    Cascade orchestrator over tiers deterministic → classify → summarize → analyze (default:
+    first three). Idempotent; per-stage results; cancellable via the #enrich monitor.
 ```
 
 ```mdl
-op extractMailbox
-  desc: Runs a selected extractor over every message in a mailbox feed (bounded parallelism).
-  input:
-    mailbox: Ref<Mailbox>
-    extractorId: string
-    concurrency?: number        # default 5
-  output:
-    extractorId: string
-    processed: number
-    succeeded: number
-    failed: number
-    created: number
-    updated: number
-  effects: [echo:write]
-  requires: [AiService]
+op ProcessMailbox
+  desc: Cursored processing pipeline over the feed (durable consumer cursor); ResetFeedCursor rewinds it.
 ```
 
-```mdl
-op analyzeMailbox
-  desc: |
-    Iterates the mailbox feed and extracts RDF facts from each message into the shared per-space
-    FactStore, tracking its own FeedCursors high-water key so re-runs skip processed messages. Facts
-    are committed page-atomically. Rendered by MailboxFactsCompanion.
-  input:
-    mailbox: Ref<Mailbox>
-    pageSize?: number           # messages per fact-store commit (default 10)
-    model?: string              # extraction model DXN; defaults to the edge Claude model
-    provider?: string           # AI provider id (e.g. ollama) for local extraction
-    strict?: boolean            # strict structured output; false for weak local models
-  output:
-    processed: number
-    facts: number
-  effects: [echo:read, feed:read]
-  requires: [AiService, FactStore, FeedCursors]
-```
+Constituents (each idempotent, capped, individually invocable): `ClassifyEmail` /
+`ClassifyMailbox` (AI tagging, spam + category, known-Person short-circuit), `SummarizeMailbox`
+(per-contact summaries into the annotations feed), `AnalyzeMailbox` (RDF facts into FactStore),
+`ExtractCorrespondents` (Person/Organization for people the user wrote to),
+`ExtractSubscriptions` (List-Unsubscribe scan → mailbox.subscriptions),
+`ExtractContactFromMessage` / `ExtractSummaryFromMessage` (pure extract, no writes),
+`CreateProjectFromMessage` (thread → Project with LLM summary), `GenerateReply` (grounded reply
+draft; handled in plugin-brain). `ExtractContact` and `ExtractMailbox` are deprecated.
+
+### Misc & navigation
 
 ```mdl
-op extractContact
-  desc: Extracts a Person object from an Actor referenced in a message.
-  input:
-    db: Database
-    actor: Actor
-  effects: [echo:write]
+op ReadEmail
+  desc: Agent tool — read mailbox content as text (skip/limit).
 ```
+
+`AddMailbox` (create-object flow), `RenameFilter` (saved-filter node action),
+`ResetFeedCursor` (rewinds a named consumer's durable cursor over the feed),
+`UnsubscribeSender` (adds a skip-sender filter and fires the RFC 8058 one-click endpoint).
+
+## Sync
+
+`runMailSync` (subpath export `@dxos/plugin-inbox/sync`, no React) is the provider-agnostic
+harness: it loads binding → mailbox → feed → tag index, resolves date windows and delta tokens
+from the durable `Cursor`, streams provider pages through dedup → cap → decode, merges provider
+reconciles (retag/delete by foreign id), runs the shared email tail (attachments → contacts →
+draft reconciliation → stats → commit units), commits in groups, reports progress (`#sync`
+monitor), and schedules itself again (`runAgain`) while capped or behind delta. Scheduling policy
+is domain-owned: 10-minute cron, auto-sync on, remote (EDGE) on. Provider `MailSyncProvider`
+layers live in plugin-google and plugin-jmap; calendar/contacts sync are separate plugin-google
+handlers.
+
+Routine templates (`automation-templates.ts`): hourly `processMailbox` and daily `enrichMailbox`
+runnables, disabled by default, surfaced in the automations companion.
+
+## Skills
+
+- **Inbox** (`org.dxos.skill.inbox`, agent-enableable; attached to Mailbox via SkillsAnnotation) —
+  mailbox management: ClassifyEmail, DraftEmail, ReadEmail, GoogleMailSync, ExtractMessage.
+- **Inbox Send** (`org.dxos.skill.inboxSend`) — send-only companion: GmailSend.
+- **Calendar** (`org.dxos.skill.calendar`; attached to Calendar) — GoogleCalendarSync.
 
 ## Features
 
 ```mdl
 feat F-1: Mailbox
-
-  req F-1.1: Mailbox stores messages in an append-only Feed; never mutates past entries.
-  req F-1.2: Messages render newest-first with sender, subject, snippet, and timestamp.
-  req F-1.3:
-    when: settings.conversations is true
-    then: list groups messages by conversation; shows most recent per thread
+  req F-1.1: Messages sync into an append-only feed; the article lists them paged and
+    thread-grouped, newest first, interactive during initial sync (no empty-state flash).
+  req F-1.2: Tags, stars, and read state live in the TagIndex sidecar keyed by canonical
+    SystemTags; providers map their vocabularies onto them.
+  req F-1.3: System-tag folders (inbox, all-mail, sent, drafts) and saved user filters are
+    filter nodes over the same mailbox subject.
 ```
 
 ```mdl
-feat F-2: Calendar
-
-  req F-2.1: Calendar stores synced events in an append-only Feed.
-  req F-2.2: Day and week views render events ordered by start time.
-  req F-2.3: CalendarArticle overlays synced (feed) and draft (local) events together on the grid and list.
+feat F-2: Reading chain
+  req F-2.1: Opening a message from the mailbox reuses the message-level plank (deck chain);
+    meta/ctrl-click opens a free plank instead.
+  req F-2.2: Message and event nodes resolve deep links but stay hidden in the nav tree.
 ```
 
 ```mdl
-feat F-3: Provider Sync
-
-  req F-3.1:
-    when: user adds a Google Connection with mail scope and a SyncBinding to a Mailbox
-    then: op:googleMailSync runs and populates the mailbox feed
-
-  req F-3.2:
-    when: user adds a Google Connection with calendar scope
-    then: op:googleCalendarSync runs and populates the calendar feed
-
-  req F-3.3:
-    when: user adds a Google Connection with contacts scope
-    then: op:googleContactsSync upserts Person objects into the space
-
-  req F-3.4:
-    when: user adds a JMAP Connection (e.g. Fastmail) and a SyncBinding to a Mailbox
-    then: op:jmapSync runs and populates the mailbox feed
-
-  req F-3.5: Subsequent syncs advance the binding cursor; the walk direction is inferred (no cursor → backward initial pull; cursor → forward incremental) and can be overridden to backfill older ranges.
-
-  req F-3.6: Provider folders/labels are mirrored as Tag objects carrying a provider foreign key (Gmail label / JMAP mailbox).
+feat F-3: Provider sync
+  req F-3.1: Sync is idempotent, resumable, capped per run, and cancellable; progress reports
+    via the #sync monitor and the mailbox statusbar.
+  req F-3.2: A provider is a MailSyncProvider layer; adding one requires no harness changes.
+  req F-3.3: Sync runs on EDGE (workerd entry) on a 10-minute cron when enabled.
 ```
 
 ```mdl
-feat F-4: Compose & Send
-
-  req F-4.1:
-    when: user clicks compose / reply / forward
-    then: op:draftEmail (or draftEmailAndOpen) creates a DraftMessage; EditMessage opens for editing
-
-  req F-4.2:
-    when: user sends a draft
-    then: op:gmailSend or op:jmapSend dispatches via the linked Connection
-    errors: [SendFailed, NoConnection]
-
-  req F-4.3:
-    when: user clicks delete on a message
-    then: op:deleteEmail removes a draft locally, or trashes a synced message on Gmail and drops the feed copy
+feat F-4: Compose & send
+  req F-4.1: Drafts are local DraftMessages scoped to the mailbox; send routes through the
+    provider's MailSendOperation and the sent copy reconciles on next sync.
+  req F-4.2: AI reply drafting is grounded on the thread and extracted facts.
 ```
 
 ```mdl
-feat F-8: Draft Events & Two-way Calendar
-
-  req F-8.1:
-    when: user clicks "Create event" on the calendar toolbar
-    then: a draft Event is created (db, parented to the Calendar) and focused for editing
-
-  req F-8.2:
-    when: an event is draft
-    then: EventArticle's header exposes editable title, start/end and body, and the toolbar shows Save
-
-  req F-8.2a:
-    when: the user toggles "All day" on a draft
-    then: the event is date-only (Event.allDay); it round-trips to Google start.date/end.date (end exclusive)
-
-  req F-8.2b:
-    when: the user picks a duration preset instead of an explicit end
-    then: endDate = startDate + duration; moving the start preserves the duration
-
-  req F-8.3: User may create multiple draft events offline before saving (e.g. while disconnected).
-
-  req F-8.4:
-    when: user clicks Save (per-event in EventArticle, or "Save events to calendar" on the calendar toolbar)
-    then: op:syncDraftEvents creates the event(s) on Google Calendar and reconciles into the feed
-    errors: [NoConnection, NoCalendarWriteScope]
-
-  req F-8.5:
-    when: user clicks delete on a draft event
-    then: op:deleteEvent removes it locally; a synced event is deleted on Google and dropped from the feed
+feat F-5: Calendar & draft events
+  req F-5.1: Events sync into the calendar feed; draft events are local Events parented to the
+    calendar and become remote events on save.
 ```
 
 ```mdl
-feat F-5: Filters and Labels
-
-  req F-5.1: User can save a named filter expression on the mailbox.
-  req F-5.2:
-    when: a saved filter is selected
-    then: message list shows only matching messages
-  req F-5.3:
-    when: user renames a saved filter
-    then: op:renameFilter updates the filter name in place
+feat F-6: Extraction & enrichment
+  req F-6.1: Extractors are contributed capabilities; extraction records ExtractedFrom provenance.
+  req F-6.2: The enrich cascade (deterministic → classify → summarize → analyze) is idempotent
+    and cancellable; each tier is individually invocable and capped.
+  req F-6.3: The processing pipeline advances a durable cursor and can be reset.
 ```
 
 ```mdl
-feat F-6: AI Assistance
-
-  req F-6.1: Plugin contributes an Inbox skill with read / draft / classify / sync / extract tools.
-  req F-6.2:
-    when: agent calls op:classifyEmail on a message
-    then: best-matching tag is applied; no tag applied below extractors.threshold
-
-  req F-6.3:
-    when: agent calls op:extractMessage on a confirmation email
-    then: structured objects (e.g. Trip segments) are created or updated
-
-  req F-6.4:
-    when: the user clicks "AI Reply" in the message toolbar
-    then: op:generateReply drafts a grounded reply body and a prefilled reply draft opens
-
-  req F-6.5:
-    when: the user clicks "Generate" in the reply-draft toolbar
-    then: op:generateReply fills the open draft's body from the message it replies to
+feat F-7: Subscriptions
+  req F-7.1: Bulk-mail senders are derived from the feed (List-Unsubscribe / body links) and
+    listed for one-click unsubscribe + sender filtering.
 ```
 
 ```mdl
-feat F-7: Related Content
-
-  req F-7.1:
-    when: a message is selected
-    then: related contacts, events, and thread messages are shown alongside the reading pane
-
-  req F-7.2:
-    when: user clicks a related contact
-    then: navigation opens the Person object
-```
-
-```mdl
-feat F-9: Fact Enrichment
-
-  req F-9.1:
-    when: op:analyzeMailbox runs over a mailbox feed
-    then: RDF facts are extracted per message into the shared per-space FactStore
-
-  req F-9.2: op:analyzeMailbox advances a FeedCursors high-water key so re-runs skip already-processed messages.
-
-  req F-9.3:
-    when: a Mailbox is open
-    then: MailboxFactsCompanion renders the mailbox's extracted facts via FactViewer
-
-  req F-9.4: |
-    FactStore facts are in-memory (reset on reload); FeedCursors' cursor is durable (survives reload)
-    — see FeedCursors' KNOWN GAP note for the resulting skew and the open product decision. Durable
-    worker-hosted fact storage is a planned follow-up.
-```
-
-```mdl
-feat F-10: Starring & Reading Preferences
-
-  req F-10.1:
-    when: user stars a message or event
-    then: the well-known "starred" Tag is applied via the container's TagIndex (toggles off on re-star)
-
-  req F-10.2:
-    when: settings.loadRemoteImages is false (default)
-    then: remote images in a message body are shown as plain links, not fetched (anti-tracking)
-```
-
-```mdl
-feat F-11: Responsiveness & Sync Integrity
-
-  desc: |
-    Perceived performance and correctness guarantees for the mailbox experience. Latency budgets are
-    p95, measured from user action (or surface mount) to first meaningful paint of the requested
-    content, and must hold WHILE a background sync is running. Each budget has two levels: a target
-    (the number to design for) and a ceiling (the max acceptable). A scenario fails above the ceiling,
-    and is not yet meeting goal until it reaches the target.
-
-  req F-11.1:
-    when: an initial sync is running (first-time or backfill)
-    then: the inbox remains interactive — the user can scroll, select messages, open threads, compose, and change filters; sync progress is non-blocking
-
-  req F-11.2:
-    when: a previously set-up mailbox is (re)loaded and its data query has not yet resolved
-    then: the mailbox does not render an empty state; it shows already-persisted/cached messages (or a skeleton over them), never a false "no messages" view
-
-  req F-11.3:
-    when: a mailbox is opened
-    then: the first page of messages is painted within 400ms (p95 ceiling); target 100ms
-
-  req F-11.4:
-    when: an email thread is selected
-    then: the thread renders in the companion within 400ms (p95 ceiling), including while a sync is running; target 100ms
-
-  req F-11.5:
-    when: mail sync runs (any provider, any number of concurrent/overlapping runs)
-    then: it is idempotent — a message already in the mailbox feed is never duplicated
-    note: |
-      Intended implementation: run all sync on edge with a lock around the mailbox so concurrent
-      syncs serialize on a single writer. That mechanism is OUT OF SCOPE for the current session;
-      this requirement records the guarantee the design must ultimately satisfy. Feed-level dedup by
-      foreign key / message id is the interim backstop.
+feat F-8: Related content
+  req F-8.1: People and organizations surface their related messages, events, and contacts via
+    Related-role surfaces.
 ```
 
 ## Acceptance
 
-Each scenario is tagged with the harness tier(s) that enforce it (`unit`, `storybook`,
-`agent-e2e`, `browser-e2e`, `bench`, `live`); enforcing tests carry the `T-#` id in their name.
-See `docs/superpowers/plans/2026-07-12-inbox-test-plan.md` for the tier definitions and the
-spec↔suite sync convention.
-
 ```mdl
 test T-1: Sync Gmail into mailbox
-  given: a Mailbox with a SyncBinding to a Google Connection with valid credentials
-  when: op:googleMailSync runs
+  given: a mailbox bound to a Gmail connection
+  when: sync runs (locally or on EDGE)
   then:
-    - newMessages > 0 on first run
-    - Mailbox.feed contains Message entries ordered by received-at
-  tags: [unit, live]
+    - new messages appear in the feed, deduped and tagged with canonical system tags
+    - re-running sync adds nothing (idempotent)
 ```
 
 ```mdl
 test T-2: Save and apply filter
-  given: Mailbox open with > 1 messages, including one from alice@example.com
-  when: user saves filter "from:alice@example.com" and selects it
+  given: a mailbox with tagged messages
+  when: the user types a filter and saves it
   then:
-    - message list shows only messages matching the filter
-  tags: [unit, browser-e2e]
+    - a saved-filter node appears under the mailbox and reopens the filtered view
 ```
 
 ```mdl
-test T-3: Draft and send reply
-  given: a Message is selected in the mailbox
-  when: user clicks reply, edits the body, and sends
+test T-3: Draft, send, reconcile
+  given: an open message
+  when: the user replies and sends
   then:
-    - op:draftEmail creates a DraftMessage with replyTo set
-    - op:gmailSend (or op:jmapSend) dispatches via the linked Connection
-    - sent message appears in the mailbox feed on next sync
-  tags: [unit, live]
+    - the draft leaves Drafts; the sent copy appears via sync; no duplicates
 ```
 
 ```mdl
-test T-4: Classify message
-  given: a Message and a tag set with confidence threshold 0.7
-  when: op:classifyEmail runs
+test T-4: Reading chain
+  given: a mailbox plank with messages
+  when: the user opens message A then message B
   then:
-    - if best tag confidence ≥ 0.7, tag applied
-    - otherwise no tag applied
-  tags: [unit, agent-e2e]
+    - one message plank is reused; meta-click opens a second plank
 ```
 
 ```mdl
-test T-5: Extract confirmation
-  given: a flight booking confirmation email
-  when: op:extractMessage runs with the trip extractor enabled
+test T-5: Enrich cascade
+  given: a synced mailbox
+  when: enrich runs (or its routine fires)
   then:
-    - Trip segment objects created or updated
-    - extractMessage output reports created/updated counts
-  tags: [unit]
+    - classifications, summaries, and facts appear; re-running is a no-op; stop cancels cleanly
 ```
 
 ```mdl
-test T-6: Create and save a draft event
-  given: a Calendar linked to a Google Connection with calendar.events scope
-  when: user clicks "Create event", edits the title and date, then clicks Save
+test T-6: Draft event round-trip
+  given: a calendar bound to Google
+  when: the user creates and saves a draft event
   then:
-    - a draft Event (parented to the Calendar, no google.com foreign key) is created and focused
-    - it is overlaid on the calendar grid and event list before saving
-    - op:syncDraftEvents calls op:createGoogleCalendarEvent and the event lands in the calendar feed
-    - the local draft Event is removed after reconciliation
-  tags: [live, browser-e2e]
+    - the remote event is created and the next sync reconciles the local draft
 ```
 
 ```mdl
-test T-7: Delete event and email
-  given: a synced Event and a synced Message
-  when: user clicks delete in EventArticle and in MessageArticle
+test T-7: Interactive during initial sync
+  given: an empty mailbox starting its first sync
   then:
-    - op:deleteEvent deletes the event on Google Calendar and removes it from the calendar feed
-    - op:deleteEmail trashes the message on Gmail and removes it from the mailbox feed
-    - a draft event / draft message would instead be removed locally only
-  tags: [unit, live]
+    - the article stays interactive and never flashes an empty state once messages exist
 ```
 
 ```mdl
-test T-8: Sync JMAP into mailbox
-  given: a Mailbox with a SyncBinding to a JMAP Connection (e.g. Fastmail) with valid credentials
-  when: op:jmapSync runs
+test T-8: Unsubscribe
+  given: a bulk-mail sender in Subscriptions
+  when: the user unsubscribes
   then:
-    - newMessages > 0 on first run
-    - JMAP mailbox folders are represented as provider Tag objects
-  tags: [unit, live]
+    - the RFC 8058 endpoint fires and a sender filter hides existing mail
 ```
 
-```mdl
-test T-9: Enrich mailbox into fact store
-  given: a Mailbox feed with N messages and an available AiService
-  when: op:analyzeMailbox runs, then runs a second time in the same session
-  then:
-    - first run: facts > 0 in the FactStore; processed === N
-    - second run: processed === 0 (FeedCursors high-water skip); fact count unchanged
-    - MailboxFactsCompanion renders the extracted facts
-  tags: [unit, storybook]
-```
-
-```mdl
-test T-10: Interactive during initial sync
-  given: a set-up Mailbox with an initial sync in progress
-  when: the user scrolls, selects a message, opens a thread, and changes the filter
-  then:
-    - every interaction responds; no interaction is blocked waiting on sync
-  tags: [performance, browser-e2e]
-```
-
-```mdl
-test T-11: No empty state on reload
-  given: a Mailbox previously synced with persisted messages
-  when: the mailbox is reloaded and its data query has not yet resolved
-  then:
-    - the persisted messages (or a skeleton over them) are shown
-    - a "no messages" empty state is never shown while the query is pending
-  tags: [performance, storybook, browser-e2e]
-```
-
-```mdl
-test T-12: Latency budgets
-  given: a set-up Mailbox (measured at p95, including while a sync is running)
-  when: the mailbox is opened, then an email thread is selected
-  then:
-    - first page of messages painted within 400ms (target 100ms)
-    - selected thread rendered in the companion within 400ms (target 100ms)
-  tags: [performance, bench, browser-e2e]
-```
-
-```mdl
-test T-13: Idempotent sync
-  given: a Mailbox with messages already in its feed
-  when: sync runs again (and when two syncs overlap)
-  then:
-    - no message is duplicated in the mailbox feed
-  tags: [correctness, unit, live]
-```
+---
 
 ## QA
 
@@ -945,7 +707,7 @@ invocable operation, an agent binding (`invoke`). Report failures by flow and st
 flow QA-1: Add a mailbox, compose a draft, read it back
   desc: The core inbox round-trip — add a Mailbox, compose a local draft into it, then read the
     feed back. plugin-inbox is ON by default; no enabling step is required.
-  actors: agent
+  actors: both
   covers: [F-1.1, F-1.2, F-4.1]
   status: unverified
   given:
@@ -956,25 +718,40 @@ flow QA-1: Add a mailbox, compose a draft, read it back
   test:
     - name: Add the mailbox
       do: In the navtree, click + on a collection and choose Mailbox. Name it "QA Mailbox".
-      invoke: [op:addMailbox] { object: { name: "QA Mailbox" }, target: $given.collection }
-      capture: created
       expect: a Mailbox named "QA Mailbox" appears under the collection, with an empty message list
-      assert: return !!$created.object
+      note: |
+        NO `invoke` — `SpaceCapabilities.CreateObjectEntry` calls `Mailbox.make(props)` (which
+        provisions the backing feed/tags/filters) before invoking `[op:addMailbox]`; passing a
+        plain `{ name }` literal straight to `[op:addMailbox]` skips that factory and produces an
+        object `draftEmail` cannot use (`Mailbox.make`'s feed/tags/filters are absent). The agent
+        path re-resolves the mailbox from ECHO in each later step instead of capturing it here.
     - name: Compose a draft into it
       do: Click Compose from the mailbox toolbar, address it to "qa@example.com", subject "QA Draft", and a short body.
-      invoke: [op:draftEmail] { subject: "QA Draft", to: "qa@example.com", body: "A QA round-trip.", mailbox: $created.object }
+      invoke: |
+        org.dxos.operation.inbox.draftEmail {
+          subject: "QA Draft", to: "qa@example.com", body: "A QA round-trip.",
+          mailbox: (await space.db.query(dxos.Filter.type(Mailbox)).run()).objects.find((m) => m.name === 'QA Mailbox')
+        }
       capture: drafted
       expect: "QA Draft" appears at the top of the message list (newest-first) as a draft
       assert: return !!$drafted.newMessageDXN
     - name: Read the mailbox back
       do: Select "QA Draft" in the message list and confirm the reading pane shows the body.
-      invoke: [op:readEmail] { mailbox: $created.object, limit: 5 }
+      invoke: |
+        org.dxos.operation.inbox.readEmail {
+          mailbox: (await space.db.query(dxos.Filter.type(Mailbox)).run()).objects.find((m) => m.name === 'QA Mailbox'),
+          limit: 5
+        }
       expect: the returned payload includes the "QA Draft" subject and its body text
       assert: return $result.content.includes('QA Draft') && $result.content.includes('A QA round-trip.');
   after:
     - name: Delete the mailbox
       do: Right-click "QA Mailbox" in the navtree and choose Delete.
-      invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.collection }
+      invoke: |
+        org.dxos.operation.space.removeObjects {
+          objects: [(await space.db.query(dxos.Filter.type(Mailbox)).run()).objects.find((m) => m.name === 'QA Mailbox') ?? (() => { throw new Error("Mailbox QA Mailbox not found — refusing to remove an unrelated object"); })()],
+          target: $given.collection
+        }
       expect: the row leaves the navtree
 ```
 
@@ -984,7 +761,7 @@ flow QA-2: Create a draft calendar event and save it to Google
     op:syncDraftEvents makes a real Google Calendar API call, which no fixture in this repo can
     stand up. Steps that only touch local ECHO state still run.
   actors: human
-  covers: [F-2.1, F-8.1, F-8.4]
+  covers: [F-5.1]
   status: blocked
   given:
     - an identity exists
@@ -1020,6 +797,9 @@ flow QA-2: Create a draft calendar event and save it to Google
 ---
 
 ## Appendix: Extension Definitions
+
+Standard-dialect terms used by this document. App-dialect terms (`node`, `deck`, `plank`,
+`companion`, `surface`, `menu`) are defined in `packages/reflect/deus/lang/app.mdl`.
 
 ```mdl
 ext type
@@ -1081,7 +861,7 @@ ext service
 
 ```mdl
 ext op
-  uri: org.dxos.mdl.op@1.0
+  uri: org.dxos.mdl.op@1.1
   desc: |
     A named operation with typed inputs, outputs, and declared errors.
     Pure ops have no effects or requires. Effectful ops declare both.

@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
+import { deepMapValues } from '@dxos/util';
 
 import { SpaceOperation } from '#types';
 
@@ -17,19 +18,18 @@ const handler: Operation.WithHandler<typeof SpaceOperation.UpdateObject> = Space
       const resolved = yield* Database.load(object);
       Obj.update(resolved, (resolved) => {
         for (const [key, value] of Object.entries(properties)) {
-          // `setValue` rather than an index write: the object is only known to be `Obj.Unknown`,
-          // which declares no arbitrary properties. A patch arrives in wire form, so a reference is
-          // an envelope rather than a live `Ref`.
-          Obj.setValue(
-            resolved,
-            [key],
-            EncodedReference.isEncodedReference(value) ? db.makeRef(EncodedReference.toURI(value)) : value,
-          );
+          Obj.setValue(resolved, [key], wireValueToRefs(db, value));
         }
       });
       return { object: resolved };
     }),
   ),
 );
+
+/** A patch arrives in wire form: ref envelopes at any depth become live refs. */
+const wireValueToRefs = (db: Database.Database, value: unknown): unknown =>
+  deepMapValues(value, (value, recurse) =>
+    EncodedReference.isEncodedReference(value) ? db.makeRef(EncodedReference.toURI(value)) : recurse(value),
+  );
 
 export default handler;

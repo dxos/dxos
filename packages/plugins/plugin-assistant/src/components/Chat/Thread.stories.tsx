@@ -90,7 +90,7 @@ const DefaultStory = ({ generator = [], delay = 0, wait, remountable, viewType }
         }
 
         setDone(true);
-      }).pipe(Effect.provide(Layer.mergeAll(Database.layer(space.db), Feed.ContextFeedService.layer(feed)))),
+      }).pipe(Effect.provide(Layer.mergeAll(Database.layer(space.db), Feed.layer(feed)))),
     );
 
     return () => {
@@ -131,7 +131,7 @@ const RemountableThread = (props: { messages: MessageType.Message[]; viewType?: 
 };
 
 const meta = {
-  title: 'plugins/plugin-assistant/components/ChatThread',
+  title: 'plugins/plugin-assistant/components/Thread',
   render: DefaultStory,
   decorators: [
     withTheme(),
@@ -304,18 +304,19 @@ export const Remount: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
+    // The panel titles a call with the tool's own name; it used to prefix it with "Calling".
     // Streaming path: the tool rows render as the messages land.
-    await expect(canvas.findByText(/Calling search/, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    await expect(canvas.findByText(/Calling create/, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await expect(canvas.findByText(/^search$/, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await expect(canvas.findByText(/^create$/, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
 
     // Away and back.
     const toggle = await canvas.findByTestId('story.toggleMount');
     await userEvent.click(toggle);
-    await waitFor(() => expect(canvas.queryByText(/Calling search/)).toBeNull());
+    await waitFor(() => expect(canvas.queryByText(/^search$/)).toBeNull());
     await userEvent.click(toggle);
 
     // Replay path: same rows, rebuilt from the messages rather than from streaming updates.
-    await expect(canvas.findByText(/Calling search/, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    await expect(canvas.findByText(/Calling create/, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await expect(canvas.findByText(/^search$/, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await expect(canvas.findByText(/^create$/, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
   },
 };

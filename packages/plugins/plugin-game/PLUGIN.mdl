@@ -304,7 +304,7 @@ flow QA-1: Create a game through the variant picker and render it
       note: |
         NO `invoke` for the same reason as the previous step — this whole creation gesture is
         human-only until `createGame` (or an equivalent) is exposed as an invocable operation.
-        Because nothing here is scriptable, the runner has no `$created` to thread forward; the
+        Because nothing here is scriptable, there is no captured result to thread forward; the
         tester notes the new Game's id manually for the `after` stage below.
     - name: Open the game and confirm dispatch
       do: Click the Game row in the navtree.

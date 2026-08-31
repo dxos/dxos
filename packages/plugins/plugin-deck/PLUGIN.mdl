@@ -787,14 +787,16 @@ flow QA-1: Open, resize, and close a second plank
       invoke: org.dxos.operation.space.addObject { object: $created.object, target: $given.collection }
       expect: "QA Deck Doc 2" appears as a row under the collection
     - name: Open it beside the first plank
-      do: Click "QA Deck Doc 2" in the navtree while holding no modifier.
-      invoke: [op:Open] { subject: ["root/$given.space.id/content/collections/$created.object.id"], disposition: "add", pivotId: $given.doc1.id }
+      do: Click "QA Deck Doc 2" in the navtree while holding Shift.
+      invoke: [op:Open] { subject: ["root/$given.space.id/content/collections/$created.object.id"], modifiers: { shift: true }, pivotId: $given.doc1.id }
       capture: opened
       expect: the deck now shows two planks, tiling side by side, "QA Deck Doc 2" alongside the first
       assert: return $opened.length > 0
       note: |
-        `disposition: add` (F-1.6, F-1.8) rather than the solo default — a solo open would replace
-        the first plank instead of growing the deck, which is not what a real click-with-add does.
+        No explicit `disposition` — the step exercises Shift forwarding (F-1.6, F-1.8): `open.ts`
+        reads `input.modifiers?.shift` and forces an add regardless of disposition, so leaving
+        disposition at its `solo` default and setting `modifiers: { shift: true }` is what actually
+        tests the shift-forces-add rule, not a hard-coded `disposition: "add"`.
     - name: Resize the tiling split
       do: Drag the hairline divider between the two planks.
       invoke: [op:UpdateTilingSize] { size: 40 }

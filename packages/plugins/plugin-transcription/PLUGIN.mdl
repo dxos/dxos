@@ -408,9 +408,13 @@ flow QA-2: Record, transcribe, and summarize a meeting
   status: blocked
   given:
     - an identity exists
-    - space: a space is open, with a Transcript open in TranscriptionArticle
+    - space: a space is open
+    - transcript: a Transcript open in TranscriptionArticle within that space
     - microphone permission is granted in the browser
     - the Whisper speech-recognition endpoint is reachable
+    - recordedContent: a canned transcript string to summarize when the recording steps below are
+      not run (they are `blocked` on hardware), so `summarizeTranscript` can still be exercised
+      standalone
   test:
     - name: Start recording
       do: Click the microphone toggle in the toolbar.

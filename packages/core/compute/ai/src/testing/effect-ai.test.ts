@@ -187,7 +187,7 @@ describe('LanguageModel', () => {
           }),
         );
       },
-      Effect.provide(AnthropicLanguageModel.model('claude-opus-4-6', { thinking: { type: 'adaptive' as any } })),
+      Effect.provide(AnthropicLanguageModel.model('claude-opus-4-6', { thinking: { type: 'adaptive' } })),
       Effect.provide(AnthropicLayer),
       TestHelpers.runIf(process.env.DX_ANTHROPIC_API_KEY),
     ),
@@ -252,7 +252,7 @@ describe('LanguageModel', () => {
         console.log(JSON.stringify(yield* chat.export, null, 2));
       },
       Effect.provide(CalculatorLayer),
-      Effect.provide(AnthropicLanguageModel.model('claude-opus-4-6', { thinking: { type: 'adaptive' as any } })),
+      Effect.provide(AnthropicLanguageModel.model('claude-opus-4-6', { thinking: { type: 'adaptive' } })),
       Effect.provide(AnthropicLayer),
       TestHelpers.runIf(process.env.DX_ANTHROPIC_API_KEY),
     ),

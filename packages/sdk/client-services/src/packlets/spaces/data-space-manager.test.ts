@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { asyncTimeout, latch, waitForCondition } from '@dxos/async';
+import { Trigger, asyncTimeout, latch, waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
 import {
   type CredentialsDocument,
@@ -13,6 +13,7 @@ import {
   getCredentialAssertion,
 } from '@dxos/credentials';
 import { type DatabaseDirectory, type SpaceRoot, createIdFromSpaceKey, isSpaceRoot } from '@dxos/echo-protocol';
+import { type EdgeHttpClient } from '@dxos/edge-client';
 import { writeMessages } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -160,6 +161,59 @@ describe('DataSpaceManager', () => {
     expect(space2.id).to.equal(await createIdFromSpaceKey(space1.key));
   });
 
+  test('an accepted space is still reported to edge after the invitation context is disposed', async () => {
+    const builder = new TestBuilder();
+
+    // Edge rejects a root whose documents have not replicated to it yet, so the report is retried.
+    // The invitation accept flow disposes its context as soon as `acceptSpace` returns, and a retry
+    // scheduled on that context would be cancelled — leaving the space on its control feed forever.
+    const attempts: string[] = [];
+    const reported = new Trigger<void>();
+    const edgeHttpClient = {
+      recordSpaceRoot: async (_ctx: Context, spaceId: string, body: { rootDocumentUrl: string }) => {
+        attempts.push(spaceId);
+        if (attempts.length === 1) {
+          throw new Error('not replicated to edge yet');
+        }
+        reported.wake();
+        return body;
+      },
+    } as unknown as EdgeHttpClient;
+
+    const peer1 = builder.createPeer({ dataSpaceProps: { automergeCredentials: true } });
+    await peer1.createIdentity();
+
+    const peer2 = builder.createPeer({ dataSpaceProps: { automergeCredentials: true }, edgeHttpClient });
+    await peer2.createIdentity();
+
+    await openAndClose(peer1.echoHost, peer1.dataSpaceManager, peer2.echoHost, peer2.dataSpaceManager);
+    await connectReplicators([peer1, peer2]);
+
+    const space1 = await peer1.dataSpaceManager.createSpace(new Context());
+    await space1.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
+
+    const memberCredential = await peer1.dataSpaceManager.admitMember({
+      spaceKey: space1.key,
+      identityKey: peer2.identity.identityKey,
+      role: SpaceMember.Role.ADMIN,
+    });
+    const assertion = getCredentialAssertion(memberCredential) as SpaceMemberAssertion;
+
+    // The context the invitation flow owns, disposed the moment the accept returns.
+    const invitationCtx = new Context();
+    const space2 = await peer2.dataSpaceManager.acceptSpace(invitationCtx, {
+      spaceKey: space1.key,
+      genesisFeedKey: space1.inner.genesisFeedKey,
+      spaceRootUrl: assertion.spaceRootUrl,
+    });
+    await peer2.dataSpaceManager.waitUntilSpaceReady(space2.key);
+    await invitationCtx.dispose();
+
+    // The retry has to outlive that disposal.
+    await reported.wait({ timeout: 5_000 });
+    expect(attempts.length).to.be.greaterThan(1);
+  });
+
   test('a legacy hypercore space migrates onto a space root document, keeping its id', async () => {
     const builder = new TestBuilder();
 
@@ -212,7 +266,7 @@ describe('DataSpaceManager', () => {
     const objectId = PublicKey.random().toHex();
     const objectUrl = (await peer.echoHost.createDoc({})).url;
     const before = await peer.echoHost.openSpaceRoot(new Context(), space.id);
-    before.handle.change((draft: DatabaseDirectory) => {
+    before.change((draft: DatabaseDirectory) => {
       draft.links ??= {};
       draft.links[objectId] = objectUrl;
     });

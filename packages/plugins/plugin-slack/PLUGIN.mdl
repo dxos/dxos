@@ -73,7 +73,7 @@ op GetSlackChannels
     without creating any local ECHO objects.  Returns one RemoteTarget per
     conversation for the integration UI's target-selection list.
   input:
-    integration: Ref<Integration>
+    connection: Ref<Connection>
   output: { targets: RemoteTarget[] }
   effects: [http]
   note: |
@@ -96,7 +96,7 @@ op SyncSlackChannel
     Updates the cursor after a successful pull so subsequent runs are
     incremental.
   input:
-    integration: Ref<Integration>
+    connection: Ref<Connection>
     channel?: Ref<Channel>          # optional: narrow to a single target
   output: { pulled: PullResult }
   effects: [http, echo:write]
@@ -325,16 +325,17 @@ flow QA-1: Connect a Slack workspace and sync a channel
         deterministic operation performs this, and the debug port cannot drive a third-party
         OAuth redirect. This step is human-only and cannot be scripted; per Execution Rule 9 the
         flow's status is `blocked`, not `failing`.
+      capture: connection
     - name: Discover channels
       do: In the Slack integration's target picker, open the conversation list.
-      invoke: org.dxos.operation.slack.getChannels { integration: $given.integration }
+      invoke: org.dxos.operation.slack.getChannels { connection: $connection.connection }
       capture: discovered
       expect: the list shows one row per Slack conversation reachable from the token, and no
         Channel objects exist in ECHO yet (F-2.2)
       assert: return Array.isArray($discovered.targets) && $discovered.targets.length > 0;
     - name: Select and sync a channel
       do: Select one conversation from the picker and confirm.
-      invoke: org.dxos.operation.slack.syncChannel { integration: $given.integration }
+      invoke: org.dxos.operation.slack.syncChannel { connection: $connection.connection }
       capture: synced
       expect: a Channel now exists in the navtree with messages from that conversation, and a
         success toast is shown (F-5.4)

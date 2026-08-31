@@ -9,7 +9,7 @@ import { Event as AsyncEvent, Trigger, sleep } from '@dxos/async';
 import { TestStream } from '@dxos/async/testing';
 import { ErrorStream } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
-import { schema } from '@dxos/protocols/proto';
+import { getBufService } from '@dxos/protocols/buf-service';
 import { type BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { type RpcPort, createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
 
@@ -290,7 +290,7 @@ describe.skip('RtcPeerTransportProxy', () => {
     const service = createProtoRpcPeer({
       requested: {},
       exposed: {
-        BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
+        BridgeService: getBufService<BridgeService>('dxos.mesh.bridge.BridgeService'),
       },
       handlers: { BridgeService: rtcTransportService },
       port,
@@ -310,7 +310,7 @@ describe.skip('RtcPeerTransportProxy', () => {
   const createClient = async (port: RpcPort) => {
     const rpcClient = createProtoRpcPeer({
       requested: {
-        BridgeService: schema.getService('dxos.mesh.bridge.BridgeService'),
+        BridgeService: getBufService<BridgeService>('dxos.mesh.bridge.BridgeService'),
       },
       port,
       noHandshake: true,

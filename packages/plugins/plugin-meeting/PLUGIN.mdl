@@ -103,8 +103,9 @@ op Create
   desc: Creates a new Meeting object in the given space, including linked Transcript, notes, and summary Text objects.
   input:
     name?: string
-    channel: Channel
-  output: Meeting
+    channel?: Channel
+  output:
+    object: Meeting
   effects: [echo:write]
   note: Also invokes TranscriptOperation.Create to initialise the transcript feed.
 ```
@@ -115,7 +116,8 @@ op SetActive
   desc: Sets the currently active meeting in plugin state and broadcasts the meeting DXN to the call layer as an activity payload.
   input:
     object?: Meeting
-  output: Meeting
+  output:
+    object?: Meeting
   effects: [calls:activity]
   requires: [MeetingCapabilities.State, CallsCapabilities.Manager]
 ```

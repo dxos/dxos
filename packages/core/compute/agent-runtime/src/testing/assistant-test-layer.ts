@@ -232,7 +232,7 @@ export const AssistantTestServiceResolverLayer = (
             // operation resolution runs.
             const agentService = agentServiceHolder.current;
             if (!agentService) {
-              return yield* Effect.fail(new ServiceNotAvailableError(AgentService.AgentService.key));
+              return yield* Effect.fail(new ServiceNotAvailableError(AgentService.key));
             }
             return agentService;
           }),
@@ -320,10 +320,11 @@ export type AssistantTestServicesWithTriggers = AssistantTestServices | TriggerD
 export const AssistantTestLayerWithTriggers = (
   options: TestLayerWithTriggersOptions,
 ): Layer.Layer<AssistantTestServicesWithTriggers, never, TestContextService> =>
-  Layer.mergeAll(
-    AssistantTestLayer(options),
-    TriggerDispatcher.layer({ timeControl: 'manual', startingTime: new Date('2025-09-05T15:01:00.000Z') }).pipe(
-      Layer.provide(AtomRegistry.layer),
-    ),
-    TriggerStateStore.layerMemory,
-  ) as any;
+  // `Layer.provideMerge` (not `Layer.mergeAll`) at each step: `mergeAll` unions requirements without
+  // letting sibling layers discharge one another, so `TriggerDispatcher`'s own dependency on
+  // `TriggerStateStore`/`ProcessManager.Service`/`Database.Service` needs threading explicitly.
+  TriggerDispatcher.layer({ timeControl: 'manual', startingTime: new Date('2025-09-05T15:01:00.000Z') }).pipe(
+    Layer.provide(AtomRegistry.layer),
+    Layer.provideMerge(TriggerStateStore.layerMemory),
+    Layer.provideMerge(AssistantTestLayer(options)),
+  );

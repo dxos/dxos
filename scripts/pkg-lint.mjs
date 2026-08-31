@@ -120,6 +120,15 @@ for (const { name, path: pkgPath } of packages) {
   const isGeneratedSource = (value) => /\/gen\//.test(value);
   for (const [importPath, importValue] of Object.entries(pkgImports)) {
     if (typeof importValue === 'string') {
+      // A single target answers every condition, so the emitted `.d.ts` and `.mjs` resolve the
+      // alias out of `src/`. Expand it with `pnpm toolbox --lint-package-exports`.
+      if (/\.tsx?$/.test(importValue)) {
+        addDiagnostic(
+          'error',
+          'import-source-only',
+          `import "${importPath}": source-only target "${importValue}" needs "source"/"types"/"default" conditions`,
+        );
+      }
       // Simple string import — skip dist paths (pre-built artifacts).
       if (!importValue.startsWith('./dist/') && !isGeneratedSource(importValue)) {
         const srcPath = join(pkgPath, importValue);

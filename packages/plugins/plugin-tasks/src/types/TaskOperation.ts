@@ -44,7 +44,7 @@ export const CreateTask = Operation.make({
     }),
     title: Schema.String,
     description: Schema.optional(Schema.String),
-    priority: Schema.optional(Schema.Literals(['none', 'low', 'medium', 'high', 'urgent'])),
+    priority: Schema.optional(Task.Priority),
     assignee: Schema.optional(Actor.Actor),
     /** Parent task for a sub-task; the task still joins the set's flat `tasks` array. */
     parentTask: Schema.optional(Ref.Ref(Task.Task)),
@@ -67,18 +67,20 @@ export const UpdateTask = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.tasks.update'),
     name: 'Update Task',
-    description: 'Patch task fields: title, description, status, priority, estimate, assignee.',
+    description: 'Patch task fields: title, description, status, priority, estimate, assignee. Null clears a field.',
     icon: 'ph--pencil-simple--regular',
   },
   services: [Database.Service],
   input: Schema.Struct({
     task: Ref.Ref(Task.Task),
     title: Schema.optional(Schema.String),
-    description: Schema.optional(Schema.String),
-    status: Schema.optional(Schema.Literals(['todo', 'started', 'done', 'failed', 'cancelled'])),
-    priority: Schema.optional(Schema.Literals(['none', 'low', 'medium', 'high', 'urgent'])),
-    estimate: Schema.optional(Schema.Number),
-    assignee: Schema.optional(Actor.Actor),
+    // `null` clears an optional field, matching `Task.Edit` — without it the operation can set an
+    // assignee but never remove one.
+    description: Schema.optional(Schema.NullOr(Schema.String)),
+    status: Schema.optional(Task.Status),
+    priority: Schema.optional(Schema.NullOr(Task.Priority)),
+    estimate: Schema.optional(Schema.NullOr(Schema.Number)),
+    assignee: Schema.optional(Schema.NullOr(Actor.Actor)),
     /** Re-file under a milestone; `null` moves the task to the backlog. */
     milestone: Schema.optional(Schema.NullOr(Ref.Ref(Milestone.Milestone))),
     /** Re-parent as a sub-task; `null` promotes the task to a root of its set. */
@@ -91,6 +93,24 @@ export const UpdateTask = Operation.make({
     task: Type.getSchema(Task.Task),
   }),
 }).pipe(Operation.mutation('write'));
+
+export const TaskRestorePoint = Schema.Struct({
+  entries: Schema.Array(
+    Schema.Struct({
+      task: Type.getSchema(Task.Task),
+      index: Schema.optional(Schema.Number).annotate({
+        description: "Position the task held in the set's `tasks` array; absent when it belonged to no set.",
+      }),
+    }),
+  ).annotate({
+    description: 'The deleted task and every sub-task that went with it.',
+  }),
+  taskSet: Schema.optional(Type.getSchema(TaskSet.TaskSet)).annotate({
+    description: 'The set the tasks were filed in, when they were in one.',
+  }),
+});
+
+export type TaskRestorePoint = Schema.Schema.Type<typeof TaskRestorePoint>;
 
 /**
  * Removes a task and its sub-tasks. `Database.remove` cascades along the parent edge, but the set's
@@ -111,8 +131,20 @@ export const DeleteTask = Operation.make({
   output: Schema.Struct({
     /** Ids of the deleted task and every sub-task that went with it. */
     deleted: Schema.Array(Schema.String),
+    restore: TaskRestorePoint,
   }),
 }).pipe(Operation.mutation('destructive'));
+
+export const RestoreTasks = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.tasks.restore'),
+    name: 'Restore Tasks',
+    description: 'Restore deleted tasks and their sub-tasks to their task set.',
+    icon: 'ph--clock-counter-clockwise--regular',
+  },
+  input: TaskRestorePoint,
+  output: Schema.Void,
+}).pipe(Operation.mutation('write'));
 
 /**
  * Repositions a task within its set's `tasks` array. There is no sort key to patch — the array
@@ -165,7 +197,7 @@ export const ListTasks = Operation.make({
     project: Schema.optional(Ref.Ref(Obj.Unknown)).annotate({
       description: 'Project whose task set is listed (org.dxos.type.project).',
     }),
-    status: Schema.optional(Schema.Literals(['todo', 'started', 'done', 'failed', 'cancelled'])),
+    status: Schema.optional(Task.Status),
     /** Matches the assignee by DID, email, or display name — whichever the actor carries. */
     assignee: Schema.optional(Schema.String),
     /** Only tasks under this milestone (inherited by sub-tasks from their nearest ancestor). */

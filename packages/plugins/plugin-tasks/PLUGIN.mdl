@@ -316,12 +316,15 @@ flow QA-1: Create an outline and edit it
   after:
     - name: Delete the outline
       do: Right-click "QA Outline" in the navtree and choose Delete.
-      invoke: org.dxos.operation.space.removeObjects { objects: [], target: $given.space }
+      invoke: |
+        org.dxos.operation.space.removeObjects {
+          objects: [(await space.db.query(dxos.Filter.type(Outline)).run()).objects.find((o) => o.name === 'QA Outline') ?? (() => { throw new Error("Outline QA Outline not found — refusing to remove an unrelated object"); })()],
+          target: $given.space
+        }
       expect: the row leaves the navtree and its plank closes if it was open
       note: |
         `objects` cannot be filled from an `invoke` result — step 1 had none — so the agent path
-        resolves the Outline live, by name, immediately before this call:
-        `(await space.db.query(dxos.Filter.type(Outline)).run()).objects.find((o) => o.name === 'QA Outline')`.
+        resolves the Outline live, by name, immediately before this call.
 ```
 
 ```mdl
@@ -344,12 +347,16 @@ flow QA-2: Quick-add a journal bullet from anywhere
         were created if either was missing
       assert: |
         const journal = (await space.db.query(dxos.Filter.type(Journal)).run()).objects[0];
-        return journal?.entries !== undefined;
+        const todayKey = new Date().toISOString().slice(0, 10);
+        const todayRef = journal?.entries?.[todayKey];
+        if (!todayRef) return false;
+        const entry = await todayRef.load();
+        const text = await entry.content.load();
+        return text.content.includes('QA quick entry');
       note: |
-        `output: void` — Rule 3 applies: the assert checks the effect (the Journal now exists),
-        not the (empty) return value. A stronger assert would read today's JournalEntry content
-        directly, but that requires resolving today's date key, which is out of scope for a
-        deterministic snippet.
+        `output: void` — Rule 3 applies: the assert checks the effect on TODAY's date-keyed
+        entry specifically, not any entry in the Journal, so a stale entry from a prior run
+        under a different date key cannot satisfy it (Execution Rule 5).
   after:
     - name: Remove the bullet
       do: Open today's journal entry and delete the "QA quick entry" line.
@@ -409,11 +416,12 @@ ext component
 
 ```mdl
 ext op
-  uri: org.dxos.mdl.op@1.0
+  uri: org.dxos.mdl.op@1.1
   desc: |
     A named operation with typed inputs, outputs, and declared errors.
     Pure ops have no effects or requires. Effectful ops declare both.
   fields:
+    key?: NSID                  # runtime operation key — what the invoker receives
     desc?: Prose
     input?: FieldMap
     output?: TypeExpr

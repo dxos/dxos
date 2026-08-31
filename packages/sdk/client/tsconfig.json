@@ -47,6 +47,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/echo/blob"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {

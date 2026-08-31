@@ -71,7 +71,7 @@ describe.skip('Bundler', () => {
         //
 
         import { defineFunction } from '@dxos/functions';
-        import { FetchHttpClient, HttpClient, HttpClientRequest } from 'effect/unstable/http';
+        import { FetchHttpClient, HttpClient, HttpClientRequest, HttpClientResponse } from 'effect/unstable/http';
         import * as Effect from 'effect/Effect';
         import * as Schedule from 'effect/Schedule';
         import * as Schema from 'effect/Schema';
@@ -91,13 +91,14 @@ describe.skip('Bundler', () => {
           handler: Effect.fnUntraced(function* ({ data: { from, to } }) {
             const res = yield* HttpClientRequest.get(\`https://free.ratesdb.com/v1/rates?from=\${from}&to=\${to}\`).pipe(
               HttpClient.execute,
-              Effect.flatMap((res: any) => res.json),
+              Effect.flatMap((res: HttpClientResponse.HttpClientResponse) => res.json),
               Effect.timeout('1 second'),
               Effect.retry(Schedule.exponential(1_000).pipe(Schedule.upTo({ times: 3 }))),
               Effect.scoped,
             );
 
-            return (res as any).data.rates[to].toString();
+            // The rates API's response shape isn't statically known; narrow the parsed JSON body once here.
+            return (res as { data: { rates: Record<string, number> } }).data.rates[to].toString();
           }, Effect.provide(FetchHttpClient.layer)),
         });
       `,

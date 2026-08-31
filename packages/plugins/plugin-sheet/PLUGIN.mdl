@@ -349,7 +349,8 @@ flow QA-1: Create a sheet, set values, evaluate a formula, read back
   given:
     - an identity exists
     - space: a space is open
-    - collection: a collection in that space, to create into
+    - root: the space's root collection — [op:create] takes no target and files the Sheet
+      there via `CollectionModel.add`, so the flow cannot choose a different one
     - no Sheet named "QA Sheet" exists — ABORT rather than reusing one this flow did not create
   test:
     - name: Create the sheet
@@ -359,27 +360,42 @@ flow QA-1: Create a sheet, set values, evaluate a formula, read back
       expect: a Sheet named "QA Sheet" now exists
       assert: return !!$created.id
 
-    - name: Place it in the collection
+    - name: Place it in the root collection
       do: (no separate gesture — the navtree create action places it)
-      invoke: org.dxos.operation.space.addObject { object: $created.id, target: $given.collection }
-      expect: "QA Sheet" appears as a row under the collection
+      expect: "QA Sheet" appears as a row under the space's root collection
+      note: |
+        NO `invoke` — [op:create] places the sheet in the space itself, so a following
+        `space.addObject` is redundant. `$created.id` is a DXN string, not an object;
+        resolve it (`db.getObjectById` on the DXN's last segment) before any step that
+        needs the live Sheet.
 
-    - name: Set values and a formula
+    - name: Resolve the sheet and set values
       do: Click cell A1 and type "10", Enter. Click A2 and type "20", Enter. Click A3 and type
         "=A1+A2", Enter.
-      invoke: [op:setRange] { sheet: $created.id, cells: { A1: 10, A2: 20, A3: "=A1+A2" } }
+      invoke: [op:setRange] { sheet: space.db.makeRef($created.id), cells: { A1: 10, A2: 20, A3: "=A1+A2" } }
       expect: A1 shows 10, A2 shows 20, and A3 shows 30 (evaluated by HyperFormula)
+      note: |
+        `sheet` is a `Ref` and `op:create` returns only `{ id }` (a DXN string) — `db.makeRef`
+        builds the `Ref` straight from that DXN, no load needed; `Ref.make` needs a live object,
+        which nothing captured here has.
 
     - name: Read the range back
       do: (agent-only — confirm the evaluated values)
-      invoke: [op:getRange] { sheet: $created.id, range: "A1:A3" }
-      expect: the returned 2D array reads [[10], [20], [30]]
-      assert: return $result.values.flat().join(',') === '10,20,30'
+      invoke: [op:getRange] { sheet: space.db.makeRef($created.id), range: "A1:A3" }
+      expect: A3 renders 30 in the grid
+      assert: |
+        // getRange returns STORED cell content, not the evaluated result — A3 comes back as
+        // the formula string. Judge the evaluated value in the UI (`expect`), not here.
+        return $result.values.flat().slice(0, 2).join(',') === '10,20';
   after:
     - name: Delete the sheet
       do: Right-click "QA Sheet" in the navtree and choose Delete.
-      invoke: org.dxos.operation.space.removeObjects { objects: [$created.id], target: $given.collection }
+      invoke: org.dxos.operation.space.removeObjects { objects: [space.db.getObjectById($created.id.split('/').pop())] }
       expect: the row leaves the navtree and its plank closes if it was open
+      note: |
+        No `target` — `op:create` calls `CollectionModel.add({ object })` with no target, so the
+        Sheet lands in the space's root collection; omitting `target` here lets `removeObjects`
+        default to that same collection rather than a different one.
 ```
 
 ---

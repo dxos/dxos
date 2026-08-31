@@ -347,7 +347,7 @@ flow QA-1: Create an image Artifact and generate a variant
       do: Right-click "QA Artifact" in the navtree and choose Delete.
       invoke: |
         org.dxos.operation.space.removeObjects {
-          objects: [(await space.db.query(dxos.Filter.type(Artifact)).run()).objects.find((a) => a.name === 'QA Artifact')],
+          objects: [(await space.db.query(dxos.Filter.type(Artifact)).run()).objects.find((a) => a.name === 'QA Artifact') ?? (() => { throw new Error("Artifact QA Artifact not found — refusing to remove an unrelated object"); })()],
           target: $given.collection
         }
       expect: the row leaves the navtree and its plank closes if it was open

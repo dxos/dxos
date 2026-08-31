@@ -251,7 +251,7 @@ flow QA-1: Open search and find an object
 
     - name: Select the result
       do: Click the result row.
-      invoke: org.dxos.operation.appToolkit.open { subject: ["root/$spaceId/content/collections/$given.doc.id"] }
+      invoke: org.dxos.operation.appToolkit.open { subject: ["root/$given.space.id/content/collections/$given.doc.id"] }
       expect: the editor opens "QA Search Target" and the dialog closes
       note: |
         The agent path approximates the click via direct navigation — SearchDialog's own

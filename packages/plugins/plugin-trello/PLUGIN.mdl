@@ -118,7 +118,7 @@ op GetTrelloBoards
     a local Kanban. Materialization happens lazily in SyncTrelloBoard on first
     sync of a target, so unselected boards leave no trace in the space.
   input:
-    integration: Ref<Integration>
+    connection: Ref<Connection>
   output: GetSyncTargetsOutput
   effects: [http]
 ```
@@ -137,7 +137,7 @@ op SyncTrelloBoard
     Per-target failures write lastError on that target and continue;
     a toast is emitted on completion regardless of per-target errors.
   input:
-    integration: Ref<Integration>
+    connection: Ref<Connection>
     kanban?: Ref<Kanban>
   output: SyncTrelloBoardOutput
   effects: [echo:read, echo:write, http]

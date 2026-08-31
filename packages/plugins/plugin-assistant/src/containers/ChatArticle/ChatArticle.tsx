@@ -2,12 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { forwardRef, useCallback, useEffect, useRef } from 'react';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Provider } from '@dxos/ai';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { type Chat as ChatType } from '@dxos/assistant-toolkit';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
@@ -15,6 +16,7 @@ import { ClientOperation } from '@dxos/plugin-client';
 import { useRegistry } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { type ChatView } from '@dxos/react-ui-assistant';
+import { graphActions, isToolbarAction } from '@dxos/react-ui-menu';
 import { Merge } from '@dxos/util';
 
 import { Chat as ChatComponent, type ChatRootProps } from '#components';
@@ -43,8 +45,6 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     const runtime = useChatServices({ id: db?.spaceId });
 
     const { preset, ...chatProps } = usePresets(settings);
-    // The provider is configured in settings; the chat surfaces it as a read-only online indicator.
-    const online = preset?.provider === Provider.edge.id;
     const processor = useChatProcessor({ db, chat, preset, runtime, registry, settings });
     const getContext = useSelectionContext(companionTo);
 
@@ -57,6 +57,30 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     const handleViewUsage = useCallback(() => {
       void invokePromise(ClientOperation.OpenUsage, undefined);
     }, [invokePromise]);
+
+    // Toolbar actions other plugins filed on this chat's node — the microphone among them. Read the
+    // way `MarkdownArticle` reads its own, so a contributor reaches the prompt without plugin-assistant
+    // importing it (or knowing it exists).
+    const { graph } = useAppGraph();
+    const customActions = useMemo(
+      () => Atom.make((get) => graphActions(graph, get, attendableId, { filter: isToolbarAction })),
+      [graph, attendableId],
+    );
+
+    // Shown by default: a chat carrying a checklist should show it without being asked, and the
+    // toggle is how the reader gets the room back once they have read it. Per mount rather than
+    // persisted — it is a glance, not a preference.
+    const [tasksVisible, setTasksVisible] = useState(true);
+    const handleEvent = useCallback<NonNullable<ChatArticleProps['onEvent']>>(
+      (event) => {
+        if (event.type === 'toggle-tasks') {
+          setTasksVisible((visible) => !visible);
+          return;
+        }
+        onEvent?.(event);
+      },
+      [onEvent],
+    );
 
     // Reset the one-shot guard when the target conversation changes, so a pending prompt for a new
     // `attendableId` is still auto-submitted within the same mount.
@@ -94,7 +118,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
         processor={processor}
         debug={debug}
         getContext={getContext}
-        onEvent={onEvent}
+        onEvent={handleEvent}
         onSubmit={onSubmit}
       >
         <Panel.Root role={role} ref={forwardedRef}>
@@ -118,13 +142,16 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                 )}
               </div>
               <div className='dx-document flex flex-col px-4 pb-4'>
-                <div className='px-4'>
+                {tasksVisible && (
                   <ChatComponent.TaskList classNames='shrink-0 max-h-[calc(4*2rem+1px)] border border-separator border-b-0 rounded-t-sm text-description' />
-                </div>
+                )}
                 <ChatComponent.Prompt
                   {...chatProps}
+                  classNames={[tasksVisible && 'rounded-t-none']}
                   outline
-                  online={online}
+                  attendableId={attendableId}
+                  customActions={customActions}
+                  tasksVisible={tasksVisible}
                   preset={preset?.id}
                   companionTo={companionTo}
                 />

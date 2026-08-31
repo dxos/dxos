@@ -33,6 +33,15 @@
       "node": "./dist/lib/commands.mjs",
       "default": "./dist/lib/commands.browser.mjs"
     },
+    "#create-panel": {
+      "source": {
+        "node": "./src/capabilities/create-panel.ts",
+        "default": "./src/capabilities/create-panel.browser.ts"
+      },
+      "types": "./dist/types/src/capabilities/create-panel.d.ts",
+      "node": "./dist/lib/create-panel.mjs",
+      "default": "./dist/lib/create-panel.browser.mjs"
+    },
     "#components": {
       "source": "./src/components/index.ts",
       "types": "./dist/types/src/components/index.d.ts",
@@ -121,11 +130,6 @@
       "types": "./dist/types/src/types/ConnectorEvents.d.ts",
       "import": "./dist/lib/ConnectorEvents.mjs"
     },
-    "./ConnectorForm": {
-      "source": "./src/types/ConnectorForm.ts",
-      "types": "./dist/types/src/types/ConnectorForm.d.ts",
-      "import": "./dist/lib/ConnectorForm.mjs"
-    },
     "./ConnectorOperation": {
       "source": "./src/types/ConnectorOperation.ts",
       "types": "./dist/types/src/types/ConnectorOperation.d.ts",
@@ -168,9 +172,6 @@
       "ConnectorEvents": [
         "dist/types/src/types/ConnectorEvents.d.ts"
       ],
-      "ConnectorForm": [
-        "dist/types/src/types/ConnectorForm.d.ts"
-      ],
       "ConnectorOperation": [
         "dist/types/src/types/ConnectorOperation.d.ts"
       ],
@@ -212,6 +213,8 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
+    "@dxos/react-ui-search": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*"
   },

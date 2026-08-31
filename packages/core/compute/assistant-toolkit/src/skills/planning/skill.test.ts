@@ -14,7 +14,7 @@ import { Database, Feed, Filter, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
-import { Message, Outline, Task, TaskSet } from '@dxos/types';
+import { Message, Outline, Task } from '@dxos/types';
 
 import { Agent, Chat } from '../../types';
 import { PlanningHandlers } from './operations';
@@ -32,7 +32,6 @@ const TestLayer = AssistantTestLayer({
   types: [
     Agent.Agent,
     Outline.Outline,
-    TaskSet.TaskSet,
     Task.Task,
     Text.Text,
     Chat.Chat,
@@ -121,10 +120,9 @@ describe('Planning skill', { tags: ['model-fixture'] }, () => {
 const setupChatWithChecklist = Effect.fnUntraced(function* () {
   const agent = yield* AgentService.createSession({ skills: [PlanningSkill.make()] });
   const chat = yield* Database.add(Chat.make({ feed: Ref.make(agent.feed) }));
-  const taskSet = yield* Chat.ensureTaskSet(chat);
   const { db } = yield* Database.Service;
   for (const title of TASKS) {
-    TaskSet.addTask(db, taskSet, title, { status: 'todo' });
+    Chat.addTask(db, chat, title, { status: 'todo' });
   }
   yield* Database.flush();
   yield* agent.addContext([Ref.make(chat)]);

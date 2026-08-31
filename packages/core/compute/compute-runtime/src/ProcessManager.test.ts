@@ -13,7 +13,6 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as PubSub from 'effect/PubSub';
 import * as Queue from 'effect/Queue';
-import * as Ref from 'effect/Ref';
 import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
@@ -31,8 +30,8 @@ import * as Process from '@dxos/compute/Process';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
-import { Annotation, Database, DXN } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import { Annotation, Database, DXN, Key } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Organization } from '@dxos/types';
 
@@ -105,7 +104,7 @@ const SlowChildGate = {
   completeDeferred: undefined as Deferred.Deferred<void> | undefined,
   alarmStarted: undefined as Deferred.Deferred<void> | undefined,
   alarmResume: undefined as Deferred.Deferred<void> | undefined,
-  alarmHandlerFinished: undefined as Ref.Ref<boolean> | undefined,
+  alarmHandlerFinished: undefined as Deferred.Deferred<void> | undefined,
 };
 
 const SlowChild = Operation.make({
@@ -193,12 +192,16 @@ const makeParentAwaitingChild = () =>
         onAlarm: () =>
           Effect.gen(function* () {
             const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+            const { alarmStarted, alarmResume, alarmHandlerFinished } = SlowChildGate;
+            if (alarmStarted === undefined || alarmResume === undefined || alarmHandlerFinished === undefined) {
+              return yield* Effect.die('SlowChildGate alarm fields not initialized');
+            }
             // Detach child invocation so the alarm handler can block on external completion,
             // matching agent-process awaiting an async tool call at shutdown.
-            yield* Deferred.succeed(SlowChildGate.alarmStarted!, undefined);
+            yield* Deferred.succeed(alarmStarted, undefined);
             yield* Effect.forkChild(invoker.invokeFiber(SlowChild, { value: 1 }).pipe(Effect.asVoid));
-            yield* Deferred.await(SlowChildGate.alarmResume!);
-            yield* Ref.set(SlowChildGate.alarmHandlerFinished!, true);
+            yield* Deferred.await(alarmResume);
+            yield* Deferred.succeed(alarmHandlerFinished, undefined);
             ctx.succeed();
           }),
         onChildEvent: () => Effect.void,
@@ -543,17 +546,8 @@ describe('ManagerImpl', () => {
     Effect.fn(function* ({ expect }) {
       const manager = yield* ProcessManager.Service;
       const handle = yield* manager.spawn(makeSumAggregator());
-      let lastOutput = 0,
-        outputCount = 0;
-      yield* handle.subscribeOutputs().pipe(
-        Stream.runForEach((output) =>
-          Effect.sync(() => {
-            lastOutput = output;
-            outputCount++;
-          }),
-        ),
-        Effect.forkChild,
-      );
+      // Forked before either input is submitted, so `Stream.take(2)` collects exactly the two outputs produced below.
+      const outputsFiber = yield* handle.subscribeOutputs().pipe(Stream.take(2), Stream.runCollect, Effect.forkChild);
       {
         yield* handle.runToCompletion();
         expect(handle.status.state).toEqual(Process.State.IDLE);
@@ -563,9 +557,8 @@ describe('ManagerImpl', () => {
         yield* handle.submitInput(2);
         yield* handle.runToCompletion();
         expect(handle.status.state).toEqual(Process.State.IDLE);
-        // TODO(dmaretskyi): Output streaming is async, not sure how to sync it.
-        yield* Effect.promise(() => expect.poll(() => outputCount).toEqual(2));
-        yield* Effect.promise(() => expect.poll(() => lastOutput).toEqual(3));
+        const outputs = yield* Fiber.join(outputsFiber);
+        expect(outputs).toEqual([1, 3]);
       }
     }, Effect.provide(TestLayer)),
   );
@@ -599,9 +592,11 @@ describe('ManagerImpl', () => {
 
         const tree = yield* monitor.processTree;
         expect(tree).toHaveLength(1);
-        expect(tree[0]!.pid).toEqual(handle.pid);
-        expect(tree[0]!.parentPid).toBeNull();
-        expect(tree[0]!.state).toEqual(Process.State.HYBERNATING);
+        const [info] = tree;
+        invariant(info);
+        expect(info.pid).toEqual(handle.pid);
+        expect(info.parentPid).toBeNull();
+        expect(info.state).toEqual(Process.State.HYBERNATING);
 
         yield* handle.terminate();
       }, Effect.provide(TestLayer)),
@@ -965,7 +960,10 @@ describe('ProcessOperationInvoker environment inheritance', () => {
           const result = yield* Operation.invoke(
             ChildOp,
             undefined,
-            input.override !== undefined ? { spaceId: input.override as any } : undefined,
+            // Test-only coercion: an override may deliberately be a syntactically-plausible but
+            // wrong space id to exercise the resolver's mismatch path, so `Key.SpaceId.make`
+            // (which validates the format) is not usable here.
+            input.override !== undefined ? { spaceId: input.override as Key.SpaceId } : undefined,
           );
           return { childSpaceId: result.spaceId };
         }),
@@ -986,11 +984,10 @@ describe('ProcessOperationInvoker environment inheritance', () => {
     ServiceResolver.ServiceResolver,
     Effect.gen(function* () {
       const dbService = yield* Database.Service;
-      return ServiceResolver.make((tag, context) =>
+      // `succeed` ties the tag to `getService`'s return type, so `dbService` (already typed as
+      // `Database.Service`'s shape) needs no cast to satisfy it.
+      return ServiceResolver.succeed(Database.Service, (context) =>
         Effect.gen(function* () {
-          if (tag.key !== Database.Service.key) {
-            return yield* Effect.fail(new ServiceNotAvailableError(String(tag.key)));
-          }
           if (context.space !== dbService.db.spaceId) {
             return yield* Effect.fail(
               new ServiceNotAvailableError(
@@ -998,7 +995,7 @@ describe('ProcessOperationInvoker environment inheritance', () => {
               ),
             );
           }
-          return dbService as any;
+          return dbService;
         }),
       );
     }),
@@ -1087,7 +1084,7 @@ describe('ProcessOperationInvoker environment inheritance', () => {
       const monitor = yield* Process.ProcessMonitorService;
       const manager = yield* ProcessManager.Service;
 
-      const conversation = 'echo://BBBBBBBBBBBBBBBBBBBBBBBBBB/01JTESTCONVERSATION00000000' as any;
+      const conversation = Key.URI.make('echo://BBBBBBBBBBBBBBBBBBBBBBBBBB/01JTESTCONVERSATION00000000');
 
       const fiber = yield* invoker.invokeFiber(
         ParentOp,
@@ -1456,7 +1453,6 @@ describe('durability', () => {
 
       const alarmStarted = yield* Deferred.make<void>();
       const alarmResume = yield* Deferred.make<void>();
-      const alarmHandlerFinished = yield* Ref.make(false);
       const blockingParent = Process.make(
         {
           key: 'test.blocking-alarm-hydrate',
@@ -1475,7 +1471,6 @@ describe('durability', () => {
               Effect.gen(function* () {
                 yield* Deferred.succeed(alarmStarted, undefined);
                 yield* Deferred.await(alarmResume);
-                yield* Ref.set(alarmHandlerFinished, true);
               }),
             onChildEvent: () => Effect.void,
           }),
@@ -1496,17 +1491,12 @@ describe('durability', () => {
       const dormant = yield* managerB.list({ key: blockingParent.key });
       expect(dormant).toHaveLength(1);
 
-      // `hydrate` returns immediately; the unsettled alarm is redelivered on the process scope.
-      yield* dormant[0].hydrate(blockingParent);
-      yield* Deferred.await(alarmStarted);
-      expect(yield* Ref.get(alarmHandlerFinished)).toEqual(false);
-
+      // A `Deferred` remembers its outcome, so succeeding `alarmResume` before the redelivered
+      // `onAlarm` ever awaits it is safe, and `runToCompletion` synchronizes on the process's
+      // real status instead of racing a hand-rolled signal.
+      const restored = yield* dormant[0].hydrate(blockingParent);
       yield* Deferred.succeed(alarmResume, undefined);
-      yield* Effect.promise(() =>
-        expect.poll(() => EffectEx.runAndForwardErrors(Ref.get(alarmHandlerFinished))).toEqual(true),
-      );
-
-      const restored = yield* managerB.attach(handle.pid);
+      yield* restored.runToCompletion();
       expect(restored.status.state).toEqual(Process.State.IDLE);
     }, Effect.provide(DurabilityTestLayer)),
   );
@@ -1523,7 +1513,12 @@ describe('durability', () => {
       SlowChildGate.taskSignal = yield* Queue.unbounded<void>();
       SlowChildGate.completeDeferred = yield* Deferred.make<void>();
       SlowChildGate.alarmStarted = yield* Deferred.make<void>();
-      SlowChildGate.alarmResume = yield* Deferred.make<void>();
+      const alarmResume = yield* Deferred.make<void>();
+      SlowChildGate.alarmResume = alarmResume;
+      // The shared handler dies if this is undefined, on both the first run and the redelivered
+      // one, so it must be set before the first `onAlarm` fires — unused otherwise now that the
+      // final wait below synchronizes on the process's real status instead of a hand-rolled signal.
+      SlowChildGate.alarmHandlerFinished = yield* Deferred.make<void>();
 
       const parentExecutable = makeParentAwaitingChild();
       const childKey = DXN.getName(SlowChild.meta.key);
@@ -1544,20 +1539,15 @@ describe('durability', () => {
       const dormantChildren = yield* managerB.list({ key: childKey });
       expect(dormantChildren.length).toBeGreaterThanOrEqual(1);
 
-      const alarmHandlerFinished = yield* Ref.make(false);
-      SlowChildGate.alarmHandlerFinished = alarmHandlerFinished;
-
-      yield* dormantParents[0].hydrate(parentExecutable);
+      const restored = yield* dormantParents[0].hydrate(parentExecutable);
+      // Redelivery runs as a fork on the process scope; drain the scheduler so it actually
+      // progresses before awaiting its result (same idiom as the DX-999 test above).
+      yield* Effect.yieldNow.pipe(Effect.repeat({ times: 10 }));
       const taskSignalB = SlowChildGate.taskSignal;
       yield* Queue.take(taskSignalB);
-      expect(yield* Ref.get(alarmHandlerFinished)).toEqual(false);
 
-      yield* Deferred.succeed(SlowChildGate.alarmResume!, undefined);
-      yield* Effect.promise(() =>
-        expect.poll(() => EffectEx.runAndForwardErrors(Ref.get(alarmHandlerFinished))).toEqual(true),
-      );
-
-      const restored = yield* managerB.attach(handle.pid);
+      yield* Deferred.succeed(alarmResume, undefined);
+      yield* restored.runToCompletion();
       expect(restored.status.state).toEqual(Process.State.SUCCEEDED);
 
       SlowChildGate.taskSignal = undefined;
@@ -1579,6 +1569,7 @@ describe('durability', () => {
 
       let handled = 0;
       let gate = true; // first manager: block; after hydrate: allow.
+      const handledOnce = yield* Deferred.make<void>();
       const blocking = Process.make(
         { key: 'test.blocking-input', input: Schema.String, output: Schema.Void, services: [] },
         () =>
@@ -1590,6 +1581,7 @@ describe('durability', () => {
                   return yield* Effect.never;
                 }
                 handled++;
+                yield* Deferred.succeed(handledOnce, undefined);
               }),
             onAlarm: () => Effect.void,
             onChildEvent: () => Effect.void,
@@ -1597,15 +1589,19 @@ describe('durability', () => {
       );
       const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
       const handle = yield* managerA.spawn(blocking);
-      // Submit input and fork it (it will block forever in manager A).
-      yield* Effect.forkChild(handle.submitInput('hello'));
-      yield* Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 50)));
+      // `submitInput` returns once the input is durably persisted, without waiting on the handler,
+      // so awaiting it already guarantees the input is pending before shutdown.
+      yield* handle.submitInput('hello');
       yield* managerA.shutdown();
 
       gate = false; // allow handling after restart.
       const managerB = mkManager({ kv, registry, resolver, handlerSet, traceSink });
       yield* (yield* managerB.list({ key: 'test.blocking-input' }))[0].hydrate(blocking);
-      yield* Effect.promise(() => expect.poll(() => handled).toEqual(1));
+      // Redelivery runs as a fork on the process scope; drain the scheduler so it actually
+      // progresses before awaiting its result (same idiom as the DX-999 test above).
+      yield* Effect.yieldNow.pipe(Effect.repeat({ times: 10 }));
+      yield* Deferred.await(handledOnce);
+      expect(handled).toEqual(1);
       yield* (yield* managerB.attach(handle.pid)).terminate();
     }, Effect.provide(DurabilityTestLayer)),
   );
@@ -1640,17 +1636,20 @@ describe('durability', () => {
       const opProcess = Process.fromOperation(SlowOp, opHandlers);
       const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
       const handle = yield* managerA.spawn(opProcess);
-      // Submit input and let the handler enter the blocked section before shutdown.
-      yield* Effect.forkChild(handle.submitInput({ value: 1 }));
-      yield* Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 50)));
+      // `submitInput` returns once the input and the operation's durable "started" marker are
+      // persisted, without waiting on the handler, so awaiting it already captures both before shutdown.
+      yield* handle.submitInput({ value: 1 });
       yield* managerA.shutdown();
 
       // Restore: the operation observes its durable "started" marker → fails instead of retrying.
       gate = false;
       const managerB = mkManager({ kv, registry, resolver, handlerSet, traceSink });
-      yield* (yield* managerB.list({ key: opProcess.key }))[0].hydrate(opProcess);
-      yield* Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 50)));
-      const restoredHandle = yield* managerB.attach(handle.pid);
+      const restoredHandle = yield* (yield* managerB.list({ key: opProcess.key }))[0].hydrate(opProcess);
+      // Redelivery runs as a fork on the process scope; drain the scheduler so it actually
+      // progresses before awaiting its result (same idiom as the DX-999 test above).
+      yield* Effect.yieldNow.pipe(Effect.repeat({ times: 10 }));
+      const exit = yield* restoredHandle.runToCompletion().pipe(Effect.exit);
+      expect(Exit.isFailure(exit)).toBe(true);
       expect(restoredHandle.status.state).toEqual(Process.State.FAILED);
     }, Effect.provide(DurabilityTestLayer)),
   );
@@ -1666,6 +1665,7 @@ describe('durability', () => {
 
       let handled = 0;
       let gate = true;
+      const handledOnce = yield* Deferred.make<void>();
       const idempotentAnnotations: Annotation.Dictionary = {};
       Annotation.setDictionary(idempotentAnnotations, Operation.IdempotentAnnotation, true);
       const SlowOp = Operation.make({
@@ -1685,6 +1685,7 @@ describe('durability', () => {
                 return yield* Effect.never;
               }
               handled++;
+              yield* Deferred.succeed(handledOnce, undefined);
             }),
           ),
         ),
@@ -1692,16 +1693,20 @@ describe('durability', () => {
       const opProcess = Process.fromOperation(SlowOp, opHandlers);
       const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
       const handle = yield* managerA.spawn(opProcess);
-      yield* Effect.forkChild(handle.submitInput({ value: 1 }));
-      yield* Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 50)));
+      // See the sibling durability test above for why a plain, non-forked `submitInput` already
+      // guarantees the pending input is durably captured before shutdown.
+      yield* handle.submitInput({ value: 1 });
       yield* managerA.shutdown();
 
       // Restore: idempotent operations skip the marker and are simply re-run to completion.
       gate = false;
       const managerB = mkManager({ kv, registry, resolver, handlerSet, traceSink });
-      yield* (yield* managerB.list({ key: opProcess.key }))[0].hydrate(opProcess);
-      yield* Effect.promise(() => expect.poll(() => handled).toEqual(1));
-      const restoredHandle = yield* managerB.attach(handle.pid);
+      const restoredHandle = yield* (yield* managerB.list({ key: opProcess.key }))[0].hydrate(opProcess);
+      // Redelivery runs as a fork on the process scope; drain the scheduler so it actually
+      // progresses before awaiting its result (same idiom as the DX-999 test above).
+      yield* Effect.yieldNow.pipe(Effect.repeat({ times: 10 }));
+      yield* Deferred.await(handledOnce);
+      expect(handled).toEqual(1);
       expect(restoredHandle.status.state).toEqual(Process.State.SUCCEEDED);
     }, Effect.provide(DurabilityTestLayer)),
   );

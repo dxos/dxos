@@ -216,6 +216,8 @@ flow QA-1: Create a Map and view it through the SolidJS surface
       `isLocal` (see `plugin-defs.tsx`: `isLocal && MapPluginSolid.make()`); on a non-local
       deployment the plugin is not in the module graph and this flow cannot run at all.
     - no Map named "QA Solid Map" exists — ABORT rather than deleting one this flow did not create
+    - map: the Map "QA Solid Map" this flow creates — no create op exists (human-only step), so
+      the runner binds this once that step completes
   test:
     - name: Create the Map
       do: In the navtree, click + on a collection and choose Map. Name it "QA Solid Map".
@@ -228,7 +230,7 @@ flow QA-1: Create a Map and view it through the SolidJS surface
     - name: Open it
       id: open
       do: Click "QA Solid Map" in the navtree.
-      invoke: org.dxos.operation.appToolkit.open { subject: ["root/$spaceId/content/collections/$created.object.id"] }
+      invoke: org.dxos.operation.appToolkit.open { subject: ["root/$spaceId/content/collections/$given.map.id"] }
       expect: the article renders the dx-map-surface custom element with MapControl visible, not the plugin-map React surface
       assert: return !!document.querySelector('dx-map-surface');
     - name: Toggle to globe view
@@ -238,7 +240,7 @@ flow QA-1: Create a Map and view it through the SolidJS surface
   after:
     - name: Delete the Map
       do: Right-click "QA Solid Map" in the navtree and choose Delete.
-      invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.collection }
+      invoke: org.dxos.operation.space.removeObjects { objects: [$given.map], target: $given.collection }
       expect: the row leaves the navtree and its plank closes
 ```
 

@@ -180,15 +180,6 @@ op ifElseSelect
 Effectful operations — mutate persistent state or call external services.
 
 ```mdl
-op createComputeGraph
-  desc: Creates a new CanvasBoard with an empty ComputeGraph and adds it to the target space.
-  input:
-    target?: Space | Collection
-  output: string                     # DXN of created CanvasBoard
-  effects: [echo:write]
-```
-
-```mdl
 op appendToQueue
   desc: Appends items to an ECHO queue or collection identified by DXN.
   input:
@@ -443,13 +434,17 @@ flow QA-1: Build and run a small compute graph
     - name: Delete the graph
       do: Right-click "QA Graph" in the navtree and choose Delete.
       invoke: |
-        const graph = (await space.db.query(dxos.Filter.everything()).run())
-          .find((o) => o.name === 'QA Graph');
-        return await Operation.invoke(SpaceOperation.RemoveObjects, { objects: [graph], target: $given.collection });
+        org.dxos.operation.space.removeObjects {
+          objects: [(await space.db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.canvasBoard'))).run()).objects
+            .find((o) => o.name === 'QA Graph')
+            ?? (() => { throw new Error("CanvasBoard QA Graph not found — refusing to remove an unrelated object"); })()],
+          target: $given.collection
+        }
       expect: the row leaves the navtree and its plank closes
       note: |
-        No captured id exists — the create step has no `invoke` (see above) — so this step
-        resolves "QA Graph" by name from the database itself before removing it.
+        No captured id exists — the create step has no `invoke` (see above) — so this resolves
+        "QA Graph" by typename AND name — a name match alone would delete any object carrying it, and throws rather than removing anything when the name does not
+        match, since `given` guarantees no pre-existing board carries it.
 ```
 
 ---

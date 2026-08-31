@@ -52,9 +52,5 @@ export const make = ({
     modelMap[model.id] = createModelLayer(model.backend);
   }
 
-  return AiModelResolver.AiModelResolver.fromModelMap(
-    { name: 'LM Studio' },
-    Provider.lmStudio.id,
-    Effect.succeed(modelMap),
-  );
+  return AiModelResolver.fromModelMap({ name: 'LM Studio' }, Provider.lmStudio.id, Effect.succeed(modelMap));
 };

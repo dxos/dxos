@@ -1931,13 +1931,13 @@ export class QueryExecutor extends Resource {
     if (!meta.documentId) {
       return null;
     }
-    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, meta.documentId as DocumentId, {
+    using lease = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, meta.documentId as DocumentId, {
       fetchFromNetwork: false,
     });
-    if (!handle) {
+    if (!lease) {
       return null;
     }
-    const object = DatabaseDirectory.getInlineObject(handle.doc(), meta.objectId);
+    const object = DatabaseDirectory.getInlineObject(lease.doc(), meta.objectId);
     if (!object) {
       return null;
     }
@@ -2037,21 +2037,21 @@ export class QueryExecutor extends Resource {
       return null;
     }
 
-    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, link as AutomergeUrl, {
+    using lease = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, link as AutomergeUrl, {
       fetchFromNetwork: false,
     });
-    if (!handle) {
+    if (!lease) {
       return null;
     }
 
-    const object = DatabaseDirectory.getInlineObject(handle.doc(), objectId);
+    const object = DatabaseDirectory.getInlineObject(lease.doc(), objectId);
     if (!object) {
       return null;
     }
 
     return {
       objectId,
-      documentId: handle.documentId,
+      documentId: lease.documentId,
       spaceId,
       queueId: null,
       queueNamespace: null,

@@ -46,6 +46,9 @@
       "path": "tools/beast/tsconfig.json"
     },
     {
+      "path": "packages/core/echo/blob/tsconfig.json"
+    },
+    {
       "path": "packages/ui/brand/tsconfig.json"
     },
     {
@@ -382,7 +385,7 @@
       "path": "packages/plugins/plugin-chess-com/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-claude-agents/tsconfig.json"
+      "path": "packages/plugins/plugin-claude/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-client/tsconfig.json"
@@ -557,6 +560,9 @@
     },
     {
       "path": "packages/plugins/plugin-routine/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-s3/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-sample/tsconfig.json"
@@ -932,6 +938,9 @@
     },
     {
       "path": "packages/ui/ui-icons/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/ui-template/tsconfig.json"
     },
     {
       "path": "packages/ui/ui-theme/tsconfig.json"

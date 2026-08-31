@@ -14,7 +14,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
-import { Outline, Task, TaskSet } from '@dxos/types';
+import { Outline, Task } from '@dxos/types';
 
 import { Agent, Chat } from '../../../types';
 import DelegationSkill from '../skill';
@@ -25,24 +25,14 @@ EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: DelegationSkillHandlers,
-  types: [
-    Agent.Agent,
-    Outline.Outline,
-    Task.Task,
-    TaskSet.TaskSet,
-    Text.Text,
-    Chat.Chat,
-    Skill.Skill,
-    Feed.Feed,
-    Project.Project,
-  ],
+  types: [Agent.Agent, Outline.Outline, Task.Task, Text.Text, Chat.Chat, Skill.Skill, Feed.Feed, Project.Project],
   skills: [DelegationSkill.make()],
   disableLlmMemoization: true,
 });
 
 /**
- * A project conversation: delegation files into the project's task set; a standalone chat files
- * into its own lazily created set (see the standalone test below).
+ * A project conversation. Delegation records the task on the CHAT's checklist either way — the
+ * project parent is here so the tests cover the shape the app actually runs.
  */
 const makeProjectAgent = Effect.gen(function* () {
   const agent = yield* Agent.makeInitialized({ name: 'Supervisor', instructions: 'Test.' }, DelegationSkill.make());
@@ -72,15 +62,20 @@ describe('DelegateTask', () => {
 
         yield* invokeDelegateTask({ title: 'Research widgets' }, chatFeed);
 
-        // The durable task is parented to the project's task set with an agent assignee.
-        const taskSet = yield* Database.load(project.taskSet!);
-        const tasks = TaskSet.resolveTasks(taskSet);
+        // The durable task lands on the chat's checklist with an agent assignee.
+        const chat = yield* Agent.loadChat(agent);
+        invariant(chat, 'Agent chat not found.');
+        const tasks = yield* Chat.loadTasks(chat);
         expect(tasks).toHaveLength(1);
         expect(tasks[0]).toMatchObject({
           title: 'Research widgets',
           status: 'todo',
           assignee: { role: 'assistant' },
         });
+        // The project's own ledger is untouched: a conversation's checklist is its own.
+        invariant(project.taskSet, 'Project task set not materialized.');
+        const taskSet = yield* Database.load(project.taskSet);
+        expect(taskSet.tasks).toHaveLength(0);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -88,10 +83,10 @@ describe('DelegateTask', () => {
   );
 
   it.effect(
-    'files every delegation into the project task set',
+    'appends every delegation to the same checklist, in order',
     Effect.fnUntraced(
       function* ({ expect }) {
-        const { agent, project } = yield* makeProjectAgent;
+        const { agent } = yield* makeProjectAgent;
 
         const agentChat = yield* Agent.loadChat(agent);
         const chatFeed = agentChat?.feed?.target;
@@ -100,9 +95,10 @@ describe('DelegateTask', () => {
         yield* invokeDelegateTask({ title: 'Research widgets' }, chatFeed);
         yield* invokeDelegateTask({ title: 'Summarize findings' }, chatFeed);
 
-        const taskSet = yield* Database.load(project.taskSet!);
-        const tasks = TaskSet.resolveTasks(taskSet);
-        expect(tasks).toHaveLength(2);
+        const chat = yield* Agent.loadChat(agent);
+        invariant(chat, 'Agent chat not found.');
+        const tasks = yield* Chat.loadTasks(chat);
+        expect(tasks.map((task) => task.title)).toEqual(['Research widgets', 'Summarize findings']);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -110,10 +106,10 @@ describe('DelegateTask', () => {
   );
 
   it.effect(
-    "files into the chat's own task set outside a project",
+    'files onto the checklist outside a project',
     Effect.fnUntraced(
       function* ({ expect }) {
-        // No project parent: the chat lazily owns its own ledger, so delegation still promotes.
+        // No project parent: the checklist is the chat's own either way, so delegation still promotes.
         const agent = yield* Agent.makeInitialized(
           { name: 'Supervisor', instructions: 'Test.' },
           DelegationSkill.make(),
@@ -127,9 +123,8 @@ describe('DelegateTask', () => {
         yield* invokeDelegateTask({ title: 'Research widgets' }, chatFeed);
 
         const chat = yield* Agent.loadChat(agent);
-        invariant(chat?.taskSet, 'Chat task set not created.');
-        const taskSet = yield* Database.load(chat.taskSet);
-        expect(TaskSet.resolveTasks(taskSet)).toHaveLength(1);
+        invariant(chat, 'Agent chat not found.');
+        expect(yield* Chat.loadTasks(chat)).toHaveLength(1);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

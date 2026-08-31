@@ -148,6 +148,9 @@ flow QA-1: Link a Chess.com account and sync games
     - a Chess.com username with at least one archived game (e.g. a well-known public account)
     - no ChessComAccount for that username exists in the space — ABORT rather than deleting one
       this flow did not create
+    - account: the ChessComAccount object the human creates in step 1, resolved by the runner
+      after that step so later steps can reference it — there is no create operation to `capture`
+      it from
   test:
     - name: Create the account
       do: In the navtree, click + on a collection and choose Chess.com Account. Enter the username.
@@ -159,20 +162,20 @@ flow QA-1: Link a Chess.com account and sync games
         plugin-chess's own game-creation gap. That is the finding, not an omission.
     - name: Sync games
       do: Click "Sync games" in the account's toolbar.
-      invoke: [op:SyncGames] { account: $given.account }
+      invoke: [op:SyncGames] { account: Ref.make($given.account) }
       capture: synced
       expect: the masonry gallery fills with game cards, one per archived game, and the account's
         profile fields (followers, country, joined, ...) populate
       assert: return $result.appended > 0;
     - name: Re-sync does not duplicate
       do: Click "Sync games" again.
-      invoke: [op:SyncGames] { account: $given.account }
+      invoke: [op:SyncGames] { account: Ref.make($given.account) }
       expect: the gallery is unchanged — no duplicate tiles appear
       assert: return $result.appended === 0;
   after:
     - name: Clear synced games
       do: Use the account's "Clear synced games" action.
-      invoke: [op:ClearSyncedGames] { account: $given.account }
+      invoke: [op:ClearSyncedGames] { account: Ref.make($given.account) }
       expect: the gallery is empty
       assert: return $result.removed > 0;
     - name: Delete the account

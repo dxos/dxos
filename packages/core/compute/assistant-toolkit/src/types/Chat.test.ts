@@ -23,8 +23,8 @@ const TestLayer = AssistantTestLayer({
   types: [
     Chat.Chat,
     Outline.Outline,
-    TaskSet.TaskSet,
     Task.Task,
+    TaskSet.TaskSet,
     Feed.Feed,
     Text.Text,
     Instructions.Instructions,
@@ -48,13 +48,13 @@ describe('Chat', () => {
         const chat = yield* makeChat;
 
         expect(Type.getTypename(Chat.Chat)).toBe('org.dxos.type.assistant.chat');
-        expect(Type.getVersion(Chat.Chat)).toBe('0.1.0');
+        expect(Type.getVersion(Chat.Chat)).toBe('0.2.0');
         expect(chat.name).toBe('Test');
 
         // Asserted on the schema, not the instance: `in` reports false for any declared-but-unset
         // optional field. The agent a chat runs as is reached through the ECHO parent edge, never a
         // field — a field was the edge that made Agent and Chat mutually dependent.
-        expect(Object.keys(Chat.Chat.fields).sort()).toEqual(['feed', 'instructions', 'name', 'taskSet', 'viewType']);
+        expect(Object.keys(Chat.fields).sort()).toEqual(['feed', 'instructions', 'name', 'tasks', 'viewType']);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -62,18 +62,121 @@ describe('Chat', () => {
   );
 
   it.effect(
-    'ensureTaskSet attaches a task set lazily and returns the same one thereafter',
+    'addTask appends to the checklist and parents the task to the chat',
     Effect.fnUntraced(
       function* (_) {
         const chat = yield* makeChat;
-        expect(chat.taskSet).toBeUndefined();
+        expect(chat.tasks).toEqual([]);
+        const { db } = yield* Database.Service;
 
-        const taskSet = yield* Chat.ensureTaskSet(chat);
-        expect(chat.taskSet?.uri).toBe(Ref.make(taskSet).uri);
+        const first = Chat.addTask(db, chat, 'Buy eggs');
+        const second = Chat.addTask(db, chat, 'Bake the cake', { status: 'started' });
+        yield* Database.flush();
 
-        // Second call reuses the attached set rather than replacing it.
-        const again = yield* Chat.ensureTaskSet(chat);
-        expect(again.id).toBe(taskSet.id);
+        expect(chat.tasks.map((ref) => ref.uri)).toEqual([Ref.make(first).uri, Ref.make(second).uri]);
+        // The field's `SetParent` annotation makes each task a child of the conversation.
+        expect(Obj.getParent(first)?.id).toBe(chat.id);
+        expect(Obj.getParent(second)?.id).toBe(chat.id);
+
+        const tasks = yield* Chat.loadTasks(chat);
+        expect(tasks.map(({ title, status }) => ({ title, status }))).toEqual([
+          { title: 'Buy eggs', status: 'todo' },
+          { title: 'Bake the cake', status: 'started' },
+        ]);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'deleteTask sweeps the task and its sub-tasks out of the checklist',
+    Effect.fnUntraced(
+      function* (_) {
+        const chat = yield* makeChat;
+        const { db } = yield* Database.Service;
+
+        const parent = Chat.addTask(db, chat, 'Ship the release');
+        const child = Chat.addTask(db, chat, 'Write the changelog', { parentTask: Ref.make(parent) });
+        const sibling = Chat.addTask(db, chat, 'Unrelated');
+        yield* Database.flush();
+
+        const deleted = Chat.deleteTask(db, chat, yield* Chat.loadTasks(chat), parent);
+        yield* Database.flush();
+
+        expect(deleted.map((task) => task.id).sort()).toEqual([parent.id, child.id].sort());
+        expect(chat.tasks.map((ref) => ref.uri)).toEqual([Ref.make(sibling).uri]);
+        const tasks = yield* Chat.loadTasks(chat);
+        expect(tasks.map((task) => task.title)).toEqual(['Unrelated']);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'a task delegated onto the checklist keeps its owner, and is not destroyed with it',
+    Effect.fnUntraced(
+      function* (_) {
+        const chat = yield* makeChat;
+        const { db } = yield* Database.Service;
+
+        // The set that owns the task, as a project's does when it delegates one here.
+        const owner = yield* Database.add(TaskSet.make({ name: 'Backlog' }));
+        const delegated = yield* Database.add(Task.make({ title: 'Write a poem', status: 'todo' }));
+        Obj.update(owner, (owner) => {
+          owner.tasks = [Ref.make(delegated)];
+        });
+        Obj.update(chat, (chat) => {
+          chat.tasks = [...chat.tasks, Ref.make(delegated)];
+        });
+        yield* Database.flush();
+
+        // The chat works on the task; it does not take it. An owning checklist would re-parent it
+        // here — and again on every later update of the chat.
+        expect(Obj.getParent(delegated)?.id).toBe(owner.id);
+        const own = Chat.addTask(db, chat, 'Draft an outline');
+        expect(Obj.getParent(own)?.id).toBe(chat.id);
+
+        // Off the checklist, still in the space: deleting is the owner's call, not the chat's.
+        Chat.deleteTask(db, chat, yield* Chat.loadTasks(chat), delegated);
+        yield* Database.flush();
+        expect(chat.tasks.map((ref) => ref.uri)).toEqual([Ref.make(own).uri]);
+        expect(yield* Database.query(Filter.id(delegated.id)).run).toHaveLength(1);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'deleteTask over a partial list strands the sub-task, which is why it takes the loaded checklist',
+    Effect.fnUntraced(
+      function* (_) {
+        const chat = yield* makeChat;
+        const { db } = yield* Database.Service;
+
+        const parent = Chat.addTask(db, chat, 'Ship the release');
+        const child = Chat.addTask(db, chat, 'Write the changelog', { parentTask: Ref.make(parent) });
+        yield* Database.flush();
+
+        // What the sync reader yields when a child is not in the working set: the walk cannot see
+        // the child, so it survives in the array — and, parented to the chat, the cascade misses it.
+        expect(Chat.deleteTask(db, chat, [parent], parent)).toEqual([parent]);
+        expect(chat.tasks.map((ref) => ref.uri)).toEqual([Ref.make(child).uri]);
+
+        // The loaded checklist takes it with the parent, which is the contract callers must meet.
+        const restored = Chat.addTask(db, chat, 'Ship again');
+        Obj.update(child, (child) => {
+          child.parentTask = Ref.make(restored);
+        });
+        yield* Database.flush();
+        expect(
+          Chat.deleteTask(db, chat, yield* Chat.loadTasks(chat), restored)
+            .map((task) => task.id)
+            .sort(),
+        ).toEqual([restored.id, child.id].sort());
+        expect(chat.tasks).toEqual([]);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

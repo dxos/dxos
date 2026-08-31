@@ -469,7 +469,7 @@ test T-6: Full-loop playground — corporate rich signature
 test T-7: attachImage — success path
   given: imageServiceUrl is configured; the mock image service returns { url: "https://images.dxos.org/abc" };
          a Person exists with no image
-  when: attachImage({ subject: personRef, url: "https://example.com/avatar.png" }) is called
+  when: attachImage({ subject: personRef, url: "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=identicon" }) is called
   then:
     - the mock image service received a multipart POST with field "file"
     - Person.image === "https://images.dxos.org/abc"
@@ -479,7 +479,7 @@ test T-7: attachImage — success path
 ```mdl
 test T-8: attachImage — config missing
   given: imageServiceUrl is not configured in @dxos/config
-  when: attachImage({ subject: personRef, url: "https://example.com/avatar.png" }) is called
+  when: attachImage({ subject: personRef, url: "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=identicon" }) is called
   then:
     - operation returns a structured error tagged ConfigMissing
     - Person.image is unchanged
@@ -616,7 +616,7 @@ flow QA-1: Research a Person end to end
       invoke: org.dxos.operation.space.removeObjects { objects: [$created.object, $researched.profile] }
       expect: neither the Person nor its Profile document exists in the space any more
       assert: |
-        return !(await space.db.query(dxos.Filter.everything()).run())
+        return !(await space.db.query(dxos.Filter.everything()).run()).objects
           .some((o) => o.id === $created.object.id || o.id === $researched.profile.id);
 ```
 
@@ -641,8 +641,8 @@ flow QA-2: Attach an image to a Person
       expect: a Person named "QA Avatar Contact" now exists with no image
       assert: return !!$created.object && !$created.object.image
     - name: Attach an avatar
-      do: Ask the assistant to attach this avatar URL to the contact — "https://example.com/avatar.png".
-      invoke: [op:attachImage] { subject: $created.object, url: "https://example.com/avatar.png" }
+      do: Ask the assistant to attach this avatar URL to the contact — "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=identicon".
+      invoke: [op:attachImage] { subject: $created.object, url: "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=identicon" }
       expect: the Person's `image` field is a canonical URL from the DXOS image service
       assert: return typeof $result.imageUrl === 'string' && $created.object.image === $result.imageUrl
   after:

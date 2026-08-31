@@ -5,7 +5,7 @@
 import { mx } from '@dxos/ui-theme';
 import { type AllowedAxis, type ComponentFunction, type Theme } from '@dxos/ui-types';
 
-import { withColumn } from '../Column/withColumn';
+import { withColumn } from '../Column';
 
 export type ScrollAreaStyleProps = {
   orientation?: AllowedAxis;

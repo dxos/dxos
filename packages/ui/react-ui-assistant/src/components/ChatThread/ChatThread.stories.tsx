@@ -33,9 +33,21 @@ type StoryArgs = {
   debug?: boolean;
   wordsPerChunk?: number;
   chunkDelay?: number;
+  /** Tool calls the turn makes, so the tool panel is driven with a run rather than one call. */
+  calls?: number;
+  /** 1-based call that fails. */
+  failAt?: number;
 };
 
-const DefaultStory = ({ count = 30, viewType = 'thinking', debug, wordsPerChunk = 4, chunkDelay = 120 }: StoryArgs) => {
+const DefaultStory = ({
+  count = 30,
+  viewType = 'thinking',
+  debug,
+  wordsPerChunk = 4,
+  chunkDelay = 120,
+  calls = 1,
+  failAt,
+}: StoryArgs) => {
   const definition = useMemo(() => createScenario({ scenario: 'assistant', count }), [count]);
   const model = useMemo(() => new FeedModel({ messages: definition.messages, stops: 'prompt' }), [definition]);
 
@@ -59,7 +71,7 @@ const DefaultStory = ({ count = 30, viewType = 'thinking', debug, wordsPerChunk 
       model.append([reply]);
       model.setStreaming(reply.id);
       try {
-        for await (const blocks of streamTurn({ wordsPerChunk, chunkDelay })) {
+        for await (const blocks of streamTurn({ wordsPerChunk, chunkDelay, calls, failAt })) {
           // Patched, not mutated: a schema-made message is frozen, so each chunk is a fresh value
           // under the same identity — which is also what an item needs to reconcile by delta.
           model.patch(reply.id, { ...reply, blocks } as Message.Message);
@@ -69,7 +81,7 @@ const DefaultStory = ({ count = 30, viewType = 'thinking', debug, wordsPerChunk 
         setBusy(false);
       }
     },
-    [model, wordsPerChunk, chunkDelay],
+    [model, wordsPerChunk, chunkDelay, calls, failAt],
   );
 
   // The thread's outward events: a suggestion or select click is a submit; the prompt toolbar's
@@ -135,8 +147,8 @@ const DefaultStory = ({ count = 30, viewType = 'thinking', debug, wordsPerChunk 
             </Toolbar.Root>
           </Panel.Toolbar>
 
-          <Panel.Content classNames='dx-container flex flex-col min-h-0'>
-            <div className='relative grow min-h-0'>
+          <Panel.Content classNames='dx-container flex flex-col'>
+            <div className='dx-container relative'>
               <PromptOutline model={model} />
               <ChatThread.Viewport classNames='absolute inset-0' padding />
               {debug && <Probes model={model} />}
@@ -321,6 +333,17 @@ const type = (input: HTMLInputElement, value: string) => {
 
 /** The loop, hands on: type a prompt, or press ▶ and watch. No play — this one is for people. */
 export const Default: Story = {};
+
+/**
+ * A turn that calls several tools, one of which fails.
+ *
+ * The run is what the tool panel summarises: it names the call in flight while the turn is live,
+ * then counts the run once it settles — so this is the story that shows the summary changing as the
+ * blocks arrive, rather than a finished run rendered from a fixture.
+ */
+export const ToolRun: Story = {
+  args: { chunkDelay: 40, calls: 3, failAt: 2, count: 4 },
+};
 
 /**
  * The whole conversation loop, driven as a reader would drive it.

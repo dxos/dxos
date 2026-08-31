@@ -33,17 +33,17 @@ describe('Word scheduling', () => {
 
     // `applyReview` still stamps a `dueAt` — the last interval is what a card in the final box would
     // wait — so reaching BOX_COUNT is what has to take the word out of the drill, not the date.
-    const word = { term: 'a', translation: 'b', progress } as unknown as Word.Word;
+    const word = { progress };
     expect(Word.isDue(word, at('2100-01-01T00:00:00.000Z'))).toBe(false);
   });
 
   test('a never-drilled word is always due', ({ expect }) => {
-    expect(Word.isDue({ term: 'a', translation: 'b' } as unknown as Word.Word, NOW)).toBe(true);
+    expect(Word.isDue({}, NOW)).toBe(true);
   });
 
   test('a word below the last box comes due once its interval has passed', ({ expect }) => {
     const progress = Word.applyReview(undefined, true, NOW);
-    expect(Word.isDue({ progress } as unknown as Word.Word, NOW)).toBe(false);
-    expect(Word.isDue({ progress } as unknown as Word.Word, at('2026-01-03T00:00:00.000Z'))).toBe(true);
+    expect(Word.isDue({ progress }, NOW)).toBe(false);
+    expect(Word.isDue({ progress }, at('2026-01-03T00:00:00.000Z'))).toBe(true);
   });
 });

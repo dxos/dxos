@@ -127,8 +127,8 @@ const config = new Config({
     client: {
       edgeFeatures: {
         agents: true,
-        echoReplicator: true,
         feedReplicator: true,
+        subductionReplicator: true,
         signaling: true,
       },
     },

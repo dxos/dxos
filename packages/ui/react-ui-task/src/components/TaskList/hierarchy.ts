@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Task, TaskSet } from '@dxos/types';
+import { Task } from '@dxos/types';
 
 /**
  * The tree the list renders, and where a gesture puts a task in it. Kept out of the components
@@ -45,7 +45,7 @@ export const walkTaskTree = (tasks: readonly Task.Task[], collapsed?: ReadonlySe
         return;
       }
       seen.add(task.id);
-      const children = TaskSet.subTasks(tasks, task);
+      const children = Task.subTasks(tasks, task);
       rows.push({
         task,
         level,
@@ -60,7 +60,7 @@ export const walkTaskTree = (tasks: readonly Task.Task[], collapsed?: ReadonlySe
     });
   };
 
-  visit(TaskSet.rootTasks(tasks), 1, []);
+  visit(Task.rootTasks(tasks), 1, []);
   return rows;
 };
 
@@ -72,7 +72,7 @@ export const subtreeIds = (tasks: readonly Task.Task[], task: Task.Task): Set<st
       return;
     }
     ids.add(current.id);
-    for (const child of TaskSet.subTasks(tasks, current)) {
+    for (const child of Task.subTasks(tasks, current)) {
       visit(child);
     }
   };
@@ -125,9 +125,9 @@ export const resolveTaskPlacement = ({
     return { parentTask: target, before: undefined };
   }
 
-  const parentId = TaskSet.parentTaskId(target);
+  const parentId = Task.parentTaskId(target);
   const parent = parentId === undefined ? null : (tasks.find((task) => task.id === parentId) ?? null);
-  const siblings = parent === null ? TaskSet.rootTasks(tasks) : TaskSet.subTasks(tasks, parent);
+  const siblings = parent === null ? Task.rootTasks(tasks) : Task.subTasks(tasks, parent);
   const index = siblings.findIndex((task) => task.id === target.id);
 
   if (intent === 'reorder-above') {
@@ -144,9 +144,9 @@ const siblingsOf = (
   tasks: readonly Task.Task[],
   task: Task.Task,
 ): { parent: Task.Task | null; siblings: Task.Task[]; index: number } => {
-  const parentId = TaskSet.parentTaskId(task);
+  const parentId = Task.parentTaskId(task);
   const parent = parentId === undefined ? null : (tasks.find((candidate) => candidate.id === parentId) ?? null);
-  const siblings = parent === null ? TaskSet.rootTasks(tasks) : TaskSet.subTasks(tasks, parent);
+  const siblings = parent === null ? Task.rootTasks(tasks) : Task.subTasks(tasks, parent);
   return { parent, siblings, index: siblings.findIndex((candidate) => candidate.id === task.id) };
 };
 
