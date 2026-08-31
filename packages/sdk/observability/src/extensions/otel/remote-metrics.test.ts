@@ -41,7 +41,9 @@ describe('RemoteMetricsForwarder', () => {
     makeForwarder();
     TRACE_PROCESSOR.remoteMetrics.increment('test.rpc', 2, { tags: { route: 'sync', skip: undefined } });
 
-    expect(posted).toEqual([{ type: 'otel-metric', op: 'increment', name: 'test.rpc', value: 2, tags: { route: 'sync' } }]);
+    expect(posted).toEqual([
+      { type: 'otel-metric', op: 'increment', name: 'test.rpc', value: 2, tags: { route: 'sync' } },
+    ]);
   });
 
   test('close unregisters from TRACE_PROCESSOR', async () => {
