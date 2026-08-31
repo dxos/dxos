@@ -27,12 +27,12 @@ import { log } from '@dxos/log';
 import { type RemoteSpan, type StartSpanOptions, TRACE_ALL_KEY, TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { type OtelOptions, signalUrl } from './otel';
-import { TagInjectorSpanProcessor } from './span-processors';
 import * as OtelSpanSink from './OtelSpanSink';
+import { TagInjectorSpanProcessor } from './span-processors';
 
 export type OtelTracesOptions = OtelOptions & {
   /**
-   * When set, ended spans are posted to the telemetry worker's `OtelSpanSink` instead of
+   * When set, ended spans are posted to the observability worker's `OtelSpanSink` instead of
    * being batched and exported here. Sampling, IDs, and propagation stay in this realm.
    */
   spanSink?: OtelSpanSink.Handle;

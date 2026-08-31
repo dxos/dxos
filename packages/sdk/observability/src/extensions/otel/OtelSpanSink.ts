@@ -62,7 +62,7 @@ export type Span = {
 
 export type Message = Init | Span;
 
-/** Producer-side handle posting span records to the worker (see the extension's `telemetryWorker`). */
+/** Producer-side handle posting span records to the worker (see the extension's `observabilityWorker`). */
 export type Handle = { post: (record: Span) => void };
 
 /** Serialize an ended span into plain data the port can clone. */
@@ -113,7 +113,7 @@ export const serializeReadableSpan = (span: ReadableSpan): Span => {
 
 /**
  * Producer-side span processor: replaces `BatchSpanProcessor(OTLPTraceExporter)` when export
- * runs in the telemetry worker. Sampling, ID generation, and context propagation stay in
+ * runs in the observability worker. Sampling, ID generation, and context propagation stay in
  * the realm's tracer provider; this processor posts each ended, sampled span synchronously
  * from `onEnd`, so spans ended by code inside a long synchronous task escape the realm while
  * its own timers are stalled.
