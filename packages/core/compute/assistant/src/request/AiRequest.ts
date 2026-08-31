@@ -236,6 +236,8 @@ export class Request {
       this._started = Date.now();
       this._history = [...history];
       this._pending = [];
+      // Per-run allowance: a reused Request must not inherit a spent budget from the previous run.
+      this.#unresolvedTools = 0;
 
       const systemPrompt = yield* formatSystemPrompt({ system, skills, objects, instructions }).pipe(Effect.orDie);
 

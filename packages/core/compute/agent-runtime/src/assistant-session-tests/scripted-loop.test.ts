@@ -174,6 +174,34 @@ describe('AiRequest loop (scripted model)', () => {
       TestHelpers.provideTestContext,
     ),
   );
+
+  // The allowance is per run: a reused Request must not inherit a spent budget from an earlier run.
+  it.effect(
+    'resets the unresolvable-tool allowance between runs of the same request',
+    Effect.fnUntraced(
+      function* (_) {
+        const request = new AiRequest.Request();
+        const toolkit = yield* OpaqueToolkit.fromContext(TestToolkit);
+
+        const first = yield* request.run({ toolkit, prompt: 'Query the database.', history: [] });
+        expect(textOf(first)).toContain('First run recovered.');
+
+        // The first run spent the whole allowance; without the reset this report would exceed it.
+        const second = yield* request.run({ toolkit, prompt: 'Query it again.', history: [] });
+        expect(textOf(second)).toContain('Second run recovered.');
+      },
+      Effect.provide(
+        testLayer([
+          { fail: toolNotFound('space-query-objects', ['Echo']) },
+          { fail: toolNotFound('space-query-objects', ['Echo']) },
+          { parts: [text('First run recovered.')] },
+          { fail: toolNotFound('space-query-objects', ['Echo']) },
+          { parts: [text('Second run recovered.')] },
+        ]),
+      ),
+      TestHelpers.provideTestContext,
+    ),
+  );
 });
 
 const textOf = (messages: readonly Message.Message[]): string =>
