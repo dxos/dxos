@@ -460,6 +460,25 @@ export const TestEditWithoutDescription: Story = {
   },
 };
 
+/**
+ * Status grouping reorders rows against the set's array, so the gutter has to number what is on
+ * screen: 1..N from the top, with no gaps and nothing out of sequence.
+ */
+export const TestOrdinalsAreLinear: Story = {
+  args: { many: true, showOrdinals: true },
+  play: async ({ canvasElement }) => {
+    const ordinals = () =>
+      Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]')).map(
+        (row) => row.querySelector('.tabular-nums')?.textContent ?? '',
+      );
+
+    await waitFor(async () => expect(ordinals().length).toBeGreaterThan(1));
+    // Built from the count rather than hardcoded, so the seed can grow without editing the test.
+    const expected = ordinals().map((_, index) => String(index + 1));
+    await expect(ordinals()).toEqual(expected);
+  },
+};
+
 export const TestHierarchy: Story = {
   // Descriptions on, so the alignment between a sub-task's description and its title is asserted.
   args: { hierarchical: true, showOrdinals: true, showDescriptions: true, framed: false },
@@ -492,8 +511,9 @@ export const TestHierarchy: Story = {
       'Log every profile:2',
     ]);
 
-    // Ordinals stay flat — position in the set, so a task keeps its number as the tree changes.
-    await expect(rows().map(({ ordinal }) => ordinal)).toEqual(['1', '3', '5', '7', '2', '4', '6']);
+    // Ordinals run 1..N down the list as rendered, not by position in the set's array — the walk
+    // interleaves the two branches, so the two orders differ.
+    await expect(rows().map(({ ordinal }) => ordinal)).toEqual(['1', '2', '3', '4', '5', '6', '7']);
 
     // Collapsing a branch hides its descendants and marks the row.
     toggle(rows()[0].row).click();

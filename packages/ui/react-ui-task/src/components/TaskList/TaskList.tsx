@@ -109,7 +109,7 @@ type TaskListRootProps = PropsWithChildren<{
   groupByStatus?: boolean;
   /** Render the status heading above each group; grouping order is kept either way. */
   showGroupLabels?: boolean;
-  /** Number rows by their position in `tasks` (set order), so tasks can be referenced by ordinal. */
+  /** Number rows 1..N down the list as rendered, so tasks can be referenced by ordinal. */
   showOrdinals?: boolean;
   /** Render each task's description under its title; rows grow to fit. Off by default, so a
    * single-line list (e.g. the chat strip) keeps one row per task. */
@@ -299,11 +299,6 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
     showGutter,
     isCollapsed,
   } = useTaskListContext('TaskList.Content');
-  // Ordinals follow the set's canonical order, not the display order, so a task keeps its number as
-  // it moves between status groups — and, in a tree, as branches collapse around it. Flat by
-  // design: an ordinal names a task ("run 3"), and a `1.2.1` path renumbers a whole branch every
-  // time anything above it changes.
-  const ordinals = useMemo(() => new Map(tasks.map((task, index) => [task.id, index + 1])), [tasks]);
   // Collapsed ids are read through the context callback rather than held here, so the walk still
   // re-runs when one flips; the set itself lives in `Root`.
   const collapsed = useMemo(() => new Set(tasks.map((task) => task.id).filter(isCollapsed)), [tasks, isCollapsed]);
@@ -321,6 +316,14 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
       tasks: tasks.filter((task) => (task.status ?? 'todo') === status),
     })).filter((group) => group.tasks.length > 0);
   }, [tasks, groupByStatus]);
+
+  // Numbered down the list as rendered, 1..N — grouping and the tree both reorder rows against the
+  // set's array, and a gutter whose numbers jump is not one a reader can count. Flat either way: an
+  // ordinal names a task ("run 3"), where a `1.2.1` path would renumber a whole branch.
+  const ordinals = useMemo(() => {
+    const ordered = rows ? rows.map((row) => row.task) : groups.flatMap((group) => group.tasks);
+    return new Map(ordered.map((task, index) => [task.id, index + 1]));
+  }, [rows, groups]);
 
   return (
     <Listbox.Content
