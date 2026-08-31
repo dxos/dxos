@@ -64,7 +64,7 @@ describe('rpcCodec', () => {
 
   test('rejects an unknown tag rather than returning a half-decoded object', () => {
     const encoded = rpcCodec.encode([{}]);
-    const poisoned = Buffer.from(JSON.stringify([{ '@dxos/blade-runner/type': 'Nope', value: 'x' }]));
+    const poisoned = Buffer.from(JSON.stringify([{ '@dxos/blade-runner/type': 'Nope', 'value': 'x' }]));
     expect(() => rpcCodec.decode({ ...encoded, value: poisoned })).toThrow(/unknown encoded type: Nope/);
   });
 });
