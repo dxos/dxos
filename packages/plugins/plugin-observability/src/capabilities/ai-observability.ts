@@ -43,8 +43,10 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const observability = yield* ObservabilityCapabilities.Observability;
 
-    const provider = AiObservability.createAiTracerProvider((event, properties) =>
-      observability.events.captureEvent(event, properties),
+    const provider = yield* Effect.promise(() =>
+      AiObservability.createAiTracerProvider((event, properties) =>
+        observability.events.captureEvent(event, properties),
+      ),
     );
     const tracer = makeTracer(provider, '@dxos/plugin-observability/ai');
     const contentTransformer = AiTelemetry.makeContentSpanTransformer();

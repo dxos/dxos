@@ -2,9 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Context } from '@opentelemetry/api';
-import { SpanStatusCode } from '@opentelemetry/api';
-import { BasicTracerProvider, type ReadableSpan, type Span, type SpanProcessor } from '@opentelemetry/sdk-trace-base';
+import { type Context, SpanStatusCode } from '@opentelemetry/api';
+import type { BasicTracerProvider, ReadableSpan, Span, SpanProcessor } from '@opentelemetry/sdk-trace-base';
 
 /**
  * AI telemetry capture — data policy.
@@ -97,9 +96,14 @@ export class AiSpanProcessor implements SpanProcessor {
  * Standalone tracer provider carrying only the AI span processor. Deliberately not registered as
  * the global OTel provider — the SigNoz exporter (extensions/otel) owns that — so AI capture and
  * infrastructure tracing cannot clobber each other's configuration or sampling.
+ *
+ * The tracer SDK is imported dynamically to keep it out of the eager boot graph, since this module
+ * is reachable from the package barrel.
  */
-export const createAiTracerProvider = (captureEvent: CaptureEvent): BasicTracerProvider =>
-  new BasicTracerProvider({ spanProcessors: [new AiSpanProcessor(captureEvent)] });
+export const createAiTracerProvider = async (captureEvent: CaptureEvent): Promise<BasicTracerProvider> => {
+  const { BasicTracerProvider } = await import('@opentelemetry/sdk-trace-base');
+  return new BasicTracerProvider({ spanProcessors: [new AiSpanProcessor(captureEvent)] });
+};
 
 const hrTimeToSeconds = ([seconds, nanos]: [number, number]): number => seconds + nanos / 1e9;
 

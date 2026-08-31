@@ -9,15 +9,15 @@ import { createAiTracerProvider } from './ai-span-processor';
 
 type Captured = { event: string; properties: Record<string, unknown> };
 
-const setup = () => {
+const setup = async () => {
   const events: Captured[] = [];
-  const provider = createAiTracerProvider((event, properties) => events.push({ event, properties }));
+  const provider = await createAiTracerProvider((event, properties) => events.push({ event, properties }));
   return { events, tracer: provider.getTracer('test') };
 };
 
 describe('AiSpanProcessor', () => {
-  test('maps gen_ai spans to $ai_generation', ({ expect }) => {
-    const { events, tracer } = setup();
+  test('maps gen_ai spans to $ai_generation', async ({ expect }) => {
+    const { events, tracer } = await setup();
     tracer
       .startSpan('LanguageModel.streamText', {
         attributes: {
@@ -46,14 +46,14 @@ describe('AiSpanProcessor', () => {
     expect(events[0]?.properties.$ai_latency).toBeTypeOf('number');
   });
 
-  test('ignores spans without gen_ai attributes', ({ expect }) => {
-    const { events, tracer } = setup();
+  test('ignores spans without gen_ai attributes', async ({ expect }) => {
+    const { events, tracer } = await setup();
     tracer.startSpan('AiSession.createRequest').end();
     expect(events).toHaveLength(0);
   });
 
-  test('reduces errors to the exception class', ({ expect }) => {
-    const { events, tracer } = setup();
+  test('reduces errors to the exception class', async ({ expect }) => {
+    const { events, tracer } = await setup();
     const span = tracer.startSpan('LanguageModel.generateText', {
       attributes: { 'gen_ai.system': 'anthropic' },
     });
@@ -66,8 +66,8 @@ describe('AiSpanProcessor', () => {
     expect(JSON.stringify(events[0]?.properties)).not.toContain('secret');
   });
 
-  test('parses content attributes, forwarding truncated JSON raw', ({ expect }) => {
-    const { events, tracer } = setup();
+  test('parses content attributes, forwarding truncated JSON raw', async ({ expect }) => {
+    const { events, tracer } = await setup();
     tracer
       .startSpan('LanguageModel.generateText', {
         attributes: {
