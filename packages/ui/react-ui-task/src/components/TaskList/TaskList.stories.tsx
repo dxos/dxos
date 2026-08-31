@@ -135,6 +135,7 @@ const DefaultStory = ({
   showGroupLabels,
   showOrdinals,
   showDescriptions,
+  showDescription = true,
   hierarchical,
   many,
   framed = true,
@@ -143,6 +144,8 @@ const DefaultStory = ({
   showGroupLabels?: boolean;
   showOrdinals?: boolean;
   showDescriptions?: boolean;
+  /** Edit the selected task's description in the pane; the pane's own prop, not the rows'. */
+  showDescription?: boolean;
   hierarchical?: boolean;
   /** Seed the longer, ten-task list instead of the default seven. */
   many?: boolean;
@@ -218,10 +221,10 @@ const DefaultStory = ({
       </TaskList.Viewport>
       {framed ? (
         <div className='p-2'>
-          <TaskList.Edit classNames='border border-separator rounded-md p-2' />
+          <TaskList.Edit showDescription={showDescription} classNames='border border-separator rounded-md p-2' />
         </div>
       ) : (
-        <TaskList.Edit grid />
+        <TaskList.Edit grid showDescription={showDescription} />
       )}
     </TaskList.Root>
   );
@@ -382,6 +385,35 @@ export const TestEdit: Story = {
     await waitFor(async () => expect(description()).not.toBeNull());
     await waitFor(async () => expect(text()).toContain('KEEP'));
     await expect(text()).not.toContain('THROW');
+  },
+};
+
+/**
+ * With `showDescription` off the pane is title-only, even for a selected task the list can update —
+ * which is what a host with no room for a markdown field (the chat strip) renders.
+ */
+export const TestEditWithoutDescription: Story = {
+  args: { showGroupLabels: false, showDescription: false },
+  play: async ({ canvasElement }) => {
+    const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
+    const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]')!;
+    const description = () => pane.querySelector<HTMLElement>('[data-testid="taskList.edit.description"]');
+    const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]'));
+
+    const first = rows()[0];
+    const firstTitle = first.querySelector('.truncate')!.textContent;
+    first.click();
+
+    // The task IS selected — the title proves the pane followed the selection — and the description
+    // is still absent, so its absence is the prop and not a pane that failed to select.
+    await waitFor(async () => expect(title().value).toEqual(firstTitle));
+    await expect(description()).toBeNull();
+
+    // Editing still works without it: the pane is title-only, not read-only.
+    await userEvent.click(title());
+    await userEvent.keyboard(' EDITED');
+    await userEvent.tab();
+    await waitFor(async () => expect(first.textContent).toContain('EDITED'));
   },
 };
 
