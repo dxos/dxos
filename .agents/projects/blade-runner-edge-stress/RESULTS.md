@@ -101,6 +101,7 @@ re-measured on the next run against EDGE.
 - **fast-check now comes from `effect/testing`.** `effect` is already a declared dependency, so the
   undeclared direct `fast-check` import is gone; the version in use moved from 3.23.2 (resolved
   only via root hoisting) to the 4.9.0 that Effect pins.
+- **Space sharing must be delegated, not interactive.** See finding 3.
 
 ## 4. Findings (open)
 
@@ -112,9 +113,14 @@ re-measured on the next run against EDGE.
    (`SpaceProtocol.stop` -> `leaveSwarm` -> `EdgeSignalManager.leave` -> `EdgeClient.send`) and
    fails with `Edge connection closed` when the link is down. Worked around by restoring the link
    before restart, so "restart while offline" is not covered.
-3. **A space invitation can time out after the guest restarts.** `joinSpace` waited the full 60s
-   for `SUCCESS` when the guest had just restarted, though cross-identity joins otherwise work.
-   Not yet isolated.
+3. ~~**A space invitation can time out after the guest restarts.**~~ Cause found: the harness was
+   sharing **interactive** invitations, which per `invitation.proto` "require both to be online to
+   complete key exchange" — so a guest that had just restarted, or a host not swarming at that
+   moment, waited out the full 60s. `shareSpace` now opens a `Type.DELEGATED` invitation, whose
+   credential is written to the space's control feed and whose redemption goes through EDGE
+   (`EdgeInvitationHandler`), so any member can admit the guest. **Not yet verified against a live
+   run** — it typechecks and the module loads, but EDGE was unavailable in the session that made
+   the change.
 4. **`EdgeClient` is not restartable** — §3 above.
 
 ## 5. Harness gaps found
