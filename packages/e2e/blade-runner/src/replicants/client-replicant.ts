@@ -17,6 +17,7 @@ import { isEdgePeerId } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { createRtcTransportFactory } from '@dxos/network-manager';
+import { Runtime_Client_Storage_SqliteMode } from '@dxos/protocols/buf/dxos/config_pb';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { trace } from '@dxos/tracing';
@@ -104,7 +105,13 @@ export class ClientReplicant {
       runtime: {
         services: { edge: { url: proxiedUrl } },
         client: {
-          storage: { persistent: true, dataRoot: `${this.#env.params.outDir}/storage` },
+          storage: {
+            persistent: true,
+            dataRoot: `${this.#env.params.outDir}/storage`,
+            // Without FILE the backend silently stays in-memory, so a restarted client comes back
+            // empty and `Restart` tests nothing (observed in every local run — RESULTS.md §5).
+            sqliteMode: Runtime_Client_Storage_SqliteMode.FILE,
+          },
           // Edge-only data replication (D7): signaling carries invitations, no client-to-client data path.
           edgeFeatures: { subductionReplicator: true, feedReplicator: true, signaling: true, agents },
         },
@@ -113,6 +120,9 @@ export class ClientReplicant {
 
     const services = new LocalClientServices({
       config: fullConfig,
+      // FILE mode reads this from the constructor, not from config: `LocalClientServices` never
+      // derives it from `data_root`, despite what its own error message suggests.
+      sqlitePath: `${this.#env.params.outDir}/storage/index.sqlite`,
       // Mirrors `setupNetworking`'s edge branch: with edge signaling the signal manager is built by
       // the services host, so only the transport factory is supplied here.
       transportFactory: createRtcTransportFactory({ iceServers: fullConfig.get('runtime.services.ice') }),
