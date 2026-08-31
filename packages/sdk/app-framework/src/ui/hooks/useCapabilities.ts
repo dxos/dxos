@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import type * as Effect from 'effect/Effect';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import { use, useCallback, useRef } from 'react';
+import { use, useCallback, useLayoutEffect, useRef } from 'react';
 
 import { NoHandlerError } from '@dxos/compute/errors';
 import type * as Operation from '@dxos/compute/Operation';
@@ -166,9 +166,12 @@ export const useOperationHandler: {
   }
   const handler = withHandler.handler;
   // The mapper reads through a ref so the mapped form keeps a stable identity across renders,
-  // like {@link useOperation}.
+  // like {@link useOperation}. Updated in a layout effect so a discarded concurrent render's
+  // mapper (closing over that render's props) never leaks into the committed callback.
   const mapRef = useRef(map);
-  mapRef.current = map;
+  useLayoutEffect(() => {
+    mapRef.current = map;
+  }, [map]);
   const mapped = useCallback((...args: TArgs) => handler(mapRef.current!(...args)), [handler]);
   return map ? mapped : handler;
 };

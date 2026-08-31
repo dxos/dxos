@@ -134,6 +134,20 @@ describe('move-task', () => {
     }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 
+  it.effect('rejects a task that is not a member of the given set, leaving both sets untouched', () =>
+    Effect.gen(function* () {
+      const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));
+      const otherSet = yield* Database.add(TaskSet.make({ name: 'Other' }));
+      yield* Database.flush();
+      const [task] = yield* seedTasks(taskSet, ['a']);
+
+      const result = yield* Effect.exit(moveTask.handler({ taskSet: Ref.make(otherSet), task: Ref.make(task) }));
+      expect(result._tag).toEqual('Failure');
+      expect(titles(TaskSet.resolveTasks(taskSet))).toEqual(['a']);
+      expect(otherSet.tasks.length).toEqual(0);
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
+  );
+
   it.effect('rejects a parent inside its own subtree, leaving the order untouched', () =>
     Effect.gen(function* () {
       const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));
