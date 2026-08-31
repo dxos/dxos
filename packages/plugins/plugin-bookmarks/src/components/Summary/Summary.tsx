@@ -54,7 +54,7 @@ export const Summary = composable<HTMLDivElement, SummaryProps>(
 
     return (
       <div
-        {...composableProps(props, { classNames: ['dx-container', classNames] })}
+        {...composableProps(props, { classNames: ['dx-expand', classNames] })}
         ref={composeRefs(parentRef, forwardedRef)}
       />
     );

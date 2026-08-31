@@ -124,7 +124,7 @@ export const FormViewport = composable<HTMLDivElement, FormViewportProps>(
     if (scroll) {
       return (
         <Column.Root
-          {...composableProps(props, { classNames: ['dx-expander', span, styles.viewport()] })}
+          {...composableProps(props, { classNames: ['dx-expand', span, styles.viewport()] })}
           gutter={gutter}
           ref={forwardedRef}
         >

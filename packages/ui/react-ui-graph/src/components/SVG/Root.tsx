@@ -74,7 +74,7 @@ export const Root = forwardRef<SVGContext, RootProps>(({ children, scale, center
 
   return (
     <SVGContextProvider value={context}>
-      <div {...composableProps(props, { classNames: 'dx-expander' })} ref={setContainer}>
+      <div {...composableProps(props, { classNames: 'dx-expand' })} ref={setContainer}>
         <svg
           xmlns='http://www.w3.org/2000/svg'
           ref={context.ref}

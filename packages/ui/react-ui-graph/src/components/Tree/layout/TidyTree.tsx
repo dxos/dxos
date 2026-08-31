@@ -91,7 +91,7 @@ export const TidyTree = ({
   }, [root, width, height, r, margin, label, slots, collapsed]);
 
   return (
-    <div ref={setRef} className={mx('dx-expander relative', classNames)}>
+    <div ref={setRef} className={mx('dx-expand relative', classNames)}>
       {width > 0 && height > 0 && (
         <svg
           ref={svgRef}

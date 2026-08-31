@@ -53,7 +53,7 @@ const DefaultStory = (args: StoryArgs) => {
     [space],
   );
 
-  return <>{message && <EditMessage classNames='dx-expander' message={message} onSend={args.onSend} />}</>;
+  return <>{message && <EditMessage classNames='dx-expand' message={message} onSend={args.onSend} />}</>;
 };
 
 const meta = {

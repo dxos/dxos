@@ -221,7 +221,7 @@ export const EditorMenuProvider = ({
               />
             </Input.Root>
           )}
-          <Popover.Viewport asChild classNames='dx-container'>
+          <Popover.Viewport asChild classNames='dx-expand'>
             <ScrollArea.Root thin>
               <ScrollArea.Viewport>
                 <Menu groups={menuGroups} currentItem={currentItem} onSelect={handleSelect} />

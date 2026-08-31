@@ -55,7 +55,7 @@ const DefaultStory = ({ content, name }: StoryArgs) => {
   }
 
   return (
-    <div className='dx-container grid grid-cols-3 gap-3 p-3'>
+    <div className='dx-expand grid grid-cols-3 gap-3 p-3'>
       <Column>
         <OutlineArticle role='article' subject={outline} taskSet={taskSet} attendableId='story' />
       </Column>
@@ -70,7 +70,7 @@ const DefaultStory = ({ content, name }: StoryArgs) => {
 };
 
 const Column = ({ children }: PropsWithChildren) => (
-  <div className='dx-expander border border-separator rounded-md overflow-hidden'>{children}</div>
+  <div className='dx-expand border border-separator rounded-md overflow-hidden'>{children}</div>
 );
 
 /**

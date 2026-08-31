@@ -28,8 +28,9 @@ export type ScrollAreaStyleProps = {
 
 const root: ComponentFunction<ScrollAreaStyleProps> = ({ orientation, native }, ...etc) =>
   mx(
-    // Expand
-    'dx-container',
+    // Expand. `dx-scroll-boundary` marks this as a scroll root for `withColumn.propagate()`,
+    // which exempts it from the centre track so the scrollbar stays in the gutter.
+    'dx-expand overflow-hidden dx-scroll-boundary',
 
     // Positioning context for the absolutely positioned overlay thumbs.
     !native && 'relative',

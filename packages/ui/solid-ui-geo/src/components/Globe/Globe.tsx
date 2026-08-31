@@ -138,7 +138,7 @@ const GlobeRoot = (props: GlobeRootProps) => {
 
   return (
     <GlobeContextProvider size={size()} {...props}>
-      <div ref={containerRef} class={mx('relative dx-container')} {...props}>
+      <div ref={containerRef} class={mx('relative dx-expand overflow-hidden')} {...props}>
         {props.children}
       </div>
     </GlobeContextProvider>

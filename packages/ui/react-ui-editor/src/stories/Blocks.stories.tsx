@@ -41,7 +41,7 @@ const DefaultStory = (props: StoryArgs) => {
 
   return (
     <Editor.Root>
-      <Editor.View {...props} classNames='dx-container' extensions={extensions} />
+      <Editor.View {...props} classNames='dx-expand' extensions={extensions} />
     </Editor.Root>
   );
 };

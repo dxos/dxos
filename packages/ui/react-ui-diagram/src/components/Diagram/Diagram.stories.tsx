@@ -91,7 +91,7 @@ const DefaultStory = ({ source, projection, background }: StoryArgs) => {
   const pinned = Object.keys(overlay.positions ?? {}).length;
 
   return (
-    <div className='dx-container grid' style={{ gridTemplateColumns: text !== undefined ? '1fr 1fr' : '1fr' }}>
+    <div className='dx-expand grid' style={{ gridTemplateColumns: text !== undefined ? '1fr 1fr' : '1fr' }}>
       {text !== undefined && (
         <Panel.Root>
           <Panel.Toolbar asChild>

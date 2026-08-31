@@ -463,7 +463,7 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
   return (
     <Menu.Root {...menuActions} attendableId={attentionId} alwaysActive>
       <Panel.Root role={role}>
-        <Panel.Toolbar asChild classNames='dx-container'>
+        <Panel.Toolbar asChild classNames='dx-expand'>
           <Menu.Toolbar>
             <Menu.Items />
           </Menu.Toolbar>

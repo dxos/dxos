@@ -89,7 +89,7 @@ export const Transcript = composable<HTMLDivElement, TranscriptProps>(
 
     return (
       <div
-        {...composableProps(props, { classNames: ['dx-container', classNames] })}
+        {...composableProps(props, { classNames: ['dx-expand', classNames] })}
         ref={composeRefs(parentRef, forwardedRef)}
       />
     );

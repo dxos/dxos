@@ -319,7 +319,7 @@ type ChatContentProps = {};
 
 const ChatContent = composable<HTMLDivElement, ChatContentProps>(({ children, ...props }, forwardedRef) => {
   return (
-    <div {...composableProps(props, { classNames: 'dx-expander flex flex-col' })} ref={forwardedRef}>
+    <div {...composableProps(props, { classNames: 'dx-expand flex flex-col' })} ref={forwardedRef}>
       {children}
     </div>
   );
@@ -490,7 +490,7 @@ const ChatThread = ({ classNames, viewType, tailLines, onViewUsage }: ChatThread
   const handleEvent = useCallback((ev: ChatThreadEvent) => event.emit(ev), [event]);
 
   if (!identity) {
-    return <div className='dx-expander' />;
+    return <div className='dx-expand' />;
   }
 
   return (

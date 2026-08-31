@@ -425,7 +425,7 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
             </Form.Root>
           )}
         </div>
-        <div className='dx-container border-t border-subdued-separator'>
+        <div className='dx-expand border-t border-subdued-separator'>
           {selected === 'all' ? (
             <VariantGallery
               variants={galleryItems}
@@ -444,7 +444,7 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
                 {t('generating.label')}
               </Flex>
             ) : (
-              <div className='dx-expander p-2'>
+              <div className='dx-expand p-2'>
                 <Surface.Surface
                   type={VariantRenderer}
                   data={{

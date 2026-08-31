@@ -13,7 +13,7 @@ type TestLayoutProps = PropsWithChildren<{ json?: unknown }>;
 
 export const TestLayout = ({ children, json }: TestLayoutProps) => {
   return (
-    <div className={mx('dx-container grid grid-cols-1 p-4 gap-4', !!json && 'grid-cols-[1fr_1fr]')}>
+    <div className={mx('dx-expand grid grid-cols-1 p-4 gap-4', !!json && 'grid-cols-[1fr_1fr]')}>
       <TestPanel>{children}</TestPanel>
       {!!json && (
         <TestPanel>
@@ -35,7 +35,10 @@ type TestPanelProps = ThemedClassName<PropsWithChildren>;
 
 export const TestPanel = slottable<HTMLDivElement, TestPanelProps>(({ children }, forwardedRef) => {
   return (
-    <div {...composableProps({ classNames: 'dx-container dx-card-surface rounded-sm' })} ref={forwardedRef}>
+    <div
+      {...composableProps({ classNames: 'dx-expand overflow-hidden dx-card-surface rounded-sm' })}
+      ref={forwardedRef}
+    >
       {children}
     </div>
   );

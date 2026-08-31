@@ -99,7 +99,7 @@ const DefaultStory = ({ text }: StoryArgs) => {
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content classNames='grid overflow-hidden'>
-        <div ref={parentRef} className='dx-expander' />
+        <div ref={parentRef} className='dx-expand' />
       </Panel.Content>
     </Panel.Root>
   );

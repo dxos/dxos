@@ -298,7 +298,7 @@ export const Kube = ({ config = {} }) => {
   }, [kube, config]);
 
   return (
-    <div ref={containerRef} className='dx-container'>
+    <div ref={containerRef} className='dx-expand'>
       <div ref={contentRef} />
     </div>
   );

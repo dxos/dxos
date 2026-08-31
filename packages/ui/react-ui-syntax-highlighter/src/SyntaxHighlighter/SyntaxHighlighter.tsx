@@ -73,7 +73,7 @@ export const SyntaxHighlighter = composable<HTMLDivElement, SyntaxHighlighterPro
           { classNames, className, role, style },
           {
             role: 'none',
-            classNames: mx('dx-expander p-1 overflow-auto', copyButton && 'relative group'),
+            classNames: mx('dx-expand p-1 overflow-auto', copyButton && 'relative group'),
           },
         )}
         ref={forwardedRef}

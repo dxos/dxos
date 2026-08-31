@@ -198,7 +198,7 @@ GlobeRoot.displayName = 'Globe.Root';
 type GlobeViewportProps = ThemedClassName<PropsWithChildren>;
 
 /**
- * Measured container for the globe. Renders the `relative dx-container` div, observes its size, and
+ * Measured container for the globe. Renders the `relative dx-expand` div, observes its size, and
  * publishes measurements to the context so `Globe.Canvas` can size the canvas.
  */
 const GlobeViewport = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
@@ -212,7 +212,7 @@ const GlobeViewport = composable<HTMLDivElement>(({ children, ...props }, forwar
   }, [width, height, setSize]);
 
   return (
-    <div {...composableProps(props, { classNames: 'relative dx-container' })} ref={composedRef}>
+    <div {...composableProps(props, { classNames: 'relative dx-expand overflow-hidden' })} ref={composedRef}>
       {children}
     </div>
   );

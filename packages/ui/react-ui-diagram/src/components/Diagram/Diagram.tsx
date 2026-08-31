@@ -164,7 +164,7 @@ const DiagramCanvas = composable<HTMLDivElement, PropsWithChildren>(({ children,
 
   return (
     <ReactFlow
-      {...composableProps(props, { classNames: 'dx-expander' })}
+      {...composableProps(props, { classNames: 'dx-expand' })}
       ref={forwardedRef}
       colorMode={themeMode}
       nodes={nodes}

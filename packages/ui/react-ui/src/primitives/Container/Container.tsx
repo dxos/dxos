@@ -14,7 +14,7 @@ export const Container = slottable<HTMLDivElement>(({ children, asChild, ...prop
   const { className, ...rest } = composableProps<HTMLDivElement>(props);
   const Comp = asChild ? Slot : Primitive.div;
   return (
-    <Comp {...rest} className={mx('dx-container', className)} ref={forwardedRef}>
+    <Comp {...rest} className={mx('dx-expand', className)} ref={forwardedRef}>
       {children}
     </Comp>
   );

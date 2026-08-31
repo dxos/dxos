@@ -79,7 +79,7 @@ const Graph = ({ classNames, data = [], bins = data.length, range = defaultRange
   return (
     <div
       ref={containerRef}
-      className={mx('dx-container border rounded-md border-green-800 stroke-green-800', classNames)}
+      className={mx('dx-expand overflow-hidden border rounded-md border-green-800 stroke-green-800', classNames)}
     >
       <svg className='overflow-visible' style={{ transform: `translate(${width / 2}px, ${height / 2}px)` }}>
         {grid && (

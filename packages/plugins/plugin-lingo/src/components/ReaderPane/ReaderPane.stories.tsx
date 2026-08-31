@@ -64,14 +64,14 @@ const ReaderPaneStory = ({ paired = false }: { paired?: boolean }) => {
   // `documentSlots` sizes the editor from its container, so a bare pane collapses to zero width.
   if (!paired) {
     return (
-      <div className='dx-container px-2'>
+      <div className='dx-expand px-2'>
         <ReaderPane {...paneProps} content={TEST_PASSAGE} classNames='h-full' />
       </div>
     );
   }
 
   return (
-    <div className='dx-container grid grid-cols-2 gap-2 px-2'>
+    <div className='dx-expand grid grid-cols-2 gap-2 px-2'>
       <ReaderPane {...paneProps} side='source' content={TEST_PASSAGE} classNames='h-full' />
       <ReaderPane {...paneProps} side='target' content={TEST_PASSAGE_TRANSLATION} classNames='h-full' />
     </div>

@@ -168,7 +168,7 @@ const ModelsPanel = ({
 }: Pick<ChatOptionsProps, 'presets' | 'preset' | 'onPresetChange'>) => {
   const { t } = useTranslation(meta.profile.key);
   return (
-    <div className='dx-container flex flex-col'>
+    <div className='dx-expand flex flex-col'>
       <Listbox.Root value={preset} onValueChange={onPresetChange} autoFocus>
         <Listbox.Content aria-label={t('options.chat-model.title')}>
           {presets?.map(({ id, label }) => (

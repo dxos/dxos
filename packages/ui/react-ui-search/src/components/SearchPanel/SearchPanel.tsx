@@ -19,7 +19,7 @@ export const SearchPanel = ({ children, ...props }: SearchPanelProps) => {
 
   return (
     <SearchList.Root {...props}>
-      <Panel.Root classNames='dx-container dx-base-surface'>
+      <Panel.Root classNames='dx-expand dx-base-surface'>
         <Panel.Content asChild>
           <SearchList.Content>{children}</SearchList.Content>
         </Panel.Content>

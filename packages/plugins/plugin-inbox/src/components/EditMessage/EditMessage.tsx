@@ -319,7 +319,7 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
             <Column.Center classNames='flex flex-col py-3 min-h-0'>
               <Editor
                 compact
-                classNames='dx-input dx-expander'
+                classNames='dx-input dx-expand'
                 placeholder={t('message-body.placeholder')}
                 extensions={extensions}
                 value={message.blocks?.find((block) => block._tag === 'text')?.text ?? ''}

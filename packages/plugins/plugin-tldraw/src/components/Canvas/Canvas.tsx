@@ -241,7 +241,7 @@ export const CanvasComponent = composable<HTMLDivElement, CanvasProps>(
 
     return (
       <div
-        {...composableProps(props, { classNames: 'dx-expander' })}
+        {...composableProps(props, { classNames: 'dx-expand' })}
         style={{ visibility: ready ? 'visible' : 'hidden' }}
         ref={containerRef}
       >

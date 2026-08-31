@@ -287,12 +287,12 @@ const ConversationStackContent = composable<HTMLDivElement, ConversationStackCon
 
       const scrollIntoView = () => tile.scrollIntoView({ block: 'end', behavior: 'smooth' });
       scrollIntoView();
-      // Focus the reply's body editor (`.dx-expander` distinguishes it from the recipient editors,
+      // Focus the reply's body editor (`.dx-expand` distinguishes it from the recipient editors,
       // which are CodeMirror too). The composer mounts asynchronously — watch the tile until the
       // editor appears, bounded by the same settle window as the scroll re-pinning below;
       // `preventScroll` keeps the focus from cutting the smooth scroll short.
       const focusBody = () => {
-        const content = tile.querySelector<HTMLElement>('.dx-expander .cm-content');
+        const content = tile.querySelector<HTMLElement>('.dx-expand .cm-content');
         if (content) {
           content.focus({ preventScroll: true });
           focusObserver.disconnect();

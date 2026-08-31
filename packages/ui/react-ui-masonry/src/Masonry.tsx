@@ -333,7 +333,7 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
       </>
     );
 
-    // Not `dx-expander` in the non-scrolling case: the width gate needs a definite inline size
+    // Not `dx-expand` in the non-scrolling case: the width gate needs a definite inline size
     // (`w-full min-w-0`) without claiming the block axis, which would fight the surrounding flow —
     // the grid's height comes from the computed layout.
     return scroll ? (

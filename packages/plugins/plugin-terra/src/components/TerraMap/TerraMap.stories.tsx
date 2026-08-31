@@ -165,7 +165,7 @@ const DefaultStory = ({ seed, terrain }: StoryArgs) => {
   return (
     <Menu.Root {...menuActions} attendableId={STORY_ATTENDABLE_ID}>
       <Panel.Root role='article'>
-        <Panel.Toolbar asChild classNames='dx-container'>
+        <Panel.Toolbar asChild classNames='dx-expand'>
           <Menu.Toolbar>
             <Menu.Items />
           </Menu.Toolbar>

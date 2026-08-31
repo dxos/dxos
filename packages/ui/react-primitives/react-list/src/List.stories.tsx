@@ -25,7 +25,7 @@ const items: Item[] = Array.from({ length: 5 }, (_, i) => ({
 //
 
 const StaticStory = () => (
-  <List variant='unordered' className='dx-container border border-separator p-2'>
+  <List variant='unordered' className='dx-expand border border-separator p-2'>
     {items.map((item) => (
       <ListItem key={item.id} className='py-1'>
         <ListItemHeading>{item.label}</ListItemHeading>
@@ -47,7 +47,7 @@ const SingleSelectStory = () => {
       variant='unordered'
       selectable
       aria-label='Single-select example'
-      className='dx-container border border-separator'
+      className='dx-expand border border-separator'
     >
       {items.map((item) => (
         <ListItem
@@ -87,7 +87,7 @@ const MultiSelectStory = () => {
       selectable
       multiSelectable
       aria-label='Multi-select example'
-      className='dx-container border border-separator'
+      className='dx-expand border border-separator'
     >
       {items.map((item) => (
         <ListItem
@@ -110,7 +110,7 @@ const MultiSelectStory = () => {
 //
 
 const CollapsibleStory = () => (
-  <List variant='unordered' className='dx-container border border-separator divide-y divide-subdued-separator'>
+  <List variant='unordered' className='dx-expand border border-separator divide-y divide-subdued-separator'>
     {items.slice(0, 3).map((item) => (
       <ListItem key={item.id} collapsible defaultOpen={item.id === items[0].id}>
         <ListItemOpenTrigger asChild>
