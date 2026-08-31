@@ -15,6 +15,10 @@ import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/convergence-key-inten
 /**
  * Durable write-ahead intents for convergence-key merging.
  *
+ * An intent means "check whether the group named by this key needs merging", not "duplicates
+ * exist": one is recorded for every keyed object the indexer processes, and the merge pass
+ * services a group of one as a no-op before vacating the key's rows.
+ *
  * Not an index: the table holds merge-workflow state, not derived data. It lives in the index
  * database anyway because the coupling is transactional — an intent must commit atomically with
  * the index-cursor advance it guards (see `IndexEngine.#update`); if the cursor advanced and the
