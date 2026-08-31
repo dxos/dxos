@@ -14,8 +14,7 @@ import { type OtelSpanRecord, OtelSpanSink, type OtelSpanSinkInit, PortSpanProce
 
 const defaultInit: OtelSpanSinkInit = {
   type: 'otel-traces-init',
-  endpoint: 'http://localhost:1',
-  headers: {},
+  destinations: [{ endpoint: 'http://localhost:1', headers: {} }],
   resourceAttributes: { 'service.name': 'test-service', 'session.id': 'session-1' },
 };
 

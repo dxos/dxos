@@ -8,6 +8,7 @@ import { type LogRecordExporter } from '@opentelemetry/sdk-logs';
 import { type LogRecord as JsonlLogRecord, LogLevel, log, shortLevelName } from '@dxos/log';
 
 import { OtelLogs, convertLevel } from './logs';
+import { type OtelDestination } from './otel';
 
 /**
  * Sent once per connection to start log export in the worker. Carries the options the
@@ -16,8 +17,7 @@ import { OtelLogs, convertLevel } from './logs';
  */
 export type OtelLogSinkInit = {
   type: 'otel-init';
-  endpoint: string;
-  headers: Record<string, string>;
+  destinations: OtelDestination[];
   /** Plain resource attributes for the producing realm, including `session.id`. */
   resourceAttributes: Record<string, string>;
   /** Minimum level to export. */
@@ -65,8 +65,7 @@ export class OtelLogSink {
     this.#tags = { ...init.tags };
     this.#logLevel = init.logLevel;
     this.#logs = new OtelLogs({
-      endpoint: init.endpoint,
-      headers: init.headers,
+      destinations: init.destinations,
       resource: createResource(init.resourceAttributes),
       getTags: () => this.#tags,
       logLevel: init.logLevel,

@@ -5,13 +5,28 @@
 import { DiagConsoleLogger, DiagLogLevel, diag } from '@opentelemetry/api';
 import { type Resource } from '@opentelemetry/resources';
 
-export type OtelOptions = {
+/** One OTLP/HTTP backend. */
+export type OtelDestination = {
+  /**
+   * Base URL that `/v1/{logs,metrics,traces}` is appended to. Backends that do not serve OTLP at
+   * the root carry their prefix here (PostHog is `https://<host>/i`).
+   */
   endpoint: string;
   headers: Record<string, string>;
+};
+
+export type OtelOptions = {
+  destinations: OtelDestination[];
   resource: Resource;
   getTags: () => { [key: string]: string };
   consoleDiagLogLevel?: string;
 };
+
+export type OtelSignal = 'logs' | 'metrics' | 'traces';
+
+/** Absolute OTLP URL for one signal at one destination. */
+export const signalUrl = (destination: OtelDestination, signal: OtelSignal): string =>
+  resolveOtlpUrl(`${destination.endpoint}/v1/${signal}`);
 
 export const setDiagLogger = (level?: string) => {
   const logLevel = DiagLogLevel[level as keyof typeof DiagLogLevel];

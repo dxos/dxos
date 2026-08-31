@@ -11,8 +11,7 @@ import { OtelMetricsSink, type OtelMetricsSinkInit } from './metrics-sink';
 
 const defaultInit: OtelMetricsSinkInit = {
   type: 'otel-metrics-init',
-  endpoint: 'http://localhost:1',
-  headers: {},
+  destinations: [{ endpoint: 'http://localhost:1', headers: {} }],
   resourceAttributes: { 'service.name': 'test-service' },
   tags: { team: 'blue' },
 };

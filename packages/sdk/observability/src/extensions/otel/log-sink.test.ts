@@ -14,8 +14,7 @@ import { OtelLogSink, type OtelLogSinkInit } from './log-sink';
 
 const defaultInit: OtelLogSinkInit = {
   type: 'otel-init',
-  endpoint: 'http://localhost:1',
-  headers: {},
+  destinations: [{ endpoint: 'http://localhost:1', headers: {} }],
   resourceAttributes: { 'service.name': 'test-service', 'session.id': 'session-1' },
   logLevel: LogLevel.INFO,
   tags: { team: 'blue' },

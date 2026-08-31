@@ -10,7 +10,7 @@ import { DXOS_VERSION, Remote } from '@dxos/client';
 import { Config, Defaults, Envs, Local, Storage, getEnvString } from '@dxos/config';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import { Observability, ObservabilityExtension, ObservabilityProvider } from '@dxos/observability';
-import { getHostPlatform } from '@dxos/util';
+import { getHostPlatform, isNonNullable } from '@dxos/util';
 
 import { APP_DOMAIN, FEEDBACK_LOGS_PATH, LOG_STORE_MAX_BYTES } from './constants';
 
@@ -102,6 +102,7 @@ export const initializeObservability = async (
         serviceVersion: DXOS_VERSION,
         environment: getEnvString(config, 'DX_ENVIRONMENT') ?? 'unknown',
         config,
+        additionalDestinations: [ObservabilityExtension.PostHog.otelDestination(config)].filter(isNonNullable),
         logs: true,
         logWriter,
         metrics: true,

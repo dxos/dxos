@@ -3,3 +3,4 @@
 //
 
 export * from './extension';
+export * from './otel-destination';

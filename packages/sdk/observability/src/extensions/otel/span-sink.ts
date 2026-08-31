@@ -23,7 +23,7 @@ import {
   type SpanProcessor,
 } from '@opentelemetry/sdk-trace-base';
 
-import { resolveOtlpUrl } from './otel';
+import { type OtelDestination, signalUrl } from './otel';
 
 /**
  * Sent once per connection to start span export in the worker. Carries the options the
@@ -31,8 +31,7 @@ import { resolveOtlpUrl } from './otel';
  */
 export type OtelSpanSinkInit = {
   type: 'otel-traces-init';
-  endpoint: string;
-  headers: Record<string, string>;
+  destinations: OtelDestination[];
   /** Plain resource attributes for the producing realm, including `session.id`. */
   resourceAttributes: Record<string, string>;
 };
@@ -136,7 +135,7 @@ export class PortSpanProcessor implements SpanProcessor {
 }
 
 export type OtelSpanSinkOptions = {
-  /** Test seam: replaces the OTLP exporter. */
+  /** Test seam: replaces the OTLP exporter for every destination. */
   exporter?: SpanExporter;
 };
 
@@ -146,30 +145,36 @@ export type OtelSpanSinkOptions = {
  */
 export class OtelSpanSink {
   readonly #resource: Resource;
-  readonly #processor: BatchSpanProcessor;
+  readonly #processors: BatchSpanProcessor[];
 
   constructor(init: OtelSpanSinkInit, options: OtelSpanSinkOptions = {}) {
     this.#resource = defaultResource().merge(resourceFromAttributes(init.resourceAttributes));
-    this.#processor = new BatchSpanProcessor(
-      options.exporter ??
-        new OTLPTraceExporter({
-          url: resolveOtlpUrl(init.endpoint + '/v1/traces'),
-          headers: init.headers,
-          concurrencyLimit: 10,
-        }),
+    this.#processors = init.destinations.map(
+      (destination) =>
+        new BatchSpanProcessor(
+          options.exporter ??
+            new OTLPTraceExporter({
+              url: signalUrl(destination, 'traces'),
+              headers: destination.headers,
+              concurrencyLimit: 10,
+            }),
+        ),
     );
   }
 
   append(record: OtelSpanRecord): void {
-    this.#processor.onEnd(this.#materialize(record));
+    const span = this.#materialize(record);
+    for (const processor of this.#processors) {
+      processor.onEnd(span);
+    }
   }
 
-  flush(): Promise<void> {
-    return this.#processor.forceFlush();
+  async flush(): Promise<void> {
+    await Promise.all(this.#processors.map((processor) => processor.forceFlush()));
   }
 
-  close(): Promise<void> {
-    return this.#processor.shutdown();
+  async close(): Promise<void> {
+    await Promise.all(this.#processors.map((processor) => processor.shutdown()));
   }
 
   #materialize(record: OtelSpanRecord): ReadableSpan {

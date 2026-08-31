@@ -7,6 +7,7 @@ import { defaultResource, resourceFromAttributes } from '@opentelemetry/resource
 import { type PushMetricExporter } from '@opentelemetry/sdk-metrics';
 
 import { OtelMetrics } from './metrics';
+import { type OtelDestination } from './otel';
 
 /**
  * Sent once per connection to start metric export in the worker. Carries the options the
@@ -16,8 +17,7 @@ import { OtelMetrics } from './metrics';
  */
 export type OtelMetricsSinkInit = {
   type: 'otel-metrics-init';
-  endpoint: string;
-  headers: Record<string, string>;
+  destinations: OtelDestination[];
   resourceAttributes: Record<string, string>;
   tags: Record<string, string>;
 };
@@ -52,8 +52,7 @@ export class OtelMetricsSink {
   constructor(init: OtelMetricsSinkInit, options: OtelMetricsSinkOptions = {}) {
     this.#tags = { ...init.tags };
     this.#metrics = new OtelMetrics({
-      endpoint: init.endpoint,
-      headers: init.headers,
+      destinations: init.destinations,
       resource: defaultResource().merge(resourceFromAttributes(init.resourceAttributes)),
       getTags: () => this.#tags,
       exporter: options.exporter,

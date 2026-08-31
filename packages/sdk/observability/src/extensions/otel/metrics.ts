@@ -25,7 +25,7 @@ import { type CleanupFn } from '@dxos/async';
 import { log } from '@dxos/log';
 import { type MetricData, type MetricObserver, TRACE_PROCESSOR } from '@dxos/tracing';
 
-import { type OtelOptions, resolveOtlpUrl, setDiagLogger } from './otel';
+import { type OtelOptions, setDiagLogger, signalUrl } from './otel';
 import { metricDataToAttributes } from './remote-metrics';
 
 const EXPORT_INTERVAL = 60 * 1000;
@@ -74,7 +74,7 @@ const HISTOGRAM_VIEWS: ViewOptions[] = [
 ];
 
 export type OtelMetricsOptions = OtelOptions & {
-  /** Test seam: replaces the OTLP exporter. */
+  /** Test seam: replaces the OTLP exporter for every destination. */
   exporter?: PushMetricExporter;
 };
 
@@ -93,22 +93,25 @@ export class OtelMetrics {
     //  https://github.com/open-telemetry/opentelemetry-js/issues/4823
     setDiagLogger(options.consoleDiagLogLevel);
 
-    const metricReader = new PeriodicExportingMetricReader({
-      exporter:
-        options.exporter ??
-        new OTLPMetricExporter({
-          url: resolveOtlpUrl(this.options.endpoint + '/v1/metrics'),
-          headers: this.options.headers,
-          // Delta because a cumulative counter restarting at 0 on every client reload reads
-          // downstream as a counter reset.
-          temporalityPreference: AggregationTemporalityPreference.DELTA,
-        }),
-      exportIntervalMillis: EXPORT_INTERVAL,
-    });
-
     this._meterProvider = new MeterProvider({
       resource: this.options.resource,
-      readers: [metricReader],
+      // Each reader collects independently, so observable callbacks run once per destination
+      // and must stay side-effect free.
+      readers: this.options.destinations.map(
+        (destination) =>
+          new PeriodicExportingMetricReader({
+            exporter:
+              options.exporter ??
+              new OTLPMetricExporter({
+                url: signalUrl(destination, 'metrics'),
+                headers: destination.headers,
+                // Delta because a cumulative counter restarting at 0 on every client reload reads
+                // downstream as a counter reset.
+                temporalityPreference: AggregationTemporalityPreference.DELTA,
+              }),
+            exportIntervalMillis: EXPORT_INTERVAL,
+          }),
+      ),
       views: HISTOGRAM_VIEWS,
     });
 
@@ -219,4 +222,3 @@ export class OtelMetrics {
     return instrument;
   }
 }
-
