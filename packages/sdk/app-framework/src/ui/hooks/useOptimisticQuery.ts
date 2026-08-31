@@ -18,7 +18,7 @@ export type QueryProjection<T> = (get: Atom.AtomContext, rows: readonly T[]) => 
 
 /**
  * A live query wrapped in an {@link Optimistic.Overlay}: `rows` re-emits on query changes and on
- * anything `project` reads, while pending overlay entries (see {@link useOptimisticOperation})
+ * anything `project` reads, while pending overlay entries (registered via `overlay.mutate`)
  * render immediately and retire on the emission that carries their write. The query atom is
  * memoized on `deps` — a fresh source would rebuild the overlay and drop pending entries
  * mid-operation, which is why this exists instead of `useQuery` + local state.

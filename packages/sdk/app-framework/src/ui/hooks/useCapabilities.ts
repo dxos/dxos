@@ -10,7 +10,7 @@ import { NoHandlerError } from '@dxos/compute/errors';
 import type * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { Capabilities, type Optimistic } from '../../common';
+import { Capabilities } from '../../common';
 import { type Capability } from '../../core';
 import { usePluginManager } from '../components';
 
@@ -173,47 +173,6 @@ export const useOperation = <TArgs extends readonly unknown[], TInput>(
   optionsRef.current = options;
   return useCallback(
     (...args: TArgs) => void invokePromise(operation, mapRef.current(...args), optionsRef.current),
-    [invokePromise, operation],
-  );
-};
-
-/**
- * Binds a {@link useOptimisticOperation} handler to an {@link Optimistic.Overlay}: `entry` turns
- * the component's callback arguments into the overlay entry rendered until the source catches up.
- */
-export type OptimisticBinding<TArgs extends readonly unknown[], TRow> = {
-  overlay: Pick<Optimistic.Overlay<TRow>, 'mutate'>;
-  entry: (...args: TArgs) => Optimistic.Entry<TRow>;
-};
-
-/**
- * Sibling of {@link useOperation} for optimistic gestures: the returned handler registers the optimistic
- * overlay entry synchronously — the gesture's own frame — then dispatches via `invokePromise` and
- * settles the entry from the promise result: success retires it on the next source emission,
- * failure drops it immediately (auto-revert).
- */
-export const useOptimisticOperation = <TArgs extends readonly unknown[], TInput, TRow>(
-  operation: Operation.Definition<TInput, unknown>,
-  map: (...args: TArgs) => TInput,
-  optimistic: OptimisticBinding<TArgs, TRow>,
-  options?: Operation.InvokeOptions,
-): ((...args: TArgs) => void) => {
-  const { invokePromise } = useOperationInvoker();
-  const mapRef = useRef(map);
-  mapRef.current = map;
-  const optimisticRef = useRef(optimistic);
-  optimisticRef.current = optimistic;
-  const optionsRef = useRef(options);
-  optionsRef.current = options;
-  return useCallback(
-    (...args: TArgs) => {
-      const { overlay, entry } = optimisticRef.current;
-      const handle = overlay.mutate(entry(...args));
-      void invokePromise(operation, mapRef.current(...args), optionsRef.current).then(
-        ({ error }) => (error ? handle.revert() : handle.commit()),
-        () => handle.revert(),
-      );
-    },
     [invokePromise, operation],
   );
 };

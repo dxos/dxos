@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import React from 'react';
+import React, { useCallback } from 'react';
 
 import * as Optimistic from '@dxos/app-framework/Optimistic';
-import { useOperation, useOptimisticOperation, useOptimisticQuery } from '@dxos/app-framework/ui';
+import { useOperation, useOperationHandler, useOptimisticQuery, useSpaceCallback } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { Panel, Switch, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { type TaskDraft, type TaskEdit, TaskList, type TaskPlacement } from '@dxos/react-ui-task';
@@ -47,23 +47,33 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
     spaceId,
   });
 
+  const moveTask = useOperationHandler(TaskOperation.MoveTask);
+  const runMove = useSpaceCallback(
+    spaceId,
+    [Database.Service],
+    (task: Task.Task, { parentTask, before }: TaskPlacement) =>
+      moveTask({
+        task: Ref.make(task),
+        parentTask: parentTask ? Ref.make(parentTask) : null,
+        ...(before ? { before: Ref.make(before) } : {}),
+      }),
+    [moveTask],
+  );
   // The optimistic entry mirrors the MoveTask handler's array write (`TaskSet.reorder` via `reorderItems`),
   // so the dropped row renders in its target position on the drop frame instead of jumping back until
-  // the query re-emits the db order.
-  const handleMove = useOptimisticOperation(
-    TaskOperation.MoveTask,
-    (task: Task.Task, { parentTask, before }: TaskPlacement) => ({
-      task: Ref.make(task),
-      parentTask: parentTask ? Ref.make(parentTask) : null,
-      ...(before ? { before: Ref.make(before) } : {}),
-    }),
-    {
-      overlay,
-      entry: (task, { before }) => ({
-        apply: (rows) => TaskSet.reorderItems(rows, (row) => row.id, task.id, before?.id),
-      }),
+  // the query re-emits the db order. It retires when the handler settles: success commits (the next
+  // source emission carries the real order), failure reverts.
+  const handleMove = useCallback(
+    (task: Task.Task, placement: TaskPlacement) => {
+      const handle = overlay.mutate({
+        apply: (rows) => TaskSet.reorderItems(rows, (row) => row.id, task.id, placement.before?.id),
+      });
+      runMove(task, placement).then(
+        () => handle.commit(),
+        () => handle.revert(),
+      );
     },
-    { spaceId },
+    [overlay, runMove],
   );
 
   const content = (
