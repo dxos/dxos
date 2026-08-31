@@ -15,9 +15,9 @@ Contrast our theme and tree with shadcn/ui and Ark UI to ground the design decis
       express that invariant.
 - [x] **Audit density** — DESIGN.md §1.4: our 3-variable CSS model is strictly more capable than
       shadcn's per-component cva sizes; Ark ships nothing. Nothing to adopt.
-- [x] **Audit Tree** — DESIGN.md §3.1: bespoke keymap (non-APG), `aria-level=0` defect, no
+- [x] **Audit Tree** — react-ui-list/docs/TREE.md §1: bespoke keymap (non-APG), `aria-level=0` defect, no
       disclosure animation, group special-casing, story scaffolding cost.
-- [x] **Decision: adopt @ark-ui/react/tree-view** — DESIGN.md §3.2; user direction to run it as a
+- [x] **Decision: adopt @ark-ui/react/tree-view** — react-ui-list/docs/TREE.md §2; user direction to run it as a
       zag-vs-our-reactivity experiment.
 
 ## Phase 2: dx-preview hover card
@@ -30,7 +30,7 @@ Contrast our theme and tree with shadcn/ui and Ark UI to ground the design decis
 
 - [x] **Implement the new Tree** — rebuilt on Ark TreeView (machine keyboard/focus/ARIA), atom-walk
       → controlled TreeCollection, groups spliced from topology, pragmatic-dnd on rows,
-      enter-disclosure animation. Public `Tree` prop surface preserved. DESIGN.md §3.3–3.4.
+      enter-disclosure animation. Public `Tree` prop surface preserved. react-ui-list/docs/TREE.md §3–4.
 - [x] **Replace the navtree tree** — plugin-navtree consumes the new Tree with zero code changes
       (story role updated treegrid→tree); story parity vs main verified (DOM facts + screenshots).
 - [x] **Stories + keyboard/DnD verification** — 17/17 generic checks (`temp/tree-verify.mjs`),
@@ -42,7 +42,7 @@ Contrast our theme and tree with shadcn/ui and Ark UI to ground the design decis
 - [x] **Branch disclosure now animates height** — `tree-disclose` keyframes animate `block-size: 0 → auto`
       via `interpolate-size: allow-keywords` (opacity carries the reveal where unsupported); gated by a
       DOM-insertion-time `data-animate` stamp so persisted-open branches don't animate on load.
-      Exit stays instant (zag hides immediately; DESIGN.md §3.5).
+      Exit stays instant (zag hides immediately; react-ui-list/docs/TREE.md §5).
 - [x] **Chevron background fixed** — zag stamps `data-state=open` on the trigger, which the ghost
       button styled as an open menu trigger (`bg-input-bg`); overridden to transparent.
 - [x] **Whole-tree focus ring removed** — `outline-none` on the tree container (machine parks focus
@@ -68,8 +68,8 @@ Contrast our theme and tree with shadcn/ui and Ark UI to ground the design decis
       `PreviewComponent` uses the optional capability, and `Editor.Blocks` wraps every portal in
       its own `Suspense` (plus `data-testid=editor.blocks.portal`). Story
       `MarkdownEditor — WithEmbed` + unit tests pin the first-mount path.
-- [ ] Follow-ups tracked in DESIGN.md §3.5 (animated exit, multi-select, popover motion promotion,
-      end-of-row keyboard access).
+- [ ] Follow-ups tracked in react-ui-list/docs/TREE.md §5 (multi-select, end-of-row keyboard
+      access) and DESIGN.md §2 (popover motion promotion to `popoverTheme.content`).
 - [ ] **Flake (repo-wide, not this project)**: `stories-assistant:test-storybook` intermittently
       fails all CI attempts with `EdgeClient._connect` errors from story decorators (shard 3 red on
       both PRs 2026-08-31; passes locally on retry). Candidate for trunk quarantine or stubbing the
