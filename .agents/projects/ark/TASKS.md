@@ -132,3 +132,28 @@ Three constraints, all measured:
 - [ ] **Migrate the remaining ten importers** to drop the dependency from `package.json` entirely.
 - [ ] **Re-baseline `MAX_PRELOAD_BYTES`** in `composer-app/scripts/check-boot-budget.mjs` downward
       once the win lands — a budget left at 4.45 MB silently absorbs the gain.
+
+## Phase 6: Theme variants for `react-ui-list`
+
+Tracked 2026-08-31. Bring `List.theme.ts` up to the pattern
+[`react-ui-form/src/components/Form/Form.theme.ts`](../../../packages/ui/react-ui-form/src/components/Form/Form.theme.ts)
+established.
+
+Gap today: `listTheme` has slots and exactly one **structural** variant (`hasIcon`, which reserves
+the leading-icon grid track). `formTheme` has a **named-variant axis** — `variant: default |
+settings` — where selecting a variant restyles every slot for a usage context, plus a companion
+non-class `behavior` record keyed by the same names (`showDescription`), and a `formSlots` export for
+`bridgeTv` registration. `listTheme` exports `listSlots` but has no variant axis and no behavior map.
+
+- [ ] **Add a `variant` axis to `listTheme`** mirroring `formTheme`'s shape: named contexts that
+      restyle slots together, `defaultVariants.variant = 'default'`, and a `behavior` record keyed by
+      the same variant names for the non-class decisions.
+- [ ] **Decide the variant names from real call sites** rather than inventing them — the candidates
+      are the density/context splits the components already hand-roll at the point of use (sidebar vs
+      document vs dialog/popover), so survey those before fixing the axis.
+- [ ] **Fold `Treegrid.theme.ts` in or leave it deliberately separate.** It is a second, standalone
+      `tv` recipe with its own `rowLevel` lookup and no central registration; whether it joins
+      `List.theme.ts` depends on the Phase 3 decision about what `Treegrid` is for.
+- [ ] Confirm `bridgeTv` registration still resolves once the axis exists, since `listSlots` is
+      derived from `styles()` and a variant axis changes nothing about slot names but does change
+      what a consumer must pass.
