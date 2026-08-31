@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import { use, useCallback, useRef } from 'react';
 
-import { NoHandlerError } from '@dxos/compute';
+import { NoHandlerError } from '@dxos/compute/errors';
 import type * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
