@@ -1,6 +1,6 @@
 # ui-theme-tree — Tasks
 
-_Resume: all three phases done and verified; next is PR prep (before/after screenshots in the description, then `submit-pr`). Uncommitted: none (ledger/design updates in the final commit). Last: full-repo build green, navtree play tests 7/7, changeset added._
+_Resume: PR #12858 OPEN. Uncommitted: none. Last: embed/menu defect chain fixed, user-confirmed in-app._
 
 ## Phase 1: Audits
 
