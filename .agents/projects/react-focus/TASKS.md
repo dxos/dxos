@@ -62,10 +62,32 @@ Result: `@dxos/react-ui-attention` now depends on `invariant`, `keyboard`, `log`
 `useHotkeyRecorder` over `CommandDefinition` from `@zag-js/hotkeys`, and the Zag runtime is already
 paid for by the Tree migration. `@dxos/keyboard`'s own header has asked for this replacement since 2023.
 
-- [ ] **Spike the three things that could kill it** before writing anything real: `disableInput`;
-      the context nesting `nestKeyboardContext` performs; and whether the store's scoping can
-      express "only while this surface is attended". `@zag-js/hotkeys` is framework-agnostic, so the
-      React layer belongs in `react-focus` while the core need not.
+- [x] **Spike — done, and it is viable. No blockers.** Run against `@ark-ui/react@5.39.1` in
+      happy-dom; the spike itself was throwaway and is not in the tree.
+
+  - **`disableInput` is Ark's default, and the polarity is inverted.** Store defaults are
+    `{ preventDefault: true, stopPropagation: false, enableOnFormTags: false,
+enableOnContentEditable: false, capture: true }`, so a command does **not** fire while focus is
+    in a text field unless it opts in with `options: { enableOnFormTags: true }` — verified both
+    ways. `@dxos/keyboard`'s `disableInput` is opt-**in** (bindings fire everywhere by default), so
+    **the migration must add `enableOnFormTags` to every binding that did not set
+    `disableInput: true`** — the safe direction is the one that changes behaviour, so it cannot be
+    skipped. Only three call sites mention `disableInput` today against ~74 binding sites, so the
+    default flips for nearly all of them.
+  - **Scopes are a flat active-set, not a hierarchy — and that is enough.** The store exposes
+    `addScope` / `removeScope` / `setScope` / `toggleScope` / `getActiveScopes`, with a wildcard
+    `'*'` always active. An unscoped command always fires; a scoped one fires only while its scope
+    is active. `nestKeyboardContext`'s "a plank inherits root bindings" becomes: root bindings
+    unscoped, plank bindings scoped to the plank, activated when attended. What is genuinely lost is
+    implicit path-prefix inheritance across more than one level — if a binding relies on a 3-segment
+    path inheriting from its grandparent, activation has to add each ancestor scope explicitly.
+  - **Attention gating needs no scope machinery at all.** `enabled` accepts a function and is
+    evaluated per dispatch, so `enabled: () => hasAttention` is the whole answer, reading React
+    state that already exists. Verified: 0 fires while disabled, 1 after enabling.
+  - Also noted: `conflictBehavior: 'warn'` by default, and `useHotkeyRegistrations` returns the
+    registered commands with `label` / `description` / `category` / `keywords` — which is the
+    shortcuts cheatsheet `@dxos/keyboard`'s `data` field was hand-rolling.
+
 - [ ] **Replace `@dxos/keyboard` and `react-hotkeys-hook`** (15 and 3 files respectively) with the
       Ark-backed layer. Three keyboard systems become one, with a rule a reader can apply: DOM
       traversal inside a widget is a focus group; a named command is a hotkey.
