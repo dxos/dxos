@@ -4,6 +4,9 @@ CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}
 COMPOSER_APP_POSTHOG_API_KEY=${COMPOSER_APP_TEST_POSTHOG_API_KEY}
 COMPOSER_APP_POSTHOG_FEEDBACK_SURVEY_ID=0199be95-be15-0000-56ca-1f0dfde8731f
 COMPOSER_APP_POSTHOG_PROJECT_ID=93152
+# Docs Test (Main + Staging) project (126181). PostHog project tokens are public write-only keys
+# shipped in every served page, so they live here as literals like the project ids above.
+DOCS_POSTHOG_API_KEY=phc_5PMOqYy30CdIv0hIzqspq0Go8LKbNKG8bISJb5CViTQ
 POSTHOG_CLI_API_KEY=${POSTHOG_CLI_API_KEY}
 DX_HUB_URL="https://dxos.network/hub/"
 DX_IPDATA_API_KEY=${IPDATA_API_KEY}
