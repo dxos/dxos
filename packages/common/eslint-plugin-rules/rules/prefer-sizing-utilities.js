@@ -67,8 +67,6 @@ export default {
     messages: {
       handRolled: '`{{classes}}` is `{{suggestion}}`. Use the utility so the intent is explicit.',
       redundant: '`{{className}}` already applies `{{redundant}}`. Remove the duplicate.',
-      clipOnConstrained:
-        '`{{className}}` already constrains this element; `overflow-hidden` here adds a clip. Keep it only if a clip is wanted, since it also makes the element a scroll container.',
     },
   },
   create: (context) => {
@@ -101,11 +99,6 @@ export default {
             messageId: 'redundant',
             data: { className: utility, redundant: redundant.join(' ') },
           });
-        }
-        // `dx-fullscreen` pins all four edges, so a clip there is an ordinary choice, not a
-        // duplicated constraint.
-        if (utility !== 'dx-fullscreen' && present.has('overflow-hidden')) {
-          context.report({ node, messageId: 'clipOnConstrained', data: { className: utility } });
         }
       }
 

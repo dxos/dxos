@@ -138,7 +138,7 @@ const ObjectGalleryScene = () => {
   }, []);
 
   return (
-    <div className='relative w-full h-full'>
+    <div className='relative dx-fill'>
       {/* `dx-expand` (w-full h-full) is load-bearing: a bare canvas is a replaced element, so
           `absolute inset-0` alone sizes it to its HTML width/height attributes (the DPI-scaled
           render buffer `engine.resize()` sets) instead of stretching to fill the parent. */}

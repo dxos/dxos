@@ -376,7 +376,7 @@ const TrailStory = ({ trajectory, speed = 10, wiggleAmplitude = 10, ...props }: 
   }, [speed, wiggleAmplitude]);
 
   return (
-    <div ref={wrapperRef} className='h-full w-full'>
+    <div ref={wrapperRef} className='dx-fill'>
       <Ghost ref={ghostRef} {...props} />
     </div>
   );

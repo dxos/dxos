@@ -30,10 +30,11 @@ describe('prefer-sizing-utilities', () => {
         { filename, code: "<div className='min-w-0 truncate' />" },
         { filename, code: "<div className='w-full' />" },
         { filename, code: "<div className='flex-1' />" },
-        // `dx-fullscreen` already determines the box, so a clip on it is an ordinary choice.
+        // A clip alongside a sizing utility is a deliberate choice, not a duplicated constraint.
+        { filename, code: "<div className='dx-expand overflow-hidden' />" },
         { filename, code: "<div className='dx-fullscreen overflow-hidden' />" },
         // Not a class-bearing attribute.
-        { filename, code: "<div title='h-full w-full' />" },
+        { filename, code: "<div title='dx-fill' />" },
       ],
       invalid: [],
     });
@@ -60,8 +61,8 @@ describe('prefer-sizing-utilities', () => {
         },
         {
           filename,
-          code: "<div className='h-full w-full' />",
-          errors: [{ messageId: 'handRolled', data: { classes: 'h-full w-full', suggestion: 'dx-fill' } }],
+          code: "<div className='dx-fill' />",
+          errors: [{ messageId: 'handRolled', data: { classes: 'dx-fill', suggestion: 'dx-fill' } }],
         },
         {
           filename,
@@ -71,19 +72,19 @@ describe('prefer-sizing-utilities', () => {
         // The longest match wins, so one class list yields one suggestion rather than a cascade.
         {
           filename,
-          code: "<div className='flex-1 min-h-0 min-w-0 h-full w-full' />",
+          code: "<div className='flex-1 min-h-0 min-w-0 dx-fill' />",
           errors: [
             {
               messageId: 'handRolled',
-              data: { classes: 'flex-1 min-h-0 min-w-0 h-full w-full', suggestion: 'dx-expand' },
+              data: { classes: 'flex-1 min-h-0 min-w-0 dx-fill', suggestion: 'dx-expand' },
             },
           ],
         },
         // `classNames` and `mx()` are checked too.
         {
           filename,
-          code: "<div classNames={mx('h-full w-full')} />",
-          errors: [{ messageId: 'handRolled', data: { classes: 'h-full w-full', suggestion: 'dx-fill' } }],
+          code: "<div classNames={mx('dx-fill')} />",
+          errors: [{ messageId: 'handRolled', data: { classes: 'dx-fill', suggestion: 'dx-fill' } }],
         },
       ],
     });
@@ -107,24 +108,6 @@ describe('prefer-sizing-utilities', () => {
           filename,
           code: "<div className='dx-fill w-full' />",
           errors: [{ messageId: 'redundant', data: { className: 'dx-fill', redundant: 'w-full' } }],
-        },
-      ],
-    });
-  });
-
-  it('flags a clip on an element the utility already constrains', () => {
-    ruleTester.run('prefer-sizing-utilities', rule, {
-      valid: [],
-      invalid: [
-        {
-          filename,
-          code: "<div className='dx-expand overflow-hidden' />",
-          errors: [{ messageId: 'clipOnConstrained', data: { className: 'dx-expand' } }],
-        },
-        {
-          filename,
-          code: "<div className='dx-grow overflow-hidden' />",
-          errors: [{ messageId: 'clipOnConstrained', data: { className: 'dx-grow' } }],
         },
       ],
     });

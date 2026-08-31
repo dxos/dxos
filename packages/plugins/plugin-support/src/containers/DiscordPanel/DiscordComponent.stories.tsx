@@ -13,7 +13,7 @@ import { DiscordComponent } from './DiscordComponent';
 
 const DefaultStory = () => (
   <DiscordComponent.Root>
-    <div className='grid grid-rows-[auto_auto_minmax(0,1fr)_auto] overflow-hidden h-full w-full'>
+    <div className='grid grid-rows-[auto_auto_minmax(0,1fr)_auto] overflow-hidden dx-fill'>
       <DiscordComponent.Header />
       <DiscordComponent.Channels />
       <DiscordComponent.Content />

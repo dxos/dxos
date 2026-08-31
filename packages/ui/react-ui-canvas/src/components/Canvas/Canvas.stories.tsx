@@ -31,7 +31,7 @@ const DefaultStory = (props: GridProps) => {
 
 const TwoCanvases = (props: GridProps) => {
   return (
-    <div className='grid grid-cols-2 gap-2 h-full w-full'>
+    <div className='grid grid-cols-2 gap-2 dx-fill'>
       <div className='h-full relative'>
         <Canvas>
           <Grid {...props} />

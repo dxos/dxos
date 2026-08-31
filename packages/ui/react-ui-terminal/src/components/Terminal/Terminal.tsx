@@ -163,7 +163,7 @@ export const Terminal = <Name extends string, Input, ContextInput, E, R>({
   return (
     <div
       ref={containerRef}
-      className={mx('overflow-hidden bg-base-surface', dimensions ? 'w-max h-max' : 'grow w-full h-full', classNames)}
+      className={mx('overflow-hidden bg-base-surface', dimensions ? 'w-max h-max' : 'grow dx-fill', classNames)}
     />
   );
 };

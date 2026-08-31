@@ -112,7 +112,7 @@ export const Image = ({
         onLoad={handleImageLoad}
         className={mx(
           'z-10 transition-opacity duration-500',
-          fit === 'cover' ? 'w-full h-full object-cover' : 'object-contain',
+          fit === 'cover' ? 'dx-fill object-cover' : 'object-contain',
         )}
         style={{
           opacity: imageLoaded ? 1 : 0,

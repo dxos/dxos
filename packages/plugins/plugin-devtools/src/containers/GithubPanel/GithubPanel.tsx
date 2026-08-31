@@ -8,7 +8,7 @@ import { GithubComponent } from './GithubComponent';
 
 export const GithubPanel = () => (
   <GithubComponent.Root>
-    <div className='h-full grid grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden h-full w-full'>
+    <div className='dx-fill grid grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden'>
       <GithubComponent.Header />
       <GithubComponent.Content />
       <GithubComponent.StatusBar />

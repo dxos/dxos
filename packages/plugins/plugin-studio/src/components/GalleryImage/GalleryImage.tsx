@@ -28,11 +28,11 @@ export const GalleryImage = ({ src, contentType, alt, classNames }: GalleryImage
       {/* col-span-full so the poster spans Card.Root's grid (icon|title|menu); fixed ratio reserves height. */}
       <div className='col-span-full overflow-hidden bg-modal-surface' style={{ aspectRatio: 16 / 9 }}>
         {src && isVideo ? (
-          <video src={src} muted playsInline preload='metadata' className='block w-full h-full object-cover' />
+          <video src={src} muted playsInline preload='metadata' className='block dx-fill object-cover' />
         ) : src ? (
-          <img src={src} alt={alt ?? ''} loading='lazy' className='block w-full h-full object-cover' />
+          <img src={src} alt={alt ?? ''} loading='lazy' className='block dx-fill object-cover' />
         ) : (
-          <div role='img' aria-label={alt} className='w-full h-full' />
+          <div role='img' aria-label={alt} className='dx-fill' />
         )}
       </div>
       {alt ? (

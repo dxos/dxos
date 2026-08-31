@@ -25,9 +25,9 @@ export const SvgArticle = ({ canvas }: SvgArticleProps) => {
   const objects = useMemo(() => SvgHandler.read(snapshot?.content ?? {}).scene.objects, [snapshot]);
 
   return (
-    <Panel.Root classNames='w-full h-full'>
+    <Panel.Root classNames='dx-fill'>
       <Panel.Content asChild>
-        <SceneSvg classNames='dx-attention-surface w-full h-full' objects={objects} />
+        <SceneSvg classNames='dx-attention-surface dx-fill' objects={objects} />
       </Panel.Content>
     </Panel.Root>
   );

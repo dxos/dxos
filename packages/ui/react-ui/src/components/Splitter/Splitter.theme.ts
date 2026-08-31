@@ -10,7 +10,7 @@ export type SplitterStyleProps = {
 };
 
 const root: ComponentFunction<SplitterStyleProps> = ({ orientation }, ...etc) =>
-  mx('relative flex w-full h-full overflow-hidden', orientation === 'vertical' ? 'flex-col' : 'flex-row', ...etc);
+  mx('relative flex dx-fill overflow-hidden', orientation === 'vertical' ? 'flex-col' : 'flex-row', ...etc);
 
 const panel: ComponentFunction<SplitterStyleProps> = (_props, ...etc) =>
   mx('relative grid overflow-hidden min-w-0 min-h-0', ...etc);

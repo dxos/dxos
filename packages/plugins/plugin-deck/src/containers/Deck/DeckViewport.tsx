@@ -487,7 +487,7 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
     // type across a presentation change — the reconciliation that keeps a plank's DOM (and therefore
     // its content state and scroll) alive when the deck crosses 1↔2 planks.
     return (
-      <Mosaic.Tile {...props} classNames='relative h-full w-full'>
+      <Mosaic.Tile {...props} classNames='relative dx-fill'>
         {companion ? (
           <CompanionSplit
             id={id}
@@ -506,7 +506,7 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   // Mobile planks are fixed full-viewport-width scroll-snap points, not user-resizable.
   if (isMobile) {
     return (
-      <Mosaic.Tile {...props} classNames='relative h-full w-full snap-start'>
+      <Mosaic.Tile {...props} classNames='relative dx-fill snap-start'>
         <DeckPlank id={id} part='main' active={deck.active} classNames='size-full' />
       </Mosaic.Tile>
     );
@@ -1780,7 +1780,7 @@ export const DeckPlanks = () => {
                   // sliding deck; it is a gap only, so the deck runs flush to both ends of the viewport.
                   classNames={
                     breakpoint === 'mobile'
-                      ? 'h-full w-full'
+                      ? 'dx-fill'
                       : isSliding
                         ? mx(
                             'h-full gap-(--main-spacing)',
@@ -1791,7 +1791,7 @@ export const DeckPlanks = () => {
                             // along with the row.
                             expose && 'origin-left translate-x-(--deck-expose-inset) scale-(--deck-expose-scale)',
                           )
-                        : 'h-full w-full'
+                        : 'dx-fill'
                   }
                   getId={getPlankId}
                   items={planks}

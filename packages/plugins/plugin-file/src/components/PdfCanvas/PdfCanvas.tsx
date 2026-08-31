@@ -551,7 +551,7 @@ export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(
 
     if (error) {
       return (
-        <div {...composableProps(props, { classNames: 'h-full w-full overflow-auto' })} ref={forwardedRef}>
+        <div {...composableProps(props, { classNames: 'dx-fill overflow-auto' })} ref={forwardedRef}>
           <div role='alert' className='p-4 text-sm text-error-text'>
             {t('pdf-error.message')}
           </div>
@@ -580,7 +580,7 @@ export const PdfCanvas = composable<HTMLDivElement, PdfCanvasProps>(
         data-pdf-canvas=''
         {...composableProps(props, {
           classNames: [
-            'h-full w-full bg-deck select-text',
+            'dx-fill bg-deck select-text',
             single ? 'overflow-hidden grid place-items-center' : 'overflow-auto',
           ],
         })}

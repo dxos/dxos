@@ -39,5 +39,5 @@ export const Knot = ({ options }: KnotProps = {}) => {
     }
   }, [options]);
 
-  return <div ref={ref} className='relative w-full h-full' />;
+  return <div ref={ref} className='relative dx-fill' />;
 };

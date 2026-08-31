@@ -156,7 +156,7 @@ export const RevealPlayer = composable<HTMLDivElement, RevealProps>(
         })}
         ref={forwardedRef}
       >
-        <div className='relative aspect-video h-full w-full h-auto max-h-full overflow-hidden'>
+        <div className='relative aspect-video dx-fill h-auto max-h-full overflow-hidden'>
           <div ref={deckDivRef} className='absolute inset-0 reveal'>
             {/* React hoists these to <head>; they must not be wrapped in <style> (which only renders CSS text). */}
             <link rel='preconnect' href='https://fonts.gstatic.com' {...{ crossOrigin: '' }} />

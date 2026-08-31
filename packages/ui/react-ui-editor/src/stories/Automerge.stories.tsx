@@ -98,7 +98,7 @@ const EchoStory = () => {
   }, [content, source]);
 
   return (
-    <div className='h-full w-full flex flex-col overflow-hidden'>
+    <div className='dx-fill flex flex-col overflow-hidden'>
       <pre className='p-2 text-xs text-subdued'>
         {JSON.stringify({ index, identity: identity?.identityKey.truncate(), spaceId, objects }, null, 2)}
       </pre>

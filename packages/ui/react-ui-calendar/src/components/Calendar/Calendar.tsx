@@ -632,7 +632,7 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
       <div
         {...composableProps(props, {
           role: 'none',
-          classNames: ['flex flex-col h-full w-full justify-center overflow-hidden outline-hidden', classNames],
+          classNames: ['flex flex-col dx-fill justify-center overflow-hidden outline-hidden', classNames],
         })}
         ref={(node: HTMLDivElement | null) => {
           gridRef.current = node;
@@ -651,7 +651,7 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
         </div>
 
         {/* Grid */}
-        <div className='flex flex-col h-full w-full justify-center overflow-hidden' ref={containerRef}>
+        <div className='flex flex-col dx-fill justify-center overflow-hidden' ref={containerRef}>
           <List
             ref={listRef}
             className='scrollbar-none outline-hidden'

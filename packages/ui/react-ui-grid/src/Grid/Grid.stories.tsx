@@ -223,7 +223,7 @@ export const Calendar: Story = {
             // TODO(burdon): Formatting changes when cell is selected.
             cells[toPlaneCellIndex({ col, row })] = {
               readonly: true,
-              accessoryHtml: '<div class="flex h-full w-full justify-center items-center overflow-hidden">0</div>',
+              accessoryHtml: '<div class="flex dx-fill justify-center items-center overflow-hidden">0</div>',
               className: '',
             };
           }

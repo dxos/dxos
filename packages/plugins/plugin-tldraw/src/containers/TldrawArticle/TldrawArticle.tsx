@@ -68,7 +68,7 @@ const Article = composable<HTMLDivElement, PropsWithChildren>((props, forwardedR
 const Container = composable<HTMLDivElement, PropsWithChildren<{ fill?: boolean }>>(
   ({ fill, ...props }, forwardedRef) => (
     <Flex
-      {...composableProps(props, { classNames: [fill ? 'h-full w-full' : 'aspect-square', 'overflow-hidden'] })}
+      {...composableProps(props, { classNames: [fill ? 'dx-fill' : 'aspect-square', 'overflow-hidden'] })}
       ref={forwardedRef}
     >
       {props.children}
