@@ -15,7 +15,7 @@ projects:
     tasks: .agents/projects/ui-theme-tree/TASKS.md
     design: .agents/projects/ui-theme-tree/DESIGN.md
     prs: []
-    resume: 'Research phase — parallel audits of theme surfaces/density, dx-preview popover mechanism, and Tree/navtree vs ark-ui tree-view.'
+    resume: 'Phases 1-3 DONE and verified (hover card 10/10, tree 17/17, navtree play 7/7, full build green). NEXT: PR prep — before/after screenshots + submit-pr; human drag check of sidebar DnD; follow-ups in DESIGN.md §3.5.'
   - name: blob
     status: active
     user: burdon

@@ -1,6 +1,6 @@
 # ui-theme-tree — Tasks
 
-_Resume: research agents running (theme audit, shadcn/ark docs, dx-preview map, tree audit, ark tree-view docs). Uncommitted: registry + project docs. Last: project registered._
+_Resume: all three phases done and verified; next is PR prep (before/after screenshots in the description, then `submit-pr`). Uncommitted: none (ledger/design updates in the final commit). Last: full-repo build green, navtree play tests 7/7, changeset added._
 
 ## Phase 1: Audits
 
@@ -8,12 +8,16 @@ Contrast our theme and tree with shadcn/ui and Ark UI to ground the design decis
 
 ### Tasks
 
-- [ ] **Audit surfaces** — `packages/ui/ui-theme/src/css/theme/surfaces.css` vs shadcn theming vars and Ark styling conventions.
-  - User focus (2026-08-30): surface colors and how contrast works at the different elevations — selection, hover, borders per surface level. Compute effective values per level, both themes.
-- [ ] **Audit density** — control/toolbar sizing vs shadcn/Ark size variants.
-- [ ] **Audit Tree** — `react-ui-list` Tree vs `@ark-ui/react` tree-view: disclosure + animation, keyboard nav, DnD, end-of-row menus/indicators, multiple islands.
-- [ ] **Decision: adopt @ark-ui/react/tree-view vs rewrite** — write up impact in DESIGN.md.
-  - User direction (2026-08-30): prefer adopting Ark as an experiment — exercise ark/zag concepts against our reactivity (atom, ECHO) and verify pragmatic-dnd can layer over Ark's parts.
+- [x] **Audit surfaces** — DESIGN.md §1: three-model comparison plus the empirical per-elevation
+      contrast tables (probe: `temp/contrast-probe.mjs`) answering the user's focus — hover/selection/
+      separator ΔL is constant across all six levels in both themes; shadcn's fixed tokens cannot
+      express that invariant.
+- [x] **Audit density** — DESIGN.md §1.4: our 3-variable CSS model is strictly more capable than
+      shadcn's per-component cva sizes; Ark ships nothing. Nothing to adopt.
+- [x] **Audit Tree** — DESIGN.md §3.1: bespoke keymap (non-APG), `aria-level=0` defect, no
+      disclosure animation, group special-casing, story scaffolding cost.
+- [x] **Decision: adopt @ark-ui/react/tree-view** — DESIGN.md §3.2; user direction to run it as a
+      zag-vs-our-reactivity experiment.
 
 ## Phase 2: dx-preview hover card
 
@@ -23,9 +27,22 @@ Contrast our theme and tree with shadcn/ui and Ark UI to ground the design decis
 
 ## Phase 3: New tree
 
-- [ ] **Implement the new Tree** per DESIGN.md decision.
-- [ ] **Replace the navtree tree** in the composer sidebar.
-- [ ] **Stories + keyboard/DnD verification.**
+- [x] **Implement the new Tree** — rebuilt on Ark TreeView (machine keyboard/focus/ARIA), atom-walk
+      → controlled TreeCollection, groups spliced from topology, pragmatic-dnd on rows,
+      enter-disclosure animation. Public `Tree` prop surface preserved. DESIGN.md §3.3–3.4.
+- [x] **Replace the navtree tree** — plugin-navtree consumes the new Tree with zero code changes
+      (story role updated treegrid→tree); story parity vs main verified (DOM facts + screenshots).
+- [x] **Stories + keyboard/DnD verification** — 17/17 generic checks (`temp/tree-verify.mjs`),
+      navtree checks (`temp/navtree-verify.mjs`), play tests 7/7, `react-ui-list` unit tests 32/32,
+      full-repo build green.
+
+## Phase 4: Wrap-up
+
+- [ ] **PR** — before/after screenshots in description (tree story + navtree pair captured in
+      `temp/`), then `submit-pr`. Confirm with user whether hover-default ships app-wide at once.
+- [ ] **Human drag check** — real DnD drop in the sidebar (native drag not automatable).
+- [ ] Follow-ups tracked in DESIGN.md §3.5 (animated exit, multi-select, popover motion promotion,
+      end-of-row keyboard access).
 
 ### References
 

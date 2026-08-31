@@ -182,20 +182,58 @@ Known gaps accepted up front:
    preserves the current per-path open state semantics (same node expandable independently at two
    locations).
 
-### 3.3 Architecture
+### 3.3 Architecture (as built)
 
 - Dependency: `@ark-ui/react` via catalog, consumed by `react-ui-list`.
-- Rewrite `Tree` in place as a namespaced composite (`Tree.Root`/`Tree.Item`… wrapping Ark parts,
-  themed via `List.theme.ts` slots, `dx-current`/`dx-selected` grammar), replacing the monolith;
-  port `plugin-navtree` (L1Panel/NavTreeContainer/columns) and any other consumers in the same
-  change — no compatibility shims.
-- Adapter from the navtree atom families to an Ark `TreeCollection` snapshot, rebuilt on graph
-  atom change; expanded/current bridged to the existing persisted ViewState atoms.
-- DnD: `draggable`/`dropTargetForElements` + tree-item hitbox on the item rows, spring-loaded
-  expand via the Ark API, `TreeDropIndicator` kept.
-- Groups ("islands"): `disposition=group` renders a section-heading part (first-class
-  `Tree.Section` instead of the hard-coded special case).
+- **The public `Tree` prop surface is preserved** (model + callbacks + `renderColumns` +
+  `gridTemplateColumns`) so `plugin-navtree` needed zero code changes — the internals are the Ark
+  parts (`Root`/`Tree`/`Branch`/`BranchControl`/`BranchContent`/`BranchTrigger`/`Item` via
+  `NodeProvider`). A full consumer-API re-namespacing was deliberately deferred: it would have
+  ballooned the port without changing what the experiment tests.
+- **Reactive walk → collection**: one atom walks the `TreeModel` families (childIds, item,
+  itemProps, itemOpen, itemCurrent) into an entry tree; any dependency change recomputes the walk
+  and hands the machine a fresh immutable `TreeCollection` plus the controlled
+  `expandedValue`/`selectedValue` arrays. Node value = joined path (per-path state preserved).
+- **Selection policy**: machine `onSelectionChange` is the single select path; input modifiers
+  (alt/shift) are captured on `pointerdown` and consulted within a 500ms window (zag callbacks
+  carry no input event). Re-activating an already-selected row (toggle a current branch, re-open a
+  current leaf) is a row-level `onClick`, since the machine emits no event for an unchanged
+  selection. `expandOnClick=false` keeps navtree's click-navigates semantics; the chevron is
+  `BranchTrigger` (zag stops propagation, so it never selects).
+- **DnD**: `draggable`/`dropTargetForElements` + tree-item hitbox moved from the heading button to
+  the row element; spring-loaded expand and drag-collapse via `onOpenChange`; `TreeData` payload
+  and the navtree `monitorForElements` contract unchanged; `TreeDropIndicator` kept.
+- **Groups**: rendered as section headings; **spliced out of the collection topology** (their
+  children become machine-children of the group's parent) so keyboard traversal never lands on a
+  header. Levels are carried on the entries, so group children stay at the header's indent.
 
-### 3.4 Open items
+### 3.4 Findings (experiment log)
 
-_Running log of findings from the implementation._
+1. **zag role placement**: `role=treeitem` + `aria-selected`/`aria-expanded` land on the Branch
+   _wrapper_; the visible row (BranchControl) is `role=button` with `data-selected` only. Since the
+   wrapper is `display: contents`, selection styling keys off `data-[selected]` on the row — a
+   deliberate deviation from the `aria-selected ↔ dx-selected` grammar (leaf Items do carry
+   `aria-selected`, so the grammar holds there).
+2. **`hidden` vs utility classes**: zag collapses BranchContent with the `hidden` attribute; any
+   display utility (`grid`) overrides the UA rule, so BranchContent needs `[&[hidden]]:hidden`.
+   Generalizable gotcha for any zag/Ark part styled with Tailwind display classes.
+3. **Atoms ↔ machine bridge works cleanly**: fully-controlled expanded/selected + diffing the
+   change details onto per-path `onOpenChange`/`onSelect` callbacks round-trips through the navtree
+   ViewState atoms with no double-fires observed. Cost: any state change rebuilds the whole walk +
+   collection (fine at sidebar scale; a memoized incremental walk is the escalation path).
+4. **pragmatic-dnd coexists with the machine** — no interference between zag's pointer handling
+   and draggable/dropTarget on the same element (draggable attr stamped, instructions render).
+   Real drop verification needs a human drag (native HTML5 drag can't be automated).
+5. Verified 17/17 generic checks (render, chevron + full keyboard expand/collapse incl. typeahead
+   keymap, click/keyboard selection, select-vs-toggle policy, groups, draggable wiring, zero
+   console errors) plus navtree story parity vs main (identical DOM facts + pixel-equivalent
+   screenshots) and the plugin-navtree play tests (7/7).
+
+### 3.5 Open items
+
+- Animated exit (measured-height collapse) — enter-only animation shipped.
+- Multi-select (`selectionMode='multiple'` is plumbed but unused; Shift+Arrow range selection
+  untested against navtree semantics).
+- Consider promoting the popover fade+zoom to `popoverTheme.content` as the default popover motion.
+- Tabster-groupper equivalent for end-of-row controls (currently reachable by pointer only, per
+  APG); evaluate zag's expectations before wiring tabster inside machine-owned rows.
