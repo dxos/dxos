@@ -296,9 +296,10 @@ export const TestEdit: Story = {
     const description = () => pane.querySelector<HTMLElement>('[data-testid="taskList.edit.description"]');
     const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]'));
 
-    // Nothing selected: the pane creates, and has no description to attach one to.
+    // Nothing selected: the pane creates. Its description belongs to the task being created, so it
+    // starts empty rather than absent (see `TestCreateWithDescription`).
     await expect(title().value).toEqual('');
-    await expect(description()).toBeNull();
+    await waitFor(async () => expect(description()).not.toBeNull());
 
     // ...and offers no Save/Cancel: with nothing typed there is nothing to save and nothing to
     // cancel, and two dead controls read as a form to fill in rather than a place to type.
@@ -333,8 +334,7 @@ export const TestEdit: Story = {
     // Escape gives the reader a way back out: the selection clears and the pane returns to creating.
     first.focus();
     first.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-    await waitFor(async () => expect(description()).toBeNull());
-    await expect(title().value).toEqual('');
+    await waitFor(async () => expect(title().value).toEqual(''));
     await expect(canvasElement.querySelectorAll('[aria-selected="true"]')).toHaveLength(0);
 
     // Re-select for the remaining assertions.
@@ -366,8 +366,11 @@ export const TestEdit: Story = {
     await userEvent.click(content());
     await userEvent.keyboard(' KEEP');
     await userEvent.click(pane.querySelector<HTMLElement>('[data-testid="taskList.edit.save"]')!);
-    await waitFor(async () => expect(description()).toBeNull());
-    await expect(title().value).toEqual('');
+    await waitFor(async () => expect(title().value).toEqual(''));
+    await expect(canvasElement.querySelectorAll('[aria-selected="true"]')).toHaveLength(0);
+    // The pane is creating again, so the field it kept is the new task's and holds none of the
+    // edited one's text.
+    await expect(text()).not.toContain('KEEP');
 
     // Cancel leaves the same way but throws the pending edit away. The buttons must not take focus:
     // the fields commit on blur, so a Cancel that stole focus would have written the very text it is
@@ -377,7 +380,7 @@ export const TestEdit: Story = {
     await userEvent.click(content());
     await userEvent.keyboard(' THROW');
     await userEvent.click(pane.querySelector<HTMLElement>('[data-testid="taskList.edit.cancel"]')!);
-    await waitFor(async () => expect(description()).toBeNull());
+    await waitFor(async () => expect(title().value).toEqual(''));
     await expect(canvasElement.querySelectorAll('[aria-selected="true"]')).toHaveLength(0);
 
     // ...so what Save wrote survived and what Cancel discarded did not.
@@ -392,6 +395,46 @@ export const TestEdit: Story = {
  * With `showDescription` off the pane is title-only, even for a selected task the list can update —
  * which is what a host with no room for a markdown field (the chat strip) renders.
  */
+/**
+ * Creating with a description: the pane's description field is present with nothing selected, and
+ * what is typed into it reaches `onTaskCreate` as part of the same draft as the title.
+ */
+export const TestCreateWithDescription: Story = {
+  args: { showGroupLabels: false, showDescriptions: true },
+  play: async ({ canvasElement }) => {
+    const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
+    const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]')!;
+    const description = () => pane.querySelector<HTMLElement>('[data-testid="taskList.edit.description"]');
+    const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]'));
+
+    // Nothing selected, and the field is there anyway — a new task can be given a description.
+    await expect(title().value).toEqual('');
+    await waitFor(async () => expect(description()).not.toBeNull());
+    const content = () => description()!.querySelector<HTMLElement>('.cm-content')!;
+    await waitFor(async () => expect(content()).not.toBeNull());
+
+    // Type the description FIRST, then the title, and create from the title with Enter — the field
+    // is still held open at that point, so the create is what has to commit it.
+    const before = rows().length;
+    await userEvent.click(content());
+    await userEvent.keyboard('Roast it twice');
+    await userEvent.click(title());
+    await userEvent.keyboard('New task{Enter}');
+
+    await waitFor(async () => expect(rows()).toHaveLength(before + 1));
+    // Found by title, not by position: the list groups by status, so a new todo lands in its group
+    // rather than at the end.
+    const created = rows().find((row) => row.textContent?.includes('New task'));
+    await expect(created).not.toBeUndefined();
+    await expect(created!.textContent).toContain('Roast it twice');
+
+    // ...and the pane resets, so the next task does not inherit the last one's description. The
+    // field is not empty-stringed: CodeMirror paints the placeholder inside `.cm-content`.
+    await expect(title().value).toEqual('');
+    await waitFor(async () => expect(content().textContent).not.toContain('Roast it twice'));
+  },
+};
+
 export const TestEditWithoutDescription: Story = {
   args: { showGroupLabels: false, showDescription: false },
   play: async ({ canvasElement }) => {

@@ -95,10 +95,10 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
       getTaskActions={getTaskActions}
       onTaskMove={handleMove}
     >
-      <TaskList.Viewport classNames='grid grid-rows-[auto_1fr] gap-2'>
+      <TaskList.Viewport>
         <TaskList.Content classNames='dx-document' />
       </TaskList.Viewport>
-      <div className='p-2'>
+      <div className='p-2 pt-0'>
         <TaskList.Edit
           showDescription
           classNames='dx-document border border-separator rounded-md p-2'

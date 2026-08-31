@@ -16,7 +16,7 @@ export default Capability.makeModule(
       {
         id: 'delegate-to-chat',
         label: 'Assign to agent',
-        icon: 'ph--chat-text--regular',
+        icon: 'ph--sparkle--regular',
         // Applies to every task: a conversation about it is always meaningful, so there is nothing
         // to gate on and the list is never empty.
         createInvocations: (task) => [

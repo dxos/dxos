@@ -1010,9 +1010,9 @@ type TaskListEditProps = ComposableProps<{
   /** Placeholder for the title field when nothing is selected (the create case). */
   placeholder?: string;
   /**
-   * Edit the selected task's description under its title. Off by default, matching `Root`'s
-   * `showDescriptions`: a pane that only adds tasks (the chat strip) has no description to edit,
-   * and a markdown field is several rows tall wherever it appears.
+   * Edit a description under the title — the selected task's, or the new task's when creating, so a
+   * task can be added with one. Off by default, matching `Root`'s `showDescriptions`: a markdown
+   * field is several rows tall wherever it appears, which a single-line strip has no room for.
    */
   showDescription?: boolean;
   /** Placeholder for the description field. */
@@ -1055,6 +1055,16 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
       setDraft(current?.title ?? '');
     }
 
+    const descriptionRef = useRef<MarkdownEditableController>(null);
+
+    // The create row's description, mirrored out of the field. A ref rather than state because the
+    // create reads it in the same tick it commits the field, and `useEditable` calls back
+    // synchronously — a `setState` would still hold the previous render's text.
+    const draftDescription = useRef('');
+    // Bumped after a create, to rebuild the held-open editor empty. The field is uncontrolled while
+    // creating (there is no task to read from), so clearing it means remounting it.
+    const [createEpoch, setCreateEpoch] = useState(0);
+
     const commitTitle = useCallback(() => {
       const title = draft.trim();
       if (task && current) {
@@ -1062,8 +1072,14 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
           onTaskUpdate?.(task, { title });
         }
       } else if (title.length > 0) {
-        onTaskCreate?.({ title });
+        // Nothing has committed the description yet — it is held open and the reader is in the
+        // title — so commit it here, before assembling the draft it belongs to.
+        descriptionRef.current?.commit();
+        const description = draftDescription.current.trim();
+        onTaskCreate?.({ title, ...(description.length > 0 && { description }) });
         setDraft('');
+        draftDescription.current = '';
+        setCreateEpoch((epoch) => epoch + 1);
       }
     }, [draft, task, current, onTaskCreate, onTaskUpdate]);
 
@@ -1085,23 +1101,31 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
       [commitTitle],
     );
 
-    const descriptionRef = useRef<MarkdownEditableController>(null);
-
     // Writes both fields and leaves, as cancelling does — the pane drops back to creating either
-    // way, and only what it did with the pending text differs.
+    // way, and only what it did with the pending text differs. Creating commits the description
+    // itself (it is part of the draft), so this only has to for an edit.
     const handleSave = useCallback(() => {
       commitTitle();
-      descriptionRef.current?.commit();
+      if (task && current) {
+        descriptionRef.current?.commit();
+      }
       onTaskSelect?.(undefined);
-    }, [commitTitle, onTaskSelect]);
+    }, [commitTitle, task, current, onTaskSelect]);
 
     // Throws away the pending edit and leaves: the pane drops back to creating, which is the same
-    // exit Escape on a row gives. Reverting first, since deselecting unmounts the fields.
+    // exit Escape on a row gives. Reverting first, since deselecting unmounts the fields. An
+    // abandoned create is cleared rather than reverted — a blur may already have committed text into
+    // the field, and reverting would restore exactly that.
     const handleCancel = useCallback(() => {
-      descriptionRef.current?.revert();
+      if (task && current) {
+        descriptionRef.current?.revert();
+      } else {
+        draftDescription.current = '';
+        setCreateEpoch((epoch) => epoch + 1);
+      }
       setDraft('');
       onTaskSelect?.(undefined);
-    }, [onTaskSelect]);
+    }, [task, current, onTaskSelect]);
 
     // Nothing to create with and nothing to edit: the pane has no purpose.
     if (!onTaskCreate && !(current && onTaskUpdate)) {
@@ -1155,31 +1179,40 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
             onBlur={handleTitleBlur}
           />
         </Input.Root>
-        {showDescription && current && onTaskUpdate && (
-          <>
-            {!grid && <span />}
-            <span
-              data-testid='taskList.edit.description'
-              className={mx('flex min-w-0', grid && [titleColumn, 'col-end-[-2]'])}
-            >
-              {/* A description is markdown, so it is edited as markdown. `editing` is held open —
+        {showDescription && (current ? onTaskUpdate : onTaskCreate) && (
+          <span
+            data-testid='taskList.edit.description'
+            // Placed explicitly, never by flow: the toolbar is absent until something is typed, so a
+            // description left to auto-place would take the cell it vacates and fall into the icon
+            // column — a field one word wide.
+            className={mx('flex min-w-0 col-end-[-2]', grid ? titleColumn : 'col-start-2')}
+          >
+            {/* A description is markdown, so it is edited as markdown. `editing` is held open —
                   the pane IS the editor, so there is nothing to click into — and the key remounts
-                  it per task, since a field held open never re-reads its subject. */}
-              <MarkdownEditable
-                key={current.id}
-                ref={descriptionRef}
-                classNames='text-sm'
-                value={current.description ?? ''}
-                editing
-                multiline
-                onValueChange={(description) => task && onTaskUpdate?.(task, { description })}
-                placeholder={descriptionPlaceholder}
-                // Held open, so it must not pull focus: selecting a row by keyboard would otherwise
-                // land the reader in the description instead of the list.
-                autoFocus={false}
-              />
-            </span>
-          </>
+                  it per task, since a field held open never re-reads its subject.
+
+                  Creating, the field is uncontrolled: there is no task to read a value from, so it
+                  holds the draft itself until the create collects it. */}
+            <MarkdownEditable
+              key={current?.id ?? `create-${createEpoch}`}
+              ref={descriptionRef}
+              classNames='text-sm'
+              {...(current && { value: current.description ?? '' })}
+              editing
+              multiline
+              onValueChange={(description) => {
+                if (task && current) {
+                  onTaskUpdate?.(task, { description });
+                } else {
+                  draftDescription.current = description;
+                }
+              }}
+              placeholder={descriptionPlaceholder}
+              // Held open, so it must not pull focus: selecting a row by keyboard would otherwise
+              // land the reader in the description instead of the list.
+              autoFocus={false}
+            />
+          </span>
         )}
         {/* The description is held open with no blur to commit it, so the pane needs to say
             explicitly what happens to the pending text. Both buttons keep focus where it is
