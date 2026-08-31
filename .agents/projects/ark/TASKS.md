@@ -192,11 +192,29 @@ not have today — the same argument that justified the navtree rebuild.
 - [ ] Port `hierarchy.test.ts` (155 lines) to whatever replaces the walk, rather than dropping the
       coverage with the module.
 
-## Blocked — external defect: spaces never leave `SPACE_INITIALIZING` in Storybook
+## Suspect — `SPACE_INITIALIZING` stall seen in the agent browser (attribution CORRECTED)
 
-Found 2026-08-31 while trying to verify `AtprotoCompanion`. **Not ark work and not caused by this
-branch** — it reproduces on clean `origin/main`. Recorded here because it blocks UI verification of
-Phases 3 and 7, and needs an ECHO/client owner.
+Found 2026-08-31 while trying to verify `AtprotoCompanion`. Not ark work and not caused by this
+branch.
+
+> **CORRECTION (same day).** This was first written up as a repo-wide defect to hand to an ECHO
+> owner. That attribution is **not supported**: the user reports `devtools/ObjectsTree` renders fine
+> in their browser, while in the agent's in-app browser it renders an empty root with
+> `Timeout [5,000ms] at Trigger.wait` (`useAsyncEffect.ts:17`). So the agent browser is at least
+> partly implicated, and this must NOT be handed to an owner as a confirmed repo defect until
+> someone reproduces it in a normal browser. The mechanism below is accurately described; only the
+> blame is uncertain.
+>
+> Note also that two _different_ harnesses are involved, with two different symptoms, which the
+> original entry conflated:
+>
+> - `withPluginManager` + `ClientPlugin` (`AtprotoCompanion`, `ConnectionView`) → story's own
+>   `<Loading />` fallback, identity created, space stuck at state 4, zero objects.
+> - `withClientProvider` (`ObjectsTree`) → nothing rendered at all, `Trigger.wait` timeout.
+>
+> **Decisive open check:** does a `withPluginManager` story (e.g.
+> `plugins-plugin-atproto-atprotocompanion--published`) seed correctly in a normal browser? If yes,
+> delete this entry — it is an agent-environment artefact.
 
 **Symptom.** Every ECHO-client-backed story hangs in `<Loading />` forever. Confirmed on
 `plugin-atproto` `AtprotoCompanion` (all four stories) and `plugin-connector` `ConnectionView`, which
@@ -224,13 +242,18 @@ is emitted by the `warnAfterTimeout` wrapping that exact wait, which ties the lo
 
 **Ruled out:** machine load (16 cores, load average 2.8, 81% memory free — an earlier claim of mine
 that the numbers did not support); stale Storybook state (reproduced after a restart with
-`.cache/storybook` deleted); cold start (still zero objects at 83 s on a warm server); and this
-branch (reproduced on `origin/main` via a second Storybook on port 9010).
+`.cache/storybook` deleted); cold start (still zero objects at 83 s on a warm server); this branch
+(reproduced on `origin/main` via a second Storybook on port 9010); and browser capability or stale
+state in the agent browser (SharedWorker, Worker, OPFS and IndexedDB all present and working; OPFS
+empty, no Web Locks held or pending, no service workers).
+
+**NOT ruled out:** something specific to the agent's in-app browser that the capability probes above
+do not cover.
 
 **Not yet known:** _why_ `SpaceProperties` never materialises — never created, created in another
 space, or its automerge doc never loads. `slow AM open {duration: 5005ms}` hints at the last.
 
-- [ ] Hand to an ECHO/client owner with the evidence above.
+- [ ] Run the decisive check above in a normal browser BEFORE handing this to anyone.
 - [ ] Consider a timeout or fallback on the `propertiesAvailable` wait — a space that waits forever
       for an object that will never exist is unrecoverable and gives the caller no signal.
 
@@ -262,5 +285,5 @@ a collapse would be undone by the next tick.
       three-column `gridTemplateColumns`, and whether writing `open: false` straight into the state
       atom races `Tree`'s own conceal-then-`commitClose` sequencing (docs/TREE.md §2 gap 1).
       Next diagnostic: compare the computed `animation-name`/`fill-mode` on `[data-part=
-    "branch-content"]` between the two stories — that distinguishes "animation never applied" from
+  "branch-content"]` between the two stories — that distinguishes "animation never applied" from
       "ran and reverted".
