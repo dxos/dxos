@@ -11,11 +11,12 @@ Design: [DESIGN.md](./DESIGN.md); ledger: [TASKS.md](./TASKS.md).
 - **The generator is fixed** (§3). Runs used to plan 24 commands and execute 3–5, because the
   drawn sequence was state-blind and `asyncModelRun` discarded the rest in silence. A plan is now
   simulated against a pure model before anything is spawned, so what is recorded is what runs.
-- **Not yet green end to end.** Every stop so far has been a specific, reproducible cause — three
-  of them modelling errors that are now fixed, two of them defects outside the test (§4).
-- **Results are attributable to the client, not to this EDGE build.** The local workers resolve
-  `@dxos/*` from a catalog pinned to `2be9f24c` (2026-08-27), 54 commits behind this branch, and
-  the pin predates changes in `core/echo`, `core/mesh` and `sdk/client-services`. See §6.
+- **Not green end to end, and the last stop is a product finding rather than a test bug.** Runs
+  used to die on modelling errors; those are fixed (§3), and the run now gets as far as a
+  reproducible replication stall that the SDK's own diagnostics name (finding 6).
+- **Caveat on attribution.** The local workers resolve `@dxos/*` from a catalog pinned to
+  `2be9f24c` (2026-08-27), 54 commits behind this branch. Client-process failures are attributable;
+  wire-level ones need a linked stack first. See §6.
 
 ## 1. Run book (local EDGE)
 
@@ -68,17 +69,31 @@ Notes that cost time to find:
 The full sequence is written to `command-trace.jsonl` as a `plan` entry **before the fleet is
 spawned** — `makeFleetModel` is pure, so the plan is a function of the seed alone.
 
-Same seed, same plan, across two runs and across an intervening change to the executor:
+Every run below planned **25 of 25** commands, against 24 planned / 3–5 executed before the
+generator was fixed.
 
-| Run | Seed | Planned | Executed | Outcome |
+| Run | Seed | Profile | Executed | Stopped by |
 | --- | --- | --- | --- | --- |
-| A | `run-a-2026-08-31` | 25 | 6 | replicant 0 crashed (finding 5) |
-| B | `run-b-nopart` | 25 | 12 | `document not found: s0-d2` (now fixed, §3) |
-| C | `run-b-nopart` | 25 | _see below_ | rerun of B after the fix — identical plan |
+| A | `run-a-2026-08-31` | full | 6 | replicant 0 crashed — finding 5 |
+| B | `run-b-nopart` | `partitions: false` | 12 | `document not found: s0-d2` — modelling error, fixed |
+| C | `run-b-nopart` | `partitions: false` | 5 | `peers disagree on space 0` at the first checkpoint — barrier too weak, fixed |
+| D | `run-b-nopart` | `partitions: false` | 8 | `sync did not quiesce for space 1 within 60000ms` — finding 6 |
 
-B and C drew byte-identical `plan` lines. The seed fixes the sequence, not the timing — a run
-against a live service is not bit-reproducible, which is why the trace, not the seed, is the
-artifact to debug from.
+B, C and D share a seed and drew byte-identical `plan` lines across three intervening changes to
+the executor — the generator depends on the seed and nothing else. The seed fixes the sequence,
+not the timing: a run against a live service is not bit-reproducible, which is why the trace, not
+the seed, is the artifact to debug from.
+
+Run D's plan, for reference — 25 commands, 17 of them data operations:
+
+```
+CreateSpace(1) CreateSpace(1) CreateDocument(0,0) CreateDocument(1,0) Checkpoint()
+EditText(1,0,1,0.5) CreateDocument(2,1) Checkpoint() CreateDocument(0,0) EditText(1,0,0,0.5)
+EditText(1,1,0,0.75) EditText(2,0,2,0.5) CreateDocument(0,0) EditText(0,0,2,0.5)
+CreateDocument(0,1) EditText(0,1,0,0) EditCounter(0,0,2) EditCounter(2,1,1) CreateDocument(1,1)
+EditText(0,1,2,0.5) DeleteDocument(1,0,3) EditText(2,0,2,0) EditText(2,0,1,0.75)
+EditCounter(0,1,1) EditText(0,0,1,0)
+```
 
 ## 3. Corrections to the design
 
@@ -102,6 +117,12 @@ artifact to debug from.
   fails at the command that made it.
 - **A document is not instantly everywhere.** The plan issued an edit on peer B the moment peer A
   created the object; `#findDocument` now waits, bounded, and a timeout there is the real finding.
+- **Convergence is a temporal property, so the assertion has to be a wait.** `quiesce` only proves
+  each peer has nothing outstanding against EDGE; a document EDGE had not yet offered to a sibling
+  left both sides reporting caught up while their digests differed, and run C failed its first
+  checkpoint on a pair that agreed moments later. Checkpoints and the final assertion now retry
+  within the quiescence budget — run D passed that same checkpoint and got three commands further,
+  to a stall that does **not** resolve (finding 6).
 - **`fc.assert` cannot drive this.** With `numRuns: 1` it biases to the smallest input and drew
   **2 commands** against a `maxCommands` of 25 (measured). Superseded by the pool-and-simulate
   scheme above.
@@ -152,10 +173,37 @@ artifact to debug from.
      already handles that error.
    The `partitions: false` spec (`configs/edge-stress-no-partitions.yml`) exists to exercise
    convergence while this stands.
-6. **`POST /db/spaces/:id/notarization` 500s on the local stack** while `GET` on the same path
-   succeeds, alongside `db-service:SubductionAutomergeReplicator: subduction: unexpected inbound
-   frame type { type: 'collection-state' }`. Consistent with the version skew in §6 rather than a
-   defect in either side; needs re-testing against a linked stack before it is filed.
+6. **A document stops halfway: discovered but never delivered.** Run D, second checkpoint, space 1
+   (created by client 2, one document created in it):
+
+   ```
+   sync did not quiesce for space 1 within 60000ms:
+     client 0 {"connected":true,"missingOnLocal":1,"missingOnRemote":0,"differentDocuments":0,"localDocumentCount":1}
+     client 1 {"connected":true,"missingOnLocal":1,"missingOnRemote":0,"differentDocuments":0,"localDocumentCount":1}
+   ```
+
+   Both devices of the other identity stay connected for the full 60 s, know a document is missing,
+   and never receive it. The SDK says the same thing from the inside, against both the peer host
+   and the subduction replicator:
+
+   ```
+   AutomergeHost#0 collection sync not converging {
+     collectionId: 'space:BDRDYYOUL2PYVT4PU5AKD36OS4LTRSXEV:4CiyCJh1NvL1yCR1pzqe7Tug4F6R',
+     passes: 6, missingOnLocal: [ '47jBHyTpJRZbQWgM4b7TABe484Wj' ], missingOnRemote: [], different: []
+   }
+   ```
+
+   So discovery works and **content transfer does not** — which rules out the collection-membership
+   hypothesis the wire logs first suggested. Worth checking against, but not obviously the cause:
+   the edge db-service's subduction decoder
+   (`packages/services/db-service/src/worker/subduction/utils.ts:199`) handles
+   `subduction-frame`, `subduction-batch`, `subduction-connection` and `collection-query`, and
+   warns `unexpected inbound frame type` on the `collection-state` the client sends
+   (`echo-network-adapter.ts:198`). `collection-state` predates the catalog pin, so this is not
+   version skew.
+7. **`POST /db/spaces/:id/notarization` 500s on the local stack** while `GET` on the same path
+   succeeds. Seen on every run; the delegated join still completes, so it is not blocking. Not
+   filed — needs a look at the local stack's own logs first.
 
 ## 5. Harness gaps found
 
@@ -191,9 +239,11 @@ The EDGE workers resolve `@dxos/*` from the edge repo's `dxos` catalog, pinned t
 - **Attributable to this checkout:** everything on the client side — the generator, the model, the
   replicant, and findings 2, 4 and 5, all of which are client-process failures with client stack
   traces.
-- **Not attributable:** anything that looks like a wire-protocol or server-side disagreement,
-  including finding 6. Link the stack first (`pnpm link-packages ../dxos --all --install` in the
-  edge repo) before filing those.
+- **Needs a linked stack before filing upstream:** findings 6 and 7, which are about what does or
+  does not cross the wire. Run `pnpm link-packages ../dxos --all --install` in the edge repo, then
+  repeat run D — the seed makes the plan identical, so the comparison is exact. Note that finding
+  6's mechanism (content never transferred for a document both sides agree is missing) is not
+  explained by the skew, so a linked run is expected to confirm it rather than dissolve it.
 
 The local stack is also not durable: wrangler died mid-run once, with an empty `✘ [ERROR]`, taking
 every worker with it. A run that stalls with every replicant timing out at once should be checked

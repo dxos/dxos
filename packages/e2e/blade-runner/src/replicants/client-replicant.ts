@@ -341,7 +341,11 @@ export class ClientReplicant {
     const db = (await this.#getSpace(spaceId)).db;
     const doc = await this.#findDocument(spaceId, docId);
     const next = (doc.counters[slot] ?? 0) + 1;
-    doc.counters[slot] = next;
+    // ECHO rejects a direct property write; the counter is a per-writer register, so a
+    // read-modify-write inside the callback cannot lose another client's increment.
+    Obj.update(doc, (mutable) => {
+      mutable.counters[slot] = next;
+    });
     await db.flush();
     return next;
   }
