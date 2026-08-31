@@ -14,10 +14,7 @@ import { AssistantOperation } from '#types';
 
 import ChatArticle from '../ChatArticle';
 
-/** Null until the companion-chat provisioner resolves or creates the chat. */
-type ProvisionableChat = Chat.Chat | null;
-
-export type ChatCompanionProps = AppSurface.ArticleProps<ProvisionableChat, {}, Obj.Unknown>;
+export type ChatCompanionProps = AppSurface.ArticleProps<Chat.Chat, {}, Obj.Unknown>;
 
 export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
   ({ role = 'article', subject: chat, companionTo, attendableId }, forwardedRef) => {
@@ -41,10 +38,6 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
       });
       await db.flush();
     }, [db, chat, companionTo, invokePromise]);
-
-    if (!chat) {
-      return null;
-    }
 
     return (
       <ChatArticle

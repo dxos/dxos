@@ -83,10 +83,11 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'companionChat',
+        // While the companion chat is still being provisioned the graph node's data is null; no
+        // candidate matches and the Surface renders nothing until EnsureCompanionChat lands.
         filter: Surface.makeFilter(
           AppSurface.Article,
-          (data) =>
-            Obj.isObject(data.companionTo) && (Obj.instanceOf(Chat.Chat, data.subject) || data.subject === null),
+          (data) => Obj.isObject(data.companionTo) && Obj.instanceOf(Chat.Chat, data.subject),
         ),
         component: ChatCompanion,
         props: ({ role, ref, data: { subject, attendableId, companionTo } }) => ({
