@@ -226,16 +226,21 @@ export class ClientReplicant {
   }
 
   /**
-   * Open a multi-use invitation and keep it alive for the rest of the run, so an identity that was
-   * offline when the space appeared can still be admitted later.
+   * Open a multi-use delegated invitation and keep it alive for the rest of the run.
+   *
+   * Delegated is the point: the credential is written to the space's control feed and redemption
+   * goes through EDGE (`EdgeInvitationHandler`), so any member can admit the guest. An interactive
+   * invitation instead "requires both to be online to complete key exchange" (invitation.proto),
+   * which is why a guest that restarted could sit until the join timed out.
    */
   @trace.span()
   async shareSpace({ spaceId }: { spaceId: string }): Promise<{ invitationCode: string }> {
     const observable = (await this.#getSpace(spaceId)).share({
-      authMethod: Invitation.AuthMethod.NONE,
+      type: Invitation.Type.DELEGATED,
+      authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
       multiUse: true,
     });
-    const invitationCode = await this.#invitationCode(observable);
+    const invitationCode = await this.#delegatedInvitationCode(observable);
     this.#hostedInvitations.set(spaceId, observable);
     return { invitationCode };
   }
@@ -473,8 +478,8 @@ export class ClientReplicant {
   }
 
   /**
-   * The invitation only carries a redeemable swarm key once it reaches CONNECTING, so the code is
-   * minted from that state rather than from the initial value.
+   * For an interactive invitation (device pairing) the code carries a redeemable swarm key only
+   * once it reaches CONNECTING, so it is minted from that state rather than the initial value.
    */
   async #invitationCode(observable: CancellableInvitation): Promise<string> {
     const connecting = new Trigger<Invitation>();
@@ -490,6 +495,28 @@ export class ClientReplicant {
     try {
       const invitation = await connecting.wait({ timeout: INVITATION_TIMEOUT });
       return InvitationEncoder.encode(invitation);
+    } finally {
+      subscription.unsubscribe();
+    }
+  }
+
+  /**
+   * A delegated invitation is redeemable only once its delegation credential is in the control
+   * feed; `InvitationsManager` re-emits the invitation carrying `delegationCredentialId` then.
+   */
+  async #delegatedInvitationCode(observable: CancellableInvitation): Promise<string> {
+    const delegated = new Trigger<Invitation>();
+    const subscription = observable.subscribe(
+      (invitation: Invitation) => {
+        if (invitation.delegationCredentialId) {
+          delegated.wake(invitation);
+        }
+      },
+      (err: Error) => log.warn('invitation error', { err }),
+    );
+
+    try {
+      return InvitationEncoder.encode(await delegated.wait({ timeout: INVITATION_TIMEOUT }));
     } finally {
       subscription.unsubscribe();
     }
