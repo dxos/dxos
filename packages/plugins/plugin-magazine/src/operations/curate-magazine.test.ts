@@ -10,7 +10,7 @@ import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AgentHandlers } from '@dxos/assistant-toolkit';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Feed, Obj, Ref, Tag } from '@dxos/echo';
+import { Database, Feed, Obj, Ref, Tag, URI } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestHelpers } from '@dxos/effect/testing';
 import { StateMap, TagIndex, Text } from '@dxos/schema';
@@ -68,6 +68,9 @@ const TestLayer = AssistantTestLayer({
   aiService: scripted.aiService,
 });
 
+/** Stands in for a feed's backing queue in the ref uris below. */
+const QUEUE_ID = '01M0V0000000000000000QUEUE';
+
 describe('applyKeep', () => {
   let builder: EchoTestBuilder;
 
@@ -98,10 +101,12 @@ describe('applyKeep', () => {
   const makePost = (published: string): Subscription.Post =>
     Obj.make(Subscription.Post, { title: `Post ${published}`, description: 'body', published });
 
+  const entry = (post: Subscription.Post) => ({ ref: Ref.make(post), post });
+
   test('keeps the newest posts up to the bound', async () => {
     const { db } = await setup();
     const posts = ['2026-01-01', '2026-01-02', '2026-01-03'].map((date) =>
-      Ref.make(db.add(makePost(`${date}T00:00:00Z`))),
+      entry(db.add(makePost(`${date}T00:00:00Z`))),
     );
 
     const kept = applyKeep(posts, 2, undefined);
@@ -114,8 +119,41 @@ describe('applyKeep', () => {
 
   test('no-ops when within the bound', async () => {
     const { db } = await setup();
-    const posts = ['2026-01-01', '2026-01-02'].map((date) => Ref.make(db.add(makePost(`${date}T00:00:00Z`))));
+    const posts = ['2026-01-01', '2026-01-02'].map((date) => entry(db.add(makePost(`${date}T00:00:00Z`))));
     expect(applyKeep(posts, 10, undefined)).toHaveLength(2);
+  });
+
+  // Curated posts live in a feed queue, whose refs never populate `ref.target`. The bound used to
+  // read the target directly, so every prior post counted as unresolved and escaped it — the list
+  // grew past `keep` on every run.
+  test('bounds posts whose refs do not resolve their target', async () => {
+    const { db } = await setup();
+    const posts = ['2026-01-01', '2026-01-02', '2026-01-03'].map((date) => db.add(makePost(`${date}T00:00:00Z`)));
+    // Models a queue-resident post: the caller resolved it, but its ref does not resolve a target
+    // (the uri names a queue this database cannot resolve through).
+    const queueUri = (post: Subscription.Post) =>
+      URI.make(`${Obj.getURI(post).toString().split('/').slice(0, -1).join('/')}/${QUEUE_ID}/${post.id}`);
+    const entries = posts.map((post) => ({ ref: Ref.fromURI(queueUri(post)), post }));
+    // Guards the test itself: if these refs ever resolve, it no longer covers the case it was written
+    // for. A ref with no resolver throws on `target` rather than returning undefined — which is the
+    // second reason the bound must not read it.
+    const resolvesTarget = (ref: Ref.Ref<Subscription.Post>) => {
+      try {
+        return ref.target !== undefined;
+      } catch {
+        return false;
+      }
+    };
+    expect(entries.every(({ ref }) => !resolvesTarget(ref))).toBe(true);
+
+    const kept = applyKeep(entries, 2, undefined);
+    expect(kept).toHaveLength(2);
+  });
+
+  test('drops duplicate entries', async () => {
+    const { db } = await setup();
+    const post = db.add(makePost('2026-01-01T00:00:00Z'));
+    expect(applyKeep([entry(post), entry(post)], 10, undefined)).toHaveLength(1);
   });
 });
 
@@ -188,6 +226,59 @@ describe('CurateMagazine', () => {
         const curated = yield* Effect.forEach(magazine.posts, Database.load);
         expect(curated.map((post) => post.title)).toEqual([posts[0].title, posts[1].title]);
         expect(result.curated).toBe(2);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  // A second run is a different code path from the first: it resolves the already-curated refs before
+  // bounding them, and filters them out of the candidate set. Curating only into an empty magazine
+  // left both untested — which is how re-running used to re-offer, and re-add, every curated post.
+  it.effect(
+    'does not offer posts it already curated as candidates',
+    Effect.fnUntraced(
+      function* (_) {
+        const subscription = yield* Database.add(
+          Subscription.makeSubscription({ name: 'Tech & Science Daily', type: 'rss' }),
+        );
+        yield* Database.flush();
+
+        const postFeed = yield* Database.load(subscription.feed);
+        const posts = ['Mars lander touches down', 'Webb images a nebula'].map((title) =>
+          Obj.make(Subscription.Post, {
+            title,
+            link: `https://example.com/${title}`,
+            published: '2026-05-01T00:00:00Z',
+            source: Ref.make(subscription),
+          }),
+        );
+        yield* Feed.append(postFeed, posts);
+        yield* Database.flush();
+
+        const magazine = yield* Database.add(
+          Magazine.make({
+            name: 'The Cosmos',
+            feeds: [Ref.make(subscription)],
+            instructions: 'Curate articles about space exploration and astronomy.',
+          }),
+        );
+        yield* Database.flush();
+
+        // Both runs are scripted up front: the model reads the turn list by index across the whole
+        // test, so a selection queued between runs would arrive after the second run asked for it.
+        // Each run picks the same post — the second run must not be able to.
+        scripted.select([posts[0].id]);
+        scripted.select([posts[0].id]);
+        scripted.select([posts[0].id]);
+
+        const first = yield* Operation.invoke(FeedOperation.CurateMagazine, { magazine: Ref.make(magazine) });
+        yield* Database.flush();
+        expect(first.curated).toBe(1);
+
+        // Curated posts are no longer candidates, so the agent's repeat pick resolves to nothing.
+        const second = yield* Operation.invoke(FeedOperation.CurateMagazine, { magazine: Ref.make(magazine) });
+        expect(second.curated).toBe(0);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

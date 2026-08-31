@@ -55,7 +55,8 @@ const entryTargets = (target: unknown): string[] => {
 
 /** Reachable from tooling rather than from a package entry point, so knip needs them spelled out. */
 const AUXILIARY_ENTRY = [
-  'src/**/*.{test,spec}.{ts,tsx}',
+  // `tst` is tstyche: a type-level test, run by the `test-types` task, imported by nothing.
+  'src/**/*.{test,spec,tst}.{ts,tsx}',
   // Solid and Lit storybooks use their own suffix so the react storybook does not pick them up.
   'src/**/*.{stories,solid-stories,lit-stories}.{ts,tsx}',
   'src/**/*.eval.{ts,tsx}',
@@ -497,6 +498,9 @@ const config: KnipConfig = {
     'tailwindcss',
     // Provided by @storybook/test-runner, which the storybook harness installs on demand.
     'test-storybook',
+    // Shipped by @dxos/app-framework, a dependency of every plugin the `composer-plugin` tag
+    // applies to; the tag file that invokes it lives at the root, which declares no such dep.
+    'dx-plugin',
   ],
   ignoreDependencies: [
     //

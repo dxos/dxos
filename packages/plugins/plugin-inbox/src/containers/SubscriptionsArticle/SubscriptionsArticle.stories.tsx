@@ -17,9 +17,9 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message } from '@dxos/types';
 
+import { InboxPlugin } from '#plugin';
 import { Mailbox } from '#types';
 
-import { InboxPlugin } from '../../plugin';
 import { SubscriptionsArticle } from './SubscriptionsArticle';
 
 /** Bulk-mail senders with a `List-Unsubscribe` affordance; counts drive the noisiest-first sort. */

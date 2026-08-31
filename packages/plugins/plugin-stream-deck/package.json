@@ -1,0 +1,157 @@
+{
+  "name": "@dxos/plugin-stream-deck",
+  "version": "0.11.1",
+  "private": true,
+  "description": "Project a space onto Stream Deck hardware — favorites on keys, progress and stats on dials.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "type": "module",
+  "imports": {
+    "#bridge": {
+      "source": "./src/bridge/index.ts",
+      "types": "./dist/types/src/bridge/index.d.ts",
+      "default": "./dist/lib/bridge.mjs"
+    },
+    "#capabilities": {
+      "source": {
+        "workerd": "./src/capabilities/gen/workerd.ts",
+        "node": "./src/capabilities/gen/node.ts",
+        "default": "./src/capabilities/index.ts"
+      },
+      "types": "./dist/types/src/capabilities/index.d.ts",
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
+      "node": "./dist/lib/capabilities.node.mjs",
+      "default": "./dist/lib/capabilities.mjs"
+    },
+    "#components": {
+      "source": "./src/components/index.ts",
+      "types": "./dist/types/src/components/index.d.ts",
+      "default": "./dist/lib/components.mjs"
+    },
+    "#containers": {
+      "source": "./src/containers/index.ts",
+      "types": "./dist/types/src/containers/index.d.ts",
+      "default": "./dist/lib/containers.mjs"
+    },
+    "#meta": {
+      "source": "./src/meta.ts",
+      "types": "./dist/types/src/meta.d.ts",
+      "default": "./dist/lib/meta.mjs"
+    },
+    "#plugin": {
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
+    },
+    "#protocol": {
+      "source": "./src/protocol/Protocol.ts",
+      "types": "./dist/types/src/protocol/Protocol.d.ts",
+      "default": "./dist/lib/Protocol.mjs"
+    },
+    "#render": {
+      "source": "./src/render/index.ts",
+      "types": "./dist/types/src/render/index.d.ts",
+      "default": "./dist/lib/render.mjs"
+    },
+    "#translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
+    }
+  },
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
+    },
+    "./StreamDeckPlugin": {
+      "source": "./src/StreamDeckPlugin.ts",
+      "types": "./dist/types/src/StreamDeckPlugin.d.ts",
+      "import": "./dist/lib/StreamDeckPlugin.mjs"
+    },
+    "./package.json": "./package.json",
+    "./Protocol": {
+      "source": "./src/protocol/Protocol.ts",
+      "types": "./dist/types/src/protocol/Protocol.d.ts",
+      "import": "./dist/lib/Protocol.mjs"
+    },
+    "./types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "import": "./dist/lib/types.mjs"
+    },
+    "./StreamDeckCapabilities": {
+      "source": "./src/types/StreamDeckCapabilities.ts",
+      "types": "./dist/types/src/types/StreamDeckCapabilities.d.ts",
+      "import": "./dist/lib/StreamDeckCapabilities.mjs"
+    },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "PLUGIN.mdl",
+    "dist",
+    "dx.config.ts",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
+    "@dxos/client": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/echo-react": "workspace:*",
+    "@dxos/graph": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-space": "workspace:*",
+    "@dxos/plugin-status-bar": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@effect/atom-react": "catalog:",
+    "@tauri-apps/api": "catalog:",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/plugin-testing": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "@storybook/react-vite": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@types/ws": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vite": "catalog:",
+    "ws": "catalog:"
+  },
+  "peerDependencies": {
+    "@dxos/react-ui": "workspace:^",
+    "@dxos/ui-theme": "workspace:^",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

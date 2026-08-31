@@ -30,16 +30,13 @@ export const ID = 'org.dxos.routine.connectorSync';
  *
  * The subject may be the Connection itself (the connection flow, the multi-target picker) or a bound
  * target such as a Mailbox (a target's sync affordance); a target resolves to its binding's
- * connection. `appliesTo` can only check the subject's shape; the binding/connector lookups happen
- * in `scaffold` (a synchronous predicate cannot query).
+ * connection.
  */
 export const make = (capabilities: CapabilityManager.CapabilityManager): RoutineCapabilities.Template => ({
   id: ID,
   label: 'Sync',
   icon: 'ph--arrows-clockwise--regular',
-  appliesTo: (subject) =>
-    subject != null &&
-    (Obj.instanceOf(Connection.Connection, subject) || ConnectorSpec.idsForTarget(subject, capabilities).length > 0),
+  hidden: true,
   scaffold: ({ name, subject }) =>
     Effect.gen(function* () {
       if (!subject) {

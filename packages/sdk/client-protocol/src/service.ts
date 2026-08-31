@@ -5,7 +5,8 @@
 import { type Event } from '@dxos/async';
 import type { Stream } from '@dxos/async';
 import type { RequestOptions } from '@dxos/codec-protobuf';
-import { schema } from '@dxos/protocols/proto';
+import { getBufService } from '@dxos/protocols/buf-service';
+import { Config } from '@dxos/protocols/buf/dxos/config_pb';
 import type {
   CreateEpochResponse,
   Device,
@@ -23,7 +24,6 @@ import type {
   RecoverIdentityRequest,
   Space,
 } from '@dxos/protocols/proto/dxos/client/services';
-import type { Config } from '@dxos/protocols/proto/dxos/config';
 import type {
   GetSpaceSnapshotResponse,
   SaveSpaceSnapshotResponse,
@@ -392,7 +392,7 @@ export type AppServiceBundle = {
 };
 
 export const appServiceBundle: ServiceBundle<AppServiceBundle> = {
-  AppService: schema.getService('dxos.iframe.AppService'),
+  AppService: getBufService<AppService>('dxos.iframe.AppService'),
 };
 
 export type ShellServiceBundle = {
@@ -400,5 +400,5 @@ export type ShellServiceBundle = {
 };
 
 export const shellServiceBundle: ServiceBundle<ShellServiceBundle> = {
-  ShellService: schema.getService('dxos.iframe.ShellService'),
+  ShellService: getBufService<ShellService>('dxos.iframe.ShellService'),
 };

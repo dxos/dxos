@@ -4,13 +4,14 @@
 
 import { Trigger, asyncTimeout, synchronized } from '@dxos/async';
 import { Stream } from '@dxos/async';
-import { type Any, type ProtoCodec, type RequestOptions } from '@dxos/codec-protobuf';
+import { type Any, type RequestOptions } from '@dxos/codec-protobuf';
 import { type Context, ContextRpcCodec } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { RpcClosedError, RpcNotOpenError, encodeError } from '@dxos/protocols';
-import { schema } from '@dxos/protocols/proto';
+import { type CompatCodec, compatCodec } from '@dxos/protocols/buf-shape-compat';
+import { RpcMessageSchema } from '@dxos/protocols/buf/dxos/rpc_pb';
 import { type Request, type Response, type RpcMessage } from '@dxos/protocols/proto/dxos/rpc';
 import { exponentialBackoffInterval } from '@dxos/util';
 
@@ -71,8 +72,8 @@ class PendingRpcRequest {
 }
 
 // NOTE: Lazy so that code that doesn't use indexing doesn't need to load the codec (breaks in workerd).
-let RpcMessageCodec!: ProtoCodec<RpcMessage>;
-const getRpcMessageCodec = () => (RpcMessageCodec ??= schema.getCodecForType('dxos.rpc.RpcMessage'));
+let RpcMessageCodec!: CompatCodec<RpcMessage>;
+const getRpcMessageCodec = () => (RpcMessageCodec ??= compatCodec<RpcMessage>(RpcMessageSchema));
 
 enum RpcState {
   INITIAL = 'INITIAL',

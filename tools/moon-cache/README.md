@@ -102,9 +102,16 @@ MOON_CACHE_SHARED_WORKTREE_CACHE=false MOON_EXPERIMENT_CAS_OUTPUTS_CACHE=false m
    bump, on its own: the same task hashed `ad0ce946` under 2.4.5 and `78dc6382` under 2.5.2 with
    identical inputs. Bundle a config change into the same commit as a version bump and the two
    share one invalidation instead of costing two.
-3. **Disk is bounded by `--max_size 200`** (GiB), enforced as an LRU: `bazel-remote` evicts the
-   least recently used blobs rather than filling the disk. Size it under the volume with room for
-   the OS — 200 GiB on the current 320 GiB disk, leaving roughly 110 GiB of headroom.
+3. **`--max_size` is bounded by RAM, not by disk.** It is 50 (GiB), enforced as an LRU:
+   `bazel-remote` evicts the least recently used blobs rather than filling the volume. The
+   temptation is to size it against the 320 GiB disk, and that is how it was first set, at 200.
+   The real constraint is that `bazel-remote` holds one index entry per cache file, measured here
+   at ~1.2 KB against a mean compressed blob of ~14.3 KB. Budget **a quarter of RAM** for the
+   index, not half: the heap has to leave room for the GC target above it and the page cache
+   beside it, and the 16 GB droplet was already thrashing at a 11.7 GB heap. A quarter of 16 GB
+   is 4 GB, which buys 4 GB / 1.2 KB = ~3.3M files, which at 14.3 KB each is ~44 GiB. 50 GiB is
+   that rounded up, and it measured out at 3.78M files and a 4.59 GB heap. See item 7 for what
+   happens when the cap is set from the disk instead.
 4. **Release workflows deliberately skip the cache** — `remote-cache: 'false'` on the setup action,
    or a workflow-level `MOON_REMOTE_HOST` where the workflow does not use that action.
 5. **`--access_log_level` defaults to `all`.** At CI volume that's one line per request: 8 days
@@ -112,22 +119,38 @@ MOON_CACHE_SHARED_WORKTREE_CACHE=false MOON_EXPERIMENT_CAS_OUTPUTS_CACHE=false m
    budget and exhaust the disk. The unit sets `--access_log_level none`; do not drop it when
    copying this config elsewhere. `rsyslog-logrotate.conf` (below) is the backstop for the next
    service that logs at this volume without a bound of its own.
-6. **A restart costs about 70 s of downtime**, more at high file counts. `bazel-remote` walks every
-   cache file to rebuild its in-memory index before it binds 9092/9093, so both ports refuse
-   connections until that finishes — moon falls back to a local build for anyone hitting it during
-   that window. Restarts are safe for the data (below), just not instantaneous. At 7.2M files the
-   scan/sort/index sequence (visible in `journalctl -u bazel-remote`) has taken several minutes,
-   not 70 s.
-7. **Sustained disk I/O saturation degrades the cache before it looks broken.** A CI fan-out can
-   drive the droplet to 40-60% iowait for the better part of an hour, especially when the cache
-   sits pinned at its `--max_size` cap and every insert forces an LRU eviction. Everything queues
-   behind the disk at that point, including the CI setup action's `/status` preflight probe, which
-   answered after its 20 s budget and reddened three otherwise-unrelated CI jobs between 2026-08-09
-   and 2026-08-19 with a false "unreachable or certificate does not verify" error — the host was up
-   the whole time. `sar -u` showing iowait above ~20% during a fan-out is the tell; the fixes are
-   more RAM (page cache absorbs reads before they reach disk), more disk headroom (fewer forced
-   evictions), and the setup action retrying the preflight before failing the job (see
-   `.github/actions/setup/action.yml`).
+6. **A restart costs minutes of downtime, not seconds.** `bazel-remote` walks every cache file to
+   rebuild its in-memory index before it binds 9092/9093, so both ports refuse connections until
+   that finishes — moon falls back to a local build for anyone hitting it during that window.
+   Restarts are safe for the data (below), just not instantaneous. The scan/sort/index sequence is
+   visible in `journalctl -u bazel-remote` and scales with file count: 70 s at low counts, several
+   minutes at 7.2M. Lowering `--max_size` adds an eviction pass on top, which is far more expensive
+   than the scan. Cutting 200 GiB to 50 on 2026-08-25 took **15 min 46 s** end to end at 10.5M
+   files: 2 min to scan, 26 s to sort, then 13 min to delete 6.7M files and 81 GB.
+7. **An oversized `--max_size` degrades the cache slowly, and the symptom looks like disk.** With
+   the cap at 200 GiB the cache never reached it, so `bazel_remote_disk_cache_evicted_bytes_total`
+   sat at 0 from the day the server was built and the file count only ever grew. By 2026-08-25 it
+   was 10.5M files, an 11.7 GB heap and a `go_memstats_next_gc_bytes` target of 14.06 GB on a
+   16 GB box: every GC cycle dragged the index back through swap. `BatchReadBlobs` averaged
+   **18.3 s**, a CI shard spent 70 min of cumulative hydration inside a 28 min budget and was
+   cancelled without running a test, and the merge queue jammed. Lowering the cap to 50 GiB and
+   restarting took the heap to 4.59 GB, `BatchReadBlobs` to normal and the same CI shard's
+   per-task p50 from 6,016 ms to 29 ms.
+
+   What makes this one nasty is that it reads as a disk problem. `sar -u` shows 20-24% iowait and
+   `vmstat` shows the disk busy, but the I/O is swap traffic, not cache I/O, and adding disk would
+   not have touched it. Two counters separate the cases in one look: `evicted_bytes_total` at 0
+   means the cap is not the constraint, and `next_gc_bytes` above physical RAM means the index is.
+   Watch `pswpin/s` in `sar -W` for the early warning — it ran 247/s on 2026-08-17 and 6,260/s on
+   2026-08-24, a slide visible eight days before anything went red.
+
+   The related failure it was originally blamed for is real but separate: a saturated host also
+   queues the CI setup action's `/status` preflight past its 20 s budget, which reddened three
+   otherwise-unrelated jobs between 2026-08-09 and 2026-08-19 with a false "unreachable or
+   certificate does not verify" error while the host was up the whole time. That one is already
+   handled: `.github/actions/setup/action.yml` retries the probe (`--retry 3 --retry-all-errors`)
+   and its `degrade()` then warns, blanks `MOON_REMOTE_HOST` and exits 0 rather than failing the
+   job, so an unreachable cache costs a slower build instead of a red one.
 
 ## The server
 
@@ -136,7 +159,7 @@ MOON_CACHE_SHARED_WORKTREE_CACHE=false MOON_EXPERIMENT_CAS_OUTPUTS_CACHE=false m
 | host | `cache.dxos.network` -> 64.225.13.237 (DigitalOcean NYC3) |
 | service | `bazel-remote` v2.5.0, systemd unit `bazel-remote` |
 | ports | 9092 gRPC, 9093 HTTPS (metrics + `/status`) |
-| storage | `/var/cache/moon`, zstd, 200 GiB LRU |
+| storage | `/var/cache/moon`, zstd, 50 GiB LRU (~3.8M files, see item 3) |
 | certificates | `/etc/bazel-remote/{server.pem,server.key,ca.pem}` |
 
 `--tls_ca_file` is what makes it mTLS. Without it the cache would be world-readable and

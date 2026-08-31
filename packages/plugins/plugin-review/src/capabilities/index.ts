@@ -9,9 +9,15 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
+import { translations as threadTranslations } from '@dxos/react-ui-thread/translations';
 
+import { meta } from '#meta';
 import type { ReviewPluginOptions } from '#plugin';
+import { translations } from '#translations';
 import { AgentIdentity, CommentCapabilities, ReviewCapabilities, ReviewEvents } from '#types';
+
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../../PLUGIN.mdl?raw';
 
 export const AgentIdentityModule = Capability.inlineModule(
   'agent-identity',
@@ -26,12 +32,17 @@ export const AgentRunner = Capability.lazyModule(
   { provides: [CommentCapabilities.AgentRunner], activatesOn: ReviewEvents.Start },
   () => import('./agent-runner'),
 );
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+  environments: ['node'],
+});
 export const HistoryGraph = AppCapability.appGraphBuilder(() => import('./history-graph'), {
   name: 'HistoryGraph',
+  environments: ['node'],
 });
 export const Schema = AppCapability.schema(() => import('./schema'));
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
+  environments: ['node'],
+});
 export const Markdown = Capability.lazyModule(
   'MarkdownExtension',
   // OperationInvoker/AtomRegistry are ambient. `CommentCapabilities.State` is declared because the
@@ -45,12 +56,14 @@ export const Markdown = Capability.lazyModule(
   () => import('./markdown-extension'),
 );
 // Markdown owns the editor-binding socket; this plugin owns the version-aware behaviour, and gates
-// the history companion for markdown documents.
+// the history companion for markdown documents. Browser-only: the binding it contributes is
+// `useMarkdownEditorBinding`, a React hook that mounts the version toolbar and suggestion overlays.
 export const MarkdownBinding = Capability.lazyModule(
   'MarkdownBinding',
   {
     provides: [MarkdownCapabilities.EditorBindingHook, ReviewCapabilities.HistoryProvider],
     activatesOn: MarkdownEvents.Start,
+    environments: [],
   },
   () => import('./markdown-binding'),
 );
@@ -78,9 +91,21 @@ export const CommentState = Capability.lazyModule(
 );
 export const ReviewState = Capability.lazyModule(
   'ReviewState',
-  { provides: [ReviewCapabilities.ReviewRenderPolicy], activatesOn: ReviewEvents.Start },
+  {
+    provides: [ReviewCapabilities.ReviewRenderPolicy],
+    activatesOn: ReviewEvents.Start,
+    environments: ['node'],
+  },
   () => import('./review-state'),
 );
 export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings'), {
   activatesOn: ReviewEvents.Start,
+  environments: ['node'],
+});
+export const Translations = AppCapability.translations([...translations, ...threadTranslations]);
+export const PluginAsset = AppCapability.pluginAsset({
+  pluginId: meta.profile.key,
+  path: 'PLUGIN.mdl',
+  content: pluginSpec,
+  mimeType: 'application/x-mdl',
 });

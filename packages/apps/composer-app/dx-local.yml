@@ -20,8 +20,7 @@ runtime:
     agentHosting:
       type: LOCAL_TESTING
     # EDGE preview by default. Point at EDGE dev or a local EDGE with DX_EDGE_BASE_URL.
-    # TODO(wittjosiah): `https://preview.dxos.network` after the EDGE rename (DX-1150).
     edge:
-      url: https://main.dxos.network/
+      url: https://preview.dxos.network/
     sandbox:
       url: https://sandbox-service.dxos.workers.dev

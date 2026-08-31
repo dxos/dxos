@@ -63,6 +63,8 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
         genesisFeedKey: identity.haloGenesisFeedKey,
         controlTimeframe: identity.controlPipeline.state.timeframe,
         credential,
+        // Absent while the host has not anchored its halo space yet; the joiner then has only the feed.
+        haloSpaceRootUrl: identity.haloSpaceRootUrl,
       },
     };
   }
@@ -99,7 +101,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
 
   async accept(_ctx: Context, response: AdmissionResponse, request: AdmissionRequest): Promise<Partial<Invitation>> {
     invariant(response.device);
-    const { identityKey, haloSpaceKey, genesisFeedKey, controlTimeframe } = response.device;
+    const { identityKey, haloSpaceKey, genesisFeedKey, controlTimeframe, haloSpaceRootUrl } = response.device;
 
     invariant(request.device);
     const { deviceKey, controlFeedKey, dataFeedKey, profile } = request.device;
@@ -117,6 +119,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
       controlTimeframe,
       deviceProfile: profile,
       authorizedDeviceCredential: response.device.credential,
+      haloSpaceRootUrl,
     });
 
     return { identityKey };

@@ -68,7 +68,13 @@ export default FeedOperation.CurateMagazine.pipe(
       // posts already curated, so the additions are simply appended (resolveSelected deduped them).
       const db = Obj.getDatabase(magazine);
       const starredUri = db ? yield* Effect.promise(() => Subscription.findSystemTagUri(db, 'starred')) : undefined;
-      const merged = [...magazine.posts, ...selected.map(({ post }) => Ref.make(post))];
+      // Resolve the already-curated refs so the keep bound can read `published`/starred off them:
+      // queue-resident posts never populate `ref.target`, so without this every prior post counts as
+      // unresolved and escapes the bound.
+      const merged = [
+        ...(yield* loadCurated(magazine.posts)),
+        ...selected.map(({ post }) => ({ ref: Ref.make(post), post })),
+      ];
       const nextPosts = applyKeep(merged, magazine.keep ?? Subscription.DEFAULT_KEEP, starredUri);
       const curated = selected.length;
 
@@ -102,6 +108,18 @@ export default FeedOperation.CurateMagazine.pipe(
 const PHASES = 3;
 
 // -- Helpers --
+
+/**
+ * Resolves curated post refs, tolerating individual failures: a post whose queue entry has rotated
+ * away must not fail the run, and its ref is carried through unresolved.
+ */
+const loadCurated = (refs: readonly Ref.Ref<Subscription.Post>[]): Effect.Effect<CuratedEntry[]> =>
+  Effect.forEach(refs, (ref) =>
+    Effect.tryPromise(() => ref.load()).pipe(
+      Effect.map((post): CuratedEntry => ({ ref, post })),
+      Effect.orElseSucceed((): CuratedEntry => ({ ref, post: undefined })),
+    ),
+  );
 
 /** Bound on concurrent feed syncs. */
 const SYNC_CONCURRENCY = 8;
@@ -185,7 +203,7 @@ type SelectedEntry = {
 /** Resolves the agent's selected entries back to candidate Posts, preserving order and dropping unknown/duplicate ids. */
 export const resolveSelected = (
   candidates: ReadonlyArray<{ post: Subscription.Post }>,
-  entries: readonly { id: string; snippet?: string; imageUrl?: string }[],
+  entries: readonly { id: string; snippet?: string | null; imageUrl?: string | null }[],
 ): SelectedEntry[] => {
   const byId = new Map(candidates.map(({ post }) => [post.id, post]));
   const seen = new Set<string>();
@@ -194,25 +212,49 @@ export const resolveSelected = (
     const post = byId.get(id);
     if (post && !seen.has(id)) {
       seen.add(id);
-      selected.push({ post, snippet, imageUrl });
+      // The agent may send `null` for a field it has nothing for; per-post state stores absence as
+      // `undefined`, so normalize here rather than writing null into ECHO.
+      selected.push({ post, snippet: snippet ?? undefined, imageUrl: imageUrl ?? undefined });
     }
   }
   return selected;
 };
 
+/** A curated post ref together with its resolved target, when it could be loaded. */
+export type CuratedEntry = { ref: Ref.Ref<Subscription.Post>; post: Subscription.Post | undefined };
+
 /**
- * Bounds a curated posts ref list to `keep` total (non-starred) posts: keeps all starred posts and
- * unresolved refs, plus the `keep` newest non-starred by published date. Pure; returns the retained
- * refs. Delegates the sort/slice/starred partition to {@link partitionByKeepBound}.
+ * Bounds a curated posts list to `keep` total (non-starred) posts: keeps all starred posts, plus the
+ * `keep` newest non-starred by published date, and drops duplicates. Pure; returns the retained refs.
+ * Delegates the sort/slice/starred partition to {@link partitionByKeepBound}.
+ *
+ * Takes resolved entries rather than bare refs. Curated Posts live in a feed queue, so `ref.target`
+ * is undefined in a freshly-spawned process; the previous ref-only signature treated every such post
+ * as unresolved, passed it through unbounded, and let the list grow without limit across runs.
+ * An entry whose `post` could not be loaded is still carried through — a transient load failure must
+ * not delete a starred post — but is deduplicated by ref uri.
  */
 export const applyKeep = (
-  posts: readonly Ref.Ref<Subscription.Post>[],
+  entries: readonly CuratedEntry[],
   keep: number,
   starredUri: string | undefined,
 ): Ref.Ref<Subscription.Post>[] => {
   const isStarred = (post: Subscription.Post) => Subscription.hasTag(post.source?.target, post.id, starredUri);
-  const resolved = posts.map((ref) => ref.target).filter((post): post is Subscription.Post => post !== undefined);
-  const unresolved = posts.filter((ref) => !ref.target);
+  const deduped: CuratedEntry[] = [];
+  const seen = new Set<string>();
+  for (const entry of entries) {
+    const key = entry.post?.id ?? entry.ref.uri;
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    deduped.push(entry);
+  }
+
+  // Reuse each post's original ref so a queue-resident post keeps the uri it was curated under.
+  const refByPostId = new Map(deduped.flatMap((entry) => (entry.post ? [[entry.post.id, entry.ref] as const] : [])));
+  const resolved = deduped.map((entry) => entry.post).filter((post): post is Subscription.Post => post !== undefined);
+  const unresolved = deduped.filter((entry) => !entry.post).map((entry) => entry.ref);
   const { kept } = partitionByKeepBound(resolved, keep, isStarred);
-  return [...kept.map((post) => Ref.make(post)), ...unresolved];
+  return [...kept.map((post) => refByPostId.get(post.id) ?? Ref.make(post)), ...unresolved];
 };

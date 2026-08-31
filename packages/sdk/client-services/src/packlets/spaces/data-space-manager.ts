@@ -3,13 +3,18 @@
 //
 
 import { type Doc } from '@automerge/automerge';
-import { type AutomergeUrl, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
+import {
+  type AutomergeUrl,
+  type DocumentId,
+  interpretAsDocumentId,
+  isValidAutomergeUrl,
+} from '@automerge/automerge-repo';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
-import { Event, synchronized, trackLeaks } from '@dxos/async';
+import { Event, scheduleTask, synchronized, trackLeaks } from '@dxos/async';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Context, LifecycleState, Resource, cancelWithContext } from '@dxos/context';
 import {
@@ -28,6 +33,7 @@ import {
   EdgeAutomergeReplicatorService,
   type MeshEchoReplicator,
   MeshEchoReplicatorService,
+  type SpaceRootRefs,
   findInlineObjectOfType,
 } from '@dxos/echo-host';
 import { type DatabaseDirectory, createIdFromSpaceKey } from '@dxos/echo-protocol';
@@ -43,8 +49,8 @@ import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError } from '@dxos/protocols';
+import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
-import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { EdgeReplicationSetting, type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import {
@@ -73,6 +79,7 @@ import {
   type SpaceProtocol,
   type SpaceProtocolSession,
 } from '../space';
+import { openCredentialsDocument } from './credentials-document-store';
 import { DataSpace } from './data-space';
 import { spaceGenesis } from './genesis';
 
@@ -134,6 +141,9 @@ export type AcceptSpaceOptions = {
   spaceKey: PublicKey;
   genesisFeedKey: PublicKey;
 
+  /** From the admitting `SpaceMember` credential; absent for a space still on its control feed. */
+  spaceRootUrl?: string;
+
   /**
    * Latest known timeframe for the control pipeline.
    * We will try to catch up to this timeframe before starting the data pipeline.
@@ -157,6 +167,9 @@ export type AdmitMemberOptions = {
   profile?: ProfileDocument;
   delegationCredentialId?: PublicKey;
   tags?: string[];
+
+  /** Successor to `genesisFeedKey`: what lets the admitted member replicate from this credential alone. */
+  spaceRootUrl?: string;
 };
 
 export type DataSpaceManagerProps = {
@@ -172,7 +185,7 @@ export type DataSpaceManagerProps = {
   meshReplicator?: MeshEchoReplicator;
   echoEdgeReplicator?: EdgeAutomergeReplicator;
   runtimeProps?: DataSpaceManagerRuntimeProps;
-  edgeFeatures?: Runtime.Client.EdgeFeatures;
+  edgeFeatures?: Runtime_Client_EdgeFeatures;
 };
 
 export type DataSpaceManagerRuntimeProps = {
@@ -185,20 +198,52 @@ export type DataSpaceManagerRuntimeProps = {
    * This is used in dedicated worker mode to restore space state after leader changeover.
    */
   autoActivateSpaces?: boolean;
+
+  /**
+   * Anchor spaces on a space root document and mirror credentials into a credentials document.
+   * Off by default — a space then keeps its key-derived id and its control feed, as before.
+   */
+  automergeCredentials?: boolean;
 };
 
 export type CreateSpaceOptions = {
+  /**
+   * Anchor the space on a space root document, taking its id from that document instead of from the
+   * space key. Defaults to the `automergeCredentials` runtime flag, which is off — so a space is
+   * key-derived unless the flag opts in. Ignored for an imported space, which brings its own root.
+   */
+  useSpaceRootDocument?: boolean;
+
   rootUrl?: AutomergeUrl;
   documents?: Record<DocumentId, Uint8Array>;
   tags?: string[];
   membershipPolicy?: MembershipPolicy;
 };
 
+/** Backoff bounds for retrying an anchor that is waiting on replication or an unassigned directory. */
+const ANCHOR_RETRY_INITIAL = 500;
+const ANCHOR_RETRY_MAX = 30_000;
+
+/** Backoff bounds for reporting a space root to edge; replication normally lands well inside this. */
+const SPACE_ROOT_REPORT_RETRY_INITIAL = 500;
+const SPACE_ROOT_REPORT_RETRY_MAX = 30_000;
+
 @trackLeaks('open', 'close')
 export class DataSpaceManager extends Resource {
   public readonly updated = new Event();
 
   private readonly _spaces = new ComplexMap<PublicKey, DataSpace>(PublicKey.hash);
+
+  /** Spaces created legacy in this session; see {@link _anchorSpaceOnRootDocument}. */
+  private readonly _legacyCreatedSpaces = new Set<SpaceId>();
+  /** Roots named by an inviter, to adopt once they replicate; see {@link _anchorSpaceOnRootDocument}. */
+  private readonly _pendingSpaceRootUrls = new Map<SpaceId, AutomergeUrl>();
+
+  /**
+   * Spaces whose close has begun. `DataSpace.isOpen` reads the inner space, which closes last, so it
+   * still reads open through `preClose` — the window the anchor's background work resumes in.
+   */
+  private readonly _closingSpaces = new Set<SpaceId>();
 
   private readonly _spaceManager: SpaceManager;
   private readonly _metadataStore: IMetadataStore;
@@ -209,10 +254,15 @@ export class DataSpaceManager extends Resource {
   private readonly _invitationsManager: InvitationsManager;
   private readonly _edgeConnection?: EdgeConnection = undefined;
   private readonly _edgeHttpClient?: EdgeHttpClient = undefined;
-  private readonly _edgeFeatures?: Runtime.Client.EdgeFeatures = undefined;
+  private readonly _edgeFeatures?: Runtime_Client_EdgeFeatures = undefined;
   private readonly _meshReplicator?: MeshEchoReplicator = undefined;
   private readonly _echoEdgeReplicator?: EdgeAutomergeReplicator = undefined;
   private readonly _runtimeProps?: DataSpaceManagerRuntimeProps = undefined;
+
+  /** Opt-in to the automerge-backed credential scheme; see {@link DataSpaceManagerRuntimeProps}. */
+  private get _automergeCredentials(): boolean {
+    return this._runtimeProps?.automergeCredentials ?? false;
+  }
 
   constructor(params: DataSpaceManagerProps) {
     super();
@@ -238,10 +288,10 @@ export class DataSpaceManager extends Resource {
         return Promise.all(
           Array.from(this._spaces.values()).map(async (space) => {
             const rootUrl = space.automergeSpaceState.rootUrl;
-            const rootHandle = rootUrl
+            using rootLease = rootUrl
               ? await this._echoHost.loadDoc<Doc<DatabaseDirectory>>(this._ctx, rootUrl as AutomergeUrl)
               : undefined;
-            const rootDoc = rootHandle?.doc();
+            const rootDoc = rootLease?.doc();
 
             const properties = rootDoc && findInlineObjectOfType(rootDoc, Type.getTypename(SpaceProperties));
 
@@ -338,10 +388,20 @@ export class DataSpaceManager extends Resource {
     const controlFeedKey = await this._keyring.createKey();
     const dataFeedKey = await this._keyring.createKey();
 
-    const spaceId = await createIdFromSpaceKey(spaceKey);
+    // An imported space brings its own root document, so it keeps the key-derived id.
+    const anchorOnRootDocument =
+      (options.useSpaceRootDocument ?? this._automergeCredentials) && !options.rootUrl && !options.documents;
+    const createdSpace = anchorOnRootDocument
+      ? await this._echoHost.createSpaceWithRootDocument(ctx, spaceKey)
+      : undefined;
+    const spaceId = createdSpace?.spaceId ?? (await createIdFromSpaceKey(spaceKey));
+    if (!createdSpace) {
+      this._legacyCreatedSpaces.add(spaceId);
+    }
 
     const metadata: SpaceMetadata = {
       key: spaceKey,
+      spaceId,
       genesisFeedKey: controlFeedKey,
       controlFeedKey,
       dataFeedKey,
@@ -363,7 +423,7 @@ export class DataSpaceManager extends Resource {
         Object.entries(options.documents).map(async ([documentId, data]) => {
           log('creating document...', { documentId });
           // TODO(dmaretskyi): Broken types -- the bytes get interpreted as CRDT data.
-          const newDoc = await this._echoHost.createDoc(data as any as DatabaseDirectory, {
+          using newDoc = await this._echoHost.createDoc(data as any as DatabaseDirectory, {
             preserveHistory: true,
           });
 
@@ -382,11 +442,13 @@ export class DataSpaceManager extends Resource {
     log('opening space...', { spaceKey });
 
     let root: DatabaseRoot;
-    if (options.rootUrl) {
+    if (createdSpace) {
+      root = createdSpace.directory;
+    } else if (options.rootUrl) {
       const newRootDocId = documentIdMapping[interpretAsDocumentId(options.rootUrl)] ?? failedInvariant();
-      const rootDocHandle = await this._echoHost.loadDoc<DatabaseDirectory>(ctx, newRootDocId);
-      invariant(rootDocHandle, 'Root document must be available after import.');
-      DatabaseRoot.mapLinks(rootDocHandle, documentIdMapping);
+      using rootDocLease = await this._echoHost.loadDoc<DatabaseDirectory>(ctx, newRootDocId);
+      invariant(rootDocLease, 'Root document must be available after import.');
+      DatabaseRoot.mapLinks(rootDocLease, documentIdMapping);
 
       root = await this._echoHost.updateSpaceRoot(ctx, spaceId, `automerge:${newRootDocId}` as AutomergeUrl);
     } else {
@@ -408,6 +470,7 @@ export class DataSpaceManager extends Resource {
       root.url,
       tags,
       options.membershipPolicy,
+      createdSpace?.spaceRootUrl,
     );
     await this._metadataStore.addSpace(metadata);
 
@@ -440,6 +503,7 @@ export class DataSpaceManager extends Resource {
     const tags = opts.tags ? Array.from(opts.tags) : [];
     const metadata: SpaceMetadata = {
       key: opts.spaceKey,
+      spaceId: await createIdFromSpaceKey(opts.spaceKey),
       genesisFeedKey: opts.genesisFeedKey,
       controlTimeframe: opts.controlTimeframe,
       dataTimeframe: opts.dataTimeframe,
@@ -448,6 +512,12 @@ export class DataSpaceManager extends Resource {
 
     const space = await this._constructSpace(ctx, metadata);
     await space.open(ctx);
+    // Anchoring must adopt the root the inviter named rather than mint one, so remember it: a second
+    // root over the same space would split its credential set, leaving members disagreeing about
+    // which document carries the chain.
+    if (opts.spaceRootUrl !== undefined && isValidAutomergeUrl(opts.spaceRootUrl)) {
+      this._pendingSpaceRootUrls.set(space.id, opts.spaceRootUrl);
+    }
     await this._metadataStore.addSpace(metadata);
     // Use DSM lifecycle ctx: the invitation accept flow disposes `ctx` as soon as
     // `acceptSpace` returns (guardedState.complete -> ctx.dispose). Detached data-pipeline
@@ -457,6 +527,156 @@ export class DataSpaceManager extends Resource {
 
     this.updated.emit();
     return space;
+  }
+
+  /**
+   * Mints a space root over a legacy space, transparently and idempotently, keeping its space id. Never
+   * blocks opening the space: a space without an anchor still works, it just has not migrated yet.
+   */
+  /**
+   * @returns Whether the space needs no further anchoring attempt — either because it is now anchored
+   * or because it never will be. False means the attempt no-oped and the caller should retry, which a
+   * space whose directory is not assigned yet depends on.
+   */
+  private async _anchorSpaceOnRootDocument(ctx: Context, space: DataSpace, force = false): Promise<boolean> {
+    // Migrating a space is the opt-in behaviour, so without the flag a space keeps its control feed
+    // and never grows a root. An explicit `migrateSpaceToRootDocument` call still forces it.
+    if (!force && !this._automergeCredentials) {
+      return true;
+    }
+
+    // A space created legacy stays unanchored for this session, or there would be no way to produce
+    // the pre-migration state the migration path starts from. It anchors on the next load, which is
+    // exactly the migration this project is for.
+    if (!force && this._legacyCreatedSpaces.has(space.id)) {
+      return true;
+    }
+
+    try {
+      if (!this._echoHost.getSpaceRootRefs(space.id)) {
+        // A root the inviter named is the space's only root; adopting it has to wait for it to
+        // replicate rather than fall through to minting a second one over the same space.
+        const named = this._pendingSpaceRootUrls.get(space.id);
+        if (named !== undefined) {
+          try {
+            const refs = await this._echoHost.adoptSpaceRoot(ctx, space.id, named);
+            this._pendingSpaceRootUrls.delete(space.id);
+            log('adopted the space root named by the inviter', { spaceId: space.id, refs });
+          } catch (err) {
+            log('space root named by the inviter has not replicated yet', { spaceId: space.id, named, err });
+            return false;
+          }
+        } else {
+          const refs = await this._echoHost.migrateSpaceToRootDocument(ctx, space.id);
+          if (!refs) {
+            return false;
+          }
+
+          log('migrated space to root document', { spaceId: space.id, refs });
+        }
+      }
+
+      // Re-checked after the adopt/migrate await: the anchor now runs on the manager's context, so a
+      // space that started closing during it would otherwise still gain credentials and be reported.
+      if (!this._isSpaceLive(space)) {
+        return false;
+      }
+
+      // Unsettled when the mirror bailed on a closing space: latching would leave the credentials
+      // half-written with nothing to retry it, since an anchored space never attempts again.
+      if (!(await this._mirrorCredentialsToDocument(space))) {
+        return false;
+      }
+      this._reportSpaceRootToEdge(space);
+      return true;
+    } catch (err) {
+      log.warn('failed to anchor space on a root document', { spaceId: space.id, err });
+      return false;
+    }
+  }
+
+  /** Whether the anchor's background work may still act on this space. */
+  private _isSpaceLive(space: DataSpace): boolean {
+    return space.isOpen && !this._closingSpaces.has(space.id);
+  }
+
+  /**
+   * Names the space root to edge, which cannot derive it from a space id that is the hash of the
+   * space key, leaving the space on its control feed.
+   */
+  private _reportSpaceRootToEdge(space: DataSpace): void {
+    const refs = this._echoHost.getSpaceRootRefs(space.id);
+    if (!this._edgeHttpClient || !refs) {
+      return;
+    }
+
+    // Retried in the background because edge rejects a root whose documents have not replicated to
+    // it yet, and bound to the manager's own context because the invitation accept flow disposes
+    // its ctx the moment `acceptSpace` returns, which would cancel every pending retry.
+    let delay = SPACE_ROOT_REPORT_RETRY_INITIAL;
+    const report = async (): Promise<void> => {
+      // A retry outlives the attempt that scheduled it, so it has to re-check: a space closed or
+      // removed in between must not be named to edge.
+      if (!this._isSpaceLive(space)) {
+        return;
+      }
+      try {
+        await this._edgeHttpClient!.recordSpaceRoot(this._ctx, space.id, {
+          rootDocumentUrl: refs.spaceRootDocUrl,
+        });
+        log('reported the space root to edge', { spaceId: space.id });
+      } catch (err) {
+        if (delay > SPACE_ROOT_REPORT_RETRY_MAX) {
+          log.warn('gave up reporting the space root to edge', { spaceId: space.id, err });
+          return;
+        }
+
+        log('space root not accepted by edge yet, retrying', { spaceId: space.id, delay, err });
+        scheduleTask(this._ctx, report, delay);
+        delay *= 2;
+      }
+    };
+
+    scheduleTask(this._ctx, report);
+  }
+
+  /**
+   * Mirrors the space's credentials into its credentials document. Subscribing to processed
+   * credentials backfills the existing chain and dual-writes new ones through one path, since the
+   * control pipeline replays the whole feed on open.
+   */
+  private async _mirrorCredentialsToDocument(space: DataSpace): Promise<boolean> {
+    {
+      // The manager's own context, not the caller's: the invitation flow disposes its context as
+      // soon as `acceptSpace` returns, and a store bound to it would be released before its first
+      // write — the same reason `initializeDataPipelineAsync` is parented here.
+      const ctx = this._ctx;
+      const store = await openCredentialsDocument(ctx, this._echoHost, space.id);
+      if (!this._isSpaceLive(space)) {
+        return false;
+      }
+      for (const credential of space.inner.spaceState.credentials) {
+        store.append(credential);
+      }
+
+      ctx.onDispose(space.inner.credentialProcessed.on((credential) => store.append(credential)));
+
+      // Read side: the document feeds the same state machine the feed does. Processing is idempotent
+      // by credential id, so during the migration window both sources can run without conflict — a
+      // space that has flipped simply stops gaining feed credentials.
+      store.subscribe(ctx, (credential) => space.inner.processDocumentCredential(credential));
+      return true;
+    }
+  }
+
+  /**
+   * Migrates a legacy space onto a space root document, keeping its id, and starts mirroring its
+   * credentials into the document. Idempotent.
+   */
+  async migrateSpaceToRootDocument(ctx: Context, spaceKey: PublicKey): Promise<SpaceRootRefs> {
+    const space = this._spaces.get(spaceKey) ?? failedInvariant();
+    await this._anchorSpaceOnRootDocument(ctx, space, true);
+    return this._echoHost.getSpaceRootRefs(space.id) ?? failedInvariant();
   }
 
   /**
@@ -538,18 +758,23 @@ export class DataSpaceManager extends Resource {
       throw new AlreadyJoinedError();
     }
 
+    // Resolved here rather than at each call site: a caller that forgets it emits a credential the
+    // admitted member cannot find the root from.
+    const spaceRootUrl = options.spaceRootUrl ?? this._echoHost.getSpaceRootRefs(space.id)?.spaceRootDocUrl;
+
     // TODO(burdon): Check if already admitted.
-    const credentials: FeedMessage.Payload[] = await createAdmissionCredentials(
-      this.signingContext.credentialSigner,
-      options.identityKey,
-      space.key,
-      space.genesisFeedKey,
-      options.role,
-      space.spaceState.membershipChainHeads,
-      options.profile,
-      options.delegationCredentialId,
-      space.spaceState.tags,
-    );
+    const credentials: FeedMessage.Payload[] = await createAdmissionCredentials({
+      signer: this.signingContext.credentialSigner,
+      identityKey: options.identityKey,
+      spaceKey: space.key,
+      genesisFeedKey: space.genesisFeedKey,
+      role: options.role,
+      membershipChainHeads: space.spaceState.membershipChainHeads,
+      profile: options.profile,
+      invitationCredentialId: options.delegationCredentialId,
+      tags: space.spaceState.tags,
+      spaceRootUrl,
+    });
 
     // TODO(dmaretskyi): Refactor.
     invariant(credentials[0].credential);
@@ -718,6 +943,7 @@ export class DataSpaceManager extends Resource {
       }
     });
     dataSpace.preClose.append(async () => {
+      this._closingSpaces.add(dataSpace.id);
       const setting = dataSpace.getEdgeReplicationSetting();
       if (!setting || setting === EdgeReplicationSetting.ENABLED) {
         await this._echoEdgeReplicator?.disconnectFromSpace(dataSpace.id);
@@ -734,6 +960,56 @@ export class DataSpaceManager extends Resource {
       dataSpace.inner.controlPipeline.state.setTargetTimeframe(metadata.controlTimeframe);
     }
 
+    // Cleared on the way back up: a closed space can be activated again, and a stale mark would
+    // leave it unanchorable for the session.
+    dataSpace.stateUpdate.on(this._ctx, () => {
+      if (dataSpace.isOpen) {
+        this._closingSpaces.delete(dataSpace.id);
+      }
+    });
+
+    // Anchoring materializes credential state, so it waits for the space to be open: a closed space
+    // must stay unmaterialized or lazy loading is defeated. Every path that opens a space — load and
+    // activate, create, accept — arrives here.
+    // Latch only once the anchor has actually settled: migration no-ops while the space's directory is
+    // unassigned, and latching on the attempt would strand the space unanchored for the whole session.
+    let anchored = false;
+    let anchoring = false;
+    let retryDelay = ANCHOR_RETRY_INITIAL;
+    const attemptAnchor = () => {
+      if (anchored || anchoring || !dataSpace.isOpen) {
+        return;
+      }
+
+      anchoring = true;
+      // The manager's context, not the caller's: an accepted space arrives with the invitation's
+      // context, which `acceptSpace` disposes on return, and the anchor's own awaits would be
+      // cancelled under it.
+      void this._anchorSpaceOnRootDocument(this._ctx, dataSpace)
+        .then((settled) => {
+          anchored = settled;
+          if (settled) {
+            return;
+          }
+
+          // What an unsettled attempt waits on — an unassigned directory, or a root named by an
+          // inviter that has not replicated yet — arrives without emitting a space state update, so
+          // nothing else would ever retry.
+          if (retryDelay <= ANCHOR_RETRY_MAX) {
+            scheduleTask(this._ctx, attemptAnchor, retryDelay);
+            retryDelay *= 2;
+          }
+        })
+        .finally(() => {
+          anchoring = false;
+        });
+    };
+
+    // Subscribed for the space's lifetime rather than the caller's: a root named by an inviter can
+    // replicate long after the invitation context is gone, and its state update is what retries.
+    const unsubscribeFromStateUpdate = dataSpace.stateUpdate.on(this._ctx, attemptAnchor);
+    dataSpace.preClose.append(async () => unsubscribeFromStateUpdate());
+
     this._spaces.set(metadata.key, dataSpace);
     return dataSpace;
   }
@@ -744,7 +1020,7 @@ export class DataSpaceManager extends Resource {
       log.warn('p2p automerge replication disabled', { space: space.key });
       return;
     }
-    await replicator.authorizeDevice(space.key, session.remotePeerId);
+    await replicator.authorizeDevice(space.id, session.remotePeerId);
     // session ended during device authorization
     if (session.isOpen) {
       session.addExtension('dxos.mesh.teleport.automerge', replicator.createExtension());
@@ -817,7 +1093,7 @@ export class DataSpaceManager extends Resource {
         invitationId: invitation.invitationId,
         swarmKey: invitation.swarmKey,
         guestKeypair: invitation.guestKey ? { publicKey: invitation.guestKey } : undefined,
-        lifetime: invitation.expiresOn ? (invitation.expiresOn.getTime() - Date.now()) / 1000 : undefined,
+        lifetime: invitation.expiresOn ? remainingLifetimeSeconds(invitation.expiresOn) : undefined,
         multiUse: invitation.multiUse,
         delegationCredentialId: credentialId,
         persistent: false,
@@ -826,6 +1102,15 @@ export class DataSpaceManager extends Resource {
     await Promise.all(tasks);
   }
 }
+
+/**
+ * Seconds left until `expiresOn`, as `Invitation.lifetime` requires: a whole number, because the
+ * field is a protobuf `int32` and a fractional value fails to encode — which silently killed the
+ * `queryInvitations` stream and hung client initialization. Floors to at least 1 since 0 means
+ * "never expires", so an already-expired invitation must not become immortal.
+ */
+export const remainingLifetimeSeconds = (expiresOn: Date): number =>
+  Math.max(1, Math.floor((expiresOn.getTime() - Date.now()) / 1000));
 
 export class DataSpaceManagerService extends EffectContext.Service<DataSpaceManagerService, DataSpaceManager>()(
   '@dxos/client-services/DataSpaceManager',

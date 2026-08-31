@@ -47,7 +47,7 @@ describe('Registry', () => {
     expect(
       local
         .list()
-        .map((o) => (o as any).value)
+        .map((o) => (o as TestSchema.Expando).value)
         .sort(),
     ).toEqual([100, 200]);
   });
@@ -63,7 +63,7 @@ describe('Registry', () => {
     const upstream = makeRegistry({ initial: [original] });
     const local = makeRegistry({ upstream, initial: [override] });
 
-    expect((local.get(original.id) as any).value).toBe(999);
+    expect((local.get(original.id) as TestSchema.Expando).value).toBe(999);
     expect(local.list()).toHaveLength(1);
   });
 
@@ -77,7 +77,7 @@ describe('Registry', () => {
 
     const result = await EffectEx.runAndForwardErrors(program.pipe(Effect.provide(registryLayer({ initial: [obj] }))));
     expect(result).toHaveLength(1);
-    expect((result[0] as any).value).toBe(42);
+    expect((result[0] as TestSchema.Expando).value).toBe(42);
   });
 
   test('layerWithUpstream wires upstream from environment', async ({ expect }) => {
@@ -86,7 +86,7 @@ describe('Registry', () => {
 
     const program = Effect.gen(function* () {
       const registry = yield* Registry.Service;
-      return registry.list().map((o) => (o as any).value);
+      return registry.list().map((o) => (o as TestSchema.Expando).value);
     });
 
     const stack = Layer.provide(
@@ -168,7 +168,7 @@ describe('Registry', () => {
     // Filter by Expando type — matches a and b but not the Type entity.
     const expandoResults = registry.query(Filter.type(TestSchema.Expando)).results;
     expect(expandoResults).toHaveLength(2);
-    expect(expandoResults.map((o) => (o as any).value).sort()).toEqual([1, 2]);
+    expect(expandoResults.map((o) => o.value).sort()).toEqual([1, 2]);
 
     // Filter by Type.Type — matches only the type entity.
     const typeResults = registry.query(Filter.type(Type.Type)).results;
@@ -184,7 +184,7 @@ describe('Registry', () => {
 
     const q = registry.query(Query.select(Filter.key('com.example.fn.translate')));
     expect(q.results).toHaveLength(1);
-    expect((q.results[0] as any).value).toBe(10);
+    expect((q.results[0] as TestSchema.Expando).value).toBe(10);
   });
 
   test('text filters evaluate in memory over property values and meta keys', ({ expect }) => {
@@ -206,12 +206,12 @@ describe('Registry', () => {
       Query.select(Filter.and(Filter.type(TestSchema.Expando), Filter.text('CREATES task'))),
     ).results;
     expect(byText).toHaveLength(1);
-    expect((byText[0] as any).name).toBe('Create Task');
+    expect((byText[0] as TestSchema.Expando).name).toBe('Create Task');
 
     // Meta is part of the serialized entity, so a registry key is searchable too.
     const byKey = registry.query(Query.select(Filter.text('queryObjects'))).results;
     expect(byKey).toHaveLength(1);
-    expect((byKey[0] as any).name).toBe('Query Objects');
+    expect((byKey[0] as TestSchema.Expando).name).toBe('Query Objects');
 
     expect(registry.query(Query.select(Filter.text('creates nonexistent'))).results).toHaveLength(0);
     // Vector search needs an embedding index no in-memory executor has.

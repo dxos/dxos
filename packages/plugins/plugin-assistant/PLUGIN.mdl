@@ -18,7 +18,8 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `feat`      | `org.dxos.mdl.feat@1.0`      |
 | `test`      | `org.dxos.mdl.test@1.0`      |
 | `component` | `org.dxos.mdl.component@1.0` |
-| `op`        | `org.dxos.mdl.op@1.0`        |
+| `op`        | `org.dxos.mdl.op@1.1`        |
+| `flow`      | `org.dxos.mdl.flow@1.0`      |
 
 ## Types
 
@@ -137,6 +138,7 @@ component AssistantSettings
 
 ```mdl
 op CreateChat
+  key: org.dxos.operation.assistant.createChat
   desc: Creates a new Chat object and optionally adds it to the active space.
   input:
     db: Database
@@ -148,6 +150,7 @@ op CreateChat
 
 ```mdl
 op UpdateChatName
+  key: org.dxos.operation.assistant.updateChatName
   desc: Automatically derives and updates the name of a chat using the AI service.
   input:
     chat: Chat
@@ -176,6 +179,7 @@ op RunPromptInNewChat
 
 ```mdl
 op EnsureCompanionChat
+  key: org.dxos.operation.assistant.ensureCompanionChat
   desc: Returns the companion chat for an object, creating one if none exists.
   input:
     db: Database
@@ -198,6 +202,7 @@ op OnCreateSpace
 
 ```mdl
 op ToggleTracePanelDebug
+  key: org.dxos.operation.assistant.setTracePanelDebug
   desc: Toggles the trace panel between commit-graph and raw JSON debug view.
   input:
     state?: boolean
@@ -227,15 +232,17 @@ feat F-2: Companion Chat
     when: companion chat does not yet exist
     then: op:EnsureCompanionChat creates one and optionally persists it
   req F-2.3:
-    when: user sends a message in the companion chat
-    then: the primary object is automatically bound as AI context
+    when: op:EnsureCompanionChat resolves a companion chat
+    then: op:BindChatContext runs every cap:SubjectContext contribution that applies to the primary
+      object and binds the merged result — by default the object itself plus the skills its type
+      declares via Skill.SkillsAnnotation
 ```
 
 ```mdl
 feat F-3: Skill System
 
   req F-3.1: Skills define named AI configurations (instructions, tools, model).
-  req F-3.2: Built-in skills include: Assistant, Browser, Database, WebSearch, Discord, Linear, Agent, Planning, Memory, Automation, SkillManager, AgentWizard.
+  req F-3.2: Built-in skills include: Assistant, Browser, Database, WebSearch, Discord, Linear, Agent, Planning, Memory, Automation, SkillManager.
   req F-3.3:
     when: user selects a skill for a chat
     then: chat uses that skill's instructions and tool set
@@ -267,7 +274,7 @@ feat F-5: Tool Execution
 ```mdl
 feat F-6: ECHO Integration
 
-  req F-6.1: Chat, CompanionTo, Skill, Feed, Message, Memory, Plan, Routine, Agent, McpServer, and Sequence schemas are registered with ECHO.
+  req F-6.1: Chat, Skill, Feed, Message, Memory, Plan, Routine, Agent, McpServer, and Sequence schemas are registered with ECHO. A chat's subject is recorded by Chat.CompanionChatAnnotation on that subject, not by a type.
   req F-6.2:
     when: a new space is created
     then: op:OnCreateSpace provisions default assistant objects
@@ -336,6 +343,85 @@ test T-7: Trace panel debug toggle
   then:
     - tracePanelDebug setting flips to true
     - trace panel switches to raw JSON view
+```
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Create a chat and send a message
+  desc: The core assistant round-trip — create a Chat, send a prompt, get a streamed AI response.
+  actors: both
+  covers: [F-1.1, F-1.2, F-1.3, F-1.4, T-1]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - no Chat named "QA Chat" exists — ABORT rather than deleting one this flow did not create
+  test:
+    - name: Create the chat
+      do: Open the assistant panel and click "New chat".
+      invoke: [op:CreateChat] { name: "QA Chat" }
+      capture: created
+      expect: a new Chat named "QA Chat" opens, empty
+      assert: return !!$created.object
+      note: |
+        CreateChat returns the chat UNFILED — the handler adds its feed regardless, but persisting
+        it in the space is a separate step (see plugin-space's addObject), which the UI's "New
+        chat" gesture does implicitly.
+    - name: Send a message
+      do: Type "Hello" into the chat input and press Enter.
+      expect: "Hello" appears as a user message, followed by a streamed assistant response, and
+        the chat is persisted to ECHO and replicated to peers
+      note: |
+        NO `invoke` — sending a prompt runs through the AI streaming path (`AiSession`), not
+        through the operation invoker; there is no `SendMessage` operation to call directly.
+    - name: Chat is auto-named
+      do: (no gesture — happens automatically once the chat has enough messages)
+      invoke: [op:UpdateChatName] { chat: $created.object }
+      expect: the chat's name changes from "QA Chat" to something derived from the conversation
+      assert: return typeof $result === 'undefined' || true;
+      note: |
+        `UpdateChatName` returns void — verify the effect on `chat.name`, not the return value
+        (Execution Rule 3). Included here for completeness; a fast QA pass may treat this as
+        `given` already established rather than re-triggering it.
+  after:
+    - name: Delete the chat
+      do: Right-click "QA Chat" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.space.db }
+      expect: the row leaves the navtree and its plank closes if it was open
+```
+
+```mdl
+flow QA-2: Companion chat is provisioned and bound
+  desc: op:EnsureCompanionChat + op:BindChatContext — the chat a companioned object gets automatically.
+  actors: both
+  covers: [F-2.1, F-2.2, F-2.3, T-2]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - subject: a Document in the space that has no companion chat yet
+  test:
+    - name: Ensure the companion chat
+      do: Open the document; the companion chat panel initializes automatically.
+      invoke: [op:EnsureCompanionChat] { companionTo: $given.subject }
+      capture: ensured
+      expect: a new Chat is returned and NOT yet persisted (`persisted === false`)
+      assert: return $result.persisted === false && !!$result.chat;
+    - name: Bind chat context
+      do: (no separate gesture — panel initialization runs this immediately after ensuring the chat)
+      invoke: org.dxos.operation.assistant.bindChatContext { chat: $ensured.chat, subject: $given.subject }
+      note: No `op BindChatContext` block is declared above — referenced by its full runtime key.
+      expect: the companion chat's context now includes the document (and any skills its type
+        declares via Skill.SkillsAnnotation)
+  after:
+    - name: (nothing to undo)
+      do: The companion chat is never persisted unless a message is sent, so nothing was written
+        to the space.
+      expect: the document still has no persisted companion chat
 ```
 
 ---

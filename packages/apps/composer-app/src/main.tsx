@@ -42,6 +42,7 @@ import {
   PARAM_LOG_LEVEL,
   PARAM_PROFILER,
   PARAM_SAFE_MODE,
+  type Profiler,
   defaultStorageIsEmpty,
   downloadLogs,
   initializeObservability,
@@ -86,9 +87,25 @@ declare const __DX_DEV_SERVER_BOOT_ID__: string;
 // Always '' in production builds, so the port cannot be auto-started on a deployed origin.
 declare const __DX_DEBUG_PORT_SESSION__: string;
 
+// Merged onto `@dxos/app-framework`'s `ComposerDevtools` (the type behind `globalThis.composer`)
+// rather than declared fresh — a second `declare global { var composer }` here would collide with
+// its declaration and resolve every member to `{}` (see `playwright/globals.d.ts`).
+declare module '@dxos/app-framework' {
+  interface ComposerDevtools {
+    profiler?: Profiler;
+    otel?: {
+      enableDebugLogs: () => void;
+      disableDebugLogs: () => void;
+      getLogLevel: () => Promise<string | null>;
+    };
+  }
+}
+
 declare global {
   interface ImportMeta {
     env: ImportMetaEnv;
+    /** Vite HMR API — present only in dev, `undefined` in production bundles. */
+    hot?: { dispose(cb: () => void): void };
   }
 
   interface ImportMetaEnv {
@@ -116,9 +133,8 @@ const BOOT_ID = import.meta.env?.DEV ? Math.random().toString(36).slice(2, 10) :
 const MODULE_EVAL_TIME = Date.now();
 if (import.meta.env?.DEV) {
   log('composer main: module evaluated', { bootId: BOOT_ID, t: MODULE_EVAL_TIME });
-  const importMeta = import.meta as any;
-  if (importMeta.hot) {
-    importMeta.hot.dispose(() => {
+  if (import.meta.hot) {
+    import.meta.hot.dispose(() => {
       log('composer main: hmr dispose', { bootId: BOOT_ID, ageMs: Date.now() - MODULE_EVAL_TIME });
     });
   }
@@ -211,12 +227,13 @@ const main = async () => {
   // Load these in parallel; HTTP/2 multiplexes the three chunks and even on
   // local-disk the parser can interleave parses. The wasm init rides the same wave: it must
   // complete before anything touches automerge (slim entrypoints — see util/automerge-wasm.ts).
-  const [{ Config, defs, SaveConfig }, { Client, createClientServices }, AppMigrations] = await Promise.all([
-    import('@dxos/config'),
-    import('@dxos/react-client'),
-    import('@dxos/app-toolkit/AppMigrations'),
-    initAutomergeWasm(),
-  ]);
+  const [{ Config, defs, SaveConfig, getEnvString }, { Client, createClientServices }, AppMigrations] =
+    await Promise.all([
+      import('@dxos/config'),
+      import('@dxos/react-client'),
+      import('@dxos/app-toolkit/AppMigrations'),
+      initAutomergeWasm(),
+    ]);
 
   profiler?.mark('dynamic-imports:end');
   profiler?.measure('dynamic-imports', 'dynamic-imports:start', 'dynamic-imports:end');
@@ -240,7 +257,7 @@ const main = async () => {
       return level;
     },
   };
-  (window as any).composer = { profiler, otel };
+  globalThis.composer = { profiler, otel };
 
   AppMigrations.define();
 
@@ -248,7 +265,7 @@ const main = async () => {
   bootStatus('Reading configuration…');
 
   let config = await setupConfig();
-  if (shouldRunStorageResetMigration(config.values.runtime?.app?.env?.DX_ENVIRONMENT)) {
+  if (shouldRunStorageResetMigration(getEnvString(config, 'DX_ENVIRONMENT'))) {
     await runStorageResetMigration();
     window.location.replace(window.location.href);
     return;
@@ -263,7 +280,7 @@ const main = async () => {
     await SaveConfig({
       runtime: {
         client: {
-          storage: { dataStore: defs.Runtime.Client.Storage.StorageDriver.IDB },
+          storage: { dataStore: defs.Runtime_Client_Storage_StorageDriver.IDB },
         },
       },
     });
@@ -368,7 +385,7 @@ const main = async () => {
         return platform === 'android' || platform === 'ios';
       }),
     ),
-    Match.when(false, () => Effect.sync(() => isTrue(config.values.runtime?.app?.env?.DX_MOBILE) || isMobile$())),
+    Match.when(false, () => Effect.sync(() => isTrue(getEnvString(config, 'DX_MOBILE')) || isMobile$())),
     Match.exhaustive,
     EffectEx.runPromise,
   );
@@ -386,10 +403,10 @@ const main = async () => {
   // env / platform constraints. Worker factories are passed unconditionally; the factory only
   // invokes the one required by the configured mode. Host mode (in-thread services) is opt-in via
   // DX_HOST; otherwise services run in a dedicated worker elected via a lock (leader/follower).
-  const useLocalServices = isTrue(config.values.runtime?.app?.env?.DX_HOST);
+  const useLocalServices = isTrue(getEnvString(config, 'DX_HOST'));
   const servicesMode = useLocalServices
-    ? defs.Runtime.Client.ServicesMode.HOST
-    : defs.Runtime.Client.ServicesMode.DEDICATED_WORKER;
+    ? defs.Runtime_Client_ServicesMode.HOST
+    : defs.Runtime_Client_ServicesMode.DEDICATED_WORKER;
 
   config = new Config(
     {
@@ -400,7 +417,7 @@ const main = async () => {
           singleClientMode: useSingleClientMode,
           servicesMode,
           // Host and dedicated worker both use OPFS-backed SQLite.
-          storage: { sqliteMode: defs.Runtime.Client.Storage.SqliteMode.OPFS },
+          storage: { sqliteMode: defs.Runtime_Client_Storage_SqliteMode.OPFS },
         },
       },
     },
@@ -455,7 +472,7 @@ const main = async () => {
 
   profiler?.mark('plugins:start');
 
-  const isPwa = !isFalse(config.values.runtime?.app?.env?.DX_PWA);
+  const isPwa = !isFalse(getEnvString(config, 'DX_PWA'));
   // The forked `client.initialize()` runs outside the render tree: a failure or a stalled worker
   // handshake reaches no error boundary, leaving suspended consumers spinning. Plugins raise it
   // here, and `Main` swaps the app for the same fatal dialog the app boundary would have shown.
@@ -473,13 +490,13 @@ const main = async () => {
 
     // Strictly the `dev` cloud environment (not preview) or a local `DX_DEV=true` opt-in, so a plain
     // local `serve` keeps the lean default plugin set (see `getDefaults` in plugin-defs.tsx).
-    isDev: config.values.runtime?.app?.env?.DX_ENVIRONMENT === 'dev' || isTrue(config.values.runtime?.app?.env?.DX_DEV),
+    isDev: getEnvString(config, 'DX_ENVIRONMENT') === 'dev' || isTrue(getEnvString(config, 'DX_DEV')),
     isLocal: !isTauri && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'),
     isPwa,
     isTauri,
     isPopover,
     isMobile,
-    isStrict: !isFalse(config.values.runtime?.app?.env?.DX_STRICT),
+    isStrict: !isFalse(getEnvString(config, 'DX_STRICT')),
   };
 
   // `getPlugins` is synchronous: each plugin's main entry exposes only
@@ -610,7 +627,12 @@ const main = async () => {
     return fatalError ? <Fallback error={fatalError} /> : <App />;
   };
 
-  const root = document.getElementById('root')!;
+  const root = document.getElementById('root');
+  if (!root) {
+    // `index.html` always ships a `#root` element — its absence means the document itself
+    // failed to load correctly, which no in-tree fallback can recover from.
+    throw new Error('composer main: #root element not found');
+  }
   log('composer main: rendering App', { bootId: BOOT_ID, strict: conf.isStrict });
   if (conf.isStrict) {
     createRoot(root).render(

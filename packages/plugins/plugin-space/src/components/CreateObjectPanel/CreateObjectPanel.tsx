@@ -119,10 +119,17 @@ export const CreateObjectPanel = ({
     return <ObjectForm object={object} type={type} schema={schema} showTags={false} />;
   }
 
-  // A live create is driven by the type entity, not by a registered create entry, so the pickers
-  // are gated on the typename rather than on an entry resolving from it.
-  if (mode === 'live' ? !typename : !metadata) {
+  // The type picker belongs to the case where no type has been chosen. Gating it on the entry
+  // instead would also catch a dialog opened *for* a type whose plugin is still activating, and
+  // flash the full list of every creatable type into a dialog already titled after one of them.
+  if (!typename) {
     return <SelectType options={sortedOptions} onChange={handleSelectOption} />;
+  }
+
+  // A live create is driven by the type entity rather than a registered create entry, so only a
+  // draft waits on one; until it resolves there is nothing correct to draw.
+  if (mode !== 'live' && !metadata) {
+    return null;
   }
 
   if (!target) {

@@ -46,7 +46,7 @@ export const adminRequest = <T>(
 
     const envelope = result as EdgeEnvelope<T>;
     if (!envelope.success) {
-      yield* Effect.fail(new AdminApiError({ message: envelope.message }));
+      return yield* Effect.fail(new AdminApiError({ message: envelope.message }));
     }
 
     return envelope.data as T;
@@ -68,7 +68,7 @@ export const adminDownload = (path: string) =>
     if (response.status !== 200) {
       const body = yield* response.json;
       const envelope = body as { error?: string };
-      yield* Effect.fail(new AdminApiError({ message: envelope?.error ?? `HTTP ${response.status}` }));
+      return yield* Effect.fail(new AdminApiError({ message: envelope?.error ?? `HTTP ${response.status}` }));
     }
 
     return response;

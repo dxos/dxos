@@ -2,7 +2,7 @@
 
 ## Surface
 
-- [ ] **A lazily-activated surface loses the first render to a catch-all.** Measured 2026-08-23 in
+- [x] **A lazily-activated surface loses the first render to a catch-all.** Measured 2026-08-23 in
       Composer: opening a feed rendered plugin-space's `recordArticle` at `04:18:17.19` and
       plugin-magazine's `feedArticle` at `04:18:18.25` — **1.06s of the wrong surface**, first
       navigation only. Tracked as #12717.
@@ -13,18 +13,17 @@ eager `Position.last` catch-all matching `Obj.isObject` claims the slot and is r
 later. It reads as a flash of unrelated UI: `RecordArticle` is a properties form plus a Masonry, so a
 feed plank briefly shows a form and a grid of related objects.
 
-Fix: `SurfaceManager` tracks `#requestedRoles` (demand claimed) but has no notion of activation
-SETTLED. Add a per-role settled signal, flipped in the `Effect.onExit` `requestSurfaces` already has,
-and have `SurfaceComponent` render its `placeholder` — which the plank already passes — while a
-role's first activation is in flight.
+FIXED with the narrow variant: `SurfaceManager.pendingAtom(role)` reports whether a module gated on
+the role's demand event has yet to activate (derived from the plugin manager's `modules`/`active`
+atoms, boolean-valued so it re-renders subscribers only when it flips), and `SurfaceComponent`
+withholds `Position.last` matches while it is true — rendering the placeholder instead. Specific
+matches are never held, so a surface with real content can never be delayed by this.
 
-Narrower and safer variant: hold only FALLBACK matches (`Position.last`) while the role is unsettled,
-and render specific matches immediately. That fixes exactly this class and cannot strand a plank that
-has a real match.
-
-Hazard either way: a role whose activation never settles must not strand the placeholder. `onExit`
-covers success and failure, but the first render happens before the effect runs — so either the
-request moves into render, or that first frame still shows the fallback.
+The predicate reads module state directly rather than tracking an activation-settled signal, so it is
+correct on the FIRST render — before the demand effect has run — which the settled-signal variant
+could not be. The hazard (a role that never settles stranding the placeholder) is bounded by the
+manager itself: a plugin that fails, including by exceeding the module timeout, is excluded from
+`modules` and auto-disabled, so the hold lifts.
 
 ## Capability API
 

@@ -12,15 +12,11 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { DisableDependentsAlert } from '#components';
-import {
-  LOAD_PLUGIN_DIALOG,
-  LoadPluginDialog,
-  PluginArticle,
-  PublicRegistryArticle,
-  RegistrySettingsContainer,
-} from '#containers';
-import { DISABLE_DEPENDENTS_DIALOG, meta } from '#meta';
+import { LoadPluginDialog, PluginArticle, PublicRegistryArticle, RegistrySettingsContainer } from '#containers';
+import { meta } from '#meta';
+import { LOAD_PLUGIN_DIALOG } from '#types';
 
+import { DISABLE_DEPENDENTS_DIALOG } from '../constants';
 import { RegistryCategoryArticle } from './RegistryCategoryArticle';
 
 export default Capability.makeModule(() =>

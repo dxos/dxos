@@ -94,7 +94,7 @@ describe('AutomergeHost', () => {
     const host2 = await setupAutomergeHost(runtime2);
     const handle2 = await host2.loadDoc<any>(Context.default(), url);
     invariant(handle2);
-    await handle2.whenReady();
+    await handle2.waitUntilReady();
     expect(handle2.doc()!.text).toEqual('Hello world');
     await host2.flush(Context.default());
   });

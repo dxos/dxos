@@ -9,6 +9,7 @@ import React, { useEffect, useState } from 'react';
 import { raise } from '@dxos/debug';
 import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
+import { ErrorFallback } from '@dxos/react-error-boundary';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { type MaybeProvider, getProviderValue } from '@dxos/util';
 
@@ -16,7 +17,17 @@ import { ActivationEvents, Capabilities } from '../common';
 import { type ActivationEvent, Capability, CapabilityManager, Plugin, PluginManager } from '../core';
 import { type UseAppOptions, useApp } from '../ui';
 import { activateDemandGatedModules } from './demand-gated';
-import { StorybookErrorFallback } from './StorybookErrorFallback';
+
+let defaultFallback: NonNullable<UseAppOptions['fallback']> = ErrorFallback;
+
+/**
+ * Sets the fallback a crashed story renders, overridable per story via `withPluginManager({ fallback })`.
+ * The storybook preview points this at the logger addon's, which a value import cannot reach from the
+ * published `./testing` entrypoint.
+ */
+export const setStoryErrorFallback = (fallback: NonNullable<UseAppOptions['fallback']>) => {
+  defaultFallback = fallback;
+};
 
 /**
  * Builds a plugin manager for test hosts. Stories go through {@link withPluginManager}; headless
@@ -176,9 +187,7 @@ const WithPluginManagerApp = ({
     [fireEvents, pluginManager, storyId],
   );
 
-  // Default to a fallback that offers "Download logs" so a crashed story is still debuggable;
-  // callers can override via `withPluginManager({ fallback })`.
-  const App = useApp({ pluginManager, setupEvents, fallback: fallback ?? StorybookErrorFallback });
+  const App = useApp({ pluginManager, setupEvents, fallback: fallback ?? defaultFallback });
   return activated ? <App /> : <></>;
 };
 

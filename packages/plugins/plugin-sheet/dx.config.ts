@@ -26,7 +26,10 @@ export default Config2.make({
     icon: { key: 'ph--grid-nine--regular', hue: 'indigo' },
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-sheet',
     spec: 'PLUGIN.mdl',
-    screenshots: [{ dark: 'https://media.dxos.network/plugin-details-sheet-dark.png' }],
+    screenshots: [
+      { dark: 'https://media.dxos.network/plugin-details-sheet-dark.png' },
+      { dark: 'https://pub-39066a86073446d7b77b1c157b660bb5.r2.dev/demos/2026-08-27-qa-flows/plugin-sheet-QA-1.webm' },
+    ],
     tags: ['alpha'],
   },
 });

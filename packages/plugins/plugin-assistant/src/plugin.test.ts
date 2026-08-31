@@ -10,26 +10,31 @@ import { describe, test } from 'vitest';
 import { AgentService as AgentServiceRuntime } from '@dxos/agent-runtime';
 import { AiService } from '@dxos/ai';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
-import { AgentWizardSkill, ChatContextSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import { AiContext } from '@dxos/assistant';
+import { ChatContextSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Skill from '@dxos/compute/Skill';
-import { Database, Ref, Registry } from '@dxos/echo';
+import { Database, Feed, Query, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { DXN, EntityId } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
+import * as RegistryPlugin from '@dxos/plugin-registry/RegistryPlugin';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { meta } from '#meta';
 import { AssistantPlugin } from '#plugin';
-import { AssistantEvents } from '#types';
+import { AssistantEvents, AssistantOperation } from '#types';
 
 import { AssistantSkill } from './skills/assistant';
+import { PluginManagerSkill } from './skills/plugin-manager';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -70,6 +75,64 @@ describe('AssistantPlugin', () => {
         expect(aiService).toBeDefined();
       }).pipe(Effect.provide(ServiceResolver.provide({ space: defaultSpace.id }, AiService.AiService))),
     );
+  });
+
+  test('offers the plugin-manager skill only where the registry plugin is present', async ({ expect }) => {
+    const skillKeys = (harness: { getAll: (capability: any) => any[] }) =>
+      harness.getAll(AppCapabilities.SkillDefinition).map((definition: { key: string }) => definition.key);
+
+    {
+      // The curated production and mobile sets ship no registry, so the skill's verbs would have no
+      // handlers there.
+      await using harness = await createComposerTestApp({
+        plugins: [ClientPlugin.make({}), AssistantPlugin()],
+      });
+      expect(skillKeys(harness)).not.toContain(PluginManagerSkill.key);
+    }
+
+    {
+      await using harness = await createComposerTestApp({
+        plugins: [ClientPlugin.make({}), AssistantPlugin(), RegistryPlugin.make()],
+      });
+      expect(skillKeys(harness)).toContain(PluginManagerSkill.key);
+    }
+  });
+
+  test('binds the plugin-manager skill into new chats where the registry plugin is present', async ({ expect }) => {
+    // The skill only helps if it reaches the model, and it does that by being bound to the chat --
+    // a user who never opens chat settings would otherwise never see a plugin offered.
+    const boundSkillUris = async (plugins: Plugin.Plugin[]) => {
+      await using harness = await createComposerTestApp({ plugins });
+      const { defaultSpace } = await EffectEx.runAndForwardErrors(
+        initializeIdentity(harness.get(ClientCapabilities.Client)),
+      );
+
+      // Awaited inside the helper: `await using` disposes the harness -- and its runtime -- when
+      // this function returns.
+      return await harness.runPromise(
+        Effect.gen(function* () {
+          const { object: chat } = yield* Operation.invoke(
+            AssistantOperation.CreateChat,
+            { name: 'test' },
+            { spaceId: defaultSpace.id },
+          );
+          yield* Database.flush();
+
+          const feed = yield* Database.load(chat.feed);
+          const bindings = yield* Feed.query(feed, Query.type(AiContext.Binding)).run;
+          return bindings.flatMap((binding) => binding.skills.added.map((ref) => ref.uri));
+        }).pipe(Effect.provide(ServiceResolver.provide({ space: defaultSpace.id }, Database.Service))),
+      );
+    };
+
+    const withRegistry = await boundSkillUris([ClientPlugin.make({}), AssistantPlugin(), RegistryPlugin.make()]);
+    expect(withRegistry.some((uri) => uri.includes(PluginManagerSkill.key))).toBe(true);
+    // Every host still gets the rest of the default set, so a missing registry costs only this skill.
+    expect(withRegistry.some((uri) => uri.includes(AssistantSkill.key))).toBe(true);
+
+    const withoutRegistry = await boundSkillUris([ClientPlugin.make({}), AssistantPlugin()]);
+    expect(withoutRegistry.some((uri) => uri.includes(PluginManagerSkill.key))).toBe(false);
+    expect(withoutRegistry.some((uri) => uri.includes(AssistantSkill.key))).toBe(true);
   });
 
   test('resolves a language model through the plugin AI service', async ({ expect }) => {
@@ -173,11 +236,10 @@ describe('AssistantPlugin', () => {
 
       await harness.runPromise(
         Effect.gen(function* () {
-          const skills = yield* Effect.forEach(
-            [ChatContextSkill, AssistantSkill, SkillManagerSkill, AgentWizardSkill],
-            (_) => Skill.resolve(_.key),
+          const skills = yield* Effect.forEach([ChatContextSkill, AssistantSkill, SkillManagerSkill], (_) =>
+            Skill.resolve(_.key),
           );
-          expect(skills).toHaveLength(4);
+          expect(skills).toHaveLength(3);
 
           const agent = yield* AgentServiceRuntime.createSession({
             skills,

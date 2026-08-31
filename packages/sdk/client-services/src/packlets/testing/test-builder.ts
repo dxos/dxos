@@ -12,6 +12,7 @@ import { Context } from '@dxos/context';
 import { CredentialGenerator, createCredentialSignerWithChain } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { EchoHost, MeshEchoReplicator } from '@dxos/echo-host';
+import { type EdgeHttpClient } from '@dxos/edge-client';
 import { RuntimeProvider } from '@dxos/effect';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { SqliteKeyring } from '@dxos/keyring';
@@ -87,14 +88,18 @@ export const createServiceContext = async ({
   return host;
 };
 
-export const createPeers = async (numPeers: number, signalManagerFactory?: () => Promise<SignalManager>) => {
+export const createPeers = async (
+  numPeers: number,
+  signalManagerFactory?: () => Promise<SignalManager>,
+  runtimeProps?: ServiceContextRuntimeProps,
+) => {
   if (!signalManagerFactory) {
     const signalContext = new MemorySignalManagerContext();
     signalManagerFactory = async () => new MemorySignalManager(signalContext);
   }
   return await Promise.all(
     Array.from(Array(numPeers)).map(async () => {
-      const peer = await createServiceContext({ signalManagerFactory });
+      const peer = await createServiceContext({ signalManagerFactory, runtimeProps });
       await peer.open(new Context());
       return peer;
     }),
@@ -124,6 +129,7 @@ export class TestBuilder {
 export type TestPeerOpts = {
   dataStore?: StorageType;
   dataSpaceProps?: DataSpaceManagerRuntimeProps;
+  edgeHttpClient?: EdgeHttpClient;
 };
 
 export type TestPeerProps = {
@@ -218,6 +224,7 @@ export class TestPeer {
       edgeConnection: undefined,
       meshReplicator: this.meshEchoReplicator,
       echoEdgeReplicator: undefined,
+      edgeHttpClient: this._opts.edgeHttpClient,
       runtimeProps: this._opts.dataSpaceProps,
     }));
   }

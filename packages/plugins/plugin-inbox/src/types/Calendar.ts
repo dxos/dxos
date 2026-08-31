@@ -17,10 +17,10 @@ export const SKILL_KEY = 'org.dxos.skill.calendar';
 export class Calendar extends Type.makeObject<Calendar>(DXN.make('org.dxos.type.calendar', '0.1.0'))(
   Schema.Struct({
     name: Schema.String.pipe(Schema.optional),
-    feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
+    feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(true), FormInputAnnotation.set(false)),
     // Inverse tag index for immutable feed Events (e.g. the "starred" tag): events are immutable Queue
     // items, so their tag associations live in this child `TagIndex` rather than in object meta.
-    tags: Ref.Ref(TagIndex.TagIndex).pipe(FormInputAnnotation.set(false)),
+    tags: Ref.Ref(TagIndex.TagIndex).pipe(Annotation.SetParent.set(true), FormInputAnnotation.set(false)),
   }).pipe(
     FeedAnnotation.set({ property: 'feed' }),
     Annotation.IconAnnotation.set({ icon: 'ph--calendar--regular', hue: 'rose' }),
@@ -47,13 +47,10 @@ type CalendarProps = Omit<Obj.MakeProps<typeof Calendar>, 'feed' | 'tags'>;
 export const make = (props: CalendarProps = {}) => {
   const feed = Feed.make();
   const tags = TagIndex.make();
-  const calendar = Obj.make(Calendar, {
+  // The feed and tag index are children (`SetParent`): both cascade-delete with the calendar.
+  return Obj.make(Calendar, {
     feed: Ref.make(feed),
     tags: Ref.make(tags),
     ...props,
   });
-  // TODO(wittjosiah): Parent should be declarative in the schema.
-  Obj.setParent(feed, calendar);
-  Obj.setParent(tags, calendar);
-  return calendar;
 };

@@ -8,8 +8,7 @@ import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { type Space } from '@dxos/client/echo';
-import { Obj } from '@dxos/echo';
+import { type Database, Obj } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import { URI } from '@dxos/keys';
 import { Card, Icon, IconButton } from '@dxos/react-ui';
@@ -51,7 +50,7 @@ const maybeScrollIntoView = (element: HTMLElement): void => {
 };
 
 export type PreviewComponentProps = XmlWidgetProps<{
-  space?: Space;
+  db?: Database.Database;
   dxn: string;
   label: string;
   block?: boolean;
@@ -67,11 +66,11 @@ export type PreviewComponentProps = XmlWidgetProps<{
  * Used as the Component entry in a urlSchemes XmlWidgetDef.
  */
 export const PreviewComponent = ({
-  view,
-  range,
-  space,
+  db,
   dxn,
   label: labelProp,
+  view,
+  range,
   onOpen,
   isSurfaceAvailable: isSurfaceAvailableProp,
 }: PreviewComponentProps) => {
@@ -82,10 +81,10 @@ export const PreviewComponent = ({
   const isSurfaceAvailable = isSurfaceAvailableProp ?? defaultIsSurfaceAvailable;
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Resolve relative to the containing document's own space so space-relative embeds
+  // Resolve relative to the containing document's own database so space-relative embeds
   // (bare `echo:/<id>` URIs, used so links survive being imported into a new space) resolve.
   const uri = useMemo(() => (dxn ? URI.make(dxn) : undefined), [dxn]);
-  const ref = useMemo(() => (uri && space ? space.db.makeRef<Obj.Unknown>(uri) : undefined), [uri, space]);
+  const ref = useMemo(() => (uri && db ? db.makeRef<Obj.Unknown>(uri) : undefined), [uri, db]);
   const object = useResolveRef(ref);
   const subject = useObject(object);
 

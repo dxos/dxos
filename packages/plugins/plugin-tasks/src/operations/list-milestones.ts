@@ -6,16 +6,12 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, type Obj, type Ref } from '@dxos/echo';
-import { TaskSet } from '@dxos/types';
+import { Task, TaskSet } from '@dxos/types';
 
 import { TaskOperation } from '#types';
 
 import { InvalidOperationInput } from '../errors';
 
-/**
- * Lists a set's milestones in sequence with progress derived from their tasks — a milestone stores
- * no status, so "met" is simply `done === total`.
- */
 const handler: Operation.WithHandler<typeof TaskOperation.ListMilestones> = TaskOperation.ListMilestones.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ taskSet: taskSetRef, project }) {
@@ -44,9 +40,10 @@ const handler: Operation.WithHandler<typeof TaskOperation.ListMilestones> = Task
         return { milestones: [] };
       }
 
-      const tasks = TaskSet.resolveTasks(taskSet);
-      const milestones = TaskSet.resolveMilestones(taskSet).map((milestone) => {
-        const { total, done } = TaskSet.milestoneProgress(tasks, milestone);
+      // Loaded, not resolved: cold refs dropped here would shorten the list and skew progress.
+      const tasks = yield* TaskSet.loadTasks(taskSet);
+      const milestones = (yield* TaskSet.loadMilestones(taskSet)).map((milestone) => {
+        const { total, done } = Task.milestoneProgress(tasks, milestone);
         return {
           id: milestone.id,
           name: milestone.name,

@@ -20,9 +20,7 @@ class McpConnectError extends BaseError.extend('McpConnectError', 'MCP connect f
 export const connect = Command.make(
   'connect',
   {
-    url: Args.string('url').pipe(
-      Args.withDescription('MCP server URL (e.g. https://mcp-space-service.dxos.workers.dev).'),
-    ),
+    url: Args.string('url').pipe(Args.withDescription('MCP server URL (e.g. https://mcp.dxos.network).')),
     spaceId: Options.string('space-id').pipe(
       Options.withDescription('Space(s) to bring into the session context; repeatable. Defaults to the first space.'),
       Options.atLeast(0),

@@ -340,7 +340,7 @@ export const useApp = ({
   const progressRef = useRef(startupProgress);
   progressRef.current = startupProgress;
 
-  const surfaces = useMemo(() => new SurfaceManager(manager.capabilities), [manager]);
+  const surfaces = useMemo(() => new SurfaceManager(manager.capabilities, manager), [manager]);
 
   return useCallback(
     () => (

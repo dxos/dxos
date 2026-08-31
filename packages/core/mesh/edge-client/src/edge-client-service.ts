@@ -200,8 +200,8 @@ export const mapEdgeErrors = <A, R>(
     // runs for `EdgeApiService`'s authed client — `anonymousClient()` has no `transformClient` at
     // all) fails every response whose status isn't declared in the endpoint's success/error map
     // with a `DecodeError`, not a `StatusCodeError` — e.g. every loose `Schema.Unknown`-success
-    // endpoint (no declared error schema) hitting a real non-2xx refusal, such as `spaceCreate`'s
-    // subduction-replication 500. The response itself is unconsumed and still carries edge's usual
+    // endpoint (no declared error schema) hitting a real non-2xx refusal, such as `spaceExecQuery`'s
+    // decode-failure 500. The response itself is unconsumed and still carries edge's usual
     // graceful-failure envelope, so classify it the same way rather than losing `message`/`data`
     // behind a generic "Decode error (...)" string.
     if (HttpClientError.isHttpClientError(error) && error.reason._tag === 'DecodeError') {

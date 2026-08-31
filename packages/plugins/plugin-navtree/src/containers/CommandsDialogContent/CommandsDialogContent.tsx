@@ -5,8 +5,8 @@
 import React, { forwardRef, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import * as Graph from '@dxos/app-graph/Graph';
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Keyboard, keySymbols } from '@dxos/keyboard';
@@ -38,11 +38,11 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
       // TODO(burdon): Get from navtree (not keyboard).
       const current = Keyboard.singleton.getCurrentContext();
       const actionMap = new Set<string>();
-      const actions: Node.ActionLike[] = [];
-      Graph.traverse(graph, {
+      const actions: AppGraphNode.ActionLike[] = [];
+      AppGraph.traverse(graph, {
         relation: ['child', 'action'],
         visitor: (node, path) => {
-          const isActionLike = Node.isAction(node) || Node.isActionGroup(node);
+          const isActionLike = AppGraphNode.isAction(node) || AppGraphNode.isActionGroup(node);
           const parentId = path.at(-2) ?? '';
           const matches = current === parentId || current.startsWith(parentId + '/');
           if (isActionLike && !actionMap.has(node.id) && matches) {
@@ -63,7 +63,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
 
     const group = allActions.find(({ id }) => id === selected);
     const groupActions = useActions(graph, group?.id);
-    const actions = Node.isActionGroup(group) ? groupActions : allActions;
+    const actions = AppGraphNode.isActionGroup(group) ? groupActions : allActions;
 
     const { results, handleSearch } = useSearchListResults({
       items: actions,
@@ -95,7 +95,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
                         return;
                       }
 
-                      if (Node.isActionGroup(action)) {
+                      if (AppGraphNode.isActionGroup(action)) {
                         setSelected(action.id);
                         return;
                       }
@@ -103,8 +103,12 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
                       void invokePromise(LayoutOperation.UpdateDialog, { state: false });
                       setTimeout(() => {
                         const lookupId = group?.id ?? action.id;
-                        const node = Graph.getConnections(graph, lookupId, Node.actionRelation('inbound'))[0];
-                        if (node && Node.isAction(action)) {
+                        const node = AppGraph.getConnections(
+                          graph,
+                          lookupId,
+                          AppGraphNode.actionRelation('inbound'),
+                        )[0];
+                        if (node && AppGraphNode.isAction(action)) {
                           void runAction(action, { parent: node, caller: KEY_BINDING });
                         }
                       });

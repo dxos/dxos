@@ -44,16 +44,18 @@ let storySpace: Space | undefined;
 const decorators = createDecorators({
   skills: [AssistantSkill.key],
   lazyPlugins: async () => {
-    const [{ Instructions, Project, Routine }, { Collection, Text }, ProjectsPlugin] = await Promise.all([
+    const [{ Instructions, Project, Routine }, { Collection, Text }, ProjectsPlugin, TasksPlugin] = await Promise.all([
       import('@dxos/compute'),
       Promise.all([import('@dxos/echo'), import('@dxos/schema')]).then(([echo, schema]) => ({
         Collection: echo.Collection,
         Text: schema.Text,
       })),
       import('@dxos/plugin-projects/ProjectsPlugin'),
+      import('@dxos/plugin-tasks/TasksPlugin'),
     ]);
     return {
-      plugins: [ProjectsPlugin.make()],
+      // Declared in Projects' `dependsOn`, so the manager refuses to resolve it without Tasks.
+      plugins: [ProjectsPlugin.make(), TasksPlugin.make()],
       types: [Project.Project, Instructions.Instructions, Routine.Routine, Collection.Collection, Text.Text],
     };
   },
@@ -75,9 +77,9 @@ const decorators = createDecorators({
   },
   // Mirror ChatCompanion's project wiring: instructions steer via the chat's ref; skills and
   // context objects (plus the project itself) travel via bindings.
-  onChatCreated: async ({ space, chat, binder }) => {
+  onChatCreated: async ({ db, chat, binder }) => {
     const { Project } = await import('@dxos/compute');
-    const [project] = await space.db.query(Filter.type(Project.Project)).run();
+    const [project] = await db.query(Filter.type(Project.Project)).run();
     if (!chat.instructions && project.instructions) {
       const instructionsRef = project.instructions;
       Obj.update(chat, (chat) => {

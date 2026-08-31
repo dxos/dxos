@@ -6,7 +6,7 @@ import React, { useMemo } from 'react';
 
 import { Format } from '@dxos/echo/Format';
 import { PublicKey } from '@dxos/keys';
-import { type KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';
+import { type DevtoolsHost } from '@dxos/protocols/rpc';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 
@@ -23,7 +23,7 @@ export const KeyringPanel = () => {
 
   const data = useMemo(
     () =>
-      keys?.map((record: KeyRecord) => ({
+      keys?.map((record: DevtoolsHost.KeyRecord) => ({
         id: PublicKey.from(record.publicKey).toHex(),
         publicKey: PublicKey.from(record.publicKey).toHex(),
         _original: record,

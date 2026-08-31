@@ -8,7 +8,7 @@ import path from 'node:path';
 import { ResolverFactory } from 'oxc-resolver';
 // import sourcemaps from 'rollup-plugin-sourcemaps';
 import { visualizer } from 'rollup-plugin-visualizer';
-import { type ConfigEnv, type PluginOption, defineConfig, searchForWorkspaceRoot } from 'vite';
+import { type ConfigEnv, type PluginOption, type Rollup, defineConfig, searchForWorkspaceRoot } from 'vite';
 // import devtoolsJson from 'vite-plugin-devtools-json';
 import inspect from 'vite-plugin-inspect';
 import { VitePWA } from 'vite-plugin-pwa';
@@ -19,7 +19,7 @@ import { bootLoaderPlugin, importMapPlugin } from '@dxos/app-framework/vite-plug
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
 import { isNonNullable } from '@dxos/util';
-import { IconsPlugin } from '@dxos/vite-plugin-icons';
+import { IconsPlugin, iconSymbolPattern } from '@dxos/vite-plugin-icons';
 import importSource from '@dxos/vite-plugin-import-source';
 import { DxosLogPlugin } from '@dxos/vite-plugin-log';
 import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
@@ -34,16 +34,21 @@ import { traceBootLeak } from './src/vite/trace-boot-leak.ts';
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFalse = (str?: string) => str === 'false' || str === '0';
 const isFastBundle = isTrue(process.env.DX_FASTBUNDLE);
-// `DX_PLUGIN_SET=production` swaps in plugin-defs.production.tsx at build time (not a runtime flag),
-// so a non-shipped plugin never enters the bundle.
-const isProductionPluginSet = process.env.DX_PLUGIN_SET === 'production';
+// `DX_PLUGIN_SET=<name>` swaps in that set's definitions at build time (not a runtime flag), so a
+// plugin outside the set never enters the bundle. Unset (or unknown) selects the full catalog.
+const PLUGIN_SETS: Record<string, string> = {
+  production: 'src/plugin-defs.production.tsx',
+  mobile: 'src/plugin-defs.mobile.tsx',
+};
+const pluginSetFile = PLUGIN_SETS[process.env.DX_PLUGIN_SET ?? ''] ?? 'src/plugin-defs.tsx';
 // Non-empty only when a dev server is launched with the debug-port flag; see `src/vite/debug-port.ts`.
 const debugPortSession = resolveDebugPortSession();
-const pluginSetFile = isProductionPluginSet ? 'src/plugin-defs.production.tsx' : 'src/plugin-defs.tsx';
+const isReducedPluginSet = pluginSetFile !== 'src/plugin-defs.tsx';
 
 const rootDir = searchForWorkspaceRoot(process.cwd());
 const phosphorIconsCore = path.join(rootDir, '/node_modules/@phosphor-icons/core/assets');
 const dxosIcons = path.join(rootDir, '/packages/ui/brand/assets/icons');
+const extendedIcons = path.join(rootDir, '/packages/ui/ui-icons/assets');
 
 const dirname = import.meta.dirname;
 
@@ -107,12 +112,12 @@ const slimWasm = (): PluginOption => {
 const browserTargets = ['chrome108', 'edge107', 'firefox104', 'safari16'] as const;
 
 /**
- * Glob matching the entry of every plugin the production set can reach, for optimize-deps
- * scanning. Derived from the set's sources so adding a plugin to `plugin-defs.production.tsx`
- * needs no edit here; a specifier scan is enough because a missed plugin costs a
- * "discovered new dependencies" reload rather than a wrong build.
+ * Glob matching the entry of every plugin the selected set can reach, for optimize-deps scanning.
+ * Derived from the set's own sources so adding a plugin to it needs no edit here; a specifier scan
+ * is enough because a missed plugin costs a "discovered new dependencies" reload rather than a wrong
+ * build.
  */
-const productionPluginEntries = () => {
+const reducedPluginEntries = () => {
   const names = new Set<string>();
   for (const file of [pluginSetFile, 'src/plugin-defs.core.tsx']) {
     const source = readFileSync(path.join(dirname, file), 'utf8');
@@ -314,9 +319,9 @@ export default defineConfig((env) => ({
     // also listed as direct deps of composer-app in package.json. An entry that stops resolving
     // costs a warning per start, not a failed scan.
     //
-    // `DX_PLUGIN_SET=production` keeps the scan instead: the list covers the full registry, and
-    // pre-bundling all of it is the cost that mode exists to avoid.
-    include: isProductionPluginSet ? undefined : optimizeDepsInclude,
+    // A reduced `DX_PLUGIN_SET` keeps the scan instead: the list covers the full registry, and
+    // pre-bundling all of it is the cost those sets exist to avoid.
+    include: isReducedPluginSet ? undefined : optimizeDepsInclude,
     // Scan the auxiliary HTML entrypoints during pre-bundle so navigations
     // to `internal.html` / `devtools.html` / `reset.html` don't trip a
     // "discovered new dependencies" reload mid-session.
@@ -335,12 +340,10 @@ export default defineConfig((env) => ({
       './devtools.html',
       './reset.html',
       './recovery.html',
-      // Under DX_PLUGIN_SET=production, scan only the plugins that set can reach, read from its
+      // Under a reduced DX_PLUGIN_SET, scan only the plugins that set can reach, read from its
       // sources themselves — the hand-maintained list this replaces had drifted from them
       // (missing `tasks`/`progress`, still naming a removed `outliner`).
-      isProductionPluginSet
-        ? productionPluginEntries()
-        : path.resolve(rootDir, 'packages/plugins/*/src/index.{ts,tsx}'),
+      isReducedPluginSet ? reducedPluginEntries() : path.resolve(rootDir, 'packages/plugins/*/src/index.{ts,tsx}'),
     ],
   },
   resolve: {
@@ -349,11 +352,9 @@ export default defineConfig((env) => ({
     // Use regex `find: /^util$/` (array form) to bind the bare module name only and let Vite's
     // native node: polyfill layer handle subpaths like `node:util/types`.
     alias: [
-      // Applies to `build` as much as `serve`: this alias is the whole mechanism by which the
-      // production bundle's module graph never reaches a non-shipped plugin.
-      ...(isProductionPluginSet
-        ? [{ find: /^\.\/plugin-defs$/, replacement: path.resolve(dirname, pluginSetFile) }]
-        : []),
+      // Applies to `build` as much as `serve`: this alias is the whole mechanism by which a reduced
+      // set's module graph never reaches a plugin outside it.
+      ...(isReducedPluginSet ? [{ find: /^\.\/plugin-defs$/, replacement: path.resolve(dirname, pluginSetFile) }] : []),
       { find: /^node-fetch$/, replacement: 'isomorphic-fetch' },
       { find: /^node:util$/, replacement: '@dxos/node-std/util' },
       { find: /^node:path$/, replacement: '@dxos/node-std/path' },
@@ -416,7 +417,12 @@ export default defineConfig((env) => ({
       name: 'rss-proxy',
       configureServer(server) {
         server.middlewares.use('/api/rss', async (req, res) => {
-          const url = new URL(req.url!, `http://${req.headers.host}`);
+          if (!req.url) {
+            res.statusCode = 400;
+            res.end('Missing request URL');
+            return;
+          }
+          const url = new URL(req.url, `http://${req.headers.host}`);
           const feedUrl = url.searchParams.get('url');
           if (!feedUrl) {
             res.statusCode = 400;
@@ -634,14 +640,14 @@ export default defineConfig((env) => ({
     }),
 
     IconsPlugin({
-      // The leading negative lookahead restricts the `dx` set to the `regular` weight only (custom
-      // brand SVGs have no weight variants); the `ph` set retains all Phosphor weights.
-      symbolPattern:
-        '(?!dx--[a-z]+[a-z-]*--(?:bold|duotone|fill|light|thin))(ph|dx)--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
+      // Built rather than written out: `ph` carries every weight while `dx` and `px` are regular-only.
+      symbolPattern: iconSymbolPattern({ sets: ['ph', 'dx', 'px'], regularOnly: ['dx', 'px'] }),
       assetPath: (iconSet, name, variant) => {
         switch (iconSet) {
           case 'dx':
             return `${dxosIcons}/${name}.svg`;
+          case 'px':
+            return `${extendedIcons}/${name}.svg`;
           default:
             return `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`;
         }
@@ -652,9 +658,13 @@ export default defineConfig((env) => ({
         path.join(rootDir, '/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}'),
         path.join(rootDir, '/{packages,tools}/**/dx.config.{ts,tsx,js,jsx}'),
       ],
-      // Serves /phosphor/ for the runtime icon resolver in @dxos/react-ui; assets are copied
-      // into the build output and cached at runtime by sw.ts (excluded from the precache).
-      assets: [{ route: '/phosphor', dir: phosphorIconsCore }],
+      // Keeps every `PxIcons` entry in the sprite so the app paints without a round trip.
+      scanPaths: [path.join(rootDir, '/packages/ui/ui-icons/src/index.ts')],
+      // Serves both catalogs so `@dxos/react-ui`'s resolver can fetch a glyph the scanner never saw.
+      assets: [
+        { route: '/phosphor', dir: phosphorIconsCore },
+        { route: '/px-icons', dir: extendedIcons },
+      ],
       // verbose: true,
     }),
 
@@ -670,9 +680,9 @@ export default defineConfig((env) => ({
  * Generate nicer chunk names.
  * Default makes most chunks have names like index-[hash].js.
  */
-function chunkFileNames(chunkInfo: any) {
+function chunkFileNames(chunkInfo: Rollup.PreRenderedChunk) {
   if (chunkInfo.facadeModuleId && chunkInfo.facadeModuleId.match(/index\.[^/]+$/gm)) {
-    let segments: any[] = chunkInfo.facadeModuleId.split('/').reverse().slice(1);
+    let segments: string[] = chunkInfo.facadeModuleId.split('/').reverse().slice(1);
     const nodeModulesIdx = segments.indexOf('node_modules');
     if (nodeModulesIdx !== -1) {
       segments = segments.slice(0, nodeModulesIdx);

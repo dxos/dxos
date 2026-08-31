@@ -5,7 +5,9 @@
 import React, { type JSX, type Ref, forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
 
 import { combine } from '@dxos/async';
-import { GraphModel, type Graph as Graph$ } from '@dxos/graph';
+import * as GraphEdge from '@dxos/graph/GraphEdge';
+import * as GraphModel from '@dxos/graph/GraphModel';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
@@ -29,12 +31,12 @@ export type GraphController = {
 /** Cursor position expressed in the same SVG model coordinates that node `x/y` live in (centered origin, post-zoom). */
 export type ModelPoint = { x: number; y: number };
 
-export type GraphProps<Node extends Graph$.Node.Any = any, Edge extends Graph$.Edge.Any = any> = ThemedClassName<
+export type GraphProps<Node extends GraphNode.Any = any, Edge extends GraphEdge.Any = any> = ThemedClassName<
   Pick<
     GraphRendererOptions<Node>,
     'labels' | 'subgraphs' | 'attributes' | 'renderNode' | 'highlightOnHover' | 'applyNode' | 'edgeOpacity'
   > & {
-    model?: GraphModel.ReactiveGraphModel<Node, Edge>;
+    model?: GraphModel.GraphModel<Node, Edge>;
     projector?: GraphProjector<Node>;
     renderer?: GraphRenderer<Node>;
     drag?: boolean;
@@ -57,7 +59,7 @@ export type GraphProps<Node extends Graph$.Node.Any = any, Edge extends Graph$.E
   }
 >;
 
-const GraphInner = <Node extends Graph$.Node.Any = any, Edge extends Graph$.Edge.Any = any>(
+const GraphInner = <Node extends GraphNode.Any = any, Edge extends GraphEdge.Any = any>(
   {
     classNames,
     model,
@@ -228,6 +230,6 @@ const GraphInner = <Node extends Graph$.Node.Any = any, Edge extends Graph$.Edge
 /**
  * SVG Graph.
  */
-export const Graph = forwardRef(GraphInner) as <Node extends Graph$.Node.Any = any, Edge extends Graph$.Edge.Any = any>(
+export const Graph = forwardRef(GraphInner) as <Node extends GraphNode.Any = any, Edge extends GraphEdge.Any = any>(
   props: GraphProps<Node, Edge> & { ref?: Ref<GraphController> },
 ) => JSX.Element;

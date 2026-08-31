@@ -6,7 +6,7 @@ import * as Option from 'effect/Option';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import { useMemo } from 'react';
 
-import type * as Node from '@dxos/app-graph/Node';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
 import { Path, type TreeModel } from '@dxos/react-ui-list';
@@ -18,7 +18,7 @@ import { filterItems } from '../util';
 import { useNavTreeState } from './useNavTreeState';
 
 // TODO(wittjosiah): Move companion/hidden nodes to their own edge categories so this filter is unnecessary.
-const isVisibleChild = (node: Node.Node): boolean =>
+const isVisibleChild = (node: AppGraphNode.Node): boolean =>
   node.type !== DeckSchema.PLANK_COMPANION_TYPE && node.properties.disposition !== 'hidden';
 
 /** Create an atom family for item display props keyed by path. */

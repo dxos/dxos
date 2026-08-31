@@ -3,3 +3,4 @@
 //
 
 export * from './assistant';
+export * from './plugin-manager';

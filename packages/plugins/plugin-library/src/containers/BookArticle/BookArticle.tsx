@@ -48,7 +48,7 @@ export const BookArticle = ({ subject, role }: BookArticleProps) => {
               />
             </>
           )}
-          <div role='none' className='grow' />
+          <div className='grow' />
           <Toolbar.ToggleGroup
             type='single'
             value={viewMode}

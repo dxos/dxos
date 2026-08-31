@@ -9,7 +9,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, Type } from '@dxos/echo';
+import { Filter, Obj, Order, Query, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { Connection } from '@dxos/link';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
@@ -32,12 +32,16 @@ export const ConnectionSettingsArticle = (_props: ConnectionSettingsArticleProps
   const { t } = useTranslation(meta.profile.key);
   const space = useActiveSpace();
   const { invokePromise } = useOperationInvoker();
-  const connections = useQuery(space?.db, Filter.type(Connection.Connection));
+  const connections = useQuery(
+    space?.db,
+    Query.select(Filter.type(Connection.Connection)).orderBy(Order.property('name', 'asc')),
+  );
 
   const handleAdd = useCallback(() => {
     if (!space) {
       return;
     }
+
     void invokePromise(SpaceOperation.OpenObjectForm, {
       target: space.db,
       typename: Type.getTypename(Connection.Connection),
@@ -50,6 +54,7 @@ export const ConnectionSettingsArticle = (_props: ConnectionSettingsArticleProps
       if (!db) {
         return;
       }
+
       void invokePromise(LayoutOperation.Open, {
         subject: [connectionDeckSubject(GraphPath.getSpacePath(db.spaceId), connection.id)],
         navigation: 'immediate',

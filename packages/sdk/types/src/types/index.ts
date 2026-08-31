@@ -22,6 +22,7 @@ import * as Outline from './Outline';
 import * as Person from './Person';
 import * as Pipeline from './Pipeline';
 import * as Provider from './Provider';
+import * as Repo from './Repo';
 import * as Task from './Task';
 import * as TaskSet from './TaskSet';
 import * as Thread from './Thread';
@@ -65,6 +66,7 @@ export {
   Person,
   Pipeline,
   Provider,
+  Repo,
   Task,
   TaskSet,
   Thread,

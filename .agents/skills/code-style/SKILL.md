@@ -207,4 +207,11 @@ readonly over mutable.
   `TestLayer(opts?)` can be parametrized so tests configure it.
 - Place test layer, configuration, and main definitions at the top of the suite;
   helpers at the bottom.
+- **Never wrap an official API in a trivial local helper.** A one-liner like
+  `const makeBody = (text: string) => Obj.make(Body, { text })` renames the API
+  rather than removing duplication: the reader has to jump to the definition to
+  see what is under test, and several of them turn a suite into an ad-hoc DSL.
+  Inline the real call — `Obj.make(Body, { text: 'x' })` — so the API being
+  exercised stays visible next to the assertion. A helper earns its place only
+  when it composes several calls or encodes a non-obvious setup sequence.
 - Avoid sleep and polling. Use events and `TestClock` instead.

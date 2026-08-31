@@ -498,6 +498,54 @@ describe('parser', () => {
         );
       }),
     );
+
+    it.effect(
+      'tool call truncated by malformed parameters is finalized before the stats block',
+      Effect.fn(function* ({ expect }) {
+        const result = yield* makeInputStream([
+          Response.makePart('tool-params-start', { id: '123', name: 'foo', providerExecuted: false }),
+          Response.makePart('tool-params-delta', { id: '123', delta: '{"objects": echo:///01' }),
+          Response.makePart('finish', {
+            reason: 'stop',
+            usage: { inputTokens: { total: 0 }, outputTokens: { total: 0 } },
+          }),
+        ])
+          .pipe(AiParser.parseResponse())
+          .pipe(Stream.runCollect);
+
+        expect(result.map((block) => block._tag)).toEqual(['toolCall', 'stats']);
+        expect(result[0]).toEqual({
+          _tag: 'toolCall',
+          toolCallId: '123',
+          name: 'foo',
+          input: '{"objects": echo:///01',
+          providerExecuted: false,
+        });
+        expect(result[1]).toMatchObject({ _tag: 'stats', toolCalls: 1 });
+      }),
+    );
+
+    it.effect(
+      'tool call truncated by malformed parameters is still emitted',
+      Effect.fn(function* ({ expect }) {
+        const result = yield* makeInputStream([
+          Response.makePart('tool-params-start', { id: '123', name: 'foo', providerExecuted: false }),
+          Response.makePart('tool-params-delta', { id: '123', delta: '{"objects": echo:///01' }),
+        ])
+          .pipe(AiParser.parseResponse())
+          .pipe(Stream.runCollect);
+
+        expect(result).toEqual([
+          {
+            _tag: 'toolCall',
+            toolCallId: '123',
+            name: 'foo',
+            input: '{"objects": echo:///01',
+            providerExecuted: false,
+          },
+        ]);
+      }),
+    );
   });
 });
 

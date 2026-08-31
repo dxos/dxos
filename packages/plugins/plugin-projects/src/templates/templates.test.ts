@@ -15,7 +15,7 @@ import { TaskSet } from '@dxos/types';
 
 import { ProjectCapabilities } from '#types';
 
-import { blank, defaultTemplates, scaffoldProject } from './index';
+import { defaultTemplate, defaultTemplates, scaffoldProject } from './index';
 
 describe('project templates', () => {
   let builder: EchoTestBuilder;
@@ -35,10 +35,10 @@ describe('project templates', () => {
     return db;
   };
 
-  test('ships a Blank template', ({ expect }) => {
-    const found = defaultTemplates.find((template) => template.id === ProjectCapabilities.BlankTemplateId);
-    expect(found).toBe(blank);
-    expect(blank.label).toBe('Blank');
+  test('ships a Default template', ({ expect }) => {
+    const found = defaultTemplates.find((template) => template.id === ProjectCapabilities.DefaultTemplateId);
+    expect(found).toBe(defaultTemplate);
+    expect(defaultTemplate.label).toBe('Default');
   });
 
   test('scaffoldProject wires the owned graph so one add cascades it', async ({ expect }) => {
@@ -62,11 +62,11 @@ describe('project templates', () => {
     expect((await db.query(Filter.type(TaskSet.TaskSet)).run()).length).toBe(0);
   });
 
-  test('blank template seeds a creation subject as standing context', async ({ expect }) => {
+  test('default template seeds a creation subject as standing context', async ({ expect }) => {
     const db = await createDatabase();
     const subject = db.add(Obj.make(Text.Text, { content: 'subject' }));
     const project = await EffectEx.runPromise(
-      blank
+      defaultTemplate
         .scaffold({ name: 'Scoped', subject })
         .pipe(Effect.provideService(Database.Service, Database.makeService(db))),
     );

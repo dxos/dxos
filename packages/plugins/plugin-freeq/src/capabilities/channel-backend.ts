@@ -27,8 +27,6 @@ export const toMessage = (incoming: IncomingMessage): Message.Message =>
     blocks: [{ _tag: 'text', text: incoming.text }],
   });
 
-const toMessageFromRest = (rest: FreeqRestApi.FreeqRestMessage): Message.Message => toMessage(rest);
-
 /** Builds the `manager.acquire` params for a channel config, resolving credentials when a handle is present. */
 const acquireParamsFor = (
   config: FreeqChannel,
@@ -113,7 +111,7 @@ export const makeFreeqChannelBackend = (
             }
             for (const rest of history) {
               if (!byId.has(rest.id)) {
-                byId.set(rest.id, toMessageFromRest(rest));
+                byId.set(rest.id, toMessage(rest));
               }
             }
             emit();

@@ -37,7 +37,19 @@ type CapturedMetric = {
 /** OTLP delta temporality, as encoded on the wire. */
 const AGGREGATION_TEMPORALITY_DELTA = 1;
 
-const attributesOf = (raw: any[] = []): Record<string, unknown> =>
+/** OTLP `KeyValue` attribute, as encoded on the wire. */
+type OtlpAttribute = { key: string; value?: { stringValue?: string; intValue?: string } };
+
+/** OTLP numeric data point, as encoded on the wire (the fields this test reads across sum/gauge/histogram). */
+type OtlpDataPoint = {
+  asInt?: string;
+  asDouble?: number;
+  count?: string;
+  attributes?: OtlpAttribute[];
+  bucketCounts?: unknown[];
+};
+
+const attributesOf = (raw: OtlpAttribute[] = []): Record<string, unknown> =>
   Object.fromEntries(raw.map((entry) => [entry.key, entry.value?.stringValue ?? entry.value?.intValue]));
 
 describe('metrics export', { tags: ['manual'], timeout: 60_000 }, () => {
@@ -69,7 +81,7 @@ describe('metrics export', { tags: ['manual'], timeout: 60_000 }, () => {
                   unit: metric.unit,
                   kind: metric.sum ? 'sum' : metric.gauge ? 'gauge' : metric.histogram ? 'histogram' : 'unknown',
                   temporality: body?.aggregationTemporality,
-                  points: (body?.dataPoints ?? []).map((point: any) => ({
+                  points: (body?.dataPoints ?? []).map((point: OtlpDataPoint) => ({
                     value: point.asInt !== undefined ? Number(point.asInt) : (point.asDouble ?? Number(point.count)),
                     attributes: attributesOf(point.attributes),
                     bucketCount: point.bucketCounts?.length,

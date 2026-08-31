@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 
 import { Format } from '@dxos/echo/Format';
 import { PublicKey } from '@dxos/keys';
-import { type ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
+import { type DevtoolsHost } from '@dxos/protocols/rpc';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { type SpaceMember, useMembers, useSpaces } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
@@ -29,7 +29,7 @@ type TableSwarmConnection = {
   transportDetails?: string;
   statsDisplay?: string;
   closeReason?: string;
-  connection?: ConnectionInfo;
+  connection?: DevtoolsHost.ConnectionInfo;
 };
 
 const stateOptions = [
@@ -92,7 +92,7 @@ export const SwarmPanel = () => {
     }
   }
 
-  const connectionMap = useMemo(() => new ComplexMap<PublicKey, ConnectionInfo>(PublicKey.hash), []);
+  const connectionMap = useMemo(() => new ComplexMap<PublicKey, DevtoolsHost.ConnectionInfo>(PublicKey.hash), []);
 
   // The state options order determines the sorting priority.
   const rows = useMemo(() => {
@@ -155,7 +155,7 @@ export const SwarmPanel = () => {
   );
 };
 
-const getStats = (connection: ConnectionInfo) => {
+const getStats = (connection: DevtoolsHost.ConnectionInfo) => {
   const stats = {
     bytesSent: 0,
     bytesReceived: 0,

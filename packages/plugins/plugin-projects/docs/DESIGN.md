@@ -103,13 +103,14 @@ Three fields change:
   its routines, discoverable only via the companion of a deleted object or the
   routines list) is accepted; preferring the canonical routine model over a
   project-shaped special case is worth the window.
+  **Reversed 2026-08-24 — see "Routine ownership" below.**
 
 What's left is the line worth keeping: **refs for what the project owns and orders**
-(instructions, artifacts, outline, taskSet); **queries for what accumulates around
-it** (chats by parent edge, routines by companion join, agents via their chats).
-Chats stay parent-edge attached — numerous, append-only, naturally time-ordered, so a
-ref array would be a CRDT hot spot with no ordering benefit; this is the recorded
-justification for the one deviation from schema-visible structure.
+(instructions, artifacts, routines, outline, taskSet); **queries for what accumulates
+around it** (chats by parent edge, agents via their chats). Chats stay parent-edge
+attached — numerous, append-only, naturally time-ordered, so a ref array would be a
+CRDT hot spot with no ordering benefit; this is the recorded justification for the one
+deviation from schema-visible structure.
 
 The type lives in `@dxos/compute` (next to Instructions, Skill, Trigger) so
 brain/inbox/EDGE-side code can reference it without a plugin dependency.
@@ -525,23 +526,30 @@ construction, via `state.currentChat[objectUri]`, and carries no ownership edge)
 than a ref-array read. If `children()` does not re-emit when a chat is newly
 parented, fall back to the Collection field — only the enumeration source moves.
 
-### Creation: `ProjectOperation.CreateChat`
+### Creation (revised 2026-08-24): a project chat is a companion chat
 
-`ProjectOperation.CreateChat({ project })`, handled in plugin-projects:
+There is no project-specific chat operation. A project gets its chat the way every
+other object does — `AssistantOperation.EnsureCompanionChat`, driven by the assistant's
+companion-chat provisioner — and everything project-specific reaches the session through
+`AssistantCapabilities.SubjectContext`:
 
-1. Invoke `AssistantOperation.CreateChat({ db, instructions })` — chat + feed,
-   with the assistant's default skills already bound.
-2. `Obj.setParent(chat, project)`.
-3. Bind `instructions.skills`.
-4. Open it with `LayoutOperation.Open` (a plank in the deck).
+- plugin-assistant's default provider binds the project and the skills its type declares
+  via `Skill.SkillsAnnotation`.
+- plugin-projects' provider adds the instructions' skills and context objects, and the
+  `instructions` ref that `BindChatContext` backfills onto the chat.
 
-`SpaceOperation.AddObject` is deliberately **not** called: it would file the chat
-in the space's root collection, surfacing it under Collections as well. DB
-membership alone (`addToSpace: true`) is what a parented chat needs.
+Two chat lifecycles, neither project-specific:
 
-Companion chats take the same instructions path: companion-chat creation sets
-`chat.instructions` from the project rather than binding it, so companion and
-standalone chats behave identically.
+- **Provisioned** — `EnsureCompanionChat`, fired by the provisioner for whatever plank is
+  active. Transient until the first message, so an untouched companion leaves nothing behind.
+- **Explicit** — `CreateCompanionChat`, behind the `+` affordances. Persisted on click, since
+  a chat the user deliberately created should be in the navtree straight away.
+
+The remaining change from the old bespoke operation: the chat opens in the companion pane
+rather than its own plank, and the navtree child gives it a plank on demand.
+
+`Chat.linkCompanion` sets the parent edge either way, so the navtree children and the
+standalone-Chats exclusion below are unaffected.
 
 ### Navtree: chats as children of the project node
 
@@ -563,9 +571,41 @@ chat appears twice, once under its project and once at the space level.
 ### Toolbar
 
 `ProjectArticle` has a `Panel.Toolbar` (`asChild` + `Toolbar.Root`) whose
-`IconButton` invokes `ProjectOperation.CreateChat`. The same action is
-contributed to the project's navtree node (`disposition: 'list-item-primary'`)
-so `+` works from the tree.
+`IconButton` invokes `AssistantOperation.CreateCompanionChat({ companionTo: project })`, which
+persists the chat immediately so it appears in the navtree before the first message. The same
+action is contributed to the project's navtree node (`disposition: 'list-item-primary'`) so `+`
+works from the tree.
+
+## Routine ownership (decided 2026-08-24)
+
+> **A routine is standalone unless an object owns it. Being triggered by an object is
+> not ownership.**
+
+The routines companion is gone. It answered "which routines touch this object?" with a
+four-hop reverse-ref join (`connectedRoutinesQuery`), and the answer read as arbitrary:
+a routine appeared because some ref path happened to reach the object, which is not the
+same as the routine changing it, and changes made any other way were invisible. History
+and change attribution replace it; both are deferred.
+
+That leaves ownership explicit rather than inferred:
+
+- `Project.routines` (`Ref(Routine)[]`) is back, alongside the routine→project parent
+  edge, so a project's starter routines cascade-delete with it. Magazine gets the same
+  treatment (one owned routine) in follow-up work.
+- Templates seed the array via `Project.addRoutine`; nothing creates a project-owned
+  routine by hand until the project-routines UI is designed.
+- **An object with a parent is not listed in a top-level section**
+  (`TypeSection.sectionQuery` filters `Filter.hasParent(false)`). A project's routines
+  and chats are reached through the project, so no deletion guard is needed for them —
+  there is no top-level row to delete. This subsumes the per-section
+  `standaloneChatsQuery` the Chats section carried.
+- Routine templates are all global: `appliesTo` is gone, a template that needs an object
+  declares an `inputSchema` the create panel collects first, and one that cannot stand
+  alone at all (the connector's Sync) sets `hidden` and is reachable only by id.
+
+The 2026-08-14 argument for removal still stands on its own terms — the join _is_ the
+canonical way to find routines that reference an object. What it got wrong is that the
+question users were asking was ownership, not reference.
 
 ## Routine staleness and deletion guards (decided 2026-08-14)
 
@@ -606,9 +646,9 @@ a Routine is, keeping EDGE compatible):
 - **`RunInstructions`**: a dead context ref is skipped as today (degrade, don't crash)
   but now records a warning on the run trace (`RoutineTraceCompanion`), so degradation
   is diagnosable post-hoc instead of silent.
-- **UI**: the companion/card badge is computed live from the refs (dangling source or
-  context ref via `Obj.isDeleted` on resolution — same predicate family as
-  `routinesForObject`), so a never-firing stale routine still shows flagged. A
+- **UI**: the card badge is computed live from the refs (dangling source or context ref
+  via `Obj.isDeleted` on resolution), so a never-firing stale routine still shows
+  flagged. A
   space-level stale-routines list (disabled-for-staleness + live dangling refs) gives
   the sweep; delete cascades trigger + instructions via the routine's own parent
   edges. Flag-and-confirm always — never auto-delete.
@@ -654,8 +694,9 @@ meaningful (`warn` alone: "3 chats reference this"; `warn`+alt: the routines cas
 
 First two consumers:
 
-1. **plugin-projects**: deleting a Project with connected routines ⇒ `warn`, subjects =
-   the routines (via `connectedRoutinesQuery`), alternative = "Delete N routines".
+1. **plugin-projects**: deleting a Project with routines that merely _reference_ it (not
+   the owned ones, which cascade) ⇒ `warn`, alternative = "Delete N routines". Needs a
+   replacement for `connectedRoutinesQuery`, which went with the companion.
 2. **Schema/space layer**: deleting a stored type with instances or views pointing at
    it ⇒ `block` (dangling-typed objects would be unopenable), alternative = "Delete
    N objects of this type". "Anything that points at the type" resolves via the same
@@ -757,21 +798,21 @@ a Chat helper (rebuild the feed), not an Agent one.
 
 ### Where current Agent functionality lands
 
-| Today (Agent)                                                            | After                                                                                                                                            |
-| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `makeInitialized` (agent + chat + binder + CompanionTo)                  | create Agent (identity + instructions); chat creation is the chat factory's job (`ProjectOperation.CreateChat` or ad-hoc), with `chat.agent` set |
-| model files an artifact (`add-artifact`)                                 | `ProjectSkill.artifact-add` into the owning project's Collection                                                                                 |
-| model reads its context (`get-context`)                                  | instructions via the system prompt (`chat.instructions`); artifacts via `ProjectSkill.artifact-list`; plan via the chat, unchanged               |
-| scheduled run (`cron` → `sync-triggers` → timer trigger → `AgentWorker`) | Routine (timer trigger) whose run targets a chat carrying `chat.agent`                                                                           |
-| subscription run (qualifier trigger per feed)                            | Routine (feed trigger); qualifier folds into the routine                                                                                         |
-| `resetChatHistory`                                                       | Chat helper; the agent is untouched                                                                                                              |
-| chat attribution (`did`)                                                 | unchanged — the one thing that was always identity-shaped                                                                                        |
+| Today (Agent)                                                            | After                                                                                                                                     |
+| ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `makeInitialized` (agent + chat + binder + CompanionTo)                  | create Agent (identity + instructions); chat creation is the chat factory's job (the companion path or ad-hoc), linked by the parent edge |
+| model files an artifact (`add-artifact`)                                 | `ProjectSkill.artifact-add` into the owning project's Collection                                                                          |
+| model reads its context (`get-context`)                                  | instructions via the system prompt (`chat.instructions`); artifacts via `ProjectSkill.artifact-list`; plan via the chat, unchanged        |
+| scheduled run (`cron` → `sync-triggers` → timer trigger → `AgentWorker`) | Routine (timer trigger) whose run targets a chat carrying `chat.agent`                                                                    |
+| subscription run (qualifier trigger per feed)                            | Routine (feed trigger); qualifier folds into the routine                                                                                  |
+| `resetChatHistory`                                                       | Chat helper; the agent is untouched                                                                                                       |
+| chat attribution (`did`)                                                 | unchanged — the one thing that was always identity-shaped                                                                                 |
 
 Sequences for the three use cases, post-refactor:
 
 1. **Ad-hoc chat**: `AssistantOperation.CreateChat` → skills bound → model
    creates artifacts; nothing owns them unless the user files them.
-2. **Project chat**: `ProjectOperation.CreateChat` → `chat.instructions` =
+2. **Project chat**: the companion path → `chat.instructions` =
    project's, `ProjectSkill` bound → artifacts filed into the shared Collection.
 3. **Agent as preset**: pick an Agent at chat creation → `chat.agent` = ref,
    `chat.instructions` = `agent.instructions` (skills come along inside it) →
@@ -822,7 +863,7 @@ the whole loop, graded on database effects rather than on model wording:
 
 1. Seed a Project with instructions and an artifacts Collection.
 2. Seed a Chat under it — own feed, `instructions` pointing at the project's
-   own object, parented to the project (mirrors `ProjectOperation.CreateChat`).
+   own object, parented to the project (mirrors a project companion chat).
 3. Prompt the model to create a markdown document.
 4. Assert the document is bound into the session context (a `Binding` record in
    the chat feed) **and** present in the project's artifacts Collection.

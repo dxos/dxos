@@ -2,6 +2,7 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {},
   "exclude": [
+    "**/*.tst.ts",
     "/node_modules/",
     "src/**/*.solid-stories.tsx",
     "src/vite-plugin/boot-loader/loader-app"
@@ -39,9 +40,6 @@
     },
     {
       "path": "../../common/random"
-    },
-    {
-      "path": "../../common/storybook-addon-logger"
     },
     {
       "path": "../../common/util"

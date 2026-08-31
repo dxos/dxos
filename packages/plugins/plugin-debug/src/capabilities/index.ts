@@ -9,9 +9,16 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 
+import { meta } from '#meta';
+import { translations } from '#translations';
 import { Debug, DebugEvents } from '#types';
 
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../../PLUGIN.mdl?raw';
+
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+  environments: ['node'],
+});
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: [
     'org.dxos.plugin.debug.surface.stats',
@@ -27,6 +34,7 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
 export const DebugSettings = AppCapability.settings(() => import('./settings'), {
   activatesOn: ActivationEvents.Idle,
   provides: [Debug.DebugCapabilities.Settings],
+  environments: ['node'],
 });
 export const StatsPanel = Capability.lazyModule(
   'StatsPanel',
@@ -49,3 +57,10 @@ export const LogRecording = Capability.lazyModule(
   { provides: [], activatesOn: DebugEvents.Start },
   () => import('./log-recording'),
 );
+export const Translations = AppCapability.translations(translations);
+export const PluginAsset = AppCapability.pluginAsset({
+  pluginId: meta.profile.key,
+  path: 'PLUGIN.mdl',
+  content: pluginSpec,
+  mimeType: 'application/x-mdl',
+});

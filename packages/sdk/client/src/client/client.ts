@@ -6,6 +6,7 @@ import * as EffectContext from 'effect/Context';
 import { inspect } from 'node:util';
 
 import { type CleanupFn, Event, MulticastObservable, Trigger, synchronized } from '@dxos/async';
+import { createEdgeBlobBackend } from '@dxos/blob/hosted';
 import {
   type ClientServicesProvider,
   type Echo,
@@ -37,7 +38,7 @@ import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { trace } from '@dxos/tracing';
 import { type JsonKeyOptions, type MaybePromise } from '@dxos/util';
 
-import { type ClientEdgeAPI, createClientEdgeAPI, createEdgeBlobBackend, createEdgeIdentity } from '../edge';
+import { type ClientEdgeAPI, createClientEdgeAPI, createEdgeIdentity } from '../edge';
 import { type MeshProxy } from '../mesh/mesh-proxy';
 import type { IFrameManager, Shell, ShellManager } from '../services';
 import { DXOS_VERSION } from '../version';
@@ -369,7 +370,8 @@ export class Client {
     performance.mark('client.initialize:called');
     log('initializing client');
     const { createClientServices, IFrameManager, ShellManager } = await import('../services');
-    const { Runtime } = await import('@dxos/protocols/proto/dxos/config');
+    const { Runtime_Client_ServicesMode, Runtime_Client_Storage_SqliteMode } =
+      await import('@dxos/protocols/buf/dxos/config_pb');
     performance.mark('client.initialize:imports-loaded');
     log('client.initialize: imports loaded');
 
@@ -381,7 +383,7 @@ export class Client {
       // services in-thread (HOST); the dedicated worker is a composer-app-level choice.
       const clientCfg = this._config.values.runtime?.client;
       if (!clientCfg?.servicesMode && !clientCfg?.remoteSource) {
-        const servicesMode = Runtime.Client.ServicesMode.HOST;
+        const servicesMode = Runtime_Client_ServicesMode.HOST;
         // Default SQLite backing when the caller didn't set one:
         // - OPFS when a createOpfsWorker callback was supplied (browser with persistent indexing)
         // - FILE when a sqlitePath or dataRoot is supplied (Node/Bun CLI or persistent config)
@@ -389,10 +391,10 @@ export class Client {
         const sqliteMode = clientCfg?.storage?.sqliteMode
           ? undefined
           : this._options.createOpfsWorker
-            ? Runtime.Client.Storage.SqliteMode.OPFS
+            ? Runtime_Client_Storage_SqliteMode.OPFS
             : this._options.sqlitePath || clientCfg?.storage?.dataRoot
-              ? Runtime.Client.Storage.SqliteMode.FILE
-              : Runtime.Client.Storage.SqliteMode.MEMORY;
+              ? Runtime_Client_Storage_SqliteMode.FILE
+              : Runtime_Client_Storage_SqliteMode.MEMORY;
         this._config = new Config(
           { runtime: { client: { servicesMode, ...(sqliteMode !== undefined && { storage: { sqliteMode } }) } } },
           this._config.values,
@@ -538,7 +540,16 @@ export class Client {
 
       this._edgeBlobBackendCleanup = this._echoClient.graph.registerBlobBackend(
         Blob.Storage.edge,
-        createEdgeBlobBackend({ edgeClient: edgeHttpClient }),
+        // Adapted rather than passed: the backend takes the four operations it needs, so it does not
+        // depend on the other twenty-nine methods of `EdgeHttpClient`, and `Context` stays here.
+        createEdgeBlobBackend({
+          transport: {
+            url: (key) => edgeHttpClient.getBlobUrl(key),
+            put: (key, data, options) => edgeHttpClient.putBlob(Context.default(), key, data, options),
+            get: (key) => edgeHttpClient.getBlob(Context.default(), key),
+            has: (key) => edgeHttpClient.hasBlob(Context.default(), key),
+          },
+        }),
         { default: true },
       );
     }

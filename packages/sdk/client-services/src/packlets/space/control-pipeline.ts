@@ -104,6 +104,15 @@ export class ControlPipeline {
     return this._spaceStateMachine;
   }
 
+  /**
+   * Feeds a credential that came from the space's credentials document rather than a feed. Processing
+   * is idempotent by credential id, so a credential the feed already delivered is a no-op — which is
+   * what lets both sources run during the migration window.
+   */
+  async processDocumentCredential(credential: Credential): Promise<boolean> {
+    return this._spaceStateMachine.process(credential, {});
+  }
+
   get pipeline(): PipelineAccessor {
     return this._pipeline;
   }
@@ -122,11 +131,13 @@ export class ControlPipeline {
     }
 
     log('starting...');
+    await this._pipeline.start();
+    // Started strictly after `pipeline.start()`: a consumer that races the start can obtain the
+    // iterator's generator before it is running — the generator then finishes immediately and
+    // polling it spins the microtask queue, starving the thread (boot wedge).
     setTimeout(async () => {
       void this._consumePipeline(ctx);
     });
-
-    await this._pipeline.start();
     log('started');
   }
 
@@ -149,10 +160,10 @@ export class ControlPipeline {
     await this._pipeline.pause();
     const snapshot: ControlPipelineSnapshot = {
       timeframe: this._pipeline.state.timeframe,
-      messages: this._spaceStateMachine.credentialEntries.map((entry) => ({
-        feedKey: entry.sourceFeed,
-        credential: entry.credential,
-      })),
+      // A snapshot replays into the feed pipeline, so an entry with no source feed has no place in it.
+      messages: this._spaceStateMachine.credentialEntries.flatMap((entry) =>
+        entry.sourceFeed ? [{ feedKey: entry.sourceFeed, credential: entry.credential }] : [],
+      ),
     };
     await this._pipeline.unpause();
 

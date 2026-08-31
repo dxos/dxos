@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { type AudioChunk } from './audio-recorder';
-import { type WhisperSegment, alignWhisperSegments } from './transcriber';
+import { type AudioChunk, type AudioRecorder } from './audio-recorder';
+import { Transcriber, type WhisperSegment, alignWhisperSegments } from './transcriber';
 
 const T0 = Date.parse('2026-01-01T00:00:00.000Z');
 
@@ -101,4 +101,41 @@ describe('alignWhisperSegments', () => {
     expect(result.transcripts).toHaveLength(1);
     expect(result.transcripts[0].text).toBe('fresh');
   });
+});
+
+describe('Transcriber transport validation', () => {
+  test('open() rejects before recording when no transport is configured', async ({ expect }) => {
+    let started = false;
+    const transcriber = new Transcriber({
+      config: { transcribeAfterChunksAmount: 50, prefixBufferChunksAmount: 10 },
+      recorder: {
+        ...stubRecorder(),
+        start: async () => {
+          started = true;
+        },
+      },
+      onSegments: async () => {},
+    });
+    await expect(transcriber.open()).rejects.toThrow(/Transcription endpoint is not configured/);
+    expect(started).toBe(false);
+  });
+
+  test('open() succeeds with a transcribe fn and no endpoint', async ({ expect }) => {
+    const transcriber = new Transcriber({
+      config: { transcribeAfterChunksAmount: 50, prefixBufferChunksAmount: 10 },
+      recorder: stubRecorder(),
+      transcribe: async () => [],
+      onSegments: async () => {},
+    });
+    await transcriber.open();
+    await transcriber.close();
+    expect(transcriber.isOpen).toBe(false);
+  });
+});
+
+const stubRecorder = (): AudioRecorder => ({
+  wavConfig: { channels: 1, sampleRate: 16_000, bitDepthCode: '32f' },
+  setOnChunk: () => {},
+  start: async () => {},
+  stop: async () => {},
 });

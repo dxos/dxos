@@ -4,11 +4,11 @@ CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}
 COMPOSER_APP_POSTHOG_API_KEY=${COMPOSER_APP_TEST_POSTHOG_API_KEY}
 COMPOSER_APP_POSTHOG_FEEDBACK_SURVEY_ID=0199be95-be15-0000-56ca-1f0dfde8731f
 COMPOSER_APP_POSTHOG_PROJECT_ID=93152
+DOCS_POSTHOG_API_KEY=phc_5PMOqYy30CdIv0hIzqspq0Go8LKbNKG8bISJb5CViTQ
 POSTHOG_CLI_API_KEY=${POSTHOG_CLI_API_KEY}
-# Must be the hub that EDGE's `HUB_SERVICE` binding resolves to (`hub` for EDGE `main` below):
-# magic-link tokens live in that hub's SESSION_KV and db-service redeems them through the binding,
-# so a hub from another environment mints links no redemption can resolve.
-DX_HUB_URL="https://hub.dxos.workers.dev/"
+# Same EDGE host as DX_EDGE_BASE_URL below, so this is the hub that EDGE's `HUB_SERVICE` binding
+# resolves to -- a hub from another environment mints magic links no redemption can resolve.
+DX_HUB_URL="https://preview.dxos.network/hub/"
 DX_IPDATA_API_KEY=${IPDATA_API_KEY}
 DX_OTEL_ENDPOINT=/api/otel
 # Stamped on every metric, log and trace as `deployment.environment`; without it every
@@ -20,6 +20,4 @@ IPFS_API_SECRET=${IPFS_API_SECRET}
 DX_PWA=false
 DX_MINIFY=true
 DX_EDGE_ECHO_REPLICATOR=true
-# EDGE preview. TODO(wittjosiah): `https://preview.dxos.network/` once DX-1150 renames EDGE's `main`
-# environment — the instance is the same one, only the name changes.
-DX_EDGE_BASE_URL="https://main.dxos.network/"
+DX_EDGE_BASE_URL="https://preview.dxos.network/"

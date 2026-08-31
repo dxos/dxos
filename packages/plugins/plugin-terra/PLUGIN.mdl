@@ -16,3 +16,56 @@ Live parameters (seed, water level, elevation and mountain scale, tree density, 
 users reshape the planet in real-time from a config panel without leaving Composer. Biomes are
 assigned from elevation and latitude, and trees/rocks are scattered across land using thin
 instances for cheap rendering at scale.
+
+## Extensions
+
+| Term   | URI                        |
+|--------|----------------------------|
+| `flow` | `org.dxos.mdl.flow@1.0`    |
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Create a planet and reshape it with live parameters
+  desc: |
+    The core terra round-trip. There is no `PLUGIN.mdl` Operations/Features/Acceptance section
+    for this plugin to cite in `covers:` — the document above is prose-only — so this flow is
+    written against the plugin's actual surface (`TerraObject` create-object entry, the config
+    panel) rather than any `feat`/`req`/`test` id.
+  actors: human
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-terra is enabled — it is OFF by default in every environment (not listed in
+      `getDefaults` in `plugin-defs.tsx`, dev included); enabling is a UI action (Settings ->
+      plugin registry)
+    - no planet named "QA Planet" exists — ABORT rather than deleting one this flow did not create
+  test:
+    - name: Create the planet
+      do: In the navtree, click + on the space and choose Terra. Name it "QA Planet".
+      expect: a low-poly planet renders — distinct land, water, and biome coloring — seeded deterministically
+      note: |
+        NO `invoke` — no `org.dxos.operation.terra.*` operation module exists in `src/` (there is
+        no `operations/` directory, unlike plugin-studio/plugin-table/plugin-tasks); creation goes
+        through `SpaceCapabilities.CreateObjectEntry` only. This step, and the whole flow, is
+        human-only for that reason.
+    - name: Reshape via the config panel
+      do: Open the config panel and change the seed, water level, or tree density.
+      expect: the planet regenerates deterministically for the new seed/config — same inputs always
+        produce the same terrain
+      note: |
+        NO `invoke` — same as above, and the result is a WebGL canvas render, invisible to the
+        debug port's DOM assertions even if an operation existed.
+  after:
+    - name: Delete the planet
+      do: Right-click "QA Planet" in the navtree and choose Delete.
+      expect: the row leaves the navtree and its plank closes if it was open
+      note: |
+        NO `invoke` — nothing in the flow captured the planet (the create step is human-only), so
+        there is no id to pass `removeObjects`; deletion stays human-only rather than passing an
+        empty `objects` list, which removes nothing.
+```

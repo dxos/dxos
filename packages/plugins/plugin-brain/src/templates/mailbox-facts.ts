@@ -4,9 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
+import * as Project from '@dxos/compute/Project';
 import * as Skill from '@dxos/compute/Skill';
 import * as Trigger from '@dxos/compute/Trigger';
-import { Database, Obj, Ref } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import type * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
@@ -71,10 +72,7 @@ export const mailboxFacts: ProjectCapabilities.Template = {
           input: { mailbox: Ref.make(mailbox) },
         }),
       });
-      // Persisted here rather than reached through the returned project: the routine connects to the
-      // mailbox through its trigger, not through any ref the project holds, so nothing in the
-      // project's ref graph would carry it into the database.
-      yield* Database.add(routine);
+      Project.addRoutine(project, routine);
 
       return project;
     }),

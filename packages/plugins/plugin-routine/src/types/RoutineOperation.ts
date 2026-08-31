@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Chat from '@dxos/assistant-toolkit/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -46,12 +47,14 @@ export const CreateRoutine = Operation.make({
     name: 'Create Routine',
     icon: 'ph--lightning--regular',
   },
-  services: [Capability.Service],
+  services: [Capability.Service, Plugin.Service],
   input: Schema.Struct({
     db: Database.Database,
     templateId: Schema.String,
     name: Schema.optional(Schema.String),
     subject: Schema.optional(Obj.Unknown),
+    /** Values for the template's `inputSchema`. */
+    input: Schema.optional(Schema.Unknown),
   }),
   output: Schema.Struct({
     id: Schema.String,

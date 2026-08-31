@@ -14,6 +14,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Message } from '@dxos/types';
 
 import { AssistantOperation } from '#types';
@@ -39,10 +40,12 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = Assis
 
       // Create a new chat, then apply source bindings and session link.
       const sourceName = Obj.getLabel(chat);
-      const { object: newChat } = yield* Operation.invoke(AssistantOperation.CreateChat, {
-        db,
-        name: sourceName ? `${sourceName} (fork)` : undefined,
-      });
+      const { object: newChat } = yield* Operation.invoke(
+        AssistantOperation.CreateChat,
+        { name: sourceName ? `${sourceName} (fork)` : undefined },
+        { spaceId: db.spaceId },
+      );
+      yield* Operation.invoke(SpaceOperation.AddObject, { object: newChat }, { spaceId: db.spaceId });
       const newFeed = yield* Database.load(newChat.feed);
 
       if (sorted.length > 0) {

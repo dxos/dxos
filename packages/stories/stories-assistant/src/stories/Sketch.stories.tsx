@@ -52,9 +52,9 @@ const decorators = createDecorators({
     addToRootCollection(space, [drawing]);
     return [[StoryRole.Chat], [Cell.article(drawing)], [AppSurface.deckCompanion('trace')]];
   },
-  onChatCreated: async ({ space, binder }) => {
+  onChatCreated: async ({ db, binder }) => {
     const { Drawing } = await import('@dxos/plugin-illustrator');
-    const objects = await space.db.query(Filter.type(Drawing.Drawing)).run();
+    const objects = await db.query(Filter.type(Drawing.Drawing)).run();
     await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
   },
   skills: [AssistantSkill.key, DrawingSkill.key],

@@ -10,7 +10,7 @@ import * as Layer from 'effect/Layer';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import { Client, ClientService } from '@dxos/client';
+import { Client, ClientService, fromClient } from '@dxos/client';
 import { INITIALIZE_TIMEOUT } from '@dxos/client-protocol';
 import { EffectEx } from '@dxos/effect';
 import { makeIdentityService, makeSpaceService } from '@dxos/halo-adapter-client';
@@ -164,7 +164,7 @@ export default Capability.makeModule(
             catch: (error) => new Error(`Client failed to initialize within ${initializeTimeout}ms: ${String(error)}`),
           }).pipe(Effect.as(client)),
         )
-      : ClientService.fromClient(client);
+      : fromClient(client);
 
     return [
       // TODO(wittjosiah): Try to remove and prefer layer?

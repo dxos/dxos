@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Graph, type SelectionModel } from '@dxos/graph';
+import { type SelectionModel } from '@dxos/graph';
+import * as GraphModel from '@dxos/graph/GraphModel';
 
 import { type SVGContext } from '../../hooks';
 import { type GraphLayout, type GraphLayoutNode, emptyGraph } from '../types';
@@ -14,7 +15,7 @@ export type GraphProjectorOptions = ProjectorOptions & {};
  * Base class for graph projectors.
  */
 export abstract class GraphProjector<NodeData = any, Options extends GraphProjectorOptions = any> extends Projector<
-  Graph.Any,
+  GraphModel.AnyData,
   GraphLayout<NodeData>,
   Options
 > {
@@ -59,7 +60,7 @@ export abstract class GraphProjector<NodeData = any, Options extends GraphProjec
    * Merge external data with internal representation (e.g., so force properties like position are preserved).
    * @param data
    */
-  protected mergeData(data: Graph.Any = emptyGraph) {
+  protected mergeData(data: GraphModel.AnyData = emptyGraph) {
     // Merge nodes.
     const nodes: GraphLayoutNode[] = data.nodes.map((node) => {
       let current: GraphLayoutNode = this._layout.graph.nodes.find((n) => n.id === this.options.idAccessor(node));

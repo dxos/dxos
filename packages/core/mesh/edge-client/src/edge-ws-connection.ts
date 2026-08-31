@@ -87,8 +87,9 @@ export class EdgeWsConnection extends Resource {
     return this._rtt;
   }
 
+  /** Floor uptime to satisfy the int32 EdgeStatus.uptime wire type. */
   public get uptime(): number {
-    return this._openTimestamp ? (Date.now() - this._openTimestamp) / 1000 : 0;
+    return this._openTimestamp ? Math.floor((Date.now() - this._openTimestamp) / 1000) : 0;
   }
 
   public get uploadRate(): number {

@@ -19,6 +19,9 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/graph"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -50,9 +53,6 @@
     },
     {
       "path": "../../core/compute/edge-compute"
-    },
-    {
-      "path": "../../core/compute/link"
     },
     {
       "path": "../../core/echo/echo"

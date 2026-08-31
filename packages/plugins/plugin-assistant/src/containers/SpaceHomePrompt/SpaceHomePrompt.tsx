@@ -4,7 +4,6 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { Provider } from '@dxos/ai';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -41,8 +40,6 @@ export const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
   const runtime = useChatServices({ id: space?.id });
   const settings = useAtomCapability(AssistantCapabilities.Settings);
   const { preset, ...presetProps } = usePresets(settings);
-  // The remote (online) service is the edge provider; the resolved preset carries the active provider.
-  const online = preset?.provider === Provider.edge.id;
 
   // In-memory backing chat (not yet added to the space). `nonce` forces a fresh chat after submit.
   const [chat, setChat] = useState<ChatType.Chat>();
@@ -53,7 +50,7 @@ export const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
       return;
     }
     let cancelled = false;
-    void invokePromise(AssistantOperation.CreateChat, { db: space.db, addToSpace: false }).then((result) => {
+    void invokePromise(AssistantOperation.CreateChat, {}, { spaceId: space.db.spaceId }).then((result) => {
       if (!cancelled) {
         setChat(result.data?.object);
       }
@@ -63,7 +60,7 @@ export const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
     };
   }, [space, nonce, invokePromise]);
 
-  const processor = useChatProcessor({ space, chat, preset, runtime, registry });
+  const processor = useChatProcessor({ db: space?.db, chat, preset, runtime, registry });
 
   const event = useMemo(() => new Event<ChatEvent>(), []);
   useEffect(() => {
@@ -101,7 +98,6 @@ export const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
       processor={processor}
       event={event}
       preset={preset?.id}
-      online={online}
       placeholder={t('space-home.prompt.placeholder')}
     />
   );

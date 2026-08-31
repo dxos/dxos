@@ -22,11 +22,13 @@ import { type EdgeIdentity } from './edge-identity';
  * environment supports it and asserting typed graceful failures elsewhere (missing OAuth
  * secrets, disabled test endpoints, admin-key-gated routes, etc).
  *
- * The former client-side "contract gap" endpoints (`db.spaceCreate`, `db.identityRecover`,
- * `db.spaceExport`, `db.spaceExecQuery`, `db.queueBlocksQuery`, `blob.blobUpload`/`blobUploadCar`)
- * now declare real `.setPayload(...)`/`.addSuccess(..., { status })` contracts, so the derived
- * client can attach a body and decode a real insert response for every one of them — those tests
- * below now exercise the real handler rather than a client-side "no payload channel" failure.
+ * The former client-side "contract gap" endpoints (`db.identityRecover`, `db.spaceExecQuery`,
+ * `db.queueBlocksQuery`, `blob.blobUpload`/`blobUploadCar`) now declare real
+ * `.setPayload(...)`/`.addSuccess(..., { status })` contracts, so the derived client can attach a
+ * body and decode a real insert response for every one of them — those tests below now exercise
+ * the real handler rather than a client-side "no payload channel" failure. `db.spaceCreate` and
+ * `db.spaceExport` were removed from the contract along with the classical-Automerge routes; see
+ * the `db` describe block below.
  * `db.registryModules` remains a genuine, documented client-side limitation (see the `registry`
  * describe block) since it depends on an upstream `@effect/platform` fix for wildcard path
  * segments.
@@ -41,12 +43,11 @@ const EDGE_URL = process.env.DX_EDGE_TEST_URL;
 
 describe.skipIf(!EDGE_URL)('edge api (live)', { tags: ['sync-e2e'], timeout: 60_000 }, () => {
   let identity: EdgeIdentity;
-  // Queue/indexer/exec-query routes key their Durable Objects by `spaceId` alone (no
-  // `spaceCreate` precondition — see the `db` describe block below), so a single random space id
-  // shared across describes stands in for a "created" space throughout this file. `spaceCreate`
-  // itself can no longer mint a real one to promote this to in this local dev instance — see the
-  // `db` describe block's `spaceCreate` test for why — so this stays a random id rather than a
-  // real created space's id.
+  // Queue/indexer/exec-query routes key their Durable Objects by `spaceId` alone (no creation
+  // precondition), so a single random space id shared across describes stands in for a "created"
+  // space throughout this file. `db.spaceCreate` was removed from the contract along with the
+  // classical-Automerge routes — space roots are now created and synced by the client under
+  // subduction — so this stays a random id rather than a real created space's id.
   const spaceId = SpaceId.random();
 
   beforeAll(async () => {
@@ -325,42 +326,13 @@ describe.skipIf(!EDGE_URL)('edge api (live)', { tags: ['sync-e2e'], timeout: 60_
   });
 
   describe('db', () => {
-    // `spaceCreate`'s `HttpApiEndpoint` now declares `.setPayload(CreateSpaceRequestSchema)`, so
-    // the derived client can attach the real `{ agentKey }` body — verified below by minting a
-    // real agent first and observing the handler's real business-logic response rather than a
-    // client-side "no payload channel" failure. This local dev instance runs with
-    // `subductionReplicator.enabled: true` (see edge's `wrangler.jsonc`), under which
-    // `SpaceHandler.createSpace` unconditionally refuses server-side space creation — space roots
-    // are meant to be created and synced by the client under subduction, not minted by the edge
-    // worker — so a real space can never actually be created through this endpoint in this
-    // environment. That's a real, intentional business rule (not a contract gap), so the test
-    // below asserts the specific graceful failure message rather than a successful creation. The
-    // queue/indexer/exec-query routes below key their Durable Objects by `spaceId` alone (no
-    // `spaceCreate` precondition) — see the shared `spaceId` declared above.
+    // `db.spaceCreate` and `db.spaceExport` were removed from the contract along with the
+    // classical-Automerge routes — space roots are now created and synced by the client under
+    // subduction, not minted or exported by the edge worker. The queue/indexer/exec-query routes
+    // below key their Durable Objects by `spaceId` alone (no creation precondition) — see the
+    // shared `spaceId` declared above.
     const subspaceTag = 'data' as const;
     const queueId = EntityId.random();
-
-    test('spaceCreate sends its payload and hits the real subduction-replication business rule', async ({ expect }) => {
-      const agent = await EffectEx.runPromise(
-        authedCall((client) =>
-          client.agents.createAgent({
-            payload: {
-              identityDid: identity.identityDid,
-              haloSpaceId: SpaceId.random(),
-              haloSpaceKey: PublicKey.random().toHex(),
-            },
-          }),
-        ),
-      );
-      const error = await EffectEx.runPromise(
-        Effect.gen(function* () {
-          const client = yield* anonymousClient();
-          return yield* mapEdgeErrors(client.db.spaceCreate({ payload: { agentKey: agent.data.deviceKey } }));
-        }).pipe(Effect.flip),
-      );
-      expect(error).toBeInstanceOf(EdgeRequestError);
-      expect(error.message).toContain('subduction replication');
-    });
 
     test('notarizationGet returns the awaiting-notarization set for a space', async ({ expect }) => {
       const response = await EffectEx.runPromise(
@@ -371,6 +343,16 @@ describe.skipIf(!EDGE_URL)('edge api (live)', { tags: ['sync-e2e'], timeout: 60_
       );
       expect(response).toBeDefined();
     });
+
+    // The 410 tombstone gate (`spaceDeletedGate` in db-service, gating every `/spaces/:spaceId/...`
+    // route once a space is marked deleted) is real and worth a typed-failure test, but its only
+    // trigger reachable from this client, `dataSpaceDelete`, requires the caller to already be a
+    // member of the space (`ownership.memberKeys.includes(identityKey)`, checked in
+    // `dataSpaceDelete`'s handler) — and, same as `spaceCreate` before its removal, this local dev
+    // instance can never mint a real space server-side (subduction replication refuses it), so no
+    // client-only precondition can produce a space this identity is a member of. The admin-key-gated
+    // `adminSpaceDelete` bypasses that membership check, but no `DX_HUB_API_KEY` is configured
+    // locally (see the `dataManagement` describe block below). Skipped rather than faked.
 
     // `queueInsert`'s handler responds `EdgeResponse.success({}, 201)`, and its `HttpApiEndpoint`
     // now declares the matching `.addSuccess(Schema.Unknown, { status: 201 })` — the derived
@@ -488,22 +470,6 @@ describe.skipIf(!EDGE_URL)('edge api (live)', { tags: ['sync-e2e'], timeout: 60_
         }),
       );
       expect(response).toBeDefined();
-    });
-
-    // `spaceExport`'s `HttpApiEndpoint` now declares `.setPayload(ExportBundleRequestSchema)`, so
-    // the real `{ docHeads }` body transmits. `AutomergeHandler.export` checks
-    // `useSubductionReplicator` before anything else, same as `SpaceHandler.createSpace` above, so
-    // this hits the same real (not contract-gap) business-rule refusal in this dev instance.
-    test('spaceExport transmits its payload and hits the real subduction-replication business rule', async ({
-      expect,
-    }) => {
-      const error = await EffectEx.runPromise(
-        authedCall((client) => client.db.spaceExport({ params: { spaceId }, payload: { docHeads: {} } })).pipe(
-          Effect.flip,
-        ),
-      );
-      expect(error).toBeInstanceOf(EdgeRequestError);
-      expect(error.message).toContain('subduction replication');
     });
 
     // `identityRecover`'s `HttpApiEndpoint` now declares `.setPayload(RecoverIdentityRequestSchema)`,
@@ -692,10 +658,10 @@ describe.skipIf(!EDGE_URL)('edge api (live)', { tags: ['sync-e2e'], timeout: 60_
   });
 
   describe('dataManagement', () => {
-    // `spaceCreate` can never mint a real space in this local dev instance (subduction
-    // replication is enabled — see the `db` describe block's `spaceCreate` test), so `identity`
-    // never actually became a member of `spaceId` — `dataSpaceInspect` correctly refuses with a
-    // 403 rather than leaking diagnostics to a non-member, so assert that graceful failure.
+    // `spaceId` above is a random id, never actually created (space roots are created and synced
+    // by the client under subduction, not minted by the edge worker) — so `identity` never became
+    // a member of it, and `dataSpaceInspect` correctly refuses with a 403 rather than leaking
+    // diagnostics to a non-member. Assert that graceful failure.
     test('dataSpaceInspect refuses for an identity that never joined the space', async ({ expect }) => {
       const error = await EffectEx.runPromise(
         authedCall((client) => client.dataManagement.dataSpaceInspect({ params: { spaceId } })).pipe(Effect.flip),

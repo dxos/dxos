@@ -7,7 +7,8 @@ import * as Rpc from 'effect/unstable/rpc/Rpc';
 import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
 import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
-import { protoMessage, serviceError } from './service-rpc.ts';
+import { ConfigSchema } from './buf/proto/gen/dxos/config_pb.ts';
+import { bufMessage, protoMessage, serviceError } from './service-rpc.ts';
 import { protoStruct, protoTimestamp } from './service-schemas.ts';
 
 //
@@ -62,7 +63,7 @@ export class Rpcs extends RpcGroup.make(
    * Get the static config of the client.
    */
   Rpc.make('getConfig', {
-    success: protoMessage('dxos.config.Config'),
+    success: bufMessage(ConfigSchema),
     error: serviceError,
   }),
   /**

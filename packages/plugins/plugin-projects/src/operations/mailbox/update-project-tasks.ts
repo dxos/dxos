@@ -13,7 +13,7 @@ import * as FeedCursor from '@dxos/plugin-inbox/FeedCursor';
 import type * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { Message } from '@dxos/types';
 
-import { ProjectOperation } from '#types';
+import { ProjectMailboxOperation } from '#types';
 
 import { messagesAscending, senderMatches, upsertTask } from './helpers';
 
@@ -78,7 +78,7 @@ export const syncProjectTasks = (project: Project.Project, mailbox: Mailbox.Mail
     return { scanned: pending.length, matched: matched.length, created };
   });
 
-const handler = ProjectOperation.UpdateProjectTasks.pipe(
+const handler = ProjectMailboxOperation.UpdateProjectTasks.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ project: projectRef, mailbox: mailboxRef, senders }) {
       const project = yield* Database.load(projectRef);

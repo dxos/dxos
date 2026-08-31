@@ -18,6 +18,7 @@
       "@dxos/random",
       "@dxos/react-ui-graph",
       "@dxos/shell",
+      "@dxos/sql-sqlite",
       "@dxos/test-utils",
       "@dxos/timeframe",
       "@dxos/tracing",

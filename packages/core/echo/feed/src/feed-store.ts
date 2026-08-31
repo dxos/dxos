@@ -280,7 +280,7 @@ export class FeedStore {
           return {
             requestId: request.requestId,
             blocks: [],
-            nextCursor: encodeCursor(validCursorToken, -1),
+            nextCursor: FeedCursor.make(`${validCursorToken}|-1`),
             hasMore: false,
           };
         }
@@ -333,11 +333,11 @@ export class FeedStore {
               iv: row.iv != null ? new Uint8Array(row.iv) : undefined,
             }));
 
-        let nextCursor: FeedCursor = request.cursor ?? encodeCursor(validCursorToken, -1);
+        let nextCursor: FeedCursor = request.cursor ?? FeedCursor.make(`${validCursorToken}|-1`);
         if (blocks.length > 0 && request.spaceId) {
           const lastBlock = blocks[blocks.length - 1];
           if (lastBlock.insertionId !== undefined) {
-            nextCursor = encodeCursor(validCursorToken, lastBlock.insertionId);
+            nextCursor = FeedCursor.make(`${validCursorToken}|${lastBlock.insertionId}`);
           }
         }
 
@@ -826,7 +826,7 @@ export class FeedStore {
         `;
         const current = existing[0];
         if (current?.position != null && current.position !== block.position) {
-          yield* Effect.fail(
+          return yield* Effect.fail(
             new PositionConflictError({
               feedId: block.feedId,
               actorId: block.actorId,
@@ -895,7 +895,6 @@ export class FeedStore {
 /** Immutable natural key of a block, bound as AAD so sealed bytes cannot be relocated. */
 const blockNaturalKey = (feedId: string, actorId: string, sequence: number) => `${feedId}:${actorId}:${sequence}`;
 
-const encodeCursor = (token: string, insertionId: number) => FeedCursor.make(`${token}|${insertionId}`);
 const decodeCursor = (cursor: FeedCursor) => {
   const [token, insertionId] = cursor.split('|');
   return { token, insertionId: Number(insertionId) };

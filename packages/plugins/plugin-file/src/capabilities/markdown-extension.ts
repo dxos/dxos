@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import { Obj } from '@dxos/echo';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
-import { getSpace } from '@dxos/react-client/echo';
 
 import { image } from '../extensions';
 
@@ -18,11 +18,11 @@ export default Capability.makeModule(() =>
       }
 
       if (document) {
-        const space = getSpace(document);
-        if (!space) {
+        const db = Obj.getDatabase(document);
+        if (!db) {
           return undefined;
         }
-        return [image({ space })];
+        return [image({ db })];
       }
 
       return undefined;

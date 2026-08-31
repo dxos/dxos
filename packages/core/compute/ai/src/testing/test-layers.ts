@@ -19,7 +19,7 @@ export type AiServiceLayer = Layer.Layer<AiService.AiService, ConfigError.Config
 
 // TODO(burdon): Adapt Config to @dxos/config.
 
-export const TestRouter = AiModelResolver.AiModelResolver.buildAiService.pipe(
+export const TestRouter = AiModelResolver.buildAiService.pipe(
   Layer.provide(AnthropicResolver.make()),
   Layer.provide(LMStudioResolver.make()),
   // Layer.provide(OpenAiResolver.OpenAiResolver),
@@ -59,7 +59,7 @@ export const LocalEdgeAiServiceLayer: AiServiceLayer = TestRouter.pipe(
 export const RemoteEdgeAiServiceLayer: AiServiceLayer = TestRouter.pipe(
   Layer.provide(
     AnthropicClient.layerConfig({
-      apiUrl: Config.succeed('https://main.dxos.network/ai/provider/anthropic'),
+      apiUrl: Config.succeed('https://preview.dxos.network/ai/provider/anthropic'),
     }),
   ),
   Layer.provide(FetchHttpClient.layer),
@@ -73,7 +73,7 @@ export const RemoteEdgeAiServiceLayer: AiServiceLayer = TestRouter.pipe(
  * OLLAMA_ORIGINS="*" ollama serve
  * ```
  */
-export const OllamaAiServiceLayer: AiServiceLayer = AiModelResolver.AiModelResolver.buildAiService.pipe(
+export const OllamaAiServiceLayer: AiServiceLayer = AiModelResolver.buildAiService.pipe(
   Layer.provide(OllamaResolver.make()),
   Layer.provide(FetchHttpClient.layer),
 );

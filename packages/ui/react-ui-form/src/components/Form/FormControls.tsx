@@ -232,9 +232,12 @@ FormLayoutController.displayName = FORM_LAYOUT_NAME;
 
 const FORM_ACTIONS_NAME = 'Form.Actions';
 
-export type FormActionsProps = ThemedClassName<{}>;
+export type FormActionsProps = ThemedClassName<{
+  submitLabel?: string;
+  submitIcon?: string;
+}>;
 
-export const FormActions = ({ classNames }: FormActionsProps) => {
+export const FormActions = ({ classNames, submitLabel, submitIcon }: FormActionsProps) => {
   const { t } = useTranslation(translationKey);
   const {
     form: { canSave, onSave, onCancel },
@@ -265,9 +268,9 @@ export const FormActions = ({ classNames }: FormActionsProps) => {
           type='submit'
           variant='primary'
           disabled={!canSave}
-          icon='ph--check--regular'
+          icon={submitIcon ?? 'ph--check--regular'}
           iconEnd
-          label={t('save-button.label')}
+          label={submitLabel ?? t('save-button.label')}
           onClick={onSave}
           data-testid='save-button'
         />

@@ -5,7 +5,8 @@
 import React, { type FC } from 'react';
 
 import { PublicKey } from '@dxos/keys';
-import { schema } from '@dxos/protocols/proto';
+import { bufRegistry } from '@dxos/protocols/buf-registry';
+import { decodeCompat } from '@dxos/protocols/buf-shape-compat';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { arrayToBuffer } from '@dxos/util';
 
@@ -47,11 +48,17 @@ const replacer =
 
       if (value?.['@type'] === 'google.protobuf.Any') {
         try {
-          const codec = schema.getCodecForType(value.type_url);
-          return {
-            '@type': value.type_url,
-            ...codec.decode(value.value),
-          };
+          // `type_url` may carry a prefix (`type.googleapis.com/example.Message`), which the
+          // registry keys do not.
+          const desc = bufRegistry.getMessage(value.type_url.slice(value.type_url.lastIndexOf('/') + 1));
+          if (desc) {
+            // Decoded through the compat layer so a substituted field renders as the shape this
+            // viewer formats.
+            return {
+              '@type': value.type_url,
+              ...decodeCompat<Record<string, unknown>>(desc, value.value),
+            };
+          }
         } catch {}
       }
     }

@@ -17,6 +17,7 @@ import { AiService } from '@dxos/ai';
 import { ServiceNotAvailableError } from '@dxos/compute';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Runnable from '@dxos/compute/Runnable';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { ExampleHandlers, Reply } from '@dxos/compute/testing';
 import * as Trace from '@dxos/compute/Trace';
@@ -44,20 +45,14 @@ const SpaceAwareResolverLayer = Layer.effect(
   ServiceResolver.ServiceResolver,
   Effect.gen(function* () {
     const dbService = yield* Database.Service;
-    return ServiceResolver.make((tag, context) =>
-      Effect.gen(function* () {
-        if (tag.key !== Database.Service.key) {
-          return yield* Effect.fail(new ServiceNotAvailableError(String(tag.key)));
-        }
-        if (context.space !== dbService.db.spaceId) {
-          return yield* Effect.fail(
+    return ServiceResolver.succeed(Database.Service, (context) =>
+      context.space === dbService.db.spaceId
+        ? Effect.succeed(dbService)
+        : Effect.fail(
             new ServiceNotAvailableError(
               `Database.Service requires space context (got ${context.space ?? 'none'}, want ${dbService.db.spaceId})`,
             ),
-          );
-        }
-        return dbService as any;
-      }),
+          ),
     );
   }),
 );
@@ -133,7 +128,7 @@ const TestHanlers = OperationHandlerSet.make(
         Obj.update(counter, (counter) => {
           counter.count++;
         });
-        yield* Operation.runAgain();
+        return yield* Operation.runAgain();
       }),
     ),
   ),
@@ -290,6 +285,44 @@ describe('TriggerDispatcher', () => {
         });
 
         expect(result).toEqual(Exit.succeed({ tick: 0 }));
+      }, Effect.provide(TestLayer())),
+    );
+
+    it.effect(
+      'refuses to invoke a disabled trigger',
+      Effect.fnUntraced(function* ({ expect }) {
+        const functionObj = yield* registerOperation(Reply);
+        const trigger = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: false,
+          spec: Trigger.specDirect(),
+        });
+        yield* Database.add(trigger);
+        const dispatcher = yield* TriggerDispatcher;
+        const { result } = yield* dispatcher.invokeTrigger({
+          trigger,
+          event: { data: {} } satisfies TriggerEvent.DirectEvent,
+        });
+
+        expect(Exit.isFailure(result)).toBe(true);
+      }, Effect.provide(TestLayer())),
+    );
+
+    it.effect(
+      'refuses to invoke a trigger with no runnable reference',
+      Effect.fnUntraced(function* ({ expect }) {
+        const trigger = Trigger.make({
+          enabled: true,
+          spec: Trigger.specDirect(),
+        });
+        yield* Database.add(trigger);
+        const dispatcher = yield* TriggerDispatcher;
+        const { result } = yield* dispatcher.invokeTrigger({
+          trigger,
+          event: { data: {} } satisfies TriggerEvent.DirectEvent,
+        });
+
+        expect(Exit.isFailure(result)).toBe(true);
       }, Effect.provide(TestLayer())),
     );
   });
@@ -474,7 +507,7 @@ describe('TriggerDispatcher', () => {
           db.registry.add([badFn]);
 
           const trigger = Trigger.make({
-            runnable: Ref.make(badFn) as any,
+            runnable: Ref.make(badFn as Runnable.Runnable),
             enabled: true,
             spec: Trigger.specTimer('* * * * *'),
           });
@@ -594,17 +627,29 @@ describe('TriggerDispatcher', () => {
     it.effect(
       'should start and stop dispatcher',
       Effect.fnUntraced(
-        function* () {
+        function* ({ expect }) {
           const dispatcher = yield* TriggerDispatcher;
+          const registry = yield* Registry.AtomRegistry;
+
+          expect(dispatcher.running).toBe(false);
           yield* dispatcher.start();
+          expect(dispatcher.running).toBe(true);
+          expect(registry.get(dispatcher.state)).toEqual(expect.objectContaining({ enabled: true, errors: [] }));
+
           yield* dispatcher.stop();
+          expect(dispatcher.running).toBe(false);
+          expect(registry.get(dispatcher.state).enabled).toBe(false);
+
+          // A second stop on an already-stopped dispatcher is a no-op, not a re-teardown.
+          yield* dispatcher.stop();
+          expect(dispatcher.running).toBe(false);
         },
         Effect.provide(TestLayer({ timeControl: 'natural' })),
       ),
     );
 
-    // `it.live` (not `it.effect`): the reactive path is woken by real subscriptions, so the sleeps
-    // below must pass real time rather than a virtual clock nothing advances.
+    // `it.live` (not `it.effect`): the reactive path is woken by real subscriptions, so the wait
+    // below observes a live registry subscription rather than a virtual clock nothing advances.
     it.live(
       'feed triggers fire on append without waiting for a poll tick',
       Effect.fnUntraced(
@@ -627,15 +672,36 @@ describe('TriggerDispatcher', () => {
             yield* Feed.append(feed, [Obj.make(Person.Person, { fullName: 'John Doe' })]);
             yield* Database.flush();
 
-            // The poll interval is an hour, so anything observed here came from the feed subscription.
+            // The poll interval is an hour, so observing an invocation here confirms the feed
+            // subscription (not the poll) fired the trigger.
             const registry = yield* Registry.AtomRegistry;
-            let fired = false;
-            for (let attempt = 0; attempt < 100 && !fired; attempt++) {
-              fired = registry.get(dispatcher.state).invocations.some((_) => _.trigger.id === trigger.id);
-              if (!fired) {
-                yield* Effect.sleep(Duration.millis(20));
+            const fired = yield* Effect.callback<void>((resume) => {
+              // `{ immediate: true }` can invoke this callback synchronously, before `subscribe`
+              // returns — reading `unsubscribe` there would hit the temporal dead zone, and a
+              // synchronous `resume` skips Effect's returned-finalizer path entirely (it only runs
+              // on interruption), so an immediate match unsubscribes directly instead of relying on it.
+              let unsubscribe: (() => void) | undefined;
+              let matchedBeforeSubscribeReturned = false;
+              unsubscribe = registry.subscribe(
+                dispatcher.state,
+                (state) => {
+                  if (state.invocations.some((invocation) => invocation.trigger.id === trigger.id)) {
+                    if (unsubscribe) {
+                      unsubscribe();
+                    } else {
+                      matchedBeforeSubscribeReturned = true;
+                    }
+                    resume(Effect.void);
+                  }
+                },
+                { immediate: true },
+              );
+              if (matchedBeforeSubscribeReturned) {
+                unsubscribe();
+                return;
               }
-            }
+              return Effect.sync(() => unsubscribe?.());
+            }).pipe(Effect.timeoutOption(Duration.seconds(2)), Effect.map(Option.isSome));
             expect(fired).toBe(true);
           }).pipe(Effect.ensuring(dispatcher.stop()));
         },
@@ -1130,11 +1196,13 @@ describe('TriggerDispatcher', () => {
       Effect.fnUntraced(function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
         yield* Database.flush();
+        const feedUri = Feed.getFeedUri(feed);
+        invariant(feedUri);
         const functionObj = yield* registerOperation(Reply);
         const trigger = Trigger.make({
           runnable: Ref.make(functionObj),
           enabled: true,
-          spec: Trigger.specSubscription(Query.select(Filter.everything()).from(Scope.feed(Feed.getFeedUri(feed)!))),
+          spec: Trigger.specSubscription(Query.select(Filter.everything()).from(Scope.feed(feedUri))),
           input: { changeType: '{{event.type}}', objectId: '{{event.changedObjectId}}' },
         });
         yield* Database.add(trigger);
@@ -1157,11 +1225,13 @@ describe('TriggerDispatcher', () => {
       Effect.fnUntraced(function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
         yield* Database.flush();
+        const feedUri = Feed.getFeedUri(feed);
+        invariant(feedUri);
         const functionObj = yield* registerOperation(Reply);
         const trigger = Trigger.make({
           runnable: Ref.make(functionObj),
           enabled: true,
-          spec: Trigger.specSubscription(Query.select(Filter.everything()).from(Scope.feed(Feed.getFeedUri(feed)!))),
+          spec: Trigger.specSubscription(Query.select(Filter.everything()).from(Scope.feed(feedUri))),
           input: { changeType: '{{event.type}}', objectId: '{{event.changedObjectId}}' },
         });
         yield* Database.add(trigger);
@@ -1190,11 +1260,13 @@ describe('TriggerDispatcher', () => {
       Effect.fnUntraced(function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
         yield* Database.flush();
+        const feedUri = Feed.getFeedUri(feed);
+        invariant(feedUri);
         const functionObj = yield* registerOperation(Reply);
         const trigger = Trigger.make({
           runnable: Ref.make(functionObj),
           enabled: true,
-          spec: Trigger.specSubscription(Query.select(Filter.everything()).from(Scope.feed(Feed.getFeedUri(feed)!))),
+          spec: Trigger.specSubscription(Query.select(Filter.everything()).from(Scope.feed(feedUri))),
           input: { changeType: '{{event.type}}', objectId: '{{event.changedObjectId}}' },
         });
         yield* Database.add(trigger);
@@ -1221,11 +1293,13 @@ describe('TriggerDispatcher', () => {
       Effect.fnUntraced(function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
         yield* Database.flush();
+        const feedUri = Feed.getFeedUri(feed);
+        invariant(feedUri);
         const functionObj = yield* registerOperation(Reply);
         const trigger = Trigger.make({
           runnable: Ref.make(functionObj),
           enabled: true,
-          spec: Trigger.specSubscription(Query.select(Filter.type(Task.Task)).from(Scope.feed(Feed.getFeedUri(feed)!))),
+          spec: Trigger.specSubscription(Query.select(Filter.type(Task.Task)).from(Scope.feed(feedUri))),
           input: { changeType: '{{event.type}}', objectId: '{{event.changedObjectId}}' },
         });
         yield* Database.add(trigger);
@@ -1301,11 +1375,27 @@ describe('TriggerDispatcher', () => {
         yield* Database.add(trigger);
         yield* dispatcher.invokeTrigger({ trigger, event: {} });
 
+        const registry = yield* Registry.AtomRegistry;
+        {
+          // A `RunAgainError` from the first invocation enqueues a pending retry, distinct from a
+          // genuine failure -- no cooldown, and the runtime status reports it as pending.
+          const status = registry.get(dispatcher.state);
+          const triggerStatus = status.triggers.find((t) => t.triggerId === trigger.id);
+          expect(triggerStatus?.retryPending).toBe(true);
+          expect(triggerStatus?.cooldownUntil).toBeUndefined();
+        }
+
         yield* dispatcher.invokeScheduledTriggers({ untilExhausted: true });
         const counter = yield* Database.query(Filter.type(RetryCounter)).first.pipe(
           Effect.flatMap((result) => Effect.fromOption(result)),
         );
         expect(counter.count).toBe(3);
+
+        // The final invocation succeeds (count reaches the cap and stops requesting retries), so
+        // the pending flag clears.
+        const status = registry.get(dispatcher.state);
+        const triggerStatus = status.triggers.find((t) => t.triggerId === trigger.id);
+        expect(triggerStatus?.retryPending).toBe(false);
       }, Effect.provide(TestLayer())),
     );
 
@@ -1320,7 +1410,7 @@ describe('TriggerDispatcher', () => {
           db.registry.add([badFn]);
 
           const trigger = Trigger.make({
-            runnable: Ref.make(badFn) as any,
+            runnable: Ref.make(badFn as Runnable.Runnable),
             enabled: true,
             spec: Trigger.specDirect(),
           });

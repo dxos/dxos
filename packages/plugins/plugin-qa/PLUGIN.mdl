@@ -1,0 +1,596 @@
+---
+id: org.dxos.plugin.qa
+name: QaPlugin
+version: 0.1.0
+---
+
+A store for QA results. A `TestPlan` declares a set of `TestCase`s; each execution of the plan
+appends a `TestRun` to the plan's feed, carrying one `TestResult` per case together with the
+documents, screenshots and recordings that evidence it. Plans are authored and results are pushed
+by an agent over the DXOS MCP surface, so the same plan a human reads in Composer is the one a
+`flow QA-n` run reports against.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`        |
+| `feat`      | `org.dxos.mdl.feat@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
+| `component` | `org.dxos.mdl.component@1.0`   |
+| `op`        | `org.dxos.mdl.op@1.1`          |
+| `skill`     | `org.dxos.mdl.skill@1.0`       |
+| `flow`      | `org.dxos.mdl.flow@1.0`        |
+| `step`      | `org.dxos.mdl.step@1.0`        |
+
+## Ontology
+
+Three ECHO objects and three inline structs. The split is deliberate:
+
+- **`TestCase` is an object** because a case outlives any one plan revision — results across
+  months of runs point at the same case, and coverage questions ("has QA-3 ever passed on main?")
+  are queries over that identity.
+- **`TestRun` is an object** because it is the feed entry: the plan owns a `Feed<TestRun>`, so a
+  run is appended, never mutated in place by a later run.
+- **`TestResult` is a struct nested in its run**, not an object. A result has no life outside the
+  run that produced it and is never referenced from elsewhere; making it an object would double
+  the object count per run for no query anyone asks.
+- **There is no artifact type.** An artifact is a `Ref` to whatever the artifact already is — a
+  `Document`, a `File`, a recording — plus a caption at the reference site.
+
+```
+TestPlan ──cases[]──▶ TestCase
+    └── feed ─▶ Feed<TestRun>
+                    TestRun ──plan──▶ TestPlan
+                        └── results[]  (TestResult)  ──case──▶ TestCase
+                                └── steps[] (TestStepResult)
+                                └── artifacts[] ──▶ Ref<Document | File | …>
+```
+
+## Types
+
+```mdl
+type TestResultStatus
+  desc: >
+    A terminal outcome — the only thing a case or a step can be reported as. `blocked` is distinct
+    from `failed`: nothing was tested, so it must not be counted as a defect.
+  literals: passed | failed | skipped | blocked
+```
+
+```mdl
+type TestStatus
+  desc: >
+    A run's status: any terminal outcome, or `running` while it is open. `running` is deliberately
+    absent from TestResultStatus — a case result that could be `running` would be counted as
+    non-failing by the rollup, and a run could seal as `passed` with nothing actually finished.
+  literals: TestResultStatus | running
+```
+
+```mdl
+type TestStep
+  desc: One move in a case — the authored instruction and its criterion. Mirrors `step` in the QA dialect.
+  fields:
+    id?: string                # stable handle; steps are otherwise numbered by position from 1
+    do: string                 # the human instruction
+    expect: string             # the criterion both a human and an agent judge
+```
+
+```mdl
+type TestCase
+  desc: >
+    The definition of one test. Stored with typename org.dxos.type.qa.testCase v0.1.0.
+    Static — an execution never writes here.
+  fields:
+    key: string                # stable human id, e.g. "QA-3"; unique within a plan
+    title: string
+    description?: string
+    steps: TestStep[]
+    source?: DXN               # the spec this case was authored from (a PLUGIN.mdl document)
+  note: >
+    No `tags` field — ECHO carries tags in every object's meta (`Obj.getMeta(case).tags`, refs to
+    Tag objects), so a QA-local string array would be a second, weaker tagging system that the
+    rest of Composer cannot see.
+```
+
+```mdl
+type TestPlan
+  desc: >
+    Root ECHO object and the container the UI opens. Stored with typename
+    org.dxos.type.qa.testPlan v0.1.0.
+  fields:
+    name: string
+    description?: string
+    cases: Ref<TestCase>[]     # ordered; the plan owns the ordering, the case does not
+    feed: Ref<Feed<TestRun>>   # durable append-only log of executions (SetParent)
+    source?: DXN               # the `## QA` section this plan tracks, when generated from a spec
+```
+
+```mdl
+type Actor
+  desc: >
+    Not defined here — `Actor` from @dxos/types (name / email / identityDid / contact / role),
+    the same type a Message sender uses. A run's runner is a person or an agent like any other
+    actor in the system, so it takes that type rather than a QA-local convention string.
+  extends: [org.dxos.types.Actor]
+```
+
+```mdl
+type TestTarget
+  desc: >
+    What a run was executed against. The field people filter on six months later, so it is
+    structured rather than prose.
+  fields:
+    ref?: string               # git sha, tag, or PR number
+    branch?: string
+    url?: string               # deployed app under test
+    env?: string               # "local" | "preview" | "prod" | free-form
+```
+
+```mdl
+type TestArtifactRef
+  desc: >
+    A reference to evidence. Not a type of its own — the target is whatever the artifact already
+    is (Document, File, recording), and only the caption and kind live here.
+  fields:
+    kind: screenshot | video | log | document | other
+    caption?: string
+    target: Ref<any>           # Document, File, …
+```
+
+```mdl
+type CapturedCase
+  desc: >
+    A case the run set out to cover, captured at `startRun`. It carries the case's identity as well
+    as its key, so a `removeCase` mid-run cannot strand a result the rollup still counts.
+  fields:
+    key: string
+    case: Ref<TestCase>
+```
+
+```mdl
+type TestStepResult
+  desc: Per-step outcome within a TestResult. Positional — index n corresponds to TestCase.steps[n].
+  fields:
+    status: TestResultStatus
+    note?: string              # why it failed, or the constraint that blocked it
+    artifacts?: TestArtifactRef[]
+```
+
+```mdl
+type TestResult
+  desc: >
+    The outcome of one TestCase within one TestRun. An inline struct of TestRun.results — never
+    an object of its own.
+  fields:
+    case: Ref<TestCase>
+    status: TestResultStatus
+    steps?: TestStepResult[]
+    note?: string              # failure summary, or `blocked` reason (QA dialect Rule 9)
+    durationMs?: number
+    artifacts?: TestArtifactRef[]   # evidence for the case as a whole
+```
+
+```mdl
+type TestRun
+  desc: >
+    One execution of a plan, appended to TestPlan.feed. Stored with typename
+    org.dxos.type.qa.testRun v0.1.0. Results accumulate as the run proceeds; `status` is a
+    rollup, written when the run is finished.
+  fields:
+    plan: Ref<TestPlan>
+    status: TestStatus         # `running` until finished; then the rollup below
+    cases: CapturedCase[]      # the cases the run set out to cover, captured at startRun
+    target?: TestTarget
+    runner?: Actor             # who ran it — `Actor` from @dxos/types, not a QA-local string
+    stages?: string[]          # which of before/test/after actually ran (QA dialect Rule 8)
+    startedAt: string          # ISO-8601
+    finishedAt?: string
+    results: TestResult[]
+    summary?: string           # one-paragraph verdict, for the feed row
+  note: >
+    The rollup runs over `cases`, not over `results`: a key in `cases` with no result counts as
+    `skipped`. Rolling up over `results` alone would seal a run that reported nothing as `passed`.
+    Precedence is failed > blocked > skipped > passed, and an empty `cases` is `skipped` before
+    that precedence is consulted — otherwise a run covering nothing would fall through to
+    `passed`. So `passed` requires a non-empty capture in which every case reported `passed`.
+    `cases` is also the authority for `pushResult`: what the run may report on, and which TestCase
+    a result points at, both come from the capture rather than from what the plan currently holds.
+```
+
+## Features
+
+```mdl
+feat F-1: Author and maintain plans
+
+  req F-1.1: A TestPlan can be created empty, or generated from the `## QA` section of a
+    PLUGIN.mdl — each `flow QA-n` becoming a TestCase whose `key` is the flow id and whose steps
+    are the flow's `test` stage.
+  req F-1.2: Cases are added, updated, reordered and removed through operations, so an agent over
+    MCP edits a plan without touching ECHO directly.
+  req F-1.3: Re-generating a plan from an updated spec matches existing cases by `key` and updates
+    them in place, so historical results keep pointing at the same TestCase.
+
+feat F-2: Record runs
+
+  req F-2.1: Starting a run appends a TestRun with status `running` to the plan's feed and returns
+    a ref to it; every later push names that ref.
+  req F-2.2: A result is pushed per case, incrementally, so a long run is observable while it is
+    still going.
+  req F-2.3: Finishing a run computes `status` as a rollup over the case keys captured at
+    `startRun` — `skipped` if the capture is empty, else `failed` if any failed, else `blocked` if
+    any is blocked, else `skipped` if any case went unreported, else `passed` — and stamps
+    `finishedAt`. A run that covered nothing, or reported nothing, therefore seals as `skipped`;
+    `passed` is reachable only from a non-empty capture in which every case reported `passed`.
+  req F-2.4: A run is immutable once finished; a correction is a new run, not an edit.
+
+feat F-3: Evidence
+
+  req F-3.1: An artifact is attached by reference to an existing object; the plugin never copies
+    or stores bytes of its own.
+  req F-3.2: Artifacts attach at step granularity as well as case granularity.
+
+feat F-4: Read the history
+
+  req F-4.1: The plan surface shows the feed newest-first, one row per run, with its target and
+    pass/fail counts.
+  req F-4.2: A case surface shows that case's outcome across every run, so a flaky or long-broken
+    case is visible without opening runs one by one.
+
+feat F-5: Agent access over MCP
+
+  req F-5.1: A `QaSkill` names the plan-editing and result-pushing operations in its `tools`, which
+    is what makes them reachable from `queryOperations` / `invokeOperation`.
+  req F-5.2: Every operation takes refs and plain values only. A `Ref` serializes as a DXN, so it
+    crosses the MCP boundary as text while staying a typed handle in the schema — unlike a bare id
+    string, which names nothing in particular and cannot be resolved without knowing its type.
+  req F-5.3: Mutation hints are declared per operation so a host can distinguish reading history
+    from writing it.
+```
+
+## Operations
+
+```mdl
+op createPlan
+  key: org.dxos.operation.qa.createPlan
+  desc: Creates a TestPlan with its feed. A factory — the caller places the object.
+  input:
+    name: string
+    description?: string
+    source?: Ref<any>          # the spec document this plan tracks
+  output: { plan: TestPlan }
+  effects: [echo:write]
+  requires: [Database.Service]
+```
+
+```mdl
+op setCase
+  key: org.dxos.operation.qa.setCase
+  desc: >
+    Creates or updates a case by `key` within a plan, appending it to `cases` when new. Matching
+    on `key` rather than id is what makes re-generation from a spec non-destructive (F-1.3).
+  input:
+    plan: Ref<TestPlan>
+    key: string
+    title: string
+    description?: string
+    steps: TestStep[]
+    tags?: Ref<Tag>[]          # Tag objects to set in the case's meta, not a field on the case
+  output: { case: TestCase, created: boolean }
+  effects: [echo:write]
+```
+
+```mdl
+op removeCase
+  key: org.dxos.operation.qa.removeCase
+  desc: Removes a case from the plan's `cases`. Past results still reference the TestCase object.
+  input:
+    plan: Ref<TestPlan>
+    key: string
+  output: { removed: boolean }
+  effects: [echo:write]
+```
+
+```mdl
+op setCaseOrder
+  key: org.dxos.operation.qa.setCaseOrder
+  desc: Sets the plan's case ordering.
+  input:
+    plan: Ref<TestPlan>
+    keys: string[]             # the full ordering; unknown or missing keys are an error
+  output: { plan: TestPlan }
+  errors:
+    UnknownCaseError: a key in the ordering is not in the plan
+    DuplicateCaseError: >
+      a key appears twice, which would store one case twice and drop another
+  effects: [echo:write]
+```
+
+```mdl
+op startRun
+  key: org.dxos.operation.qa.startRun
+  desc: >
+    Appends a `running` TestRun to the plan's feed and returns a ref to it. Captures the plan's case
+    keys onto the run, so a later edit to the plan cannot change what this run was measured
+    against. `cases` narrows that capture for a partial run; its keys are validated against the
+    plan here, which is the only point at which the plan has a say in a run's coverage.
+  input:
+    plan: Ref<TestPlan>
+    cases?: string[]           # case keys to cover; defaults to the plan's full case list
+    target?: TestTarget
+    runner?: Actor
+    stages?: string[]
+  output: { run: Ref<TestRun>, cases: string[] }
+  errors:
+    UnknownCaseError: a requested key is not in the plan
+    DuplicateCaseError: a key appears twice in `cases`, which would double-count it in the rollup
+  effects: [echo:write]
+```
+
+```mdl
+op pushResult
+  key: org.dxos.operation.qa.pushResult
+  desc: >
+    Appends (or replaces, by case key) one TestResult on a running run. Artifacts are given as
+    refs to objects that already exist.
+  input:
+    run: Ref<TestRun>
+    caseKey: string
+    status: TestResultStatus
+    steps?: TestStepResult[]
+    note?: string
+    durationMs?: number
+    artifacts?: TestArtifactRef[]
+  output: { result: TestResult }
+  errors:
+    RunFinishedError: the run is already finished and is immutable
+    UnknownCaseError: >
+      caseKey is not in the run's captured `cases`. Validated against the capture, not against
+      the plan's current membership: a `removeCase` mid-run must not reject a result for a case
+      the run is still counting as unreported.
+  effects: [echo:write]
+```
+
+```mdl
+op completeRun
+  key: org.dxos.operation.qa.completeRun
+  desc: >
+    Rolls up `status` over the run's captured `cases`, stamps `finishedAt`, and seals the run.
+    A captured case with no result counts as `skipped`, so an empty or partial run cannot seal as
+    `passed`.
+  input:
+    run: Ref<TestRun>
+    summary?: string
+  output: { run: TestRun, unreported: string[] }   # case keys that never received a result
+  errors:
+    RunFinishedError: the run is already sealed
+  effects: [echo:write]
+```
+
+```mdl
+op queryRuns
+  key: org.dxos.operation.qa.queryRuns
+  desc: Reads the plan's feed, newest-first, with optional filters. Results are summarised unless `full`.
+  input:
+    plan: Ref<TestPlan>
+    limit?: number
+    status?: TestStatus
+    caseKey?: string           # runs containing a result for this case
+    full?: boolean             # include per-step detail and artifact refs
+  output: { runs: TestRun[] }
+  effects: []
+```
+
+```mdl
+op getCaseHistory
+  key: org.dxos.operation.qa.getCaseHistory
+  desc: One case's status across runs, newest-first — the query behind F-4.2.
+  input:
+    plan: Ref<TestPlan>
+    caseKey: string
+    limit?: number
+  output: { entries: { run: Ref<TestRun>, status: TestStatus, target?: TestTarget, at: string }[] }
+  effects: []
+```
+
+## Skill
+
+```mdl
+skill QaSkill
+  key: org.dxos.skill.qa
+  desc: >
+    Makes the QA store reachable over the DXOS MCP surface: an agent generates a plan from a
+    spec's `## QA` section, runs the flows, and pushes a run back as it goes.
+  depends_on:
+    - org.dxos.skill.database   # query / load, for resolving plans and artifact targets
+    - org.dxos.skill.markdown   # authoring the report document an artifact points at
+  contributes:
+    - plugin-qa/createPlan
+    - plugin-qa/setCase
+    - plugin-qa/removeCase
+    - plugin-qa/setCaseOrder
+    - plugin-qa/startRun
+    - plugin-qa/pushResult
+    - plugin-qa/completeRun
+    - plugin-qa/queryRuns
+    - plugin-qa/getCaseHistory
+  instructions: >
+    Authored in `src/skills/qa/skill.ts`. Covers the run protocol (start once, push per case,
+    finish exactly once), the rule that a finished run is never edited, that `blocked` is used
+    where a step could not run at all, and that artifacts are attached as refs to objects the
+    agent created first — never inlined.
+```
+
+## Components
+
+```mdl
+component TestPlanArticle
+  desc: Main surface for a plan — the case list above the run feed.
+  props:
+    subject: TestPlan
+    role: "article" | "section"
+  state:
+    runs: AtomQuery            # the plan's feed, newest-first
+  actions:
+    openRun(run: Ref<TestRun>)
+    openCase(case: Ref<TestCase>)
+  layout: |
+    ┌────────────────────────────────────────────┐
+    │ Plan name                    [Run] [•••]   │
+    ├────────────────────────────────────────────┤
+    │ QA-1  Create and open a document      ✓    │
+    │ QA-2  Link two documents              ✗    │
+    ├────────────────────────────────────────────┤
+    │ Runs                                       │
+    │ ● 2026-08-31  main@a1b2c3   7/8   qa-flow  │
+    │ ● 2026-08-30  main@9f0e1d   8/8   agent    │
+    └────────────────────────────────────────────┘
+```
+
+```mdl
+component TestRunArticle
+  desc: One run — the per-case result table, each row expanding to steps and artifacts.
+  props:
+    subject: TestRun
+  actions:
+    toggleResult(caseKey: string)
+    openArtifact(ref: Ref<any>)
+```
+
+```mdl
+component TestCaseArticle
+  desc: One case — its authored steps, and its outcome across every run (F-4.2).
+  props:
+    subject: TestCase
+  state:
+    history: { run: Ref<TestRun>, status: TestStatus, at: string }[]
+```
+
+## Acceptance
+
+```mdl
+test T-1: A run rolls up to the worst outcome
+  given: a plan with three cases, and a started run
+  when: results are pushed as passed, blocked, passed
+  then: completeRun sets the run status to blocked, not passed
+
+test T-2: A failure dominates a block
+  given: a started run
+  when: results are pushed as failed and blocked
+  then: completeRun sets the run status to failed
+
+test T-3: A run covering nothing seals as skipped
+  given: a plan with no cases
+  when: a run is started and finished without pushing anything
+  then: the run status is skipped
+  note: the same holds for startRun called with cases: [] on a plan that has cases
+
+test T-4: An unreported case cannot seal as passed
+  given: a run started over three cases
+  when: one result is pushed as passed and the run is finished
+  then: the run status is skipped, and `unreported` names the two cases that never reported
+
+test T-5: A finished run is immutable
+  given: a finished run
+  when: pushResult is invoked for one of its cases
+  then: it fails with RunFinishedError and the run is unchanged
+
+test T-6: Re-generation preserves case identity
+  given: a plan whose case QA-1 has results in two past runs
+  when: setCase is invoked with key QA-1 and a changed title
+  then: the same TestCase object is updated, and both past results still resolve to it
+
+test T-7: Artifacts are references, not copies
+  given: a Document in the space
+  when: a result is pushed with that document as an artifact
+  then: the result holds a Ref to the existing object and no new object is created
+
+test T-8: A mid-run plan edit does not reject a captured case
+  given: a run started over cases QA-1 and QA-2
+  when: QA-2 is removed from the plan, then a result for QA-2 is pushed
+  then: the push succeeds — the capture, not the plan, decides what the run may report
+```
+
+## QA
+
+```mdl
+flow QA-1: Record a run against a plan
+  actors: both
+  covers: [F-1.1, F-2.1, F-2.2, F-2.3, F-2.4, F-4.1]
+  given:
+    - an identity exists
+    - collection: a collection in the open space, to create into
+    - no TestPlan named "Smoke" exists in the space
+  before:
+    - name: Create the plan
+      do: In the navtree, click + on a collection and choose Test plan. Name it "Smoke".
+      invoke: [op:createPlan] { name: "Smoke", target: $given.collection.db }
+      capture: plan
+      expect: a TestPlan named "Smoke" exists and its feed is empty
+      note: >
+        createPlan is a factory — it creates the plan in the target database but places nothing, so
+        the placement below is a separate step even though the navtree does both in one gesture.
+    - name: Place it in the collection
+      do: (no separate gesture — the navtree action places it)
+      invoke: org.dxos.operation.space.addObject { object: $plan.plan, target: $given.collection }
+      expect: "Smoke" appears as a row under the collection
+    - name: Add the first case
+      do: In the plan, add case "QA-1" / "It boots".
+      invoke: [op:setCase] { plan: $plan.plan, key: "QA-1", title: "It boots", steps: [{ do: "Open the app", expect: "the app renders" }] }
+      expect: the case list shows one row, QA-1
+    - name: Add the second case
+      do: Add case "QA-2" / "It saves".
+      invoke: [op:setCase] { plan: $plan.plan, key: "QA-2", title: "It saves", steps: [{ do: "Edit and reload", expect: "the edit survives" }] }
+      expect: the case list shows QA-1 and QA-2
+      note: Two cases, so the partial-run rollup in the `test` stage has something to be partial about.
+  test:
+    - name: Start a run
+      do: Click "Run" on the plan.
+      invoke: [op:startRun] { plan: $plan.plan, runner: { name: "qa-flow", role: "assistant" } }
+      capture: run
+      expect: a run row appears in the feed with status `running`, tallying 0/2
+      assert: return $run.cases.length === 2
+    - name: Push one result
+      do: Mark QA-1 as passed in the run view.
+      invoke: [op:pushResult] { run: $run.run, caseKey: "QA-1", status: "passed" }
+      expect: the run row shows 1/2 while still `running`
+    - name: Complete the run
+      do: Click "Finish" on the run.
+      invoke: [op:completeRun] { run: $run.run }
+      expect: >
+        the run seals as `skipped`, not `passed` — QA-2 never reported — and `unreported` names it
+      assert: return $result.status === 'skipped' && $result.unreported.includes('QA-2')
+    - name: Reject a late push
+      do: Try to mark QA-2 as passed on the sealed run.
+      invoke: [op:pushResult] { run: $run.run, caseKey: "QA-2", status: "passed" }
+      expect: the push is rejected because the run is sealed, and the run still reads `skipped`
+  after:
+    - name: Delete the plan
+      do: Right-click "Smoke" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$plan.plan], target: $given.collection }
+      expect: the row leaves the navtree and its plank closes if open
+```
+
+## Open questions
+
+1. **Does a plan pin its cases by revision?** Today `TestCase` is mutable and a past result points
+   at its current text, so a re-worded case silently re-writes what an old run appears to have
+   tested. The alternative — snapshotting the case's steps into the `TestResult` — costs bytes per
+   run but makes history honest. Deferred, not decided.
+2. **Where do plans come from in CI?** The MCP path covers an agent at a desk. A CI job pushing
+   runs needs either the same operations behind an EDGE-hosted MCP server or a thin ingest
+   endpoint; the ontology is the same either way.
+3. **Suites.** `TestPlan.cases` is flat. Grouping arrives as either nested plans or a `group` field
+   on the case; flat is correct until a real plan is large enough to hurt.
+
+---
+
+## Appendix: Extension Definitions
+
+Extension block types not redefined here (`type`, `feat`, `test`, `component`, `op`, `skill`,
+`flow`, `step`) follow the shared DXOS MDL extension library — `op@1.1`, `flow@1.0` and `step@1.0`
+are defined in [`packages/reflect/deus/lang/qa.mdl`](../../reflect/deus/lang/qa.mdl); `skill@1.0`
+in [`packages/plugins/plugin-crm/PLUGIN.mdl`](../plugin-crm/PLUGIN.mdl); the remainder in
+[`packages/reflect/deus/lang/PLUGIN-.template.mdl`](../../reflect/deus/lang/PLUGIN-.template.mdl).

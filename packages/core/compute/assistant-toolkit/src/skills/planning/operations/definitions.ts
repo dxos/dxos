@@ -14,11 +14,11 @@ import INSTRUCTIONS from './update-tasks.md?raw';
 
 /**
  * LLM-facing checklist entry: items are addressed by title (the checklist is markdown — see
- * `Outline.upsertChecklistItems`); `in-progress` renders unchecked, nuance lives in conversation.
+ * `Outline.upsertChecklistItems`); `started` renders unchecked, nuance lives in conversation.
  */
 const ChecklistTask = Schema.Struct({
   title: Schema.String.annotate({ description: 'Task title; also the key for updates.' }),
-  status: Schema.Literals(['todo', 'in-progress', 'done']),
+  status: Schema.Literals(['todo', 'started', 'done']),
 });
 
 export const UpdateTasks = Operation.make({

@@ -7,6 +7,8 @@ import * as Option from 'effect/Option';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { Chat as AssistantChat, resolveSlashCommand } from '@dxos/assistant-toolkit';
 import { Event } from '@dxos/async';
 import { type Database, Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
@@ -20,22 +22,28 @@ import {
   type ChatView,
   ChatThread as NaturalChatThread,
 } from '@dxos/react-ui-assistant';
-import { type MessageRange, type OutlineMarker, Outline as OutlineRail, useFeedModel } from '@dxos/react-ui-feed';
+import {
+  type MessageRange,
+  type OutlineMarker,
+  Outline as OutlineRail,
+  isPrompt,
+  useFeedModel,
+} from '@dxos/react-ui-feed';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
-import { Outline } from '@dxos/types';
-import { Message } from '@dxos/types';
+import { TaskList } from '@dxos/react-ui-task';
+import { Message, Task } from '@dxos/types';
 import { keyToFallback } from '@dxos/util';
 
 import { useChatToolbarActions, useDebug } from '#hooks';
 import { meta } from '#meta';
 
+import { TaskSlashCommands } from '../../commands';
 import { AiUsageQuotaError, type ProcessorRequestContext } from '../../processor';
 import {
   ChatStatus,
   ChatPrompt as NaturalChatPrompt,
   type ChatPromptProps as NaturalChatPromptProps,
 } from '../ChatPrompt';
-import { TaskList } from '../TaskList';
 import { ChatContextProvider, type ChatContextValue, type ChatRequestTiming, useChatContext } from './context';
 import { type ChatEvent } from './events';
 import { SurfaceWidget } from './SurfaceWidget';
@@ -72,10 +80,14 @@ const ChatRoot = ({
   ...props
 }: ChatRootProps) => {
   const [debug, setDebug] = useState(debugProp ?? false);
+  // Slash commands run their operations through the same invoker the rest of the UI uses.
+  const { invokePromise } = useOperationInvoker();
   const streaming = useAtomValue(processor.streaming);
   const active = useAtomValue(processor.active);
   const requestTiming = useRequestTiming({ active });
   const lastPrompt = useRef<string | undefined>(undefined);
+  // A slash command runs outside the processor, so `streaming` does not cover it.
+  const commandPending = useRef(false);
   // Transient chats have no database of their own; fall back to the supplied space db so
   // the message query and context controls operate before the chat is persisted.
   const db = (chat && Obj.getDatabase(chat)) || dbFallback;
@@ -130,6 +142,61 @@ const ChatRoot = ({
         case 'submit': {
           const text = ev.text.trim();
           if (!streaming && text.length) {
+            // A leading /command is a deterministic shortcut — executed directly, no model in
+            // the loop; an unknown command falls through to the model as plain text.
+            const resolved = resolveSlashCommand(text, TaskSlashCommands);
+            if (resolved) {
+              // One command at a time: `invokePromise` does not queue, so two quick submissions
+              // would interleave their operations and land their summaries out of order.
+              if (commandPending.current) {
+                break;
+              }
+              commandPending.current = true;
+              // One rejection handler for the whole chain: `onSubmit` can throw synchronously and
+              // `appendToFeed` can reject, and either would otherwise be lost with no error shown.
+              void (async () => {
+                await Promise.resolve(onSubmit?.(text));
+                // Re-read after `onSubmit`: that is what persists a transient chat, so a chat that
+                // began without a database has one only now.
+                const currentDb = (chat && Obj.getDatabase(chat)) || db;
+                if (!chat || !currentDb) {
+                  throw new Error('Command requires a persisted chat.');
+                }
+
+                const result = await resolved.command.execute(resolved.args, {
+                  db: currentDb,
+                  chat,
+                  invoke: invokePromise,
+                });
+                if (result instanceof Error) {
+                  throw result;
+                }
+
+                // The command's effect is otherwise invisible in the conversation: the prompt was
+                // never sent, so nothing records that the user ran it. The feed is re-read here
+                // because `onSubmit` is what persists a transient chat, creating it.
+                const currentFeed = feed ?? chat.feed?.target;
+                if (currentFeed && result.summary) {
+                  await currentDb.appendToFeed(currentFeed, [
+                    Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text }] }),
+                    Message.make({ sender: { role: 'assistant' }, blocks: [{ _tag: 'text', text: result.summary }] }),
+                  ]);
+                }
+
+                if (result.followUp) {
+                  // Some effects run on the supervisor loop (delegation spawns post-turn), so the
+                  // command wakes the conversation with a short synthetic prompt.
+                  void processor.request({ message: result.followUp });
+                }
+              })()
+                .catch((error) => {
+                  event.emit({ type: 'error', error: error instanceof Error ? error : new Error(String(error)) });
+                })
+                .finally(() => {
+                  commandPending.current = false;
+                });
+              break;
+            }
             lastPrompt.current = ev.text;
             const context = getContext?.();
             // Await persistence (transient chat) before requesting so the agent resolves the
@@ -176,7 +243,7 @@ const ChatRoot = ({
     });
     // `feed` and `messages` are dependencies because the rewind branch reads and writes them: without
     // them the handler would keep resolving rewinds against whatever was mounted first.
-  }, [event, dump, processor, streaming, onEvent, onSubmit, getContext, feed, messages]);
+  }, [event, dump, processor, streaming, onEvent, onSubmit, getContext, feed, messages, chat, db]);
 
   return (
     <ChatContextProvider
@@ -268,9 +335,18 @@ const PROMPT_SNIPPET_LINES = 3;
 const PROMPT_SNIPPET_CHARS = 280;
 const PROMPT_TITLE_CHARS = 100;
 
+/**
+ * The text the reader actually wrote. Synthetic blocks carry injected context and tool results, so
+ * titling a marker from them would name the machinery rather than the prompt.
+ */
+const authoredText = (message: Message.Message): string =>
+  message.blocks
+    .flatMap((block) => (block._tag === 'text' && block.disposition !== 'synthetic' ? [block.text] : []))
+    .join('\n');
+
 /** First non-empty line of a message's text, truncated for the marker title. */
 const promptTitle = (message: Message.Message): string => {
-  const text = Message.extractText(message).trim();
+  const text = authoredText(message).trim();
   const firstLine = text.split('\n').find((line) => line.trim().length) ?? '';
   return firstLine.length > PROMPT_TITLE_CHARS ? `${firstLine.slice(0, PROMPT_TITLE_CHARS)}…` : firstLine;
 };
@@ -299,16 +375,19 @@ const buildMarkers = (messages: Message.Message[]): OutlineMarker[] => {
   const markers: OutlineMarker[] = [];
   for (let index = 0; index < messages.length; index++) {
     const message = messages[index];
-    if (message.sender.role !== 'user') {
+    // Role alone would also match tool results and injected context, which travel back as
+    // `user`-role messages; `isPrompt` is the feed's single definition of a stop.
+    if (!isPrompt(message)) {
       continue;
     }
 
-    // Extend the turn through the following non-user messages and grab the first assistant reply.
+    // Extend the turn up to the next prompt: a tool-result turn belongs to the turn it serves, so
+    // stopping on any `user`-role message would cut the range at the first tool call.
     let turnTo = index + 1;
     let description: string | undefined;
     for (let next = index + 1; next < messages.length; next++) {
       const nextMessage = messages[next];
-      if (nextMessage.sender.role === 'user') {
+      if (isPrompt(nextMessage)) {
         break;
       }
       turnTo = next + 1;
@@ -527,39 +606,42 @@ ChatPrompt.displayName = CHAT_PROMPT_NAME;
 
 const CHAT_TASK_LIST_NAME = 'Chat.TaskList';
 
-type ChatTaskListProps = {
-  outline?: Outline.Outline;
-};
+const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
+  const { chat } = useChatContext(CHAT_TASK_LIST_NAME);
 
-// TODO(burdon): Project chats keep their working checklist on the parent project's outline —
-//  resolve via the parent edge (needs a reactive parent lookup), not only `chat.outline`.
-const ChatTaskList = composable<HTMLDivElement, ChatTaskListProps>(
-  ({ outline: outlineProp, ...props }, forwardedRef) => {
-    const { chat } = useChatContext(CHAT_TASK_LIST_NAME);
+  // Both the chat (membership) and each ref (row objects): a query re-emits only on membership.
+  const [chatSnapshot] = useObject(chat);
+  const taskRefs = chatSnapshot?.tasks;
+  const tasks = useAtomValue(
+    useMemo(() => Atom.make((get) => Task.dedupeById((taskRefs ?? []).map((ref) => get(ref.atom)))), [taskRefs]),
+  );
 
-    const outline = useAtomValue(
-      useMemo(
-        () =>
-          Atom.make(
-            (get) =>
-              outlineProp ??
-              Option.fromNullishOr(chat).pipe(
-                Option.map((_) => get(Obj.atom(_))),
-                Option.flatMapNullishOr((_) => _?.outline?.atom),
-                Option.map(get),
-                Option.getOrUndefined,
-              ),
-          ),
-        [chat, outlineProp],
-      ),
-    );
-    if (!outline) {
-      return null;
-    }
+  // The same primitive the task commands use, so the parent edge and the refs cannot diverge.
+  const handleCreate = useCallback(
+    ({ title, ...props }: Task.Draft) => {
+      const db = chat && Obj.getDatabase(chat);
+      if (chat && db) {
+        AssistantChat.addTask(db, chat, title, props);
+      }
+    },
+    [chat],
+  );
+  // Rendered even when empty, so `TaskList.Edit` can always add the first task.
+  if (!chat) {
+    return null;
+  }
 
-    return <TaskList {...composableProps(props)} outline={outline} ref={forwardedRef} />;
-  },
-);
+  return (
+    <TaskList.Root tasks={tasks} showGroupLabels={false} showOrdinals onTaskCreate={handleCreate}>
+      <div {...composableProps(props, { classNames: 'flex flex-col min-h-0' })} ref={forwardedRef}>
+        <TaskList.Viewport classNames='min-h-0'>
+          <TaskList.Content />
+        </TaskList.Viewport>
+        <TaskList.Edit classNames='shrink-0' />
+      </div>
+    </TaskList.Root>
+  );
+});
 
 ChatTaskList.displayName = CHAT_TASK_LIST_NAME;
 

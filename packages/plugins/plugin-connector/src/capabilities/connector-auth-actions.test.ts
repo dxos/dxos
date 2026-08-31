@@ -9,15 +9,14 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
-import { qualifyId } from '@dxos/app-graph';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
-import * as Node from '@dxos/app-graph/Node';
-import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import { setupGraphBuilder } from '@dxos/app-graph/testing';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN, Obj, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
+import * as GraphNode from '@dxos/graph/GraphNode';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { Connection, Cursor } from '@dxos/link';
 import { OAuthProvider } from '@dxos/protocols';
 
@@ -132,20 +131,22 @@ describe('connectorAuth graph extension', () => {
       Effect.scoped(connectorGraphBuilder().pipe(Effect.provideService(Capability.Service, manager))),
     );
     // A contribution carries its implementations in `values`; the graph builder wants the extensions.
-    const extensions = contribution.values.flat() as GraphBuilder.BuilderExtensions;
+    const extensions = contribution.values.flat() as AppGraphBuilder.BuilderExtensions;
     const rootExtensions = await EffectEx.runPromise(
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'testRoot',
-        match: NodeMatcher.whenRoot,
+        match: GraphNodeMatcher.whenRoot,
         connector: () => Effect.succeed([{ id: SUBJECT_ID, type: 'test', data: target }]),
       }),
     );
 
     const context = setupGraphBuilder({ registry, extensions: [rootExtensions, extensions].flat() });
-    await context.expand(Node.RootId);
-    await context.expand(qualifyId(Node.RootId, SUBJECT_ID), 'action');
+    await context.expand(GraphNode.RootId);
+    await context.expand(GraphNode.qualifyId(GraphNode.RootId, SUBJECT_ID), 'action');
 
-    const actions: any[] = context.registry.get(context.graph.actions(qualifyId(Node.RootId, SUBJECT_ID)));
+    const actions: any[] = context.registry.get(
+      context.graph.actions(GraphNode.qualifyId(GraphNode.RootId, SUBJECT_ID)),
+    );
     lastContext = context;
     lastManager = manager;
     return actions.find((action) => action.id.endsWith(ConnectorAuth.GROUP_ID));
@@ -154,8 +155,10 @@ describe('connectorAuth graph extension', () => {
   /** Registers a later provider list on the standing graph and re-reads the group it produces. */
   const registerConnectors = async (connectors: ConnectorSpec.ConnectorEntry[]) => {
     lastManager!.contribute({ module: 'late', interface: ConnectorSpec.Connector, implementation: connectors });
-    await lastContext!.expand(qualifyId(Node.RootId, SUBJECT_ID), 'action');
-    const actions: any[] = lastContext!.registry.get(lastContext!.graph.actions(qualifyId(Node.RootId, SUBJECT_ID)));
+    await lastContext!.expand(GraphNode.qualifyId(GraphNode.RootId, SUBJECT_ID), 'action');
+    const actions: any[] = lastContext!.registry.get(
+      lastContext!.graph.actions(GraphNode.qualifyId(GraphNode.RootId, SUBJECT_ID)),
+    );
     return actions.find((action) => action.id.endsWith(ConnectorAuth.GROUP_ID));
   };
 

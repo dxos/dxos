@@ -49,7 +49,7 @@ describe('GenerateHomeSuggestions', () => {
         const { db } = yield* Database.Service;
         testRegistry.set(testCacheAtom, {});
 
-        const result = yield* Operation.invoke(AssistantOperation.GenerateHomeSuggestions, { db });
+        const result = yield* Operation.invoke(AssistantOperation.GenerateHomeSuggestions, {});
 
         expect(result.prompts).toHaveLength(0);
         // No cache entry written when prompts is empty.
@@ -71,7 +71,7 @@ describe('GenerateHomeSuggestions', () => {
           [db.spaceId]: { generatedAt: Date.now(), prompts: stored },
         });
 
-        const result = yield* Operation.invoke(AssistantOperation.GenerateHomeSuggestions, { db });
+        const result = yield* Operation.invoke(AssistantOperation.GenerateHomeSuggestions, {});
 
         expect(result.prompts).toEqual(stored);
       },
@@ -91,7 +91,7 @@ describe('GenerateHomeSuggestions', () => {
         });
 
         // Empty space — expired entry is ignored, no LLM call, no new cache entry written.
-        const result = yield* Operation.invoke(AssistantOperation.GenerateHomeSuggestions, { db });
+        const result = yield* Operation.invoke(AssistantOperation.GenerateHomeSuggestions, {});
 
         expect(result.prompts).toHaveLength(0);
         // Cache not updated since prompts is empty.

@@ -12,14 +12,27 @@
   "author": "DXOS.org",
   "type": "module",
   "imports": {
-    "#translations": "./src/translations.ts",
-    "#types": "./src/types.ts"
+    "#translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types.ts",
+      "types": "./dist/types/src/types.d.ts",
+      "default": "./dist/lib/types.mjs"
+    }
   },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./annotations": {
+      "source": "./src/annotations.ts",
+      "types": "./dist/types/src/annotations.d.ts",
+      "import": "./dist/lib/annotations.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",

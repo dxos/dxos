@@ -513,7 +513,7 @@ Follow-ups from the 2026-08-19 audit (none block PR #12616):
       the existing `projectSkills` output (`SkillRecord` maps 1:1 onto the frontmatter), keep
       `loadSkill` as the polyfill indefinitely. Do not build the manifest/asset part until the PR
       settles. The stale Server.ts comment is fixed in the Milestone 8 projection work.
-- [ ] **`code-project-skill.md` fs fallback** (audit G5) — the space-binding gate reads
+- [ ] **`project-skill.md` fs fallback** (audit G5) — the space-binding gate reads
       `.agents/projects/space.yml`, silently inapplicable on an fs-less client (claude.ai
       connector). One line: no filesystem → ask the user for the space.
 - [ ] **CLAUDE.md fallback snippet** (audit) — the "point at the MCP server, no skills required"
@@ -596,6 +596,10 @@ three below — and the count no longer grows with the registry.
       MCP handshake with the new plumbing, which is the fidelity contract doing its job.
 - [ ] Edge follow-through on the next pin bump: `gatewayLayer` becomes hydrate-plus-`Host` (sketch
       in DESIGN.md §1.0 "How EDGE wires it"); its `listSkills` DTO already matches `HydratedSkill`.
+      **Also breaks on that bump (dxos#12704):** the project skill is re-keyed
+      `…skill.codeProject` → `…skill.project`, so its projected prompt is `project`, and edge's
+      `test/mcp-space-service.node.test.ts:441-448` asserts `codeProject` three times. Update those
+      assertions with the pin, not before — they are correct against the current pin.
       Its own `listOperations` static tool retires the same way the CLI's did.
 - [ ] Watch: the cost this shape accepts is that a client can no longer auto-approve a read —
       `invokeOperation` is marked possibly-destructive because some operation behind it is. If the
@@ -860,6 +864,7 @@ space session, open questions) and §9 (milestones M6–M9).
 
 ## Backlog
 
+- [ ] EXPERIMENT — `sync-aliases`: auto-generated MCP prompt commands are `/mcp__plugin_<plugin>_<server>__<prompt>` and effectively need autocomplete; a verb (or `dx mcp` subcommand) that enumerates the server's projected prompts and writes thin `.claude/commands/<name>.md` wrappers would give ANY space-defined skill a short slash command without a plugin release, at the cost of committed generated files. Generic to every projected prompt, not the project skill (moved here from claude-plugins Phase 4, 2026-08-19). Evaluate usefulness before adopting.
 - [x] Composer: deviceInvitationCode RACE — FIXED (claude/funny-chaplygin-89274c merged into #12423): onboarding is the single param owner + reset-and-join dialog. Runtime note: any composer served from a checkout without the fix (e.g. primary checkout on main) still hangs
 - [ ] CLI under node: tsx chokes on `.tpl` imports from @dxos/assistant (bun-only text loader) — blocks testing invitations outside bun
 - [x] CLI: `halo share` — printing + open-failure surfacing were already fixed in the re-registered version (landed with #12423); added the missing joinable URL print (live-verified 2026-08-01)

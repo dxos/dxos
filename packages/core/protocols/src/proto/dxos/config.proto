@@ -143,8 +143,12 @@ message Runtime {
     }
 
     message EdgeFeatures {
+      /// Field 2 held `echo_replicator`, the classical Automerge edge transport. Both the number
+      /// and the name are reserved: reusing either breaks wire or JSON/text compatibility.
+      reserved 2;
+      reserved "echo_replicator";
+
       optional bool feed_replicator = 1;
-      optional bool echo_replicator = 2;
       /// Enables Subduction sedimentree transport for Automerge document replication.
       optional bool subduction_replicator = 5;
       optional bool signaling = 3;
@@ -206,6 +210,12 @@ message Runtime {
     /// in-process (HOST), SharedWorker, and dedicated Worker runtimes. Required when no
     /// `remote_source` is configured.
     optional ServicesMode services_mode = 16;
+
+    /// Anchor spaces on an automerge space root document and carry credentials in a credentials
+    /// document, instead of deriving the space id from the space key and reading credentials from
+    /// the hypercore control feed. Off by default: the automerge scheme is opt-in until it has
+    /// soaked. Set via DX_AUTOMERGE_CREDENTIALS.
+    optional bool automerge_credentials = 17;
   }
 
   message App {
@@ -463,7 +473,12 @@ message Runtime {
 
     message Ai { optional string server = 1; }
 
-    message Hub { optional string url = 1; }
+    message Hub {
+      optional string url = 1;
+      /// Origin serving the passkey prompt. Must be covered by the WebAuthn relying party the
+      /// credential was registered against; the API host is not.
+      optional string auth_url = 2;
+    }
 
     /// Canonical descriptor for an EDGE (Cloudflare Worker) service.
     /// Entries in `Services.edge_services` consolidate the per-service URL

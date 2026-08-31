@@ -35,22 +35,8 @@ describe('SyncTemplate', () => {
     await builder.close();
   });
 
-  test('applies to a Connection, and to a target whose typename a connector binds', async ({ expect }) => {
-    const { connection, target } = await setup();
-    const template = SyncTemplate.make(capabilities({ scheduled: true }));
-
-    expect(template.appliesTo?.(connection)).toBe(true);
-    expect(template.appliesTo?.(target)).toBe(true);
-    // No subject at all is the global create dialog, which has no account to sync.
-    expect(template.appliesTo?.(undefined)).toBe(false);
-  });
-
-  test('does not apply to a target no connector declares', async ({ expect }) => {
-    const { target } = await setup();
-    // The connector binds `Expando` only via `targetTypename`; drop it and the target is unrelated.
-    const template = SyncTemplate.make(capabilities({ scheduled: true, bindsTarget: false }));
-
-    expect(template.appliesTo?.(target)).toBe(false);
+  test('stays out of the create picker', async ({ expect }) => {
+    expect(SyncTemplate.make(capabilities({ scheduled: true })).hidden).toBe(true);
   });
 
   test('scaffolds the account routine from a Connection subject', async ({ expect }) => {
@@ -99,7 +85,6 @@ describe('SyncTemplate', () => {
   test('fails when the subject has no connection to sync', async ({ expect }) => {
     const { db } = await setup();
     const template = SyncTemplate.make(capabilities({ scheduled: true }));
-    // An unbound object of the connector's target type: `appliesTo` passes, the lookup does not.
     const unbound = db.add(Obj.make(Expando.Expando, { name: 'Unbound' }));
     await db.flush({ indexes: true });
 
@@ -161,14 +146,14 @@ const TestSync = Operation.make({
 });
 
 /** A connector registry holding one connector, scheduled or on-demand. */
-const capabilities = ({ scheduled, bindsTarget = true }: { scheduled: boolean; bindsTarget?: boolean }) => {
+const capabilities = ({ scheduled }: { scheduled: boolean }) => {
   const manager = CapabilityManager.make({ registry: Registry.make() });
   const connector: ConnectorSpec.ConnectorEntry = {
     id: 'example',
     source: 'example.com',
     sync: {
       operation: TestSync,
-      ...(bindsTarget ? { targetTypename: TARGET_TYPENAME } : {}),
+      targetTypename: TARGET_TYPENAME,
       ...(scheduled ? { trigger: Trigger.specTimer('*/10 * * * *') } : {}),
     },
   };

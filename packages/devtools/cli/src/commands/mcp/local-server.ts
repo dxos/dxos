@@ -18,11 +18,6 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { type Registry } from '@dxos/echo';
 import { SpaceId } from '@dxos/keys';
 import { McpServer } from '@dxos/mcp-server';
-import * as CodeProjectSkill from '@dxos/plugin-projects/CodeProjectSkill';
-// Narrow subpath imports: these plugins declare React surfaces, and a bundler follows the dynamic
-// import behind a lazy capability, so activating them would pull React into the CLI binary.
-import * as ProjectOperationHandlerSet from '@dxos/plugin-projects/ProjectOperationHandlerSet';
-import * as TasksOperationHandlerSet from '@dxos/plugin-tasks/TasksOperationHandlerSet';
 
 import { chatLayer, operationHandlers } from '../../util';
 
@@ -54,18 +49,14 @@ export const makeLocalServer = Effect.fn(function* () {
   // this host assembled, and the space verbs reach the client through its capability.
   const ambient = yield* Effect.context<ClientService | Capability.Service | Plugin.Service>();
 
-  // The project and task verbs are the skill-governed ones, so a registry without them serves
-  // nothing worth calling; their sets are registered directly for the reason the import above
-  // states — the same trade EDGE's operation-service makes for the mail handler sets.
-  // `operationHandlers` brings the rest the CLI already curates for chat.
+  // The project and task verbs arrive as capabilities like every other, because `serve` activates
+  // both plugins; `operationHandlers` brings the rest the CLI curates for chat.
   const handlerSet = OperationHandlerSet.merge(
     ...capabilities.getAll(Capabilities.OperationHandler),
     operationHandlers,
-    ProjectOperationHandlerSet.handlers,
-    TasksOperationHandlerSet.handlers,
   );
   const handlers = dedupeOperations(yield* handlerSet.handlers);
-  const skills = dedupeByKey([...capabilities.getAll(AppCapabilities.SkillDefinition), CodeProjectSkill]);
+  const skills = dedupeByKey(capabilities.getAll(AppCapabilities.SkillDefinition));
 
   // The client's own hypergraph registry, not a separate instance: plugin-routine's registry-sync
   // already fills it with the capability-contributed skills and serialized operation handlers, so

@@ -41,7 +41,8 @@ The following extension dialects are used in this document.
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `component` | `org.dxos.mdl.component@1.0`  |
-| `op`        | `org.dxos.mdl.op@1.0`         |
+| `op`        | `org.dxos.mdl.op@1.1`         |
+| `flow`      | `org.dxos.mdl.flow@1.0`       |
 
 ## Types
 
@@ -131,6 +132,7 @@ component SupportArticle
 
 ```mdl
 op createTicket
+  key: org.dxos.operation.support.createTicket
   desc: Creates a new Ticket in the active space.
   input:
     title: string
@@ -141,6 +143,7 @@ op createTicket
 
 ```mdl
 op markInProgress
+  key: org.dxos.operation.support.markInProgress
   desc: Marks a Ticket as in progress (active investigation).
   input:
     ticket: Ticket
@@ -150,6 +153,7 @@ op markInProgress
 
 ```mdl
 op resolveTicket
+  key: org.dxos.operation.support.resolveTicket
   desc: Marks a Ticket as resolved with optional resolution notes.
   input:
     ticket: Ticket
@@ -160,6 +164,7 @@ op resolveTicket
 
 ```mdl
 op searchDocs
+  key: org.dxos.operation.support.searchDocs
   desc: >
     Searches Composer / DXOS documentation for the given query and returns
     a list of excerpts. Stub implementation in the initial phase; later
@@ -173,6 +178,7 @@ op searchDocs
 
 ```mdl
 op captureUserFeedback
+  key: org.dxos.operation.support.captureFeedback
   desc: >
     Sends a one-shot feedback message (with optional debug logs) to the
     observability backend. Backed by the Observability capability contributed
@@ -321,3 +327,64 @@ test T-6: Reopen a resolved ticket
   then:
     - Ticket.status === open
 ```
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Create a support ticket and resolve it
+  desc: The core ticket lifecycle round-trip — create, mark in progress, resolve, read back.
+  actors: agent
+  covers: [F-1.1, F-1.2, F-1.3, F-1.4, T-1, T-2, T-5]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - no Ticket titled "QA Ticket" exists — ABORT rather than deleting one this flow did not create
+  test:
+    - name: Create the ticket
+      do: In the navtree, click + on the space and choose Support Ticket. Title it "QA Ticket".
+      invoke: [op:createTicket] { title: "QA Ticket", body: "Echo sync hung" }
+      capture: created
+      expect: a Ticket titled "QA Ticket" now exists with status open and no resolution
+      assert: return !!$created && $created.status === 'open'
+    - name: Mark it in progress
+      do: Open "QA Ticket" and click "Mark in progress".
+      invoke: [op:markInProgress] { ticket: $created }
+      expect: the status indicator reads "in_progress"
+      assert: return $result.status === 'in_progress'
+    - name: Resolve it
+      do: Click "Resolve" and enter "Restarted client" as the resolution notes.
+      invoke: [op:resolveTicket] { ticket: $created, resolution: "Restarted client" }
+      expect: the status indicator reads "resolved" and the resolution notes are shown
+      assert: return $result.status === 'resolved' && $result.resolution === 'Restarted client'
+  after:
+    - name: Delete the ticket
+      do: Right-click "QA Ticket" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$created], target: $given.space }
+      expect: the row leaves the navtree and its plank closes if it was open
+```
+
+```mdl
+flow QA-2: Send one-shot feedback via the help companion
+  desc: The `--help` companion's PostHog feedback path — no ECHO object is created.
+  actors: both
+  covers: [F-4.1, F-4.2, F-4.3]
+  status: unverified
+  given:
+    - an identity exists
+    - the deck `--help` companion is available (SupportPlugin is a core plugin, always enabled)
+  test:
+    - name: Open the help companion
+      do: Click the `?` / help affordance to open the `--help` companion.
+      expect: the FeedbackForm renders with type, severity, title and body fields
+      note: NO `invoke` — opening a deck companion panel is a UI gesture with no operation behind it.
+    - name: Submit feedback
+      do: Fill in a short description ("QA smoke test — please ignore") and click Submit.
+      invoke: [op:captureUserFeedback] { message: "QA smoke test — please ignore", includeLogs: false }
+      expect: a confirmation toast is shown and the companion collapses
+  # No `after` — feedback goes straight to the observability backend; no ECHO object is created to remove.
+```
+

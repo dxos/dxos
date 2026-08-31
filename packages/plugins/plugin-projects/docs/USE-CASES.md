@@ -65,7 +65,8 @@ this milestone; SHOULD = next; MAY = direction.
 
 ### 2.2 Operations (programmatic surface)
 
-- `ProjectOperation.CreateChat`, `CreateRoutine` — exist.
+- Neither routines nor chats need a project-specific operation: routines come from
+  `RoutineOperation.CreateRoutine`, chats from the assistant's companion path.
 - `ProjectOperation.Create` MUST exist: creates a Project (owned Instructions + artifacts
   Collection) from `{ name?, description?, instructions?, skills?, objects?, template? }`, so other
   plugins can create projects without reaching into plugin internals. (Today only the create-object

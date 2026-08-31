@@ -113,7 +113,8 @@ pub fn run() {
             .plugin(tauri_plugin_shell::init())
             .plugin(tauri_plugin_deep_link::init())
             .plugin(tauri_plugin_dialog::init())
-            .plugin(tauri_plugin_fs::init());
+            .plugin(tauri_plugin_fs::init())
+            .plugin(tauri_plugin_http::init());
 
         // Spotlight panel and global shortcut are macOS-only.
         #[cfg(target_os = "macos")]
@@ -188,7 +189,11 @@ pub fn run() {
     builder
         .setup(move |app| {
             // Initialize logging in debug mode.
-            if cfg!(debug_assertions) {
+            // #region DEBUG — release builds log too while the suspension probe ships, so its
+            // heartbeat reaches ~/Library/Logs/<identifier>/. Restore `cfg!(debug_assertions)`
+            // when the probe is removed.
+            if true {
+                // #endregion DEBUG
                 app.handle().plugin(
                     tauri_plugin_log::Builder::default()
                         .level(log::LevelFilter::Info)
@@ -254,6 +259,11 @@ pub fn run() {
                     }
                 }
                 window_state::setup_window_state_tracking(&main_window);
+
+                // #region DEBUG
+                #[cfg(target_os = "macos")]
+                debug_suspension_probe::spawn(&main_window);
+                // #endregion DEBUG
             }
 
             // Mobile: create window using Tauri's default asset protocol.
@@ -279,3 +289,99 @@ pub fn run() {
         .run(context)
         .expect("error while running tauri application");
 }
+
+// #region DEBUG
+/// [DEBUG H-suspend] Host-process heartbeat, shipped temporarily to confirm the native-app
+/// freeze diagnosis in the wild before the fix lands. Remove together with the JS probe in
+/// client-observability.ts and the release-logging override in `setup`.
+///
+/// Diagnosis so far (2026-08-29 dev soak): with the window hidden, macOS suspended the
+/// WebContent process for hours (every JS realm frozen in lockstep, wall ≈ mono across the
+/// gap, machine awake) while this host process ticked every 15s without a single gap —
+/// WKWebView's default inactive scheduling policy. The same signature in a shipped bundle is
+/// JS-side `js wake after gap` lines with no `host gap` lines; both gapping means whole-app
+/// suspension instead, and wall≫mono flags system sleep. Prospective fix once confirmed:
+/// `background_throttling(Disabled)` on the window builder plus a suspension-aware startup
+/// deadline in useApp (both staged in commit aebe18803d, reverted pending confirmation).
+#[cfg(target_os = "macos")]
+mod debug_suspension_probe {
+    use std::time::{Duration, Instant, SystemTime};
+
+    const TICK: Duration = Duration::from_secs(15);
+    /// A tick landing more than 5s late means this thread did not run on schedule.
+    const GAP: Duration = Duration::from_secs(20);
+    /// Quiet cadence for shipped builds: one steady-state heartbeat line per 5 minutes.
+    const HEARTBEAT_EVERY: u32 = 20;
+
+    pub fn spawn(window: &tauri::WebviewWindow) {
+        window.on_window_event(|event| {
+            if let tauri::WindowEvent::Focused(focused) = event {
+                log::info!("[DEBUG H-suspend] window focused={focused}");
+            }
+        });
+
+        let window = window.clone();
+        std::thread::spawn(move || {
+            let mut last_wall = SystemTime::now();
+            let mut last_mono = Instant::now();
+            let mut tick: u32 = 0;
+            let mut last_state = String::new();
+            loop {
+                std::thread::sleep(TICK);
+                tick = tick.wrapping_add(1);
+                let wall = SystemTime::now();
+                let mono = Instant::now();
+                let wall_delta = wall.duration_since(last_wall).unwrap_or_default();
+                let mono_delta = mono.duration_since(last_mono);
+                last_wall = wall;
+                last_mono = mono;
+                let gapped = wall_delta > GAP || mono_delta > GAP;
+                if gapped || tick % HEARTBEAT_EVERY == 0 {
+                    log::info!(
+                        "[DEBUG H-suspend] host {}: wall_delta_ms={} mono_delta_ms={} slept_ms={}",
+                        if gapped { "gap" } else { "heartbeat" },
+                        wall_delta.as_millis(),
+                        mono_delta.as_millis(),
+                        wall_delta.as_millis() as i128 - mono_delta.as_millis() as i128,
+                    );
+                }
+
+                // AppKit state is main-thread-only. If the main thread is itself suspended, this
+                // closure lands after the wake — the gap between the heartbeat line and this one
+                // is then itself a signal (a responsive main thread answers within the tick).
+                let w = window.clone();
+                let state_tx = std::sync::mpsc::channel::<String>();
+                let sender = state_tx.0;
+                if window
+                    .run_on_main_thread(move || unsafe {
+                        use objc2::MainThreadMarker;
+                        use objc2_app_kit::{NSApplication, NSWindow, NSWindowOcclusionState};
+                        let Ok(ns_window) = w.ns_window() else { return };
+                        let ns_window: &NSWindow = &*ns_window.cast();
+                        let Some(mtm) = MainThreadMarker::new() else { return };
+                        let app = NSApplication::sharedApplication(mtm);
+                        let _ = sender.send(format!(
+                            "occluded={} miniaturized={} visible={} app_active={} app_hidden={}",
+                            !ns_window.occlusionState().contains(NSWindowOcclusionState::Visible),
+                            ns_window.isMiniaturized(),
+                            ns_window.isVisible(),
+                            app.isActive(),
+                            app.isHidden(),
+                        ));
+                    })
+                    .is_ok()
+                {
+                    // Bounded wait so a suspended main thread stalls this probe for at most one
+                    // tick; state transitions are logged, steady state stays quiet.
+                    if let Ok(state) = state_tx.1.recv_timeout(TICK) {
+                        if state != last_state || gapped {
+                            log::info!("[DEBUG H-suspend] window state: {state}");
+                            last_state = state;
+                        }
+                    }
+                }
+            }
+        });
+    }
+}
+// #endregion DEBUG

@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 
 import { l0ItemType } from '../../util';
 import { L1Panel, type L1PanelProps } from './L1Panel';
@@ -12,7 +12,7 @@ import { L1Panel, type L1PanelProps } from './L1Panel';
 export type L1TabsProps = Pick<L1PanelProps, 'open' | 'onBack'> & {
   currentItemId: string;
   path: string[];
-  topLevelItems: Node.Node[];
+  topLevelItems: AppGraphNode.Node[];
 };
 
 /**
@@ -27,7 +27,7 @@ export const L1Tabs = ({ topLevelItems, currentItemId, onBack, open, path }: L1T
   const spaces = useMemo(
     () =>
       topLevelItems
-        .filter((item) => Node.hasDisposition(item, 'workspace'))
+        .filter((item) => AppGraphNode.hasDisposition(item, 'workspace'))
         .map(({ id }) => id)
         .join(),
     [topLevelItems],

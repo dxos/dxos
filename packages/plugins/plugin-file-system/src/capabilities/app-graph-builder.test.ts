@@ -7,11 +7,10 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
-import { qualifyId } from '@dxos/app-graph';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
-import * as Node from '@dxos/app-graph/Node';
-import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import { setupGraphBuilder } from '@dxos/app-graph/testing';
+import * as GraphNode from '@dxos/graph/GraphNode';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
 import { meta } from '#meta';
 import { FileSystemCapabilities } from '#types';
@@ -54,17 +53,19 @@ describe('filesystem app graph builder', () => {
       ],
     });
 
-    await graphBuilder.expand(Node.RootId);
-    await graphBuilder.expand(qualifyId(Node.RootId, 'workspace'));
-    await graphBuilder.expand(qualifyId(Node.RootId, 'workspace', 'archive'));
+    await graphBuilder.expand(GraphNode.RootId);
+    await graphBuilder.expand(GraphNode.qualifyId(GraphNode.RootId, 'workspace'));
+    await graphBuilder.expand(GraphNode.qualifyId(GraphNode.RootId, 'workspace', 'archive'));
 
-    expect(graphBuilder.getConnections(qualifyId(Node.RootId, 'workspace')).map((node) => node.id)).toEqual([
-      qualifyId(Node.RootId, 'workspace', 'archive'),
-      qualifyId(Node.RootId, 'workspace', 'topNote'),
+    expect(
+      graphBuilder.getConnections(GraphNode.qualifyId(GraphNode.RootId, 'workspace')).map((node) => node.id),
+    ).toEqual([
+      GraphNode.qualifyId(GraphNode.RootId, 'workspace', 'archive'),
+      GraphNode.qualifyId(GraphNode.RootId, 'workspace', 'topNote'),
     ]);
-    expect(graphBuilder.getConnections(qualifyId(Node.RootId, 'workspace', 'archive')).map((node) => node.id)).toEqual([
-      qualifyId(Node.RootId, 'workspace', 'archive', 'nestedNote'),
-    ]);
+    expect(
+      graphBuilder.getConnections(GraphNode.qualifyId(GraphNode.RootId, 'workspace', 'archive')).map((node) => node.id),
+    ).toEqual([GraphNode.qualifyId(GraphNode.RootId, 'workspace', 'archive', 'nestedNote')]);
   });
 
   test('keeps expanded directory entries in sync when workspace state is replaced', async ({ expect }) => {
@@ -94,13 +95,13 @@ describe('filesystem app graph builder', () => {
       currentFile: undefined,
     });
 
-    await graphBuilder.expand(Node.RootId);
-    await graphBuilder.expand(qualifyId(Node.RootId, 'workspace'));
-    await graphBuilder.expand(qualifyId(Node.RootId, 'workspace', 'archive'));
+    await graphBuilder.expand(GraphNode.RootId);
+    await graphBuilder.expand(GraphNode.qualifyId(GraphNode.RootId, 'workspace'));
+    await graphBuilder.expand(GraphNode.qualifyId(GraphNode.RootId, 'workspace', 'archive'));
 
-    expect(graphBuilder.getConnections(qualifyId(Node.RootId, 'workspace', 'archive')).map((node) => node.id)).toEqual([
-      qualifyId(Node.RootId, 'workspace', 'archive', 'one'),
-    ]);
+    expect(
+      graphBuilder.getConnections(GraphNode.qualifyId(GraphNode.RootId, 'workspace', 'archive')).map((node) => node.id),
+    ).toEqual([GraphNode.qualifyId(GraphNode.RootId, 'workspace', 'archive', 'one')]);
 
     setDirectoryChildren('archive', [
       createMarkdownFile({
@@ -118,9 +119,11 @@ describe('filesystem app graph builder', () => {
     ]);
     await graphBuilder.flush();
 
-    expect(graphBuilder.getConnections(qualifyId(Node.RootId, 'workspace', 'archive')).map((node) => node.id)).toEqual([
-      qualifyId(Node.RootId, 'workspace', 'archive', 'one'),
-      qualifyId(Node.RootId, 'workspace', 'archive', 'two'),
+    expect(
+      graphBuilder.getConnections(GraphNode.qualifyId(GraphNode.RootId, 'workspace', 'archive')).map((node) => node.id),
+    ).toEqual([
+      GraphNode.qualifyId(GraphNode.RootId, 'workspace', 'archive', 'one'),
+      GraphNode.qualifyId(GraphNode.RootId, 'workspace', 'archive', 'two'),
     ]);
   });
 });
@@ -169,9 +172,9 @@ const setupFileSystemGraphBuilder = ({
 };
 
 const createWorkspaceRootExtensions = (stateAtom: Atom.Writable<FileSystemCapabilities.FileSystemState>) =>
-  GraphBuilder.createExtension({
+  AppGraphBuilder.createExtension({
     id: 'testWorkspaces',
-    match: NodeMatcher.whenRoot,
+    match: GraphNodeMatcher.whenRoot,
     connector: (_node, get) =>
       Effect.succeed(
         get(stateAtom).workspaces.map((workspace) => ({

@@ -7,6 +7,8 @@ import React from 'react';
 
 import { MarkdownBlock, WidgetStateProvider, createWidgetStateStore } from '@dxos/react-ui-feed';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { ContentBlock } from '@dxos/types';
+import { trim } from '@dxos/util';
 
 import { assistantRegistry } from './registry';
 import { translations } from './translations';
@@ -25,14 +27,17 @@ type StoryArgs = {
 // the item unmounting as the reader scrolls past it.
 const store = createWidgetStateStore();
 
+// Stands in for the query container a thread gets from `Column.Center`, so `cqi` is not the viewport.
 const DefaultStory = ({ content }: StoryArgs) => (
   <WidgetStateProvider store={store}>
-    <MarkdownBlock text={content} registry={assistantRegistry} />
+    <div className='dx-container-type-inline-size'>
+      <MarkdownBlock text={content} registry={assistantRegistry} />
+    </div>
   </WidgetStateProvider>
 );
 
 const meta = {
-  title: 'ui/react-ui-assistant/registry',
+  title: 'ui/react-ui-assistant/widgets/Registry',
   component: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'p-4' })],
   parameters: {
@@ -69,8 +74,12 @@ export const Synthetic: Story = {
 
 export const Reasoning: Story = {
   args: {
-    content:
-      '<reasoning>The user is asking about nested flex layouts and overflow. I should mention min-height 0 and grid track sizing.</reasoning>',
+    content: trim`
+      <reasoning>
+      The user is asking about nested flex layouts and overflow. 
+      I should mention min-height 0 and grid track sizing.
+      </reasoning>
+    `,
   },
 };
 
@@ -88,15 +97,28 @@ export const Reference: Story = {
 
 export const Suggestion: Story = {
   args: {
-    content:
-      '<suggestion>Show me the layout rules</suggestion> <suggestion>Explain min-h-0</suggestion> <suggestion>Draft a fix</suggestion>',
+    // TODO(burdon): Consider addition container for suggestions (like select).
+    content: [
+      '<suggestion>Show me the layout rules (this is a very very long suggestion that should truncate)</suggestion>',
+      '<suggestion>Suggestion 2</suggestion>',
+      '<suggestion>Suggestion 3</suggestion>',
+    ].join(''),
   },
 };
 
 export const Select: Story = {
   args: {
-    content:
-      '<select><option>Scroll the leaf</option><option>Scroll the panel</option><option>Do nothing</option></select>',
+    content: trim`
+      <select>
+        <option>Select red</option>
+        <option>Select green</option>
+        <option>Select blue</option>
+        <option>Select yellow</option>
+        <option>Select purple</option>
+        <option>Select orange</option>
+        <option>Select pink</option>
+      </select>
+    `,
   },
 };
 
@@ -110,24 +132,133 @@ export const Stats: Story = {
 // React widgets (portaled outside the editor)
 //
 
+const call = (id: string, name: string, input: unknown = { query: 'status', limit: 10 }): ContentBlock.ToolCall => ({
+  _tag: 'toolCall',
+  toolCallId: id,
+  name,
+  input: JSON.stringify(input),
+  providerExecuted: false,
+});
+
+const result = (id: string, name: string, value: unknown): ContentBlock.ToolResult => ({
+  _tag: 'toolResult',
+  toolCallId: id,
+  name,
+  result: JSON.stringify(value),
+  providerExecuted: false,
+});
+
+const failure = (id: string, name: string, error: string): ContentBlock.ToolResult => ({
+  _tag: 'toolResult',
+  toolCallId: id,
+  name,
+  error,
+  providerExecuted: false,
+});
+
+/** One tag per run, which is what the thread's projection produces after folding a turn's messages. */
+const toolkit = (blocks: ContentBlock.Any[]): string => `<toolkit>${JSON.stringify(blocks)}</toolkit>`;
+
+const toolchain: [ContentBlock.ToolCall, ContentBlock.ToolResult][] = [
+  [
+    {
+      _tag: 'toolCall',
+      toolCallId: 'tc-1',
+      name: 'example_tool',
+      input: JSON.stringify({ query: 'status', limit: 10 }),
+      providerExecuted: false,
+    },
+    {
+      _tag: 'toolResult',
+      toolCallId: 'tc-1',
+      name: 'example_tool',
+      result: JSON.stringify({ ok: true, rows: [{ id: 1 }, { id: 2 }] }),
+      providerExecuted: false,
+    },
+  ],
+  [
+    {
+      _tag: 'toolCall',
+      toolCallId: 'tc-2',
+      name: 'example_tool',
+      input: JSON.stringify({ query: 'status', limit: 10 }),
+      providerExecuted: false,
+    },
+    {
+      _tag: 'toolResult',
+      toolCallId: 'tc-2',
+      name: 'example_tool',
+      result: JSON.stringify({ ok: true, rows: [{ id: 1 }, { id: 2 }, { id: 3 }] }),
+      providerExecuted: false,
+    },
+  ],
+];
+
+/** A finished run: the summary counts, and every call is one row a click from its payload. */
 export const Toolkit: Story = {
   args: {
-    content: `<toolkit>${JSON.stringify([
-      {
-        _tag: 'toolCall',
-        toolCallId: 'tc-story-1',
-        name: 'example_tool',
-        input: JSON.stringify({ query: 'status', limit: 10 }),
-        providerExecuted: false,
-      },
-      {
-        _tag: 'toolResult',
-        toolCallId: 'tc-story-1',
-        name: 'example_tool',
-        result: JSON.stringify({ ok: true, rows: [{ id: 1 }, { id: 2 }] }),
-        providerExecuted: false,
-      },
-    ])}</toolkit>`,
+    content: toolkit([
+      call('tc-1', 'read_document'),
+      result('tc-1', 'read_document', { ok: true, rows: [{ id: 1 }, { id: 2 }] }),
+      call('tc-2', 'search_index'),
+      result('tc-2', 'search_index', { ok: true, hits: 12 }),
+      call('tc-3', 'write_document'),
+      result('tc-3', 'write_document', { ok: true }),
+    ]),
+  },
+};
+
+/** A lone call whose payload is far taller than the panel: collapsed, it must not scroll. */
+export const ToolkitSingleLarge: Story = {
+  args: {
+    content: toolkit([
+      call('tc-1', 'markdown-update', {
+        doc: 'echo://SPACE/01ABC',
+        edits: Array.from({ length: 12 }, (_, i) => ({ oldString: `old ${i}`, newString: `new ${i}` })),
+      }),
+      result('tc-1', 'markdown-update', { newContent: 'x'.repeat(400) }),
+    ]),
+  },
+};
+
+/** A single call still in flight: the summary names it rather than counting. */
+export const ToolkitRunning: Story = {
+  args: {
+    content: toolkit([call('tc-1', 'read_document')]),
+  },
+};
+
+/** A later call in flight: the summary names the active one and carries the run's count. */
+export const ToolkitRunningRun: Story = {
+  args: {
+    content: toolkit([
+      call('tc-1', 'read_document'),
+      result('tc-1', 'read_document', { ok: true }),
+      call('tc-2', 'search_index'),
+      result('tc-2', 'search_index', { ok: true }),
+      call('tc-3', 'write_document'),
+    ]),
+  },
+};
+
+/** A failed call, which the summary reports without the reader opening anything. */
+export const ToolkitFailed: Story = {
+  args: {
+    content: toolkit([
+      call('tc-1', 'read_document'),
+      result('tc-1', 'read_document', { ok: true }),
+      call('tc-2', 'search_index'),
+      failure('tc-2', 'search_index', 'ENOENT: no such file or directory'),
+      call('tc-3', 'write_document'),
+      result('tc-3', 'write_document', { ok: true }),
+    ]),
+  },
+};
+
+/** The pre-fold shape, kept so a regression to one panel per message is visible. */
+export const ToolkitUnmerged: Story = {
+  args: {
+    content: toolchain.map(([toolCall, toolResult]) => toolkit([toolCall, toolResult])).join('\n\n'),
   },
 };
 

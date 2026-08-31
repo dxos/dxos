@@ -4,7 +4,7 @@
 
 import { isNode } from '@dxos/util';
 
-import { type Config } from './config';
+import { type Config, getEnvString } from './config';
 
 /**
  * Resolves the telemetry tag used as the `X-DXOS-Client-Tag` header on edge
@@ -21,5 +21,5 @@ import { type Config } from './config';
  * than stamping empty strings.
  */
 export const resolveTelemetryTag = (config?: Config): string | undefined => {
-  return config?.get('runtime.app.env.DX_TELEMETRY_TAG') ?? (isNode() ? process.env.DX_TELEMETRY_TAG : undefined);
+  return getEnvString(config, 'DX_TELEMETRY_TAG') ?? (isNode() ? process.env.DX_TELEMETRY_TAG : undefined);
 };

@@ -185,6 +185,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     await this._spaceManager.acceptSpace(ctx, {
       spaceKey: assertion.spaceKey,
       genesisFeedKey: assertion.genesisFeedKey,
+      spaceRootUrl: assertion.spaceRootUrl,
       controlTimeframe,
       dataTimeframe,
       tags: assertion.tags,

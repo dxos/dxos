@@ -12,7 +12,7 @@ import { mx } from '@dxos/ui-theme';
 import { Outline, type OutlineMarker } from '../components';
 import { type MessageChromeProps, MessageList, useMessageList } from '../components';
 import { type Decoration, DecorationsProvider, ItemSelectionProvider } from '../hooks';
-import { SearchHit, defaultRenderer, searchFeed, sliceFeed, useFeedModel } from '../model';
+import { SearchHit, defaultRenderer, isPrompt, searchFeed, sliceFeed, useFeedModel } from '../model';
 import { FeedStats, useFeedDebug } from './debug';
 import { createMessages } from './generator';
 import { type FeedScenario, createScenario } from './scenarios';
@@ -342,7 +342,7 @@ const FeedOutline = ({ classNames, messages }: ThemedClassName<{ messages: reado
     // Every prompt is passed; the rail thins them to whatever its height affords.
     return messages
       .map((message, index) => ({ message, index }))
-      .filter(({ message }) => message.sender.role === 'user')
+      .filter(({ message }) => isPrompt(message))
       .map(({ message, index }) => ({
         id: message.id,
         title: `#${index} · ${message.sender.name ?? message.sender.role}`,

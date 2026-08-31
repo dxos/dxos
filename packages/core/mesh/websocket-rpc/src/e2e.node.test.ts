@@ -4,14 +4,15 @@
 
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { schema } from '@dxos/protocols/proto';
+import { getBufService } from '@dxos/protocols/buf-service';
+import { type TestService } from '@dxos/protocols/proto/example/testing/rpc';
 import { type ServiceTypesOf, createServiceBundle } from '@dxos/rpc';
 
 import { WebsocketRpcClient } from './client';
 import { WebsocketRpcServer } from './server';
 
 const services = createServiceBundle({
-  TestService: schema.getService('example.testing.rpc.TestService'),
+  TestService: getBufService<TestService>('example.testing.rpc.TestService'),
 });
 
 describe('e2e', () => {

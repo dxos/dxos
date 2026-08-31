@@ -27,8 +27,8 @@ import {
   createRtcTransportFactory,
 } from '@dxos/network-manager';
 import { TcpTransportFactory } from '@dxos/network-manager/transport/tcp';
+import { Runtime_Client_Storage_SqliteMode } from '@dxos/protocols/buf/dxos/config_pb';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import * as Coordinator from '@dxos/worker-framework/Coordinator';
@@ -120,7 +120,7 @@ export class TestBuilder {
     const configDataRoot = this.config.get('runtime.client.storage.dataRoot');
     const sqlitePath =
       options?.sqlitePath ?? this.sqlitePath ?? (configDataRoot ? `${configDataRoot}/storage.db` : undefined);
-    const sqliteMode = sqlitePath ? Runtime.Client.Storage.SqliteMode.FILE : Runtime.Client.Storage.SqliteMode.MEMORY;
+    const sqliteMode = sqlitePath ? Runtime_Client_Storage_SqliteMode.FILE : Runtime_Client_Storage_SqliteMode.MEMORY;
     const config = new Config({ runtime: { client: { storage: { sqliteMode } } } }, this.config.values);
     const services = new LocalClientServices({
       config,

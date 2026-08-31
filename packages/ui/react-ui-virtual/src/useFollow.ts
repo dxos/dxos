@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type RefObject, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
+import { type RefObject, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { ScrollFollower } from './follow';
 import { type Placement } from './placement';
@@ -20,6 +20,14 @@ const FOLLOW_WINDOW = 1_000;
 const SETTLE_FRAMES = 12;
 
 export type FollowHandle = {
+  /**
+   * Whether the reader is resting on the end, within {@link STICKY_THRESHOLD}.
+   *
+   * Published as state rather than read from the intent ref, so a host can render an affordance
+   * against it — the intent is a ref precisely because the correction must not re-render, and a
+   * second scroll listener in the host would fork the threshold.
+   */
+  atEnd: boolean;
   /**
    * A navigation is the reader answering "do you want the tail?" — and it must answer *before* the
    * scroll moves. The intent is otherwise withdrawn by the scroll event the jump raises, which is
@@ -85,6 +93,8 @@ export const useFollow = ({
   changedAt,
 }: UseFollowOptions): FollowHandle => {
   const following = useRef(!!enabled);
+  // A feed shorter than its viewport never scrolls, so it starts at its end and no event says so.
+  const [atEnd, setAtEnd] = useState(true);
   const wasEnabled = useRef(enabled);
   if (wasEnabled.current !== enabled) {
     wasEnabled.current = enabled;
@@ -190,7 +200,11 @@ export const useFollow = ({
       const total = axis === 'block' ? scroller.scrollHeight : scroller.scrollWidth;
       const back = current < lastOffset.current - 1;
       lastOffset.current = current;
-      if (total - current - viewport <= STICKY_THRESHOLD) {
+      const end = total - current - viewport <= STICKY_THRESHOLD;
+      // Same threshold as the intent, one listener: React bails out on an unchanged value, so a
+      // pinned feed streaming for minutes re-renders nothing.
+      setAtEnd(end);
+      if (end) {
         following.current = true;
       } else if (back && performance.now() - gestureAt.current < GESTURE_WINDOW) {
         following.current = false;
@@ -316,6 +330,7 @@ export const useFollow = ({
     [enabled, follower],
   );
 
-  // Stable across appends, so controllers built over it do not churn per model change.
-  return useMemo(() => ({ onNavigate }), [onNavigate]);
+  // Stable across appends, so controllers built over it do not churn per model change; `atEnd`
+  // changes only when the reader crosses the threshold, which is not an append.
+  return useMemo(() => ({ atEnd, onNavigate }), [atEnd, onNavigate]);
 };

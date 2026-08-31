@@ -107,6 +107,9 @@ message DeviceAdmissionCredentials {
   optional dxos.echo.timeframe.TimeframeVector control_timeframe = 4;
   /// Credential of type `AuthorizedDevice` that allows guest device to act as the identity it was added to.
   dxos.halo.credentials.Credential credential = 5;
+  /// Automerge URL of the halo space root document, so the joining device replicates the credential
+  /// chain as a document rather than only as a control feed. Absent for a host that has not anchored.
+  optional string halo_space_root_url = 6;
 }
 
 message SpaceAdmissionCredentials {

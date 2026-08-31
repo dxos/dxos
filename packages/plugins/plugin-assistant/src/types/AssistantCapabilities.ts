@@ -4,13 +4,17 @@
 
 // @import-as-namespace
 
+import type * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import type { MakeTurnProducer } from '@dxos/agent-runtime';
 import * as Capability from '@dxos/app-framework/Capability';
-import { type Obj } from '@dxos/echo';
+import type { AiContext } from '@dxos/assistant';
+import type { Chat } from '@dxos/assistant-toolkit';
+import type * as Instructions from '@dxos/compute/Instructions';
+import { type Database, type Obj, type Ref, type Registry } from '@dxos/echo';
 
 import { meta } from '#meta';
 
@@ -68,3 +72,29 @@ export const HomeSuggestionsCache = Capability.makeSingleton<Atom.Writable<HomeS
 export const AgentTurnProducer = Capability.make<MakeTurnProducer>()(
   'org.dxos.plugin.assistant.capability.agentTurnProducer',
 );
+
+/** Context a chat receives when it runs against a subject object. */
+export type SubjectBindings = AiContext.BindingProps & {
+  /** Applied to `chat.instructions` only when the chat has none; reaches the model via the system prompt. */
+  instructions?: Ref.Ref<Instructions.Instructions>;
+};
+
+/**
+ * Bindings contributed for a chat opened against a subject object — the object a companion chat is
+ * attached to, or the object a chat was created for.
+ *
+ * Every contribution whose `appliesTo` accepts the subject runs and the results are merged, so a
+ * type-specific provider adds to the default rather than replacing it. Invoked by
+ * `AssistantOperation.BindChatContext`, which provides `Database.Service` for the subject's space and
+ * declares `Registry.Service` for skills resolved out of the hypergraph registry.
+ */
+export type SubjectContext = {
+  /** Whether this provider applies to the subject. Absent ⇒ applies to every subject. */
+  appliesTo?: (subject: Obj.Unknown) => boolean;
+  getBindings: (params: {
+    subject: Obj.Unknown;
+    chat: Chat.Chat;
+  }) => Effect.Effect<SubjectBindings, Error, Database.Service | Registry.Service>;
+};
+
+export const SubjectContext = Capability.make<SubjectContext>()(`${meta.profile.key}.capability.subjectContext`);

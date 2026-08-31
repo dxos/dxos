@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as Node from '@dxos/app-graph/Node';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { type MenuActionProperties } from '@dxos/ui-types';
 
 /**
@@ -10,7 +10,7 @@ import { type MenuActionProperties } from '@dxos/ui-types';
  * single action declare multiple dispositions yet render appropriately in each surface — e.g. a
  * primary toolbar button and a plain nav-tree row from the same definition.
  */
-export const applyPresentation = <A extends Node.ActionLike>(action: A, surface: string): A => {
+export const applyPresentation = <A extends AppGraphNode.ActionLike>(action: A, surface: string): A => {
   const presentation = (action.properties as MenuActionProperties).presentation?.[surface];
   if (!presentation) {
     return action;

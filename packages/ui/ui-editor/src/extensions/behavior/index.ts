@@ -4,6 +4,7 @@
 
 export * from './bookmarks';
 export * from './dnd';
+export * from './inline-edit';
 export * from './listener';
 export * from './spacing';
 export * from './submit';

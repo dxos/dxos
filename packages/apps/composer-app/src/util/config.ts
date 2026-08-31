@@ -7,7 +7,7 @@ import * as Function from 'effect/Function';
 import * as Match from 'effect/Match';
 
 import { DXOS_VERSION, Remote } from '@dxos/client';
-import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
+import { Config, Defaults, Envs, Local, Storage, getEnvString } from '@dxos/config';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import { Observability, ObservabilityExtension, ObservabilityProvider } from '@dxos/observability';
 import { getHostPlatform } from '@dxos/util';
@@ -76,7 +76,7 @@ const POSTHOG_DISABLED_CONFIG = {
  */
 const feedbackLogsEndpoint = (config: Config, isTauri: boolean): string | undefined =>
   isTauri
-    ? (config.values.runtime?.app?.env?.DX_FEEDBACK_LOGS_ENDPOINT ?? `https://${APP_DOMAIN}${FEEDBACK_LOGS_PATH}`)
+    ? (getEnvString(config, 'DX_FEEDBACK_LOGS_ENDPOINT') ?? `https://${APP_DOMAIN}${FEEDBACK_LOGS_PATH}`)
     : undefined;
 
 /** Initialize observability extensions and data providers for Composer. */
@@ -93,7 +93,7 @@ export const initializeObservability = async (
         // TODO(wittjosiah): Make APP_KEY "composer"?
         serviceName: 'composer',
         serviceVersion: DXOS_VERSION,
-        environment: config.values.runtime?.app?.env?.DX_ENVIRONMENT ?? 'unknown',
+        environment: getEnvString(config, 'DX_ENVIRONMENT') ?? 'unknown',
         config,
         logs: true,
         metrics: true,
@@ -104,7 +104,7 @@ export const initializeObservability = async (
       ObservabilityExtension.PostHog.extensions({
         config,
         release: DXOS_VERSION,
-        environment: config.values.runtime?.app?.env?.DX_ENVIRONMENT ?? 'unknown',
+        environment: getEnvString(config, 'DX_ENVIRONMENT') ?? 'unknown',
         logStore,
         feedbackLogMaxSize: LOG_STORE_MAX_BYTES,
         feedbackLogsEndpoint: feedbackLogsEndpoint(config, isTauri),

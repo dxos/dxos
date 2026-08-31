@@ -28,7 +28,9 @@ The following extension dialects are used in this document.
 | `feat`      | `org.dxos.mdl.feat@1.0`      |
 | `test`      | `org.dxos.mdl.test@1.0`      |
 | `component` | `org.dxos.mdl.component@1.0` |
-| `op`        | `org.dxos.mdl.op@1.0`        |
+| `op`        | `org.dxos.mdl.op@1.1`        |
+| `flow`      | `org.dxos.mdl.flow@1.0`      |
+| `step`      | `org.dxos.mdl.step@1.0`      |
 
 ## Types
 
@@ -223,6 +225,7 @@ component FlashcardsArticle
 
 ```mdl
 op AddWord
+  key: org.dxos.operation.lingo.addWord
   desc: Adds a word to a deck, deduplicating on the term.
   input:
     vocabulary: Ref<Vocabulary>
@@ -240,6 +243,7 @@ op AddWord
 
 ```mdl
 op RecordReview
+  key: org.dxos.operation.lingo.recordReview
   desc: Records one flashcard answer and advances the word's Leitner schedule.
   input:
     word: Ref<Word>
@@ -264,6 +268,7 @@ op TranslateTerm
 
 ```mdl
 op TranslatePassage
+  key: org.dxos.operation.lingo.translatePassage
   desc: >
     Translates a whole passage into the base language, preserving its markdown
     so the two panes line up paragraph for paragraph. Distinct from swapping
@@ -280,6 +285,7 @@ op TranslatePassage
 
 ```mdl
 op AnalyzeText
+  key: org.dxos.operation.lingo.analyzeText
   desc: >
     Analyzes a passage into nested paragraph / sentence / clause / vocabulary
     regions and caches the result on an Analysis object. Re-running is cheap by
@@ -466,3 +472,108 @@ splits ("パン屋" → "パン" + "屋") still resolve.
 `reading` on every vocab region when the script needs one — furigana for
 Japanese, pinyin for Mandarin — and explicitly suppresses it otherwise, since a
 pronunciation guide for a script the learner already reads is noise.
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+plugin-lingo is dev-only in `getDefaults` (`isDev`), so OFF by default for a normal user.
+
+```mdl
+flow QA-1: Add a word to a deck and drill it to box 3
+  desc: The core vocabulary round-trip — create a Language and Vocabulary, add a Word,
+    and answer it correctly three times through the Leitner schedule.
+  actors: human
+  covers: [F-1.1, F-1.4, F-2.1, F-2.2, F-2.3]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - plugin-lingo is enabled — it is OFF by default (isDev-only default). Enabling is a UI
+      action (Settings -> plugin registry).
+    - no Vocabulary named "QA Deck" exists — ABORT rather than deleting one this flow did not create
+  test:
+    - name: Create a Language and Vocabulary
+      do: In the navtree, click + on a collection and choose Vocabulary. Name it "QA Deck" and
+        create a Language "Spanish" (code "es") for it.
+      capture: created
+      expect: a Vocabulary named "QA Deck" appears under the collection, with Vocabulary.language
+        a Ref to the new Language
+      note: |
+        NO `invoke` — no create operation exists for Vocabulary or Language (only op:AddWord and
+        op:RecordReview are registered); the create menu is a UI factory.
+    - name: Add a word
+      do: In the VocabularyArticle, add the term "gato" translated as "cat".
+      invoke: [op:AddWord] { vocabulary: $created.vocabulary, term: "gato", translation: "cat" }
+      capture: added
+      expect: "gato" appears in the word list, due immediately (box 0)
+      assert: return !$added.existing;
+    - name: Answer it correctly (1st)
+      do: Open FlashcardsArticle for "QA Deck" and answer "gato" correctly.
+      invoke: [op:RecordReview] { word: $added.word, correct: true }
+      expect: the word's box advances and its streak is 1
+    - name: Answer it correctly (2nd)
+      do: Answer "gato" correctly again.
+      invoke: [op:RecordReview] { word: $added.word, correct: true }
+      expect: the word's box advances again and its streak is 2
+    - name: Answer it correctly (3rd)
+      do: Answer "gato" correctly a third time in a row.
+      invoke: [op:RecordReview] { word: $added.word, correct: true }
+      expect: after the third correct answer, the word's box is 3, streak is 3, and it is due 7
+        days out
+      assert: return $result.progress.box === 3 && $result.progress.streak === 3;
+  after:
+    - name: Delete the deck
+      do: Right-click "QA Deck" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$created.vocabulary], target: $given.collection }
+      expect: the row leaves the navtree
+```
+
+```mdl
+flow QA-2: Translate and analyze a passage in the reading companion
+  desc: The reading-companion round-trip — open a document, run translate + analyze, and confirm
+    the paired panes and cached Analysis.
+  actors: human
+  covers: [F-3.1, F-3.2, F-3.4, F-5.3]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - document: a Markdown document with a short non-English passage is open (e.g. "Hola, ¿cómo
+        estás?")
+    - text: the passage text, as it appears in the open document
+    - language: an existing Language ("English", code "en") selected as the target in the
+        reading companion
+    - no Analysis exists for this document and "English" — the first run asserts
+      `cached === false`, so a leftover Analysis from an earlier run fails it
+    - plugin-lingo is enabled — it is OFF by default (isDev-only default)
+  test:
+    - name: Open the reading companion and run analysis
+      do: Open the reading companion beside the document, pick "English" as the target language,
+        and click the run action.
+      invoke: [op:TranslatePassage] { text: $given.text, language: Ref.make($given.language) }
+      capture: translated
+      expect: a translated passage renders in the companion pane
+      assert: return !!$translated.text;
+    - name: Analyze the pair
+      do: (the run action chains straight into analysis)
+      invoke: [op:AnalyzeText] { subject: Ref.make($given.document), text: $given.text, language: Ref.make($given.language), translation: $translated.text }
+      capture: analyzed
+      expect: the source pane shows decorated paragraph/sentence/clause/vocab regions; hovering
+        one outlines the most specific region and reveals a gloss
+      assert: return !!$analyzed.analysis && $analyzed.cached === false;
+      note: Coalesced with the previous step — `translated.text` is live and cannot cross a
+        snippet boundary.
+    - name: Re-run and confirm the cache is used
+      do: Click the run action again without editing the document.
+      invoke: [op:AnalyzeText] { subject: Ref.make($given.document), text: $given.text, language: Ref.make($given.language), translation: $translated.text }
+      expect: the same Analysis is reused; no second model call is made
+      assert: return $result.cached === true;
+  after:
+    - name: Delete the translation
+      do: Click the delete action in the reading companion toolbar.
+      expect: the pane returns to its initial (untranslated) state and the Analysis object is removed
+      note: NO `invoke` — deletion is a component action (`delete()`), not a registered op.
+```

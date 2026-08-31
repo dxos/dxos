@@ -37,7 +37,7 @@ import { trim } from '@dxos/util';
 
 import { getDefaultSkills } from './skills';
 
-const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claude-opus-4-8.default');
+const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claude-opus-5.default');
 
 /** Per-eval fallback; scenarios with more tool round-trips should pass an explicit `timeout`. */
 const DEFAULT_EVAL_TIMEOUT_MILLIS = 60_000;
@@ -62,7 +62,7 @@ const SYSTEM_INSTRUCTIONS = trim`
 `;
 
 const makeAiServiceMiddleware = (): Promise<(_upstream: AiService.Service) => AiService.Service> =>
-  AiService.AiService.pipe(
+  AiService.tag.pipe(
     Effect.provide(AiServiceTestingPreset('direct')),
     Effect.map((service) => (_upstream: AiService.Service) => service),
     EffectEx.runAndForwardErrors,

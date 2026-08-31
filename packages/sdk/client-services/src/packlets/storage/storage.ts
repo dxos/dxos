@@ -3,15 +3,16 @@
 //
 
 import { InvalidConfigError } from '@dxos/protocols';
-import { Runtime } from '@dxos/protocols/proto/dxos/config';
+import {
+  type Runtime_Client_Storage,
+  Runtime_Client_Storage_StorageDriver as StorageDriver,
+} from '@dxos/protocols/buf/dxos/config_pb';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 
 import { getRootPath } from './util';
 
-import StorageDriver = Runtime.Client.Storage.StorageDriver;
-
 // TODO(burdon): Factor out.
-export const createStorageObjects = (config: Runtime.Client.Storage) => {
+export const createStorageObjects = (config: Runtime_Client_Storage) => {
   const { persistent = false, keyStore, dataStore } = config ?? {};
   if (persistent && dataStore === StorageDriver.RAM) {
     throw new InvalidConfigError({ message: 'RAM storage cannot be used in persistent mode.' });

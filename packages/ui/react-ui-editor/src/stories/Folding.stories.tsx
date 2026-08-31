@@ -80,7 +80,7 @@ const DefaultStory = ({ text }: StoryArgs) => {
     <Panel.Root>
       <Panel.Toolbar>
         <Toolbar.Root classNames='dx-document'>
-          <SystemIconButton.Expander
+          <SystemIconButton.Disclosure
             active={!collapsed}
             label={collapsed ? 'Expand all' : 'Collapse all'}
             onClick={() => {

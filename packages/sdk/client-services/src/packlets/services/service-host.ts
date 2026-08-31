@@ -433,6 +433,9 @@ export class ClientServicesHost {
       if (this.#runtimeProps.enableVectorIndexing === undefined) {
         this.#runtimeProps.enableVectorIndexing = config?.get('runtime.client.enableVectorIndexing', false);
       }
+      if (this.#runtimeProps.automergeCredentials === undefined) {
+        this.#runtimeProps.automergeCredentials = config?.get('runtime.client.automergeCredentials', false);
+      }
 
       invariant(!this.#config, 'config already set');
       this.#config = config;

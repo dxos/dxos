@@ -14,7 +14,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
-import { Outline } from '@dxos/types';
+import { Outline, Task } from '@dxos/types';
 
 import { Agent, Chat } from '../../../types';
 import PlanningSkill from '../skill';
@@ -25,14 +25,14 @@ EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: PlanningHandlers,
-  types: [Agent.Agent, Outline.Outline, Text.Text, Chat.Chat, Skill.Skill, Feed.Feed],
+  types: [Agent.Agent, Outline.Outline, Task.Task, Text.Text, Chat.Chat, Skill.Skill, Feed.Feed],
   skills: [PlanningSkill.make()],
   disableLlmMemoization: true,
 });
 
 describe('UpdateTasks', () => {
   it.effect(
-    'adds items to the checklist',
+    "adds tasks to the chat's checklist",
     Effect.fnUntraced(
       function* ({ expect }) {
         const agent = yield* Agent.makeInitialized({ name: 'Planner', instructions: 'Test.' }, PlanningSkill.make());
@@ -48,10 +48,8 @@ describe('UpdateTasks', () => {
 
         const chat = yield* Agent.loadChat(agent);
         invariant(chat, 'Agent chat not found.');
-        expect(chat.outline).toBeDefined();
-        const outline = yield* Database.load(chat.outline!);
-        const text = yield* Database.load(outline.content);
-        expect(Outline.parseChecklist(text.content)).toEqual([{ title: 'Hello', done: false }]);
+        const tasks = yield* Chat.loadTasks(chat);
+        expect(tasks.map(({ title, status }) => ({ title, status }))).toEqual([{ title: 'Hello', status: 'todo' }]);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -59,12 +57,12 @@ describe('UpdateTasks', () => {
   );
 
   it.effect(
-    'adds items to the checklist without an agent, and checks off completed ones',
+    'adds tasks without an agent, and completes them in place',
     Effect.fnUntraced(
       function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
         const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
-        expect(chat.outline).toBeUndefined();
+        expect(chat.tasks).toEqual([]);
         const runtime = yield* Effect.context<Database.Service>();
         const binder = new AiContext.Binder({ feed, runtime });
         yield* Effect.promise(() => binder.bind({ objects: [Ref.make(chat)] }));
@@ -72,7 +70,7 @@ describe('UpdateTasks', () => {
         yield* Operation.invoke(UpdateTasks, {
           tasks: [
             { title: 'Hello', status: 'todo' },
-            { title: 'World', status: 'in-progress' },
+            { title: 'World', status: 'started' },
           ],
         }).pipe(Effect.provide(Operation.withInvocationOptions({ conversation: Obj.getURI(feed) })));
 
@@ -80,11 +78,10 @@ describe('UpdateTasks', () => {
           tasks: [{ title: 'Hello', status: 'done' }],
         }).pipe(Effect.provide(Operation.withInvocationOptions({ conversation: Obj.getURI(feed) })));
 
-        const outline = yield* Database.load(chat.outline!);
-        const text = yield* Database.load(outline.content);
-        expect(Outline.parseChecklist(text.content)).toEqual([
-          { title: 'Hello', done: true },
-          { title: 'World', done: false },
+        const tasks = yield* Chat.loadTasks(chat);
+        expect(tasks.map(({ title, status }) => ({ title, status }))).toEqual([
+          { title: 'Hello', status: 'done' },
+          { title: 'World', status: 'started' },
         ]);
       },
       Effect.provide(TestLayer),

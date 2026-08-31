@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
-import { BoardLayout, defaultLayout } from '@dxos/react-ui-board';
+import { BoardLayout, defaultLayout } from '@dxos/react-ui-board/types';
 
 import * as Artifact from './Artifact';
 

@@ -114,10 +114,23 @@ for (const { name, path: pkgPath } of packages) {
 
   // Check imports source paths.
   const pkgImports = pkgJson.imports ?? {};
+  // Prebuild-generated sources (e.g. `dx-plugin gen`'s src/**/gen/ barrels) are gitignored,
+  // so a fresh checkout legitimately lacks them — the moon task graph, not the checkout,
+  // guarantees their existence.
+  const isGeneratedSource = (value) => /\/gen\//.test(value);
   for (const [importPath, importValue] of Object.entries(pkgImports)) {
     if (typeof importValue === 'string') {
+      // A single target answers every condition, so the emitted `.d.ts` and `.mjs` resolve the
+      // alias out of `src/`. Expand it with `pnpm toolbox --lint-package-exports`.
+      if (/\.tsx?$/.test(importValue)) {
+        addDiagnostic(
+          'error',
+          'import-source-only',
+          `import "${importPath}": source-only target "${importValue}" needs "source"/"types"/"default" conditions`,
+        );
+      }
       // Simple string import — skip dist paths (pre-built artifacts).
-      if (!importValue.startsWith('./dist/')) {
+      if (!importValue.startsWith('./dist/') && !isGeneratedSource(importValue)) {
         const srcPath = join(pkgPath, importValue);
         if (!existsSync(srcPath)) {
           addDiagnostic(
@@ -131,7 +144,7 @@ for (const { name, path: pkgPath } of packages) {
       }
     } else if (importValue && typeof importValue === 'object') {
       const { source } = importValue;
-      if (typeof source === 'string') {
+      if (typeof source === 'string' && !isGeneratedSource(source)) {
         const srcPath = join(pkgPath, source);
         if (!existsSync(srcPath)) {
           addDiagnostic(
@@ -145,7 +158,7 @@ for (const { name, path: pkgPath } of packages) {
       } else if (source && typeof source === 'object') {
         // Nested conditions (e.g., { workerd: "...", node: "...", default: "..." }).
         for (const [condition, condValue] of Object.entries(source)) {
-          if (typeof condValue === 'string') {
+          if (typeof condValue === 'string' && !isGeneratedSource(condValue)) {
             const srcPath = join(pkgPath, condValue);
             if (!existsSync(srcPath)) {
               addDiagnostic(
