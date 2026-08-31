@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import {
   type Attributes,
   type Context,
@@ -18,7 +20,7 @@ import { type Resource, defaultResource, resourceFromAttributes } from '@opentel
 import {
   BatchSpanProcessor,
   type ReadableSpan,
-  type Span,
+  type Span as SdkSpan,
   type SpanExporter,
   type SpanProcessor,
 } from '@opentelemetry/sdk-trace-base';
@@ -29,7 +31,7 @@ import { resolveOtlpUrl } from './otel';
  * Sent once per connection to start span export in the worker. Carries the options the
  * producer realm resolved — the worker itself is config-free.
  */
-export type OtelSpanSinkInit = {
+export type Init = {
   type: 'otel-traces-init';
   endpoint: string;
   headers: Record<string, string>;
@@ -38,7 +40,7 @@ export type OtelSpanSinkInit = {
 };
 
 /** One ended, sampled span serialized for the port (structured-cloneable plain data). */
-export type OtelSpanRecord = {
+export type Span = {
   type: 'otel-span';
   name: string;
   kind: SpanKind;
@@ -59,13 +61,13 @@ export type OtelSpanRecord = {
   instrumentationScope: { name: string; version?: string };
 };
 
-export type OtelSpanSinkMessage = OtelSpanSinkInit | OtelSpanRecord;
+export type Message = Init | Span;
 
 /** Producer-side handle posting span records to the worker (see the extension's `telemetryWorker`). */
-export type SpanSinkHandle = { post: (record: OtelSpanRecord) => void };
+export type Handle = { post: (record: Span) => void };
 
 /** Serialize an ended span into plain data the port can clone. */
-export const serializeReadableSpan = (span: ReadableSpan): OtelSpanRecord => {
+export const serializeReadableSpan = (span: ReadableSpan): Span => {
   const spanContext = span.spanContext();
   return {
     type: 'otel-span',
@@ -118,9 +120,9 @@ export const serializeReadableSpan = (span: ReadableSpan): OtelSpanRecord => {
  * its own timers are stalled.
  */
 export class PortSpanProcessor implements SpanProcessor {
-  constructor(private readonly _post: (record: OtelSpanRecord) => void) {}
+  constructor(private readonly _post: (record: Span) => void) {}
 
-  onStart(_span: Span, _parentContext: Context): void {}
+  onStart(_span: SdkSpan, _parentContext: Context): void {}
 
   onEnd(span: ReadableSpan): void {
     // Mirror BatchSpanProcessor: unsampled spans are not exported.
@@ -135,7 +137,7 @@ export class PortSpanProcessor implements SpanProcessor {
   async forceFlush(): Promise<void> {}
 }
 
-export type OtelSpanSinkOptions = {
+export type Options = {
   /** Test seam: replaces the OTLP exporter. */
   exporter?: SpanExporter;
 };
@@ -144,11 +146,11 @@ export type OtelSpanSinkOptions = {
  * Worker-side OTel span pipeline: re-materializes forwarded span records and feeds them to a
  * `BatchSpanProcessor` + OTLP exporter running on the worker's own event loop.
  */
-export class OtelSpanSink {
+export class Sink {
   readonly #resource: Resource;
   readonly #processor: BatchSpanProcessor;
 
-  constructor(init: OtelSpanSinkInit, options: OtelSpanSinkOptions = {}) {
+  constructor(init: Init, options: Options = {}) {
     this.#resource = defaultResource().merge(resourceFromAttributes(init.resourceAttributes));
     this.#processor = new BatchSpanProcessor(
       options.exporter ??
@@ -160,7 +162,7 @@ export class OtelSpanSink {
     );
   }
 
-  append(record: OtelSpanRecord): void {
+  append(record: Span): void {
     this.#processor.onEnd(this.#materialize(record));
   }
 
@@ -172,7 +174,7 @@ export class OtelSpanSink {
     return this.#processor.shutdown();
   }
 
-  #materialize(record: OtelSpanRecord): ReadableSpan {
+  #materialize(record: Span): ReadableSpan {
     const spanContext: SpanContext = {
       traceId: record.traceId,
       spanId: record.spanId,

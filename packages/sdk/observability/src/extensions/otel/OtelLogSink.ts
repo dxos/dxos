@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { type Resource, defaultResource, resourceFromAttributes } from '@opentelemetry/resources';
 import { type LogRecordExporter } from '@opentelemetry/sdk-logs';
 
@@ -14,7 +16,7 @@ import { OtelLogs, convertLevel } from './logs';
  * producer realm resolved (config, env vars, opt-out state) — the worker itself is
  * config-free.
  */
-export type OtelLogSinkInit = {
+export type Init = {
   type: 'otel-init';
   endpoint: string;
   headers: Record<string, string>;
@@ -31,10 +33,7 @@ export type OtelLogSinkInit = {
  * this union — they arrive as bare JSONL strings on the same port, shipped by the log
  * processor.
  */
-export type OtelLogSinkMessage =
-  | OtelLogSinkInit
-  | { type: 'otel-tags'; tags: Record<string, string> }
-  | { type: 'otel-flush' };
+export type Message = Init | { type: 'otel-tags'; tags: Record<string, string> } | { type: 'otel-flush' };
 
 /** Inverse of {@link shortLevelName}, keyed by the letter carried in each record's `l` field. */
 const levelFromShortName = new Map<string, LogLevel>(
@@ -44,7 +43,7 @@ const levelFromShortName = new Map<string, LogLevel>(
   ]),
 );
 
-export type OtelLogSinkOptions = {
+export type Options = {
   /** Test seam: replaces the OTLP exporter. */
   exporter?: LogRecordExporter;
 };
@@ -56,12 +55,12 @@ export type OtelLogSinkOptions = {
  * lines it logged from inside that task were posted synchronously and export in
  * near-real-time (see DX-1224).
  */
-export class OtelLogSink {
+export class Sink {
   readonly #logs: OtelLogs;
   #tags: Record<string, string>;
   readonly #logLevel: LogLevel;
 
-  constructor(init: OtelLogSinkInit, options: OtelLogSinkOptions = {}) {
+  constructor(init: Init, options: Options = {}) {
     this.#tags = { ...init.tags };
     this.#logLevel = init.logLevel;
     this.#logs = new OtelLogs({
@@ -102,7 +101,7 @@ export class OtelLogSink {
     });
   }
 
-  handleMessage(message: Exclude<OtelLogSinkMessage, OtelLogSinkInit>): void {
+  handleMessage(message: Exclude<Message, Init>): void {
     switch (message.type) {
       case 'otel-tags': {
         this.#tags = { ...this.#tags, ...message.tags };

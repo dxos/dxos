@@ -17,14 +17,14 @@ import buildSecrets from '../../cli-observability-secrets.json';
 import { type Extension, type ExtensionApi } from '../../observability-extension';
 import { getOtelLogLevel, isObservabilityDisabled, storeObservabilityDisabled } from '../../storage';
 import { stubExtension } from '../stub';
-import { type OtelLogSinkMessage } from './log-sink';
 import { type OtelMetrics } from './metrics';
-import { type OtelMetricsSinkMessage } from './metrics-sink';
+import type * as OtelLogSink from './OtelLogSink';
+import type * as OtelMetricsSink from './OtelMetricsSink';
+import type * as OtelSpanSink from './OtelSpanSink';
 import { RemoteMetricsForwarder } from './remote-metrics';
-import { type OtelSpanSinkMessage } from './span-sink';
 
 /** Everything the producing realm posts to the telemetry worker's OTel sinks. */
-export type OtelWorkerMessage = OtelLogSinkMessage | OtelMetricsSinkMessage | OtelSpanSinkMessage;
+export type OtelWorkerMessage = OtelLogSink.Message | OtelMetricsSink.Message | OtelSpanSink.Message;
 
 export type ExtensionsOptions = {
   /** For the OTEL, the name of the entity for which signals (metrics or trace) are collected. */
@@ -172,7 +172,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
         resource,
         getTags: () => Object.fromEntries(tags),
         // Sampling, IDs, and propagation stay local; only batching and export move out.
-        spanSink: telemetryWorker ? { post: (record) => telemetryWorker.post(record) } : undefined,
+        spanSink: telemetryWorker ? { post: (record: OtelSpanSink.Span) => telemetryWorker.post(record) } : undefined,
       })
     : undefined;
 

@@ -6,12 +6,12 @@ import { afterEach, describe, expect, test } from 'vitest';
 
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 
-import { type OtelMetricRecord, type OtelMetricsSinkInit } from './metrics-sink';
+import type * as OtelMetricsSink from './OtelMetricsSink';
 import { RemoteMetricsForwarder } from './remote-metrics';
 
 describe('RemoteMetricsForwarder', () => {
   let forwarder: RemoteMetricsForwarder | undefined;
-  const posted: (OtelMetricsSinkInit | OtelMetricRecord)[] = [];
+  const posted: (OtelMetricsSink.Init | OtelMetricsSink.Metric)[] = [];
 
   afterEach(async () => {
     await forwarder?.close();

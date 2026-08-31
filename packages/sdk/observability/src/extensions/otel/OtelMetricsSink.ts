@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { type Attributes } from '@opentelemetry/api';
 import { defaultResource, resourceFromAttributes } from '@opentelemetry/resources';
 import { type PushMetricExporter } from '@opentelemetry/sdk-metrics';
@@ -14,7 +16,7 @@ import { OtelMetrics } from './metrics';
  * metrics resource (no `session.id` — a per-page-load attribute would mint a new time
  * series on every reload).
  */
-export type OtelMetricsSinkInit = {
+export type Init = {
   type: 'otel-metrics-init';
   endpoint: string;
   headers: Record<string, string>;
@@ -23,7 +25,7 @@ export type OtelMetricsSinkInit = {
 };
 
 /** One instrument call forwarded from the producer realm. */
-export type OtelMetricRecord = {
+export type Metric = {
   type: 'otel-metric';
   op: 'increment' | 'distribution' | 'gauge';
   name: string;
@@ -32,9 +34,9 @@ export type OtelMetricRecord = {
   meta?: { unit?: string; description?: string };
 };
 
-export type OtelMetricsSinkMessage = OtelMetricsSinkInit | OtelMetricRecord;
+export type Message = Init | Metric;
 
-export type OtelMetricsSinkOptions = {
+export type Options = {
   /** Test seam: replaces the OTLP exporter. */
   exporter?: PushMetricExporter;
 };
@@ -45,11 +47,11 @@ export type OtelMetricsSinkOptions = {
  * calls are posted synchronously inside the instrumented code, so a realm blocked by a long
  * synchronous task keeps landing datapoints — the export timer here keeps ticking either way.
  */
-export class OtelMetricsSink {
+export class Sink {
   readonly #metrics: OtelMetrics;
   #tags: Record<string, string>;
 
-  constructor(init: OtelMetricsSinkInit, options: OtelMetricsSinkOptions = {}) {
+  constructor(init: Init, options: Options = {}) {
     this.#tags = { ...init.tags };
     this.#metrics = new OtelMetrics({
       endpoint: init.endpoint,
@@ -63,7 +65,7 @@ export class OtelMetricsSink {
     });
   }
 
-  append(record: OtelMetricRecord): void {
+  append(record: Metric): void {
     switch (record.op) {
       case 'increment': {
         this.#metrics.increment(record.name, record.value, record.tags, record.meta);
