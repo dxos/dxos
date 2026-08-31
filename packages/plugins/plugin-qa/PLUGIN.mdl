@@ -171,8 +171,11 @@ type TestRun
   note: >
     The rollup runs over `cases`, not over `results`: a key in `cases` with no result counts as
     `skipped`. Rolling up over `results` alone would seal a run that reported nothing as `passed`.
-    Precedence is failed > blocked > skipped > passed, so `passed` requires every captured case to
-    have reported `passed`.
+    Precedence is failed > blocked > skipped > passed, and an empty `cases` is `skipped` before
+    that precedence is consulted — otherwise a run covering nothing would fall through to
+    `passed`. So `passed` requires a non-empty capture in which every case reported `passed`.
+    `cases` is also the authority for `pushResult`: what the run may report on is what it
+    captured, not what the plan currently holds.
 ```
 
 ## Features
@@ -195,9 +198,10 @@ feat F-2: Record runs
   req F-2.2: A result is pushed per case, incrementally, so a long run is observable while it is
     still going.
   req F-2.3: Finishing a run computes `status` as a rollup over the case keys captured at
-    `startRun` — `failed` if any failed, else `blocked` if any is blocked, else `skipped` if any
-    case went unreported, else `passed` — and stamps `finishedAt`. A run that reported nothing
-    therefore seals as `skipped`, never `passed`.
+    `startRun` — `skipped` if the capture is empty, else `failed` if any failed, else `blocked` if
+    any is blocked, else `skipped` if any case went unreported, else `passed` — and stamps
+    `finishedAt`. A run that covered nothing, or reported nothing, therefore seals as `skipped`;
+    `passed` is reachable only from a non-empty capture in which every case reported `passed`.
   req F-2.4: A run is immutable once finished; a correction is a new run, not an edit.
 
 feat F-3: Evidence
@@ -285,7 +289,8 @@ op startRun
   desc: >
     Appends a `running` TestRun to the plan's feed and returns its id. Captures the plan's case
     keys onto the run, so a later edit to the plan cannot change what this run was measured
-    against. `cases` narrows that capture for a partial run.
+    against. `cases` narrows that capture for a partial run; its keys are validated against the
+    plan here, which is the only point at which the plan has a say in a run's coverage.
   input:
     planId: string
     cases?: string[]           # case keys to cover; defaults to the plan's full case list
@@ -293,6 +298,9 @@ op startRun
     runner?: string
     stages?: string[]
   output: { runId: string, cases: string[] }
+  errors:
+    UnknownCaseError: a requested key is not in the plan
+    DuplicateCaseError: a key appears twice in `cases`, which would double-count it in the rollup
   effects: [echo:write]
 ```
 
@@ -313,7 +321,10 @@ op pushResult
   output: { result: TestResult }
   errors:
     RunFinishedError: the run is already finished and is immutable
-    UnknownCaseError: caseKey is not in the run's plan
+    UnknownCaseError: >
+      caseKey is not in the run's captured `cases`. Validated against the capture, not against
+      the plan's current membership: a `removeCase` mid-run must not reject a result for a case
+      the run is still counting as unreported.
   effects: [echo:write]
 ```
 
@@ -445,25 +456,36 @@ test T-2: A failure dominates a block
   when: results are pushed as failed and blocked
   then: finishRun sets the run status to failed
 
-test T-3: An unreported case cannot seal as passed
+test T-3: A run covering nothing seals as skipped
+  given: a plan with no cases
+  when: a run is started and finished without pushing anything
+  then: the run status is skipped
+  note: the same holds for startRun called with cases: [] on a plan that has cases
+
+test T-4: An unreported case cannot seal as passed
   given: a run started over three cases
   when: one result is pushed as passed and the run is finished
   then: the run status is skipped, and `unreported` names the two cases that never reported
 
-test T-4: A finished run is immutable
+test T-5: A finished run is immutable
   given: a finished run
   when: pushResult is invoked for one of its cases
   then: it fails with RunFinishedError and the run is unchanged
 
-test T-5: Re-generation preserves case identity
+test T-6: Re-generation preserves case identity
   given: a plan whose case QA-1 has results in two past runs
   when: upsertCase is invoked with key QA-1 and a changed title
   then: the same TestCase object is updated, and both past results still resolve to it
 
-test T-6: Artifacts are references, not copies
+test T-7: Artifacts are references, not copies
   given: a Document in the space
   when: a result is pushed with that document as an artifact
   then: the result holds a Ref to the existing object and no new object is created
+
+test T-8: A mid-run plan edit does not reject a captured case
+  given: a run started over cases QA-1 and QA-2
+  when: QA-2 is removed from the plan, then a result for QA-2 is pushed
+  then: the push succeeds — the capture, not the plan, decides what the run may report
 ```
 
 ## QA
