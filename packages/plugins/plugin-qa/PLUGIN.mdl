@@ -506,45 +506,54 @@ test T-8: A mid-run plan edit does not reject a captured case
 ```mdl
 flow QA-1: Record a run against a plan
   actors: both
-  covers: [F-1.1, F-2.1, F-2.2, F-2.3, F-4.1]
+  covers: [F-1.1, F-2.1, F-2.2, F-2.3, F-2.4, F-4.1]
   given:
     - an identity exists
     - collection: a collection in the open space, to create into
     - no TestPlan named "Smoke" exists in the space
   before:
     - name: Create the plan
-      do: In the navtree, click + on a collection and choose QA Plan. Name it "Smoke".
-      invoke: [op:createPlan] { name: "Smoke" }
+      do: In the navtree, click + on a collection and choose Test plan. Name it "Smoke".
+      invoke: [op:createPlan] { name: "Smoke", target: $given.collection.db }
       capture: plan
       expect: a TestPlan named "Smoke" exists and its feed is empty
-      note: Coalesced with the placement below — the created object is live and cannot cross a snippet boundary.
+      note: >
+        createPlan is a factory — it creates the plan in the target database but places nothing, so
+        the placement below is a separate step even though the navtree does both in one gesture.
     - name: Place it in the collection
       do: (no separate gesture — the navtree action places it)
       invoke: org.dxos.operation.space.addObject { object: $plan.plan, target: $given.collection }
       expect: "Smoke" appears as a row under the collection
-    - name: Add a case
-      do: In the plan, click "Add case" and enter key "QA-1", title "It boots".
+    - name: Add the first case
+      do: In the plan, add case "QA-1" / "It boots".
       invoke: [op:setCase] { plan: $plan.plan, key: "QA-1", title: "It boots", steps: [{ do: "Open the app", expect: "the app renders" }] }
       expect: the case list shows one row, QA-1
+    - name: Add the second case
+      do: Add case "QA-2" / "It saves".
+      invoke: [op:setCase] { plan: $plan.plan, key: "QA-2", title: "It saves", steps: [{ do: "Edit and reload", expect: "the edit survives" }] }
+      expect: the case list shows QA-1 and QA-2
+      note: Two cases, so the partial-run rollup in the `test` stage has something to be partial about.
   test:
     - name: Start a run
       do: Click "Run" on the plan.
       invoke: [op:startRun] { plan: $plan.plan, runner: { name: "qa-flow", role: "assistant" } }
       capture: run
-      expect: a run row appears in the feed with status `running`
-      assert: return !!$run.run
-    - name: Push a result
+      expect: a run row appears in the feed with status `running`, tallying 0/2
+      assert: return $run.cases.length === 2
+    - name: Push one result
       do: Mark QA-1 as passed in the run view.
       invoke: [op:pushResult] { run: $run.run, caseKey: "QA-1", status: "passed" }
-      expect: the run row shows 1/1 while still `running`
-    - name: Finish the run
+      expect: the run row shows 1/2 while still `running`
+    - name: Complete the run
       do: Click "Finish" on the run.
       invoke: [op:completeRun] { run: $run.run }
-      expect: the run status becomes `passed` and `finishedAt` is set
+      expect: >
+        the run seals as `skipped`, not `passed` — QA-2 never reported — and `unreported` names it
+      assert: return $result.status === 'skipped' && $result.unreported.includes('QA-2')
     - name: Reject a late push
-      do: Try to mark QA-1 as failed on the finished run.
-      invoke: [op:pushResult] { run: $run.run, caseKey: "QA-1", status: "failed" }
-      expect: the push is rejected with RunFinishedError and the run still reads `passed`
+      do: Try to mark QA-2 as passed on the sealed run.
+      invoke: [op:pushResult] { run: $run.run, caseKey: "QA-2", status: "passed" }
+      expect: the push is rejected because the run is sealed, and the run still reads `skipped`
   after:
     - name: Delete the plan
       do: Right-click "Smoke" in the navtree and choose Delete.
