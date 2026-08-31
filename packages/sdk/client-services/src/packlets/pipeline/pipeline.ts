@@ -376,11 +376,15 @@ export class Pipeline implements PipelineAccessor {
     let lastFeedSetIterator = this._feedSetIterator;
     let iterable = lastFeedSetIterator[Symbol.asyncIterator]();
 
+    // Iteration counter to make a busy loop visible in debug logs.
+    let iteration = 0;
     while (!this._isStopping) {
+      log('consume iteration', { iteration: iteration++ });
       await this._pauseTrigger.wait();
 
       // Iterator might have been changed while we were waiting for the processing to complete.
       if (lastFeedSetIterator !== this._feedSetIterator) {
+        log('consume: iterator changed while paused', { iteration });
         invariant(this._feedSetIterator, 'Iterator not initialized.');
         lastFeedSetIterator = this._feedSetIterator;
         iterable = lastFeedSetIterator[Symbol.asyncIterator]();
@@ -390,6 +394,7 @@ export class Pipeline implements PipelineAccessor {
       const { done, value } = await iterable.next();
       if (!done) {
         const block = value ?? failUndefined();
+        log('consume block', { iteration, feedKey: PublicKey.from(block.feedKey).truncate(), seq: block.seq });
         this._processingTrigger.reset();
         this._timeframeClock.updatePendingTimeframe(PublicKey.from(block.feedKey), block.seq);
         yield block;
@@ -400,14 +405,17 @@ export class Pipeline implements PipelineAccessor {
         // set the iterator running, or the iterator is being swapped by `setCursor`. Polling the
         // finished generator would spin the microtask queue forever (starving the whole thread),
         // so wait for the iterator to (re)start or be replaced, then take a fresh generator.
+        log('consume: generator ended; waiting for iterator restart or swap', { iteration });
         if (lastFeedSetIterator === this._feedSetIterator) {
           await Promise.race([lastFeedSetIterator.waitUntilRunning(), this._iteratorChanged.wait()]);
         }
         invariant(this._feedSetIterator, 'Iterator not initialized.');
         lastFeedSetIterator = this._feedSetIterator;
         iterable = lastFeedSetIterator[Symbol.asyncIterator]();
+        log('consume: resuming with fresh generator', { iteration });
       }
     }
+    log('consume: stopped', { iteration });
 
     // TODO(burdon): Test re-entrant?
     this._isBeingConsumed = false;
