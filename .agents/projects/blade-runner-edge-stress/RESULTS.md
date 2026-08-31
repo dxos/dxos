@@ -15,9 +15,9 @@ Design: [DESIGN.md](./DESIGN.md); ledger: [TASKS.md](./TASKS.md).
   2 spaces, 3 devices and 2 identities — and then failed its final convergence assertion. Every
   earlier stop was a modelling error in the test; those are fixed (§3). What is left is a product
   finding the SDK's own diagnostics corroborate (finding 6).
-- **Caveat on attribution.** The local workers resolve `@dxos/*` from a catalog pinned to
-  `2be9f24c` (2026-08-27), 54 commits behind this branch. Client-process failures are attributable;
-  wire-level ones need a linked stack first. See §6.
+- **Finding 6 is real, not version skew.** The local workers were resolving `@dxos/*` from a
+  catalog pinned 54 commits behind this branch. After `pnpm link-packages ../dxos --all --install`
+  they run this checkout, and run G reproduced run F's failure exactly. See §6.
 
 ## 1. Run book (local EDGE)
 
@@ -81,6 +81,7 @@ generator was fixed.
 | D | `run-b-nopart` | `partitions: false` | 8 | `sync did not quiesce for space 1 within 60000ms` — finding 6 |
 | E | `run-e-second-seed` | `partitions: false` | 8 | `Cannot modify ECHO object property "0"` — replicant bug, fixed |
 | F | `run-e-second-seed` | `partitions: false` | **25** | final assertion: `differentDocuments: 1` after 21 data operations — finding 6 |
+| G | `run-e-second-seed` | `partitions: false`, **linked stack** | **25** | identical failure to F — finding 6 is not version skew |
 
 B, C and D share a seed and drew byte-identical `plan` lines across three intervening changes to
 the executor — the generator depends on the seed and nothing else. The seed fixes the sequence,
@@ -214,6 +215,26 @@ EditCounter(0,1,1) EditText(0,0,1,0)
    quiesced. Nothing is missing in either direction — this is a merge that never reconciles, not a
    transfer that never starts.
 
+   Repeating that run against a **linked** stack (run G, §6) reproduced it exactly — same seed,
+   same plan, same failure, same counts — so it is not version skew. On the linked run the SDK
+   names the state outright, once per peer:
+
+   ```
+   AutomergeHost#0 diverged document has no subduction retry path {
+     collectionId: 'space:BPHSYTOHOZWN4DZ2TYRFT7R5ZQRUD3BWM:2fnoNshSGe5fBLb88rgqXHQXU1Cf',
+     peerId: 'subduction-replicator:BPHSYTOHOZWN4DZ2TYRFT7R5ZQRUD3BWM-0b89e5f1-…',
+     documentId: '2TeamFZEx3bdeDagdCjWkpGhSMM2',
+     sedimentreeId: '68c1e9f52eb94567b5a896576c3e6689…'
+   }
+   ```
+
+   "No retry path" is the point: this is terminal, not slow. Both sides know the document differs
+   and neither has a mechanism to reconcile it, which is why waiting does not help.
+
+   Nor is it a deleted document being counted as different — the plan for this seed puts both
+   `DeleteDocument`s in space 1, and the failure is in space 0, which has four documents and no
+   deletions.
+
    So discovery works and **content transfer does not** — which rules out the collection-membership
    hypothesis the wire logs first suggested. Worth checking against, but not obviously the cause:
    the edge db-service's subduction decoder
@@ -278,21 +299,31 @@ Setup against dev is fast: identity minted and space created in **4.9 s**, again
   `LocalClientServices` constructor, not from `data_root`, despite what its own error message says.
   Verified: `index.sqlite` now appears on disk where nothing did before.
 
-## 6. What these runs do and do not prove
+## 6. Linking the stack (run G)
 
-The EDGE workers resolve `@dxos/*` from the edge repo's `dxos` catalog, pinned to
-`2be9f24c` (2026-08-27) — 54 commits behind this branch, and the range touches `core/echo`,
-`core/mesh` and `sdk/client-services`. So:
+`pnpm link-packages ../dxos --all --install` in the edge repo replaces the `dxos` catalog with 327
+`file:` packs built from this checkout, so client and workers run the same code. Notes:
 
-- **Attributable to this checkout:** everything on the client side — the generator, the model, the
-  replicant, and findings 2, 4 and 5, all of which are client-process failures with client stack
-  traces.
-- **Needs a linked stack before filing upstream:** findings 6 and 7, which are about what does or
-  does not cross the wire. Run `pnpm link-packages ../dxos --all --install` in the edge repo, then
-  repeat run D — the seed makes the plan identical, so the comparison is exact. Note that finding
-  6's mechanism (content never transferred for a document both sides agree is missing) is not
-  explained by the skew, so a linked run is expected to confirm it rather than dissolve it.
+- The install takes ~50 min in this container (326 `pnpm pack` invocations, then a full resolve).
+- `operation-service` cannot be started afterwards: it imports seven `@dxos/plugin-*` subpaths
+  (`@dxos/plugin-inbox/InboxPlugin` and friends) that the packs do not expose, and esbuild fails the
+  whole group. Drop it from the config list — the stress test does not use it.
+- Everything else starts clean, with zero unresolved imports.
 
-The local stack is also not durable: wrangler died mid-run once, with an empty `✘ [ERROR]`, taking
-every worker with it. A run that stalls with every replicant timing out at once should be checked
-against `curl localhost:8787` before it is read as a product defect.
+**Result: run G reproduced run F exactly.** Same seed, same 25-command plan, all 25 executed, and
+the same failure with the same numbers:
+
+```
+sync did not quiesce for space 0 within 60000ms:
+  client 0 {"connected":true,"missingOnLocal":0,"missingOnRemote":0,"differentDocuments":1,"localDocumentCount":5}
+  client 1 {"connected":true,"missingOnLocal":0,"missingOnRemote":0,"differentDocuments":1,"localDocumentCount":5}
+```
+
+So finding 6 stands on its own: it is a convergence defect, not a consequence of running a client
+against older workers. The `subduction: unexpected inbound frame type { type: 'collection-state' }`
+warning also persists with matched versions, confirming it is an edge-side gap in db-service's
+frame decoder rather than skew.
+
+**Cleanup worked here**: `{"event":"cleanup","spaces":2,"accepted":4,"refused":[]}` — the self-serve
+path deleted both spaces and both identities with no admin key. The 403s in §4b are specific to the
+deployed environment's Hub-account gate, not to the mechanism.
