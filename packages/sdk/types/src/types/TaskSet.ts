@@ -62,10 +62,9 @@ export const addTask = (
   title: string,
   props: Partial<Omit<Obj.MakeProps<typeof Task.Task>, 'title'>> = {},
 ): Task.Task => {
-  const task = db.add(Task.make({ title: title.trim(), status: 'todo', ...props }));
-  Obj.setParent(task, taskSet);
+  const task = Task.make({ [Obj.Parent]: taskSet, title: title.trim(), status: 'todo', ...props });
   Obj.update(taskSet, (taskSet) => {
-    taskSet.tasks = [...taskSet.tasks, Ref.make(task)];
+    taskSet.tasks.push(Ref.make(task));
   });
   return task;
 };
