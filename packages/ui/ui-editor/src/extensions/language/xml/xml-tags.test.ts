@@ -331,6 +331,48 @@ describe('xmlTags decorations', () => {
       expect(await rebuild(view)).toEqual([]);
       view.destroy();
     });
+
+    // The first-document-render path: no rebuild effect, no edit — decorations must appear from
+    // `create()` plus the parse-completion listener alone.
+    test('block and inline widgets build on first mount without a rebuild effect', async ({ expect }) => {
+      const doc = '# Title\n\nsee [x](dxn:123)\n\n![label](dxn:456)\n';
+      const view = createView(doc, { registry });
+      // Allow background parsing and the parse-completion microtask to run.
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      await flush();
+      const decorations = xmlDecorations(view);
+      expect(decorations.some((decoration) => !decoration.block)).toBe(true);
+      expect(decorations.some((decoration) => decoration.block)).toBe(true);
+      view.destroy();
+    });
+
+    // The Component (StubWidget) branch the app registry uses — asserts the portal host mounts too.
+    test('component-backed block widget builds and mounts on first render', async ({ expect }) => {
+      const doc = '# Title\n\nsee [x](echo:/123)\n\n![label](echo:/456)\n';
+      let widgets: XmlWidgetState[] = [];
+      const componentRegistry: NonNullable<Parameters<typeof xmlTags>[0]>['registry'] = {
+        'dxn-preview': {
+          block: true,
+          urlSchemes: ['dxn:', 'echo:'],
+          Component: () => null,
+        },
+        'link-preview': {
+          block: false,
+          urlSchemes: ['dxn:', 'echo:'],
+          factory: ({ label, dxn }: any) => (label && dxn ? new TestWidget({ id: `${label}`, label, dxn }) : null),
+        },
+      };
+      const view = createView(doc, { registry: componentRegistry, setWidgets: (next) => (widgets = next) });
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      await flush();
+      const decorations = xmlDecorations(view);
+      expect(decorations.some((decoration) => decoration.block)).toBe(true);
+      expect(widgets.map((widget) => widget.id)).toContain('cm-url-echo:/456-0');
+      // DOM attachment is not asserted: happy-dom lays out no viewport, so CM defers drawing the
+      // block host here; the storybook `MarkdownEditor — WithEmbed` story covers the drawn path.
+      expect(widgets[0]?.root).toBeInstanceOf(HTMLElement);
+      view.destroy();
+    });
   });
 
   describe('effects', () => {

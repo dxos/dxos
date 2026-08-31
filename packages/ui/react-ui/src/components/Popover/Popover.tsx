@@ -3,6 +3,7 @@
 //
 
 // This is based upon `@radix-ui/react-popover` fetched Oct 25, 2024 at https://github.com/radix-ui/primitives at commit 374c7d7.
+// https://github.com/radix-ui/primitives/tree/main/packages/react/popover
 
 import { composeEventHandlers } from '@radix-ui/primitive';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';

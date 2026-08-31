@@ -5,6 +5,7 @@
 import { type EditorState, type Extension } from '@codemirror/state';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, {
+  Suspense,
   type PropsWithChildren,
   forwardRef,
   useCallback,
@@ -176,7 +177,17 @@ const EditorBlocks = () => {
   return (
     <>
       {widgets.map(({ id, root, Component, props }) => (
-        <div key={id}>{createPortal(<Component {...props} />, root)}</div>
+        <div key={id} data-testid='editor.blocks.portal'>
+          {/* Per-portal boundary: a block that suspends (capability wait, lazy surface module) must
+              not hold the surrounding editor tree un-committed — that made embeds invisible until
+              a view-mode toggle rebuilt everything. */}
+          {createPortal(
+            <Suspense fallback={null}>
+              <Component {...props} />
+            </Suspense>,
+            root,
+          )}
+        </div>
       ))}
     </>
   );

@@ -61,7 +61,7 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
                 </Editor.Root>
               )}
             </MarkdownEditorProvider>
-            {/* <Fade /> */}
+            <Fade />
           </Card.Row>
         </Card.Section>
       )}
@@ -79,8 +79,8 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
 const Fade = () => (
   <div
     className={mx(
-      'z-10 absolute bottom-0 inset-x-0 h-6 w-full',
-      'bg-gradient-to-b from-transparent to-(--surface-bg) pointer-events-none',
+      'z-10 absolute bottom-0 inset-x-0 h-8',
+      'bg-gradient-to-b from-transparent to-input-surface pointer-events-none',
     )}
   />
 );

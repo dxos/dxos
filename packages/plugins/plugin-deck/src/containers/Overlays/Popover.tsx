@@ -20,7 +20,7 @@ import {
 } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
 import { Menu } from '@dxos/react-ui-menu';
-import { getStyles, mx } from '@dxos/ui-theme';
+import { getStyles } from '@dxos/ui-theme';
 
 import { useDeckState } from '#hooks';
 import { meta } from '#meta';
@@ -116,6 +116,20 @@ export const PopoverContent = () => {
       if (event.type === 'dismissableLayer.focusOutside') {
         event.preventDefault();
         return;
+      }
+      // A pointer-down inside a PORTALED layer spawned from the card (its ⋮ menu, a select) is not
+      // "outside" either — Radix's own nested-layer coordination cannot be relied on here because
+      // the workspace resolves several copies of react-dismissable-layer (vendored popover + menu
+      // forks), whose module-level layer registries are disjoint.
+      if ('detail' in event && typeof event.detail === 'object' && event.detail !== null) {
+        const target = event.detail.originalEvent.target;
+        if (
+          target instanceof Element &&
+          target.closest('[data-radix-popper-content-wrapper], [data-radix-menu-content]')
+        ) {
+          event.preventDefault();
+          return;
+        }
       }
       handleClose();
     },
