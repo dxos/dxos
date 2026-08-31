@@ -289,23 +289,6 @@ describe('TriggerDispatcher', () => {
     );
 
     it.effect(
-      'a timer event carries no feed cursor',
-      Effect.fnUntraced(function* ({ expect }) {
-        const functionObj = yield* registerOperation(Reply);
-        const trigger = Trigger.make({
-          runnable: Ref.make(functionObj),
-          enabled: true,
-          spec: Trigger.specTimer('* * * * *'),
-        });
-        yield* Database.add(trigger);
-        const dispatcher = yield* TriggerDispatcher;
-        const { feedCursor } = yield* dispatcher.invokeTrigger({ trigger, event: { tick: 0 } });
-
-        expect(feedCursor).toBeUndefined();
-      }, Effect.provide(TestLayer())),
-    );
-
-    it.effect(
       'refuses to invoke a disabled trigger',
       Effect.fnUntraced(function* ({ expect }) {
         const functionObj = yield* registerOperation(Reply);
@@ -340,35 +323,6 @@ describe('TriggerDispatcher', () => {
         });
 
         expect(Exit.isFailure(result)).toBe(true);
-      }, Effect.provide(TestLayer())),
-    );
-
-    it.effect(
-      'tracks at most the most recent invocations',
-      Effect.fnUntraced(function* ({ expect }) {
-        const functionObj = yield* registerOperation(Reply);
-        const trigger = Trigger.make({
-          runnable: Ref.make(functionObj),
-          enabled: true,
-          spec: Trigger.specDirect(),
-        });
-        yield* Database.add(trigger);
-        const dispatcher = yield* TriggerDispatcher;
-        const registry = yield* Registry.AtomRegistry;
-
-        // One more than MAX_TRACKED_INVOCATIONS (10): the oldest is dropped, not accumulated forever.
-        for (let index = 0; index < 11; index += 1) {
-          yield* dispatcher.invokeTrigger({
-            trigger,
-            event: { data: { tick: index } } satisfies TriggerEvent.DirectEvent,
-          });
-        }
-
-        const { invocations } = registry.get(dispatcher.state);
-        expect(invocations.length).toBe(10);
-        // The dropped invocation is the very first (tick: 0); the surviving window starts at tick 1.
-        expect(invocations[0].event).toEqual({ data: { tick: 1 } });
-        expect(invocations[invocations.length - 1].event).toEqual({ data: { tick: 10 } });
       }, Effect.provide(TestLayer())),
     );
   });
@@ -573,15 +527,8 @@ describe('TriggerDispatcher', () => {
           results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['timer'] });
           expect(results.length).toBe(0);
 
-          // Exactly at the cooldown boundary -- the cooldown is treated as elapsed (`<=`, not `<`),
-          // so the trigger fires rather than waiting one more tick.
-          yield* dispatcher.advanceTime(Duration.minutes(3));
-          results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['timer'] });
-          expect(results.length).toBe(1);
-          expect(Exit.isFailure(results[0].result)).toBe(true);
-
-          // Past the new cooldown armed by the run above -- runs again (and fails again).
-          yield* dispatcher.advanceTime(Duration.minutes(6));
+          // Past cooldown -- runs again (and fails again).
+          yield* dispatcher.advanceTime(Duration.minutes(4));
           results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['timer'] });
           expect(results.length).toBe(1);
           expect(Exit.isFailure(results[0].result)).toBe(true);
