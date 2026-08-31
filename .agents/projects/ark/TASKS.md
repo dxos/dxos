@@ -56,7 +56,8 @@ Tracked 2026-08-31. The rebuild decoupled `Tree` from `Treegrid` entirely — `T
       nothing (no disclosure to model) and `AtprotoCompanion` is a flat table that wants a grid.
 - [ ] **Scope the `ObjectsTree` → `Tree` migration** — the only genuine candidate, but it is a
       rewrite onto the `TreeModel` atom-family contract, not a swap.
-- [ ] Drop the stale `Treegrid` mention in `react-ui-list/src/hooks/useListNavigation.ts:100`.
+- [x] Drop the stale `Treegrid` mention in `react-ui-list/src/hooks/useListNavigation.ts:100` — now
+      reads `Tree (Ark TreeView machine)`.
 
 ## Phase 4: Deferred — wider Ark adoption
 
