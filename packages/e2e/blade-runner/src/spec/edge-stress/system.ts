@@ -48,6 +48,12 @@ export type EdgeStressSpec = {
   /** Draw `GoOffline`/`GoOnline`/`Restart`. Off isolates convergence from partition tolerance. */
   partitions: boolean;
   /**
+   * Replay this plan instead of drawing one: a `command-trace.jsonl` from an earlier run, or any
+   * file whose last `plan` entry carries a `plan` array. Turns a counterexample into a fixture —
+   * and lets one be shrunk by hand, since a sampled sequence has no fast-check shrinker.
+   */
+  planFile?: string;
+  /**
    * Delete the spaces and identities the run created. A no-op without `DX_HUB_API_KEY`, so it is
    * safe to leave on for local EDGE, where the state is ephemeral anyway.
    */

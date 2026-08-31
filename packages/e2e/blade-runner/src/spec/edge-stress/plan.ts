@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Schema } from 'effect';
 import { FastCheck } from 'effect/testing';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -12,7 +13,16 @@ import { log } from '@dxos/log';
 import { type SchedulerEnvImpl } from '../../env';
 import { type ReplicantBrain, type ReplicantsSummary, type TestPlan, type TestProps } from '../../plan';
 import { ClientReplicant } from '../../replicants/client-replicant';
-import { type Command, canRun, describe, execute, makeCommandArbitrary, mutatesData, simulate } from './commands';
+import {
+  type Command,
+  canRun,
+  describe,
+  execute,
+  makeCommandArbitrary,
+  makeCommandSchema,
+  mutatesData,
+  simulate,
+} from './commands';
 import { type Model, makeFleetModel } from './model';
 import {
   type EdgeStressResult,
@@ -79,7 +89,8 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
     // Decided before a single process exists: the fleet model is pure, so the sequence is a
     // function of the seed alone and the recorded plan is exactly what will run.
     const plan = this._drawPlan(params, limits, clientCount);
-    trace({ event: 'plan', seed: params.randomSeed, commands: plan.map(describe) });
+    // Both forms: `commands` for a human reading the trace, `plan` for `planFile` to replay.
+    trace({ event: 'plan', seed: params.randomSeed, commands: plan.map(describe), plan });
 
     const setupBegin = Date.now();
     const { replicants, model, identityDids } = await this._setupFleet(env, params, limits);
@@ -143,6 +154,25 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
    */
   private _drawPlan(params: TestProps<EdgeStressSpec>, limits: Model['limits'], clientCount: number): Command[] {
     const spec = params.spec;
+    const commandSchema = makeCommandSchema({
+      clients: clientCount,
+      spaces: spec.maxSpaces,
+      documents: spec.maxDocumentsPerSpace,
+    });
+
+    if (spec.planFile) {
+      const plan = readPlanFile(spec.planFile).map((entry) => Schema.decodeUnknownSync(commandSchema)(entry));
+      // Simulated against the same starting model the run will use, so an edited plan reports a
+      // command that cannot run rather than being quietly truncated at execution time.
+      const executable = simulate(plan, makeFleetModel({ devicesPerIdentity: spec.devicesPerIdentity, limits }));
+      invariant(
+        executable.length === plan.length,
+        `plan is not executable from the initial state: ${plan.length - executable.length} of ${plan.length} commands cannot run`,
+      );
+      log.info('replaying a fixed plan', { planFile: spec.planFile, commands: plan.length });
+      return plan;
+    }
+
     const command = makeCommandArbitrary({
       clients: clientCount,
       spaces: spec.maxSpaces,
@@ -229,6 +259,27 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
     return result;
   }
 }
+
+/**
+ * The plan recorded in a trace file, or a bare JSON array of commands.
+ *
+ * Reading the *last* `plan` entry matters: a trace is opened with `flags: 'a'`, so a directory
+ * reused across runs holds every plan it ever ran, and the last one is the one that failed.
+ */
+const readPlanFile = (planFile: string): unknown[] => {
+  const contents = fs.readFileSync(planFile, 'utf8').trim();
+  if (contents.startsWith('[')) {
+    return JSON.parse(contents) as unknown[];
+  }
+  const plans = contents
+    .split('\n')
+    .map((line) => JSON.parse(line) as { event?: string; plan?: unknown[] })
+    .filter((entry) => entry.event === 'plan' && Array.isArray(entry.plan));
+  invariant(plans.length > 0, `no plan entry in ${planFile}`);
+  const plan = plans[plans.length - 1].plan;
+  invariant(plan, 'plan entry has no commands');
+  return plan;
+};
 
 /**
  * fast-check seeds are numeric; the harness's seed is a hex string, so fold it into 32 bits. The

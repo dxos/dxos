@@ -1,0 +1,19 @@
+# Minimal candidate reproduction of RESULTS.md finding 6: two devices of one identity edit the
+# same document concurrently, in a space owned by a second identity.
+#
+#   GRAVITY_OUT_BASE=$PWD node --import tsx src/main.ts edgeStress --no-browser \
+#     -s configs/edge-stress-finding-6.yml
+platform: nodejs
+edgeUrl: http://localhost:8787
+devicesPerIdentity: [2, 1]
+agents: false
+maxSpaces: 1
+maxDocumentsPerSpace: 1
+maxCommands: 5
+sampleDraws: 1
+maxRuntimeMs: 600000
+quiescenceTimeoutMs: 60000
+checkpoints: false
+partitions: false
+cleanup: true
+planFile: configs/plans/finding-6-candidate.json

@@ -1,0 +1,7 @@
+[
+  { "_tag": "CreateSpace", "client": 2 },
+  { "_tag": "CreateDocument", "client": 2, "space": 0 },
+  { "_tag": "EditText", "client": 0, "space": 0, "document": 0, "position": 0.5 },
+  { "_tag": "EditText", "client": 1, "space": 0, "document": 0, "position": 0.5 },
+  { "_tag": "EditCounter", "client": 0, "space": 0, "document": 0 }
+]

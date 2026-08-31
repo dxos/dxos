@@ -274,6 +274,43 @@ fixed or characterised; the probe itself failed and its space and identity are s
 Setup against dev is fast: identity minted and space created in **4.9 s**, against 15–21 s for a
 3-client fleet locally.
 
+## 4c. Minimal reproduction, and a sharper finding (run H)
+
+`spec.planFile` replays a recorded plan instead of drawing one — the plan trace entry now carries
+the commands structurally as well as readably, and a replayed plan is simulated before execution so
+an edited one reports which command cannot run. That turns a counterexample into a fixture, which
+is what a sampled sequence otherwise lacks: there is no fast-check shrinker to lean on.
+
+Hand-shrinking run F/G's 25-command plan to five commands
+(`configs/plans/finding-6-candidate.json`, `configs/edge-stress-finding-6.yml`):
+
+```
+CreateSpace(2)  CreateDocument(2, 0)  EditText(0, 0, 0, 0.5)  EditText(1, 0, 0, 0.5)  EditCounter(0, 0, 0)
+```
+
+Two devices of one identity insert at the same offset of the same document, in a space owned by a
+second identity. All three replicants logged `diverged document has no subduction retry path`, and
+the final assertion failed — but on a **different mode** than run F/G, and a worse one:
+
+```
+client 0 diverged from the model on space 0:
+  model:  [["s0-d0",["⟦c0-1⟧","⟦c1-2⟧"],[1,0,0]]]
+  client: [["s0-d0",["⟦c0⟦c1-2⟧"],[1,0,0]]]
+```
+
+The peers **converged, to a corrupted value**: client 1's token was spliced into the middle of
+client 0's, so `⟦c0-1⟧` and `⟦c1-2⟧` merged into `⟦c0⟦c1-2⟧-1⟧`. Two concurrent inserts at the same
+index interleaved character by character — the anomaly Automerge's sequence CRDT is specifically
+designed to prevent. The counters on the same document are correct (`[1,0,0]`), so this is the text
+path alone.
+
+Caveats, both worth closing before this is filed:
+
+- The digest extracts tokens with `/⟦[^⟧]*⟧/g`, so `⟦c0⟦c1-2⟧` is what the regex made of the merged
+  content, not the content itself. Capture the raw string to confirm the exact interleaving.
+- Run F/G failed with `differentDocuments: 1` and never converged; run H converged to the wrong
+  value. They may share a root cause but that is not established.
+
 ## 5. Harness gaps found
 
 - `blade-runner:build` is a no-op, so the documented entry point does not exist.
