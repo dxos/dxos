@@ -54,6 +54,12 @@ export type SyncSummary = {
 export type DocumentDigest = {
   tokens: string[];
   counters: number[];
+  /**
+   * The raw text, for diagnostics only — never compared. The model cannot predict merge order, so
+   * equality is decided on `tokens`; but when that fails, the tokens are already the regex's view
+   * of the text and the text itself is what says what actually happened.
+   */
+  content: string;
 };
 
 export type SpaceDigest = {
@@ -467,6 +473,7 @@ export class ClientReplicant {
       docs[object.docId] = {
         tokens: (object.content?.match(/⟦[^⟧]*⟧/g) ?? []).sort(),
         counters: [...object.counters],
+        content: object.content ?? '',
       };
     }
     return { docs };

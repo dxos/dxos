@@ -156,6 +156,8 @@ export const expectedDigest = (model: Model, spaceSlot: number): SpaceDigest => 
     docs[documentId(spaceSlot, slot)] = {
       tokens: [...document.tokens].sort(),
       counters: model.clients.map((_, client) => document.counters.get(client) ?? 0),
+      // The model has no text, only the set of tokens; `canonical` drops this, so it never compares.
+      content: '',
     };
   });
   return { docs };

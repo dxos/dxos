@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { sleep } from '@dxos/async';
+import { asyncTimeout, sleep } from '@dxos/async';
 import { log } from '@dxos/log';
 
 import { type Platform, type ReplicantBrain } from '../../plan';
@@ -71,6 +71,9 @@ export type EdgeStressResult = {
   runTimeMs: number;
 };
 
+/** A read from a healthy peer answers in milliseconds; this is a hang detector, not a wait. */
+const CALL_BUDGET_MS = 30_000;
+
 //
 // The live fleet.
 //
@@ -93,6 +96,17 @@ export type Real = {
   counters: { commands: number; documents: number };
 };
 
+/**
+ * Bound one call to a replicant.
+ *
+ * RPC to a replicant is created with `timeout: 0`, and the scheduler only rescues the run when a
+ * replicant *dies* — a peer that is alive but stuck inside `flush` or a query hangs the orchestrator
+ * for as long as the run lasts, with no diagnosis. Every assertion-side call gets a deadline, so
+ * that becomes a named failure against a named peer.
+ */
+const withDeadline = <T>(label: string, budgetMs: number, call: Promise<T>): Promise<T> =>
+  asyncTimeout(call, budgetMs, new Error(`replicant call did not return within ${budgetMs}ms: ${label}`));
+
 /** Sentinel: the time budget ran out, which ends the sequence normally rather than failing it. */
 export class BudgetExhausted extends Error {}
 
@@ -109,7 +123,11 @@ export const devicesHoldingSpace = async (
   const held = await Promise.all(
     clients.map(async (client) => ({
       client,
-      has: await real.replicants[client].brain.hasSpace({ spaceId: real.spaceIds[spaceSlot] }),
+      has: await withDeadline(
+        `hasSpace(client ${client}, space ${spaceSlot})`,
+        CALL_BUDGET_MS,
+        real.replicants[client].brain.hasSpace({ spaceId: real.spaceIds[spaceSlot] }),
+      ),
     })),
   );
   return held.filter(({ has }) => has).map(({ client }) => client);
@@ -153,13 +171,21 @@ export const quiesce = async (real: Real, spaceSlot: number, clients: ClientInde
   const pending = new Map<ClientIndex, string>();
 
   for (const client of clients) {
-    await real.replicants[client].brain.flush({ spaceId: real.spaceIds[spaceSlot] });
+    await withDeadline(
+      `flush(client ${client}, space ${spaceSlot})`,
+      real.spec.quiescenceTimeoutMs,
+      real.replicants[client].brain.flush({ spaceId: real.spaceIds[spaceSlot] }),
+    );
   }
 
   while (Date.now() < deadline) {
     pending.clear();
     for (const client of clients) {
-      const state = await real.replicants[client].brain.getSyncState({ spaceId: real.spaceIds[spaceSlot] });
+      const state = await withDeadline(
+        `getSyncState(client ${client}, space ${spaceSlot})`,
+        CALL_BUDGET_MS,
+        real.replicants[client].brain.getSyncState({ spaceId: real.spaceIds[spaceSlot] }),
+      );
       if (
         !state.connected ||
         state.missingOnLocal !== 0 ||
@@ -306,8 +332,13 @@ export const assertEqualsModel = (model: Model, spaceSlot: number, client: Clien
   const expected = canonical(expectedDigest(model, spaceSlot));
   const actual = canonical(digest);
   if (expected !== actual) {
+    // The raw text goes in the message: `tokens` is a regex's view of it, and when a merge splices
+    // one token into another the regex output is not what the document actually holds.
+    const raw = Object.entries(digest.docs)
+      .map(([docId, doc]) => `    ${docId}: ${JSON.stringify(doc.content)}`)
+      .join('\n');
     throw new Error(
-      `client ${client} diverged from the model on space ${spaceSlot}:\n  model:  ${expected}\n  client: ${actual}`,
+      `client ${client} diverged from the model on space ${spaceSlot}:\n  model:  ${expected}\n  client: ${actual}\n  raw:\n${raw}`,
     );
   }
 };
@@ -350,7 +381,11 @@ export const runCheckpoint = async (model: Model, real: Real): Promise<void> => 
       const digests = await Promise.all(
         devices.map(async (client) => ({
           client,
-          digest: await real.replicants[client].brain.digest({ spaceId: real.spaceIds[slot] }),
+          digest: await withDeadline(
+            `digest(client ${client}, space ${slot})`,
+            CALL_BUDGET_MS,
+            real.replicants[client].brain.digest({ spaceId: real.spaceIds[slot] }),
+          ),
         })),
       );
       assertDigestsAgree(digests, slot);
@@ -386,7 +421,11 @@ export const assertFullyReplicated = async (model: Model, real: Real): Promise<v
     await quiesce(real, slot, devices);
     await untilConverged(real, async () => {
       for (const client of devices) {
-        const digest = await real.replicants[client].brain.digest({ spaceId: real.spaceIds[slot] });
+        const digest = await withDeadline(
+          `digest(client ${client}, space ${slot})`,
+          CALL_BUDGET_MS,
+          real.replicants[client].brain.digest({ spaceId: real.spaceIds[slot] }),
+        );
         assertEqualsModel(model, slot, client, digest);
       }
     });

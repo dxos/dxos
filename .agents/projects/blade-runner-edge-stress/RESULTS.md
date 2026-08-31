@@ -289,8 +289,13 @@ CreateSpace(2)  CreateDocument(2, 0)  EditText(0, 0, 0, 0.5)  EditText(1, 0, 0, 
 ```
 
 Two devices of one identity insert at the same offset of the same document, in a space owned by a
-second identity. All three replicants logged `diverged document has no subduction retry path`, and
-the final assertion failed — but on a **different mode** than run F/G, and a worse one:
+second identity.
+
+**This plan fails intermittently, not every time** — a rerun of the identical plan (run J) passed,
+executing all five commands with the final assertion green in 12.5 s. So what follows is a race, not
+a property of the sequence; §4d has the measured rate. On the run that failed, all three replicants
+logged `diverged document has no subduction retry path`, and the final assertion failed on a
+**different mode** than run F/G, and a worse one:
 
 ```
 client 0 diverged from the model on space 0:
@@ -304,12 +309,22 @@ index interleaved character by character — the anomaly Automerge's sequence CR
 designed to prevent. The counters on the same document are correct (`[1,0,0]`), so this is the text
 path alone.
 
-Caveats, both worth closing before this is filed:
+Caveats, all worth closing before this is filed:
 
 - The digest extracts tokens with `/⟦[^⟧]*⟧/g`, so `⟦c0⟦c1-2⟧` is what the regex made of the merged
-  content, not the content itself. Capture the raw string to confirm the exact interleaving.
+  content, not the content itself. `digest` now also returns the raw string and `assertEqualsModel`
+  prints it, so the next failing run shows the exact interleaving — but it has not been captured yet.
 - Run F/G failed with `differentDocuments: 1` and never converged; run H converged to the wrong
   value. They may share a root cause but that is not established.
+- It is intermittent (above), so a fix cannot be validated by one green run.
+
+### An assertion against a stuck peer hung the run
+
+Runs I and J sat in the final assertion for over fifteen minutes with no output. RPC to a replicant
+is created with `timeout: 0`, and the scheduler only rescues the run when a replicant *dies* — a
+peer alive but stuck inside `flush` or a query hangs the orchestrator indefinitely, with nothing to
+diagnose from. Every assertion-side call (`hasSpace`, `flush`, `getSyncState`, `digest`) now carries
+a deadline naming the peer and the call. It has not fired yet, so it is in but unproven.
 
 ## 5. Harness gaps found
 
