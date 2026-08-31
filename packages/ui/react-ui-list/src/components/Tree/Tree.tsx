@@ -240,7 +240,7 @@ export const Tree = <T extends { id: string } = any>({
     return Date.now() - at < MODIFIER_WINDOW ? { option, shift } : { option: false, shift: false };
   }, []);
 
-  const selectNode = useCallback(
+  const onSelectNode = useCallback(
     (node: TreeNodeEntry<T>, modifiers: { option: boolean; shift: boolean }) => {
       // A branch that is already current, or an option-activation, toggles instead of selecting.
       if (node.branch && (modifiers.option || node.current)) {
@@ -253,10 +253,10 @@ export const Tree = <T extends { id: string } = any>({
   );
 
   // Values whose branch content is running its conceal animation; the model close commits when the
-  // animation finishes (the machine hides content the instant the controlled value shrinks, so an
-  // animated exit has to precede the commit).
+  // animation finishes (the machine hides content the instant the controlled value shrinks,
+  // so an animated exit has to precede the commit).
   const [closingValues, setClosingValues] = useState<ReadonlySet<string>>(() => new Set());
-  const commitClose = useCallback(
+  const onCommitClose = useCallback(
     (node: TreeNodeEntry) => {
       onOpenChange?.({ item: node.item, path: node.path, open: false });
       setClosingValues((previous) => {
@@ -302,10 +302,10 @@ export const Tree = <T extends { id: string } = any>({
           : selectedValue.find((candidate) => !previous.has(candidate));
       const entry = value ? byValue.get(value) : undefined;
       if (entry) {
-        selectNode(entry, recentModifiers());
+        onSelectNode(entry, recentModifiers());
       }
     },
-    [selected, byValue, selectNode, recentModifiers],
+    [selected, byValue, onSelectNode, recentModifiers],
   );
 
   // Flipped after the first commit: branch content inserted during the initial paint (persisted
@@ -323,21 +323,21 @@ export const Tree = <T extends { id: string } = any>({
       canDrop,
       onOpenChange,
       onItemHover,
-      selectNode,
-      mountedRef,
+      selectNode: onSelectNode,
       closingValues,
-      commitClose,
+      commitClose: onCommitClose,
+      mountedRef,
     }),
     [
       draggable,
       renderColumns,
       blockInstruction,
       canDrop,
+      onSelectNode,
+      closingValues,
       onOpenChange,
       onItemHover,
-      selectNode,
-      closingValues,
-      commitClose,
+      onCommitClose,
     ],
   );
 
@@ -521,7 +521,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
   const isItemDroppable = props.droppable !== false;
   const shouldSeedNativeDragData = typeof document !== 'undefined' && document.body.hasAttribute('data-platform');
 
-  const cancelExpand = useCallback(() => {
+  const onCancelExpand = useCallback(() => {
     if (cancelExpandRef.current) {
       clearTimeout(cancelExpandRef.current);
       cancelExpandRef.current = null;
@@ -588,7 +588,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
             }, 500);
           }
           if (next?.type !== 'make-child') {
-            cancelExpand();
+            onCancelExpand();
           }
           setInstruction(next);
         } else if (next?.type === 'reparent') {
@@ -598,11 +598,11 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
         }
       },
       onDragLeave: () => {
-        cancelExpand();
+        onCancelExpand();
         setInstruction(null);
       },
       onDrop: () => {
-        cancelExpand();
+        onCancelExpand();
         setInstruction(null);
       },
     });
@@ -626,11 +626,11 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
     blockInstruction,
     canDrop,
     onOpenChange,
-    cancelExpand,
+    onCancelExpand,
     shouldSeedNativeDragData,
   ]);
 
-  useEffect(() => () => cancelExpand(), [cancelExpand]);
+  useEffect(() => () => onCancelExpand(), [onCancelExpand]);
 
   // The machine skips selection events for an already-selected row, so re-activation (toggle a
   // current branch, scroll a current leaf into view) is handled here.
