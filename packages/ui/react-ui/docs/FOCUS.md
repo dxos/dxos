@@ -222,3 +222,38 @@ The exemplar at [`exemplars/focus.stories.tsx`](../src/exemplars/focus.stories.t
 columns of cards — a mover of grouppers of grouppers — and is the fastest way to feel all three
 behaviours at once. `useFocusGroup.test.tsx` pins the arrow, `Enter`/`Escape`, nesting and
 text-entry rules; the `Tab` paths need a real browser and were verified by hand.
+
+## 10. Test plan
+
+`Tab` cannot be simulated: a synthetic key event carries no default action, so the browser never
+performs the traversal. That splits coverage in two, and the split is the reason a green build says
+nothing about this module.
+
+**Automated** — [`useFocusGroup.test.tsx`](../src/hooks/useFocusGroup.test.tsx), happy-dom, nine
+tests: arrow movement on the axis, off-axis keys left alone, `cyclic` wrap, `Home`/`End`, `Enter`
+in and `Escape` out of a limited group, `memorizeCurrent` marking and entry resolution, a nested
+group as one arrow step, an entered nested group keeping its keys, and a text field keeping its own
+arrows.
+
+**Manual** — Storybook (`moon run storybook-react:serve`), the run that found both defects in §3
+and §6. Note that the page must be clicked once before keys reach it.
+
+1. `exemplars/focus` — arrows move between cards in a column; `Escape` from a field goes to the
+   card, again to the column; `ArrowDown` at the last card stays; `ArrowRight` moves column to
+   column; `Enter` enters a column; `Tab`/`Shift+Tab` step column to column.
+2. `components/Focus` Default — `ArrowDown` from the group enters the items; arrows move; `Escape`
+   returns to the group; from the last item `Tab` wraps to the first and `Shift+Tab` back
+   (`limited-trap-focus`).
+3. `components/Main` Default — open both sidebars, focus one landmark, `Tab` alternates between
+   landmarks. Each landmark must have two `[data-focus-sentinel]` children; **none means the ref
+   was dropped**, which is defect §3.
+4. `components/Carousel` Default — `ArrowLeft`/`ArrowRight` move between indicator dots and change
+   the slide; `Tab` leaves the strip rather than visiting the remaining dots.
+5. `react-ui-list/Listbox` Disclosure (`list` mode, rows are `tabIndex=-1`) — arrows move row to
+   row, landing on each row's control. **Focus stuck on one row is defect §6.**
+6. `react-ui-list/Listbox` Default (`listbox` mode) — arrows move between options; `Tab` leaves the
+   listbox entirely; `Shift+Tab` back re-enters on the option you left.
+
+**Not covered.** The running Composer app: the Deck panes' focus zones come from `useLandmarkMover`
+and were verified through the `Main` story, not against the app. That is the gap to close first if
+a focus regression is reported.
