@@ -101,6 +101,11 @@ to re-derive:
 
 ## Phase 5: Replace `@fluentui/react-tabster` — done
 
+Design record:
+[`packages/ui/react-ui/docs/FOCUS.md`](../../../packages/ui/react-ui/docs/FOCUS.md) — the mechanism
+(sentinels, the `Tab` hand-off, what "entered" means), the alternatives that do not work, the
+size accounting, and every call site.
+
 Tracked 2026-08-31. The largest measured win available in this area, and — despite living in this
 ledger — **a `@dxos/react-ui` project, not an Ark adoption**. Prize: **68,256 bytes minified in the
 eager boot graph** (`tabster` 59,820 + `keyborg` 6,298 in `boot-4`, plus the 2,138-byte fluentui
