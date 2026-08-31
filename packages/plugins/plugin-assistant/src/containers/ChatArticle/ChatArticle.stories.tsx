@@ -11,16 +11,20 @@ import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { type AiService } from '@dxos/ai';
 import { ScriptedLanguageModel, SERVICES_CONFIG } from '@dxos/ai/testing';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Chat } from '@dxos/assistant-toolkit';
+import { AiContext } from '@dxos/assistant';
+import { Chat, PlanningSkill } from '@dxos/assistant-toolkit';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
-import { Feed, Filter, Ref } from '@dxos/echo';
+import * as Skill from '@dxos/compute/Skill';
+import { Database, Feed, Filter, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
+import { SpacePlugin } from '@dxos/plugin-space/testing';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
@@ -164,6 +168,25 @@ const meta = {
                   // them so the story renders without waiting on a lazy resolution nothing triggers.
                   const set = yield* Effect.promise(() => chat.taskSet!.load());
                   yield* Effect.promise(() => Promise.all(set.tasks.map((task) => task.load())));
+
+                  // Bind the conversation the way `CreateChat` binds a new chat's defaults, because
+                  // owning a task set is not the same as working one: the planning skill's
+                  // update-tasks tool and its end-request reminder both reach the checklist through
+                  // `Chat.getFromContext`, so without the chat and the set in context the model gets
+                  // the tool and no list to apply it to.
+                  const registry = yield* Capability.get(Capabilities.AtomRegistry);
+                  const runtime = yield* Effect.context<Database.Service>().pipe(
+                    Effect.provide(Database.layer(space.db)),
+                  );
+                  const binder = new AiContext.Binder({ feed, runtime, registry });
+                  yield* Effect.promise(() =>
+                    binder.use((binder: AiContext.Binder) =>
+                      binder.bind({
+                        skills: [Ref.fromURI(Skill.registryURI(PlanningSkill.key))],
+                        objects: [Ref.make(chat), Ref.make(set)],
+                      }),
+                    ),
+                  );
                 }
 
                 yield* Effect.promise(() => space.db.flush({ indexes: true }));
@@ -177,6 +200,11 @@ const meta = {
               messages.length > 0 ? scriptedAiServiceMiddleware(messages.map(({ reply }) => reply)) : undefined,
           }),
           PreviewPlugin.make(),
+          // The assistant contributes the database SKILL unconditionally, but its tools resolve to
+          // operations this plugin owns. Without it the system prompt advertises `space-*` tools the
+          // toolkit cannot build, and the first turn that takes the model up on one dies with
+          // ToolNotFoundError.
+          SpacePlugin({}),
           // Contributes the task verbs the `/task:*` commands invoke.
           TasksPlugin.make(),
           StorybookPlugin.make({}),
