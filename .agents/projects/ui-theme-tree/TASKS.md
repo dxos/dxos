@@ -9,9 +9,11 @@ Contrast our theme and tree with shadcn/ui and Ark UI to ground the design decis
 ### Tasks
 
 - [ ] **Audit surfaces** — `packages/ui/ui-theme/src/css/theme/surfaces.css` vs shadcn theming vars and Ark styling conventions.
+  - User focus (2026-08-30): surface colors and how contrast works at the different elevations — selection, hover, borders per surface level. Compute effective values per level, both themes.
 - [ ] **Audit density** — control/toolbar sizing vs shadcn/Ark size variants.
 - [ ] **Audit Tree** — `react-ui-list` Tree vs `@ark-ui/react` tree-view: disclosure + animation, keyboard nav, DnD, end-of-row menus/indicators, multiple islands.
 - [ ] **Decision: adopt @ark-ui/react/tree-view vs rewrite** — write up impact in DESIGN.md.
+  - User direction (2026-08-30): prefer adopting Ark as an experiment — exercise ark/zag concepts against our reactivity (atom, ECHO) and verify pragmatic-dnd can layer over Ark's parts.
 
 ## Phase 2: dx-preview hover card
 

@@ -33,6 +33,8 @@ import React, {
 } from 'react';
 import { RemoveScroll } from 'react-remove-scroll';
 
+import { DX_POPOVER_CONTENT_ATTR } from '@dxos/ui-types';
+
 import { useElevationContext, useSafeCollisionPadding, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { ColumnContext } from '../Column/ColumnContext';
@@ -470,6 +472,7 @@ const PopoverContentImpl = forwardRef<PopoverContentImplElement, PopoverContentI
         >
           <PopperPrimitive.Content
             data-state={getState(context.open)}
+            {...{ [DX_POPOVER_CONTENT_ATTR]: '' }}
             role='dialog'
             id={context.contentId}
             {...popperScope}

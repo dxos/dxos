@@ -12,12 +12,14 @@ export class AnchorWidget extends WidgetType {
   constructor(
     readonly _label: string,
     readonly _dxn: string,
+    /** Overrides the element's default (`hover`) preview trigger. */
+    readonly _trigger?: 'hover' | 'click',
   ) {
     super();
   }
 
   override eq(other: this) {
-    return this._dxn === other._dxn && this._label === other._label;
+    return this._dxn === other._dxn && this._label === other._label && this._trigger === other._trigger;
   }
 
   override toDOM(_view: EditorView) {
@@ -25,6 +27,9 @@ export class AnchorWidget extends WidgetType {
     root.classList.add('dx-tag--anchor');
     root.textContent = this._label;
     root.setAttribute('dxn', this._dxn);
+    if (this._trigger) {
+      root.setAttribute('trigger', this._trigger);
+    }
     return root;
   }
 }

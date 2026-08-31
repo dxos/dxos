@@ -128,11 +128,16 @@ export const PopoverContent = () => {
         onOpenAutoFocus={isRename ? undefined : (event) => event.preventDefault()}
         onInteractOutside={handleInteractOutside}
         onEscapeKeyDown={handleInteractOutside}
-        // Reuse the dialog's enter/exit motion so the rename popover does not flicker on open.
+        // Rename reuses the dialog's enter/exit motion so it does not flicker on open; preview
+        // cards get the hover-card fade+zoom anchored at the trigger.
         classNames={
           isRename
             ? ['data-[state=open]:animate-slide-up-and-fade', 'data-[state=closed]:animate-slide-down-and-fade']
-            : undefined
+            : [
+                'origin-(--radix-popover-content-transform-origin)',
+                'data-[state=open]:animate-popover-in',
+                'data-[state=closed]:animate-popover-out',
+              ]
         }
       >
         <Popover.Viewport>

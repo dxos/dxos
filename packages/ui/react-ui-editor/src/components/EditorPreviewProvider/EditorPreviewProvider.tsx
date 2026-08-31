@@ -26,6 +26,12 @@ export const EditorPreviewProvider = ({ children, onLookup }: EditorPreviewProvi
 
   const handleActivate = useCallback(
     (event: DxAnchorActivate) => {
+      // Hover-driven anchors dispatch `state: false` when the pointer leaves the anchor/card.
+      if (event.state === false) {
+        setOpen(false);
+        return;
+      }
+
       const { dxn, label, trigger } = event;
       setValue((value) => ({
         ...value,
