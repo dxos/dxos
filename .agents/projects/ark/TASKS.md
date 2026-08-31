@@ -80,3 +80,28 @@ cost against a much smaller hand-rolled component (Accordion +4.6 KB net, Listbo
       Ark's `carousel` a candidate for the third.
 - [ ] Evaluate Ark's Accordion on merit (+4.6 KB net over `@radix-ui/react-accordion`) — the only
       swap cheap enough to decide on behavior alone.
+- [ ] **Evaluate moving the core of `react-ui-list` and `@fluentui/react-tabster` to
+      `@ark-ui/react`** — the whole-stack version of the question, as one evaluation rather than
+      per-component. Tracked 2026-08-31. Constraints below.
+
+### Constraints on that evaluation
+
+Already measured (docs/TREE.md §6–§7) — these are what the evaluation has to answer, not assumptions
+to re-derive:
+
+1. **Bundle size is not the case for it.** Ark's shared Zag runtime is ~24.5 KB raw and the Tree
+   already bought all of it; per-machine marginal cost then runs Accordion +8,125 raw, Listbox
+   +22,470, Combobox +87,936 — each against a hand-rolled component an order of magnitude smaller. A
+   full `react-ui-list` sweep is net **worse** on bytes.
+2. **Tabster and `react-ui-list` are separable problems.** All four `react-ui-list` tabster call
+   sites are in lazy chunks and attribute zero boot bytes; the 68 KB prize is behind three
+   `@dxos/react-ui` files. Migrating this package off tabster saves nothing, and taking the prize
+   does not require touching this package.
+3. **Ark has no groupper.** `useArrowNavigationGroup`/`useFocusableGroup` are generic
+   composite-widget focus zones; Zag's focus management is per-machine and `focus-trap` is a trap.
+   Any plan that ends tabster needs an in-house roving-tabindex hook regardless of how much Ark is
+   adopted.
+4. **The case, if there is one, is coherence** — one interaction/accessibility model across the
+   package instead of four (Ark machine, tabster roving-tabindex, Radix, bespoke activedescendant),
+   with APG conformance maintained upstream. Size the migration against that, and price the ~85 KB
+   Combobox explicitly since it is the one that decides the total.
