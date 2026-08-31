@@ -20,6 +20,7 @@ import {
   type Real,
   BudgetExhausted,
   assertFullyReplicated,
+  cleanupRun,
 } from './system';
 
 /**
@@ -44,6 +45,7 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
       maxRuntimeMs: 10 * 60_000,
       quiescenceTimeoutMs: 60_000,
       checkpoints: true,
+      cleanup: true,
     };
   }
 
@@ -60,7 +62,7 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
     trace({ event: 'run', seed: params.randomSeed, spec });
 
     const setupBegin = Date.now();
-    const { replicants, model } = await this._setupFleet(env, params, clientCount);
+    const { replicants, model, identityDids } = await this._setupFleet(env, params, clientCount);
     const setupTimeMs = Date.now() - setupBegin;
     log.info('fleet ready', { setupTimeMs });
 
@@ -70,6 +72,7 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
       deadline: Number.MAX_SAFE_INTEGER,
       spaceIds: [],
       invitationCodes: [],
+      identityDids,
       trace,
       counters: { commands: 0, documents: 0 },
     };
@@ -116,6 +119,16 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
       await assertFullyReplicated(model, real);
     } finally {
       trace({ event: 'done', commands: real.counters.commands });
+      // Runs even when an assertion threw, which is exactly when a shared environment would leak.
+      const adminKey = process.env.DX_HUB_API_KEY;
+      if (spec.cleanup && adminKey) {
+        await cleanupRun(real, adminKey);
+      } else if (spec.cleanup) {
+        log.warn('cleanup skipped: DX_HUB_API_KEY is not set', {
+          spaces: real.spaceIds.length,
+          identities: real.identityDids.length,
+        });
+      }
       traceStream.end();
     }
 
@@ -137,7 +150,7 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
     env: SchedulerEnvImpl<EdgeStressSpec>,
     params: TestProps<EdgeStressSpec>,
     clientCount: number,
-  ): Promise<{ replicants: ReplicantBrain<ClientReplicant>[]; model: Model }> {
+  ): Promise<{ replicants: ReplicantBrain<ClientReplicant>[]; model: Model; identityDids: string[] }> {
     const spec = params.spec;
 
     const replicants: ReplicantBrain<ClientReplicant>[] = [];
@@ -153,10 +166,14 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
       agents: spec.agents,
     });
 
+    const identityDids: string[] = [];
     let cursor = 0;
     for (const [identity, devices] of spec.devicesPerIdentity.entries()) {
       const owner = cursor;
-      await replicants[owner].brain.createIdentity({ displayName: `edge-stress-identity-${identity}` });
+      const { identityDid } = await replicants[owner].brain.createIdentity({
+        displayName: `edge-stress-identity-${identity}`,
+      });
+      identityDids.push(identityDid);
       if (spec.agents) {
         await replicants[owner].brain.createAgent();
       }
@@ -173,7 +190,7 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
       }
     }
 
-    return { replicants, model };
+    return { replicants, model, identityDids };
   }
 
   async analyze(
