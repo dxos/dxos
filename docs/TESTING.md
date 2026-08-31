@@ -98,8 +98,3 @@ only on the dev server (`DX_MOBILE=1 moon run composer-app:serve`), not in the o
 - `plugin-deck`'s own `PLUGIN.mdl` still describes the mobile rendering that moved out to
   `plugin-mobile`; its mobile prose needs a refresh to point at the new package instead of
   re-describing behaviour deck no longer owns.
-- A `DX_PLUGIN_SET=mobile` build still emits a handful of tiny inert chunks referencing the registry
-  (e.g. `open-plugin-registry-*.js`, an "open registry" Settings operation-handler) even though
-  `RegistryPlugin` itself is not part of the set and nothing in the UI can trigger loading them —
-  confirmed via `vite build` + `vite preview` that no Registry entry or catalog is reachable. Worth
-  chasing to full parity with the `production` set, which presumably has the same characteristic.
