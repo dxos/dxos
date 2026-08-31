@@ -31,11 +31,11 @@ const DefaultStory = ({ tasksVisible: initialTasksVisible, ...args }: StoryArgs)
 
 const meta = {
   title: 'plugins/plugin-assistant/components/ChatActions',
-  component: ChatActions as any,
+  component: ChatActions,
   render: DefaultStory,
   decorators: [withTheme(), withPluginManager({ plugins: corePlugins() })],
   parameters: { layout: 'centered', translations },
-} satisfies Meta<typeof DefaultStory>;
+} satisfies Meta<typeof ChatActions>;
 
 export default meta;
 

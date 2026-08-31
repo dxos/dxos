@@ -104,7 +104,9 @@ describe('WorkingSetQueryExecutor', () => {
     // Query.without produces a SetDifferenceStep: all persons minus alice.
     const all = Query.select(Filter.type(TestSchema.Person)).from(db);
     const justAlice = Query.select(Filter.id(alice.id)).from(db);
-    const plan = makeNoIndexPlanner().createPlan(Query.without(all, justAlice).ast);
+    const plan = new QueryPlanner({ defaultTextSearchKind: 'full-text', noIndexes: true }).createPlan(
+      Query.without(all, justAlice).ast,
+    );
     const results = makeExecutor(db).tryExecute(plan);
     expect(results).not.toBeNull();
     const ids = results!.map((item) => item.objectId);
@@ -205,7 +207,9 @@ describe('WorkingSetQueryExecutor', () => {
     // Query.all produces a UnionStep over the given sub-queries.
     const persons = Query.select(Filter.type(TestSchema.Person)).from(db);
     const tasks = Query.select(Filter.type(TestSchema.Task)).from(db);
-    const plan = makeNoIndexPlanner().createPlan(Query.all(persons, tasks).ast);
+    const plan = new QueryPlanner({ defaultTextSearchKind: 'full-text', noIndexes: true }).createPlan(
+      Query.all(persons, tasks).ast,
+    );
     const results = makeExecutor(db).tryExecute(plan);
     expect(results).not.toBeNull();
     const ids = results!.map((item) => item.objectId);
@@ -246,7 +250,7 @@ describe('WorkingSetQueryExecutor', () => {
   });
 
   test('TextSelector causes executor to return null', async ({ expect }) => {
-    const planner = makeNoIndexPlanner();
+    const planner = new QueryPlanner({ defaultTextSearchKind: 'full-text', noIndexes: true });
     const executor = makeExecutor(db);
     const query = Query.select(Filter.text('foo')).from(db);
     const plan = planner.createPlan(query.ast);
@@ -256,7 +260,7 @@ describe('WorkingSetQueryExecutor', () => {
   });
 
   test('TimestampSelector (updated) causes executor to return null', async ({ expect }) => {
-    const planner = makeNoIndexPlanner();
+    const planner = new QueryPlanner({ defaultTextSearchKind: 'full-text', noIndexes: true });
     const executor = makeExecutor(db);
     const query = Query.select(Filter.updated({ after: new Date(0) })).from(db);
     const plan = planner.createPlan(query.ast);
@@ -270,7 +274,7 @@ describe('WorkingSetQueryExecutor', () => {
     db.add(alice);
     await db.flush();
 
-    const planner = makeNoIndexPlanner();
+    const planner = new QueryPlanner({ defaultTextSearchKind: 'full-text', noIndexes: true });
     const executor = makeExecutor(db);
     // Feed-scoped subquery: `_execSelectStep` would return an *empty* (not null) working set for
     // a scope outside this space, so the executor must bail rather than silently resolve an empty
@@ -508,8 +512,6 @@ describe('WorkingSetQueryExecutor', () => {
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
-const makeNoIndexPlanner = () => new QueryPlanner({ defaultTextSearchKind: 'full-text', noIndexes: true });
-
 const makeProvider = (db: DatabaseImpl): WorkingSetDataProvider => ({
   get spaceId() {
     return db.spaceId;
@@ -526,7 +528,7 @@ const makeExecutor = (db: DatabaseImpl) => new WorkingSetQueryExecutor(makeProvi
  * Throws if the executor cannot satisfy the plan (i.e. it returned null).
  */
 const planAndExecute = (db: DatabaseImpl, query: Query.Query<any>) => {
-  const planner = makeNoIndexPlanner();
+  const planner = new QueryPlanner({ defaultTextSearchKind: 'full-text', noIndexes: true });
   const executor = makeExecutor(db);
   // All queries must be scoped; bind to the given database so the planner sees a from() clause.
   const plan = planner.createPlan(query.from(db).ast);

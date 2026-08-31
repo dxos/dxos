@@ -21,7 +21,7 @@ type Translate = (label: unknown) => string | undefined;
 
 /** Best-effort localization: an i18n tuple degrades to its key when no translator is active. */
 const makeTranslate =
-  (translator: { t: (...args: any[]) => string } | undefined): Translate =>
+  (translator: { t: (key: string, options?: unknown) => string } | undefined): Translate =>
   (label) => {
     if (typeof label === 'string') {
       return label;

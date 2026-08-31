@@ -3,7 +3,7 @@
 //
 
 import { act, renderHook } from '@testing-library/react';
-import { type FocusEvent } from 'react';
+import { type FocusEvent, type MouseEvent } from 'react';
 import { describe, test, vi } from 'vitest';
 
 import { useListSelection } from './useListSelection';
@@ -14,12 +14,15 @@ const focusEvent = (
   fields: Pick<FocusEvent<HTMLElement>, 'currentTarget' | 'relatedTarget'>,
 ): FocusEvent<HTMLElement> => fields as FocusEvent<HTMLElement>;
 
+// Minimal synthetic click event: the click handler under test ignores every field on its argument.
+const clickEvent = (): MouseEvent<HTMLElement> => ({}) as MouseEvent<HTMLElement>;
+
 describe('useListSelection', () => {
   describe('single mode', () => {
     test('click selects the row', ({ expect }) => {
       const onValueChange = vi.fn();
       const { result } = renderHook(() => useListSelection({ mode: 'single', onValueChange }));
-      act(() => result.current.bind('a').rowProps.onClick({} as any));
+      act(() => result.current.bind('a').rowProps.onClick(clickEvent()));
       expect(onValueChange).toHaveBeenLastCalledWith('a');
     });
 
@@ -71,7 +74,7 @@ describe('useListSelection', () => {
       // re-renders — the second selection of the same id must not re-emit.
       act(() => {
         result.current.bind('a').rowProps.onFocus?.(focusEvent({ currentTarget: optionA, relatedTarget: container }));
-        result.current.bind('a').rowProps.onClick({} as any);
+        result.current.bind('a').rowProps.onClick(clickEvent());
       });
       expect(onValueChange).toHaveBeenCalledTimes(1);
       expect(onValueChange).toHaveBeenLastCalledWith('a');
@@ -101,7 +104,7 @@ describe('useListSelection', () => {
     test('disabled rows do not update selection on click', ({ expect }) => {
       const onValueChange = vi.fn();
       const { result } = renderHook(() => useListSelection({ mode: 'single', onValueChange }));
-      act(() => result.current.bind('a', { disabled: true }).rowProps.onClick({} as any));
+      act(() => result.current.bind('a', { disabled: true }).rowProps.onClick(clickEvent()));
       expect(onValueChange).not.toHaveBeenCalled();
     });
 
@@ -121,7 +124,7 @@ describe('useListSelection', () => {
     test('click toggles row in/out of selection set', ({ expect }) => {
       const onValueChange = vi.fn();
       const { result } = renderHook(() => useListSelection({ mode: 'multi', onValueChange }));
-      act(() => result.current.bind('a').rowProps.onClick({} as any));
+      act(() => result.current.bind('a').rowProps.onClick(clickEvent()));
       const firstCall = onValueChange.mock.calls[0]?.[0] as Set<string>;
       expect(firstCall.has('a')).toBe(true);
     });

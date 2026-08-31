@@ -12,8 +12,6 @@ import { Milestone, Task, TaskSet } from '@dxos/types';
 import createTask from './create-task';
 import deleteTask from './delete-task';
 
-const testLayer = () => TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] });
-
 describe('delete-task', () => {
   it.effect('sweeps the task and its sub-tasks out of the array', () =>
     Effect.gen(function* () {
@@ -31,6 +29,6 @@ describe('delete-task', () => {
 
       expect([...deleted].sort()).toEqual([child.id, parent.id].sort());
       expect(taskSet.tasks.map((ref) => ref.target?.id)).toEqual([kept.id]);
-    }).pipe(Effect.provide(testLayer())),
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 });

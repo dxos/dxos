@@ -9,7 +9,8 @@ import { Message } from '@dxos/types';
 
 import { createRenderer } from './renderer';
 
-const message = (blocks: any[]) => Message.make({ created: new Date(0).toISOString(), sender: 'assistant', blocks });
+const message = (blocks: NonNullable<Parameters<typeof Message.make>[0]['blocks']>) =>
+  Message.make({ created: new Date(0).toISOString(), sender: 'assistant', blocks });
 
 /** The renderer's markdown, which is the only shape these cases produce. */
 const markdown = (content: ItemContent): string => (content.kind === 'markdown' ? content.text : '');

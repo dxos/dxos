@@ -27,16 +27,16 @@ const STREAM_SERVICE = 'example.testing.rpc.TestStreamService';
 
 describe('Buf service descriptor', () => {
   test('exposes the same service name as the legacy descriptor', ({ expect }) => {
-    expect(bufService().name).toEqual(legacyService().name);
+    expect(bufService().name).toEqual(schema.getService(SERVICE).name);
     expect(bufService().name).toEqual(SERVICE);
   });
 
   test('buf client calls a legacy server', async ({ expect }) => {
-    expect(await callAcross(legacyService(), bufService(), 'a')).toEqual('echo:a');
+    expect(await callAcross(schema.getService(SERVICE), bufService(), 'a')).toEqual('echo:a');
   });
 
   test('legacy client calls a buf server', async ({ expect }) => {
-    expect(await callAcross(bufService(), legacyService(), 'b')).toEqual('echo:b');
+    expect(await callAcross(bufService(), schema.getService(SERVICE), 'b')).toEqual('echo:b');
   });
 
   test('buf on both sides', async ({ expect }) => {
@@ -47,7 +47,7 @@ describe('Buf service descriptor', () => {
     // `google.protobuf.Empty` decodes to `{}` on both implementations, verified against the legacy
     // client rather than assumed.
     await withPeers(
-      () => openUnary(legacyService(), bufService()),
+      () => openUnary(schema.getService(SERVICE), bufService()),
       async (client) => {
         expect(await client.rpc.TestService.voidCall()).toEqual({});
       },
@@ -55,19 +55,17 @@ describe('Buf service descriptor', () => {
   });
 
   test('a server-streaming method round-trips from a legacy server to a buf client', async ({ expect }) => {
-    expect(await streamAcross(legacyStreamService(), bufStreamService())).toEqual(['one', 'two']);
+    expect(await streamAcross(schema.getService(STREAM_SERVICE), bufStreamService())).toEqual(['one', 'two']);
   });
 
   test('a server-streaming method round-trips from a buf server to a legacy client', async ({ expect }) => {
     // `BufServiceHandler.callStream` writes each element's response `type_url` through a different
     // path from the legacy handler, so one direction does not imply the other.
-    expect(await streamAcross(bufStreamService(), legacyStreamService())).toEqual(['one', 'two']);
+    expect(await streamAcross(bufStreamService(), schema.getService(STREAM_SERVICE))).toEqual(['one', 'two']);
   });
 });
 
-const legacyService = () => schema.getService(SERVICE);
 const bufService = () => getBufService<TestService>(SERVICE);
-const legacyStreamService = () => schema.getService(STREAM_SERVICE);
 const bufStreamService = () => getBufService<TestStreamService>(STREAM_SERVICE);
 
 const unaryHandlers = {

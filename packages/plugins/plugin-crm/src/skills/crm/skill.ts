@@ -63,11 +63,9 @@ export const makeCrmSkill = (researchSources: ReadonlyArray<ResearchSource> = de
     }),
   });
 
-const make = () => makeCrmSkill();
-
 const skill: Skill.Definition = {
   key: SKILL_KEY,
-  make,
+  make: makeCrmSkill,
 };
 
 export default skill;
