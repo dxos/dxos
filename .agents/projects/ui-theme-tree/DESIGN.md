@@ -60,9 +60,47 @@ The costs of the DXOS model, seen in the audit:
    is no shadow ramp at all (deliberate, but it makes the popup/overlay distinction rest entirely
    on ΔL 0.03 + backdrop blur).
 
-### 1.3 Measured surfaces (filled in by the probe — see `contrast-probe` results)
+### 1.3 Measured contrast per elevation (empirical)
 
-_To be appended: per-level resolved colors + ΔL for hover/current/separator families, per theme._
+Browser-resolved tokens per surface zone (probe: `temp/contrast-probe.mjs` against the worktree
+storybook; full JSON in `temp/contrast-probe.json`). `ΔL` = oklch lightness of the aspect minus its
+host surface; `WCAG` = contrast ratio vs the host surface.
+
+**Dark** (attenuation = 1, the reference contract):
+
+| level | bg L | hover ΔL | current ΔL | separator ΔL | subdued-sep ΔL | body-fg WCAG | description WCAG |
+|---|---|---|---|---|---|---|---|
+| sunken | 0.145 | +0.081 | +0.102 | +0.167 | +0.089 | 15.0 | 7.6 |
+| chrome | 0.176 | +0.079 | +0.099 | +0.164 | +0.087 | 14.3 | 7.3 |
+| base | 0.205 | +0.079 | +0.100 | +0.166 | +0.089 | 13.6 | 6.9 |
+| raised | 0.238 | +0.078 | +0.099 | +0.166 | +0.087 | 12.5 | 6.4 |
+| overlay | 0.269 | +0.080 | +0.102 | +0.165 | +0.090 | 11.4 | 5.8 |
+| popup | 0.296 | +0.079 | +0.098 | +0.164 | +0.087 | 10.5 | 5.3 |
+
+**Light** (state ×0.5, separator ×0.75/0.45 attenuation):
+
+| level | bg L | hover ΔL | current ΔL | separator ΔL | subdued-sep ΔL | body-fg WCAG | description WCAG |
+|---|---|---|---|---|---|---|---|
+| sunken | 0.906 | −0.040 | −0.052 | −0.076 | −0.068 | 15.0 | 5.9 |
+| chrome | 0.936 | −0.042 | −0.051 | −0.076 | −0.067 | 16.4 | 6.5 |
+| base | 0.981 | −0.042 | −0.051 | −0.075 | −0.069 | 18.8 | 7.4 |
+| raised | 0.990 | −0.039 | −0.051 | −0.075 | −0.066 | 19.3 | 7.6 |
+| overlay | 0.996 | −0.042 | −0.051 | −0.075 | −0.069 | 19.6 | 7.7 |
+| popup | 1.000 | −0.039 | −0.051 | −0.075 | −0.066 | 19.8 | 7.8 |
+
+Findings:
+
+1. **The invariant holds exactly** — hover/current/separator ΔL is flat across all six levels in
+   both themes (±0.003). This is the property shadcn's fixed `--accent`/`--muted`/`--border`
+   cannot provide (its deltas drift with whatever surface hosts them, §1.2).
+2. **Perceptual, not photometric, constancy**: the *WCAG ratio* of a fixed ΔL grows with dark-mode
+   elevation (hover 1.16 → 1.35 sunken→popup) — intended, since oklch L is the perceptual axis.
+3. **Text contrast is comfortably conformant everywhere**: body ≥ 10.5:1, description ≥ 5.3:1
+   (AA for normal text at every elevation; body clears AAA). The dark popup level is the global
+   minimum — the level to watch if the ladder is ever extended upward.
+4. Selection (`current-surface`) at ΔL ≈ 0.10 is a ~1.2–1.5:1 surface-on-surface ratio — below any
+   WCAG threshold for *meaningful* contrast, which is why the `dx-selected`/`dx-current` grammar
+   pairs it with `font-semibold` / the pseudo ring rather than relying on fill alone.
 
 ### 1.4 Density
 
