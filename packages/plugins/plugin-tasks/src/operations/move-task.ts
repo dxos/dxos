@@ -15,15 +15,9 @@ import { InvalidOperationInput } from '../errors';
 const handler: Operation.WithHandler<typeof TaskOperation.MoveTask> = TaskOperation.MoveTask.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ task: taskRef, taskSet: taskSetRef, before, parentTask }) {
-      // Peek short-circuits for materialized refs, so with a materialized input the whole handler
-      // completes without an async boundary — a drop runs it under `Effect.runSync` in the
-      // gesture frame; unloaded refs (e.g. an agent caller) fall back to the async load.
       const task = Database.peek(taskRef) ?? (yield* Database.load(taskRef));
       const taskSet = Database.peek(taskSetRef) ?? (yield* Database.load(taskSetRef));
 
-      // The set arrives as input rather than being derived from membership, so membership is a
-      // precondition: moving a non-member would leave the array untouched yet still re-parent the
-      // task into this set.
       if (!taskSet.tasks.some((ref) => Task.refEntityId(ref) === task.id)) {
         return yield* Effect.fail(new InvalidOperationInput({ message: 'The task does not belong to the task set.' }));
       }

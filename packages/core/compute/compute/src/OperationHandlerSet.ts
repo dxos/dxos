@@ -125,17 +125,13 @@ export const reactive = (
       const normalized = normalizeKey(key);
       let promise = perKey.get(normalized);
       if (!promise) {
-        promise = resolveFromSets(registry.get(atom), normalized).then(
-          (handler) => handler,
-          (err) => {
-            // Evict so a transient failure is not memoized — but only this entry: an atom change
-            // mid-flight clears the map, and a replacement promise must not be evicted with it.
-            if (perKey.get(normalized) === promise) {
-              perKey.delete(normalized);
-            }
-            throw err;
-          },
-        );
+        const evictUnlessReplaced = (err: unknown) => {
+          if (perKey.get(normalized) === promise) {
+            perKey.delete(normalized);
+          }
+          throw err;
+        };
+        promise = resolveFromSets(registry.get(atom), normalized).then((handler) => handler, evictUnlessReplaced);
         perKey.set(normalized, promise);
       }
       return promise;

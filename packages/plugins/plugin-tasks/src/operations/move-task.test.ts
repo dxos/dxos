@@ -90,8 +90,6 @@ describe('move-task', () => {
       yield* Database.flush();
       const [first, , third, fourth] = yield* seedTasks(taskSet, ['a', 'b', 'c', 'd']);
 
-      // The pure reorder must predict the exact order the handler commits, so a caller can
-      // preview a move without running it.
       const anchored = TaskSet.reorderItems(TaskSet.resolveTasks(taskSet), (row) => row.id, third.id, first.id);
       yield* moveTask.handler({ taskSet: Ref.make(taskSet), task: Ref.make(third), before: Ref.make(first) });
       expect(titles(TaskSet.resolveTasks(taskSet))).toEqual(titles(anchored));
@@ -109,16 +107,12 @@ describe('move-task', () => {
       yield* Database.flush();
       const [first, , third] = yield* seedTasks(taskSet, ['a', 'b', 'c']);
 
-      // runSync throws on ANY async boundary — this is the regression test for the loaded-refs
-      // sync path (see TaskOperation.MoveTask): Database.load short-circuits and the parent
-      // validation walks only loaded refs.
       const { task } = Effect.runSync(
         moveTask.handler({ taskSet: Ref.make(taskSet), task: Ref.make(third), before: Ref.make(first) }),
       );
       expect(task.id).toEqual(third.id);
       expect(titles(TaskSet.resolveTasks(taskSet))).toEqual(['c', 'a', 'b']);
 
-      // Re-parenting exercises resolveParentTask's ancestor walk under runSync too.
       Effect.runSync(
         moveTask.handler({ taskSet: Ref.make(taskSet), task: Ref.make(third), parentTask: Ref.make(first) }),
       );

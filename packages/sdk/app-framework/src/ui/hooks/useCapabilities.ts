@@ -139,9 +139,8 @@ export const useOperationInvoker = (): Capabilities.OperationInvoker => useCapab
  *
  * Resolves against the merged {@link Capabilities.OperationHandlers} set. Handler sets are all
  * registered by startup (only handler BODIES load lazily), so the component suspends only while
- * the matched handler's module loads — `getHandlerFor` returns a per-key stable promise, which is
- * what lets `use` resume instead of re-suspending on every retry render. Throws
- * {@link NoHandlerError} when no contributed set knows the operation.
+ * the matched handler's module loads. Throws {@link NoHandlerError} when no contributed set
+ * knows the operation.
  *
  * The returned effect still requires the operation's declared services; run it via
  * {@link useSpaceCallback} or the {@link Capabilities.ProcessManagerRuntime}.
@@ -165,9 +164,8 @@ export const useOperationHandler: {
     throw new NoHandlerError(operation.meta.key);
   }
   const handler = withHandler.handler;
-  // The mapper reads through a ref so the mapped form keeps a stable identity across renders,
-  // like {@link useOperation}. Updated in a layout effect so a discarded concurrent render's
-  // mapper (closing over that render's props) never leaks into the committed callback.
+  // The ref is updated in a layout effect so a discarded concurrent render's mapper (closing
+  // over that render's props) never leaks into the committed callback.
   const mapRef = useRef(map);
   useLayoutEffect(() => {
     mapRef.current = map;

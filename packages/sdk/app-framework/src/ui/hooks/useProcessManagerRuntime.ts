@@ -64,8 +64,6 @@ export const useSpaceCallback = <
         ServiceResolver.provide({ space: spaceId }, ...tags),
         Operation.withInvocationOptions({ spaceId }),
       );
-      // The cast erases only the requirements channel: the layer satisfies the tags and the
-      // runtime carries {@link Capabilities.ProcessManagerRuntimeServices}.
       return runtime.runPromise(
         fn(...args).pipe(Effect.provide(layer)) as Effect.Effect<T, E | ServiceNotAvailableError, any>,
       );

@@ -76,8 +76,6 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
       ...(before ? { before: Ref.make(before) } : {}),
     }),
   );
-  // MoveTask is synchronous — the array write lands in the drop frame itself, before it paints,
-  // so the reordered row renders in place with no optimistic overlay.
   const handleMove = useCallback(
     (task: Task.Task, placement: TaskPlacement) => {
       Effect.runSync(move(task, placement));

@@ -565,11 +565,8 @@ export class RefImpl<T> implements Ref<T> {
       return undefined;
     }
     try {
-      // No load flag and no callback: a pure working-set read with no side effects.
       return this.#resolver.resolveSync(this.#uri, false, undefined) as T | undefined;
     } catch {
-      // Not synchronously resolvable (e.g. a feed-context ref with no space) — peek's contract is
-      // best-effort, so this is the miss case, not an error to surface.
       return undefined;
     }
   }

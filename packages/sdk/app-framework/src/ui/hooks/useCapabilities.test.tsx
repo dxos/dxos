@@ -75,8 +75,6 @@ describe('useCapabilities', () => {
     await view.findByTestId('resolved');
     const result = await EffectEx.runPromise(handler!({ a: 2, b: 3 }));
     expect(result).toEqual({ sum: 5 });
-    // Unmount before the harness disposes: shutdown removes the contribution and a still-mounted
-    // Probe would re-render into a boundary-less NoHandlerError.
     view.unmount();
   });
 

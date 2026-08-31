@@ -253,7 +253,6 @@ describe('OperationHandlerSet.reactive getHandlerFor identity', () => {
 
     const reactive = OperationHandlerSet.reactive(registry, atom);
     const first = reactive.getHandlerFor(KEY_A);
-    // Invalidate while the first lookup is in flight, then memoize a replacement.
     registry.set(atom, [OperationHandlerSet.make(makeHandler(KEY_A, 'A'))]);
     const replacement = reactive.getHandlerFor(KEY_A);
     rejectFirst(new Error('late'));
