@@ -25,7 +25,7 @@ import * as UrlLoader from '@dxos/app-framework/UrlLoader';
 import { EdgeHttpClient } from '@dxos/edge-client/http';
 import { EffectEx } from '@dxos/effect';
 import { LogLevel, log } from '@dxos/log';
-import { WorkerLogStore } from '@dxos/log-store-idb';
+import { IdbLogStore } from '@dxos/log-store-idb';
 import { Observability } from '@dxos/observability';
 import { translations as observabilityTranslations } from '@dxos/plugin-observability/translations';
 import { ErrorBoundary, ErrorFallback } from '@dxos/react-error-boundary';
@@ -43,6 +43,7 @@ import {
   PARAM_PROFILER,
   PARAM_SAFE_MODE,
   type Profiler,
+  WorkerLogProcessor,
   defaultStorageIsEmpty,
   downloadLogs,
   initializeObservability,
@@ -180,12 +181,14 @@ const createAssetCache = async (isPwa: boolean, isTauri: boolean): Promise<Plugi
 };
 
 /**
- * Spin up the log-writer worker backing the {@link WorkerLogStore}. SharedWorker where the
+ * Spin up the log-writer worker backing the {@link WorkerLogProcessor}. SharedWorker where the
  * platform has it (one writer for all tabs, survives a single tab's close, so flush-at-unload
  * is more durable); dedicated Worker otherwise (unload race is no worse than in-thread writes).
  */
 const createLogWriterWorker = (): Worker | MessagePort => {
-  if (typeof SharedWorker !== 'undefined') {
+  // WKWebView can crash instantiating a SharedWorker (FB11723920), so mobile Tauri always
+  // takes the dedicated path — this runs before config load, hence the sync platform probes.
+  if (typeof SharedWorker !== 'undefined' && !(isTauri$() && isMobile$())) {
     return new SharedWorker(new URL('./workers/log-writer-worker', import.meta.url), {
       type: 'module',
       // Dev: SharedWorkers are keyed by (URL, name) and outlive vite restarts; suffixing the
@@ -237,10 +240,12 @@ const main = async () => {
 
   // Log persistence runs in its own worker so lines survive main-thread saturation: each
   // pre-serialized line is handed off via postMessage inside the log call, and the worker
-  // flushes to IDB while this thread is still blocked. A SharedWorker consolidates
-  // multi-tab writers and outlives a single tab's close; dedicated Worker is the fallback.
-  const logStore = new WorkerLogStore({ dbName: LOG_STORE_DB_NAME, worker: createLogWriterWorker() });
-  log.addProcessor(logStore.processor);
+  // flushes to IDB while this thread is still blocked. This store is the read handle for
+  // downloads and feedback exports (IDB keeps the data); the worker owns writes and eviction,
+  // so the read handle's own sweep is disabled.
+  const logStore = new IdbLogStore({ dbName: LOG_STORE_DB_NAME, evictionInterval: 0 });
+  const logProcessor = new WorkerLogProcessor({ worker: createLogWriterWorker() });
+  log.addProcessor(logProcessor.processor);
 
   // Devtools convenience — also surfaced via the help panel and ResetDialog UI.
   globalThis.downloadLogs = () => downloadLogs(logStore);

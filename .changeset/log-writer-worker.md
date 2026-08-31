@@ -2,4 +2,4 @@
 '@dxos/log-store-idb': minor
 ---
 
-Add `WorkerLogStore` and `runLogWriterWorker`: log persistence can now run in a dedicated (or shared) log-writer worker, so IDB writes survive main-thread saturation. `IdbLogStore` gains `append()`, a bounded in-memory queue (`maxQueueLines`), and flushes no longer stall behind an in-flight write; consumers can type stores as the new `LogStore` interface.
+`IdbLogStore` fixes: flushes drain through a single loop so a stalled IDB write can no longer wedge later flush triggers while the queue grows unboundedly; the in-memory queue is capped (`maxQueueLines`, oldest lines dropped); eviction failures no longer surface as unhandled rejections; a `versionchange` close drops the cached connection so storage resets aren't blocked. Adds `append()` for enqueueing pre-serialized JSONL lines (used by worker-based log processors).

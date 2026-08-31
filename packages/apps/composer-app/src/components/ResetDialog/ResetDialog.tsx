@@ -5,7 +5,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { type LogStore } from '@dxos/log-store-idb';
+import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Observability } from '@dxos/observability';
 import { FeedbackForm } from '@dxos/plugin-support/components';
 import type * as SupportOperation from '@dxos/plugin-support/SupportOperation';
@@ -48,7 +48,7 @@ const parseError = (t: (name: string, context?: object) => string, error: Error)
 
 export type ResetDialogProps = Pick<AlertDialogRootProps, 'defaultOpen' | 'open' | 'onOpenChange'> & {
   error?: Error;
-  logStore: LogStore;
+  logStore: IdbLogStore;
   observability?: Promise<Observability.Observability>;
   needRefresh?: boolean;
   onRefresh?: () => void;

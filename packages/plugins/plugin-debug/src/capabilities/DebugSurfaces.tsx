@@ -16,7 +16,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Annotation, Collection, Entity, Filter, Obj, Type } from '@dxos/echo';
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
-import { type LogStore } from '@dxos/log-store-idb';
+import { type IdbLogStore } from '@dxos/log-store-idb';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useClient } from '@dxos/react-client';
@@ -69,7 +69,7 @@ const useObjectOpenAction = (invokePromise: ReturnType<typeof useOperationInvoke
 
 export type DebugSettingsSurfaceProps = {
   subject: AppCapabilities.Settings;
-  logStore?: LogStore;
+  logStore?: IdbLogStore;
   onUpload?: AppCapabilities.FileUploader;
 };
 

@@ -32,7 +32,7 @@ type Settings
 ```mdl
 type DebugPluginOptions
   fields:
-    logStore?: LogStore      # shared persistent log store for capturing and downloading logs
+    logStore?: IdbLogStore      # shared persistent log store for capturing and downloading logs
 ```
 
 ```mdl
@@ -50,7 +50,7 @@ component DebugSettings
   desc: Settings panel rendered in the plugin-settings article slot; controls wireframe and traceAll toggles and exposes log download.
   props:
     settings: Settings
-    logStore?: LogStore
+    logStore?: IdbLogStore
   actions:
     updateSettings(patch: Partial<Settings>)
     downloadLogs()

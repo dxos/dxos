@@ -8,7 +8,7 @@ import { ProcessManagerPlugin } from '@dxos/app-framework';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { type Client, type ClientServicesProvider, type Config } from '@dxos/client';
-import { type LogStore } from '@dxos/log-store-idb';
+import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Observability } from '@dxos/observability';
 import * as AtprotoPlugin from '@dxos/plugin-atproto/AtprotoPlugin';
 import * as AttentionPlugin from '@dxos/plugin-attention/AttentionPlugin';
@@ -46,7 +46,7 @@ export type State = {
   /** Constructed and initializing at the entry point, so the handshake overlaps plugin loading. */
   client: Client;
   observability: Promise<Observability.Observability>;
-  logStore: LogStore;
+  logStore: IdbLogStore;
 };
 
 export type PluginConfig = State & {

@@ -7,7 +7,7 @@ import { type PostHogConfig } from 'posthog-js';
 
 import { type Config, getEnvString } from '@dxos/config';
 import { log } from '@dxos/log';
-import { type LogStore } from '@dxos/log-store-idb';
+import { type IdbLogStore } from '@dxos/log-store-idb';
 
 import { type Extension } from '../../observability-extension';
 import { stubExtension } from '../stub';
@@ -24,7 +24,7 @@ export type ExtensionsOptions = {
    * The owning app is expected to register `logStore.processor` with `log` itself —
    * this extension only consumes the buffered logs (via `export()`).
    */
-  logStore?: LogStore;
+  logStore?: IdbLogStore;
   /**
    * Maximum byte size passed to `logStore.export()` when uploading feedback logs.
    * Should match the upload limit enforced by the server receiving the logs.

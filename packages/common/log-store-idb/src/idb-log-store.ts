@@ -50,26 +50,6 @@ type LogChunk = {
   lines: string;
 };
 
-/**
- * Common surface of the log stores in this package — implemented by {@link IdbLogStore}
- * (in-thread writes) and `WorkerLogStore` (writes forwarded to a log-writer worker), so
- * consumers can hold either.
- */
-export type LogStore = {
-  /** Log processor — register via `log.addProcessor(store.processor)`. Never throws. */
-  readonly processor: LogProcessor;
-  /** Force a flush now and resolve once queued lines are committed. */
-  flush(): Promise<void>;
-  /** Read all retained log lines as a JSONL string. */
-  export(options?: { maxSize?: number }): Promise<string>;
-  /** Read all retained log lines as an NDJSON blob. */
-  exportBlob(options?: { maxSize?: number }): Promise<Blob>;
-  /** Discard all stored log records. */
-  clear(): Promise<void>;
-  /** Flush remaining entries and release resources. */
-  close(): Promise<void>;
-};
-
 export type IdbLogStoreOptions = {
   /** Name of the IndexedDB database. */
   dbName: string;
@@ -123,7 +103,7 @@ export type IdbLogStoreOptions = {
  * - the queue exceeding `flushBatchSize`,
  * - `visibilitychange` to `hidden` and `pagehide` events.
  */
-export class IdbLogStore implements LogStore {
+export class IdbLogStore {
   readonly #dbName: string;
   readonly #storeName: string;
   readonly #flushInterval: number;
@@ -158,7 +138,9 @@ export class IdbLogStore implements LogStore {
     this.#maxRecords = options.maxRecords ?? DEFAULT_MAX_RECORDS;
     this.#maxBytes = options.maxBytes ?? DEFAULT_MAX_BYTES;
     this.#evictionInterval = options.evictionInterval ?? DEFAULT_EVICTION_INTERVAL;
-    this.#maxQueueLines = options.maxQueueLines ?? DEFAULT_MAX_QUEUE_LINES;
+    // Guard against NaN/non-positive values, which would disable or degenerate the cap.
+    const maxQueueLines = options.maxQueueLines ?? DEFAULT_MAX_QUEUE_LINES;
+    this.#maxQueueLines = Number.isFinite(maxQueueLines) && maxQueueLines > 0 ? maxQueueLines : DEFAULT_MAX_QUEUE_LINES;
     this.#tabId = options.tabId ?? inferEnvironmentName();
     this.#filters = parseFilter(options.logFilter ?? DEFAULT_LOG_FILTER);
 
@@ -394,9 +376,7 @@ export class IdbLogStore implements LogStore {
     const locks = (globalThis as any).navigator?.locks as LockManager | undefined;
     if (locks?.request) {
       try {
-        // Explicit param type: the DOM and sharedworker type libs both declare `request`,
-        // and the merged overloads no longer infer the callback's parameter.
-        await locks.request(EVICTION_LOCK_NAME, { ifAvailable: true }, async (lock: Lock | null) => {
+        await locks.request(EVICTION_LOCK_NAME, { ifAvailable: true }, async (lock) => {
           if (!lock) {
             return;
           }
