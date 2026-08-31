@@ -5,8 +5,8 @@
 import { type EditorState, type Extension } from '@codemirror/state';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, {
-  Suspense,
   type PropsWithChildren,
+  Suspense,
   forwardRef,
   useCallback,
   useEffect,
