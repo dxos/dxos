@@ -41,12 +41,9 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
   #services: ClientServicesProxy | undefined;
   #bridgeServer: Rpc.GroupServer | undefined;
   #releaseTabLock: (() => void) | undefined;
-  #loggingStreamCleanup?: () => void;
-  readonly #logFilter: LogFilter[];
 
   constructor(options: DedicatedWorkerClientServicesOptions) {
     super();
-    this.#logFilter = parseFilter('error,warn');
     this.#connection = new Client.Connection({
       createWorker: options.createWorker,
       createCoordinator: options.createCoordinator,
@@ -89,38 +86,8 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
         }
         await EffectEx.runPromise(this.#services.rpc['WorkerService.start']({ origin, lockKey }));
 
-        this.#loggingStreamCleanup?.();
-        this.#loggingStreamCleanup = subscribeStream(
-          Context.empty(),
-          this.#services.rpc['LoggingService.queryLogs']({ filters: this.#logFilter }),
-          {
-            onData: (entry) => {
-              switch (entry.level) {
-                case LogLevel.DEBUG:
-                  log.debug(entry.message, entry.context, mapLogMeta(entry.meta));
-                  break;
-                case LogLevel.VERBOSE:
-                  log.verbose(entry.message, entry.context, mapLogMeta(entry.meta));
-                  break;
-                case LogLevel.INFO:
-                  log.info(entry.message, entry.context, mapLogMeta(entry.meta));
-                  break;
-                case LogLevel.WARN:
-                  log.warn(entry.message, entry.context, mapLogMeta(entry.meta));
-                  break;
-                case LogLevel.ERROR:
-                  log.error(entry.message, entry.context, mapLogMeta(entry.meta));
-                  break;
-              }
-            },
-            onError: (err) => log.catch(err),
-          },
-        );
-
         return {
           close: async () => {
-            this.#loggingStreamCleanup?.();
-            this.#loggingStreamCleanup = undefined;
             this.#releaseTabLock?.();
             this.#releaseTabLock = undefined;
             await this.#services?.close();
