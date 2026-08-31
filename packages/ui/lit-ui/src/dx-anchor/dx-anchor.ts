@@ -83,6 +83,7 @@ export class DxAnchor extends LitElement {
     this.#cancelClose();
     this.#hoverOpen = false;
     document.removeEventListener('pointerover', this.#handleDocumentPointerOver);
+    document.removeEventListener('pointerdown', this.#handleDocumentPointerDown, { capture: true });
   }
 
   #cancelOpen(): void {
@@ -110,8 +111,10 @@ export class DxAnchor extends LitElement {
 
   #openFromHover(): void {
     this.#hoverOpen = true;
-    // Track where the pointer travels while hover-open: over the anchor or the card keeps it open.
+    // Track where the pointer travels while hover-open: over the anchor or the card keeps it open,
+    // and interacting with the card pins it.
     document.addEventListener('pointerover', this.#handleDocumentPointerOver);
+    document.addEventListener('pointerdown', this.#handleDocumentPointerDown, { capture: true });
     this.#dispatchActivate();
   }
 
@@ -168,6 +171,16 @@ export class DxAnchor extends LitElement {
       this.#cancelClose();
     } else {
       this.#scheduleClose();
+    }
+  };
+
+  #handleDocumentPointerDown = (event: PointerEvent): void => {
+    // Interacting with the card pins it: content opened FROM it (a toolbar menu, a dialog) portals
+    // outside the card element, so leave-to-close must stop the moment the user starts using it.
+    // Dismissal reverts to outside-interaction/Escape, exactly as for a click-opened card.
+    const target = event.target;
+    if (target instanceof Element && target.closest(`[${DX_POPOVER_CONTENT_ATTR}]`)) {
+      this.#reset();
     }
   };
 }

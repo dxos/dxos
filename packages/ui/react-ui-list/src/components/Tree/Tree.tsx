@@ -296,6 +296,13 @@ export const Tree = <T extends { id: string } = any>({
     [selected, byValue, selectNode, recentModifiers],
   );
 
+  // Flipped after the first commit: branch content inserted during the initial paint (persisted
+  // open state) must not animate; only user-driven disclosure does.
+  const mountedRef = useRef(false);
+  useEffect(() => {
+    mountedRef.current = true;
+  }, []);
+
   const renderContext = useMemo<TreeRenderContextValue<T>>(
     () => ({
       draggable,
@@ -306,6 +313,7 @@ export const Tree = <T extends { id: string } = any>({
       onOpenChange,
       onItemHover,
       selectNode,
+      mountedRef,
     }),
     [draggable, levelOffset, renderColumns, blockInstruction, canDrop, onOpenChange, onItemHover, selectNode],
   );
@@ -324,7 +332,9 @@ export const Tree = <T extends { id: string } = any>({
     >
       <TreeRenderProvider value={renderContext as TreeRenderContextValue}>
         <TreeView.Tree
-          className={mx('grid', ...(Array.isArray(classNames) ? classNames : [classNames]))}
+          // `outline-none`: the machine parks focus on the tree container (tabIndex=-1) when no
+          // row holds it, which must not draw a focus ring around the whole tree.
+          className={mx('grid outline-none', ...(Array.isArray(classNames) ? classNames : [classNames]))}
           style={{ gridTemplateColumns }}
           onPointerDownCapture={handlePointerDownCapture}
         >
@@ -370,17 +380,7 @@ const TreeNodeRow: FC<TreeNodeRowProps> = memo(({ node }) => {
       {node.branch ? (
         <TreeView.Branch className='contents'>
           <TreeNodeRowContent node={node} />
-          <TreeView.BranchContent
-            // `[&[hidden]]:hidden` restores the UA collapse that the `grid` display would defeat.
-            className={mx(
-              'col-[tree-row] grid grid-cols-subgrid [&[hidden]]:hidden',
-              'data-[state=open]:animate-tree-disclose',
-            )}
-          >
-            {node.children?.map((child) => (
-              <TreeNodeRow key={child.value} node={child} />
-            ))}
-          </TreeView.BranchContent>
+          <TreeBranchContent node={node} />
         </TreeView.Branch>
       ) : (
         <TreeNodeRowContent node={node} />
@@ -390,6 +390,40 @@ const TreeNodeRow: FC<TreeNodeRowProps> = memo(({ node }) => {
 });
 
 TreeNodeRow.displayName = 'Tree.NodeRow';
+
+/**
+ * Branch children container. Disclosure animates height (via `interpolate-size`, opacity-only
+ * where unsupported) — but only for content inserted after the initial paint, so a tree restoring
+ * persisted open state does not animate every branch on load. The gate is stamped at DOM insertion
+ * time because lazy-mounted content attaches long after the row first renders.
+ */
+const TreeBranchContent: FC<TreeNodeRowProps> = ({ node }) => {
+  const { mountedRef } = useTreeRender();
+  const handleRef = useCallback(
+    (element: HTMLDivElement | null) => {
+      if (element && mountedRef.current) {
+        element.dataset.animate = '';
+      }
+    },
+    [mountedRef],
+  );
+  return (
+    <TreeView.BranchContent
+      ref={handleRef}
+      // `[&[hidden]]:hidden` restores the UA collapse that the `grid` display would defeat.
+      className={mx(
+        'col-[tree-row] grid grid-cols-subgrid [&[hidden]]:hidden',
+        'overflow-y-clip [interpolate-size:allow-keywords] data-[animate]:data-[state=open]:animate-tree-disclose',
+      )}
+    >
+      {node.children?.map((child) => (
+        <TreeNodeRow key={child.value} node={child} />
+      ))}
+    </TreeView.BranchContent>
+  );
+};
+
+TreeBranchContent.displayName = 'Tree.BranchContent';
 
 type TreeItemDragState = 'idle' | 'dragging' | 'preview' | 'parent-of-instruction';
 
@@ -578,7 +612,9 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
         <div role='none' className='flex items-center'>
           {branch ? (
             <TreeView.BranchTrigger asChild>
-              <TreeItemToggle isBranch open={open} />
+              {/* zag stamps data-state=open on the trigger, which the ghost button styles as an
+                  open menu trigger (bg-input-bg) — the chevron must stay transparent. */}
+              <TreeItemToggle isBranch open={open} classNames='data-[state=open]:bg-transparent' />
             </TreeView.BranchTrigger>
           ) : (
             <TreeItemToggle isBranch={false} />

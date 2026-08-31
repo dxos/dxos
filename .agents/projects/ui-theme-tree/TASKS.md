@@ -36,6 +36,20 @@ Contrast our theme and tree with shadcn/ui and Ark UI to ground the design decis
       navtree checks (`temp/navtree-verify.mjs`), play tests 7/7, `react-ui-list` unit tests 32/32,
       full-repo build green.
 
+## Phase 3.5: Review fixes (user, 2026-08-31)
+
+- [x] **Branch disclosure now animates height** — `tree-disclose` keyframes animate `block-size: 0 → auto`
+      via `interpolate-size: allow-keywords` (opacity carries the reveal where unsupported); gated by a
+      DOM-insertion-time `data-animate` stamp so persisted-open branches don't animate on load.
+      Exit stays instant (zag hides immediately; DESIGN.md §3.5).
+- [x] **Chevron background fixed** — zag stamps `data-state=open` on the trigger, which the ghost
+      button styled as an open menu trigger (`bg-input-bg`); overridden to transparent.
+- [x] **Whole-tree focus ring removed** — `outline-none` on the tree container (machine parks focus
+      there via tabIndex −1).
+- [x] **Click inside a hover card pins it** — doc-level pointerdown inside `[data-dx-popover-content]`
+      converts hover-open to pinned, so portaled menus/toolbars opened from the card can't trigger
+      leave-to-close; verified 13/13 hover checks + 17/17 tree checks + all test suites green.
+
 ## Phase 4: Wrap-up
 
 - [ ] **PR** — before/after screenshots in description (tree story + navtree pair captured in

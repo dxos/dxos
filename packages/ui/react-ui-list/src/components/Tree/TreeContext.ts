@@ -4,7 +4,7 @@
 
 import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import type * as Atom from 'effect/unstable/reactivity/Atom';
-import { type FC, createContext, useContext } from 'react';
+import { type FC, type MutableRefObject, createContext, useContext } from 'react';
 
 import { raise } from '@dxos/debug';
 import { type Label } from '@dxos/react-ui';
@@ -94,6 +94,8 @@ export type TreeRenderContextValue<T extends { id: string } = any> = {
   onItemHover?: (params: { item: T }) => void;
   /** Applies the select-vs-toggle policy for a row activation. */
   selectNode: (node: TreeNodeEntry<T>, modifiers: { option: boolean; shift: boolean }) => void;
+  /** False during the tree's initial commit — disclosure inserted then must not animate. */
+  mountedRef: MutableRefObject<boolean>;
 };
 
 const TreeRenderContext = createContext<TreeRenderContextValue | null>(null);
