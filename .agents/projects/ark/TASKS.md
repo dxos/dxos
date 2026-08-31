@@ -70,14 +70,6 @@ cost against a much smaller hand-rolled component (Accordion +4.6 KB net, Listbo
       59,820 + `keyborg` 6,298 in `boot-4`, plus the 2,138-byte fluentui wrapper in `boot-5`); the
       used API surface bundles to 76,623 raw / 21,736 gzip / 19,392 brotli. Bigger than the entire
       Ark Tree cost, and in the eager graph rather than a lazy chunk.
-- [ ] **Take the tabster prize — as a `@dxos/react-ui` project, not an Ark one.** Only three files
-      keep tabster in boot, all in `react-ui`: `Focus/Focus.tsx`, `Main/MainContext.ts` (one
-      `useFocusableGroup` call) and `Carousel/Carousel.tsx`. The other ten importers are lazy and
-      attribute zero boot bytes — **including all four in `react-ui-list`, so migrating this package
-      off tabster saves nothing**. Ark is not the replacement: Zag's focus management is per-machine,
-      while these three need a generic roving-tabindex/groupper (Ark ships `focus-trap`, a trap, not
-      a groupper). Plan: a small in-house roving-tabindex hook for `Focus.Group`/`MainContext`, with
-      Ark's `carousel` a candidate for the third.
 - [ ] Evaluate Ark's Accordion on merit (+4.6 KB net over `@radix-ui/react-accordion`) — the only
       swap cheap enough to decide on behavior alone.
 - [ ] **Evaluate moving the core of `react-ui-list` and `@fluentui/react-tabster` to
@@ -105,3 +97,38 @@ to re-derive:
    package instead of four (Ark machine, tabster roving-tabindex, Radix, bespoke activedescendant),
    with APG conformance maintained upstream. Size the migration against that, and price the ~85 KB
    Combobox explicitly since it is the one that decides the total.
+
+## Phase 5: Replace `@fluentui/react-tabster`
+
+Tracked 2026-08-31. The largest measured win available in this area, and — despite living in this
+ledger — **a `@dxos/react-ui` project, not an Ark adoption**. Prize: **68,256 bytes minified in the
+eager boot graph** (`tabster` 59,820 + `keyborg` 6,298 in `boot-4`, plus the 2,138-byte fluentui
+wrapper in `boot-5`); the used API surface bundles to 76,623 raw / 21,736 gzip / 19,392 brotli.
+Larger than the entire Ark Tree cost, and in the eager graph rather than a lazy chunk. Evidence:
+docs/TREE.md §7.
+
+Three constraints, all measured:
+
+1. **Only three files keep tabster in boot**, all in `@dxos/react-ui`: `Focus/Focus.tsx`,
+   `Main/MainContext.ts` (a single `useFocusableGroup` call) and `Carousel/Carousel.tsx`. Removing
+   tabster from those three is what collects the 68 KB.
+2. **The other ten importers are lazy and attribute zero boot bytes** — `plugin-deck`,
+   `plugin-support`, `sdk/shell`, `react-ui-tabs`, `react-ui-masonry`, and all four in
+   `react-ui-list`. They must still be migrated to remove the dependency outright, but they are not
+   where the win is.
+3. **Ark is not the replacement.** Zag's focus management is per-machine; `focus-trap` is a modal
+   trap, not a roving-tabindex groupper — see docs/MIGRATION.md §1. The API to replace is
+   `useArrowNavigationGroup`, `useFocusFinders`, `useFocusableGroup` and
+   `useMergedTabsterAttributes_unstable`.
+
+### Tasks
+
+- [ ] **Write the in-house roving-tabindex/groupper hook** in `@dxos/react-ui` covering
+      `useArrowNavigationGroup` + `useFocusableGroup`. This is the whole project's critical path.
+- [ ] **Cut the three boot-reachable files over** (`Focus.tsx`, `MainContext.ts`, `Carousel.tsx`),
+      then re-run `moon run composer-app:bundle` + `check-boot-budget` and confirm the eager graph
+      drops by ~66 KB. Ark's `carousel` machine is a candidate for the third file if the hook does
+      not cover it cleanly.
+- [ ] **Migrate the remaining ten importers** to drop the dependency from `package.json` entirely.
+- [ ] **Re-baseline `MAX_PRELOAD_BYTES`** in `composer-app/scripts/check-boot-budget.mjs` downward
+      once the win lands — a budget left at 4.45 MB silently absorbs the gain.

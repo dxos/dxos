@@ -208,4 +208,6 @@ delete it) is tracked in the `ark` project ledger.
 
 ## References
 
+- [MIGRATION.md](./MIGRATION.md) — which Ark **utilities** (focus-trap, hotkeys, format, frame,
+  download-trigger) are worth adopting, measured the same way.
 - https://ark-ui.com/docs/components/tree-view
