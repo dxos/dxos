@@ -108,6 +108,12 @@ export const makeContentSpanTransformer = (options?: ContentTransformerOptions):
 const field = (part: { readonly type: string }, key: string): unknown =>
   (part as unknown as Record<string, unknown>)[key];
 
+/** Concatenating {@link field} directly would stringify a missing or non-string value into the capture. */
+const textField = (part: { readonly type: string }, key: string): string => {
+  const value = field(part, key);
+  return typeof value === 'string' ? value : '';
+};
+
 const serializePrompt = (prompt: Prompt.Prompt): unknown[] =>
   prompt.content.map((message) => ({
     role: message.role,
@@ -137,16 +143,16 @@ const serializeResponse = (response: ReadonlyArray<{ readonly type: string }>): 
   for (const part of response) {
     switch (part.type) {
       case 'text':
-        text += field(part, 'text');
+        text += textField(part, 'text');
         break;
       case 'text-delta':
-        text += field(part, 'delta');
+        text += textField(part, 'delta');
         break;
       case 'reasoning':
-        reasoning += field(part, 'text');
+        reasoning += textField(part, 'text');
         break;
       case 'reasoning-delta':
-        reasoning += field(part, 'delta');
+        reasoning += textField(part, 'delta');
         break;
       case 'tool-call':
         content.push({ type: 'function', function: { name: field(part, 'name'), arguments: field(part, 'params') } });
