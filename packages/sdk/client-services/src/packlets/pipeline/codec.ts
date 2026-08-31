@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { createCodecEncoding, type ValueCodec } from '@dxos/hypercore';
+import { type ValueCodec, createCodecEncoding } from '@dxos/hypercore';
 import { schema } from '@dxos/protocols/proto';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 

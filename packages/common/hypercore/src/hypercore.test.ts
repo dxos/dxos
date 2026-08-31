@@ -8,7 +8,7 @@ import { describe, expect, test } from 'vitest';
 
 import { createKeyPair } from '@dxos/crypto';
 
-import { createCodecEncoding, type ValueCodec } from './crypto';
+import { type ValueCodec, createCodecEncoding } from './crypto';
 import { HypercoreFactory } from './hypercore-factory';
 
 type TestItem = {

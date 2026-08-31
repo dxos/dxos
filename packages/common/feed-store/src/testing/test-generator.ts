@@ -3,7 +3,7 @@
 //
 
 import { sleep } from '@dxos/async';
-import { createCodecEncoding, type ValueCodec } from '@dxos/hypercore';
+import { type ValueCodec, createCodecEncoding } from '@dxos/hypercore';
 import { random } from '@dxos/random';
 import type { AbstractValueEncoding } from '@dxos/vendor-hypercore/hypercore';
 
