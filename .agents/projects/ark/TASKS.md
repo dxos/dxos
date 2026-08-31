@@ -184,3 +184,36 @@ non-class `behavior` record keyed by the same names (`showDescription`), and a `
 - [ ] Confirm `bridgeTv` registration still resolves once the axis exists, since `listSlots` is
       derived from `styles()` and a variant axis changes nothing about slot names but does change
       what a consumer must pass.
+
+## Phase 7: Reimplement `react-ui-task` on the Tree
+
+Tracked 2026-08-31. `@dxos/react-ui-task` renders a hierarchical task list and, today, re-derives
+most of what the Ark-based `Tree` now provides. `TaskList.tsx` is **1,324 lines** plus a bespoke
+`hierarchy.ts` (191) and `dnd.ts` (46); it borrows only leaf pieces from `react-ui-list`
+(`Listbox`, `TreeDropIndicator`, `TreeItemToggle`, `paddingIndentation`, `useListDisclosure`) and
+hand-rolls its own roles, keyboard handling and drag wiring on top of `Task.parentTask`.
+
+The prospective target, `@dxos/react-ui-tree`, **does not exist yet** — this item presupposes
+extracting `Tree` out of `react-ui-list` into its own package. That extraction is the real
+precondition and should be decided first, alongside the Phase 3 `Treegrid` question, since both are
+"what belongs in `react-ui-list`" decisions.
+
+Why it is worth doing: the Tree already owns the APG keymap, machine-managed focus and ARIA, and the
+pragmatic-dnd contract. Reimplementing `TaskList` on it should delete the bespoke hierarchy walk and
+most of the keyboard/role handling, and would give the task list the accessibility behaviour it does
+not have today — the same argument that justified the navtree rebuild.
+
+- [ ] **Decide whether `Tree` is extracted into `@dxos/react-ui-tree`.** Precondition for everything
+      below. Weigh against Phase 3 (Treegrid) and the `react-ui`→`react-ui-list` layering rule in
+      AUDIT.md §1.4 — a new package must not create an upward edge.
+- [ ] **Map `TaskList`'s requirements onto the `TreeModel` contract.** It stores hierarchy as
+      `Task.parentTask` and moves nodes with a single `MoveTask` mutation taking a parent/index pair;
+      the Tree's model is atom families keyed by path. Establish that the mapping is faithful before
+      committing — this is where the migration succeeds or fails.
+- [ ] **Reimplement `TaskList` on the Tree**, deleting `hierarchy.ts` + `dnd.ts` and the hand-rolled
+      roles/keyboard handling in favour of the machine's.
+- [ ] **Keep the sub-task disclosure semantics.** `TaskList` documents a per-viewer, per-list open
+      state and a rule about not hiding a newly added first sub-task; confirm the Tree's controlled
+      `expandedValue` reproduces it rather than assuming path-keyed state is equivalent.
+- [ ] Port `hierarchy.test.ts` (155 lines) to whatever replaces the walk, rather than dropping the
+      coverage with the module.
