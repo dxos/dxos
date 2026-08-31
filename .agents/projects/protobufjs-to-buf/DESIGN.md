@@ -25,6 +25,12 @@ it. Doing this **before** the remaining sweeps is what makes the teardown a dele
 landing afterwards imports from the new home, so the dependent list shrinks monotonically instead of
 being re-established by every new call site.
 
+The runtime half had a twin: `decodeCompat<V>` took the compat shape as a caller-supplied type, and
+only the protobuf.js barrel could name it. `Compat<T>` in `@dxos/protocols/buf-shape-compat` derives
+it from the buf type instead, which is what finally lets `protobuf-compiler`'s output be deleted. It
+widens field presence (buf cannot recover proto3 `optional`), so the remaining sweeps cost
+undefined-handling at each consumer rather than an import swap.
+
 It cannot live in `@dxos/protocols`: `hypercore` and `feed-store` are `common/` packages that do not
 depend on it, and routing them through `core/` inverts the layering.
 

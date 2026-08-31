@@ -21,9 +21,11 @@ at the bottom — read those before picking up a thread.
 | 9c  | `echo/metadata` + `echo/feed`           | **part** | Both metadata stores swapped; `pipeline/codec` held back for `#9d`.      |
 | 9d  | credentials signing/verification        | **part** | Signature stability proven by test; the type sweep is what is left.      |
 
-**Next up, in order:** extract the transport vocabulary (see "Structuring for teardown" below) so
-the remaining threads land against it, then the import sweep that `#5`'s and `#9d`'s remainders both
-decompose into, then `pipeline/codec` as the tail of `#9c`/`#9d`. `#2` is independent and can slot
+**Next up, in order:** the transport vocabulary is extracted (`@dxos/codec`) and `Compat<T>` now
+derives the compat shape from buf's generated types, so both prerequisites below are met. What
+remains is the sweep that `#5`'s and `#9d`'s remainders decompose into — one package at a time,
+because it is presence handling rather than an import swap (see "The second thing that kept
+protobuf.js alive") — then `pipeline/codec` as the tail of `#9c`/`#9d`. `#2` is independent and can slot
 in anywhere. Every milestone-sized thread is done and nothing is gated -- what is left is volume,
 not blockers.
 
@@ -522,3 +524,39 @@ of consumers and with the package still in the graph.
 Ordering: extract the vocabulary → land what remains (`#5`'s 14 files, `#9c`'s `pipeline/codec`,
 `#9d`'s type sweep, and `#2` whenever) against it → the package is then reachable only from
 `protobuf-compiler` and its own tests, and goes with them in one commit.
+
+## The second thing that kept protobuf.js alive: compat _types_
+
+Extracting the transport vocabulary moved the symbols that describe the wire. What remained was
+subtler and blocked every import sweep: `decodeCompat<V>`/`compatCodec<T>` take the compat shape as
+a caller-supplied type parameter, and the **only** source of that type was the protobuf.js
+generated barrel. So every one of the ~20 compat-codec call sites still imported
+`@dxos/protocols/proto/*` purely to name a type, and `protobuf-compiler`'s output could not be
+deleted no matter how much runtime moved.
+
+`Compat<T>` (`protocols/src/buf/compat-types.ts`, exported from `@dxos/protocols/buf-shape-compat`)
+derives that shape from the buf generated type instead, mirroring `shape-compat.ts` field rule for
+field rule: the five substituted messages become `PublicKey`/`Buffer`/`Timeframe`/`Date`/`Struct`,
+`Any` becomes a `@type`-tagged bag, `JsonObject` collapses to `Struct`, and oneof groups flatten
+from buf's `{ case, value }` into protobuf.js's sibling optional fields.
+
+`compat-types.test.ts` pins it by assigning a legacy-typed value into `Compat<Buf>` for a credential,
+a presentation, a oneof group, a private key, a timeframe, a `Struct`+`Any` message, a nested
+message with enums, and a map field. Those assertions compile against the protobuf.js types and are
+deleted with them.
+
+### What the sweep costs, now that the types exist
+
+`Compat` is a **widening**, not a match, and the reason is structural: buf cannot recover proto3's
+`optional` marker from a generated type, so every singular message field arrives optional even where
+protobuf.js declared it required (repeated and map fields go the other way — buf always materialises
+the empty collection, so `Compat` marks them optional to match protobuf.js). Legacy-typed values are
+therefore assignable to `Compat`, not the reverse.
+
+That reprices `#5` and `#9d`. Both were filed as import sweeps; what is actually left is
+**presence handling** at each consumer, and it cannot be discharged with `!` under the repo's
+no-cast rule. `echo-host`'s `sqlite-heads-store.ts` is converted here as the worked example — it
+already read `.hashes ?? []`, so it cost one import line. A site that indexes a required submessage
+will cost a real branch, and packages whose public API re-exports a generated type (`keyring`'s
+`KeyRecord[]`, for one) propagate the widening to their own consumers, which is why the sweep wants
+one package per change rather than one repo-wide commit.

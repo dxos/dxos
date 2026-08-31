@@ -25,6 +25,8 @@ import { Timeframe } from '@dxos/timeframe';
 import { preserve_any } from './proto/gen/dxos/field_options_pb.ts';
 import { bufRegistry } from './registry.ts';
 
+export { type Compat } from './compat-types.ts';
+
 /**
  * Thrown when a message reaches the compat layer carrying a field whose protobuf.js shape cannot
  * be reproduced on buf. Failing loudly beats silently writing a differently-shaped value into
