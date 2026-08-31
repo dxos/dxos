@@ -36,17 +36,25 @@ mover.
       so the AGENTS.md "new packages are private" default cannot apply to a package the themed tier
       consumes. Every sibling in `react-primitives/` is public for the same reason.
 
-## Phase 2: Break attention's themed edge
+## Phase 2: Break attention's themed edge — DONE
 
-`@dxos/react-ui-attention` touches `@dxos/react-ui` in exactly two places, so the state layer is
+`@dxos/react-ui-attention` touched `@dxos/react-ui` in exactly two places, so the state layer was
 already headless in everything but its dependency list.
 
-- [ ] **Take `ThemedClassName` from `@dxos/ui-types`** in `AttentionProvider.tsx` — it is re-exported
+- [x] **Take `ThemedClassName` from `@dxos/ui-types`** in `AttentionProvider.tsx` — it is re-exported
       by `react-ui`, not owned by it.
-- [ ] **Move `AttentionGlyph` into `@dxos/react-ui`** — the only thing in the package that genuinely
-      needs `Icon` and the theme. This inverts an edge that currently points the wrong way.
-- [ ] **Drop `@dxos/react-ui` from the package's dependencies and peerDependencies** and confirm
-      nothing else reaches for it.
+- [x] **Move `AttentionGlyph` into `@dxos/react-ui`** — the only thing in the package that genuinely
+      needed `Icon` and the theme, and presentational throughout (`attended` / `containsAttended` /
+      `syncing` / `presence` props, no attention context), so it moved without dragging state with
+      it. Two consumers in `plugin-space` repointed; `Syncing` had none outside the package.
+- [x] **Drop `@dxos/react-ui` from `peerDependencies`.** It stays a **devDependency** only, because
+      `AttentionProvider.stories.tsx` uses `@dxos/react-ui/testing`'s `withTheme` decorator — a
+      headless package may still demo itself against the theme. The production dependency, which is
+      what the layering claim is about, is gone. `@dxos/util` went too: knip found it unused once
+      the glyph left.
+
+Result: `@dxos/react-ui-attention` now depends on `invariant`, `keyboard`, `log`, `react-hooks` and
+`ui-types` — nothing from the themed tier.
 
 ## Phase 3: Hotkeys on Ark — spike first
 

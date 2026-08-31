@@ -21,9 +21,6 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/util"
-    },
-    {
       "path": "../react-primitives/react-hooks"
     },
     {
@@ -31,6 +28,9 @@
     },
     {
       "path": "../ui-theme"
+    },
+    {
+      "path": "../ui-types"
     }
   ]
 }

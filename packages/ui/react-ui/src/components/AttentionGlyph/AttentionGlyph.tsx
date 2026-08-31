@@ -5,8 +5,10 @@
 import { type Primitive } from '@radix-ui/react-primitive';
 import React, { type ComponentPropsWithRef, type CSSProperties, forwardRef, useMemo } from 'react';
 
-import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
+
+import { type ThemedClassName } from '../../util';
+import { Icon } from '../Icon';
 
 const attentionGlyphStyles = mx(
   'inline-block rounded-xs w-3 h-3 bg-transparent text-accent-text transition-colors',
