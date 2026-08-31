@@ -12,9 +12,9 @@ import {
   serializeToJsonl,
   shouldLog,
 } from '@dxos/log';
-import { type OtelLogSinkMessage } from '@dxos/observability/otel-log-sink';
-import { type OtelMetricsSinkMessage } from '@dxos/observability/otel-metrics-sink';
-import { type OtelSpanSinkMessage } from '@dxos/observability/otel-span-sink';
+import type * as OtelLogSink from '@dxos/observability/OtelLogSink';
+import type * as OtelMetricsSink from '@dxos/observability/OtelMetricsSink';
+import type * as OtelSpanSink from '@dxos/observability/OtelSpanSink';
 
 const DEFAULT_LOG_FILTER = 'debug';
 
@@ -28,9 +28,9 @@ const DEFAULT_LOG_FILTER = 'debug';
 export type TelemetryWorkerMessage =
   | string
   | { type: 'flush' }
-  | OtelLogSinkMessage
-  | OtelMetricsSinkMessage
-  | OtelSpanSinkMessage;
+  | OtelLogSink.Message
+  | OtelMetricsSink.Message
+  | OtelSpanSink.Message;
 
 export type WorkerLogProcessorOptions = {
   /** The telemetry worker (`workers/telemetry-worker.ts`), or the `port` of a SharedWorker running it. */

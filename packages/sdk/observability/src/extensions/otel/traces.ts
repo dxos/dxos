@@ -20,14 +20,14 @@ import { type RemoteSpan, type StartSpanOptions, TRACE_PROCESSOR } from '@dxos/t
 
 import { type OtelOptions, signalUrl } from './otel';
 import { TagInjectorSpanProcessor } from './span-processors';
-import { PortSpanProcessor, type SpanSinkHandle } from './span-sink';
+import * as OtelSpanSink from './OtelSpanSink';
 
 export type OtelTracesOptions = OtelOptions & {
   /**
    * When set, ended spans are posted to the telemetry worker's `OtelSpanSink` instead of
    * being batched and exported here. Sampling, IDs, and propagation stay in this realm.
    */
-  spanSink?: SpanSinkHandle;
+  spanSink?: OtelSpanSink.Handle;
 };
 
 export class OtelTraces {
@@ -42,7 +42,7 @@ export class OtelTraces {
       spanProcessors: [
         new TagInjectorSpanProcessor(this.options.getTags),
         ...(options.spanSink
-          ? [new PortSpanProcessor(options.spanSink.post)]
+          ? [new OtelSpanSink.PortSpanProcessor(options.spanSink.post)]
           : this.options.destinations.map(
               (destination) =>
                 new BatchSpanProcessor(

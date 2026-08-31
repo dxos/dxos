@@ -9,7 +9,9 @@ import * as Match from 'effect/Match';
 import { DXOS_VERSION, Remote } from '@dxos/client';
 import { Config, Defaults, Envs, Local, Storage, getEnvString } from '@dxos/config';
 import { type IdbLogStore } from '@dxos/log-store-idb';
-import { Observability, ObservabilityExtension, ObservabilityProvider } from '@dxos/observability';
+import * as Observability from '@dxos/observability/Observability';
+import * as ObservabilityExtension from '@dxos/observability/ObservabilityExtension';
+import * as ObservabilityProvider from '@dxos/observability/ObservabilityProvider';
 import { getHostPlatform, isNonNullable } from '@dxos/util';
 
 import { APP_DOMAIN, FEEDBACK_LOGS_PATH, LOG_STORE_MAX_BYTES } from './constants';
@@ -102,9 +104,9 @@ export const initializeObservability = async (
         serviceVersion: DXOS_VERSION,
         environment: getEnvString(config, 'DX_ENVIRONMENT') ?? 'unknown',
         config,
-        additionalDestinations: [ObservabilityExtension.PostHog.otelDestination(config)].filter(isNonNullable),
         logs: true,
         telemetryWorker,
+        additionalDestinations: [ObservabilityExtension.PostHog.otelDestination(config)].filter(isNonNullable),
         metrics: true,
         traces: true,
       }),

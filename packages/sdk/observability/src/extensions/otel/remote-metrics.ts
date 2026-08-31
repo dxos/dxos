@@ -8,7 +8,7 @@ import { type CleanupFn, scheduleTaskInterval } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type MetricData, type MetricObserver, TRACE_PROCESSOR } from '@dxos/tracing';
 
-import { type OtelMetricRecord, type OtelMetricsSinkInit } from './metrics-sink';
+import type * as OtelMetricsSink from './OtelMetricsSink';
 
 /**
  * Matches the sink's export interval (see `EXPORT_INTERVAL` in `metrics.ts` — not imported,
@@ -44,7 +44,7 @@ export const metricDataToAttributes = (data?: MetricData): Attributes => {
  * the same windows the in-process reader would have missed.
  */
 export class RemoteMetricsForwarder {
-  readonly #post: (message: OtelMetricsSinkInit | OtelMetricRecord) => void;
+  readonly #post: (message: OtelMetricsSink.Init | OtelMetricsSink.Metric) => void;
   readonly #ctx = new Context();
 
   readonly #processor: Parameters<typeof TRACE_PROCESSOR.remoteMetrics.registerProcessor>[0] = {
@@ -56,7 +56,7 @@ export class RemoteMetricsForwarder {
     observe: (name, callback, data) => this.observe(name, callback, metricDataToAttributes(data), data),
   };
 
-  constructor(post: (message: OtelMetricsSinkInit | OtelMetricRecord) => void) {
+  constructor(post: (message: OtelMetricsSink.Init | OtelMetricsSink.Metric) => void) {
     this.#post = post;
     TRACE_PROCESSOR.remoteMetrics.registerProcessor(this.#processor);
   }
@@ -96,11 +96,11 @@ export class RemoteMetricsForwarder {
     await this.#ctx.dispose();
   }
 
-  #record(op: OtelMetricRecord['op'], name: string, value: number, data?: MetricData): void {
+  #record(op: OtelMetricsSink.Metric['op'], name: string, value: number, data?: MetricData): void {
     this.#send(op, name, value, metricDataToAttributes(data), data);
   }
 
-  #send(op: OtelMetricRecord['op'], name: string, value: number, tags?: Attributes, meta?: MetricData): void {
+  #send(op: OtelMetricsSink.Metric['op'], name: string, value: number, tags?: Attributes, meta?: MetricData): void {
     this.#post({
       type: 'otel-metric',
       op,

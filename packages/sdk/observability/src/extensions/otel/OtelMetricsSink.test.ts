@@ -8,9 +8,9 @@ import { afterEach, describe, expect, test } from 'vitest';
 import { invariant } from '@dxos/invariant';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 
-import { OtelMetricsSink, type OtelMetricsSinkInit } from './metrics-sink';
+import * as OtelMetricsSink from './OtelMetricsSink';
 
-const defaultInit: OtelMetricsSinkInit = {
+const defaultInit: OtelMetricsSink.Init = {
   type: 'otel-metrics-init',
   destinations: [{ endpoint: 'http://localhost:1', headers: {} }],
   resourceAttributes: { 'service.name': 'test-service' },
@@ -18,16 +18,16 @@ const defaultInit: OtelMetricsSinkInit = {
 };
 
 describe('OtelMetricsSink', () => {
-  let sink: OtelMetricsSink | undefined;
+  let sink: OtelMetricsSink.Sink | undefined;
 
   afterEach(async () => {
     await sink?.close();
     sink = undefined;
   });
 
-  const makeSink = (init: Partial<OtelMetricsSinkInit> = {}) => {
+  const makeSink = (init: Partial<OtelMetricsSink.Init> = {}) => {
     const exporter = new InMemoryMetricExporter(AggregationTemporality.DELTA);
-    sink = new OtelMetricsSink({ ...defaultInit, ...init }, { exporter });
+    sink = new OtelMetricsSink.Sink({ ...defaultInit, ...init }, { exporter });
     const metric = async (name: string): Promise<MetricData> => {
       invariant(sink);
       await sink.flush();

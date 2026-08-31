@@ -3,169 +3,145 @@
 //
 
 import { IdbLogStore } from '@dxos/log-store-idb';
-import { type OtelLogSink, type OtelLogSinkMessage } from '@dxos/observability/otel-log-sink';
-import { type OtelMetricRecord, type OtelMetricsSink } from '@dxos/observability/otel-metrics-sink';
-import { type OtelSpanRecord, type OtelSpanSink } from '@dxos/observability/otel-span-sink';
+import type * as OtelLogSink from '@dxos/observability/OtelLogSink';
+import type * as OtelMetricsSink from '@dxos/observability/OtelMetricsSink';
+import type * as OtelSpanSink from '@dxos/observability/OtelSpanSink';
 
 // Direct module import: the util barrel would pull the whole config/observability graph into
 // this worker's bundle.
 import { LOG_STORE_DB_NAME, LOG_STORE_MAX_BYTES } from '../util/constants';
 import { type TelemetryWorkerMessage } from '../util/worker-log-processor';
 
-// Telemetry worker: owns the queue, flush timer, chunked IDB writes and eviction, so log
-// persistence never depends on the sending thread's event loop turning (see DX-1224).
-// `WorkerLogProcessor` is the sending side. Handles both dedicated (`onmessage`) and shared
-// (`onconnect`) worker scopes.
-//
-// On `otel-init` / `otel-metrics-init` (sent by the Otel observability extension in the
-// producing realm) the worker additionally exports to the OTLP endpoint — logs by parsing
-// the lines it already receives (`OtelLogSink`), metrics from forwarded instrument calls
-// (`OtelMetricsSink`) — from its own event loop, so export keeps flowing while the producer
-// is blocked by a long synchronous task. The sink modules are imported lazily:
-// telemetry-disabled sessions never load the OTel SDK.
+// Telemetry worker: owns log persistence (queue, flush timer, chunked IDB writes, eviction —
+// see DX-1224) and, once a connection sends its `otel-*-init` messages, OTLP export of that
+// connection's logs, metrics, and spans. Everything runs on this worker's own event loop, so
+// persistence and export keep going while a producing realm is blocked by a long synchronous
+// task. `WorkerLogProcessor` and the Otel extension are the sending side. Handles both
+// dedicated (`onmessage`) and shared (`onconnect`) worker scopes.
 
 const store = new IdbLogStore({ dbName: LOG_STORE_DB_NAME, maxBytes: LOG_STORE_MAX_BYTES });
 
 /** Caps messages buffered while a sink module import is in flight. */
 const MAX_PENDING = 5_000;
 
+type Tags = { type: 'otel-tags'; tags: Record<string, string> };
+type Flush = { type: 'otel-flush' };
+
+/**
+ * One lazily-imported export pipeline. `init` starts the (one-shot) module load; messages
+ * delivered before it resolves are buffered in order, bounded by {@link MAX_PENDING}. A
+ * failed load drops export for this connection — IDB persistence is unaffected.
+ */
+const lazySink = <TInit, TMessage>(
+  load: (init: TInit) => Promise<(message: TMessage) => void>,
+): { init: (init: TInit) => void; deliver: (message: TMessage) => void } => {
+  let deliver: ((message: TMessage) => void) | undefined;
+  let pending: TMessage[] | undefined;
+  return {
+    init: (init) => {
+      if (deliver !== undefined || pending !== undefined) {
+        return;
+      }
+      pending = [];
+      load(init)
+        .then((loaded) => {
+          deliver = loaded;
+          pending?.forEach(loaded);
+          pending = undefined;
+        })
+        .catch(() => {
+          pending = undefined;
+        });
+    },
+    deliver: (message) => {
+      if (deliver !== undefined) {
+        deliver(message);
+      } else if (pending !== undefined && pending.length < MAX_PENDING) {
+        pending.push(message);
+      }
+    },
+  };
+};
+
+// Flushes are fire-and-forget, mirroring the sender's pagehide semantics; a failed export
+// retries on the sink's own timer.
+const fireFlush = (result: Promise<void>): void => {
+  void result.catch(() => {});
+};
+
 // Per connection: a SharedWorker serves one producing realm per port, each with its own
 // resource identity (process type, session id), so sink state cannot be shared.
 const createMessageHandler = (): ((event: MessageEvent<TelemetryWorkerMessage>) => void) => {
-  let logSink: OtelLogSink | undefined;
-  let metricsSink: OtelMetricsSink | undefined;
-  let spanSink: OtelSpanSink | undefined;
-  // Set when the matching init arrives; each holds messages in arrival order until the
-  // dynamic import resolves, then replays them into the sink. Messages arriving before any
-  // init are persisted (logs) or dropped (metrics) — same as the in-process pipelines,
-  // which only start once observability initializes.
-  let pendingLogs: (string | Exclude<OtelLogSinkMessage, { type: 'otel-init' }>)[] | undefined;
-  let pendingMetrics: OtelMetricRecord[] | undefined;
-  let pendingSpans: OtelSpanRecord[] | undefined;
-
-  const toLogSink = (message: string | Exclude<OtelLogSinkMessage, { type: 'otel-init' }>): void => {
-    if (logSink) {
-      if (typeof message === 'string') {
-        logSink.append(message);
-      } else {
-        logSink.handleMessage(message);
-      }
-    } else if (pendingLogs && pendingLogs.length < MAX_PENDING) {
-      pendingLogs.push(message);
-    }
-  };
-
-  // Fire-and-forget, mirroring the sender's pagehide semantics; a failed export retries on
-  // the sinks' own timers.
-  const flushTelemetry = (): void => {
-    void metricsSink?.flush().catch(() => {});
-    void spanSink?.flush().catch(() => {});
-  };
+  const logs = lazySink<OtelLogSink.Init, string | Tags | Flush>((init) =>
+    import('@dxos/observability/OtelLogSink').then(({ Sink }) => {
+      const sink = new Sink(init);
+      return (message) => (typeof message === 'string' ? sink.append(message) : sink.handleMessage(message));
+    }),
+  );
+  const metrics = lazySink<OtelMetricsSink.Init, OtelMetricsSink.Metric | Tags | Flush>((init) =>
+    import('@dxos/observability/OtelMetricsSink').then(({ Sink }) => {
+      const sink = new Sink(init);
+      return (message) => {
+        switch (message.type) {
+          case 'otel-metric':
+            return sink.append(message);
+          case 'otel-tags':
+            return sink.setTags(message.tags);
+          case 'otel-flush':
+            return fireFlush(sink.flush());
+        }
+      };
+    }),
+  );
+  const spans = lazySink<OtelSpanSink.Init, OtelSpanSink.Span | Flush>((init) =>
+    import('@dxos/observability/OtelSpanSink').then(({ Sink }) => {
+      const sink = new Sink(init);
+      return (message) => (message.type === 'otel-span' ? sink.append(message) : fireFlush(sink.flush()));
+    }),
+  );
 
   return (event: MessageEvent<TelemetryWorkerMessage>): void => {
     const data = event.data;
     // Hot path: a bare string is one pre-serialized JSONL line.
     if (typeof data === 'string') {
       store.append(data);
-      toLogSink(data);
+      logs.deliver(data);
       return;
     }
     if (data == null) {
       return;
     }
     switch (data.type) {
-      case 'flush': {
-        // Fire-and-forget, mirroring the sender's pagehide semantics; `flush` never rejects.
+      case 'flush':
         void store.flush();
-        toLogSink({ type: 'otel-flush' });
-        flushTelemetry();
+        logs.deliver({ type: 'otel-flush' });
+        metrics.deliver({ type: 'otel-flush' });
+        spans.deliver({ type: 'otel-flush' });
         break;
-      }
-      case 'otel-init': {
-        if (logSink !== undefined || pendingLogs !== undefined) {
-          break;
-        }
-        pendingLogs = [];
-        void import('@dxos/observability/otel-log-sink')
-          .then(({ OtelLogSink }) => {
-            logSink = new OtelLogSink(data);
-            for (const message of pendingLogs ?? []) {
-              toLogSink(message);
-            }
-            pendingLogs = undefined;
-          })
-          .catch(() => {
-            // No OTel log export for this connection; IDB persistence is unaffected.
-            pendingLogs = undefined;
-          });
+      case 'otel-init':
+        logs.init(data);
         break;
-      }
-      case 'otel-metrics-init': {
-        if (metricsSink !== undefined || pendingMetrics !== undefined) {
-          break;
-        }
-        pendingMetrics = [];
-        void import('@dxos/observability/otel-metrics-sink')
-          .then(({ OtelMetricsSink }) => {
-            metricsSink = new OtelMetricsSink(data);
-            for (const record of pendingMetrics ?? []) {
-              metricsSink.append(record);
-            }
-            pendingMetrics = undefined;
-          })
-          .catch(() => {
-            // No OTel metric export for this connection.
-            pendingMetrics = undefined;
-          });
+      case 'otel-metrics-init':
+        metrics.init(data);
         break;
-      }
-      case 'otel-metric': {
-        if (metricsSink) {
-          metricsSink.append(data);
-        } else if (pendingMetrics && pendingMetrics.length < MAX_PENDING) {
-          pendingMetrics.push(data);
-        }
+      case 'otel-traces-init':
+        spans.init(data);
         break;
-      }
-      case 'otel-tags': {
-        // A tags update racing the metrics-sink import is dropped for metrics — the window
-        // is the ms-scale module load at startup, well before identity tags arrive.
-        toLogSink(data);
-        metricsSink?.setTags(data.tags);
+      case 'otel-metric':
+        metrics.deliver(data);
         break;
-      }
-      case 'otel-traces-init': {
-        if (spanSink !== undefined || pendingSpans !== undefined) {
-          break;
-        }
-        pendingSpans = [];
-        void import('@dxos/observability/otel-span-sink')
-          .then(({ OtelSpanSink }) => {
-            spanSink = new OtelSpanSink(data);
-            for (const record of pendingSpans ?? []) {
-              spanSink.append(record);
-            }
-            pendingSpans = undefined;
-          })
-          .catch(() => {
-            // No OTel span export for this connection.
-            pendingSpans = undefined;
-          });
+      case 'otel-span':
+        spans.deliver(data);
         break;
-      }
-      case 'otel-span': {
-        if (spanSink) {
-          spanSink.append(data);
-        } else if (pendingSpans && pendingSpans.length < MAX_PENDING) {
-          pendingSpans.push(data);
-        }
+      case 'otel-tags':
+        logs.deliver(data);
+        metrics.deliver(data);
         break;
-      }
-      case 'otel-flush': {
-        toLogSink(data);
-        flushTelemetry();
+      case 'otel-flush':
+        logs.deliver(data);
+        metrics.deliver(data);
+        spans.deliver(data);
         break;
-      }
     }
   };
 };

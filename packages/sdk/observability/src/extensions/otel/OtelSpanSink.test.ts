@@ -10,9 +10,9 @@ import { afterEach, describe, expect, test } from 'vitest';
 
 import { invariant } from '@dxos/invariant';
 
-import { type OtelSpanRecord, OtelSpanSink, type OtelSpanSinkInit, PortSpanProcessor } from './span-sink';
+import * as OtelSpanSink from './OtelSpanSink';
 
-const defaultInit: OtelSpanSinkInit = {
+const defaultInit: OtelSpanSink.Init = {
   type: 'otel-traces-init',
   destinations: [{ endpoint: 'http://localhost:1', headers: {} }],
   resourceAttributes: { 'service.name': 'test-service', 'session.id': 'session-1' },
@@ -20,16 +20,16 @@ const defaultInit: OtelSpanSinkInit = {
 
 /** Producer-side tracer provider wired to capture serialized records, as the realm would post them. */
 const makeProducer = () => {
-  const records: OtelSpanRecord[] = [];
+  const records: OtelSpanSink.Span[] = [];
   const provider = new BasicTracerProvider({
     resource: resourceFromAttributes({ 'service.name': 'producer-only' }),
-    spanProcessors: [new PortSpanProcessor((record) => records.push(record))],
+    spanProcessors: [new OtelSpanSink.PortSpanProcessor((record) => records.push(record))],
   });
   return { records, tracer: provider.getTracer('dxos-observability', '1.0.0'), provider };
 };
 
 describe('OtelSpanSink', () => {
-  let sink: OtelSpanSink | undefined;
+  let sink: OtelSpanSink.Sink | undefined;
 
   afterEach(async () => {
     await sink?.close();
@@ -38,7 +38,7 @@ describe('OtelSpanSink', () => {
 
   const makeSink = () => {
     const exporter = new InMemorySpanExporter();
-    sink = new OtelSpanSink(defaultInit, { exporter });
+    sink = new OtelSpanSink.Sink(defaultInit, { exporter });
     return { sink, exporter };
   };
 
@@ -94,8 +94,8 @@ describe('OtelSpanSink', () => {
   });
 
   test('unsampled spans are not forwarded', () => {
-    const records: OtelSpanRecord[] = [];
-    const processor = new PortSpanProcessor((record) => records.push(record));
+    const records: OtelSpanSink.Span[] = [];
+    const processor = new OtelSpanSink.PortSpanProcessor((record) => records.push(record));
     const unsampled: ReadableSpan = {
       name: 'unsampled',
       kind: SpanKind.INTERNAL,

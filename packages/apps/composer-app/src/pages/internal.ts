@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Observability } from '@dxos/observability';
+import * as Observability from '@dxos/observability/Observability';
 
 import { APP_KEY } from '../util';
 

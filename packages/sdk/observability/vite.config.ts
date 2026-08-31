@@ -7,11 +7,14 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     'index': 'src/index.ts',
-    // Standalone entries: the telemetry worker imports the sinks without dragging the rest
+    'observability': 'src/observability.ts',
+    'observability-extension': 'src/observability-extension.ts',
+    'providers': 'src/providers/index.ts',
+    // Standalone sink entries: the telemetry worker imports these without dragging the rest
     // of the package (PostHog, providers) into its bundle.
-    'otel-log-sink': 'src/extensions/otel/log-sink.ts',
-    'otel-metrics-sink': 'src/extensions/otel/metrics-sink.ts',
-    'otel-span-sink': 'src/extensions/otel/span-sink.ts',
+    'extensions/otel/OtelLogSink': 'src/extensions/otel/OtelLogSink.ts',
+    'extensions/otel/OtelMetricsSink': 'src/extensions/otel/OtelMetricsSink.ts',
+    'extensions/otel/OtelSpanSink': 'src/extensions/otel/OtelSpanSink.ts',
   },
   test: { node: true },
 });
