@@ -55,13 +55,31 @@ const isSentinel = (element: Element): boolean => element.hasAttribute(FOCUS_SEN
 const isExcluded = (element: Element): boolean =>
   element.hasAttribute('inert') || element.hasAttribute('hidden') || element.getAttribute('aria-hidden') === 'true';
 
+// A test DOM has no layout at all, so a rendered-ness test there would reject every element.
+// Only `true` is memoized, so a document measured before its first layout is measured again.
+const documentsWithLayout = new WeakMap<Document, boolean>();
+const hasLayout = (document: Document): boolean => {
+  let value = documentsWithLayout.get(document);
+  if (value !== true) {
+    value = document.body.getClientRects().length > 0;
+    documentsWithLayout.set(document, value);
+  }
+  return value;
+};
+
 /**
- * Rendered. `getClientRects` is what distinguishes a rendered element from one whose ancestor is
- * `display: none` — the case tabindex alone cannot see. Test DOMs have no layout at all, where the
- * same test would reject every element, so it only applies where the document has layout.
+ * Rendered. Tabindex alone cannot see an ancestor's `display: none` or `visibility: hidden`;
+ * `checkVisibility` can, and unlike a rect test it is not fooled by a hidden element that still
+ * occupies space. Opacity is deliberately not considered — a faded-in list is still navigable.
  */
-const isRendered = (element: HTMLElement): boolean =>
-  element.getClientRects().length > 0 || element.ownerDocument.body.getClientRects().length === 0;
+const isRendered = (element: HTMLElement): boolean => {
+  if (!hasLayout(element.ownerDocument)) {
+    return true;
+  }
+  return typeof element.checkVisibility === 'function'
+    ? element.checkVisibility({ visibilityProperty: true, contentVisibilityAuto: true })
+    : element.getClientRects().length > 0;
+};
 
 /** Reachable by `Tab`. */
 export const isTabbable = (element: HTMLElement): boolean =>

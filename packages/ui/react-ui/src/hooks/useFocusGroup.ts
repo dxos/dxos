@@ -15,6 +15,7 @@ import {
   findFirstFocusable,
   findLastFocusable,
   findNextTabStop,
+  getCurrentItem,
   getEntryTarget,
   getFocusItems,
   getTabExitBoundary,
@@ -76,6 +77,15 @@ const createSentinel = (document: Document, position: 'start' | 'end'): HTMLElem
   // Out of flow so it cannot become a flex or grid item, and unpaintable so it cannot be seen.
   sentinel.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;pointer-events:none;';
   return sentinel;
+};
+
+/** Where focus goes when the group's contents are entered: the memorized item, else the first. */
+const contentEntry = (container: HTMLElement): HTMLElement | null => {
+  const current = getCurrentItem(container);
+  if (current) {
+    return isTabbable(current) ? current : getEntryTarget(current);
+  }
+  return findFirstFocusable(container);
 };
 
 /** The nested group between `target` and `container` that currently owns focus, if any. */
@@ -149,7 +159,12 @@ export const useFocusGroup = ({
       target = getEntryTarget(container, !start);
     }
 
-    target?.focus();
+    if (target) {
+      target.focus();
+    } else {
+      // Nothing to hand focus to; the sentinel must not keep it.
+      sentinel.blur();
+    }
   }, []);
 
   const ref = useCallback(
@@ -199,7 +214,9 @@ export const useFocusGroup = ({
 
     const { axis, tabBehavior, cyclic, tabbable, ignoreKeys } = optionsRef.current;
     const ignored = (key: FocusGroupKey) => !!ignoreKeys?.includes(key);
-    const groupper = tabBehavior === 'limited' || tabBehavior === 'limited-trap-focus';
+    // Enter and Escape belong to any group; only a limited one takes Tab away from its contents.
+    const groupper = !!tabBehavior;
+    const limited = tabBehavior === 'limited' || tabBehavior === 'limited-trap-focus';
     const target = event.target as HTMLElement;
     const onContainer = target === container;
 
@@ -210,10 +227,10 @@ export const useFocusGroup = ({
 
     if (event.key === 'Enter') {
       if (groupper && onContainer && !ignored('Enter')) {
-        const first = findFirstFocusable(container);
-        if (first) {
+        const entry = contentEntry(container);
+        if (entry) {
           event.preventDefault();
-          first.focus();
+          entry.focus();
         }
       }
       return;
@@ -230,7 +247,7 @@ export const useFocusGroup = ({
 
     if (event.key === 'Tab') {
       // A trap's edges are handled by its sentinels; a groupper's contents tab out through them.
-      if (axis && !tabbable && !groupper && !onContainer && !ignored('Tab')) {
+      if (axis && !tabbable && !limited && !onContainer && !ignored('Tab')) {
         event.preventDefault();
         findNextTabStop(getTabExitBoundary(container), event.shiftKey)?.focus();
       }
@@ -268,7 +285,7 @@ export const useFocusGroup = ({
     }
 
     if (onContainer) {
-      focus(getEntryTarget(container) ?? items[0]);
+      focus(contentEntry(container) ?? items[0]);
       return;
     }
 
