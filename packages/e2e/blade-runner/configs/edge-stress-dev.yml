@@ -1,0 +1,22 @@
+# Run edgeStress against the deployed dev EDGE.
+#
+#   export DX_HUB_API_KEY=...   # required, or the run leaks its spaces and identities
+#   redis-server --port 6379 &
+#   GRAVITY_OUT_BASE=$PWD node --import tsx src/main.ts edgeStress --no-browser \
+#     -s configs/edge-stress-dev.yml --seed <seed>
+#
+# Cleanup deletes every space and identity the run created, in plan.run's finally, so it also
+# runs when an assertion fails. Deletion is enqueued server-side, not synchronous.
+platform: nodejs
+edgeUrl: https://dev.dxos.network
+devicesPerIdentity: [2, 1]
+agents: false
+maxSpaces: 2
+maxDocumentsPerSpace: 4
+maxCommands: 25
+sampleDraws: 12
+# Longer than local: every operation now crosses the public internet.
+maxRuntimeMs: 900000
+quiescenceTimeoutMs: 90000
+checkpoints: true
+cleanup: true

@@ -44,6 +44,11 @@ export type EdgeStressSpec = {
   quiescenceTimeoutMs: number;
   /** Mid-run quiesce-and-assert over the online members. */
   checkpoints: boolean;
+  /**
+   * Delete the spaces and identities the run created. A no-op without `DX_HUB_API_KEY`, so it is
+   * safe to leave on for local EDGE, where the state is ephemeral anyway.
+   */
+  cleanup: boolean;
 };
 
 export type EdgeStressResult = {
@@ -69,6 +74,8 @@ export type Real = {
   replicants: ReplicantBrain<ClientReplicant>[];
   spaceIds: string[];
   invitationCodes: string[];
+  /** DIDs of the identities this run minted, in creation order; only cleanup reads them. */
+  identityDids: string[];
   trace: (entry: Record<string, unknown>) => void;
   counters: { commands: number; documents: number };
 };
@@ -160,6 +167,47 @@ export const quiesce = async (real: Real, spaceSlot: number, clients: ClientInde
       ...pending,
     ])}`,
   );
+};
+
+/**
+ * Delete what the run created, through the same admin API the CLI speaks: `X-Admin-Key` plus an
+ * envelope-wrapped response (`packages/devtools/cli/src/commands/admin/util.ts`).
+ *
+ * Spaces go first — deleting an identity that still owns spaces would orphan them. Nothing here
+ * throws: a cleanup failure must never mask the run's own result, so it is logged and traced.
+ */
+export const cleanupRun = async (real: Real, adminKey: string): Promise<void> => {
+  const remove = async (path: string): Promise<boolean> => {
+    try {
+      const response = await fetch(new URL(path, real.spec.edgeUrl), {
+        method: 'DELETE',
+        headers: { 'X-Admin-Key': adminKey },
+      });
+      const envelope = (await response.json().catch(() => ({}))) as { success?: boolean; message?: string };
+      if (!response.ok || envelope.success === false) {
+        log.warn('cleanup request failed', { path, status: response.status, message: envelope.message });
+        return false;
+      }
+      return true;
+    } catch (err) {
+      log.warn('cleanup request threw', { path, err });
+      return false;
+    }
+  };
+
+  const spaces = real.spaceIds.filter(Boolean);
+  const identities = real.identityDids.filter(Boolean);
+  let deleted = 0;
+  for (const spaceId of spaces) {
+    deleted += (await remove(`/admin/spaces/${spaceId}`)) ? 1 : 0;
+  }
+  for (const identityDid of identities) {
+    deleted += (await remove(`/admin/identities/${identityDid}`)) ? 1 : 0;
+  }
+
+  // Deletion is enqueued rather than synchronous, so this counts requests accepted, not state gone.
+  real.trace({ event: 'cleanup', spaces: spaces.length, identities: identities.length, accepted: deleted });
+  log.info('cleanup done', { spaces: spaces.length, identities: identities.length, accepted: deleted });
 };
 
 //
