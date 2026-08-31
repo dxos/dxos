@@ -15,9 +15,8 @@ import { EntityId } from '@dxos/keys';
 
 import { OperationTestLayer } from '../../../testing';
 import { Agent } from '../../../types';
-import { Relay } from '../../agent/operations/definitions';
-import AgentSkillDef from '../../agent/skill';
-import { AgentWizardOperations } from '../index';
+import AgentSkillDef from '../skill';
+import { Relay, SyncAutomation } from './definitions';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -35,7 +34,7 @@ describe('SyncAutomation', () => {
         );
         yield* Database.flush();
 
-        yield* Operation.invoke(AgentWizardOperations.SyncAutomation, { agent: Ref.make(agent), cron });
+        yield* Operation.invoke(SyncAutomation, { agent: Ref.make(agent), cron });
 
         const triggers = yield* Database.query(
           Query.select(Filter.type(Trigger.Trigger)).debugLabel('assistant-toolkit.sync-automation.timer'),
@@ -77,7 +76,7 @@ describe('SyncAutomation', () => {
         );
         yield* Database.flush();
 
-        yield* Operation.invoke(AgentWizardOperations.SyncAutomation, { agent: Ref.make(agent), cron });
+        yield* Operation.invoke(SyncAutomation, { agent: Ref.make(agent), cron });
 
         const triggers = yield* Database.query(
           Query.select(Filter.type(Trigger.Trigger)).debugLabel('assistant-toolkit.sync-automation.toggle'),
@@ -90,7 +89,7 @@ describe('SyncAutomation', () => {
           agent.enabled = true;
         });
         yield* Database.flush();
-        yield* Operation.invoke(AgentWizardOperations.SyncAutomation, { agent: Ref.make(agent), cron });
+        yield* Operation.invoke(SyncAutomation, { agent: Ref.make(agent), cron });
 
         const triggersAfter = yield* Database.query(
           Query.select(Filter.type(Trigger.Trigger)).debugLabel('assistant-toolkit.sync-automation.after'),

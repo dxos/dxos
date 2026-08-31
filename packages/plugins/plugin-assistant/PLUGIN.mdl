@@ -242,7 +242,7 @@ feat F-2: Companion Chat
 feat F-3: Skill System
 
   req F-3.1: Skills define named AI configurations (instructions, tools, model).
-  req F-3.2: Built-in skills include: Assistant, Browser, Database, WebSearch, Discord, Linear, Agent, Planning, Memory, Automation, SkillManager, AgentWizard.
+  req F-3.2: Built-in skills include: Assistant, Browser, Database, WebSearch, Discord, Linear, Agent, Planning, Memory, Automation, SkillManager.
   req F-3.3:
     when: user selects a skill for a chat
     then: chat uses that skill's instructions and tool set

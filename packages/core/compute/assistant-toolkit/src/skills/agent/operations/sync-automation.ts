@@ -12,7 +12,7 @@ import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { getFeedRef } from '@dxos/schema';
 
 import { Agent } from '../../../types';
-import { SyncAutomation } from './definitions';
+import { Relay, SyncAutomation } from './definitions';
 
 export default SyncAutomation.pipe(
   Operation.withHandler(
@@ -88,9 +88,6 @@ export const syncAgentAutomation = (
     }
 
     const triggersEnabled = agent.enabled ?? true;
-
-    // Lazy import to avoid circular dependency issues.
-    const { Relay } = yield* Effect.promise(() => import('../../agent/operations/definitions'));
 
     const makeRoutine = (options: {
       name: string;

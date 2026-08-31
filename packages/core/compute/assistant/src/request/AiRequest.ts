@@ -11,7 +11,7 @@ import * as Option from 'effect/Option';
 import * as Result from 'effect/Result';
 import * as Semaphore from 'effect/Semaphore';
 import * as Stream from 'effect/Stream';
-import type * as AiError from 'effect/unstable/ai/AiError';
+import * as AiError from 'effect/unstable/ai/AiError';
 import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 import type * as Toolkit from 'effect/unstable/ai/Toolkit';
 
@@ -41,6 +41,22 @@ import { formatSystemPrompt, formatUserPrompt } from './format';
 import { GenerationObserver } from './observer';
 
 export type RunError = AiError.AiError | PromptPreprocessingError | AiToolNotFoundError | AiAssistantError;
+
+/**
+ * An {@link AiError.AiError} raised because the model called a tool the toolkit does not contain.
+ * Narrowed with a guard rather than a cast: the recovery reads the reason's fields.
+ */
+type ToolNotFoundError = AiError.AiError & { readonly reason: AiError.ToolNotFoundError };
+
+const isToolNotFound = (error: unknown): error is ToolNotFoundError =>
+  AiError.isAiError(error) && error.reason._tag === 'ToolNotFoundError';
+
+/**
+ * How many turns of one request may be spent reporting unresolvable tool calls. A model that keeps
+ * calling the same absent tool would otherwise loop until the token budget is gone; past this the
+ * error is raised, so a persistent fault still surfaces.
+ */
+const MAX_UNRESOLVED_TOOL_TURNS = 2;
 
 export type RunRequirements =
   | LanguageModel.LanguageModel
@@ -137,6 +153,8 @@ export class Request {
   private _started = 0;
   private _ended = 0;
   private _toolCalls = 0;
+  /** Turns of this request spent reporting a tool call the toolkit could not resolve. */
+  #unresolvedTools = 0;
 
   constructor(private readonly _options: Options = {}) {
     this._observer = _options.observer ?? GenerationObserver.noop();
@@ -178,6 +196,20 @@ export class Request {
       return message;
     });
 
+  /**
+   * Appends a system-generated note to the turn, addressed to the model: synthetic, so it renders as
+   * its own panel rather than as words the reader typed. Used to report a fault the model can act on
+   * (an unresolvable tool call) without failing the request.
+   */
+  submitNotice = (text: string): Effect.Effect<Message.Message, never, Trace.TraceService> =>
+    this._submitMessage(
+      Obj.make(Message.Message, {
+        created: new Date().toISOString(),
+        sender: { role: 'user' },
+        blocks: [ContentBlock.Text.make({ text, disposition: 'synthetic' })],
+      }),
+    );
+
   getToolCalls = () =>
     pipe(
       [...this._history, ...this._pending],
@@ -204,6 +236,8 @@ export class Request {
       this._started = Date.now();
       this._history = [...history];
       this._pending = [];
+      // Per-run allowance: a reused Request must not inherit a spent budget from the previous run.
+      this.#unresolvedTools = 0;
 
       const systemPrompt = yield* formatSystemPrompt({ system, skills, objects, instructions }).pipe(Effect.orDie);
 
@@ -221,6 +255,35 @@ export class Request {
 
       yield* this._submitMessage(yield* formatUserPrompt({ prompt, history }));
     }).pipe(Effect.withSpan('AiRequest.begin'));
+
+  /**
+   * Reports a tool call the toolkit could not resolve back to the model, as a turn it can correct.
+   *
+   * The provider raises this while DECODING its own response — it needs the tool's schema to decode
+   * the arguments — so the failure arrives before any tool call reaches the loop, and it kills the
+   * whole turn. The usual causes are a skill whose instructions name a tool whose handler this host
+   * never contributed, and a model inventing a name; both leave the reader with no reply at all.
+   *
+   * The tool call itself is lost: the provider discards the event batch it failed in, including the
+   * `tool-params-end` the parser needs to complete the block, so nothing dangles in history that
+   * would need a matching tool result — a plain note is enough.
+   */
+  #reportUnresolvedTool = (error: ToolNotFoundError): Effect.Effect<TurnResult, RunError, Trace.TraceService> =>
+    Effect.gen({ self: this }, function* () {
+      if (++this.#unresolvedTools > MAX_UNRESOLVED_TOOL_TURNS) {
+        return yield* Effect.fail(error);
+      }
+
+      const { toolName, availableTools } = error.reason;
+      log.warn('tool not found; reporting to the model', { tool: toolName, available: availableTools });
+      yield* this.submitNotice(
+        `The tool '${toolName}' does not exist, so nothing was called. ` +
+          `The tools you can call are: ${availableTools.join(', ')}. ` +
+          'Continue with those, and say so plainly if the task needs one that is missing.',
+      );
+
+      return { messages: [], done: false };
+    });
 
   /**
    * Execute a single turn: one LLM generation followed by tool execution.
@@ -320,7 +383,10 @@ export class Request {
       }
 
       return { messages, done: false, finishReason };
-    }).pipe(Effect.withSpan('AiRequest.runAgentTurn'));
+    }).pipe(
+      Effect.catchIf(isToolNotFound, (error) => this.#reportUnresolvedTool(error)),
+      Effect.withSpan('AiRequest.runAgentTurn'),
+    );
 
   runTools = <const R = never>({
     toolkit: opaqueToolkit,
@@ -330,6 +396,12 @@ export class Request {
     Effect.gen({ self: this }, function* () {
       const toolkit = opaqueToolkit ? yield* opaqueToolkit.handlers : undefined;
       const toolCalls = this.getToolCalls();
+      // A turn can end with no calls to run — a turn recovered from an unresolvable tool call leaves
+      // none. Submitting anyway would append a tool message with no blocks, which the provider
+      // rejects as empty content.
+      if (toolCalls.length === 0) {
+        return;
+      }
       const toolResults = yield* Effect.forEach(toolCalls, ({ block, message }) => {
         if (!toolkit) {
           throw new Error('No toolkit provided');
