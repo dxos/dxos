@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
-import * as Optimistic from '@dxos/app-framework/Optimistic';
-import { useOperation, useOperationHandler, useOptimisticQuery, useSpaceCallback } from '@dxos/app-framework/ui';
+import { useOperation, useOperationHandler, useOptimisticQuery } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Database, Filter, Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { Panel, Switch, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { createMenuAction } from '@dxos/react-ui-menu';
@@ -32,7 +32,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
   const { t } = useTranslation(meta.profile.key);
   const { hasAttention } = useAttention(attendableId);
   const spaceId = Obj.getDatabase(taskSet)?.spaceId;
-  const { tasks, overlay } = useTasks(taskSet);
+  const tasks = useTasks(taskSet);
 
   const handleCreate = useOperation(
     TaskOperation.CreateTask,
@@ -65,30 +65,22 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
     [contributed, handleDelete, t],
   );
 
-  const runMove = useSpaceCallback(
-    spaceId,
-    [Database.Service],
-    useOperationHandler(TaskOperation.MoveTask, (task: Task.Task, { parentTask, before }: TaskPlacement) => ({
+  const move = useOperationHandler(
+    TaskOperation.MoveTask,
+    (task: Task.Task, { parentTask, before }: TaskPlacement) => ({
       task: Ref.make(task),
+      taskSet: Ref.make(taskSet),
       parentTask: parentTask ? Ref.make(parentTask) : null,
       ...(before ? { before: Ref.make(before) } : {}),
-    })),
+    }),
   );
-  // The MoveTask handler is async (Database.load, the findTaskSet query), so its write can land
-  // frames after the drop. The optimistic entry mirrors the handler's array write in the drop
-  // frame itself so the row does not jump back meanwhile; success commits (the next source
-  // emission carries the real order), failure reverts.
+  // MoveTask is synchronous — the array write lands in the drop frame itself, before it paints,
+  // so the reordered row renders in place with no optimistic overlay.
   const handleMove = useCallback(
     (task: Task.Task, placement: TaskPlacement) => {
-      const handle = overlay.mutate({
-        apply: (rows) => TaskSet.reorderItems(rows, (row) => row.id, task.id, placement.before?.id),
-      });
-      runMove(task, placement).then(
-        () => handle.commit(),
-        () => handle.revert(),
-      );
+      Effect.runSync(move(task, placement));
     },
-    [overlay, runMove],
+    [move],
   );
 
   const content = (
@@ -139,15 +131,10 @@ TaskSetArticle.displayName = 'TaskSetArticle';
 /**
  * The set's tasks via `childOf` — membership is the ECHO parent edge, and transitive tolerates
  * legacy sub-tasks still parented to their parent task. The query re-emits on membership changes
- * only, never on a member's edit — `TaskList` rows subscribe themselves. The ordered query atom
- * is wrapped in an optimistic overlay: the source must stay stable across emissions (hence
- * `query.atom` instead of `useQuery`, whose fresh arrays would rebuild the overlay and lose
- * pending entries mid-operation).
+ * only, never on a member's edit — `TaskList` rows subscribe themselves.
  */
-const useTasks = (
-  taskSet: TaskSet.TaskSet,
-): { tasks: readonly Task.Task[]; overlay: Optimistic.Overlay<Task.Task> } => {
-  const { objects, overlay } = useOptimisticQuery(
+const useTasks = (taskSet: TaskSet.TaskSet): readonly Task.Task[] => {
+  const { objects } = useOptimisticQuery(
     Obj.getDatabase(taskSet),
     Filter.and(Filter.type(Task.Task), Filter.childOf(taskSet)),
     // Subscribes each member's `parentTask` (the set's array does not carry hierarchy)
@@ -159,5 +146,5 @@ const useTasks = (
     [taskSet],
   );
 
-  return { tasks: objects, overlay };
+  return objects;
 };

@@ -165,7 +165,12 @@ export const useOperationHandler: {
     throw new NoHandlerError(operation.meta.key);
   }
   const handler = withHandler.handler;
-  return map ? (...args: TArgs) => handler(map(...args)) : handler;
+  // The mapper reads through a ref so the mapped form keeps a stable identity across renders,
+  // like {@link useOperation}.
+  const mapRef = useRef(map);
+  mapRef.current = map;
+  const mapped = useCallback((...args: TArgs) => handler(mapRef.current!(...args)), [handler]);
+  return map ? mapped : handler;
 };
 
 /**
