@@ -75,6 +75,16 @@ export type TreeNodeEntry<T extends { id: string } = any> = {
   indexPath: number[];
 };
 
+/**
+ * Replaces the heading's leading icon. `TreeItemDataProps.icon` names a static glyph; a caller whose
+ * icon carries its own state — an animation, a tooltip, a per-state hue — needs to render it itself.
+ */
+export type IconRenderer<T extends { id: string } = any> = FC<{
+  item: T;
+  path: string[];
+  props: TreeItemDataProps;
+}>;
+
 export type ColumnRenderer<T extends { id: string } = any> = FC<{
   item: T;
   path: string[];
@@ -87,6 +97,7 @@ export type ColumnRenderer<T extends { id: string } = any> = FC<{
 export type TreeRenderContextValue<T extends { id: string } = any> = {
   draggable: boolean;
   renderColumns?: ColumnRenderer<T>;
+  renderIcon?: IconRenderer<T>;
   blockInstruction?: (params: { instruction: Instruction; source: TreeData; target: TreeData }) => boolean;
   canDrop?: (params: { source: TreeData; target: TreeData }) => boolean;
   onOpenChange?: (params: { item: T; path: string[]; open: boolean }) => void;
@@ -105,4 +116,5 @@ const TreeRenderContext = createContext<TreeRenderContextValue | null>(null);
 
 export const TreeRenderProvider = TreeRenderContext.Provider;
 
-export const useTreeRender = () => useContext(TreeRenderContext) ?? raise(new Error('TreeRenderContext not found'));
+export const useTreeRender = <T extends { id: string } = any>(): TreeRenderContextValue<T> =>
+  useContext(TreeRenderContext) ?? raise(new Error('TreeRenderContext not found'));

@@ -233,3 +233,34 @@ space, or its automerge doc never loads. `slow AM open {duration: 5005ms}` hints
 - [ ] Hand to an ECHO/client owner with the evidence above.
 - [ ] Consider a timeout or fallback on the `propertiesAvailable` wait — a space that waits forever
       for an object that will never exist is unrecoverable and gives the caller no signal.
+
+## Phase 8: `ProcessTree` on the Tree — landed with one open defect
+
+Done 2026-08-31. `ProcessTree` no longer uses `Treegrid`: it builds a pruned process forest, adapts
+it with `createStaticTreeModel`, and renders through `Tree`. Verified in Storybook (client-free
+story, so unaffected by the `SPACE_INITIALIZING` deadlock above).
+
+**Gained:** real `role=tree` / `role=treeitem` with machine-managed `aria-level` (1/2/1/1/1 measured)
+and `aria-expanded` on branches only, the APG keymap, and expand/collapse the flattened view never
+had. `aria-level` used to be derived by counting `~` separators in the DOM `id`.
+
+**Enabling change:** `Tree` gained an optional `renderIcon` slot (`IconRenderer` in `TreeContext`).
+`TreeItemDataProps.icon` names a static glyph, which cannot express `ProcessTree`'s status icon —
+`animate-spin` on RUNNING, per-state hue, and a tooltip carrying the state. Verified the Tree stories
+render unchanged when the slot is absent.
+
+**Live-data note:** `processes` carries live metrics, so the forest and model are rebuilt on every
+tick. Open state is therefore held in a `useRef` outside the model and re-seeded through `isOpen`, or
+a collapse would be undone by the next tick.
+
+- [ ] **DEFECT: collapse sets the ARIA state but does not visually collapse.** Clicking the branch
+      trigger flips `aria-expanded` to `false` and `data-state` to `closed`, but the branch content
+      stays at `blockSize: 34px` with the child still visible; `getAnimations()` is empty 6 s later.
+      The same interaction in `ui/react-ui-list/Tree`'s own story collapses correctly (child
+      `offsetParent` null), so this is the `ProcessTree` integration, not `Tree`. Suspects, in order:
+      the `ScrollArea.Root`/`Viewport` wrapper (two ancestors report `blockSize: 0px`), the custom
+      three-column `gridTemplateColumns`, and whether writing `open: false` straight into the state
+      atom races `Tree`'s own conceal-then-`commitClose` sequencing (docs/TREE.md §2 gap 1).
+      Next diagnostic: compare the computed `animation-name`/`fill-mode` on `[data-part=
+    "branch-content"]` between the two stories — that distinguishes "animation never applied" from
+      "ran and reverted".
