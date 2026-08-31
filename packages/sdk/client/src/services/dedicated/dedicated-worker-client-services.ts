@@ -2,17 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Context from 'effect/Context';
-
 import { Trigger } from '@dxos/async';
 import { type ClientServices, type ClientServicesProvider, Rpc, serveBridgeService } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import { Resource } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { type CallMetadata, type LogFilter, log, parseFilter } from '@dxos/log';
-import { subscribeStream } from '@dxos/protocols';
-import { type LogEntry, LogLevel } from '@dxos/protocols/proto/dxos/client/services';
 import type { MaybePromise } from '@dxos/util';
 import { WorkerProtocol } from '@dxos/worker-framework';
 import * as Client from '@dxos/worker-framework/Client';
@@ -130,17 +125,3 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
     await this.#connection.close();
   }
 }
-
-const mapLogMeta = (meta: LogEntry.Meta | undefined): CallMetadata | undefined => {
-  return (
-    meta && {
-      F: meta.file,
-      L: meta.line,
-      S: {
-        ...meta.scope,
-        remoteSessionId: meta.scope?.hostSessionId,
-        hostSessionId: undefined,
-      },
-    }
-  );
-};
