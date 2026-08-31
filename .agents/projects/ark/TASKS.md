@@ -285,5 +285,41 @@ a collapse would be undone by the next tick.
       three-column `gridTemplateColumns`, and whether writing `open: false` straight into the state
       atom races `Tree`'s own conceal-then-`commitClose` sequencing (docs/TREE.md §2 gap 1).
       Next diagnostic: compare the computed `animation-name`/`fill-mode` on `[data-part=
-  "branch-content"]` between the two stories — that distinguishes "animation never applied" from
+"branch-content"]` between the two stories — that distinguishes "animation never applied" from
       "ran and reverted".
+
+## Phase 9: `ObjectsTree` on the Tree — NOT VERIFIED BY THE AGENT
+
+Done 2026-08-31. `devtools/ObjectsTree` no longer uses `Treegrid`; it exposes a `TreeModel` view over
+its existing atoms and renders through `Tree`. **Builds and lints clean, but the agent's browser
+cannot render this story** (see the corrected `SPACE_INITIALIZING` entry), so it is unverified —
+the user has the working story at
+`http://localhost:9009/?path=/story/devtools-devtools-objectstree--default`.
+
+Two corrections to earlier analysis in this ledger, both found by reading `Tree`'s walk rather than
+assuming:
+
+1. **`Tree` already guards cycles.** `Tree.tsx:107` skips any child whose id is already on
+   `parentPath` — strictly stronger than `ObjectsTree`'s old `child.id !== parent?.id`, which only
+   excluded the immediate parent. An earlier entry here claimed `TreeModel.childIds` had to be
+   extended with the path to make this migration possible. **That was wrong; no contract change was
+   needed.**
+2. **The real constraint is that the walk recurses into every branch regardless of `open`** — `open`
+   only decides what lands in `expanded`. Left alone that would query the entire reachable object
+   graph on first render. `childIds` is therefore gated on the node being open, so the walk stops one
+   level ahead; `itemProps.parentOf` still reads that level, which the row needed anyway to decide
+   whether to draw a toggle. This is the "unloaded branch" case `TreeContext` documents via
+   `childrenCount`.
+
+Design notes for whoever reviews it: props are keyed by path, not id, because `type` (and so the
+relation arrow) is computed relative to the anchor a node was reached through — the same entity reads
+differently under two parents. Open state is written twice on toggle: by path (what `Tree` addresses
+rows by) and by id (what gates the walk).
+
+- [ ] **Verify in the story** — expand/collapse, relation arrows on both directions, the role label,
+      the row action menu, and deleted-object strikethrough.
+- [ ] Confirm expanding into a relation cycle terminates (it should now be handled by `Tree`'s
+      ancestor check rather than `ObjectsTree`'s single-level one).
+- [ ] With this landed, `Treegrid`'s only remaining consumer is `plugin-atproto`'s
+      `AtprotoCompanion`, whose rows are read-only — Phase 3 can be settled by moving it to grouped
+      semantic markup and deleting `Treegrid`.
