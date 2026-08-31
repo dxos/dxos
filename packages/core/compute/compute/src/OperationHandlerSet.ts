@@ -89,8 +89,13 @@ export const reactive = (
   atom: Atom.Atom<readonly OperationHandlerSet[]>,
 ): OperationHandlerSet => {
   let cached: Promise<Operation.WithHandler<Operation.Definition.Any>[]> | null = null;
+  // Per-key promises are memoized so repeated `getHandlerFor` calls return the SAME promise until
+  // the contributions change — React `use` (useOperationHandler) relies on this thenable identity
+  // to resume a suspended render instead of re-suspending on a fresh promise every retry.
+  const perKey = new Map<string, Promise<Operation.WithHandler<Operation.Definition.Any> | undefined>>();
   registry.subscribe(atom, () => {
     cached = null;
+    perKey.clear();
   });
   // `suspend` defers `registry.get(atom)` until each run, so re-evaluations
   // after cache invalidation see the current contributed sets.
@@ -116,7 +121,22 @@ export const reactive = (
     definitions: () => registry.get(atom).flatMap((set) => set.definitions()),
     // Per-operation resolution over the CURRENT contributed sets: only the matched operation's
     // module loads; the load-everything paths above stay for enumerators.
-    getHandlerFor: (key) => resolveFromSets(registry.get(atom), key),
+    getHandlerFor: (key) => {
+      const normalized = normalizeKey(key);
+      let promise = perKey.get(normalized);
+      if (!promise) {
+        promise = resolveFromSets(registry.get(atom), normalized).then(
+          (handler) => handler,
+          (err) => {
+            // Evict so a transient failure is not memoized.
+            perKey.delete(normalized);
+            throw err;
+          },
+        );
+        perKey.set(normalized, promise);
+      }
+      return promise;
+    },
   };
 };
 
@@ -241,6 +261,16 @@ export const getHandler = <const Op extends Operation.Definition.Any>(
   definition: Op,
 ): Effect.Effect<Operation.WithHandler<Op>, NoHandlerError> =>
   lookup(set, definition.meta.key) as Effect.Effect<Operation.WithHandler<Op>, NoHandlerError>;
+
+/**
+ * Promise counterpart of {@link getHandler}: definition-typed {@link OperationHandlerSet.getHandlerFor},
+ * resolving `undefined` on a miss instead of failing.
+ */
+export const findHandler = <const Op extends Operation.Definition.Any>(
+  set: OperationHandlerSet,
+  definition: Op,
+): Promise<Operation.WithHandler<Op> | undefined> =>
+  set.getHandlerFor(definition.meta.key) as Promise<Operation.WithHandler<Op> | undefined>;
 
 /**
  * Gets a handler for an operation by key.

@@ -4,9 +4,11 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import { useCallback, useRef } from 'react';
+import { use, useCallback, useRef } from 'react';
 
+import { NoHandlerError } from '@dxos/compute';
 import type * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 import { Capabilities, type Optimistic } from '../../common';
 import { type Capability } from '../../core';
@@ -128,6 +130,31 @@ export const useOptionalAtomCapabilityState = <T>(
  * Hook to get the operation invoker capability.
  */
 export const useOperationInvoker = (): Capabilities.OperationInvoker => useCapability(Capabilities.OperationInvoker);
+
+/**
+ * Suspensefully resolves an operation's handler as an effect fn: `(input) => Effect<Output>`.
+ *
+ * Resolves against the merged {@link Capabilities.OperationHandlers} set. Handler sets are all
+ * registered by startup (only handler BODIES load lazily), so the component suspends only while
+ * the matched handler's module loads — `getHandlerFor` returns a per-key stable promise, which is
+ * what lets `use` resume instead of re-suspending on every retry render. Throws
+ * {@link NoHandlerError} when no contributed set knows the operation.
+ *
+ * The returned effect still requires the operation's declared services; run it via
+ * {@link useSpaceCallback} or the {@link Capabilities.ProcessManagerRuntime}.
+ *
+ * @example const moveTask = useOperationHandler(TaskOperation.MoveTask);
+ */
+export const useOperationHandler = <const Def extends Operation.Definition.Any>(
+  operation: Def,
+): Operation.Definition.HandlerType<Def> => {
+  const handlers = useCapability(Capabilities.OperationHandlers);
+  const withHandler = use(OperationHandlerSet.findHandler(handlers, operation));
+  if (!withHandler) {
+    throw new NoHandlerError(operation.meta.key);
+  }
+  return withHandler.handler;
+};
 
 /**
  * Binds an operation to a UI callback in one step: `map` turns the component's callback

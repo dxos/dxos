@@ -213,3 +213,46 @@ describe('OperationHandlerSet.lazy', () => {
     expect(found).toBe(overrideHandler);
   });
 });
+
+// React's `use` dedupes suspended renders by thenable identity, so the reactive set — what
+// useOperationHandler resolves against — must return the SAME promise for repeated same-key calls.
+describe('OperationHandlerSet.reactive getHandlerFor identity', () => {
+  test('returns a stable promise until the atom changes', async ({ expect }) => {
+    const registry = Registry.make();
+    const atom = Atom.make<readonly OperationHandlerSet.OperationHandlerSet[]>([
+      OperationHandlerSet.make(makeHandler(KEY_A, 'A')),
+    ]).pipe(Atom.keepAlive);
+    registry.mount(atom);
+
+    const reactive = OperationHandlerSet.reactive(registry, atom);
+    const before = reactive.getHandlerFor(KEY_B);
+    expect(reactive.getHandlerFor(KEY_B)).toBe(before);
+    expect(await before).toBeUndefined();
+
+    registry.set(atom, [OperationHandlerSet.make(makeHandler(KEY_A, 'A')), OperationHandlerSet.make(makeHandler(KEY_B, 'B'))]);
+    const after = reactive.getHandlerFor(KEY_B);
+    expect(after).not.toBe(before);
+    expect((await after)?.meta.key).toEqual(KEY_B);
+  });
+
+  test('a rejection is not memoized', async ({ expect }) => {
+    const registry = Registry.make();
+    let calls = 0;
+    const flakyChild: OperationHandlerSet.OperationHandlerSet = {
+      [OperationHandlerSet.TypeId]: OperationHandlerSet.TypeId,
+      definitions: () => [],
+      getHandlerFor: () => {
+        calls++;
+        return calls === 1 ? Promise.reject(new Error('transient')) : Promise.resolve(makeHandler(KEY_A, 'A'));
+      },
+      getHandlers: () => Promise.resolve([]),
+      handlers: Effect.succeed([]),
+    };
+    const atom = Atom.make<readonly OperationHandlerSet.OperationHandlerSet[]>([flakyChild]).pipe(Atom.keepAlive);
+    registry.mount(atom);
+
+    const reactive = OperationHandlerSet.reactive(registry, atom);
+    await expect(reactive.getHandlerFor(KEY_A)).rejects.toThrow('transient');
+    expect((await reactive.getHandlerFor(KEY_A))?.meta.key).toEqual(KEY_A);
+  });
+});
