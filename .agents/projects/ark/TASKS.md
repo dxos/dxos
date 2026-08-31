@@ -191,3 +191,45 @@ not have today — the same argument that justified the navtree rebuild.
       `expandedValue` reproduces it rather than assuming path-keyed state is equivalent.
 - [ ] Port `hierarchy.test.ts` (155 lines) to whatever replaces the walk, rather than dropping the
       coverage with the module.
+
+## Blocked — external defect: spaces never leave `SPACE_INITIALIZING` in Storybook
+
+Found 2026-08-31 while trying to verify `AtprotoCompanion`. **Not ark work and not caused by this
+branch** — it reproduces on clean `origin/main`. Recorded here because it blocks UI verification of
+Phases 3 and 7, and needs an ECHO/client owner.
+
+**Symptom.** Every ECHO-client-backed story hangs in `<Loading />` forever. Confirmed on
+`plugin-atproto` `AtprotoCompanion` (all four stories) and `plugin-connector` `ConnectionView`, which
+this branch does not touch.
+
+**Root cause.** `SpaceProxy._initializeDb`
+([space-proxy.ts:449](../../../packages/sdk/client/src/echo/space-proxy.ts)) ends by blocking on a
+`propertiesAvailable` trigger that only wakes when `query(Filter.type(SpaceProperties))` returns
+**exactly one** result. The space contains **zero objects**, so it never wakes, `_initializeDb` never
+returns, `_initializationComplete` never fires, and `waitUntilReady()`
+([line 542](../../../packages/sdk/client/src/echo/space-proxy.ts)) never resolves. Every story seed's
+second line is `waitUntilReady()`, so seeding stops there and nothing is ever added.
+
+**Evidence** (probed against the live client in the running story):
+
+| probe                           | value   | meaning                                       |
+| ------------------------------- | ------- | --------------------------------------------- |
+| `client.halo.identity.get()`    | present | `initializeIdentity` ran — the seed started   |
+| `space.state.get()`             | `4`     | `SPACE_INITIALIZING`, never `SPACE_READY` (3) |
+| `db.query(Filter.everything())` | `0`     | seed never got past `waitUntilReady()`        |
+| `client.spaces.default`         | `false` | default space never completed                 |
+
+The recurring console warning `Action "Finding properties for a space" is taking more then 5,000ms`
+is emitted by the `warnAfterTimeout` wrapping that exact wait, which ties the log to the deadlock.
+
+**Ruled out:** machine load (16 cores, load average 2.8, 81% memory free — an earlier claim of mine
+that the numbers did not support); stale Storybook state (reproduced after a restart with
+`.cache/storybook` deleted); cold start (still zero objects at 83 s on a warm server); and this
+branch (reproduced on `origin/main` via a second Storybook on port 9010).
+
+**Not yet known:** _why_ `SpaceProperties` never materialises — never created, created in another
+space, or its automerge doc never loads. `slow AM open {duration: 5005ms}` hints at the last.
+
+- [ ] Hand to an ECHO/client owner with the evidence above.
+- [ ] Consider a timeout or fallback on the `propertiesAvailable` wait — a space that waits forever
+      for an object that will never exist is unrecoverable and gives the caller no signal.
