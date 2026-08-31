@@ -259,6 +259,32 @@ const makeWaitingExecutable = () =>
     }),
   );
 
+/**
+ * A process whose input handler ignores interruption. Terminating it leaves the scope pinned open —
+ * the mid-turn cancel where the in-flight turn does not unwind — so the handle stays observable in
+ * the window between "finished" and "torn down", which is where the wedged-chat bug lived.
+ */
+const makeStallingProcess = Effect.fnUntraced(function* () {
+  const release = yield* Deferred.make<void>();
+  const started = yield* Deferred.make<void>();
+  let inputs = 0;
+  const executable = Process.make({ key: 'test.stalling', input: Schema.Void, output: Schema.Void, services: [] }, () =>
+    Effect.succeed({
+      onSpawn: () => Effect.void,
+      onInput: () =>
+        Effect.gen(function* () {
+          inputs++;
+          yield* Deferred.succeed(started, undefined);
+          yield* Deferred.await(release).pipe(Effect.uninterruptible);
+        }),
+      onAlarm: () => Effect.void,
+      onChildEvent: () => Effect.void,
+    }),
+  );
+
+  return { executable, release, started, inputs: () => inputs };
+});
+
 const rpcs = RpcGroup.make(
   Rpc.make('getValue', {
     success: Schema.Number,
@@ -425,6 +451,66 @@ describe('ManagerImpl', () => {
         yield* handle.terminate();
         expect(handle.status.state).toEqual(Process.State.TERMINATED);
       }
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'terminate settles the handle even when a handler holds the process scope open',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+      const { executable, release, started } = yield* makeStallingProcess();
+
+      const handle = yield* manager.spawn(executable);
+      yield* handle.submitInput(undefined);
+      yield* Deferred.await(started);
+      const terminating = yield* Effect.forkChild(handle.terminate());
+      yield* Effect.yieldNow;
+
+      // The terminal state is visible while teardown is still blocked; a handle stuck in TERMINATING
+      // reads as live and gets adopted by the next session, which then never receives a turn.
+      expect(handle.status.state).toEqual(Process.State.TERMINATED);
+      // ...and a caller waiting on the stop is released rather than held for the process's lifetime.
+      yield* handle.runUntilSettled();
+
+      yield* Deferred.succeed(release, undefined);
+      yield* Fiber.join(terminating);
+    }, Effect.provide(TestLayer)),
+  );
+
+  // The rest of the contract a stalled teardown has to keep. Each assertion is a state some consumer
+  // reads while `terminate` is still blocked, and getting any of them wrong strands the caller
+  // silently rather than failing it.
+  it.effect(
+    'a process stalled in teardown is not adoptable, and drops further input',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+      const { executable, release, started, inputs } = yield* makeStallingProcess();
+
+      const handle = yield* manager.spawn(executable);
+      yield* handle.submitInput(undefined);
+      yield* Deferred.await(started);
+      const terminating = yield* Effect.forkChild(handle.terminate());
+      yield* Effect.yieldNow;
+
+      // A remount lookup adopts the first process it finds in a non-terminal state. While teardown
+      // blocks, this handle must not be that process.
+      const listed = yield* manager.list({ key: 'test.stalling' });
+      expect(listed.map((process) => process.status.state)).toEqual([Process.State.TERMINATED]);
+
+      // Input after the stop is refused outright. Queueing it would be worse than dropping it: the
+      // handler never runs again, so the caller would wait on a turn that cannot come.
+      yield* handle.submitInput(undefined);
+      expect(inputs()).toEqual(1);
+
+      // Stopping twice returns rather than joining the blocked teardown behind the first caller.
+      yield* handle.terminate();
+
+      yield* Deferred.succeed(release, undefined);
+      yield* Fiber.join(terminating);
+
+      // Teardown completing neither revives the handle nor replays the dropped input.
+      expect(handle.status.state).toEqual(Process.State.TERMINATED);
+      expect(inputs()).toEqual(1);
     }, Effect.provide(TestLayer)),
   );
 

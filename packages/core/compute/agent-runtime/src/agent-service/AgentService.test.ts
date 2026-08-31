@@ -5,6 +5,7 @@
 import { describe, it } from '@effect/vitest';
 import * as Clock from 'effect/Clock';
 import * as DateTime from 'effect/DateTime';
+import * as Deferred from 'effect/Deferred';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -85,6 +86,26 @@ const Ping = Operation.make({
 /** Set by {@link Ping}'s handler so a test can assert the model actually reached the tool. */
 let pingCount = 0;
 
+/**
+ * A tool that does not unwind on interrupt. Terminating while it runs leaves the process scope
+ * pinned open, which is the mid-turn cancel that produced the wedged-chat bug: teardown blocks, and
+ * anything reading the handle's state meanwhile decides whether the next prompt reaches a process.
+ */
+const Stall = Operation.make({
+  meta: {
+    key: DXN.make('com.example.operation.stall'),
+    name: 'Stall',
+    description: 'Runs a long job and returns when it finishes. Takes no arguments.',
+  },
+  input: Schema.Void,
+  output: Schema.String,
+});
+
+/** Resolved by the test to let the stalled tool — and with it the blocked teardown — finish. */
+let stallRelease: Deferred.Deferred<void> | undefined;
+/** Fulfilled once the tool is actually running, so the test stops at the right moment. */
+let stallStarted: Deferred.Deferred<void> | undefined;
+
 const handlers = OperationHandlerSet.make(
   Ping.pipe(
     Operation.withHandler(
@@ -110,6 +131,15 @@ const handlers = OperationHandlerSet.make(
       }),
     ),
   ),
+  Stall.pipe(
+    Operation.withHandler(
+      Effect.fnUntraced(function* () {
+        yield* Deferred.succeed(stallStarted!, undefined);
+        yield* Deferred.await(stallRelease!).pipe(Effect.uninterruptible);
+        return 'finished';
+      }),
+    ),
+  ),
 );
 
 const ResearchSkill = Skill.make({
@@ -122,6 +152,12 @@ const PingSkill = Skill.make({
   key: 'org.dxos.skill.ping',
   name: 'Ping',
   tools: Skill.toolDefinitions({ operations: [Ping] }),
+});
+
+const StallSkill = Skill.make({
+  key: 'org.dxos.skill.stall',
+  name: 'Stall',
+  tools: Skill.toolDefinitions({ operations: [Stall] }),
 });
 
 const assistantTestLayerOptions = {
@@ -138,6 +174,13 @@ const TestLayer = ({ enableToolBackgrounding = false }: { enableToolBackgroundin
     ...assistantTestLayerOptions,
     agent: { enableToolBackgrounding },
   });
+
+// Separate layer so the extra registry seed lands after every other fixture test's ids: the module
+// PRNG is shared file-wide, and reseeding earlier would invalidate their recorded conversations.
+const StallTestLayer = AssistantTestLayer({
+  ...assistantTestLayerOptions,
+  skills: [...assistantTestLayerOptions.skills, StallSkill],
+});
 
 //
 // Delegation (supervisor) fixtures.
@@ -598,6 +641,52 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
       TestHelpers.provideTestContext,
     ),
     { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
+  );
+
+  // Stopping mid-tool-call finishes the handle while its teardown is still blocked on the in-flight
+  // turn. A handle left readable as live is adopted by the next session, whose prompt is then dropped
+  // by the `#finished` guard — the conversation wedges with no error until the page reloads. Uses a
+  // tool that ignores interruption, since a tool that unwinds lets teardown complete and never
+  // produces the stranded handle. The runtime seam is covered in ProcessManager.test.ts.
+  it.effect(
+    'accepts a new prompt after being stopped mid-tool-call',
+    Effect.fnUntraced(
+      function* (_) {
+        stallStarted = yield* Deferred.make<void>();
+        stallRelease = yield* Deferred.make<void>();
+
+        const session = yield* AgentService.createSession({ skills: [StallSkill] });
+        const processManager = yield* ProcessManager.ProcessManagerService;
+        const [handle] = yield* processManager.list({ target: Obj.getURI(session.feed), key: AGENT_PROCESS_KEY });
+
+        yield* session.submitPrompt('Run the stall tool.');
+        yield* Deferred.await(stallStarted);
+
+        // The stop button returns at once; `terminate` does not, because the tool holds the scope
+        // open. Forking is what the UI effectively does — and what leaves the handle observable
+        // mid-teardown. `terminate` publishes the state before its first yield, so one turn is enough.
+        const stopping = yield* Effect.forkChild(session.terminate());
+        yield* Effect.yieldNow;
+        expect(handle.status.state).not.toBe(Process.State.RUNNING);
+
+        // Same feed: the user typing again after hitting stop. The stopped handle must not be
+        // adopted — neither from the session cache nor by the remount lookup that follows it.
+        const resumed = yield* getSession(session.feed);
+        expect(resumed).not.toBe(session);
+
+        yield* resumed.submitPrompt('What is the capital of France? Reply with just the city name.');
+        yield* resumed.waitForCompletion();
+        const messages = yield* Feed.query(resumed.feed, Filter.type(Message.Message)).run;
+        expect(messages.map(Message.extractText).join('\n').toLocaleLowerCase()).toContain('paris');
+
+        // Let the stalled tool finish so the blocked teardown can complete with the test.
+        yield* Deferred.succeed(stallRelease, undefined);
+        yield* Fiber.join(stopping);
+      },
+      Effect.provide(StallTestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : 30_000 },
   );
 });
 
