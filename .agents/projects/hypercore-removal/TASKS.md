@@ -302,6 +302,12 @@ migration; crash mid-migration and resume.
 - [x] **Edge is told the space root** — write-once record (`COALESCE`, returns the id in force), genesis
       credential checked against the space's known space key, cached in `GlobalKv` (safe without
       invalidation precisely because the record is write-once).
+- [ ] **Follow-up: the root lookup has no negative cache.** Only a hit is cached, so every
+      unanchored space re-asks the `SpaceRegistry` singleton once per state-machine poll — N spaces
+      into one durable object, forever, for an answer that is "no" until the space is anchored. The
+      reasoning for caching only hits is sound (a miss is the pre-anchor state), but the cost is
+      real; a short-TTL negative entry would delay a flip by that TTL and nothing else. Decide
+      before the flip goes wide, not after.
 - [x] **Client reports the root on anchor** (dxos#12774) — `EdgeHttpClient.recordSpaceRoot`, retried with
       backoff on the manager's own context, since the invitation accept flow disposes its ctx as soon as
       `acceptSpace` returns.
