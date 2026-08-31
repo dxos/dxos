@@ -11,9 +11,10 @@ Design: [DESIGN.md](./DESIGN.md); ledger: [TASKS.md](./TASKS.md).
 - **The generator is fixed** (§3). Runs used to plan 24 commands and execute 3–5, because the
   drawn sequence was state-blind and `asyncModelRun` discarded the rest in silence. A plan is now
   simulated against a pure model before anything is spawned, so what is recorded is what runs.
-- **Not green end to end, and the last stop is a product finding rather than a test bug.** Runs
-  used to die on modelling errors; those are fixed (§3), and the run now gets as far as a
-  reproducible replication stall that the SDK's own diagnostics name (finding 6).
+- **A full sequence now runs.** Run F executed all 25 commands — 21 of them data operations across
+  2 spaces, 3 devices and 2 identities — and then failed its final convergence assertion. Every
+  earlier stop was a modelling error in the test; those are fixed (§3). What is left is a product
+  finding the SDK's own diagnostics corroborate (finding 6).
 - **Caveat on attribution.** The local workers resolve `@dxos/*` from a catalog pinned to
   `2be9f24c` (2026-08-27), 54 commits behind this branch. Client-process failures are attributable;
   wire-level ones need a linked stack first. See §6.
@@ -78,6 +79,8 @@ generator was fixed.
 | B | `run-b-nopart` | `partitions: false` | 12 | `document not found: s0-d2` — modelling error, fixed |
 | C | `run-b-nopart` | `partitions: false` | 5 | `peers disagree on space 0` at the first checkpoint — barrier too weak, fixed |
 | D | `run-b-nopart` | `partitions: false` | 8 | `sync did not quiesce for space 1 within 60000ms` — finding 6 |
+| E | `run-e-second-seed` | `partitions: false` | 8 | `Cannot modify ECHO object property "0"` — replicant bug, fixed |
+| F | `run-e-second-seed` | `partitions: false` | **25** | final assertion: `differentDocuments: 1` after 21 data operations — finding 6 |
 
 B, C and D share a seed and drew byte-identical `plan` lines across three intervening changes to
 the executor — the generator depends on the seed and nothing else. The seed fixes the sequence,
@@ -123,6 +126,10 @@ EditCounter(0,1,1) EditText(0,0,1,0)
   checkpoint on a pair that agreed moments later. Checkpoints and the final assertion now retry
   within the quiescence budget — run D passed that same checkpoint and got three commands further,
   to a stall that does **not** resolve (finding 6).
+- **The replicant wrote an ECHO property directly.** `editDocumentCounter` assigned
+  `doc.counters[slot]`, which ECHO rejects outside `Obj.update`. Only the second seed reached an
+  `EditCounter` at all, which is a fair illustration of what the generator fix bought: a bug latent
+  through every previous run surfaced on the first plan that got there.
 - **`fc.assert` cannot drive this.** With `numRuns: 1` it biases to the smallest input and drew
   **2 commands** against a `maxCommands` of 25 (measured). Superseded by the pool-and-simulate
   scheme above.
@@ -192,6 +199,20 @@ EditCounter(0,1,1) EditText(0,0,1,0)
      passes: 6, missingOnLocal: [ '47jBHyTpJRZbQWgM4b7TABe484Wj' ], missingOnRemote: [], different: []
    }
    ```
+
+   Run F, which executed the whole sequence, reaches the same wall from the other side — after 21
+   data operations the final assertion finds one document whose *content* differs and stays
+   different:
+
+   ```
+   sync did not quiesce for space 0 within 60000ms:
+     client 0 {"connected":true,"missingOnLocal":0,"missingOnRemote":0,"differentDocuments":1,"localDocumentCount":5}
+     client 1 {"connected":true,"missingOnLocal":0,"missingOnRemote":0,"differentDocuments":1,"localDocumentCount":5}
+   ```
+
+   Both devices of identity 0 disagree with EDGE on the same document; identity 1's device had
+   quiesced. Nothing is missing in either direction — this is a merge that never reconciles, not a
+   transfer that never starts.
 
    So discovery works and **content transfer does not** — which rules out the collection-membership
    hypothesis the wire logs first suggested. Worth checking against, but not obviously the cause:
