@@ -44,19 +44,22 @@ const main = () => {
     return;
   }
 
-  const head = args.head ?? 'HEAD';
+  // Resolve --head to a commit sha before emitting it: with that, every emitted value is a sha or the
+  // literal `remote`, so the output is safe to eval and to append to $GITHUB_ENV with no quoting.
+  const head = args.head ? (resolveCommit(args.head) ?? fail(`--head ${args.head} does not resolve`)) : 'HEAD';
   // Export the fork point rather than the raw base: moon merge-bases a resolvable base with HEAD
   // itself (2.5.2), so this is behaviour-neutral, and the logged range is the range moon diffs even
   // when the base branch has advanced past the fork.
   const fork = tryGit('merge-base', base, head) ?? base;
-  const range = args.head ? [fork, args.head] : [fork];
   const changed =
-    tryGit('diff', '--name-only', ...range)
+    tryGit('diff', '--name-only', fork, ...(args.head ? [head] : []))
       ?.split('\n')
       .filter(Boolean) ?? [];
-  note(`Affected run — ${reason} (${fork.slice(0, 8)}..${head}, ${changed.length} changed files).`);
+  note(
+    `Affected run — ${reason} (${fork.slice(0, 8)}..${args.head ? head.slice(0, 8) : 'HEAD'}, ${changed.length} changed files).`,
+  );
 
-  emit(args, { MOON_AFFECTED: 'remote', MOON_BASE: fork, ...(args.head ? { MOON_HEAD: args.head } : {}) });
+  emit(args, { MOON_AFFECTED: 'remote', MOON_BASE: fork, ...(args.head ? { MOON_HEAD: head } : {}) });
 };
 
 const resolve = ({ args, event, branch, defaultBranch }) => {
