@@ -14,7 +14,7 @@ import {
   isEncodedReference,
 } from '@dxos/echo-protocol';
 import { resolveMergeRedirect } from '@dxos/echo/internal';
-import { type EntityMeta } from '@dxos/index-core';
+import { type EntityMeta, type Referrer } from '@dxos/index-core';
 import { EID, type EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -32,18 +32,19 @@ export type MergeDocumentRef = {
 };
 
 /**
- * One object holding references to a merge loser, from the reverse-reference index joined to the
- * object metadata. `propPaths` are the unescaped property paths within the referrer's data that
- * the index recorded as pointing at the target.
+ * A referrer document is loaded on the index's say-so alone, so the rewrite path never waits on
+ * the network: a document that is not locally available has no local references to rewrite, and a
+ * best-effort optimization must not stall the indexing loop. The timeout is a backstop for the
+ * local load itself.
  */
-export type Referrer = {
-  objectId: EntityId;
-  documentId: string;
-  propPaths: readonly (readonly string[])[];
-};
+const REFERRER_LOAD_OPTIONS = { fetchFromNetwork: false, timeout: 10_000 };
 
 export type ConvergenceKeyMergerDeps = {
-  loadDoc: (ctx: Context, documentId: DocumentId) => Promise<MergeDocumentRef | null>;
+  loadDoc: (
+    ctx: Context,
+    documentId: DocumentId,
+    opts?: { timeout?: number; fetchFromNetwork?: boolean },
+  ) => Promise<MergeDocumentRef | null>;
 
   /**
    * Persist a document's pending changes durably. Winner and loser live in different documents
@@ -59,9 +60,9 @@ export type ConvergenceKeyMergerDeps = {
   queryByConvergenceKeys: (spaceId: SpaceId, convergenceKeys: readonly string[]) => Promise<readonly EntityMeta[]>;
 
   /**
-   * Referrers of one entity (`IndexEngine.queryReverseRef` joined to the object metadata for the
-   * referrer's document) — the point lookup behind reference rewriting. Index rows are derived
-   * state; every hit is re-verified against the document before anything is written.
+   * Referrers of one entity (`IndexEngine.queryReferrers`) — the point lookup behind reference
+   * rewriting. Index rows are derived state; every hit is re-verified against the document before
+   * anything is written.
    */
   queryReferrers: (spaceId: SpaceId, targetId: EntityId) => Promise<readonly Referrer[]>;
 };
@@ -346,6 +347,10 @@ export class ConvergenceKeyMerger {
       return true;
     }
 
+    // Only losers whose redirect was actually written may have their referrers repointed: a loser
+    // whose callback declines (re-keyed, deleted, concurrently redirected) carries no redirect of
+    // ours, and rewriting refs to a live independent entity would sever them with no way back.
+    const redirected = new Map<EntityId, EntityId>();
     for (const loserId of result.losers) {
       const loser = byId.get(loserId);
       const heads = loserHeads.get(loserId);
@@ -371,6 +376,7 @@ export class ConvergenceKeyMerger {
         entity.system.mergedInto = result.winner;
         entity.system.mergedAtHeads = [...heads];
         entity.system.deleted = true;
+        redirected.set(loserId, result.winner);
       });
     }
 
@@ -391,9 +397,9 @@ export class ConvergenceKeyMerger {
     // References to the losers repoint at the winner now that the tombstones exist. Outside the
     // durability guarantee by design: resolution follows the redirect regardless, so this is an
     // optimization plus the compat path for clients too old to follow `mergedInto`.
-    const groupHandles = new Map([...byId].map(([objectId, member]) => [objectId, member.handle]));
-    for (const loserId of result.losers) {
-      await this.#rewriteReferences(ctx, spaceId, loserId, result.winner, groupHandles);
+    if (redirected.size > 0) {
+      const groupHandles = new Map([...byId].map(([objectId, member]) => [objectId, member.handle]));
+      await this.#rewriteReferences(ctx, spaceId, redirected, groupHandles);
     }
     return true;
   }
@@ -509,79 +515,99 @@ export class ConvergenceKeyMerger {
 
     // Even a pass with nothing to fold re-covers referrers: a loser re-indexing is the only signal
     // that re-presents the key, so this is where late referrers (§4.11's freshness residual) catch
-    // up. Idempotent — an already-rewritten ref no longer parses as the loser.
+    // up. Idempotent — a rewritten referrer re-indexes with rows naming the winner, so the loser's
+    // steady-state lookup is empty and no documents are loaded.
     if (winnerLive) {
-      await this.#rewriteReferences(ctx, spaceId, loserId, winnerId, handles);
+      await this.#rewriteReferences(ctx, spaceId, new Map([[loserId, winnerId]]), handles);
     }
     return applied || needsTombstone;
   }
 
   /**
-   * Repoint references at a merged-away loser to its winner, index-driven: the reverse-reference
+   * Repoint references at merged-away losers to their winners, index-driven: the reverse-reference
    * index names each referrer and the property holding the ref, so every rewrite is a point load —
-   * no scan, no client, no hydration.
+   * no scan, no client, no hydration. A referrer holding refs to several losers is loaded and
+   * written once, covering all of them.
    *
    * Best-effort by design (see §4.11): a ref that stays behind still resolves through the redirect,
-   * and the loser's next re-index re-presents the work — so failures are logged and swallowed, and
-   * no flush is ordered. Only same-space referrers with a document are rewritten; the reference's
-   * own spelling (local or space-qualified) is preserved.
+   * and the loser's next re-index re-presents the work — so every failure surface here, the write
+   * included, is logged and swallowed, and no flush is ordered. A throw escaping this method would
+   * mark the key un-serviced and wedge the intent on permanent retry, which a non-load-bearing
+   * optimization must never do. The reference's own spelling (local or space-qualified) is
+   * preserved; the index restricts rows to same-space referrers with a document.
    */
   async #rewriteReferences(
     ctx: Context,
     spaceId: SpaceId,
-    loserId: EntityId,
-    winnerId: EntityId,
+    redirects: ReadonlyMap<EntityId, EntityId>,
     handles: ReadonlyMap<EntityId, MergeDocumentRef>,
   ): Promise<void> {
-    let referrers: readonly Referrer[];
-    try {
-      referrers = await this.#deps.queryReferrers(spaceId, loserId);
-    } catch (err) {
-      log.warn('referrer lookup failed; references stay on the redirect', { spaceId, loserId, err });
-      return;
-    }
-
-    for (const referrer of referrers) {
-      if (referrer.propPaths.length === 0) {
+    // One batch entry per referrer object, accumulating the rewrites every loser asks of it.
+    type ReferrerBatch = {
+      referrer: Referrer;
+      rewrites: { loserId: EntityId; winnerId: EntityId; propPaths: Referrer['propPaths'] }[];
+    };
+    const batches = new Map<string, ReferrerBatch>();
+    for (const [loserId, winnerId] of redirects) {
+      let referrers: readonly Referrer[];
+      try {
+        referrers = await this.#deps.queryReferrers(spaceId, loserId);
+      } catch (err) {
+        log.warn('referrer lookup failed; references stay on the redirect', { spaceId, loserId, err });
         continue;
       }
-      // A group member (the winner included) is already loaded; reuse its lease rather than
-      // taking a second one.
-      const shared = handles.get(referrer.objectId);
-      let handle = shared;
-      try {
-        if (!handle) {
-          try {
-            handle = (await this.#deps.loadDoc(ctx, referrer.documentId as DocumentId)) ?? undefined;
-          } catch (err) {
-            log.warn('referrer load failed; references stay on the redirect', { referrer: referrer.objectId, err });
-            continue;
-          }
+      for (const referrer of referrers) {
+        if (referrer.propPaths.length === 0) {
+          continue;
         }
+        const key = `${referrer.documentId}/${referrer.objectId}`;
+        const batch = batches.get(key) ?? { referrer, rewrites: [] };
+        batch.rewrites.push({ loserId, winnerId, propPaths: referrer.propPaths });
+        batches.set(key, batch);
+      }
+    }
+
+    for (const { referrer, rewrites } of batches.values()) {
+      try {
+        // A group member (the winner included) is already loaded; reuse its lease rather than
+        // taking a second one — but only when the lease holds the document the index row names.
+        const shared = handles.get(referrer.objectId);
+        const reusable = shared !== undefined && shared.documentId === referrer.documentId;
+        const handle = reusable
+          ? shared
+          : ((await this.#deps.loadDoc(ctx, referrer.documentId as DocumentId, REFERRER_LOAD_OPTIONS)) ?? undefined);
         if (!handle) {
           continue;
         }
-        const rewritten: string[] = [];
-        handle.change((doc: DatabaseDirectory) => {
-          const entity = doc.objects?.[referrer.objectId];
-          // A tombstoned or merged-away referrer is left alone — its own merge folds its data,
-          // rewrites included, into wherever it survives.
-          if (!entity || entity.system?.mergedInto !== undefined || entity.system?.deleted || !entity.data) {
-            return;
-          }
-          for (const path of referrer.propPaths) {
-            if (_rewriteReferenceAt(entity.data as Record<string, unknown>, path, loserId, winnerId)) {
-              rewritten.push(path.join('.'));
+        try {
+          const rewritten: string[] = [];
+          handle.change((doc: DatabaseDirectory) => {
+            const entity = doc.objects?.[referrer.objectId];
+            // A merged-away referrer is left alone: a write would land above its own fold
+            // watermark and be carried into its winner as if it were a straggler's edit. A
+            // plain-deleted referrer is also left alone — if it is restored, the loser's next
+            // re-index re-covers it.
+            if (!entity || entity.system?.mergedInto !== undefined || entity.system?.deleted || !entity.data) {
+              return;
             }
+            for (const { loserId, winnerId, propPaths } of rewrites) {
+              for (const path of propPaths) {
+                if (_rewriteReferenceAt(entity.data as Record<string, unknown>, path, loserId, winnerId)) {
+                  rewritten.push(path.join('.'));
+                }
+              }
+            }
+          });
+          if (rewritten.length > 0) {
+            log('rewrote references', { referrer: referrer.objectId, paths: rewritten });
           }
-        });
-        if (rewritten.length > 0) {
-          log('rewrote references', { referrer: referrer.objectId, loserId, winnerId, paths: rewritten });
+        } finally {
+          if (!reusable) {
+            handle[Symbol.dispose]?.();
+          }
         }
-      } finally {
-        if (handle !== undefined && handle !== shared) {
-          handle[Symbol.dispose]?.();
-        }
+      } catch (err) {
+        log.warn('referrer rewrite failed; references stay on the redirect', { referrer: referrer.objectId, err });
       }
     }
   }

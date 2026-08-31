@@ -8,7 +8,7 @@ import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { type Context } from '@dxos/context';
 import { ATTR_META, ATTR_RELATION_SOURCE, ATTR_TYPE } from '@dxos/echo/internal';
-import type { EntityId, SpaceId } from '@dxos/keys';
+import type { EntityId, SpaceId, URI } from '@dxos/keys';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 import { ConvergenceKeyIntentStore } from './convergence-key-intent-store';
@@ -22,6 +22,7 @@ import {
   type Index,
   type IndexerObject,
   type QueueWindow,
+  type Referrer,
   ReverseRefIndex,
   type ReverseRefQuery,
 } from './indexes';
@@ -177,6 +178,17 @@ export class IndexEngine {
   queryReverseRef(query: ReverseRefQuery) {
     // TODO(mykola): Join with metadata table here.
     return this.#reverseRefIndex.query(query);
+  }
+
+  /**
+   * Referrers of one target in one space, joined to the object metadata for the referrer's
+   * document (see {@link ReverseRefIndex.queryReferrers}).
+   */
+  queryReferrers(
+    spaceId: SpaceId,
+    targetDXN: URI.URI,
+  ): Effect.Effect<readonly Referrer[], SqlError.SqlError, SqlClient.SqlClient> {
+    return this.#reverseRefIndex.queryReferrers({ spaceId, targetDXN });
   }
 
   queryAll(query: {

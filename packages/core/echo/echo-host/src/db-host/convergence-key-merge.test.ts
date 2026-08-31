@@ -439,7 +439,7 @@ describe('ConvergenceKeyMerger reference rewriting', () => {
       [ID_REF, makeEntity(REFERRER_KEY, referrerData)],
     ]);
     const group = fixture.group.slice(0, 2);
-    const referrers = (propPaths: readonly (readonly string[])[]) => async (_spaceId: SpaceId, targetId: EntityId) =>
+    const referrers = (propPaths: string[][]) => async (_spaceId: SpaceId, targetId: EntityId) =>
       targetId === ID_B ? [{ objectId: ID_REF, documentId: fixture.group[2].documentId, propPaths }] : [];
     return { fixture, group, referrers };
   };
@@ -450,7 +450,8 @@ describe('ConvergenceKeyMerger reference rewriting', () => {
     const { fixture, group, referrers } = setupWithReferrer({
       owner: localRef(ID_B),
       nested: { link: localRef(ID_B) },
-      items: [localRef(ID_B), localRef(ID_A)],
+      // The sibling entry names an id outside the group, so over-rewriting would be visible.
+      items: [localRef(ID_B), localRef(ID_C)],
     });
     const context: ConvergenceKeyMergerDeps = {
       ...fixture.context,
@@ -463,7 +464,7 @@ describe('ConvergenceKeyMerger reference rewriting', () => {
     expect(referrer?.data.owner).toEqual(localRef(ID_A));
     expect((referrer?.data.nested as { link: unknown }).link).toEqual(localRef(ID_A));
     expect((referrer?.data.items as unknown[])[0]).toEqual(localRef(ID_A));
-    expect((referrer?.data.items as unknown[])[1]).toEqual(localRef(ID_A));
+    expect((referrer?.data.items as unknown[])[1]).toEqual(localRef(ID_C));
   });
 
   test('a space-qualified reference keeps its qualification', async ({ expect }) => {
@@ -511,6 +512,68 @@ describe('ConvergenceKeyMerger reference rewriting', () => {
     await new ConvergenceKeyMerger(context).mergeGroup(Context.default(), SPACE_ID, KEY, group);
 
     expect(entityOf(fixture, ID_REF)?.data.owner).toEqual(localRef(ID_B));
+  });
+
+  test('a merged-away referrer is never written', async ({ expect }) => {
+    // Writing to a redirected referrer would land above its own fold watermark and be carried
+    // into its winner as if it were a straggler's edit — the reason the skip rule exists.
+    const { fixture, group, referrers } = setupWithReferrer({ owner: localRef(ID_B) });
+    edit(fixture, ID_REF, (entity) => {
+      if (entity.system) {
+        entity.system.mergedInto = ID_A;
+      }
+    });
+    const context: ConvergenceKeyMergerDeps = {
+      ...fixture.context,
+      queryReferrers: referrers([['owner']]),
+    };
+
+    await new ConvergenceKeyMerger(context).mergeGroup(Context.default(), SPACE_ID, KEY, group);
+
+    expect(entityOf(fixture, ID_REF)?.data.owner).toEqual(localRef(ID_B));
+  });
+
+  test('referrers of a loser whose tombstone was declined are not repointed', async ({ expect }) => {
+    // The loser is re-keyed while the winner's flush is in flight, so the tombstone callback
+    // declines and B stays live with no redirect. Rewriting its referrers would sever their
+    // linkage to a live entity with no redirect to resolve back through.
+    const { fixture, group, referrers } = setupWithReferrer({ owner: localRef(ID_B) });
+    const context: ConvergenceKeyMergerDeps = {
+      ...fixture.context,
+      queryReferrers: referrers([['owner']]),
+      flushDoc: async () => {
+        edit(fixture, ID_B, (entity) => {
+          if (entity.meta) {
+            entity.meta.convergenceKey = 'example.com/thing/forked';
+          }
+        });
+      },
+    };
+
+    await new ConvergenceKeyMerger(context).mergeGroup(Context.default(), SPACE_ID, KEY, group);
+
+    expect(entityOf(fixture, ID_B)?.system?.mergedInto).toBeUndefined();
+    expect(entityOf(fixture, ID_REF)?.data.owner).toEqual(localRef(ID_B));
+  });
+
+  test('a referrer inside the merge group reuses its lease and is rewritten', async ({ expect }) => {
+    // The winner itself refers to the loser: the rewrite must reuse the group's lease (never
+    // double-dispose it) and repoint the ref like any other referrer's.
+    const fixture = setup([
+      [ID_A, makeEntity(KEY, { title: 'a', prev: localRef(ID_B) })],
+      [ID_B, makeEntity(KEY, { title: 'b' })],
+    ]);
+    const context: ConvergenceKeyMergerDeps = {
+      ...fixture.context,
+      queryReferrers: async (_spaceId, targetId) =>
+        targetId === ID_B ? [{ objectId: ID_A, documentId: fixture.group[0].documentId, propPaths: [['prev']] }] : [],
+    };
+
+    expect(await new ConvergenceKeyMerger(context).mergeGroup(Context.default(), SPACE_ID, KEY, fixture.group)).toBe(
+      true,
+    );
+
+    expect(entityOf(fixture, ID_A)?.data.prev).toEqual(localRef(ID_A));
   });
 
   test('a referrer lookup failure does not fail the merge', async ({ expect }) => {

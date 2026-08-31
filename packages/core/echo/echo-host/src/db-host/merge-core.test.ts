@@ -4,19 +4,11 @@
 
 import { describe, test } from 'vitest';
 
-import { Obj } from '@dxos/echo';
 import { type ForeignKey } from '@dxos/echo-protocol';
 import { resolveMergeRedirect } from '@dxos/echo/internal';
-import { TestSchema } from '@dxos/echo/testing';
 import { type EntityId } from '@dxos/keys';
 
-import { type MergeCandidate, findMergeDuplicates, mergeCandidates, toMergeCandidate } from './merge-core';
-
-// The field is assigned through meta inside an update — there is deliberately no dedicated setter.
-const setConvergenceKey = (object: Obj.Unknown, convergenceKey: string | undefined) =>
-  Obj.update(object, (object) => {
-    Obj.getMeta(object).convergenceKey = convergenceKey;
-  });
+import { type MergeCandidate, mergeCandidates } from './merge-core';
 
 // Ids are compared lexicographically, so fixed ULID-shaped literals keep the ordering readable:
 // `idA < idB < idC`.
@@ -42,75 +34,6 @@ const permutations = <T>(items: readonly T[]): T[][] => {
 };
 
 describe('merge core', () => {
-  describe('toMergeCandidate', () => {
-    test('builds a candidate from a live object', ({ expect }) => {
-      const object = Obj.make(TestSchema.Task, { title: 'one' });
-      setConvergenceKey(object, 'org.example.seed');
-      const candidate = toMergeCandidate(object);
-      expect(candidate.id).toBe(object.id);
-      expect(candidate.convergenceKey).toBe('org.example.seed');
-      expect(candidate.data.title).toBe('one');
-    });
-
-    test('real objects merge field-wise by id', ({ expect }) => {
-      const first = Obj.make(TestSchema.Task, { title: 'first' });
-      const second = Obj.make(TestSchema.Task, { title: 'second', description: 'only on second' });
-      for (const object of [first, second]) {
-        setConvergenceKey(object, 'org.example.seed');
-      }
-      // Ids are ULIDs minted in creation order, so `first` is the winner.
-      const result = mergeCandidates([toMergeCandidate(second), toMergeCandidate(first)]);
-      expect(result.winner).toBe(first.id);
-      expect(result.losers).toEqual([second.id]);
-      expect(result.data.title).toBe('first');
-      expect(result.data.description).toBe('only on second');
-    });
-
-    test('objects without a convergence key are not grouped as duplicates', ({ expect }) => {
-      const first = Obj.make(TestSchema.Task, { title: 'first' });
-      const second = Obj.make(TestSchema.Task, { title: 'second' });
-      const duplicates = findMergeDuplicates([toMergeCandidate(first), toMergeCandidate(second)]);
-      expect(duplicates.size).toBe(0);
-    });
-  });
-
-  describe('findMergeDuplicates', () => {
-    test('partitions by key and drops groups of one', ({ expect }) => {
-      const duplicates = findMergeDuplicates([
-        candidate(idA, {}, { convergenceKey: 'one' }),
-        candidate(idB, {}, { convergenceKey: 'two' }),
-        candidate(idC, {}, { convergenceKey: 'two' }),
-      ]);
-      expect([...duplicates.keys()]).toEqual(['two']);
-      expect(duplicates.get('two')!.map(({ id }) => id)).toEqual([idB, idC]);
-    });
-
-    test('no duplicates in a set of distinct keys', ({ expect }) => {
-      const duplicates = findMergeDuplicates([
-        candidate(idA, {}, { convergenceKey: 'one' }),
-        candidate(idB, {}, { convergenceKey: 'two' }),
-      ]);
-      expect(duplicates.size).toBe(0);
-    });
-
-    test('entities without a convergence key never group, not even with each other', ({ expect }) => {
-      const duplicates = findMergeDuplicates([
-        { id: idA, data: {} },
-        { id: idB, data: {} },
-      ]);
-      expect(duplicates.size).toBe(0);
-    });
-
-    test('keys differing only by encoded generation do not group together', ({ expect }) => {
-      const duplicates = findMergeDuplicates([
-        candidate(idA, {}, { convergenceKey: 'org.example.seed' }),
-        candidate(idB, {}, { convergenceKey: 'org.example.seed@2' }),
-        candidate(idC, {}, { convergenceKey: 'org.example.seed@2' }),
-      ]);
-      expect([...duplicates.keys()]).toEqual(['org.example.seed@2']);
-    });
-  });
-
   describe('mergeCandidates', () => {
     test('throws on an empty candidate set', ({ expect }) => {
       expect(() => mergeCandidates([])).toThrow(TypeError);
@@ -285,34 +208,10 @@ describe('merge core', () => {
     });
   });
 
-  describe('resolveMergeRedirect', () => {
+  // The interplay between the merge function and the resolver it hands chains to — the resolver's
+  // own unit tests live beside it in `@dxos/echo`.
+  describe('mergeCandidates + resolveMergeRedirect', () => {
     const chain = (edges: Record<string, EntityId>) => (id: EntityId) => edges[id];
-
-    test('an entity that was not merged away resolves to itself', ({ expect }) => {
-      expect(resolveMergeRedirect(idB, chain({}))).toBe(idB);
-    });
-
-    test('follows a single hop', ({ expect }) => {
-      expect(resolveMergeRedirect(idB, chain({ [idB]: idA }))).toBe(idA);
-    });
-
-    test('follows a chain transitively to the global minimum', ({ expect }) => {
-      // The partial-view case: one peer wrote C -> B, another later wrote B -> A.
-      expect(resolveMergeRedirect(idC, chain({ [idC]: idB, [idB]: idA }))).toBe(idA);
-    });
-
-    test('terminates on a cycle instead of looping', ({ expect }) => {
-      expect(resolveMergeRedirect(idA, chain({ [idA]: idB, [idB]: idA }))).toBe(idA);
-    });
-
-    test('terminates on a self-reference', ({ expect }) => {
-      expect(resolveMergeRedirect(idA, chain({ [idA]: idA }))).toBe(idA);
-    });
-
-    test('stops at a forward reference rather than following it', ({ expect }) => {
-      // Every legitimate edge decreases the id; an increasing edge is corrupt data, not a hop.
-      expect(resolveMergeRedirect(idA, chain({ [idA]: idC }))).toBe(idA);
-    });
 
     test('every edge produced by a merge decreases the id, so chains are finite', ({ expect }) => {
       const result = mergeCandidates([candidate(idA), candidate(idB), candidate(idC), candidate(idD)]);

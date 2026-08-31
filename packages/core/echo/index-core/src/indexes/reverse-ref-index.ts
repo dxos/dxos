@@ -10,11 +10,11 @@ import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { EncodedReference, isEncodedReference } from '@dxos/echo-protocol';
 import { ATTR_META } from '@dxos/echo/internal';
-import { DXN, EID, URI } from '@dxos/keys';
+import { DXN, EID, type EntityId, type SpaceId, URI } from '@dxos/keys';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/reverse-ref';
-import { EscapedPropPath, chunkArray } from '../utils';
+import { type EntityPropPath, EscapedPropPath, chunkArray } from '../utils';
 import type { Index, IndexerObject } from './interface';
 
 /**
@@ -81,6 +81,17 @@ export interface ReverseRefQuery {
 }
 
 /**
+ * One object holding references to a target, joined to the object metadata for its document.
+ * `propPaths` are the unescaped property paths within the referrer's data that the index
+ * recorded as pointing at the target.
+ */
+export type Referrer = {
+  objectId: EntityId;
+  documentId: string;
+  propPaths: EntityPropPath[];
+};
+
+/**
  * Indexes reverse references - tracks which objects reference which targets.
  * Only indexes references, not relations.
  */
@@ -114,6 +125,42 @@ export class ReverseRefIndex implements Index {
         // TODO(mykola): Join objectMeta table here.
         const rows = yield* sql`SELECT * FROM reverseRef WHERE targetDXN = ${normalized}`;
         return rows as ReverseRef[];
+      }),
+  );
+
+  /**
+   * Referrers of one target in one space, joined to the object metadata for the referrer's
+   * document — the point lookup behind merge reference rewriting. Queue entities carry no
+   * document to rewrite and rows from other spaces are not this space's to repoint, so both
+   * are excluded in SQL.
+   */
+  queryReferrers = Effect.fn('ReverseRefIndex.queryReferrers')(
+    ({
+      spaceId,
+      targetDXN,
+    }: {
+      spaceId: SpaceId;
+      targetDXN: URI.URI;
+    }): Effect.Effect<readonly Referrer[], SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        const normalized = referenceIndexKey(targetDXN);
+        if (normalized === undefined) {
+          return [];
+        }
+        const rows = yield* sql<{ objectId: EntityId; documentId: string; propPath: string }>`
+          SELECT om.objectId, om.documentId, rr.propPath
+          FROM reverseRef rr JOIN objectMeta om ON om.recordId = rr.recordId
+          WHERE rr.targetDXN = ${normalized} AND om.spaceId = ${spaceId} AND om.documentId != ''`;
+        const byReferrer = new Map<string, Referrer>();
+        for (const row of rows) {
+          // Object ids are unique within a space, but the row's document is the one the index saw.
+          const key = `${row.documentId}/${row.objectId}`;
+          const referrer = byReferrer.get(key) ?? { objectId: row.objectId, documentId: row.documentId, propPaths: [] };
+          referrer.propPaths.push(EscapedPropPath.unescape(row.propPath));
+          byReferrer.set(key, referrer);
+        }
+        return [...byReferrer.values()];
       }),
   );
 

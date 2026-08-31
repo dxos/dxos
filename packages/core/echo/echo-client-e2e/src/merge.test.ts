@@ -9,7 +9,6 @@ import { waitForCondition } from '@dxos/async';
 import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { getObjectCore } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { findMergeDuplicates, mergeCandidates, toMergeCandidate } from '@dxos/echo-host';
 import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
 
@@ -36,7 +35,7 @@ describe('convergence-key merging', () => {
 
   // Merging is triggered by the worker's indexing stream, so convergence is awaited rather than
   // synchronous with any one query.
-  const waitForLiveCount = async (db: any, count: number, type: any = TestSchema.Task) =>
+  const waitForLiveCount = async (db: any, count: number, type: Parameters<typeof Filter.type>[0] = TestSchema.Task) =>
     waitForCondition({
       condition: async () => (await db.query(Filter.type(type)).run()).length === count,
       timeout: 10_000,
@@ -82,35 +81,6 @@ describe('convergence-key merging', () => {
   });
 
   // The duplication this exists to fix: two uncoordinated writers each create "the same" object.
-  test('duplicates sharing a convergence key are detected and merged deterministically', async ({ expect }) => {
-    await using peer = await builder.createPeer({ types: [TestSchema.Task] });
-    const db = await peer.createDatabase();
-
-    await Effect.gen(function* () {
-      const first = Obj.make(TestSchema.Task, { title: 'from the first writer' });
-      setConvergenceKey(first, 'org.example.seed');
-      yield* Database.add(first);
-
-      const second = Obj.make(TestSchema.Task, { title: 'from the second writer', description: 'only here' });
-      setConvergenceKey(second, 'org.example.seed');
-      yield* Database.add(second);
-
-      yield* Database.flush();
-
-      // Deliberately not via a query: a query collapses duplicates on sight, so this exercises the
-      // pure detection over the two entities directly.
-      const duplicates = findMergeDuplicates([first, second].map(toMergeCandidate));
-      expect(duplicates.size).toBe(1);
-
-      const result = mergeCandidates(duplicates.get('org.example.seed')!);
-      // Ids are ULIDs minted in creation order, so the first writer's object wins.
-      expect(result.winner).toBe(first.id);
-      expect(result.losers).toEqual([second.id]);
-      expect(result.data.title).toBe('from the first writer');
-      expect(result.data.description).toBe('only here');
-    }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
-  });
-
   test('the worker collapses duplicates to one live object and folds the loser-only fields', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [TestSchema.Task] });
     const db = await peer.createDatabase();
@@ -418,22 +388,5 @@ describe('convergence-key merging', () => {
 
       expect(await db.query(Filter.type(TestSchema.Task)).run()).toHaveLength(2);
     });
-  });
-
-  test('objects with distinct convergence keys are not duplicates', async ({ expect }) => {
-    await using peer = await builder.createPeer({ types: [TestSchema.Task] });
-    const db = await peer.createDatabase();
-
-    await Effect.gen(function* () {
-      for (const convergenceKey of ['org.example.seed', 'org.example.seed@2', 'org.example.other']) {
-        const task = Obj.make(TestSchema.Task, { title: convergenceKey });
-        setConvergenceKey(task, convergenceKey);
-        yield* Database.add(task);
-      }
-      yield* Database.flush();
-
-      const tasks = yield* Database.query(Filter.type(TestSchema.Task)).run;
-      expect(findMergeDuplicates(tasks.map(toMergeCandidate)).size).toBe(0);
-    }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
   });
 });

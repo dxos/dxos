@@ -2,9 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Entity } from '@dxos/echo';
-import { type ForeignKey, PROPERTY_ID } from '@dxos/echo-protocol';
-import { getMetaChecked, getSnapshot } from '@dxos/echo/internal';
+import { type ForeignKey } from '@dxos/echo-protocol';
 import { type EntityId } from '@dxos/keys';
 
 /**
@@ -24,70 +22,6 @@ export type MergeCandidate = {
 
   /** Foreign keys, unioned across the group by {@link mergeCandidates}. */
   readonly keys?: readonly ForeignKey[];
-};
-
-// ECHO's brand keys (`KindId` and friends) are ordinary string properties rather than symbols, so
-// they show up in `Object.entries` of a snapshot. They are not user data, and writing one back to
-// an object throws, so they have to be excluded by prefix.
-const INTERNAL_KEY_PREFIX = '~@dxos/echo/';
-
-const isDataField = (field: string): boolean => field !== PROPERTY_ID && !field.startsWith(INTERNAL_KEY_PREFIX);
-
-/**
- * Build a {@link MergeCandidate} from a live entity or snapshot.
- */
-export const toMergeCandidate = (entity: (Entity.Unknown | Entity.Snapshot) & { id: EntityId }): MergeCandidate => {
-  const meta = getMetaChecked(entity);
-  const snapshot = getSnapshot(entity);
-  // Accumulate in a Map: on a plain object, field names colliding with `Object.prototype`
-  // members (`toString`, `__proto__`, ...) would be dropped or would mutate the prototype.
-  const data = new Map<string, unknown>();
-  for (const [field, value] of Object.entries(snapshot)) {
-    if (isDataField(field)) {
-      data.set(field, value);
-    }
-  }
-
-  return {
-    id: entity.id,
-    convergenceKey: meta.convergenceKey,
-    data: Object.fromEntries(data),
-    keys: meta.keys,
-  };
-};
-
-/**
- * Partition entities into merge groups by convergence key.
- *
- * Entities that declare no convergence key are not merge candidates and are omitted.
- */
-const groupByConvergenceKey = (candidates: readonly MergeCandidate[]): Map<string, MergeCandidate[]> => {
-  const groups = new Map<string, MergeCandidate[]>();
-  for (const candidate of candidates) {
-    if (candidate.convergenceKey === undefined) {
-      continue;
-    }
-    const group = groups.get(candidate.convergenceKey);
-    if (group) {
-      group.push(candidate);
-    } else {
-      groups.set(candidate.convergenceKey, [candidate]);
-    }
-  }
-  return groups;
-};
-
-/**
- * Groups holding more than one entity — i.e. the ones that actually need merging.
- */
-export const findMergeDuplicates = (candidates: readonly MergeCandidate[]): Map<string, MergeCandidate[]> => {
-  const groups = groupByConvergenceKey(candidates);
-  for (const [convergenceKey, group] of groups) {
-    if (group.length < 2) {
-      groups.delete(convergenceKey);
-    }
-  }
-  return groups;
 };
 
 export type MergeResult = {

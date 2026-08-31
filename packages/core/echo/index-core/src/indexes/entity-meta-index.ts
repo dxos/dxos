@@ -524,17 +524,17 @@ export class EntityMetaIndex implements Index {
   lookupByRecordIds = Effect.fn('EntityMetaIndex.lookupByRecordIds')(
     (recordIds: number[]): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
-        if (recordIds.length === 0) {
-          return [];
-        }
-
         const sql = yield* SqlClient.SqlClient;
-        const rows = yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sql.in('recordId', recordIds)}`;
-
-        return rows.map((row) => ({
-          ...row,
-          deleted: !!row.deleted,
-        }));
+        // Chunked: a widely-referenced object can put thousands of ids here, past
+        // SQLITE_LIMIT_VARIABLE_NUMBER.
+        const results: EntityMeta[] = [];
+        for (const chunk of chunkArray(recordIds)) {
+          const rows = yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sql.in('recordId', chunk)}`;
+          for (const row of rows) {
+            results.push({ ...row, deleted: !!row.deleted });
+          }
+        }
+        return results;
       }),
   );
 

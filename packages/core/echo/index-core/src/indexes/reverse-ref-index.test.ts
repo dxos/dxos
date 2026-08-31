@@ -12,6 +12,7 @@ import { ATTR_TYPE } from '@dxos/echo/internal';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
+import { EntityMetaIndex } from './entity-meta-index';
 import type { IndexerObject } from './interface';
 import { ReverseRefIndex } from './reverse-ref-index';
 
@@ -303,6 +304,84 @@ describe('ReverseRefIndex', () => {
 
       const versioned = yield* reverseRefIndex.query({ targetDXN: DXN.make('org.example.operation.foo', '1.0.0') });
       expect(versioned.length).toBe(2);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+});
+
+describe('ReverseRefIndex.queryReferrers', () => {
+  const makeDocumentObject = (spaceId: SpaceId, documentId: string, data: Record<string, unknown>): IndexerObject => ({
+    spaceId,
+    queueId: null,
+    queueNamespace: null,
+    documentId,
+    recordId: null,
+    createdAt: null,
+    updatedAt: Date.now(),
+    data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_PERSON, ...data },
+  });
+
+  /** Index through both indexes, the way the engine does: meta rows first, then reverse refs. */
+  const indexObjects = (metaIndex: EntityMetaIndex, reverseRefIndex: ReverseRefIndex, objects: IndexerObject[]) =>
+    Effect.gen(function* () {
+      yield* metaIndex.update(objects);
+      yield* metaIndex.lookupRecordIds(objects);
+      yield* reverseRefIndex.update(objects);
+    });
+
+  it.effect('joins referrer rows to their document metadata, grouping paths per referrer', () =>
+    Effect.gen(function* () {
+      const metaIndex = new EntityMetaIndex();
+      const reverseRefIndex = new ReverseRefIndex();
+      yield* metaIndex.migrate();
+      yield* reverseRefIndex.migrate();
+
+      const spaceId = SpaceId.random();
+      const targetId = EntityId.random();
+      const target = { '/': EID.make({ entityId: targetId }) };
+      const referrer = makeDocumentObject(spaceId, 'doc-referrer', {
+        'owner': target,
+        'nested': { link: target },
+        // A field name containing the path separator must survive the escape round-trip.
+        'dotted.name': target,
+      });
+      yield* indexObjects(metaIndex, reverseRefIndex, [referrer]);
+
+      const referrers = yield* reverseRefIndex.queryReferrers({
+        spaceId,
+        targetDXN: EID.make({ entityId: targetId }),
+      });
+      expect(referrers).toHaveLength(1);
+      expect(referrers[0].objectId).toBe(referrer.data.id);
+      expect(referrers[0].documentId).toBe('doc-referrer');
+      expect([...referrers[0].propPaths].sort()).toEqual([['dotted.name'], ['nested', 'link'], ['owner']]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('excludes referrers from other spaces and queue entities without a document', () =>
+    Effect.gen(function* () {
+      const metaIndex = new EntityMetaIndex();
+      const reverseRefIndex = new ReverseRefIndex();
+      yield* metaIndex.migrate();
+      yield* reverseRefIndex.migrate();
+
+      const spaceId = SpaceId.random();
+      const targetId = EntityId.random();
+      const target = { '/': EID.make({ entityId: targetId }) };
+      const sameSpace = makeDocumentObject(spaceId, 'doc-same', { owner: target });
+      const otherSpace = makeDocumentObject(SpaceId.random(), 'doc-other', { owner: target });
+      const queueReferrer: IndexerObject = {
+        ...makeDocumentObject(spaceId, '', { owner: target }),
+        documentId: null,
+        queueId: EntityId.random(),
+        queueNamespace: 'data',
+      };
+      yield* indexObjects(metaIndex, reverseRefIndex, [sameSpace, otherSpace, queueReferrer]);
+
+      const referrers = yield* reverseRefIndex.queryReferrers({
+        spaceId,
+        targetDXN: EID.make({ entityId: targetId }),
+      });
+      expect(referrers.map(({ objectId }) => objectId)).toEqual([sameSpace.data.id]);
     }).pipe(Effect.provide(TestLayer)),
   );
 });
