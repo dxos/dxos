@@ -19,8 +19,6 @@ import * as LanguageModelFixture from './LanguageModelFixture';
 
 const { __testing, DEFAULT_DYNAMIC_VALUE_PATTERNS } = LanguageModelFixture;
 
-const normalize = (prompt: unknown): unknown => __testing.normalizeForMatching(prompt, DEFAULT_DYNAMIC_VALUE_PATTERNS);
-
 /** Deterministic PRNG (mulberry32) so a failing seed reproduces exactly. */
 const makeRng = (seed: number): (() => number) => {
   let state = seed >>> 0;
@@ -90,8 +88,11 @@ describe('fixture match-key invariance (fuzz)', { tags: ['manual'] }, () => {
   test('normalized key is invariant under a fresh, same-shape id substitution', ({ expect }) => {
     for (let seed = 0; seed < ROUNDS; seed++) {
       // Two independent id bundles → the concrete id VALUES differ, the STRUCTURE is identical.
-      const left = normalize(buildPrompt(freshIds(makeRng(seed))));
-      const right = normalize(buildPrompt(freshIds(makeRng(seed ^ 0x9e3779b9))));
+      const left = __testing.normalizeForMatching(buildPrompt(freshIds(makeRng(seed))), DEFAULT_DYNAMIC_VALUE_PATTERNS);
+      const right = __testing.normalizeForMatching(
+        buildPrompt(freshIds(makeRng(seed ^ 0x9e3779b9))),
+        DEFAULT_DYNAMIC_VALUE_PATTERNS,
+      );
       expect(right, `seed ${seed}: normalization is not id-invariant`).toEqual(left);
     }
   });
@@ -100,8 +101,11 @@ describe('fixture match-key invariance (fuzz)', { tags: ['manual'] }, () => {
     const ids = freshIds(makeRng(42));
     // entityA appears twice, entityB once → normalized form must keep three distinct placeholder
     // occurrences with only two distinct placeholders, or a swapped-relationship prompt would falsely match.
-    const oneEntity = normalize(buildPrompt({ ...ids, entityB: ids.entityA }));
-    const twoEntities = normalize(buildPrompt(ids));
+    const oneEntity = __testing.normalizeForMatching(
+      buildPrompt({ ...ids, entityB: ids.entityA }),
+      DEFAULT_DYNAMIC_VALUE_PATTERNS,
+    );
+    const twoEntities = __testing.normalizeForMatching(buildPrompt(ids), DEFAULT_DYNAMIC_VALUE_PATTERNS);
     expect(twoEntities, 'collapsing distinct entity ids would produce false fixture hits').not.toEqual(oneEntity);
   });
 
@@ -109,7 +113,7 @@ describe('fixture match-key invariance (fuzz)', { tags: ['manual'] }, () => {
     // SPACE_ID_PATTERN's boundaries — (?<![A-Z2-7]) … (?![A-Z2-7]) — must reject a B…{32} run that is
     // only part of a longer token; otherwise normalization would corrupt an unrelated identifier.
     const embedded = [{ text: `A${`B${'A'.repeat(32)}`}A` }];
-    expect(normalize(embedded)).toEqual(embedded);
+    expect(__testing.normalizeForMatching(embedded, DEFAULT_DYNAMIC_VALUE_PATTERNS)).toEqual(embedded);
   });
 });
 
@@ -181,8 +185,8 @@ describe('fixture match-key invariance (real corpus)', { tags: ['manual'] }, () 
         continue; // Prompt carries no dynamic ids — nothing to fuzz.
       }
       mutatedCount++;
-      const original = normalize(prompt);
-      const churned = normalize(JSON.parse(mutated));
+      const original = __testing.normalizeForMatching(prompt, DEFAULT_DYNAMIC_VALUE_PATTERNS);
+      const churned = __testing.normalizeForMatching(JSON.parse(mutated), DEFAULT_DYNAMIC_VALUE_PATTERNS);
       expect(churned, `${suite}/${file.slice(0, 12)}: normalized key drifted under id churn`).toEqual(original);
     }
     expect(mutatedCount, 'no fixture prompt contained a dynamic id to fuzz').toBeGreaterThan(0);

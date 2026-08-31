@@ -43,8 +43,6 @@ import { ThreadContextProvider, useThreadContext } from '../context';
 import { Message } from '../Message';
 import { type MessageMetadata, type ThreadContextValue } from '../types';
 
-const getMessageId = (message: MessageType.Message) => Obj.getURI(message);
-
 //
 // Root
 //
@@ -297,7 +295,7 @@ const groupMessages = (
     if (currentGroup && sameSenderAsGroup && withinGroupWindow) {
       currentGroup.messages.push(message);
     } else {
-      currentGroup = { kind: 'group', id: getMessageId(message), messages: [message] };
+      currentGroup = { kind: 'group', id: Obj.getURI(message), messages: [message] };
       items.push(currentGroup);
     }
     lastGroupMessage = message;

@@ -287,6 +287,44 @@ describe('TriggerDispatcher', () => {
         expect(result).toEqual(Exit.succeed({ tick: 0 }));
       }, Effect.provide(TestLayer())),
     );
+
+    it.effect(
+      'refuses to invoke a disabled trigger',
+      Effect.fnUntraced(function* ({ expect }) {
+        const functionObj = yield* registerOperation(Reply);
+        const trigger = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: false,
+          spec: Trigger.specDirect(),
+        });
+        yield* Database.add(trigger);
+        const dispatcher = yield* TriggerDispatcher;
+        const { result } = yield* dispatcher.invokeTrigger({
+          trigger,
+          event: { data: {} } satisfies TriggerEvent.DirectEvent,
+        });
+
+        expect(Exit.isFailure(result)).toBe(true);
+      }, Effect.provide(TestLayer())),
+    );
+
+    it.effect(
+      'refuses to invoke a trigger with no runnable reference',
+      Effect.fnUntraced(function* ({ expect }) {
+        const trigger = Trigger.make({
+          enabled: true,
+          spec: Trigger.specDirect(),
+        });
+        yield* Database.add(trigger);
+        const dispatcher = yield* TriggerDispatcher;
+        const { result } = yield* dispatcher.invokeTrigger({
+          trigger,
+          event: { data: {} } satisfies TriggerEvent.DirectEvent,
+        });
+
+        expect(Exit.isFailure(result)).toBe(true);
+      }, Effect.provide(TestLayer())),
+    );
   });
 
   describe('Timer Triggers', () => {
@@ -589,10 +627,22 @@ describe('TriggerDispatcher', () => {
     it.effect(
       'should start and stop dispatcher',
       Effect.fnUntraced(
-        function* () {
+        function* ({ expect }) {
           const dispatcher = yield* TriggerDispatcher;
+          const registry = yield* Registry.AtomRegistry;
+
+          expect(dispatcher.running).toBe(false);
           yield* dispatcher.start();
+          expect(dispatcher.running).toBe(true);
+          expect(registry.get(dispatcher.state)).toEqual(expect.objectContaining({ enabled: true, errors: [] }));
+
           yield* dispatcher.stop();
+          expect(dispatcher.running).toBe(false);
+          expect(registry.get(dispatcher.state).enabled).toBe(false);
+
+          // A second stop on an already-stopped dispatcher is a no-op, not a re-teardown.
+          yield* dispatcher.stop();
+          expect(dispatcher.running).toBe(false);
         },
         Effect.provide(TestLayer({ timeControl: 'natural' })),
       ),
@@ -1325,11 +1375,27 @@ describe('TriggerDispatcher', () => {
         yield* Database.add(trigger);
         yield* dispatcher.invokeTrigger({ trigger, event: {} });
 
+        const registry = yield* Registry.AtomRegistry;
+        {
+          // A `RunAgainError` from the first invocation enqueues a pending retry, distinct from a
+          // genuine failure -- no cooldown, and the runtime status reports it as pending.
+          const status = registry.get(dispatcher.state);
+          const triggerStatus = status.triggers.find((t) => t.triggerId === trigger.id);
+          expect(triggerStatus?.retryPending).toBe(true);
+          expect(triggerStatus?.cooldownUntil).toBeUndefined();
+        }
+
         yield* dispatcher.invokeScheduledTriggers({ untilExhausted: true });
         const counter = yield* Database.query(Filter.type(RetryCounter)).first.pipe(
           Effect.flatMap((result) => Effect.fromOption(result)),
         );
         expect(counter.count).toBe(3);
+
+        // The final invocation succeeds (count reaches the cap and stops requesting retries), so
+        // the pending flag clears.
+        const status = registry.get(dispatcher.state);
+        const triggerStatus = status.triggers.find((t) => t.triggerId === trigger.id);
+        expect(triggerStatus?.retryPending).toBe(false);
       }, Effect.provide(TestLayer())),
     );
 

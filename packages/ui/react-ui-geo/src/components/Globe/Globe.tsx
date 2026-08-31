@@ -247,7 +247,6 @@ const GlobeCanvas = ({ projection: projectionProp, topology, features, styles: s
 
   // Canvas.
   const [canvas, setCanvas] = useState<HTMLCanvasElement>(null);
-  const canvasRef = (canvas: HTMLCanvasElement) => setCanvas(canvas);
 
   // Projection.
   const projection = useMemo(() => getProjection(projectionProp), [projectionProp]);
@@ -387,7 +386,7 @@ const GlobeCanvas = ({ projection: projectionProp, topology, features, styles: s
     return null;
   }
 
-  return <canvas ref={canvasRef} className='bg-base-surface' width={size.width} height={size.height} />;
+  return <canvas ref={setCanvas} className='bg-base-surface' width={size.width} height={size.height} />;
 };
 
 GlobeCanvas.displayName = 'Globe.Canvas';

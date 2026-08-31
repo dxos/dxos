@@ -31,8 +31,8 @@ const typeUrlFor = (desc: { readonly typeName: string }): string => desc.typeNam
 
 type MethodCodecs = {
   readonly method: DescMethod;
-  readonly request: CompatCodec<any>;
-  readonly response: CompatCodec<any>;
+  readonly request: CompatCodec<unknown>;
+  readonly response: CompatCodec<unknown>;
 };
 
 /**
@@ -79,14 +79,14 @@ export class BufServiceDescriptor<Service> {
     if (method.methodKind === 'server_streaming') {
       return (value: unknown, options?: RequestOptions) =>
         Stream.map(backend.callStream(method.name, request(value), options), (data) =>
-          codecs.response.decode(data.value!, encodingOptions),
+          codecs.response.decode(data.value, encodingOptions),
         );
     }
 
     invariant(method.methodKind === 'unary', `Unsupported method kind: ${method.methodKind}`);
     return async (value: unknown, options?: RequestOptions) => {
       const response = await backend.call(method.name, request(value), options);
-      return codecs.response.decode(response.value!, encodingOptions);
+      return codecs.response.decode(response.value, encodingOptions);
     };
   }
 
@@ -94,7 +94,7 @@ export class BufServiceDescriptor<Service> {
     return (this.#methods ??= new Map(
       this._service.methods.map((method) => [
         method.name,
-        { method, request: compatCodec<any>(method.input), response: compatCodec<any>(method.output) },
+        { method, request: compatCodec<unknown>(method.input), response: compatCodec<unknown>(method.output) },
       ]),
     ));
   }
@@ -116,7 +116,7 @@ export class BufServiceHandler<Service> implements ServiceBackend {
     invariant(method.methodKind === 'unary', `Invalid RPC method call: response streaming mismatch. ${methodName}`);
 
     const handler = await this.#handler(method);
-    const response = await handler(requestCodec.decode(request.value!, this._encodingOptions), options);
+    const response = await handler(requestCodec.decode(request.value, this._encodingOptions), options);
 
     return { value: responseCodec.encode(response, this._encodingOptions), type_url: typeUrlFor(method.output) };
   }
@@ -128,7 +128,7 @@ export class BufServiceHandler<Service> implements ServiceBackend {
       `Invalid RPC method call: response streaming mismatch., ${methodName}`,
     );
 
-    const decoded = requestCodec.decode(request.value!, this._encodingOptions);
+    const decoded = requestCodec.decode(request.value, this._encodingOptions);
     const responses = Stream.unwrapPromise(
       this.#handler(method).then((handler) => handler(decoded, options) as Stream<unknown>),
     );
@@ -143,7 +143,7 @@ export class BufServiceHandler<Service> implements ServiceBackend {
     const service: Service = await getAsyncProviderValue(this._handlers);
     const handler = service[method.localName as keyof Service];
     invariant(handler, `Handler is missing: ${method.localName}`);
-    return (handler as any).bind(service);
+    return (handler as (...args: unknown[]) => unknown).bind(service);
   }
 
   #methodInfo(methodName: string): MethodCodecs {

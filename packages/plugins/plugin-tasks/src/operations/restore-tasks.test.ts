@@ -13,8 +13,6 @@ import createTask from './create-task';
 import deleteTask from './delete-task';
 import restoreTasks from './restore-tasks';
 
-const testLayer = () => TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] });
-
 describe('restore-tasks', () => {
   it.effect('puts the subtree back at the positions it held', () =>
     Effect.gen(function* () {
@@ -37,7 +35,7 @@ describe('restore-tasks', () => {
       expect(taskSet.tasks.map((ref) => ref.target?.id)).toEqual([first.id, parent.id, child.id, last.id]);
       expect(Obj.isDeleted(parent)).toBe(false);
       expect(Obj.isDeleted(child)).toBe(false);
-    }).pipe(Effect.provide(testLayer())),
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 
   it.effect('restores a task that belonged to no set', () =>
@@ -50,6 +48,6 @@ describe('restore-tasks', () => {
 
       yield* restoreTasks.handler(restore);
       expect(Obj.isDeleted(task)).toBe(false);
-    }).pipe(Effect.provide(testLayer())),
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 });

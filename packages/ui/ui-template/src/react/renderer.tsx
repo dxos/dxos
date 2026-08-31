@@ -112,7 +112,7 @@ const capabilityApi = (scope: Scope, ref: unknown): unknown => {
 /** Create the React renderer: one function per kind tag, resolving `schema=` against the registry. */
 export const createReactRenderer = ({
   schemas,
-}: CreateRendererOptions<Schema.Codec<any, any>>): Renderer<ReactNode> => ({
+}: CreateRendererOptions<Schema.Codec<unknown, unknown>>): Renderer<ReactNode> => ({
   container: ({ path, props, children }) => (
     <AttendableContainer
       key={path}
@@ -294,7 +294,9 @@ export const createReactRenderer = ({
     return (
       <Form.Root
         key={`${path}:${identity}`}
-        schema={schema}
+        // The registry holds heterogeneous schemas (structs and scalars) under one widened type;
+        // `Form.Root` only ever receives one resolved by `schema=`, which is always struct-shaped.
+        schema={schema as Schema.Codec<Record<string, unknown>, unknown>}
         defaultValues={values}
         onSave={(next) => handlers.save?.(next)}
         onCancel={() => handlers.cancel?.()}

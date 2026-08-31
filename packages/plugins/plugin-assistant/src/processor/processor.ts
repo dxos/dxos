@@ -500,7 +500,14 @@ export class AiChatProcessor {
         if (this.#requestFiber) {
           yield* Fiber.interrupt(this.#requestFiber);
         }
-        const session = yield* AgentService.getSession(this._feed);
+        // Same options as `request`: looked up bare, a differing model/provider/instructions reads as
+        // a reconfiguration, which tears down the running process and spawns a replacement purely to
+        // terminate it again.
+        const session = yield* AgentService.getSession(this._feed, {
+          model: this._options.model,
+          provider: this._options.provider,
+          instructions: this._options.chat?.target?.instructions,
+        });
         yield* session.terminate();
       }).pipe(Effect.provide(this._spaceLayer)),
     );

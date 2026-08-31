@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { MicButton, Toolbar } from '@dxos/react-ui';
+import { SystemIconButton, Toolbar } from '@dxos/react-ui';
 import { type AudioInputDevice, MicSettings, type RecordMode } from '@dxos/react-ui-transcription';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -27,7 +27,7 @@ const DefaultStory = () => {
 
   return (
     <Toolbar.Root>
-      <MicButton
+      <SystemIconButton.Mic
         iconOnly
         variant='ghost'
         label={recording ? 'Stop recording' : recordMode === 'hold' ? 'Hold to record' : 'Start recording'}

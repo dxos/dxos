@@ -16,7 +16,8 @@ import { type FeedBlock } from './types';
  * Base class for an async iterable feed.
  */
 export abstract class AbstractFeedIterator<T> implements AsyncIterable<FeedBlock<T>> {
-  private readonly _stopTrigger = new Trigger();
+  private _stopTrigger = new Trigger();
+  private _runningTrigger = new Trigger();
 
   protected _open = false;
   protected _running = false;
@@ -62,6 +63,10 @@ export abstract class AbstractFeedIterator<T> implements AsyncIterable<FeedBlock
     invariant(this._open);
     if (!this._running) {
       this._running = true;
+      // Re-arm: a woken stop trigger from a previous stop would otherwise finish every new
+      // generator immediately.
+      this._stopTrigger = new Trigger();
+      this._runningTrigger.wake();
     }
   }
 
@@ -69,8 +74,23 @@ export abstract class AbstractFeedIterator<T> implements AsyncIterable<FeedBlock
     invariant(this._open);
     if (this._running) {
       this._running = false;
+      // Release `waitUntilRunning` waiters so they can observe the stop, then re-arm for the next start.
+      this._runningTrigger.wake();
+      this._runningTrigger = new Trigger();
       this._stopTrigger.wake();
     }
+  }
+
+  /**
+   * Resolves once the iterator is running. A generator obtained before {@link start} completes
+   * immediately (its loop observes `_running === false`); consumers use this to wait out that
+   * window instead of polling a finished generator.
+   */
+  async waitUntilRunning(): Promise<void> {
+    if (this._running) {
+      return;
+    }
+    await this._runningTrigger.wait();
   }
 
   //

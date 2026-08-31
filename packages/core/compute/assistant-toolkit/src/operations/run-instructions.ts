@@ -31,7 +31,7 @@ import * as Chat from '../types/Chat';
 import { makeCompleteJobParameters, makeCompleteJobTool } from './complete-job-tool';
 import { RunInstructions } from './definitions';
 
-const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claude-opus-4-8.default');
+const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claude-opus-5.default');
 
 export default RunInstructions.pipe(
   Operation.withHandler(

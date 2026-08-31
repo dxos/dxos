@@ -301,6 +301,7 @@
       "@dxos/plugin-progress",
       "@dxos/plugin-projects",
       "@dxos/plugin-pwa",
+      "@dxos/plugin-qa",
       "@dxos/plugin-registry",
       "@dxos/plugin-review",
       "@dxos/plugin-routine",

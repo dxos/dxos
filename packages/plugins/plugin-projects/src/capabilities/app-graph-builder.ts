@@ -284,7 +284,7 @@ export const createProjectArtifactsExtension = () =>
           properties: {
             label: ['artifacts.label', { ns: meta.profile.key }],
             icon: 'ph--cube--regular',
-            iconHue: 'amber',
+            iconHue: 'indigo',
             role: 'branch',
             selectable: true,
             draggable: false,

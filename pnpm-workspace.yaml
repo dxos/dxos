@@ -165,7 +165,6 @@ catalog:
   '@phosphor-icons/core': ^2.1.1
   '@phosphor-icons/react': 2.1.10
   '@playwright/test': 1.57.0
-  '@posthog/cli': ^0.5.29
   '@radix-ui/primitive': 1.1.1
   '@radix-ui/react-accordion': 1.2.3
   '@radix-ui/react-alert-dialog': 1.1.6
