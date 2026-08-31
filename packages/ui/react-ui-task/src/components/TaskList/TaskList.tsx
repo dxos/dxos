@@ -1049,15 +1049,6 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
     const [snapshot] = useObject(task);
     const current = snapshot ?? task;
 
-    const [draft, setDraft] = useState('');
-    // The pane is a view onto whichever task is selected, so switching tasks replaces the title it
-    // holds rather than carrying the previous one's across.
-    const editingId = useRef<string | undefined>(undefined);
-    if (editingId.current !== current?.id) {
-      editingId.current = current?.id;
-      setDraft(current?.title ?? '');
-    }
-
     const descriptionRef = useRef<MarkdownEditableController>(null);
 
     // The create row's description, mirrored out of the field. A ref rather than state because the
@@ -1067,6 +1058,19 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
     // Bumped after a create, to rebuild the held-open editor empty. The field is uncontrolled while
     // creating (there is no task to read from), so clearing it means remounting it.
     const [createEpoch, setCreateEpoch] = useState(0);
+
+    const [draft, setDraft] = useState('');
+    // The pane is a view onto whichever task is selected, so switching tasks replaces the text it
+    // holds rather than carrying the previous one's across. The description ref is cleared here too:
+    // the field remounts empty on the way back to creating, but `commit()` on an already-empty field
+    // never calls back — so text abandoned before a selection would otherwise ride along, unseen,
+    // into the next task created.
+    const editingId = useRef<string | undefined>(undefined);
+    if (editingId.current !== current?.id) {
+      editingId.current = current?.id;
+      setDraft(current?.title ?? '');
+      draftDescription.current = '';
+    }
 
     const commitTitle = useCallback(() => {
       const title = draft.trim();

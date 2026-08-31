@@ -180,6 +180,9 @@ const ComboboxTrigger = composable<HTMLButtonElement, ComboboxTriggerProps>(
   ({ children, classNames, onClick, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const { modalId, open, onOpenChange, placeholder, value, displayValue } = useComboboxContext(COMBOBOX_TRIGGER_NAME);
+    // Nullish, matching the `??` that picks the children below: `false`/`0`/`''` suppress the
+    // fallback caret without being a caret of their own, so the column has to collapse for them too.
+    const custom = children !== null && children !== undefined;
     const handleClick = useCallback(
       (event: Parameters<Exclude<ButtonProps['onClick'], undefined>>[0]) => {
         onClick?.(event);
@@ -196,7 +199,7 @@ const ComboboxTrigger = composable<HTMLButtonElement, ComboboxTriggerProps>(
           // (input surface, 1fr/auto grid, control sizing). That second column belongs to the caret
           // below, so a caller supplying its own children collapses it — otherwise the column sits
           // empty and its gap paints a strip of trigger surface beside the content.
-          classNames={tx('select.triggerButton', {}, [!!children && 'grid-cols-[1fr] gap-0', classNames])}
+          classNames={tx('select.triggerButton', {}, [custom && 'grid-cols-[1fr] gap-0', classNames])}
           role='combobox'
           aria-expanded={open}
           aria-controls={modalId}

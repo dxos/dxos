@@ -392,10 +392,6 @@ export const TestEdit: Story = {
 };
 
 /**
- * With `showDescription` off the pane is title-only, even for a selected task the list can update —
- * which is what a host with no room for a markdown field (the chat strip) renders.
- */
-/**
  * Creating with a description: the pane's description field is present with nothing selected, and
  * what is typed into it reaches `onTaskCreate` as part of the same draft as the title.
  */
@@ -435,6 +431,51 @@ export const TestCreateWithDescription: Story = {
   },
 };
 
+/**
+ * A description typed while creating, then abandoned by selecting a row, must not ride along into
+ * the NEXT task created. The field remounts empty on the way back, but committing an already-empty
+ * field never calls back — so the mirror the create reads has to be cleared with the selection.
+ */
+export const TestAbandonedDescriptionDoesNotLeak: Story = {
+  args: { showGroupLabels: false, showDescriptions: true },
+  play: async ({ canvasElement }) => {
+    const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
+    const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]')!;
+    const description = () => pane.querySelector<HTMLElement>('[data-testid="taskList.edit.description"]');
+    const content = () => description()!.querySelector<HTMLElement>('.cm-content')!;
+    const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]'));
+
+    await waitFor(async () => expect(content()).not.toBeNull());
+
+    // Type a description with no title, then commit it by leaving the field — nothing is created,
+    // but the create row's mirror now holds the text.
+    await userEvent.click(content());
+    await userEvent.keyboard('LEAKED');
+    await userEvent.click(title());
+
+    // Select a row and come back out: the pane is creating again, with an empty field.
+    const first = rows()[0];
+    first.click();
+    await waitFor(async () => expect(title().value).not.toEqual(''));
+    first.focus();
+    first.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await waitFor(async () => expect(title().value).toEqual(''));
+
+    // Create with a title alone. The abandoned description must not be attached to it.
+    const before = rows().length;
+    await userEvent.click(title());
+    await userEvent.keyboard('Clean task{Enter}');
+    await waitFor(async () => expect(rows()).toHaveLength(before + 1));
+    const created = rows().find((row) => row.textContent?.includes('Clean task'));
+    await expect(created).not.toBeUndefined();
+    await expect(created!.textContent).not.toContain('LEAKED');
+  },
+};
+
+/**
+ * With `showDescription` off the pane is title-only, even for a selected task the list can update —
+ * which is what a host with no room for a markdown field (the chat strip) renders.
+ */
 export const TestEditWithoutDescription: Story = {
   args: { showGroupLabels: false, showDescription: false },
   play: async ({ canvasElement }) => {
