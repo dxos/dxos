@@ -4,7 +4,7 @@
 
 import * as protobuf from 'protobufjs';
 
-import { type Struct } from './substitutions';
+import { type Struct } from '@dxos/codec';
 
 export const encodeProtobuf = (root: protobuf.Root): Struct => root.toJSON();
 

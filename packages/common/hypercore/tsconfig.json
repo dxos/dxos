@@ -17,7 +17,7 @@
       "path": "../async"
     },
     {
-      "path": "../codec-protobuf"
+      "path": "../codec"
     },
     {
       "path": "../crypto"

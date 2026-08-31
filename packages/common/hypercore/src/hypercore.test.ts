@@ -6,7 +6,7 @@ import { type AbstractValueEncoding } from 'hypercore';
 import { promisify } from 'node:util';
 import { describe, expect, test } from 'vitest';
 
-import { type Codec } from '@dxos/codec-protobuf';
+import { type Codec } from '@dxos/codec';
 import { createKeyPair } from '@dxos/crypto';
 
 import { createCodecEncoding } from './crypto';

@@ -6,7 +6,7 @@ import { cbor } from '@automerge/automerge-repo';
 import type Redis from 'ioredis';
 
 import { scheduleMicroTask } from '@dxos/async';
-import { type Any } from '@dxos/codec-protobuf';
+import { type Any } from '@dxos/codec';
 import { Context } from '@dxos/context';
 import { type RpcPort } from '@dxos/rpc';
 

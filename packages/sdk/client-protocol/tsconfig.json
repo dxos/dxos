@@ -13,7 +13,7 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/codec-protobuf"
+      "path": "../../common/codec"
     },
     {
       "path": "../../common/effect"

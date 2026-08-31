@@ -31,6 +31,7 @@
       "@dxos/client-e2e",
       "@dxos/client-protocol",
       "@dxos/client-services",
+      "@dxos/codec",
       "@dxos/codec-protobuf",
       "@dxos/codemorph",
       "@dxos/composer-forensics",

@@ -53,7 +53,7 @@
     "@bufbuild/protobuf": "catalog:",
     "@dxos/async": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
-    "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/codec": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/credentials": "workspace:*",

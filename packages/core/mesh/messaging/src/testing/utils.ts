@@ -3,7 +3,7 @@
 //
 
 import { type Event, asyncTimeout } from '@dxos/async';
-import { type Any } from '@dxos/codec-protobuf';
+import { type Any } from '@dxos/codec';
 import { PublicKey } from '@dxos/keys';
 
 import { type Message, type PeerInfo, type SignalMethods } from '../signal-methods';

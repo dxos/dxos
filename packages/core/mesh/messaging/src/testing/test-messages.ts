@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type TaggedType } from '@dxos/codec-protobuf';
+import { type TaggedType } from '@dxos/codec';
 import { type TYPES } from '@dxos/protocols/proto';
 
 export const PAYLOAD_1: TaggedType<TYPES, 'google.protobuf.Any'> = {

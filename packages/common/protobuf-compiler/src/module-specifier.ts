@@ -54,6 +54,9 @@ export class ModuleSpecifier {
 
 export const CODEC_MODULE = new ModuleSpecifier('@dxos/codec-protobuf', import.meta.dirname);
 
+/** The transport vocabulary, which generated service stubs import without needing protobuf.js. */
+export const CODEC_TYPES_MODULE = new ModuleSpecifier('@dxos/codec', import.meta.dirname);
+
 // `Stream` lives in @dxos/async so that generated service types do not pull in the protobuf.js codec.
 export const ASYNC_MODULE = new ModuleSpecifier('@dxos/async', import.meta.dirname);
 

@@ -25,6 +25,7 @@
   ],
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/codec": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/node-std": "workspace:*",

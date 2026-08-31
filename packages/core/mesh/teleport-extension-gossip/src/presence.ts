@@ -3,7 +3,7 @@
 //
 
 import { Event, scheduleTaskInterval } from '@dxos/async';
-import { type WithTypeUrl } from '@dxos/codec-protobuf';
+import { type WithTypeUrl } from '@dxos/codec';
 import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';

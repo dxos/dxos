@@ -5,7 +5,8 @@
 import { type IConversionOptions } from 'protobufjs';
 import type protobufjs from 'protobufjs';
 
-import { type Any, type EncodingOptions, type WithTypeUrl } from './common';
+import { type Any, type Codec, type EncodingOptions, type WithTypeUrl } from '@dxos/codec';
+
 import { type BidirectionalMapingDescriptors } from './mapping';
 import { type Mapper, createMessageMapper } from './precompiled-mapping/create-message-mapper';
 import type { Schema } from './schema';
@@ -26,14 +27,6 @@ const JSON_CONVERSION_OPTIONS: IConversionOptions = {
   defaults: false,
   json: true,
 };
-
-/**
- * Defines a generic encoder/decoder.
- */
-export interface Codec<T> {
-  encode(obj: T, opts?: EncodingOptions): Uint8Array;
-  decode(buffer: Uint8Array, opts?: EncodingOptions): T;
-}
 
 /**
  * Protocol buffer codec.

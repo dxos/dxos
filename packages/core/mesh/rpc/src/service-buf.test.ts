@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { Stream } from '@dxos/async';
-import { type ServiceDescriptorLike } from '@dxos/codec-protobuf';
+import { type ServiceDescriptorLike } from '@dxos/codec';
 import { getBufService } from '@dxos/protocols/buf-service';
 import { schema } from '@dxos/protocols/proto';
 import {

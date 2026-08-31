@@ -3,5 +3,5 @@
 //
 
 export * from './any';
-export { type Struct, structSubstitutions } from './struct';
+export { structSubstitutions } from './struct';
 export * from './timestamp';

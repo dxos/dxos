@@ -3,7 +3,7 @@
 //
 
 import { TimeoutError, scheduleExponentialBackoffTaskInterval, scheduleTask, scheduleTaskInterval } from '@dxos/async';
-import { type Any } from '@dxos/codec-protobuf';
+import { type Any } from '@dxos/codec';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';

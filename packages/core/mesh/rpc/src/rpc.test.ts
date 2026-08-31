@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';
 import { Stream } from '@dxos/async';
-import { type Any, type TaggedType } from '@dxos/codec-protobuf';
+import { type Any, type TaggedType } from '@dxos/codec';
 import { log } from '@dxos/log';
 import { type TYPES } from '@dxos/protocols/proto';
 

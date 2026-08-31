@@ -2,7 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import { type EncodingOptions, type WithTypeUrl } from '../common';
+import { type EncodingOptions, type WithTypeUrl } from '@dxos/codec';
+
 import { type TypeMapperContext } from '../mapping';
 import type { Schema } from '../schema';
 import { structSubstitutions } from './struct';

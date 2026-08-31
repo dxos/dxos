@@ -5,32 +5,18 @@
 import type pb from 'protobufjs';
 
 import { Stream } from '@dxos/async';
+import {
+  type Any,
+  type EncodingOptions,
+  type RequestOptions,
+  type ServiceBackend,
+  type ServiceDescriptorLike,
+  type ServiceProvider,
+} from '@dxos/codec';
 import { invariant } from '@dxos/invariant';
 import { getAsyncProviderValue } from '@dxos/util';
 
-import { type Any, type EncodingOptions } from './common';
-import { type RequestOptions } from './request-options';
 import type { Schema } from './schema';
-
-/**
- * Service endpoint.
- */
-export interface ServiceBackend {
-  call(method: string, request: Any, requestOptions?: RequestOptions): Promise<Any>;
-  callStream(method: string, request: Any, requestOptions?: RequestOptions): Stream<Any>;
-}
-
-export type ServiceProvider<Service> = Service | (() => Service) | (() => Promise<Service>);
-
-/**
- * What a service bundle needs of a descriptor, so a bundle can hold either the protobuf.js
- * implementation below or the buf-backed one in `@dxos/protocols/buf-service`.
- */
-export interface ServiceDescriptorLike<Service> {
-  readonly name: string;
-  createClient(backend: ServiceBackend, encodingOptions?: EncodingOptions): Service;
-  createServer(handlers: ServiceProvider<Service>, encodingOptions?: EncodingOptions): ServiceBackend;
-}
 
 /**
  * Client/server service wrapper.

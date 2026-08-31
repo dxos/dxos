@@ -15,17 +15,17 @@ at the bottom — read those before picking up a thread.
 | 5   | devtools                                | **part** | Enums, `JsonView`, and two mis-annotated imports moved; 14 left.         |
 | 6   | `Stream` extraction                     | **done** | Moved to `@dxos/async`; generator emits it from there.                   |
 | 7   | `protoMessage()` / `serviceError` → buf | **done** | All 45 types route through buf, once `#3` learned to resolve `Any`.      |
-| 8   | Remaining `ServiceDescriptor` RPC       | todo     | 21 production sites / 11 services, all cross-peer; 36 more are tests.    |
+| 8   | Remaining `ServiceDescriptor` RPC       | **done** | All 21 production sites on buf descriptors; interop asserted both ways.  |
 | 9a  | keyring `KeyRecord`                     | **done** | No substituted fields; wire format unchanged, asserted byte-for-byte.    |
 | 9b  | `echo.query.Heads`                      | **done** | Same; also dropped the workerd lazy-codec workaround.                    |
 | 9c  | `echo/metadata` + `echo/feed`           | **part** | Both metadata stores swapped; `pipeline/codec` held back for `#9d`.      |
 | 9d  | credentials signing/verification        | **part** | Signature stability proven by test; the type sweep is what is left.      |
 
-**Next up, in order:** `#8` (the last `ServiceDescriptor` RPC, ~1.5-2 weeks and the only remaining
-milestone-sized thread), then the import sweep that `#5`'s and `#9d`'s remainders both decompose
-into, then `pipeline/codec` as the tail of `#9c`/`#9d`. `#2` is independent and can slot in
-anywhere. `Any` support is done, so nothing is gated any more -- what is left is volume, not
-blockers.
+**Next up, in order:** extract the transport vocabulary (see "Structuring for teardown" below) so
+the remaining threads land against it, then the import sweep that `#5`'s and `#9d`'s remainders both
+decompose into, then `pipeline/codec` as the tail of `#9c`/`#9d`. `#2` is independent and can slot
+in anywhere. Every milestone-sized thread is done and nothing is gated -- what is left is volume,
+not blockers.
 
 Deleting `protobuf-compiler`/`codec-protobuf` and dropping `protobufjs` from the catalog is the
 last step, and needs every thread above done.

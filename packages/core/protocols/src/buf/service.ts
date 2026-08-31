@@ -11,7 +11,7 @@ import {
   type RequestOptions,
   type ServiceBackend,
   type ServiceProvider,
-} from '@dxos/codec-protobuf';
+} from '@dxos/codec';
 import { invariant } from '@dxos/invariant';
 import { getAsyncProviderValue } from '@dxos/util';
 

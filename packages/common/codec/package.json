@@ -1,7 +1,7 @@
 {
-  "name": "@dxos/rpc",
+  "name": "@dxos/codec",
   "version": "0.11.1",
-  "description": "A lightweight, transport-agnostic RPC implementation",
+  "description": "Transport vocabulary shared by codec and RPC implementations.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -26,19 +26,9 @@
   ],
   "dependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/codec": "workspace:*",
-    "@dxos/context": "workspace:*",
-    "@dxos/debug": "workspace:*",
-    "@dxos/invariant": "workspace:*",
-    "@dxos/log": "workspace:*",
-    "@dxos/node-std": "workspace:*",
-    "@dxos/protocols": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "effect": "catalog:"
+    "@dxos/context": "workspace:*"
   },
-  "devDependencies": {
-    "@dxos/effect": "workspace:*"
-  },
+  "devDependencies": {},
   "publishConfig": {
     "access": "public"
   }

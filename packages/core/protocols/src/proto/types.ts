@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type TypedProtoMessage } from '@dxos/codec-protobuf';
+import { type TypedProtoMessage } from '@dxos/codec';
 
 import { type TYPES } from './gen/index.ts';
 

@@ -7,7 +7,7 @@ import { type AnyDocumentId, type DocumentId, interpretAsDocumentId } from '@aut
 import * as Context from 'effect/Context';
 
 import { Event, Trigger, UpdateScheduler, sleep } from '@dxos/async';
-import { type Struct } from '@dxos/codec-protobuf';
+import { type Struct } from '@dxos/codec';
 import { LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';

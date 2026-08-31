@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-export type Struct = Record<string, any>;
+import { type Struct } from '@dxos/codec';
 
 const encodeStructValue = (structValue: any, visitedObjects: WeakSet<any>): any => {
   const valueType = typeof structValue;

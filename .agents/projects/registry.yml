@@ -6,6 +6,15 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: protobufjs-to-buf
+    status: active
+    user: dmaretskyi
+    created: 2026-08-30
+    summary: 'Replace protobuf.js (@dxos/codec-protobuf, @dxos/protobuf-compiler) with buf and delete both packages. Spec and thread table: docs/audits/protobufjs-to-buf.md.'
+    tasks: .agents/projects/protobufjs-to-buf/TASKS.md
+    design: .agents/projects/protobufjs-to-buf/DESIGN.md
+    prs: [12833]
+    resume: 'Every milestone-sized thread is done -- #8 (the last ServiceDescriptor RPC, cross-peer wire risk) merged in #12833, and nothing is gated any more. What is left is three import sweeps (#5 devtools 14 files, #9d credentials 94 declarations, #9c tail pipeline/codec) plus #2, then teardown. IN FLIGHT: @dxos/codec, the transport-vocabulary extraction that makes teardown a deletion rather than a refactor -- codec-protobuf direct dependents drop 11 -> 2 (protobuf-compiler and protocols, both genuine protobuf.js machinery). BLOCKED ON A HUMAN: the new package name must be published and npm trusted publishing configured (node scripts/publish-package.mjs codec) BEFORE the wiring lands -- private fails check-public-dependencies (10 published packages import it), public fails check-packages-published. Same trap the blob project recorded. TRAPS: both codecs return a bytes field as a view into the buffer they decoded, so flattening Buffer -> Uint8Array breaks credential/auth paths silently, and canonicalStringify-based assertions cannot see it (it renders both identically) -- assert the view type. vitest does not typecheck, so run moon build not just tests.'
   - name: blob
     status: active
     user: burdon

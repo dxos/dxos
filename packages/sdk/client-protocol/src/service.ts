@@ -4,7 +4,7 @@
 
 import { type Event } from '@dxos/async';
 import type { Stream } from '@dxos/async';
-import type { RequestOptions } from '@dxos/codec-protobuf';
+import type { RequestOptions } from '@dxos/codec';
 import { getBufService } from '@dxos/protocols/buf-service';
 import { Config } from '@dxos/protocols/buf/dxos/config_pb';
 import type {

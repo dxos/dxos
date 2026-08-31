@@ -39,7 +39,7 @@
     "@automerge/automerge-repo": "catalog:",
     "@dxos/async": "workspace:*",
     "@dxos/blob": "workspace:*",
-    "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/codec": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",

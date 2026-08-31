@@ -21,6 +21,9 @@
       "path": "../async"
     },
     {
+      "path": "../codec"
+    },
+    {
       "path": "../codec-protobuf"
     },
     {
