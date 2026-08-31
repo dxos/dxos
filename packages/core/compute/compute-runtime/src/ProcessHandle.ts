@@ -265,6 +265,9 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
   }
   submitInput(input: I): Effect.Effect<void> {
     if (this.#finished) {
+      // Warned rather than silently dropped: a caller that reached a finished handle holds a stale
+      // reference, and swallowing the input strands it waiting for a turn that will never run.
+      log.warn('lifecycle: input dropped (already finished)', { pid: this.pid, state: this.#currentStatus.state });
       return Effect.void;
     }
     this.#inputCount++;
@@ -309,11 +312,15 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
       // Before the scope-close interrupt, so non-Effect work holding the run's Cancellation signal
       // (e.g. an in-flight fetch) unhooks with the fiber. Suspend deliberately does not fire it.
       this.#cancellation?.abort();
+      // Published before the teardown is awaited: `#cleanup` closes the process scope, which cannot
+      // complete while a handler fiber sits in an uninterruptible section, and a handle left in
+      // TERMINATING reads as live to every terminal-state check — the next session adopts the dead
+      // process, its input is dropped by the `#finished` guard, and the turn never settles.
+      this.#setStatus(Process.State.TERMINATED, Exit.void);
       if (this.#onTerminate !== undefined) {
         yield* this.#onTerminate();
       }
       yield* this.#cleanup();
-      this.#setStatus(Process.State.TERMINATED, Exit.void);
     });
   }
   hydrate(definition: Process.Process<I, O, any, any>): Effect.Effect<ProcessManager.Handle<I, O, any>> {
@@ -438,6 +445,9 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
           switch (state.state) {
             case Process.State.SUCCEEDED:
             case Process.State.TERMINATED:
+            // A cancelled turn settles here: the handle is dead, so waiting for a further transition
+            // would hang the caller for the lifetime of the page.
+            case Process.State.TERMINATING:
               return Effect.runSync(Deferred.succeed(deferred, undefined));
             case Process.State.IDLE:
               // A fired alarm clears #alarmFiber before its handler runs; do not treat the transient
