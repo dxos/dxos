@@ -471,6 +471,38 @@ describe('RepoProxy', () => {
     await hostHandle.waitUntilReady();
     await expect.poll(() => hostHandle.doc()?.text, { timeout: 5000 }).toEqual(text);
   });
+
+  test('flush during a dropped subscription delivers the write', async () => {
+    const created: { instance?: DroppableDataService } = {};
+    const { dataService, host } = await setup(
+      undefined,
+      (props) => (created.instance = new DroppableDataService(props)),
+    );
+    const droppable = created.instance;
+    invariant(droppable);
+
+    const [clientRepo] = createProxyRepos(dataService);
+    await openAndClose(clientRepo);
+
+    const clientHandle = clientRepo.create<{ text: string }>();
+    await clientHandle.whenReady();
+    await clientRepo.flush();
+
+    // Race the write against subscription recovery: `flush` must not resolve until the replacement
+    // subscription has taken the mutation, since a short-lived writer closes right after it.
+    droppable.dropSubscription.wake();
+    const text = 'written mid-drop';
+    clientHandle.change((doc: { text: string }) => {
+      doc.text = text;
+    });
+    await clientRepo.flush();
+
+    // No polling: `flush` resolving is the delivery guarantee under test.
+    const hostHandle = await host.loadDoc<{ text: string }>(Context.default(), clientHandle.url!);
+    invariant(hostHandle);
+    await hostHandle.waitUntilReady();
+    expect(hostHandle.doc()?.text).toEqual(text);
+  });
 });
 
 /**

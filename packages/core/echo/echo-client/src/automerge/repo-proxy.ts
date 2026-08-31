@@ -205,11 +205,15 @@ export class RepoProxy extends Resource {
       if (attempt >= FLUSH_ATTEMPTS) {
         throw this._lastSendError ?? new Error('Failed to send document updates.');
       }
-      await sleep(FLUSH_RETRY_DELAY_MS * attempt);
+      // A dropped subscription is replaced only after {@link RESUBSCRIBE_DELAY_MS}, so a shorter
+      // sleep burns every attempt against a subscription known to be gone.
+      await sleep(FLUSH_RETRY_DELAY_MS * attempt + (this._isReconnecting ? RESUBSCRIBE_DELAY_MS : 0));
     }
   }
 
   protected override async _open(): Promise<void> {
+    // A close during the resubscribe delay cancels the task that clears this flag.
+    this._isReconnecting = false;
     this._sendUpdatesJob = new UpdateScheduler(this._ctx, async () => this._sendUpdates(), {
       maxFrequency: MAX_UPDATE_FREQ,
     });
@@ -322,10 +326,16 @@ export class RepoProxy extends Resource {
     // Abandons the batch racing the subscription the host has already forgotten, so it re-queues its
     // ids quietly instead of raising the failure the replacement is about to make moot.
     this._generation++;
+    const generation = this._generation;
     const delay = Math.min(RESUBSCRIBE_DELAY_MS * 2 ** this._resubscribeAttempts++, RESUBSCRIBE_MAX_DELAY_MS);
     scheduleTask(
       this._ctx,
       () => {
+        // A reconnect that ran during the delay already replaced the subscription; replacing it
+        // again would tear down the healthy stream it just created.
+        if (this._generation !== generation) {
+          return;
+        }
         try {
           this._subscribe();
         } finally {
@@ -510,6 +520,12 @@ export class RepoProxy extends Resource {
   private async _sendUpdates(): Promise<void> {
     // Abort early if reconnection is in progress to avoid blocking on dead RPC.
     if (this._isReconnecting) {
+      // Counted as a failed pass: `flush` must keep retrying rather than resolve over work the
+      // replacement subscription has not taken yet.
+      if (this._pendingUpdateIds.size || this._pendingAddIds.size || this._pendingRemoveIds.size) {
+        this._lastSendError = new Error('Subscription is being re-established.');
+        this._sendFailureCount++;
+      }
       return;
     }
 
@@ -577,11 +593,10 @@ export class RepoProxy extends Resource {
       // A reconnection or a replaced subscription happened under this task, making its failure the
       // old connection's rather than this proxy's.
       const isAbandoned = generation !== this._generation;
-      // Recorded even when the error is not raised below: `flush` still needs to know.
-      if (!isAbandoned) {
-        this._lastSendError = err as Error;
-        this._sendFailureCount++;
-      }
+      // Recorded even for an abandoned task: its ids are re-queued below, so a `flush` resolving on
+      // an unchanged counter would report a write as delivered that the host never received.
+      this._lastSendError = err as Error;
+      this._sendFailureCount++;
       // Restored even for an abandoned task: nothing else re-queues a pending mutation, so dropping
       // these ids would strand the writes in their handles until the document changed again.
       addIds.forEach((id) => this._pendingAddIds.add(id));
