@@ -44,7 +44,7 @@ const statusIcon: ComponentFunction<AvatarStyleProps> = ({ status, size = 3 }, .
 
 const ring: ComponentFunction<AvatarStyleProps> = ({ status, variant, animation }, ...etc) =>
   mx(
-    'absolute inset-0 border-2',
+    'dx-fullscreen border-2',
     variant === 'circle' ? 'rounded-full' : 'rounded-sm',
     status === 'current'
       ? 'border-primary-400 dark:border-primary-500'

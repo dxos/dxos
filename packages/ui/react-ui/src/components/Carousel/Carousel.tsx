@@ -342,7 +342,7 @@ const CarouselSlide = ({
       className={mx(
         transition === 'slide'
           ? 'relative shrink-0 basis-full h-full dx-base-surface'
-          : 'absolute inset-0 dx-fill dx-base-surface',
+          : 'dx-fullscreen dx-fill dx-base-surface',
         classNames,
       )}
     >

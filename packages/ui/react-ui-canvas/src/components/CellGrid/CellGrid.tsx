@@ -248,11 +248,11 @@ export const CellGrid = <T,>({
         inside the box. Without this offset the canvas gridlines land 1px down/right
         of the header dividers and the columns read as misaligned.
       */}
-      <canvas ref={staticCanvasRef} className='absolute inset-0 pointer-events-none' style={{ top: -1, left: -1 }} />
-      <canvas ref={overlayCanvasRef} className='absolute inset-0 pointer-events-none' style={{ top: -1, left: -1 }} />
+      <canvas ref={staticCanvasRef} className='dx-fullscreen pointer-events-none' style={{ top: -1, left: -1 }} />
+      <canvas ref={overlayCanvasRef} className='dx-fullscreen pointer-events-none' style={{ top: -1, left: -1 }} />
       <div
         ref={overlayInputRef}
-        className='absolute inset-0 touch-none'
+        className='dx-fullscreen touch-none'
         style={{ paddingLeft: headers.left, paddingTop: headers.top }}
       />
       {headers.top > 0 && <Ruler viewport={viewportState} headers={headers} width={width} />}

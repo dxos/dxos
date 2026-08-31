@@ -195,7 +195,7 @@ export const Fullscreen = {
       <p className='max-w-2xl text-sm text-description'>
         Use `dx-fullscreen` instead of `dx-expand`, not alongside it.
       </p>
-      <Frame title='dx-fullscreen' note='absolute inset-0 against a positioned ancestor'>
+      <Frame title='dx-fullscreen' note='dx-fullscreen against a positioned ancestor'>
         <div className='relative h-full'>
           <Measured label='dx-fullscreen' classNames='dx-fullscreen'>
             <Tall />

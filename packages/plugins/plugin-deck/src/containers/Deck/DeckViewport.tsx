@@ -494,10 +494,10 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
             companionId={companion}
             active={deck.active}
             companionSize={soloCompanionSize}
-            classNames={mx('absolute inset-0', mainPaddingTransitions)}
+            classNames={mx('dx-fullscreen', mainPaddingTransitions)}
           />
         ) : (
-          <DeckPlank id={id} part='main' active={deck.active} classNames={mx('absolute inset-0', mainIntrinsicSize)} />
+          <DeckPlank id={id} part='main' active={deck.active} classNames={mx('dx-fullscreen', mainIntrinsicSize)} />
         )}
       </Mosaic.Tile>
     );
@@ -1747,12 +1747,7 @@ export const DeckPlanks = () => {
         {fullscreen && fullscreenId ? (
           <>
             <ExitFullscreenButton onExit={toggleFullscreen} />
-            <DeckPlank
-              id={fullscreenId}
-              part='main'
-              fullscreen
-              classNames={mx('absolute inset-0', mainIntrinsicSize)}
-            />
+            <DeckPlank id={fullscreenId} part='main' fullscreen classNames={mx('dx-fullscreen', mainIntrinsicSize)} />
           </>
         ) : (
           // Every non-fullscreen presentation renders through this one pipeline — fullbleed included
@@ -1761,7 +1756,7 @@ export const DeckPlanks = () => {
           // fullbleed branch here remounted the surviving plank on every message open/close (the
           // mailbox-list flash). The stack is `w-full` when not sliding so the lone tile's `w-full`
           // resolves against the viewport instead of a shrink-wrapped flex row.
-          <Mosaic.Container orientation='horizontal' classNames={['absolute inset-0', mainPaddingTransitions]}>
+          <Mosaic.Container orientation='horizontal' classNames={['dx-fullscreen', mainPaddingTransitions]}>
             <ScrollArea.Root orientation='horizontal' classNames='size-full'>
               <ScrollArea.Viewport
                 ref={viewportRef}

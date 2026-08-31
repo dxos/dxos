@@ -545,7 +545,7 @@ export const Flock = ({
 
   return (
     <div
-      className={mx('dx-expand absolute inset-0', classNames)}
+      className={mx('dx-fill dx-fullscreen', classNames)}
       ref={setContainer}
       onPointerMove={handlePointerMove}
       onPointerLeave={handlePointerLeave}

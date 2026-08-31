@@ -35,6 +35,10 @@ describe('prefer-sizing-utilities', () => {
         { filename, code: "<div className='dx-fullscreen overflow-hidden' />" },
         // Not a class-bearing attribute.
         { filename, code: "<div title='h-full w-full' />" },
+        // A variant retargets the class, so the pair is not a rule about this element.
+        { filename, code: "<div className='[&>svg]:w-full [&>svg]:h-full' />" },
+        { filename, code: "<div className='hover:w-full md:h-full' />" },
+        { filename, code: "<div className='[&_.dx-grid]:absolute [&_.dx-grid]:inset-0' />" },
       ],
       invalid: [],
     });

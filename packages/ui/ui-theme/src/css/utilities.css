@@ -63,6 +63,10 @@
 /**
  * Pins all four edges of the nearest positioned ancestor. Sizing utilities are inert on top of
  * this — the insets already determine the box — so use it INSTEAD of `dx-expand`, not with it.
+ *
+ * The exception is a replaced element (`canvas`, `img`, `video`): the insets do not stretch it,
+ * so it sizes to its intrinsic dimensions — a canvas to its DPI-scaled render buffer — and needs
+ * `dx-fill` alongside.
  */
 @utility dx-fullscreen {
   @apply absolute inset-0;

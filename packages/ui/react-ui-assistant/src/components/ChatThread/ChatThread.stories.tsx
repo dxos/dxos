@@ -150,7 +150,7 @@ const DefaultStory = ({
           <Panel.Content classNames='flex flex-col'>
             <div className='relative dx-grow'>
               <PromptOutline model={model} />
-              <ChatThread.Viewport classNames='absolute inset-0' padding />
+              <ChatThread.Viewport classNames='dx-fullscreen' padding />
               {debug && <Probes model={model} />}
             </div>
             <PromptInput busy={busy} prompt={prompt} setPrompt={setPrompt} onSubmit={(prompt) => void answer(prompt)} />

@@ -10,19 +10,19 @@
  * decision about how the parent sizes the element. The utilities name the intent, so a reader does
  * not have to reconstruct it from the properties.
  *
- * Also flags a sizing utility stacked on top of what it already applies, and the one genuinely
- * wrong combination: a clip on an element whose class already constrains it.
+ * Also flags a sizing utility stacked on top of what it already applies.
  *
  * @example
  * // ❌ Bad
  * <div className='flex-1 min-h-0 min-w-0' />
  * <div className='h-full w-full' />
- * <div className='dx-expand overflow-hidden h-full' />
+ * <div className='dx-expand h-full' />
  *
  * // ✅ Good
  * <div className='dx-grow' />
  * <div className='dx-fill' />
  * <div className='dx-expand' />
+ * <div className='[&>svg]:w-full [&>svg]:h-full' />
  */
 
 /** What each utility already applies. */
@@ -52,8 +52,12 @@ const COMBINATIONS = [
 /** Class-bearing attributes. `mx()` is this repo's class merger. */
 const ATTRIBUTES = new Set(['className', 'classNames', 'class']);
 
-/** Strip variants (`hover:`, `md:`, `[&_p]:`) so a prefixed class is not mistaken for a bare one. */
-const bare = (className) => className.slice(className.lastIndexOf(':') + 1);
+/**
+ * Only unprefixed classes are considered. A variant (`hover:`, `md:`, `[&>svg]:`) retargets the
+ * class — at a state, a breakpoint, or a descendant — so `[&>svg]:w-full [&>svg]:h-full` is a rule
+ * about the SVG, not about this element, and the variants of a pair are not necessarily equal.
+ */
+const unprefixed = (className) => !className.includes(':');
 
 export default {
   meta: {
@@ -85,7 +89,7 @@ export default {
       }
 
       const classes = value.split(/\s+/).filter(Boolean);
-      const present = new Set(classes.map(bare));
+      const present = new Set(classes.filter(unprefixed));
 
       // A utility stacked on top of what it already applies.
       for (const [utility, applied] of Object.entries(UTILITIES)) {

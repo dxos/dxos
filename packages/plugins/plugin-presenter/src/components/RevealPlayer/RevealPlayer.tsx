@@ -151,13 +151,13 @@ export const RevealPlayer = composable<HTMLDivElement, RevealProps>(
         {...composableProps(props, {
           classNames: [
             'dx-expand overflow-hidden grid place-items-center bg-scrim-surface',
-            fullscreen && 'absolute inset-0',
+            fullscreen && 'dx-fullscreen',
           ],
         })}
         ref={forwardedRef}
       >
         <div className='relative aspect-video dx-fill h-auto max-h-full overflow-hidden'>
-          <div ref={deckDivRef} className='absolute inset-0 reveal'>
+          <div ref={deckDivRef} className='dx-fullscreen reveal'>
             {/* React hoists these to <head>; they must not be wrapped in <style> (which only renders CSS text). */}
             <link rel='preconnect' href='https://fonts.gstatic.com' {...{ crossOrigin: '' }} />
             <link rel='preconnect' href='https://fonts.googleapis.com' />

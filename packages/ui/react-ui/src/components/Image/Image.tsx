@@ -94,7 +94,7 @@ export const Image = ({
 
       {/* Background gradient overlay for smooth transition. */}
       <div
-        className='absolute inset-0 pointer-events-none'
+        className='dx-fullscreen pointer-events-none'
         style={{
           background: dominantColor
             ? `radial-gradient(circle at center, transparent 30%, ${dominantColor} 100%)`

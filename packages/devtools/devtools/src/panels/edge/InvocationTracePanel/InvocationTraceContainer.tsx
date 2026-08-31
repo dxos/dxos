@@ -181,7 +181,7 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
           )}
           <Panel.Content>
             <div className='relative dx-grow'>
-              <div className={mx('absolute inset-0 overflow-hidden', gridLayout)}>
+              <div className={mx('dx-fullscreen overflow-hidden', gridLayout)}>
                 <DynamicTable properties={properties} rows={rows} features={features} onRowClick={handleRowClick} />
                 {selectedInvocation && <Selected span={selectedInvocation} />}
               </div>

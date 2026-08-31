@@ -602,7 +602,7 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
                     onPointerUp={() => handleDayPointerUp(date)}
                   >
                     {/* Selection range */}
-                    {inRange && <div className='absolute inset-0 bg-primary-500/20' />}
+                    {inRange && <div className='dx-fullscreen bg-primary-500/20' />}
                     {/* Month */}
                     {!dateClassNames && date.getDate() === 1 && (
                       <span className='absolute top-0 text-xs text-description'>{format(date, 'MMM')}</span>

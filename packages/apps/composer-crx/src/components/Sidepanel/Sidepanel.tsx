@@ -96,7 +96,7 @@ const SidepanelContent = () => {
   const showChat = !thumbnailUrl && !!host;
 
   return (
-    <Panel.Root classNames='absolute inset-0 dx-expand'>
+    <Panel.Root classNames='dx-fullscreen dx-fill'>
       {/* App controls that are not chat-specific (clip, page actions, launch) live here, not inside Chat. */}
       <Panel.Toolbar>
         <Toolbar.Root>

@@ -224,7 +224,7 @@ export const ModuleContainer = ({ layout, compact = false }: ModuleContainerProp
 
   return (
     <div
-      className={mx('dx-expand absolute inset-0 grid', !compact && 'gap-2 p-2')}
+      className={mx('dx-fill dx-fullscreen grid', !compact && 'gap-2 p-2')}
       style={{ gridTemplateColumns: `repeat(${resolvedLayout.length}, minmax(0, 1fr))` }}
     >
       {resolvedLayout.map((column, columnIndex) => (
