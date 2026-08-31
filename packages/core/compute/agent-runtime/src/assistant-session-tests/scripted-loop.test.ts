@@ -4,8 +4,10 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
+import * as AiError from 'effect/unstable/ai/AiError';
 import * as Tool from 'effect/unstable/ai/Tool';
 import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
@@ -39,6 +41,18 @@ const TestToolkit = Toolkit.make(
 const toolkitLayer = TestToolkit.toLayer({
   Echo: ({ value }) => Effect.succeed({ value }),
 });
+
+/**
+ * The failure the Anthropic adapter raises while decoding a response that calls a tool the toolkit
+ * does not contain — the shape reproduced here, since the provider raises it before any tool call
+ * reaches the loop and no scripted tool call can stand in for it.
+ */
+const toolNotFound = (toolName: string, availableTools: string[]): AiError.AiError =>
+  new AiError.AiError({
+    module: 'AnthropicLanguageModel',
+    method: 'makeResponse',
+    reason: new AiError.ToolNotFoundError({ toolName, availableTools }),
+  });
 
 // Drives the real `AiRequest` loop against a scripted model instead of a live/memoized provider.
 const testLayer = (turns: readonly ScriptedLanguageModel.ScriptedTurn[]) =>
@@ -101,6 +115,60 @@ describe('AiRequest loop (scripted model)', () => {
           { parts: [toolCall('Echo', { value: 'first' })] },
           { parts: [toolCall('Echo', { value: 'second' })] },
           { parts: [text('All done.')] },
+        ]),
+      ),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  // A skill can name a tool in its instructions whose handler this host never contributed: the name
+  // reaches the model through the system prompt and never reaches the toolkit. The provider then
+  // fails while decoding its own response, which used to kill the request and leave the reader with
+  // no reply at all.
+  it.effect(
+    'reports an unresolvable tool call to the model and keeps going',
+    Effect.fnUntraced(
+      function* (_) {
+        const request = new AiRequest.Request();
+        const toolkit = yield* OpaqueToolkit.fromContext(TestToolkit);
+        const messages = yield* request.run({ toolkit, prompt: 'Query the database.', history: [] });
+
+        // The turn is reported, not fatal: the model gets another turn and the reader gets an answer.
+        expect(textOf(messages)).toContain('Understood, I will use Echo.');
+        const notice = messages
+          .flatMap((message) => message.blocks)
+          .filter(ContentBlock.is('text'))
+          .find((block) => block.text.includes('space-query-objects'));
+        expect(notice?.disposition).toEqual('synthetic');
+        expect(notice?.text).toContain('Echo');
+      },
+      Effect.provide(
+        testLayer([
+          { fail: toolNotFound('space-query-objects', ['Echo']) },
+          { parts: [text('Understood, I will use Echo.')] },
+        ]),
+      ),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  // The report is bounded: a model that keeps calling the same absent tool must not spend the whole
+  // budget being told it does not exist.
+  it.effect(
+    'fails once a request has spent its allowance of unresolvable tool calls',
+    Effect.fnUntraced(
+      function* (_) {
+        const request = new AiRequest.Request();
+        const toolkit = yield* OpaqueToolkit.fromContext(TestToolkit);
+        const exit = yield* Effect.exit(request.run({ toolkit, prompt: 'Query the database.', history: [] }));
+
+        expect(Exit.isFailure(exit)).toBe(true);
+      },
+      Effect.provide(
+        testLayer([
+          { fail: toolNotFound('space-query-objects', ['Echo']) },
+          { fail: toolNotFound('space-query-objects', ['Echo']) },
+          { fail: toolNotFound('space-query-objects', ['Echo']) },
         ]),
       ),
       TestHelpers.provideTestContext,
