@@ -165,7 +165,6 @@ export const MoveTask = Operation.make({
     description: 'Reposition a task within its task set, optionally re-parenting it — array order is the task order.',
     icon: 'ph--arrows-down-up--regular',
   },
-  executionMode: 'sync',
   input: Schema.Struct({
     task: Ref.Ref(Task.Task),
     taskSet: Ref.Ref(TaskSet.TaskSet),

@@ -8,4 +8,4 @@ New `useOperationHandler(operation, map?)` hook: suspensefully resolves an opera
 
 `useSpaceCallback` now passes the returned callback's arguments through to `fn`, so gesture handlers can build effects from per-call inputs. BREAKING: the optimistic-overlay layer is removed entirely — `useOptimisticOperation`, `OptimisticBinding`, `useOptimisticQuery`, and the `@dxos/app-framework/Optimistic` module. Local-first sync writes need no overlay; a query view is a memoized `Atom.make` over `query.atom` read with `useAtomValue`.
 
-BREAKING: `TaskOperation.MoveTask` is now synchronous (`executionMode: 'sync'`): its input requires a `taskSet` ref alongside the task, all refs must be loaded, and the handler needs no services — a drop runs it with `Effect.runSync` so the write lands in the gesture frame, with no optimistic overlay.
+BREAKING: `TaskOperation.MoveTask` is now synchronous: its input requires a `taskSet` ref alongside the task, all refs must be loaded, and the handler needs no services — a drop runs it with `Effect.runSync` so the write lands in the gesture frame, with no optimistic overlay.
