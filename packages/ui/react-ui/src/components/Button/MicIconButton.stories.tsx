@@ -9,14 +9,14 @@ import { translations } from '#translations';
 
 import { withTheme } from '../../testing';
 import { Tooltip } from '../Tooltip';
-import { MicButton, type MicButtonProps } from './MicButton';
+import { SystemIconButton, type MicIconButtonProps } from './SystemIconButton';
 
-const DefaultStory = ({ mode = 'toggle', ...props }: MicButtonProps) => {
+const DefaultStory = ({ mode = 'toggle', ...props }: MicIconButtonProps) => {
   const [recording, setRecording] = useState(false);
 
   return (
     <Tooltip.Provider>
-      <MicButton
+      <SystemIconButton.Mic
         iconOnly
         variant='ghost'
         {...props}
@@ -33,16 +33,16 @@ const DefaultStory = ({ mode = 'toggle', ...props }: MicButtonProps) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/components/MicButton',
+  title: 'ui/react-ui-core/components/SystemIconButton/Mic',
   decorators: [withTheme()],
-  component: MicButton,
+  component: SystemIconButton.Mic,
   render: DefaultStory,
   args: { label: 'Record', mode: 'toggle' },
   parameters: {
     layout: 'centered',
     translations,
   },
-} satisfies Meta<typeof MicButton>;
+} satisfies Meta<typeof SystemIconButton.Mic>;
 
 export default meta;
 
