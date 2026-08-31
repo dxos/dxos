@@ -53,6 +53,8 @@ export type EdgeStressSpec = {
 
 export type EdgeStressResult = {
   seed: string | undefined;
+  /** Planned and executed are equal on a clean run; a gap means the run stopped early. */
+  commandsPlanned: number;
   commandsExecuted: number;
   spacesCreated: number;
   documentsCreated: number;

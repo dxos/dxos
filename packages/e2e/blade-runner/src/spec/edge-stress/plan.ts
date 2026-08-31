@@ -2,18 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Schema } from 'effect';
 import { FastCheck } from 'effect/testing';
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { type SchedulerEnvImpl } from '../../env';
 import { type ReplicantBrain, type ReplicantsSummary, type TestPlan, type TestProps } from '../../plan';
 import { ClientReplicant } from '../../replicants/client-replicant';
-import { makeCommandSchema, toAsyncCommand } from './commands';
-import { type Model, makeModel } from './model';
+import { type Command, canRun, describe, execute, makeCommandArbitrary, mutatesData, simulate } from './commands';
+import { type Model, makeFleetModel } from './model';
 import {
   type EdgeStressResult,
   type EdgeStressSpec,
@@ -22,6 +22,15 @@ import {
   assertFullyReplicated,
   cleanupRun,
 } from './system';
+
+/**
+ * How many commands to draw per executable one.
+ *
+ * A uniformly drawn command is usually unreachable where it lands — `JoinSpace` before any space
+ * exists, `EditText` before any document does — so a pool of this size is what lets the filtered
+ * sequence still reach `maxCommands`.
+ */
+const COMMAND_POOL_FACTOR = 8;
 
 /**
  * Randomized stress test of a fleet of real clients replicating through EDGE.
@@ -51,6 +60,11 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
 
   async run(env: SchedulerEnvImpl<EdgeStressSpec>, params: TestProps<EdgeStressSpec>): Promise<EdgeStressResult> {
     const spec = params.spec;
+    const limits: Model['limits'] = {
+      maxSpaces: spec.maxSpaces,
+      maxDocumentsPerSpace: spec.maxDocumentsPerSpace,
+      agents: spec.agents,
+    };
     const clientCount = spec.devicesPerIdentity.reduce((sum, count) => sum + count, 0);
     const tracePath = path.join(params.outDir, 'command-trace.jsonl');
     const traceStream = fs.createWriteStream(tracePath, { flags: 'a' });
@@ -61,8 +75,13 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
     log.info('edge-stress starting', { seed: params.randomSeed, clientCount, spec });
     trace({ event: 'run', seed: params.randomSeed, spec });
 
+    // Decided before a single process exists: the fleet model is pure, so the sequence is a
+    // function of the seed alone and the recorded plan is exactly what will run.
+    const plan = this._drawPlan(params, limits, clientCount);
+    trace({ event: 'plan', seed: params.randomSeed, commands: plan.map(describe) });
+
     const setupBegin = Date.now();
-    const { replicants, model, identityDids } = await this._setupFleet(env, params, clientCount);
+    const { replicants, model, identityDids } = await this._setupFleet(env, params, limits);
     const setupTimeMs = Date.now() - setupBegin;
     log.info('fleet ready', { setupTimeMs });
 
@@ -77,39 +96,18 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
       counters: { commands: 0, documents: 0 },
     };
 
-    const commandSchema = makeCommandSchema({
-      clients: clientCount,
-      spaces: spec.maxSpaces,
-      documents: spec.maxDocumentsPerSpace,
-    });
-    const commands = Schema.toArbitrary(commandSchema)(FastCheck)
-      .filter((command) => command._tag !== 'Checkpoint' || spec.checkpoints)
-      .map(toAsyncCommand);
-
     const runBegin = Date.now();
     real.deadline = runBegin + spec.maxRuntimeMs;
 
-    // Draw every candidate sequence from the seed and execute the longest.
-    const draws = FastCheck.sample(FastCheck.commands([commands], { maxCommands: spec.maxCommands, size: 'large' }), {
-      seed: hashSeed(params.randomSeed ?? ''),
-      numRuns: spec.sampleDraws,
-    });
-    const generated = draws.reduce((longest, candidate) =>
-      [...candidate].length > [...longest].length ? candidate : longest,
-    );
-    // Recorded before execution so the seed's sequence is provable independently of how far the
-    // run gets: same seed, same `plan` line.
-    const planned = [...generated].map((command) => command.toString());
-    trace({ event: 'plan', seed: params.randomSeed, commands: planned });
-    log.info('command sequence drawn', {
-      draws: draws.length,
-      lengths: draws.map((candidate) => [...candidate].length),
-      chosen: planned.length,
-    });
-
     try {
       try {
-        await FastCheck.asyncModelRun(() => ({ model, real }), generated);
+        for (const command of plan) {
+          // Simulation and execution start from the same model and apply the same transitions, so
+          // a disagreement here is a defect in `advance`, not an unlucky draw — fail loudly rather
+          // than silently skipping, which is what made earlier runs look longer than they were.
+          invariant(canRun(command, model), `command unreachable at execution time: ${describe(command)}`);
+          await execute(command, model, real);
+        }
       } catch (err) {
         if (!(err instanceof BudgetExhausted)) {
           throw err;
@@ -118,7 +116,7 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
       }
       await assertFullyReplicated(model, real);
     } finally {
-      trace({ event: 'done', commands: real.counters.commands });
+      trace({ event: 'done', planned: plan.length, commands: real.counters.commands });
       // Runs even when an assertion threw, which is exactly when a shared environment would leak.
       const adminKey = process.env.DX_HUB_API_KEY;
       if (spec.cleanup && adminKey) {
@@ -134,6 +132,7 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
 
     return {
       seed: params.randomSeed,
+      commandsPlanned: plan.length,
       commandsExecuted: real.counters.commands,
       spacesCreated: real.spaceIds.length,
       documentsCreated: real.counters.documents,
@@ -143,33 +142,71 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
   }
 
   /**
+   * The sequence this seed will run: sample several pools, simulate each, keep the one that
+   * replicates the most.
+   */
+  private _drawPlan(params: TestProps<EdgeStressSpec>, limits: Model['limits'], clientCount: number): Command[] {
+    const spec = params.spec;
+    const command = makeCommandArbitrary({
+      clients: clientCount,
+      spaces: spec.maxSpaces,
+      documents: spec.maxDocumentsPerSpace,
+      checkpoints: spec.checkpoints,
+    });
+    const pool = FastCheck.array(command, {
+      minLength: spec.maxCommands,
+      maxLength: spec.maxCommands * COMMAND_POOL_FACTOR,
+      size: 'max',
+    });
+
+    const draws = FastCheck.sample(pool, {
+      seed: hashSeed(params.randomSeed ?? ''),
+      numRuns: spec.sampleDraws,
+    });
+    const candidates = draws.map((draw) =>
+      simulate(draw, makeFleetModel({ devicesPerIdentity: spec.devicesPerIdentity, limits }), spec.maxCommands),
+    );
+    // Ranked by data operations, not length: filtering already fills every candidate to
+    // `maxCommands`, so length no longer separates a run that replicates something from one that
+    // only churns clients.
+    const score = (candidate: Command[]) => candidate.filter(mutatesData).length;
+    const chosen = candidates.reduce((best, candidate) => (score(candidate) > score(best) ? candidate : best));
+
+    log.info('command sequence drawn', {
+      draws: draws.length,
+      drawn: draws.map((draw) => draw.length),
+      executable: candidates.map((candidate) => candidate.length),
+      dataOps: candidates.map(score),
+      chosen: chosen.length,
+    });
+    return chosen;
+  }
+
+  /**
    * Spawn every replicant, mint one identity per group and admit its extra devices, so the fleet
    * mixes HALO device replication with invitation-through-EDGE (decision D1).
+   *
+   * The topology comes from the same `makeFleetModel` the plan was simulated against, so the fleet
+   * cannot be shaped differently from what the plan assumed.
    */
   private async _setupFleet(
     env: SchedulerEnvImpl<EdgeStressSpec>,
     params: TestProps<EdgeStressSpec>,
-    clientCount: number,
+    limits: Model['limits'],
   ): Promise<{ replicants: ReplicantBrain<ClientReplicant>[]; model: Model; identityDids: string[] }> {
     const spec = params.spec;
+    const model = makeFleetModel({ devicesPerIdentity: spec.devicesPerIdentity, limits });
 
     const replicants: ReplicantBrain<ClientReplicant>[] = [];
-    for (let index = 0; index < clientCount; index++) {
+    for (let index = 0; index < model.clients.length; index++) {
       const replicant = await env.spawn(ClientReplicant, { platform: spec.platform });
       await replicant.brain.init({ edgeUrl: spec.edgeUrl, agents: spec.agents });
       replicants.push(replicant);
     }
 
-    const model = makeModel({
-      maxSpaces: spec.maxSpaces,
-      maxDocumentsPerSpace: spec.maxDocumentsPerSpace,
-      agents: spec.agents,
-    });
-
     const identityDids: string[] = [];
-    let cursor = 0;
-    for (const [identity, devices] of spec.devicesPerIdentity.entries()) {
-      const owner = cursor;
+    for (const [identity, { devices }] of model.identities.entries()) {
+      const [owner, ...rest] = devices;
       const { identityDid } = await replicants[owner].brain.createIdentity({
         displayName: `edge-stress-identity-${identity}`,
       });
@@ -177,16 +214,9 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
       if (spec.agents) {
         await replicants[owner].brain.createAgent();
       }
-      model.identities.push({ devices: [] });
-
-      for (let device = 0; device < devices; device++) {
-        const client = cursor++;
-        if (device > 0) {
-          const { invitationCode } = await replicants[owner].brain.inviteDevice();
-          await replicants[client].brain.joinAsDevice({ invitationCode });
-        }
-        model.clients.push({ identity, state: 'online' });
-        model.identities[identity].devices.push(client);
+      for (const device of rest) {
+        const { invitationCode } = await replicants[owner].brain.inviteDevice();
+        await replicants[device].brain.joinAsDevice({ invitationCode });
       }
     }
 

@@ -50,6 +50,32 @@ export const makeModel = (limits: Model['limits']): Model => ({
   limits,
 });
 
+/**
+ * The starting model for a fleet shape: one identity per group, its devices online.
+ *
+ * Pure, so a command sequence can be simulated against it before any process exists — which is
+ * what lets the plan record what will actually run rather than what was drawn.
+ */
+export const makeFleetModel = ({
+  devicesPerIdentity,
+  limits,
+}: {
+  devicesPerIdentity: number[];
+  limits: Model['limits'];
+}): Model => {
+  const model = makeModel(limits);
+  let cursor = 0;
+  for (const [identity, devices] of devicesPerIdentity.entries()) {
+    model.identities.push({ devices: [] });
+    for (let device = 0; device < devices; device++) {
+      const client = cursor++;
+      model.clients.push({ identity, state: 'online' });
+      model.identities[identity].devices.push(client);
+    }
+  }
+  return model;
+};
+
 /** Globally unique, so a token proves which client authored it and cannot collide with another. */
 export const token = (client: ClientIndex, seq: number): string => `⟦c${client}-${seq}⟧`;
 
