@@ -193,8 +193,10 @@ const ComboboxTrigger = composable<HTMLButtonElement, ComboboxTriggerProps>(
         <Button
           {...props}
           // The `Select` trigger slot, so the two controls are indistinguishable in a form
-          // (input surface, 1fr/auto grid, control sizing).
-          classNames={tx('select.triggerButton', {}, classNames)}
+          // (input surface, 1fr/auto grid, control sizing). That second column belongs to the caret
+          // below, so a caller supplying its own children collapses it — otherwise the column sits
+          // empty and its gap paints a strip of trigger surface beside the content.
+          classNames={tx('select.triggerButton', {}, [!!children && 'grid-cols-[1fr] gap-0', classNames])}
           role='combobox'
           aria-expanded={open}
           aria-controls={modalId}
