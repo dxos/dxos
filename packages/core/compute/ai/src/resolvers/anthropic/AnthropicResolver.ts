@@ -38,7 +38,7 @@ export const make = () =>
             ? // The Effect-AI Anthropic binding's `thinking.type` union predates Anthropic's `adaptive` mode.
               ({
                 type: 'adaptive',
-                // Default is "ommited"
+                // The API default omits thinking blocks from the stream; summaries keep them visible.
                 display: 'summarized',
               } as const)
             : undefined;

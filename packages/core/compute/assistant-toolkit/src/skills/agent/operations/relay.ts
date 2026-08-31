@@ -60,7 +60,7 @@ const handler: Operation.WithHandler<typeof Relay> = Relay.pipe(
         const content = prompt ?? JSON.stringify(event);
         yield* session.submitPrompt([{ _tag: 'text', text: content, disposition: 'synthetic' }]);
       },
-      Effect.provide(AiService.model('com.anthropic.model.claude-sonnet-4-6.default')),
+      Effect.provide(AiService.model('com.anthropic.model.claude-sonnet-5.default')),
     ),
   ),
   Operation.opaqueHandler,

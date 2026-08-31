@@ -323,7 +323,7 @@ describe('LanguageModel', () => {
 const TestLayer = Layer.mergeAll(
   testingLayer,
   CalculatorLayer,
-  AiService.model('com.anthropic.model.claude-sonnet-4-6.default'),
+  AiService.model('com.anthropic.model.claude-sonnet-5.default'),
 ).pipe(Layer.provideMerge(LanguageModelFixture.layerTest()), Layer.provide(AiServiceTestingPreset('direct')));
 
 // TODO(wittjosiah): GeoPoint breaks Anthropic validation.

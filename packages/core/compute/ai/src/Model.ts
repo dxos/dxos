@@ -162,7 +162,7 @@ export const get = (provider: DXN.DXN, id: DXN.DXN): Model | undefined =>
 export const byId = (id: DXN.DXN): Model[] => all.filter((model) => model.id === id);
 
 // Default model per provider, used when no explicit selection is configured.
-export const DEFAULT_EDGE: DXN.DXN = DXN.make('com.anthropic.model.claude-sonnet-4-6.default');
+export const DEFAULT_EDGE: DXN.DXN = DXN.make('com.anthropic.model.claude-sonnet-5.default');
 export const DEFAULT_OLLAMA: DXN.DXN = DXN.make('com.meta.model.llama-3-2-1b.instruct');
 export const DEFAULT_LMSTUDIO: DXN.DXN = DXN.make('com.meta.model.llama-3-2-3b.instruct');
 

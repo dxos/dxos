@@ -23,7 +23,7 @@ import PlanningSkill from './skill';
 EntityId.dangerouslyDisableRandomness();
 
 // Recorded model fixtures use sonnet to keep regeneration cost down.
-const FIXTURE_MODEL = DXN.make('com.anthropic.model.claude-sonnet-4-6.default');
+const FIXTURE_MODEL = DXN.make('com.anthropic.model.claude-sonnet-5.default');
 
 const TestLayer = AssistantTestLayer({
   model: FIXTURE_MODEL,
