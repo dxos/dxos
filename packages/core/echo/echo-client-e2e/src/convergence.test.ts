@@ -7,12 +7,11 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Entity, Filter, Obj, Query, Relation } from '@dxos/echo';
+import { foldLateEdits, mergeDuplicates, resolveMerged } from '@dxos/echo-client';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestReplicationNetwork } from '@dxos/echo-host/testing';
 import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
-
-import { EchoTestBuilder } from '../testing';
-import { foldLateEdits, mergeDuplicates, resolveMerged } from './merge-executor';
 
 // The scenario the whole design exists for: peers initialize the same application state without
 // coordinating, so each mints its own object and replication surfaces the duplicates.

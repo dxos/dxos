@@ -7,12 +7,11 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { waitForCondition } from '@dxos/async';
 import { Database, Entity, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
+import { getMergedFrom, mergeDuplicates, resolveMerged, rewriteReferences } from '@dxos/echo-client';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { findMergeDuplicates, mergeCandidates, toMergeCandidate } from '@dxos/echo/internal';
 import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
-
-import { EchoTestBuilder } from '../testing';
-import { getMergedFrom, mergeDuplicates, resolveMerged, rewriteReferences } from './merge-executor';
 
 describe('convergence-key merging', () => {
   let builder: EchoTestBuilder;

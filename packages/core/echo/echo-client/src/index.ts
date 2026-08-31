@@ -5,6 +5,7 @@
 export { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 
 export * from './automerge';
+export * from './merge';
 export * from './client';
 export {
   type AddCoreOptions,

@@ -7,7 +7,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import { type CleanupFn, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
-import { type Entity, Query, type QueryAST, type QueryResult } from '@dxos/echo';
+import { type Entity, Query, QueryAST, type QueryResult } from '@dxos/echo';
 import { type AggregateValue, GroupBy } from '@dxos/echo-host/query';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -23,18 +23,14 @@ import { type QueryContext, type SourceEntry } from './query-context';
  * `.options({ deleted })` produces a node that scoping wraps further, so the flag can sit at any
  * depth rather than on the root.
  */
-const _queryIncludesDeleted = (node: unknown): boolean => {
-  if (node === null || typeof node !== 'object') {
-    return false;
-  }
-  const record = node as Record<string, unknown>;
-  if (record.type === 'options') {
-    const deleted = (record.options as { deleted?: string } | undefined)?.deleted;
-    if (deleted === 'include' || deleted === 'only') {
-      return true;
+const _queryIncludesDeleted = (query: QueryAST.Query): boolean => {
+  let includesDeleted = false;
+  QueryAST.visit(query, (node) => {
+    if (node.type === 'options' && (node.options.deleted === 'include' || node.options.deleted === 'only')) {
+      includesDeleted = true;
     }
-  }
-  return Object.values(record).some(_queryIncludesDeleted);
+  });
+  return includesDeleted;
 };
 
 /**
