@@ -347,30 +347,39 @@ change, but only if the substituted-shape problem (1) is solved first.
 
 ## Remaining estimate
 
-Per open thread, assuming no behaviour change and no proto edits.
+Priced by teardown slice, not by thread, since that is how the work now decomposes. Assumes no
+behaviour change and no proto edits.
 
-| Thread | Work                                                                                                 | Estimate    |
-| ------ | ---------------------------------------------------------------------------------------------------- | ----------- |
-| 7      | All 45 types route through buf                                                                       | done        |
-| 5      | `JsonView` and two mis-annotated imports done; the 14 remaining need their types swept               | in sweep    |
-| 9c     | Both metadata stores swapped; `pipeline/codec` rides `#9d`                                           | 1–2 days    |
-| 8      | `ServiceDescriptor`/`createProtoRpcPeer` for mesh/teleport, iframe, bridge, agentmanager             | 1.5–2 weeks |
-| 9d     | Credentials type sweep; the signature question is settled by test                                    | 1 week      |
-| 2      | Test/example protos                                                                                  | 2–3 days    |
-| —      | Import sweep: moving the 45 types' consumer references to buf shapes (independent of `#7`)           | 3–4 weeks   |
-| —      | Delete `protobuf-compiler`, `codec-protobuf`, `substitutions.ts`; drop `protobufjs` from the catalog | 3–5 days    |
+| Slice / thread | Work                                                                                                 | Estimate    |
+| -------------- | ---------------------------------------------------------------------------------------------------- | ----------- |
+| A              | Value codecs: `Codec`/`EncodingOptions` out of hypercore, feed-store, client-services                | done        |
+| B + C          | The `Any` envelope and the RPC seam, together, generator first                                       | 1.5–2 weeks |
+| 5              | devtools: the 14 remaining imports need their types swept                                            | in sweep    |
+| 9d             | Credentials: 94 declarations; the signature question is settled by test                              | 1 week      |
+| 9c             | `pipeline/codec`'s codec instance; unblocked by A, wants cross-version feed fixtures                 | 1–2 days    |
+| 2              | Test/example protos                                                                                  | 2–3 days    |
+| —              | Import sweep: the 45 types' consumer references to buf shapes, presence handling included            | 3–4 weeks   |
+| D              | Delete `protobuf-compiler`, `codec-protobuf`, `substitutions.ts`; drop `protobufjs` from the catalog | 3–5 days    |
 
-**Remaining: roughly 7–10 engineer-weeks**, of which the import sweep is the long tail and the only
-item that touches most of the repo. That is the sum of the rows above at five days to the week. This
-is the first revision where the estimate fell, and for a reason worth keeping: two of the three items
-that shrank did so because a stated blocker turned out to be an assumption -- the credential signature
-risk (`canonicalStringify` sorts keys and normalises byte views) and `#9c`'s downgrade hazard (both
-stores always write both timestamps). Check the assumption before pricing the thread.
+**Remaining: roughly 6–8 engineer-weeks**, of which the import sweep is the long tail and the only
+item that touches most of the repo. Two earlier revisions saw the estimate fall because a stated
+blocker turned out to be an assumption — the credential signature risk (`canonicalStringify` sorts
+keys and normalises byte views) and `#9c`'s downgrade hazard (both stores always write both
+timestamps). Check the assumption before pricing the thread.
 
-Main risks now, in order: `#8`'s cross-peer wire compatibility, decoded-shape drift silently changing
-behaviour across the sweep, and the five generator divergences below.
+It has also gone the other way once, which is the more useful lesson: `#5` and `#9d` were priced as
+import sweeps, and they are presence handling — buf loses proto3 `optional`, so each converted site
+needs a real branch and `!` is barred.
+
+Main risks now, in order: slice B's wire-visible `Any` reshaping, decoded-shape drift silently
+changing behaviour across the sweep, and the five generator divergences below.
 
 ## Thread detail (ranked by risk × complexity)
+
+**Historical: this is the original ranking, kept for the scope and risk analysis behind each thread.
+Rows are NOT a work list** — the Status table at the top is authoritative, and `#1`, `#3`, `#4`,
+`#6`, `#7`, `#8`, `#9a` and `#9b` are done. Only `#2`, `#5`, `#9c` and `#9d` remain, and they are
+sequenced by the teardown slices, not by this ordering.
 
 Independently landable threads, lowest → highest risk×complexity. Six have a dependency, in three
 groups: `#7` and `#9a`–`#9d` on the shape-compat layer (`#3`), and `#8` on the `Stream` extraction
@@ -497,39 +506,14 @@ migrating only if the fixtures are worth keeping. `#4`, `#5` and `#7` are easy t
 overlook here because they read protobuf.js through generated types and `protoMessage()` rather
 than through `codec-protobuf` directly, but they are consumers all the same.
 
-## Structuring for teardown: the type surface, not the runtime
-
-Migrating every runtime call site does **not** make `codec-protobuf` deletable. Of the 22 source
-files outside the package that import it, most import only `type`s, and those split into three
-groups with different fates:
-
-| Group                                                                      | Symbols                                                                                                                                         | Fate                                |
-| -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| **Transport vocabulary** — describes the wire, contains no protobuf.js     | `Any`, `RequestOptions`, `EncodingOptions`, `Codec`, `ServiceBackend`, `ServiceProvider`, `ServiceDescriptorLike`                               | must **move**; nothing retires them |
-| **Shape conventions** — the substituted shapes the compat layer reproduces | `WithTypeUrl`, `TaggedType`, `Struct`, `TypedProtoMessage`                                                                                      | retire with the shape-compat layer  |
-| **protobuf.js machinery**                                                  | `compressSchema`, `anySubstitutions`, `structSubstitutions`, `timestampSubstitutions`, and the `Codec`/schema/mapping/sanitizer implementations | deleted with the package            |
-
-The first group is what keeps the package alive past the migration. `hypercore/src/crypto.ts` and
-`feed-store` want a thing with `encode`/`decode`; `messaging` and `blade-runner` want the `Any`
-envelope; `client-services/pipeline/codec.ts` wants `Codec`. None of them is a protobuf.js
-consumer, so no migration thread ever removes their import — the symbols have to leave instead.
-
-**They cannot move into `@dxos/protocols`.** `hypercore` and `feed-store` live in `common/` and do
-not depend on it; routing them through `core/protocols` would invert the layering. The transport
-vocabulary needs a `common/`-level home of its own — a types-only package with no protobuf.js
-dependency, which `codec-protobuf` then implements rather than defines.
-
-Doing that extraction **before** the remaining threads is what makes the teardown a deletion rather
-than a refactor: each thread that lands afterwards imports the vocabulary from its new home, so
-`codec-protobuf`'s dependent list shrinks monotonically to zero instead of being re-established by
-every new call site. Left to the end, the same work has to be done anyway, but against a wider set
-of consumers and with the package still in the graph.
-
-Ordering: extract the vocabulary → land what remains (`#5`'s 14 files, `#9c`'s `pipeline/codec`,
-`#9d`'s type sweep, and `#2` whenever) against it → the package is then reachable only from
-`protobuf-compiler` and its own tests, and goes with them in one commit.
-
 ## The teardown, by consumer
+
+Migrating every runtime call site does **not** make `codec-protobuf` deletable: most imports outside
+the package are `type`s, so they survive any amount of runtime migration. An earlier revision
+concluded from this that the shared types had to **move**, into a new `common/`-level package. They
+do not — they have to _go_, together with the consumers' dependence on their shape. That section is
+deleted rather than left standing beside this one, because a reader following it would build the
+package this plan no longer wants.
 
 Deleting `codec-protobuf` is not one commit at the end. It is one slice per group of consumers that
 want the same thing from it, each independently landable. Measured on `main`: 29 import sites
