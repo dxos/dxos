@@ -602,6 +602,30 @@ describe('xmlTags widget context', () => {
     view.destroy();
   });
 
+  // CodeMirror draws a replacement widget (same id, `eq` false after a context change) BEFORE
+  // destroying the old instance; the old instance's destroy must not wipe the replacement's
+  // registration — that orphaned the live placeholder with no portal until a view-mode toggle.
+  test('a context rebuild does not unregister the replacement widget', async ({ expect }) => {
+    let published: XmlWidgetState[] = [];
+    const view = createView(doc, { registry: contextRegistry, setWidgets: (widgets) => (published = widgets) });
+    await rebuild(view);
+
+    // Simulate the draw cycle: the initial widget mounts, then the context effect replaces it —
+    // new instance draws (mounted), old instance is destroyed afterwards.
+    const before = stubWidget(view, 'a');
+    before.toDOM(view);
+    expect(published.map((state) => state.id)).toContain('a');
+
+    view.dispatch({ effects: xmlTagContextEffect.of({ rewind: () => {} }) });
+    await flush();
+    const after = stubWidget(view, 'a');
+    const dom = after.toDOM(view);
+    before.destroy(dom);
+
+    expect(published.map((state) => state.id)).toContain('a');
+    view.destroy();
+  });
+
   test('a later context replaces an earlier one', async ({ expect }) => {
     const view = createView(doc, { registry: contextRegistry });
     await rebuild(view);
