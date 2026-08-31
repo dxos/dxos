@@ -18,6 +18,12 @@ import { type Extension, type ExtensionApi } from '../../observability-extension
 import { getOtelLogLevel, isObservabilityDisabled, storeObservabilityDisabled } from '../../storage';
 import { stubExtension } from '../stub';
 import { type OtelLogSinkMessage } from './log-sink';
+import { type OtelMetrics } from './metrics';
+import { type OtelMetricsSinkMessage } from './metrics-sink';
+import { RemoteMetricsForwarder } from './remote-metrics';
+
+/** Everything the producing realm posts to the log-writer worker's OTel sinks. */
+export type OtelWorkerMessage = OtelLogSinkMessage | OtelMetricsSinkMessage;
 
 export type ExtensionsOptions = {
   /** For the OTEL, the name of the entity for which signals (metrics or trace) are collected. */
@@ -33,13 +39,14 @@ export type ExtensionsOptions = {
   /** Minimum log level to export. Defaults to INFO (i.e. info, warn, error). */
   logLevel?: LogLevel;
   /**
-   * When set (and `logs` is on), log export runs in the log-writer worker instead of this
-   * realm: the resolved options are posted over this handle for the worker to build an
-   * `OtelLogSink`, and no local pipeline or log processor is installed. The worker exports
-   * the JSONL lines the realm's log processor already ships it, on its own event loop — so
-   * export keeps up while this realm is blocked by a long synchronous task.
+   * When set, OTLP export runs in the log-writer worker instead of this realm: the resolved
+   * options are posted over this handle for the worker to build the sinks, and no local
+   * pipelines are installed. Logs ride the JSONL lines the realm's log processor already
+   * ships; metric instrument calls are forwarded as messages. Batching and export happen on
+   * the worker's own event loop, so export keeps up while this realm is blocked by a long
+   * synchronous task.
    */
-  logWriter?: { post: (message: OtelLogSinkMessage) => void };
+  logWriter?: { post: (message: OtelWorkerMessage) => void };
   metrics?: boolean;
   traces?: boolean;
 };
@@ -143,14 +150,19 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
         })
       : undefined;
 
-  const metrics = metricsEnabled
-    ? new OtelMetrics({
-        endpoint: resolvedEndpoint,
-        headers: resolvedHeaders,
-        resource: metricsResource,
-        getTags: () => Object.fromEntries(tags),
-      })
-    : undefined;
+  // Constructed eagerly (mirroring OtelMetrics, which registers with TRACE_PROCESSOR at
+  // construction) but only when telemetry is on — a disabled session forwards nothing.
+  const remoteMetrics =
+    metricsEnabled && logWriter && !disabled ? new RemoteMetricsForwarder(logWriter.post) : undefined;
+  const metrics =
+    metricsEnabled && !logWriter
+      ? new OtelMetrics({
+          endpoint: resolvedEndpoint,
+          headers: resolvedHeaders,
+          resource: metricsResource,
+          getTags: () => Object.fromEntries(tags),
+        })
+      : undefined;
 
   const traces = tracesEnabled
     ? new OtelTraces({
@@ -181,6 +193,16 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
             tags: Object.fromEntries(tags),
           });
         }
+        if (remoteMetrics) {
+          logWriter?.post({
+            type: 'otel-metrics-init',
+            endpoint: resolvedEndpoint,
+            headers: resolvedHeaders,
+            // The metrics resource omits `session.id` (see createResources).
+            resourceAttributes: baseAttributes,
+            tags: Object.fromEntries(tags),
+          });
+        }
         if (traces) {
           traces.start();
         }
@@ -203,7 +225,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
         // from logs or metrics would drop the tracer provider's BatchSpanProcessor
         // queue on process exit, manifesting as "Missing Span" in SigNoz for any
         // already-exported children.
-        const results = await Promise.allSettled([logs?.close(), metrics?.close()]);
+        const results = await Promise.allSettled([logs?.close(), metrics?.close(), remoteMetrics?.close()]);
         for (const result of results) {
           if (result.status === 'rejected') {
             log.catch(result.reason);
@@ -236,22 +258,26 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
     },
     apis: [
       { kind: 'logs', isAvailable: () => Effect.succeed(!!logs || !!remoteLogs) } satisfies ExtensionApi,
-      metrics
-        ? ({
-            kind: 'metrics',
-            isAvailable: () => Effect.succeed(true),
-            gauge: (name, value, tags, meta) => metrics.gauge(name, value, tags, meta),
-            increment: (name, value, tags, meta) => metrics.increment(name, value, tags, meta),
-            distribution: (name, value, tags, meta) => metrics.distribution(name, value, tags, meta),
-            observe: (name, callback, tags, meta) => metrics.observe(name, callback, tags, meta),
-          } satisfies ExtensionApi)
-        : undefined,
+      metricsApi(metrics ?? remoteMetrics),
       traces ? ({ kind: 'traces', isAvailable: () => Effect.succeed(true) } satisfies ExtensionApi) : undefined,
     ].filter(isNonNullable),
   };
 
   return extension;
 });
+
+/** Both metric backends expose the same instrument surface; the API entry is agnostic. */
+const metricsApi = (metrics: OtelMetrics | RemoteMetricsForwarder | undefined): ExtensionApi | undefined =>
+  metrics
+    ? ({
+        kind: 'metrics',
+        isAvailable: () => Effect.succeed(true),
+        gauge: (name, value, tags, meta) => metrics.gauge(name, value, tags, meta),
+        increment: (name, value, tags, meta) => metrics.increment(name, value, tags, meta),
+        distribution: (name, value, tags, meta) => metrics.distribution(name, value, tags, meta),
+        observe: (name, callback, tags, meta) => metrics.observe(name, callback, tags, meta),
+      } satisfies ExtensionApi)
+    : undefined;
 
 /**
  * Builds the resource for logs/traces and the separate one for metrics.
