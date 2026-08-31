@@ -412,9 +412,9 @@ export const SystemIconButton = {
 
 export type {
   ClipboardIconButtonProps,
+  DownloadIconButtonProps,
   MicButtonMode,
   MicIconButtonProps,
-  DownloadIconButtonProps,
   StaticPresetProps,
   TogglePresetProps,
   UploadIconButtonProps,

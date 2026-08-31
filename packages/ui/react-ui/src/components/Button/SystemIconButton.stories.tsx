@@ -11,12 +11,17 @@ import { translations } from '#translations';
 import { withTheme } from '../../testing';
 import { Toolbar } from '../Toolbar';
 import { Tooltip } from '../Tooltip';
-import { SystemIconButton } from './SystemIconButton';
+import { type MicButtonMode, SystemIconButton } from './SystemIconButton';
 
 const iconOnly = { iconOnly: true, variant: 'ghost' as const };
 
-const ToolbarStory = () => {
-  const [state, setState] = useState({ star: false, bookmark: false, disclosure: false });
+type StoryArgs = {
+  /** `toggle`: click flips recording. `hold`: push-to-talk. Drives the Mic preset only. */
+  micMode?: MicButtonMode;
+};
+
+const ToolbarStory = ({ micMode = 'toggle' }: StoryArgs) => {
+  const [state, setState] = useState({ star: false, bookmark: false, disclosure: false, recording: false });
 
   return (
     <Tooltip.Provider>
@@ -40,6 +45,18 @@ const ToolbarStory = () => {
             {...iconOnly}
             active={state.bookmark}
             onClick={() => setState((prev) => ({ ...prev, bookmark: !prev.bookmark }))}
+          />
+        </Toolbar.Button>
+        <Toolbar.Button asChild>
+          <SystemIconButton.Mic
+            {...iconOnly}
+            mode={micMode}
+            // Label and state are driven from the story so the demo reacts to a press.
+            label={state.recording ? 'Stop recording' : micMode === 'hold' ? 'Hold to record' : 'Start recording'}
+            recording={state.recording}
+            onToggle={() => setState((prev) => ({ ...prev, recording: !prev.recording }))}
+            onPressStart={() => setState((prev) => ({ ...prev, recording: true }))}
+            onPressEnd={() => setState((prev) => ({ ...prev, recording: false }))}
           />
         </Toolbar.Button>
         <Toolbar.Separator variant='line' />
@@ -75,21 +92,25 @@ const ToolbarStory = () => {
 
 const meta = {
   title: 'ui/react-ui-core/components/SystemIconButton',
-  component: SystemIconButton.Add,
   render: ToolbarStory,
   decorators: [withTheme()],
   parameters: {
     layout: 'centered',
     translations,
   },
-} satisfies Meta<typeof SystemIconButton.Add>;
+} satisfies Meta<StoryArgs>;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<StoryArgs>;
 
 export const Default: Story = {
   args: {},
+};
+
+/** Push-to-talk: the Mic records only while held, rather than toggling on click. */
+export const MicHold: Story = {
+  args: { micMode: 'hold' },
 };
 
 /**
