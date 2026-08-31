@@ -206,7 +206,7 @@ feat F-1: Author and maintain plans
 feat F-2: Record runs
 
   req F-2.1: Starting a run appends a TestRun with status `running` to the plan's feed and returns
-    its id; every later push names that id.
+    a ref to it; every later push names that ref.
   req F-2.2: A result is pushed per case, incrementally, so a long run is observable while it is
     still going.
   req F-2.3: Finishing a run computes `status` as a rollup over the case keys captured at
@@ -233,8 +233,9 @@ feat F-5: Agent access over MCP
 
   req F-5.1: A `QaSkill` names the plan-editing and result-pushing operations in its `tools`, which
     is what makes them reachable from `queryOperations` / `invokeOperation`.
-  req F-5.2: Every operation takes ids and plain values only — no live ECHO objects cross the MCP
-    boundary.
+  req F-5.2: Every operation takes refs and plain values only. A `Ref` serializes as a DXN, so it
+    crosses the MCP boundary as text while staying a typed handle in the schema — unlike a bare id
+    string, which names nothing in particular and cannot be resolved without knowing its type.
   req F-5.3: Mutation hints are declared per operation so a host can distinguish reading history
     from writing it.
 ```
@@ -248,7 +249,7 @@ op createPlan
   input:
     name: string
     description?: string
-    source?: string            # DXN of the spec document this plan tracks
+    source?: Ref<any>          # the spec document this plan tracks
   output: { plan: TestPlan }
   effects: [echo:write]
   requires: [Database.Service]
@@ -261,12 +262,12 @@ op upsertCase
     Creates or updates a case by `key` within a plan, appending it to `cases` when new. Matching
     on `key` rather than id is what makes re-generation from a spec non-destructive (F-1.3).
   input:
-    planId: string
+    plan: Ref<TestPlan>
     key: string
     title: string
     description?: string
     steps: TestStep[]
-    tags?: DXN[]               # Tag objects to set in the case's meta, not a field on the case
+    tags?: Ref<Tag>[]          # Tag objects to set in the case's meta, not a field on the case
   output: { case: TestCase, created: boolean }
   effects: [echo:write]
 ```
@@ -276,7 +277,7 @@ op removeCase
   key: org.dxos.operation.qa.removeCase
   desc: Removes a case from the plan's `cases`. Past results still reference the TestCase object.
   input:
-    planId: string
+    plan: Ref<TestPlan>
     key: string
   output: { removed: boolean }
   effects: [echo:write]
@@ -287,7 +288,7 @@ op reorderCases
   key: org.dxos.operation.qa.reorderCases
   desc: Sets the plan's case ordering.
   input:
-    planId: string
+    plan: Ref<TestPlan>
     keys: string[]             # the full ordering; unknown or missing keys are an error
   output: { plan: TestPlan }
   errors:
@@ -299,17 +300,17 @@ op reorderCases
 op startRun
   key: org.dxos.operation.qa.startRun
   desc: >
-    Appends a `running` TestRun to the plan's feed and returns its id. Captures the plan's case
+    Appends a `running` TestRun to the plan's feed and returns a ref to it. Captures the plan's case
     keys onto the run, so a later edit to the plan cannot change what this run was measured
     against. `cases` narrows that capture for a partial run; its keys are validated against the
     plan here, which is the only point at which the plan has a say in a run's coverage.
   input:
-    planId: string
+    plan: Ref<TestPlan>
     cases?: string[]           # case keys to cover; defaults to the plan's full case list
     target?: TestTarget
     runner?: Actor
     stages?: string[]
-  output: { runId: string, cases: string[] }
+  output: { run: Ref<TestRun>, cases: string[] }
   errors:
     UnknownCaseError: a requested key is not in the plan
     DuplicateCaseError: a key appears twice in `cases`, which would double-count it in the rollup
@@ -321,15 +322,15 @@ op pushResult
   key: org.dxos.operation.qa.pushResult
   desc: >
     Appends (or replaces, by case key) one TestResult on a running run. Artifacts are given as
-    DXNs of objects that already exist.
+    refs to objects that already exist.
   input:
-    runId: string
+    run: Ref<TestRun>
     caseKey: string
     status: TestResultStatus
     steps?: TestStepResult[]
     note?: string
     durationMs?: number
-    artifacts?: { kind: string, caption?: string, target: string }[]   # target is a DXN
+    artifacts?: TestArtifactRef[]
   output: { result: TestResult }
   errors:
     RunFinishedError: the run is already finished and is immutable
@@ -348,7 +349,7 @@ op finishRun
     A captured case with no result counts as `skipped`, so an empty or partial run cannot seal as
     `passed`.
   input:
-    runId: string
+    run: Ref<TestRun>
     summary?: string
   output: { run: TestRun, unreported: string[] }   # case keys that never received a result
   errors:
@@ -361,7 +362,7 @@ op queryRuns
   key: org.dxos.operation.qa.queryRuns
   desc: Reads the plan's feed, newest-first, with optional filters. Results are summarised unless `full`.
   input:
-    planId: string
+    plan: Ref<TestPlan>
     limit?: number
     status?: TestStatus
     caseKey?: string           # runs containing a result for this case
@@ -375,10 +376,10 @@ op caseHistory
   key: org.dxos.operation.qa.caseHistory
   desc: One case's status across runs, newest-first — the query behind F-4.2.
   input:
-    planId: string
+    plan: Ref<TestPlan>
     caseKey: string
     limit?: number
-  output: { entries: { runId: string, status: TestStatus, target?: TestTarget, at: string }[] }
+  output: { entries: { run: Ref<TestRun>, status: TestStatus, target?: TestTarget, at: string }[] }
   effects: []
 ```
 
@@ -406,7 +407,7 @@ skill QaSkill
   instructions: >
     Authored in `src/skills/qa/skill.ts`. Covers the run protocol (start once, push per case,
     finish exactly once), the rule that a finished run is never edited, that `blocked` is used
-    where a step could not run at all, and that artifacts are attached by DXN to objects the
+    where a step could not run at all, and that artifacts are attached as refs to objects the
     agent created first — never inlined.
 ```
 
@@ -421,8 +422,8 @@ component TestPlanArticle
   state:
     runs: AtomQuery            # the plan's feed, newest-first
   actions:
-    openRun(runId: string)
-    openCase(caseId: string)
+    openRun(run: Ref<TestRun>)
+    openCase(case: Ref<TestCase>)
   layout: |
     ┌────────────────────────────────────────────┐
     │ Plan name                    [Run] [•••]   │
@@ -452,7 +453,7 @@ component TestCaseArticle
   props:
     subject: TestCase
   state:
-    history: { runId: string, status: TestStatus, at: string }[]
+    history: { run: Ref<TestRun>, status: TestStatus, at: string }[]
 ```
 
 ## Acceptance
@@ -523,26 +524,26 @@ flow QA-1: Record a run against a plan
       expect: "Smoke" appears as a row under the collection
     - name: Add a case
       do: In the plan, click "Add case" and enter key "QA-1", title "It boots".
-      invoke: [op:upsertCase] { planId: $plan.plan.id, key: "QA-1", title: "It boots", steps: [{ do: "Open the app", expect: "the app renders" }] }
+      invoke: [op:upsertCase] { plan: $plan.plan, key: "QA-1", title: "It boots", steps: [{ do: "Open the app", expect: "the app renders" }] }
       expect: the case list shows one row, QA-1
   test:
     - name: Start a run
       do: Click "Run" on the plan.
-      invoke: [op:startRun] { planId: $plan.plan.id, runner: { name: "qa-flow", role: "assistant" } }
+      invoke: [op:startRun] { plan: $plan.plan, runner: { name: "qa-flow", role: "assistant" } }
       capture: run
       expect: a run row appears in the feed with status `running`
-      assert: return typeof $run.runId === 'string'
+      assert: return !!$run.run
     - name: Push a result
       do: Mark QA-1 as passed in the run view.
-      invoke: [op:pushResult] { runId: $run.runId, caseKey: "QA-1", status: "passed" }
+      invoke: [op:pushResult] { run: $run.run, caseKey: "QA-1", status: "passed" }
       expect: the run row shows 1/1 while still `running`
     - name: Finish the run
       do: Click "Finish" on the run.
-      invoke: [op:finishRun] { runId: $run.runId }
+      invoke: [op:finishRun] { run: $run.run }
       expect: the run status becomes `passed` and `finishedAt` is set
     - name: Reject a late push
       do: Try to mark QA-1 as failed on the finished run.
-      invoke: [op:pushResult] { runId: $run.runId, caseKey: "QA-1", status: "failed" }
+      invoke: [op:pushResult] { run: $run.run, caseKey: "QA-1", status: "failed" }
       expect: the push is rejected with RunFinishedError and the run still reads `passed`
   after:
     - name: Delete the plan
