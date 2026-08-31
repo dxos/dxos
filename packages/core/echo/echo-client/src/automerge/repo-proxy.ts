@@ -6,7 +6,7 @@ import { next as A } from '@automerge/automerge';
 import { type AnyDocumentId, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
 import * as Context from 'effect/Context';
 
-import { Event, Trigger, UpdateScheduler, sleep } from '@dxos/async';
+import { Event, Trigger, UpdateScheduler, scheduleTask, sleep } from '@dxos/async';
 import { type Struct } from '@dxos/codec-protobuf';
 import { LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
@@ -28,6 +28,12 @@ const FLUSH_ATTEMPTS = 3;
 
 /** Backoff between {@link FLUSH_ATTEMPTS}, multiplied by the attempt number. */
 const FLUSH_RETRY_DELAY_MS = 50;
+
+/** Delay before replacing a subscription the host dropped; doubled on each consecutive attempt. */
+const RESUBSCRIBE_DELAY_MS = 250;
+
+/** Cap on the {@link RESUBSCRIBE_DELAY_MS} backoff, so a host that stays down is still retried. */
+const RESUBSCRIBE_MAX_DELAY_MS = 10_000;
 
 /**
  * A proxy (thin client) to the Automerge Repo.
@@ -95,6 +101,12 @@ export class RepoProxy extends Resource {
    * Used to identify and suppress errors from abandoned tasks.
    */
   private _generation = 0;
+
+  /**
+   * Consecutive attempts to replace a dropped subscription, backing off so a host that is gone for
+   * good is not retried in a tight loop. Reset by the first batch the replacement delivers.
+   */
+  private _resubscribeAttempts = 0;
 
   readonly saveStateChanged = new Event<SaveStateChangedEvent>();
 
@@ -202,12 +214,7 @@ export class RepoProxy extends Resource {
       maxFrequency: MAX_UPDATE_FREQ,
     });
     // TODO(dmaretskyi): Set proper space id.
-    this._subscriptionReady.reset();
-    this._subscriptionCleanup = subscribeStream(
-      this._runtime,
-      this._dataService['DataService.subscribe']({ subscriptionId: this._subscriptionId, spaceId: this._spaceId }),
-      { onData: (updates) => this._receiveUpdate(updates) },
-    );
+    this._subscribe();
   }
 
   protected override async _close(): Promise<void> {
@@ -250,34 +257,84 @@ export class RepoProxy extends Resource {
       maxFrequency: MAX_UPDATE_FREQ,
     });
 
-    // Close old subscription (this should cause old RPC calls to fail faster).
-    this._subscriptionCleanup?.();
+    try {
+      this._subscribe();
+    } finally {
+      // Left set by a throwing pass, `_sendUpdates` would early-out for the life of the space.
+      this._isReconnecting = false;
+    }
 
-    // Create new subscription.
+    // Hands the documents `_subscribe` re-queued to the fresh subscription, raising if they cannot
+    // be registered — the caller resumes replication on the strength of this call returning.
+    await this.flush();
+  }
+
+  /**
+   * Opens the document-updates subscription and queues every held document for registration with it.
+   *
+   * The host drops a subscription as soon as its stream ends, so this is not a once-per-space call:
+   * a replacement stream starts from an empty document set on the host, and everything the client
+   * still holds has to be added again.
+   */
+  private _subscribe(): void {
+    // Closing the previous stream first makes its outstanding RPC calls fail fast.
+    this._subscriptionCleanup?.();
+    // Woken before it is re-armed because `reset` abandons parked waiters: a `_sendUpdates` left
+    // waiting on the subscription being replaced holds the scheduler, blocking every later batch
+    // until its RPC timeout. It resumes, fails against the dead subscription, and re-queues.
+    this._subscriptionReady.wake();
     this._subscriptionReady.reset();
     this._subscriptionCleanup = subscribeStream(
       this._runtime,
       this._dataService['DataService.subscribe']({ subscriptionId: this._subscriptionId, spaceId: this._spaceId }),
-      { onData: (updates) => this._receiveUpdate(updates) },
+      {
+        onData: (updates) => this._receiveUpdate(updates),
+        onError: (error) => this._onSubscriptionDropped(error),
+        onClose: () => this._onSubscriptionDropped(),
+      },
     );
 
-    // Re-sync all existing documents.
-    const documentIds = Object.keys(this._handles);
-    if (documentIds.length > 0) {
-      await this._subscriptionReady.wait({ timeout: RPC_TIMEOUT });
-      await runServiceCall(
-        this._runtime,
-        this._dataService['DataService.updateSubscription']({
-          subscriptionId: this._subscriptionId,
-          addIds: documentIds,
-          removeIds: [],
-        }),
-        { timeout: RPC_TIMEOUT },
-      );
+    // Queued rather than sent directly so a failed pass is retried by the scheduler with the rest of
+    // the batch, instead of leaving the host subscribed to nothing.
+    for (const documentId of Object.keys(this._handles) as DocumentId[]) {
+      this._pendingRemoveIds.delete(documentId);
+      this._pendingAddIds.add(documentId);
+    }
+  }
+
+  /**
+   * Replaces a subscription whose stream ended without this proxy closing it — the host restarted,
+   * or the transport dropped the stream under us. The host deletes the subscription along with the
+   * stream, so every later call on that id fails with "Subscription not found"; the client has to
+   * subscribe again rather than keep using an id the host has forgotten.
+   *
+   * Not reached for a stream this proxy tore down itself: {@link subscribeStream}'s cleanup marks
+   * the subscription done before interrupting it.
+   */
+  private _onSubscriptionDropped(error?: Error): void {
+    if (this._ctx.disposed || this._isReconnecting) {
+      return;
     }
 
-    // Reconnection complete, clear the flag.
-    this._isReconnecting = false;
+    log.warn('document subscription dropped, re-subscribing', { spaceId: this._spaceId, error });
+    // Keeps the scheduler idle until the replacement is in place.
+    this._isReconnecting = true;
+    // Abandons the batch racing the subscription the host has already forgotten, so it re-queues its
+    // ids quietly instead of raising the failure the replacement is about to make moot.
+    this._generation++;
+    const delay = Math.min(RESUBSCRIBE_DELAY_MS * 2 ** this._resubscribeAttempts++, RESUBSCRIBE_MAX_DELAY_MS);
+    scheduleTask(
+      this._ctx,
+      () => {
+        try {
+          this._subscribe();
+        } finally {
+          this._isReconnecting = false;
+        }
+        this._sendUpdatesJob?.trigger();
+      },
+      delay,
+    );
   }
 
   /** Returns an existing handle if we have it; creates one otherwise. */
@@ -418,6 +475,8 @@ export class RepoProxy extends Resource {
     // The host opens every subscription with an empty batch once it is registered; a real update
     // always carries at least one entry, so this is unambiguous.
     this._subscriptionReady.wake();
+    // A batch proves the subscription is live, so the next drop starts from the shortest backoff.
+    this._resubscribeAttempts = 0;
     if (!updates) {
       return;
     }
@@ -515,19 +574,19 @@ export class RepoProxy extends Resource {
       this._releaseDeferred();
       this._emitSaveStateEvent();
     } catch (err) {
-      // Don't restore pending updates if generation changed - this task is abandoned.
+      // A reconnection or a replaced subscription happened under this task, making its failure the
+      // old connection's rather than this proxy's.
       const isAbandoned = generation !== this._generation;
       // Recorded even when the error is not raised below: `flush` still needs to know.
       if (!isAbandoned) {
         this._lastSendError = err as Error;
         this._sendFailureCount++;
       }
-      if (!isAbandoned) {
-        // Restore the state of pending updates if the RPC call failed.
-        addIds.forEach((id) => this._pendingAddIds.add(id));
-        removeIds.forEach((id) => this._pendingRemoveIds.add(id));
-        updateIds.forEach((id) => this._pendingUpdateIds.add(id));
-      }
+      // Restored even for an abandoned task: nothing else re-queues a pending mutation, so dropping
+      // these ids would strand the writes in their handles until the document changed again.
+      addIds.forEach((id) => this._pendingAddIds.add(id));
+      removeIds.forEach((id) => this._pendingRemoveIds.add(id));
+      updateIds.forEach((id) => this._pendingUpdateIds.add(id));
 
       // Don't raise errors if we're closing, reconnecting, abandoned, or if the RPC connection was closed.
       // RpcClosedError and timeouts can happen during reconnection or shutdown before _close() is called.

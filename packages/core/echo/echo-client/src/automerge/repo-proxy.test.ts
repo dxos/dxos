@@ -8,11 +8,12 @@ import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Scope from 'effect/Scope';
+import * as EffectStream from 'effect/Stream';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, latch, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { AutomergeHost, DataServiceImpl, SpaceStateManager } from '@dxos/echo-host';
+import { AutomergeHost, DataServiceImpl, type DataServiceProps, SpaceStateManager } from '@dxos/echo-host';
 import { TestReplicationNetwork, createTestSqliteRuntime } from '@dxos/echo-host/testing';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -438,9 +439,61 @@ describe('RepoProxy', () => {
       await expect.poll(async () => handle.doc()?.text2, { timeout: 1000 }).toEqual(text2);
     }
   });
+
+  test('re-subscribes after the host drops the subscription', async () => {
+    const created: { instance?: DroppableDataService } = {};
+    const { dataService, host } = await setup(
+      undefined,
+      (props) => (created.instance = new DroppableDataService(props)),
+    );
+    const droppable = created.instance;
+    invariant(droppable);
+
+    const [clientRepo] = createProxyRepos(dataService);
+    await openAndClose(clientRepo);
+
+    const clientHandle = clientRepo.create<{ text: string }>();
+    await clientHandle.whenReady();
+    // Registers the document with the first subscription, so the drop below has something to lose.
+    await clientRepo.flush();
+
+    droppable.dropSubscription.wake();
+    await expect.poll(() => droppable.subscribeCount, { timeout: 5000 }).toEqual(2);
+
+    const text = 'Hello World!';
+    clientHandle.change((doc: { text: string }) => {
+      doc.text = text;
+    });
+    await clientRepo.flush();
+
+    const hostHandle = await host.loadDoc<{ text: string }>(Context.default(), clientHandle.url!);
+    invariant(hostHandle);
+    await hostHandle.waitUntilReady();
+    await expect.poll(() => hostHandle.doc()?.text, { timeout: 5000 }).toEqual(text);
+  });
 });
 
-const setup = async (runtime?: ReturnType<typeof createTestSqliteRuntime>['runtime']) => {
+/**
+ * Ends the first `subscribe` stream on demand, so the host runs the finalizer that forgets the
+ * subscription while the client stays connected — the shape that made every later call on that
+ * subscription id fail with "Subscription not found".
+ */
+class DroppableDataService extends DataServiceImpl {
+  readonly 'dropSubscription' = new Trigger();
+  'subscribeCount' = 0;
+
+  override ['DataService.subscribe'](request: DataService.SubscribeRequest) {
+    const stream = super['DataService.subscribe'](request);
+    return this.subscribeCount++ === 0
+      ? stream.pipe(EffectStream.interruptWhen(Effect.promise(() => this.dropSubscription.wait())))
+      : stream;
+  }
+}
+
+const setup = async (
+  runtime?: ReturnType<typeof createTestSqliteRuntime>['runtime'],
+  createDataService: (props: DataServiceProps) => DataService.Handlers = (props) => new DataServiceImpl(props),
+) => {
   if (!runtime) {
     const handle = createTestSqliteRuntime();
     onTestFinished(() => handle.dispose());
@@ -449,7 +502,7 @@ const setup = async (runtime?: ReturnType<typeof createTestSqliteRuntime>['runti
   const host = new AutomergeHost({ runtime });
   await openAndClose(host);
 
-  const dataServiceImpl = new DataServiceImpl({
+  const dataServiceImpl = createDataService({
     automergeHost: host,
     spaceStateManager: new SpaceStateManager({ runtime }),
     updateIndexes: async () => {},
