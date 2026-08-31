@@ -123,10 +123,12 @@ const ContributedActions = ({
 }) => {
   const menuActions = useMenuActions(actions);
   return (
-    // `Menu.Items` without `Menu.Toolbar`: the items are container-free, so they take their place
-    // in the prompt's own row rather than bringing a toolbar of their own.
     <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive>
-      <Menu.Items />
+      {/* Plain (non-`custom`) items render `Toolbar.*` primitives, which throw without the roving-focus
+          context `Menu.Toolbar` provides; `contents` keeps the items in the prompt's own row. */}
+      <Menu.Toolbar classNames='contents'>
+        <Menu.Items />
+      </Menu.Toolbar>
     </Menu.Root>
   );
 };
