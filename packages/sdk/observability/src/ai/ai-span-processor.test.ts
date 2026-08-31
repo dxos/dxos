@@ -9,9 +9,12 @@ import { createAiTracerProvider } from './ai-span-processor';
 
 type Captured = { event: string; properties: Record<string, unknown> };
 
-const setup = async () => {
+const setup = async (allowContent: (spaceId: string | undefined) => boolean = () => true) => {
   const events: Captured[] = [];
-  const provider = await createAiTracerProvider((event, properties) => events.push({ event, properties }));
+  const provider = await createAiTracerProvider({
+    captureEvent: (event, properties) => events.push({ event, properties }),
+    allowContent,
+  });
   return { events, tracer: provider.getTracer('test') };
 };
 
@@ -80,5 +83,41 @@ describe('AiSpanProcessor', () => {
 
     expect(events[0]?.properties.$ai_input).toEqual([{ role: 'user', content: 'hi' }]);
     expect(events[0]?.properties.$ai_output_choices).toEqual('[{"role":"assist');
+  });
+
+  test('drops content the policy rejects, keeping metadata', async ({ expect }) => {
+    const { events, tracer } = await setup((spaceId) => spaceId === 'plaintext-space');
+    tracer
+      .startSpan('LanguageModel.generateText', {
+        attributes: {
+          'gen_ai.system': 'anthropic',
+          'gen_ai.usage.input_tokens': 10,
+          'dxos.ai.space_id': 'encrypted-space',
+          'dxos.ai.input': JSON.stringify([{ role: 'user', content: 'private' }]),
+          'dxos.ai.output': JSON.stringify([{ role: 'assistant', content: 'private' }]),
+          'dxos.ai.tools': JSON.stringify([{ name: 'search' }]),
+        },
+      })
+      .end();
+
+    expect(events[0]?.properties.$ai_input).toBeUndefined();
+    expect(events[0]?.properties.$ai_output_choices).toBeUndefined();
+    expect(events[0]?.properties.$ai_tools).toBeUndefined();
+    expect(events[0]?.properties.$ai_input_tokens).toEqual(10);
+    expect(JSON.stringify(events[0]?.properties)).not.toContain('private');
+  });
+
+  test('denies content when the span carries no space', async ({ expect }) => {
+    const { events, tracer } = await setup((spaceId) => spaceId !== undefined);
+    tracer
+      .startSpan('LanguageModel.generateText', {
+        attributes: {
+          'gen_ai.system': 'anthropic',
+          'dxos.ai.input': JSON.stringify([{ role: 'user', content: 'private' }]),
+        },
+      })
+      .end();
+
+    expect(events[0]?.properties.$ai_input).toBeUndefined();
   });
 });

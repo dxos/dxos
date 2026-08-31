@@ -9,19 +9,17 @@ import type { BasicTracerProvider, ReadableSpan, Span, SpanProcessor } from '@op
  * AI telemetry capture — data policy.
  *
  * This processor turns OpenTelemetry GenAI spans (`gen_ai.*` attributes, emitted by the
- * `effect/unstable/ai` provider layers) into PostHog `$ai_generation` events. What it forwards is
- * governed by a two-tier policy:
+ * `effect/unstable/ai` provider layers) into PostHog `$ai_generation` events. It is the only place
+ * the capture policy is evaluated, so every event leaving for PostHog passes through it:
  *
- * - **Tier 1 (metadata)** — always, whenever observability is enabled: model, provider, request
- *   parameters, token counts, latency, trace/span/session ids, error class. Never prompt or
- *   response content, tool arguments, tool results, or anything read from user spaces.
- * - **Tier 2 (content)** — adds `$ai_input` / `$ai_output_choices` / `$ai_tools`, read from the
- *   `dxos.ai.*` span attributes stamped by the content span transformer (`AiTelemetry` in
- *   `@dxos/ai`). Whether that transformer is installed at all is decided per space at the
- *   AiService middleware (see `ai-observability.ts` in `plugin-observability`) — this processor
- *   only forwards what an upstream policy decision put on the span.
+ * - **Metadata** — always: model, provider, request parameters, token counts, latency,
+ *   trace/span/session ids, error class.
+ * - **Content** — `$ai_input` / `$ai_output_choices` / `$ai_tools`, forwarded only when
+ *   {@link Options.allowContent} accepts the span's space. Content is always stamped on the span
+ *   upstream (`AiTelemetry` in `@dxos/ai`) and dropped here, rather than conditionally stamped, so
+ *   a source that forgets the policy cannot bypass it.
  *
- * Scrub rules enforced here, regardless of tier:
+ * Scrub rules enforced here regardless of the above:
  * - Attribute **allowlist**: only the mappings below are forwarded; unknown span attributes are
  *   dropped (so an accidental attribute upstream cannot leak through telemetry).
  * - Errors are reduced to the exception **class name** — `exception.message` and
@@ -31,11 +29,18 @@ import type { BasicTracerProvider, ReadableSpan, Span, SpanProcessor } from '@op
 
 export type CaptureEvent = (event: string, properties: Record<string, unknown>) => void;
 
+export type Options = {
+  captureEvent: CaptureEvent;
+  /** Whether prompt/response content may leave for the given space. Denies when the space is unknown. */
+  allowContent: (spaceId: string | undefined) => boolean;
+};
+
 /** Marker attributes identifying a GenAI span (per OTel GenAI semantic conventions). */
 const GEN_AI_MARKERS = ['gen_ai.system', 'gen_ai.request.model', 'gen_ai.response.model'];
 
 /** Session/content attributes stamped by `@dxos/ai` `AiTelemetry` (not part of the GenAI spec). */
 const SESSION_ID_ATTR = 'dxos.ai.session_id';
+const SPACE_ID_ATTR = 'dxos.ai.space_id';
 const INPUT_ATTR = 'dxos.ai.input';
 const OUTPUT_ATTR = 'dxos.ai.output';
 const TOOLS_ATTR = 'dxos.ai.tools';
@@ -46,7 +51,13 @@ const TOOLS_ATTR = 'dxos.ai.tools';
  * opt-in/opt-out). Non-GenAI spans pass through untouched.
  */
 export class AiSpanProcessor implements SpanProcessor {
-  constructor(private readonly _captureEvent: CaptureEvent) {}
+  private readonly _captureEvent: CaptureEvent;
+  private readonly _allowContent: Options['allowContent'];
+
+  constructor({ captureEvent, allowContent }: Options) {
+    this._captureEvent = captureEvent;
+    this._allowContent = allowContent;
+  }
 
   onStart(_span: Span, _parentContext: Context): void {}
 
@@ -55,6 +66,9 @@ export class AiSpanProcessor implements SpanProcessor {
     if (!GEN_AI_MARKERS.some((key) => attributes[key] !== undefined)) {
       return;
     }
+
+    const spaceId = attributes[SPACE_ID_ATTR];
+    const content = this._allowContent(typeof spaceId === 'string' ? spaceId : undefined);
 
     const spanContext = span.spanContext();
     const properties: Record<string, unknown> = {
@@ -70,9 +84,9 @@ export class AiSpanProcessor implements SpanProcessor {
       $ai_stream: span.name === 'LanguageModel.streamText' ? true : undefined,
       $ai_session_id: attributes[SESSION_ID_ATTR],
       $ai_model_parameters: modelParameters(attributes),
-      $ai_input: parseJsonAttribute(attributes[INPUT_ATTR]),
-      $ai_output_choices: parseJsonAttribute(attributes[OUTPUT_ATTR]),
-      $ai_tools: parseJsonAttribute(attributes[TOOLS_ATTR]),
+      $ai_input: content ? parseJsonAttribute(attributes[INPUT_ATTR]) : undefined,
+      $ai_output_choices: content ? parseJsonAttribute(attributes[OUTPUT_ATTR]) : undefined,
+      $ai_tools: content ? parseJsonAttribute(attributes[TOOLS_ATTR]) : undefined,
     };
 
     if (span.status.code === SpanStatusCode.ERROR) {
@@ -100,9 +114,9 @@ export class AiSpanProcessor implements SpanProcessor {
  * The tracer SDK is imported dynamically to keep it out of the eager boot graph, since this module
  * is reachable from the package barrel.
  */
-export const createAiTracerProvider = async (captureEvent: CaptureEvent): Promise<BasicTracerProvider> => {
+export const createAiTracerProvider = async (options: Options): Promise<BasicTracerProvider> => {
   const { BasicTracerProvider } = await import('@opentelemetry/sdk-trace-base');
-  return new BasicTracerProvider({ spanProcessors: [new AiSpanProcessor(captureEvent)] });
+  return new BasicTracerProvider({ spanProcessors: [new AiSpanProcessor(options)] });
 };
 
 const hrTimeToSeconds = ([seconds, nanos]: [number, number]): number => seconds + nanos / 1e9;

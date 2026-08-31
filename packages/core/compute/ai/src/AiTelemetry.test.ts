@@ -48,9 +48,7 @@ const setup = Effect.fnUntraced(function* (options: Omit<AiTelemetry.WrapOptions
 describe('AiTelemetry', () => {
   it.effect('routes model spans to the wrapped tracer with content and session id', () =>
     Effect.gen(function* () {
-      const { exporter, provider, wrapped } = yield* setup({
-        spanTransformer: AiTelemetry.makeContentSpanTransformer(),
-      });
+      const { exporter, provider, wrapped } = yield* setup({});
 
       yield* LanguageModel.generateText({ prompt: 'hi' }).pipe(
         Effect.provide(wrapped.model(MODEL)),
@@ -73,17 +71,14 @@ describe('AiTelemetry', () => {
     }),
   );
 
-  it.effect('captures metadata only without a content transformer', () =>
+  it.effect('stamps the attributes the sink filters on', () =>
     Effect.gen(function* () {
-      const { exporter, provider, wrapped } = yield* setup({});
+      const { exporter, provider, wrapped } = yield* setup({ attributes: { 'dxos.ai.space_id': 'space-1' } });
 
       yield* LanguageModel.generateText({ prompt: 'hi' }).pipe(Effect.provide(wrapped.model(MODEL)));
       yield* Effect.promise(() => provider.forceFlush());
 
-      const span = findModelSpan(exporter);
-      expect(span.attributes['gen_ai.usage.input_tokens']).toEqual(3);
-      expect(span.attributes['dxos.ai.input']).toBeUndefined();
-      expect(span.attributes['dxos.ai.output']).toBeUndefined();
+      expect(findModelSpan(exporter).attributes['dxos.ai.space_id']).toEqual('space-1');
     }),
   );
 });
