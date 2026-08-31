@@ -2,14 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useFocusFinders } from '@fluentui/react-tabster';
 import { type Scope, createContextScope } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type ComponentPropsWithRef, type CSSProperties, type KeyboardEvent, useCallback } from 'react';
 
-import { type ThemedClassName, composable, composableProps, slottable } from '@dxos/react-ui';
+import { type ThemedClassName, composable, composableProps, findFirstFocusable, slottable } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { treegridTheme } from './Treegrid.theme';
@@ -45,7 +44,6 @@ const TreegridRoot = composable<HTMLDivElement, TreegridRootProps>(
   ({ asChild, classNames, children, style, gridTemplateColumns, onKeyDown: onKeyDownProp, ...props }, forwardedRef) => {
     const { className, role: _role, ...rest } = composableProps<HTMLDivElement>(props, { classNames });
     const Comp = asChild ? Slot : Primitive.div;
-    const { findFirstFocusable } = useFocusFinders();
 
     const handleKeyDown = useCallback(
       (event: KeyboardEvent<HTMLDivElement>) => {
@@ -90,7 +88,7 @@ const TreegridRoot = composable<HTMLDivElement, TreegridRootProps>(
         }
         onKeyDownProp?.(event);
       },
-      [findFirstFocusable, onKeyDownProp],
+      [onKeyDownProp],
     );
 
     return (

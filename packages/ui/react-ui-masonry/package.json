@@ -25,7 +25,6 @@
     "src"
   ],
   "dependencies": {
-    "@fluentui/react-tabster": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "react-resize-detector": "catalog:"
   },

@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useArrowNavigationGroup, useFocusableGroup, useFocusFinders } from '@fluentui/react-tabster';
 import { createContext } from '@radix-ui/react-context';
 import { Slot } from '@radix-ui/react-slot';
 import * as TabsPrimitive from '@radix-ui/react-tabs';
@@ -17,6 +16,7 @@ import {
   type SlottableProps,
   type ThemedClassName,
   composableProps,
+  findFirstFocusable,
   slottable,
   useForwardedRef,
 } from '@dxos/react-ui';
@@ -82,9 +82,6 @@ const TabsRoot = slottable<HTMLDivElement, TabsRootCustomProps>(
   ) => {
     const tabsRoot = useForwardedRef(forwardedRef);
 
-    // TODO(thure): Without these, we get Groupper/Mover `API used before initialization`, but why?
-    useArrowNavigationGroup();
-    useFocusableGroup();
     const [activePart = 'list', setActivePart] = useControllableState({
       prop: propsActivePart,
       onChange: onActivePartChange,
@@ -104,8 +101,6 @@ const TabsRoot = slottable<HTMLDivElement, TabsRootCustomProps>(
       },
       [value],
     );
-
-    const { findFirstFocusable, findNextFocusable } = useFocusFinders();
 
     useLayoutEffect(() => {
       if (suppressRegionFocus) {
@@ -128,13 +123,10 @@ const TabsRoot = slottable<HTMLDivElement, TabsRootCustomProps>(
         return;
       }
 
-      // Radix marks the active panel focusable for roving tabindex; skip it so content receives focus.
-      let target = findFirstFocusable(panel);
-      if (target === panel) {
-        target = findNextFocusable(panel, { container: panel }) ?? undefined;
-      }
-      target?.focus();
-    }, [activePart, value, findFirstFocusable, findNextFocusable, suppressRegionFocus]);
+      // Radix marks the active panel focusable for roving tabindex; `findFirstFocusable` skips the
+      // container itself, so the panel's content receives focus rather than the panel.
+      findFirstFocusable(panel)?.focus();
+    }, [activePart, value, suppressRegionFocus]);
 
     return (
       <TabsContextProvider

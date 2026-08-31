@@ -56,11 +56,16 @@ const isExcluded = (element: Element): boolean =>
   element.hasAttribute('inert') || element.hasAttribute('hidden') || element.getAttribute('aria-hidden') === 'true';
 
 /**
- * Reachable by `Tab`. `getClientRects` is what distinguishes a rendered element from one whose
- * ancestor is `display: none` — the case tabindex alone cannot see.
+ * Rendered. `getClientRects` is what distinguishes a rendered element from one whose ancestor is
+ * `display: none` — the case tabindex alone cannot see. Test DOMs have no layout at all, where the
+ * same test would reject every element, so it only applies where the document has layout.
  */
+const isRendered = (element: HTMLElement): boolean =>
+  element.getClientRects().length > 0 || element.ownerDocument.body.getClientRects().length === 0;
+
+/** Reachable by `Tab`. */
 export const isTabbable = (element: HTMLElement): boolean =>
-  element.tabIndex >= 0 && element.matches(FOCUSABLE_SELECTOR) && element.getClientRects().length > 0;
+  element.tabIndex >= 0 && element.matches(FOCUSABLE_SELECTOR) && isRendered(element);
 
 /** Container of a composite-widget focus group (a groupper, a mover, or both). */
 export const isFocusGroup = (element: Element): boolean =>

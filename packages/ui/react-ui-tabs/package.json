@@ -26,7 +26,6 @@
   ],
   "dependencies": {
     "@dxos/react-ui-attention": "workspace:*",
-    "@fluentui/react-tabster": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "@radix-ui/react-slot": "catalog:",
     "@radix-ui/react-tabs": "catalog:",

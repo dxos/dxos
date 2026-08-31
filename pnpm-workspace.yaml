@@ -109,7 +109,6 @@ catalog:
   '@emoji-mart/data': ^1.1.2
   '@emoji-mart/react': ^1.1.1
   '@excalidraw/excalidraw': ^0.18.0
-  '@fluentui/react-tabster': 9.26.11
   '@fontsource-variable/inter': 5.2.8
   '@fontsource-variable/jetbrains-mono': 5.0.21
   '@fontsource-variable/nunito': 5.2.7
@@ -504,7 +503,6 @@ catalog:
   jszip: ^3.10.1
   jwt-decode: ^4.0.0
   kbn-handlebars: ^1.0.0
-  keyborg: ^2.5.0
   knip: ^5.64.3
   koffi: ^2.8.0
   leaflet: ^1.9.4
@@ -650,7 +648,6 @@ catalog:
   storybook-solidjs-vite: ^10.6.0
   streamx: ^2.12.5
   style-mod: ^4.1.0
-  tabster: ^8.5.5
   tailwind-merge: ^3.5.0
   tailwind-scrollbar: ^4.0.0
   tailwind-variants: ^3.2.2

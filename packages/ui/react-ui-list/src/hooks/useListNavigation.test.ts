@@ -5,6 +5,8 @@
 import { renderHook } from '@testing-library/react';
 import { describe, test } from 'vitest';
 
+import { FOCUS_MOVER_ATTR } from '@dxos/react-ui';
+
 import { useListNavigation } from './useListNavigation';
 
 describe('useListNavigation', () => {
@@ -36,9 +38,14 @@ describe('useListNavigation', () => {
     expect(result.current.itemProps()['aria-disabled']).toBeUndefined();
   });
 
-  test('emits Tabster data attributes on the container', ({ expect }) => {
+  test('marks the container an arrow-key group on the mode default axis', ({ expect }) => {
     const { result } = renderHook(() => useListNavigation({ mode: 'listbox' }));
-    const tabsterKeys = Object.keys(result.current.containerProps).filter((key) => key.startsWith('data-tabster'));
-    expect(tabsterKeys.length).toBeGreaterThan(0);
+    expect(result.current.containerProps[FOCUS_MOVER_ATTR]).toBe('vertical');
+    expect(typeof result.current.containerProps.ref).toBe('function');
+  });
+
+  test('grid mode navigates on both axes', ({ expect }) => {
+    const { result } = renderHook(() => useListNavigation({ mode: 'grid' }));
+    expect(result.current.containerProps[FOCUS_MOVER_ATTR]).toBe('grid');
   });
 });

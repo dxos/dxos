@@ -2,13 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useFocusFinders } from '@fluentui/react-tabster';
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { ScrollArea } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import { composable, composableProps, findFirstFocusable } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { type ComposableProps } from '@dxos/ui-types';
@@ -70,10 +69,6 @@ const MatrixRoot = forwardRef<MatrixController, MatrixRootProps>(
       viewportRef.current = element;
     }, []);
 
-    const { findFirstFocusable } = useFocusFinders();
-    const findFirstFocusableRef = useRef(findFirstFocusable);
-    findFirstFocusableRef.current = findFirstFocusable;
-
     // Sync attention system with current tile.
     const attended = useAttended();
     const itemIds = useRef(new Set<string>());
@@ -102,7 +97,7 @@ const MatrixRoot = forwardRef<MatrixController, MatrixRootProps>(
         }
 
         // Focus first focusable element so attention updates immediately, then scroll.
-        const focusable = findFirstFocusableRef.current(tile);
+        const focusable = findFirstFocusable(tile);
         (focusable ?? tile).focus({ preventScroll: true });
 
         const tileRect = tile.getBoundingClientRect();
