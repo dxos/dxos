@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type FocusEvent as ReactFocusEvent, type KeyboardEvent, useCallback, useMemo, useRef } from 'react';
+import { type KeyboardEvent, type FocusEvent as ReactFocusEvent, useCallback, useMemo, useRef } from 'react';
 
 import {
   FOCUS_CURRENT_ATTR,
@@ -119,6 +119,9 @@ export const useFocusGroup = ({
 }: UseFocusGroupOptions = {}): UseFocusGroupResult => {
   const containerRef = useRef<HTMLElement | null>(null);
   const cleanupRef = useRef<(() => void) | undefined>(undefined);
+  const sentinelsRef = useRef<{ first: HTMLElement; last: HTMLElement } | undefined>(undefined);
+  // Set while focus is parked on a sentinel deliberately, so its handler does not undo the move.
+  const inTransitRef = useRef(false);
 
   // Read through a ref so the handlers stay referentially stable across option changes.
   const optionsRef = useRef({ axis, tabBehavior, memorizeCurrent, cyclic, tabbable, ignoreKeys });
@@ -132,7 +135,7 @@ export const useFocusGroup = ({
   const handleSentinelFocus = useCallback((event: FocusEvent) => {
     const container = containerRef.current;
     const sentinel = event.currentTarget as HTMLElement;
-    if (!container) {
+    if (!container || inTransitRef.current) {
       return;
     }
 
@@ -189,6 +192,7 @@ export const useFocusGroup = ({
       };
 
       place();
+      sentinelsRef.current = { first, last };
       first.addEventListener('focus', handleSentinelFocus);
       last.addEventListener('focus', handleSentinelFocus);
       // React appends new children after the trailing sentinel, which would let `Tab` past it.
@@ -196,6 +200,7 @@ export const useFocusGroup = ({
       observer.observe(element, { childList: true });
 
       cleanupRef.current = () => {
+        sentinelsRef.current = undefined;
         observer.disconnect();
         first.removeEventListener('focus', handleSentinelFocus);
         last.removeEventListener('focus', handleSentinelFocus);
@@ -248,8 +253,21 @@ export const useFocusGroup = ({
     if (event.key === 'Tab') {
       // A trap's edges are handled by its sentinels; a groupper's contents tab out through them.
       if (axis && !tabbable && !limited && !onContainer && !ignored('Tab')) {
-        event.preventDefault();
-        findNextTabStop(getTabExitBoundary(container), event.shiftKey)?.focus();
+        // Park focus on the boundary and let the browser tab onward from there, so a mover is one
+        // stop without this having to answer where the next one is — including at the end of the
+        // document, where the answer is the browser's own chrome.
+        const sentinels = sentinelsRef.current;
+        if (sentinels) {
+          inTransitRef.current = true;
+          (event.shiftKey ? sentinels.first : sentinels.last).focus();
+          inTransitRef.current = false;
+        } else {
+          const next = findNextTabStop(getTabExitBoundary(container), event.shiftKey);
+          if (next) {
+            event.preventDefault();
+            next.focus();
+          }
+        }
       }
       return;
     }

@@ -19,7 +19,7 @@ import React, {
 } from 'react';
 
 import { addEventListener } from '@dxos/async';
-import { useForwardedRef, useMediaQuery } from '@dxos/react-hooks';
+import { useMediaQuery, useMergeRefs } from '@dxos/react-hooks';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { useThemeContext } from '../../hooks';
@@ -172,7 +172,11 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
     const [isLg] = useMediaQuery('lg');
     const { tx } = useThemeContext();
     const { t } = useTranslation(osTranslations);
-    const ref = useForwardedRef(forwardedRef);
+    // A ref object for `useSwipeToDismiss`, merged rather than synced: `useForwardedRef` writes the
+    // forwarded ref once in an effect, which never delivers the node when `Root` swaps between
+    // `Primitive.div` and `DialogContent` on a media-query change.
+    const ref = useRef<HTMLDivElement>(null);
+    const composedRef = useMergeRefs<HTMLDivElement>([ref, forwardedRef]);
     const noopRef = useRef(null);
 
     useSwipeToDismiss(swipeToDismiss ? ref : noopRef, {
@@ -208,7 +212,7 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
           data-resizing={resizing ? 'true' : 'false'}
           className={tx('main.sidebar', {}, classNames)}
           onKeyDownCapture={handleKeyDown}
-          ref={ref}
+          ref={composedRef}
         >
           {children}
         </Root>

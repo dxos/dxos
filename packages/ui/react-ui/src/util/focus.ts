@@ -147,8 +147,15 @@ export const getFocusItems = (container: HTMLElement): HTMLElement[] => {
 export const getCurrentItem = (container: HTMLElement): HTMLElement | null =>
   getFocusItems(container).find((item) => item.hasAttribute(FOCUS_CURRENT_ATTR)) ?? null;
 
-/** True while the group's contents — rather than the container itself — hold focus. */
+/**
+ * True while the group's contents — rather than the container itself — hold focus. A container
+ * that is not itself a tab stop has no state to be entered FROM: focus reaching its contents is
+ * how an enclosing group steps onto it, not the user going inside.
+ */
 export const isEntered = (container: HTMLElement): boolean => {
+  if (!isTabbable(container)) {
+    return false;
+  }
   const active = container.ownerDocument.activeElement;
   return !!active && active !== container && container.contains(active) && !isSentinel(active);
 };
