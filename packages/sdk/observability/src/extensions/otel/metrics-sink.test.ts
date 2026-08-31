@@ -6,6 +6,7 @@ import { AggregationTemporality, InMemoryMetricExporter, type MetricData } from 
 import { afterEach, describe, expect, test } from 'vitest';
 
 import { invariant } from '@dxos/invariant';
+import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { OtelMetricsSink, type OtelMetricsSinkInit } from './metrics-sink';
 
@@ -84,6 +85,20 @@ describe('OtelMetricsSink', () => {
     const attributeSets = data.dataPoints.map((point) => point.attributes);
     expect(attributeSets).toContainEqual({ team: 'blue' });
     expect(attributeSets).toContainEqual({ team: 'blue', identity: 'alice' });
+  });
+
+  test('does not register on the local TRACE_PROCESSOR', async () => {
+    const { sink, exporter } = makeSink();
+    TRACE_PROCESSOR.remoteMetrics.increment('worker.local', 1);
+    sink.append({ type: 'otel-metric', op: 'increment', name: 'forwarded', value: 1 });
+    await sink.flush();
+
+    const names = exporter
+      .getMetrics()
+      .flatMap((resourceMetrics) => resourceMetrics.scopeMetrics)
+      .flatMap((scopeMetrics) => scopeMetrics.metrics)
+      .map((data) => data.descriptor.name);
+    expect(names).toEqual(['forwarded']);
   });
 
   test('resource carries the forwarded attributes', async () => {

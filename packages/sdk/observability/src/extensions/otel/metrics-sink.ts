@@ -56,6 +56,9 @@ export class OtelMetricsSink {
       resource: defaultResource().merge(resourceFromAttributes(init.resourceAttributes)),
       getTags: () => this.#tags,
       exporter: options.exporter,
+      // This pipeline exports one producer realm's forwarded records; the worker's own
+      // TRACE_PROCESSOR must not fan into every connection's pipeline.
+      registerTraceProcessor: false,
     });
   }
 

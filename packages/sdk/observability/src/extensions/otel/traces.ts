@@ -24,7 +24,7 @@ import { PortSpanProcessor, type SpanSinkHandle } from './span-sink';
 
 export type OtelTracesOptions = OtelOptions & {
   /**
-   * When set, ended spans are posted to the log-writer worker's `OtelSpanSink` instead of
+   * When set, ended spans are posted to the telemetry worker's `OtelSpanSink` instead of
    * being batched and exported here. Sampling, IDs, and propagation stay in this realm.
    */
   spanSink?: SpanSinkHandle;

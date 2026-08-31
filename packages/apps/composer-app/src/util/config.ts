@@ -86,12 +86,12 @@ export const initializeObservability = async (
   logStore?: IdbLogStore,
   observabilityDisabled = false,
   /**
-   * Handle posting to this realm's log-writer worker. When present, OTel log and metric
+   * Handle posting to this realm's telemetry worker. When present, OTel log and metric
    * export runs there instead of in this realm — the worker's own event loop keeps
    * exporting what this realm logs and records even while its loop is saturated by a long
    * synchronous task.
    */
-  logWriter?: { post: (message: ObservabilityExtension.Otel.OtelWorkerMessage) => void },
+  telemetryWorker?: { post: (message: ObservabilityExtension.Otel.OtelWorkerMessage) => void },
 ) =>
   Function.pipe(
     Observability.make(),
@@ -104,7 +104,7 @@ export const initializeObservability = async (
         config,
         additionalDestinations: [ObservabilityExtension.PostHog.otelDestination(config)].filter(isNonNullable),
         logs: true,
-        logWriter,
+        telemetryWorker,
         metrics: true,
         traces: true,
       }),

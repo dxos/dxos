@@ -76,6 +76,13 @@ const HISTOGRAM_VIEWS: ViewOptions[] = [
 export type OtelMetricsOptions = OtelOptions & {
   /** Test seam: replaces the OTLP exporter for every destination. */
   exporter?: PushMetricExporter;
+  /**
+   * Register with `TRACE_PROCESSOR.remoteMetrics` to receive instrument calls made in this
+   * realm. Default true. The worker-side sink disables it: its records arrive over the
+   * port, and per-connection registration would export any worker-local metric once per
+   * connected realm.
+   */
+  registerTraceProcessor?: boolean;
 };
 
 export class OtelMetrics {
@@ -134,7 +141,9 @@ export class OtelMetrics {
       },
     };
 
-    TRACE_PROCESSOR.remoteMetrics.registerProcessor(this.#processor);
+    if (options.registerTraceProcessor ?? true) {
+      TRACE_PROCESSOR.remoteMetrics.registerProcessor(this.#processor);
+    }
   }
 
   gauge(name: string, value: number, tags?: Attributes, data?: MetricData): void {
