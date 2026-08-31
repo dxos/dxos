@@ -8,15 +8,6 @@ import { describe, test, vi } from 'vitest';
 
 import { useListSelection } from './useListSelection';
 
-// Minimal synthetic focus event exposing only the fields the selection-follows-focus handler reads.
-// Constructing a partial event for a unit test is a genuine type boundary (React synthesizes the rest).
-const focusEvent = (
-  fields: Pick<FocusEvent<HTMLElement>, 'currentTarget' | 'relatedTarget'>,
-): FocusEvent<HTMLElement> => fields as FocusEvent<HTMLElement>;
-
-// Minimal synthetic click event: the click handler under test ignores every field on its argument.
-const clickEvent = (): MouseEvent<HTMLElement> => ({}) as MouseEvent<HTMLElement>;
-
 describe('useListSelection', () => {
   describe('single mode', () => {
     test('click selects the row', ({ expect }) => {
@@ -142,3 +133,12 @@ describe('useListSelection', () => {
     });
   });
 });
+
+// Minimal synthetic focus event exposing only the fields the selection-follows-focus handler reads.
+// Constructing a partial event for a unit test is a genuine type boundary (React synthesizes the rest).
+const focusEvent = (
+  fields: Pick<FocusEvent<HTMLElement>, 'currentTarget' | 'relatedTarget'>,
+): FocusEvent<HTMLElement> => fields as FocusEvent<HTMLElement>;
+
+// Minimal synthetic click event: the click handler under test ignores every field on its argument.
+const clickEvent = (): MouseEvent<HTMLElement> => ({}) as MouseEvent<HTMLElement>;

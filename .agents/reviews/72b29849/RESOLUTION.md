@@ -36,6 +36,7 @@
 - 72b29849-32 - resolved - no-sleep-in-test - packages/core/mesh/network-manager/src/transport/webrtc/rtc-transport-proxy.test.ts:152
 - 72b29849-33 - resolved - no-sleep-in-test - packages/core/mesh/network-manager/src/transport/webrtc/rtc-transport-proxy.test.ts:173
 - 72b29849-34 - ignored - no-sleep-in-test - packages/core/mesh/network-manager/src/transport/webrtc/rtc-transport-proxy.test.ts:204
+  <!-- Load-bearing: removing the sleep before the post-close write caused a real ERR_STREAM_WRITE_AFTER_END (verified empirically); the final sleep is an irreducible negative-assertion grace period with no event to wait on instead. See the inline comments at lines 198-199 and 202-203 of the test file. -->
 - 72b29849-35 - resolved - no-trivial-wrappers-over-official-apis - packages/core/mesh/rpc/src/service-buf.test.ts:68:1
 - 72b29849-36 - resolved - no-sleep-in-test - packages/core/mesh/teleport/src/muxing/muxer.test.ts:70
 - 72b29849-37 - resolved - no-sleep-in-test - packages/core/mesh/teleport/src/muxing/muxer.test.ts:102

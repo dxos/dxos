@@ -9,14 +9,6 @@ import { Message } from '@dxos/types';
 
 import { createRenderer } from './renderer';
 
-const message = (blocks: NonNullable<Parameters<typeof Message.make>[0]['blocks']>) =>
-  Message.make({ created: new Date(0).toISOString(), sender: 'assistant', blocks });
-
-/** The renderer's markdown, which is the only shape these cases produce. */
-const markdown = (content: ItemContent): string => (content.kind === 'markdown' ? content.text : '');
-
-const toolkitTags = (content: ItemContent) => markdown(content).match(/<toolkit/g)?.length ?? 0;
-
 describe('createRenderer', () => {
   test('a run of tool calls is one panel', ({ expect }) => {
     const render = createRenderer(undefined);
@@ -62,3 +54,11 @@ describe('createRenderer', () => {
     expect(markdown(rendered)).toContain('Now writing the document.');
   });
 });
+
+const message = (blocks: NonNullable<Parameters<typeof Message.make>[0]['blocks']>) =>
+  Message.make({ created: new Date(0).toISOString(), sender: 'assistant', blocks });
+
+/** The renderer's markdown, which is the only shape these cases produce. */
+const markdown = (content: ItemContent): string => (content.kind === 'markdown' ? content.text : '');
+
+const toolkitTags = (content: ItemContent) => markdown(content).match(/<toolkit/g)?.length ?? 0;

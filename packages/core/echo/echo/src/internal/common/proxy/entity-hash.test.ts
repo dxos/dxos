@@ -58,8 +58,10 @@ describe('entity Hash/Equal traits', () => {
   });
 
   test('distinct ids, identical contents — not equal', ({ expect }) => {
-    expect(Equal.equals(Obj.make(TestSchema.Person, { name: 'Alice' }), Obj.make(TestSchema.Person, { name: 'Alice' })))
-      .to.be.false;
+    const first = Obj.make(TestSchema.Person, { name: 'Alice' });
+    const second = Obj.make(TestSchema.Person, { name: 'Alice' });
+    expect(Equal.equals(first, second)).to.be.false;
+    expect(Equal.equals(second, first)).to.be.false;
   });
 
   test('an entity never equals a non-entity', ({ expect }) => {
