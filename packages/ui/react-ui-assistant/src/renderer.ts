@@ -3,7 +3,7 @@
 //
 
 import { type URI } from '@dxos/keys';
-import { type MessageRenderer } from '@dxos/react-ui-feed';
+import { type MessageRenderer, isPrompt } from '@dxos/react-ui-feed';
 import { type ContentBlock, type Message } from '@dxos/types';
 
 import { type ChatView } from './types';
@@ -62,11 +62,16 @@ export const createRenderer = (
         continue;
       }
 
-      flushTools();
+      // Rendered BEFORE the flush: a block that renders to nothing must not end the run. The
+      // runtime interleaves empty text blocks with tool calls, and flushing on one split a single
+      // run into a panel per call with nothing visible between them.
       const rendered = blockToMarkdown(message, block, getObjectLabel);
-      if (rendered) {
-        segments.push(rendered);
+      if (!rendered) {
+        continue;
       }
+
+      flushTools();
+      segments.push(rendered);
     }
     flushTools();
 
@@ -112,9 +117,15 @@ const blockToMarkdown = (
   switch (block._tag) {
     case 'text': {
       if (message.sender.role === 'user') {
-        // Synthetic context (a selection, an encoded event) is the chrome's: it renders as its own
-        // panel above the bubble, so the bubble frames only the reader's words.
-        return block.disposition === 'synthetic' ? undefined : tag('prompt', block.text, block);
+        if (block.disposition !== 'synthetic') {
+          return tag('prompt', block.text, block);
+        }
+        // Synthetic context riding ON a prompt is the chrome's: it renders as its own panel above
+        // the bubble, so the bubble frames only the reader's words. A message that is ONLY synthetic
+        // is not the reader speaking at all (a trigger, a continuation nudge), so it renders as its
+        // own panel row — emitted here, since a message the renderer maps to nothing is dropped as
+        // an empty row, which left the answer to it reading as unprompted.
+        return isPrompt(message) ? undefined : tag('synthetic', block.text, block);
       }
       return block.text.trim() || undefined;
     }

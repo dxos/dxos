@@ -5,7 +5,7 @@
 import { mx } from '@dxos/ui-theme';
 import { type ComponentFunction } from '@dxos/ui-types';
 
-type Size = 'lg' | 'md';
+type Size = 'lg' | 'md' | 'sm';
 
 export type PanelStyleProps = {
   size?: Size;
@@ -14,6 +14,8 @@ export type PanelStyleProps = {
 const sizes: Record<Size, string> = {
   lg: 'h-(--dx-topbar-size)',
   md: 'h-(--dx-toolbar-size)',
+  // One control step down, so a density=sm toolbar reads shorter than the default bar.
+  sm: 'h-(--dx-control-md)',
 };
 
 const root: ComponentFunction<PanelStyleProps> = (_, ...etc) =>

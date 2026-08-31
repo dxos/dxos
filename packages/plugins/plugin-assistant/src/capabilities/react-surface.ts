@@ -85,8 +85,7 @@ export default Capability.makeModule(() =>
         id: 'companionChat',
         filter: Surface.makeFilter(
           AppSurface.Article,
-          (data) =>
-            Obj.isObject(data.companionTo) && (Obj.instanceOf(Chat.Chat, data.subject) || data.subject === null),
+          (data) => Obj.isObject(data.companionTo) && Obj.instanceOf(Chat.Chat, data.subject),
         ),
         component: ChatCompanion,
         props: ({ role, ref, data: { subject, attendableId, companionTo } }) => ({

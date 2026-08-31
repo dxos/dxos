@@ -62,6 +62,27 @@ rule no-trivial-wrappers-over-official-apis: Do not extract a helper that only f
   severity: warn
 ```
 
+```mdl
+rule operations-take-refs-not-ids: Operations identify objects by Ref, never by a raw id string
+  An operation input that names an object takes `Ref.Ref(Type)`, not a `string`
+  id. A `Ref` carries the type alongside the identity, resolves through the
+  database on its own, and still serializes to a DXN — so it crosses an RPC or
+  MCP boundary exactly as cheaply as the string it replaces, while a bare
+  `spaceId`-less `objectId: string` names nothing in particular and forces every
+  handler to re-derive what it points at. Flag an `Operation.make` input field
+  whose name ends in `Id`/`Ids` (or is `id`) and whose schema is
+  `Schema.String`, where the thing identified is an ECHO object. A `spaceId`, a
+  foreign id from an external system (a Gmail message id, a GitHub node id), an
+  id inside a stored record rather than an operation input, and an opaque handle
+  the operation itself minted are NOT violations.
+  scope: repo
+  files:
+    - packages/**/*Operation.ts
+    - packages/**/operations/**/*.ts
+  grep: Operation\.make|Id: Schema\.String|Ids: Schema\.Array
+  severity: warn
+```
+
 ## Appendix
 
 ```mdl

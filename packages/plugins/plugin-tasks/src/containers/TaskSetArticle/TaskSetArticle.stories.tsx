@@ -20,6 +20,7 @@ import { Milestone, Person, Task, TaskSet } from '@dxos/types';
 
 import { translations } from '#translations';
 
+import * as TasksPlugin from '../../TasksPlugin';
 import { TaskSetArticle } from './TaskSetArticle';
 
 /** Kept so a play function can mutate the source objects and assert the article follows. */
@@ -61,9 +62,16 @@ const seedTaskSet = (space: Space) => {
       assignee: { email: 'riley@example.com' },
       milestone: Ref.make(launch),
     },
-    { title: 'Schedule cuppings', status: 'todo' },
-    { title: 'Print run v1', status: 'cancelled' },
+    {
+      title: 'Schedule cuppings',
+      status: 'todo',
+    },
+    {
+      title: 'Print run v1',
+      status: 'cancelled',
+    },
   ];
+
   for (const props of seed) {
     const task = space.db.add(Task.make(props));
     Obj.update(set, (set) => {
@@ -117,6 +125,9 @@ const meta = {
             }),
         }),
         StorybookPlugin.make({}),
+        // The plugin itself, so its OperationHandler module contributes the task verbs —
+        // without it every invoke (move included) dies with NoHandlerError.
+        TasksPlugin.make(),
       ],
     }),
   ],

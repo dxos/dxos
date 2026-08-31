@@ -213,19 +213,30 @@ equivalent of `schema.getService()` already exists.
 Measured against `dxos.mesh.teleport.control.ControlService`: the service name matches once the
 legacy `.slice(1)` strips its leading dot, `method.name` is identical (`RegisterExtension`), and
 `method.localName` is already the camelCase handler key `mapRpcMethodName` computes by hand.
-`methodKind === 'unary'` replaces `responseStream`. But the request/response type names diverge:
+Stream kind needs care rather than a one-to-one swap: buf carries a single `methodKind`
+(`unary`, `server_streaming`, `client_streaming`, `bidi_streaming`) where protobuf.js carries two
+independent flags, and `service.ts` asserts `!method.requestStream`, so only the first two kinds
+are reachable here -- `methodKind === 'unary'` stands in for `!responseStream` across the services
+DXOS actually declares, not in general. But the request/response type names diverge:
 protobuf.js reports `.dxos.mesh.teleport.control.RegisterExtensionRequest` with a leading dot and
-buf reports it without, and that string is what `ServiceHandler` writes into `Any.type_url` on every
-call and response. Receivers decode `request.value` and never read `type_url`, so this is probably
-inert -- but "probably" is not a wire contract, so `#8` needs a fixture pairing a legacy client with
-a buf server and the reverse before anything switches.
+buf reports it without, and that string goes into `Any.type_url` from both ends: the client `Service`
+writes the request type on every call, and `ServiceHandler.call`/`callStream` write the response type
+on every reply. Two conventions coexist and must not be conflated: `Codec.encode` writes
+`fullName.slice(1)`, dot-free, and the messaging and swarm paths dispatch on exactly that
+(`swarm-messenger` compares against `dxos.mesh.swarm.SwarmMessage`, `messenger` against
+`dxos.mesh.messaging.{ReliablePayload,Acknowledgement}`) -- buf's `typeName` is dot-free too, so
+those comparisons keep matching. The service path is the one that differs, and nothing in it reads
+`type_url`, so dropping the dot there should be inert. "Should be" is not a wire contract, so `#8`
+needs a fixture pairing a legacy client with a buf server and the reverse before anything switches.
 
 Three directions, in preference order:
 
 1. **Re-point `@dxos/rpc` at buf descriptors.** Reimplement `ServiceBundle`/`ServiceDescriptor` over
    `DescService` and encode payloads through the compat layer, keeping `RpcPeer`'s framing and the
-   `dxos.rpc.RpcMessage` envelope byte-identical. No cross-version risk; the surface is `service.ts`
-   (~190 lines) plus `rpc.ts`. Recommended.
+   `dxos.rpc.RpcMessage` envelope byte-identical. The surface is `service.ts` (~190 lines) plus
+   `rpc.ts`. Recommended -- but not risk-free: `ServiceHandler` writes the protobuf.js type name
+   into `Any.type_url` and `DescService` supplies it without the leading dot, so this direction is
+   gated on the bidirectional fixture described above (or on normalising the name explicitly).
 2. **effect-rpc** (`effect/unstable/rpc`) -- where the repo is already heading, and right for anything
    whose wire may change or that is already an `RpcGroup`. A rewrite per service, so it carries the
    same cross-version caution as (3).
@@ -479,3 +490,35 @@ deleting the two packages removes their own test and example protos with them, s
 migrating only if the fixtures are worth keeping. `#4`, `#5` and `#7` are easy to
 overlook here because they read protobuf.js through generated types and `protoMessage()` rather
 than through `codec-protobuf` directly, but they are consumers all the same.
+
+## Structuring for teardown: the type surface, not the runtime
+
+Migrating every runtime call site does **not** make `codec-protobuf` deletable. Of the 22 source
+files outside the package that import it, most import only `type`s, and those split into three
+groups with different fates:
+
+| Group                                                                      | Symbols                                                                                                                                         | Fate                                |
+| -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| **Transport vocabulary** — describes the wire, contains no protobuf.js     | `Any`, `RequestOptions`, `EncodingOptions`, `Codec`, `ServiceBackend`, `ServiceProvider`, `ServiceDescriptorLike`                               | must **move**; nothing retires them |
+| **Shape conventions** — the substituted shapes the compat layer reproduces | `WithTypeUrl`, `TaggedType`, `Struct`, `TypedProtoMessage`                                                                                      | retire with the shape-compat layer  |
+| **protobuf.js machinery**                                                  | `compressSchema`, `anySubstitutions`, `structSubstitutions`, `timestampSubstitutions`, and the `Codec`/schema/mapping/sanitizer implementations | deleted with the package            |
+
+The first group is what keeps the package alive past the migration. `hypercore/src/crypto.ts` and
+`feed-store` want a thing with `encode`/`decode`; `messaging` and `blade-runner` want the `Any`
+envelope; `client-services/pipeline/codec.ts` wants `Codec`. None of them is a protobuf.js
+consumer, so no migration thread ever removes their import — the symbols have to leave instead.
+
+**They cannot move into `@dxos/protocols`.** `hypercore` and `feed-store` live in `common/` and do
+not depend on it; routing them through `core/protocols` would invert the layering. The transport
+vocabulary needs a `common/`-level home of its own — a types-only package with no protobuf.js
+dependency, which `codec-protobuf` then implements rather than defines.
+
+Doing that extraction **before** the remaining threads is what makes the teardown a deletion rather
+than a refactor: each thread that lands afterwards imports the vocabulary from its new home, so
+`codec-protobuf`'s dependent list shrinks monotonically to zero instead of being re-established by
+every new call site. Left to the end, the same work has to be done anyway, but against a wider set
+of consumers and with the package still in the graph.
+
+Ordering: extract the vocabulary → land what remains (`#5`'s 14 files, `#9c`'s `pipeline/codec`,
+`#9d`'s type sweep, and `#2` whenever) against it → the package is then reachable only from
+`protobuf-compiler` and its own tests, and goes with them in one commit.

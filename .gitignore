@@ -260,3 +260,7 @@ tools/vscode/vscode-mdl/dist
 
 # Generated headless capability barrels (dx-plugin prebuild, produced by plugin prebuild tasks).
 **/src/capabilities/gen/
+
+# Stryker mutation testing (evaluation).
+.stryker-tmp/
+reports/mutation/

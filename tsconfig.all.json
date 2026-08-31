@@ -553,6 +553,9 @@
       "path": "packages/plugins/plugin-pwa/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-qa/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-registry/tsconfig.json"
     },
     {
@@ -938,6 +941,9 @@
     },
     {
       "path": "packages/ui/ui-icons/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/ui-template/tsconfig.json"
     },
     {
       "path": "packages/ui/ui-theme/tsconfig.json"

@@ -57,23 +57,23 @@ describe('Binding.targets', () => {
     });
 
   test('matches a target stored in the canonical local form', ({ expect }) => {
-    const target = makeTarget();
+    const target = Obj.make(Expando.Expando, { name: 'Inbox' });
     expect(Binding.targets(makeCursor(`echo:///${target.id}`), target)).toBe(true);
   });
 
   test('matches a target stored in the legacy single-slash form', ({ expect }) => {
-    const target = makeTarget();
+    const target = Obj.make(Expando.Expando, { name: 'Inbox' });
     expect(Binding.targets(makeCursor(`echo:/${target.id}`), target)).toBe(true);
   });
 
   test('matches a target stored in the space-qualified form', ({ expect }) => {
-    const target = makeTarget();
+    const target = Obj.make(Expando.Expando, { name: 'Inbox' });
     expect(Binding.targets(makeCursor(`echo://BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE/${target.id}`), target)).toBe(true);
   });
 
   test('does not match a different object', ({ expect }) => {
-    const target = makeTarget();
-    const other = makeTarget();
+    const target = Obj.make(Expando.Expando, { name: 'Inbox' });
+    const other = Obj.make(Expando.Expando, { name: 'Inbox' });
     expect(Binding.targets(makeCursor(`echo:///${other.id}`), target)).toBe(false);
   });
 });
@@ -196,7 +196,7 @@ describe('target account', () => {
   const SOURCE = 'gmail.com';
 
   test('records and reads the account a target syncs', ({ expect }) => {
-    const target = makeTarget();
+    const target = Obj.make(Expando.Expando, { name: 'Inbox' });
     expect(Binding.readAccount(target, SOURCE)).toBeUndefined();
 
     Binding.recordAccount(target, SOURCE, 'me@example.com');
@@ -207,7 +207,7 @@ describe('target account', () => {
   });
 
   test('the first recorded account stands', ({ expect }) => {
-    const target = makeTarget();
+    const target = Obj.make(Expando.Expando, { name: 'Inbox' });
     Binding.recordAccount(target, SOURCE, 'me@example.com');
     Binding.recordAccount(target, SOURCE, 'someone-else@example.com');
 
@@ -216,7 +216,7 @@ describe('target account', () => {
   });
 
   test('refuses only a contradiction', ({ expect }) => {
-    const target = makeTarget();
+    const target = Obj.make(Expando.Expando, { name: 'Inbox' });
     // Nothing recorded: no evidence either way, so bind and start fresh.
     expect(Binding.checkAccount(target, SOURCE, 'me@example.com')).toBe('unknown');
 
@@ -1011,5 +1011,3 @@ const makeConnection = (db: Database.Database) => {
   const token = db.add(Obj.make(AccessToken.AccessToken, { source: 'example.com', token: 'tok', account: 'a@b.c' }));
   return db.add(Obj.make(Connection.Connection, { connectorId: 'example', accessToken: Ref.make(token) }));
 };
-
-const makeTarget = () => Obj.make(Expando.Expando, { name: 'Inbox' });

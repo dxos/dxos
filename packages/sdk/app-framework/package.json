@@ -48,6 +48,11 @@
       "types": "./dist/types/src/plugin-process-manager/history/history-tracker.d.ts",
       "import": "./dist/lib/plugin-process-manager/history/history-tracker.mjs"
     },
+    "./Optimistic": {
+      "source": "./src/common/optimistic.ts",
+      "types": "./dist/types/src/common/optimistic.d.ts",
+      "import": "./dist/lib/common/optimistic.mjs"
+    },
     "./Plugin": {
       "source": "./src/core/plugin.ts",
       "types": "./dist/types/src/core/plugin.d.ts",

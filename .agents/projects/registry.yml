@@ -44,8 +44,8 @@ projects:
     summary: 'Agent delegation and task management over the two-forms model — make the delegation loop (supervisor -> durable Task in a TaskSet -> sub-agent -> fold-back) work live and be visible in the UI.'
     tasks: .agents/projects/project-tasks/TASKS.md
     design: .agents/projects/project-tasks/DESIGN.md
-    prs: [12752, 12784, 12787]
-    resume: '#12752 and #12784 MERGED. #12787 (hierarchical task list) MERGED 2026-08-27. It renders a task set as the sub-task tree it stores: TaskList walks the tree, indents the title cell only, keeps listbox semantics (aria-level/posinset/expanded), and restructures by drag (react-ui-list tree-item hitbox + TreeDropIndicator + useListDisclosure + paddingIndentation) or Alt+arrow; the grip sits in the ordinal gutter, the preview clones the whole subtree, and the dragged rows hide while in flight. MoveTask gained an optional parentTask so a drop is ONE mutation. Review found a real bug now fixed: applyParentTask skipped Obj.setParent when neither a new parent nor a set existed, leaving a stale ECHO edge that would cascade-delete a promoted task — note the obvious regression test PASSES under the buggy code, since a task still in a set has the set to fall back to. NOT VERIFIED: the pointer drag itself (pragmatic-dnd uses native HTML5 drag events; synthetic dispatch reaches the library but never yields a lift). NEXT: pick from Phase 3 (terminal-status dates, extension-contributed tabs, cancel/delete, the joined delegation+TaskSet story). KNOWN: `#nnn` stays plain text in the ProjectArticle story because corePlugins() mounts no MarkdownPlugin, so plugin-github never activates on MarkdownEvents.Start. TOOLING: CI moved to Depot — `gh run list --workflow Check` no longer resolves; use `gh pr checks <n>`, and Depot job logs need a browser login.'
+    prs: [12752, 12784, 12787, 12839, 12847]
+    resume: "#12752, #12784, #12787 and #12839 are MERGED onto main (#12839 squashed as 0132aab498 on 2026-08-29). IN FLIGHT: PR #12847, open on this branch — Task.Event narrowed to created|updated with an optional description, plus the ledger entries; everything else the branch carries is already on main. #12839 turned TaskList.Create into TaskList.Edit — a detail pane that creates when nothing is selected and edits the selection otherwise, title as an input, description as a held-open markdown editor, with a density=sm Save/Cancel toolbar on the title line (both leave the pane; neither may take focus, since the fields commit on blur). It also fixed three things worth remembering: the markdown bundle needs createBasicExtensions (else white-space: pre, no wrap, no undo) AND createThemeExtensions (else CodeMirror's invisible 1px black caret); Toolbar.Root declared density as a CSS class only while Button/Input stamp data-density from React context, and that stamp shadows the variable the class sets around them, so a toolbar's density reached no control ANYWHERE in the app until Toolbar.Root started providing the context too; and destroying a CodeMirror field fires a blur, which commits, so a revert wrote the very text it discarded. NOTE main has since refactored TaskList further in #12840 (mosaic): TaskPatch is now TaskEdit/TaskDraft and Root gained a `selectable` prop — read the current file, not this session's memory of it. NEXT: pick from Phase 3 (terminal-status dates, extension-contributed tabs, cancel/delete, the joined delegation+TaskSet story). KNOWN: `#nnn` stays plain text in the ProjectArticle story because corePlugins() mounts no MarkdownPlugin. TOOLING: CI is on Depot — use `gh pr checks <n>`; Depot job logs need a browser login, so reproduce failures locally."
 
   - name: hardware-devices
     status: active
@@ -508,6 +508,17 @@ projects:
     design: .agents/projects/effect-smol/DESIGN.md
     prs: [12521]
     resume: 'Both repos migrated, reviewed and pushed as draft PRs: dxos/dxos#12521 and dxos/edge#827 (branch claude/effect-4-migration-audit-pq2m8z in each). dxos build 326/326 + node tests green; edge build 83/83 + full :test sweep green. Durable v4 rules extracted to .agents/skills/effect/v4-schema.md; spike moved to .agents/projects/effect-smol/spike. NEXT: D7 — dispatch pkg.pr.new on the dxos branch, then repoint edge catalogs.dxos off the 315 local tarball overrides (edge CI is red until that lands, install-time, by design).'
+
+  - name: mosaic
+    status: active
+    user: root
+    host: vm
+    created: 2026-08-13
+    summary: 'MOSAIC (Model-Oriented System for Adaptive Interface Composition; unrelated to react-ui-mosaic) — declarative UI / app ontology work-stream: name the data + app ontologies (Hyperspace/Space/Schema/Feeds; Deck/Plugins/Components), give them a DEUS specification surface (app dialect: node/deck/plank/companion/surface/menu), describe plugin-inbox in it, and design the Scenes composition DSL.'
+    tasks: .agents/projects/mosaic/TASKS.md
+    design: .agents/projects/mosaic/DESIGN.md
+    prs: [12484, 12840, 12846]
+    resume: 'PR #12846 OPEN (follow-on: useOperation in app-framework + phase 7 design tasks; #12840 MERGED 2026-08-29 with the ui-template spike, typed modules, zag capability sync, Show/Switch, container audit): MOSAIC docs + illustrator Ui dialect + Grid primitive extension + @dxos/ui-template. Overnight spike DONE (2026-08-29): state-driven layout system — URI-keyed registry (schemas/operations/machines), published state at ui.<id> (id=+machine= binds from registry; publication requires the name), operations as only writer with visible log, ECHO-bound stories on EchoTestBuilder (withClientProvider wedged dev server). 7 stories verified in browser: list/form/master-detail/toolbar(add->draft->db.add, qualify)/combobox/filter/view-switch (layout itself swaps on state, selection survives). Design written to packages/ui/ui-template/docs/DESIGN.md incl. machines formalism (not executed), undo (log-only), plugin/app-graph composition; ONTOLOGY R-4 updated with the published-state answer. NEXT: Rich reviews DESIGN.md + stories; open items ranked in DESIGN.md (state addressing across templates, operation payload typing, when=/parts/sizing grammar, machines-vs-slots).'
   - name: halo-consumer-migration
     status: active
     user: dmaretskyi
@@ -543,6 +554,16 @@ projects:
       op key gap is everywhere — chess declares six operations of which one has a runtime counterpart
       and startGame has none. NEXT: run the three unverified flows, then routine part (a) (reconcile a
       PLUGIN.mdl against Operation.make), then composer-app/APP.mdl."
+  - name: agent-composer-introspection
+    status: active
+    user: burdon
+    host: burdon-mbp-2092
+    created: 2026-08-30
+    summary: 'Make the agent a first-class Composer operator: fix the plugin enable/disable operation path (list all / list active / enable / disable via the debug port), and design an app-graph-driven state-introspection API (JSON surface/context/operations snapshot + ARIA/data- attributes) that replaces screenshot-based inspection.'
+    tasks: .agents/projects/agent-composer-introspection/TASKS.md
+    design: packages/sdk/app-framework/docs/INTROSPECTION.md
+    prs: []
+    resume: 'PR #12850 OPEN, Check green (shard-3 red was flaky TestTaskDrainScripted — passes attempt 2 locally with and without this change; retriggered green). SHIPPED IN IT: disablePlugins (definition+handler+5 tests, live-verified — chess deactivates, ops vanish) AND Phase A snapshot: org.dxos.operation.debug.snapshot + composer.snapshot() sugar in plugin-debug (layout/attention/planks-with-actions/surfaces/plugin-counts, per-section degradation, headless-harness test green). Design at packages/sdk/app-framework/docs/INTROSPECTION.md (§3.2 surface registry + §3.3 data-node-id/data-action attrs are Phases B/C, unbuilt). FINDING for #12845: boot is visibility-gated — hidden tab suspends rAF, app sits on boot screen with manager fully active (startup+idle fired); a late rAF shim cannot rescue the already-pending callback. NEXT: live snapshot() evaluation per INTROSPECTION.md §4 acceptance test (needs a VISIBLE Browser pane), then land #12850.'
 ended:
   - name: task-planning-skill
     user: burdon

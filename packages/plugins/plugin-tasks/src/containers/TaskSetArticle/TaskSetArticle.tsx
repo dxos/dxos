@@ -2,21 +2,22 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useAtomValue } from '@effect/atom-react/Hooks';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Optimistic from '@dxos/app-framework/Optimistic';
+import { useOperation, useOptimisticOperation, useOptimisticQuery } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { useQuery } from '@dxos/echo-react';
-import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Panel, Switch, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { TaskList, type TaskPatch, type TaskPlacement } from '@dxos/react-ui-task';
+import { createMenuAction } from '@dxos/react-ui-menu';
+import { TaskList, type TaskPlacement } from '@dxos/react-ui-task';
 import { Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
 import { TaskOperation } from '#types';
+
+import { useTaskActions } from '../../hooks/useTaskActions';
 
 export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet>;
 
@@ -31,79 +32,98 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
   const { t } = useTranslation(meta.profile.key);
   const { hasAttention } = useAttention(attendableId);
   const spaceId = Obj.getDatabase(taskSet)?.spaceId;
-  const { invokePromise } = useOperationInvoker();
+  const { tasks, overlay } = useTasks(taskSet);
 
-  const tasks = useSetTasks(taskSet);
-
-  const statusLabel = useCallback((status: Task.Status) => t(`task-status.${status}.label`), [t]);
-
-  const handleCreate = useCallback(
-    (title: string) => void invokePromise(TaskOperation.CreateTask, { taskSet: Ref.make(taskSet), title }, { spaceId }),
-    [invokePromise, taskSet, spaceId],
+  const handleCreate = useOperation(
+    TaskOperation.CreateTask,
+    (props: Task.Draft) => ({ taskSet: Ref.make(taskSet), ...props }),
+    { spaceId },
   );
 
-  const handleUpdate = useCallback(
-    (task: Task.Task, patch: TaskPatch) =>
-      void invokePromise(TaskOperation.UpdateTask, { task: Ref.make(task), ...patch }, { spaceId }),
-    [invokePromise, spaceId],
+  const handleUpdate = useOperation(
+    TaskOperation.UpdateTask,
+    (task: Task.Task, props: Task.Edit) => ({ task: Ref.make(task), ...props }),
+    { spaceId },
   );
 
-  // Deleting through the verb (not `db.remove`) is what sweeps the task and its sub-tasks out of
-  // the set's `tasks` array; the cascade alone would leave the refs behind.
-  const handleDelete = useCallback(
-    (task: Task.Task) => void invokePromise(TaskOperation.DeleteTask, { task: Ref.make(task) }, { spaceId }),
-    [invokePromise, spaceId],
+  const handleDelete = useOperation(TaskOperation.DeleteTask, (task: Task.Task) => ({ task: Ref.make(task) }), {
+    spaceId,
+  });
+
+  // Delete is one item among the contributed ones, so a row has a single trailing affordance
+  // whatever any plugin adds to it.
+  const contributed = useTaskActions();
+  const getTaskActions = useCallback(
+    (task: Task.Task) => [
+      ...contributed(task),
+      createMenuAction(`delete-${task.id}`, () => handleDelete(task), {
+        label: t('delete-task.label'),
+        icon: 'ph--x--regular',
+        testId: 'tasks.task.delete',
+      }),
+    ],
+    [contributed, handleDelete, t],
   );
 
-  const handleMove = useCallback(
-    (task: Task.Task, { parentTask, before }: TaskPlacement) =>
-      TaskSet.moveTask(taskSet, task, { parentTask, beforeId: before?.id }),
-    [taskSet],
+  // The optimistic entry mirrors the MoveTask handler's array write (`TaskSet.reorder` via `reorderItems`),
+  // so the dropped row renders in its target position on the drop frame instead of jumping back until
+  // the query re-emits the db order.
+  const handleMove = useOptimisticOperation(
+    TaskOperation.MoveTask,
+    (task: Task.Task, { parentTask, before }: TaskPlacement) => ({
+      task: Ref.make(task),
+      parentTask: parentTask ? Ref.make(parentTask) : null,
+      ...(before ? { before: Ref.make(before) } : {}),
+    }),
+    {
+      overlay,
+      entry: (task, { before }) => ({
+        apply: (rows) => TaskSet.reorderItems(rows, (row) => row.id, task.id, before?.id),
+      }),
+    },
+    { spaceId },
   );
-
-  const [selected, setSelected] = useState<string>();
-  const handleSelect = useCallback((task: Task.Task | undefined) => setSelected(task?.id), []);
 
   const content = (
     <TaskList.Root
       hierarchical
-      tasks={tasks}
+      selectable
       showDescriptions
-      selected={selected}
-      statusLabel={statusLabel}
+      tasks={tasks}
       onTaskCreate={handleCreate}
       onTaskUpdate={handleUpdate}
-      onTaskDelete={handleDelete}
+      getTaskActions={getTaskActions}
       onTaskMove={handleMove}
-      onTaskSelect={handleSelect}
     >
-      <div className='dx-container grid grid-rows-[auto_1fr] gap-2'>
-        <TaskList.Viewport>
-          <TaskList.Content classNames='dx-document' />
-        </TaskList.Viewport>
-      </div>
-      <div className='p-2'>
+      <TaskList.Viewport>
+        <TaskList.Content classNames='dx-document' />
+      </TaskList.Viewport>
+      <div className='p-2 pt-0'>
         <TaskList.Edit
-          classNames='dx-document border border-separator rounded-md p-2'
+          showDescription
+          classNames='dx-document bg-input-surface border border-separator rounded-md p-2'
           placeholder={t('task-create.placeholder')}
         />
       </div>
     </TaskList.Root>
   );
 
-  // Embedded as a section (e.g., the ProjectArticle Tasks section): the host owns scroll and
-  // chrome, so render the bare list — a nested Panel/scroll root would collapse width.
-  if (role === AppSurface.Section.role) {
-    return content;
-  }
-
   return (
-    <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
-        <Toolbar.Root disabled={!hasAttention} />
-      </Panel.Toolbar>
-      <Panel.Content>{content}</Panel.Content>
-    </Panel.Root>
+    <Switch.Root
+      on={role}
+      fallback={
+        <Panel.Root role={role}>
+          <Panel.Toolbar asChild>
+            <Toolbar.Root disabled={!hasAttention} />
+          </Panel.Toolbar>
+          <Panel.Content>{content}</Panel.Content>
+        </Panel.Root>
+      }
+    >
+      {/* Embedded as a section (e.g., the ProjectArticle Tasks section): the host owns scroll and
+          chrome, so render the bare list — a nested Panel/scroll root would collapse width. */}
+      <Switch.Match when={AppSurface.Section.role}>{content}</Switch.Match>
+    </Switch.Root>
   );
 };
 
@@ -112,23 +132,25 @@ TaskSetArticle.displayName = 'TaskSetArticle';
 /**
  * The set's tasks via `childOf` — membership is the ECHO parent edge, and transitive tolerates
  * legacy sub-tasks still parented to their parent task. The query re-emits on membership changes
- * only, never on a member's edit — `TaskList` rows subscribe themselves.
+ * only, never on a member's edit — `TaskList` rows subscribe themselves. The ordered query atom
+ * is wrapped in an optimistic overlay: the source must stay stable across emissions (hence
+ * `query.atom` instead of `useQuery`, whose fresh arrays would rebuild the overlay and lose
+ * pending entries mid-operation).
  */
-const useSetTasks = (taskSet: TaskSet.TaskSet): Task.Task[] => {
-  const db = Obj.getDatabase(taskSet);
-  const tasks = useQuery(db, Filter.and(Filter.type(Task.Task), Filter.childOf(taskSet)));
-  const orderedAtom = useMemo(
-    () =>
-      Atom.make((get) => {
-        subscribeHierarchy(get, tasks);
-        return Task.orderTasks(tasks, get(Obj.atomProperty(taskSet, 'tasks')) ?? []);
-      }),
-    [taskSet, tasks],
+const useTasks = (
+  taskSet: TaskSet.TaskSet,
+): { tasks: readonly Task.Task[]; overlay: Optimistic.Overlay<Task.Task> } => {
+  const { objects, overlay } = useOptimisticQuery(
+    Obj.getDatabase(taskSet),
+    Filter.and(Filter.type(Task.Task), Filter.childOf(taskSet)),
+    // Subscribes each member's `parentTask` (the set's array does not carry hierarchy)
+    // and orders by the set's canonical array.
+    (get, tasks) => {
+      tasks.forEach((task) => get(Obj.atomProperty(task, 'parentTask')));
+      return Task.orderTasks(tasks, get(Obj.atomProperty(taskSet, 'tasks')) ?? []);
+    },
+    [taskSet],
   );
-  return useAtomValue(orderedAtom);
-};
 
-/** Subscribes to every member's `parentTask`, which the set's array does not carry. */
-const subscribeHierarchy = (get: Atom.AtomContext, tasks: readonly Task.Task[]): void => {
-  tasks.forEach((task) => get(Obj.atomProperty(task, 'parentTask')));
+  return { tasks: objects, overlay };
 };

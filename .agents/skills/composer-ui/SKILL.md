@@ -68,8 +68,9 @@ is being phased out — prefer the kebab forms):
   `border-active-separator`, `border-focus-ring`.
 
 Themed primitives accept overrides via a `classNames` prop (string or array) — never `className`.
-Pass functional layout hints (`p-4`, `space-y-4`, `flex`, `@container` queries) freely; pass color/size
-through tokens. If you're writing more than a layout hint by hand, you're probably missing a primitive.
+Pass functional layout hints (`p-4`, `space-y-4`, `@container` queries) freely; pass color/size
+through tokens. Hand-written `flex`/`grid` class soup is the exception, not the hint — `Flex`/`Grid` cover
+it (see below). If you're writing more than a layout hint by hand, you're probably missing a primitive.
 
 ## Sizing vs logical utilities (post-Tailwind-3)
 
@@ -173,6 +174,57 @@ relies on (a wrapper around an input once silently disabled scrolling). If a con
 rather than wrapping — and if there's genuinely no path without a wrapper, discuss it first.
 
 See: `plugin-chess/src/containers/ChessArticle/`, `plugin-sample/src/containers/`.
+
+## Layout primitives: Flex, Grid, Column, Container
+
+When you do need a box — inside `ScrollArea.Viewport`, between `Panel` parts, anywhere the shell doesn't
+already give you one — reach for these before writing `<div className='flex …'>`. All take `asChild`, so
+the layout can project onto a semantic element (`<header>`, `<ul>`) at no extra DOM node.
+`Flex`/`Grid`/`Container` live in
+[`packages/ui/react-ui/src/primitives/`](../../../packages/ui/react-ui/src/primitives) (not
+`components/`); `Column` is in `components/Column`.
+
+- **`Flex`** — `column`, `gap`, `align`, `justify`, `wrap`, `grow`, `center`. `grow` is
+  `flex-1 overflow-hidden` (the height-chain link); `center` centers on both axes.
+- **`Grid`** — `cols`, `rows`, `gap`, `align`, `center`, `grow`, `contents`. Tracks take a count for
+  equal columns (`cols={3}`) or a list for anything asymmetric
+  (`cols={['min-content', '1fr']}`, `cols={[2, 1]}` for `2fr 1fr`) — the list form replaces
+  `grid-cols-[min-content_1fr]`, which is the least readable class in the corpus. `cols='subgrid'`
+  adopts the parent's tracks and spans them. `overflow-hidden` comes only with `grow`, so a
+  `grow={false}` grid clips no more than the `<div>` it replaced.
+- **`Column`** — the gutter grid: three tracks (leading gutter / content / trailing gutter) sized by
+  `--gutter`. This is what aligns icons, controls, and scrollbars to the same vertical rules across
+  every surface, so use it instead of hand-padding a content column.
+- **`Container`** — a bare `dx-container` (fill + clip) box, for when the only job is to fill and clip.
+
+```tsx
+<Flex column gap='sm'>…</Flex>
+<Flex gap='sm' justify='end'>…</Flex>
+<Flex center classNames='h-full text-subdued' role='status'>{t('empty.message')}</Flex>
+<Flex asChild gap='sm'><header>…</header></Flex>
+```
+
+**`Column` parts.** `Column.Root` (`gutter: sm|md|lg`, `subgrid`, `gap`) defines the tracks and exposes
+`--dx-col`; `Column.Center` puts plain content in the centre track and is the default choice;
+`Column.Row` is a 3-track subgrid row for content flanked by gutter items; `Column.Block` is a gutter
+slot sized to `--dx-rail-item` (`end` for the trailing gutter) so a passive `<Icon>` and an interactive
+`IconButton` align to the pixel. For slotted children that can't take a part, the `withColumn` helpers
+apply placement: `center()`, `placeContent()`, `propagate()`. Reach for `propagate()` — not `center()` —
+when a descendant must address the gutters, e.g. a `ScrollArea` that should span full width and keep its
+scrollbar out in the gutter; `Dialog.Body` depends on exactly that, and `center()` there confines the
+body and pulls the scrollbar inboard. Nest with `subgrid` when a `Column` (or `Card`) sits inside another
+3-track grid and must inherit its rules rather than invent new ones.
+
+**`gap` takes ramp steps, not Tailwind numbers.** `xs | sm | md | lg | xl | 2xl | form | form-section`
+([`primitives/layout.ts`](../../../packages/ui/react-ui/src/primitives/layout.ts)) — a `gap-2` literal is
+precisely the drift the prop exists to prevent. `Flex` grows **no** padding or colour props on purpose
+(components own their spacing); everything else goes through `classNames`. There is no implicit `align`:
+row-centering is common, but defaulting it would silently restyle consumers relying on CSS `stretch`.
+
+**This is a live migration, so match it rather than adding to the backlog.**
+[`packages/ui/react-ui/AUDIT.md`](../../../packages/ui/react-ui/AUDIT.md) is the wrapper-div census that
+produced `Flex` and drove the `Grid` extension: of 191 flex/grid wrappers in plugin containers, 145 are
+converted. A new hand-rolled flex or grid div is new debt in a count someone is actively driving down.
 
 ## Lists, pickers, and stacks
 
@@ -524,7 +576,9 @@ link `.../<branch>/<path>` — that 404s the moment the file goes.
 
 ## Checklist
 
-- Layout from `Panel.*` + `ScrollArea.*`; no wrapper `<div>`s for styling; `asChild` when the child is composable.
+- Layout from `Panel.*` + `ScrollArea.*`; boxes inside them from `Flex`/`Grid`/`Column`/`Container`, never a
+  hand-rolled `<div className='flex …'>`; `gap` from the ramp (`sm`/`md`/…), not `gap-2`; no wrapper
+  `<div>`s for styling; `asChild` when the child is composable.
 - Let `Form`/`List`/`Stack` own their padding/spacing — don't double-pad them.
 - Collections: never hand-roll a list of mapped `<div>`s — existing picker/combobox → `react-ui-list` (`Listbox` for flat lists; `OrderedList`/`Tree`/`Accordion` otherwise) → Mosaic `Stack`. `@dxos/react-ui` `List`/`ListItem` and `@dxos/react-ui-stack` are deprecated.
 - Colors from verified tokens (grep `semantic.css` / copy a component); no invented tokens, no `className`.
