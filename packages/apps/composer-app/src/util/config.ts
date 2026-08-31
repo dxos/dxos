@@ -10,6 +10,7 @@ import { DXOS_VERSION, Remote } from '@dxos/client';
 import { Config, Defaults, Envs, Local, Storage, getEnvString } from '@dxos/config';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import { Observability, ObservabilityExtension, ObservabilityProvider } from '@dxos/observability';
+import { type OtelLogSinkMessage } from '@dxos/observability/otel-log-sink';
 import { getHostPlatform } from '@dxos/util';
 
 import { APP_DOMAIN, FEEDBACK_LOGS_PATH, LOG_STORE_MAX_BYTES } from './constants';
@@ -85,6 +86,12 @@ export const initializeObservability = async (
   isTauri: boolean,
   logStore?: IdbLogStore,
   observabilityDisabled = false,
+  /**
+   * Handle posting to this realm's log-writer worker. When present, OTel log export runs
+   * there instead of in this realm — the worker's own event loop keeps exporting the lines
+   * this realm logs even while its loop is saturated by a long synchronous task.
+   */
+  logWriter?: { post: (message: OtelLogSinkMessage) => void },
 ) =>
   Function.pipe(
     Observability.make(),
@@ -96,6 +103,7 @@ export const initializeObservability = async (
         environment: getEnvString(config, 'DX_ENVIRONMENT') ?? 'unknown',
         config,
         logs: true,
+        logWriter,
         metrics: true,
         traces: true,
       }),

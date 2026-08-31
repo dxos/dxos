@@ -17,6 +17,7 @@ import buildSecrets from '../../cli-observability-secrets.json';
 import { type Extension, type ExtensionApi } from '../../observability-extension';
 import { getOtelLogLevel, isObservabilityDisabled, storeObservabilityDisabled } from '../../storage';
 import { stubExtension } from '../stub';
+import { type OtelLogSinkMessage } from './log-sink';
 
 export type ExtensionsOptions = {
   /** For the OTEL, the name of the entity for which signals (metrics or trace) are collected. */
@@ -31,6 +32,14 @@ export type ExtensionsOptions = {
   logs?: boolean;
   /** Minimum log level to export. Defaults to INFO (i.e. info, warn, error). */
   logLevel?: LogLevel;
+  /**
+   * When set (and `logs` is on), log export runs in the log-writer worker instead of this
+   * realm: the resolved options are posted over this handle for the worker to build an
+   * `OtelLogSink`, and no local pipeline or log processor is installed. The worker exports
+   * the JSONL lines the realm's log processor already ships it, on its own event loop — so
+   * export keeps up while this realm is blocked by a long synchronous task.
+   */
+  logWriter?: { post: (message: OtelLogSinkMessage) => void };
   metrics?: boolean;
   traces?: boolean;
 };
@@ -49,6 +58,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   //   - logs should be flushed to the server if user opts to include them in a bug report
   logs: logsEnabled = false,
   logLevel = LogLevel.INFO,
+  logWriter,
   metrics: metricsEnabled = false,
   traces: tracesEnabled = false,
 }) {
@@ -109,26 +119,29 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
     tags.set('ctx.tag', clientTag);
   }
 
-  const { resource, metricsResource } = createResources(
-    {
-      [ATTR_SERVICE_NAME]: serviceName,
-      [ATTR_SERVICE_VERSION]: serviceVersion,
-      'deployment.environment': environment,
-      'dxos.process.type': detectProcessType(),
-      ...(clientTag ? { 'ctx.tag': clientTag } : {}),
-    },
-    crypto.randomUUID(),
-  );
+  const baseAttributes = {
+    [ATTR_SERVICE_NAME]: serviceName,
+    [ATTR_SERVICE_VERSION]: serviceVersion,
+    'deployment.environment': environment,
+    'dxos.process.type': detectProcessType(),
+    ...(clientTag ? { 'ctx.tag': clientTag } : {}),
+  };
+  const sessionId = crypto.randomUUID();
+  const { resource, metricsResource } = createResources(baseAttributes, sessionId);
 
-  const logs = logsEnabled
-    ? new OtelLogs({
-        endpoint: resolvedEndpoint,
-        headers: resolvedHeaders,
-        resource,
-        getTags: () => Object.fromEntries(tags),
-        logLevel: resolvedLogLevel,
-      })
-    : undefined;
+  // Remote takes precedence: with a log writer, the worker owns the whole log pipeline and
+  // this realm installs no processor at all.
+  const remoteLogs = logsEnabled ? logWriter : undefined;
+  const logs =
+    logsEnabled && !remoteLogs
+      ? new OtelLogs({
+          endpoint: resolvedEndpoint,
+          headers: resolvedHeaders,
+          resource,
+          getTags: () => Object.fromEntries(tags),
+          logLevel: resolvedLogLevel,
+        })
+      : undefined;
 
   const metrics = metricsEnabled
     ? new OtelMetrics({
@@ -158,6 +171,16 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
         if (logs) {
           log.runtimeConfig.processors.push(logs.logProcessor);
         }
+        if (remoteLogs) {
+          remoteLogs.post({
+            type: 'otel-init',
+            endpoint: resolvedEndpoint,
+            headers: resolvedHeaders,
+            resourceAttributes: { ...baseAttributes, 'session.id': sessionId },
+            logLevel: resolvedLogLevel,
+            tags: Object.fromEntries(tags),
+          });
+        }
         if (traces) {
           traces.start();
         }
@@ -172,6 +195,9 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
     }),
     close: () =>
       Effect.promise(async () => {
+        // Fire-and-forget: the worker outlives this realm's teardown and drains on its own
+        // schedule; there is no ack channel to await.
+        remoteLogs?.post({ type: 'otel-flush' });
         // Run logs/metrics close concurrently and swallow their failures so the
         // tracer provider shutdown below ALWAYS runs. Without this, a rejection
         // from logs or metrics would drop the tracer provider's BatchSpanProcessor
@@ -190,6 +216,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
       }),
     flush: () =>
       Effect.promise(async () => {
+        remoteLogs?.post({ type: 'otel-flush' });
         const results = await Promise.allSettled([logs?.flush(), metrics?.flush()]);
         for (const result of results) {
           if (result.status === 'rejected') {
@@ -202,12 +229,13 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
       for (const [key, value] of Object.entries(incomingTags)) {
         tags.set(key, value);
       }
+      remoteLogs?.post({ type: 'otel-tags', tags: { ...incomingTags } });
     },
     get enabled() {
       return Ref.get(enabledRef).pipe(Effect.runSync);
     },
     apis: [
-      { kind: 'logs', isAvailable: () => Effect.succeed(!!logs) } satisfies ExtensionApi,
+      { kind: 'logs', isAvailable: () => Effect.succeed(!!logs || !!remoteLogs) } satisfies ExtensionApi,
       metrics
         ? ({
             kind: 'metrics',

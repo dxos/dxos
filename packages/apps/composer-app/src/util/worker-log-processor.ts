@@ -12,14 +12,17 @@ import {
   serializeToJsonl,
   shouldLog,
 } from '@dxos/log';
+import { type OtelLogSinkMessage } from '@dxos/observability/otel-log-sink';
 
 const DEFAULT_LOG_FILTER = 'debug';
 
 /**
  * Sender → log-writer worker: a bare string is one pre-serialized JSONL log line (hot path —
- * no envelope), `{ type: 'flush' }` asks the worker to flush its queue now.
+ * no envelope), `{ type: 'flush' }` asks the worker to flush its queue now. The `otel-*`
+ * messages are the Otel extension's control plane for the worker-side OTLP export of those
+ * same lines (posted via the `logWriter` handle `initializeObservability` wires up).
  */
-export type LogWriterMessage = string | { type: 'flush' };
+export type LogWriterMessage = string | { type: 'flush' } | OtelLogSinkMessage;
 
 export type WorkerLogProcessorOptions = {
   /** The log-writer worker (`workers/log-writer-worker.ts`), or the `port` of a SharedWorker running it. */

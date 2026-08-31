@@ -16,6 +16,10 @@
     ".": {
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./otel-log-sink": {
+      "types": "./dist/types/src/extensions/otel/log-sink.d.ts",
+      "import": "./dist/lib/otel-log-sink.mjs"
     }
   },
   "browser": {
