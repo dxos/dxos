@@ -12,8 +12,6 @@ import { Milestone, Task, TaskSet } from '@dxos/types';
 import createMilestone from './create-milestone';
 import createTask from './create-task';
 
-const testLayer = () => TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] });
-
 describe('create-task', () => {
   it.effect("defaults status and joins the set's tasks array", () =>
     Effect.gen(function* () {
@@ -26,7 +24,7 @@ describe('create-task', () => {
       expect(task.status).toBe('todo');
       expect(taskSet.tasks.map((ref) => ref.target?.id)).toEqual([task.id]);
       expect(Obj.getParent(task)?.id).toBe(taskSet.id);
-    }).pipe(Effect.provide(testLayer())),
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 
   it.effect('a sub-task joins the same flat array and points at its parent', () =>
@@ -46,7 +44,7 @@ describe('create-task', () => {
       expect(Task.rootTasks(TaskSet.resolveTasks(taskSet)).map((task) => task.id)).toEqual([parent.id]);
       // The parent edge means membership: a sub-task is parented to the set, not its `parentTask`.
       expect(Obj.getParent(child)?.id).toBe(taskSet.id);
-    }).pipe(Effect.provide(testLayer())),
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 
   it.effect("a task cannot be filed under another set's milestone", () =>
@@ -60,6 +58,6 @@ describe('create-task', () => {
         createTask.handler({ taskSet: Ref.make(taskSet), title: 'Nope', milestone: Ref.make(foreign) }),
       );
       expect(exit._tag).toBe('Failure');
-    }).pipe(Effect.provide(testLayer())),
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 });

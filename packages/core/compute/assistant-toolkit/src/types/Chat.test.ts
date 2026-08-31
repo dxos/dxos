@@ -13,14 +13,23 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import { Text } from '@dxos/schema';
-import { Message, Outline, Task } from '@dxos/types';
+import { Message, Outline, Task, TaskSet } from '@dxos/types';
 
 import { Chat } from '../types';
 
 EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
-  types: [Chat.Chat, Outline.Outline, Task.Task, Feed.Feed, Text.Text, Instructions.Instructions, Message.Message],
+  types: [
+    Chat.Chat,
+    Outline.Outline,
+    Task.Task,
+    TaskSet.TaskSet,
+    Feed.Feed,
+    Text.Text,
+    Instructions.Instructions,
+    Message.Message,
+  ],
   disableLlmMemoization: true,
 });
 
@@ -99,6 +108,41 @@ describe('Chat', () => {
         expect(chat.tasks.map((ref) => ref.uri)).toEqual([Ref.make(sibling).uri]);
         const tasks = yield* Chat.loadTasks(chat);
         expect(tasks.map((task) => task.title)).toEqual(['Unrelated']);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'a task delegated onto the checklist keeps its owner, and is not destroyed with it',
+    Effect.fnUntraced(
+      function* (_) {
+        const chat = yield* makeChat;
+        const { db } = yield* Database.Service;
+
+        // The set that owns the task, as a project's does when it delegates one here.
+        const owner = yield* Database.add(TaskSet.make({ name: 'Backlog' }));
+        const delegated = yield* Database.add(Task.make({ title: 'Write a poem', status: 'todo' }));
+        Obj.update(owner, (owner) => {
+          owner.tasks = [Ref.make(delegated)];
+        });
+        Obj.update(chat, (chat) => {
+          chat.tasks = [...chat.tasks, Ref.make(delegated)];
+        });
+        yield* Database.flush();
+
+        // The chat works on the task; it does not take it. An owning checklist would re-parent it
+        // here — and again on every later update of the chat.
+        expect(Obj.getParent(delegated)?.id).toBe(owner.id);
+        const own = Chat.addTask(db, chat, 'Draft an outline');
+        expect(Obj.getParent(own)?.id).toBe(chat.id);
+
+        // Off the checklist, still in the space: deleting is the owner's call, not the chat's.
+        Chat.deleteTask(db, chat, yield* Chat.loadTasks(chat), delegated);
+        yield* Database.flush();
+        expect(chat.tasks.map((ref) => ref.uri)).toEqual([Ref.make(own).uri]);
+        expect(yield* Database.query(Filter.id(delegated.id)).run).toHaveLength(1);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

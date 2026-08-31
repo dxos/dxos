@@ -12,8 +12,6 @@ import { Outline, Task, TaskSet } from '@dxos/types';
 
 import convertToTask from './convert-to-task';
 
-const testLayer = () => TestDatabaseLayer({ types: [Outline.Outline, Task.Task, TaskSet.TaskSet, Text.Text] });
-
 describe('convert-to-task', () => {
   it.effect('promotes an item into the task set the caller names', () =>
     Effect.gen(function* () {
@@ -25,7 +23,7 @@ describe('convert-to-task', () => {
       expect(task.title).toBe('first');
       expect(task.status).toBe('todo');
       expect(Obj.getParent(task)?.id).toBe(taskSet.id);
-    }).pipe(Effect.provide(testLayer())),
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Outline.Outline, Task.Task, TaskSet.TaskSet, Text.Text] }))),
   );
 
   it.effect('a second promotion appends to the same set rather than creating another', () =>
@@ -38,7 +36,7 @@ describe('convert-to-task', () => {
       expect(taskSet.tasks.map((ref) => ref.target?.id)).toEqual([first.id, second.id]);
       const sets = yield* Database.query(Filter.type(TaskSet.TaskSet)).run;
       expect(sets).toHaveLength(1);
-    }).pipe(Effect.provide(testLayer())),
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Outline.Outline, Task.Task, TaskSet.TaskSet, Text.Text] }))),
   );
 
   it.effect('the outline markdown is left untouched — the item is copied, not moved', () =>
@@ -51,7 +49,7 @@ describe('convert-to-task', () => {
 
       const content = yield* Database.load(outline.content);
       expect(content.content).toBe('- [ ] first\n- [ ] second');
-    }).pipe(Effect.provide(testLayer())),
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Outline.Outline, Task.Task, TaskSet.TaskSet, Text.Text] }))),
   );
 
   it.effect('a title the caller invents is promoted like any other', () =>
@@ -61,7 +59,7 @@ describe('convert-to-task', () => {
       const { task } = yield* convertToTask.handler({ taskSet, title: 'invented' });
 
       expect(task.title).toBe('invented');
-    }).pipe(Effect.provide(testLayer())),
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Outline.Outline, Task.Task, TaskSet.TaskSet, Text.Text] }))),
   );
 });
 

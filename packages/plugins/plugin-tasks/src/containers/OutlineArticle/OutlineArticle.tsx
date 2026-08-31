@@ -11,7 +11,7 @@ import { useResolveRef } from '@dxos/echo-react';
 import { SchemaEx } from '@dxos/effect';
 import { URI } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
-import { Panel, ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Panel, Show, ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
 import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Outline as OutlineType, Task, TaskSet } from '@dxos/types';
@@ -168,36 +168,36 @@ export const OutlineArticle = ({
     );
   }
 
-  if (!text) {
-    return null;
-  }
-
   return (
-    <Outline.Root
-      ref={outlineRef}
-      id={text.id}
-      text={text}
-      onConvertToTask={taskSet ? handleConvertToTask : undefined}
-      onConvertibleChange={setConvertible}
-      onSelectLink={handleSelectLink}
-      resolveLinkLabel={resolveLinkLabel}
-      extensions={extensions}
-    >
-      <Menu.Root {...outlineActions} attendableId={attendableId}>
-        <Panel.Root role={role}>
-          {toolbar && (
-            <Panel.Toolbar>
-              <Menu.Toolbar classNames='dx-document'>
-                <Menu.Items />
-              </Menu.Toolbar>
-            </Panel.Toolbar>
-          )}
-          <Panel.Content asChild>
-            <Outline.Content classNames='dx-document' />
-          </Panel.Content>
-        </Panel.Root>
-      </Menu.Root>
-    </Outline.Root>
+    <Show when={text}>
+      {(text) => (
+        <Outline.Root
+          ref={outlineRef}
+          id={text.id}
+          text={text}
+          onConvertToTask={taskSet ? handleConvertToTask : undefined}
+          onConvertibleChange={setConvertible}
+          onSelectLink={handleSelectLink}
+          resolveLinkLabel={resolveLinkLabel}
+          extensions={extensions}
+        >
+          <Menu.Root {...outlineActions} attendableId={attendableId}>
+            <Panel.Root role={role}>
+              <Show when={toolbar}>
+                <Panel.Toolbar>
+                  <Menu.Toolbar classNames='dx-document'>
+                    <Menu.Items />
+                  </Menu.Toolbar>
+                </Panel.Toolbar>
+              </Show>
+              <Panel.Content asChild>
+                <Outline.Content classNames='dx-document' />
+              </Panel.Content>
+            </Panel.Root>
+          </Menu.Root>
+        </Outline.Root>
+      )}
+    </Show>
   );
 };
 

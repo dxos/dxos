@@ -120,6 +120,7 @@
     "@dxos/plugin-progress": "workspace:*",
     "@dxos/plugin-projects": "workspace:*",
     "@dxos/plugin-pwa": "workspace:*",
+    "@dxos/plugin-qa": "workspace:*",
     "@dxos/plugin-registry": "workspace:*",
     "@dxos/plugin-review": "workspace:*",
     "@dxos/plugin-routine": "workspace:*",

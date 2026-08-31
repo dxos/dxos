@@ -131,11 +131,13 @@ export class ControlPipeline {
     }
 
     log('starting...');
+    await this._pipeline.start();
+    // Started strictly after `pipeline.start()`: a consumer that races the start can obtain the
+    // iterator's generator before it is running — the generator then finishes immediately and
+    // polling it spins the microtask queue, starving the thread (boot wedge).
     setTimeout(async () => {
       void this._consumePipeline(ctx);
     });
-
-    await this._pipeline.start();
     log('started');
   }
 

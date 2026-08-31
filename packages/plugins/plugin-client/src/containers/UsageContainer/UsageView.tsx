@@ -66,8 +66,6 @@ const formatLimitLabel = (limit: MeteringLimit, t: TFunction): string => {
   return `${subtype ? `${limit.eventType}/${subtype}` : limit.eventType} · ${metric}`;
 };
 
-const formatAmount = (amount: number): string => amount.toLocaleString();
-
 const SECONDS_PER_HOUR = 60 * 60;
 
 /** Render `windowHours` as a localized "N months / days / hours" string. */
@@ -105,7 +103,7 @@ const computeRows = (data: GetProfileUsageResponse, t: TFunction): UsageRow[] =>
         return {
           key,
           label,
-          caption: t('usage-unlimited.description', { used: formatAmount(used), window }),
+          caption: t('usage-unlimited.description', { used: used.toLocaleString(), window }),
           windowHours,
         };
       }
@@ -113,7 +111,7 @@ const computeRows = (data: GetProfileUsageResponse, t: TFunction): UsageRow[] =>
       return {
         key,
         label,
-        caption: `${t('usage-percent-used.label', { percent })} · ${t('usage-limit.description', { used: formatAmount(used), limit: formatAmount(limit.limit), window })}`,
+        caption: `${t('usage-percent-used.label', { percent })} · ${t('usage-limit.description', { used: used.toLocaleString(), limit: limit.limit.toLocaleString(), window })}`,
         percent,
         windowHours,
       };

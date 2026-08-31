@@ -87,7 +87,7 @@ emit_setup() {
 }
 
 emit_new() {
-  emit "$(printf 'TASK-PLANNING PROJECT DIRECTIVE: `/dxos:project new` — args: "%s". Add an `active` registry entry (user = `whoami`, host = `hostname -s`, created = today) and scaffold `<registry-dir>/<name>/{TASKS,DESIGN}.md` unless the docs already live elsewhere (record that path instead). Confirm in one line.' "$1")"
+  emit "$(printf 'TASK-PLANNING PROJECT DIRECTIVE: `/dxos:project new` — args: "%s". Add an `active` registry entry (user = `whoami`, host = `hostname -s`, created = today) and scaffold `<registry-dir>/<name>/{TASKS,DESIGN}.md` unless the docs already live elsewhere (record that path instead). Set this session'"'"'s title to the project name via the session-management set_session_title tool (session_id "self") when that tool is available. Confirm in one line.' "$1")"
 }
 
 emit_end() {
@@ -111,11 +111,11 @@ emit_spawn() {
 }
 
 emit_hydrate() {
-  emit 'TASK-PLANNING HYDRATE: `/dxos:project hydrate`. Follow the task-planning skill "Project handoff" -> hydrate: identify the CURRENT project (the single `active` entry for the current user; if more than one, ask which), reconcile its TASKS.md (check off done, note next step on in-progress items), update its `resume` field + the doc resume pointer, push decisions into its DESIGN.md and durable direction to memory, run git status and account for EVERY uncommitted file, then confirm the checkpoint in one short block (done / in-progress / next / uncommitted).'
+  emit 'TASK-PLANNING HYDRATE: `/dxos:project hydrate`. Follow the task-planning skill "Project handoff" -> hydrate: identify the CURRENT project (the single `active` entry for the current user; if more than one, ask which), reconcile its TASKS.md (check off done, note next step on in-progress items), update its `resume` field + the doc resume pointer, push decisions into its DESIGN.md and durable direction to memory, run git status and account for EVERY uncommitted file, then confirm the checkpoint in one short block (done / in-progress / next / uncommitted). If the checkpoint records a PR in the entry'"'"'s `prs` (opening one is the usual reason to hydrate), set this session'"'"'s title to `<project> - #<PR>` — the NEWEST PR when the entry lists several — via the session-management set_session_title tool (session_id "self") when that tool is available.'
 }
 
 emit_resume() {
-  emit "$(printf 'TASK-PLANNING RESUME: `/dxos:project resume`. Follow the task-planning skill "Project handoff" -> resume: pick the project — %s. Stay in this session'"'"'s assigned worktree: NEVER cd into, edit in, or adopt another project'"'"'s worktree or branch — if the prior work lives on an unmerged branch elsewhere, report that and ask the user instead of following it. Read the project'"'"'s `tasks` (TASKS.md) + `design` doc, check git status + recent git log, report a concise state (done / in-progress / next action / uncommitted), then continue with the next action unless the user directed otherwise.' "$1")"
+  emit "$(printf 'TASK-PLANNING RESUME: `/dxos:project resume`. Follow the task-planning skill "Project handoff" -> resume: pick the project — %s. Stay in this session'"'"'s assigned worktree: NEVER cd into, edit in, or adopt another project'"'"'s worktree or branch — if the prior work lives on an unmerged branch elsewhere, report that and ask the user instead of following it. Read the project'"'"'s `tasks` (TASKS.md) + `design` doc, check git status + recent git log, report a concise state (done / in-progress / next action / uncommitted), set this session'"'"'s title to `<project> - #<PR>` — the NEWEST PR in the entry'"'"'s `prs` when it lists several, bare `<project>` when it lists none — via the session-management set_session_title tool (session_id "self") when that tool is available - the desktop app shows the title where a statusline would be - then continue with the next action unless the user directed otherwise.' "$1")"
 }
 
 # First line only — a slash command leads the message, and restricting the match

@@ -618,15 +618,15 @@ const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
 
   // The same primitive the task commands use, so the parent edge and the refs cannot diverge.
   const handleCreate = useCallback(
-    (title: string) => {
+    ({ title, ...props }: Task.Draft) => {
       const db = chat && Obj.getDatabase(chat);
       if (chat && db) {
-        AssistantChat.addTask(db, chat, title);
+        AssistantChat.addTask(db, chat, title, props);
       }
     },
     [chat],
   );
-  // Rendered even when empty, so `TaskList.Create` can always add the first task.
+  // Rendered even when empty, so `TaskList.Edit` can always add the first task.
   if (!chat) {
     return null;
   }
@@ -637,7 +637,7 @@ const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
         <TaskList.Viewport classNames='min-h-0'>
           <TaskList.Content />
         </TaskList.Viewport>
-        <TaskList.Create classNames='shrink-0' />
+        <TaskList.Edit classNames='shrink-0' />
       </div>
     </TaskList.Root>
   );

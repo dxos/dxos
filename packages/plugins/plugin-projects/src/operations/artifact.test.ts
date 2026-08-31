@@ -10,13 +10,14 @@ import * as Project from '@dxos/compute/Project';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { Text } from '@dxos/schema';
+import { Task } from '@dxos/types';
 
 import artifactAdd from './artifact-add';
 import artifactList from './artifact-list';
 
 const testLayer = () =>
   TestDatabaseLayer({
-    types: [Project.Project, Instructions.Instructions, Text.Text],
+    types: [Project.Project, Instructions.Instructions, Text.Text, Task.Task],
   });
 
 describe('project skill operations', () => {
@@ -31,6 +32,24 @@ describe('project skill operations', () => {
 
       yield* artifactAdd.handler({ project: Ref.make(project), object: Ref.make(doc) });
       expect(project.artifacts).toHaveLength(1);
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('artifact-add also records the object on the task it was made for', () =>
+    Effect.gen(function* () {
+      const project = yield* Database.add(Project.make({ name: 'Voyage' }));
+      const task = yield* Database.add(Task.make({ title: 'Write a poem' }));
+      const doc = yield* Database.add(Text.make({ content: 'A short poem.' }));
+      yield* Database.flush();
+
+      yield* artifactAdd.handler({ project: Ref.make(project), object: Ref.make(doc), task: Ref.make(task) });
+
+      // Both places: the project owns everything it holds, the task shows what it produced.
+      expect(project.artifacts).toHaveLength(1);
+      expect(Task.refEntityId(task.artifacts?.[0])).toBe(doc.id);
+
+      // Refs, not children — finishing the task must not cascade to the document.
+      expect(Obj.getParent(doc)?.id).not.toBe(task.id);
     }).pipe(Effect.provide(testLayer())),
   );
 

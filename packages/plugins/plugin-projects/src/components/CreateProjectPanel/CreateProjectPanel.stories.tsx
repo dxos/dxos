@@ -47,6 +47,18 @@ export const Default: Story = {
     await waitFor(async () => expect(canvas.getByText('Default')).toBeInTheDocument());
     await expect(canvas.getByText('Example Research')).toBeInTheDocument();
 
+    // The template rows share the form's column with the inputs above them: only geometry shows
+    // this, since a reserved scroll strip insets the rows without changing the DOM.
+    const column = (element: Element) => {
+      const { left, right } = element.getBoundingClientRect();
+      return [Math.round(left), Math.round(right)];
+    };
+    const nameColumn = column(canvas.getByTestId('create-project-panel.name-input'));
+    await expect(column(canvas.getByTestId('create-project-panel.template-input'))).toEqual(nameColumn);
+    for (const option of canvasElement.querySelectorAll('[role="option"]')) {
+      await expect(column(option)).toEqual(nameColumn);
+    }
+
     await userEvent.type(await canvas.findByTestId('create-project-panel.name-input'), 'Voyage');
     await userEvent.click(canvas.getByText('Default'));
     await waitFor(async () =>
