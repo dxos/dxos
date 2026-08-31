@@ -27,7 +27,7 @@
  * Fills the available space.
  */
 @utility dx-expander {
-  @apply flex-1 min-h-0 min-w-0 h-full w-full;
+  @apply flex-1 min-h-0 h-full min-w-0 w-full;
 }
 
 /**
