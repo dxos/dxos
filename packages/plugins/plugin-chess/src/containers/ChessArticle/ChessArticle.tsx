@@ -64,22 +64,25 @@ export const ChessArticle = ({ role, variant }: ChessArticleProps) => {
     return null;
   }
 
+  // TODO(burdon): Separate component for section?
   return (
     <Chessboard.Root state={state} ref={controller}>
       <Panel.Root role={role} classNames='@container'>
-        <Panel.Toolbar asChild>
-          <Toolbar.Root>
-            {isGameOver && <Toolbar.Button onClick={handleNewGame}>{t('new-game.button')}</Toolbar.Button>}
-            <div className='grow' />
-            <Toolbar.IconButton
-              icon='ph--info--regular'
-              iconOnly
-              label={t('toggle-info.button')}
-              classNames={mx('invisible @4xl:visible')}
-              onClick={() => setShowInfo((open) => !open)}
-            />
-          </Toolbar.Root>
-        </Panel.Toolbar>
+        {role === AppSurface.Article.role && (
+          <Panel.Toolbar asChild>
+            <Toolbar.Root>
+              {isGameOver && <Toolbar.Button onClick={handleNewGame}>{t('new-game.button')}</Toolbar.Button>}
+              <div className='grow' />
+              <Toolbar.IconButton
+                icon='ph--info--regular'
+                iconOnly
+                label={t('toggle-info.button')}
+                classNames={mx('invisible @4xl:visible')}
+                onClick={() => setShowInfo((open) => !open)}
+              />
+            </Toolbar.Root>
+          </Panel.Toolbar>
+        )}
         <Panel.Content>
           <div
             className={mx(
