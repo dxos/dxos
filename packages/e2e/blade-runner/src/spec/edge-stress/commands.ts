@@ -5,7 +5,6 @@
 import { Schema } from 'effect';
 import { FastCheck } from 'effect/testing';
 
-import { runCheckpoint } from './assertions';
 import {
   type Model,
   type ModelSpace,
@@ -17,7 +16,7 @@ import {
   liveDocument,
   token,
 } from './model';
-import { type Real, BudgetExhausted, joinPendingSpaces, joinSpace } from './system';
+import { type Real, BudgetExhausted, joinPendingSpaces, joinSpace, runCheckpoint } from './system';
 
 /**
  * The operation vocabulary, as Effect schemas: one declaration defines what may be generated, what

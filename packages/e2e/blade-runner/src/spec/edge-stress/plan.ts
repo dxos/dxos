@@ -12,11 +12,15 @@ import { log } from '@dxos/log';
 import { type SchedulerEnvImpl } from '../../env';
 import { type ReplicantBrain, type ReplicantsSummary, type TestPlan, type TestProps } from '../../plan';
 import { ClientReplicant } from '../../replicants/client-replicant';
-import { assertFullyReplicated } from './assertions';
 import { makeCommandSchema, toAsyncCommand } from './commands';
 import { type Model, makeModel } from './model';
-import { type EdgeStressResult, type EdgeStressSpec } from './spec';
-import { type Real, BudgetExhausted } from './system';
+import {
+  type EdgeStressResult,
+  type EdgeStressSpec,
+  type Real,
+  BudgetExhausted,
+  assertFullyReplicated,
+} from './system';
 
 /**
  * Randomized stress test of a fleet of real clients replicating through EDGE.
