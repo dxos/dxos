@@ -232,3 +232,86 @@ write. Confirmed by reverting the fix and watching the test fail.
 preload entries / 4.23 MB against a 25 / 4.45 MB budget, both before and after merging main, and
 main's own run was green. Nothing in this diff is boot-reachable — `plugin-assistant` reaches
 `react-ui-task` only through its `/translations` subpath, and the list surfaces are lazy.
+
+## Object actions: one way for a plugin to put a menu item on another plugin's object
+
+_Designed 2026-08-30. Supersedes the ad-hoc `MailboxAction` / `SenderAction` pair._
+
+### The precedent, and what is wrong with it
+
+plugin-inbox already lets other plugins inject menu items, and does it **twice**:
+
+- `InboxCapabilities.MailboxAction` — a mailbox-scoped item on the article toolbar;
+  `createInvocation(mailbox)` returns ONE `{ operation, input }`. plugin-brain contributes `Analyze`.
+- `InboxCapabilities.SenderAction` — a sender-scoped item on the per-message menu;
+  `createInvocations(actor)` returns a LIST, and an **empty list means "does not apply"**, which is
+  how the item is filtered per subject. plugin-crm contributes research.
+
+The two are the same idea with two spellings. Only the second can express "not applicable here", and
+only the second composes. Both share the constraint that matters: the contributed value is **plain
+data**, and the operation comes back from a closure — holding an `Operation.Definition` on the
+capability value makes the capability atom read recurse.
+
+A third mechanism exists for objects that have an app-graph node: contributions land on the node and
+`graphActions(graph, get, nodeId, { filter: isToolbarAction })` folds them in. That is the right tool
+when the subject already has a node (a mailbox does). **A task does not** — plugin-tasks' graph
+builder contributes only a root action, and a task lives inside a `TaskSet`, not a collection — so
+the graph route would mean inventing nodes per task before any of this could work.
+
+### The mechanism
+
+One generic shape, `ObjectAction<T>` in `@dxos/app-toolkit/ObjectAction`, replacing both:
+
+```ts
+export type ObjectAction<T> = {
+  id: string;
+  label: string;
+  icon?: string;
+  /** Invocations to run, in order. EMPTY means the action does not apply to this subject. */
+  createInvocations: (subject: T) => { operation: Operation.Definition.Any; input: unknown }[];
+};
+```
+
+Each plugin declares its own capability over that shape, so the subject type stays checked and the
+capability key stays owned by the plugin that defines the surface:
+
+```ts
+export const TaskAction = Capability.make<ObjectAction<Task.Task>>()(`${meta.profile.key}.capability.taskAction`);
+```
+
+Filtering is the empty list, not a separate predicate: one closure decides applicability and what to
+run, so the two cannot disagree.
+
+### Rendering: `react-ui-task` stays presentation-only
+
+`react-ui-task` must not learn about capabilities, operations or the app graph. `TaskList` therefore
+takes plain descriptors and hands back an id:
+
+```ts
+getTaskActions?: (task: Task.Task) => readonly TaskItemAction[];   // { id, label, icon?, disabled? }
+onTaskAction?: (task: Task.Task, actionId: string) => void;
+```
+
+`onTaskDelete` is **removed**: delete becomes an ordinary action the container supplies, so the row
+has one affordance to render rather than a special case plus a list.
+
+The row renders by count — nothing for none, a plain icon button for one, a `DropdownMenu` for more.
+`DropdownMenu` comes from `@dxos/react-ui`, which the package already depends on; using
+`@dxos/react-ui-menu` here would pull `app-graph`, `graph` and `keyboard` into a leaf UI package for
+one overflow menu.
+
+### Wiring
+
+- `TaskSetArticle` / `ProjectArticle` resolve `TaskAction` with `useCapabilities`, build the row's
+  descriptor list (its own `delete` plus every contributed action whose `createInvocations` is
+  non-empty for that task), and dispatch the chosen id through the operation invoker.
+- plugin-projects contributes `create-chat`: a new `Chat`, companion-linked to the project, with the
+  task placed in `chat.tasks`.
+
+### Open question — `Chat.tasks` re-parents
+
+`Chat.tasks` carries `Annotation.SetParent.set(true)`, so putting an **existing** task into a chat
+moves its ECHO parent edge from the `TaskSet` to the `Chat`. The task would leave the set's ownership
+and follow the chat's cascade delete. Three ways out, decision pending: reference the task without
+re-parenting (needs a non-`SetParent` field), copy it, or accept the move as the meaning of
+"delegate this task to a chat".

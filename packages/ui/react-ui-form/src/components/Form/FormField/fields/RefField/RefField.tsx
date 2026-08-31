@@ -192,7 +192,9 @@ export const RefField = (props: RefFieldProps) => {
           <ObjectPicker.Root open={open} onOpenChange={setOpen}>
             <ObjectPicker.Trigger asChild classNames='p-0'>
               {item ? (
-                <div className='flex gap-form-gap w-full'>
+                // No layout of its own: the trigger it stands in for (`asChild`) is already a grid,
+                // and a `flex` here only competes with it.
+                <div className='w-full'>
                   <Input.Root key={item.id}>
                     <Input.TextInput value={item.label} readOnly classNames='w-full' />
                   </Input.Root>

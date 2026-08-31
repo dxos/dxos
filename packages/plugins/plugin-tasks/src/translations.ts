@@ -43,6 +43,7 @@ export const translations = [
         'backlog.label': 'Backlog',
         'milestone-progress.label': '{{done}}/{{total}}',
         'delete-object.label': 'Delete object',
+        'delete-task.label': 'Delete task',
         'task-deleted.label': 'Task deleted',
         'tasks-deleted.label': 'Tasks deleted',
         'create-outline.label': 'Create outline',

@@ -42,10 +42,10 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-markdown": "workspace:*",
+    "@dxos/react-ui-menu": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/ui-types": "workspace:*",
-    "@dxos/util": "workspace:*",
     "@radix-ui/react-compose-refs": "catalog:",
     "@radix-ui/react-context": "catalog:"
   },
