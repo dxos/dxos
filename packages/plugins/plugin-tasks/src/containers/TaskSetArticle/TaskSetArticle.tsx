@@ -2,10 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import React, { useCallback, useMemo } from 'react';
 
-import * as Optimistic from '@dxos/app-framework/Optimistic';
-import { useOperation, useOptimisticOperation, useOptimisticQuery } from '@dxos/app-framework/ui';
+import { useOperation, useOperationHandler } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { Panel, Switch, Toolbar, useTranslation } from '@dxos/react-ui';
@@ -32,7 +34,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
   const { t } = useTranslation(meta.profile.key);
   const { hasAttention } = useAttention(attendableId);
   const spaceId = Obj.getDatabase(taskSet)?.spaceId;
-  const { tasks, overlay } = useTasks(taskSet);
+  const tasks = useTasks(taskSet);
 
   const handleCreate = useOperation(
     TaskOperation.CreateTask,
@@ -65,23 +67,20 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
     [contributed, handleDelete, t],
   );
 
-  // The optimistic entry mirrors the MoveTask handler's array write (`TaskSet.reorder` via `reorderItems`),
-  // so the dropped row renders in its target position on the drop frame instead of jumping back until
-  // the query re-emits the db order.
-  const handleMove = useOptimisticOperation(
+  const move = useOperationHandler(
     TaskOperation.MoveTask,
     (task: Task.Task, { parentTask, before }: TaskPlacement) => ({
       task: Ref.make(task),
+      taskSet: Ref.make(taskSet),
       parentTask: parentTask ? Ref.make(parentTask) : null,
       ...(before ? { before: Ref.make(before) } : {}),
     }),
-    {
-      overlay,
-      entry: (task, { before }) => ({
-        apply: (rows) => TaskSet.reorderItems(rows, (row) => row.id, task.id, before?.id),
-      }),
+  );
+  const handleMove = useCallback(
+    (task: Task.Task, placement: TaskPlacement) => {
+      Effect.runSync(move(task, placement));
     },
-    { spaceId },
+    [move],
   );
 
   const content = (
@@ -132,25 +131,19 @@ TaskSetArticle.displayName = 'TaskSetArticle';
 /**
  * The set's tasks via `childOf` — membership is the ECHO parent edge, and transitive tolerates
  * legacy sub-tasks still parented to their parent task. The query re-emits on membership changes
- * only, never on a member's edit — `TaskList` rows subscribe themselves. The ordered query atom
- * is wrapped in an optimistic overlay: the source must stay stable across emissions (hence
- * `query.atom` instead of `useQuery`, whose fresh arrays would rebuild the overlay and lose
- * pending entries mid-operation).
+ * only, never on a member's edit — `TaskList` rows subscribe themselves.
  */
-const useTasks = (
-  taskSet: TaskSet.TaskSet,
-): { tasks: readonly Task.Task[]; overlay: Optimistic.Overlay<Task.Task> } => {
-  const { objects, overlay } = useOptimisticQuery(
-    Obj.getDatabase(taskSet),
-    Filter.and(Filter.type(Task.Task), Filter.childOf(taskSet)),
-    // Subscribes each member's `parentTask` (the set's array does not carry hierarchy)
-    // and orders by the set's canonical array.
-    (get, tasks) => {
+const useTasks = (taskSet: TaskSet.TaskSet): readonly Task.Task[] => {
+  const atom = useMemo(() => {
+    const query = Obj.getDatabase(taskSet)?.query(Filter.and(Filter.type(Task.Task), Filter.childOf(taskSet)));
+    return Atom.make((get): readonly Task.Task[] => {
+      const tasks: readonly Task.Task[] = query ? get(query.atom) : [];
+      // Subscribes each member's `parentTask` (the set's array does not carry hierarchy)
+      // and orders by the set's canonical array.
       tasks.forEach((task) => get(Obj.atomProperty(task, 'parentTask')));
       return Task.orderTasks(tasks, get(Obj.atomProperty(taskSet, 'tasks')) ?? []);
-    },
-    [taskSet],
-  );
+    });
+  }, [taskSet]);
 
-  return { tasks: objects, overlay };
+  return useAtomValue(atom);
 };
