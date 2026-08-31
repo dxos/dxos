@@ -22,6 +22,7 @@ export type RunResultsProps = { run: TestRun.TestRun };
 export const RunResults = ({ run }: RunResultsProps) => {
   const { invokePromise } = useOperationInvoker();
   const [error, setError] = useState<string | undefined>();
+  const [completing, setCompleting] = useState(false);
   // Read through the snapshot so results appearing on the run re-render this list; the operations
   // still take a ref to the live object.
   const [snapshot] = useObject(run);
@@ -43,15 +44,16 @@ export const RunResults = ({ run }: RunResultsProps) => {
   );
 
   const handleComplete = useCallback(() => {
-    if (!invokePromise) {
+    // A second activation before the first settles would seal, then report the expected
+    // "already sealed" refusal as if the completion itself had failed.
+    if (!invokePromise || completing) {
       return;
     }
-    void invokePromise(
-      QaOperation.CompleteRun,
-      { run: Ref.make(run) },
-      { spaceId: Obj.getDatabase(run)?.spaceId },
-    ).then(({ error }) => setError(error ? String(error) : undefined));
-  }, [invokePromise, run]);
+    setCompleting(true);
+    void invokePromise(QaOperation.CompleteRun, { run: Ref.make(run) }, { spaceId: Obj.getDatabase(run)?.spaceId })
+      .then(({ error }) => setError(error ? String(error) : undefined))
+      .finally(() => setCompleting(false));
+  }, [invokePromise, run, completing]);
 
   return (
     <div className='flex flex-col gap-1 ps-6' data-testid='qa.run.results'>
@@ -97,7 +99,7 @@ export const RunResults = ({ run }: RunResultsProps) => {
 
       {snapshot.status === 'running' && (
         <div className='flex justify-end pt-1'>
-          <button className='dx-button' onClick={handleComplete} data-testid='qa.run.complete'>
+          <button className='dx-button' disabled={completing} onClick={handleComplete} data-testid='qa.run.complete'>
             <Icon icon='ph--flag-checkered--regular' size={4} />
             <span>Finish run</span>
           </button>
