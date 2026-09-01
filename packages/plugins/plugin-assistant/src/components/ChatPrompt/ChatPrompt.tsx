@@ -13,7 +13,7 @@ import { type Event } from '@dxos/async';
 import * as Project from '@dxos/compute/Project';
 import { type Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
 import {
   ChatEditor,
   type ChatEditorController,
