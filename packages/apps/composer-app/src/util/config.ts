@@ -89,13 +89,7 @@ export const initializeObservability = async (
   isTauri: boolean,
   logStore?: IdbLogStore,
   observabilityDisabled = false,
-  /**
-   * Handle posting to this realm's observability worker. When present, OTel log and metric
-   * export runs there instead of in this realm — the worker's own event loop keeps
-   * exporting what this realm logs and records even while its loop is saturated by a long
-   * synchronous task.
-   */
-  observabilityWorker?: { post: (message: ObservabilityExtension.Otel.OtelWorkerMessage) => void },
+  observabilityWorker?: ObservabilityExtension.Otel.OtelWorkerPort,
 ) =>
   Function.pipe(
     Observability.make(),

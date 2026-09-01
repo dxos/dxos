@@ -8,14 +8,8 @@ import { type CleanupFn, scheduleTaskInterval } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type MetricData, type MetricObserver, TRACE_PROCESSOR } from '@dxos/tracing';
 
+import { METRIC_EXPORT_INTERVAL } from './intervals';
 import type * as OtelMetricsSink from './OtelMetricsSink';
-
-/**
- * Matches the sink's export interval (see `EXPORT_INTERVAL` in `metrics.ts` — not imported,
- * that module statically pulls the OTel SDK and this one must stay light). Observed gauges
- * are sampled here at the same cadence the in-process reader would have collected them.
- */
-const OBSERVE_INTERVAL = 60 * 1000;
 
 /** Projects tags onto OTel attributes, dropping nullish values that are not valid attribute values. */
 export const metricDataToAttributes = (data?: MetricData): Attributes => {
@@ -32,17 +26,6 @@ export const metricDataToAttributes = (data?: MetricData): Attributes => {
   }, {});
 };
 
-/**
- * Producer-side metrics forwarder: implements the `TRACE_PROCESSOR.remoteMetrics` processor
- * contract by posting each instrument call to the observability worker, where an
- * `OtelMetricsSink` hosts the real `MeterProvider` and export timer. The post happens
- * synchronously inside the instrumented code, so a realm blocked by a long synchronous task
- * keeps landing datapoints while its own timers are stalled.
- *
- * Observable gauges cannot cross a port as callbacks; `observe` samples the callback on a
- * local timer and forwards plain gauge records. A saturated event loop skips those samples —
- * the same windows the in-process reader would have missed.
- */
 export class RemoteMetricsForwarder {
   readonly #post: (message: OtelMetricsSink.Init | OtelMetricsSink.Metric) => void;
   readonly #ctx = new Context();
@@ -50,7 +33,6 @@ export class RemoteMetricsForwarder {
   readonly #processor: Parameters<typeof TRACE_PROCESSOR.remoteMetrics.registerProcessor>[0] = {
     increment: (name, value, data) => this.#record('increment', name, value ?? 1, data),
     distribution: (name, value, data) => this.#record('distribution', name, value, data),
-    // Not implemented, not part of the OTel spec (parity with `OtelMetrics`).
     set: () => {},
     gauge: (name, value, data) => this.#record('gauge', name, value, data),
     observe: (name, callback, data) => this.observe(name, callback, metricDataToAttributes(data), data),
@@ -84,7 +66,7 @@ export class RemoteMetricsForwarder {
         }
         this.#send('gauge', name, value, tags, meta);
       },
-      OBSERVE_INTERVAL,
+      METRIC_EXPORT_INTERVAL,
     );
     return () => {
       void ctx.dispose();

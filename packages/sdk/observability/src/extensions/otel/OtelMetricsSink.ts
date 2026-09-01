@@ -10,12 +10,6 @@ import { type PushMetricExporter } from '@opentelemetry/sdk-metrics';
 
 import { OtelMetrics } from './metrics';
 
-/**
- * Sent once per connection to start metric export in the worker. Carries the options the
- * producer realm resolved — the worker itself is config-free. Resource attributes are the
- * metrics resource (no `session.id` — a per-page-load attribute would mint a new time
- * series on every reload).
- */
 export type Init = {
   type: 'otel-metrics-init';
   endpoint: string;
@@ -24,7 +18,6 @@ export type Init = {
   tags: Record<string, string>;
 };
 
-/** One instrument call forwarded from the producer realm. */
 export type Metric = {
   type: 'otel-metric';
   op: 'increment' | 'distribution' | 'gauge';
@@ -37,16 +30,9 @@ export type Metric = {
 export type Message = Init | Metric;
 
 export type Options = {
-  /** Test seam: replaces the OTLP exporter. */
   exporter?: PushMetricExporter;
 };
 
-/**
- * Worker-side OTel metrics pipeline: hosts the `MeterProvider`, aggregation, and the
- * periodic export timer, fed by instrument calls forwarded from the producer realm. The
- * calls are posted synchronously inside the instrumented code, so a realm blocked by a long
- * synchronous task keeps landing datapoints — the export timer here keeps ticking either way.
- */
 export class Sink {
   readonly #metrics: OtelMetrics;
   #tags: Record<string, string>;
@@ -59,8 +45,6 @@ export class Sink {
       resource: defaultResource().merge(resourceFromAttributes(init.resourceAttributes)),
       getTags: () => this.#tags,
       exporter: options.exporter,
-      // This pipeline exports one producer realm's forwarded records; the worker's own
-      // TRACE_PROCESSOR must not fan into every connection's pipeline.
       registerTraceProcessor: false,
     });
   }

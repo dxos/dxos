@@ -100,7 +100,6 @@ describe('OtelLogSink', () => {
   });
 });
 
-/** Serialize a real {@link LogEntry} the way the producing realm's log processor does. */
 const makeLine = (init: ConstructorParameters<typeof LogEntry>[0]): string => {
   const line = serializeToJsonl(new LogEntry(init), { env: 'test-env' });
   invariant(line !== undefined);
