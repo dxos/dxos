@@ -27,7 +27,7 @@ const Board = forwardRef<HTMLDivElement, { columns: string[][] }>(({ columns }, 
   const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'horizontal', memorizeCurrent: true, tabbable: true });
 
   return (
-    <div ref={ref} tabIndex={0} {...arrowNavigationAttrs} className='flex h-full w-full overflow-hidden'>
+    <div ref={ref} tabIndex={0} {...arrowNavigationAttrs} className='flex dx-fill overflow-hidden'>
       <div className={mx('flex h-full overflow-x-auto p-4 gap-4')}>
         {columns.map((column) => (
           <Column key={column[0]} items={column} />

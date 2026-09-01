@@ -847,7 +847,59 @@ const buildDecorations = (
         break;
       }
     }
+
+    // A chunk boundary can land inside the opening tag itself, leaving a tail like `<reasoni` that
+    // the complete-tag scan above cannot match — and an undecorated tail renders as literal markup
+    // until the `>` arrives. Hidden without a widget: there is no tag name yet to build one from,
+    // and `block` needs a widget to size the line.
+    if (streamingFrom === undefined) {
+      const partial = matchPartialOpenTag(tailText, streamingTagNames);
+      if (partial !== undefined) {
+        const absoluteFrom = range.from + partial.from;
+        builder.add(
+          absoluteFrom,
+          range.to,
+          Decoration.replace({
+            atomic: true,
+            inclusive: true,
+            streaming: true,
+            contentFrom: range.to,
+            // The fragment, not the tag it may become: `tag` is what bookmark navigation matches
+            // against, and a tag that has not arrived yet must not be a jump target.
+            tag: partial.fragment,
+          }),
+        );
+        streamingFrom = absoluteFrom;
+        last = absoluteFrom;
+      }
+    }
   }
 
   return { from: last, streamingFrom, decorations: builder.finish() };
+};
+
+/**
+ * Offset of a trailing `<` that could still become one of `tagNames`, or undefined.
+ *
+ * Only the document tail is considered: an unterminated `<` anywhere earlier is prose (`5 < 6`),
+ * since a real tag would have been closed by the text that follows it. Requiring the fragment to be
+ * a prefix of a registered name is what keeps `a < b` and `<div` out.
+ */
+const matchPartialOpenTag = (text: string, tagNames: string[]): { from: number; fragment: string } | undefined => {
+  const start = text.lastIndexOf('<');
+  if (start === -1) {
+    return undefined;
+  }
+
+  const fragment = text.slice(start + 1);
+  // A `>` means the tag is complete (or is not a tag at all); either way the scan above owns it.
+  if (fragment.includes('>')) {
+    return undefined;
+  }
+
+  // `<` alone is ambiguous — it becomes a tag or stays prose on the next character, and hiding the
+  // tail on that guess flickers the reader's own text.
+  return fragment.length > 0 && tagNames.some((name) => name.startsWith(fragment))
+    ? { from: start, fragment }
+    : undefined;
 };

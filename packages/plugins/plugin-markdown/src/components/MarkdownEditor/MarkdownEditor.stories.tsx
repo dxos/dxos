@@ -71,7 +71,7 @@ const EditorArticle = (props: MarkdownEditorEditorRootProps) => (
 );
 
 const EditorColumn = ({ id, object, settings }: Pick<MarkdownEditorProviderProps, 'id' | 'object' | 'settings'>) => (
-  <AttendableContainer id={id} tabIndex={0} classNames='dx-container'>
+  <AttendableContainer id={id} tabIndex={0} classNames='dx-expand'>
     <MarkdownEditorProvider
       id={id}
       attendableId={id}
@@ -90,7 +90,7 @@ const DefaultStory = ({ columns, content = CONTENT }: StoryArgs) => {
   const object = useMemo(() => createObject(Text.make({ content })), [content]);
 
   return (
-    <div className='dx-container grid' style={{ gridTemplateColumns: `repeat(${columns.length}, minmax(0, 1fr))` }}>
+    <div className='dx-expand grid' style={{ gridTemplateColumns: `repeat(${columns.length}, minmax(0, 1fr))` }}>
       {columns.map((settings, index) => (
         <EditorColumn key={index} id={`${object.id}/${index}`} object={object} settings={settings} />
       ))}

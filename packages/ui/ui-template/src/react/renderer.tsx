@@ -90,7 +90,7 @@ const AttendableContainer = ({ id, gap, children }: PropsWithChildren<{ id?: str
         column
         gap={gap}
         classNames={mx(
-          'dx-container ring-2 ring-separator rounded-sm',
+          'dx-expand overflow-hidden ring-2 ring-separator rounded-sm',
           id && attended === id && 'ring-[var(--color-focus-ring-subtle)]',
         )}
       >
@@ -137,13 +137,13 @@ export const createReactRenderer = ({
     }
     if (cols || rows) {
       return (
-        <Grid key={path} cols={cols} rows={rows} gap={oneOf(GAPS, props.gap)} grow={false} classNames='dx-container'>
+        <Grid key={path} cols={cols} rows={rows} gap={oneOf(GAPS, props.gap)} grow={false} classNames='dx-expand'>
           {children}
         </Grid>
       );
     } else {
       return (
-        <Flex key={path} {...flexProps(props)} classNames='dx-container'>
+        <Flex key={path} {...flexProps(props)} classNames='dx-expand'>
           {children}
         </Flex>
       );

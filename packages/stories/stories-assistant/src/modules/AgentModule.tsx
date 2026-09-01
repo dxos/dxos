@@ -138,7 +138,7 @@ export const AgentModule = () => {
   );
 
   return (
-    <Panel.Root classNames='h-full w-full min-h-0 min-w-0 flex flex-col gap-2 p-2 overflow-hidden'>
+    <Panel.Root classNames='dx-fill min-h-0 min-w-0 flex flex-col gap-2 p-2 overflow-hidden'>
       <Panel.Toolbar classNames='shrink-0 justify-end'>
         <div className='flex items-center gap-1 text-xs text-description'>
           <Icon icon='ph--git-commit--regular' size={4} />
@@ -146,7 +146,7 @@ export const AgentModule = () => {
         </div>
       </Panel.Toolbar>
 
-      <div ref={scroller} className='flex-1 min-h-0 overflow-y-auto p-2'>
+      <div ref={scroller} className='dx-grow overflow-y-auto p-2'>
         <div className='flex flex-col gap-3'>
           {rows.map(({ role, block, superseded }, index) => (
             <div key={index} className='flex flex-col gap-1'>

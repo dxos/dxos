@@ -47,7 +47,7 @@ export const ProcessTree = React.memo(
       const rows = useMemo(() => buildProcessTreeRows(processes, depth), [processes, depth]);
 
       return (
-        <ScrollArea.Root {...composableProps(props, { classNames: 'dx-expander' })} thin ref={forwardedRef}>
+        <ScrollArea.Root {...composableProps(props, { classNames: 'dx-expand' })} thin ref={forwardedRef}>
           <ScrollArea.Viewport>
             <Treegrid.Root classNames='grid grid-cols-[min-content_1fr_min-content_min-content]'>
               {rows.map(({ process, path }) => (

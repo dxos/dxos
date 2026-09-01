@@ -270,9 +270,9 @@ const PreviewContent = composable<HTMLDivElement>((props, forwardedRef) => {
 
   if (type.startsWith('image/') || type.startsWith('video/') || type.startsWith('audio/')) {
     return (
-      <div {...composableProps(props, { classNames: 'grid h-full w-full min-h-0' })} ref={forwardedRef}>
+      <div {...composableProps(props, { classNames: 'grid dx-fill min-h-0' })} ref={forwardedRef}>
         <MediaPlayer
-          classNames='h-full w-full'
+          classNames='dx-fill'
           src={url}
           // `kind` is set explicitly for audio and video because the URL is a `data:`/`blob:`/
           // presigned one with no usable extension, which is all `detectMediaKind` has to go on.
@@ -285,7 +285,7 @@ const PreviewContent = composable<HTMLDivElement>((props, forwardedRef) => {
   }
 
   return (
-    <div {...composableProps(props, { classNames: 'grid place-items-center h-full w-full p-8' })} ref={forwardedRef}>
+    <div {...composableProps(props, { classNames: 'grid place-items-center dx-fill p-8' })} ref={forwardedRef}>
       <div className='flex flex-col items-center gap-2 text-center'>
         <Icon icon='ph--file--regular' size={8} classNames='text-subdued' />
         {name && <span className='text-sm'>{name}</span>}

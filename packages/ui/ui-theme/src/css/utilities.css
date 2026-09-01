@@ -3,45 +3,96 @@
  */
 
 /**
- * Layout rules for flex-based scroll containment:
- * `flex flex-col`
- *   On a container: makes it a flex column so children stack and can use `flex-1`.
- * `flex-1`
- *   On a child: grows to fill the flex parent. Requires the parent to be `flex`.
- * `min-h-0` (alongside `flex-1`):
- *   Overrides default flex children: `min-height:auto` (sized to content), which prevents shrinking.
- *   Allows element to shrink and trigger overflow/scrolling.
- *   Always pair with `flex-1` when scroll is needed.
- * `h-full`:
- *   Fills 100% of the parent's *computed* height.
- *   Use when the parent has a definite height but is not a flex container (e.g. `overflow:hidden` wrapper).
- *   Unlike `flex-1`, does not require the parent to be flex.
+ * Sizing utilities: filling a parent, and letting children scroll.
  *
- * Pattern for a scrollable region inside a flex ancestor:
- *   ancestor         → `flex flex-col`             (or `flex flex-row`)
- *   scroll root      → `flex-1 min-h-0`            (fills ancestor, can shrink)
+ * ## The one rule
+ *
+ * A sizing class never describes the element's own layout — it describes how the element is
+ * sized BY ITS PARENT. So `dx-expand grid` is not a contradiction: `grid` arranges the
+ * element's children, `dx-expand` sizes the element within whatever contains it. An element
+ * is routinely both a grid container and a flex item.
+ *
+ * ## Which property the parent actually reads
+ *
+ * The three mechanisms below are a union, one per kind of parent. Exactly the applicable
+ * subset is consulted; the rest compute normally and are never read. Measured in a 300px
+ * parent with a 40px header and a 900px-tall grandchild:
+ *
+ * | property           | flex parent | grid parent | block parent w/ definite height |
+ * | ------------------ | ----------- | ----------- | ------------------------------- |
+ * | `flex-1`           | sizes it    | ignored     | ignored                         |
+ * | `min-h-0 min-w-0`  | lets it     | lets it     | n/a (auto is already 0)         |
+ * |                    | shrink      | shrink      |                                 |
+ * | `h-full w-full`    | redundant   | redundant   | sizes it                        |
+ *
+ * In a grid parent `min-h-0` is the ONLY property that does anything: without it the item's
+ * automatic minimum size (`min-height:auto`) grows the track to the content — 900px instead of
+ * the 260px the track offers. `flex-1` and `h-full` both leave it at 900px on their own.
+ *
+ * This is why the union is safe and why it works without the author knowing the parent's
+ * display type. It is also why `flex-1` appearing next to `grid` is not a bug.
+ *
+ * ## Overflow is a size constraint too
+ *
+ * For a flex or grid item, `min-height:auto` applies only while `overflow` is `visible`
+ * (CSS Flexbox §4.5, CSS Grid §6.6). Any non-visible overflow therefore zeroes the automatic
+ * minimum size, making `overflow-hidden` and `min-h-0 min-w-0` two spellings of the same
+ * constraint. Prefer the explicit `min-*-0` — a clip additionally makes the element a scroll
+ * container, so a focused descendant can silently scroll it with no scrollbar to scroll back.
+ *
+ * Add `overflow-hidden` only where a clip is genuinely wanted: a rounded or bordered box whose
+ * child surface would paint over the radius, or a host for something that draws past its bounds
+ * by design (a map, a canvas, a scaled slide).
+ *
+ * ## Pattern for a scrollable region
+ *
+ *   ancestor         → `flex flex-col`             (or `flex flex-row`, or `grid`)
+ *   scroll root      → `dx-grow`                   (fills ancestor, can shrink)
  *   scroll viewport  → `h-full overflow-y-scroll`  (fills root, scrolls)
+ *
+ * ## Picking one
+ *
+ * | class           | expands to                     | use when                                      |
+ * | --------------- | ------------------------------ | --------------------------------------------- |
+ * | `dx-fill`       | `h-full w-full`                | parent has a definite size                    |
+ * | `dx-grow`       | `flex-1 min-h-0 min-w-0`       | flex/grid child taking the remainder          |
+ * | `dx-expand`     | `dx-grow dx-fill`              | parent's display type is unknown or varies    |
+ * | `dx-fullscreen` | `absolute inset-0`             | pinned to a positioned ancestor               |
  */
 
 /**
- * Fills the available space.
- */
-@utility dx-expander {
-  @apply flex-1 min-h-0 h-full min-w-0 w-full;
-}
-
-/**
- * Container that fills the available space (extends dx-expander with overflow clipping).
- */
-@utility dx-container {
-  @apply dx-expander overflow-hidden;
-}
-
-/**
- * Fullscreen
+ * Pins all four edges of the nearest positioned ancestor. Sizing utilities are inert on top of
+ * this — the insets already determine the box — so use it INSTEAD of `dx-expand`, not with it.
+ *
+ * The exception is a replaced element (`canvas`, `img`, `video`): the insets do not stretch it,
+ * so it sizes to its intrinsic dimensions — a canvas to its DPI-scaled render buffer — and needs
+ * `dx-fill` alongside.
  */
 @utility dx-fullscreen {
   @apply absolute inset-0;
+}
+
+/**
+ * Fills a parent that already has a definite size. Does not require a flex or grid parent.
+ */
+@utility dx-fill {
+  @apply h-full w-full;
+}
+
+/**
+ * Flex/grid child: take the remaining space, and yield to scrolling or truncating children.
+ * Sets `flex`, not `display: flex` — it describes how the parent sizes this element.
+ */
+@utility dx-grow {
+  @apply flex-1 min-h-0 min-w-0;
+}
+
+/**
+ * Fills the available space, whatever kind of parent it has. Use when the parent's display
+ * type is unknown or may change — see the union table above.
+ */
+@utility dx-expand {
+  @apply dx-grow dx-fill;
 }
 
 /**

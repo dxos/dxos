@@ -675,9 +675,11 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ### Layout / scrolling
 
-- `<div overflow-y-auto>` inside `Panel.Content` does NOT scroll. `Panel.Content` = `[grid-area:content] min-h-0` (bounded block). Root must fill it: `flex flex-col dx-container`.
-- `dx-container` = `flex-1 min-h-0 min-w-0 h-full w-full overflow-hidden`; no flex-direction, so keep `flex flex-col`.
-- `ScrollArea.Root` theme already includes `dx-container` — do NOT add `min-h-0 grow`/`h-full`.
+- `<div overflow-y-auto>` inside `Panel.Content` does NOT scroll. `Panel.Content` = `[grid-area:content] min-h-0` (bounded block). Root must fill it: `flex flex-col dx-expand`.
+- `dx-expand` = `dx-grow` (`flex-1 min-h-0 min-w-0`) + `dx-fill` (`h-full w-full`); no flex-direction, so keep `flex flex-col`. It no longer clips — add `overflow-hidden` where a clip is wanted.
+- Which half fires depends on the parent: `flex-1` only in a flex parent, `min-*-0` in flex AND grid, `h-full w-full` only in a block parent with a definite height. In a grid parent `min-h-0` is the ONLY property doing anything.
+- `dx-container` is gone (it bundled the clip); `dx-expander` is renamed `dx-expand`.
+- `ScrollArea.Root` theme already includes `dx-expand overflow-hidden dx-scroll-boundary` — do NOT add `min-h-0 grow`/`h-full`. The `dx-scroll-boundary` marker is what `withColumn.propagate()` exempts from the centre track.
 - Pattern: pinned region (`shrink-0`, `border-b border-separator`) + scrolling region (stack or `ScrollArea`).
 - No `role=''` on plain layout divs.
 - No arbitrary spacing (`p-3`, `gap-2`). Use design-token utilities (`p-form-gap`, `gap-form-gap`, `pb-form-gap` — backed by `--spacing-form-gap`) or embed in `Form.Viewport`/`Form.Content` and let the form supply spacing.
