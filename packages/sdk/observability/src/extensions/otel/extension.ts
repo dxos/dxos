@@ -19,6 +19,9 @@ import { getOtelLogLevel, isObservabilityDisabled, storeObservabilityDisabled } 
 import { stubExtension } from '../stub';
 import { type OtelLogSinkMessage } from './log-sink';
 
+/** One-way send handle into the observability worker. */
+export type OtelWorkerPort = { post: (message: OtelLogSinkMessage) => void };
+
 export type ExtensionsOptions = {
   /** For the OTEL, the name of the entity for which signals (metrics or trace) are collected. */
   serviceName: string;
@@ -39,7 +42,7 @@ export type ExtensionsOptions = {
    * the JSONL lines the realm's log processor already ships it, on its own event loop — so
    * export keeps up while this realm is blocked by a long synchronous task.
    */
-  observabilityWorker?: { post: (message: OtelLogSinkMessage) => void };
+  observabilityWorker?: OtelWorkerPort;
   metrics?: boolean;
   traces?: boolean;
 };
@@ -129,8 +132,6 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   const sessionId = crypto.randomUUID();
   const { resource, metricsResource } = createResources(baseAttributes, sessionId);
 
-  // Remote takes precedence: with a observability worker, the worker owns the whole log pipeline and
-  // this realm installs no processor at all.
   const remoteLogs = logsEnabled ? observabilityWorker : undefined;
   const logs =
     logsEnabled && !remoteLogs
@@ -195,8 +196,6 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
     }),
     close: () =>
       Effect.promise(async () => {
-        // Fire-and-forget: the worker outlives this realm's teardown and drains on its own
-        // schedule; there is no ack channel to await.
         remoteLogs?.post({ type: 'otel-flush' });
         // Run logs/metrics close concurrently and swallow their failures so the
         // tracer provider shutdown below ALWAYS runs. Without this, a rejection

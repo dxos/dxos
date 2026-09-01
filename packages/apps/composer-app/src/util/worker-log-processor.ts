@@ -22,10 +22,12 @@ const DEFAULT_LOG_FILTER = 'debug';
  * messages are the Otel extension's control plane for the worker-side OTLP export of those
  * same lines (posted via the `observabilityWorker` handle `initializeObservability` wires up).
  */
-export type ObservabilityWorkerMessage = string | { type: 'flush' } | OtelLogSinkMessage;
+/** One pre-serialized JSONL log line; the hot path carries no envelope. */
+export type SerializedLogLine = string;
+
+export type ObservabilityWorkerMessage = SerializedLogLine | { type: 'flush' } | OtelLogSinkMessage;
 
 export type WorkerLogProcessorOptions = {
-  /** The observability worker (`workers/observability-worker.ts`). */
   worker: Worker;
   /** Identifier embedded in every record's `i` field. Defaults to {@link inferEnvironmentName}. */
   tabId?: string;

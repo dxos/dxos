@@ -5,8 +5,7 @@
 import { IdbLogStore } from '@dxos/log-store-idb';
 import { type OtelLogSinkInit, type OtelLogSinkMessage } from '@dxos/observability/otel-log-sink';
 
-// Direct module import: the util barrel would pull the whole config/observability graph into
-// this worker's bundle.
+// Not the `../util` barrel: it re-exports config, pulling @dxos/client into this bundle.
 import { LOG_STORE_DB_NAME, LOG_STORE_MAX_BYTES } from '../util/constants';
 import { type ObservabilityWorkerMessage } from '../util/worker-log-processor';
 
@@ -23,24 +22,20 @@ import { type ObservabilityWorkerMessage } from '../util/worker-log-processor';
 const store = new IdbLogStore({ dbName: LOG_STORE_DB_NAME, maxBytes: LOG_STORE_MAX_BYTES });
 
 /** Caps records buffered while the sink module import is in flight. */
-const MAX_PENDING = 5_000;
+const MAX_BUFFERED_RECORDS = 5_000;
 
 /** What the sink accepts after its init; kept in step with `OtelLogSink.handleMessage`. */
 type LogControl = Exclude<OtelLogSinkMessage, OtelLogSinkInit>;
 
-/**
- * One lazily-imported export pipeline. `init` starts the (one-shot) module load; messages
- * delivered before it resolves are buffered in order. Only records count against
- * {@link MAX_PENDING}: control messages are few, and dropping one loses a flush rather than a
- * record. A failed load drops export for this connection — IDB persistence is unaffected.
- */
+type Consume<TMessage> = (message: TMessage) => void;
+type Pipeline<TInit, TMessage> = { init: (init: TInit) => void; deliver: Consume<TMessage> };
+
 const lazySink = <TInit, TMessage>(
-  load: (init: TInit) => Promise<(message: TMessage) => void>,
+  load: (init: TInit) => Promise<Consume<TMessage>>,
   isRecord: (message: TMessage) => boolean,
-): { init: (init: TInit) => void; deliver: (message: TMessage) => void } => {
+): Pipeline<TInit, TMessage> => {
   let deliver: ((message: TMessage) => void) | undefined;
   let pending: TMessage[] | undefined;
-  // Counted apart from `pending.length` so a queued control message never displaces a record.
   let pendingRecords = 0;
   return {
     init: (init) => {
@@ -62,7 +57,7 @@ const lazySink = <TInit, TMessage>(
     deliver: (message) => {
       if (deliver !== undefined) {
         deliver(message);
-      } else if (pending !== undefined && (!isRecord(message) || pendingRecords < MAX_PENDING)) {
+      } else if (pending !== undefined && (!isRecord(message) || pendingRecords < MAX_BUFFERED_RECORDS)) {
         pending.push(message);
         if (isRecord(message)) {
           pendingRecords++;
@@ -86,7 +81,6 @@ const createMessageHandler = (): ((event: MessageEvent<ObservabilityWorkerMessag
 
   return (event: MessageEvent<ObservabilityWorkerMessage>): void => {
     const data = event.data;
-    // Hot path: a bare string is one pre-serialized JSONL line.
     if (typeof data === 'string') {
       store.append(data);
       logs.deliver(data);
