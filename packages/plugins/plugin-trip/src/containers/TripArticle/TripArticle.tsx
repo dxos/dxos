@@ -258,7 +258,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
   }, [handleAddSegment, showGlobe, mapAvailable, hasRoad, planning, handlePlanRoute]);
 
   return (
-    <div role={role} className='@container dx-container overflow-hidden'>
+    <div role={role} className='@container dx-expand'>
       <div
         className={mx(
           'grid h-full',

@@ -102,7 +102,7 @@ export const IntrinsicCardContainer = ({
       style={sizeStyle(size, 'horizontal')}
       {...resizeAttributes}
     >
-      <div className='dx-container flex flex-col'>{children}</div>
+      <div className='dx-expand flex flex-col'>{children}</div>
       <ResizeHandle
         side='inline-end'
         fallbackSize={DEFAULT_BLOCK_SIZE}

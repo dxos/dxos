@@ -36,7 +36,7 @@ const PaneRoot = forwardRef<HTMLDivElement, PaneRootProps>(({ children, ...props
       // No `dx-density-*` here: the class sets `--dx-control` for the whole subtree, so a pane-wide
       // `lg` reached the content body and rendered form labels and inputs at 40px. The toolbar gets
       // `lg` from its own `DensityProvider` (see `Pane.Toolbar`); the body keeps the `md` default.
-      classNames: 'dx-container flex flex-col dx-attention-surface relative dx-focus-ring-inset-over-all min-w-0',
+      classNames: 'dx-expand flex flex-col dx-attention-surface relative dx-focus-ring-inset-over-all',
     })}
     ref={forwardedRef}
   >
@@ -74,7 +74,7 @@ PaneToolbar.displayName = 'Pane.Toolbar';
 const PaneContent = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const Comp = asChild ? Slot : 'div';
   return (
-    <Comp {...composableProps(props, { classNames: 'flex-1 min-h-0' })} ref={forwardedRef}>
+    <Comp {...composableProps(props, { classNames: 'dx-grow' })} ref={forwardedRef}>
       {children}
     </Comp>
   );

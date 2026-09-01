@@ -342,7 +342,7 @@ const CarouselSlide = ({
       className={mx(
         transition === 'slide'
           ? 'relative shrink-0 basis-full h-full dx-base-surface'
-          : 'absolute inset-0 w-full h-full dx-base-surface',
+          : 'dx-fullscreen dx-fill dx-base-surface',
         classNames,
       )}
     >
@@ -350,7 +350,7 @@ const CarouselSlide = ({
         src={src}
         kind={kind}
         alt={alt}
-        classNames='w-full h-full'
+        classNames='dx-fill'
         controls={controls}
         // In `slide` mode every slide is mounted; only auto-play the active one to avoid off-screen playback.
         autoPlay={autoPlay && active === index}
