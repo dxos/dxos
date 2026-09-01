@@ -731,15 +731,19 @@ export const Test: Story = {
     // The pane is one grid whose first cells ARE the title line, so its gutter cell is its first
     // child — the same column a row's status toggle occupies.
     const createIcon = firstCell(create);
-    if (!rowIcon || !createIcon) {
-      throw new Error('Row icons not found.');
+    const rowLabel = labelCell(row);
+    const createLabel = labelCell(create);
+    // Guarded together: indexing a NodeList yields `undefined` for a missing cell, and reading
+    // geometry off it would throw a TypeError instead of failing the alignment assertion.
+    if (!rowIcon || !createIcon || !rowLabel || !createLabel) {
+      throw new Error('Row icons or label cells not found.');
     }
 
     // Same icon column ⇒ same horizontal centre (sub-pixel tolerance for rounding).
     await expect(Math.abs(center(rowIcon) - center(createIcon))).toBeLessThan(1);
     // ...and the labels start at the same x.
     await expect(
-      Math.abs(labelCell(row).getBoundingClientRect().left - labelCell(create).getBoundingClientRect().left),
+      Math.abs(rowLabel.getBoundingClientRect().left - createLabel.getBoundingClientRect().left),
     ).toBeLessThan(1);
 
     // The row spans the full width, so trailing actions sit at the far edge.
