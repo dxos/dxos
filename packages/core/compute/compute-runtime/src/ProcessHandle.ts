@@ -19,6 +19,7 @@ import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import * as Semaphore from 'effect/Semaphore';
 import * as Stream from 'effect/Stream';
+import * as Tracer from 'effect/Tracer';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import * as RpcClient from 'effect/unstable/rpc/RpcClient';
@@ -160,6 +161,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
   readonly #storage: StorageService.Service;
   readonly #traceSink: Trace.Sink;
   readonly #clock: Clock.Clock;
+  readonly #tracer: Tracer.Tracer;
   readonly #ephemeralBuffer = new EphemeralTraceBuffer();
   readonly #ephemeralSubscribers: Queue.Queue<Option.Option<Trace.Message>>[] = [];
   readonly #onFinished: ((state: Process.State, cause?: Cause.Cause<never>) => Effect.Effect<void>) | undefined;
@@ -181,6 +183,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
     environment: Process.Environment,
     traceSink: Trace.Sink,
     clock: Clock.Clock,
+    tracer: Tracer.Tracer,
     rpc: RpcClient.RpcClient<any>,
     onFinished?: (state: Process.State, cause?: Cause.Cause<never>) => Effect.Effect<void>,
     onStatusChanged?: () => void,
@@ -204,6 +207,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
     this.#traceSink = traceSink;
     this.#storage = storage;
     this.#clock = clock;
+    this.#tracer = tracer;
     this.rpc = rpc;
     this.#onFinished = onFinished;
     this.#onStatusChanged = onStatusChanged;
@@ -376,7 +380,9 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
     this.#alarmDueAt = dueAt;
     log('lifecycle: alarm rearmed', { dueAt, delayMs: delay });
     this.#alarmFiber = Effect.runFork(
-      Effect.provideService(this.#makeAlarmSleepEffect(delay), Clock.Clock, this.#clock),
+      Effect.provideService(this.#makeAlarmSleepEffect(delay), Clock.Clock, this.#clock).pipe(
+        Effect.provideService(Tracer.Tracer, this.#tracer),
+      ),
     );
   }
   /**
@@ -566,10 +572,13 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
     const dueAt = Date.now() + delay;
     this.#alarmDueAt = dueAt;
     log('lifecycle: alarm scheduled', { delayMs: delay, dueAt });
-    // Forked off the default runtime, so the captured ambient clock is provided to the whole effect
-    // (handler included) — otherwise it reverts to the live clock and no `TestClock` reaches it.
+    // Forked off the default runtime, so the captured ambient clock and tracer are provided to the
+    // whole effect (handler included) — otherwise the clock reverts to the live one, no `TestClock`
+    // reaches it, and the handler's spans go to Effect's default tracer, which exports nothing.
     this.#alarmFiber = Effect.runFork(
-      Effect.provideService(this.#makeAlarmSleepEffect(delay), Clock.Clock, this.#clock),
+      Effect.provideService(this.#makeAlarmSleepEffect(delay), Clock.Clock, this.#clock).pipe(
+        Effect.provideService(Tracer.Tracer, this.#tracer),
+      ),
     );
   }
 
@@ -629,7 +638,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
       log('lifecycle: child event ignored (already finished)', { tag: event._tag, childPid: event.pid });
       return;
     }
-    // Carries the captured clock for the same reason as the alarm fork above.
+    // Carries the captured clock and tracer for the same reason as the alarm fork above.
     Effect.runFork(
       Effect.provideService(
         this.#persistence
@@ -639,7 +648,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
           ),
         Clock.Clock,
         this.#clock,
-      ),
+      ).pipe(Effect.provideService(Tracer.Tracer, this.#tracer)),
     );
   }
 

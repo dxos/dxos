@@ -8,6 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Scope from 'effect/Scope';
+import * as Tracer from 'effect/Tracer';
 
 import { ServiceNotAvailableError } from '@dxos/compute';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
@@ -31,7 +32,40 @@ class ServiceD extends Context.Service<ServiceD, { readonly value: string }>()('
 const resolveWithScope = <A, E>(effect: Effect.Effect<A, E, Scope.Scope>) =>
   Effect.scoped(effect) as Effect.Effect<A, E, never>;
 
+/** Records the name of every span opened, delegating the span itself to the built-in tracer. */
+const makeRecordingTracer = (names: string[]) => {
+  const base = Effect.runSync(Effect.tracer);
+  return Tracer.make({
+    span: (...args) => {
+      names.push((args[0] as any).name);
+      return base.span(...args);
+    },
+  });
+};
+
+const sliceSpanNames: string[] = [];
+
 describe('LayerStack', () => {
+  it.effect(
+    'builds service layers under the ambient tracer',
+    Effect.fn(
+      function* ({ expect }) {
+        const layer = LayerSpec.make({ affinity: 'application', requires: [], provides: [ServiceA] }, () =>
+          Layer.effect(ServiceA, Effect.succeed({ value: 'a' }).pipe(Effect.withSpan('Slice.build'))),
+        );
+
+        const stack = new LayerStack.LayerStack({ layers: [layer] });
+        yield* resolveWithScope(stack.getServiceResolver().resolve(ServiceA, {}));
+
+        // Each slice gets its own `ManagedRuntime`, which starts from an empty context -- so without
+        // help the slice, and anything long-lived it builds (an agent process, say), runs on the
+        // default tracer, which keeps spans in memory and exports none of them.
+        expect(sliceSpanNames).toContain('Slice.build');
+      },
+      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(sliceSpanNames))),
+    ),
+  );
+
   describe('application-affinity resolution', () => {
     it.effect(
       'resolves a single service provided by an application-affinity layer',

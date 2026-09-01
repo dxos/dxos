@@ -489,6 +489,9 @@ export class ProcessManagerImpl implements Manager {
     return Effect.gen({ self: this }, function* () {
       // Captured from the ambient runtime so alarms are driven by the same `Clock` (incl. `TestClock`).
       const clock = yield* Clock.Clock;
+      // Captured for the same reason as the clock: the handle's alarm and child-event forks run off
+      // the default runtime, where the tracer reverts to one that exports nothing.
+      const tracer = yield* Effect.tracer;
       const id = this.#idGenerator();
       log('lifecycle: spawn', {
         pid: id,
@@ -671,6 +674,7 @@ export class ProcessManagerImpl implements Manager {
         environment,
         this.#traceSink,
         clock,
+        tracer,
         rpcClient,
         onFinished,
         () => this.#refreshProcessTree(),
@@ -720,6 +724,9 @@ export class ProcessManagerImpl implements Manager {
     return Effect.gen({ self: this }, function* () {
       // Captured from the ambient runtime so alarms are driven by the same `Clock` (incl. `TestClock`).
       const clock = yield* Clock.Clock;
+      // Captured for the same reason as the clock: the handle's alarm and child-event forks run off
+      // the default runtime, where the tracer reverts to one that exports nothing.
+      const tracer = yield* Effect.tracer;
       const id = record.id;
       log('lifecycle: rehydrate', { pid: id, key: record.key });
 
@@ -864,6 +871,7 @@ export class ProcessManagerImpl implements Manager {
         environment,
         this.#traceSink,
         clock,
+        tracer,
         rpcClient,
         onFinished,
         () => this.#refreshProcessTree(),

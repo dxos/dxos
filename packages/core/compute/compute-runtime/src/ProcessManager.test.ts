@@ -17,6 +17,7 @@ import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import * as TestClock from 'effect/testing/TestClock';
+import * as Tracer from 'effect/Tracer';
 import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import * as Rpc from 'effect/unstable/rpc/Rpc';
@@ -55,6 +56,12 @@ const Double = Operation.make({
   meta: { key: DXN.make('com.example.operation.test.double'), name: 'Double' },
   input: Schema.Struct({ value: Schema.Number }),
   output: Schema.Number,
+});
+
+const Traced = Operation.make({
+  meta: { key: DXN.make('com.example.operation.test.traced'), name: 'Traced' },
+  input: Schema.Void,
+  output: Schema.Void,
 });
 
 const Failing = Operation.make({
@@ -118,6 +125,13 @@ const handlers = OperationHandlerSet.make(
     Operation.withHandler(
       Effect.fn(function* (input) {
         return input.value * 2;
+      }),
+    ),
+  ),
+  Traced.pipe(
+    Operation.withHandler(
+      Effect.fn(function* () {
+        yield* Effect.void.pipe(Effect.withSpan('Handler.span'));
       }),
     ),
   ),
@@ -352,6 +366,24 @@ const CapturingTraceTestLayer = Layer.mergeAll(ProcessManager.ProcessOperationIn
   Layer.provide(Layer.succeed(Trace.TraceSink, { write: (message) => capturedTraceMessages.push(message) })),
 );
 
+/**
+ * Records the name of every span the ambient tracer is asked to open, delegating the span itself to
+ * the built-in tracer. Stands in for the OTel-backed tracer the app installs: `Tracer.Tracer` is a
+ * reference whose default builds in-memory spans that are never exported, so a handler that loses
+ * the installed tracer still *looks* traced while emitting nothing.
+ */
+const makeRecordingTracer = (names: string[]) => {
+  const base = Effect.runSync(Effect.tracer);
+  return Tracer.make({
+    span: (...args) => {
+      names.push((args[0] as any).name);
+      return base.span(...args);
+    },
+  });
+};
+
+const spanNames: string[] = [];
+
 describe('ManagerImpl', () => {
   it.effect(
     'spawns a process and produces output',
@@ -370,6 +402,20 @@ describe('ManagerImpl', () => {
       const outputs = yield* Fiber.join(outputFiber);
       expect(outputs).toEqual([10]);
     }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'runs process handlers under the ambient tracer',
+    Effect.fn(
+      function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        const handle = yield* manager.spawn(Process.fromOperation(Traced, handlers));
+        yield* handle.runAndExit({ inputs: [undefined] }).pipe(Stream.runCollect);
+        expect(spanNames).toContain('Handler.span');
+      },
+      Effect.provide(TestLayer),
+      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(spanNames))),
+    ),
   );
 
   it.effect(
