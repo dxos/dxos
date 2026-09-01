@@ -214,6 +214,17 @@ export type TreeProps<T extends { id: string } = any> = {
    * that looks wrong here is a band that behaves wrong under the pointer.
    */
   debug?: boolean;
+  /**
+   * Give an open branch a reorder-below zone, meaning "after this row and everything under it".
+   *
+   * The hitbox drops that zone for an expanded branch because "below the row" and "its first child"
+   * are the same pixels, and offers `reparent` bands under the last descendant instead. Those bands
+   * are indent-wide slivers whose position moves with the row's depth — not a target anyone can aim
+   * at — so a tree whose "below" already means *after the subtree* is better served offering it
+   * everywhere. Off by default: it changes what the zone means, and the navtree relies on the
+   * hitbox's own reading.
+   */
+  dropBelowExpanded?: boolean;
   canSelect?: (params: { item: T; path: string[] }) => boolean;
   onOpenChange?: (params: { item: T; path: string[]; open: boolean }) => void;
   onSelect?: (params: { item: T; path: string[]; current: boolean; option: boolean; shift: boolean }) => void;
@@ -243,6 +254,7 @@ export const Tree = <T extends { id: string } = any>({
   leavesAcceptChildren = false,
   selectionFollowsFocus = false,
   debug = false,
+  dropBelowExpanded = false,
   canSelect,
   onOpenChange,
   onSelect,
@@ -377,6 +389,7 @@ export const Tree = <T extends { id: string } = any>({
       canDrop,
       leavesAcceptChildren,
       debug,
+      dropBelowExpanded,
       onOpenChange,
       onItemHover,
       selectNode: onSelectNode,
@@ -393,6 +406,7 @@ export const Tree = <T extends { id: string } = any>({
       canDrop,
       leavesAcceptChildren,
       debug,
+      dropBelowExpanded,
       onSelectNode,
       closingValues,
       onOpenChange,
@@ -574,6 +588,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
     canDrop,
     leavesAcceptChildren,
     debug,
+    dropBelowExpanded,
     onOpenChange,
     onItemHover,
     selectNode,
@@ -590,7 +605,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
   // the reorder-below zone, because "below an open branch" and "its first child" are the same place.
   // A leaf reports `open` too (nothing distinguishes it in the model), and treating that as expanded
   // stripped the below zone from every childless row — so nothing could be dropped after one.
-  const mode: ItemMode = last ? 'last-in-group' : branch && open ? 'expanded' : 'standard';
+  const mode: ItemMode = last ? 'last-in-group' : branch && open && !dropBelowExpanded ? 'expanded' : 'standard';
   const data = { id, path, item } satisfies TreeData;
   const isItemDraggable = treeDraggable && props.draggable !== false;
   const isItemDroppable = props.droppable !== false;

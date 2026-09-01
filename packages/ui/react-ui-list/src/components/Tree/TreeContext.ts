@@ -117,6 +117,8 @@ export type TreeRenderContextValue<T extends { id: string } = any> = {
   leavesAcceptChildren?: boolean;
   /** Paint every row's drop bands, so the zones can be seen without holding a drag. */
   debug?: boolean;
+  /** Offer an open branch a reorder-below zone meaning "after this row and its subtree". */
+  dropBelowExpanded?: boolean;
   onOpenChange?: (params: { item: T; path: string[]; open: boolean }) => void;
   onItemHover?: (params: { item: T }) => void;
   /** Applies the select-vs-toggle policy for a row activation. */

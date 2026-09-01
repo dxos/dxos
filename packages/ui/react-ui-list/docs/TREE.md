@@ -301,8 +301,8 @@ Run `moon run storybook-react:serve` and open
 `Tree` takes a `debug` prop that paints every row's bands and labels them — `above` / `child` /
 `below` in blue and green, and one amber band per ancestor a `reparent` can lift the row out to.
 `TaskList.Root` forwards it; the `Drag Debug` story turns it on. It is the fastest way to answer
-"where do I aim", and it makes the gap below visible at a glance: an expanded, non-last branch has
-no `below` band painted at all.
+"where do I aim", and it is how the missing band on an expanded branch was found — the overlay
+showed `above,child` where every other row showed three.
 
 ### Indent: visual vs hitbox
 
@@ -313,13 +313,22 @@ measurable, but unhittable by hand — which presents as "there is no way to dro
 child". `TreeDropIndicator` keeps using the visual indent, so its line still lands under the row it
 refers to.
 
-### Known gap
+### `dropBelowExpanded`: every row offers "after this subtree"
 
-A branch that is expanded but **not** last in its group has no reorder-below zone at all (atlaskit's
-`expanded` mode drops it by design, since "below an open branch" and "its first child" are the same
-place). "After this subtree" is therefore unreachable for such a row; a last-in-group branch is fine,
-because `reparent` covers it. Options — collapse a hovered branch during a drag, or force `standard`
-mode — are unresolved; forcing `standard` would change navtree's drag behaviour too.
+The hitbox gives an expanded branch no reorder-below zone, because "below the row" and "its first
+child" are the same pixels; it offers `reparent` bands under the last descendant instead. Measured,
+those bands are indent-wide slivers whose x-range moves with the row's depth — a drop aimed at one
+produced no instruction at all. They are not a target anyone can aim at.
+
+A task list does not need them: its "below" already resolves to _after the row and its sub-tasks_,
+because the placement takes the target's parent and the sibling that follows it. So `Tree` takes
+`dropBelowExpanded`, which keeps every row in `standard` mode and gives all of them the same three
+bands. The task tree turns it on; it is off by default, since it changes what the zone means and the
+navtree relies on the hitbox's own reading.
+
+Verified by real drags: below an expanded, non-last branch lands the task after that branch's whole
+subtree; below the last root lands it at the end of the list as that root's peer — the move that was
+previously unreachable.
 
 ## References
 

@@ -231,6 +231,9 @@ export const TaskTreeContent = ({
       // The highlight is what tells the reader where they are; a tree that only highlights (rather
       // than navigating on select) wants it to travel with the arrows.
       selectionFollowsFocus
+      // A task list's "below" already means after the row and its sub-tasks, so every row offers
+      // it — the alternative is the reparent slivers, which cannot be aimed at.
+      dropBelowExpanded
       debug={debug}
       renderHeading={renderHeading}
       renderColumns={renderTrailing}
