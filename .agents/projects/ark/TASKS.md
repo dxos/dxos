@@ -232,8 +232,13 @@ Still open (the Phase 7 gaps):
       the flat path. Moving drag onto the Tree's pragmatic-dnd contract is what finally deletes them
       — and only then does `hierarchy.test.ts` (155 lines) get ported rather than dropped.
 - [ ] **Inline title editing** in the tree path.
-- [ ] **Conceal animation.** The branch never runs its close animation in the task tree — rows
-      disappear instantly. Cosmetic, and distinct from the flicker (fixed above).
+- [x] **Conceal animation — NOT a defect; the earlier entry was wrong.** This was written up as "the
+      branch never runs its close animation in the task tree — rows disappear instantly". Measured
+      in the `Hierarchical` story on 2026-09-01 and that is not what happens: collapsing a branch
+      fires `animationstart`/`animationend` for `tree-conceal` on `branch-content`, and sampling
+      the element per frame shows height ramping 102 → 41 px with opacity 1.00 → 0.63 over ~114 ms
+      before landing at 0. `interpolate-size: allow-keywords` is supported, so the height keyframes
+      apply rather than degrading to opacity-only. Nothing to fix.
 
 ## Suspect — `SPACE_INITIALIZING` stall seen in the agent browser (attribution CORRECTED)
 
