@@ -333,7 +333,14 @@ const createWidgetMap = (setWidgets?: (widgets: XmlWidgetState[]) => void, debug
       widgets.set(id, { ...current, props: { ...current.props, ...widgetState } });
       setWidgets?.([...widgets.values()]);
     },
-    unmounted: (id: string) => {
+    unmounted: (id: string, root?: HTMLElement | null) => {
+      // Stale destroy: a replacement widget (same id) already registered a newer root — CodeMirror
+      // draws the replacement before destroying the old instance, and deleting here would orphan
+      // the live placeholder with no portal (embeds vanished until a view-mode toggle).
+      const current = widgets.get(id);
+      if (!current || (root && current.root !== root)) {
+        return;
+      }
       widgets.delete(id);
       // A cull drops the portal for a frame before it re-mounts — this is the blank-space window.
       if (debug) {

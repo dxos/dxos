@@ -51,7 +51,7 @@ const meta = {
   render: ObjectsPanelStory,
   decorators: [
     withTheme(),
-    withLayout({ layout: 'fullscreen' }),
+    withLayout({ layout: 'column' }),
     withDevtoolsContext,
     withClientProvider({
       createIdentity: true,

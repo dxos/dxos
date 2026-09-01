@@ -76,6 +76,7 @@ export const ChessGameArticle = ({ role, subject, attendableId }: ChessGameArtic
             {t('empty-games.message')}
           </Flex>
         ) : (
+          // TODO(burdon): This seems wrong?
           <Masonry.Root Tile={GameTile} minColumnWidth={18} maxColumnWidth={24}>
             <Masonry.Content thin centered padding>
               <Masonry.Viewport classNames='py-2' items={sortedGames} getId={(game) => game.id} />
