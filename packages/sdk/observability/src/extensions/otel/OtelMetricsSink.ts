@@ -9,11 +9,11 @@ import { defaultResource, resourceFromAttributes } from '@opentelemetry/resource
 import { type PushMetricExporter } from '@opentelemetry/sdk-metrics';
 
 import { OtelMetrics } from './metrics';
+import { type OtelDestination } from './otel';
 
 export type Init = {
   type: 'otel-metrics-init';
-  endpoint: string;
-  headers: Record<string, string>;
+  destinations: OtelDestination[];
   resourceAttributes: Record<string, string>;
   tags: Record<string, string>;
 };
@@ -40,8 +40,7 @@ export class Sink {
   constructor(init: Init, options: Options = {}) {
     this.#tags = { ...init.tags };
     this.#metrics = new OtelMetrics({
-      endpoint: init.endpoint,
-      headers: init.headers,
+      destinations: init.destinations,
       resource: defaultResource().merge(resourceFromAttributes(init.resourceAttributes)),
       getTags: () => this.#tags,
       exporter: options.exporter,

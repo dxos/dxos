@@ -18,6 +18,7 @@ import { type Extension, type ExtensionApi } from '../../observability-extension
 import { getOtelLogLevel, isObservabilityDisabled, storeObservabilityDisabled } from '../../storage';
 import { stubExtension } from '../stub';
 import { type OtelMetrics } from './metrics';
+import { type OtelDestination } from './otel';
 import type * as OtelLogSink from './OtelLogSink';
 import type * as OtelMetricsSink from './OtelMetricsSink';
 import type * as OtelSpanSink from './OtelSpanSink';
@@ -38,6 +39,7 @@ export type ExtensionsOptions = {
   config: Config;
   endpoint?: string;
   headers?: Record<string, string>;
+  additionalDestinations?: OtelDestination[];
   logs?: boolean;
   /** Minimum log level to export. Defaults to INFO (i.e. info, warn, error). */
   logLevel?: LogLevel;
@@ -54,6 +56,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   config,
   endpoint: _endpoint,
   headers: _headers,
+  additionalDestinations = [],
   // TODO(wittjosiah): Logging integration.
   //   - logger should run even if observability is disabled
   //   - logs should be cached locally in a circular buffer
@@ -95,14 +98,16 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
 
   if (!endpoint) {
     log.info('Missing OTEL_ENDPOINT');
+  }
+
+  const destinations: OtelDestination[] = [
+    ...(endpoint ? [{ endpoint, headers: headers ?? {} }] : []),
+    ...additionalDestinations,
+  ];
+  if (destinations.length === 0) {
     return stubExtension;
   }
-  // Headers are optional when using a proxy that injects auth server-side.
-  const resolvedHeaders = headers ?? {};
-  // OTLP HTTP exporters require an absolute URL. Resolve relative paths using the current origin.
-  // globalThis.location is defined in all browser contexts (main thread, dedicated/service workers).
-  const resolvedEndpoint =
-    !isNode() && endpoint.startsWith('/') ? `${globalThis.location.origin}${endpoint}` : endpoint;
+  log.info('otel destinations', { destinations: destinations.map(({ endpoint }) => endpoint) });
 
   // Matches edge's `ctx.tag` span attribute (stamped by the edge log middleware
   // when it reads the `X-DXOS-Client-Tag` header, see
@@ -135,8 +140,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   const logs =
     logsEnabled && !remoteLogs
       ? new OtelLogs({
-          endpoint: resolvedEndpoint,
-          headers: resolvedHeaders,
+          destinations,
           resource,
           getTags: () => Object.fromEntries(tags),
           logLevel: resolvedLogLevel,
@@ -150,8 +154,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   const metrics =
     metricsEnabled && !observabilityWorker
       ? new OtelMetrics({
-          endpoint: resolvedEndpoint,
-          headers: resolvedHeaders,
+          destinations,
           resource: metricsResource,
           getTags: () => Object.fromEntries(tags),
         })
@@ -159,8 +162,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
 
   const traces = tracesEnabled
     ? new OtelTraces({
-        endpoint: resolvedEndpoint,
-        headers: resolvedHeaders,
+        destinations,
         resource,
         getTags: () => Object.fromEntries(tags),
         spanSink: observabilityWorker
@@ -182,8 +184,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
         if (remoteLogs) {
           remoteLogs.post({
             type: 'otel-init',
-            endpoint: resolvedEndpoint,
-            headers: resolvedHeaders,
+            destinations,
             resourceAttributes: { ...baseAttributes, 'session.id': sessionId },
             logLevel: resolvedLogLevel,
             tags: Object.fromEntries(tags),
@@ -192,8 +193,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
         if (remoteMetrics) {
           observabilityWorker?.post({
             type: 'otel-metrics-init',
-            endpoint: resolvedEndpoint,
-            headers: resolvedHeaders,
+            destinations,
             resourceAttributes: baseAttributes,
             tags: Object.fromEntries(tags),
           });
@@ -202,8 +202,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
           if (observabilityWorker) {
             observabilityWorker.post({
               type: 'otel-traces-init',
-              endpoint: resolvedEndpoint,
-              headers: resolvedHeaders,
+              destinations,
               resourceAttributes: { ...baseAttributes, 'session.id': sessionId },
             });
           }

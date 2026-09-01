@@ -14,8 +14,7 @@ import * as OtelSpanSink from './OtelSpanSink';
 
 const defaultInit: OtelSpanSink.Init = {
   type: 'otel-traces-init',
-  endpoint: 'http://localhost:1',
-  headers: {},
+  destinations: [{ endpoint: 'http://localhost:1', headers: {} }],
   resourceAttributes: { 'service.name': 'test-service', 'session.id': 'session-1' },
 };
 

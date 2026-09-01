@@ -16,13 +16,12 @@ import {
   getRelativeFilename,
 } from '@dxos/log';
 
-import { type OtelOptions, resolveOtlpUrl, setDiagLogger } from './otel';
+import { type OtelOptions, setDiagLogger, signalUrl } from './otel';
 
 const FLATTEN_DEPTH = 1;
 
 export type OtelLogOptions = OtelOptions & {
   logLevel: LogLevel;
-  /** Test seam: replaces the OTLP exporter. */
   exporter?: LogRecordExporter;
   /**
    * Include logs forwarded from the shared worker via LoggingService.
@@ -36,16 +35,20 @@ export class OtelLogs {
   private _loggerProvider: LoggerProvider;
   constructor(private readonly options: OtelLogOptions) {
     setDiagLogger(options.consoleDiagLogLevel);
-    const logExporter =
-      options.exporter ??
-      new OTLPLogExporter({
-        url: resolveOtlpUrl(this.options.endpoint + '/v1/logs'),
-        headers: this.options.headers,
-        concurrencyLimit: 10, // an optional limit on pending requests
-      });
     this._loggerProvider = new LoggerProvider({
       resource: this.options.resource,
-      processors: [new BatchLogRecordProcessor({ exporter: logExporter })],
+      processors: this.options.destinations.map(
+        (destination) =>
+          new BatchLogRecordProcessor({
+            exporter:
+              options.exporter ??
+              new OTLPLogExporter({
+                url: signalUrl(destination, 'logs'),
+                headers: destination.headers,
+                concurrencyLimit: 10,
+              }),
+          }),
+      ),
     });
   }
 

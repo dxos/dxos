@@ -10,11 +10,11 @@ import { type LogRecordExporter } from '@opentelemetry/sdk-logs';
 import { type LogRecord as JsonlLogRecord, LogLevel, log, shortLevelName } from '@dxos/log';
 
 import { OtelLogs, convertLevel } from './logs';
+import { type OtelDestination } from './otel';
 
 export type Init = {
   type: 'otel-init';
-  endpoint: string;
-  headers: Record<string, string>;
+  destinations: OtelDestination[];
   resourceAttributes: Record<string, string>;
   logLevel: LogLevel;
   tags: Record<string, string>;
@@ -42,8 +42,7 @@ export class Sink {
     this.#tags = { ...init.tags };
     this.#logLevel = init.logLevel;
     this.#logs = new OtelLogs({
-      endpoint: init.endpoint,
-      headers: init.headers,
+      destinations: init.destinations,
       resource: createResource(init.resourceAttributes),
       getTags: () => this.#tags,
       logLevel: init.logLevel,

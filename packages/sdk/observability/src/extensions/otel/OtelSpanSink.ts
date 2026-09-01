@@ -25,12 +25,11 @@ import {
   type SpanProcessor,
 } from '@opentelemetry/sdk-trace-base';
 
-import { resolveOtlpUrl } from './otel';
+import { type OtelDestination, signalUrl } from './otel';
 
 export type Init = {
   type: 'otel-traces-init';
-  endpoint: string;
-  headers: Record<string, string>;
+  destinations: OtelDestination[];
   resourceAttributes: Record<string, string>;
 };
 
@@ -122,36 +121,41 @@ export class PortSpanProcessor implements SpanProcessor {
 }
 
 export type Options = {
-  /** Test seam: replaces the OTLP exporter. */
   exporter?: SpanExporter;
 };
 
 export class Sink {
   readonly #resource: Resource;
-  readonly #processor: BatchSpanProcessor;
+  readonly #processors: BatchSpanProcessor[];
 
   constructor(init: Init, options: Options = {}) {
     this.#resource = defaultResource().merge(resourceFromAttributes(init.resourceAttributes));
-    this.#processor = new BatchSpanProcessor(
-      options.exporter ??
-        new OTLPTraceExporter({
-          url: resolveOtlpUrl(init.endpoint + '/v1/traces'),
-          headers: init.headers,
-          concurrencyLimit: 10,
-        }),
+    this.#processors = init.destinations.map(
+      (destination) =>
+        new BatchSpanProcessor(
+          options.exporter ??
+            new OTLPTraceExporter({
+              url: signalUrl(destination, 'traces'),
+              headers: destination.headers,
+              concurrencyLimit: 10,
+            }),
+        ),
     );
   }
 
   append(record: Span): void {
-    this.#processor.onEnd(this.#materialize(record));
+    const span = this.#materialize(record);
+    for (const processor of this.#processors) {
+      processor.onEnd(span);
+    }
   }
 
-  flush(): Promise<void> {
-    return this.#processor.forceFlush();
+  async flush(): Promise<void> {
+    await Promise.all(this.#processors.map((processor) => processor.forceFlush()));
   }
 
-  close(): Promise<void> {
-    return this.#processor.shutdown();
+  async close(): Promise<void> {
+    await Promise.all(this.#processors.map((processor) => processor.shutdown()));
   }
 
   #materialize(record: Span): ReadableSpan {

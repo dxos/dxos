@@ -12,7 +12,7 @@ import { type IdbLogStore } from '@dxos/log-store-idb';
 import * as Observability from '@dxos/observability/Observability';
 import * as ObservabilityExtension from '@dxos/observability/ObservabilityExtension';
 import * as ObservabilityProvider from '@dxos/observability/ObservabilityProvider';
-import { getHostPlatform } from '@dxos/util';
+import { getHostPlatform, isNonNullable } from '@dxos/util';
 
 import { APP_DOMAIN, FEEDBACK_LOGS_PATH, LOG_STORE_MAX_BYTES } from './constants';
 
@@ -102,6 +102,7 @@ export const initializeObservability = async (
         config,
         logs: true,
         observabilityWorker,
+        additionalDestinations: [ObservabilityExtension.PostHog.otelDestination(config)].filter(isNonNullable),
         metrics: true,
         traces: true,
       }),
