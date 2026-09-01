@@ -34,6 +34,19 @@ const stubModel = makeStub({ uncached: 3, total: 21, cacheRead: 11, cacheWrite: 
 /** An OpenAI-compatible endpoint, which reports no cache figures at all. */
 const uncachedModel = makeStub({ uncached: 3, total: 3 });
 
+const streamingModel = LanguageModel.make({
+  generateText: () => Effect.succeed([]),
+  streamText: () =>
+    Stream.make(
+      { type: 'text-delta' as const, id: '0', delta: 'hello' },
+      {
+        type: 'finish' as const,
+        reason: 'stop' as const,
+        usage: { inputTokens: { total: 3 }, outputTokens: { total: 5 } },
+      },
+    ),
+});
+
 describe('AiTelemetry', () => {
   it.effect('stamps prompt and response content onto the model-call span', () =>
     Effect.gen(function* () {
@@ -116,6 +129,21 @@ describe('AiTelemetry', () => {
         ),
       ),
     ),
+  );
+
+  it.effect("ends a streamed call's span with its own scope, not the caller's", () =>
+    Effect.gen(function* () {
+      const { exporter, provider, layer } = setup({}, streamingModel);
+
+      // `streamText` opens its span with `makeSpanScoped`, so it ends when the enclosing scope does.
+      // Consuming the stream under `Effect.scoped` is what makes that the turn rather than whatever
+      // outlives it — a conversation, in the app. The outer scope here stands in for that: it is
+      // still open at the assertion, and the span must already have been exported anyway.
+      yield* Effect.scoped(Stream.runCollect(LanguageModel.streamText({ prompt: 'hi' }))).pipe(Effect.provide(layer));
+      yield* Effect.promise(() => provider.forceFlush());
+
+      expect(modelSpan(exporter).name).toEqual('LanguageModel.streamText');
+    }).pipe(Effect.scoped),
   );
 
   it('names the attributes the sink reads', () => {

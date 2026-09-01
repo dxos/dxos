@@ -3,9 +3,11 @@
 //
 
 import { describe, expect, it } from '@effect/vitest';
+import { BasicTracerProvider, InMemorySpanExporter, SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
+import * as Tracer from 'effect/Tracer';
 import * as Tool from 'effect/unstable/ai/Tool';
 import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
@@ -15,6 +17,7 @@ import { operationServiceLayerNoop } from '@dxos/compute/testing';
 import * as Trace from '@dxos/compute/Trace';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { registryLayerNoop } from '@dxos/echo/testing';
+import { makeTracer } from '@dxos/effect';
 import { ContentBlock, type Message } from '@dxos/types';
 
 import * as AiRequest from './AiRequest';
@@ -108,3 +111,29 @@ const textOf = (messages: readonly Message.Message[]): string =>
 
 const toolResultsOf = (messages: readonly Message.Message[]) =>
   messages.flatMap((message) => message.blocks).filter(ContentBlock.is('toolResult'));
+
+// Capture is only ever asserted against a stubbed `LanguageModel`; the app's path is this one —
+// `streamText`, an agent loop, a toolkit — and a model call that is never reported is invisible.
+describe('AiRequest.Request.run (telemetry)', () => {
+  it.effect('reports every model call of a turn', () =>
+    Effect.gen(function* () {
+      const exporter = new InMemorySpanExporter();
+      const provider = new BasicTracerProvider({ spanProcessors: [new SimpleSpanProcessor(exporter)] });
+
+      const request = new AiRequest.Request();
+      yield* request
+        .run({ toolkit, prompt: 'Echo hello.', history: [] })
+        .pipe(Effect.provideService(Tracer.Tracer, makeTracer(provider, 'test')));
+      yield* Effect.promise(() => provider.forceFlush());
+
+      // Two model calls: the one that asks for the tool, and the one that answers after it ran.
+      const modelSpans = exporter.getFinishedSpans().filter(({ name }) => name.startsWith('LanguageModel.'));
+      expect(modelSpans).toHaveLength(2);
+      expect(modelSpans.every((span) => span.attributes['gen_ai.system'] !== undefined)).toEqual(true);
+    }).pipe(
+      Effect.provide(
+        testLayer([{ parts: [toolCall('Echo', { value: 'hello' })] }, { parts: [text('Echoed the value.')] }]),
+      ),
+    ),
+  );
+});
