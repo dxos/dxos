@@ -6,7 +6,7 @@ import { next as A } from '@automerge/automerge';
 import * as Schema from 'effect/Schema';
 import net from 'node:net';
 
-import { Trigger, waitForCondition } from '@dxos/async';
+import { Trigger, sleep, waitForCondition } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
 import { type CancellableInvitation, InvitationEncoder } from '@dxos/client-protocol';
 import { createEdgeIdentity } from '@dxos/client/edge';
@@ -570,17 +570,30 @@ export class ClientReplicant {
    */
   async #findDocument(spaceId: string, docId: string): Promise<EdgeStressDocument> {
     const db = (await this.#getSpace(spaceId)).db;
-    const doc = await waitForCondition({
-      condition: async () => {
-        const objects = await db.query(Query.select(Filter.type(EdgeStressDocument))).run();
-        return objects.find((object: EdgeStressDocument) => object.docId === docId);
-      },
-      timeout: DOCUMENT_READY_TIMEOUT,
-      interval: 100,
-      error: new Error(`document never replicated: ${docId}`),
-    });
-    invariant(doc, `document never replicated: ${docId}`);
-    return doc;
+    const query = async (): Promise<EdgeStressDocument[]> =>
+      (await db.query(Query.select(Filter.type(EdgeStressDocument))).run()) as EdgeStressDocument[];
+
+    const deadline = Date.now() + DOCUMENT_READY_TIMEOUT;
+    let held: EdgeStressDocument[] = [];
+    while (Date.now() < deadline) {
+      held = await query();
+      const doc = held.find((object) => object.docId === docId);
+      if (doc) {
+        return doc;
+      }
+      await sleep(100);
+    }
+
+    // Not `waitForCondition`: its own `Timeout [60,000ms]` wins over the `error` it is handed, and
+    // a bare timeout does not say whether the object never arrived or the query missed it. What
+    // the peer *does* hold is the difference between those two.
+    throw new Error(
+      `document ${docId} never arrived in space ${spaceId} after ${DOCUMENT_READY_TIMEOUT}ms; ` +
+        `this peer holds [${held
+          .map((object) => object.docId)
+          .sort()
+          .join(', ')}]`,
+    );
   }
 
   /**
