@@ -87,6 +87,12 @@ export const initializeObservability = async (
   isTauri: boolean,
   logStore?: IdbLogStore,
   observabilityDisabled = false,
+  /**
+   * Handle posting to this realm's observability worker. When present, OTel log export runs
+   * there instead of in this realm — the worker's own event loop keeps exporting the lines
+   * this realm logs even while its loop is saturated by a long synchronous task.
+   */
+  observabilityWorker?: ObservabilityExtension.Otel.OtelWorkerPort,
 ) =>
   Function.pipe(
     Observability.make(),
@@ -98,6 +104,7 @@ export const initializeObservability = async (
         environment: getEnvString(config, 'DX_ENVIRONMENT') ?? 'unknown',
         config,
         logs: true,
+        observabilityWorker,
         metrics: true,
         traces: true,
       }),
