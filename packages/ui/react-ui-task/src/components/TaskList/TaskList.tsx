@@ -292,9 +292,12 @@ TaskListViewport.displayName = 'TaskList.Viewport';
  * status gutter is `1.5rem` because that is the width of the `density='sm'` icon button it holds;
  * a narrower track makes the button overflow it and align left instead of centring.
  */
+/** Ordinals stop at 99: the gutter is sized for two digits. */
+const MAX_ORDINAL = 99;
+
 const GRID_COLS = {
-  content: 'grid-cols-[1.5rem_1fr_min-content_min-content_2rem]',
-  contentWithOrdinals: 'grid-cols-[2rem_1.5rem_1fr_min-content_min-content_2rem]',
+  content: 'grid-cols-[1.5rem_1fr_min-content_2rem]',
+  contentWithOrdinals: 'grid-cols-[2rem_1.5rem_1fr_min-content_2rem]',
 };
 
 type TaskListContentProps = ComposableProps;
@@ -343,7 +346,9 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
     // the row's handle), so they are still in `ordered` — numbering them would leave gaps in the
     // column the reader can actually see.
     const visible = dragging.size > 0 ? ordered.filter((task) => !dragging.has(task.id)) : ordered;
-    return new Map(visible.map((task, index) => [task.id, index + 1]));
+    // Past 99 the number outgrows the gutter, so it is dropped rather than shrunk — a two-digit
+    // column that occasionally goes blank reads better than one that reflows the whole list.
+    return new Map(visible.flatMap((task, index) => (index < MAX_ORDINAL ? [[task.id, index + 1] as const] : [])));
   }, [rows, groups, dragging]);
 
   if (rows) {
@@ -870,17 +875,13 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
           )}
           <span className='truncate'>{current.title}</span>
         </span>
-        {current.assignee ? (
-          <span className='h-8 flex justify-end items-center'>
-            <TaskListAssignee assignee={current.assignee} />
-          </span>
-        ) : (
-          <div />
-        )}
-        <div className='h-8 flex justify-start items-center gap-1'>
+        {/* One column for every chip on the row — assignee, blocked, artifacts — with the priority
+            control last, immediately before the actions button. */}
+        <div className='h-8 flex justify-end items-center gap-1'>
+          {current.assignee && <TaskListAssignee assignee={current.assignee} />}
           {blocked && <Tag hue='indigo'>{t('task-blocked.label')}</Tag>}
-          <TaskPriorityIcon task={task} />
           <TaskListItemArtifacts task={task} />
+          <TaskPriorityIcon task={task} />
         </div>
         <TaskListItemActions task={task} />
         {instruction && <TreeDropIndicator instruction={instruction} gap={0} />}
@@ -907,14 +908,16 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
 
 /**
  * Priority as a signal-strength glyph rather than a word: the four levels are ordinal, so a ramp
- * reads at a glance where four differently-worded tags do not. `urgent` breaks the ramp deliberately
- * — it is a different kind of statement from "how much", and a filled mark carries that.
+ * reads at a glance where four differently-worded tags do not. The ramp itself is neutral — shape
+ * carries the level — so only `urgent` is coloured, which is what makes it findable in a long list.
  */
 const PRIORITY_ICONS: Record<string, { icon: string; classNames: string }> = {
   low: { icon: 'ph--wifi-low--regular', classNames: 'text-subdued' },
-  medium: { icon: 'ph--wifi-medium--regular', classNames: 'text-blue-500' },
-  high: { icon: 'ph--wifi-high--regular', classNames: 'text-yellow-500' },
-  urgent: { icon: 'ph--exclamation-mark--fill', classNames: 'text-red-500' },
+  medium: { icon: 'ph--wifi-medium--regular', classNames: 'text-subdued' },
+  high: { icon: 'ph--wifi-high--regular', classNames: 'text-subdued' },
+  // Only urgent carries colour, and it keeps it at rest rather than fading with the row's other
+  // controls — an urgent task has to read from across the list, not on hover.
+  urgent: { icon: 'ph--exclamation-mark--fill', classNames: '[--icons-color:var(--color-rose-text)] opacity-100!' },
 };
 
 /** Offered in ascending order, with `none` first so clearing is the reachable default. */
@@ -978,9 +981,9 @@ const TaskTreeTrailing = ({ item }: { item: TaskNode }) => {
   return (
     <>
       <div className='flex h-8 items-center justify-start gap-1'>
-        <TaskPriorityIcon task={task} />
         <TaskListItemArtifacts task={task} />
         {task.assignee && <TaskListAssignee assignee={task.assignee} />}
+        <TaskPriorityIcon task={task} />
       </div>
       <TaskListItemActions task={task} />
     </>
@@ -1347,6 +1350,9 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
             rather than a place to type. */}
         {(current || draft.trim().length > 0) && (
           <Toolbar.Root density='sm' classNames='row-start-1 col-start-[-2] p-0 bg-transparent'>
+            {/* Only when editing an existing task: the create row has nothing to set a priority on
+                until it is saved. */}
+            {task && <TaskPriorityIcon task={task} />}
             <Toolbar.IconButton
               variant='ghost'
               iconOnly
