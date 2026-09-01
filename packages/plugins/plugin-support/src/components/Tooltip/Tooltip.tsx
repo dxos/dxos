@@ -26,6 +26,8 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipRenderProps>(
         role='tooltip'
         data-testid='helpPlugin.tooltip'
         data-step={index + 1}
+        // The trap returns Escape focus to the container, which has to be a focus target to receive it.
+        tabIndex={0}
         {...focusGroupProps}
         ref={useMergeRefs<HTMLDivElement>([forwardedRef, focusGroupRef])}
       >

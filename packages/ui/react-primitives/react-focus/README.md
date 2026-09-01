@@ -1,8 +1,9 @@
 # `@dxos/react-focus` — composite-widget focus primitives
 
 Headless focus management for widgets the user reaches with one `Tab` and then
-moves around inside with the arrow keys. React and the DOM are the only
-dependencies: no theme, no tokens, no components.
+moves around inside with the arrow keys, plus the app's hotkey registry. No
+theme, no tokens, no components — the runtime dependencies are React, the DOM,
+`@zag-js/hotkeys` for the hotkey store, and `@dxos/util` for platform detection.
 
 - **`useFocusGroup`** — arrow-key navigation across a container's items (`axis`)
   and a `Tab` boundary around them (`tabBehavior`). One hook takes both.

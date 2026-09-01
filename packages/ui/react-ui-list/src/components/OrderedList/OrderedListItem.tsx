@@ -137,6 +137,9 @@ export const OrderedListItem = <T extends ListItemRecord>({
           // `event.target === event.currentTarget`: bubbled from a control inside the row, its Enter
           // belongs to that control — the group puts focus there deliberately.
           if (
+            // The focus group claims Enter to move focus into the row's controls; activating the
+            // row as well would fire both.
+            !event.defaultPrevented &&
             navigationMode === 'listbox' &&
             onClick &&
             event.target === event.currentTarget &&

@@ -142,10 +142,9 @@ describe('hotkey scopes', () => {
 
     setHotkeyScope('root/plank-1', store);
     press('d');
-    // Documents the behaviour rather than endorsing it; `conflictBehavior: 'warn'` surfaces the
-    // collision that the old most-specific-wins scan would have hidden.
-    expect(fired.length).toBeGreaterThan(0);
-    // eslint-disable-next-line no-console
-    console.log('COLLISION FIRED:', JSON.stringify(fired));
+    // Both, not one: the path-scan this replaced fired only the most specific match, so asserting
+    // the pair is what catches a regression back to it. `conflictBehavior: 'warn'` surfaces the
+    // collision that the old scan would have hidden.
+    expect(fired).toEqual(['root', 'plank']);
   });
 });

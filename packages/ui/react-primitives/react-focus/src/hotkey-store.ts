@@ -27,9 +27,40 @@ export const initHotkeys = (target: Document | ShadowRoot = document): void => {
   hotkeyStore.init({ target });
 };
 
-/** Stop listening and drop every registration. */
+/**
+ * Stop listening and drop every registration.
+ *
+ * This is the whole app's store, so a single owner tearing it down takes every other component's
+ * bindings with it. Only a root that called `initHotkeys` should call this — a capability or story
+ * that merely registered commands unregisters those instead.
+ */
 export const destroyHotkeys = (): void => {
   hotkeyStore.destroy();
+};
+
+// Scopes are shared: two groups can hold overlapping chains (`root/a` and `root/a/b` both hold
+// `root`), so the last holder — not the first to unmount — is what retires one.
+const scopeHolders = new Map<string, number>();
+
+/** Hold `path` and its ancestors active, returning the release for whichever holder is last out. */
+export const holdHotkeyScope = (path: string, store: HotkeyStore = hotkeyStore): (() => void) => {
+  const scopes = scopeChain(path);
+  for (const scope of scopes) {
+    scopeHolders.set(scope, (scopeHolders.get(scope) ?? 0) + 1);
+    store.addScope(scope);
+  }
+
+  return () => {
+    for (const scope of scopes) {
+      const held = (scopeHolders.get(scope) ?? 1) - 1;
+      if (held > 0) {
+        scopeHolders.set(scope, held);
+      } else {
+        scopeHolders.delete(scope);
+        store.removeScope(scope);
+      }
+    }
+  };
 };
 
 /** Graph root segment; matches `@dxos/plugin-graph` `Node.RootId`. */

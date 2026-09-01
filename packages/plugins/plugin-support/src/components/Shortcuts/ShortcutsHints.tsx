@@ -29,7 +29,7 @@ export const ShortcutsHints = ({ onClose }: { onClose?: () => void }) => {
   return (
     <div className='flex overflow-hidden px-2 gap-4'>
       {hints.map((binding) => (
-        <Shortcut key={binding.hotkey} binding={binding} />
+        <Shortcut key={binding.id} binding={binding} />
       ))}
       {onClose && (
         <IconButton

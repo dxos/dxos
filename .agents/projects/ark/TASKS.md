@@ -133,8 +133,8 @@ Three constraints, all measured:
 ### Tasks
 
 - [x] **Write the in-house roving-tabindex/groupper hook** —
-      [`useFocusGroup`](../../../packages/ui/react-ui/src/hooks/useFocusGroup.ts) over the DOM
-      primitives in [`util/focus.ts`](../../../packages/ui/react-ui/src/util/focus.ts). One hook
+      [`useFocusGroup`](../../../packages/ui/react-primitives/react-focus/src/useFocusGroup.ts) over the DOM
+      primitives in [`focus.ts`](../../../packages/ui/react-primitives/react-focus/src/focus.ts). One hook
       covers both tabster concerns: `axis` gives arrow-key navigation (a mover), `tabBehavior` gives
       the `Tab` boundary (a groupper), so `useMergedTabsterAttributes_unstable` has no successor.
       Boundaries are a pair of zero-size sentinel children — tabster's mechanism, and the reason

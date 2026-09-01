@@ -20,7 +20,7 @@ import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
-import { destroyHotkeys, initHotkeys } from '@dxos/react-focus';
+import { initHotkeys } from '@dxos/react-focus';
 import { AttendableContainer, useSelection } from '@dxos/react-ui-attention';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
@@ -142,8 +142,8 @@ const ATTENDABLE_ID = 'story';
 // article's 'j'/'k' bindings dispatch in isolation.
 const withKeyboard: Decorator = (Story) => {
   useEffect(() => {
+    // No teardown: the store is shared, and destroying it would unbind every other story.
     initHotkeys();
-    return () => destroyHotkeys();
   }, []);
 
   return <Story />;

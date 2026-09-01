@@ -28,7 +28,11 @@ export const FOCUS_TABBABLE_ATTR = 'data-focus-tabbable';
 export type FocusGroupTabBehavior =
   /** The container is one stop among its own contents; `Tab` reaches everything inside. */
   | 'unlimited'
-  /** `Tab` stops on the container; `Enter` moves inside, `Escape` back out, `Tab` inside leaves. */
+  /**
+   * `Tab` stops on the container; `Enter` moves inside and `Escape` comes back out. Once inside,
+   * `Tab` moves through the contents and leaves at the edge — a `Main` pane could not work
+   * otherwise — which is what the boundary sentinels enforce.
+   */
   | 'limited'
   /** As `limited`, but `Tab` inside cycles rather than leaving; only `Escape` gets out. */
   | 'limited-trap-focus';
@@ -38,10 +42,13 @@ export type FocusGroupAxis = 'vertical' | 'horizontal' | 'grid' | 'grid-linear' 
 
 const FOCUSABLE_SELECTOR = [
   'a[href]',
-  'button:not([disabled])',
-  'input:not([disabled])',
-  'select:not([disabled])',
-  'textarea:not([disabled])',
+  // `:disabled` rather than `[disabled]`: a control inside a disabled `<fieldset>` carries no
+  // attribute of its own, but the browser still refuses to focus it — so an attribute test makes it
+  // an arrow-navigation target that focus can never reach.
+  'button:not(:disabled)',
+  'input:not(:disabled)',
+  'select:not(:disabled)',
+  'textarea:not(:disabled)',
   '[tabindex]',
   '[contenteditable="true"]',
   'details > summary',

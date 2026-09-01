@@ -5,7 +5,7 @@
 import { type CommandDefinition, type HotkeyCommand, type HotkeyStore, normalizeHotkey } from '@zag-js/hotkeys';
 import { useCallback, useEffect, useId, useRef, useSyncExternalStore } from 'react';
 
-import { hotkeyStore, scopeChain } from './hotkey-store';
+import { holdHotkeyScope, hotkeyStore } from './hotkey-store';
 
 export * from './hotkey-store';
 
@@ -97,22 +97,18 @@ export const useActiveHotkeys = (store: HotkeyStore = hotkeyStore): HotkeyComman
   return commands.filter(({ scopes }) => !scopes?.length || scopes.some((scope: string) => active.has(scope)));
 };
 
-/** Activate a scope path for as long as the component is mounted and `enabled`. */
+/**
+ * Activate a scope path for as long as the component is mounted and `enabled`.
+ *
+ * Held rather than simply added: two groups can share an ancestor (`root/a` and `root/a/b` both
+ * hold `root`), so one unmounting must not retire a scope the other still needs.
+ */
 export const useHotkeyScope = (path?: string, enabled = true, store: HotkeyStore = hotkeyStore): void => {
   useEffect(() => {
     if (!enabled || !path) {
       return;
     }
 
-    const scopes = scopeChain(path);
-    for (const scope of scopes) {
-      store.addScope(scope);
-    }
-
-    return () => {
-      for (const scope of scopes) {
-        store.removeScope(scope);
-      }
-    };
+    return holdHotkeyScope(path, store);
   }, [store, path, enabled]);
 };
