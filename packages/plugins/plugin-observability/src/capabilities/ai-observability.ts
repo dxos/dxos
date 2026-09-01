@@ -12,7 +12,9 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { makeTracer } from '@dxos/effect';
 import { log } from '@dxos/log';
-import * as AiObservability from '@dxos/observability/AiObservability';
+// Aliased because `@dxos/ai` exports a namespace of the same name: that one produces the span
+// attributes, this one reads them back out.
+import * as AiTelemetrySink from '@dxos/observability/AiTelemetry';
 import type * as Observability from '@dxos/observability/Observability';
 
 import { ObservabilityCapabilities } from '#types';
@@ -69,11 +71,11 @@ export default Capability.makeModule(
     // The provider's chunk is fetched on demand, and a chunk fetch fails routinely after a redeploy.
     // Telemetry setup degrades to no capture rather than failing a Startup module.
     const provider = yield* Effect.tryPromise(() =>
-      AiObservability.createAiTracerProvider({
-        captureEvent: (event, properties) => observability()?.events.captureEvent(event, properties),
+      AiTelemetrySink.createAiTracerProvider({
+        captureGeneration: (generation) => observability()?.generations.captureGeneration(generation),
         // Read per span rather than captured: the user can toggle telemetry mid-session, and
-        // `captureEvent` alone would leave the decision to the PostHog client's own opt-out flag.
-        // A span ending before observability is up reports nothing, which is the safe direction.
+        // leaving the decision to the backend client would gate on its own opt-out flag, which is a
+        // separate store. A span ending before observability is up reports nothing, which is safe.
         captureEnabled: () => observability()?.enabled ?? false,
         allowContent: contentCaptureAllowed,
       }),

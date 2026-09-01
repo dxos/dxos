@@ -11,6 +11,7 @@ import { type IdbLogStore } from '@dxos/log-store-idb';
 
 import { type Extension } from '../../observability-extension';
 import { stubExtension } from '../stub';
+import { AI_GENERATION_EVENT, toAiGenerationProperties } from './ai-generation';
 
 export type ExtensionsOptions = {
   config: Config;
@@ -162,6 +163,13 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
         isAvailable: () => Effect.succeed(true),
         captureException: (error, attributes) => {
           posthog.captureException(error, attributes);
+        },
+      },
+      {
+        kind: 'generations',
+        isAvailable: () => Effect.succeed(true),
+        captureGeneration: (generation) => {
+          posthog.capture(AI_GENERATION_EVENT, toAiGenerationProperties(generation));
         },
       },
       {

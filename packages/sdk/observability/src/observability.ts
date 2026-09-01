@@ -17,6 +17,7 @@ import {
   type Extension,
   type ExtensionApi,
   type Feedback,
+  type Generations,
   type Kind,
   type Metrics,
 } from './observability-extension';
@@ -50,6 +51,7 @@ export interface Observability {
   errors: Errors;
   events: Events;
   feedback: Feedback;
+  generations: Generations;
   /** True if at least one extension of the given kind reports as available. */
   isAvailable(kind: Kind): Effect.Effect<boolean>;
   metrics: Metrics;
@@ -207,6 +209,16 @@ class ObservabilityImpl implements Observability {
       captureEvent: (event, attributes) => {
         for (const extension of this._getExtensions('events')) {
           extension.captureEvent(event, attributes);
+        }
+      },
+    };
+  }
+
+  get generations(): Generations {
+    return {
+      captureGeneration: (generation) => {
+        for (const extension of this._getExtensions('generations')) {
+          extension.captureGeneration(generation);
         }
       },
     };
