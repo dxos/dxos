@@ -12,7 +12,7 @@ import * as Telemetry from 'effect/unstable/ai/Telemetry';
 
 import { AiTelemetry } from '@dxos/ai';
 import { makeTracer } from '@dxos/effect';
-import { AiObservability } from '@dxos/observability';
+import * as AiObservability from '@dxos/observability/ai';
 
 /**
  * Producer and sink live in packages that cannot import each other — telemetry sits below the AI

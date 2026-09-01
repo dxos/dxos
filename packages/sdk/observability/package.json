@@ -16,6 +16,10 @@
     ".": {
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./ai": {
+      "types": "./dist/types/src/ai/index.d.ts",
+      "import": "./dist/lib/ai.mjs"
     }
   },
   "browser": {
