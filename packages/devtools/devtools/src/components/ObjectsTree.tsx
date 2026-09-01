@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Array from 'effect/Array';
 import { pipe } from 'effect/Function';
@@ -53,7 +54,7 @@ export const ObjectsTree = ({ db, root, onSelect, onOpen, canOpen }: ObjectsTree
   const handleOpenChange = useCallback(
     ({ item, path, open }: { item: ObjectsTreeItem; path: string[]; open: boolean }) => {
       registry.set(model.openAtPath(path), open);
-      registry.set(model.markOpen(item.id, open), open);
+      registry.set(model.markOpen(item.id), open);
     },
     [model, registry],
   );
@@ -76,24 +77,27 @@ export const ObjectsTree = ({ db, root, onSelect, onOpen, canOpen }: ObjectsTree
 };
 
 /** Relation direction arrow plus the entity's own glyph, which a static icon name cannot express. */
-const ObjectsTreeIcon: IconRenderer<ObjectsTreeItem> = ({ item }) => {
-  const styles = item.iconHue ? getStyles(item.iconHue) : undefined;
+const ObjectsTreeIcon: IconRenderer<ObjectsTreeItem> = ({ item, path }) => {
+  const { model } = useContext(ObjectsTreeContext) ?? raise(new Error('ObjectsTreeContext not found'));
+  const scoped = useAtomValue(model.itemAt(path)) ?? item;
+  const styles = scoped.iconHue ? getStyles(scoped.iconHue) : undefined;
   return (
     <>
-      {item.type === 'outgoing-relation' && (
+      {scoped.type === 'outgoing-relation' && (
         <Icon icon='ph--arrow-right--regular' classNames='shrink-0 w-4 h-4 opacity-70' />
       )}
-      {item.type === 'incoming-relation' && (
+      {scoped.type === 'incoming-relation' && (
         <Icon icon='ph--arrow-left--regular' classNames='shrink-0 w-4 h-4 opacity-70' />
       )}
-      <Icon icon={item.icon} classNames={['shrink-0 w-4 h-4', styles?.text]} />
+      <Icon icon={scoped.icon} classNames={['shrink-0 w-4 h-4', styles?.text]} />
     </>
   );
 };
 
 /** Trailing columns: the reference key this entity is held under, and the per-row action menu. */
-const ObjectsTreeColumns: ColumnRenderer<ObjectsTreeItem> = ({ item: node }) => {
+const ObjectsTreeColumns: ColumnRenderer<ObjectsTreeItem> = ({ item, path }) => {
   const { model, onOpen, canOpen } = useContext(ObjectsTreeContext) ?? raise(new Error('ObjectsTreeContext not found'));
+  const node = useAtomValue(model.itemAt(path)) ?? item;
 
   const showOpen =
     onOpen != null && !node.deleted && node.type === 'object' && (canOpen == null || canOpen(node.entity));
@@ -282,17 +286,38 @@ class ObjectsTreeModel {
   #openIds = Atom.family((id: string) => Atom.make((get) => get(this.#openIdState(id))));
   #openIdState = Atom.family((_id: string) => Atom.make(false));
 
-  markOpen(id: string, open: boolean): Atom.Writable<boolean> {
+  /** Walk-gating state, keyed by id — `Tree` addresses rows by path, but `childIds` only has the id. */
+  markOpen(id: string): Atom.Writable<boolean> {
     return this.#openIdState(id);
   }
 
-  #itemFamily = Atom.family((id: string) =>
-    Atom.make((get): ObjectsTreeItem | undefined => {
-      const entities = get(
-        this.#database.query(Query.select(Filter.id(id)).options({ deleted: 'include' }).from(this.#database)).atom,
-      );
-      const entity = entities[0];
+  #itemFamily = Atom.family((id: string) => {
+    const entities = this.#database.query(
+      Query.select(Filter.id(id)).options({ deleted: 'include' }).from(this.#database),
+    ).atom;
+    return Atom.make((get): ObjectsTreeItem | undefined => {
+      const entity = get(entities)[0];
       return entity ? this.#mapEntityToTreeItems(get(Entity.atom(entity)), null) : undefined;
+    });
+  });
+
+  /**
+   * The node as reached through `path`. `model.item(id)` cannot carry this: `type` — and so the
+   * relation arrow — is computed relative to the anchor, so an id-keyed lookup reports every
+   * relation as incoming.
+   */
+  itemAt(path: string[]): Atom.Atom<ObjectsTreeItem | undefined> {
+    return this.#itemAtFamily(path.join('/'));
+  }
+
+  #itemAtFamily = Atom.family((key: string) =>
+    Atom.make((get): ObjectsTreeItem | undefined => {
+      const path = key.split('/');
+      const id = path[path.length - 1];
+      // The synthetic root is not an entity id, and `#atoms` asserts that it is one.
+      const parent = path.length > 1 ? path[path.length - 2] : null;
+      const anchor = parent === ROOT_ANCHOR ? null : parent;
+      return get(this.#atoms(anchor)).find((sibling) => sibling.id === id) ?? get(this.#itemFamily(id));
     }),
   );
 
@@ -304,9 +329,7 @@ class ObjectsTreeModel {
     Atom.make((get): TreeItemDataProps => {
       const path = key.split('/');
       const id = path[path.length - 1];
-      const anchor = path.length > 1 ? path[path.length - 2] : null;
-      const siblings = get(this.#atoms(anchor));
-      const item = siblings.find((sibling) => sibling.id === id) ?? get(this.#itemFamily(id));
+      const item = get(this.#itemAtFamily(key));
       const children = get(this.#atoms(id));
       return {
         id,
