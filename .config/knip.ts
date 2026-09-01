@@ -329,15 +329,20 @@ for (const manifest of globSync(['packages/**/package.json', 'tools/**/package.j
  * cannot be read off a manifest — only an app bundle surfaces it.
  */
 /**
- * Dependencies knip's `--production` traversal does not credit. It stops short of a file whose only
- * route to an entry point is a barrel's `export *`, so a package whose single use of a dependency
- * sits behind one reads as unused even though the symbol is called at runtime and the build resolves
- * it. Verified per entry by adding a direct import at the package entry, which clears the finding.
+ * Dependencies knip's traversal does not credit. It stops short of a file whose only route to an
+ * entry point is indirect — a barrel's `export *`, or a dynamic `import()` whose specifier carries
+ * an explicit `.ts`/`.tsx` extension (as `rewriteRelativeImportExtensions` requires) — so a package
+ * whose single use of a dependency sits behind one reads as unused even though the symbol is called
+ * at runtime and the build resolves it. Verified per entry by adding a direct import at the package
+ * entry, which clears the finding.
  */
 const TRAVERSAL_MISSED: Record<string, string[]> = {
   // `functions/edge-function.ts` calls `SchemaAST.getPropertySignatures`, and reaches the entry only
   // as `src/index.ts` -> `./functions` -> `./edge-function`.
   'packages/core/compute/compute-hyperformula': ['@dxos/effect'],
+  // `debug/plugin.ts` reaches `Debug.tsx` only via `Capability.lazyModule(..., () => import('./Debug.tsx'))` —
+  // an extensioned dynamic import, which knip's traversal does not follow.
+  'packages/sdk/app-toolkit': ['@dxos/react-ui-syntax-highlighter'],
 };
 
 /**
