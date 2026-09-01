@@ -145,11 +145,11 @@ The amortization argument fails from both ends. Ark's shared Zag runtime is ~24.
 alone costs 32,580; added on top of the Tree it costs 8,125) — and the Tree has already bought all of
 it. Every further machine is marginal cost against a much smaller hand-rolled component:
 
-| component | Ark marginal (raw / gzip) | displaces (attributed)              | net     |
-| --------- | ------------------------- | ----------------------------------- | ------- |
-| Accordion | +8,125 / +2,038           | `@radix-ui/react-accordion` — 3,509 | +4.6 KB |
-| Listbox   | +22,470 / +5,330          | custom `Listbox.tsx` — 2,493        | +20 KB  |
-| Combobox  | +87,936 / +26,847         | custom `Combobox.tsx` — 3,236       | +85 KB  |
+| component | Ark marginal (raw / gzip) | displaces (attributed)              | net     | status   |
+| --------- | ------------------------- | ----------------------------------- | ------- | -------- |
+| Accordion | +8,125 / +2,038           | `@radix-ui/react-accordion` — 3,509 | +4.6 KB | **done** |
+| Listbox   | +22,470 / +5,330          | custom `Listbox.tsx` — 2,493        | +20 KB  | no       |
+| Combobox  | +87,936 / +26,847         | custom `Combobox.tsx` — 3,236       | +85 KB  | no       |
 
 Combobox is the outlier because it drags in a floating layer the Tree never needed —
 `@zag-js/popper` + `@zag-js/dismissable` + `@floating-ui/core` + `@floating-ui/dom`, ~27.5 KB of its
@@ -186,6 +186,18 @@ plausible answer for the third file. It also does not get cheaper by migrating m
 
 **Migrate a component to Ark for its behavior, not to spread a fixed cost. There is none left to
 spread.**
+
+Accordion is the one that met that bar and has landed. It was never about bytes — it is net +4.6 KB —
+but the component carried a `TODO(burdon): Support key navigation` and the machine supplies the APG
+keymap outright. Verified in its story: ArrowDown moves focus between triggers and End jumps to the
+last. The public surface (`Root`/`Item`/`ItemHeader`/`ItemBody`) is unchanged, so no consumer moved,
+and `@radix-ui/react-accordion` is gone along with its `composer-app` prebundle entry. One structural
+note for anyone porting another component: Ark exposes no `Header` part — `ItemTrigger` is the
+control — so a header row that also holds trailing controls has to be a plain element wrapping the
+trigger.
+
+Listbox and Combobox remain "no" on the numbers above; nothing about the Accordion result changes
+them.
 
 ## 8. `Treegrid` after the rebuild — deleted
 

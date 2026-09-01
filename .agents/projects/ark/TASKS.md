@@ -70,8 +70,11 @@ cost against a much smaller hand-rolled component (Accordion +4.6 KB net, Listbo
       59,820 + `keyborg` 6,298 in `boot-4`, plus the 2,138-byte fluentui wrapper in `boot-5`); the
       used API surface bundles to 76,623 raw / 21,736 gzip / 19,392 brotli. Bigger than the entire
       Ark Tree cost, and in the eager graph rather than a lazy chunk.
-- [ ] Evaluate Ark's Accordion on merit (+4.6 KB net over `@radix-ui/react-accordion`) — the only
-      swap cheap enough to decide on behavior alone.
+- [x] **Accordion migrated to Ark** (+4.6 KB net over `@radix-ui/react-accordion`). Done on merit,
+      not bytes: the component carried a `TODO(burdon): Support key navigation` and the machine
+      supplies the APG keymap. Verified in its story — ArrowDown moves focus between triggers, End
+      jumps to the last, pointer expand opens the content. Public surface unchanged, so no consumer
+      moved; the radix dependency and its `composer-app` prebundle entry are gone.
 - [ ] **Evaluate moving the core of `react-ui-list` and `@fluentui/react-tabster` to
       `@ark-ui/react`** — the whole-stack version of the question, as one evaluation rather than
       per-component. Tracked 2026-08-31. Constraints below.
