@@ -872,7 +872,7 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
         )}
         <div className='h-8 flex justify-start items-center gap-1'>
           {blocked && <Tag hue='indigo'>{t('task-blocked.label')}</Tag>}
-          {current.priority && current.priority !== 'none' && <Tag hue='neutral'>{current.priority}</Tag>}
+          <TaskPriorityIcon priority={current.priority} />
           <TaskListItemArtifacts task={task} />
         </div>
         <TaskListItemActions task={task} />
@@ -898,6 +898,35 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
   },
 );
 
+/**
+ * Priority as a signal-strength glyph rather than a word: the four levels are ordinal, so a ramp
+ * reads at a glance where four differently-worded tags do not. `urgent` breaks the ramp deliberately
+ * — it is a different kind of statement from "how much", and a filled mark carries that.
+ */
+const PRIORITY_ICONS: Record<string, { icon: string; classNames: string }> = {
+  low: { icon: 'ph--wifi-low--regular', classNames: 'text-subdued' },
+  medium: { icon: 'ph--wifi-medium--regular', classNames: 'text-blue-500' },
+  high: { icon: 'ph--wifi-high--regular', classNames: 'text-yellow-500' },
+  urgent: { icon: 'ph--exclamation-mark--fill', classNames: 'text-red-500' },
+};
+
+const TaskPriorityIcon = ({ priority }: { priority?: Task.Priority | null }) => {
+  const { t } = useTranslation(translationKey);
+  const style = priority ? PRIORITY_ICONS[priority] : undefined;
+  if (!style) {
+    return null;
+  }
+
+  return (
+    <Icon
+      icon={style.icon}
+      size={4}
+      classNames={mx('shrink-0', style.classNames)}
+      aria-label={t(`priority-${priority}.label`, { defaultValue: priority as string })}
+    />
+  );
+};
+
 /** Trailing cells of a tree row — the same content the flat row puts after its title. */
 const TaskTreeTrailing = ({ item }: { item: TaskNode }) => {
   const { t } = useTranslation(translationKey);
@@ -909,7 +938,7 @@ const TaskTreeTrailing = ({ item }: { item: TaskNode }) => {
   return (
     <>
       <div className='flex h-8 items-center justify-start gap-1'>
-        {task.priority && task.priority !== 'none' && <Tag hue='neutral'>{task.priority}</Tag>}
+        <TaskPriorityIcon priority={task.priority} />
         <TaskListItemArtifacts task={task} />
         {task.assignee && <TaskListAssignee assignee={task.assignee} />}
       </div>
