@@ -229,23 +229,23 @@ not have today — the same argument that justified the navtree rebuild.
 Found 2026-08-31 while trying to verify `AtprotoCompanion`. Not ark work and not caused by this
 branch.
 
-> **RESOLVED 2026-09-01 for `plugin-trip`, and the attribution below was wrong twice over.** The
-> `TripArticle` Default story rendered nothing because its seed **threw before adding anything**:
-> `TripBuilder.addFlight` forwarded the caller's `{ name, code }` airline straight into `Segment`'s
-> `provider`, and `Provider` is `{ name, domain, ref }` — so `Segment.make` raised
-> `TypeError: Unknown property: details.provider.code`, inside `onClientInitialized`'s Effect where
-> it was swallowed. No exception surfaced, no object was added, and the article sat on its loading
-> state showing `{ space: true, db: true, trip: false }`. Fixed in `testing/builder.ts`, with a unit
-> test over the Default sequence and a `play` assertion on the story — the latter verified to fail
-> without the fix (30 s timeout) and pass with it. The render-only smoke test never caught it,
-> because a swallowed throw still renders.
->
-> Two diagnoses of my own were wrong on the way: that every `withPluginManager` story stalls (only
-> Default did — the others seed differently), and that `Empty` rendering nothing ruled out a seeding
-> fault (it shares the same decorators, so it proved nothing).
->
-> What remains unexplained is the SEPARATE `SPACE_INITIALIZING` observation below, which is about a
-> space with zero objects rather than a throwing seed. Do not merge the two.
+**RESOLVED 2026-09-01 for `plugin-trip`, and the attribution below was wrong twice over.** The
+`TripArticle` Default story rendered nothing because its seed **threw before adding anything**:
+`TripBuilder.addFlight` forwarded the caller's `{ name, code }` airline straight into `Segment`'s
+`provider`, and `Provider` is `{ name, domain, ref }` — so `Segment.make` raised
+`TypeError: Unknown property: details.provider.code`, inside `onClientInitialized`'s Effect where
+it was swallowed. No exception surfaced, no object was added, and the article sat on its loading
+state showing `{ space: true, db: true, trip: false }`. Fixed in `testing/builder.ts`, with a unit
+test over the Default sequence and a `play` assertion on the story — the latter verified to fail
+without the fix (30 s timeout) and pass with it. The render-only smoke test never caught it,
+because a swallowed throw still renders.
+
+Two diagnoses of my own were wrong on the way: that every `withPluginManager` story stalls (only
+Default did — the others seed differently), and that `Empty` rendering nothing ruled out a seeding
+fault (it shares the same decorators, so it proved nothing).
+
+What remains unexplained is the SEPARATE `SPACE_INITIALIZING` observation below, which is about a
+space with zero objects rather than a throwing seed. Do not merge the two.
 
 > **CORRECTION (same day).** This was first written up as a repo-wide defect to hand to an ECHO
 > owner. That attribution is **not supported**: the user reports `devtools/ObjectsTree` renders fine
