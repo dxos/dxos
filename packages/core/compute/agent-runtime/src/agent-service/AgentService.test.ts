@@ -10,9 +10,11 @@ import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
+import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
+import * as Tracer from 'effect/Tracer';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { expect } from 'vitest';
 
@@ -226,6 +228,19 @@ const DelegationTestLayer = AssistantTestLayer({
   ...assistantTestLayerOptions,
   agent: { delegationStrategy: StubDelegationStrategy },
 });
+
+/** Records the name of every span opened, delegating the span itself to the built-in tracer. */
+const makeRecordingTracer = (names: string[]) => {
+  const base = Effect.runSync(Effect.tracer);
+  return Tracer.make({
+    span: (...args) => {
+      names.push((args[0] as any).name);
+      return base.span(...args);
+    },
+  });
+};
+
+const turnSpanNames: string[] = [];
 
 describe('Agent Service', { tags: ['model-fixture'] }, () => {
   it.effect(
@@ -781,5 +796,22 @@ describe('Agent Service (control plane)', () => {
       Effect.provide(TestLayer()),
       TestHelpers.provideTestContext,
     ),
+  );
+  it.effect(
+    'traces a turn run through the agent process',
+    Effect.fnUntraced(
+      function* (_) {
+        const session = yield* AgentService.createSession();
+        yield* session.submitPrompt('What is the capital of France?');
+        yield* session.waitForCompletion();
+
+        // The agent runs on the caller's runtime, so the tracer it installed must reach the turn.
+        expect(turnSpanNames).toContain('AiSession.createRequest');
+      },
+      Effect.provide(TestLayer()),
+      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(turnSpanNames))),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
   );
 });
