@@ -102,9 +102,9 @@ export const MasterDetail = <T extends MasterDetailRecord>({
     // nested `MasterDetail`, or content that scrolls itself) — so nesting does not stack scroll regions.
     // `overflow-hidden` is required: a flex item only shrinks below its content's height (letting the
     // inner scroll areas engage) when its overflow is not `visible`. The caller makes this row fill its
-    // parent (`flex-1 min-h-0`).
+    // parent (`dx-grow`).
     return (
-      <div className={mx('flex gap-2 min-h-0 overflow-hidden', classNames)}>
+      <div className={mx('flex dx-grow gap-2 overflow-hidden', classNames)}>
         <Panel.Root classNames='shrink-0 w-max max-w-xs'>
           <Panel.Content asChild>
             <ScrollArea.Root orientation='vertical'>
@@ -113,7 +113,7 @@ export const MasterDetail = <T extends MasterDetailRecord>({
           </Panel.Content>
         </Panel.Root>
         <Panel.Root classNames='flex-1 min-w-0'>
-          <Panel.Content classNames='flex flex-col min-h-0'>{detail}</Panel.Content>
+          <Panel.Content classNames='flex flex-col dx-grow'>{detail}</Panel.Content>
         </Panel.Root>
       </div>
     );

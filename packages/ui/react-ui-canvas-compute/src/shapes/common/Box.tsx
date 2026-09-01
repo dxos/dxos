@@ -28,7 +28,7 @@ export const Box = forwardRef<HTMLDivElement, BoxProps>(
     const { debug } = useEditorContext();
 
     return (
-      <div ref={forwardedRef} className='flex flex-col h-full w-full justify-between'>
+      <div ref={forwardedRef} className='flex flex-col dx-fill justify-between'>
         <div className='flex shrink-0 w-full justify-between items-center h-[32px] dx-input-surface'>
           <Icon icon={icon} classNames='mx-2' />
           <div className='grow text-sm truncate'>{debug ? shape.type : (name ?? shape.text ?? title)}</div>

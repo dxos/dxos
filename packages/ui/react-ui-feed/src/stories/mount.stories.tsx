@@ -159,7 +159,7 @@ const MountProfile = ({ count = 200, runs = 3 }: MountProfileProps) => {
       <pre className='p-4 text-xs whitespace-pre' data-testid='mount.results'>
         {results.length ? format(results) : 'measuring…'}
       </pre>
-      <div ref={containerRef} className='relative grow min-h-0'>
+      <div ref={containerRef} className='relative dx-grow'>
         {definition && <Mounted key={shown} definition={definition} />}
       </div>
     </div>
@@ -197,7 +197,7 @@ const Mounted = ({ definition }: { definition: ScenarioDefinition }) => {
       estimateSize={definition.estimateSize}
       stickyBottom={definition.stickyBottom}
     >
-      <MessageList.Viewport classNames='absolute inset-0' padding />
+      <MessageList.Viewport classNames='dx-fullscreen' padding />
     </MessageList.Root>
   );
 };

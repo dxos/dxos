@@ -166,7 +166,7 @@ const DefaultStory = ({ showMap }: { showMap?: boolean }) => {
   // AttendableContainer marks the subtree with `data-attendable-id` so focusing it establishes
   // attention for ATTENDABLE_ID. Two columns: the trip article, and the selected-segment companion.
   return (
-    <AttendableContainer id={ATTENDABLE_ID} classNames='dx-container grid grid-cols-2'>
+    <AttendableContainer id={ATTENDABLE_ID} classNames='dx-expand grid grid-cols-2'>
       <TripArticle role='article' subject={trip} attendableId={ATTENDABLE_ID} defaultShowGlobe={showMap} />
       <div className='min-h-0 overflow-hidden border-is border-separator'>
         {selected && (

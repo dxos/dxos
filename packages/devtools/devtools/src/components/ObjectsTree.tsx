@@ -63,7 +63,7 @@ export const ObjectsTree = ({ db, root, onSelect, onOpen, canOpen }: ObjectsTree
 
   return (
     <ObjectsTreeContext.Provider value={contextValue}>
-      <ScrollArea.Root classNames='dx-expander' thin>
+      <ScrollArea.Root classNames='dx-expand' thin>
         <ScrollArea.Viewport>
           <Tree<ObjectsTreeItem>
             id={ROOT_ANCHOR}

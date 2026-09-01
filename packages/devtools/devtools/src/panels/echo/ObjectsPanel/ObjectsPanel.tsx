@@ -204,7 +204,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
             </div>
           </div>
 
-          <div className='dx-container grid grid-rows-[1fr_16rem] border-s border-t border-separator'>
+          <div className='dx-expand grid grid-rows-[1fr_16rem] border-s border-t border-separator'>
             <div className='p-1 min-h-0 overflow-auto'>
               {selected ? (
                 <ObjectViewer

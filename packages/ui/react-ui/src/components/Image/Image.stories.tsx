@@ -18,7 +18,7 @@ const meta = {
   title: 'ui/react-ui-core/components/Image',
   component: Image,
   render: (args) => (
-    <div className='absolute inset-0 flex justify-center items-center'>
+    <div className='dx-fullscreen flex justify-center items-center'>
       <Image {...args} />
     </div>
   ),

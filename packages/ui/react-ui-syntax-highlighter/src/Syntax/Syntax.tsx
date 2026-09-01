@@ -134,7 +134,7 @@ type SyntaxContentProps = ComposableProps;
 /** Flex-column layout container for composite parts. */
 const SyntaxContent = composable<HTMLDivElement, SyntaxContentProps>(({ children, ...props }, forwardedRef) => {
   return (
-    <div {...composableProps(props, { classNames: 'flex flex-col h-full min-h-0 overflow-hidden' })} ref={forwardedRef}>
+    <div {...composableProps(props, { classNames: 'flex flex-col dx-grow overflow-hidden' })} ref={forwardedRef}>
       {children}
     </div>
   );

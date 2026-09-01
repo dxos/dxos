@@ -29,7 +29,7 @@ const Board = forwardRef<HTMLDivElement, { columns: string[][] }>(({ columns }, 
       ref={useMergeRefs<HTMLDivElement>([ref, focusGroupRef])}
       tabIndex={0}
       {...focusGroupProps}
-      className='flex h-full w-full overflow-hidden'
+      className='flex dx-fill overflow-hidden'
     >
       <div className={mx('flex h-full overflow-x-auto p-4 gap-4')}>
         {columns.map((column) => (
