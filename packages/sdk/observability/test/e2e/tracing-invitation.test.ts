@@ -16,7 +16,7 @@ import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 
 import * as Otel from '../../src/extensions/otel';
-import * as observability from '../../src/observability';
+import * as observability from '../../src/Observability';
 import { identityProvider } from '../../src/providers/client-observability';
 
 // Dev-only: this suite is permanently skipped in CI. It boots two Clients against
