@@ -161,38 +161,49 @@ non-class `behavior` record keyed by the same names (`showDescription`), and a `
       derived from `styles()` and a variant axis changes nothing about slot names but does change
       what a consumer must pass.
 
-## Phase 7: Reimplement `react-ui-task` on the Tree
+## Phase 7: Reimplement `react-ui-task` on the Tree — landed
 
-Tracked 2026-08-31. `@dxos/react-ui-task` renders a hierarchical task list and, today, re-derives
-most of what the Ark-based `Tree` now provides. `TaskList.tsx` is **1,324 lines** plus a bespoke
-`hierarchy.ts` (191) and `dnd.ts` (46); it borrows only leaf pieces from `react-ui-list`
-(`Listbox`, `TreeDropIndicator`, `TreeItemToggle`, `paddingIndentation`, `useListDisclosure`) and
-hand-rolls its own roles, keyboard handling and drag wiring on top of `Task.parentTask`.
+Tracked 2026-08-31, implemented the same day. `@dxos/react-ui-task` rendered a hierarchical task
+list that re-derived most of what the Ark-based `Tree` provides: `TaskList.tsx` at **1,324 lines**
+plus a bespoke `hierarchy.ts` (191) and `dnd.ts` (46), borrowing only leaf pieces from
+`react-ui-list` and hand-rolling its own roles, keyboard handling and drag wiring on top of
+`Task.parentTask`.
 
-The prospective target, `@dxos/react-ui-tree`, **does not exist yet** — this item presupposes
-extracting `Tree` out of `react-ui-list` into its own package. That extraction is the real
-precondition and should be decided first, alongside the Phase 3 `Treegrid` question, since both are
-"what belongs in `react-ui-list`" decisions.
+**The `@dxos/react-ui-tree` extraction was NOT required and did not happen.** The original entry
+named it as a precondition; that was wrong. `react-ui-task` already depends on `react-ui-list`, so
+`TaskTreeContent` imports `Tree` from `@dxos/react-ui-list` directly and no new package — and no new
+layering edge — was introduced. Extraction remains an open _packaging_ question (see Phase 3), not a
+blocker for any consumer.
 
-Why it is worth doing: the Tree already owns the APG keymap, machine-managed focus and ARIA, and the
-pragmatic-dnd contract. Reimplementing `TaskList` on it should delete the bespoke hierarchy walk and
-most of the keyboard/role handling, and would give the task list the accessibility behaviour it does
-not have today — the same argument that justified the navtree rebuild.
+What landed:
 
-- [ ] **Decide whether `Tree` is extracted into `@dxos/react-ui-tree`.** Precondition for everything
-      below. Weigh against Phase 3 (Treegrid) and the `react-ui`→`react-ui-list` layering rule in
-      AUDIT.md §1.4 — a new package must not create an upward edge.
-- [ ] **Map `TaskList`'s requirements onto the `TreeModel` contract.** It stores hierarchy as
-      `Task.parentTask` and moves nodes with a single `MoveTask` mutation taking a parent/index pair;
-      the Tree's model is atom families keyed by path. Establish that the mapping is faithful before
-      committing — this is where the migration succeeds or fails.
-- [ ] **Reimplement `TaskList` on the Tree**, deleting `hierarchy.ts` + `dnd.ts` and the hand-rolled
-      roles/keyboard handling in favour of the machine's.
-- [ ] **Keep the sub-task disclosure semantics.** `TaskList` documents a per-viewer, per-list open
-      state and a rule about not hiding a newly added first sub-task; confirm the Tree's controlled
-      `expandedValue` reproduces it rather than assuming path-keyed state is equivalent.
-- [ ] Port `hierarchy.test.ts` (155 lines) to whatever replaces the walk, rather than dropping the
-      coverage with the module.
+- [x] **Mapped `TaskList` onto the `TreeModel` contract.** `tree-model.ts` builds a `TaskNode` forest
+      from `Task.parentTask` under a synthetic `TASK_TREE_ROOT_ID` root and feeds it to
+      `createStaticTreeModel`. A task has exactly one parent, so it occupies exactly one path — which
+      is what lets the list keep collapse keyed by id while `Tree` addresses rows by path.
+      `buildTaskPaths` is the bridge. Cycle-safe in the same way as `walkTaskTree`.
+- [x] **Rendered `TaskList` through `Tree`** (`TaskTreeContent.tsx`), so the machine owns disclosure,
+      roving focus and the APG keymap. Row anatomy becomes `[toggle][heading][columns]`; `Alt+Arrow`
+      restructuring still reaches the row handler because zag ignores modified arrows.
+- [x] **Kept the disclosure semantics.** Open state is seeded from the list's `collapsed` set and
+      written back through `onOpenChange`; the set survives model rebuilds when the task array
+      changes. `collapsed` is deliberately kept out of the model memo's deps — a new model per toggle
+      rebuilt the collection and repainted every row (the flicker).
+- [x] **Selection is driven in, not held.** `TaskList.Root` still owns `selected`; an effect writes
+      `current` into `model.stateAtom(path)` so selecting elsewhere cannot leave the tree stale.
+- [x] Coverage: `tree-model.test.ts` (7 tests) covers topology, sibling order, dangling parents,
+      cycles, seeded collapse and path uniqueness.
+
+Still open (the Phase 7 gaps):
+
+- [ ] **Descriptions in the tree path.** The flat list renders a task description row; the tree row
+      does not.
+- [ ] **Drag handles / reordering.** `dnd.ts` and `hierarchy.ts` are still present and still serve
+      the flat path. Moving drag onto the Tree's pragmatic-dnd contract is what finally deletes them
+      — and only then does `hierarchy.test.ts` (155 lines) get ported rather than dropped.
+- [ ] **Inline title editing** in the tree path.
+- [ ] **Conceal animation.** The branch never runs its close animation in the task tree — rows
+      disappear instantly. Cosmetic, and distinct from the flicker (fixed above).
 
 ## Suspect — `SPACE_INITIALIZING` stall seen in the agent browser (attribution CORRECTED)
 
