@@ -330,6 +330,30 @@ Two lessons worth keeping:
 - The counters on the same document were correct in every failing run. That should have been the
   clue: a CRDT that interleaved text would not keep per-writer registers exact.
 
+### Cleaning up after a run that never got to clean up
+
+Per-run cleanup handles assertion failures (it runs in `finally`) but not a dead orchestrator —
+SIGKILL, container loss. Two pieces close that:
+
+- The trace records every real id the moment it exists: a `fleet` event with the identity DIDs, and
+  a `detail: 'spaceId'` entry per space. A dead run's artifact is therefore sufficient to undo it.
+- `scripts/sweep-edge-stress.mjs` replays one or more traces into admin-API deletions
+  (`--dry-run` to list without a key; the edge URL comes from each trace's own `run` event).
+
+Proven end to end against the local stack: a `cleanup: false` run
+(`configs/edge-stress-no-cleanup.yml`) left one space and one identity; the sweeper deleted both
+(`accepted`, exit 0). That was also the first live exercise of the admin-key path — a locally
+minted `DX_HUB_API_KEY` in the edge worker's `.env`, sent as `Authorization: Bearer`.
+
+Still open on cleanup, in order:
+
+1. Deployed environments: self-serve 403s on the Hub-account gate, so dev needs the real
+   `DX_HUB_API_KEY` (one run would prove it), an account-binding step at setup, or an EDGE policy
+   allowing an unbound identity to delete itself.
+2. The probe's leftovers on dev await that key: space `BLHSBW7YTLRFZZVFWT4M4MRVX5OO2XJHB`,
+   identity `did:halo:BDFMLFLXMZ5NOCYIF3VLBN6KYPG5XXEPC`.
+3. Deletion is enqueued (202) and never verified gone; acceptable for now, noted.
+
 ## 5. Harness gaps found
 
 - `blade-runner:build` is a no-op, so the documented entry point does not exist.

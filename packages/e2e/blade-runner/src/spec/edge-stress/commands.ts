@@ -382,6 +382,9 @@ export const execute = async (command: Command, model: Model, real: Real): Promi
       real.spaceIds[slot] = spaceId;
       real.invitationCodes[slot] = invitationCode;
       real.spaceOwners[slot] = command.client;
+      // The real id goes into the trace the moment it exists: a run that dies before its own
+      // cleanup leaves an artifact a sweeper can act on (scripts/sweep-edge-stress.mjs).
+      real.trace({ seq: real.counters.commands, detail: 'spaceId', spaceId });
       await performJoins(real, transition.joins);
       break;
     }

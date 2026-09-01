@@ -96,6 +96,9 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
     const { replicants, model, identityDids } = await this._setupFleet(env, params, limits);
     const setupTimeMs = Date.now() - setupBegin;
     log.info('fleet ready', { setupTimeMs });
+    // Same reason as the per-space `spaceId` detail: identities a dead run leaves behind must be
+    // recoverable from the trace alone.
+    trace({ event: 'fleet', identityDids });
 
     const real: Real = {
       spec,

@@ -1,0 +1,15 @@
+# Simulates a run that died before its own cleanup: one identity, one space, no cleanup.
+# Pair with scripts/sweep-edge-stress.mjs, which deletes what the trace records.
+platform: nodejs
+edgeUrl: http://localhost:8787
+devicesPerIdentity: [1]
+agents: false
+maxSpaces: 1
+maxDocumentsPerSpace: 1
+maxCommands: 1
+sampleDraws: 4
+maxRuntimeMs: 300000
+quiescenceTimeoutMs: 60000
+checkpoints: false
+partitions: false
+cleanup: false
