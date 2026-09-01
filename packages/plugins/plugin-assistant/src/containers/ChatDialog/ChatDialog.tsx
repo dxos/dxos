@@ -62,6 +62,8 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
           <Chat.Thread viewType={(chatViewType as ChatView | undefined) ?? settings.chatView} />
         </NaturalChatDialog.Content>
         <NaturalChatDialog.Footer classNames='p-1.5'>
+          {/* Queued prompts the agent has not taken up yet, stacked right above the composer. */}
+          <Chat.Queue classNames='pb-1' />
           <Chat.Prompt {...chatProps} preset={preset?.id} expandable />
         </NaturalChatDialog.Footer>
       </NaturalChatDialog.Root>

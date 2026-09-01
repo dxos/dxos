@@ -17,10 +17,35 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./ai": {
+    "./AiObservability": {
       "types": "./dist/types/src/ai/index.d.ts",
-      "import": "./dist/lib/ai.mjs"
-    }
+      "import": "./dist/lib/AiObservability.mjs"
+    },
+    "./Observability": {
+      "types": "./dist/types/src/observability.d.ts",
+      "import": "./dist/lib/observability.mjs"
+    },
+    "./ObservabilityExtension": {
+      "types": "./dist/types/src/observability-extension.d.ts",
+      "import": "./dist/lib/observability-extension.mjs"
+    },
+    "./ObservabilityProvider": {
+      "types": "./dist/types/src/providers/index.d.ts",
+      "import": "./dist/lib/providers.mjs"
+    },
+    "./OtelLogSink": {
+      "types": "./dist/types/src/extensions/otel/OtelLogSink.d.ts",
+      "import": "./dist/lib/extensions/otel/OtelLogSink.mjs"
+    },
+    "./OtelMetricsSink": {
+      "types": "./dist/types/src/extensions/otel/OtelMetricsSink.d.ts",
+      "import": "./dist/lib/extensions/otel/OtelMetricsSink.mjs"
+    },
+    "./OtelSpanSink": {
+      "types": "./dist/types/src/extensions/otel/OtelSpanSink.d.ts",
+      "import": "./dist/lib/extensions/otel/OtelSpanSink.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "browser": {
     "./src/storage/node.ts": "./src/storage/browser.ts",

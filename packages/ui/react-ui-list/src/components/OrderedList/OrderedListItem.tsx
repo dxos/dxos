@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useFocusableGroup } from '@fluentui/react-tabster';
 import { createContext } from '@radix-ui/react-context';
 import React, {
   type ComponentProps,
@@ -14,12 +13,14 @@ import React, {
   useCallback,
 } from 'react';
 
+import { useFocusGroup } from '@dxos/react-focus';
 import {
   IconBlock,
   IconButton,
   type IconButtonProps,
   type ThemedClassName,
   ToggleIconButton,
+  useMergeRefs,
   useTranslation,
 } from '@dxos/react-ui';
 import { mx, osTranslations } from '@dxos/ui-theme';
@@ -92,10 +93,19 @@ export const OrderedListItem = <T extends ListItemRecord>({
 }: OrderedListItemProps<T>) => {
   const { reorder, disclosure, navigation, navigationMode } = useOrderedListContext(ORDERED_LIST_ITEM_NAME);
   // A row that holds its own controls (a menu, a handle) would otherwise take the arrow keys one
-  // focusable at a time. The groupper makes it a single stop, with `Enter` to reach inside — the
+  // focusable at a time. The group makes it a single stop, with `Enter` to reach inside — the
   // same treatment `Listbox.Item` gets, and only meaningful once the row itself is focusable.
-  const groupProps = useFocusableGroup({ tabBehavior: 'limited' });
+  const {
+    ref: focusGroupRef,
+    onKeyDown: onFocusGroupKeyDown,
+    onFocus: _onFocusGroupFocus,
+    ...groupProps
+  } = useFocusGroup({ tabBehavior: 'limited' });
   const { rowRef, handleRef, closestEdge, state } = useReorderItem(reorder, id);
+  const itemRef = useMergeRefs<HTMLDivElement>([
+    rowRef as RefCallback<HTMLDivElement>,
+    navigationMode === 'listbox' ? focusGroupRef : undefined,
+  ]);
   const { expanded, toggle, triggerProps, panelProps } = disclosure.bind(id);
 
   return (
@@ -109,7 +119,7 @@ export const OrderedListItem = <T extends ListItemRecord>({
       panelProps={panelProps}
     >
       <div
-        ref={rowRef as RefCallback<HTMLDivElement>}
+        ref={itemRef}
         {...navigation.itemProps()}
         style={style}
         {...(navigationMode === 'listbox'
@@ -119,11 +129,17 @@ export const OrderedListItem = <T extends ListItemRecord>({
         {...(navigationMode === 'listbox' ? groupProps : {})}
         onClick={onClick}
         onKeyDown={(event) => {
+          if (navigationMode === 'listbox') {
+            onFocusGroupKeyDown(event);
+          }
           // An option is not natively activatable, so Enter/Space have to be wired the way a button
           // gets them for free.
           // `event.target === event.currentTarget`: bubbled from a control inside the row, its Enter
-          // belongs to that control — the groupper puts focus there deliberately.
+          // belongs to that control — the group puts focus there deliberately.
           if (
+            // The focus group claims Enter to move focus into the row's controls; activating the
+            // row as well would fire both.
+            !event.defaultPrevented &&
             navigationMode === 'listbox' &&
             onClick &&
             event.target === event.currentTarget &&

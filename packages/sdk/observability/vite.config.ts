@@ -5,8 +5,17 @@
 import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
-  // `./ai` is a separate entry rather than a barrel re-export: Composer's boot imports the root
-  // barrel, and the boot set is the parse graph, so the AI sink would otherwise ride along.
-  entry: { index: 'src/index.ts', ai: 'src/ai/index.ts' },
+  entry: {
+    'index': 'src/index.ts',
+    // Deliberately absent from the root barrel, unlike the namespaces below: Composer's boot
+    // imports that barrel, and the boot set is the parse graph, so the AI sink would ride along.
+    'AiObservability': 'src/ai/index.ts',
+    'observability': 'src/observability.ts',
+    'observability-extension': 'src/observability-extension.ts',
+    'providers': 'src/providers/index.ts',
+    'extensions/otel/OtelLogSink': 'src/extensions/otel/OtelLogSink.ts',
+    'extensions/otel/OtelMetricsSink': 'src/extensions/otel/OtelMetricsSink.ts',
+    'extensions/otel/OtelSpanSink': 'src/extensions/otel/OtelSpanSink.ts',
+  },
   test: { node: true },
 });

@@ -9,7 +9,7 @@
 //
 // Built on `Listbox` from `@dxos/react-ui-list`, which provides the
 // `aria-selected` / `dx-selected` pairing (via `value` / `onValueChange`),
-// tabster arrow-key navigation, and the `ScrollArea`-backed Viewport for free.
+// arrow-key navigation, and the `ScrollArea`-backed Viewport for free.
 
 import React, { useCallback, useMemo } from 'react';
 

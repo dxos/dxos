@@ -277,6 +277,7 @@ export default Capability.makeModule(
       Capability.contribute(Capabilities.ServiceResolver, serviceResolver),
       Capability.contribute(Capabilities.ProcessMonitor, processMonitor),
       Capability.contribute(Capabilities.OperationInvoker, operationInvoker),
+      Capability.contribute(Capabilities.OperationHandlers, handlerSet),
     ];
   }),
 );

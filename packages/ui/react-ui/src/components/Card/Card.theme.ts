@@ -69,7 +69,7 @@ const actionLabel: ComponentFunction<CardStyleProps> = (_, ...etc) =>
 // Holds the label and its annotation in one grid cell: `action` puts every child in column 2,
 // so siblings would otherwise stack onto separate rows.
 const actionContent: ComponentFunction<CardStyleProps> = (_, ...etc) =>
-  mx('dx-card__action-content min-w-0 flex-1 flex items-baseline gap-2 overflow-hidden', ...etc);
+  mx('dx-card__action-content flex-1 flex items-baseline gap-2 overflow-hidden', ...etc);
 
 // Never shrinks: the label truncates around it, so a long subject cannot squeeze the annotation out.
 const actionAnnotation: ComponentFunction<CardStyleProps> = (_, ...etc) =>

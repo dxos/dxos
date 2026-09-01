@@ -82,7 +82,6 @@ export const ChatPrompt = ({
   const error = useAtomValue(processor.error).pipe(Option.getOrUndefined);
   const streaming = useAtomValue(processor.streaming);
   const active = useAtomValue(processor.active);
-  const activeRef = useDynamicRef(active);
 
   const editorRef = useRef<ChatEditorController>(null);
   useEffect(() => {
@@ -132,21 +131,22 @@ export const ChatPrompt = ({
     [],
   );
 
-  // Keyed to `active`, the same signal `handleSubmit` guards on — `streaming` only flips on the
-  // first agent token, so gating on it would leave the control enabled but inert until then.
-  const canSend = hasText && !active;
+  // There is something to send, whether or not a turn is running: a prompt submitted mid-turn is
+  // queued behind it rather than dropped, so text is the only precondition. `ChatActions` reads this
+  // to decide which affordance the primary control offers (Send with text, Stop without).
+  const canSend = hasText;
 
   const extensions = useMemo(
     () => [keymapExtensions, pendingText(), commandsExtension, emptinessExtension],
     [keymapExtensions, commandsExtension, emptinessExtension],
   );
 
+  // Submits while a turn is running too: the agent's input queue is feed state, so the prompt is
+  // queued behind the running turn rather than dropped (`Chat.Root` routes it to `enqueue`).
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
     (text) => {
-      if (!activeRef.current) {
-        event.emit({ type: 'submit', text });
-        return true;
-      }
+      event.emit({ type: 'submit', text });
+      return true;
     },
     [event],
   );
@@ -217,7 +217,9 @@ export const ChatPrompt = ({
             classNames='col-span-2'
             attendableId={attendableId}
             customActions={customActions}
-            processing={streaming}
+            // `active`, not `streaming`: a turn parked in a tool call streams nothing, and the
+            // reader still needs a way to stop it.
+            processing={active}
             canSend={canSend}
             tasksVisible={tasksVisible}
             onSend={handleSend}

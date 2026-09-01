@@ -12,8 +12,8 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { makeTracer } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { type Observability } from '@dxos/observability';
-import * as AiObservability from '@dxos/observability/ai';
+import * as AiObservability from '@dxos/observability/AiObservability';
+import type * as Observability from '@dxos/observability/Observability';
 
 import { ObservabilityCapabilities } from '#types';
 

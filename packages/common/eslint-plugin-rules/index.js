@@ -17,6 +17,7 @@ import noDeadTailwindLogical from './rules/no-dead-tailwind-logical.js';
 import noEffectRunPromise from './rules/no-effect-run-promise.js';
 import noEmptyPromiseCatch from './rules/no-empty-promise-catch.js';
 import operationKeyShape from './rules/operation-key-shape.js';
+import preferSizingUtilities from './rules/prefer-sizing-utilities.js';
 import translationKeyFormat from './rules/translation-key-format.js';
 
 const pkg = JSON.parse(fs.readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
@@ -40,6 +41,7 @@ const plugin = {
     'no-dead-tailwind-logical': noDeadTailwindLogical,
     'no-effect-run-promise': noEffectRunPromise,
     'operation-key-shape': operationKeyShape,
+    'prefer-sizing-utilities': preferSizingUtilities,
     'no-empty-promise-catch': noEmptyPromiseCatch,
     'translation-key-format': translationKeyFormat,
   },

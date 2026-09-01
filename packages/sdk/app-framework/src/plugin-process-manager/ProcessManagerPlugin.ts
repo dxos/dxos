@@ -27,6 +27,7 @@ const ProcessManagerCapability = Capability.lazyModule(
       Capabilities.ServiceResolver,
       Capabilities.ProcessMonitor,
       Capabilities.OperationInvoker,
+      Capabilities.OperationHandlers,
     ],
   },
   () => import('./process-manager-capability'),

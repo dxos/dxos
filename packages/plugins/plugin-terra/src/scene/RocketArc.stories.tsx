@@ -130,19 +130,15 @@ const RocketArcScene = () => {
   return (
     <Menu.Root {...menuActions} attendableId={STORY_ATTENDABLE_ID}>
       <Panel.Root role='article'>
-        <Panel.Toolbar asChild classNames='dx-container'>
+        <Panel.Toolbar asChild classNames='dx-expand'>
           <Menu.Toolbar>
             <Menu.Items />
           </Menu.Toolbar>
         </Panel.Toolbar>
         <Panel.Content asChild>
           <div className='relative grow'>
-            {/* `dx-container` (w-full h-full) is load-bearing — see `ObjectGallery.stories.tsx`. */}
-            <canvas
-              ref={canvasRef}
-              className='dx-container absolute inset-0 outline-none'
-              style={{ touchAction: 'none' }}
-            />
+            {/* `dx-fill` is load-bearing — see `ObjectGallery.stories.tsx`. */}
+            <canvas ref={canvasRef} className='dx-fill dx-fullscreen outline-none' style={{ touchAction: 'none' }} />
           </div>
         </Panel.Content>
       </Panel.Root>
