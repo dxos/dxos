@@ -141,7 +141,7 @@ export const RegistryPanel = () => {
           <div className={mx('flex flex-col dx-grow overflow-hidden')}>
             <DynamicTable properties={properties} rows={rows} features={features} onRowClick={handleRowClicked} />
           </div>
-          <div className={mx('h-full min-h-0 overflow-auto border-s border-separator text-sm')}>
+          <div className={mx('h-full overflow-auto border-s border-separator text-sm')}>
             {detailJson ? <JsonView data={detailJson} /> : <Placeholder label='Details' />}
           </div>
         </div>
