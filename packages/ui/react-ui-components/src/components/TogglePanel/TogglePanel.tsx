@@ -30,15 +30,17 @@ const [TogglePanelContext, useTogglePanelContext] = createContext<ContextValue>(
 
 const ROOT_NAME = 'TogglePanel.Root';
 
-type RootProps = PropsWithChildren<
-  {
-    open?: boolean;
-    defaultOpen?: boolean;
-    onChangeOpen?: (open: boolean) => void;
-  } & Partial<ContextValue>
+type RootProps = ThemedClassName<
+  PropsWithChildren<
+    {
+      open?: boolean;
+      defaultOpen?: boolean;
+      onChangeOpen?: (open: boolean) => void;
+    } & Partial<ContextValue>
+  >
 >;
 
-const Root = ({ children, open, defaultOpen = false, duration = 250, onChangeOpen }: RootProps) => (
+const Root = ({ children, classNames, open, defaultOpen = false, duration = 250, onChangeOpen }: RootProps) => (
   <TogglePanelContext duration={duration}>
     <Collapsible.Root
       open={open}
@@ -47,6 +49,7 @@ const Root = ({ children, open, defaultOpen = false, duration = 250, onChangeOpe
       // The body is clipped rather than unmounted, matching what callers relied on before: several
       // gate their own content on `open` and would double-unmount otherwise.
       lazyMount={false}
+      className={mx(classNames)}
     >
       {children}
     </Collapsible.Root>

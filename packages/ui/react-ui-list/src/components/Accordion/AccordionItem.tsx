@@ -59,7 +59,7 @@ export const AccordionItemHeader = ({
 }: AccordionItemHeaderProps) => {
   return (
     // Ark exposes no `Header` part — `ItemTrigger` is the control itself — so this is a plain row.
-    <div {...props} className={mx('flex items-start', classNames)}>
+    <div {...props} className={mx('flex items-start rounded-[inherit]', classNames)}>
       {/* `justify-between` pins the toggle caret to the trailing edge of the row regardless of
           the header content's intrinsic width — so the affordance lives at a predictable
           right-end position. The content wrapper grabs the remaining space. */}

@@ -71,6 +71,9 @@ type ToolCallEntry = {
 
 const DEFAULT_TOOL_ICON = 'ph--wrench--regular';
 
+/** The bordered box the disclosure opens onto — the list and a lone call's detail share it. */
+const PANEL_FRAME = 'border border-subdued-separator rounded-md min-w-0';
+
 /** The tool's name is all the block carries; a description would need the toolkit definition. */
 const callTitle = (block: ContentBlock.ToolCall): string => block.name ?? 'Tool';
 
@@ -153,7 +156,6 @@ const ToolPanel = ({ calls, onChangeOpen }: ToolPanelProps) => {
   const summary = active ? active.title : t('tool-run.label', { count: calls.length });
   const count = active && calls.length > 1 ? calls.length : undefined;
   const failed = calls.filter((call) => call.error !== undefined).length;
-  const icon = active?.icon ?? calls[calls.length - 1]?.icon ?? DEFAULT_TOOL_ICON;
 
   // A lone call owns the panel itself: a summary above one row says the same thing twice, and the
   // outer disclosure is the one that opens onto its payload.
@@ -164,14 +166,21 @@ const ToolPanel = ({ calls, onChangeOpen }: ToolPanelProps) => {
     // The summary is a bare text row rather than a bordered panel header: the border belongs to
     // the list it opens onto, so a collapsed run reads as one line of prose in the feed.
     //
-    // No reveal animation: the detail mounts and unmounts in one frame while an animated height
-    // ramps over 250ms, and during the ramp the editor scrolls to reach content its box has not
-    // grown to hold yet — a scrollbar on open and a flicker on close.
-    <TogglePanel.Root open={open} duration={0} onChangeOpen={setOpen}>
+    // The body animates: the Collapsible measures its own `--height`, so the reveal ramps instead
+    // of the content appearing and vanishing in one frame. Content stays mounted and the machine
+    // hides it, which is what lets the ramp have a height to animate to.
+    <TogglePanel.Root
+      open={open}
+      onChangeOpen={setOpen}
+      // `w-0 min-w-full`: the editor sizes its content line to its widest child, so a wide payload
+      // would stretch the whole line — carrying the summary row out of view and scrolling the
+      // editor instead of the payload. Zero width removes this widget from that calculation, and
+      // the min-width then takes the line's own width, which is what bounds the payload's scroller.
+      classNames='w-0 min-w-full'
+    >
       <TogglePanel.Header
         caret='end'
         data-testid={single ? 'assistant.tool-call' : 'assistant.tool-run'}
-        icon={<Icon icon={icon} size={4} />}
         classNames='gap-1'
       >
         <span className='flex min-w-0 items-center gap-1 text-description tabular-nums'>
@@ -180,12 +189,16 @@ const ToolPanel = ({ calls, onChangeOpen }: ToolPanelProps) => {
           {failed > 0 && <span className='shrink-0 text-error'>· {t('tool-failed.label', { count: failed })}</span>}
         </span>
       </TogglePanel.Header>
+      {/* No `Viewport`: its `overflow-y-auto` puts a scrollbar on the body for the length of the
+          ramp, while the box is still shorter than the content it is growing to hold. */}
       <TogglePanel.Body>
-        <TogglePanel.Viewport>
-          {/* Mounted with the disclosure: a collapsed body clips its content but still lays it
-              out, and the editor measures that as content to scroll to. */}
-          {open && (single ? <ToolCallDetail call={single} /> : <ToolCallList calls={calls} onOpen={onChangeOpen} />)}
-        </TogglePanel.Viewport>
+        {single ? (
+          // Pads itself only here: inside the accordion the body already insets by `trim-sm`, and
+          // padding twice pushed the copy button off the caret's column.
+          <ToolCallDetail call={single} classNames={mx(PANEL_FRAME, 'p-trim-sm')} />
+        ) : (
+          <ToolCallList calls={calls} onOpen={onChangeOpen} />
+        )}
       </TogglePanel.Body>
     </TogglePanel.Root>
   );
@@ -206,7 +219,9 @@ type ToolCallListProps = {
 const ToolCallList = ({ calls, onOpen }: ToolCallListProps) => (
   <Accordion.Root<ToolCallEntry>
     items={calls}
-    classNames='border border-subdued-separator rounded-md divide-y divide-subdued-separator overflow-hidden'
+    // No `overflow-hidden`: it clips the top and bottom edges off the inset focus ring of the
+    // first and last triggers, whose bounds coincide with the frame's own.
+    classNames={mx(PANEL_FRAME, 'divide-y divide-subdued-separator')}
     onValueChange={(value) => onOpen?.(value.length > 0)}
   >
     {({ items }) =>
@@ -246,7 +261,9 @@ const ToolCallList = ({ calls, onOpen }: ToolCallListProps) => (
 const ToolCallDetail = ({ call, classNames }: { call: ToolCallEntry; classNames?: string }) => {
   const { t } = useTranslation(translationKey);
   return (
-    <div className={mx('flex flex-col gap-1 pb-1', classNames)}>
+    // `min-w-0` so a wide payload scrolls inside its own section rather than widening this column
+    // and taking the summary row with it.
+    <div className={mx('flex flex-col gap-1 min-w-0', classNames)}>
       {call.input !== undefined && <ToolSection label={t('tool-input.label')} data={call.input} />}
       {call.error !== undefined && <ToolSection label={t('tool-error.label')} data={call.error} />}
       {call.result !== undefined && <ToolSection label={t('tool-result.label')} data={call.result} />}
@@ -256,13 +273,26 @@ const ToolCallDetail = ({ call, classNames }: { call: ToolCallEntry; classNames?
 
 const ToolSection = ({ label, data }: { label: string; data: unknown }) => (
   <div className='flex flex-col'>
-    <div className='flex px-2 items-center justify-between'>
+    {/* No horizontal padding of its own: the containing body already insets by `trim-sm`, and a
+        second inset here pushed the copy button off the column the disclosure carets sit in. */}
+    <div className='flex items-center justify-between'>
       <span className='text-sm text-description'>{label}</span>
-      <SystemIconButton.Clipboard variant='ghost' density='sm' iconOnly size={4} onCopy={() => JSON.stringify(data)} />
+      {/* `-me-1` cancels the button's own trailing inset so its glyph centres on the same column as
+        the disclosure caret rather than sitting a few pixels inside it. */}
+      <SystemIconButton.Clipboard
+        variant='ghost'
+        density='sm'
+        iconOnly
+        size={4}
+        classNames='-me-1'
+        onCopy={() => JSON.stringify(data)}
+      />
     </div>
     <JsonHighlighter
       data={data}
-      classNames='px-2 text-xs bg-transparent'
+      // The payload is the scroll container: a long line must not scroll the whole widget, which
+      // would carry the summary row out of view with it.
+      classNames='text-xs bg-transparent overflow-x-auto'
       replacer={{ maxDepth: 3, maxArrayLen: 10, maxStringLen: 128 }}
     />
   </div>

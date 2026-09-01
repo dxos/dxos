@@ -674,8 +674,10 @@ export const TestHierarchy: Story = {
     press(rows().find(({ title }) => title === 'Ship the spring release')!.row, 'ArrowUp');
     await waitFor(async () => expect(rows()[0].title).toEqual('Ship the spring release'));
 
-    // Each row is findable by task id, which is how the drag preview collects a subtree to clone.
-    await expect(canvasElement.querySelectorAll('[data-task-id]')).toHaveLength(7);
+    // Each row is findable by task id. In the tree the attribute is `data-object-id`, stamped by
+    // `Tree` itself — the flat row's own `data-task-id` is what its drag preview reads to collect a
+    // subtree to clone, and that path is unchanged.
+    await expect(canvasElement.querySelectorAll('[data-object-id]')).toHaveLength(7);
 
     // The pane carries its own columns rather than the list's: it is a card below the list, so it
     // has no ordinal gutter and does not step in with the tree. Only its own two cells line up.
