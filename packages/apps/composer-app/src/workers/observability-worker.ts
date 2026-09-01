@@ -23,8 +23,9 @@ const store = new IdbLogStore({ dbName: LOG_STORE_DB_NAME, maxBytes: LOG_STORE_M
 /** Caps messages buffered while a sink module import is in flight. */
 const MAX_PENDING = 5_000;
 
-type Tags = { type: 'otel-tags'; tags: Record<string, string> };
-type Flush = { type: 'otel-flush' };
+/** The cross-cutting control messages, as the log sink's `handleMessage` already defines them. */
+type Control = Exclude<OtelLogSink.Message, OtelLogSink.Init>;
+type Flush = Extract<Control, { type: 'otel-flush' }>;
 
 /**
  * One lazily-imported export pipeline. `init` starts the (one-shot) module load; messages
@@ -38,12 +39,15 @@ const lazySink = <TInit, TMessage>(
 ): { init: (init: TInit) => void; deliver: (message: TMessage) => void } => {
   let deliver: ((message: TMessage) => void) | undefined;
   let pending: TMessage[] | undefined;
+  // Counted apart from `pending.length` so a queued control message never displaces a record.
+  let pendingRecords = 0;
   return {
     init: (init) => {
       if (deliver !== undefined || pending !== undefined) {
         return;
       }
       pending = [];
+      pendingRecords = 0;
       load(init)
         .then((loaded) => {
           deliver = loaded;
@@ -57,8 +61,11 @@ const lazySink = <TInit, TMessage>(
     deliver: (message) => {
       if (deliver !== undefined) {
         deliver(message);
-      } else if (pending !== undefined && (!isRecord(message) || pending.length < MAX_PENDING)) {
+      } else if (pending !== undefined && (!isRecord(message) || pendingRecords < MAX_PENDING)) {
         pending.push(message);
+        if (isRecord(message)) {
+          pendingRecords++;
+        }
       }
     },
   };
@@ -73,7 +80,7 @@ const fireFlush = (result: Promise<void>): void => {
 // One worker per producing realm, so the sinks below are that realm's — its resource
 // identity (process type, session id) arrives with the init messages.
 const createMessageHandler = (): ((event: MessageEvent<ObservabilityWorkerMessage>) => void) => {
-  const logs = lazySink<OtelLogSink.Init, string | Tags | Flush>(
+  const logs = lazySink<OtelLogSink.Init, string | Control>(
     (init) =>
       import('@dxos/observability/OtelLogSink').then(({ Sink }) => {
         const sink = new Sink(init);
@@ -81,7 +88,7 @@ const createMessageHandler = (): ((event: MessageEvent<ObservabilityWorkerMessag
       }),
     (message) => typeof message === 'string',
   );
-  const metrics = lazySink<OtelMetricsSink.Init, OtelMetricsSink.Metric | Tags | Flush>(
+  const metrics = lazySink<OtelMetricsSink.Init, OtelMetricsSink.Metric | Control>(
     (init) =>
       import('@dxos/observability/OtelMetricsSink').then(({ Sink }) => {
         const sink = new Sink(init);
