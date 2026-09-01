@@ -33,15 +33,25 @@ export const ClientReady = Capability.lazyModule(
   },
   () => import('./client-ready'),
 );
-// Startup so the layer is contributed before the process-manager snapshots its
-// `RuntimeServices` contributions to build the runtime.
+/**
+ * Separate from {@link Observability} because the two have opposite activation contracts, not
+ * because AI capture is its own concern.
+ *
+ * This must run at Startup: the process manager snapshots `RuntimeServices` when it builds the
+ * runtime, and a layer contributed after that is silently absent. `Observability` is dependency-mode
+ * — it activates when something asks for it — and initializing it awaits its data providers, one of
+ * which fetches IP geolocation over the network with no timeout. Folding this into that module would
+ * mean either putting that fetch between the Startup wave and the runtime, or contributing the layer
+ * too late to be seen.
+ *
+ * So the module holds only the wiring, resolves the `Observability` capability per span rather than
+ * requiring it, and stays lazy so none of the AI telemetry code is parsed for a user who never
+ * makes a model call.
+ */
 export const AiObservability = Capability.lazyModule(
   'AiObservability',
   {
     environments: [],
-    // Deliberately does not require `Observability`: it resolves that per span instead, so
-    // observability initialization (which awaits a network fetch) stays off the path between the
-    // Startup wave and the process-manager runtime.
     requires: [],
     provides: [Capabilities.RuntimeServices],
     activatesOn: ActivationEvents.Startup,

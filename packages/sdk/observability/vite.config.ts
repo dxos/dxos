@@ -9,7 +9,7 @@ export default defineConfig({
     'index': 'src/index.ts',
     // Deliberately absent from the root barrel, unlike the namespaces below: Composer's boot
     // imports that barrel, and the boot set is the parse graph, so the AI sink would ride along.
-    'AiTelemetry': 'src/ai/index.ts',
+    'AiObservability': 'src/ai/index.ts',
     'observability': 'src/observability.ts',
     'observability-extension': 'src/observability-extension.ts',
     'providers': 'src/providers/index.ts',

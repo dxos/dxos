@@ -72,7 +72,7 @@ export type Events = {
 };
 
 /**
- * One model call, already filtered by the capture policy and scrubbed (see `AiTelemetry`). Shaped
+ * One model call, already filtered by the capture policy and scrubbed (see `AiObservability`). Shaped
  * after the OTel GenAI conventions rather than any vendor's schema — an extension maps it onto
  * whatever its backend calls these things.
  */

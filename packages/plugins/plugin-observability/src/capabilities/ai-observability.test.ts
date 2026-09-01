@@ -12,7 +12,7 @@ import * as Telemetry from 'effect/unstable/ai/Telemetry';
 
 import { AiTelemetry } from '@dxos/ai';
 import { makeTracer } from '@dxos/effect';
-import * as AiTelemetrySink from '@dxos/observability/AiTelemetry';
+import * as AiObservability from '@dxos/observability/AiObservability';
 import type * as ObservabilityExtension from '@dxos/observability/ObservabilityExtension';
 
 /**
@@ -117,7 +117,7 @@ const setup = ({
   Effect.gen(function* () {
     const events: Captured[] = [];
     const provider = yield* Effect.promise(() =>
-      AiTelemetrySink.createAiTracerProvider({
+      AiObservability.createAiTracerProvider({
         captureGeneration: (generation) => events.push(generation),
         captureEnabled,
         allowContent,

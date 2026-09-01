@@ -6,7 +6,7 @@ import { SpanStatusCode } from '@opentelemetry/api';
 import { describe, test } from 'vitest';
 
 import type * as ObservabilityExtension from '../observability-extension';
-import { createAiTracerProvider } from './AiTelemetry';
+import { createAiTracerProvider } from './AiObservability';
 
 const setup = async ({
   allowContent = () => true,
