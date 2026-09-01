@@ -225,6 +225,15 @@ export type TreeProps<T extends { id: string } = any> = {
    * hitbox's own reading.
    */
   dropBelowExpanded?: boolean;
+  /**
+   * Render a strip after the last row that accepts a drop meaning "append at the end".
+   *
+   * Rows are the only drop targets, and they are sticky — the pointer leaving them into the empty
+   * space below keeps the last one active, so a drop there silently applies whatever instruction
+   * that row was showing. Dragging past the end of a list is the obvious way to say "put it last",
+   * and without this it is both invisible and wrong.
+   */
+  dropAtEnd?: boolean;
   canSelect?: (params: { item: T; path: string[] }) => boolean;
   onOpenChange?: (params: { item: T; path: string[]; open: boolean }) => void;
   onSelect?: (params: { item: T; path: string[]; current: boolean; option: boolean; shift: boolean }) => void;
@@ -255,6 +264,7 @@ export const Tree = <T extends { id: string } = any>({
   selectionFollowsFocus = false,
   debug = false,
   dropBelowExpanded = false,
+  dropAtEnd = false,
   canSelect,
   onOpenChange,
   onSelect,
@@ -440,6 +450,7 @@ export const Tree = <T extends { id: string } = any>({
           {root.children?.map((node) => (
             <TreeNodeRow key={node.value} node={node} />
           ))}
+          {dropAtEnd && draggable && <TreeEndDropTarget data={{ id: root.id, path: root.path, item: root.item }} />}
         </TreeView.Tree>
       </TreeRenderProvider>
     </TreeView.Root>
@@ -575,6 +586,40 @@ const TreeBranchContent: FC<TreeNodeRowProps> = ({ node }) => {
 };
 
 TreeBranchContent.displayName = 'Tree.BranchContent';
+
+/**
+ * A strip after the last row that accepts "append at the end".
+ *
+ * It carries the tree's root as its payload with `atEnd`, so a consumer's monitor can tell this
+ * drop from one onto the root itself. No hitbox: there is only one thing this can mean.
+ */
+const TreeEndDropTarget = ({ data }: { data: TreeData }) => {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [over, setOver] = useState(false);
+
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) {
+      return;
+    }
+
+    return dropTargetForElements({
+      element,
+      getData: () => ({ ...data, atEnd: true }),
+      onDragEnter: () => setOver(true),
+      onDragLeave: () => setOver(false),
+      onDrop: () => setOver(false),
+    });
+  }, [data]);
+
+  return (
+    <div ref={ref} role='none' className='relative col-[tree-row] min-h-(--dx-control)'>
+      {over && <div className='absolute inset-x-0 top-0 h-0.5 bg-accent-bg' />}
+    </div>
+  );
+};
+
+TreeEndDropTarget.displayName = 'Tree.EndDropTarget';
 
 type TreeItemDragState = 'idle' | 'dragging' | 'preview' | 'parent-of-instruction';
 

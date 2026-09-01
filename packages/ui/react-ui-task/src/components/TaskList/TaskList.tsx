@@ -28,6 +28,7 @@ import React, {
 import { Filter, Obj } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import {
+  Button,
   DxAnchorActivate,
   Icon,
   IconButton,
@@ -85,7 +86,9 @@ type TaskListContextValue = {
   groupByStatus: boolean;
   showGroupLabels: boolean;
   showOrdinals: boolean;
-  showDescriptions: boolean;
+  showDescription: boolean;
+  /** Render each task's estimate beside the priority control. */
+  showEstimates: boolean;
   hierarchical: boolean;
   /** Paint the tree's drop bands on every row (development affordance). */
   debug: boolean;
@@ -126,9 +129,11 @@ type TaskListRootProps = PropsWithChildren<{
   showGroupLabels?: boolean;
   /** Number rows 1..N down the list as rendered, so tasks can be referenced by ordinal. */
   showOrdinals?: boolean;
+  /** Render each task's estimate beside the priority control. Off by default. */
+  showEstimates?: boolean;
   /** Render each task's description under its title; rows grow to fit. Off by default, so a
    * single-line list (e.g. the chat strip) keeps one row per task. */
-  showDescriptions?: boolean;
+  showDescription?: boolean;
   /** Enables `Create`; called with a draft carrying at least the trimmed title. */
   onTaskCreate?: (task: Task.Draft) => void;
   /** Enables the done toggle. Every mutation is delegated — the list never writes. */
@@ -179,7 +184,8 @@ const TaskListRoot = ({
   groupByStatus = true,
   showGroupLabels = true,
   showOrdinals = false,
-  showDescriptions = false,
+  showDescription = false,
+  showEstimates = false,
   hierarchical = false,
   debug = false,
   collapsed,
@@ -242,7 +248,8 @@ const TaskListRoot = ({
       groupByStatus={groupByStatus && !hierarchical}
       showGroupLabels={showGroupLabels}
       showOrdinals={showOrdinals}
-      showDescriptions={showDescriptions}
+      showDescription={showDescription}
+      showEstimates={showEstimates}
       hierarchical={hierarchical}
       debug={debug}
       // The handle lives in the ordinal's gutter, so a movable list reserves the track even when it
@@ -316,7 +323,7 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
     groupByStatus,
     showGroupLabels,
     showOrdinals,
-    showDescriptions,
+    showDescription,
     hierarchical,
     showGutter,
     isCollapsed,
@@ -373,7 +380,7 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
         onTaskSelect={onTaskSelect}
         onTaskUpdate={onTaskUpdate}
         onTaskMove={onTaskMove}
-        showDescriptions={showDescriptions}
+        showDescription={showDescription}
         debug={debug}
         renderTrailing={TaskTreeTrailing}
       />
@@ -389,7 +396,7 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
         // the middle of a two-line row.
         classNames: mx(
           'group grid gap-x-1 w-full min-w-0',
-          showDescriptions ? 'auto-rows-min items-start' : 'auto-rows-[2rem] items-center',
+          showDescription ? 'auto-rows-min items-start' : 'auto-rows-[2rem] items-center',
           showGutter ? GRID_COLS.contentWithOrdinals : GRID_COLS.content,
         ),
       })}
@@ -672,12 +679,15 @@ const draggingId = { current: undefined as string | undefined };
 //
 
 const STATUS_ICONS: Record<Task.Status, { icon: string; classNames?: string }> = {
+  backlog: { icon: 'ph--tray--regular', classNames: 'text-subdued' },
   todo: { icon: 'ph--square--regular', classNames: 'text-subdued' },
+  blocked: { icon: 'ph--prohibit--regular', classNames: 'text-warning-text' },
   started: { icon: 'ph--hourglass--regular', classNames: 'text-info-text' },
   review: { icon: 'ph--eye--regular', classNames: 'text-info-text' },
   done: { icon: 'ph--check--regular', classNames: 'text-success-text' },
   failed: { icon: 'ph--x--regular', classNames: 'text-error-text' },
   cancelled: { icon: 'ph--x--regular', classNames: 'text-error-text' },
+  duplicate: { icon: 'ph--copy--regular', classNames: 'text-subdued' },
 };
 
 type TaskListItemProps = ComposableProps<{ task: Task.Task; ordinal?: number; row?: TaskTreeRow }>;
@@ -687,7 +697,8 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
     const { t } = useTranslation(translationKey);
     const {
       tasks,
-      showDescriptions,
+      showDescription,
+      showEstimates,
       showGutter,
       onTaskUpdate,
       getTaskActions,
@@ -721,7 +732,7 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
 
     // Only when the list asks for it, and only when there is something to show — an empty second
     // line would make every row taller for nothing.
-    const description = showDescriptions ? current.description?.trim() || undefined : undefined;
+    const description = showDescription ? current.description?.trim() || undefined : undefined;
 
     // Virtual: an open task whose dependencies (resolved within the set) are not all done.
     const blocked = (current.status ?? 'todo') === 'todo' && !Task.isTaskReady(tasks, task);
@@ -888,6 +899,7 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
           {current.assignee && <TaskListAssignee assignee={current.assignee} />}
           {blocked && <Tag hue='indigo'>{t('task-blocked.label')}</Tag>}
           <TaskListItemArtifacts task={task} />
+          {showEstimates && <TaskEstimateControl task={task} />}
           <TaskPriorityIcon task={task} />
         </div>
         <TaskListItemActions task={task} />
@@ -913,17 +925,66 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
   },
 );
 
+/** Offered with `none` first, so clearing is reachable without hunting. */
+const ESTIMATES: (Task.Estimate | 'none')[] = ['none', 'xs', 's', 'm', 'l', 'xl'];
+
+/**
+ * Estimate as its own label rather than a glyph: the sizes are a vocabulary a reader already knows
+ * (`XS`…`XL`), and two ordinal ramps side by side would be read as one. Rendered on every row so
+ * setting an estimate never depends on discovering a hover affordance, and reading as `–` when
+ * unset — a dash says "no size yet" where a blank cell says nothing at all.
+ */
+const TaskEstimateControl = ({ task }: { task: Task.Task }) => {
+  const { t } = useTranslation(translationKey);
+  const { onTaskUpdate } = useTaskListContext('TaskList.EstimateControl');
+  const estimate = task.estimate;
+  const label = estimate ? estimate.toUpperCase() : '–';
+
+  if (!onTaskUpdate) {
+    return <span className='grid h-8 w-6 shrink-0 place-items-center text-xs tabular-nums text-subdued'>{label}</span>;
+  }
+
+  return (
+    <Menu.Root>
+      <Menu.Trigger asChild>
+        <Button
+          variant='ghost'
+          density='sm'
+          data-testid='taskList.item.estimate'
+          classNames='w-6 px-0 text-xs tabular-nums text-subdued'
+          // The row is the selection target; opening the menu must not also select it.
+          onClick={(event: React.MouseEvent) => event.stopPropagation()}
+        >
+          {label}
+        </Button>
+      </Menu.Trigger>
+      <Menu.Content
+        items={ESTIMATES.map((value) =>
+          createMenuAction(
+            `estimate-${value}`,
+            () => onTaskUpdate(task, { estimate: value === 'none' ? null : value }),
+            {
+              label: value === 'none' ? t('estimate-none.label') : value.toUpperCase(),
+              checked: (estimate ?? 'none') === value,
+            },
+          ),
+        )}
+      />
+    </Menu.Root>
+  );
+};
+
+TaskEstimateControl.displayName = 'TaskList.EstimateControl';
+
 /**
  * Priority as a signal-strength glyph rather than a word: the four levels are ordinal, so a ramp
  * reads at a glance where four differently-worded tags do not. The ramp itself is neutral — shape
  * carries the level — so only `urgent` is coloured, which is what makes it findable in a long list.
  */
 const PRIORITY_ICONS: Record<string, { icon: string; classNames: string }> = {
-  low: { icon: 'ph--wifi-low--regular', classNames: 'text-subdued' },
-  medium: { icon: 'ph--wifi-medium--regular', classNames: 'text-subdued' },
-  high: { icon: 'ph--wifi-high--regular', classNames: 'text-subdued' },
-  // Only urgent carries colour, and it keeps it at rest rather than fading with the row's other
-  // controls — an urgent task has to read from across the list, not on hover.
+  low: { icon: 'px--bar-low--regular', classNames: '' },
+  medium: { icon: 'px--bar-medium--regular', classNames: 'text-subdued' },
+  high: { icon: 'px--bar-high--regular', classNames: 'text-subdued' },
   urgent: { icon: 'ph--exclamation-mark--fill', classNames: '[--icons-color:var(--color-rose-text)] opacity-100!' },
 };
 
@@ -988,6 +1049,7 @@ const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
 /** Trailing cells of a tree row — the same content the flat row puts after its title. */
 const TaskTreeTrailing = ({ item }: { item: TaskNode }) => {
   const { t } = useTranslation(translationKey);
+  const { showEstimates } = useTaskListContext('TaskList.TreeTrailing');
   const task = item.task;
   if (!task) {
     return null;
@@ -998,6 +1060,7 @@ const TaskTreeTrailing = ({ item }: { item: TaskNode }) => {
       <div className='flex h-8 items-center justify-start gap-1'>
         <TaskListItemArtifacts task={task} />
         {task.assignee && <TaskListAssignee assignee={task.assignee} />}
+        {showEstimates && <TaskEstimateControl task={task} />}
         <TaskPriorityIcon task={task} />
       </div>
       <TaskListItemActions task={task} />
@@ -1143,7 +1206,7 @@ type TaskListEditProps = ComposableProps<{
   placeholder?: string;
   /**
    * Edit a description under the title — the selected task's, or the new task's when creating, so a
-   * task can be added with one. Off by default, matching `Root`'s `showDescriptions`: a markdown
+   * task can be added with one. Off by default, matching `Root`'s `showDescription`: a markdown
    * field is several rows tall wherever it appears, which a single-line strip has no room for.
    */
   showDescription?: boolean;

@@ -76,6 +76,7 @@ const manySeed = (n = 30): Task.Task[] =>
       title: random.lorem.sentence(random.number.int({ min: 5, max: 10 })),
       description: random.number.int({ min: 0, max: 1 }) ? random.lorem.paragraphs(1) : undefined,
       priority: random.helpers.arrayElement([...Task.Priority.literals]),
+      estimate: random.helpers.arrayElement([...Task.Estimate.literals]),
     }),
   );
 
@@ -139,8 +140,8 @@ const DefaultStory = ({
   readonly,
   showGroupLabels,
   showOrdinals,
-  showDescriptions,
   showDescription = true,
+  showEstimates,
   hierarchical,
   draggable = false,
   many,
@@ -151,9 +152,8 @@ const DefaultStory = ({
   readonly?: boolean;
   showGroupLabels?: boolean;
   showOrdinals?: boolean;
-  showDescriptions?: boolean;
-  /** Edit the selected task's description in the pane; the pane's own prop, not the rows'. */
   showDescription?: boolean;
+  showEstimates?: boolean;
   hierarchical?: boolean;
   /** Wire `onTaskMove`, which is what turns rows into drag sources. Off unless a story asks. */
   draggable?: boolean;
@@ -226,7 +226,8 @@ const DefaultStory = ({
       selected={selected}
       showGroupLabels={showGroupLabels}
       showOrdinals={showOrdinals}
-      showDescriptions={showDescriptions}
+      showDescription={showDescription}
+      showEstimates={showEstimates}
       onTaskCreate={readonly ? undefined : handleCreate}
       onTaskUpdate={readonly ? undefined : handleUpdate}
       getTaskActions={readonly ? undefined : getTaskActions}
@@ -267,7 +268,8 @@ export const Default: Story = {};
 export const ManyTasks: Story = {
   args: {
     many: true,
-    showDescriptions: true,
+    showEstimates: true,
+    showDescription: true,
     showOrdinals: true,
   },
 };
@@ -295,7 +297,7 @@ export const WithDescriptions: Story = {
   args: {
     showGroupLabels: false,
     showOrdinals: true,
-    showDescriptions: true,
+    showDescription: true,
   },
 };
 
@@ -303,7 +305,7 @@ export const Hierarchical: Story = {
   args: {
     hierarchical: true,
     showOrdinals: true,
-    showDescriptions: true,
+    showDescription: true,
   },
 };
 
@@ -313,7 +315,7 @@ export const HierarchicalDraggable: Story = {
     hierarchical: true,
     draggable: true,
     showOrdinals: true,
-    showDescriptions: true,
+    showDescription: true,
   },
 };
 
@@ -324,7 +326,7 @@ export const DragDebug: Story = {
     draggable: true,
     debug: true,
     showOrdinals: true,
-    showDescriptions: true,
+    showDescription: true,
     framed: false,
   },
 };
@@ -479,7 +481,7 @@ export const TestEdit: Story = {
  * what is typed into it reaches `onTaskCreate` as part of the same draft as the title.
  */
 export const TestCreateWithDescription: Story = {
-  args: { showGroupLabels: false, showDescriptions: true },
+  args: { showGroupLabels: false, showDescription: true },
   play: async ({ canvasElement }) => {
     const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
     const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]')!;
@@ -520,7 +522,7 @@ export const TestCreateWithDescription: Story = {
  * field never calls back — so the mirror the create reads has to be cleared with the selection.
  */
 export const TestAbandonedDescriptionDoesNotLeak: Story = {
-  args: { showGroupLabels: false, showDescriptions: true },
+  args: { showGroupLabels: false, showDescription: true },
   play: async ({ canvasElement }) => {
     const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
     const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]')!;
@@ -606,7 +608,7 @@ export const TestOrdinalsAreLinear: Story = {
 export const TestHierarchy: Story = {
   // Descriptions on, so the alignment between a sub-task's description and its title is asserted;
   // draggable on, because the drag affordances are part of what this asserts.
-  args: { hierarchical: true, draggable: true, showOrdinals: true, showDescriptions: true, framed: false },
+  args: { hierarchical: true, draggable: true, showOrdinals: true, showDescription: true, framed: false },
   // The tree is what the walk produces, not what the array holds; and restructuring is driven from
   // the keyboard, which is the half of the gesture set that CAN be synthesized (a native HTML5 drag
   // cannot).

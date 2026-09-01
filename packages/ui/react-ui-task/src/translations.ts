@@ -21,6 +21,8 @@ export const translations = [
         'task-blocked.label': 'Blocked',
         'task-priority.label': 'Priority',
         'priority-none.label': 'None',
+        'task-estimate.label': 'Estimate',
+        'estimate-none.label': 'None',
         'priority-low.label': 'Low',
         'priority-medium.label': 'Medium',
         'priority-high.label': 'High',

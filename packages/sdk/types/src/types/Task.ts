@@ -17,15 +17,67 @@ import { type MakeRequired } from '@dxos/util';
 import * as Actor from './Actor';
 import * as Milestone from './Milestone';
 
+//
+// Priority
+//
+
 export const Priority = Schema.Literals(['none', 'low', 'medium', 'high', 'urgent']);
 export type Priority = Schema.Schema.Type<typeof Priority>;
 
-/**
- * `review` sits between working and done: a task whose {@link Task.reviewers} is non-empty lands
- * there when the work is finished, so nothing a reviewer was named for closes without them.
- */
-export const Status = Schema.Literals(['todo', 'started', 'review', 'done', 'cancelled', 'failed']);
+const PriorityOptions: { id: Priority; title: string; color: string }[] = [
+  { id: 'none', title: 'None', color: 'gray' },
+  { id: 'low', title: 'Low', color: 'indigo' },
+  { id: 'medium', title: 'Medium', color: 'purple' },
+  { id: 'high', title: 'High', color: 'amber' },
+  { id: 'urgent', title: 'Urgent', color: 'red' },
+];
+
+//
+// Estimate
+// T-shirt sizes: relative effort, which is what a reader can actually agree on, not hours.
+// `review` sits between working and done: a task whose {@link Task.reviewers} is non-empty lands
+// there when the work is finished, so nothing a reviewer was named for closes without them.
+//
+
+export const Estimate = Schema.Literals(['xs', 's', 'm', 'l', 'xl']);
+export type Estimate = Schema.Schema.Type<typeof Estimate>;
+
+const EstimateOptions: { id: Estimate; title: string; color: string }[] = [
+  { id: 'xs', title: 'XS', color: 'gray' },
+  { id: 's', title: 'S', color: 'indigo' },
+  { id: 'm', title: 'M', color: 'purple' },
+  { id: 'l', title: 'L', color: 'amber' },
+  { id: 'xl', title: 'XL', color: 'red' },
+];
+
+//
+// Status
+//
+
+export const Status = Schema.Literals([
+  'todo',
+  'backlog',
+  'blocked',
+  'started',
+  'review',
+  'done',
+  'cancelled',
+  'duplicate',
+  'failed',
+]);
 export type Status = Schema.Schema.Type<typeof Status>;
+
+const StatusOptions: { id: Status; title: string; color: string }[] = [
+  { id: 'todo', title: 'Todo', color: 'indigo' },
+  { id: 'backlog', title: 'Backlog', color: 'gray' },
+  { id: 'blocked', title: 'Blocked', color: 'indigo' },
+  { id: 'started', title: 'Started', color: 'purple' },
+  { id: 'review', title: 'In Review', color: 'cyan' },
+  { id: 'done', title: 'Done', color: 'amber' },
+  { id: 'cancelled', title: 'Cancelled', color: 'gray' },
+  { id: 'duplicate', title: 'Duplicate', color: 'gray' },
+  { id: 'failed', title: 'Failed', color: 'red' },
+];
 
 /**
  * What happened to a task, as recorded in its {@link History}. Deliberately coarser than the field
@@ -93,14 +145,7 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
         title: 'Status',
         [PropertyMetaAnnotationId]: {
           singleSelect: {
-            options: [
-              { id: 'todo', title: 'Todo', color: 'indigo' },
-              { id: 'started', title: 'Started', color: 'purple' },
-              { id: 'review', title: 'In Review', color: 'cyan' },
-              { id: 'done', title: 'Done', color: 'amber' },
-              { id: 'cancelled', title: 'Cancelled', color: 'gray' },
-              { id: 'failed', title: 'Failed', color: 'red' },
-            ],
+            options: StatusOptions,
           },
         },
       }),
@@ -118,21 +163,29 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
         title: 'Priority',
         [PropertyMetaAnnotationId]: {
           singleSelect: {
-            options: [
-              { id: 'none', title: 'None', color: 'gray' },
-              { id: 'low', title: 'Low', color: 'indigo' },
-              { id: 'medium', title: 'Medium', color: 'purple' },
-              { id: 'high', title: 'High', color: 'amber' },
-              { id: 'urgent', title: 'Urgent', color: 'red' },
-            ],
+            options: PriorityOptions,
           },
         },
       }),
       Schema.optional,
     ),
 
-    // TODO(burdon): Unit could be hours, or fibonacci?
-    estimate: Schema.optional(Schema.Number.annotate({ title: 'Estimate' })),
+    estimate: Estimate.pipe(
+      FormatAnnotation.set(Format.TypeFormat.SingleSelect),
+      GeneratorAnnotation.set({
+        generator: 'helpers.arrayElement',
+        args: [Estimate.literals],
+      }),
+      Schema.annotate({
+        title: 'Estimate',
+        [PropertyMetaAnnotationId]: {
+          singleSelect: {
+            options: EstimateOptions,
+          },
+        },
+      }),
+      Schema.optional,
+    ),
 
     /** Human or agent assignment: a HALO identity (DID), a Person ref, a bare email, or a display name. */
     assignee: Schema.optional(Actor.Actor.annotate({ title: 'Assignee' })),
@@ -203,7 +256,7 @@ export type Edit = {
   description?: string | null;
   status?: Status;
   priority?: Priority | null;
-  estimate?: number | null;
+  estimate?: Estimate | null;
   assignee?: Actor.Actor | null;
 };
 
@@ -313,7 +366,7 @@ export const update = (task: Task, requested: Edit, options: EditOptions = {}): 
     );
   }
   if (changes.estimate !== undefined && (changes.estimate ?? undefined) !== task.estimate) {
-    notes.push(changes.estimate === null ? 'Estimate cleared.' : `Estimate set to ${changes.estimate}.`);
+    notes.push(changes.estimate === null ? 'Estimate cleared.' : `Estimate set to ${changes.estimate.toUpperCase()}.`);
   }
   if (changes.assignee !== undefined && !sameActor(changes.assignee ?? undefined, task.assignee)) {
     notes.push(changes.assignee === null ? 'Unassigned.' : `Assigned to ${actorLabel(changes.assignee)}.`);

@@ -43,7 +43,7 @@ export type TaskTreeContentProps = {
   selected?: string;
   translationKey: string;
   /** Render each task's description under its title; rows grow to fit. */
-  showDescriptions?: boolean;
+  showDescription?: boolean;
   onCollapseToggle: (id: string) => void;
   onTaskSelect?: (task: Task.Task | undefined) => void;
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
@@ -63,7 +63,7 @@ export const TaskTreeContent = ({
   ordinals,
   selected,
   translationKey,
-  showDescriptions = false,
+  showDescription = false,
   onCollapseToggle,
   onTaskSelect,
   onTaskUpdate,
@@ -124,9 +124,9 @@ export const TaskTreeContent = ({
 
   const renderHeading: HeadingRenderer<TaskNode> = useCallback(
     ({ item }) => (
-      <TaskTreeHeading node={item} {...{ showGutter, ordinals, translationKey, showDescriptions, onTaskUpdate }} />
+      <TaskTreeHeading node={item} {...{ showGutter, ordinals, translationKey, showDescription, onTaskUpdate }} />
     ),
-    [showGutter, ordinals, translationKey, showDescriptions, onTaskUpdate],
+    [showGutter, ordinals, translationKey, showDescription, onTaskUpdate],
   );
 
   // Restructuring is keyboard-driven, and the machine ignores modified arrows — so the gesture is
@@ -185,6 +185,15 @@ export const TaskTreeContent = ({
           return;
         }
 
+        // The end strip has no hitbox: it means one thing, which is "last among the roots".
+        if ((target.data as { atEnd?: boolean }).atEnd) {
+          const dragged = (source.data.item as TaskNode | undefined)?.task;
+          if (dragged) {
+            onTaskMove(dragged, { parentTask: null, before: undefined });
+          }
+          return;
+        }
+
         const instruction = extractInstruction(target.data);
         if (!instruction || instruction.type === 'instruction-blocked') {
           return;
@@ -234,6 +243,9 @@ export const TaskTreeContent = ({
       // A task list's "below" already means after the row and its sub-tasks, so every row offers
       // it — the alternative is the reparent slivers, which cannot be aimed at.
       dropBelowExpanded
+      // Dragging past the last row is the obvious way to say "put it last"; without a target there
+      // the sticky rows keep the previous instruction and the drop lands somewhere else entirely.
+      dropAtEnd
       debug={debug}
       renderHeading={renderHeading}
       renderColumns={renderTrailing}
@@ -250,14 +262,14 @@ const TaskTreeHeading = ({
   showGutter,
   ordinals,
   translationKey,
-  showDescriptions,
+  showDescription,
   onTaskUpdate,
 }: {
   node: TaskNode;
   showGutter: boolean;
   ordinals: ReadonlyMap<string, number>;
   translationKey: string;
-  showDescriptions: boolean;
+  showDescription: boolean;
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
 }) => {
   const { t } = useTranslation(translationKey);
@@ -279,7 +291,7 @@ const TaskTreeHeading = ({
   const icon = done ? 'ph--check-circle--regular' : error ? 'ph--x-circle--regular' : 'ph--circle--regular';
   const iconClassNames = done ? 'text-success-text' : error ? 'text-error-text' : 'text-subdued';
 
-  const description = showDescriptions ? task.description?.trim() || undefined : undefined;
+  const description = showDescription ? task.description?.trim() || undefined : undefined;
 
   return (
     // A grid rather than a flex row so the description can start in the title's own column: it has

@@ -32,7 +32,7 @@ export const TreeDropDebug = ({ mode, level, acceptsChildren, draggable }: TreeD
   const reparents = mode === 'last-in-group' ? level - 1 : 0;
 
   return (
-    <div className='pointer-events-none absolute inset-0 z-20 font-mono text-[8px] leading-none'>
+    <div className='pointer-events-none dx-fullscreen z-20 font-mono text-[8px] leading-none'>
       <div className='absolute inset-x-0 top-0 h-1/4 border-t border-sky-400/70 bg-sky-400/15'>
         <span className='absolute left-1 top-0 text-sky-300'>above</span>
       </div>
