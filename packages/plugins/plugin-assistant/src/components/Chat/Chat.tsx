@@ -119,7 +119,7 @@ const ChatRoot = ({
     () => projectThread({ feedMessages, pendingMessages, rewindFrom: feedSnapshot?.rewindFrom }),
     [feedMessages, pendingMessages, feedSnapshot?.rewindFrom],
   );
-  const alarms = useMemo(() => projectAlarms({ feedAlarms, messages: feedMessages }), [feedAlarms, feedMessages]);
+  const alarms = useMemo(() => projectAlarms({ feedAlarms }), [feedAlarms]);
 
   // Cancelling is a plain feed removal: the queue and the alarm set are projections over the feed,
   // so dropping the record is what takes the item out of them.

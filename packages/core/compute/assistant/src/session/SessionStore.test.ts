@@ -11,7 +11,7 @@ import { Message } from '@dxos/types';
 
 import * as Alarm from './Alarm';
 import * as SessionLink from './SessionLink';
-import { SessionStore, getAck, isQueued } from './SessionStore';
+import { SessionStore, isConsumed, isQueued } from './SessionStore';
 
 // Monotonic timestamps so chronological sorting in SessionStore is deterministic.
 let clock = 0;
@@ -115,7 +115,7 @@ describe('SessionStore', () => {
       }).pipe(Effect.provide(TestLayer)),
     );
 
-    it.effect('drops queued originals from history — their echoes carry it', () =>
+    it.effect('drops queue entries from history — the turn appends its own message', () =>
       Effect.gen(function* () {
         const { db } = yield* Database.Service;
         const feed = db.add(Feed.make());
@@ -149,28 +149,42 @@ describe('SessionStore', () => {
       }).pipe(Effect.provide(TestLayer)),
     );
 
-    it.effect('acking dequeues without removing — echo enters history, original stays in feed', () =>
+    it.effect('acking marks the entry consumed without removing it from the feed', () =>
       Effect.gen(function* () {
         const { db } = yield* Database.Service;
         const feed = db.add(Feed.make());
         const store = new SessionStore();
 
-        const original = yield* store.enqueueMessage(feed, makeMessage('prompt'));
-        const echo = yield* store.ackMessage(feed, original);
+        const entry = yield* store.enqueueMessage(feed, makeMessage('prompt'));
+        yield* store.ack(feed, entry);
 
-        expect(echo.id).not.toEqual(original.id);
-        expect(getAck(echo)).toEqual(original.id);
-        expect(Message.extractText(echo)).toEqual('prompt');
-        expect(echo.sender).toEqual(original.sender);
-        expect(echo.created).toEqual(original.created);
+        expect(isConsumed(entry)).toBe(true);
 
         const state = yield* store.loadState(feed);
         expect(state.pendingMessages).toEqual([]);
-        expect(state.history.map((msg) => msg.id)).toEqual([echo.id]);
+        // A queue entry is never history; the turn's own message is (appended by the request).
+        expect(state.history).toEqual([]);
 
-        // The original is still in the feed (only filtered from the queue projection).
+        // Still in the feed — only filtered out of the pending projection.
         const items = yield* Feed.query(feed, Filter.type(Message.Message)).run;
-        expect(items.map((item) => item.id)).toContain(original.id);
+        expect(items.map((item) => item.id)).toContain(entry.id);
+      }).pipe(Effect.provide(TestLayer)),
+    );
+
+    // The ack lands after the turn, so an interrupted turn must leave the entry pending — this is
+    // what makes a rehydrated process redeliver it rather than silently drop it.
+    it.effect('an entry whose turn never acked stays pending', () =>
+      Effect.gen(function* () {
+        const { db } = yield* Database.Service;
+        const feed = db.add(Feed.make());
+        const store = new SessionStore();
+
+        const entry = yield* store.enqueueMessage(feed, makeMessage('interrupted prompt'));
+        // The turn ran and appended its own message, but died before acking.
+        yield* Feed.append(feed, [makeMessage('interrupted prompt')]);
+
+        const { pendingMessages } = yield* store.loadPending(feed);
+        expect(pendingMessages.map((msg) => msg.id)).toEqual([entry.id]);
       }).pipe(Effect.provide(TestLayer)),
     );
 
@@ -207,20 +221,18 @@ describe('SessionStore', () => {
       }).pipe(Effect.provide(TestLayer)),
     );
 
-    it.effect('acking a fired alarm filters it from the pending set; the wake message enters history', () =>
+    it.effect('acking a fired alarm filters it from the pending set', () =>
       Effect.gen(function* () {
         const { db } = yield* Database.Service;
         const feed = db.add(Feed.make());
         const store = new SessionStore();
 
         const alarm = yield* store.setAlarm(feed, { wakeAt: 1_000, message: 'wake up' });
-        const wakeMessage = yield* store.ackAlarm(feed, alarm, makeMessage('alarm fired: wake up'));
+        yield* store.ack(feed, alarm);
 
-        expect(getAck(wakeMessage)).toEqual(alarm.id);
-
-        const state = yield* store.loadState(feed);
-        expect(state.pendingAlarms).toEqual([]);
-        expect(state.history.map((msg) => msg.id)).toEqual([wakeMessage.id]);
+        expect(isConsumed(alarm)).toBe(true);
+        const { pendingAlarms } = yield* store.loadPending(feed);
+        expect(pendingAlarms).toEqual([]);
       }).pipe(Effect.provide(TestLayer)),
     );
 
@@ -248,11 +260,12 @@ describe('SessionStore', () => {
         const feed = db.add(Feed.make());
         const store = new SessionStore();
 
-        // A processed turn: queued prompt + its ack echo + the assistant reply.
+        // A processed turn: a queue entry, acked, plus the turn's own prompt and reply.
         const processed = yield* store.enqueueMessage(feed, makeMessage('answered prompt'));
-        const echo = yield* store.ackMessage(feed, processed);
+        const turnPrompt = makeMessage('answered prompt');
         const reply = makeMessage('the answer', 'assistant');
-        yield* Feed.append(feed, [reply]);
+        yield* Feed.append(feed, [turnPrompt, reply]);
+        yield* store.ack(feed, processed);
 
         // Unprocessed input and alarms.
         const pending = yield* store.enqueueMessage(feed, makeMessage('unanswered prompt'));
@@ -260,7 +273,7 @@ describe('SessionStore', () => {
 
         const state = yield* store.loadState(feed);
 
-        expect(state.history.map((msg) => msg.id)).toEqual([echo.id, reply.id]);
+        expect(state.history.map((msg) => msg.id)).toEqual([turnPrompt.id, reply.id]);
         expect(state.pendingMessages.map((msg) => msg.id)).toEqual([pending.id]);
         expect(state.pendingAlarms.map((entry) => entry.id)).toEqual([alarm.id]);
       }).pipe(Effect.provide(TestLayer)),
