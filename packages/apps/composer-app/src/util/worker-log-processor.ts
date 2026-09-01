@@ -12,26 +12,21 @@ import {
   serializeToJsonl,
   shouldLog,
 } from '@dxos/log';
-import { type OtelLogSinkMessage } from '@dxos/observability/otel-log-sink';
-import { type OtelMetricsSinkMessage } from '@dxos/observability/otel-metrics-sink';
+import type * as OtelLogSink from '@dxos/observability/OtelLogSink';
+import type * as OtelMetricsSink from '@dxos/observability/OtelMetricsSink';
+import type * as OtelSpanSink from '@dxos/observability/OtelSpanSink';
 
 const DEFAULT_LOG_FILTER = 'debug';
 
-/**
- * Sender → observability worker: a bare string is one pre-serialized JSONL log line (hot path —
- * no envelope), `{ type: 'flush' }` asks the worker to flush its queue now. The `otel-*`
- * messages are the Otel extension's worker-side OTLP export: control plane for the log
- * lines, plus forwarded metric instrument calls (posted via the `observabilityWorker` handle
- * `initializeObservability` wires up).
- */
 /** One pre-serialized JSONL log line; the hot path carries no envelope. */
 export type SerializedLogLine = string;
 
 export type ObservabilityWorkerMessage =
   | SerializedLogLine
   | { type: 'flush' }
-  | OtelLogSinkMessage
-  | OtelMetricsSinkMessage;
+  | OtelLogSink.Message
+  | OtelMetricsSink.Message
+  | OtelSpanSink.Message;
 
 export type WorkerLogProcessorOptions = {
   worker: Worker;

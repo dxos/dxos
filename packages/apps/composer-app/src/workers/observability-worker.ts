@@ -3,30 +3,19 @@
 //
 
 import { IdbLogStore } from '@dxos/log-store-idb';
-import { type OtelLogSinkInit, type OtelLogSinkMessage } from '@dxos/observability/otel-log-sink';
-import { type OtelMetricRecord, type OtelMetricsSinkInit } from '@dxos/observability/otel-metrics-sink';
+import type * as OtelLogSink from '@dxos/observability/OtelLogSink';
+import type * as OtelMetricsSink from '@dxos/observability/OtelMetricsSink';
+import type * as OtelSpanSink from '@dxos/observability/OtelSpanSink';
 
 // Not the `../util` barrel: it re-exports config, pulling @dxos/client into this bundle.
 import { LOG_STORE_DB_NAME, LOG_STORE_MAX_BYTES } from '../util/constants';
 import { type ObservabilityWorkerMessage } from '../util/worker-log-processor';
 
-// Observability worker: owns the queue, flush timer, chunked IDB writes and eviction, so log
-// persistence never depends on the sending thread's event loop turning (see DX-1224).
-// `WorkerLogProcessor` is the sending side.
-//
-// On `otel-init` / `otel-metrics-init` (sent by the Otel observability extension in the
-// producing realm) the worker additionally exports to the OTLP endpoint — logs by parsing
-// the lines it already receives (`OtelLogSink`), metrics from forwarded instrument calls
-// (`OtelMetricsSink`) — from its own event loop, so export keeps flowing while the producer
-// is blocked by a long synchronous task. The sink modules are imported lazily:
-// telemetry-disabled sessions never load the OTel SDK.
-
 const store = new IdbLogStore({ dbName: LOG_STORE_DB_NAME, maxBytes: LOG_STORE_MAX_BYTES });
 
-/** Caps records buffered while a sink module import is in flight. */
 const MAX_BUFFERED_RECORDS = 5_000;
 
-type Control = Exclude<OtelLogSinkMessage, OtelLogSinkInit>;
+type Control = Exclude<OtelLogSink.Message, OtelLogSink.Init>;
 type Flush = Extract<Control, { type: 'otel-flush' }>;
 
 type Consume<TMessage> = (message: TMessage) => void;
@@ -69,25 +58,23 @@ const lazySink = <TInit, TMessage>(
   };
 };
 
-// Fire-and-forget, mirroring the sender's pagehide semantics; a failed export retries on the
-// sink's own timer.
 const fireFlush = (result: Promise<void>): void => {
   void result.catch(() => {});
 };
 
 const createMessageHandler = (): ((event: MessageEvent<ObservabilityWorkerMessage>) => void) => {
-  const logs = lazySink<OtelLogSinkInit, string | Control>(
+  const logs = lazySink<OtelLogSink.Init, string | Control>(
     (init) =>
-      import('@dxos/observability/otel-log-sink').then(({ OtelLogSink }) => {
-        const sink = new OtelLogSink(init);
+      import('@dxos/observability/OtelLogSink').then(({ Sink }) => {
+        const sink = new Sink(init);
         return (message) => (typeof message === 'string' ? sink.append(message) : sink.handleMessage(message));
       }),
     (message) => typeof message === 'string',
   );
-  const metrics = lazySink<OtelMetricsSinkInit, OtelMetricRecord | Control>(
+  const metrics = lazySink<OtelMetricsSink.Init, OtelMetricsSink.Metric | Control>(
     (init) =>
-      import('@dxos/observability/otel-metrics-sink').then(({ OtelMetricsSink }) => {
-        const sink = new OtelMetricsSink(init);
+      import('@dxos/observability/OtelMetricsSink').then(({ Sink }) => {
+        const sink = new Sink(init);
         return (message) => {
           switch (message.type) {
             case 'otel-metric':
@@ -100,6 +87,14 @@ const createMessageHandler = (): ((event: MessageEvent<ObservabilityWorkerMessag
         };
       }),
     (message) => message.type === 'otel-metric',
+  );
+  const spans = lazySink<OtelSpanSink.Init, OtelSpanSink.Span | Flush>(
+    (init) =>
+      import('@dxos/observability/OtelSpanSink').then(({ Sink }) => {
+        const sink = new Sink(init);
+        return (message) => (message.type === 'otel-span' ? sink.append(message) : fireFlush(sink.flush()));
+      }),
+    (message) => message.type === 'otel-span',
   );
 
   return (event: MessageEvent<ObservabilityWorkerMessage>): void => {
@@ -114,10 +109,10 @@ const createMessageHandler = (): ((event: MessageEvent<ObservabilityWorkerMessag
     }
     switch (data.type) {
       case 'flush':
-        // Fire-and-forget, mirroring the sender's pagehide semantics; `flush` never rejects.
         void store.flush();
         logs.deliver({ type: 'otel-flush' });
         metrics.deliver({ type: 'otel-flush' });
+        spans.deliver({ type: 'otel-flush' });
         break;
       case 'otel-init':
         logs.init(data);
@@ -125,13 +120,23 @@ const createMessageHandler = (): ((event: MessageEvent<ObservabilityWorkerMessag
       case 'otel-metrics-init':
         metrics.init(data);
         break;
+      case 'otel-traces-init':
+        spans.init(data);
+        break;
       case 'otel-metric':
         metrics.deliver(data);
         break;
+      case 'otel-span':
+        spans.deliver(data);
+        break;
       case 'otel-tags':
+        logs.deliver(data);
+        metrics.deliver(data);
+        break;
       case 'otel-flush':
         logs.deliver(data);
         metrics.deliver(data);
+        spans.deliver(data);
         break;
     }
   };

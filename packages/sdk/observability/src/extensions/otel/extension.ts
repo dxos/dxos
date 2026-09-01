@@ -17,12 +17,13 @@ import buildSecrets from '../../cli-observability-secrets.json';
 import { type Extension, type ExtensionApi } from '../../observability-extension';
 import { getOtelLogLevel, isObservabilityDisabled, storeObservabilityDisabled } from '../../storage';
 import { stubExtension } from '../stub';
-import { type OtelLogSinkMessage } from './log-sink';
 import { type OtelMetrics } from './metrics';
-import { type OtelMetricsSinkMessage } from './metrics-sink';
+import type * as OtelLogSink from './OtelLogSink';
+import type * as OtelMetricsSink from './OtelMetricsSink';
+import type * as OtelSpanSink from './OtelSpanSink';
 import { RemoteMetricsForwarder } from './remote-metrics';
 
-export type OtelWorkerMessage = OtelLogSinkMessage | OtelMetricsSinkMessage;
+export type OtelWorkerMessage = OtelLogSink.Message | OtelMetricsSink.Message | OtelSpanSink.Message;
 
 /** One-way send handle into the observability worker. */
 export type OtelWorkerPort = { post: (message: OtelWorkerMessage) => void };
@@ -162,6 +163,9 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
         headers: resolvedHeaders,
         resource,
         getTags: () => Object.fromEntries(tags),
+        spanSink: observabilityWorker
+          ? { post: (record: OtelSpanSink.Span) => observabilityWorker.post(record) }
+          : undefined,
       })
     : undefined;
 
@@ -195,6 +199,14 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
           });
         }
         if (traces) {
+          if (observabilityWorker) {
+            observabilityWorker.post({
+              type: 'otel-traces-init',
+              endpoint: resolvedEndpoint,
+              headers: resolvedHeaders,
+              resourceAttributes: { ...baseAttributes, 'session.id': sessionId },
+            });
+          }
           traces.start();
         }
       }),

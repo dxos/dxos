@@ -10,10 +10,10 @@ import { afterEach, describe, expect, test } from 'vitest';
 import { invariant } from '@dxos/invariant';
 import { LogEntry, LogLevel, serializeToJsonl } from '@dxos/log';
 
-import { OtelLogSink, type OtelLogSinkInit } from './log-sink';
+import * as OtelLogSink from './OtelLogSink';
 
 describe('OtelLogSink', () => {
-  const defaultInit: OtelLogSinkInit = {
+  const defaultInit: OtelLogSink.Init = {
     type: 'otel-init',
     endpoint: 'http://localhost:1',
     headers: {},
@@ -22,16 +22,16 @@ describe('OtelLogSink', () => {
     tags: { team: 'blue' },
   };
 
-  let sink: OtelLogSink | undefined;
+  let sink: OtelLogSink.Sink | undefined;
 
   afterEach(async () => {
     await sink?.close();
     sink = undefined;
   });
 
-  const makeSink = (init: Partial<OtelLogSinkInit> = {}) => {
+  const makeSink = (init: Partial<OtelLogSink.Init> = {}) => {
     const exporter = new InMemoryLogRecordExporter();
-    sink = new OtelLogSink({ ...defaultInit, ...init }, { exporter });
+    sink = new OtelLogSink.Sink({ ...defaultInit, ...init }, { exporter });
     const records = async (): Promise<ReadableLogRecord[]> => {
       invariant(sink);
       await sink.flush();
@@ -100,7 +100,6 @@ describe('OtelLogSink', () => {
   });
 });
 
-/** Serialize a real {@link LogEntry} the way the producing realm's log processor does. */
 const makeLine = (init: ConstructorParameters<typeof LogEntry>[0]): string => {
   const line = serializeToJsonl(new LogEntry(init), { env: 'test-env' });
   invariant(line !== undefined);

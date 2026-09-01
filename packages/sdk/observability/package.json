@@ -17,14 +17,31 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./otel-log-sink": {
-      "types": "./dist/types/src/extensions/otel/log-sink.d.ts",
-      "import": "./dist/lib/otel-log-sink.mjs"
+    "./Observability": {
+      "types": "./dist/types/src/observability.d.ts",
+      "import": "./dist/lib/observability.mjs"
     },
-    "./otel-metrics-sink": {
-      "types": "./dist/types/src/extensions/otel/metrics-sink.d.ts",
-      "import": "./dist/lib/otel-metrics-sink.mjs"
-    }
+    "./ObservabilityExtension": {
+      "types": "./dist/types/src/observability-extension.d.ts",
+      "import": "./dist/lib/observability-extension.mjs"
+    },
+    "./ObservabilityProvider": {
+      "types": "./dist/types/src/providers/index.d.ts",
+      "import": "./dist/lib/providers.mjs"
+    },
+    "./OtelLogSink": {
+      "types": "./dist/types/src/extensions/otel/OtelLogSink.d.ts",
+      "import": "./dist/lib/extensions/otel/OtelLogSink.mjs"
+    },
+    "./OtelMetricsSink": {
+      "types": "./dist/types/src/extensions/otel/OtelMetricsSink.d.ts",
+      "import": "./dist/lib/extensions/otel/OtelMetricsSink.mjs"
+    },
+    "./OtelSpanSink": {
+      "types": "./dist/types/src/extensions/otel/OtelSpanSink.d.ts",
+      "import": "./dist/lib/extensions/otel/OtelSpanSink.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "browser": {
     "./src/storage/node.ts": "./src/storage/browser.ts",
