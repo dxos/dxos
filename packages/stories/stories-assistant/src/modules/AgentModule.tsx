@@ -138,7 +138,7 @@ export const AgentModule = () => {
   );
 
   return (
-    <Panel.Root classNames='dx-fill min-h-0 min-w-0 flex flex-col gap-2 p-2 overflow-hidden'>
+    <Panel.Root classNames='dx-fill flex flex-col gap-2 p-2 overflow-hidden'>
       <Panel.Toolbar classNames='shrink-0 justify-end'>
         <div className='flex items-center gap-1 text-xs text-description'>
           <Icon icon='ph--git-commit--regular' size={4} />

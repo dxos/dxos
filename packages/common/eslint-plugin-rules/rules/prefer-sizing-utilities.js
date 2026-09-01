@@ -49,6 +49,22 @@ const COMBINATIONS = [
   { classes: ['absolute', 'inset-0'], suggestion: 'dx-fullscreen' },
 ];
 
+/** Utility pairs that are the long spelling of another utility. */
+const COMPOSITIONS = [{ classes: ['dx-grow', 'dx-fill'], suggestion: 'dx-expand' }];
+
+/**
+ * Overflow values that already zero the automatic minimum size — the ones that make the box a
+ * scroll container.
+ *
+ * `overflow-clip` is deliberately absent: it clips without scrolling, so it is NOT a scroll
+ * container and the minimum still applies. Measured in a 200px column over a 40px footer, a 500px
+ * child leaves the footer at 500 under both `clip` and `visible`, and at 160 under `hidden`/`auto`.
+ */
+const CLIPS = /^overflow(-[xy])?-(hidden|auto|scroll)$/;
+
+/** The classes that only exist to zero that same minimum. */
+const MINIMUMS = ['min-h-0', 'min-w-0', 'dx-shrink'];
+
 /** Class-bearing attributes. `mx()` is this repo's class merger. */
 const ATTRIBUTES = new Set(['className', 'classNames', 'class']);
 
@@ -71,6 +87,8 @@ export default {
     messages: {
       handRolled: '`{{classes}}` is `{{suggestion}}`. Use the utility so the intent is explicit.',
       redundant: '`{{className}}` already applies `{{redundant}}`. Remove the duplicate.',
+      minimumUnderClip:
+        '`{{minimum}}` does nothing here: `{{overflow}}` already zeroes the automatic minimum size, so the element can already be smaller than its content. Remove it.',
     },
   },
   create: (context) => {
@@ -104,6 +122,26 @@ export default {
             data: { className: utility, redundant: redundant.join(' ') },
           });
         }
+      }
+
+      // A minimum next to a clip. The overflow already did it, so the class is a no-op that reads
+      // as though it were load-bearing — the single biggest source of confusion about `min-*-0`.
+      const overflow = classes.filter(unprefixed).find((cls) => CLIPS.test(cls));
+      if (overflow) {
+        const minimum = MINIMUMS.find((cls) => present.has(cls));
+        if (minimum) {
+          context.report({ node, messageId: 'minimumUnderClip', data: { minimum, overflow } });
+        }
+      }
+
+      // Two utilities that compose into a third — the long spelling of one name.
+      const composition = COMPOSITIONS.find(({ classes: needed }) => needed.every((cls) => present.has(cls)));
+      if (composition) {
+        context.report({
+          node,
+          messageId: 'handRolled',
+          data: { classes: composition.classes.join(' '), suggestion: composition.suggestion },
+        });
       }
 
       // Hand-rolled equivalents. Only the first (longest) match is reported, so one class list does

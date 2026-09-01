@@ -3,7 +3,7 @@
 //
 
 import { RuleTester } from 'eslint';
-import { describe, it } from 'vitest';
+import { describe, test } from 'vitest';
 
 import rule from '../rules/prefer-sizing-utilities.js';
 
@@ -19,7 +19,7 @@ const ruleTester = new RuleTester({
 });
 
 describe('prefer-sizing-utilities', () => {
-  it('accepts the utilities and unrelated classes', () => {
+  test('accepts the utilities and unrelated classes', () => {
     ruleTester.run('prefer-sizing-utilities', rule, {
       valid: [
         { filename, code: "<div className='dx-expand' />" },
@@ -44,7 +44,7 @@ describe('prefer-sizing-utilities', () => {
     });
   });
 
-  it('reports hand-rolled equivalents', () => {
+  test('reports hand-rolled equivalents', () => {
     ruleTester.run('prefer-sizing-utilities', rule, {
       valid: [],
       invalid: [
@@ -94,7 +94,53 @@ describe('prefer-sizing-utilities', () => {
     });
   });
 
-  it('reports a utility stacked on what it already applies', () => {
+  test('reports a minimum that a clip has already applied', () => {
+    ruleTester.run('prefer-sizing-utilities', rule, {
+      valid: [
+        // The element's own overflow stays visible, so the minimum is load-bearing.
+        { filename, code: "<div className='min-h-0' />" },
+        { filename, code: "<div className='dx-shrink' />" },
+        // The clip is on a descendant, not on this element.
+        { filename, code: "<div className='min-h-0 [&>*]:overflow-hidden' />" },
+        // `overflow-clip` clips without scrolling, so it is not a scroll container and the
+        // automatic minimum size still applies — the class stays load-bearing.
+        { filename, code: "<div className='min-h-0 overflow-clip' />" },
+        { filename, code: "<div className='dx-shrink overflow-x-clip' />" },
+      ],
+      invalid: [
+        {
+          filename,
+          code: "<div className='min-h-0 overflow-hidden' />",
+          errors: [{ messageId: 'minimumUnderClip', data: { minimum: 'min-h-0', overflow: 'overflow-hidden' } }],
+        },
+        {
+          filename,
+          code: "<div className='min-w-0 overflow-y-auto' />",
+          errors: [{ messageId: 'minimumUnderClip', data: { minimum: 'min-w-0', overflow: 'overflow-y-auto' } }],
+        },
+        {
+          filename,
+          code: "<div className='dx-shrink overflow-scroll' />",
+          errors: [{ messageId: 'minimumUnderClip', data: { minimum: 'dx-shrink', overflow: 'overflow-scroll' } }],
+        },
+      ],
+    });
+  });
+
+  test('reports two utilities that compose into a third', () => {
+    ruleTester.run('prefer-sizing-utilities', rule, {
+      valid: [],
+      invalid: [
+        {
+          filename,
+          code: "<div className='flex dx-fill dx-grow' />",
+          errors: [{ messageId: 'handRolled', data: { classes: 'dx-grow dx-fill', suggestion: 'dx-expand' } }],
+        },
+      ],
+    });
+  });
+
+  test('reports a utility stacked on what it already applies', () => {
     ruleTester.run('prefer-sizing-utilities', rule, {
       valid: [],
       invalid: [

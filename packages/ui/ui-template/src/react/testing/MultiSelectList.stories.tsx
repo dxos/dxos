@@ -99,7 +99,7 @@ const DefaultStory = ({ splitter }: StoryArgs) => {
 const meta: Meta<typeof DefaultStory> = {
   title: 'ui/ui-template/MultiSelect',
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen', classNames: '2-96' })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen', classNames: 'w-96' })],
   parameters: { layout: 'fullscreen', translations: formTranslations },
 };
 
