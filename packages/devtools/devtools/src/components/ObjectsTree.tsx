@@ -66,7 +66,10 @@ export const ObjectsTree = ({ db, root, onSelect, onOpen, canOpen }: ObjectsTree
       <Tree<ObjectsTreeItem>
         id={ROOT_ANCHOR}
         model={model.treeModel}
-        gridTemplateColumns='[tree-row-start] 1fr min-content min-content [tree-row-end]'
+        // `minmax(0, 1fr)`, not `1fr`: a bare `1fr` is `minmax(auto, 1fr)`, whose automatic minimum
+        // is the content's min-content width, so a long label (a relation typename on a deep row)
+        // widens the track and pushes the trailing columns instead of truncating.
+        gridTemplateColumns='[tree-row-start] minmax(0, 1fr) min-content min-content [tree-row-end]'
         renderIcon={ObjectsTreeIcon}
         renderColumns={ObjectsTreeColumns}
         onOpenChange={handleOpenChange}
