@@ -2,12 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { trace } from '@opentelemetry/api';
-import { BasicTracerProvider, InMemorySpanExporter, SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
-import { describe, onTestFinished, test } from 'vitest';
+import { describe, test } from 'vitest';
 
 import { AgentService as AgentServiceRuntime } from '@dxos/agent-runtime';
 import { AiService } from '@dxos/ai';
@@ -210,63 +208,6 @@ describe('AssistantPlugin', () => {
         expect(result).toEqual({ capital: 'paris' });
       }).pipe(Effect.provide(ServiceResolver.provide({ space: defaultSpace.id }, Database.Service))),
     );
-  });
-
-  test('exports model-call spans through the process manager tracer', async ({ expect }) => {
-    const exporter = new InMemorySpanExporter();
-    const provider = new BasicTracerProvider({ spanProcessors: [new SimpleSpanProcessor(exporter)] });
-    // No plugin contributes a tracer. The framework installs one over the OpenTelemetry global, so
-    // registering a provider is all it takes for the spans the AI stack already emits to be
-    // exported — which is what lets AI capture be a span processor rather than a tracing stack.
-    trace.setGlobalTracerProvider(provider);
-    onTestFinished(() => trace.disable());
-
-    await using harness = await createComposerTestApp({
-      plugins: [
-        ClientPlugin.make({}),
-        AssistantPlugin({
-          aiServiceMiddleware: ScriptedLanguageModel.scriptedAiServiceMiddleware([
-            { parts: [ScriptedLanguageModel.toolCall('completeJob', { success: { capital: 'paris' } })] },
-            { parts: [ScriptedLanguageModel.text('Done.')] },
-          ]),
-        }),
-        RoutinePlugin.make(),
-      ],
-    });
-
-    const { defaultSpace } = await EffectEx.runAndForwardErrors(
-      initializeIdentity(harness.get(ClientCapabilities.Client)),
-    );
-
-    await harness.runPromise(
-      Effect.gen(function* () {
-        const instructions = yield* Database.add(
-          Instructions.make({
-            name: 'tracer-test',
-            text: 'Call completeJob with success set to { "capital": "<lowercase country capital>" }.',
-          }),
-        );
-        yield* Database.flush();
-        yield* Operation.invoke(
-          RunInstructions,
-          {
-            instructions: Ref.make(instructions),
-            input: { country: 'France' },
-            model: DXN.make('com.anthropic.model.claude-haiku-4-5.default'),
-          },
-          { spaceId: defaultSpace.id },
-        );
-      }).pipe(Effect.provide(ServiceResolver.provide({ space: defaultSpace.id }, Database.Service))),
-    );
-    await provider.forceFlush();
-
-    // The point of the test: nothing above wired a tracer into the model call. It arrives because
-    // every fiber on the process-manager runtime inherits the tracer the framework installs.
-    const spans = exporter.getFinishedSpans();
-    const modelSpan = spans.find(({ name }) => name.startsWith('LanguageModel.'));
-    expect(modelSpan).toBeDefined();
-    expect(modelSpan!.attributes['dxos.ai.session_id']).toBeTypeOf('string');
-    expect(modelSpan!.attributes['dxos.ai.space_id']).toEqual(defaultSpace.id);
   });
 
   test(

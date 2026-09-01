@@ -299,8 +299,6 @@
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@opentelemetry/api": "1.9.1",
-    "@opentelemetry/sdk-trace-base": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@testing-library/react": "catalog:",
     "@types/react": "catalog:",
