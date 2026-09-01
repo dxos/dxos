@@ -32,6 +32,8 @@ import {
   runSqliteHealthCheck,
 } from '@dxos/echo-host';
 import {
+  type EdgeApiClientService,
+  EdgeApiService,
   EdgeClient,
   type EdgeConnection,
   EdgeHttpClient,
@@ -194,6 +196,9 @@ export class ClientServicesHost {
   #devtoolsProxy?: WebsocketRpcClient<{}, ClientServices>;
   #edgeConnection?: EdgeConnection = undefined;
   #edgeHttpClient?: EdgeHttpClient = undefined;
+  // Derived Effect-native edge client, provided alongside `#edgeHttpClient` while consumers
+  // migrate group-by-group; no consumer wired to it yet.
+  #edgeApiClient?: EdgeApiClientService = undefined;
 
   #stackRuntime?: ManagedRuntime.ManagedRuntime<
     ClientServicesHostService | ClientServicesRpcContext | ServiceContextStackContext,
@@ -447,6 +452,7 @@ export class ClientServicesHost {
         deferConnect: true,
       });
       this.#edgeHttpClient = new EdgeHttpClient(endpoint, { clientTag });
+      this.#edgeApiClient = EdgeApiService.make({ baseUrl: endpoint, clientTag });
     }
 
     const {
@@ -858,6 +864,11 @@ export class ClientServicesHost {
 
     this.#edgeConnection?.setIdentity(edgeIdentity);
     this.#edgeHttpClient?.setIdentity(edgeIdentity);
+    if (this.#edgeApiClient) {
+      // `setIdentity` completes synchronously; run it eagerly so the derived client presents the
+      // current identity on its next request.
+      Effect.runSync(this.#edgeApiClient.setIdentity(edgeIdentity));
+    }
     this.networkManager.setPeerInfo({
       identityDid: edgeIdentity.identityDid,
       peerKey: edgeIdentity.peerKey,

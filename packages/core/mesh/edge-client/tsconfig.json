@@ -42,6 +42,12 @@
       "path": "../../../common/util"
     },
     {
+      "path": "../../echo/echo"
+    },
+    {
+      "path": "../../echo/echo-protocol"
+    },
+    {
       "path": "../../halo/credentials"
     },
     {
