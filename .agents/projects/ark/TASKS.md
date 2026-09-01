@@ -286,7 +286,7 @@ a collapse would be undone by the next tick.
       is shared, normal behaviour rather than a symptom.
 
       Lesson worth keeping: for "is it visible", take the screenshot. Three rounds of DOM
-                              instrumentation pointed the wrong way; one before/after image settled it in seconds.
+                                  instrumentation pointed the wrong way; one before/after image settled it in seconds.
 
 ## Phase 9: `ObjectsTree` on the Tree — VERIFIED by the user
 

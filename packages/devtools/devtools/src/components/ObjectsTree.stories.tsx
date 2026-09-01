@@ -160,7 +160,7 @@ export const WithTree: Story = {
       return <div>No space</div>;
     }
     return (
-      <div className='text-base-fg'>
+      <div className='dx-container text-base-fg'>
         <ObjectsTree db={space.db} />
       </div>
     );
@@ -175,7 +175,7 @@ export const WithDetails: Story = {
     }
     const [selectedObject, setSelectedObject] = useState<Entity.Snapshot | null>(null);
     return (
-      <div className='flex grid grid-rows_[1fr_1fr]'>
+      <div className='dx-container grid grid-rows-[1fr_1fr]'>
         <ObjectsTree db={space.db} onSelect={setSelectedObject} />
         <div className='border-separator! border-s border-t'>
           {selectedObject && <ObjectViewer object={selectedObject} id={selectedObject.id} />}
