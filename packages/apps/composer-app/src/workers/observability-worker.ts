@@ -3,7 +3,7 @@
 //
 
 import { IdbLogStore } from '@dxos/log-store-idb';
-import { type OtelLogSinkInit } from '@dxos/observability/otel-log-sink';
+import { type OtelLogSinkInit, type OtelLogSinkMessage } from '@dxos/observability/otel-log-sink';
 
 // Direct module import: the util barrel would pull the whole config/observability graph into
 // this worker's bundle.
@@ -25,8 +25,8 @@ const store = new IdbLogStore({ dbName: LOG_STORE_DB_NAME, maxBytes: LOG_STORE_M
 /** Caps records buffered while the sink module import is in flight. */
 const MAX_PENDING = 5_000;
 
-type Tags = { type: 'otel-tags'; tags: Record<string, string> };
-type Flush = { type: 'otel-flush' };
+/** What the sink accepts after its init; kept in step with `OtelLogSink.handleMessage`. */
+type LogControl = Exclude<OtelLogSinkMessage, OtelLogSinkInit>;
 
 /**
  * One lazily-imported export pipeline. `init` starts the (one-shot) module load; messages
@@ -40,12 +40,15 @@ const lazySink = <TInit, TMessage>(
 ): { init: (init: TInit) => void; deliver: (message: TMessage) => void } => {
   let deliver: ((message: TMessage) => void) | undefined;
   let pending: TMessage[] | undefined;
+  // Counted apart from `pending.length` so a queued control message never displaces a record.
+  let pendingRecords = 0;
   return {
     init: (init) => {
       if (deliver !== undefined || pending !== undefined) {
         return;
       }
       pending = [];
+      pendingRecords = 0;
       load(init)
         .then((loaded) => {
           deliver = loaded;
@@ -59,8 +62,11 @@ const lazySink = <TInit, TMessage>(
     deliver: (message) => {
       if (deliver !== undefined) {
         deliver(message);
-      } else if (pending !== undefined && (!isRecord(message) || pending.length < MAX_PENDING)) {
+      } else if (pending !== undefined && (!isRecord(message) || pendingRecords < MAX_PENDING)) {
         pending.push(message);
+        if (isRecord(message)) {
+          pendingRecords++;
+        }
       }
     },
   };
@@ -69,7 +75,7 @@ const lazySink = <TInit, TMessage>(
 // One worker per producing realm, so the sink below is that realm's — its resource identity
 // (process type, session id) arrives with the init message.
 const createMessageHandler = (): ((event: MessageEvent<ObservabilityWorkerMessage>) => void) => {
-  const logs = lazySink<OtelLogSinkInit, string | Tags | Flush>(
+  const logs = lazySink<OtelLogSinkInit, string | LogControl>(
     (init) =>
       import('@dxos/observability/otel-log-sink').then(({ OtelLogSink }) => {
         const sink = new OtelLogSink(init);
