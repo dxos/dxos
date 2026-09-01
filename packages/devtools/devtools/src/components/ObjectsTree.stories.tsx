@@ -51,7 +51,7 @@ const meta = {
   render: ObjectsPanelStory,
   decorators: [
     withTheme(),
-    withLayout({ layout: 'column', classNames: 'w-[20rem] overflow-hidden border' }),
+    withLayout({ layout: 'column', classNames: 'w-[20rem]' }),
     withDevtoolsContext,
     withClientProvider({
       createIdentity: true,

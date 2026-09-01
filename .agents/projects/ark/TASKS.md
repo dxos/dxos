@@ -285,8 +285,8 @@ a collapse would be undone by the next tick.
       150 ms, `block-size` held at 136 px, no `hidden` attribute) and collapses correctly, so that
       is shared, normal behaviour rather than a symptom.
 
-      Lesson worth keeping: for "is it visible", take the screenshot. Three rounds of DOM
-                                  instrumentation pointed the wrong way; one before/after image settled it in seconds.
+Lesson worth keeping: for "is it visible", take the screenshot. Three rounds of DOM instrumentation
+pointed the wrong way; one before/after image settled it immediately.
 
 ## Phase 9: `ObjectsTree` on the Tree — VERIFIED by the user
 
