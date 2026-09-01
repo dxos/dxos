@@ -380,6 +380,29 @@ export class AiChatProcessor {
   }
 
   /**
+   * Queues a prompt behind the turn already running, instead of starting one.
+   *
+   * The agent's input queue is feed state, so submitting is durable and ordered: the running turn is
+   * left alone and the process takes this prompt up when it settles. {@link request} cannot serve
+   * this case — it cancels the in-flight turn to start its own — and the running request's
+   * `waitForCompletion` already covers the queued turn, since the agent does not report completion
+   * while its queue is non-empty.
+   */
+  async enqueue(requestProp: ProcessorRequest): Promise<void> {
+    try {
+      await this._runtime.runPromise(
+        Effect.gen({ self: this }, function* () {
+          const session = yield* this.#getSession();
+          yield* session.submitPrompt(createPromptContent(requestProp));
+        }).pipe(Effect.provide(this._spaceLayer)),
+      );
+    } catch (err) {
+      log.error('enqueue failed', { error: err });
+      this.#registry.set(this.error, Option.some(parseError(err)));
+    }
+  }
+
+  /**
    * Mirrors turns this processor did not initiate into its own state: active/streaming state is
    * per-processor ({@link useChatProcessor} builds one per mount) while the agent process outlives
    * the mount, so a chat remounted mid-turn would otherwise render as idle.

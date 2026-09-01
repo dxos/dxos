@@ -5,10 +5,11 @@
 import * as Array from 'effect/Array';
 import { describe, test } from 'vitest';
 
-import { Feed, Obj } from '@dxos/echo';
+import { AckAnnotation, Alarm, QueuedAnnotation } from '@dxos/assistant';
+import { Annotation, Feed, Obj, Ref } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
-import { byAppendOrder, collapseToolRuns, projectThread, resolveRewind } from './thread.ts';
+import { byAppendOrder, collapseToolRuns, projectAlarms, projectThread, resolveRewind } from './thread';
 
 describe('byAppendOrder', () => {
   test('orders by feed position when it discriminates', ({ expect }) => {
@@ -93,6 +94,64 @@ describe('projectThread', () => {
 
   test('an empty feed projects nothing', ({ expect }) => {
     expect(projectThread({ feedMessages: [] }).messages).toEqual([]);
+  });
+});
+
+describe('queue projection', () => {
+  test('a queued message is held out of the thread and listed as queued', ({ expect }) => {
+    const asked = message('answered');
+    const waiting = queued(message('waiting'));
+    const { messages, queued: pending } = projectThread({ feedMessages: [asked, waiting] });
+
+    expect(text(messages)).toEqual(['answered']);
+    expect(text(pending)).toEqual(['waiting']);
+  });
+
+  test('an acked queued message leaves the queue — its ack-carrying turn is the thread entry', ({ expect }) => {
+    const original = queued(message('do the thing'));
+    const turn = acking(message('do the thing'), original);
+    const { messages, queued: pending } = projectThread({ feedMessages: [original, turn] });
+
+    // Exactly once in the thread, and no longer waiting.
+    expect(text(messages)).toEqual(['do the thing']);
+    expect(pending).toEqual([]);
+  });
+
+  test('queued messages are ordered by append order', ({ expect }) => {
+    const second = queued(positioned(message('second'), 2));
+    const first = queued(positioned(message('first'), 1));
+    expect(text(projectThread({ feedMessages: [second, first] }).queued)).toEqual(['first', 'second']);
+  });
+
+  // A rewind truncates the thread; the queue is work that has not run, so it is unaffected.
+  test('a rewind does not discard queued input', ({ expect }) => {
+    const first = message('first');
+    const discarded = message('discarded');
+    const waiting = queued(message('waiting'));
+    const { messages, queued: pending } = projectThread({
+      feedMessages: [first, discarded, waiting],
+      rewindFrom: discarded.id,
+    });
+
+    expect(text(messages)).toEqual(['first']);
+    expect(text(pending)).toEqual(['waiting']);
+  });
+});
+
+describe('projectAlarms', () => {
+  test('pending alarms are ordered by wake time', ({ expect }) => {
+    const later = Alarm.make({ wakeAt: 2_000 });
+    const sooner = Alarm.make({ wakeAt: 1_000 });
+    const alarms = projectAlarms({ feedAlarms: [later, sooner], messages: [] });
+    expect(alarms.map((alarm) => alarm.wakeAt)).toEqual([1_000, 2_000]);
+  });
+
+  test('an alarm a turn has acked is no longer pending', ({ expect }) => {
+    const fired = Alarm.make({ wakeAt: 1_000 });
+    const pending = Alarm.make({ wakeAt: 2_000 });
+    const wake = acking(message('alarm fired'), fired);
+    const alarms = projectAlarms({ feedAlarms: [fired, pending], messages: [wake] });
+    expect(alarms.map((alarm) => alarm.id)).toEqual([pending.id]);
   });
 });
 
@@ -204,6 +263,16 @@ const positioned = (message: Message.Message, position: number) => {
   Obj.update(message, (message) => {
     Obj.getMeta(message).keys.push({ source: Feed.POSITION_KEY, id: String(position) });
   });
+  return message;
+};
+
+const queued = (message: Message.Message) => {
+  Obj.update(message, (message) => Annotation.set(message, QueuedAnnotation, true));
+  return message;
+};
+
+const acking = (message: Message.Message, original: Obj.Unknown) => {
+  Obj.update(message, (message) => Annotation.set(message, AckAnnotation, Ref.make(original)));
   return message;
 };
 

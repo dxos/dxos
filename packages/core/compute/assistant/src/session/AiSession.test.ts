@@ -12,7 +12,7 @@ import { Message } from '@dxos/types';
 import * as AiSession from './AiSession.ts';
 import * as SessionLink from './SessionLink.ts';
 
-// Monotonic timestamps so chronological sorting in SessionLoader is deterministic.
+// Monotonic timestamps so chronological sorting in SessionStore is deterministic.
 let clock = 0;
 const makeMessage = (text: string, sender: 'user' | 'assistant' = 'user') =>
   Message.make({ created: new Date(clock++).toISOString(), sender, blocks: [{ _tag: 'text', text }] });

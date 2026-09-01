@@ -41,6 +41,12 @@ export type TurnRequest = {
   prompt: Parameters<AiSession.Session['createRequest']>[0]['prompt'];
   system?: string;
   mcpServers?: Parameters<AiSession.Session['createRequest']>[0]['mcpServers'];
+  /**
+   * Queued feed item (message or alarm) this turn dequeues. A producer that persists the user
+   * prompt message stamps it as `AckAnnotation`; one that does not may ignore it — the process
+   * acks explicitly after the turn.
+   */
+  ack?: Parameters<AiSession.Session['createRequest']>[0]['ack'];
 };
 
 export type MakeTurnProducerOptions = {

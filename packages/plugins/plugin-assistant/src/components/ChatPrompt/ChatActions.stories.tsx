@@ -15,8 +15,8 @@ import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { type ChatEvent } from '../Chat/index.ts';
-import { ChatActions, type ChatActionsProps } from './ChatActions.tsx';
+import { type ChatEvent } from '../Chat';
+import { ChatActions, type ChatActionsProps } from './ChatActions';
 
 type StoryArgs = Pick<ChatActionsProps, 'processing' | 'canSend' | 'tasksVisible' | 'debug' | 'customActions'>;
 
@@ -89,8 +89,12 @@ export const StopReplacesSendWhileProcessing: Story = {
   },
 };
 
-/** Typed while the prior turn is still running: sending it now queues it rather than stopping. */
-export const SendQueuesWhileProcessing: Story = {
+/**
+ * Mid-turn WITH text waiting: the control offers Send, not Stop. A prompt submitted now is queued
+ * behind the running turn, so refusing to send it (or offering only Stop) would strand what the
+ * reader just typed.
+ */
+export const SendWhileProcessingWithText: Story = {
   args: { processing: true, canSend: true, tasksVisible: true },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

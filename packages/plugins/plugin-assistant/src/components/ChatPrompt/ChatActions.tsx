@@ -11,7 +11,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import { type ChatEvent } from '../Chat/events.ts';
+import { type ChatEvent } from '../Chat/events';
 
 /**
  * 44px at the 16px (pointer: fine) root font-size, the iOS HIG minimum touch target; the density
@@ -55,10 +55,9 @@ export const ChatActions = ({
   onEvent,
 }: ChatActionsProps) => {
   const { t } = useTranslation(meta.profile.key);
-  // Processing with an empty prompt offers nothing to submit, so it stays a stop control; text
-  // in the prompt while processing means the turn already has an answer coming and this one
-  // queues behind it, so the control reverts to send.
-  const showStop = Boolean(processing) && !canSend;
+  // While a turn runs the primary control interrupts it — unless there is text waiting, in which
+  // case sending it (which queues it behind the running turn) is what the reader is asking for.
+  const showStop = processing && !canSend;
   return (
     <div className={mx('flex items-center gap-1', classNames)}>
       {children}
@@ -94,7 +93,7 @@ export const ChatActions = ({
       {onSend && (
         // TODO(dmaretskyi): Set processing state correctly on rehydrated agents.
         <IconButton
-          disabled={!processing && !canSend}
+          disabled={!showStop && !canSend}
           variant='ghost'
           classNames={mx(TOUCH_TARGET, showStop ? 'text-error-text' : canSend && 'text-accent-text')}
           icon={showStop ? 'ph--square--duotone' : 'ph--paper-plane-right--regular'}

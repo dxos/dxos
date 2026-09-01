@@ -30,14 +30,14 @@ import { useChatKeymapExtensions } from '#hooks';
 import { meta } from '#meta';
 import { AssistantPreset } from '#types';
 
-import { TaskSlashCommands } from '../../commands/index.ts';
-import { type AiChatProcessor } from '../../processor/index.ts';
-import { type ChatEvent } from '../Chat/index.ts';
-import { ChatActions, type ChatActionsProps } from './ChatActions.tsx';
-import { ChatMcpErrors } from './ChatMcpErrors.tsx';
-import { ChatOptions } from './ChatOptions.tsx';
-import { ChatReferences } from './ChatReferences.tsx';
-import { useChatVoiceInput } from './useChatVoiceInput.ts';
+import { TaskSlashCommands } from '../../commands';
+import { type AiChatProcessor } from '../../processor';
+import { type ChatEvent } from '../Chat';
+import { ChatActions, type ChatActionsProps } from './ChatActions';
+import { ChatMcpErrors } from './ChatMcpErrors';
+import { ChatOptions } from './ChatOptions';
+import { ChatReferences } from './ChatReferences';
+import { useChatVoiceInput } from './useChatVoiceInput';
 
 export type ChatPromptProps = Merge<
   ThemedClassName<{
@@ -81,6 +81,7 @@ export const ChatPrompt = ({
   const { t } = useTranslation(meta.profile.key);
   const error = useAtomValue(processor.error).pipe(Option.getOrUndefined);
   const streaming = useAtomValue(processor.streaming);
+  const active = useAtomValue(processor.active);
 
   const editorRef = useRef<ChatEditorController>(null);
   useEffect(() => {
@@ -130,14 +131,18 @@ export const ChatPrompt = ({
     [],
   );
 
+  // There is something to send, whether or not a turn is running: a prompt submitted mid-turn is
+  // queued behind it rather than dropped, so text is the only precondition. `ChatActions` reads this
+  // to decide which affordance the primary control offers (Send with text, Stop without).
+  const canSend = hasText;
+
   const extensions = useMemo(
     () => [keymapExtensions, pendingText(), commandsExtension, emptinessExtension],
     [keymapExtensions, commandsExtension, emptinessExtension],
   );
 
-  // Always emits and clears the prompt, whether or not a turn is in flight: `Chat.Root` decides
-  // whether to run the request now or queue it for when the current one finishes, so the button
-  // and the Enter keybinding stay this one path regardless of processing state.
+  // Submits while a turn is running too: the agent's input queue is feed state, so the prompt is
+  // queued behind the running turn rather than dropped (`Chat.Root` routes it to `enqueue`).
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
     (text) => {
       event.emit({ type: 'submit', text });
@@ -212,8 +217,10 @@ export const ChatPrompt = ({
             classNames='col-span-2'
             attendableId={attendableId}
             customActions={customActions}
-            processing={streaming}
-            canSend={hasText}
+            // `active`, not `streaming`: a turn parked in a tool call streams nothing, and the
+            // reader still needs a way to stop it.
+            processing={active}
+            canSend={canSend}
             tasksVisible={tasksVisible}
             onSend={handleSend}
             onEvent={handleEvent}

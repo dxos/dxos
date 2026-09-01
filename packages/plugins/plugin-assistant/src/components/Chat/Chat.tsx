@@ -8,6 +8,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { Alarm } from '@dxos/assistant';
 import { Chat as AssistantChat, resolveSlashCommand } from '@dxos/assistant-toolkit';
 import { Event } from '@dxos/async';
 import { type Database, Filter, Obj, Query } from '@dxos/echo';
@@ -37,17 +38,18 @@ import { keyToFallback } from '@dxos/util';
 import { useChatToolbarActions, useDebug } from '#hooks';
 import { meta } from '#meta';
 
-import { TaskSlashCommands } from '../../commands/index.ts';
-import { AiUsageQuotaError, type ProcessorRequestContext } from '../../processor/index.ts';
+import { TaskSlashCommands } from '../../commands';
+import { AiUsageQuotaError, type ProcessorRequestContext } from '../../processor';
 import {
   ChatStatus,
   ChatPrompt as NaturalChatPrompt,
   type ChatPromptProps as NaturalChatPromptProps,
-} from '../ChatPrompt/index.ts';
-import { ChatContextProvider, type ChatContextValue, type ChatRequestTiming, useChatContext } from './context.ts';
-import { type ChatEvent } from './events.ts';
-import { SurfaceWidget } from './SurfaceWidget.tsx';
-import { projectThread, resolveRewind } from './thread.ts';
+} from '../ChatPrompt';
+import { ChatQueue as NaturalChatQueue, type ChatQueueProps as NaturalChatQueueProps } from '../ChatQueue';
+import { ChatContextProvider, type ChatContextValue, type ChatRequestTiming, useChatContext } from './context';
+import { type ChatEvent } from './events';
+import { SurfaceWidget } from './SurfaceWidget';
+import { projectAlarms, projectThread, resolveRewind } from './thread';
 
 //
 // Root
@@ -88,10 +90,6 @@ const ChatRoot = ({
   const lastPrompt = useRef<string | undefined>(undefined);
   // A slash command runs outside the processor, so `streaming` does not cover it.
   const commandPending = useRef(false);
-  // A submission made while the current turn is still streaming waits here instead of running (or
-  // being dropped) immediately; the effect below flushes it the moment `streaming` goes false.
-  const queuedMessage = useRef<string | undefined>(undefined);
-  const wasStreaming = useRef(streaming);
   // Transient chats have no database of their own; fall back to the supplied space db so
   // the message query and context controls operate before the chat is persisted.
   const db = (chat && Obj.getDatabase(chat)) || dbFallback;
@@ -112,10 +110,26 @@ const ChatRoot = ({
     db,
     feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
   );
+  const feedAlarms = useQuery(
+    db,
+    feed ? Query.select(Filter.type(Alarm.Alarm)).from(feed) : Query.select(Filter.nothing()),
+  );
   const pendingMessages = useAtomValue(processor.messages);
-  const { messages } = useMemo(
+  const { messages, queued } = useMemo(
     () => projectThread({ feedMessages, pendingMessages, rewindFrom: feedSnapshot?.rewindFrom }),
     [feedMessages, pendingMessages, feedSnapshot?.rewindFrom],
+  );
+  const alarms = useMemo(() => projectAlarms({ feedAlarms, messages: feedMessages }), [feedAlarms, feedMessages]);
+
+  // Cancelling is a plain feed removal: the queue and the alarm set are projections over the feed,
+  // so dropping the record is what takes the item out of them.
+  const handleCancel = useCallback(
+    (item: Message.Message | Alarm.Alarm) => {
+      if (db && feed) {
+        void db.removeFeedItemsByIds(feed, [item.id]).catch((err) => log.catch(err));
+      }
+    },
+    [db, feed],
   );
 
   const dump = useDebug({ processor });
@@ -127,85 +141,6 @@ const ChatRoot = ({
       event.emit({ type: 'error', error: error.value });
     }
   }, [event, error]);
-
-  // The actual work of a submission, shared by an immediate submit and a queued one flushed once
-  // the prior turn finishes streaming.
-  const performSubmit = useCallback(
-    (text: string) => {
-      // A leading /command is a deterministic shortcut — executed directly, no model in
-      // the loop; an unknown command falls through to the model as plain text.
-      const resolved = resolveSlashCommand(text, TaskSlashCommands);
-      if (resolved) {
-        // One command at a time: `invokePromise` does not queue, so two quick submissions
-        // would interleave their operations and land their summaries out of order.
-        if (commandPending.current) {
-          return;
-        }
-        commandPending.current = true;
-        // One rejection handler for the whole chain: `onSubmit` can throw synchronously and
-        // `appendToFeed` can reject, and either would otherwise be lost with no error shown.
-        void (async () => {
-          await Promise.resolve(onSubmit?.(text));
-          // Re-read after `onSubmit`: that is what persists a transient chat, so a chat that
-          // began without a database has one only now.
-          const currentDb = (chat && Obj.getDatabase(chat)) || db;
-          if (!chat || !currentDb) {
-            throw new Error('Command requires a persisted chat.');
-          }
-
-          const result = await resolved.command.execute(resolved.args, {
-            db: currentDb,
-            chat,
-            invoke: invokePromise,
-          });
-          if (result instanceof Error) {
-            throw result;
-          }
-
-          // The command's effect is otherwise invisible in the conversation: the prompt was
-          // never sent, so nothing records that the user ran it. The feed is re-read here
-          // because `onSubmit` is what persists a transient chat, creating it.
-          const currentFeed = feed ?? chat.feed?.target;
-          if (currentFeed && result.summary) {
-            await currentDb.appendToFeed(currentFeed, [
-              Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text }] }),
-              Message.make({ sender: { role: 'assistant' }, blocks: [{ _tag: 'text', text: result.summary }] }),
-            ]);
-          }
-
-          if (result.followUp) {
-            // Some effects run on the supervisor loop (delegation spawns post-turn), so the
-            // command wakes the conversation with a short synthetic prompt.
-            void processor.request({ message: result.followUp });
-          }
-        })()
-          .catch((error) => {
-            event.emit({ type: 'error', error: error instanceof Error ? error : new Error(String(error)) });
-          })
-          .finally(() => {
-            commandPending.current = false;
-          });
-        return;
-      }
-      lastPrompt.current = text;
-      const context = getContext?.();
-      // Await persistence (transient chat) before requesting so the agent resolves the
-      // now-durable conversation feed; resolves immediately when there is no hook.
-      void Promise.resolve(onSubmit?.(text)).then(() => processor.request({ message: text, context }));
-    },
-    [chat, db, event, feed, getContext, invokePromise, onSubmit, processor],
-  );
-
-  // Flushes a message queued while the prior turn was streaming, the moment it finishes — the
-  // send control only offers queueing when the prompt has text, so there is at most one waiting.
-  useEffect(() => {
-    if (wasStreaming.current && !streaming && queuedMessage.current) {
-      const text = queuedMessage.current;
-      queuedMessage.current = undefined;
-      performSubmit(text);
-    }
-    wasStreaming.current = streaming;
-  }, [streaming, performSubmit]);
 
   useEffect(() => {
     return event.on((ev) => {
@@ -224,16 +159,74 @@ const ChatRoot = ({
 
         case 'submit': {
           const text = ev.text.trim();
-          if (!text.length) {
-            break;
+          if (text.length) {
+            // A leading /command is a deterministic shortcut — executed directly, no model in
+            // the loop; an unknown command falls through to the model as plain text.
+            const resolved = resolveSlashCommand(text, TaskSlashCommands);
+            if (resolved) {
+              // One command at a time: `invokePromise` does not queue, so two quick submissions
+              // would interleave their operations and land their summaries out of order.
+              if (commandPending.current) {
+                break;
+              }
+              commandPending.current = true;
+              // One rejection handler for the whole chain: `onSubmit` can throw synchronously and
+              // `appendToFeed` can reject, and either would otherwise be lost with no error shown.
+              void (async () => {
+                await Promise.resolve(onSubmit?.(text));
+                // Re-read after `onSubmit`: that is what persists a transient chat, so a chat that
+                // began without a database has one only now.
+                const currentDb = (chat && Obj.getDatabase(chat)) || db;
+                if (!chat || !currentDb) {
+                  throw new Error('Command requires a persisted chat.');
+                }
+
+                const result = await resolved.command.execute(resolved.args, {
+                  db: currentDb,
+                  chat,
+                  invoke: invokePromise,
+                });
+                if (result instanceof Error) {
+                  throw result;
+                }
+
+                // The command's effect is otherwise invisible in the conversation: the prompt was
+                // never sent, so nothing records that the user ran it. The feed is re-read here
+                // because `onSubmit` is what persists a transient chat, creating it.
+                const currentFeed = feed ?? chat.feed?.target;
+                if (currentFeed && result.summary) {
+                  await currentDb.appendToFeed(currentFeed, [
+                    Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text }] }),
+                    Message.make({ sender: { role: 'assistant' }, blocks: [{ _tag: 'text', text: result.summary }] }),
+                  ]);
+                }
+
+                if (result.followUp) {
+                  // Some effects run on the supervisor loop (delegation spawns post-turn), so the
+                  // command wakes the conversation with a short synthetic prompt.
+                  void processor.request({ message: result.followUp });
+                }
+              })()
+                .catch((error) => {
+                  event.emit({ type: 'error', error: error instanceof Error ? error : new Error(String(error)) });
+                })
+                .finally(() => {
+                  commandPending.current = false;
+                });
+              break;
+            }
+            lastPrompt.current = ev.text;
+            const context = getContext?.();
+            // Await persistence (transient chat) before requesting so the agent resolves the
+            // now-durable conversation feed; resolves immediately when there is no hook.
+            //
+            // A prompt submitted while a turn is running is QUEUED, not requested: `request` would
+            // cancel the running turn to start its own, whereas the agent's queue is feed state that
+            // it drains in order once the current turn settles.
+            void Promise.resolve(onSubmit?.(text)).then(() =>
+              active ? processor.enqueue({ message: text, context }) : processor.request({ message: text, context }),
+            );
           }
-          if (streaming) {
-            // The current turn hasn't finished; hold this one and send it once it does, rather
-            // than dropping it or interleaving it mid-stream.
-            queuedMessage.current = text;
-            break;
-          }
-          performSubmit(text);
           break;
         }
 
@@ -266,9 +259,6 @@ const ChatRoot = ({
               event.emit({ type: 'update-prompt', text: lastPrompt.current });
             }
           }
-          // Cancelling the turn means the reader no longer wants it continued, so a message
-          // queued behind it should not fire on its own once cancellation completes.
-          queuedMessage.current = undefined;
           break;
         }
       }
@@ -277,7 +267,7 @@ const ChatRoot = ({
     });
     // `feed` and `messages` are dependencies because the rewind branch reads and writes them: without
     // them the handler would keep resolving rewinds against whatever was mounted first.
-  }, [event, dump, processor, streaming, onEvent, feed, messages, performSubmit]);
+  }, [event, dump, processor, streaming, active, onEvent, onSubmit, getContext, feed, messages, chat, db]);
 
   return (
     <ChatContextProvider
@@ -286,6 +276,9 @@ const ChatRoot = ({
       db={db}
       chat={chat}
       messages={messages}
+      queued={queued}
+      alarms={alarms}
+      onCancel={handleCancel}
       processor={processor}
       requestTiming={requestTiming}
       controller={controller}
@@ -681,6 +674,21 @@ const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
 ChatTaskList.displayName = CHAT_TASK_LIST_NAME;
 
 //
+// Queue
+//
+
+const CHAT_QUEUE_NAME = 'Chat.Queue';
+
+type ChatQueueProps = Omit<NaturalChatQueueProps, 'queued' | 'onCancel'>;
+
+const ChatQueue = (props: ChatQueueProps) => {
+  const { queued, onCancel } = useChatContext(CHAT_QUEUE_NAME);
+  return <NaturalChatQueue {...props} queued={queued} onCancel={onCancel} />;
+};
+
+ChatQueue.displayName = CHAT_QUEUE_NAME;
+
+//
 // Chat
 //
 
@@ -689,6 +697,7 @@ export const Chat = {
   Toolbar: ChatToolbar,
   Content: ChatContent,
   Prompt: ChatPrompt,
+  Queue: ChatQueue,
   Status: ChatStatus,
   Thread: ChatThread,
   Outline: ChatOutline,
@@ -700,6 +709,7 @@ export type {
   ChatEvent,
   ChatOutlineProps,
   ChatPromptProps,
+  ChatQueueProps,
   ChatRootProps,
   ChatThreadProps,
   ChatToolbarProps,

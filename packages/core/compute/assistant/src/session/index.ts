@@ -2,12 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './toolkit.ts';
+export * from './toolkit';
 
-export * as AiContext from './AiContext.ts';
-export * as AiSession from './AiSession.ts';
-export * as Harness from './Harness.ts';
-export * as SkillHooks from './SkillHooks.ts';
-export { HarnessControl, type HarnessControlRpcs } from './harness-control.ts';
-export { SessionLoader } from './SessionLoader.ts';
-export * as SessionLink from './SessionLink.ts';
+export * as AiContext from './AiContext';
+export * as AiSession from './AiSession';
+export * as Harness from './Harness';
+export * as SkillHooks from './SkillHooks';
+export { HarnessControl, type HarnessControlRpcs } from './harness-control';
+export * as Alarm from './Alarm';
+export * as SessionLink from './SessionLink';
+export {
+  AckAnnotation,
+  type PendingState,
+  QueuedAnnotation,
+  type SessionState,
+  SessionStore,
+  type SetAlarmProps,
+  getAck,
+  isQueued,
+} from './SessionStore';

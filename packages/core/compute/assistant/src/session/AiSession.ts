@@ -21,7 +21,7 @@ import * as Operation from '@dxos/compute/Operation';
 import type * as Skill from '@dxos/compute/Skill';
 import * as Trace from '@dxos/compute/Trace';
 import { Resource } from '@dxos/context';
-import { Database, Feed, Filter, Obj, Registry } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, type Ref, Registry } from '@dxos/echo';
 import { RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -29,14 +29,14 @@ import { McpToolkit } from '@dxos/mcp-client';
 import { FeedProtocol } from '@dxos/protocols';
 import { type ContentBlock, Message } from '@dxos/types';
 
-import { AiRequest, type GenerationObserver, formatSystemPrompt } from '../request/index.ts';
-import { ToolExecutionServices } from '../tool-runtime/index.ts';
-import { McpServerError } from '../util/index.ts';
-import * as AiContext from './AiContext.ts';
-import * as Harness from './Harness.ts';
-import { SessionLoader } from './SessionLoader.ts';
-import * as SkillHooks from './SkillHooks.ts';
-import { createToolkit } from './toolkit.ts';
+import { AiRequest, type GenerationObserver, formatSystemPrompt } from '../request';
+import { ToolExecutionServices } from '../tool-runtime';
+import { McpServerError } from '../util';
+import * as AiContext from './AiContext';
+import * as Harness from './Harness';
+import { SessionStore } from './SessionStore';
+import * as SkillHooks from './SkillHooks';
+import { createToolkit } from './toolkit';
 
 export type RunProps<R = never> = {
   prompt: string | ContentBlock.Any[];
@@ -55,6 +55,12 @@ export type RunProps<R = never> = {
    * @default true
    */
   persist?: boolean;
+
+  /**
+   * Queued feed item (message or alarm) this turn dequeues; stamped as `AckAnnotation` on the user
+   * prompt message so its append is the atomic ack.
+   */
+  ack?: Ref.Ref<Obj.Unknown>;
 };
 
 export type Options = {
@@ -89,7 +95,7 @@ export class Session extends Resource {
    */
   private readonly _binder: AiContext.Binder;
 
-  private readonly _sessionLoader = new SessionLoader();
+  private readonly _sessionStore = new SessionStore();
 
   public constructor(options: Options) {
     super();
@@ -124,7 +130,7 @@ export class Session extends Resource {
   public async getHistory(): Promise<Message.Message[]> {
     const { items: reachable } = Feed.history(await this.#messagesInAppendOrder());
     return RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
-      this._sessionLoader.reifyHistory(this._feed, reachable),
+      this._sessionStore.reifyHistory(this._feed, reachable),
     );
   }
 
@@ -224,6 +230,7 @@ export class Session extends Resource {
         instructions: this.#instructions,
         prompt: params.prompt,
         system: params.system,
+        ack: params.ack,
       });
 
       // Fire begin-request hooks declared by the bound skills. These run in the agent's turn
