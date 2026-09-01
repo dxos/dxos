@@ -1,4 +1,5 @@
 ---
+# multiple-changesets: unrelated protobuf-compiler fix rides along, found by the same migration
 '@dxos/eslint-plugin-rules': patch
 ---
 
