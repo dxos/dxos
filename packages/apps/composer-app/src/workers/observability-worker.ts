@@ -28,11 +28,13 @@ type Flush = { type: 'otel-flush' };
 
 /**
  * One lazily-imported export pipeline. `init` starts the (one-shot) module load; messages
- * delivered before it resolves are buffered in order, bounded by {@link MAX_PENDING}. A
- * failed load drops export for this connection — IDB persistence is unaffected.
+ * delivered before it resolves are buffered in order. Only records count against
+ * {@link MAX_PENDING}: control messages are few, and dropping one loses a flush rather than a
+ * record. A failed load drops export for this connection — IDB persistence is unaffected.
  */
 const lazySink = <TInit, TMessage>(
   load: (init: TInit) => Promise<(message: TMessage) => void>,
+  isRecord: (message: TMessage) => boolean,
 ): { init: (init: TInit) => void; deliver: (message: TMessage) => void } => {
   let deliver: ((message: TMessage) => void) | undefined;
   let pending: TMessage[] | undefined;
@@ -55,7 +57,7 @@ const lazySink = <TInit, TMessage>(
     deliver: (message) => {
       if (deliver !== undefined) {
         deliver(message);
-      } else if (pending !== undefined && pending.length < MAX_PENDING) {
+      } else if (pending !== undefined && (!isRecord(message) || pending.length < MAX_PENDING)) {
         pending.push(message);
       }
     },
@@ -71,32 +73,38 @@ const fireFlush = (result: Promise<void>): void => {
 // One worker per producing realm, so the sinks below are that realm's — its resource
 // identity (process type, session id) arrives with the init messages.
 const createMessageHandler = (): ((event: MessageEvent<ObservabilityWorkerMessage>) => void) => {
-  const logs = lazySink<OtelLogSink.Init, string | Tags | Flush>((init) =>
-    import('@dxos/observability/OtelLogSink').then(({ Sink }) => {
-      const sink = new Sink(init);
-      return (message) => (typeof message === 'string' ? sink.append(message) : sink.handleMessage(message));
-    }),
+  const logs = lazySink<OtelLogSink.Init, string | Tags | Flush>(
+    (init) =>
+      import('@dxos/observability/OtelLogSink').then(({ Sink }) => {
+        const sink = new Sink(init);
+        return (message) => (typeof message === 'string' ? sink.append(message) : sink.handleMessage(message));
+      }),
+    (message) => typeof message === 'string',
   );
-  const metrics = lazySink<OtelMetricsSink.Init, OtelMetricsSink.Metric | Tags | Flush>((init) =>
-    import('@dxos/observability/OtelMetricsSink').then(({ Sink }) => {
-      const sink = new Sink(init);
-      return (message) => {
-        switch (message.type) {
-          case 'otel-metric':
-            return sink.append(message);
-          case 'otel-tags':
-            return sink.setTags(message.tags);
-          case 'otel-flush':
-            return fireFlush(sink.flush());
-        }
-      };
-    }),
+  const metrics = lazySink<OtelMetricsSink.Init, OtelMetricsSink.Metric | Tags | Flush>(
+    (init) =>
+      import('@dxos/observability/OtelMetricsSink').then(({ Sink }) => {
+        const sink = new Sink(init);
+        return (message) => {
+          switch (message.type) {
+            case 'otel-metric':
+              return sink.append(message);
+            case 'otel-tags':
+              return sink.setTags(message.tags);
+            case 'otel-flush':
+              return fireFlush(sink.flush());
+          }
+        };
+      }),
+    (message) => message.type === 'otel-metric',
   );
-  const spans = lazySink<OtelSpanSink.Init, OtelSpanSink.Span | Flush>((init) =>
-    import('@dxos/observability/OtelSpanSink').then(({ Sink }) => {
-      const sink = new Sink(init);
-      return (message) => (message.type === 'otel-span' ? sink.append(message) : fireFlush(sink.flush()));
-    }),
+  const spans = lazySink<OtelSpanSink.Init, OtelSpanSink.Span | Flush>(
+    (init) =>
+      import('@dxos/observability/OtelSpanSink').then(({ Sink }) => {
+        const sink = new Sink(init);
+        return (message) => (message.type === 'otel-span' ? sink.append(message) : fireFlush(sink.flush()));
+      }),
+    (message) => message.type === 'otel-span',
   );
 
   return (event: MessageEvent<ObservabilityWorkerMessage>): void => {
