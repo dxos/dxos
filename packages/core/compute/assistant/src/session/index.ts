@@ -12,12 +12,12 @@ export { HarnessControl, type HarnessControlRpcs } from './harness-control';
 export * as Alarm from './Alarm';
 export * as SessionLink from './SessionLink';
 export {
-  AckAnnotation,
+  ConsumedAnnotation,
   type PendingState,
   QueuedAnnotation,
   type SessionState,
   SessionStore,
   type SetAlarmProps,
-  getAck,
+  isConsumed,
   isQueued,
 } from './SessionStore';
