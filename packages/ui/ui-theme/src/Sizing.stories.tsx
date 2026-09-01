@@ -154,6 +154,55 @@ export const WhichPropertyFires = {
 };
 
 /**
+ * What `min-*-0` actually does — the class this vocabulary exists to demystify.
+ *
+ * It is read as "makes things scroll". It does not: it says the element MAY BE SHORTER THAN ITS
+ * CONTENT. Without it, an item's minimum height is its content height, so it shoves its siblings
+ * out of the line. Scrolling is only the downstream consequence of finally being squeezed.
+ */
+export const ShrinkingVersusShoving = {
+  render: () => {
+    const footer = <div className='h-10 shrink-0 grid place-items-center text-xs bg-emerald-500/20'>footer</div>;
+    return (
+      <div className='p-4 flex flex-col gap-6'>
+        <p className='max-w-2xl text-sm text-description'>
+          Identical 260px columns: a body holding 900px of content, then a 40px footer. Watch the footer, not the
+          scrollbar — the failure on the left is a displaced sibling, and nothing scrolls in either box.
+        </p>
+        <div className='flex flex-wrap gap-6'>
+          <Frame title='no dx-shrink' note='body claims its content height; footer is pushed out of view'>
+            <div className='flex flex-col h-full'>
+              <Measured label='(nothing)' classNames=''>
+                <Tall />
+              </Measured>
+              {footer}
+            </div>
+          </Frame>
+          <Frame title='dx-shrink' note='body yields; footer keeps its place'>
+            <div className='flex flex-col h-full'>
+              <Measured label='dx-shrink' classNames='dx-shrink'>
+                <Tall />
+              </Measured>
+              {footer}
+            </div>
+          </Frame>
+          {/* The point most likely to save someone an afternoon: a clip says the same thing, so a
+              `min-*-0` beside one is dead weight that reads as though it were holding the layout up. */}
+          <Frame title='overflow-hidden alone' note='a clip zeroes the same minimum — dx-shrink adds nothing here'>
+            <div className='flex flex-col h-full'>
+              <Measured label='overflow-hidden' classNames='overflow-hidden'>
+                <Tall />
+              </Measured>
+              {footer}
+            </div>
+          </Frame>
+        </div>
+      </div>
+    );
+  },
+};
+
+/**
  * `dx-grow` constrains without clipping, so an overflowing child is visible rather than hidden.
  * Reach for `overflow-hidden` only where a clip is wanted — it also makes the element a scroll
  * container, which a focused descendant can silently scroll.

@@ -260,7 +260,7 @@ type TaskListViewportProps = ComposableProps;
 const TaskListViewport = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   const { className, ...rest } = composableProps(props);
   return (
-    <Listbox.Viewport {...rest} classNames={mx('min-w-0 min-h-0', className)} ref={forwardedRef}>
+    <Listbox.Viewport {...rest} classNames={mx('dx-shrink', className)} ref={forwardedRef}>
       {children}
     </Listbox.Viewport>
   );

@@ -140,7 +140,7 @@ const PaneTabs = forwardRef<HTMLDivElement, PaneTabsProps>(
     return (
       <div
         role='tablist'
-        className={mx('flex-1 min-w-0 overflow-x-auto scrollbar-none flex items-center gap-1', classNames)}
+        className={mx('flex-1 overflow-x-auto scrollbar-none flex items-center gap-1', classNames)}
         ref={forwardedRef}
       >
         {tabs.map(({ id, icon, label }) => (
