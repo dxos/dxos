@@ -7,84 +7,127 @@ import { BasicTracerProvider, InMemorySpanExporter, SimpleSpanProcessor } from '
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
+import * as Tracer from 'effect/Tracer';
 import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 import * as Telemetry from 'effect/unstable/ai/Telemetry';
 
 import { makeTracer } from '@dxos/effect';
-import { DXN } from '@dxos/keys';
 
-import * as AiService from './AiService';
 import * as AiTelemetry from './AiTelemetry';
 
-const MODEL = DXN.make('com.example.model.stub');
-
-const makeStubModel = LanguageModel.make({
-  generateText: (options) =>
-    Effect.sync(() => {
-      Telemetry.addGenAIAnnotations(options.span, {
-        system: 'stub',
-        request: { model: 'stub-model' },
-        usage: { inputTokens: 3, outputTokens: 5 },
-      });
-      return [
-        { type: 'text', text: 'hello' },
-        { type: 'finish', reason: 'stop', usage: { inputTokens: { total: 3 }, outputTokens: { total: 5 } } },
-      ];
-    }),
+const stubModel = LanguageModel.make({
+  generateText: () =>
+    Effect.succeed([
+      { type: 'text', text: 'hello' },
+      { type: 'finish', reason: 'stop', usage: { inputTokens: { total: 3 }, outputTokens: { total: 5 } } },
+    ]),
   streamText: () => Stream.empty,
 });
 
-const setup = Effect.fnUntraced(function* (options: Omit<AiTelemetry.WrapOptions, 'tracer'>) {
-  const exporter = new InMemorySpanExporter();
-  const provider = new BasicTracerProvider({ spanProcessors: [new SimpleSpanProcessor(exporter)] });
-  const languageModel = yield* makeStubModel;
-  const service: AiService.Service = {
-    model: () => Layer.succeed(LanguageModel.LanguageModel, languageModel),
-  };
-  const wrapped = AiTelemetry.wrap(service, { tracer: makeTracer(provider, 'test'), ...options });
-  return { exporter, provider, wrapped };
-});
-
 describe('AiTelemetry', () => {
-  it.effect('routes model spans to the wrapped tracer with content and session id', () =>
+  it.effect('stamps prompt and response content onto the model-call span', () =>
     Effect.gen(function* () {
-      const { exporter, provider, wrapped } = yield* setup({});
+      const { exporter, provider, layer } = setup();
+      yield* LanguageModel.generateText({ prompt: 'hi' }).pipe(Effect.provide(layer));
+      yield* Effect.promise(() => provider.forceFlush());
 
+      const span = modelSpan(exporter);
+      expect(JSON.parse(String(span.attributes['dxos.ai.input']))).toEqual([
+        { role: 'user', content: [{ type: 'text', text: 'hi' }] },
+      ]);
+      expect(JSON.parse(String(span.attributes['dxos.ai.output']))).toEqual([
+        { role: 'assistant', content: [{ type: 'text', text: 'hello' }] },
+      ]);
+    }),
+  );
+
+  it.effect('truncates oversized content rather than dropping it', () =>
+    Effect.gen(function* () {
+      const { exporter, provider, layer } = setup({ maxContentLength: 32 });
+      yield* LanguageModel.generateText({ prompt: 'x'.repeat(500) }).pipe(Effect.provide(layer));
+      yield* Effect.promise(() => provider.forceFlush());
+
+      const span = modelSpan(exporter);
+      expect(String(span.attributes[AiTelemetry.ATTRIBUTES.input])).toHaveLength(32);
+      expect(span.attributes[AiTelemetry.ATTRIBUTES.truncated]).toEqual(true);
+    }),
+  );
+
+  it.effect('marks nothing truncated when everything fits', () =>
+    Effect.gen(function* () {
+      const { exporter, provider, layer } = setup();
+      yield* LanguageModel.generateText({ prompt: 'hi' }).pipe(Effect.provide(layer));
+      yield* Effect.promise(() => provider.forceFlush());
+
+      expect(modelSpan(exporter).attributes[AiTelemetry.ATTRIBUTES.truncated]).toBeUndefined();
+    }),
+  );
+
+  it.effect('drops only the attribute it cannot serialize, leaving the model call intact', () =>
+    Effect.gen(function* () {
+      const { exporter, provider, layer } = setup();
+      // Tool results are arbitrary values; a cycle throws from `JSON.stringify`. Reaching the model
+      // span at all proves the throw did not escape onto the call's own fiber.
+      const cyclic: Record<string, unknown> = {};
+      cyclic.self = cyclic;
+      const prompt = [
+        {
+          role: 'tool' as const,
+          content: [{ type: 'tool-result' as const, id: 't1', name: 'search', result: cyclic, isFailure: false }],
+        },
+      ];
+      yield* LanguageModel.generateText({ prompt }).pipe(Effect.provide(layer));
+      yield* Effect.promise(() => provider.forceFlush());
+
+      const span = modelSpan(exporter);
+      expect(span.attributes[AiTelemetry.ATTRIBUTES.input]).toBeUndefined();
+      expect(span.attributes[AiTelemetry.ATTRIBUTES.output]).toBeDefined();
+    }),
+  );
+
+  it('names the attributes the sink reads', () => {
+    // `AiSpanProcessor` in `@dxos/observability` restates these; it cannot import them (telemetry
+    // sits below the AI stack). Pinning the values here makes a rename fail rather than silently
+    // disconnect capture.
+    expect(AiTelemetry.ATTRIBUTES).toEqual({
+      sessionId: 'dxos.ai.session_id',
+      spaceId: 'dxos.ai.space_id',
+      input: 'dxos.ai.input',
+      output: 'dxos.ai.output',
+      tools: 'dxos.ai.tools',
+      truncated: 'dxos.ai.truncated',
+    });
+  });
+
+  it.effect('leaves the span bare when no transformer is installed', () =>
+    Effect.gen(function* () {
+      const exporter = new InMemorySpanExporter();
+      const provider = new BasicTracerProvider({ spanProcessors: [new SimpleSpanProcessor(exporter)] });
       yield* LanguageModel.generateText({ prompt: 'hi' }).pipe(
-        Effect.provide(wrapped.model(MODEL)),
-        Effect.withSpan('AiSession.createRequest'),
-        Effect.annotateSpans('dxos.ai.session_id', 'feed-1'),
+        Effect.provide(Layer.effect(LanguageModel.LanguageModel, stubModel)),
+        Effect.provideService(Tracer.Tracer, makeTracer(provider, 'test')),
       );
       yield* Effect.promise(() => provider.forceFlush());
 
-      const span = findModelSpan(exporter);
-      expect(span.attributes['gen_ai.system']).toEqual('stub');
-      expect(span.attributes['gen_ai.request.model']).toEqual('stub-model');
-      expect(span.attributes['gen_ai.usage.input_tokens']).toEqual(3);
-      expect(span.attributes['gen_ai.usage.output_tokens']).toEqual(5);
-      expect(span.attributes['dxos.ai.session_id']).toEqual('feed-1');
-
-      const input = JSON.parse(String(span.attributes['dxos.ai.input']));
-      expect(input).toEqual([{ role: 'user', content: [{ type: 'text', text: 'hi' }] }]);
-      const output = JSON.parse(String(span.attributes['dxos.ai.output']));
-      expect(output).toEqual([{ role: 'assistant', content: [{ type: 'text', text: 'hello' }] }]);
-    }),
-  );
-
-  it.effect('stamps the attributes the sink filters on', () =>
-    Effect.gen(function* () {
-      const { exporter, provider, wrapped } = yield* setup({ attributes: { 'dxos.ai.space_id': 'space-1' } });
-
-      yield* LanguageModel.generateText({ prompt: 'hi' }).pipe(Effect.provide(wrapped.model(MODEL)));
-      yield* Effect.promise(() => provider.forceFlush());
-
-      expect(findModelSpan(exporter).attributes['dxos.ai.space_id']).toEqual('space-1');
+      expect(modelSpan(exporter).attributes['dxos.ai.input']).toBeUndefined();
     }),
   );
 });
 
-const findModelSpan = (exporter: InMemorySpanExporter) => {
-  const span = exporter.getFinishedSpans().find(({ name }) => name === 'LanguageModel.generateText');
+const setup = (options?: AiTelemetry.ContentTransformerOptions) => {
+  const exporter = new InMemorySpanExporter();
+  const provider = new BasicTracerProvider({ spanProcessors: [new SimpleSpanProcessor(exporter)] });
+  // Mirrors what the app installs into the process-manager runtime.
+  const layer = Layer.mergeAll(
+    Layer.effect(LanguageModel.LanguageModel, stubModel),
+    Layer.succeed(Tracer.Tracer, makeTracer(provider, 'test')),
+    Layer.succeed(Telemetry.CurrentSpanTransformer, AiTelemetry.makeContentSpanTransformer(options)),
+  );
+  return { exporter, provider, layer };
+};
+
+const modelSpan = (exporter: InMemorySpanExporter) => {
+  const span = exporter.getFinishedSpans().find(({ name }) => name.startsWith('LanguageModel.'));
   if (!span) {
     throw new Error('model span was not exported');
   }

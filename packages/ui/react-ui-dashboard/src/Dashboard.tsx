@@ -296,7 +296,7 @@ const DashboardActivity = composable<HTMLDivElement, DashboardActivityCustomProp
           ))}
         </div>
         {/* justify-end overflows surplus weeks past the clipped left edge, pinning recent weeks right. */}
-        <div className='flex min-w-0 justify-end overflow-hidden'>
+        <div className='flex justify-end overflow-hidden'>
           <div
             className='grid gap-[3px]'
             style={{

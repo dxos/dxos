@@ -92,34 +92,46 @@ export default Capability.makeModule(
 
     const layerSpecContributions = yield* Capabilities.LayerSpec;
     const traceSinkContributions = yield* Capabilities.TraceSink;
+    const runtimeServiceContributions = yield* Capabilities.RuntimeServices;
     const operationHandlerContributions = yield* Capabilities.OperationHandler;
     const remoteTraceMonitorContributions = yield* Capabilities.RemoteTraceMonitor;
     // One-shot snapshot: startup soft-ordering makes same-pass providers visible; entries
     // contributed by plugins enabled later do not join the stack (same as the event window).
     const layerSpecs = layerSpecContributions.get();
 
-    // The snapshot is restart-scoped — the stack below bakes into one runtime, and rebuilding it
-    // for a late arrival would tear down every live service on it. A LayerSpec contributed after
-    // this point is therefore silently absent, and the failure surfaces hops away as a missing
-    // service (which is exactly how it has bitten us). Name it here instead.
-    const layerSpecModulesAtSnapshot = new Set(
-      Object.keys(atomRegistry.get(capabilityManager.atomByModule(Capabilities.LayerSpec))),
-    );
-    const cancelLayerSpecWatch = atomRegistry.subscribe(
-      capabilityManager.atomByModule(Capabilities.LayerSpec),
-      (byModule) => {
+    // Every snapshot below is restart-scoped — they bake into one runtime, and rebuilding it for a
+    // late arrival would tear down every live service on it. A contribution arriving after this
+    // point is therefore silently absent, and the failure surfaces hops away (a missing service, or
+    // telemetry that simply never appears). Name it here instead.
+    const warnOnLateContribution = <T>(capability: Capability.InterfaceDef<T>, label: string, fix: string) => {
+      const atom = capabilityManager.atomByModule(capability);
+      const modulesAtSnapshot = new Set(Object.keys(atomRegistry.get(atom)));
+      return atomRegistry.subscribe(atom, (byModule) => {
         for (const moduleId of Object.keys(byModule)) {
-          if (!layerSpecModulesAtSnapshot.has(moduleId)) {
-            layerSpecModulesAtSnapshot.add(moduleId);
-            log.error('LayerSpec contributed after the runtime was built — it is ignored until the next boot', {
+          if (!modulesAtSnapshot.has(moduleId)) {
+            modulesAtSnapshot.add(moduleId);
+            log.error(`${label} contributed after the runtime was built — it is ignored until the next boot`, {
               module: moduleId,
-              fix: 'contribute it with AppCapability.layerSpec (or declare activatesOn: ActivationEvents.Startup)',
+              fix,
             });
           }
         }
-      },
-    );
-    yield* Effect.addFinalizer(() => Effect.sync(cancelLayerSpecWatch));
+      });
+    };
+
+    const cancelLateContributionWatches = [
+      warnOnLateContribution(
+        Capabilities.LayerSpec,
+        'LayerSpec',
+        'contribute it with AppCapability.layerSpec (or declare activatesOn: ActivationEvents.Startup)',
+      ),
+      warnOnLateContribution(
+        Capabilities.RuntimeServices,
+        'RuntimeServices',
+        'declare activatesOn: ActivationEvents.Startup so the layer is contributed before the snapshot',
+      ),
+    ];
+    yield* Effect.addFinalizer(() => Effect.sync(() => cancelLateContributionWatches.forEach((cancel) => cancel())));
     // Optional swarm-backed remote trace source (DX-1125); first contribution wins, else empty.
     const remoteTraceMonitors = remoteTraceMonitorContributions.get();
 
@@ -176,6 +188,13 @@ export default Capability.makeModule(
     // Sensible defaults are provided here; plugins that want alternative
     // implementations (e.g. persistent KV store, real tracing) can contribute
     // their own LayerSpec entries against the ServiceResolver.
+    // Snapshotted like the LayerSpec list above: these bake into the runtime built below.
+    // A `Tracer` here is inherited by every fiber the runtime runs, which is what makes the
+    // spans subsystems already emit reach an exporter without any of them knowing about one.
+    // Last contribution wins for any service two contributors both provide; the late-arrival watch
+    // above covers the ordering hazard, not that one.
+    const runtimeServicesLayer = Layer.mergeAll(Layer.empty, ...runtimeServiceContributions.get());
+
     const baseLayer = Layer.mergeAll(
       Layer.succeed(Capability.Service, capabilityManager),
       Layer.succeed(Plugin.Service, pluginManager),
@@ -184,6 +203,7 @@ export default Capability.makeModule(
       OperationHandlerSet.provide(handlerSet),
       layerIdb,
       Layer.succeed(Trace.TraceSink, mergedTraceSink),
+      runtimeServicesLayer,
     );
 
     const processManagerLayer = ProcessManager.layer({ runtimeName: Trace.CommonRuntimeName.local }).pipe(
@@ -257,6 +277,7 @@ export default Capability.makeModule(
       Capability.contribute(Capabilities.ServiceResolver, serviceResolver),
       Capability.contribute(Capabilities.ProcessMonitor, processMonitor),
       Capability.contribute(Capabilities.OperationInvoker, operationInvoker),
+      Capability.contribute(Capabilities.OperationHandlers, handlerSet),
     ];
   }),
 );

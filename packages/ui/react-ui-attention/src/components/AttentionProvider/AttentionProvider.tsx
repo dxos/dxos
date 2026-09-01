@@ -16,8 +16,8 @@ import React, {
 
 import { log } from '@dxos/log';
 import { useDefaultValue } from '@dxos/react-hooks';
-import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
+import { type ThemedClassName } from '@dxos/ui-types';
 
 import { ATTENDABLE_SELECTOR, AttentionManager, getAttendables } from '../../types/Attention';
 import { AttentionContextProvider, useAttentionAttributes } from './attention-context';

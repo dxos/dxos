@@ -12,9 +12,9 @@ import { EffectEx } from '@dxos/effect';
 import { Connection } from '@dxos/link';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Banner, Button, Flex, Panel, ScrollArea, Tag, useTranslation } from '@dxos/react-ui';
-import { Treegrid } from '@dxos/react-ui-list';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { type PublishFieldNote } from '@dxos/schema';
+import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 import { AtprotoCapabilities, AtprotoPublication } from '#types';
@@ -45,8 +45,8 @@ const STATUS_META: Record<DisplayStatus, { key: string; icon: string; valence: S
   outOfDate: { key: 'status-out-of-date.label', icon: 'ph--cloud-arrow-up--regular', valence: 'warning' },
 };
 
-// Inline-start inset per nesting level (Treegrid's own row-level indentation is calibrated for deep
-// navtrees; nested field rows are indented directly, following ProcessTree).
+// Inline-start inset per nesting level; the grouping is presentational, so the indent is applied
+// directly rather than derived from a row level.
 const INDENT_REM = 1;
 
 /**
@@ -278,7 +278,13 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
                     </Banner.Content>
                   </Banner.Root>
                 )}
-                <Treegrid.Root gridTemplateColumns='minmax(0, 1fr) minmax(0, 1fr) min-content' classNames='gap-x-3'>
+                {/* A read-only field listing: three columns, no disclosure and nothing focusable, so it
+                    is a table rather than the `treegrid` this used to claim. Depth is visual indent only. */}
+                <div
+                  role='table'
+                  className='grid gap-x-3'
+                  style={{ gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr) min-content' }}
+                >
                   {fields.map((field) => {
                     const published = field.visibility === 'publish';
                     const mirrored = field.visibility === 'mirror';
@@ -297,24 +303,27 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
                           typeof publishedValues?.[field.path] === 'string' &&
                           publishedValues[field.path] !== value));
                     return (
-                      <Treegrid.Row
+                      <div
                         key={field.path}
-                        id={field.path.replaceAll('.', '~')}
-                        classNames={[
+                        role='row'
+                        className={mx(
                           'grid grid-cols-subgrid col-span-full items-center py-0.5',
                           field.group ? 'font-medium' : 'font-normal',
-                        ]}
+                        )}
                       >
-                        <Treegrid.Cell
-                          classNames='flex items-center'
+                        <div
+                          role='rowheader'
+                          className='flex items-center'
                           style={field.depth > 0 ? { paddingInlineStart: `${field.depth * INDENT_REM}rem` } : undefined}
                         >
                           <span className={`truncate text-sm ${field.group || visible ? '' : 'text-description'}`}>
                             {field.name}
                           </span>
-                        </Treegrid.Cell>
-                        <Treegrid.Cell classNames='truncate text-sm text-description'>{value}</Treegrid.Cell>
-                        <Treegrid.Cell classNames='flex shrink-0 items-center justify-end gap-1'>
+                        </div>
+                        <div role='cell' className='truncate text-sm text-description'>
+                          {value}
+                        </div>
+                        <div role='cell' className='flex shrink-0 items-center justify-end gap-1'>
                           {!field.group && (
                             <>
                               {diverged && <Tag hue='warning'>{t('diverged-field.label')}</Tag>}
@@ -327,11 +336,11 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
                               </Tag>
                             </>
                           )}
-                        </Treegrid.Cell>
-                      </Treegrid.Row>
+                        </div>
+                      </div>
                     );
                   })}
-                </Treegrid.Root>
+                </div>
               </Flex>
             </Flex>
           </ScrollArea.Viewport>

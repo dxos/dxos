@@ -169,7 +169,7 @@ export const LoopMarkers = ({
   void paneWidth;
 
   return (
-    <div ref={rootRef} className='absolute inset-0 pointer-events-none' aria-hidden>
+    <div ref={rootRef} className='dx-fullscreen pointer-events-none' aria-hidden>
       {/* Single clip container so markers cannot bleed into the frozen pitch-
           label column (left of headerLeft) or, beyond that, the TrackList. */}
       <div

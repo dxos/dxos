@@ -31,10 +31,11 @@ import type * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import type * as Skill from '@dxos/compute/Skill';
 import * as Trace from '@dxos/compute/Trace';
-import { Database, Obj, Registry } from '@dxos/echo';
+import { Annotation, Database, Obj, type Ref, Registry } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
 
+import { AckAnnotation } from '../session/SessionStore';
 import { getOperationFromTool } from '../tool-runtime/services';
 import { type AiAssistantError, CompleteBlock, PartialBlock } from '../util';
 import { formatSystemPrompt, formatUserPrompt } from './format';
@@ -108,6 +109,11 @@ export type BeginProps = {
   objects?: Obj.Unknown[];
   skills?: readonly Skill.Skill[];
   instructions?: readonly Instructions.Instructions[];
+  /**
+   * Queued feed item (message or alarm) this turn dequeues; stamped as `AckAnnotation` on the user
+   * prompt message so its append is the atomic ack.
+   */
+  ack?: Ref.Ref<Obj.Unknown>;
 };
 
 export type TurnProps<R = never> = {
@@ -231,6 +237,7 @@ export class Request {
     skills = [],
     objects = [],
     instructions = [],
+    ack,
   }: BeginProps): Effect.Effect<void, RunError, RunRequirements> =>
     Effect.gen({ self: this }, function* () {
       this._started = Date.now();
@@ -253,7 +260,11 @@ export class Request {
         }
       }
 
-      yield* this._submitMessage(yield* formatUserPrompt({ prompt, history }));
+      const userMessage = yield* formatUserPrompt({ prompt, history });
+      if (ack !== undefined) {
+        Obj.update(userMessage, (userMessage) => Annotation.set(userMessage, AckAnnotation, ack));
+      }
+      yield* this._submitMessage(userMessage);
     }).pipe(Effect.withSpan('AiRequest.begin'));
 
   /**

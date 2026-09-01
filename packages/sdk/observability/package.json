@@ -37,6 +37,18 @@
       "types": "./dist/types/src/providers/ObservabilityProvider.d.ts",
       "import": "./dist/lib/providers/ObservabilityProvider.mjs"
     },
+    "./OtelLogSink": {
+      "types": "./dist/types/src/extensions/otel/OtelLogSink.d.ts",
+      "import": "./dist/lib/extensions/otel/OtelLogSink.mjs"
+    },
+    "./OtelMetricsSink": {
+      "types": "./dist/types/src/extensions/otel/OtelMetricsSink.d.ts",
+      "import": "./dist/lib/extensions/otel/OtelMetricsSink.mjs"
+    },
+    "./OtelSpanSink": {
+      "types": "./dist/types/src/extensions/otel/OtelSpanSink.d.ts",
+      "import": "./dist/lib/extensions/otel/OtelSpanSink.mjs"
+    },
     "./package.json": "./package.json"
   },
   "browser": {

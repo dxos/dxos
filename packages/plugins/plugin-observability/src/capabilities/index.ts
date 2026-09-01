@@ -33,14 +33,17 @@ export const ClientReady = Capability.lazyModule(
   },
   () => import('./client-ready'),
 );
-// Startup so the contributed middleware is visible to plugin-assistant's `AiService` module,
-// which snapshots its multi-arity `AiServiceMiddleware` require once during startup.
+// Startup so the layer is contributed before the process-manager snapshots its
+// `RuntimeServices` contributions to build the runtime.
 export const AiObservability = Capability.lazyModule(
   'AiObservability',
   {
     environments: [],
-    requires: [ObservabilityCapabilities.Observability],
-    provides: [AppCapabilities.AiServiceMiddleware],
+    // Deliberately does not require `Observability`: it resolves that per span instead, so
+    // observability initialization (which awaits a network fetch) stays off the path between the
+    // Startup wave and the process-manager runtime.
+    requires: [],
+    provides: [Capabilities.RuntimeServices],
     activatesOn: ActivationEvents.Startup,
   },
   () => import('./ai-observability'),

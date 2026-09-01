@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { createContext } from '@radix-ui/react-context';
 import React, {
   type ComponentType,
@@ -18,8 +17,9 @@ import React, {
 } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
+import { useFocusGroup } from '@dxos/react-focus';
 import { ScrollArea, ScrollAreaRootProps, ThemedClassName, usePx } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import { composable, composableProps, useMergeRefs } from '@dxos/react-ui';
 import { cardMaxInlineSize, cardMinInlineSize } from '@dxos/ui-theme';
 
 import { prefersReducedMotion, useFlip } from './useFlip';
@@ -253,14 +253,15 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
       return () => clearTimeout(deadline);
     }, []);
 
-    // Arrow-key navigation across tiles. Uses Tabster's `both` axis so all four
-    // arrows move focus through the items as flat next/previous-focusable, giving
-    // predictable wrap-around in DOM order.
-    const arrowNavigationAttrs = useArrowNavigationGroup({
+    // Arrow-key navigation across tiles. The `both` axis moves focus through the items as flat
+    // next/previous in DOM order on all four arrows; `tabbable` keeps each tile its own tab stop.
+    const { ref: focusGroupRef, ...focusGroupProps } = useFocusGroup({
       axis: 'both',
       memorizeCurrent: true,
       tabbable: true,
+      cyclic: true,
     });
+    const gridRef = useMergeRefs<HTMLDivElement>([forwardedRef, focusGroupRef]);
 
     // The viewport is the full-width scroll container; its centered+padded theme
     // (with `--gutter` set to the gap) balances the scrollbar into symmetric inline
@@ -283,9 +284,9 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
                 transition: animate && !prefersReducedMotion() ? 'opacity 200ms cubic-bezier(0.2, 0, 0, 1)' : undefined,
               },
             })}
-            {...arrowNavigationAttrs}
+            {...focusGroupProps}
             role='list'
-            ref={forwardedRef}
+            ref={gridRef}
           >
             {items.map((item, index) => {
               const id = ids[index];
@@ -333,7 +334,7 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
       </>
     );
 
-    // Not `dx-expander` in the non-scrolling case: the width gate needs a definite inline size
+    // Not `dx-expand` in the non-scrolling case: the width gate needs a definite inline size
     // (`w-full min-w-0`) without claiming the block axis, which would fight the surrounding flow —
     // the grid's height comes from the computed layout.
     return scroll ? (

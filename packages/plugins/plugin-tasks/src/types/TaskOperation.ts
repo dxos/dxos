@@ -153,6 +153,11 @@ export const RestoreTasks = Operation.make({
  * Re-parenting is part of the same verb because a drop in the tree is both at once: doing it as
  * `UpdateTask` then `MoveTask` leaves a window where the task hangs at the end of its new parent
  * before the position lands, and costs two undo entries for one gesture.
+ *
+ * The input carries every object the write touches, so the handler needs no query and no
+ * services. With loaded refs it completes without an async boundary — a drop runs it under
+ * `Effect.runSync` so the write lands in the gesture frame, with no optimistic overlay — while
+ * unloaded refs (e.g. an agent caller) load asynchronously through the same path.
  */
 export const MoveTask = Operation.make({
   meta: {
@@ -161,9 +166,9 @@ export const MoveTask = Operation.make({
     description: 'Reposition a task within its task set, optionally re-parenting it — array order is the task order.',
     icon: 'ph--arrows-down-up--regular',
   },
-  services: [Database.Service],
   input: Schema.Struct({
     task: Ref.Ref(Task.Task),
+    taskSet: Ref.Ref(TaskSet.TaskSet),
     /** Insert immediately before this task; omit to move to the end. */
     before: Schema.optional(Ref.Ref(Task.Task)),
     /** Re-parent as a sub-task; `null` promotes the task to a root of its set (as `UpdateTask`). */

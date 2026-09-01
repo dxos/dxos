@@ -196,11 +196,7 @@ export const BookReader = forwardRef<EpubReaderHandle, { book: Book.Book }>(({ b
     }
     if (resolved.type === PDF_TYPE) {
       return (
-        <iframe
-          src={resolved.url}
-          title={live.catalog?.title ?? t('view-read.label')}
-          className='w-full h-full border-0'
-        />
+        <iframe src={resolved.url} title={live.catalog?.title ?? t('view-read.label')} className='dx-fill border-0' />
       );
     }
     return (

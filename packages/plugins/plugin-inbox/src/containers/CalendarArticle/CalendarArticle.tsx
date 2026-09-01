@@ -203,7 +203,7 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
   useArticleKeyboardNavigation({ articleId: id, items: events, currentId, onSelect: handleNavigate });
 
   return (
-    <div role={role} className='@container dx-container overflow-hidden'>
+    <div role={role} className='@container dx-expand'>
       <div className='grid grid-cols-1 @2xl:grid-cols-[min-content_1fr] h-full'>
         <Panel.Root classNames='hidden @2xl:block'>
           <NaturalCalendar.Root ref={calendarRef}>

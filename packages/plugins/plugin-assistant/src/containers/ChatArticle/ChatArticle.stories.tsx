@@ -305,6 +305,37 @@ export const Send: Story = {
 };
 
 /**
+ * Submitting again without waiting for the running turn: the second prompt is QUEUED on the feed and
+ * runs after the first, rather than being dropped (the composer used to ignore a submit while a turn
+ * was active) or cancelling the turn in flight (`processor.request` interrupts, `enqueue` does not).
+ *
+ * Deliberately no wait between the two submits — that is the whole case. Both replies landing is what
+ * proves the second prompt survived; the agent-level ordering and mid-turn arrival are pinned
+ * deterministically in `agent-runtime`'s `queue-scripted.test.ts`.
+ */
+export const QueueWhileProcessing: Story = {
+  args: {
+    messages: [
+      { prompt: 'First question', reply: 'The first answer.' },
+      { prompt: 'Second question', reply: 'The second answer.' },
+    ],
+  },
+  play: async ({ canvasElement, args: { messages = [] } }) => {
+    await submitPrompt(canvasElement, messages[0].prompt);
+    // No `waitFor` on the first reply: this submit is meant to land while the first turn is running.
+    await submitPrompt(canvasElement, messages[1].prompt);
+
+    for (const { prompt, reply } of messages) {
+      await waitFor(() => void expect(threadText(canvasElement)).toContain(reply), {
+        timeout: 30_000,
+        interval: 300,
+      });
+      await expect(threadText(canvasElement)).toContain(prompt);
+    }
+  },
+};
+
+/**
  * The desktop baseline for the platform-gated chrome: after two turns the marker rail and the
  * floating status pill are both present. Without this, `MobilePlatform`'s absence assertions would
  * pass against a thread that never rendered them in the first place.

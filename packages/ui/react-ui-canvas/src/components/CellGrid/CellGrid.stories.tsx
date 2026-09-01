@@ -171,7 +171,7 @@ const DefaultStory = ({ variant, tool, numCols, numRows, cellWidth, cellHeight, 
   };
 
   return (
-    <div className='absolute inset-0'>
+    <div className='dx-fullscreen'>
       <CellGrid
         atoms={atoms as any}
         rows={rows}

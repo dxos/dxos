@@ -138,11 +138,11 @@ const ObjectGalleryScene = () => {
   }, []);
 
   return (
-    <div className='relative w-full h-full'>
-      {/* `dx-container` (w-full h-full) is load-bearing: a bare canvas is a replaced element, so
-          `absolute inset-0` alone sizes it to its HTML width/height attributes (the DPI-scaled
+    <div className='relative dx-fill'>
+      {/* `dx-fill` is load-bearing: a bare canvas is a replaced element, so
+          `dx-fullscreen` alone sizes it to its HTML width/height attributes (the DPI-scaled
           render buffer `engine.resize()` sets) instead of stretching to fill the parent. */}
-      <canvas ref={canvasRef} className='dx-container absolute inset-0 outline-none' style={{ touchAction: 'none' }} />
+      <canvas ref={canvasRef} className='dx-fill dx-fullscreen outline-none' style={{ touchAction: 'none' }} />
     </div>
   );
 };

@@ -17,6 +17,7 @@ const ProcessManagerCapability = Capability.lazyModule(
     requires: [
       Capabilities.AtomRegistry,
       Capabilities.LayerSpec,
+      Capabilities.RuntimeServices,
       Capabilities.TraceSink,
       Capabilities.OperationHandler,
       Capabilities.RemoteTraceMonitor,
@@ -26,6 +27,7 @@ const ProcessManagerCapability = Capability.lazyModule(
       Capabilities.ServiceResolver,
       Capabilities.ProcessMonitor,
       Capabilities.OperationInvoker,
+      Capabilities.OperationHandlers,
     ],
   },
   () => import('./process-manager-capability'),

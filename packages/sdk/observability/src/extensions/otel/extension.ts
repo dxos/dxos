@@ -17,6 +17,17 @@ import buildSecrets from '../../cli-observability-secrets.json';
 import * as ObservabilityExtension from '../../ObservabilityExtension';
 import { getOtelLogLevel, isObservabilityDisabled, storeObservabilityDisabled } from '../../storage';
 import { stubExtension } from '../stub';
+import { type OtelMetrics } from './metrics';
+import { type OtelDestination } from './otel';
+import type * as OtelLogSink from './OtelLogSink';
+import type * as OtelMetricsSink from './OtelMetricsSink';
+import type * as OtelSpanSink from './OtelSpanSink';
+import { RemoteMetricsForwarder } from './remote-metrics';
+
+export type OtelWorkerMessage = OtelLogSink.Message | OtelMetricsSink.Message | OtelSpanSink.Message;
+
+/** One-way send handle into the observability worker. */
+export type OtelWorkerPort = { post: (message: OtelWorkerMessage) => void };
 
 export type ExtensionsOptions = {
   /** For the OTEL, the name of the entity for which signals (metrics or trace) are collected. */
@@ -28,9 +39,11 @@ export type ExtensionsOptions = {
   config: Config;
   endpoint?: string;
   headers?: Record<string, string>;
+  additionalDestinations?: OtelDestination[];
   logs?: boolean;
   /** Minimum log level to export. Defaults to INFO (i.e. info, warn, error). */
   logLevel?: LogLevel;
+  observabilityWorker?: OtelWorkerPort;
   metrics?: boolean;
   traces?: boolean;
 };
@@ -44,12 +57,14 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
     config,
     endpoint: _endpoint,
     headers: _headers,
+    additionalDestinations = [],
     // TODO(wittjosiah): Logging integration.
     //   - logger should run even if observability is disabled
     //   - logs should be cached locally in a circular buffer
     //   - logs should be flushed to the server if user opts to include them in a bug report
     logs: logsEnabled = false,
     logLevel = LogLevel.INFO,
+    observabilityWorker,
     metrics: metricsEnabled = false,
     traces: tracesEnabled = false,
   }) {
@@ -84,14 +99,16 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
 
     if (!endpoint) {
       log.info('Missing OTEL_ENDPOINT');
+    }
+
+    const destinations: OtelDestination[] = [
+      ...(endpoint ? [{ endpoint, headers: headers ?? {} }] : []),
+      ...additionalDestinations,
+    ];
+    if (destinations.length === 0) {
       return stubExtension;
     }
-    // Headers are optional when using a proxy that injects auth server-side.
-    const resolvedHeaders = headers ?? {};
-    // OTLP HTTP exporters require an absolute URL. Resolve relative paths using the current origin.
-    // globalThis.location is defined in all browser contexts (main thread, dedicated/service workers).
-    const resolvedEndpoint =
-      !isNode() && endpoint.startsWith('/') ? `${globalThis.location.origin}${endpoint}` : endpoint;
+    log.info('otel destinations', { destinations: destinations.map(({ endpoint }) => endpoint) });
 
     // Matches edge's `ctx.tag` span attribute (stamped by the edge log middleware
     // when it reads the `X-DXOS-Client-Tag` header, see
@@ -110,42 +127,48 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
       tags.set('ctx.tag', clientTag);
     }
 
-    const { resource, metricsResource } = createResources(
-      {
-        [ATTR_SERVICE_NAME]: serviceName,
-        [ATTR_SERVICE_VERSION]: serviceVersion,
-        'deployment.environment': environment,
-        'dxos.process.type': detectProcessType(),
-        ...(clientTag ? { 'ctx.tag': clientTag } : {}),
-      },
-      crypto.randomUUID(),
-    );
+    const baseAttributes = {
+      [ATTR_SERVICE_NAME]: serviceName,
+      [ATTR_SERVICE_VERSION]: serviceVersion,
+      'deployment.environment': environment,
+      'dxos.process.type': detectProcessType(),
+      ...(clientTag ? { 'ctx.tag': clientTag } : {}),
+    };
+    const sessionId = crypto.randomUUID();
+    const { resource, metricsResource } = createResources(baseAttributes, sessionId);
 
-    const logs = logsEnabled
-      ? new OtelLogs({
-          endpoint: resolvedEndpoint,
-          headers: resolvedHeaders,
-          resource,
-          getTags: () => Object.fromEntries(tags),
-          logLevel: resolvedLogLevel,
-        })
-      : undefined;
+    const remoteLogs = logsEnabled ? observabilityWorker : undefined;
+    const logs =
+      logsEnabled && !remoteLogs
+        ? new OtelLogs({
+            destinations,
+            resource,
+            getTags: () => Object.fromEntries(tags),
+            logLevel: resolvedLogLevel,
+          })
+        : undefined;
 
-    const metrics = metricsEnabled
-      ? new OtelMetrics({
-          endpoint: resolvedEndpoint,
-          headers: resolvedHeaders,
-          resource: metricsResource,
-          getTags: () => Object.fromEntries(tags),
-        })
-      : undefined;
+    const remoteMetrics =
+      metricsEnabled && observabilityWorker && !disabled
+        ? new RemoteMetricsForwarder(observabilityWorker.post)
+        : undefined;
+    const metrics =
+      metricsEnabled && !observabilityWorker
+        ? new OtelMetrics({
+            destinations,
+            resource: metricsResource,
+            getTags: () => Object.fromEntries(tags),
+          })
+        : undefined;
 
     const traces = tracesEnabled
       ? new OtelTraces({
-          endpoint: resolvedEndpoint,
-          headers: resolvedHeaders,
+          destinations,
           resource,
           getTags: () => Object.fromEntries(tags),
+          spanSink: observabilityWorker
+            ? { post: (record: OtelSpanSink.Span) => observabilityWorker.post(record) }
+            : undefined,
         })
       : undefined;
 
@@ -159,7 +182,31 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
           if (logs) {
             log.runtimeConfig.processors.push(logs.logProcessor);
           }
+          if (remoteLogs) {
+            remoteLogs.post({
+              type: 'otel-init',
+              destinations,
+              resourceAttributes: { ...baseAttributes, 'session.id': sessionId },
+              logLevel: resolvedLogLevel,
+              tags: Object.fromEntries(tags),
+            });
+          }
+          if (remoteMetrics) {
+            observabilityWorker?.post({
+              type: 'otel-metrics-init',
+              destinations,
+              resourceAttributes: baseAttributes,
+              tags: Object.fromEntries(tags),
+            });
+          }
           if (traces) {
+            if (observabilityWorker) {
+              observabilityWorker.post({
+                type: 'otel-traces-init',
+                destinations,
+                resourceAttributes: { ...baseAttributes, 'session.id': sessionId },
+              });
+            }
             traces.start();
           }
         }),
@@ -173,12 +220,13 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
       }),
       close: () =>
         Effect.promise(async () => {
+          remoteLogs?.post({ type: 'otel-flush' });
           // Run logs/metrics close concurrently and swallow their failures so the
           // tracer provider shutdown below ALWAYS runs. Without this, a rejection
           // from logs or metrics would drop the tracer provider's BatchSpanProcessor
           // queue on process exit, manifesting as "Missing Span" in SigNoz for any
           // already-exported children.
-          const results = await Promise.allSettled([logs?.close(), metrics?.close()]);
+          const results = await Promise.allSettled([logs?.close(), metrics?.close(), remoteMetrics?.close()]);
           for (const result of results) {
             if (result.status === 'rejected') {
               log.catch(result.reason);
@@ -191,6 +239,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
         }),
       flush: () =>
         Effect.promise(async () => {
+          remoteLogs?.post({ type: 'otel-flush' });
           const results = await Promise.allSettled([logs?.flush(), metrics?.flush()]);
           for (const result of results) {
             if (result.status === 'rejected') {
@@ -203,22 +252,17 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
         for (const [key, value] of Object.entries(incomingTags)) {
           tags.set(key, value);
         }
+        remoteLogs?.post({ type: 'otel-tags', tags: { ...incomingTags } });
       },
       get enabled() {
         return Ref.get(enabledRef).pipe(Effect.runSync);
       },
       apis: [
-        { kind: 'logs', isAvailable: () => Effect.succeed(!!logs) } satisfies ObservabilityExtension.ExtensionApi,
-        metrics
-          ? ({
-              kind: 'metrics',
-              isAvailable: () => Effect.succeed(true),
-              gauge: (name, value, tags, meta) => metrics.gauge(name, value, tags, meta),
-              increment: (name, value, tags, meta) => metrics.increment(name, value, tags, meta),
-              distribution: (name, value, tags, meta) => metrics.distribution(name, value, tags, meta),
-              observe: (name, callback, tags, meta) => metrics.observe(name, callback, tags, meta),
-            } satisfies ObservabilityExtension.ExtensionApi)
-          : undefined,
+        {
+          kind: 'logs',
+          isAvailable: () => Effect.succeed(!!logs || !!remoteLogs),
+        } satisfies ObservabilityExtension.ExtensionApi,
+        metricsApi(metrics ?? remoteMetrics),
         traces
           ? ({ kind: 'traces', isAvailable: () => Effect.succeed(true) } satisfies ObservabilityExtension.ExtensionApi)
           : undefined,
@@ -228,6 +272,20 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
     return extension;
   },
 );
+
+const metricsApi = (
+  metrics: OtelMetrics | RemoteMetricsForwarder | undefined,
+): ObservabilityExtension.ExtensionApi | undefined =>
+  metrics
+    ? ({
+        kind: 'metrics',
+        isAvailable: () => Effect.succeed(true),
+        gauge: (name, value, tags, meta) => metrics.gauge(name, value, tags, meta),
+        increment: (name, value, tags, meta) => metrics.increment(name, value, tags, meta),
+        distribution: (name, value, tags, meta) => metrics.distribution(name, value, tags, meta),
+        observe: (name, callback, tags, meta) => metrics.observe(name, callback, tags, meta),
+      } satisfies ObservabilityExtension.ExtensionApi)
+    : undefined;
 
 /**
  * Builds the resource for logs/traces and the separate one for metrics.

@@ -43,6 +43,7 @@ import {
   PARAM_PROFILER,
   PARAM_SAFE_MODE,
   type Profiler,
+  WorkerLogProcessor,
   defaultStorageIsEmpty,
   downloadLogs,
   initializeObservability,
@@ -215,8 +216,18 @@ const main = async () => {
 
   TRACE_PROCESSOR.setInstanceTag('app');
 
-  const logStore = new IdbLogStore({ dbName: LOG_STORE_DB_NAME });
-  log.addProcessor(logStore.processor);
+  // Log persistence runs in its own worker so lines survive main-thread saturation: each
+  // pre-serialized line is handed off via postMessage inside the log call, and the worker
+  // flushes to IDB while this thread is still blocked. This store is the read handle for
+  // downloads and feedback exports (IDB keeps the data); the worker owns writes and eviction,
+  // so the read handle's own sweep is disabled.
+  const logStore = new IdbLogStore({ dbName: LOG_STORE_DB_NAME, evictionInterval: 0 });
+  const observabilityWorker = new Worker(new URL('./workers/observability-worker', import.meta.url), {
+    type: 'module',
+    name: 'dxos-observability',
+  });
+  const logProcessor = new WorkerLogProcessor({ worker: observabilityWorker });
+  log.addProcessor(logProcessor.processor);
 
   // Devtools convenience — also surfaced via the help panel and ResetDialog UI.
   globalThis.downloadLogs = () => downloadLogs(logStore);
@@ -306,7 +317,9 @@ const main = async () => {
 
   // Intentionally do not await; the buffering backend in TRACE_PROCESSOR captures
   // early spans and replays them once the real OTEL backend registers.
-  const observability = initializeObservability(config, isTauri, logStore, observabilityDisabled);
+  const observability = initializeObservability(config, isTauri, logStore, observabilityDisabled, {
+    post: (message) => observabilityWorker.postMessage(message),
+  });
 
   // Capture a one-shot `composer.startup` event when the framework dispatches
   // `app-framework:startup-activated`. Includes total ms, per-phase ms, top-5
