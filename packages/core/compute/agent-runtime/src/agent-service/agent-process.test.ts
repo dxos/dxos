@@ -8,7 +8,7 @@ import { Alarm } from '@dxos/assistant';
 import * as Process from '@dxos/compute/Process';
 import { Message } from '@dxos/types';
 
-import { computeAlarmDelay, isAgentWorkPending } from './agent-process';
+import { computeAlarmDelay, isAgentWorkPending } from './agent-process.ts';
 
 const NOW = new Date('2026-06-04T12:00:00.000Z').getTime();
 

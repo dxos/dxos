@@ -9,8 +9,8 @@ import * as Schema from 'effect/Schema';
 import { Annotation, Database, EID, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
-import * as Alarm from './Alarm';
-import * as SessionLink from './SessionLink';
+import * as Alarm from './Alarm.ts';
+import * as SessionLink from './SessionLink.ts';
 
 /**
  * Marks a feed `Message` as queued agent input, pending processing. A queued message never enters

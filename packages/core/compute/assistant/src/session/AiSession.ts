@@ -29,14 +29,14 @@ import { McpToolkit } from '@dxos/mcp-client';
 import { FeedProtocol } from '@dxos/protocols';
 import { type ContentBlock, Message } from '@dxos/types';
 
-import { AiRequest, type GenerationObserver, formatSystemPrompt } from '../request';
-import { ToolExecutionServices } from '../tool-runtime';
-import { McpServerError } from '../util';
-import * as AiContext from './AiContext';
-import * as Harness from './Harness';
-import { SessionStore } from './SessionStore';
-import * as SkillHooks from './SkillHooks';
-import { createToolkit } from './toolkit';
+import { AiRequest, type GenerationObserver, formatSystemPrompt } from '../request/index.ts';
+import { ToolExecutionServices } from '../tool-runtime/index.ts';
+import { McpServerError } from '../util/index.ts';
+import * as AiContext from './AiContext.ts';
+import * as Harness from './Harness.ts';
+import { SessionStore } from './SessionStore.ts';
+import * as SkillHooks from './SkillHooks.ts';
+import { createToolkit } from './toolkit.ts';
 
 export type RunProps<R = never> = {
   prompt: string | ContentBlock.Any[];

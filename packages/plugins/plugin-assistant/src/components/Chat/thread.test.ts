@@ -9,7 +9,7 @@ import { AckAnnotation, Alarm, QueuedAnnotation } from '@dxos/assistant';
 import { Annotation, Feed, Obj, Ref } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
-import { byAppendOrder, collapseToolRuns, projectAlarms, projectThread, resolveRewind } from './thread';
+import { byAppendOrder, collapseToolRuns, projectAlarms, projectThread, resolveRewind } from './thread.ts';
 
 describe('byAppendOrder', () => {
   test('orders by feed position when it discriminates', ({ expect }) => {
