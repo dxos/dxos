@@ -151,7 +151,14 @@ export class Sink {
   append(record: Span): void {
     // Decided before materializing: a dropped span should not cost the object graph the exporter
     // would have needed.
-    if (!this.#sampler.keep(record)) {
+    if (
+      !this.#sampler.keep({
+        traceId: record.traceId,
+        status: record.status,
+        attributes: record.attributes,
+        durationMs: TailSampling.hrTimeToMs(hrTimeDuration(record.startTime, record.endTime)),
+      })
+    ) {
       return;
     }
     const span = this.#materialize(record);

@@ -15,10 +15,23 @@ import type { ReadableSpan, Span, SpanProcessor } from '@opentelemetry/sdk-trace
  * buffers whole traces server-side; there is no collector between Composer and SigNoz, so the same
  * decisions are made here instead, on the spans this realm produced.
  *
- * The rules, in order:
+ * The rules are the canonical tail-sampling set — keep what errored, keep what was slow, sample the
+ * rest — as described in OpenTelemetry's own writeup and implemented by the Collector's
+ * `tailsamplingprocessor` policies (`status_code`, `latency`, `probabilistic`):
+ *
+ * - https://opentelemetry.io/blog/2022/tail-sampling/
+ * - https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/processor/tailsamplingprocessor
+ * - https://www.datadoghq.com/blog/control-trace-volume-with-opentelemetry-tail-based-sampling/
+ *
+ * Expressing them as a processor that filters in `onEnd` is the documented way to drop spans from a
+ * JS SDK, since a `Sampler` cannot: https://github.com/open-telemetry/opentelemetry-js/discussions/2817
+ *
+ * In order:
  * - a span that **errored** is kept, and its trace is promoted;
+ * - a span slower than {@link DEFAULT_SLOW_MS} is kept, and its trace is promoted;
  * - a span carrying `gen_ai.*` is kept, and its trace is promoted, so a model call is never a
- *   fraction of the calls that happened;
+ *   fraction of the calls that happened. This one is ours rather than canonical: the AI events are
+ *   what price the product, and a sampled fraction of them reports a fraction of the spend;
  * - any other span of a **promoted** trace is kept;
  * - everything else is kept at {@link DEFAULT_RATIO}, keyed on the trace id so the decision is the
  *   same for every span of a trace.
@@ -35,6 +48,16 @@ import type { ReadableSpan, Span, SpanProcessor } from '@opentelemetry/sdk-trace
 export const DEFAULT_RATIO = 0.3;
 
 /**
+ * Above this, a span is kept as slow.
+ *
+ * Far above the 5s the Collector's examples use, because this app's slowest spans are model calls
+ * and a conversation turn legitimately runs for tens of seconds — a 5s threshold would promote
+ * nearly every AI trace and quietly turn the ratio off for exactly the traffic there is most of.
+ * At 30s what is left is a hang rather than a slow answer.
+ */
+export const DEFAULT_SLOW_MS = 30_000;
+
+/**
  * Bound on remembered trace ids. Reached only under a burst far above normal span rates, and a trace
  * evicted early degrades to the ratio rather than to a dropped span.
  */
@@ -42,6 +65,7 @@ const DEFAULT_MAX_TRACKED_TRACES = 10_000;
 
 export type Options = {
   ratio?: number;
+  slowMs?: number;
   maxTrackedTraces?: number;
 };
 
@@ -50,26 +74,41 @@ export type Decidable = {
   readonly traceId: string;
   readonly status: { readonly code: SpanStatusCode };
   readonly attributes: Attributes;
+  readonly durationMs: number;
 };
 
 export class TailSampler {
   private readonly _ratio: number;
+  private readonly _slowMs: number;
   private readonly _maxTrackedTraces: number;
   /** Insertion-ordered, so the oldest entry is the first key — an LRU without the bookkeeping. */
   private readonly _promoted = new Set<string>();
 
-  constructor({ ratio = DEFAULT_RATIO, maxTrackedTraces = DEFAULT_MAX_TRACKED_TRACES }: Options = {}) {
+  constructor({
+    ratio = DEFAULT_RATIO,
+    slowMs = DEFAULT_SLOW_MS,
+    maxTrackedTraces = DEFAULT_MAX_TRACKED_TRACES,
+  }: Options = {}) {
     this._ratio = ratio;
+    this._slowMs = slowMs;
     this._maxTrackedTraces = maxTrackedTraces;
   }
 
   /** Whether the span should be forwarded to the exporter. */
   keep(span: Decidable): boolean {
-    if (isPromotable(span)) {
+    if (this._isPromotable(span)) {
       this._promote(span.traceId);
       return true;
     }
     return this._promoted.has(span.traceId) || sampledByTraceId(span.traceId, this._ratio);
+  }
+
+  private _isPromotable(span: Decidable): boolean {
+    return (
+      span.status.code === SpanStatusCode.ERROR ||
+      span.durationMs > this._slowMs ||
+      Object.keys(span.attributes).some(isGenAiAttribute)
+    );
   }
 
   private _promote(traceId: string): void {
@@ -88,9 +127,6 @@ export class TailSampler {
 
 const GEN_AI_PREFIX = 'gen_ai.';
 
-const isPromotable = (span: Decidable): boolean =>
-  span.status.code === SpanStatusCode.ERROR || Object.keys(span.attributes).some(isGenAiAttribute);
-
 const isGenAiAttribute = (key: string): boolean => key.startsWith(GEN_AI_PREFIX);
 
 /**
@@ -108,6 +144,9 @@ const sampledByTraceId = (traceId: string, ratio: number): boolean => {
   const value = Number.parseInt(traceId.slice(-8), 16);
   return Number.isNaN(value) ? false : value / 0x1_0000_0000 < ratio;
 };
+
+/** OTel reports durations as `[seconds, nanoseconds]`. */
+export const hrTimeToMs = ([seconds, nanos]: [number, number]): number => seconds * 1_000 + nanos / 1e6;
 
 /**
  * Applies the same rules in-process, for the path that exports without a worker (node, and a browser
@@ -130,7 +169,13 @@ export class TailSamplingSpanProcessor implements SpanProcessor {
 
   onEnd(span: ReadableSpan): void {
     const { traceId } = span.spanContext();
-    if (this._sampler.keep({ traceId, status: span.status, attributes: span.attributes })) {
+    const decidable = {
+      traceId,
+      status: span.status,
+      attributes: span.attributes,
+      durationMs: hrTimeToMs(span.duration),
+    };
+    if (this._sampler.keep(decidable)) {
       this._delegate.onEnd(span);
     }
   }
