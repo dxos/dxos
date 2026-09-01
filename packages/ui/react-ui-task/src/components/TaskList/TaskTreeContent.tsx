@@ -11,6 +11,7 @@ import { Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
 import { type TaskPlacement, resolveIndent, resolveNudge, resolveOutdent } from './hierarchy';
+import { TaskDescription } from './TaskDescription';
 import { TASK_TREE_ROOT_ID, type TaskNode, buildTaskForest, buildTaskPaths, createTaskTreeModel } from './tree-model';
 
 /**
@@ -31,6 +32,8 @@ export type TaskTreeContentProps = {
   ordinals: ReadonlyMap<string, number>;
   selected?: string;
   translationKey: string;
+  /** Render each task's description under its title; rows grow to fit. */
+  showDescriptions?: boolean;
   onCollapseToggle: (id: string) => void;
   onTaskSelect?: (task: Task.Task | undefined) => void;
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
@@ -48,6 +51,7 @@ export const TaskTreeContent = ({
   ordinals,
   selected,
   translationKey,
+  showDescriptions = false,
   onCollapseToggle,
   onTaskSelect,
   onTaskUpdate,
@@ -106,8 +110,10 @@ export const TaskTreeContent = ({
   );
 
   const renderHeading: HeadingRenderer<TaskNode> = useCallback(
-    ({ item }) => <TaskTreeHeading node={item} {...{ showGutter, ordinals, translationKey, onTaskUpdate }} />,
-    [showGutter, ordinals, translationKey, onTaskUpdate],
+    ({ item }) => (
+      <TaskTreeHeading node={item} {...{ showGutter, ordinals, translationKey, showDescriptions, onTaskUpdate }} />
+    ),
+    [showGutter, ordinals, translationKey, showDescriptions, onTaskUpdate],
   );
 
   // Restructuring is keyboard-driven, and the machine ignores modified arrows — so the gesture is
@@ -169,12 +175,14 @@ const TaskTreeHeading = ({
   showGutter,
   ordinals,
   translationKey,
+  showDescriptions,
   onTaskUpdate,
 }: {
   node: TaskNode;
   showGutter: boolean;
   ordinals: ReadonlyMap<string, number>;
   translationKey: string;
+  showDescriptions: boolean;
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
 }) => {
   const { t } = useTranslation(translationKey);
@@ -196,13 +204,26 @@ const TaskTreeHeading = ({
   const icon = done ? 'ph--check-circle--regular' : error ? 'ph--x-circle--regular' : 'ph--circle--regular';
   const iconClassNames = done ? 'text-success-text' : error ? 'text-error-text' : 'text-subdued';
 
+  const description = showDescriptions ? task.description?.trim() || undefined : undefined;
+
   return (
-    <div className='flex min-w-0 grow items-center gap-1'>
-      {showGutter && ordinal !== undefined && (
-        <Tag hue={done ? 'green' : error ? 'rose' : 'neutral'} classNames='tabular-nums'>
-          {ordinal}
-        </Tag>
+    // A grid rather than a flex row so the description can start in the title's own column: it has
+    // to clear the ordinal and the status control, or it reads as belonging to the row above.
+    <div
+      className={mx(
+        'grid min-w-0 grow items-center gap-x-1',
+        showGutter ? 'grid-cols-[auto_auto_minmax(0,1fr)]' : 'grid-cols-[auto_minmax(0,1fr)]',
       )}
+    >
+      {showGutter &&
+        (ordinal !== undefined ? (
+          <Tag hue={done ? 'green' : error ? 'rose' : 'neutral'} classNames='tabular-nums'>
+            {ordinal}
+          </Tag>
+        ) : (
+          // Holds the gutter track so a numberless row's title still lines up with its neighbours.
+          <span />
+        ))}
       {onTaskUpdate ? (
         <IconButton
           classNames={mx('shrink-0', iconClassNames)}
@@ -224,6 +245,9 @@ const TaskTreeHeading = ({
         </span>
       )}
       <span className='min-w-0 truncate'>{task.title}</span>
+      {description && (
+        <TaskDescription content={description} classNames={mx(showGutter ? 'col-start-3' : 'col-start-2', 'pb-1')} />
+      )}
     </div>
   );
 };

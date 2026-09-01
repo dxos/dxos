@@ -41,7 +41,7 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { Listbox, TreeDropIndicator, TreeItemToggle, paddingIndentation, useListDisclosure } from '@dxos/react-ui-list';
-import { MarkdownEditable, type MarkdownEditableController, MarkdownView } from '@dxos/react-ui-markdown';
+import { MarkdownEditable, type MarkdownEditableController } from '@dxos/react-ui-markdown';
 import {
   Menu,
   type MenuAction,
@@ -67,6 +67,7 @@ import {
   subtreeIds,
   walkTaskTree,
 } from './hierarchy';
+import { TaskDescription } from './TaskDescription';
 import { TaskTreeContent } from './TaskTreeContent';
 import { type TaskNode } from './tree-model';
 
@@ -365,6 +366,7 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
         onTaskSelect={onTaskSelect}
         onTaskUpdate={onTaskUpdate}
         onTaskMove={onTaskMove}
+        showDescriptions={showDescriptions}
         renderTrailing={TaskTreeTrailing}
       />
     );
@@ -661,11 +663,6 @@ const draggingId = { current: undefined as string | undefined };
 // Item — one row. Exported so a host can render its own selection of tasks.
 //
 
-/** A description is a line in a row, not a document: no paragraph block, no heading scale. */
-const DESCRIPTION_COMPONENTS = {
-  p: ({ children }: PropsWithChildren) => <span>{children}</span>,
-};
-
 const STATUS_ICONS: Record<Task.Status, { icon: string; classNames?: string }> = {
   todo: { icon: 'ph--square--regular', classNames: 'text-subdued' },
   started: { icon: 'ph--hourglass--regular', classNames: 'text-info-text' },
@@ -889,7 +886,7 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
         {instruction && <TreeDropIndicator instruction={instruction} gap={0} />}
         {description && (
           // Its own row in the subgrid, starting under the title and spanning the label columns.
-          <MarkdownView
+          <TaskDescription
             content={description}
             classNames={mx(
               showGutter ? 'col-start-3' : 'col-start-2',
@@ -899,11 +896,8 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
               // Ends before the chip column rather than spanning a fixed count: the grid has one
               // fewer track since the chips collapsed into one, and a stale span ran the description
               // under the priority and actions controls.
-              'col-end-[-3] pb-1 text-sm text-description line-clamp-3',
+              'col-end-[-3] pb-1',
             )}
-            // The row supplies the type scale and the clamp, so the description renders as one
-            // inline run rather than the block paragraph the default component wraps it in.
-            components={DESCRIPTION_COMPONENTS}
           />
         )}
       </Listbox.Item>
