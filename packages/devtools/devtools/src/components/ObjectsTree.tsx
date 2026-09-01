@@ -19,7 +19,7 @@ import { type Database, Entity, Filter, Obj, Query, Ref, Relation } from '@dxos/
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { DropdownMenu, Icon, IconButton } from '@dxos/react-ui';
+import { DropdownMenu, Icon, IconButton, ScrollArea } from '@dxos/react-ui';
 import {
   type ColumnRenderer,
   type IconRenderer,
@@ -63,18 +63,28 @@ export const ObjectsTree = ({ db, root, onSelect, onOpen, canOpen }: ObjectsTree
 
   return (
     <ObjectsTreeContext.Provider value={contextValue}>
-      <Tree<ObjectsTreeItem>
-        id={ROOT_ANCHOR}
-        model={model.treeModel}
-        // `minmax(0, 1fr)`, not `1fr`: a bare `1fr` is `minmax(auto, 1fr)`, whose automatic minimum
-        // is the content's min-content width, so a long label (a relation typename on a deep row)
-        // widens the track and pushes the trailing columns instead of truncating.
-        gridTemplateColumns='[tree-row-start] minmax(0, 1fr) min-content min-content [tree-row-end]'
-        renderIcon={ObjectsTreeIcon}
-        renderColumns={ObjectsTreeColumns}
-        onOpenChange={handleOpenChange}
-        onSelect={handleSelect}
-      />
+      <ScrollArea.Root classNames='dx-expander' thin>
+        <ScrollArea.Viewport>
+          <Tree<ObjectsTreeItem>
+            id={ROOT_ANCHOR}
+            model={model.treeModel}
+            // `minmax(0, 1fr)`, not `1fr`: a bare `1fr` is `minmax(auto, 1fr)`, whose automatic
+            // minimum is the content's min-content width, so a long relation typename on a deep row
+            // would widen the track and push the trailing columns instead of truncating.
+            //
+            // The role sits in the SAME track as the actions rather than its own: a separate
+            // `min-content` column is sized from the widest role across the whole subgrid, so
+            // expanding a node whose child carries a role widened that track and visibly shifted
+            // every row's action button.
+            gridTemplateColumns='[tree-row-start] minmax(0, 1fr) min-content [tree-row-end]'
+            classNames='w-full min-w-0'
+            renderIcon={ObjectsTreeIcon}
+            renderColumns={ObjectsTreeColumns}
+            onOpenChange={handleOpenChange}
+            onSelect={handleSelect}
+          />
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
     </ObjectsTreeContext.Provider>
   );
 };
@@ -134,8 +144,8 @@ const ObjectsTreeColumns: ColumnRenderer<ObjectsTreeItem> = ({ item, path }) => 
   }, [node.id, model.database]);
 
   return (
-    <>
-      <div className='flex items-center'>{node.role && <span className='text-subdued text-xs'>{node.role}</span>}</div>
+    <div className='flex shrink-0 items-center gap-1'>
+      {node.role && <span className='text-subdued text-xs'>{node.role}</span>}
       <DropdownMenu.Root>
         <DropdownMenu.Trigger asChild>
           <IconButton
@@ -182,7 +192,7 @@ const ObjectsTreeColumns: ColumnRenderer<ObjectsTreeItem> = ({ item, path }) => 
           </DropdownMenu.Item>
         </DropdownMenu.Content>
       </DropdownMenu.Root>
-    </>
+    </div>
   );
 };
 
