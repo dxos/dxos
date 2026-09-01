@@ -12,23 +12,16 @@ import { LogEntry, LogLevel, serializeToJsonl } from '@dxos/log';
 
 import { OtelLogSink, type OtelLogSinkInit } from './log-sink';
 
-const defaultInit: OtelLogSinkInit = {
-  type: 'otel-init',
-  endpoint: 'http://localhost:1',
-  headers: {},
-  resourceAttributes: { 'service.name': 'test-service', 'session.id': 'session-1' },
-  logLevel: LogLevel.INFO,
-  tags: { team: 'blue' },
-};
-
-/** Serialize a real {@link LogEntry} the way the producing realm's log processor does. */
-const makeLine = (init: ConstructorParameters<typeof LogEntry>[0]): string => {
-  const line = serializeToJsonl(new LogEntry(init), { env: 'test-env' });
-  invariant(line !== undefined);
-  return line;
-};
-
 describe('OtelLogSink', () => {
+  const defaultInit: OtelLogSinkInit = {
+    type: 'otel-init',
+    endpoint: 'http://localhost:1',
+    headers: {},
+    resourceAttributes: { 'service.name': 'test-service', 'session.id': 'session-1' },
+    logLevel: LogLevel.INFO,
+    tags: { team: 'blue' },
+  };
+
   let sink: OtelLogSink | undefined;
 
   afterEach(async () => {
@@ -98,6 +91,7 @@ describe('OtelLogSink', () => {
   test('ignores malformed lines and unknown level letters', async () => {
     const { sink, records } = makeSink();
     sink.append('not json');
+    sink.append('null');
     sink.append(JSON.stringify({ t: new Date().toISOString(), l: '?', m: 'unknown level' }));
     sink.append(makeLine({ level: LogLevel.INFO, message: 'valid' }));
 
@@ -105,3 +99,10 @@ describe('OtelLogSink', () => {
     expect(exported.map((record) => record.body)).toEqual(['valid']);
   });
 });
+
+/** Serialize a real {@link LogEntry} the way the producing realm's log processor does. */
+const makeLine = (init: ConstructorParameters<typeof LogEntry>[0]): string => {
+  const line = serializeToJsonl(new LogEntry(init), { env: 'test-env' });
+  invariant(line !== undefined);
+  return line;
+};
