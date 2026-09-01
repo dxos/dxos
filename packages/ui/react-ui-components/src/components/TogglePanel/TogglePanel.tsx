@@ -2,20 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Collapsible } from '@ark-ui/react/collapsible';
 import { createContext } from '@radix-ui/react-context';
-import React, { type JSX, type PropsWithChildren, useEffect } from 'react';
+import React, { type ComponentPropsWithoutRef, type JSX, type PropsWithChildren } from 'react';
 
-import { Icon, IconBlock, type ThemedClassName, useControlledState } from '@dxos/react-ui';
+import { Icon, IconBlock, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
+
+// Built on `@ark-ui/react`'s Collapsible (zag state machine), so the header is a real button with
+// the disclosure ARIA wiring instead of a click-handling div, and the body animates against the
+// `--height` the machine measures rather than a `grid-template-rows` ramp.
 
 //
 // Context
 //
 
 type ContextValue = {
-  open: boolean;
-  setOpen: (open: boolean) => void;
   duration: number;
 };
 
@@ -32,22 +35,23 @@ type RootProps = PropsWithChildren<
     open?: boolean;
     defaultOpen?: boolean;
     onChangeOpen?: (open: boolean) => void;
-  } & Partial<Pick<ContextValue, 'duration'>>
+  } & Partial<ContextValue>
 >;
 
-const Root = ({ children, open: openProp, defaultOpen = false, duration = 250, onChangeOpen }: RootProps) => {
-  const [open, setOpen] = useControlledState<boolean>(openProp ?? defaultOpen);
-
-  useEffect(() => {
-    onChangeOpen?.(open);
-  }, [open, onChangeOpen]);
-
-  return (
-    <TogglePanelContext duration={duration} open={open} setOpen={setOpen}>
+const Root = ({ children, open, defaultOpen = false, duration = 250, onChangeOpen }: RootProps) => (
+  <TogglePanelContext duration={duration}>
+    <Collapsible.Root
+      open={open}
+      defaultOpen={defaultOpen}
+      onOpenChange={onChangeOpen && ((details) => onChangeOpen(details.open))}
+      // The body is clipped rather than unmounted, matching what callers relied on before: several
+      // gate their own content on `open` and would double-unmount otherwise.
+      lazyMount={false}
+    >
       {children}
-    </TogglePanelContext>
-  );
-};
+    </Collapsible.Root>
+  </TogglePanelContext>
+);
 
 Root.displayName = ROOT_NAME;
 
@@ -79,30 +83,34 @@ Content.displayName = CONTENT_NAME;
 const HEADER_NAME = 'TogglePanel.Header';
 
 type HeaderProps = ThemedClassName<
-  PropsWithChildren<{
+  Omit<ComponentPropsWithoutRef<'button'>, 'className'> & {
     icon?: JSX.Element;
-  }>
+  }
 >;
 
-const Header = ({ classNames, children, icon }: HeaderProps) => {
-  const { open, setOpen, duration } = useTogglePanelContext(HEADER_NAME);
+const Header = ({ classNames, children, icon, ...props }: HeaderProps) => {
+  const { duration } = useTogglePanelContext(HEADER_NAME);
 
   return (
-    <div
-      className={mx('p-1 grid grid-cols-[2rem_1fr_2rem] items-center cursor-pointer select-none', classNames)}
-      onClick={() => setOpen(!open)}
+    <Collapsible.Trigger
+      {...props}
+      className={mx(
+        'group p-1 grid grid-cols-[2rem_1fr_2rem] items-center select-none w-full text-start dx-focus-ring-inset',
+        classNames,
+      )}
     >
       <IconBlock>
         <Icon
           size={4}
           icon={'ph--caret-right--regular'}
           style={{ transitionDuration: `${duration}ms` }}
-          classNames={['transition transition-transform ease-in-out', open ? 'rotate-90' : 'transform-none']}
+          // The machine owns the state, so the caret reads it off the trigger rather than a prop.
+          classNames={['transition transition-transform ease-in-out', 'group-data-[state=open]:rotate-90']}
         />
       </IconBlock>
       <div className='flex grow items-center overflow-hidden truncate'>{children}</div>
       {icon && <IconBlock>{icon}</IconBlock>}
-    </div>
+    </Collapsible.Trigger>
   );
 };
 
@@ -117,17 +125,22 @@ const BODY_NAME = 'TogglePanel.Body';
 type BodyProps = ThemedClassName<PropsWithChildren>;
 
 const Body = composable<HTMLDivElement, BodyProps>(({ children, ...props }, forwardedRef) => {
-  const { duration, open } = useTogglePanelContext(BODY_NAME);
+  const { duration } = useTogglePanelContext(BODY_NAME);
   return (
-    <div
+    <Collapsible.Content
       {...composableProps(props, {
-        style: { transitionDuration: `${duration}ms` },
-        classNames: ['grid transition-[grid-template-rows] ease-in-out', open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'],
+        // `--height` is measured by the machine; a zero duration is how a caller opts out of the
+        // ramp entirely (the assistant feed does, because it measures height as the body settles).
+        style: { animationDuration: `${duration}ms` },
+        classNames: [
+          'overflow-hidden',
+          duration > 0 && 'data-[state=closed]:animate-slide-up data-[state=open]:animate-slide-down',
+        ],
       })}
       ref={forwardedRef}
     >
-      <div className='overflow-hidden'>{children}</div>
-    </div>
+      {children}
+    </Collapsible.Content>
   );
 });
 
