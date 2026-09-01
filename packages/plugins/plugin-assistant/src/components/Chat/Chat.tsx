@@ -8,6 +8,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { Alarm } from '@dxos/assistant';
 import { Chat as AssistantChat, resolveSlashCommand } from '@dxos/assistant-toolkit';
 import { Event } from '@dxos/async';
 import { type Database, Filter, Obj, Query } from '@dxos/echo';
@@ -44,10 +45,11 @@ import {
   ChatPrompt as NaturalChatPrompt,
   type ChatPromptProps as NaturalChatPromptProps,
 } from '../ChatPrompt';
+import { ChatQueue as NaturalChatQueue, type ChatQueueProps as NaturalChatQueueProps } from '../ChatQueue';
 import { ChatContextProvider, type ChatContextValue, type ChatRequestTiming, useChatContext } from './context';
 import { type ChatEvent } from './events';
 import { SurfaceWidget } from './SurfaceWidget';
-import { projectThread, resolveRewind } from './thread';
+import { projectAlarms, projectThread, resolveRewind } from './thread';
 
 //
 // Root
@@ -108,10 +110,26 @@ const ChatRoot = ({
     db,
     feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
   );
+  const feedAlarms = useQuery(
+    db,
+    feed ? Query.select(Filter.type(Alarm.Alarm)).from(feed) : Query.select(Filter.nothing()),
+  );
   const pendingMessages = useAtomValue(processor.messages);
-  const { messages } = useMemo(
+  const { messages, queued } = useMemo(
     () => projectThread({ feedMessages, pendingMessages, rewindFrom: feedSnapshot?.rewindFrom }),
     [feedMessages, pendingMessages, feedSnapshot?.rewindFrom],
+  );
+  const alarms = useMemo(() => projectAlarms({ feedAlarms, messages: feedMessages }), [feedAlarms, feedMessages]);
+
+  // Cancelling is a plain feed removal: the queue and the alarm set are projections over the feed,
+  // so dropping the record is what takes the item out of them.
+  const handleCancel = useCallback(
+    (item: Message.Message | Alarm.Alarm) => {
+      if (db && feed) {
+        void db.removeFeedItemsByIds(feed, [item.id]).catch((err) => log.catch(err));
+      }
+    },
+    [db, feed],
   );
 
   const dump = useDebug({ processor });
@@ -141,7 +159,7 @@ const ChatRoot = ({
 
         case 'submit': {
           const text = ev.text.trim();
-          if (!streaming && text.length) {
+          if (text.length) {
             // A leading /command is a deterministic shortcut — executed directly, no model in
             // the loop; an unknown command falls through to the model as plain text.
             const resolved = resolveSlashCommand(text, TaskSlashCommands);
@@ -201,7 +219,13 @@ const ChatRoot = ({
             const context = getContext?.();
             // Await persistence (transient chat) before requesting so the agent resolves the
             // now-durable conversation feed; resolves immediately when there is no hook.
-            void Promise.resolve(onSubmit?.(text)).then(() => processor.request({ message: text, context }));
+            //
+            // A prompt submitted while a turn is running is QUEUED, not requested: `request` would
+            // cancel the running turn to start its own, whereas the agent's queue is feed state that
+            // it drains in order once the current turn settles.
+            void Promise.resolve(onSubmit?.(text)).then(() =>
+              active ? processor.enqueue({ message: text, context }) : processor.request({ message: text, context }),
+            );
           }
           break;
         }
@@ -243,7 +267,7 @@ const ChatRoot = ({
     });
     // `feed` and `messages` are dependencies because the rewind branch reads and writes them: without
     // them the handler would keep resolving rewinds against whatever was mounted first.
-  }, [event, dump, processor, streaming, onEvent, onSubmit, getContext, feed, messages, chat, db]);
+  }, [event, dump, processor, streaming, active, onEvent, onSubmit, getContext, feed, messages, chat, db]);
 
   return (
     <ChatContextProvider
@@ -252,6 +276,9 @@ const ChatRoot = ({
       db={db}
       chat={chat}
       messages={messages}
+      queued={queued}
+      alarms={alarms}
+      onCancel={handleCancel}
       processor={processor}
       requestTiming={requestTiming}
       controller={controller}
@@ -647,6 +674,21 @@ const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
 ChatTaskList.displayName = CHAT_TASK_LIST_NAME;
 
 //
+// Queue
+//
+
+const CHAT_QUEUE_NAME = 'Chat.Queue';
+
+type ChatQueueProps = Omit<NaturalChatQueueProps, 'queued' | 'onCancel'>;
+
+const ChatQueue = (props: ChatQueueProps) => {
+  const { queued, onCancel } = useChatContext(CHAT_QUEUE_NAME);
+  return <NaturalChatQueue {...props} queued={queued} onCancel={onCancel} />;
+};
+
+ChatQueue.displayName = CHAT_QUEUE_NAME;
+
+//
 // Chat
 //
 
@@ -655,6 +697,7 @@ export const Chat = {
   Toolbar: ChatToolbar,
   Content: ChatContent,
   Prompt: ChatPrompt,
+  Queue: ChatQueue,
   Status: ChatStatus,
   Thread: ChatThread,
   Outline: ChatOutline,
@@ -666,6 +709,7 @@ export type {
   ChatEvent,
   ChatOutlineProps,
   ChatPromptProps,
+  ChatQueueProps,
   ChatRootProps,
   ChatThreadProps,
   ChatToolbarProps,

@@ -5,7 +5,7 @@
 import * as Array from 'effect/Array';
 import * as Order from 'effect/Order';
 
-import { getAck, isQueued } from '@dxos/assistant';
+import { type Alarm, getAck, isQueued } from '@dxos/assistant';
 import { Feed } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
@@ -29,6 +29,11 @@ export const byAppendOrder: Order.Order<Message.Message> = (a, b) => {
 export type ThreadProjection = {
   /** The turns to render, in append order. */
   messages: Message.Message[];
+  /**
+   * Queued input the agent has not taken up yet, in append order. Rendered as its own stack above
+   * the prompt rather than in the thread: it is work waiting, not a turn that happened.
+   */
+  queued: Message.Message[];
 };
 
 /**
@@ -52,26 +57,51 @@ export const projectThread = ({
   rewindFrom?: string;
 }): ThreadProjection => {
   const all = Array.dedupeWith([...feedMessages, ...pendingMessages], ({ id: a }, { id: b }) => a === b);
-  // A queued original renders while it awaits processing; once a turn acks it, its echo carries the
-  // turn and the original would double the prompt.
+  // A queued original never joins the thread: while it waits it belongs to the queue stack, and once
+  // a turn acks it the ack-carrying message is the turn, so the original would only double the prompt.
   const acked = new Set(all.map(getAck).filter((id) => id !== undefined));
-  const visible = all.filter((message) => !(isQueued(message) && acked.has(message.id)));
-  const sorted = Array.sort(visible, byAppendOrder);
+  const sorted = Array.sort(
+    all.filter((message) => !isQueued(message)),
+    byAppendOrder,
+  );
+  const queued = Array.sort(
+    all.filter((message) => isQueued(message) && !acked.has(message.id)),
+    byAppendOrder,
+  );
 
   if (rewindFrom !== undefined) {
     const index = sorted.findIndex((message) => message.id === rewindFrom);
     if (index === 0) {
       // Rewound to the first turn: nothing precedes it.
-      return { messages: [] };
+      return { messages: [], queued };
     }
     if (index > 0) {
-      return { messages: collapseToolRuns(Feed.history(sorted, { head: sorted[index - 1].id }).items) };
+      return { messages: collapseToolRuns(Feed.history(sorted, { head: sorted[index - 1].id }).items), queued };
     }
     // Not present — a stale pointer (e.g. the message never replicated); fall through to the feed's
     // own lineage rather than blanking the thread.
   }
 
-  return { messages: collapseToolRuns(Feed.history(sorted).items) };
+  return { messages: collapseToolRuns(Feed.history(sorted).items), queued };
+};
+
+/**
+ * The alarms still waiting to fire, earliest first: those no message has acked, and (for a cancelled
+ * one) not removed from the feed.
+ */
+export const projectAlarms = ({
+  feedAlarms,
+  messages,
+}: {
+  feedAlarms: readonly Alarm.Alarm[];
+  /** Every message read from the feed — an ack lives on the message that consumed the alarm. */
+  messages: readonly Message.Message[];
+}): Alarm.Alarm[] => {
+  const acked = new Set(messages.map(getAck).filter((id) => id !== undefined));
+  return Array.sort(
+    feedAlarms.filter((alarm) => !acked.has(alarm.id)),
+    Order.mapInput(Order.Number, (alarm: Alarm.Alarm) => alarm.wakeAt),
+  );
 };
 
 /**

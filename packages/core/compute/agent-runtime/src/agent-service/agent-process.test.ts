@@ -6,7 +6,7 @@ import { describe, it } from '@effect/vitest';
 
 import { Alarm } from '@dxos/assistant';
 import * as Process from '@dxos/compute/Process';
-import { ContentBlock, Message } from '@dxos/types';
+import { Message } from '@dxos/types';
 
 import { computeAlarmDelay, isAgentWorkPending } from './agent-process';
 
@@ -39,7 +39,7 @@ describe('computeAlarmDelay', () => {
 describe('isAgentWorkPending', () => {
   const makeSnapshot = (overrides: Partial<Parameters<typeof isAgentWorkPending>[0]> = {}) =>
     ({
-      inputQueue: [],
+      toolResults: [],
       pendingMessages: [],
       pendingAlarms: [],
       delegations: [],
@@ -53,11 +53,11 @@ describe('isAgentWorkPending', () => {
     expect(isAgentWorkPending(makeSnapshot())).toBe(false);
   });
 
-  it('is pending when the legacy input queue has work', ({ expect }) => {
+  it('is pending when an undelivered tool result is queued', ({ expect }) => {
     expect(
       isAgentWorkPending(
         makeSnapshot({
-          inputQueue: [{ _tag: 'prompt', content: [ContentBlock.Text.make({ text: 'hello' })] }],
+          toolResults: [{ _tag: 'tool_result', pid: Process.ID.make('1'), result: 'x', isError: false }],
         }),
       ),
     ).toBe(true);

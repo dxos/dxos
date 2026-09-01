@@ -4,7 +4,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { ChatStatus as NaturalChatStatus, formatElapsed } from '@dxos/react-ui-chat';
 import { Matrix } from '@dxos/react-ui-components';
 import { type ContentBlock } from '@dxos/types';
@@ -38,7 +38,7 @@ export const ChatStatus = ({ classNames, icon }: ChatStreamStatusProps) => {
   // blocks streamed via the ephemeral `PartialBlock` channel, while finalized blocks
   // (including the per-turn `stats` block we read for token counts) are submitted to the
   // feed via `_submitMessage` and only show up through `useQuery`.
-  const { messages, requestTiming } = useChatContext(CHAT_STREAM_STATUS_NAME);
+  const { messages, requestTiming, alarms } = useChatContext(CHAT_STREAM_STATUS_NAME);
 
   const { lastOutputTokens, sessionTotalTokens } = useMemo(() => {
     let last: number | undefined;
@@ -55,7 +55,9 @@ export const ChatStatus = ({ classNames, icon }: ChatStreamStatusProps) => {
   }, [messages]);
 
   const isRunning = requestTiming != null && requestTiming.endedAt == null;
-  const show = requestTiming || lastOutputTokens || sessionTotalTokens > 0;
+  // The earliest pending alarm is the one that wakes the agent next, so it is the one worth a slot.
+  const nextAlarm = alarms.at(0);
+  const show = requestTiming || lastOutputTokens || sessionTotalTokens > 0 || nextAlarm != null;
   if (!show) {
     return null;
   }
@@ -94,6 +96,21 @@ export const ChatStatus = ({ classNames, icon }: ChatStreamStatusProps) => {
               <NaturalChatStatus.Text>Σ {Unit.Thousand(sessionTotalTokens).toString()}</NaturalChatStatus.Text>
             </>
           )}
+          {nextAlarm && (
+            <>
+              {(requestTiming || lastOutputTokens != null || sessionTotalTokens > 0) && <NaturalChatStatus.Separator />}
+              <NaturalChatStatus.Text>
+                <span
+                  data-testid='assistant.chat-status.alarm'
+                  className='flex items-center gap-1'
+                  title={nextAlarm.message ?? undefined}
+                >
+                  <Icon icon='ph--alarm--regular' size={4} />
+                  {formatWakeAt(nextAlarm.wakeAt)}
+                </span>
+              </NaturalChatStatus.Text>
+            </>
+          )}
         </div>
       )}
     </NaturalChatStatus.Root>
@@ -121,3 +138,10 @@ const Elapsed = ({ timing }: { timing: ChatRequestTiming }) => {
 };
 
 const isStats = (block: ContentBlock.Any): block is ContentBlock.Stats => block._tag === 'stats';
+
+/**
+ * Wall-clock time an alarm fires. The clock is what the reader needs to act on ("it will wake at
+ * 14:20"); a countdown would have to tick, and the alarm can be days out.
+ */
+export const formatWakeAt = (wakeAt: number): string =>
+  new Date(wakeAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });

@@ -147,9 +147,15 @@ Writes:
   removal).
 
 `agent-process.ts` consumes SessionStore instead of `AgentEventsCell` /
-`AgentAlarmCell` for prompts and alarms. `tool_result` events stay in process
-KV for now — they are process-plumbing (pid-scoped, tied to the delegation
+`AgentAlarmCell` for prompts and alarms. Undelivered `tool_result`s stay in
+process KV (now the single-purpose `ToolResultsCell` / `ToolResultEvent`, no
+event union) — they are process-plumbing (pid-scoped, tied to the delegation
 machinery), not conversation state; folding them in is a possible follow-up.
+
+No migration path is kept for state persisted by the pre-feed process (user
+decision, 2026-09-01): the old `inputQueue` / `agentAlarm` cells are simply
+abandoned, so a process mid-flight across the upgrade loses at most a queued
+prompt and its single alarm.
 
 ### 2.5 How a turn acks (implementation refinement)
 
@@ -166,12 +172,20 @@ at-least-once replay).
 
 ### 2.6 Surfaces
 
-- Legacy migration: pre-existing KV queue entries drain through the old path
-  first; the single KV alarm is folded into a feed Alarm once on process start.
 - `Alarm` and `SessionLink` are registered in plugin-assistant `schema-defs`.
-- `projectThread` (chat UI) hides a queued original once an ack names it — the
-  echo carries the turn — while a still-pending original renders, giving the
-  submit-while-busy UX for free.
+- **Queue stack.** `projectThread` returns `{ messages, queued }`: a queued
+  original never joins the thread (waiting → it belongs to the queue; acked →
+  the ack-carrying turn is the thread entry, so the original would double the
+  prompt). `Chat.Queue` (`components/ChatQueue`) renders `queued` as a
+  right-aligned `Listbox` stack directly above the composer in `ChatArticle`,
+  each row cancelable. Cancel is `db.removeFeedItemsByIds` — the queue is a
+  projection, so dropping the record takes the item out of it.
+- **Alarm in the status box.** `projectAlarms({ feedAlarms, messages })` gives
+  the un-acked alarms, earliest first; `ChatStatus` shows the next one as an
+  alarm icon + wake clock time (`formatWakeAt`) beside the elapsed and token
+  readouts, with the reminder text as the tooltip. Wall-clock rather than a
+  countdown: an alarm can be days out, and a countdown would have to tick.
+- A rewind truncates the thread but never the queue — queued work has not run.
 
 ### 2.7 Non-goals / kept as-is
 
@@ -249,6 +263,21 @@ Moving `Chat` (and `Agent`) into `@dxos/assistant` and anchoring sessions on
 3. Re-anchor `AgentService`/`Process` on Chat (target = chat URI, resolve feed
    - instructions from it).
 4. Retire `InstructionsAnnotation` and `Chat.getFromContext`'s dynamic import.
+
+## 3a. UI invariants (learned the hard way)
+
+- **Every prompt host must mount `Chat.Queue`.** Queued originals are held out of the thread
+  (`projectThread` drops an acked queued message, and a pending one belongs in the stack), so a host
+  that renders `Chat.Prompt` without `Chat.Queue` shows a prompt being submitted and then nothing at
+  all. Mounted in `ChatArticle`, `ChatDialog` and the `ChatPrompt` story.
+- **The send/stop control keys off `active`, never `streaming`.** `streaming` is true only while
+  tokens are arriving, so a turn parked in a tool call streams nothing — wiring the control to it
+  left a running agent with a disabled Send and no way to stop it. Pinned by
+  `TestStopWhileRunning` / `TestSendWhileRunning`, which force `active` with `streaming` false (a
+  scripted model cannot hold that state still).
+- **Mode rule:** running + empty box → Stop; running + text → Send (queues behind the running turn);
+  idle → Send, disabled when empty. One button, one testid (`assistant.send`), the mode carried by
+  the accessible label.
 
 ## 4. Decisions
 
