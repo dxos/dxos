@@ -167,7 +167,7 @@ export class IdbLogStore {
 
   /**
    * Enqueue one pre-serialized JSONL line, bypassing filtering and serialization.
-   * Used by the telemetry worker, whose lines arrive already serialized by the sender.
+   * Used by the observability worker, whose lines arrive already serialized by the sender.
    */
   append(line: string): void {
     if (this.#closed) {

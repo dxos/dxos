@@ -14,17 +14,17 @@ import { initAutomergeWasm } from '../util/automerge-wasm';
 // worker of its own. The IdbLogStore is the read handle for observability exports; the
 // nested worker owns writes and eviction.
 const logStore = new IdbLogStore({ dbName: LOG_STORE_DB_NAME, maxBytes: LOG_STORE_MAX_BYTES, evictionInterval: 0 });
-const telemetryWorker = new Worker(new URL('./telemetry-worker', import.meta.url), {
+const observabilityWorker = new Worker(new URL('./observability-worker', import.meta.url), {
   type: 'module',
-  name: 'dxos-telemetry',
+  name: 'dxos-observability',
 });
-const logProcessor = new WorkerLogProcessor({ worker: telemetryWorker });
+const logProcessor = new WorkerLogProcessor({ worker: observabilityWorker });
 log.addProcessor(logProcessor.processor);
 
 runDedicatedWorker({
   onBeforeStart: async (cfg) => {
     void initializeObservability(cfg, isTauri(), logStore, undefined, {
-      post: (message) => telemetryWorker.postMessage(message),
+      post: (message) => observabilityWorker.postMessage(message),
     }).catch((err) => log.catch(err));
     // The runtime this worker starts hosts echo; automerge is slim-resolved and must be
     // initialized before it runs (see util/automerge-wasm.ts).

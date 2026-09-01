@@ -222,11 +222,11 @@ const main = async () => {
   // downloads and feedback exports (IDB keeps the data); the worker owns writes and eviction,
   // so the read handle's own sweep is disabled.
   const logStore = new IdbLogStore({ dbName: LOG_STORE_DB_NAME, evictionInterval: 0 });
-  const telemetryWorker = new Worker(new URL('./workers/telemetry-worker', import.meta.url), {
+  const observabilityWorker = new Worker(new URL('./workers/observability-worker', import.meta.url), {
     type: 'module',
-    name: 'dxos-telemetry',
+    name: 'dxos-observability',
   });
-  const logProcessor = new WorkerLogProcessor({ worker: telemetryWorker });
+  const logProcessor = new WorkerLogProcessor({ worker: observabilityWorker });
   log.addProcessor(logProcessor.processor);
 
   // Devtools convenience — also surfaced via the help panel and ResetDialog UI.
@@ -318,7 +318,7 @@ const main = async () => {
   // Intentionally do not await; the buffering backend in TRACE_PROCESSOR captures
   // early spans and replays them once the real OTEL backend registers.
   const observability = initializeObservability(config, isTauri, logStore, observabilityDisabled, {
-    post: (message) => telemetryWorker.postMessage(message),
+    post: (message) => observabilityWorker.postMessage(message),
   });
 
   // Capture a one-shot `composer.startup` event when the framework dispatches
