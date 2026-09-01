@@ -193,6 +193,14 @@ export type TreeProps<T extends { id: string } = any> = {
   renderHeading?: HeadingRenderer<T>;
   blockInstruction?: (params: { instruction: Instruction; source: TreeData; target: TreeData }) => boolean;
   canDrop?: (params: { source: TreeData; target: TreeData }) => boolean;
+  /**
+   * Whether a row with no children can be dropped onto to adopt the dragged item. Off by default:
+   * in a tree whose leaves are terminal (a navtree's documents) nesting into one is meaningless, so
+   * the hitbox drops the zone. Trees whose every node can take children — a task list, where any
+   * task can gain a sub-task — turn it on, and without it a peer offers no make-child zone and so
+   * no drop indicator either.
+   */
+  leavesAcceptChildren?: boolean;
   canSelect?: (params: { item: T; path: string[] }) => boolean;
   onOpenChange?: (params: { item: T; path: string[]; open: boolean }) => void;
   onSelect?: (params: { item: T; path: string[]; current: boolean; option: boolean; shift: boolean }) => void;
@@ -219,6 +227,7 @@ export const Tree = <T extends { id: string } = any>({
   renderHeading,
   blockInstruction,
   canDrop,
+  leavesAcceptChildren = false,
   canSelect,
   onOpenChange,
   onSelect,
@@ -336,6 +345,7 @@ export const Tree = <T extends { id: string } = any>({
       renderHeading,
       blockInstruction,
       canDrop,
+      leavesAcceptChildren,
       onOpenChange,
       onItemHover,
       selectNode: onSelectNode,
@@ -350,6 +360,7 @@ export const Tree = <T extends { id: string } = any>({
       renderHeading,
       blockInstruction,
       canDrop,
+      leavesAcceptChildren,
       onSelectNode,
       closingValues,
       onOpenChange,
@@ -528,6 +539,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
     renderHeading: RenderHeading,
     blockInstruction,
     canDrop,
+    leavesAcceptChildren,
     onOpenChange,
     onItemHover,
     selectNode,
@@ -594,7 +606,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
           indentPerLevel: DEFAULT_INDENTATION,
           currentLevel: level,
           mode,
-          block: branch ? [] : ['make-child'],
+          block: branch || leavesAcceptChildren ? [] : ['make-child'],
         }),
       canDrop: ({ source }) => {
         const permitted = canDrop ?? (() => true);

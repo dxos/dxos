@@ -214,6 +214,9 @@ export const TaskTreeContent = ({
       gridTemplateColumns={GRID_TEMPLATE}
       classNames='w-full min-w-0'
       draggable={!!onTaskMove}
+      // Any task can gain a sub-task, so a childless peer is still a drop target — without this the
+      // hitbox offers no make-child zone on one, and so no drop indicator either.
+      leavesAcceptChildren
       renderHeading={renderHeading}
       renderColumns={renderTrailing}
       onOpenChange={handleOpenChange}
