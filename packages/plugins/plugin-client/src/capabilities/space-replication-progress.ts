@@ -64,12 +64,12 @@ export default Capability.makeModule(
       }
       monitor.set(update.current);
       monitor.total(update.total);
-      monitor.note(update.note ?? '');
+      // monitor.note(update.note ?? '');
     };
 
     // A space that has not finished initializing throws from its `properties` getter, and the
-    // spaces subscription fires before initialization completes (startup, space creation) — so
-    // the name is read lazily per sync-state update, and only once the space is SPACE_READY.
+    // spaces subscription fires before initialization completes (startup, space creation) —
+    // so the name is read lazily per sync-state update, and only once the space is SPACE_READY.
     const getSpaceName = (space: Space): string | undefined =>
       space.state.get() === SpaceState.SPACE_READY ? space.properties.name : undefined;
 
@@ -117,7 +117,7 @@ export default Capability.makeModule(
 
     yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
-        for (const spaceId of [...subscriptions.keys()]) {
+        for (const spaceId of subscriptions.keys()) {
           unsubscribeSpace(spaceId);
         }
       }),
@@ -126,7 +126,7 @@ export default Capability.makeModule(
     // A departed space stops emitting sync state, so its monitor and fibers must be torn down here.
     const pruneSpaces = (spaces: readonly Space[]): void => {
       const live = new Set(spaces.map((space) => space.id));
-      for (const spaceId of [...subscriptions.keys()]) {
+      for (const spaceId of subscriptions.keys()) {
         if (!live.has(spaceId)) {
           unsubscribeSpace(spaceId);
         }

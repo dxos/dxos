@@ -48,11 +48,11 @@
     "@dxos/lit-ui": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-error-boundary": "workspace:*",
+    "@dxos/react-focus": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-input": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@fluentui/react-tabster": "catalog:",
     "@internationalized/date": "catalog:",
     "@radix-ui/primitive": "catalog:",
     "@radix-ui/react-alert-dialog": "catalog:",
@@ -86,7 +86,6 @@
     "dompurify": "catalog:",
     "error-stack-parser": "catalog:",
     "i18next": "catalog:",
-    "keyborg": "catalog:",
     "react-aria-components": "catalog:",
     "react-error-boundary": "catalog:",
     "react-i18next": "catalog:",
@@ -104,7 +103,6 @@
     "@types/react-dom": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "tabster": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {

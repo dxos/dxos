@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useFocusFinders } from '@fluentui/react-tabster';
 import { type Scope, createContextScope } from '@radix-ui/react-context';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
@@ -14,6 +13,7 @@ import React, {
   useEffect,
 } from 'react';
 
+import { KEYBOARD_MODALITY_ATTR, findFirstFocusable } from '@dxos/react-focus';
 import { type ThemedClassName, useForwardedRef } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
@@ -94,9 +94,8 @@ const ViewportView = forwardRef<HTMLDivElement, ViewportScopedProps<ViewportView
     const { activeView, focusManaged }: ViewportContextValue = useViewportContext(VIEW_NAME, __viewportScope);
     const isActive = id === activeView;
     const ref = useForwardedRef(forwardedRef);
-    const { findFirstFocusable } = useFocusFinders();
     useEffect(() => {
-      if (!focusManaged && isActive && document.body.hasAttribute('data-w-keyboard') && ref.current) {
+      if (!focusManaged && isActive && document.body.hasAttribute(KEYBOARD_MODALITY_ATTR) && ref.current) {
         findFirstFocusable(ref.current)?.focus();
       }
     }, [focusManaged, ref.current, isActive]);

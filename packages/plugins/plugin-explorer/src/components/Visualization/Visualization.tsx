@@ -57,7 +57,7 @@ const VisualizationRoot = slottable<
   HTMLDivElement,
   { model: SpaceGraphModel; variant: VisualizationVariantId; focus?: string; onSurfaceClick?: () => void }
 >(({ children, asChild, model, variant, focus, onSurfaceClick, ...props }, forwardedRef) => {
-  const { className, ...rest } = composableProps(props, { classNames: 'dx-expander relative' });
+  const { className, ...rest } = composableProps(props, { classNames: 'dx-expand relative' });
   const Comp = asChild ? Slot : 'div';
   return (
     <VisualizationProvider model={model} variant={getVariant(variant)} focus={focus}>

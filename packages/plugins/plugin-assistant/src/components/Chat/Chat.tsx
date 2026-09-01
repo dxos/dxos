@@ -319,7 +319,7 @@ type ChatContentProps = {};
 
 const ChatContent = composable<HTMLDivElement, ChatContentProps>(({ children, ...props }, forwardedRef) => {
   return (
-    <div {...composableProps(props, { classNames: 'dx-expander flex flex-col' })} ref={forwardedRef}>
+    <div {...composableProps(props, { classNames: 'dx-expand flex flex-col' })} ref={forwardedRef}>
       {children}
     </div>
   );
@@ -490,7 +490,7 @@ const ChatThread = ({ classNames, viewType, tailLines, onViewUsage }: ChatThread
   const handleEvent = useCallback((ev: ChatThreadEvent) => event.emit(ev), [event]);
 
   if (!identity) {
-    return <div className='dx-expander' />;
+    return <div className='dx-expand' />;
   }
 
   return (
@@ -626,6 +626,7 @@ const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
     },
     [chat],
   );
+
   // Rendered even when empty, so `TaskList.Edit` can always add the first task.
   if (!chat) {
     return null;
@@ -633,11 +634,11 @@ const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
 
   return (
     <TaskList.Root tasks={tasks} showGroupLabels={false} showOrdinals onTaskCreate={handleCreate}>
-      <div {...composableProps(props, { classNames: 'flex flex-col min-h-0' })} ref={forwardedRef}>
-        <TaskList.Viewport classNames='min-h-0'>
+      <div {...composableProps(props, { classNames: 'flex flex-col dx-grow' })} ref={forwardedRef}>
+        <TaskList.Viewport>
           <TaskList.Content />
         </TaskList.Viewport>
-        <TaskList.Edit classNames='shrink-0' />
+        <TaskList.Edit grid classNames='shrink-0' />
       </div>
     </TaskList.Root>
   );

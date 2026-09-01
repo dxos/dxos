@@ -457,6 +457,21 @@ export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Error.EntityNotFoundErro
 );
 
 /**
+ * Synchronous working-set read (see {@link Ref.peek}): the materialized target, or `undefined` —
+ * never throws and never triggers loading. Compose with {@link load} for a sync-when-materialized
+ * read with an async fallback, keeping the effect runnable under `Effect.runSync` when every ref
+ * is materialized (e.g. a mutation in a gesture frame):
+ *
+ * ```ts
+ * const task = Database.peek(ref) ?? (yield* Database.load(ref));
+ * ```
+ *
+ * Peek skips {@link load}'s settling — a just-added object can resolve here before it has its own
+ * document — so callers that branch (or otherwise need a settled document) must load.
+ */
+export const peek = <T>(ref: Ref<T>): T | undefined => ref.peek();
+
+/**
  * Adds an object or relation to the database.
  * @see {@link Database.add}
  */

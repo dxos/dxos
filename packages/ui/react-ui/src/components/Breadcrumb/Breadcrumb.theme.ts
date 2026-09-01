@@ -11,7 +11,7 @@ const root: ComponentFunction<breadcrumbStyleProps> = (_props, ...etc) =>
   mx('flex items-center grow overflow-hidden', ...etc);
 
 const list: ComponentFunction<breadcrumbStyleProps> = (_props, ...etc) =>
-  mx('flex items-center min-w-0 grow overflow-x-auto scrollbar-none', ...etc);
+  mx('flex items-center grow overflow-x-auto scrollbar-none', ...etc);
 
 const listItem: ComponentFunction<breadcrumbStyleProps> = (_props, ...etc) => mx('flex items-center shrink-0', ...etc);
 

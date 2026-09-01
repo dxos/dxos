@@ -92,8 +92,8 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
-    "@dxos/keyboard": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
+    "@dxos/react-focus": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"

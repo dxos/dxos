@@ -54,6 +54,24 @@ REPORT.md, "In CI". What remains is operational hardening, not the rollout itsel
 
 ## Phase 2: Backlog
 
+- [x] **Resolve the affected scope once per job** — `.depot/actions/affected` +
+      its `resolve-affected.mjs` export `MOON_AFFECTED`/`MOON_BASE` from the trigger's own base
+      (`pull_request.base.sha`, `merge_group.base_sha`, else the merge-base with `origin/main`), so
+      every moon step is unconditional. Collapsed 11 branch-gated step variants to 4, retired
+      `.depot/actions/branch`, and made the decision reproducible off CI —
+      the resolver's `--event <name>`, and `depot ci run` with no event at all. Falls back to a full
+      run when a base does not resolve, because an empty affected set is a green no-op.
+- [x] **Run independent steps concurrently** (Depot CI `parallel:`) — `check`'s nine no-build gates,
+      `check`'s slow checks (knip against `check-plugin-set` + `docs:bundle` in one moon invocation),
+      and the per-cell preparation in `test` and `e2e`. Stage 3's `fail-fast: false` replaced the
+      `continue-on-error`-plus-gate-step pair. Not applied to `memory` (its three steps must not
+      overlap) or to the peer-dependency check (its lockfile `trap` does not survive cancellation).
+- [x] **Un-break `check-cache-wiring.mjs`** — it looked for `./.github/actions/setup` under
+      `.github/workflows`; the Depot migration moved every call site, so it passed by matching
+      nothing. Now scans both trees, flattens `parallel:` groups, and fails on zero call sites.
+- [ ] **Measure the two changes above.** The step collapse and the parallel blocks are argued from
+      recorded per-step costs, not from a head-to-head run. Worth one dispatch on a warm cache.
+
 - [x] **Check that every moon-running job has a cache credential** —
       `scripts/check-cache-wiring.mjs`, run in `check`. `model-fixture.yml` landed from main after
       the call sites were wired and had neither binding nor opt-out, which the setup action caught

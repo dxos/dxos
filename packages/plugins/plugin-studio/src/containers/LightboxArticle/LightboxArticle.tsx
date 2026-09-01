@@ -95,7 +95,7 @@ export const LightboxArticle = ({ role, subject: lightbox, attendableId }: Light
           </Toolbar.Root>
         </Panel.Toolbar>
         <Panel.Content asChild>
-          <Board.Container classNames='absolute inset-0'>
+          <Board.Container classNames='dx-fullscreen'>
             <Board.Viewport>
               <Board.Backdrop />
               <Board.Content>

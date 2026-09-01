@@ -4,6 +4,8 @@
 
 import type { Manifold } from 'manifold-3d';
 
+import { downloadBlob } from '@dxos/util';
+
 /**
  * Exports a Manifold solid as a binary STL file.
  *
@@ -102,13 +104,9 @@ export const exportSTL = (solid: Manifold): ArrayBuffer => {
   return buffer;
 };
 
-/** Triggers a browser download of an ArrayBuffer as a file. */
-export const downloadFile = (buffer: ArrayBuffer, filename: string, mimeType = 'application/octet-stream'): void => {
-  const blob = new Blob([buffer], { type: mimeType });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  link.click();
-  URL.revokeObjectURL(url);
-};
+/** Saves an ArrayBuffer to disk, resolving false if the user cancelled the native dialog. */
+export const downloadFile = (
+  buffer: ArrayBuffer,
+  filename: string,
+  mimeType = 'application/octet-stream',
+): Promise<boolean> => downloadBlob(new Blob([buffer], { type: mimeType }), filename);
