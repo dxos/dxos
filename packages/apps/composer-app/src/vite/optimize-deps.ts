@@ -149,7 +149,6 @@ export const optimizeDepsInclude: string[] = [
   '@dxos/plugin-conductor > @dxos/react-ui-canvas-compute > @dxos/react-ui-experimental > flubber',
   '@dxos/plugin-conductor > @dxos/react-ui-canvas-editor > @antv/graphlib',
   '@dxos/plugin-conductor > @dxos/react-ui-canvas-editor > @antv/layout',
-  '@dxos/plugin-conductor > @dxos/react-ui-canvas-editor > react-hotkeys-hook',
   '@dxos/plugin-debug > @dxos/random > @ngneat/falso',
   '@dxos/plugin-deck > @dxos/react-ui-mosaic > @tanstack/react-virtual',
   '@dxos/plugin-deck > @tauri-apps/plugin-deep-link',

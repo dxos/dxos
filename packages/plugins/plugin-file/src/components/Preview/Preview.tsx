@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Keyboard, nestKeyboardContext } from '@dxos/keyboard';
+import { useHotkeys } from '@dxos/react-focus';
 import { Icon, Input, MediaPlayer, Toolbar, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 
@@ -72,38 +72,25 @@ const PreviewToolbar = composable<HTMLDivElement>(({ children, ...props }, forwa
   const searchRef = useRef<HTMLInputElement>(null);
   const { hasAttention } = useAttention(attendableId);
 
-  // Bound in the attended article's own keyboard context rather than globally, so the shortcut
-  // belongs to whichever plank the reader is in — the same mechanism `useArticleKeyboardNavigation`
-  // uses. Without an attendable id there is no context to scope to, so nothing is bound.
-  useEffect(() => {
-    if (!attendableId || !hasAttention || !paged) {
-      return;
-    }
-
-    const contextPath = nestKeyboardContext(attendableId);
-    const context = Keyboard.singleton.getContext(contextPath);
-    const previous = Keyboard.singleton.getCurrentContext();
-    Keyboard.singleton.setCurrentContext(contextPath);
-
-    context.bind({
-      shortcut: 'meta+f',
-      // Not `disableInput`: the point is to reach the field from anywhere in the article, including
-      // when focus is already inside it, where selecting the text is the useful outcome.
-      handler: () => {
-        searchRef.current?.focus();
-        searchRef.current?.select();
-        return true;
+  // Gated on the article having attention rather than bound globally, so the shortcut belongs to
+  // whichever plank the reader is in — the same mechanism `useArticleKeyboardNavigation` uses.
+  useHotkeys({
+    id: `${attendableId}:search`,
+    commands: [
+      {
+        hotkey: 'meta+f',
+        label: t('search-shortcut.label'),
+        enabled: () => !!attendableId && hasAttention && !!paged,
+        // Reachable from anywhere in the article, including when focus is already in the field,
+        // where selecting the text is the useful outcome.
+        options: { enableOnFormTags: true, enableOnContentEditable: true },
+        action: () => {
+          searchRef.current?.focus();
+          searchRef.current?.select();
+        },
       },
-      data: t('search-shortcut.label'),
-    });
-
-    return () => {
-      context.unbind('meta+f');
-      if (Keyboard.singleton.getCurrentContext() === contextPath) {
-        Keyboard.singleton.setCurrentContext(previous);
-      }
-    };
-  }, [attendableId, hasAttention, paged, t]);
+    ],
+  });
 
   const handleSearch = useCallback(
     (next: string) => {

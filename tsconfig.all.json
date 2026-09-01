@@ -271,9 +271,6 @@
       "path": "packages/common/invariant/tsconfig.json"
     },
     {
-      "path": "packages/common/keyboard/tsconfig.json"
-    },
-    {
       "path": "packages/core/halo/keyring/tsconfig.json"
     },
     {

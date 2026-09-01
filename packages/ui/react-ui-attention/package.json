@@ -36,8 +36,8 @@
   ],
   "dependencies": {
     "@dxos/invariant": "workspace:*",
-    "@dxos/keyboard": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/react-focus": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@effect/atom-react": "catalog:",

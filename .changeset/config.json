@@ -97,7 +97,6 @@
       "@dxos/introspect-mcp",
       "@dxos/introspect-tools",
       "@dxos/invariant",
-      "@dxos/keyboard",
       "@dxos/keyring",
       "@dxos/keys",
       "@dxos/link",

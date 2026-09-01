@@ -13,6 +13,7 @@ import {
   nestHotkeyScope,
   scopeChain,
   setHotkeyScope,
+  useActiveHotkeys,
   useHotkeys,
 } from './hotkeys';
 
@@ -96,6 +97,34 @@ describe('hotkey scopes', () => {
     press('x');
     press('y');
     expect(fired).toEqual(['two']);
+  });
+
+  test('a registration carries the normalized hotkey and its label', () => {
+    let seen: any[] = [];
+    const Probe = () => {
+      seen = useActiveHotkeys();
+      return null;
+    };
+    const store = hotkeyStore;
+    render(
+      <>
+        <Bindings
+          store={store}
+          commands={[
+            { hotkey: 'meta+k', scopes: [GRAPH_ROOT_ID], label: 'Search', action: () => {} },
+            { hotkey: 'q', scopes: ['root/elsewhere'], label: 'Elsewhere', action: () => {} },
+          ]}
+        />
+        <Probe />
+      </>,
+    );
+
+    setHotkeyScope(GRAPH_ROOT_ID, store);
+    render(<Probe />);
+    // eslint-disable-next-line no-console
+    console.log('REGISTRATION:', JSON.stringify(seen.map(({ hotkey, label, scopes }) => ({ hotkey, label, scopes }))));
+    expect(seen.some((command) => command.label === 'Search')).toBe(true);
+    expect(seen.some((command) => command.label === 'Elsewhere')).toBe(false);
   });
 
   test('the same hotkey bound at two depths fires both, unlike the path-scan it replaces', () => {

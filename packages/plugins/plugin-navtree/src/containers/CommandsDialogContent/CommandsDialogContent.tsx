@@ -9,10 +9,9 @@ import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { Keyboard } from '@dxos/keyboard';
 import { useActions } from '@dxos/plugin-graph/hooks';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { keySymbols } from '@dxos/react-focus';
+import { getHotkeyScope, keySymbols } from '@dxos/react-focus';
 import { Button, Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { osTranslations } from '@dxos/ui-theme';
@@ -37,7 +36,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
     // TODO(burdon): Factor out commonality with shortcut dialog.
     const allActions = useMemo(() => {
       // TODO(burdon): Get from navtree (not keyboard).
-      const current = Keyboard.singleton.getCurrentContext();
+      const current = getHotkeyScope() ?? '';
       const actionMap = new Set<string>();
       const actions: AppGraphNode.ActionLike[] = [];
       AppGraph.traverse(graph, {

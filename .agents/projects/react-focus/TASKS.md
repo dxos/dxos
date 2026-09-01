@@ -88,11 +88,33 @@ enableOnContentEditable: false, capture: true }`, so a command does **not** fire
     registered commands with `label` / `description` / `category` / `keywords` — which is the
     shortcuts cheatsheet `@dxos/keyboard`'s `data` field was hand-rolling.
 
-- [ ] **Replace `@dxos/keyboard` and `react-hotkeys-hook`** (15 and 3 files respectively) with the
-      Ark-backed layer. Three keyboard systems become one, with a rule a reader can apply: DOM
-      traversal inside a widget is a focus group; a named command is a hotkey.
-- [ ] **Move `useArticleKeyboardNavigation`** onto it, taking `enabled: hasAttention` rather than
-      reaching into the attention context — which is what lets it leave the attention package.
+- [x] **Replaced `@dxos/keyboard` and `react-hotkeys-hook`.** `packages/common/keyboard` is deleted;
+      three keyboard systems are one. The rule a reader can now apply: DOM traversal inside a widget
+      is a focus group; a named command is a hotkey.
+
+  - **Bindings** still come from the app-graph walk in `plugin-navtree`, but register on the store
+    scoped by graph path. The walk is debounced and re-runs on every graph change, and the store
+    _warns_ on a duplicate id rather than replacing, so the sync now unregisters before registering
+    and retires ids the graph has dropped.
+  - **Activation** is `plugin-attention` calling `setHotkeyScope(nestHotkeyScope(id))`.
+  - **Display** (`ShortcutsList`, `ShortcutsHints`) reads `useActiveHotkeys()` — registrations
+    filtered to active scopes, since the registry holds every binding in the app rather than the
+    matching-context subset `getBindings()` returned. A command with no label falls back to its
+    shortcut instead of rendering blank.
+  - **The command palette**'s "current context" is `getHotkeyScope()`, the deepest active scope.
+  - **`keySymbols`** moved to `react-focus` unchanged — it is a pure platform-aware formatter, and
+    keeping `@dxos/keyboard` alive for it would have defeated the exercise.
+  - **The canvas editor** drops `HotkeysProvider` + `enableScope`/`disableScope` for
+    `useHotkeyScope(id, hasAttention)`, and its eleven `useHotkeys` calls become one command array.
+
+- [x] **Moved `useArticleKeyboardNavigation`** onto it with `enabled: () => hasAttention`.
+
+**A dependency trap this sprang, worth knowing before adding Ark anywhere else.** `@ark-ui/react`
+requires `@internationalized/date@3.12.3` while the catalog pinned `^3.12.1` for `react-aria`. Two
+copies means two nominal type identities, and `react-ui`'s `Calendar` failed with `Property
+'#private' in type 'CalendarDate' refers to a different member` the moment Ark entered its type
+graph via `react-focus`. The catalog is now `^3.12.3`, which dedupes them. The symptom points at
+`Calendar`, which has nothing to do with it — expect that misdirection if Ark's pin moves again.
 
 ## Phase 4: Fold attention in — optional, pure churn
 

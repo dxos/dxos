@@ -45,8 +45,19 @@ export const destroyHotkeys = (): void => {
 export const useHotkeys = ({ store = hotkeyStore, ...props }: UseHotkeysProps): void =>
   useArkHotkeys({ store, ...props });
 
-/** Every registered command, for a shortcuts list. */
+/** Every registered command, whether or not its scope is active. */
 export const useHotkeyRegistrations = (store: HotkeyStore = hotkeyStore) => useArkHotkeyRegistrations({ store });
+
+/**
+ * The commands that would fire right now: unscoped ones, plus those whose scope is active. This is
+ * what a shortcuts list wants — the registry holds every binding in the app, most of them for
+ * surfaces the user is not looking at.
+ */
+export const useActiveHotkeys = (store: HotkeyStore = hotkeyStore) => {
+  const commands = useArkHotkeyRegistrations({ store });
+  const active = new Set(store.getActiveScopes());
+  return commands.filter(({ scopes }) => !scopes?.length || scopes.some((scope: string) => active.has(scope)));
+};
 
 /** Graph root segment; matches `@dxos/plugin-graph` `Node.RootId`. */
 export const GRAPH_ROOT_ID = 'root';
@@ -93,6 +104,16 @@ export const setHotkeyScope = (path?: string, store: HotkeyStore = hotkeyStore):
     store.addScope(scope);
   }
 };
+
+/**
+ * The most specific active scope — the leaf `setHotkeyScope` was last called with, since it
+ * activates every ancestor alongside it. `undefined` when only the store's wildcard is active.
+ */
+export const getHotkeyScope = (store: HotkeyStore = hotkeyStore): string | undefined =>
+  store
+    .getActiveScopes()
+    .filter((scope: string) => scope !== '*')
+    .sort((a: string, b: string) => b.length - a.length)[0];
 
 /** Activate a scope path for as long as the component is mounted and `enabled`. */
 export const useHotkeyScope = (path?: string, enabled = true, store: HotkeyStore = hotkeyStore): void => {

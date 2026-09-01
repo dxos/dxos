@@ -4,8 +4,7 @@
 
 import React, { Fragment } from 'react';
 
-import { Keyboard } from '@dxos/keyboard';
-import { keySymbols } from '@dxos/react-focus';
+import { keySymbols, useActiveHotkeys } from '@dxos/react-focus';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
@@ -13,20 +12,20 @@ import { meta } from '#meta';
 
 export const ShortcutsList = () => {
   const { t } = useTranslation(meta.profile.key);
-  const bindings = Keyboard.singleton.getBindings();
-
   // TODO(burdon): Get shortcuts from TextEditor.
-  bindings.sort((a, b) => {
-    return toLocalizedString(a.data, t)?.toLowerCase().localeCompare(toLocalizedString(b.data, t)?.toLowerCase());
-  });
+  // A command registered without a label is shown by its shortcut rather than dropped.
+  const label = (binding: { label?: string; hotkey: string }) => toLocalizedString(binding.label ?? binding.hotkey, t);
+  const bindings = [...useActiveHotkeys()].sort((a, b) =>
+    label(a)?.toLowerCase().localeCompare(label(b)?.toLowerCase()),
+  );
 
   return (
     <dl className={mx('w-fit grid grid-cols-[min-content_minmax(12rem,1fr)] gap-2 my-3 text-subdued select-none')}>
       {bindings.map((binding, i) => (
         <Fragment key={i}>
-          <Key binding={binding.shortcut} />
-          <span role='definition' className='ms-4' aria-labelledby={binding.shortcut}>
-            {toLocalizedString(binding.data, t)}
+          <Key binding={binding.hotkey} />
+          <span role='definition' className='ms-4' aria-labelledby={binding.hotkey}>
+            {label(binding)}
           </span>
         </Fragment>
       ))}
