@@ -109,9 +109,16 @@ A group only gets sentinels when something must be intercepted: a limited groupp
 mover's memorized entry point. `unlimited` grouppers and `tabbable` movers get none — they are pure
 markers.
 
-**Caveat.** `<i>` is not a valid child of `<ul>`, and a listbox gets sentinels. Browsers tolerate it,
-`aria-hidden` keeps it out of the accessibility tree and `position: fixed` keeps it out of layout,
-but it is a deviation from the content model and worth knowing before debugging a stray child.
+**Two caveats, and the second has already bitten.** `<i>` is not a valid child of `<ul>`, and a
+listbox gets sentinels — browsers tolerate it, `aria-hidden` keeps it out of the accessibility tree
+and `position: fixed` keeps it out of layout, but it deviates from the content model.
+
+More consequentially, **a group container's first and last element children are no longer what the
+author wrote.** Layout is safe, because `position: fixed` means a sentinel is never a flex or grid
+item — but `firstElementChild`, `children[n]`, `:first-child` and `:nth-child` all see it.
+`TaskList.stories.tsx` asserted icon-column alignment via `row.firstElementChild` and started
+measuring the sentinel instead: a 1px box at viewport x≈0.5 against a real cell at ≈292, failing by
+291.5px. Query a group's children with `:scope > *:not([data-focus-sentinel])`.
 
 ## 5. Movers
 
