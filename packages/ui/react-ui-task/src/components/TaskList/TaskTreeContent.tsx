@@ -2,15 +2,24 @@
 // Copyright 2026 DXOS.org
 //
 
+import { extractInstruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
+import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 
 import { Icon, IconButton, Tag, useTranslation } from '@dxos/react-ui';
-import { type ColumnRenderer, type HeadingRenderer, Tree } from '@dxos/react-ui-list';
+import { type ColumnRenderer, type HeadingRenderer, Tree, isTreeData } from '@dxos/react-ui-list';
 import { Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
-import { type TaskPlacement, resolveIndent, resolveNudge, resolveOutdent } from './hierarchy';
+import {
+  type TaskDropIntent,
+  type TaskPlacement,
+  resolveIndent,
+  resolveNudge,
+  resolveOutdent,
+  resolveTaskPlacement,
+} from './hierarchy';
 import { TaskDescription } from './TaskDescription';
 import { TASK_TREE_ROOT_ID, type TaskNode, buildTaskForest, buildTaskPaths, createTaskTreeModel } from './tree-model';
 
@@ -154,12 +163,55 @@ export const TaskTreeContent = ({
     [onTaskMove, tasks],
   );
 
+  // The drop half of the gesture. `Tree` publishes each row as a pragmatic-dnd draggable carrying
+  // `TreeData`; the placement is resolved here because only the list knows the task set the move is
+  // relative to. Same shape as the navtree's monitor, which is the established consumer of this
+  // contract.
+  useEffect(() => {
+    if (!onTaskMove) {
+      return;
+    }
+
+    return monitorForElements({
+      canMonitor: ({ source }) => isTreeData(source.data),
+      onDrop: ({ location, source }) => {
+        const target = location.current.dropTargets[0];
+        if (!target) {
+          return;
+        }
+
+        const instruction = extractInstruction(target.data);
+        if (!instruction || instruction.type === 'instruction-blocked') {
+          return;
+        }
+
+        // The synthetic root has no task, so a drop onto it (or from it) is not a move.
+        const sourceTask = (source.data.item as TaskNode | undefined)?.task;
+        const targetTask = (target.data.item as TaskNode | undefined)?.task;
+        if (!sourceTask || !targetTask) {
+          return;
+        }
+
+        const placement = resolveTaskPlacement({
+          tasks,
+          source: sourceTask,
+          target: targetTask,
+          intent: instruction.type as TaskDropIntent,
+        });
+        if (placement) {
+          onTaskMove(sourceTask, placement);
+        }
+      },
+    });
+  }, [tasks, onTaskMove]);
+
   return (
     <Tree<TaskNode>
       id={TASK_TREE_ROOT_ID}
       model={model}
       gridTemplateColumns={GRID_TEMPLATE}
       classNames='w-full min-w-0'
+      draggable={!!onTaskMove}
       renderHeading={renderHeading}
       renderColumns={renderTrailing}
       onOpenChange={handleOpenChange}

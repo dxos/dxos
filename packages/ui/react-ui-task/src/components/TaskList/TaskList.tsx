@@ -940,7 +940,15 @@ const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
   const style = PRIORITY_ICONS[priority];
 
   if (!onTaskUpdate) {
-    return style ? <Icon icon={style.icon} size={4} classNames={mx('shrink-0', style.classNames)} /> : null;
+    // Falls back to the dot rather than rendering nothing: a readonly row still says "no priority"
+    // in the same column its neighbours use, so the list reads as one column and not a ragged one.
+    return (
+      <Icon
+        icon={style?.icon ?? NO_PRIORITY_ICON}
+        size={4}
+        classNames={mx('shrink-0', style?.classNames ?? 'text-subdued')}
+      />
+    );
   }
 
   return (
