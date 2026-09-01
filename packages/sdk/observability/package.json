@@ -90,6 +90,7 @@
     "zone.js": "catalog:"
   },
   "devDependencies": {
+    "@dxos/ai": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/network-manager": "workspace:*",
