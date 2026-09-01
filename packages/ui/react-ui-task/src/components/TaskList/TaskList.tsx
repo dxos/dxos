@@ -42,7 +42,14 @@ import {
 } from '@dxos/react-ui';
 import { Listbox, TreeDropIndicator, TreeItemToggle, paddingIndentation, useListDisclosure } from '@dxos/react-ui-list';
 import { MarkdownEditable, type MarkdownEditableController, MarkdownView } from '@dxos/react-ui-markdown';
-import { Menu, type MenuAction, type MenuItem, executeMenuAction, fallbackIcon } from '@dxos/react-ui-menu';
+import {
+  Menu,
+  type MenuAction,
+  type MenuItem,
+  createMenuAction,
+  executeMenuAction,
+  fallbackIcon,
+} from '@dxos/react-ui-menu';
 import { type Actor, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
@@ -872,7 +879,7 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
         )}
         <div className='h-8 flex justify-start items-center gap-1'>
           {blocked && <Tag hue='indigo'>{t('task-blocked.label')}</Tag>}
-          <TaskPriorityIcon priority={current.priority} />
+          <TaskPriorityIcon task={task} />
           <TaskListItemArtifacts task={task} />
         </div>
         <TaskListItemActions task={task} />
@@ -910,20 +917,52 @@ const PRIORITY_ICONS: Record<string, { icon: string; classNames: string }> = {
   urgent: { icon: 'ph--exclamation-mark--fill', classNames: 'text-red-500' },
 };
 
-const TaskPriorityIcon = ({ priority }: { priority?: Task.Priority | null }) => {
+/** Offered in ascending order, with `none` first so clearing is the reachable default. */
+const PRIORITIES: Task.Priority[] = ['none', 'low', 'medium', 'high', 'urgent'];
+
+const NO_PRIORITY_ICON = 'ph--minus--regular';
+
+/**
+ * Priority as a signal-strength glyph rather than a word: the four levels are ordinal, so a ramp
+ * reads at a glance where four differently-worded tags do not. `urgent` breaks the ramp deliberately
+ * — it is a different kind of statement from "how much", and a filled mark carries that.
+ *
+ * The glyph is also the control: it opens a menu to set the level. A task with no priority shows
+ * nothing until the row is hovered or focused, so an unset list stays quiet but is still settable.
+ */
+const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
   const { t } = useTranslation(translationKey);
-  const style = priority ? PRIORITY_ICONS[priority] : undefined;
-  if (!style) {
-    return null;
+  const { onTaskUpdate } = useTaskListContext('TaskList.PriorityIcon');
+  const priority = task.priority ?? 'none';
+  const style = PRIORITY_ICONS[priority];
+
+  if (!onTaskUpdate) {
+    return style ? <Icon icon={style.icon} size={4} classNames={mx('shrink-0', style.classNames)} /> : null;
   }
 
   return (
-    <Icon
-      icon={style.icon}
-      size={4}
-      classNames={mx('shrink-0', style.classNames)}
-      aria-label={t(`priority-${priority}.label`, { defaultValue: priority as string })}
-    />
+    <Menu.Root>
+      <Menu.Trigger asChild>
+        <CompactIconButton
+          variant='ghost'
+          icon={style?.icon ?? NO_PRIORITY_ICON}
+          label={t('task-priority.label')}
+          data-testid='taskList.item.priority'
+          classNames={mx(style?.classNames, !style && ROW_ACTION_CLASSNAMES)}
+          // The row is the selection target; opening the menu must not also select it.
+          onClick={(event) => event.stopPropagation()}
+        />
+      </Menu.Trigger>
+      <Menu.Content
+        items={PRIORITIES.map((value) =>
+          createMenuAction(`priority-${value}`, () => onTaskUpdate(task, { priority: value }), {
+            label: t(`priority-${value}.label`),
+            icon: PRIORITY_ICONS[value]?.icon ?? NO_PRIORITY_ICON,
+            checked: priority === value,
+          }),
+        )}
+      />
+    </Menu.Root>
   );
 };
 
@@ -938,7 +977,7 @@ const TaskTreeTrailing = ({ item }: { item: TaskNode }) => {
   return (
     <>
       <div className='flex h-8 items-center justify-start gap-1'>
-        <TaskPriorityIcon priority={task.priority} />
+        <TaskPriorityIcon task={task} />
         <TaskListItemArtifacts task={task} />
         {task.assignee && <TaskListAssignee assignee={task.assignee} />}
       </div>
