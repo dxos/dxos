@@ -10,10 +10,10 @@ import * as Telemetry from 'effect/unstable/ai/Telemetry';
 import { AiTelemetry } from '@dxos/ai';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { makeTracer } from '@dxos/effect';
-import { log } from '@dxos/log';
+import { makeGlobalTracer } from '@dxos/effect';
 import * as AiObservability from '@dxos/observability/AiObservability';
 import type * as Observability from '@dxos/observability/Observability';
+import * as ObservabilityExtension from '@dxos/observability/ObservabilityExtension';
 
 import { ObservabilityCapabilities } from '#types';
 
@@ -52,9 +52,18 @@ const contentCaptureAllowed = (_spaceId: string): boolean => {
 };
 
 /**
- * Installs the telemetry backend for the spans the AI stack already emits. The model call sites
- * know nothing about this: they annotate spans unconditionally, and a `Tracer` reaches them only
- * because every fiber on the process-manager runtime inherits what is provided here.
+ * Installs the process manager's tracing backend, and the AI capture that rides on it.
+ *
+ * Two things, deliberately together. The `Tracer` is the baseline: Effect's default is a no-op, so
+ * every `withSpan` in the app was created and discarded, and one tracer on the process-manager
+ * runtime makes all of them real. It is built over the OTel API's global provider, which is a proxy
+ * — spans no-op until observability initialization registers the real provider behind it, and start
+ * flowing from then on — so this can be contributed at Startup without waiting for that.
+ *
+ * AI capture is then only what the baseline does not already give: a processor that turns model-call
+ * spans into `Generation` records, and effect's `CurrentSpanTransformer`, which is the only way to
+ * reach prompt and response content since the GenAI conventions deliberately exclude it. It needs no
+ * provider, no sampler and no tracer of its own — those all belong to the baseline.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -66,10 +75,8 @@ export default Capability.makeModule(
     const observability = (): Observability.Observability | undefined =>
       capabilities.getAll(ObservabilityCapabilities.Observability)[0];
 
-    // The provider's chunk is fetched on demand, and a chunk fetch fails routinely after a redeploy.
-    // Telemetry setup degrades to no capture rather than failing a Startup module.
-    const provider = yield* Effect.tryPromise(() =>
-      AiObservability.createAiTracerProvider({
+    const detach = ObservabilityExtension.Otel.addSpanProcessor(
+      new AiObservability.AiSpanProcessor({
         captureGeneration: (generation) => observability()?.generations.captureGeneration(generation),
         // Read per span rather than captured: the user can toggle telemetry mid-session, and
         // leaving the decision to the backend client would gate on its own opt-out flag, which is a
@@ -77,18 +84,11 @@ export default Capability.makeModule(
         captureEnabled: () => observability()?.enabled ?? false,
         allowContent: contentCaptureAllowed,
       }),
-    ).pipe(Effect.catch((err) => Effect.sync(() => log.catch(err))));
+    );
+    yield* Effect.addFinalizer(() => Effect.sync(detach));
 
-    if (!provider) {
-      return [];
-    }
-
-    // Paired deliberately: the transformer serializes every prompt and response, so it is installed
-    // with the exporter that consumes its output rather than by the harness that would pay for it
-    // whether or not anything reads it. It also carries the prompt-cache counts, which the GenAI
-    // conventions have no attribute for.
     const layer = Layer.mergeAll(
-      Layer.succeed(Tracer.Tracer, makeTracer(provider, '@dxos/plugin-observability/ai')),
+      Layer.succeed(Tracer.Tracer, makeGlobalTracer('@dxos/plugin-observability')),
       Layer.succeed(Telemetry.CurrentSpanTransformer, AiTelemetry.makeSpanTransformer()),
     );
 

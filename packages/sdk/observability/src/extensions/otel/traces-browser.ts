@@ -23,6 +23,7 @@ import { type RemoteSpan, type StartSpanOptions, TRACE_ALL_KEY, TRACE_PROCESSOR 
 
 import { type OtelOptions, signalUrl } from './otel';
 import * as OtelSpanSink from './OtelSpanSink';
+import * as SpanFanout from './span-fanout';
 import { TagInjectorSpanProcessor } from './span-processors';
 import * as TailSampling from './tail-sampling';
 
@@ -54,6 +55,8 @@ export class OtelTraces {
       sampler: new AlwaysOnSampler(),
       spanProcessors: [
         new TagInjectorSpanProcessor(this.options.getTags),
+        // Lets a consumer observe ended spans without standing up a provider of its own.
+        new SpanFanout.FanoutSpanProcessor(),
         ...(options.spanSink
           ? // Everything crosses to the worker, which owns the keep/drop decision.
             [new OtelSpanSink.PortSpanProcessor(options.spanSink.post)]

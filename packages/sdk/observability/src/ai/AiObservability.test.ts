@@ -6,17 +6,24 @@ import { SpanStatusCode } from '@opentelemetry/api';
 import { describe, test } from 'vitest';
 
 import type * as ObservabilityExtension from '../observability-extension';
-import { createAiTracerProvider } from './AiObservability';
+import { AiSpanProcessor } from './AiObservability';
 
 const setup = async ({
   allowContent = () => true,
   captureEnabled = () => true,
 }: { allowContent?: (spaceId: string) => boolean; captureEnabled?: () => boolean } = {}) => {
   const generations: ObservabilityExtension.Generation[] = [];
-  const provider = await createAiTracerProvider({
-    captureGeneration: (generation) => generations.push(generation),
-    captureEnabled,
-    allowContent,
+  const { BasicTracerProvider } = await import('@opentelemetry/sdk-trace-base');
+  // Stands in for the realm's provider, which in the app carries this processor alongside the
+  // exporter's.
+  const provider = new BasicTracerProvider({
+    spanProcessors: [
+      new AiSpanProcessor({
+        captureGeneration: (generation) => generations.push(generation),
+        captureEnabled,
+        allowContent,
+      }),
+    ],
   });
   return { generations, tracer: provider.getTracer('test') };
 };
@@ -191,12 +198,17 @@ describe('AiSpanProcessor', () => {
   });
 
   test('survives a sink that throws', async ({ expect }) => {
-    const provider = await createAiTracerProvider({
-      captureGeneration: () => {
-        throw new Error('sink exploded');
-      },
-      captureEnabled: () => true,
-      allowContent: () => true,
+    const { BasicTracerProvider } = await import('@opentelemetry/sdk-trace-base');
+    const provider = new BasicTracerProvider({
+      spanProcessors: [
+        new AiSpanProcessor({
+          captureGeneration: () => {
+            throw new Error('sink exploded');
+          },
+          captureEnabled: () => true,
+          allowContent: () => true,
+        }),
+      ],
     });
     const span = provider.getTracer('test').startSpan('LanguageModel.generateText', {
       attributes: { 'gen_ai.system': 'anthropic' },

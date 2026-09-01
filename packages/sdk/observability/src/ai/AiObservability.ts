@@ -3,7 +3,7 @@
 //
 
 import { type Context, SpanStatusCode } from '@opentelemetry/api';
-import type { BasicTracerProvider, ReadableSpan, Span, SpanProcessor } from '@opentelemetry/sdk-trace-base';
+import type { ReadableSpan, Span, SpanProcessor } from '@opentelemetry/sdk-trace-base';
 
 import { log } from '@dxos/log';
 
@@ -60,6 +60,9 @@ export type Options = {
   allowContent: (spaceId: string) => boolean;
 };
 
+/** The span `effect/unstable/ai` names for a streamed call; anything else is a single response. */
+const STREAM_SPAN_NAME = 'LanguageModel.streamText';
+
 /** Marker attributes identifying a GenAI span (per OTel GenAI semantic conventions). */
 const GEN_AI_MARKERS = ['gen_ai.system', 'gen_ai.request.model', 'gen_ai.response.model'];
 
@@ -79,6 +82,10 @@ const CACHE_WRITE_TOKENS_ATTR = 'dxos.ai.cache_write_tokens';
 
 /**
  * Reports finished GenAI spans to the injected sink. Non-GenAI spans pass through untouched.
+ *
+ * Attaches to the realm's tracer provider via `Otel.addSpanProcessor` rather than owning one: the
+ * process manager's baseline tracer already records every span, so a second provider would mean a
+ * second sampler and a second tracer over the same spans.
  */
 export class AiSpanProcessor implements SpanProcessor {
   private readonly _captureGeneration: Options['captureGeneration'];
@@ -130,7 +137,7 @@ export class AiSpanProcessor implements SpanProcessor {
       cacheReadTokens: numberAttribute(attributes[CACHE_READ_TOKENS_ATTR]),
       cacheWriteTokens: numberAttribute(attributes[CACHE_WRITE_TOKENS_ATTR]),
       latency: hrTimeToSeconds(span.duration),
-      streaming: span.name === `${MODEL_CALL_SPAN_PREFIX}streamText`,
+      streaming: span.name === STREAM_SPAN_NAME,
       content: content
         ? {
             input: parseJsonAttribute(attributes[INPUT_ATTR]),
@@ -155,41 +162,6 @@ export class AiSpanProcessor implements SpanProcessor {
     return Promise.resolve();
   }
 }
-
-/**
- * Prefix of the span names `effect/unstable/ai` gives model calls. Sampling on it is what keeps
- * this provider cheap: it backs an app-wide `Tracer`, so without it every span the app emits — a
- * hundred-odd `withSpan` sites plus every operation — would be allocated and attributed in full
- * just to be discarded by the marker check in `onEnd`.
- */
-const MODEL_CALL_SPAN_PREFIX = 'LanguageModel.';
-
-/**
- * Standalone tracer provider carrying only the AI span processor. Deliberately not registered as
- * the global OTel provider — the SigNoz exporter (extensions/otel) owns that — so AI capture and
- * infrastructure tracing cannot clobber each other's configuration or sampling.
- *
- * Only model-call spans are recorded. Their `dxos.ai.*` annotations survive an unrecorded parent,
- * because Effect carries span annotations on the fiber and stamps them onto each span as it is
- * created rather than inheriting them through the parent span.
- *
- * The tracer SDK is imported dynamically to keep it out of the eager boot graph, since this module
- * is reachable from the package barrel.
- */
-export const createAiTracerProvider = async (options: Options): Promise<BasicTracerProvider> => {
-  const { BasicTracerProvider, SamplingDecision } = await import('@opentelemetry/sdk-trace-base');
-  return new BasicTracerProvider({
-    sampler: {
-      shouldSample: (_context, _traceId, spanName) => ({
-        decision: spanName.startsWith(MODEL_CALL_SPAN_PREFIX)
-          ? SamplingDecision.RECORD_AND_SAMPLED
-          : SamplingDecision.NOT_RECORD,
-      }),
-      toString: () => 'AiSpanSampler',
-    },
-    spanProcessors: [new AiSpanProcessor(options)],
-  });
-};
 
 const hrTimeToSeconds = ([seconds, nanos]: [number, number]): number => seconds + nanos / 1e9;
 

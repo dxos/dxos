@@ -3,3 +3,4 @@
 //
 
 export * from './extension';
+export { addSpanProcessor } from './span-fanout';

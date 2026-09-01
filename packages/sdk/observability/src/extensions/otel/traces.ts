@@ -20,6 +20,7 @@ import { type RemoteSpan, type StartSpanOptions, TRACE_PROCESSOR } from '@dxos/t
 
 import { type OtelOptions, signalUrl } from './otel';
 import * as OtelSpanSink from './OtelSpanSink';
+import * as SpanFanout from './span-fanout';
 import { TagInjectorSpanProcessor } from './span-processors';
 
 export type OtelTracesOptions = OtelOptions & {
@@ -41,6 +42,8 @@ export class OtelTraces {
       resource: this.options.resource,
       spanProcessors: [
         new TagInjectorSpanProcessor(this.options.getTags),
+        // Lets a consumer observe ended spans without standing up a provider of its own.
+        new SpanFanout.FanoutSpanProcessor(),
         ...(options.spanSink
           ? [new OtelSpanSink.PortSpanProcessor(options.spanSink.post)]
           : this.options.destinations.map(
