@@ -10,7 +10,7 @@ import type * as Layer$ from 'effect/Layer';
 import * as Schema$ from 'effect/Schema';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
-import type { AiModelResolver as AiModelResolver$, AiService as AiService$ } from '@dxos/ai';
+import type { AiModelResolver as AiModelResolver$ } from '@dxos/ai';
 import type { OpaqueToolkit } from '@dxos/ai';
 import * as Capability$ from '@dxos/app-framework/Capability';
 import { BuilderExtensions } from '@dxos/app-graph';
@@ -20,7 +20,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import type { Database, Type } from '@dxos/echo';
 import { type Translator as Translator$ } from '@dxos/i18n';
-import { type SpaceId, type URI } from '@dxos/keys';
+import { type URI } from '@dxos/keys';
 import { Progress } from '@dxos/progress';
 import type { AnchoredTo } from '@dxos/types';
 import type { Position } from '@dxos/util';
@@ -236,17 +236,6 @@ export const PluginAsset = Capability$.make<PluginAsset>()('org.dxos.app-framewo
 export const AiModelResolver = Capability$.make<
   Layer$.Layer<AiModelResolver$.AiModelResolver, never, Credential.CredentialsService>
 >()('org.dxos.app-framework.capability.aiModelResolver');
-
-/**
- * Decorators applied to the assembled {@link AiService$.Service} (after any app-supplied
- * middleware), e.g. telemetry instrumentation. Applied per space — the context carries the space
- * the service instance is scoped to, so policy (like content-capture gating) can vary by space.
- */
-export type AiServiceMiddleware = (service: AiService$.Service, context: { space?: SpaceId }) => AiService$.Service;
-
-export const AiServiceMiddleware = Capability$.make<AiServiceMiddleware>()(
-  'org.dxos.app-framework.capability.aiServiceMiddleware',
-);
 
 export type FileUploader = (db: Database.Database, file: File) => Promise<FileInfo | undefined>;
 

@@ -8,6 +8,7 @@ import type * as Fiber$ from 'effect/Fiber';
 import type * as Layer$ from 'effect/Layer';
 import type * as ManagedRuntime$ from 'effect/ManagedRuntime';
 import * as Option from 'effect/Option';
+import type * as Tracer$ from 'effect/Tracer';
 import type * as Command$ from 'effect/unstable/cli/Command';
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
@@ -138,6 +139,21 @@ export type TraceSinkFactory = (ctx: TraceSinkFactoryContext) => Trace$.Sink;
  * @category Capability
  */
 export const TraceSink = Capability$.make<TraceSinkFactory>()('org.dxos.app-framework.capability.traceSink');
+
+/**
+ * Effect layer installed into the {@link ProcessManagerRuntime}, for services every fiber running
+ * on it should inherit — a `Tracer` exporting the spans the code already emits, and anything it
+ * needs (e.g. `Telemetry.CurrentSpanTransformer`). Contributions are merged, so the app chooses a
+ * telemetry backend without any subsystem knowing which one, or that there is one.
+ *
+ * @category Capability
+ */
+export const RuntimeServices = Capability$.make<Layer$.Layer<never>>()(
+  'org.dxos.app-framework.capability.runtimeServices',
+);
+
+/** Re-exported so a contributor can type its layer without depending on effect's Tracer path. */
+export type Tracer = Tracer$.Tracer;
 
 /**
  * Source of ephemeral trace messages broadcast by remote runtimes over the space swarm (DX-1125).

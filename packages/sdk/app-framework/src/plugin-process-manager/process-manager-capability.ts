@@ -92,6 +92,7 @@ export default Capability.makeModule(
 
     const layerSpecContributions = yield* Capabilities.LayerSpec;
     const traceSinkContributions = yield* Capabilities.TraceSink;
+    const runtimeServiceContributions = yield* Capabilities.RuntimeServices;
     const operationHandlerContributions = yield* Capabilities.OperationHandler;
     const remoteTraceMonitorContributions = yield* Capabilities.RemoteTraceMonitor;
     // One-shot snapshot: startup soft-ordering makes same-pass providers visible; entries
@@ -176,6 +177,13 @@ export default Capability.makeModule(
     // Sensible defaults are provided here; plugins that want alternative
     // implementations (e.g. persistent KV store, real tracing) can contribute
     // their own LayerSpec entries against the ServiceResolver.
+    // Snapshotted like the LayerSpec list above: these bake into the runtime built below.
+    // A `Tracer` here is inherited by every fiber the runtime runs, which is what makes the
+    // spans subsystems already emit reach an exporter without any of them knowing about one.
+    const runtimeServicesLayer = runtimeServiceContributions
+      .get()
+      .reduce<Layer.Layer<never>>((acc, layer) => Layer.merge(acc, layer), Layer.empty);
+
     const baseLayer = Layer.mergeAll(
       Layer.succeed(Capability.Service, capabilityManager),
       Layer.succeed(Plugin.Service, pluginManager),
@@ -184,6 +192,7 @@ export default Capability.makeModule(
       OperationHandlerSet.provide(handlerSet),
       layerIdb,
       Layer.succeed(Trace.TraceSink, mergedTraceSink),
+      runtimeServicesLayer,
     );
 
     const processManagerLayer = ProcessManager.layer({ runtimeName: Trace.CommonRuntimeName.local }).pipe(

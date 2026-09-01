@@ -3,10 +3,13 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Tracer from 'effect/Tracer';
+import * as Telemetry from 'effect/unstable/ai/Telemetry';
 
 import { AiTelemetry } from '@dxos/ai';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { makeTracer } from '@dxos/effect';
 import { AiObservability } from '@dxos/observability';
 
@@ -39,6 +42,11 @@ const contentCaptureAllowed = (_spaceId: string | undefined): boolean => {
   return true;
 };
 
+/**
+ * Installs the telemetry backend for the spans the AI stack already emits. The model call sites
+ * know nothing about this: they annotate spans unconditionally, and a `Tracer` reaches them only
+ * because every fiber on the process-manager runtime inherits what is provided here.
+ */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const observability = yield* ObservabilityCapabilities.Observability;
@@ -49,11 +57,15 @@ export default Capability.makeModule(
         allowContent: contentCaptureAllowed,
       }),
     );
-    const tracer = makeTracer(provider, '@dxos/plugin-observability/ai');
 
-    const middleware: AppCapabilities.AiServiceMiddleware = (service, { space }) =>
-      AiTelemetry.wrap(service, { tracer, attributes: space ? { 'dxos.ai.space_id': space } : undefined });
+    // Paired deliberately: the transformer serializes every prompt and response, so it is installed
+    // with the exporter that consumes its output rather than by the harness that would pay for it
+    // whether or not anything reads it.
+    const layer = Layer.mergeAll(
+      Layer.succeed(Tracer.Tracer, makeTracer(provider, '@dxos/plugin-observability/ai')),
+      Layer.succeed(Telemetry.CurrentSpanTransformer, AiTelemetry.makeContentSpanTransformer()),
+    );
 
-    return Capability.contribute(AppCapabilities.AiServiceMiddleware, middleware);
+    return Capability.contribute(Capabilities.RuntimeServices, layer);
   }),
 );

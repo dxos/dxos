@@ -7802,6 +7802,9 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
+      '@opentelemetry/sdk-trace-base':
+        specifier: 'catalog:'
+        version: 2.10.0(@opentelemetry/api@1.9.1)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.5.8(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(esbuild@0.28.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.5.8(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))

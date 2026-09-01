@@ -24,6 +24,7 @@ import { Resource } from '@dxos/context';
 import { Database, Feed, Filter, Obj, Registry } from '@dxos/echo';
 import { RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
+import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { McpToolkit } from '@dxos/mcp-client';
 import { FeedProtocol } from '@dxos/protocols';
@@ -287,9 +288,9 @@ export class Session extends Resource {
         ),
       ),
       Effect.withSpan('AiSession.createRequest'),
-      // Read by the AI telemetry span processor (maps to PostHog `$ai_session_id`), grouping this
-      // conversation's model-call spans across turns.
-      Effect.annotateSpans('dxos.ai.session_id', Obj.getURI(this._feed).toString()),
+      // Which conversation, and whose space, are properties of the conversation rather than of any
+      // observability backend, so every turn carries them whether or not one is installed.
+      Effect.annotateSpans(sessionAnnotations(this._feed)),
     );
   }
 }
@@ -376,4 +377,15 @@ const feedPosition = (message: Message.Message): number => {
   const key = Obj.getKeys(message, FeedProtocol.KEY_QUEUE_POSITION).at(0)?.id;
   const position = key !== undefined ? Number(key) : Number.NaN;
   return Number.isNaN(position) ? Number.POSITIVE_INFINITY : position;
+};
+
+/**
+ * Span annotations identifying the conversation a model call belongs to. The space is read off the
+ * feed's URI (`echo://<spaceId>/<objectId>`) rather than passed in, so it cannot go missing.
+ */
+const sessionAnnotations = (feed: Feed.Feed): Record<string, string> => {
+  const uri = Obj.getURI(feed).toString();
+  const eid = EID.tryParse(uri);
+  const spaceId = eid && EID.getSpaceId(eid);
+  return { 'dxos.ai.session_id': uri, ...(spaceId ? { 'dxos.ai.space_id': spaceId } : {}) };
 };
