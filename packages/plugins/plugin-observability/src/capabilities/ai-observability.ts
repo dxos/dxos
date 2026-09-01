@@ -12,9 +12,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { makeTracer } from '@dxos/effect';
 import { log } from '@dxos/log';
-// Aliased because `@dxos/ai` exports a namespace of the same name: that one produces the span
-// attributes, this one reads them back out.
-import * as AiTelemetrySink from '@dxos/observability/AiTelemetry';
+import * as AiObservability from '@dxos/observability/AiObservability';
 import type * as Observability from '@dxos/observability/Observability';
 
 import { ObservabilityCapabilities } from '#types';
@@ -71,7 +69,7 @@ export default Capability.makeModule(
     // The provider's chunk is fetched on demand, and a chunk fetch fails routinely after a redeploy.
     // Telemetry setup degrades to no capture rather than failing a Startup module.
     const provider = yield* Effect.tryPromise(() =>
-      AiTelemetrySink.createAiTracerProvider({
+      AiObservability.createAiTracerProvider({
         captureGeneration: (generation) => observability()?.generations.captureGeneration(generation),
         // Read per span rather than captured: the user can toggle telemetry mid-session, and
         // leaving the decision to the backend client would gate on its own opt-out flag, which is a

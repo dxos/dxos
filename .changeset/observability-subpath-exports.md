@@ -3,7 +3,7 @@
 '@dxos/eslint-plugin-rules': patch
 ---
 
-`@dxos/observability` exposes one entrypoint per namespace: `@dxos/observability/Observability`, `/ObservabilityExtension`, `/ObservabilityProvider`, `/ObservabilityClientProvider`, `/AiTelemetry`, `/OtelLogSink`, `/OtelMetricsSink`, and `/OtelSpanSink`. The barrel still exports the first four, so existing imports keep working, but importing it pulls the whole package into the consumer's eager graph. The `dxos-subpath-imports` lint now rewrites barrel imports of this package onto the subpaths.
+`@dxos/observability` exposes one entrypoint per namespace: `@dxos/observability/Observability`, `/ObservabilityExtension`, `/ObservabilityProvider`, `/ObservabilityClientProvider`, `/AiObservability`, `/OtelLogSink`, `/OtelMetricsSink`, and `/OtelSpanSink`. The barrel still exports the first four, so existing imports keep working, but importing it pulls the whole package into the consumer's eager graph. The `dxos-subpath-imports` lint now rewrites barrel imports of this package onto the subpaths.
 
 The last four are standalone entrypoints rather than barrel namespaces: the AI sink is used only by a lazily-activated capability, and the `Otel*Sink` trio only by the log-writer worker, so hoisting any of them onto the barrel would put it in the eager graph of everyone importing the package. Each carries a header saying so in place of the `@import-as-namespace` directive, which is how `dxos-subpath-exports` tells the two apart.
 

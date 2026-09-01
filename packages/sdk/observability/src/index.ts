@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-// `AiTelemetry` and the `Otel*Sink` worker entrypoints are deliberately absent: each is a
+// `AiObservability` and the `Otel*Sink` worker entrypoints are deliberately absent: each is a
 // standalone subpath whose own header says why hoisting it here would cost every consumer.
 
 export * as Observability from './Observability';
