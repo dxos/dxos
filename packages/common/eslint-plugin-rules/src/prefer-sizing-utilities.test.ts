@@ -19,7 +19,7 @@ const ruleTester = new RuleTester({
 });
 
 describe('prefer-sizing-utilities', () => {
-  it('accepts the utilities and unrelated classes', () => {
+  test('accepts the utilities and unrelated classes', () => {
     ruleTester.run('prefer-sizing-utilities', rule, {
       valid: [
         { filename, code: "<div className='dx-expand' />" },
@@ -44,7 +44,7 @@ describe('prefer-sizing-utilities', () => {
     });
   });
 
-  it('reports hand-rolled equivalents', () => {
+  test('reports hand-rolled equivalents', () => {
     ruleTester.run('prefer-sizing-utilities', rule, {
       valid: [],
       invalid: [
@@ -94,7 +94,7 @@ describe('prefer-sizing-utilities', () => {
     });
   });
 
-  it('reports a minimum that a clip has already applied', () => {
+  test('reports a minimum that a clip has already applied', () => {
     ruleTester.run('prefer-sizing-utilities', rule, {
       valid: [
         // The element's own overflow stays visible, so the minimum is load-bearing.
@@ -127,7 +127,7 @@ describe('prefer-sizing-utilities', () => {
     });
   });
 
-  it('reports two utilities that compose into a third', () => {
+  test('reports two utilities that compose into a third', () => {
     ruleTester.run('prefer-sizing-utilities', rule, {
       valid: [],
       invalid: [
@@ -140,7 +140,7 @@ describe('prefer-sizing-utilities', () => {
     });
   });
 
-  it('reports a utility stacked on what it already applies', () => {
+  test('reports a utility stacked on what it already applies', () => {
     ruleTester.run('prefer-sizing-utilities', rule, {
       valid: [],
       invalid: [
