@@ -65,6 +65,14 @@ Known gaps accepted up front:
 - **DnD**: `draggable`/`dropTargetForElements` + tree-item hitbox moved from the heading button to
   the row element; spring-loaded expand and drag-collapse via `onOpenChange`; `TreeData` payload
   and the navtree `monitorForElements` contract unchanged; `TreeDropIndicator` kept.
+- **Hitbox modes**: `last-in-group` for a last sibling, `expanded` only for a branch that is
+  actually showing children, else `standard`. The `branch &&` guard matters: a model that reports
+  every node as open (a task list has nothing else to say about a leaf) otherwise puts leaves in
+  `expanded`, and that mode exists precisely to drop the reorder-below zone — so nothing could be
+  dropped after a childless row.
+- **`leavesAcceptChildren`** (default off): whether a childless row offers a make-child zone. Off
+  suits a tree whose leaves are terminal (navtree documents); a task list turns it on, since any
+  task can gain a sub-task. With it off, a leaf shows no drop indicator at all on its middle band.
 - **Groups**: rendered as section headings; **spliced out of the collection topology** (their
   children become machine-children of the group's parent) so keyboard traversal never lands on a
   header. Levels are carried on the entries, so group children stay at the header's indent.
@@ -85,7 +93,11 @@ Known gaps accepted up front:
    collection (fine at sidebar scale; a memoized incremental walk is the escalation path).
 4. **pragmatic-dnd coexists with the machine** — no interference between zag's pointer handling
    and draggable/dropTarget on the same element (draggable attr stamped, instructions render).
-   Real drop verification needs a human drag (native HTML5 drag can't be automated).
+   **Correction (2026-09-01):** this entry previously claimed a real drop could only be verified by
+   hand because native HTML5 drag cannot be automated. That is wrong. Playwright drives native drag
+   in Chromium, so drops, zone boundaries and the resulting tree shape are all measurable — the drop
+   semantics in §9 were established that way. Only a Storybook play function is still limited, since
+   it has no driver.
 5. Verified 17/17 generic checks (render, chevron + full keyboard expand/collapse incl. typeahead
    keymap, click/keyboard selection, select-vs-toggle policy, groups, draggable wiring, zero
    console errors) plus navtree story parity vs main (identical DOM facts + pixel-equivalent
@@ -225,6 +237,58 @@ deleted**:
 The last of those is the point worth keeping: a component whose entire value is its ARIA role was
 being used by two consumers that were not the thing that role describes, which is how the navtree
 `gridcell` bug survived as long as it did.
+
+## 9. Testing
+
+Automated coverage lives in three places, and the drag contract is exercised end-to-end rather than
+asserted structurally.
+
+| layer                                                            | what it covers                                                                                                                 | how to run                                       |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------ |
+| unit — `hierarchy.test.ts` (26)                                  | placement algebra: above/below/make-child, indent, outdent, nudge, cycle and foreign-set rejection                             | `moon run react-ui-task:test`                    |
+| unit — `tree-model.test.ts` (7), `static-tree-model.test.ts` (8) | topology from `parentTask`, sibling order, seeded collapse, path uniqueness                                                    | `moon run react-ui-task:test react-ui-list:test` |
+| story — `TaskList.stories.tsx > Test Hierarchy` (16 in file)     | shape, levels, ordinals, collapse, `Shift+Arrow` restructuring, focus movement, row draggability, toggle/description alignment | `moon run react-ui-task:test-storybook`          |
+
+**The drop gesture is not covered by the story suite** — a play function cannot drive native HTML5
+drag. It was verified with Playwright driving real drags against `TaskList.stories.tsx`
+`DragTargets` (`A` with children `B`, `C`), which is the fixture the drop rules are reasoned about
+with. Measured zone map per 32px row, and the resulting tree after each drop:
+
+| pointer band | instruction     | result when dragging `C`       |
+| ------------ | --------------- | ------------------------------ |
+| y 4–7        | `reorder-above` | before the target, as its peer |
+| y 10–22      | `make-child`    | **first** child of the target  |
+| y 25–31      | `reorder-below` | after the target, as its peer  |
+
+### Manual script
+
+Run `moon run storybook-react:serve` and open
+`ui/react-ui-task/TaskList` → `Hierarchical Draggable`, then `Drag Targets`.
+
+1. Click a row. It selects; the disclosure does **not** change. Click the same row again — now it
+   toggles. This asymmetry is inherited from the machine's select-vs-toggle policy and is the one
+   behaviour still open for a decision.
+2. Click a chevron. The branch animates open and closed.
+3. Press `ArrowDown`/`ArrowUp`. Focus steps row to row; selection does not follow, which is APG tree
+   behaviour and differs from the flat list's listbox.
+4. Press `Shift+ArrowDown` / `Shift+ArrowUp`. The focused row moves among its siblings.
+5. Press `Shift+ArrowRight` / `Shift+ArrowLeft`. The focused row indents under its previous sibling,
+   or outdents to become its parent's next sibling.
+6. In `Drag Targets`, drag `C`. It leaves the list for the duration of the gesture, so you see
+   `A > B`. Check each landing place: before `A`; onto `A` (first child); before `B`; onto `B`;
+   after `B`; and `A`'s bottom edge, which places `C` after `A`'s whole subtree as its next peer.
+7. Drag a row that has children (`Approve the label art` in `Hierarchical Draggable`). The subtree
+   goes with it and lands under the new parent.
+8. Confirm every disclosure chevron sits on its title's centreline, including the row that carries a
+   description.
+
+### Known gap
+
+`A`'s own reorder-below zone is what places a task after an expanded branch's subtree. A branch that
+is expanded but **not** last in its group has no below zone at all (atlaskit's `expanded` mode drops
+it by design), so "after this subtree" is unreachable for such a row. Options — collapse a hovered
+branch during a drag, or force `standard` mode — are unresolved; forcing `standard` would change
+navtree's drag behaviour too.
 
 ## References
 

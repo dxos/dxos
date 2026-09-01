@@ -552,7 +552,11 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const { id, item, path, level, branch, open, last, current, props } = node;
-  const mode: ItemMode = last ? 'last-in-group' : open ? 'expanded' : 'standard';
+  // `expanded` only applies to a branch that is actually showing children: the mode exists to drop
+  // the reorder-below zone, because "below an open branch" and "its first child" are the same place.
+  // A leaf reports `open` too (nothing distinguishes it in the model), and treating that as expanded
+  // stripped the below zone from every childless row — so nothing could be dropped after one.
+  const mode: ItemMode = last ? 'last-in-group' : branch && open ? 'expanded' : 'standard';
   const data = { id, path, item } satisfies TreeData;
   const isItemDraggable = treeDraggable && props.draggable !== false;
   const isItemDroppable = props.droppable !== false;
@@ -723,7 +727,9 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
       onContextMenu={handleContextMenu}
     >
       <div className='indent relative grid grid-cols-subgrid col-[tree-row]' style={paddingIndentation(level)}>
-        <div role='none' className='flex items-center'>
+        {/* `items-start`: a row with a description is taller than one control, and centring put the
+            disclosure chevron beside the description rather than beside the title it discloses. */}
+        <div role='none' className='flex items-start'>
           {branch ? (
             <TreeView.BranchTrigger asChild>
               {/* zag stamps data-state=open on the trigger, which the ghost button styles as an

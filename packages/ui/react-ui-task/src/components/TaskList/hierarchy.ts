@@ -120,9 +120,11 @@ export const resolveTaskPlacement = ({
   }
 
   if (intent === 'make-child') {
-    // Appended as the last child (the navtree's convention): with no anchor the task goes to the
-    // end of the array, where nothing following it can be an earlier sibling.
-    return { parentTask: target, before: undefined };
+    // Inserted as the FIRST child: the pointer is on the parent's own row, and the place directly
+    // under that row is where the reader expects the task to appear. Appending it last puts it
+    // somewhere off-screen for any parent with a few children.
+    const firstChild = Task.subTasks(tasks, target).find((child) => child.id !== source.id);
+    return { parentTask: target, before: firstChild };
   }
 
   const parentId = Task.parentTaskId(target);

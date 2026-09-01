@@ -126,11 +126,12 @@ export const TaskTreeContent = ({
   );
 
   // Restructuring is keyboard-driven, and the machine ignores modified arrows — so the gesture is
-  // handled here rather than per row. The focused row names its task through `data-object-id`,
-  // which is what lets one container-level handler serve every depth.
+  // handled here rather than per row. `Shift` moves the row where an unmodified arrow navigates:
+  // up/down reorder among siblings, left/right change depth. The focused row names its task through
+  // `data-object-id`, which is what lets one container-level handler serve every depth.
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLDivElement>) => {
-      if (!onTaskMove || !event.altKey) {
+      if (!onTaskMove || !event.shiftKey) {
         return;
       }
       const id = (event.target as HTMLElement | null)

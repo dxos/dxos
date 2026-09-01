@@ -124,6 +124,17 @@ const hierarchicalSeed = (): Task.Task[] => {
   return [release, roast, notes, sample, label, curve, proof];
 };
 
+/**
+ * The minimal shape the drop zones are reasoned about with: one parent and two children. Dragging
+ * `C` leaves `A > B`, against which every landing place has to be reachable.
+ */
+const dragSeed = (): Task.Task[] => {
+  const a = Task.make({ title: 'A', status: 'todo' });
+  const b = Task.make({ title: 'B', status: 'todo', parentTask: Ref.make(a) });
+  const c = Task.make({ title: 'C', status: 'todo', parentTask: Ref.make(a) });
+  return [a, b, c];
+};
+
 const DefaultStory = ({
   readonly,
   showGroupLabels,
@@ -133,6 +144,7 @@ const DefaultStory = ({
   hierarchical,
   draggable = false,
   many,
+  dragFixture,
   framed = true,
 }: {
   readonly?: boolean;
@@ -146,11 +158,15 @@ const DefaultStory = ({
   draggable?: boolean;
   /** Seed the longer, ten-task list instead of the default seven. */
   many?: boolean;
+  /** Seed the minimal `A > B, C` fixture the drop zones are reasoned about with. */
+  dragFixture?: boolean;
   /** Insets the pane in a card, as an article does. Off for the tests that measure the pane's own
       columns against a row's, which the inset would offset. */
   framed?: boolean;
 }) => {
-  const [tasks, setTasks] = useState<Task.Task[]>(hierarchical ? hierarchicalSeed : many ? manySeed : seed);
+  const [tasks, setTasks] = useState<Task.Task[]>(
+    dragFixture ? dragSeed : hierarchical ? hierarchicalSeed : many ? manySeed : seed,
+  );
   // Selection is what the article wires, and what arrow-key navigation moves.
   const [selected, setSelected] = useState<string>();
 
@@ -294,6 +310,20 @@ export const HierarchicalDraggable: Story = {
     draggable: true,
     showOrdinals: true,
     showDescriptions: true,
+  },
+};
+
+/**
+ * `A > B, C` with drag on. Dragging `C` must leave every landing place reachable: before `A`, onto
+ * `A`, before `B`, onto `B`, after `B`, and after `A`'s children as `A`'s next peer.
+ */
+export const DragTargets: Story = {
+  args: {
+    hierarchical: true,
+    draggable: true,
+    dragFixture: true,
+    showOrdinals: true,
+    framed: false,
   },
 };
 
@@ -596,7 +626,7 @@ export const TestHierarchy: Story = {
     const toggle = (row: HTMLElement) => row.querySelector<HTMLElement>('[data-testid="treeItem.toggle"]')!;
     const press = (row: HTMLElement, key: string) => {
       row.focus();
-      row.dispatchEvent(new KeyboardEvent('keydown', { key, altKey: true, bubbles: true }));
+      row.dispatchEvent(new KeyboardEvent('keydown', { key, shiftKey: true, bubbles: true }));
     };
 
     // Interleaved in the array, nested in the walk.
@@ -630,7 +660,7 @@ export const TestHierarchy: Story = {
     await userEvent.click(toggle(rows()[0].row));
     await waitFor(async () => expect(rows()).toHaveLength(7));
 
-    // Alt-ArrowLeft outdents: the sub-task becomes the next sibling of its parent.
+    // Shift-ArrowLeft outdents: the sub-task becomes the next sibling of its parent.
     await expect(rows()[1].title).toEqual('Write the tasting notes');
     press(rows()[1].row, 'ArrowLeft');
     await waitFor(async () =>
@@ -706,14 +736,24 @@ export const TestHierarchy: Story = {
     const paneInput = paneInputElement.getBoundingClientRect();
     await expect(Math.round(paneInput.left)).toBeGreaterThan(Math.round(create.getBoundingClientRect().left));
 
-    // Every row carries a handle in the ordinal's own gutter — the ordinal and the handle share one
-    // cell, so nothing shifts when the cursor crosses a row. The drop itself needs a real pointer
-    // (native HTML5 drag events cannot be synthesized), so the manual script covers the gesture.
-    const handles = canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.dragHandle"]');
-    await expect(handles).toHaveLength(7);
+    // The row itself is the drag source — the tree publishes each row to pragmatic-dnd rather than
+    // a handle in the gutter, which is what the navtree does too. The drop is a native HTML5 drag
+    // and cannot be driven from a play function; the manual script covers the gesture and its
+    // landing places.
     await expect(canvasElement.querySelectorAll('[draggable="true"]')).toHaveLength(7);
-    const gutter = (element: Element) => Math.round(element.getBoundingClientRect().left);
-    await expect(gutter(handles[0])).toEqual(gutter(rows()[0].row.querySelector('.tabular-nums')!.parentElement!));
+
+    // The disclosure toggle sits on the title's centreline whether or not a description follows.
+    for (const { row } of rows()) {
+      const toggle = row.querySelector<HTMLElement>('[data-testid="treeItem.toggle"]');
+      const rowTitle = row.querySelector<HTMLElement>('.truncate');
+      if (toggle && rowTitle) {
+        const centre = (element: HTMLElement) => {
+          const rect = element.getBoundingClientRect();
+          return rect.top + rect.height / 2;
+        };
+        await expect(Math.abs(centre(toggle) - centre(rowTitle))).toBeLessThan(1);
+      }
+    }
 
     // A description lines up under its own title, not under the column — it is indented with the
     // row and clears the disclosure toggle.
