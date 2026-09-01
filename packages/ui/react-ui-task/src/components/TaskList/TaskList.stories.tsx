@@ -7,6 +7,7 @@ import React, { useCallback, useState } from 'react';
 import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { Obj, Ref } from '@dxos/echo';
+import { random } from '@dxos/random';
 import { createMenuAction } from '@dxos/react-ui-menu';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Task } from '@dxos/types';
@@ -15,6 +16,8 @@ import { translations } from '#translations';
 
 import { type TaskPlacement } from './hierarchy';
 import { TaskList } from './TaskList';
+
+random.seed(1);
 
 const seed = (): Task.Task[] => [
   Task.make({
@@ -67,23 +70,7 @@ const seed = (): Task.Task[] => [
  * ordinals into double digits, and put more than one task under each group heading, which a
  * seven-task list does not.
  */
-const manySeed = (): Task.Task[] => [
-  Task.make({ title: 'Source green coffee', status: 'done', priority: 'high' }),
-  Task.make({ title: 'Cup the samples', status: 'done' }),
-  Task.make({ title: 'Finalize roast curve', status: 'started', priority: 'high' }),
-  Task.make({ title: 'Draft launch email', status: 'started', assignee: { role: 'assistant', name: 'Scout' } }),
-  Task.make({
-    title: 'Write the launch poem',
-    status: 'review',
-    reviewers: [{ name: 'Rich', role: 'user' }],
-    artifacts: [Ref.make(Task.make({ title: 'Ode to a Coffee Bean' }))],
-  }),
-  Task.make({ title: 'Design label', status: 'todo', assignee: { email: 'riley@example.com' } }),
-  Task.make({ title: 'Publish the tasting notes', status: 'todo' }),
-  Task.make({ title: 'Book the launch venue', status: 'todo', priority: 'low' }),
-  Task.make({ title: 'Print run v1', status: 'cancelled' }),
-  Task.make({ title: 'Ship the pre-orders', status: 'failed', priority: 'urgent' }),
-];
+const manySeed = (n = 10): Task.Task[] => Array.from({ length: n }, (_, i) => Task.make({ title: `Task ${i + 1}` }));
 
 /**
  * Two roots with sub-tasks two levels deep. Array order is sibling order only, so the seed

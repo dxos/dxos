@@ -894,7 +894,10 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
               // Aligned under its own title — which sits past the disclosure toggle — so a
               // sub-task's description does not read as belonging to the row above it.
               row && 'ps-(--task-title-inset)',
-              'col-span-3 pb-1 text-sm text-description line-clamp-3',
+              // Ends before the chip column rather than spanning a fixed count: the grid has one
+              // fewer track since the chips collapsed into one, and a stale span ran the description
+              // under the priority and actions controls.
+              'col-end-[-3] pb-1 text-sm text-description line-clamp-3',
             )}
             // The row supplies the type scale and the clamp, so the description renders as one
             // inline run rather than the block paragraph the default component wraps it in.
