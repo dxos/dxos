@@ -4,8 +4,9 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Icon, IconButton, SystemIconButton, useTranslation } from '@dxos/react-ui';
+import { Icon, SystemIconButton, useTranslation } from '@dxos/react-ui';
 import { TogglePanel, type TogglePanelRootProps } from '@dxos/react-ui-components';
+import { Accordion } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { type ContentBlock } from '@dxos/types';
 import { type XmlWidgetProps, getXmlTextChild } from '@dxos/ui-editor';
@@ -160,92 +161,86 @@ const ToolPanel = ({ calls, onChangeOpen }: ToolPanelProps) => {
   const header = single?.title ?? summary;
 
   return (
+    // The summary is a bare text row rather than a bordered panel header: the border belongs to
+    // the list it opens onto, so a collapsed run reads as one line of prose in the feed.
+    //
     // No reveal animation: the detail mounts and unmounts in one frame while an animated height
     // ramps over 250ms, and during the ramp the editor scrolls to reach content its box has not
     // grown to hold yet — a scrollbar on open and a flicker on close.
     <TogglePanel.Root open={open} duration={0} onChangeOpen={setOpen}>
-      <TogglePanel.Content>
-        <TogglePanel.Header
-          data-testid={single ? 'assistant.tool-call' : 'assistant.tool-run'}
-          icon={<Icon icon={icon} size={4} />}
-        >
-          <span className='flex min-w-0 items-center gap-1 text-description tabular-nums'>
-            <span className={mx('truncate', single?.error !== undefined && 'text-error')}>{header}</span>
-            {count !== undefined && <span className='shrink-0'>({count})</span>}
-            {failed > 0 && <span className='shrink-0 text-error'>· {t('tool-failed.label', { count: failed })}</span>}
-          </span>
-        </TogglePanel.Header>
-        <TogglePanel.Body>
-          <TogglePanel.Viewport>
-            {/* Mounted with the disclosure: a collapsed body clips its content but still lays it
-                out, and the editor measures that as content to scroll to. */}
-            {open &&
-              (single ? (
-                <ToolCallDetail call={single} />
-              ) : (
-                <div
-                  role='list'
-                  className='flex flex-col border-t border-subdued-separator divide-y divide-subdued-separator'
-                >
-                  {calls.map((call) => (
-                    <ToolCallRow key={call.id} call={call} onChangeOpen={onChangeOpen} />
-                  ))}
-                </div>
-              ))}
-          </TogglePanel.Viewport>
-        </TogglePanel.Body>
-      </TogglePanel.Content>
+      <TogglePanel.Header
+        caret='end'
+        data-testid={single ? 'assistant.tool-call' : 'assistant.tool-run'}
+        icon={<Icon icon={icon} size={4} />}
+        classNames='gap-1'
+      >
+        <span className='flex min-w-0 items-center gap-1 text-description tabular-nums'>
+          <span className={mx('truncate', single?.error !== undefined && 'text-error')}>{header}</span>
+          {count !== undefined && <span className='shrink-0'>({count})</span>}
+          {failed > 0 && <span className='shrink-0 text-error'>· {t('tool-failed.label', { count: failed })}</span>}
+        </span>
+      </TogglePanel.Header>
+      <TogglePanel.Body>
+        <TogglePanel.Viewport>
+          {/* Mounted with the disclosure: a collapsed body clips its content but still lays it
+              out, and the editor measures that as content to scroll to. */}
+          {open && (single ? <ToolCallDetail call={single} /> : <ToolCallList calls={calls} onOpen={onChangeOpen} />)}
+        </TogglePanel.Viewport>
+      </TogglePanel.Body>
     </TogglePanel.Root>
   );
 };
 
-type ToolCallRowProps = {
-  call: ToolCallEntry;
-} & Pick<TogglePanelRootProps, 'onChangeOpen'>;
+type ToolCallListProps = {
+  calls: ToolCallEntry[];
+  onOpen?: (open: boolean) => void;
+};
 
 /**
- * One call as its own disclosure, so a run can be scanned without opening anything.
+ * The run's calls as an accordion, so each row opens onto its own payload and the machine supplies
+ * the APG keymap the hand-rolled rows never had.
  *
- * Collapsed by default: a row that opened itself would change this item's height, and the feed
- * measures that height as the row mounts.
+ * Rows are collapsed by default: one that opened itself would change this item's height, and the
+ * feed measures that height as the row mounts.
  */
-const ToolCallRow = ({ call, onChangeOpen }: ToolCallRowProps) => {
-  const { t } = useTranslation(translationKey);
-  const [open, setOpen] = useState(false);
-
-  const handleToggle = useCallback(() => {
-    setOpen((prev) => !prev);
-    onChangeOpen?.(!open);
-  }, [open, onChangeOpen]);
-
-  // Nothing to open onto: a caret that reveals emptiness reads as a failure.
-  if (!hasDetail(call)) {
-    return (
-      <div role='listitem' className='flex items-center gap-2 px-2 text-sm min-h-(--dx-control)'>
-        <Icon icon={call.icon ?? DEFAULT_TOOL_ICON} size={4} />
-        <span className={mx('truncate', call.error !== undefined && 'text-error')}>{call.title}</span>
-      </div>
-    );
-  }
-
-  return (
-    <div role='listitem' className='flex flex-col'>
-      <IconButton
-        icon={open ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
-        label={call.title}
-        variant='ghost'
-        size={4}
-        classNames={mx(
-          'justify-start w-full gap-2 text-sm [&_span]:truncate',
-          call.error !== undefined && 'text-error',
-        )}
-        data-testid='assistant.tool-call'
-        onClick={handleToggle}
-      />
-      {open && <ToolCallDetail call={call} />}
-    </div>
-  );
-};
+const ToolCallList = ({ calls, onOpen }: ToolCallListProps) => (
+  <Accordion.Root<ToolCallEntry>
+    items={calls}
+    classNames='border border-subdued-separator rounded-md divide-y divide-subdued-separator overflow-hidden'
+    onValueChange={(value) => onOpen?.(value.length > 0)}
+  >
+    {({ items }) =>
+      items.map((call) =>
+        // Nothing to open onto: a caret that reveals emptiness reads as a failure, so a call with
+        // no payload is a plain row rather than an accordion item.
+        hasDetail(call) ? (
+          <Accordion.Item key={call.id} item={call}>
+            <Accordion.ItemHeader
+              hover
+              icon={call.icon ?? DEFAULT_TOOL_ICON}
+              data-testid='assistant.tool-call'
+              classNames={mx('text-sm', call.error !== undefined && 'text-error')}
+            >
+              <span className='truncate'>{call.title}</span>
+            </Accordion.ItemHeader>
+            <Accordion.ItemBody>
+              <ToolCallDetail call={call} />
+            </Accordion.ItemBody>
+          </Accordion.Item>
+        ) : (
+          <div
+            key={call.id}
+            className='flex items-center gap-2 px-2 text-sm min-h-(--dx-control)'
+            data-testid='assistant.tool-call'
+          >
+            <Icon icon={call.icon ?? DEFAULT_TOOL_ICON} size={4} />
+            <span className={mx('truncate', call.error !== undefined && 'text-error')}>{call.title}</span>
+          </div>
+        ),
+      )
+    }
+  </Accordion.Root>
+);
 
 /** What a call carries, in the order it happened. */
 const ToolCallDetail = ({ call, classNames }: { call: ToolCallEntry; classNames?: string }) => {

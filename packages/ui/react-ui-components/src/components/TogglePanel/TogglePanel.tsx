@@ -85,30 +85,43 @@ const HEADER_NAME = 'TogglePanel.Header';
 type HeaderProps = ThemedClassName<
   Omit<ComponentPropsWithoutRef<'button'>, 'className'> & {
     icon?: JSX.Element;
+    /**
+     * Which edge the disclosure caret sits on. `start` frames the row as a panel header; `end`
+     * lets the caret trail the text so the row reads as a sentence with an affordance after it.
+     */
+    caret?: 'start' | 'end';
   }
 >;
 
-const Header = ({ classNames, children, icon, ...props }: HeaderProps) => {
+const Header = ({ classNames, children, icon, caret = 'start', ...props }: HeaderProps) => {
   const { duration } = useTogglePanelContext(HEADER_NAME);
+
+  const disclosure = (
+    <IconBlock>
+      <Icon
+        size={4}
+        icon={'ph--caret-right--regular'}
+        style={{ transitionDuration: `${duration}ms` }}
+        // The machine owns the state, so the caret reads it off the trigger rather than a prop.
+        classNames={['transition transition-transform ease-in-out', 'group-data-[state=open]:rotate-90']}
+      />
+    </IconBlock>
+  );
 
   return (
     <Collapsible.Trigger
       {...props}
       className={mx(
-        'group p-1 grid grid-cols-[2rem_1fr_2rem] items-center select-none w-full text-start dx-focus-ring-inset',
+        'group p-1 items-center select-none w-full text-start dx-focus-ring-inset',
+        caret === 'end' ? 'flex' : 'grid grid-cols-[2rem_1fr_2rem]',
         classNames,
       )}
     >
-      <IconBlock>
-        <Icon
-          size={4}
-          icon={'ph--caret-right--regular'}
-          style={{ transitionDuration: `${duration}ms` }}
-          // The machine owns the state, so the caret reads it off the trigger rather than a prop.
-          classNames={['transition transition-transform ease-in-out', 'group-data-[state=open]:rotate-90']}
-        />
-      </IconBlock>
-      <div className='flex grow items-center overflow-hidden truncate'>{children}</div>
+      {caret === 'start' && disclosure}
+      <div className={mx('flex items-center overflow-hidden truncate', caret === 'end' ? 'min-w-0' : 'grow')}>
+        {children}
+      </div>
+      {caret === 'end' && disclosure}
       {icon && <IconBlock>{icon}</IconBlock>}
     </Collapsible.Trigger>
   );
