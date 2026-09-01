@@ -153,7 +153,9 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   // Constructed eagerly (mirroring OtelMetrics, which registers with TRACE_PROCESSOR at
   // construction) but only when telemetry is on — a disabled session forwards nothing.
   const remoteMetrics =
-    metricsEnabled && observabilityWorker && !disabled ? new RemoteMetricsForwarder(observabilityWorker.post) : undefined;
+    metricsEnabled && observabilityWorker && !disabled
+      ? new RemoteMetricsForwarder(observabilityWorker.post)
+      : undefined;
   const metrics =
     metricsEnabled && !observabilityWorker
       ? new OtelMetrics({
