@@ -26,14 +26,21 @@ export const ATTRIBUTES = {
   input: 'dxos.ai.input',
   output: 'dxos.ai.output',
   tools: 'dxos.ai.tools',
+  /** Set when any of the above was cut to fit, so a consumer does not read a fragment as the whole. */
+  truncated: 'dxos.ai.truncated',
 } as const;
 
 export type ContentTransformerOptions = {
-  /** Cap per serialized content attribute; oversized values are cut mid-JSON and forwarded raw. */
+  /** Cap per serialized content attribute; a value over it is cut and the span marked truncated. */
   maxContentLength?: number;
 };
 
-const DEFAULT_MAX_CONTENT_LENGTH = 200_000;
+/**
+ * Per attribute, so a single event carries at most three times this plus metadata. Sized well under
+ * the ~1 MB an ingestion request is expected to hold, since the alternative to cutting is an event
+ * rejected whole — and the largest conversations are the ones worth having.
+ */
+const DEFAULT_MAX_CONTENT_LENGTH = 64_000;
 
 /**
  * Span transformer stamping prompt, response, and tool names onto the model-call span as
@@ -49,19 +56,27 @@ export const makeContentSpanTransformer = (options?: ContentTransformerOptions):
   // here fails the call. Tool results are arbitrary values — a cycle or a BigInt throws from
   // `JSON.stringify` — so each attribute is built and stamped independently, and a failure costs
   // only its own attribute.
-  const stamp = (span: Tracer.Span, key: string, value: () => unknown): void => {
+  const stamp = (span: Tracer.Span, key: string, value: () => unknown): boolean => {
     try {
-      span.attribute(key, truncate(JSON.stringify(value())));
+      const serialized = JSON.stringify(value());
+      span.attribute(key, truncate(serialized));
+      return serialized.length > maxLength;
     } catch (err) {
       log.catch(err, { key });
+      return false;
     }
   };
 
   return ({ prompt, tools, response, span }) => {
-    stamp(span, ATTRIBUTES.input, () => serializePrompt(prompt));
-    stamp(span, ATTRIBUTES.output, () => serializeResponse(response));
+    // Cutting a serialized value leaves it unparseable, so the fragment is forwarded raw. Say so on
+    // the span rather than leaving a consumer to infer it from a parse failure.
+    let truncated = stamp(span, ATTRIBUTES.input, () => serializePrompt(prompt));
+    truncated = stamp(span, ATTRIBUTES.output, () => serializeResponse(response)) || truncated;
     if (tools.length > 0) {
-      stamp(span, ATTRIBUTES.tools, () => tools.map((tool) => ({ name: tool.name })));
+      truncated = stamp(span, ATTRIBUTES.tools, () => tools.map((tool) => ({ name: tool.name }))) || truncated;
+    }
+    if (truncated) {
+      span.attribute(ATTRIBUTES.truncated, true);
     }
   };
 };

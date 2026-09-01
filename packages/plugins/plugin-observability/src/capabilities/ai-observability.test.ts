@@ -62,6 +62,16 @@ describe('AI observability wiring', () => {
     }),
   );
 
+  it.effect('records only the model call, not the spans around it', () =>
+    Effect.gen(function* () {
+      const { events, flush, callModel } = yield* setup();
+      yield* callModel;
+      yield* flush;
+
+      expect(events.map(({ properties }) => properties.$ai_span_name)).toEqual(['LanguageModel.generateText']);
+    }),
+  );
+
   it.effect('reports nothing while telemetry is off', () =>
     Effect.gen(function* () {
       const { events, flush, callModel } = yield* setup({ captureEnabled: () => false });
@@ -123,6 +133,10 @@ const setup = ({
     // model-call span beneath it.
     const annotations = declaresSpace ? { [AiTelemetry.ATTRIBUTES.spaceId]: SPACE_ID } : {};
     const callModel = LanguageModel.generateText({ prompt: 'hi' }).pipe(
+      // The enclosing span stands in for `AiSession.createRequest`. The provider samples it away —
+      // only model calls are recorded — so reaching the policy at all proves the annotation travels
+      // on the fiber rather than through the parent span.
+      Effect.withSpan('AiSession.createRequest'),
       Effect.annotateSpans(annotations),
       Effect.provide(layer),
     );

@@ -39,7 +39,10 @@ export const AiObservability = Capability.lazyModule(
   'AiObservability',
   {
     environments: [],
-    requires: [ObservabilityCapabilities.Observability],
+    // Deliberately does not require `Observability`: it resolves that per span instead, so
+    // observability initialization (which awaits a network fetch) stays off the path between the
+    // Startup wave and the process-manager runtime.
+    requires: [],
     provides: [Capabilities.RuntimeServices],
     activatesOn: ActivationEvents.Startup,
   },

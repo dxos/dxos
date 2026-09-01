@@ -47,7 +47,19 @@ describe('AiTelemetry', () => {
       yield* LanguageModel.generateText({ prompt: 'x'.repeat(500) }).pipe(Effect.provide(layer));
       yield* Effect.promise(() => provider.forceFlush());
 
-      expect(String(modelSpan(exporter).attributes['dxos.ai.input'])).toHaveLength(32);
+      const span = modelSpan(exporter);
+      expect(String(span.attributes[AiTelemetry.ATTRIBUTES.input])).toHaveLength(32);
+      expect(span.attributes[AiTelemetry.ATTRIBUTES.truncated]).toEqual(true);
+    }),
+  );
+
+  it.effect('marks nothing truncated when everything fits', () =>
+    Effect.gen(function* () {
+      const { exporter, provider, layer } = setup();
+      yield* LanguageModel.generateText({ prompt: 'hi' }).pipe(Effect.provide(layer));
+      yield* Effect.promise(() => provider.forceFlush());
+
+      expect(modelSpan(exporter).attributes[AiTelemetry.ATTRIBUTES.truncated]).toBeUndefined();
     }),
   );
 
@@ -83,6 +95,7 @@ describe('AiTelemetry', () => {
       input: 'dxos.ai.input',
       output: 'dxos.ai.output',
       tools: 'dxos.ai.tools',
+      truncated: 'dxos.ai.truncated',
     });
   });
 

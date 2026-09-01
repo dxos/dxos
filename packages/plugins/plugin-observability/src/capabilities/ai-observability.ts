@@ -11,7 +11,7 @@ import { AiTelemetry } from '@dxos/ai';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { makeTracer } from '@dxos/effect';
-import { AiObservability } from '@dxos/observability';
+import { AiObservability, type Observability } from '@dxos/observability';
 
 import { ObservabilityCapabilities } from '#types';
 
@@ -56,14 +56,21 @@ const contentCaptureAllowed = (_spaceId: string): boolean => {
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const observability = yield* ObservabilityCapabilities.Observability;
+    // Resolved per span rather than required, so this module does not put observability
+    // initialization — which awaits its data providers, one of which fetches IP geolocation over
+    // the network — between the Startup wave and the process-manager runtime it must beat. Nothing
+    // here needs the instance until a model call ends, long after boot.
+    const capabilities = yield* Capability.Service;
+    const observability = (): Observability.Observability | undefined =>
+      capabilities.getAll(ObservabilityCapabilities.Observability)[0];
 
     const provider = yield* Effect.promise(() =>
       AiObservability.createAiTracerProvider({
-        captureEvent: (event, properties) => observability.events.captureEvent(event, properties),
+        captureEvent: (event, properties) => observability()?.events.captureEvent(event, properties),
         // Read per span rather than captured: the user can toggle telemetry mid-session, and
         // `captureEvent` alone would leave the decision to the PostHog client's own opt-out flag.
-        captureEnabled: () => observability.enabled,
+        // A span ending before observability is up reports nothing, which is the safe direction.
+        captureEnabled: () => observability()?.enabled ?? false,
         allowContent: contentCaptureAllowed,
       }),
     );

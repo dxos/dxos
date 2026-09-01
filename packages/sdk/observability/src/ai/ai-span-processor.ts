@@ -66,6 +66,7 @@ const SPACE_ID_ATTR = 'dxos.ai.space_id';
 const INPUT_ATTR = 'dxos.ai.input';
 const OUTPUT_ATTR = 'dxos.ai.output';
 const TOOLS_ATTR = 'dxos.ai.tools';
+const TRUNCATED_ATTR = 'dxos.ai.truncated';
 
 /**
  * Forwards finished GenAI spans to PostHog as `$ai_generation` events via the injected capture
@@ -116,12 +117,15 @@ export class AiSpanProcessor implements SpanProcessor {
       $ai_input_tokens: attributes['gen_ai.usage.input_tokens'],
       $ai_output_tokens: attributes['gen_ai.usage.output_tokens'],
       $ai_latency: hrTimeToSeconds(span.duration),
-      $ai_stream: span.name === 'LanguageModel.streamText' ? true : undefined,
+      $ai_stream: span.name === `${MODEL_CALL_SPAN_PREFIX}streamText` ? true : undefined,
       $ai_session_id: attributes[SESSION_ID_ATTR],
       $ai_model_parameters: modelParameters(attributes),
       $ai_input: content ? parseJsonAttribute(attributes[INPUT_ATTR]) : undefined,
       $ai_output_choices: content ? parseJsonAttribute(attributes[OUTPUT_ATTR]) : undefined,
       $ai_tools: content ? parseJsonAttribute(attributes[TOOLS_ATTR]) : undefined,
+      // A cut value is no longer parseable, so it is forwarded as the raw fragment; this says which
+      // events those are rather than leaving a string where an array was expected to look like a bug.
+      $ai_content_truncated: content && attributes[TRUNCATED_ATTR] === true ? true : undefined,
     };
 
     if (span.status.code === SpanStatusCode.ERROR) {
@@ -142,16 +146,38 @@ export class AiSpanProcessor implements SpanProcessor {
 }
 
 /**
+ * Prefix of the span names `effect/unstable/ai` gives model calls. Sampling on it is what keeps
+ * this provider cheap: it backs an app-wide `Tracer`, so without it every span the app emits — a
+ * hundred-odd `withSpan` sites plus every operation — would be allocated and attributed in full
+ * just to be discarded by the marker check in `onEnd`.
+ */
+const MODEL_CALL_SPAN_PREFIX = 'LanguageModel.';
+
+/**
  * Standalone tracer provider carrying only the AI span processor. Deliberately not registered as
  * the global OTel provider — the SigNoz exporter (extensions/otel) owns that — so AI capture and
  * infrastructure tracing cannot clobber each other's configuration or sampling.
+ *
+ * Only model-call spans are recorded. Their `dxos.ai.*` annotations survive an unrecorded parent,
+ * because Effect carries span annotations on the fiber and stamps them onto each span as it is
+ * created rather than inheriting them through the parent span.
  *
  * The tracer SDK is imported dynamically to keep it out of the eager boot graph, since this module
  * is reachable from the package barrel.
  */
 export const createAiTracerProvider = async (options: Options): Promise<BasicTracerProvider> => {
-  const { BasicTracerProvider } = await import('@opentelemetry/sdk-trace-base');
-  return new BasicTracerProvider({ spanProcessors: [new AiSpanProcessor(options)] });
+  const { BasicTracerProvider, SamplingDecision } = await import('@opentelemetry/sdk-trace-base');
+  return new BasicTracerProvider({
+    sampler: {
+      shouldSample: (_context, _traceId, spanName) => ({
+        decision: spanName.startsWith(MODEL_CALL_SPAN_PREFIX)
+          ? SamplingDecision.RECORD_AND_SAMPLED
+          : SamplingDecision.NOT_RECORD,
+      }),
+      toString: () => 'AiSpanSampler',
+    },
+    spanProcessors: [new AiSpanProcessor(options)],
+  });
 };
 
 const hrTimeToSeconds = ([seconds, nanos]: [number, number]): number => seconds + nanos / 1e9;

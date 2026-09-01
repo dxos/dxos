@@ -93,6 +93,23 @@ describe('AiSpanProcessor', () => {
     expect(events[0]?.properties.$ai_output_choices).toEqual('[{"role":"assist');
   });
 
+  test('marks an event whose content was cut', async ({ expect }) => {
+    const { events, tracer } = await setup();
+    tracer
+      .startSpan('LanguageModel.generateText', {
+        attributes: {
+          'gen_ai.system': 'anthropic',
+          'dxos.ai.space_id': PLAINTEXT_SPACE,
+          'dxos.ai.output': '[{"role":"assist',
+          'dxos.ai.truncated': true,
+        },
+      })
+      .end();
+
+    expect(events[0]?.properties.$ai_content_truncated).toEqual(true);
+    expect(events[0]?.properties.$ai_output_choices).toEqual('[{"role":"assist');
+  });
+
   test('drops content the policy rejects, keeping metadata', async ({ expect }) => {
     const { events, tracer } = await setup({ allowContent: (spaceId) => spaceId === PLAINTEXT_SPACE });
     tracer

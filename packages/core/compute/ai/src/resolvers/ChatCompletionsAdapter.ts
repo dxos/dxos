@@ -241,6 +241,12 @@ export type ApiFormat = 'ollama' | 'openai';
 export type ChatCompletionsClientConfig = {
   readonly baseUrl: string;
   readonly apiFormat: ApiFormat;
+  /**
+   * The serving product, reported as `gen_ai.system`. Distinct from {@link ApiFormat}, which is the
+   * wire dialect: LM Studio and any other OpenAI-compatible endpoint speak `'openai'` without being
+   * OpenAI, and consumers price on this field. Defaults to the API format.
+   */
+  readonly provider?: string;
   readonly transformClient?: (client: HttpClient.HttpClient) => HttpClient.HttpClient;
   /**
    * Maximum duration to wait for the HTTP response to start. Applies to both
@@ -655,7 +661,7 @@ export const make = (model: string) =>
       generateText: (options) =>
         Effect.gen(function* () {
           const idGen = yield* IdGenerator.IdGenerator;
-          annotateRequest(options.span, model, config.apiFormat);
+          annotateRequest(options.span, model, config);
 
           const messages = promptToMessages(options.prompt, config.apiFormat);
           const jsonFormat = options.responseFormat.type === 'json';
@@ -727,7 +733,7 @@ export const make = (model: string) =>
         Stream.unwrap(
           Effect.gen(function* () {
             const idGen = yield* IdGenerator.IdGenerator;
-            annotateRequest(options.span, model, config.apiFormat);
+            annotateRequest(options.span, model, config);
 
             const messages = promptToMessages(options.prompt, config.apiFormat);
             const jsonFormat = options.responseFormat.type === 'json';
@@ -961,9 +967,13 @@ export const make = (model: string) =>
   });
 
 /** GenAI span annotations (OTel semantic conventions), matching what `@effect/ai-anthropic` emits. */
-const annotateRequest = (span: LanguageModel.ProviderOptions['span'], model: string, apiFormat: ApiFormat): void =>
+const annotateRequest = (
+  span: LanguageModel.ProviderOptions['span'],
+  model: string,
+  config: ChatCompletionsClientConfig,
+): void =>
   Telemetry.addGenAIAnnotations(span, {
-    system: apiFormat,
+    system: config.provider ?? config.apiFormat,
     operation: { name: 'chat' },
     request: { model },
   });
