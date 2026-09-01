@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Tracer from 'effect/Tracer';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import {
@@ -19,6 +20,7 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Process from '@dxos/compute/Process';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Trace from '@dxos/compute/Trace';
+import { makeGlobalTracer } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 // Explicit import so the emitted `.d.ts` references the package via its public
@@ -186,11 +188,9 @@ export default Capability.makeModule(
 
     // Base services required by ProcessManager and the operation invoker.
     // Sensible defaults are provided here; plugins that want alternative
-    // implementations (e.g. persistent KV store, real tracing) can contribute
-    // their own LayerSpec entries against the ServiceResolver.
+    // implementations (e.g. persistent KV store) can contribute their own LayerSpec entries
+    // against the ServiceResolver.
     // Snapshotted like the LayerSpec list above: these bake into the runtime built below.
-    // A `Tracer` here is inherited by every fiber the runtime runs, which is what makes the
-    // spans subsystems already emit reach an exporter without any of them knowing about one.
     // Last contribution wins for any service two contributors both provide; the late-arrival watch
     // above covers the ordering hazard, not that one.
     const runtimeServicesLayer = Layer.mergeAll(Layer.empty, ...runtimeServiceContributions.get());
@@ -203,6 +203,13 @@ export default Capability.makeModule(
       OperationHandlerSet.provide(handlerSet),
       layerIdb,
       Layer.succeed(Trace.TraceSink, mergedTraceSink),
+      // Effect's default `Tracer` discards every span, so the ~100 `withSpan` sites in the app and
+      // every operation invocation were unobservable. This one is inherited by every fiber the
+      // runtime runs. It reads the OpenTelemetry API's global provider, which is a proxy: it no-ops
+      // until something registers a real provider behind it and delegates from then on — so the
+      // framework installs it unconditionally, with no knowledge of whether observability exists.
+      Layer.succeed(Tracer.Tracer, makeGlobalTracer('@dxos/app-framework/process-manager')),
+      // After the tracer, so a plugin that wants a different one can still say so.
       runtimeServicesLayer,
     );
 

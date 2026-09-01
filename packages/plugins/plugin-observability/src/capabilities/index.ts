@@ -34,8 +34,7 @@ export const ClientReady = Capability.lazyModule(
   () => import('./client-ready'),
 );
 /**
- * Separate from {@link Observability} because the two have opposite activation contracts, not
- * because AI capture is its own concern.
+ * Separate from {@link Observability} because the two have opposite activation contracts.
  *
  * This must run at Startup: the process manager snapshots `RuntimeServices` when it builds the
  * runtime, and a layer contributed after that is silently absent. `Observability` is dependency-mode
@@ -44,9 +43,9 @@ export const ClientReady = Capability.lazyModule(
  * mean either putting that fetch between the Startup wave and the runtime, or contributing the layer
  * too late to be seen.
  *
- * So the module holds only the wiring, resolves the `Observability` capability per span rather than
- * requiring it, and stays lazy so none of the AI telemetry code is parsed for a user who never
- * makes a model call.
+ * So the module holds only the AI-specific wiring, resolves the `Observability` capability per span
+ * rather than requiring it, and stays lazy so none of the AI telemetry code is parsed for a user who
+ * never makes a model call.
  */
 export const AiObservability = Capability.lazyModule(
   'AiObservability',

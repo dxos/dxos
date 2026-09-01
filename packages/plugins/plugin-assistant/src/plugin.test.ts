@@ -2,19 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
+import { trace } from '@opentelemetry/api';
 import { BasicTracerProvider, InMemorySpanExporter, SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Tracer from 'effect/Tracer';
 import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
-import { describe, test } from 'vitest';
+import { describe, onTestFinished, test } from 'vitest';
 
 import { AgentService as AgentServiceRuntime } from '@dxos/agent-runtime';
 import { AiService } from '@dxos/ai';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
-import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
-import * as Capabilities from '@dxos/app-framework/Capabilities';
-import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { AiContext } from '@dxos/assistant';
@@ -25,7 +22,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Query, Ref, Registry } from '@dxos/echo';
-import { EffectEx, makeTracer } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { DXN, EntityId } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
@@ -215,26 +212,14 @@ describe('AssistantPlugin', () => {
     );
   });
 
-  test('exports model-call spans through a runtime-installed tracer', async ({ expect }) => {
+  test('exports model-call spans through the process manager tracer', async ({ expect }) => {
     const exporter = new InMemorySpanExporter();
     const provider = new BasicTracerProvider({ spanProcessors: [new SimpleSpanProcessor(exporter)] });
-    // Stands in for plugin-observability: contributes a tracer with no knowledge of the AI stack.
-    const TracerPlugin = Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.test.tracer'), name: 'Tracer' })).pipe(
-      Plugin.addModule(
-        Capability.inlineModule(
-          'tracer',
-          { provides: [Capabilities.RuntimeServices], activatesOn: ActivationEvents.Startup },
-          () =>
-            Effect.succeed([
-              Capability.contribute(
-                Capabilities.RuntimeServices,
-                Layer.succeed(Tracer.Tracer, makeTracer(provider, 'test')),
-              ),
-            ]),
-        ),
-      ),
-      Plugin.make,
-    );
+    // No plugin contributes a tracer. The framework installs one over the OpenTelemetry global, so
+    // registering a provider is all it takes for the spans the AI stack already emits to be
+    // exported — which is what lets AI capture be a span processor rather than a tracing stack.
+    trace.setGlobalTracerProvider(provider);
+    onTestFinished(() => trace.disable());
 
     await using harness = await createComposerTestApp({
       plugins: [
@@ -246,7 +231,6 @@ describe('AssistantPlugin', () => {
           ]),
         }),
         RoutinePlugin.make(),
-        TracerPlugin(),
       ],
     });
 

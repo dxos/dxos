@@ -4,13 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Tracer from 'effect/Tracer';
 import * as Telemetry from 'effect/unstable/ai/Telemetry';
 
 import { AiTelemetry } from '@dxos/ai';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { makeGlobalTracer } from '@dxos/effect';
 import * as AiObservability from '@dxos/observability/AiObservability';
 import type * as Observability from '@dxos/observability/Observability';
 import * as ObservabilityExtension from '@dxos/observability/ObservabilityExtension';
@@ -52,18 +50,17 @@ const contentCaptureAllowed = (_spaceId: string): boolean => {
 };
 
 /**
- * Installs the process manager's tracing backend, and the AI capture that rides on it.
+ * Wires AI capture onto the tracing the process manager already does.
  *
- * Two things, deliberately together. The `Tracer` is the baseline: Effect's default is a no-op, so
- * every `withSpan` in the app was created and discarded, and one tracer on the process-manager
- * runtime makes all of them real. It is built over the OTel API's global provider, which is a proxy
- * — spans no-op until observability initialization registers the real provider behind it, and start
- * flowing from then on — so this can be contributed at Startup without waiting for that.
+ * The runtime's `Tracer` is not installed here — the framework installs one over the OpenTelemetry
+ * global, so every span the app emits is already recorded and exported. What is left is the part
+ * that is specific to model calls: a processor that turns their spans into `Generation` records,
+ * and effect's `CurrentSpanTransformer`, which is the only route to prompt and response content
+ * since the GenAI conventions deliberately exclude it.
  *
- * AI capture is then only what the baseline does not already give: a processor that turns model-call
- * spans into `Generation` records, and effect's `CurrentSpanTransformer`, which is the only way to
- * reach prompt and response content since the GenAI conventions deliberately exclude it. It needs no
- * provider, no sampler and no tracer of its own — those all belong to the baseline.
+ * The transformer is contributed rather than installed by the AI stack because it serializes every
+ * prompt and response: it belongs with the sink that consumes its output, not with the harness that
+ * would pay for it whether or not anything reads it.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -87,11 +84,9 @@ export default Capability.makeModule(
     );
     yield* Effect.addFinalizer(() => Effect.sync(detach));
 
-    const layer = Layer.mergeAll(
-      Layer.succeed(Tracer.Tracer, makeGlobalTracer('@dxos/plugin-observability')),
+    return Capability.contribute(
+      Capabilities.RuntimeServices,
       Layer.succeed(Telemetry.CurrentSpanTransformer, AiTelemetry.makeSpanTransformer()),
     );
-
-    return Capability.contribute(Capabilities.RuntimeServices, layer);
   }),
 );
