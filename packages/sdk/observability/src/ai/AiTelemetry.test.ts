@@ -5,29 +5,28 @@
 import { SpanStatusCode } from '@opentelemetry/api';
 import { describe, test } from 'vitest';
 
-import { createAiTracerProvider } from './ai-span-processor';
-
-type Captured = { event: string; properties: Record<string, unknown> };
+import type * as ObservabilityExtension from '../ObservabilityExtension';
+import { createAiTracerProvider } from './AiTelemetry';
 
 const setup = async ({
   allowContent = () => true,
   captureEnabled = () => true,
 }: { allowContent?: (spaceId: string) => boolean; captureEnabled?: () => boolean } = {}) => {
-  const events: Captured[] = [];
+  const generations: ObservabilityExtension.Generation[] = [];
   const provider = await createAiTracerProvider({
-    captureEvent: (event, properties) => events.push({ event, properties }),
+    captureGeneration: (generation) => generations.push(generation),
     captureEnabled,
     allowContent,
   });
-  return { events, tracer: provider.getTracer('test') };
+  return { generations, tracer: provider.getTracer('test') };
 };
 
-/** Every span the suite builds carries a space, since a span without one never reports content. */
+/** A span without a space never reports content, so every content case here names one. */
 const PLAINTEXT_SPACE = 'plaintext-space';
 
 describe('AiSpanProcessor', () => {
-  test('maps gen_ai spans to $ai_generation', async ({ expect }) => {
-    const { events, tracer } = await setup();
+  test('reports a gen_ai span as a generation', async ({ expect }) => {
+    const { generations, tracer } = await setup();
     tracer
       .startSpan('LanguageModel.streamText', {
         attributes: {
@@ -41,29 +40,28 @@ describe('AiSpanProcessor', () => {
       })
       .end();
 
-    expect(events).toHaveLength(1);
-    expect(events[0]?.event).toEqual('$ai_generation');
-    expect(events[0]?.properties).toMatchObject({
-      $ai_provider: 'anthropic',
-      $ai_model: 'claude-sonnet-5',
-      $ai_input_tokens: 10,
-      $ai_output_tokens: 20,
-      $ai_stream: true,
-      $ai_session_id: 'feed-1',
-      $ai_model_parameters: { temperature: 0.5 },
+    expect(generations).toHaveLength(1);
+    expect(generations[0]).toMatchObject({
+      provider: 'anthropic',
+      model: 'claude-sonnet-5',
+      inputTokens: 10,
+      outputTokens: 20,
+      streaming: true,
+      sessionId: 'feed-1',
+      parameters: { temperature: 0.5 },
     });
-    expect(events[0]?.properties.$ai_trace_id).toBeTypeOf('string');
-    expect(events[0]?.properties.$ai_latency).toBeTypeOf('number');
+    expect(generations[0]?.traceId).toBeTypeOf('string');
+    expect(generations[0]?.latency).toBeTypeOf('number');
   });
 
   test('ignores spans without gen_ai attributes', async ({ expect }) => {
-    const { events, tracer } = await setup();
+    const { generations, tracer } = await setup();
     tracer.startSpan('AiSession.createRequest').end();
-    expect(events).toHaveLength(0);
+    expect(generations).toHaveLength(0);
   });
 
   test('reduces errors to the exception class', async ({ expect }) => {
-    const { events, tracer } = await setup();
+    const { generations, tracer } = await setup();
     const span = tracer.startSpan('LanguageModel.generateText', {
       attributes: { 'gen_ai.system': 'anthropic' },
     });
@@ -71,13 +69,12 @@ describe('AiSpanProcessor', () => {
     span.setStatus({ code: SpanStatusCode.ERROR, message: 'the user secret' });
     span.end();
 
-    expect(events[0]?.properties.$ai_is_error).toEqual(true);
-    expect(events[0]?.properties.$ai_error).toEqual('TypeError');
-    expect(JSON.stringify(events[0]?.properties)).not.toContain('secret');
+    expect(generations[0]?.errorClass).toEqual('TypeError');
+    expect(JSON.stringify(generations[0])).not.toContain('secret');
   });
 
-  test('parses content attributes, forwarding truncated JSON raw', async ({ expect }) => {
-    const { events, tracer } = await setup();
+  test('parses content attributes, carrying truncated JSON raw', async ({ expect }) => {
+    const { generations, tracer } = await setup();
     tracer
       .startSpan('LanguageModel.generateText', {
         attributes: {
@@ -89,12 +86,12 @@ describe('AiSpanProcessor', () => {
       })
       .end();
 
-    expect(events[0]?.properties.$ai_input).toEqual([{ role: 'user', content: 'hi' }]);
-    expect(events[0]?.properties.$ai_output_choices).toEqual('[{"role":"assist');
+    expect(generations[0]?.content?.input).toEqual([{ role: 'user', content: 'hi' }]);
+    expect(generations[0]?.content?.output).toEqual('[{"role":"assist');
   });
 
-  test('marks an event whose content was cut', async ({ expect }) => {
-    const { events, tracer } = await setup();
+  test('marks a generation whose content was cut', async ({ expect }) => {
+    const { generations, tracer } = await setup();
     tracer
       .startSpan('LanguageModel.generateText', {
         attributes: {
@@ -106,12 +103,29 @@ describe('AiSpanProcessor', () => {
       })
       .end();
 
-    expect(events[0]?.properties.$ai_content_truncated).toEqual(true);
-    expect(events[0]?.properties.$ai_output_choices).toEqual('[{"role":"assist');
+    expect(generations[0]?.content?.truncated).toEqual(true);
+  });
+
+  test('reports the prompt-cache counts as metadata, even when content is denied', async ({ expect }) => {
+    const { generations, tracer } = await setup({ allowContent: () => false });
+    tracer
+      .startSpan('LanguageModel.generateText', {
+        attributes: {
+          'gen_ai.system': 'anthropic',
+          'gen_ai.usage.input_tokens': 3,
+          'dxos.ai.space_id': 'encrypted-space',
+          'dxos.ai.cache_read_tokens': 11,
+          'dxos.ai.cache_write_tokens': 7,
+        },
+      })
+      .end();
+
+    expect(generations[0]).toMatchObject({ inputTokens: 3, cacheReadTokens: 11, cacheWriteTokens: 7 });
+    expect(generations[0]?.content).toBeUndefined();
   });
 
   test('drops content the policy rejects, keeping metadata', async ({ expect }) => {
-    const { events, tracer } = await setup({ allowContent: (spaceId) => spaceId === PLAINTEXT_SPACE });
+    const { generations, tracer } = await setup({ allowContent: (spaceId) => spaceId === PLAINTEXT_SPACE });
     tracer
       .startSpan('LanguageModel.generateText', {
         attributes: {
@@ -125,16 +139,14 @@ describe('AiSpanProcessor', () => {
       })
       .end();
 
-    expect(events[0]?.properties.$ai_input).toBeUndefined();
-    expect(events[0]?.properties.$ai_output_choices).toBeUndefined();
-    expect(events[0]?.properties.$ai_tools).toBeUndefined();
-    expect(events[0]?.properties.$ai_input_tokens).toEqual(10);
-    expect(JSON.stringify(events[0]?.properties)).not.toContain('private');
+    expect(generations[0]?.content).toBeUndefined();
+    expect(generations[0]?.inputTokens).toEqual(10);
+    expect(JSON.stringify(generations[0])).not.toContain('private');
   });
 
   test('denies content when the span carries no space, without consulting the policy', async ({ expect }) => {
     let asked = false;
-    const { events, tracer } = await setup({
+    const { generations, tracer } = await setup({
       allowContent: () => {
         asked = true;
         return true;
@@ -151,37 +163,37 @@ describe('AiSpanProcessor', () => {
       .end();
 
     expect(asked).toEqual(false);
-    expect(events[0]?.properties.$ai_input).toBeUndefined();
-    expect(events[0]?.properties.$ai_input_tokens).toEqual(10);
+    expect(generations[0]?.content).toBeUndefined();
+    expect(generations[0]?.inputTokens).toEqual(10);
   });
 
   test('reports nothing at all while telemetry is off', async ({ expect }) => {
-    const { events, tracer } = await setup({ captureEnabled: () => false });
+    const { generations, tracer } = await setup({ captureEnabled: () => false });
     tracer
       .startSpan('LanguageModel.generateText', {
         attributes: { 'gen_ai.system': 'anthropic', 'dxos.ai.space_id': PLAINTEXT_SPACE },
       })
       .end();
 
-    expect(events).toHaveLength(0);
+    expect(generations).toHaveLength(0);
   });
 
   test('reads the opt-in per span, so a mid-session toggle takes effect', async ({ expect }) => {
     let enabled = false;
-    const { events, tracer } = await setup({ captureEnabled: () => enabled });
+    const { generations, tracer } = await setup({ captureEnabled: () => enabled });
     const emit = () => tracer.startSpan('LanguageModel.generateText', { attributes: { 'gen_ai.system': 'a' } }).end();
 
     emit();
-    expect(events).toHaveLength(0);
+    expect(generations).toHaveLength(0);
     enabled = true;
     emit();
-    expect(events).toHaveLength(1);
+    expect(generations).toHaveLength(1);
   });
 
-  test('survives a capture callback that throws', async ({ expect }) => {
+  test('survives a sink that throws', async ({ expect }) => {
     const provider = await createAiTracerProvider({
-      captureEvent: () => {
-        throw new Error('posthog exploded');
+      captureGeneration: () => {
+        throw new Error('sink exploded');
       },
       captureEnabled: () => true,
       allowContent: () => true,

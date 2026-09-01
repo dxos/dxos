@@ -17,9 +17,9 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./AiObservability": {
-      "types": "./dist/types/src/ai/AiObservability.d.ts",
-      "import": "./dist/lib/ai/AiObservability.mjs"
+    "./AiTelemetry": {
+      "types": "./dist/types/src/ai/AiTelemetry.d.ts",
+      "import": "./dist/lib/ai/AiTelemetry.mjs"
     },
     "./Observability": {
       "types": "./dist/types/src/Observability.d.ts",

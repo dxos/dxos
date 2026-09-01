@@ -9,7 +9,7 @@ export default defineConfig({
     'index': 'src/index.ts',
     // Kept off the root barrel, unlike the namespaces below: the parent branch's boot still
     // imports that barrel, and the boot set is the parse graph, so the AI sink would ride along.
-    'ai/AiObservability': 'src/ai/AiObservability.ts',
+    'ai/AiTelemetry': 'src/ai/AiTelemetry.ts',
     'Observability': 'src/Observability.ts',
     'ObservabilityExtension': 'src/ObservabilityExtension.ts',
     'providers/ObservabilityClientProvider': 'src/providers/ObservabilityClientProvider.ts',

@@ -12,7 +12,8 @@ import * as Telemetry from 'effect/unstable/ai/Telemetry';
 
 import { AiTelemetry } from '@dxos/ai';
 import { makeTracer } from '@dxos/effect';
-import * as AiObservability from '@dxos/observability/AiObservability';
+import * as AiTelemetrySink from '@dxos/observability/AiTelemetry';
+import type * as ObservabilityExtension from '@dxos/observability/ObservabilityExtension';
 
 /**
  * Producer and sink live in packages that cannot import each other — telemetry sits below the AI
@@ -28,13 +29,9 @@ describe('AI observability wiring', () => {
       yield* flush;
 
       expect(events).toHaveLength(1);
-      const [{ event, properties }] = events;
-      expect(event).toEqual('$ai_generation');
-      expect(properties.$ai_space_id).toBeUndefined(); // Not forwarded; it only decides the policy.
-      expect(properties.$ai_input).toEqual([{ role: 'user', content: [{ type: 'text', text: 'hi' }] }]);
-      expect(properties.$ai_output_choices).toEqual([
-        { role: 'assistant', content: [{ type: 'text', text: 'hello' }] },
-      ]);
+      const [generation] = events;
+      expect(generation.content?.input).toEqual([{ role: 'user', content: [{ type: 'text', text: 'hi' }] }]);
+      expect(generation.content?.output).toEqual([{ role: 'assistant', content: [{ type: 'text', text: 'hello' }] }]);
     }),
   );
 
@@ -44,10 +41,11 @@ describe('AI observability wiring', () => {
       yield* callModel;
       yield* flush;
 
-      expect(events[0]?.properties.$ai_input).toBeUndefined();
-      expect(events[0]?.properties.$ai_output_choices).toBeUndefined();
-      expect(events[0]?.properties.$ai_model).toEqual('test-model');
-      expect(JSON.stringify(events[0]?.properties)).not.toContain('hello');
+      expect(events[0]?.content).toBeUndefined();
+      expect(events[0]?.model).toEqual('test-model');
+      // Cache counts are metadata: they price the call and survive the content policy.
+      expect(events[0]?.cacheReadTokens).toEqual(11);
+      expect(JSON.stringify(events[0])).not.toContain('hello');
     }),
   );
 
@@ -57,8 +55,8 @@ describe('AI observability wiring', () => {
       yield* callModel;
       yield* flush;
 
-      expect(events[0]?.properties.$ai_input).toBeUndefined();
-      expect(events[0]?.properties.$ai_model).toEqual('test-model');
+      expect(events[0]?.content).toBeUndefined();
+      expect(events[0]?.model).toEqual('test-model');
     }),
   );
 
@@ -68,7 +66,7 @@ describe('AI observability wiring', () => {
       yield* callModel;
       yield* flush;
 
-      expect(events.map(({ properties }) => properties.$ai_span_name)).toEqual(['LanguageModel.generateText']);
+      expect(events.map(({ spanName }) => spanName)).toEqual(['LanguageModel.generateText']);
     }),
   );
 
@@ -83,7 +81,7 @@ describe('AI observability wiring', () => {
   );
 });
 
-type Captured = { event: string; properties: Record<string, unknown> };
+type Captured = ObservabilityExtension.Generation;
 
 const stubModel = LanguageModel.make({
   generateText: ({ span }) =>
@@ -94,7 +92,10 @@ const stubModel = LanguageModel.make({
         {
           type: 'finish' as const,
           reason: 'stop' as const,
-          usage: { inputTokens: { total: 3 }, outputTokens: { total: 5 } },
+          usage: {
+            inputTokens: { uncached: 3, total: 21, cacheRead: 11, cacheWrite: 7 },
+            outputTokens: { total: 5 },
+          },
         },
       ];
     }),
@@ -116,8 +117,8 @@ const setup = ({
   Effect.gen(function* () {
     const events: Captured[] = [];
     const provider = yield* Effect.promise(() =>
-      AiObservability.createAiTracerProvider({
-        captureEvent: (event, properties) => events.push({ event, properties }),
+      AiTelemetrySink.createAiTracerProvider({
+        captureGeneration: (generation) => events.push(generation),
         captureEnabled,
         allowContent,
       }),
@@ -126,7 +127,7 @@ const setup = ({
     const layer = Layer.mergeAll(
       Layer.effect(LanguageModel.LanguageModel, stubModel),
       Layer.succeed(Tracer.Tracer, makeTracer(provider, 'test')),
-      Layer.succeed(Telemetry.CurrentSpanTransformer, AiTelemetry.makeContentSpanTransformer()),
+      Layer.succeed(Telemetry.CurrentSpanTransformer, AiTelemetry.makeSpanTransformer()),
     );
 
     // How `AiSession` declares its space: an annotation on the enclosing effect, inherited by the

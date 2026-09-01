@@ -28,9 +28,18 @@ export const ATTRIBUTES = {
   tools: 'dxos.ai.tools',
   /** Set when any of the above was cut to fit, so a consumer does not read a fragment as the whole. */
   truncated: 'dxos.ai.truncated',
+  /**
+   * Prompt-cache token counts. Not content, and carried here only because the GenAI conventions have
+   * nowhere for them: `Telemetry.UsageAttributes` is input/output tokens and nothing else, so
+   * `gen_ai.usage.*` cannot express a cache hit. Without them `gen_ai.usage.input_tokens` — which is
+   * the *uncached* count — is the only input figure a consumer sees, and every cached turn reads as
+   * a cheap one.
+   */
+  cacheReadTokens: 'dxos.ai.cache_read_tokens',
+  cacheWriteTokens: 'dxos.ai.cache_write_tokens',
 } as const;
 
-export type ContentTransformerOptions = {
+export type SpanTransformerOptions = {
   /** Cap per serialized content attribute; a value over it is cut and the span marked truncated. */
   maxContentLength?: number;
 };
@@ -43,12 +52,16 @@ export type ContentTransformerOptions = {
 const DEFAULT_MAX_CONTENT_LENGTH = 64_000;
 
 /**
- * Span transformer stamping prompt, response, and tool names onto the model-call span as
- * `dxos.ai.*` attributes. Effect's `LanguageModel` invokes it only when one is installed, so
- * whether content is serialized at all is the installer's decision, and whether it then leaves
- * the device is the sink's.
+ * Span transformer stamping `dxos.ai.*` attributes onto the model-call span: the prompt, the
+ * response, and tool names, plus the prompt-cache token counts. Effect's `LanguageModel` invokes it
+ * only when one is installed, so whether any of this is serialized at all is the installer's
+ * decision, and whether it then leaves the device is the sink's.
+ *
+ * Cache counts ride along here rather than in their own hook because effect allows a single
+ * `CurrentSpanTransformer`, and this is the only place the response — and so its usage — is offered.
+ * They are metadata, and the sink forwards them whether or not it forwards content.
  */
-export const makeContentSpanTransformer = (options?: ContentTransformerOptions): Telemetry.SpanTransformer => {
+export const makeSpanTransformer = (options?: SpanTransformerOptions): Telemetry.SpanTransformer => {
   const maxLength = options?.maxContentLength ?? DEFAULT_MAX_CONTENT_LENGTH;
   const truncate = (value: string): string => (value.length > maxLength ? value.slice(0, maxLength) : value);
 
@@ -78,7 +91,30 @@ export const makeContentSpanTransformer = (options?: ContentTransformerOptions):
     if (truncated) {
       span.attribute(ATTRIBUTES.truncated, true);
     }
+    stampCacheUsage(span, response);
   };
+};
+
+/**
+ * Reads the prompt-cache counts off the response's finish part. Absent for a provider that does not
+ * report them (the OpenAI-compatible adapters), in which case nothing is stamped rather than zeroes,
+ * so a consumer can tell "no cache" from "no data".
+ */
+const stampCacheUsage = (span: Tracer.Span, response: ReadonlyArray<{ readonly type: string }>): void => {
+  const finish = response.find((part) => part.type === 'finish');
+  if (!finish) {
+    return;
+  }
+  const inputTokens = (field(finish, 'usage') as { inputTokens?: Record<string, unknown> } | undefined)?.inputTokens;
+  if (!inputTokens) {
+    return;
+  }
+  if (typeof inputTokens.cacheRead === 'number') {
+    span.attribute(ATTRIBUTES.cacheReadTokens, inputTokens.cacheRead);
+  }
+  if (typeof inputTokens.cacheWrite === 'number') {
+    span.attribute(ATTRIBUTES.cacheWriteTokens, inputTokens.cacheWrite);
+  }
 };
 
 // Parts are class instances across role-specific, provider-extensible unions; index access

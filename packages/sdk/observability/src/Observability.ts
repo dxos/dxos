@@ -47,6 +47,7 @@ export interface Observability {
   errors: ObservabilityExtension.Errors;
   events: ObservabilityExtension.Events;
   feedback: ObservabilityExtension.Feedback;
+  generations: ObservabilityExtension.Generations;
   /** True if at least one extension of the given kind reports as available. */
   isAvailable(kind: ObservabilityExtension.Kind): Effect.Effect<boolean>;
   metrics: ObservabilityExtension.Metrics;
@@ -208,6 +209,16 @@ class ObservabilityImpl implements Observability {
       captureEvent: (event, attributes) => {
         for (const extension of this._getExtensions('events')) {
           extension.captureEvent(event, attributes);
+        }
+      },
+    };
+  }
+
+  get generations(): ObservabilityExtension.Generations {
+    return {
+      captureGeneration: (generation) => {
+        for (const extension of this._getExtensions('generations')) {
+          extension.captureGeneration(generation);
         }
       },
     };
