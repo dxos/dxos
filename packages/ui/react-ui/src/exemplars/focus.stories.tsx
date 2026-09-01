@@ -13,8 +13,9 @@ import { mx } from '@dxos/ui-theme';
 // TODO(burdon): Implement horizontal movement between columns when column is selected.
 // TODO(burdon): Prevent tab out of app.
 
-const border =
-  'rounded-xs outline-hidden border border-subdued-separator focus:border-primary-500 focus-within:border-rose-500';
+// `dx-focus-ring` is the app's focus affordance; without it a focusable div falls back to the
+// browser's own outline, which is what these blocks were drawing.
+const border = 'dx-focus-ring rounded-xs border border-subdued-separator';
 
 /** Horizontal group over the columns; each column is one stop. */
 const Board = forwardRef<HTMLDivElement, { columns: string[][] }>(({ columns }, ref) => {
@@ -29,7 +30,7 @@ const Board = forwardRef<HTMLDivElement, { columns: string[][] }>(({ columns }, 
       ref={useMergeRefs<HTMLDivElement>([ref, focusGroupRef])}
       tabIndex={0}
       {...focusGroupProps}
-      className='flex dx-fill overflow-hidden'
+      className='flex dx-fill overflow-hidden dx-focus-ring rounded-xs'
     >
       <div className={mx('flex h-full overflow-x-auto p-4 gap-4')}>
         {columns.map((column) => (
@@ -49,9 +50,14 @@ const Column = ({ items }: { items: string[] }) => {
   });
 
   return (
-    <ScrollArea.Root orientation='vertical' classNames={mx('w-[25rem]', border)}>
+    <ScrollArea.Root orientation='vertical' classNames={mx('w-[25rem]', 'rounded-xs border border-subdued-separator')}>
       <ScrollArea.Viewport classNames='p-4'>
-        <div {...focusGroupProps} tabIndex={0} className='flex flex-col gap-4' ref={focusGroupRef}>
+        <div
+          {...focusGroupProps}
+          tabIndex={0}
+          className={mx('flex flex-col gap-4 rounded-xs', 'dx-focus-ring')}
+          ref={focusGroupRef}
+        >
           {items.map((item) => (
             <Item key={item} value={item} />
           ))}
