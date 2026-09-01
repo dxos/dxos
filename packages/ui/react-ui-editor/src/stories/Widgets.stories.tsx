@@ -103,7 +103,14 @@ const PreviewCard = () => {
   }
   return (
     <Popover.Portal>
-      <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
+      <Popover.Content
+        onOpenAutoFocus={(event) => event.preventDefault()}
+        classNames={[
+          'origin-(--radix-popover-content-transform-origin)',
+          'data-[state=open]:animate-popover-in',
+          'data-[state=closed]:animate-popover-out',
+        ]}
+      >
         <Popover.Viewport classNames='dx-card-popover-width'>
           <Card.Root border={false}>
             <Card.Header>
@@ -269,45 +276,55 @@ const previewText = trim`
 
 `;
 
+const PreviewStory = ({ trigger }: { trigger?: 'hover' | 'click' }) => {
+  const [widgets, setWidgets] = useState<XmlWidgetState[]>([]);
+  const extensions = useMemo(
+    () => [
+      image(),
+      xmlTags({
+        registry: {
+          'dxn-preview': {
+            block: true,
+            urlSchemes: ['dxn:', 'echo:'],
+            Component: PreviewBlockCard,
+          },
+          'link-preview': {
+            block: false,
+            urlSchemes: ['dxn:', 'echo:'],
+            factory: ({ label, dxn }: XmlWidgetProps<{ label: string; dxn: string }>) =>
+              label && dxn ? new AnchorWidget(label, dxn, trigger) : null,
+          },
+        },
+        setWidgets,
+      }),
+    ],
+    [trigger],
+  );
+
+  return (
+    <EditorPreviewProvider onLookup={handlePreviewLookup}>
+      <EditorStory text={previewText} extensions={extensions} />
+      <PreviewCard />
+      {widgets.map(({ id, root, Component, props }) => (
+        <div key={id}>{createPortal(<Component {...props} />, root)}</div>
+      ))}
+    </EditorPreviewProvider>
+  );
+};
+
 /**
  * Markdown image/link URLs (echo:/…) trigger block widgets via xmlTags.
+ * Inline anchors open their preview card on hover (the default) as well as click.
  */
 export const Preview: Story = {
-  render: () => {
-    const [widgets, setWidgets] = useState<XmlWidgetState[]>([]);
-    const extensions = useMemo(
-      () => [
-        image(),
-        xmlTags({
-          registry: {
-            'dxn-preview': {
-              block: true,
-              urlSchemes: ['dxn:', 'echo:'],
-              Component: PreviewBlockCard,
-            },
-            'link-preview': {
-              block: false,
-              urlSchemes: ['dxn:', 'echo:'],
-              factory: ({ label, dxn }: XmlWidgetProps<{ label: string; dxn: string }>) =>
-                label && dxn ? new AnchorWidget(label, dxn) : null,
-            },
-          },
-          setWidgets,
-        }),
-      ],
-      [],
-    );
+  render: () => <PreviewStory />,
+};
 
-    return (
-      <EditorPreviewProvider onLookup={handlePreviewLookup}>
-        <EditorStory text={previewText} extensions={extensions} />
-        <PreviewCard />
-        {widgets.map(({ id, root, Component, props }) => (
-          <div key={id}>{createPortal(<Component {...props} />, root)}</div>
-        ))}
-      </EditorPreviewProvider>
-    );
-  },
+/**
+ * Anchors with `trigger='click'` only open the preview card on click.
+ */
+export const PreviewClickTrigger: Story = {
+  render: () => <PreviewStory trigger='click' />,
 };
 
 const filler = (marker: string) =>

@@ -13,7 +13,12 @@ import { type XmlWidgetProps, type XmlWidgetState } from './xml-tags';
 
 export interface XmlWidgetNotifier {
   mounted(widget: XmlWidgetState): void;
-  unmounted(id: string): void;
+  /**
+   * `root` identifies the destroyed instance: when CodeMirror replaces a widget (same id, `eq`
+   * false — e.g. a context rebuild), it draws the NEW widget before destroying the OLD one, so an
+   * id-only unmount would wipe the replacement's fresh registration.
+   */
+  unmounted(id: string, root?: HTMLElement | null): void;
   /**
    * Re-render the mounted widget for `id` with updated props. Keyed by id rather than by widget
    * instance: a rebuild constructs fresh widgets, but `StubWidget.eq` (id equality) makes CodeMirror
@@ -213,7 +218,7 @@ export class StubWidget<TProps extends XmlWidgetProps> extends WidgetType {
       return;
     }
     this.#trace('destroy (cull)', { scrollTop: Math.round(this.#view?.scrollDOM.scrollTop ?? -1) });
-    this.notifier.unmounted(this.id);
+    this.notifier.unmounted(this.id, this.#root ?? _dom);
     this.#root = null;
     this.#view = undefined;
   }
