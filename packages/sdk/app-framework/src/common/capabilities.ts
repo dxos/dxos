@@ -140,18 +140,6 @@ export type TraceSinkFactory = (ctx: TraceSinkFactoryContext) => Trace$.Sink;
 export const TraceSink = Capability$.make<TraceSinkFactory>()('org.dxos.app-framework.capability.traceSink');
 
 /**
- * Effect layer installed into the {@link ProcessManagerRuntime}, for services every fiber running
- * on it should inherit — a `Tracer` exporting the spans the code already emits, and anything it
- * needs (e.g. `Telemetry.CurrentSpanTransformer`). Contributions are merged, so the app chooses a
- * telemetry backend without any subsystem knowing which one, or that there is one.
- *
- * @category Capability
- */
-export const RuntimeServices = Capability$.make<Layer$.Layer<never>>()(
-  'org.dxos.app-framework.capability.runtimeServices',
-);
-
-/**
  * Source of ephemeral trace messages broadcast by remote runtimes over the space swarm (DX-1125).
  * Contributed by a client-aware plugin; the process-manager capability wires the first contribution
  * (or a no-op) into the aggregate {@link ProcessMonitor} so its `subscribeToTraceMessages` surfaces

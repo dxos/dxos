@@ -261,7 +261,7 @@ describe('AssistantPlugin', () => {
     await provider.forceFlush();
 
     // The point of the test: nothing above wired a tracer into the model call. It arrives because
-    // every fiber on the process-manager runtime inherits what `RuntimeServices` contributed.
+    // every fiber on the process-manager runtime inherits the tracer the framework installs.
     const spans = exporter.getFinishedSpans();
     const modelSpan = spans.find(({ name }) => name.startsWith('LanguageModel.'));
     expect(modelSpan).toBeDefined();

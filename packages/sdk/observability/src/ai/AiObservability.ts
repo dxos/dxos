@@ -48,6 +48,40 @@ import type * as ObservabilityExtension from '../observability-extension';
  * and OTel's `MultiSpanProcessor` does not catch, so an escaping error would fail that call.
  */
 
+/**
+ * AI telemetry capture policy:
+ *
+ * | Observability toggle | Space                                 | Capture          |
+ * |----------------------|---------------------------------------|------------------|
+ * | off                  | any                                   | nothing          |
+ * | on                   | EDGE has plaintext access (all today) | metadata+content |
+ * | on                   | E2E-encrypted (future)                | metadata only    |
+ * | on                   | not declared by the call site         | metadata only    |
+ *
+ * Metadata is model, provider, tokens, latency, and trace/session ids. Content adds the prompt,
+ * the response, and tool names — including tool results, i.e. data the agent read from the space.
+ * The rationale: content that already leaves the device in plaintext for EDGE to replicate is not
+ * newly exposed in kind by telemetry, whereas an E2E space promises that plaintext never reaches
+ * infrastructure, and telemetry must not become the side channel that breaks it.
+ *
+ * The last row is the fail-closed default. A space id reaches the span only from a call site that
+ * declares one (`AiSession` does; the utility model calls behind summarization, tagging, and
+ * extraction do not), so content capture is opt-in per call site and an undeclared one reports
+ * metadata only. That is what keeps this predicate honest once it stops returning true: it can
+ * never be asked about a space nobody named.
+ *
+ * Both this predicate and the telemetry opt-in are evaluated in the sink, not at the model call, so
+ * they apply to every event on the way out (see `AiSpanProcessor` in `@dxos/observability`, which
+ * also holds the scrub rules).
+ */
+export const contentCaptureAllowed = (_spaceId: string): boolean => {
+  // Always true today because every space replicates through EDGE in plaintext. This MUST NOT
+  // stay unconditional: once E2E-encrypted spaces exist this predicate has to return false for
+  // them — and apply at the data boundary, not just the conversation's home space, since a turn
+  // that reads from an E2E space via a cross-space reference would otherwise leak its content.
+  return true;
+};
+
 export type Options = {
   /** Sink for a call that survived the policy — typically `Observability.generations`. */
   captureGeneration: (generation: ObservabilityExtension.Generation) => void;

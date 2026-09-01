@@ -94,7 +94,6 @@ export default Capability.makeModule(
 
     const layerSpecContributions = yield* Capabilities.LayerSpec;
     const traceSinkContributions = yield* Capabilities.TraceSink;
-    const runtimeServiceContributions = yield* Capabilities.RuntimeServices;
     const operationHandlerContributions = yield* Capabilities.OperationHandler;
     const remoteTraceMonitorContributions = yield* Capabilities.RemoteTraceMonitor;
     // One-shot snapshot: startup soft-ordering makes same-pass providers visible; entries
@@ -126,11 +125,6 @@ export default Capability.makeModule(
         Capabilities.LayerSpec,
         'LayerSpec',
         'contribute it with AppCapability.layerSpec (or declare activatesOn: ActivationEvents.Startup)',
-      ),
-      warnOnLateContribution(
-        Capabilities.RuntimeServices,
-        'RuntimeServices',
-        'declare activatesOn: ActivationEvents.Startup so the layer is contributed before the snapshot',
       ),
     ];
     yield* Effect.addFinalizer(() => Effect.sync(() => cancelLateContributionWatches.forEach((cancel) => cancel())));
@@ -191,10 +185,6 @@ export default Capability.makeModule(
     // implementations (e.g. persistent KV store) can contribute their own LayerSpec entries
     // against the ServiceResolver.
     // Snapshotted like the LayerSpec list above: these bake into the runtime built below.
-    // Last contribution wins for any service two contributors both provide; the late-arrival watch
-    // above covers the ordering hazard, not that one.
-    const runtimeServicesLayer = Layer.mergeAll(Layer.empty, ...runtimeServiceContributions.get());
-
     const baseLayer = Layer.mergeAll(
       Layer.succeed(Capability.Service, capabilityManager),
       Layer.succeed(Plugin.Service, pluginManager),
@@ -209,8 +199,6 @@ export default Capability.makeModule(
       // until something registers a real provider behind it and delegates from then on — so the
       // framework installs it unconditionally, with no knowledge of whether observability exists.
       Layer.succeed(Tracer.Tracer, makeGlobalTracer('@dxos/app-framework/process-manager')),
-      // After the tracer, so a plugin that wants a different one can still say so.
-      runtimeServicesLayer,
     );
 
     const processManagerLayer = ProcessManager.layer({ runtimeName: Trace.CommonRuntimeName.local }).pipe(

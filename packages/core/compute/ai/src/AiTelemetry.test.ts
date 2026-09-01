@@ -12,7 +12,10 @@ import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 import * as Telemetry from 'effect/unstable/ai/Telemetry';
 
 import { makeTracer } from '@dxos/effect';
+import { DXN } from '@dxos/keys';
 
+import * as AiModelResolver from './AiModelResolver';
+import * as AiService from './AiService';
 import * as AiTelemetry from './AiTelemetry';
 
 const makeStub = (inputTokens: Record<string, number>) =>
@@ -90,6 +93,29 @@ describe('AiTelemetry', () => {
       expect(span.attributes[AiTelemetry.ATTRIBUTES.input]).toBeUndefined();
       expect(span.attributes[AiTelemetry.ATTRIBUTES.output]).toBeDefined();
     }),
+  );
+
+  it.effect('rides along with a resolved model, so no caller has to install it', () =>
+    Effect.gen(function* () {
+      // What makes AI capture need no wiring of its own: whoever holds the model holds the hook.
+      const transformer = yield* Effect.serviceOption(Telemetry.CurrentSpanTransformer);
+      expect(transformer._tag).toEqual('Some');
+    }).pipe(
+      Effect.provide(
+        AiService.model(DXN.getName(DXN.make('example.com.model.stub'))).pipe(
+          Layer.provide(
+            AiModelResolver.buildAiService.pipe(
+              Layer.provide(
+                AiModelResolver.resolver(
+                  { name: 'stub' },
+                  Effect.succeed(() => Layer.effect(LanguageModel.LanguageModel, stubModel)),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
   );
 
   it('names the attributes the sink reads', () => {

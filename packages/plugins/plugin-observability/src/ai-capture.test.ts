@@ -18,8 +18,8 @@ import type * as ObservabilityExtension from '@dxos/observability/ObservabilityE
 /**
  * Producer and sink live in packages that cannot import each other — telemetry sits below the AI
  * stack — so each is otherwise tested against its own copy of the `dxos.ai.*` names. This drives
- * the whole path (transformer → span → processor → captured event) in the one package that depends
- * on both, which is what makes a rename on either side fail.
+ * the whole path (transformer → span → processor → generation) in a package that depends on both,
+ * which is what makes a rename on either side fail.
  */
 describe('AI observability wiring', () => {
   it.effect('reports a model call with its content', () =>
@@ -132,6 +132,7 @@ const setup = ({
     const layer = Layer.mergeAll(
       Layer.effect(LanguageModel.LanguageModel, stubModel),
       Layer.succeed(Tracer.Tracer, makeTracer(provider, 'test')),
+      // Installed explicitly here; `AiModelResolver.test.ts` covers that a resolved model brings it.
       Layer.succeed(Telemetry.CurrentSpanTransformer, AiTelemetry.makeSpanTransformer()),
     );
 
