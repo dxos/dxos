@@ -65,7 +65,16 @@ const getSymbol = (part: string) => {
   }
 };
 
-export const keySymbols = (keyBinding: string): string[] => {
-  const parts = keyBinding.split('+');
-  return parts.map(getSymbol);
-};
+/**
+ * The key caps to render for a binding, one per element.
+ *
+ * Splits sequences (`g > h`) as well as chords (`meta+k`): Zag's parser accepts both, and a
+ * sequence left whole renders as a single cap reading `G > H`. Nothing binds a sequence today —
+ * this keeps the formatter honest if something does.
+ */
+export const keySymbols = (keyBinding: string): string[] =>
+  keyBinding
+    .split('>')
+    .flatMap((step) => step.trim().split('+'))
+    .filter(Boolean)
+    .map(getSymbol);

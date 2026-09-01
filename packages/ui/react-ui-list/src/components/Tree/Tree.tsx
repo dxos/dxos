@@ -47,7 +47,6 @@ import { DEFAULT_INDENTATION, paddingIndentation } from './helpers';
 import { type TreeData } from './tree-data';
 import {
   type ColumnRenderer,
-  type HeadingRenderer,
   type IconRenderer,
   type TreeItemDataProps,
   type TreeModel,
@@ -190,7 +189,6 @@ export type TreeProps<T extends { id: string } = any> = {
   selectionMode?: 'single' | 'multiple';
   renderColumns?: ColumnRenderer<T>;
   renderIcon?: IconRenderer<T>;
-  renderHeading?: HeadingRenderer<T>;
   blockInstruction?: (params: { instruction: Instruction; source: TreeData; target: TreeData }) => boolean;
   canDrop?: (params: { source: TreeData; target: TreeData }) => boolean;
   canSelect?: (params: { item: T; path: string[] }) => boolean;
@@ -210,7 +208,6 @@ export const Tree = <T extends { id: string } = any>({
   selectionMode = 'single',
   renderColumns,
   renderIcon,
-  renderHeading,
   blockInstruction,
   canDrop,
   canSelect,
@@ -326,7 +323,6 @@ export const Tree = <T extends { id: string } = any>({
       draggable,
       renderColumns,
       renderIcon,
-      renderHeading,
       blockInstruction,
       canDrop,
       onOpenChange,
@@ -340,7 +336,6 @@ export const Tree = <T extends { id: string } = any>({
       draggable,
       renderColumns,
       renderIcon,
-      renderHeading,
       blockInstruction,
       canDrop,
       onSelectNode,
@@ -511,7 +506,6 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
   const {
     draggable: treeDraggable,
     renderColumns: Columns,
-    renderHeading: RenderHeading,
     blockInstruction,
     canDrop,
     onOpenChange,
@@ -701,11 +695,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
           ) : (
             <TreeItemToggle isBranch={false} />
           )}
-          {RenderHeading ? (
-            <RenderHeading item={item} path={path} props={props} open={open} />
-          ) : (
-            <TreeNodeHeading item={item} path={path} props={props} />
-          )}
+          <TreeNodeHeading item={item} path={path} props={props} />
         </div>
         {Columns && <Columns item={item} path={path} open={open} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />}
         {instruction && <TreeDropIndicator instruction={instruction} gap={2} />}
