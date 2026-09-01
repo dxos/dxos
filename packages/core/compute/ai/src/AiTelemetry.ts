@@ -4,8 +4,29 @@
 
 // @import-as-namespace
 
+import type * as Tracer from 'effect/Tracer';
 import type * as Prompt from 'effect/unstable/ai/Prompt';
 import type * as Telemetry from 'effect/unstable/ai/Telemetry';
+
+import { log } from '@dxos/log';
+
+/**
+ * Span attributes carrying AI capture, outside the `gen_ai.*` semantic conventions.
+ *
+ * The names are a contract with the sink that reads them (`AiSpanProcessor` in
+ * `@dxos/observability`, which cannot import this package — telemetry depends on the AI stack, not
+ * the reverse — and so restates them). `AiTelemetry.test.ts` asserts the values, so a rename here
+ * fails that suite rather than silently disconnecting capture.
+ */
+export const ATTRIBUTES = {
+  /** Conversation identity, so the sink can group a conversation's turns. */
+  sessionId: 'dxos.ai.session_id',
+  /** Space the call runs in. The sink denies content capture when it is absent. */
+  spaceId: 'dxos.ai.space_id',
+  input: 'dxos.ai.input',
+  output: 'dxos.ai.output',
+  tools: 'dxos.ai.tools',
+} as const;
 
 export type ContentTransformerOptions = {
   /** Cap per serialized content attribute; oversized values are cut mid-JSON and forwarded raw. */
@@ -24,11 +45,23 @@ export const makeContentSpanTransformer = (options?: ContentTransformerOptions):
   const maxLength = options?.maxContentLength ?? DEFAULT_MAX_CONTENT_LENGTH;
   const truncate = (value: string): string => (value.length > maxLength ? value.slice(0, maxLength) : value);
 
+  // Effect calls the transformer on the model call's own fiber with no error handling, so a throw
+  // here fails the call. Tool results are arbitrary values — a cycle or a BigInt throws from
+  // `JSON.stringify` — so each attribute is built and stamped independently, and a failure costs
+  // only its own attribute.
+  const stamp = (span: Tracer.Span, key: string, value: () => unknown): void => {
+    try {
+      span.attribute(key, truncate(JSON.stringify(value())));
+    } catch (err) {
+      log.catch(err, { key });
+    }
+  };
+
   return ({ prompt, tools, response, span }) => {
-    span.attribute('dxos.ai.input', truncate(JSON.stringify(serializePrompt(prompt))));
-    span.attribute('dxos.ai.output', truncate(JSON.stringify(serializeResponse(response))));
+    stamp(span, ATTRIBUTES.input, () => serializePrompt(prompt));
+    stamp(span, ATTRIBUTES.output, () => serializeResponse(response));
     if (tools.length > 0) {
-      span.attribute('dxos.ai.tools', truncate(JSON.stringify(tools.map((tool) => ({ name: tool.name })))));
+      stamp(span, ATTRIBUTES.tools, () => tools.map((tool) => ({ name: tool.name })));
     }
   };
 };

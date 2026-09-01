@@ -9,14 +9,21 @@ import { createAiTracerProvider } from './ai-span-processor';
 
 type Captured = { event: string; properties: Record<string, unknown> };
 
-const setup = async (allowContent: (spaceId: string | undefined) => boolean = () => true) => {
+const setup = async ({
+  allowContent = () => true,
+  captureEnabled = () => true,
+}: { allowContent?: (spaceId: string) => boolean; captureEnabled?: () => boolean } = {}) => {
   const events: Captured[] = [];
   const provider = await createAiTracerProvider({
     captureEvent: (event, properties) => events.push({ event, properties }),
+    captureEnabled,
     allowContent,
   });
   return { events, tracer: provider.getTracer('test') };
 };
+
+/** Every span the suite builds carries a space, since a span without one never reports content. */
+const PLAINTEXT_SPACE = 'plaintext-space';
 
 describe('AiSpanProcessor', () => {
   test('maps gen_ai spans to $ai_generation', async ({ expect }) => {
@@ -75,6 +82,7 @@ describe('AiSpanProcessor', () => {
       .startSpan('LanguageModel.generateText', {
         attributes: {
           'gen_ai.system': 'anthropic',
+          'dxos.ai.space_id': PLAINTEXT_SPACE,
           'dxos.ai.input': JSON.stringify([{ role: 'user', content: 'hi' }]),
           'dxos.ai.output': '[{"role":"assist', // Truncated mid-JSON.
         },
@@ -86,7 +94,7 @@ describe('AiSpanProcessor', () => {
   });
 
   test('drops content the policy rejects, keeping metadata', async ({ expect }) => {
-    const { events, tracer } = await setup((spaceId) => spaceId === 'plaintext-space');
+    const { events, tracer } = await setup({ allowContent: (spaceId) => spaceId === PLAINTEXT_SPACE });
     tracer
       .startSpan('LanguageModel.generateText', {
         attributes: {
@@ -107,17 +115,65 @@ describe('AiSpanProcessor', () => {
     expect(JSON.stringify(events[0]?.properties)).not.toContain('private');
   });
 
-  test('denies content when the span carries no space', async ({ expect }) => {
-    const { events, tracer } = await setup((spaceId) => spaceId !== undefined);
+  test('denies content when the span carries no space, without consulting the policy', async ({ expect }) => {
+    let asked = false;
+    const { events, tracer } = await setup({
+      allowContent: () => {
+        asked = true;
+        return true;
+      },
+    });
     tracer
       .startSpan('LanguageModel.generateText', {
         attributes: {
           'gen_ai.system': 'anthropic',
+          'gen_ai.usage.input_tokens': 10,
           'dxos.ai.input': JSON.stringify([{ role: 'user', content: 'private' }]),
         },
       })
       .end();
 
+    expect(asked).toEqual(false);
     expect(events[0]?.properties.$ai_input).toBeUndefined();
+    expect(events[0]?.properties.$ai_input_tokens).toEqual(10);
+  });
+
+  test('reports nothing at all while telemetry is off', async ({ expect }) => {
+    const { events, tracer } = await setup({ captureEnabled: () => false });
+    tracer
+      .startSpan('LanguageModel.generateText', {
+        attributes: { 'gen_ai.system': 'anthropic', 'dxos.ai.space_id': PLAINTEXT_SPACE },
+      })
+      .end();
+
+    expect(events).toHaveLength(0);
+  });
+
+  test('reads the opt-in per span, so a mid-session toggle takes effect', async ({ expect }) => {
+    let enabled = false;
+    const { events, tracer } = await setup({ captureEnabled: () => enabled });
+    const emit = () => tracer.startSpan('LanguageModel.generateText', { attributes: { 'gen_ai.system': 'a' } }).end();
+
+    emit();
+    expect(events).toHaveLength(0);
+    enabled = true;
+    emit();
+    expect(events).toHaveLength(1);
+  });
+
+  test('survives a capture callback that throws', async ({ expect }) => {
+    const provider = await createAiTracerProvider({
+      captureEvent: () => {
+        throw new Error('posthog exploded');
+      },
+      captureEnabled: () => true,
+      allowContent: () => true,
+    });
+    const span = provider.getTracer('test').startSpan('LanguageModel.generateText', {
+      attributes: { 'gen_ai.system': 'anthropic' },
+    });
+
+    // `onEnd` runs inside `end()`; an escaping error would fail the model call's own fiber.
+    expect(() => span.end()).not.toThrow();
   });
 });

@@ -51,6 +51,41 @@ describe('AiTelemetry', () => {
     }),
   );
 
+  it.effect('drops only the attribute it cannot serialize, leaving the model call intact', () =>
+    Effect.gen(function* () {
+      const { exporter, provider, layer } = setup();
+      // Tool results are arbitrary values; a cycle throws from `JSON.stringify`. Reaching the model
+      // span at all proves the throw did not escape onto the call's own fiber.
+      const cyclic: Record<string, unknown> = {};
+      cyclic.self = cyclic;
+      const prompt = [
+        {
+          role: 'tool' as const,
+          content: [{ type: 'tool-result' as const, id: 't1', name: 'search', result: cyclic, isFailure: false }],
+        },
+      ];
+      yield* LanguageModel.generateText({ prompt }).pipe(Effect.provide(layer));
+      yield* Effect.promise(() => provider.forceFlush());
+
+      const span = modelSpan(exporter);
+      expect(span.attributes[AiTelemetry.ATTRIBUTES.input]).toBeUndefined();
+      expect(span.attributes[AiTelemetry.ATTRIBUTES.output]).toBeDefined();
+    }),
+  );
+
+  it('names the attributes the sink reads', () => {
+    // `AiSpanProcessor` in `@dxos/observability` restates these; it cannot import them (telemetry
+    // sits below the AI stack). Pinning the values here makes a rename fail rather than silently
+    // disconnect capture.
+    expect(AiTelemetry.ATTRIBUTES).toEqual({
+      sessionId: 'dxos.ai.session_id',
+      spaceId: 'dxos.ai.space_id',
+      input: 'dxos.ai.input',
+      output: 'dxos.ai.output',
+      tools: 'dxos.ai.tools',
+    });
+  });
+
   it.effect('leaves the span bare when no transformer is installed', () =>
     Effect.gen(function* () {
       const exporter = new InMemorySpanExporter();

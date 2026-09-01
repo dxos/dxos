@@ -14,7 +14,7 @@ import * as Record from 'effect/Record';
 import type * as Tool from 'effect/unstable/ai/Tool';
 import type * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
-import { type OpaqueToolkit, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
+import { AiTelemetry, type OpaqueToolkit, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
 import type * as Instructions from '@dxos/compute/Instructions';
 import * as McpServer from '@dxos/compute/McpServer';
 import * as Operation from '@dxos/compute/Operation';
@@ -384,8 +384,13 @@ const feedPosition = (message: Message.Message): number => {
  * feed's URI (`echo://<spaceId>/<objectId>`) rather than passed in, so it cannot go missing.
  */
 const sessionAnnotations = (feed: Feed.Feed): Record<string, string> => {
-  const uri = Obj.getURI(feed).toString();
+  // `prefer: 'absolute'` because the relative form (`echo:///<objectId>`) carries no space, and a
+  // span with no space reports metadata only.
+  const uri = Obj.getURI(feed, { prefer: 'absolute' });
   const eid = EID.tryParse(uri);
   const spaceId = eid && EID.getSpaceId(eid);
-  return { 'dxos.ai.session_id': uri, ...(spaceId ? { 'dxos.ai.space_id': spaceId } : {}) };
+  return {
+    [AiTelemetry.ATTRIBUTES.sessionId]: uri,
+    ...(spaceId ? { [AiTelemetry.ATTRIBUTES.spaceId]: spaceId } : {}),
+  };
 };
