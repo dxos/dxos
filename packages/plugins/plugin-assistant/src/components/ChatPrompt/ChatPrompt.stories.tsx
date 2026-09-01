@@ -43,6 +43,8 @@ type StoryArgs = {
    * still long enough to assert against.
    */
   running?: boolean;
+  /** Minutes from now to seed a pending alarm on the feed, which the status pill reports. */
+  alarmInMinutes?: number;
 };
 
 const DefaultStory = ({ tasksVisible: initialTasksVisible, running }: StoryArgs) => {
@@ -84,6 +86,7 @@ const DefaultStory = ({ tasksVisible: initialTasksVisible, running }: StoryArgs)
         <Chat.Root chat={chat} db={db} processor={processor} onEvent={handleEvent}>
           {/* Mounted here as every prompt host must: queued prompts are held out of the thread, so
               without this part they are submitted and then invisible. */}
+          <Chat.Status classNames='px-3 rounded-sm bg-group-surface' />
           <Chat.Queue classNames='pb-1' />
           {tasksVisible && <Chat.TaskList classNames='border border-separator border-b-0 rounded-t-sm' />}
           {/* `attendableId` is the graph node contributed actions are filed under; the story's chat
@@ -107,7 +110,7 @@ const meta = {
   decorators: [
     withTheme(),
     withLayout({ layout: 'column', classNames: 'flex flex-col justify-end w-[30rem]' }),
-    withPluginManager<StoryArgs>(({ args: { tasks = [], queued = [] } }) => ({
+    withPluginManager<StoryArgs>(({ args: { tasks = [], queued = [], alarmInMinutes } }) => ({
       plugins: [
         ...corePlugins(),
         ClientPlugin.make({
@@ -128,6 +131,11 @@ const meta = {
               for (const text of queued) {
                 yield* store
                   .enqueueMessage(feed, Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text }] }))
+                  .pipe(Effect.provide(Database.layer(space.db)));
+              }
+              if (alarmInMinutes !== undefined) {
+                yield* store
+                  .setAlarm(feed, { wakeAt: Date.now() + alarmInMinutes * 60_000, message: 'Check the build' })
                   .pipe(Effect.provide(Database.layer(space.db)));
               }
               // The task list reads its rows through resolve-once ref atoms; load them so the story
@@ -181,6 +189,25 @@ export const TestQueued: Story = {
     const items = await canvas.findAllByTestId('assistant.queued-message', {}, { timeout: 30_000 });
     await expect(items).toHaveLength(1);
     await expect(items[0]).toHaveTextContent('Waiting on the agent');
+  },
+};
+
+/** A pending alarm, reported by the status pill beside the token counts. */
+export const PendingAlarm: Story = {
+  args: { alarmInMinutes: 30 },
+};
+
+/**
+ * The alarm reaching the pill through the real stack: an `Alarm` record on the feed, the reactive
+ * query over it, `projectAlarms`, the chat context, then the pill. `ChatStatus.stories.tsx` covers
+ * the rendering; this is the wiring, which is the half that can silently return nothing.
+ */
+export const TestAlarmFromFeed: Story = {
+  args: { alarmInMinutes: 30 },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // Generous: the story boots a client and a space, then the query has to emit.
+    await canvas.findByTestId('assistant.chat-status.alarm', {}, { timeout: 30_000 });
   },
 };
 

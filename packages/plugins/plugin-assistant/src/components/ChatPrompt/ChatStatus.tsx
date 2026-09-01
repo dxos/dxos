@@ -19,6 +19,21 @@ export type ChatStreamStatusProps = ThemedClassName<{
   icon?: boolean;
 }>;
 
+export type ChatStatusViewProps = ChatStreamStatusProps & {
+  /** Start/end of the most recent request; `endedAt: null` while it runs. */
+  requestTiming?: ChatRequestTiming | null;
+  /** Output tokens of the last completed turn. */
+  lastOutputTokens?: number;
+  /** Cumulative tokens across the session. */
+  sessionTotalTokens?: number;
+  /**
+   * When the agent will next wake itself, if an alarm is pending. Plain values rather than the feed
+   * record: this component only renders, and a live ECHO object cannot survive being passed as a
+   * Storybook arg (its proxy rejects the mutation Storybook's arg handling performs).
+   */
+  alarm?: { wakeAt: number; message?: string };
+};
+
 /**
  * Live status pill rendered at the bottom of the chat thread.
  *
@@ -54,10 +69,35 @@ export const ChatStatus = ({ classNames, icon }: ChatStreamStatusProps) => {
     return { lastOutputTokens: last, sessionTotalTokens: total };
   }, [messages]);
 
-  const isRunning = requestTiming != null && requestTiming.endedAt == null;
-  // The earliest pending alarm is the one that wakes the agent next, so it is the one worth a slot.
   const nextAlarm = alarms.at(0);
-  const show = requestTiming || lastOutputTokens || sessionTotalTokens > 0 || nextAlarm != null;
+
+  return (
+    <ChatStatusView
+      classNames={classNames}
+      icon={icon}
+      requestTiming={requestTiming}
+      lastOutputTokens={lastOutputTokens}
+      sessionTotalTokens={sessionTotalTokens}
+      // The earliest pending alarm is the one that wakes the agent next, so it is the one worth a slot.
+      alarm={nextAlarm && { wakeAt: nextAlarm.wakeAt, message: nextAlarm.message }}
+    />
+  );
+};
+
+/**
+ * The pill itself, given resolved values. Split from {@link ChatStatus} so each slot — elapsed,
+ * tokens, the next alarm — can be mounted and asserted in a story without a live processor.
+ */
+export const ChatStatusView = ({
+  classNames,
+  icon,
+  requestTiming,
+  lastOutputTokens,
+  sessionTotalTokens = 0,
+  alarm,
+}: ChatStatusViewProps) => {
+  const isRunning = requestTiming != null && requestTiming.endedAt == null;
+  const show = requestTiming || lastOutputTokens || sessionTotalTokens > 0 || alarm != null;
   if (!show) {
     return null;
   }
@@ -96,17 +136,17 @@ export const ChatStatus = ({ classNames, icon }: ChatStreamStatusProps) => {
               <NaturalChatStatus.Text>Σ {Unit.Thousand(sessionTotalTokens).toString()}</NaturalChatStatus.Text>
             </>
           )}
-          {nextAlarm && (
+          {alarm && (
             <>
               {(requestTiming || lastOutputTokens != null || sessionTotalTokens > 0) && <NaturalChatStatus.Separator />}
               <NaturalChatStatus.Text>
                 <span
                   data-testid='assistant.chat-status.alarm'
                   className='flex items-center gap-1'
-                  title={nextAlarm.message ?? undefined}
+                  title={alarm.message}
                 >
                   <Icon icon='ph--alarm--regular' size={4} />
-                  {formatWakeAt(nextAlarm.wakeAt)}
+                  {formatWakeAt(alarm.wakeAt)}
                 </span>
               </NaturalChatStatus.Text>
             </>
