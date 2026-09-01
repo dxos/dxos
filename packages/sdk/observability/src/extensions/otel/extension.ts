@@ -24,8 +24,10 @@ import type * as OtelMetricsSink from './OtelMetricsSink';
 import type * as OtelSpanSink from './OtelSpanSink';
 import { RemoteMetricsForwarder } from './remote-metrics';
 
-/** Everything the producing realm posts to the observability worker's OTel sinks. */
 export type OtelWorkerMessage = OtelLogSink.Message | OtelMetricsSink.Message | OtelSpanSink.Message;
+
+/** One-way send handle into the observability worker. */
+export type OtelWorkerPort = { post: (message: OtelWorkerMessage) => void };
 
 export type ExtensionsOptions = {
   /** For the OTEL, the name of the entity for which signals (metrics or trace) are collected. */
@@ -37,20 +39,11 @@ export type ExtensionsOptions = {
   config: Config;
   endpoint?: string;
   headers?: Record<string, string>;
-  /** Backends to export to besides the one from `DX_OTEL_ENDPOINT`. Every signal goes to all of them. */
   additionalDestinations?: OtelDestination[];
   logs?: boolean;
   /** Minimum log level to export. Defaults to INFO (i.e. info, warn, error). */
   logLevel?: LogLevel;
-  /**
-   * When set, OTLP export runs in the observability worker instead of this realm: the resolved
-   * options are posted over this handle for the worker to build the sinks, and no local
-   * pipelines are installed. Logs ride the JSONL lines the realm's log processor already
-   * ships; metric instrument calls are forwarded as messages. Batching and export happen on
-   * the worker's own event loop, so export keeps up while this realm is blocked by a long
-   * synchronous task.
-   */
-  observabilityWorker?: { post: (message: OtelWorkerMessage) => void };
+  observabilityWorker?: OtelWorkerPort;
   metrics?: boolean;
   traces?: boolean;
 };
@@ -108,7 +101,6 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   }
 
   const destinations: OtelDestination[] = [
-    // Headers are optional when using a proxy that injects auth server-side.
     ...(endpoint ? [{ endpoint, headers: headers ?? {} }] : []),
     ...additionalDestinations,
   ];
@@ -144,8 +136,6 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   const sessionId = crypto.randomUUID();
   const { resource, metricsResource } = createResources(baseAttributes, sessionId);
 
-  // Remote takes precedence: with a observability worker, the worker owns the whole log pipeline and
-  // this realm installs no processor at all.
   const remoteLogs = logsEnabled ? observabilityWorker : undefined;
   const logs =
     logsEnabled && !remoteLogs
@@ -157,8 +147,6 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
         })
       : undefined;
 
-  // Constructed eagerly (mirroring OtelMetrics, which registers with TRACE_PROCESSOR at
-  // construction) but only when telemetry is on — a disabled session forwards nothing.
   const remoteMetrics =
     metricsEnabled && observabilityWorker && !disabled
       ? new RemoteMetricsForwarder(observabilityWorker.post)
@@ -177,7 +165,6 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
         destinations,
         resource,
         getTags: () => Object.fromEntries(tags),
-        // Sampling, IDs, and propagation stay local; only batching and export move out.
         spanSink: observabilityWorker
           ? { post: (record: OtelSpanSink.Span) => observabilityWorker.post(record) }
           : undefined,
@@ -207,7 +194,6 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
           observabilityWorker?.post({
             type: 'otel-metrics-init',
             destinations,
-            // The metrics resource omits `session.id` (see createResources).
             resourceAttributes: baseAttributes,
             tags: Object.fromEntries(tags),
           });
@@ -233,8 +219,6 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
     }),
     close: () =>
       Effect.promise(async () => {
-        // Fire-and-forget: the worker outlives this realm's teardown and drains on its own
-        // schedule; there is no ack channel to await.
         remoteLogs?.post({ type: 'otel-flush' });
         // Run logs/metrics close concurrently and swallow their failures so the
         // tracer provider shutdown below ALWAYS runs. Without this, a rejection
@@ -282,7 +266,6 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   return extension;
 });
 
-/** Both metric backends expose the same instrument surface; the API entry is agnostic. */
 const metricsApi = (metrics: OtelMetrics | RemoteMetricsForwarder | undefined): ExtensionApi | undefined =>
   metrics
     ? ({

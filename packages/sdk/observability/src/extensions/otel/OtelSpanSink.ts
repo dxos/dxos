@@ -27,18 +27,12 @@ import {
 
 import { type OtelDestination, signalUrl } from './otel';
 
-/**
- * Sent once per connection to start span export in the worker. Carries the options the
- * producer realm resolved — the worker itself is config-free.
- */
 export type Init = {
   type: 'otel-traces-init';
   destinations: OtelDestination[];
-  /** Plain resource attributes for the producing realm, including `session.id`. */
   resourceAttributes: Record<string, string>;
 };
 
-/** One ended, sampled span serialized for the port (structured-cloneable plain data). */
 export type Span = {
   type: 'otel-span';
   name: string;
@@ -62,10 +56,8 @@ export type Span = {
 
 export type Message = Init | Span;
 
-/** Producer-side handle posting span records to the worker (see the extension's `observabilityWorker`). */
 export type Handle = { post: (record: Span) => void };
 
-/** Serialize an ended span into plain data the port can clone. */
 export const serializeReadableSpan = (span: ReadableSpan): Span => {
   const spanContext = span.spanContext();
   return {
@@ -111,20 +103,12 @@ export const serializeReadableSpan = (span: ReadableSpan): Span => {
   };
 };
 
-/**
- * Producer-side span processor: replaces `BatchSpanProcessor(OTLPTraceExporter)` when export
- * runs in the observability worker. Sampling, ID generation, and context propagation stay in
- * the realm's tracer provider; this processor posts each ended, sampled span synchronously
- * from `onEnd`, so spans ended by code inside a long synchronous task escape the realm while
- * its own timers are stalled.
- */
 export class PortSpanProcessor implements SpanProcessor {
   constructor(private readonly _post: (record: Span) => void) {}
 
   onStart(_span: SdkSpan, _parentContext: Context): void {}
 
   onEnd(span: ReadableSpan): void {
-    // Mirror BatchSpanProcessor: unsampled spans are not exported.
     if ((span.spanContext().traceFlags & TraceFlags.SAMPLED) === 0) {
       return;
     }
@@ -137,14 +121,9 @@ export class PortSpanProcessor implements SpanProcessor {
 }
 
 export type Options = {
-  /** Test seam: replaces the OTLP exporter for every destination. */
   exporter?: SpanExporter;
 };
 
-/**
- * Worker-side OTel span pipeline: re-materializes forwarded span records and feeds them to a
- * `BatchSpanProcessor` + OTLP exporter running on the worker's own event loop.
- */
 export class Sink {
   readonly #resource: Resource;
   readonly #processors: BatchSpanProcessor[];

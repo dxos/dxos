@@ -7,39 +7,26 @@ import type * as OtelLogSink from '@dxos/observability/OtelLogSink';
 import type * as OtelMetricsSink from '@dxos/observability/OtelMetricsSink';
 import type * as OtelSpanSink from '@dxos/observability/OtelSpanSink';
 
-// Direct module import: the util barrel would pull the whole config/observability graph into
-// this worker's bundle.
+// Not the `../util` barrel: it re-exports config, pulling @dxos/client into this bundle.
 import { LOG_STORE_DB_NAME, LOG_STORE_MAX_BYTES } from '../util/constants';
 import { type ObservabilityWorkerMessage } from '../util/worker-log-processor';
 
-// Observability worker: owns log persistence (queue, flush timer, chunked IDB writes, eviction —
-// see DX-1224) and, once a connection sends its `otel-*-init` messages, OTLP export of that
-// connection's logs, metrics, and spans. Everything runs on this worker's own event loop, so
-// persistence and export keep going while a producing realm is blocked by a long synchronous
-// task. `WorkerLogProcessor` and the Otel extension are the sending side.
-
 const store = new IdbLogStore({ dbName: LOG_STORE_DB_NAME, maxBytes: LOG_STORE_MAX_BYTES });
 
-/** Caps messages buffered while a sink module import is in flight. */
-const MAX_PENDING = 5_000;
+const MAX_BUFFERED_RECORDS = 5_000;
 
-/** The cross-cutting control messages, as the log sink's `handleMessage` already defines them. */
 type Control = Exclude<OtelLogSink.Message, OtelLogSink.Init>;
 type Flush = Extract<Control, { type: 'otel-flush' }>;
 
-/**
- * One lazily-imported export pipeline. `init` starts the (one-shot) module load; messages
- * delivered before it resolves are buffered in order. Only records count against
- * {@link MAX_PENDING}: control messages are few, and dropping one loses a flush rather than a
- * record. A failed load drops export for this connection — IDB persistence is unaffected.
- */
+type Consume<TMessage> = (message: TMessage) => void;
+type Pipeline<TInit, TMessage> = { init: (init: TInit) => void; deliver: Consume<TMessage> };
+
 const lazySink = <TInit, TMessage>(
-  load: (init: TInit) => Promise<(message: TMessage) => void>,
+  load: (init: TInit) => Promise<Consume<TMessage>>,
   isRecord: (message: TMessage) => boolean,
-): { init: (init: TInit) => void; deliver: (message: TMessage) => void } => {
+): Pipeline<TInit, TMessage> => {
   let deliver: ((message: TMessage) => void) | undefined;
   let pending: TMessage[] | undefined;
-  // Counted apart from `pending.length` so a queued control message never displaces a record.
   let pendingRecords = 0;
   return {
     init: (init) => {
@@ -61,7 +48,7 @@ const lazySink = <TInit, TMessage>(
     deliver: (message) => {
       if (deliver !== undefined) {
         deliver(message);
-      } else if (pending !== undefined && (!isRecord(message) || pendingRecords < MAX_PENDING)) {
+      } else if (pending !== undefined && (!isRecord(message) || pendingRecords < MAX_BUFFERED_RECORDS)) {
         pending.push(message);
         if (isRecord(message)) {
           pendingRecords++;
@@ -71,14 +58,10 @@ const lazySink = <TInit, TMessage>(
   };
 };
 
-// Flushes are fire-and-forget, mirroring the sender's pagehide semantics; a failed export
-// retries on the sink's own timer.
 const fireFlush = (result: Promise<void>): void => {
   void result.catch(() => {});
 };
 
-// One worker per producing realm, so the sinks below are that realm's — its resource
-// identity (process type, session id) arrives with the init messages.
 const createMessageHandler = (): ((event: MessageEvent<ObservabilityWorkerMessage>) => void) => {
   const logs = lazySink<OtelLogSink.Init, string | Control>(
     (init) =>
@@ -116,7 +99,6 @@ const createMessageHandler = (): ((event: MessageEvent<ObservabilityWorkerMessag
 
   return (event: MessageEvent<ObservabilityWorkerMessage>): void => {
     const data = event.data;
-    // Hot path: a bare string is one pre-serialized JSONL line.
     if (typeof data === 'string') {
       store.append(data);
       logs.deliver(data);

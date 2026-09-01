@@ -12,30 +12,16 @@ import { type LogRecord as JsonlLogRecord, LogLevel, log, shortLevelName } from 
 import { OtelLogs, convertLevel } from './logs';
 import { type OtelDestination } from './otel';
 
-/**
- * Sent once per connection to start log export in the worker. Carries the options the
- * producer realm resolved (config, env vars, opt-out state) — the worker itself is
- * config-free.
- */
 export type Init = {
   type: 'otel-init';
   destinations: OtelDestination[];
-  /** Plain resource attributes for the producing realm, including `session.id`. */
   resourceAttributes: Record<string, string>;
-  /** Minimum level to export. */
   logLevel: LogLevel;
   tags: Record<string, string>;
 };
 
-/**
- * Control-plane messages the Otel extension posts to the observability worker when log export
- * runs there (see the extension's `observabilityWorker` option). Log lines themselves are not part of
- * this union — they arrive as bare JSONL strings on the same port, shipped by the log
- * processor.
- */
 export type Message = Init | { type: 'otel-tags'; tags: Record<string, string> } | { type: 'otel-flush' };
 
-/** Inverse of {@link shortLevelName}, keyed by the letter carried in each record's `l` field. */
 const levelFromShortName = new Map<string, LogLevel>(
   [LogLevel.TRACE, LogLevel.DEBUG, LogLevel.VERBOSE, LogLevel.INFO, LogLevel.WARN, LogLevel.ERROR].map((level) => [
     shortLevelName[level],
@@ -44,17 +30,9 @@ const levelFromShortName = new Map<string, LogLevel>(
 );
 
 export type Options = {
-  /** Test seam: replaces the OTLP exporter. */
   exporter?: LogRecordExporter;
 };
 
-/**
- * Worker-side OTel log pipeline: turns the JSONL lines the observability worker already
- * receives into OTLP log records. Runs on the worker's own event loop, so batching and
- * export keep going while the producing realm is blocked by a long synchronous task — the
- * lines it logged from inside that task were posted synchronously and export in
- * near-real-time (see DX-1224).
- */
 export class Sink {
   readonly #logs: OtelLogs;
   #tags: Record<string, string>;
@@ -129,10 +107,6 @@ export class Sink {
 const createResource = (attributes: Record<string, string>): Resource =>
   defaultResource().merge(resourceFromAttributes(attributes));
 
-/**
- * The `c` field is a JSON string of a flat key/value map (see `serializeToJsonl`); keys get
- * the same `ctx_` prefix the in-process pipeline applies.
- */
 const parseContext = (context: string | undefined): Record<string, string> => {
   if (!context) {
     return {};

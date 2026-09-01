@@ -18,22 +18,17 @@ import type * as OtelSpanSink from '@dxos/observability/OtelSpanSink';
 
 const DEFAULT_LOG_FILTER = 'debug';
 
-/**
- * Sender → observability worker: a bare string is one pre-serialized JSONL log line (hot path —
- * no envelope), `{ type: 'flush' }` asks the worker to flush its queue now. The `otel-*`
- * messages are the Otel extension's worker-side OTLP export: control plane for the log
- * lines, plus forwarded metric instrument calls and ended spans (posted via the `observabilityWorker`
- * handle `initializeObservability` wires up).
- */
+/** One pre-serialized JSONL log line; the hot path carries no envelope. */
+export type SerializedLogLine = string;
+
 export type ObservabilityWorkerMessage =
-  | string
+  | SerializedLogLine
   | { type: 'flush' }
   | OtelLogSink.Message
   | OtelMetricsSink.Message
   | OtelSpanSink.Message;
 
 export type WorkerLogProcessorOptions = {
-  /** The observability worker (`workers/observability-worker.ts`). */
   worker: Worker;
   /** Identifier embedded in every record's `i` field. Defaults to {@link inferEnvironmentName}. */
   tabId?: string;

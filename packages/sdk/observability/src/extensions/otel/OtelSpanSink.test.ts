@@ -18,7 +18,6 @@ const defaultInit: OtelSpanSink.Init = {
   resourceAttributes: { 'service.name': 'test-service', 'session.id': 'session-1' },
 };
 
-/** Producer-side tracer provider wired to capture serialized records, as the realm would post them. */
 const makeProducer = () => {
   const records: OtelSpanSink.Span[] = [];
   const provider = new BasicTracerProvider({
@@ -64,7 +63,6 @@ describe('OtelSpanSink', () => {
     expect(exported.events).toHaveLength(1);
     expect(exported.events[0].name).toBe('doc-loaded');
     expect(hrTimeToMilliseconds(exported.duration)).toBeGreaterThanOrEqual(0);
-    // The worker's resource replaces the producer's placeholder.
     expect(exported.resource.attributes['service.name']).toBe('test-service');
     expect(exported.resource.attributes['session.id']).toBe('session-1');
     expect(exported.instrumentationScope).toEqual(expect.objectContaining({ name: 'dxos-observability' }));

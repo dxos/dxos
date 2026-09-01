@@ -5,7 +5,6 @@
 import { DiagConsoleLogger, DiagLogLevel, diag } from '@opentelemetry/api';
 import { type Resource } from '@opentelemetry/resources';
 
-/** One OTLP/HTTP backend. */
 export type OtelDestination = {
   /**
    * Base URL that `/v1/{logs,metrics,traces}` is appended to. Backends that do not serve OTLP at
@@ -24,7 +23,6 @@ export type OtelOptions = {
 
 export type OtelSignal = 'logs' | 'metrics' | 'traces';
 
-/** Absolute OTLP URL for one signal at one destination. */
 export const signalUrl = (destination: OtelDestination, signal: OtelSignal): string =>
   resolveOtlpUrl(`${destination.endpoint}/v1/${signal}`);
 
