@@ -12,6 +12,7 @@ DX_OTEL_ENDPOINT=/api/otel
 # Stamped on every metric, log and trace as `deployment.environment`; without it every
 # deployed client reports `unknown` and production is indistinguishable from preview.
 DX_ENVIRONMENT=staging
+DX_POSTHOG_API_KEY=${COMPOSER_APP_TEST_POSTHOG_API_KEY}
 DX_POSTHOG_API_HOST=https://o.composer.space
 DX_POSTHOG_OTEL_HOST=https://o.composer.space
 IPFS_API_SECRET=${IPFS_API_SECRET}
