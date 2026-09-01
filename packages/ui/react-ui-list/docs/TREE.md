@@ -187,24 +187,32 @@ plausible answer for the third file. It also does not get cheaper by migrating m
 **Migrate a component to Ark for its behavior, not to spread a fixed cost. There is none left to
 spread.**
 
-## 8. `Treegrid` after the rebuild
+## 8. `Treegrid` after the rebuild — deleted
 
-`Tree.tsx` now has zero `Treegrid` references, where `main` rendered `Treegrid.Root` +
+`Tree.tsx` ended up with zero `Treegrid` references, where `main` rendered `Treegrid.Root` +
 `Treegrid.Row`/`Cell`; the Ark markup absorbed the column layout via `grid-cols-subgrid`. Verified in
-Storybook: the Tree renders 1 `role="tree"` and 4 `role="treeitem"`, with zero
+Storybook: the Tree renders `role="tree"` and `role="treeitem"`, with zero
 `treegrid`/`row`/`gridcell`.
 
 That decoupling had one consequence worth recording. `plugin-navtree`'s `NavTreeItemColumns` wrapped
 its output in `Treegrid.Cell`, which was valid while the enclosing row was a `Treegrid.Row` and
 became an orphaned `role="gridcell"` — no `row` ancestor — the moment the row became an Ark
-`treeitem`. `display: contents` hid it from layout but not from the accessibility tree. The wrappers
-are removed; the empty one is now a plain `<div />` holding the actions column in the subgrid.
+`treeitem`. `display: contents` hid it from layout but not from the accessibility tree. Those
+wrappers are gone.
 
-`Treegrid` is left a standalone multi-column grid primitive with three consumers, only one of which
-is a hierarchy — devtools `ObjectsTree`; `plugin-assistant`'s `ProcessTree` pre-flattens its rows and
-has no disclosure, and `plugin-atproto`'s `AtprotoCompanion` is a flat field table whose `depth` is
-inline padding. Disposition (rename to match what it is, or migrate `ObjectsTree` onto `Tree` and
-delete it) is tracked in the `ark` project ledger.
+With `Tree` no longer using it, `Treegrid` was left a standalone multi-column grid with three
+consumers, only one of which was a hierarchy. All three have since moved and **the component is
+deleted**:
+
+| former consumer                     | moved to                                                                    |
+| ----------------------------------- | --------------------------------------------------------------------------- |
+| `devtools` `ObjectsTree`            | `Tree`, via a `TreeModel` view over its existing atoms                      |
+| `plugin-assistant` `ProcessTree`    | `Tree`, via `createStaticTreeModel`                                         |
+| `plugin-atproto` `AtprotoCompanion` | a plain `role="table"` — its rows are read-only, so it was never a treegrid |
+
+The last of those is the point worth keeping: a component whose entire value is its ARIA role was
+being used by two consumers that were not the thing that role describes, which is how the navtree
+`gridcell` bug survived as long as it did.
 
 ## References
 

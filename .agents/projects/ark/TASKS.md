@@ -50,12 +50,11 @@ Tracked 2026-08-31. The rebuild decoupled `Tree` from `Treegrid` entirely — `T
 | `plugin-assistant` `ProcessTree`      | Root + Row + Cell, 4 cols            | pre-flattened rows, no disclosure    |
 | `plugin-atproto` `AtprotoCompanion`   | Root + Row + Cell, 3 cols            | flat field table; `depth` is padding |
 
-- [ ] **Decide what `Treegrid` is for.** Either keep it as a generic multi-column grid primitive and
-      **rename it** (`role=treegrid` misdescribes two of its three uses), or migrate `ObjectsTree`
-      onto `Tree` and delete it. Do not "replace it with `Tree`" wholesale: `ProcessTree` would gain
-      nothing (no disclosure to model) and `AtprotoCompanion` is a flat table that wants a grid.
-- [ ] **Scope the `ObjectsTree` → `Tree` migration** — the only genuine candidate, but it is a
-      rewrite onto the `TreeModel` atom-family contract, not a swap.
+- [x] **Decided and done: `Treegrid` is DELETED.** All three consumers moved — `ObjectsTree` and
+      `ProcessTree` onto `Tree` (Phases 9 and 8), and `AtprotoCompanion` onto a plain `role="table"`,
+      since its rows are read-only and it was never a treegrid. The directory, its export and its
+      theme are gone; `react-ui-list` builds, and so do all four former consumers.
+- [x] **`ObjectsTree` → `Tree` migration** — done and verified (Phase 9).
 - [x] Drop the stale `Treegrid` mention in `react-ui-list/src/hooks/useListNavigation.ts:100` — now
       reads `Tree (Ark TreeView machine)`.
 

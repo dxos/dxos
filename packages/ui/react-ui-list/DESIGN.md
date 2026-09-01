@@ -54,7 +54,6 @@ key controlled-ness off the _presence_ of the `value` prop (so clearing to
 | `Listbox`     | styled list; **selection opt-in**           | `useListNavigation`, `useListSelection('single')` when wired                                     |
 | `OrderedList` | reorderable master-detail rows              | `useReorder*`, `useListDisclosure('single')`, `useListNavigation('list')`, `useListGrid`         |
 | `Tree`        | reactive hierarchical tree                  | `@ark-ui/react` TreeView machine + atom-based `TreeModel` (own model — see note) + pragmatic-dnd |
-| `Treegrid`    | `role=treegrid` grid layout (rows/cells)    | own `tv` theme + arrow-key row nav (`@fluentui/react-tabster`)                                   |
 | `Accordion`   | collapsible sections                        | Radix Accordion (own disclosure — see note)                                                      |
 | `Combobox`    | popover list + text input                   | composes `Picker`                                                                                |
 | `Picker`      | input-driven option list (virtual focus)    | own registry + keyboard (activedescendant pattern)                                               |
@@ -130,23 +129,6 @@ experiment log: [docs/TREE.md](./docs/TREE.md).
 `renderColumns` output lands inside a `role=treeitem`, **not** a grid row — it
 must not carry `role=gridcell`.
 
-### Treegrid — `role=treegrid` grid layout
-
-```
-Treegrid.Root                      <div role=treegrid> · grid · arrow-key row nav
-└─ Treegrid.Row                    <div role=row> · aria-level / aria-expanded / aria-owns
-   └─ Treegrid.Cell                <div role=gridcell> · `indent` carries per-level padding
-```
-
-A standalone multi-column grid primitive. `Tree` no longer builds on it (the Ark
-rebuild absorbed the column layout); the remaining consumers are devtools
-(`ObjectsTree`), plugin-assistant (`ProcessTree`) and plugin-atproto
-(`AtprotoCompanion`) — and only the first is a hierarchy, so the `treegrid` role
-misdescribes two of the three. Disposition is open; see the `ark` project ledger.
-Self-contained `tv` theme (`Treegrid.theme.ts`) — no central theme registration.
-Row depth derives from the id's `~`-separated path; `Treegrid.theme.rowLevel(level)`
-supplies the indent class.
-
 ### Accordion — collapsible sections
 
 ```
@@ -184,8 +166,7 @@ fuzzy/search filtering, pair with `@dxos/react-ui-search`.
 ## Conventions
 
 - **Theme.** Component classes live in `components/List.theme.ts` (tailwind-variants);
-  per-instance overrides flow through `classNames`. `Treegrid` carries its own
-  `tv` theme (`Treegrid.theme.ts`). Mirror this when adding a component — add a
+  per-instance overrides flow through `classNames`. Mirror this when adding a component — add a
   slot, don't inline literals.
 - **`dx-*` ↔ ARIA grammar.** `aria-selected` ↔ `dx-selected` (chosen row);
   `aria-current` ↔ `dx-current` (you-are-here); `dx-hover` is free. Definitions
