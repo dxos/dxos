@@ -245,6 +245,15 @@ export const OperationHandler = Capability$.make<OperationHandlerSet.OperationHa
   'org.dxos.app-framework.capability.operationHandler',
 );
 
+/**
+ * Merged, contribution-ordered view over all {@link OperationHandler} contributions — the same
+ * set the operation invoker resolves against. Provided by ProcessManagerPlugin.
+ * @category Capability
+ */
+export const OperationHandlers = Capability$.makeSingleton<OperationHandlerSet.OperationHandlerSet>()(
+  'org.dxos.app-framework.capability.operationHandlers',
+);
+
 export type UndoMapping = UndoMapping$.UndoMapping;
 
 /**

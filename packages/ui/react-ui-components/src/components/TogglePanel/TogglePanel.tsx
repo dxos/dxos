@@ -126,7 +126,7 @@ const Body = composable<HTMLDivElement, BodyProps>(({ children, ...props }, forw
       })}
       ref={forwardedRef}
     >
-      <div className='min-h-0 overflow-hidden'>{children}</div>
+      <div className='overflow-hidden'>{children}</div>
     </div>
   );
 });
@@ -145,7 +145,7 @@ export type ViewportProps = ThemedClassName<PropsWithChildren>;
  * Scrollable region for nested flex/grid layouts. Uses min-h-0 and min-w-0 so overflow can shrink correctly.
  */
 export const Viewport = composable<HTMLDivElement, ViewportProps>(({ children, ...props }, forwardedRef) => (
-  <div {...composableProps(props, { classNames: ['min-h-0 min-w-0 overflow-y-auto'] })} ref={forwardedRef}>
+  <div {...composableProps(props, { classNames: ['overflow-y-auto'] })} ref={forwardedRef}>
     {children}
   </div>
 ));

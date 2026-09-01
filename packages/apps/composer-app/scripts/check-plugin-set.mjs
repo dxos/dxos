@@ -16,10 +16,6 @@
  * build emits five HTML entries and `devtools.html` IS the devtools app — its graph carries
  * plugin-devtools in every environment, which a whole-directory scan reports as a leak.
  *
- * The set is read from the two source files, so a plugin core carries for both sets counts as shipped
- * — plugin-registry, for instance, whose lazy chunk a curated build emits and never imports (the
- * `isExtensible` flag withholds the plugin, `DX_PLUGIN_SET` is what keeps code out of the graph).
- *
  * What counts as evidence: a plugin's BODY module (`src/plugin.tsx` and its platform variants),
  * which is what `#plugin` resolves to and what `Plugin.lazy` imports on first enable. That module is
  * package-internal — nothing outside a plugin imports another plugin's body — so its presence means

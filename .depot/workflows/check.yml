@@ -72,7 +72,7 @@ jobs:
         with:
           detached: true
 
-      # Full depth keeps the commit graph that `--affected remote` / `merge-base` resolve against,
+      # Full depth keeps the commit graph the affected resolver and moon's own merge-base resolve against,
       # while `filter: blob:none` stops the transfer of every historical file version — the previous
       # full fetch ranged 32s–15m on the same commit. No `lfs: true`: nothing in the tree is
       # LFS-tracked. `fetch-tags: false` is not used because checkout ignores it at depth 0; at
@@ -85,150 +85,103 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
 
-      - name: Extract branch
-        id: extract_branch
-        uses: ./.depot/actions/branch
-
       - name: Setup
         uses: ./.depot/actions/setup
 
+      - name: Resolve affected scope
+        uses: ./.depot/actions/affected
+
       # ─── Stage 1: gates that need no build ──────────────────────────────────────────────────────
-      # Ordered by measured cost, cheapest first, so the common failure lands in seconds instead of
-      # behind minutes of work it does not depend on; the whole stage is ~30 s. `format-check` leads
-      # because a single unformatted file fails every job in the workflow.
-      - name: Check formatting
-        run: pnpm run format-check
+      # Independent node scripts, seconds each. `fail-fast: false` so one run reports every failure.
+      - fail-fast: false
+        parallel:
+          - name: Check formatting
+            run: pnpm run format-check
 
-      - name: Check for import cycles
-        run: pnpm run check-cycles
+          - name: Check for import cycles
+            run: pnpm run check-cycles
 
-      - name: Check publish config
-        run: pnpm run check-publish-config
+          - name: Check publish config
+            run: pnpm run check-publish-config
 
-      # Every gating rule on `.changeset/*.md` — parseability, bump levels, versionable packages, one
-      # entry per PR — in one pass, so a run reports all of them instead of stopping at the first. Each fails on something
-      # otherwise invisible until `changeset version` runs on `main`. The count rule is diff-based and
-      # self-skips outside a `pull_request`: on `main` `.changeset/` holds every unreleased entry, and a
-      # `merge_group` batches PRs that each legitimately carry their own. The missing-changeset reminder
-      # is advisory and stays its own job (`changeset-reminder`).
-      - name: Check changesets
-        env:
-          CHANGESET_BASE_REF: ${{ github.event.pull_request.base.sha }}
-        run: pnpm run check-changesets
+          - name: Check changesets
+            env:
+              CHANGESET_BASE_REF: ${{ github.event.pull_request.base.sha }}
+            run: pnpm run check-changesets
 
-      - name: Check version files in sync
-        # version.ts (DXOS_VERSION) + tauri.conf.json are derived from their package versions by
-        # sync-versions.mjs during release; fail the PR if a committed copy drifts out of sync.
-        run: node scripts/sync-versions.mjs --check
+          - name: Check version files in sync
+            run: node scripts/sync-versions.mjs --check
 
-      - name: Check remote cache wiring
-        run: node scripts/check-cache-wiring.mjs
+          - name: Check remote cache wiring
+            run: node scripts/check-cache-wiring.mjs
 
-      - name: Check package.json paths
-        run: pnpm run pkg-lint
+          - name: Check package.json paths
+            run: pnpm run pkg-lint
 
-      # `pkg-lint` rejects a malformed `exports`/`imports` entry; this rejects a stale one. The
-      # toolbox is the only writer of those maps, so anything it would change is drift a contributor
-      # fixes by running the same command.
-      - name: Check package exports in sync
-        run: |
-          pnpm toolbox --lint-package-exports
-          git diff --exit-code -- '**/package.json'
+          - name: Check public packages don't depend on private packages
+            run: pnpm run check-public-dependencies
 
-      - name: Check public packages don't depend on private packages
-        run: pnpm run check-public-dependencies
+          - name: Check public packages are published
+            run: pnpm run check-packages-published
 
-      - name: Check public packages are published
-        run: pnpm run check-packages-published
-
-      # `.npmrc` sets `strict-peer-dependencies` with `auto-install-peers=false`, so re-resolving is
-      # what surfaces an unsatisfiable peer. The `trap` restores the lockfile on failure as well as on
-      # success: `--no-frozen-lockfile` can rewrite `pnpm-lock.yaml`, which `.moon/tasks/all.yml`
-      # declares as an input to every task, so a rewritten copy would miss the cache for both stages
-      # below — the reason this step used to sit at the very end.
+      # Neither of the next two can join the block above: each rewrites a file that `.moon/tasks/all.yml`
+      # declares an implicit input to every task, and neither restores it on a hard cancellation.
+      #
+      # `.npmrc` sets `strict-peer-dependencies` with `auto-install-peers=false`, so re-resolving is what
+      # surfaces an unsatisfiable peer. `--no-frozen-lockfile` can rewrite `pnpm-lock.yaml`.
       - name: Check for peer dependency issues
         run: |
           trap 'git checkout -- pnpm-lock.yaml' EXIT
           pnpm install --resolution-only --no-frozen-lockfile
 
+      # `pkg-lint` rejects a malformed `exports`/`imports` entry; this rejects a stale one. The toolbox is
+      # the only writer of those maps, so anything it would change is drift a contributor fixes by running
+      # the same command. `--lint-package-exports` writes `package.json` through `updatePackages()`, which
+      # four of the gates above read, so it stays out of the block for that reason too.
+      - name: Check package exports in sync
+        run: |
+          pnpm toolbox --lint-package-exports
+          git diff --exit-code -- '**/package.json'
+
       # ─── Stage 2: the compile gate ──────────────────────────────────────────────────────────────
       # ~15 s warm, minutes cold, and the floor under everything below it.
-      - name: Check Affected
-        if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: moon run :lint :build :test-types --affected remote
-
-      - name: Check All
-        if: ${{ steps.extract_branch.outputs.branch == 'main' }}
+      - name: Check
         run: moon run :lint :build :test-types
 
       # `check-module-structure` traces the built artifacts (`deps: [build]`), so it cannot move ahead
       # of the gate however cheap it looks — its 5 s is a post-build number.
-      - name: Check module structure (affected)
-        if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: moon run :check-module-structure --affected remote
-
-      - name: Check module structure (all)
-        if: ${{ steps.extract_branch.outputs.branch == 'main' }}
+      - name: Check module structure
         run: moon run :check-module-structure
 
-      # ─── Stage 3: the three slow checks ─────────────────────────────────────────────────────────
-      # ~2m30s, ~1m and ~1m against ~30 s for all of stage 1, so these run last. All three are
-      # `continue-on-error` with a gate step below: fail-fast is free when steps are cheap, but here
-      # it would hide one failure behind the others at the cost of a whole further run of the job.
+      # ─── Stage 3: the slow checks ───────────────────────────────────────────────────────────────
+      # ~2m30s against ~1m and ~1m, so they run last, and concurrently. `fail-fast: false` reports both.
       #
-      # Unused/undeclared dependencies and unreferenced files. Analyses the source tree — the knip
-      # config resolves workspace packages through their `source` export condition — so it needs no
-      # build, but at 85% of the job's real work it earns no place ahead of anything.
-      - name: Check dependencies
-        id: knip
-        continue-on-error: true
-        run: pnpm run knip
+      # One moon invocation, not a lane each: two concurrent moon processes in one workspace contend for
+      # the same task locks. Only `moon exec` has `--on-failure`. `env -u` because both checks catch a
+      # property of an import edge, whose offending commit lands in a package neither project's inputs
+      # name, so scoped they no-op on the PRs they exist to catch. Unset them, do not set
+      # `MOON_AFFECTED=''`. Empty is not "off", moon reads it as an empty base and still filters.
+      - fail-fast: false
+        parallel:
+          - name: Check dependencies
+            run: pnpm run knip
 
-      # What composer.space actually ships: fails when a plugin the production set does not name
-      # reached the bundle anyway. Same reasoning as the boot budget — it is a property of an import
-      # edge, invisible to the build, the tests, and the app's own UI (a plugin absent from the
-      # registry can still be in the bundle) — and it needs its own `DX_PLUGIN_SET=production` bundle,
-      # which no other step builds. Gated here so the PR that introduces the leak is the one that fails.
-      #
-      # `DX_PLUGIN_SET=production` bundle built here rather than on a runner of its own: the `^:build`
-      # graph is already warm from stage 2, which put its cost at 22s against the boot budget's 41s
-      # when the two shared this job — cheap enough that a second machine's ~160s of setup would
-      # dominate it.
-      - name: Check production plugin set
-        id: plugin_set
-        continue-on-error: true
-        run: moon run composer-app:check-plugin-set
-
-      # `starlight-links-validator` runs as the last phase of `astro build`, so bundling the site IS
-      # the link check.
-      - name: Check docs links
-        id: docs
-        continue-on-error: true
-        run: moon run docs:bundle
-
-      - name: Report slow-check failures
-        if: ${{ steps.knip.outcome == 'failure' || steps.plugin_set.outcome == 'failure' || steps.docs.outcome == 'failure' }}
-        run: |
-          if [ "${{ steps.knip.outcome }}" = failure ]; then
-            echo '::error::knip failed — see the "Check dependencies" step.'
-          fi
-          if [ "${{ steps.plugin_set.outcome }}" = failure ]; then
-            echo '::error::production plugin set check failed — see the "Check production plugin set" step.'
-          fi
-          if [ "${{ steps.docs.outcome }}" = failure ]; then
-            echo '::error::docs link validation failed — see the "Check docs links" step.'
-          fi
-          exit 1
+          # `docs:bundle` IS the docs link check: `starlight-links-validator` runs as the last phase of
+          # `astro build`.
+          - name: Check production plugin set and docs links
+            run: >-
+              env -u MOON_AFFECTED -u MOON_BASE -u MOON_HEAD
+              moon exec composer-app:check-plugin-set docs:bundle --on-failure continue
 
   # Static boot-graph budget over the production bundle, on its own runner. The class it catches is a
   # property of an IMPORT EDGE — a boot-reachable module reaching a barrel instead of a subpath — so a
   # refactor that relocates the edge silently drops the fix and neither the build nor the tests notice;
-  # three separate fixes were undone that way. Not `--affected`-scoped, because the offending edit lands
-  # in some other package. Here rather than on an `e2e` cell so that it gates the PR that introduces the
-  # regression: `e2e` runs on main/changeset-release or an explicit dispatch, so there it never gated
-  # one. Split out of `check`, where its ~41s of bundling (nothing else in the workflow builds
-  # `bundle`) sat behind that job's whole stage 1+2 sequence; the library builds it needs come from the
-  # remote cache instead.
+  # three separate fixes were undone that way. Not affected-scoped, because the offending edit lands in
+  # some other package. Here rather than on an `e2e` cell so that it gates the PR that introduces the
+  # regression: `e2e` runs on main/changeset-release or an explicit dispatch, so there it never gated one.
+  # Split out of `check`, where its ~41s of bundling (nothing else in the workflow builds `bundle`) sat
+  # behind that job's whole stage 1+2 sequence; the library builds it needs come from the remote cache
+  # instead.
   boot-budget:
     permissions:
       contents: read
@@ -456,41 +409,22 @@ jobs:
           filter: blob:none
           persist-credentials: false
 
-      - name: Extract branch
-        id: extract_branch
-        uses: ./.depot/actions/branch
-
       - name: Setup
         uses: ./.depot/actions/setup
 
-      # Unconditional: moon owns cell assignment, so which flavours a shard draws is not known here.
-      - name: Install Playwright
-        run: pnpm run install-playwright
+      - name: Resolve affected scope
+        uses: ./.depot/actions/affected
 
-      - name: Clean stale test results
-        run: rm -rf test-results
+      - parallel:
+          # Unconditional: moon owns cell assignment, so which flavours a shard draws is not known here.
+          - name: Install Playwright
+            run: pnpm run install-playwright
 
-      - name: Test Affected
-        if: ${{ steps.extract_branch.outputs.branch != 'main' && env.TRUNK_TOKEN != '' }}
-        uses: trunk-io/analytics-uploader@v1
-        with:
-          junit-paths: 'test-results/**/results.xml'
-          org-slug: dxos
-          token: ${{ secrets.TRUNK_TOKEN }}
-          quarantine: true
-          run: >-
-            moon exec --on-failure continue :test :test-browser :test-storybook :test-workerd
-            --affected remote --job ${{ matrix.shard }} --job-total 4 -- --no-file-parallelism
+          - name: Clean stale test results
+            run: rm -rf test-results
 
-      # Fallback for fork PRs and local runs where TRUNK_TOKEN is unavailable.
-      - name: Test Affected (no analytics)
-        if: ${{ steps.extract_branch.outputs.branch != 'main' && env.TRUNK_TOKEN == '' }}
-        run: >-
-          moon exec --on-failure continue :test :test-browser :test-storybook :test-workerd
-          --affected remote --job ${{ matrix.shard }} --job-total 4 -- --no-file-parallelism
-
-      - name: Test All
-        if: ${{ steps.extract_branch.outputs.branch == 'main' && env.TRUNK_TOKEN != '' }}
+      - name: Test
+        if: ${{ env.TRUNK_TOKEN != '' }}
         uses: trunk-io/analytics-uploader@v1
         with:
           junit-paths: 'test-results/**/results.xml'
@@ -501,9 +435,8 @@ jobs:
             moon exec --on-failure continue :test :test-browser :test-storybook :test-workerd
             --job ${{ matrix.shard }} --job-total 4 -- --no-file-parallelism
 
-      # Fallback for forks running against their own main where TRUNK_TOKEN is unavailable.
-      - name: Test All (no analytics)
-        if: ${{ steps.extract_branch.outputs.branch == 'main' && env.TRUNK_TOKEN == '' }}
+      - name: Test (no analytics)
+        if: ${{ env.TRUNK_TOKEN == '' }}
         run: >-
           moon exec --on-failure continue :test :test-browser :test-storybook :test-workerd
           --job ${{ matrix.shard }} --job-total 4 -- --no-file-parallelism
@@ -557,12 +490,13 @@ jobs:
           filter: blob:none
           persist-credentials: false
 
-      - name: Extract branch
-        id: extract_branch
-        uses: ./.depot/actions/branch
-
       - name: Setup
         uses: ./.depot/actions/setup
+
+      - name: Resolve affected scope
+        uses: ./.depot/actions/affected
+        with:
+          all: ${{ inputs.e2e }}
 
       # `:bundle-e2e`, not a project list and not `:bundle`. Only a project that serves a production
       # bundle to Playwright (`vite preview`) defines `bundle-e2e`, so the glob is already exactly the
@@ -572,12 +506,7 @@ jobs:
       # testbench-app, composer-crx, devtools-extension, examples and tasks closures — including docs'
       # typedoc tasks, which cost more to download than composer's bundle costs to build. Warming
       # `bundle` instead would warm a hash the e2e closure never waits on.
-      - name: Bundle Affected
-        if: ${{ steps.extract_branch.outputs.branch != 'main' && !inputs.e2e }}
-        run: moon run :bundle-e2e --affected remote
-
-      - name: Bundle All
-        if: ${{ steps.extract_branch.outputs.branch == 'main' || inputs.e2e }}
+      - name: Bundle
         run: moon run :bundle-e2e
 
   # Sharded browser × cell, three cells per browser: a cell costs ~160s of fixed setup against
@@ -633,59 +562,48 @@ jobs:
           filter: blob:none
           persist-credentials: false
 
-      - name: Extract branch
-        id: extract_branch
-        uses: ./.depot/actions/branch
-
       - name: Setup
         uses: ./.depot/actions/setup
 
-      # Only this cell's browser — the other two engines' downloads are dead weight here.
-      - name: Install Playwright
-        run: pnpm run install-playwright ${{ matrix.browser }}
+      - name: Resolve affected scope
+        uses: ./.depot/actions/affected
+        with:
+          all: ${{ inputs.e2e }}
 
       # No bundle step: the `e2e-ci` targets declare `bundle-e2e` as a dep, so moon hydrates it from the
-      # cache `e2e-bundle` warmed.
+      # cache `e2e-bundle` warmed. Step `id`s and outputs survive the block (Depot merges each unit's env
+      # and outputs back on join); were the shard output ever lost, the Test step's interpolation leaves
+      # `moon exec` with no targets, which exits 1 in a non-TTY rather than running nothing green.
+      - parallel:
+          # Only this cell's browser — the other two engines' downloads are dead weight here.
+          - name: Install Playwright
+            run: pnpm run install-playwright ${{ matrix.browser }}
 
-      # Clear Storybook Vite cache in every package so Storybook dev server does a fresh optimizeDeps run.
-      # Avoids 504 Outdated Optimize Dep when graph differs from bundle step.
-      # Storybook puts cache under node_modules/.cache/storybook/<hash>/sb-vite per package.
-      - name: Clear Storybook Vite cache
-        run: find . -type d -path '*/node_modules/.cache/storybook' -prune -print0 | xargs -0 rm -rf
+          # Clear Storybook Vite cache in every package so Storybook dev server does a fresh optimizeDeps
+          # run. Avoids 504 Outdated Optimize Dep when graph differs from bundle step. Storybook puts
+          # cache under node_modules/.cache/storybook/<hash>/sb-vite per package.
+          - name: Clear Storybook Vite cache
+            run: find . -type d -path '*/node_modules/.cache/storybook' -prune -print0 | xargs -0 rm -rf
 
-      - name: Clean stale test results
-        run: rm -rf test-results
+          - name: Clean stale test results
+            run: rm -rf test-results
 
-      # The pool list is computed, not globbed: `:e2e` would match composer-app too, and only
-      # `moon query` honours MQL negation (`moon exec --query` ignores it). Empty is fatal — a bad
-      # query would otherwise run nothing and report green.
-      - name: Select shard targets
-        id: shard
-        run: |
-          if [ "${{ matrix.shard }}" = "composer" ]; then
-            targets=composer-app:e2e
-          else
-            targets=$(moon query tasks "task=e2e && project!=composer-app" |
-              node -e "let s='';process.stdin.on('data',(d)=>(s+=d)).on('end',()=>console.log(Object.keys(JSON.parse(s).tasks).sort().map((project)=>project+':e2e').join(' ')))")
-          fi
-          [ -n "$targets" ] || { echo 'no e2e targets resolved'; exit 1; }
-          echo "targets=$targets" >> "$GITHUB_OUTPUT"
+          # The pool list is computed, not globbed: `:e2e` would match composer-app too, and only
+          # `moon query` honours MQL negation (`moon exec --query` ignores it). Empty is fatal — a bad
+          # query would otherwise run nothing and report green.
+          - name: Select shard targets
+            id: shard
+            run: |
+              if [ "${{ matrix.shard }}" = "composer" ]; then
+                targets=composer-app:e2e
+              else
+                targets=$(moon query tasks "task=e2e && project!=composer-app" |
+                  node -e "let s='';process.stdin.on('data',(d)=>(s+=d)).on('end',()=>console.log(Object.keys(JSON.parse(s).tasks).sort().map((project)=>project+':e2e').join(' ')))")
+              fi
+              [ -n "$targets" ] || { echo 'no e2e targets resolved'; exit 1; }
+              echo "targets=$targets" >> "$GITHUB_OUTPUT"
 
-      - name: Test Affected
-        if: ${{ steps.extract_branch.outputs.branch != 'main' && !inputs.e2e }}
-        timeout-minutes: 35
-        uses: trunk-io/analytics-uploader@v1
-        with:
-          junit-paths: 'test-results/playwright/report/*.xml'
-          org-slug: dxos
-          token: ${{ secrets.TRUNK_TOKEN }}
-          quarantine: true
-          run: >-
-            moon exec --on-failure continue ${{ steps.shard.outputs.targets }}
-            --affected remote --concurrency=1
-
-      - name: Test All
-        if: ${{ steps.extract_branch.outputs.branch == 'main' || inputs.e2e }}
+      - name: Test
         timeout-minutes: 35
         uses: trunk-io/analytics-uploader@v1
         env:

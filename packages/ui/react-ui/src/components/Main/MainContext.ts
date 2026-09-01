@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useFocusableGroup } from '@fluentui/react-tabster';
 import { createContext } from '@radix-ui/react-context';
 import {
   type ComponentPropsWithoutRef,
@@ -13,6 +12,7 @@ import {
 } from 'react';
 
 import { log } from '@dxos/log';
+import { useFocusGroup } from '@dxos/react-focus';
 
 export const MAIN_NAME = 'Main';
 
@@ -30,6 +30,16 @@ const landmarkAttr = 'data-main-landmark';
  * Ref https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/landmark_role
  */
 export const useLandmarkMover = (propsOnKeyDown: ComponentPropsWithoutRef<'div'>['onKeyDown'], landmark: string) => {
+  // TODO(thure): This was disconnected once before in #8818;
+  //  if this should change again to support the browser extension, please ensure the change doesn’t break web, desktop and mobile.
+  // `Tab` is ignored because the landmark traversal below owns it.
+  const {
+    ref,
+    onKeyDown: onFocusGroupKeyDown,
+    onFocus,
+    ...focusGroupAttrs
+  } = useFocusGroup({ tabBehavior: 'limited', ignoreKeys: ['Tab'] });
+
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
       const target = event.target as HTMLDivElement;
@@ -43,20 +53,19 @@ export const useLandmarkMover = (propsOnKeyDown: ComponentPropsWithoutRef<'div'>
         const nextLandmark = landmarks[(cursor + l + (event.getModifierState('Shift') ? -1 : 1)) % l];
         (document.querySelector(`[${landmarkAttr}="${nextLandmark}"]`) as HTMLDivElement | null)?.focus();
       }
+      onFocusGroupKeyDown(event);
       propsOnKeyDown?.(event);
     },
-    [propsOnKeyDown],
+    [onFocusGroupKeyDown, propsOnKeyDown],
   );
-
-  // TODO(thure): This was disconnected once before in #8818;
-  //  if this should change again to support the browser extension, please ensure the change doesn’t break web, desktop and mobile.
-  const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited', ignoreDefaultKeydown: { Tab: true } });
 
   return {
     [landmarkAttr]: landmark,
     tabIndex: 0,
+    ref,
     onKeyDown: handleKeyDown,
-    ...focusableGroupAttrs,
+    onFocus,
+    ...focusGroupAttrs,
   };
 };
 

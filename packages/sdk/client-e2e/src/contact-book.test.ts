@@ -76,7 +76,7 @@ describe('ContactBook', () => {
     test('contact appears in contact book after joining a space', async () => {
       const [client1, client2] = await createInitializedClients(2);
       const space = await client1.spaces.create();
-      expectNoContacts(client1);
+      expect(client1.halo.contacts.get().length).to.eq(0);
       await inviteMember(space, client2);
       const contacts = await waitForContactBookSize(client1, 1);
       expectInContactBook(contacts, client2);
@@ -142,8 +142,6 @@ describe('ContactBook', () => {
     });
     return initialized;
   };
-
-  const expectNoContacts = (client: Client) => expect(client.halo.contacts.get().length).to.eq(0);
 
   const waitForContactBookSize = async (client: Client, size: number): Promise<Contact[]> => {
     await waitForCondition({ condition: () => client.halo.contacts.get().length === size });

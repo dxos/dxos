@@ -15,8 +15,6 @@ import createTask from './create-task';
 import listTasks from './list-tasks';
 import updateTask from './update-task';
 
-const testLayer = () => TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] });
-
 describe('list-tasks', () => {
   it.effect('filters by status and assignee, and excludes sub-tasks by default', () =>
     Effect.gen(function* () {
@@ -40,7 +38,7 @@ describe('list-tasks', () => {
 
       const byAssignee = yield* listTasks.handler({ taskSet: Ref.make(taskSet), assignee: 'KAI@example.com' });
       expect(titles(byAssignee.tasks)).toEqual(['Open thing']);
-    }).pipe(Effect.provide(testLayer())),
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 
   it.effect('pages with after/limit and stops issuing a cursor at the end', () =>
@@ -60,14 +58,14 @@ describe('list-tasks', () => {
       expect(second.nextCursor).toBeUndefined();
 
       expect([...titles(first.tasks), ...titles(second.tasks)].sort()).toEqual(['a', 'b', 'c']);
-    }).pipe(Effect.provide(testLayer())),
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 
   it.effect('requires a container', () =>
     Effect.gen(function* () {
       const exit = yield* Effect.exit(listTasks.handler({}));
       expect(exit._tag).toBe('Failure');
-    }).pipe(Effect.provide(testLayer())),
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 
   it.effect(
@@ -75,8 +73,6 @@ describe('list-tasks', () => {
     Effect.fnUntraced(function* () {
       const spaceKey = PublicKey.random();
       const storagePath = testStoragePath({ name: `list-tasks-fresh-session-${Date.now()}` });
-      const sessionLayer = () =>
-        TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet], spaceKey, storagePath });
 
       yield* Effect.gen(function* () {
         const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));
@@ -89,7 +85,11 @@ describe('list-tasks', () => {
           taskSet.tasks = [...taskSet.tasks, db.makeRef(URI.make('echo:///01M122P4GNVZ1P982K1K0QG8AY'))];
         });
         yield* Database.flush();
-      }).pipe(Effect.provide(sessionLayer()));
+      }).pipe(
+        Effect.provide(
+          TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet], spaceKey, storagePath }),
+        ),
+      );
 
       yield* Effect.gen(function* () {
         const sets = yield* Database.query(Query.select(Filter.type(TaskSet.TaskSet))).run;
@@ -97,7 +97,11 @@ describe('list-tasks', () => {
 
         const { tasks } = yield* listTasks.handler({ taskSet: Ref.make(sets[0]) });
         expect(titles(tasks).sort()).toEqual(['First', 'Second']);
-      }).pipe(Effect.provide(sessionLayer()));
+      }).pipe(
+        Effect.provide(
+          TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet], spaceKey, storagePath }),
+        ),
+      );
     }),
   );
 
@@ -112,7 +116,7 @@ describe('list-tasks', () => {
       const filed = yield* listTasks.handler({ taskSet: Ref.make(taskSet), milestone: Ref.make(milestone) });
 
       expect(titles(filed.tasks)).toEqual(['Filed']);
-    }).pipe(Effect.provide(testLayer())),
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 });
 

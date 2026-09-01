@@ -38,8 +38,13 @@ type AgentRpcs = ReturnType<typeof AgentProcess> extends Process.Process<any, an
 /** Live handle to a spawned {@link AgentProcess}, carrying its `HarnessControl` RPC surface. */
 type AgentHandle = ProcessManager.Handle<string | ContentBlock.Any[], void, AgentRpcs>;
 
+// TERMINATING counts as terminal: the handle is already `#finished`, so adopting one would drop
+// every submitted input and leave the turn waiting for a process that will never run again.
 const isTerminalProcess = (state: Process.State): boolean =>
-  state === Process.State.SUCCEEDED || state === Process.State.FAILED || state === Process.State.TERMINATED;
+  state === Process.State.SUCCEEDED ||
+  state === Process.State.FAILED ||
+  state === Process.State.TERMINATED ||
+  state === Process.State.TERMINATING;
 
 // TODO(burdon): Agent identity?
 export interface CreateSessionOptions {

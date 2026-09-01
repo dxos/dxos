@@ -34,8 +34,7 @@ describe('toPixels', () => {
   });
 
   test('scrolling shifts the text left', ({ expect }) => {
-    const at = (offset: number) => toPixels({ text: 'ABCDEFGHIJKL' }, offset);
-    expect(at(0)).not.toEqual(at(4));
+    expect(toPixels({ text: 'ABCDEFGHIJKL' }, 0)).not.toEqual(toPixels({ text: 'ABCDEFGHIJKL' }, 4));
   });
 
   test('only nine characters fit, so a typical stat line scrolls', ({ expect }) => {

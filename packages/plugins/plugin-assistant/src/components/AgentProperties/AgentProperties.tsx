@@ -15,7 +15,7 @@ import { isFeedOwnerSchema } from '@dxos/schema';
 
 import { meta } from '#meta';
 
-/** Mirrors the foreign keys stamped by the agent-wizard automation compiler (`sync-automation`). */
+/** Mirrors the foreign keys stamped by the agent skill's automation compiler (`sync-automation`). */
 const AGENT_TRIGGER_EXTENSION_KEY = 'org.dxos.extension.AgentTrigger';
 const AGENT_TRIGGER_TARGET_EXTENSION_KEY = 'org.dxos.extension.AgentTriggerTarget';
 

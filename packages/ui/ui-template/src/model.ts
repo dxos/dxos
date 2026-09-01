@@ -95,27 +95,28 @@ export type Path<T> = { readonly [PATH]: readonly string[] } & (T extends object
   ? { readonly [K in keyof T]-?: Path<NonNullable<T[K]>> }
   : unknown);
 
-const makePath = (path: readonly string[]): any =>
+const makePath = <T>(path: readonly string[]): Path<T> =>
   new Proxy(
     { [PATH]: path },
     {
-      get: (target: any, key) => (key === PATH ? path : makePath([...path, String(key)])),
+      get: (target: { readonly [PATH]: readonly string[] }, key) =>
+        key === PATH ? path : makePath<unknown>([...path, String(key)]),
     },
-  );
+  ) as Path<T>;
 
 /** Root of a typed path into the template's state. */
-export const select = <State>(): Path<State> => makePath([]);
+export const select = <State>(): Path<State> => makePath<State>([]);
 
 /** Root of a typed path into the current `collection` item. */
-export const item = <Item>(): Path<Item> => makePath([]);
+export const item = <Item>(): Path<Item> => makePath<Item>([]);
 
-const pathOf = (value: unknown): readonly string[] => (value as any)[PATH];
+const pathOf = (value: unknown): readonly string[] => (value as { readonly [PATH]: readonly string[] })[PATH];
 
 /** Bind a node prop to a path on the state object. */
-export const fromState = (path: Path<any>): Binding => ({ from: 'state', path: pathOf(path) });
+export const fromState = <T>(path: Path<T>): Binding => ({ from: 'state', path: pathOf(path) });
 
 /** Bind a node prop to a path on the current collection item. */
-export const fromItem = (path: Path<any>): Binding => ({ from: 'item', path: pathOf(path) });
+export const fromItem = <T>(path: Path<T>): Binding => ({ from: 'item', path: pathOf(path) });
 
 //
 // Resolution.

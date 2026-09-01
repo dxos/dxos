@@ -507,12 +507,6 @@ const isPendingToolCallEvent = (event: Trace.FlatEvent, toolCallContext: ToolCal
 };
 
 /**
- * Marks commits that represent work still in flight for Timeline shimmer styling.
- */
-const shouldShimmerInProgressCommit = (event: Trace.FlatEvent, toolCallContext: ToolCallContext): boolean =>
-  isPendingToolCallEvent(event, toolCallContext);
-
-/**
  * A span is completed when its last recorded event is a matching end boundary.
  */
 const isCompletedSpan = (span: Span): boolean => {
@@ -792,7 +786,8 @@ const spanTreeToCommits = (
 
     const commitIndex = globalIndex++;
     const commitId = formatCommitId(span, commitIndex, presentation.idSuffix);
-    const shimmer = shouldShimmerInProgressCommit(event, toolCallContext);
+    // A pending tool call still in flight gets Timeline shimmer styling.
+    const shimmer = isPendingToolCallEvent(event, toolCallContext);
     const commit: Commit = {
       id: commitId,
       branch,

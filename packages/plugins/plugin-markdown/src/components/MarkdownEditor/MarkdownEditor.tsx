@@ -8,7 +8,7 @@ import { createContext } from '@radix-ui/react-context';
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 
-import { type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
+import { type ThemedClassName } from '@dxos/react-ui';
 import {
   type EditorRootProps,
   type EditorToolbarState,
@@ -166,41 +166,41 @@ type MarkdownEditorContentProps = Omit<
   'id' | 'extensions' | 'toolbarState' | 'editorStateStore'
 >;
 
-const MarkdownEditorContent = composable<HTMLDivElement, MarkdownEditorContentProps>(
-  ({ compact: compactProp, ...props }, _forwardedRef) => {
-    const {
-      id,
-      attendableId,
-      compact = compactProp,
-      viewMode,
-      editorStateStore,
-      onFileUpload,
-    } = useMarkdownEditorContext(MARKDOWN_EDITOR_CONTENT_NAME);
-    const { extensions, setController, state } = useEditorContext(MARKDOWN_EDITOR_CONTENT_NAME);
+const MarkdownEditorContent = ({ compact: compactProp, ...props }: MarkdownEditorContentProps) => {
+  const {
+    id,
+    attendableId,
+    compact = compactProp,
+    viewMode,
+    editorStateStore,
+    onFileUpload,
+  } = useMarkdownEditorContext(MARKDOWN_EDITOR_CONTENT_NAME);
+  const { extensions, setController, state } = useEditorContext(MARKDOWN_EDITOR_CONTENT_NAME);
 
-    const handleRef = useCallback(
-      (view: EditorView | null) => {
-        setController(createEditorController(view));
-      },
-      [setController],
-    );
+  const handleRef = useCallback(
+    (view: EditorView | null) => {
+      setController(createEditorController(view));
+    },
+    [setController],
+  );
 
-    return (
-      <NaturalMarkdownEditorContent
-        {...composableProps(props)}
-        id={id}
-        attendableId={attendableId}
-        compact={compact}
-        viewMode={viewMode}
-        editorStateStore={editorStateStore}
-        toolbarState={state as Atom.Writable<EditorToolbarState>}
-        extensions={extensions}
-        onFileUpload={onFileUpload}
-        ref={handleRef}
-      />
-    );
-  },
-);
+  return (
+    <NaturalMarkdownEditorContent
+      // Spread directly: both sides speak `classNames`; `composableProps` here converted it to a
+      // DOM `className` the inner component never reads, dropping the caller's classes.
+      {...props}
+      id={id}
+      attendableId={attendableId}
+      compact={compact}
+      viewMode={viewMode}
+      editorStateStore={editorStateStore}
+      toolbarState={state as Atom.Writable<EditorToolbarState>}
+      extensions={extensions}
+      onFileUpload={onFileUpload}
+      ref={handleRef}
+    />
+  );
+};
 
 MarkdownEditorContent.displayName = MARKDOWN_EDITOR_CONTENT_NAME;
 
@@ -252,6 +252,3 @@ export const MarkdownEditor = {
 };
 
 export type { MarkdownEditorContentProps, MarkdownEditorToolbarProps };
-
-/** @deprecated Use `MarkdownEditorProviderProps`. */
-export type MarkdownEditorRootProps = MarkdownEditorProviderProps;
