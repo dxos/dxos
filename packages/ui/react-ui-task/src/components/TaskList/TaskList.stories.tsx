@@ -131,7 +131,7 @@ const DefaultStory = ({
   showDescriptions,
   showDescription = true,
   hierarchical,
-  draggable = true,
+  draggable = false,
   many,
   framed = true,
 }: {
@@ -142,7 +142,7 @@ const DefaultStory = ({
   /** Edit the selected task's description in the pane; the pane's own prop, not the rows'. */
   showDescription?: boolean;
   hierarchical?: boolean;
-  /** Wire `onTaskMove`, which is what turns rows into drag sources. */
+  /** Wire `onTaskMove`, which is what turns rows into drag sources. Off unless a story asks. */
   draggable?: boolean;
   /** Seed the longer, ten-task list instead of the default seven. */
   many?: boolean;
@@ -585,8 +585,9 @@ export const TestOrdinalsAreLinear: Story = {
 };
 
 export const TestHierarchy: Story = {
-  // Descriptions on, so the alignment between a sub-task's description and its title is asserted.
-  args: { hierarchical: true, showOrdinals: true, showDescriptions: true, framed: false },
+  // Descriptions on, so the alignment between a sub-task's description and its title is asserted;
+  // draggable on, because the drag affordances are part of what this asserts.
+  args: { hierarchical: true, draggable: true, showOrdinals: true, showDescriptions: true, framed: false },
   // The tree is what the walk produces, not what the array holds; and restructuring is driven from
   // the keyboard, which is the half of the gesture set that CAN be synthesized (a native HTML5 drag
   // cannot).

@@ -192,14 +192,14 @@ export const TaskTreeContent = ({
           return;
         }
 
-        // Dropping onto a peer positions after it rather than nesting under it: two siblings are
-        // an ordering, and a drop in the middle of one reads as "put it here", not "put it inside".
-        // A drop onto a non-peer still nests, which is the only way to re-parent by drag.
-        const peers = Task.parentTaskId(sourceTask) === Task.parentTaskId(targetTask);
-        const intent: TaskDropIntent =
-          peers && instruction.type === 'make-child' ? 'reorder-below' : (instruction.type as TaskDropIntent);
-
-        const placement = resolveTaskPlacement({ tasks, source: sourceTask, target: targetTask, intent });
+        // The hitbox's instruction is taken as given: dropping onto a row makes the task its child,
+        // and the reorder zones at the row's edges are what place it before or after instead.
+        const placement = resolveTaskPlacement({
+          tasks,
+          source: sourceTask,
+          target: targetTask,
+          intent: instruction.type as TaskDropIntent,
+        });
         if (placement) {
           onTaskMove(sourceTask, placement);
         }
