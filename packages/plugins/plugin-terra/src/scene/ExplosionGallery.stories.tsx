@@ -116,9 +116,9 @@ const ExplosionScene = () => {
   }, []);
 
   return (
-    <div className='relative w-full h-full'>
-      {/* `dx-container` (w-full h-full) is load-bearing — see `ObjectGallery.stories.tsx`. */}
-      <canvas ref={canvasRef} className='dx-container absolute inset-0 outline-none' style={{ touchAction: 'none' }} />
+    <div className='relative dx-fill'>
+      {/* `dx-fill` is load-bearing — see `ObjectGallery.stories.tsx`. */}
+      <canvas ref={canvasRef} className='dx-fill dx-fullscreen outline-none' style={{ touchAction: 'none' }} />
     </div>
   );
 };

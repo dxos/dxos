@@ -238,19 +238,34 @@ export const reorder = <T extends Obj.Unknown>(
 /** A parent outside the task's own set (the hierarchy would flatten) or inside its own subtree (a cycle). */
 export class InvalidParentTaskError extends BaseError.extend('InvalidParentTaskError', 'Invalid parent task.') {}
 
-/** Load and validate a candidate parent (see {@link InvalidParentTaskError} for the rejections). */
+/**
+ * Load and validate a candidate parent (see {@link InvalidParentTaskError} for the rejections).
+ *
+ * The cycle check walks the candidate's `parentTask` ancestor chain instead of collecting the
+ * task's subtree: it is equivalent (the candidate descends from the task iff the task is one of
+ * its ancestors), sees cross-set descendants, and — resolving each hop as `peek ?? load` —
+ * completes without an async boundary when every ref on the chain is materialized, so callers
+ * holding materialized objects can run it under `Effect.runSync`.
+ */
 export const resolveParentTask = (
   taskSet: TaskSet | undefined,
   task: Task.Task,
   parentTask: Ref.Ref<Task.Task>,
-): Effect.Effect<Task.Task, InvalidParentTaskError | Error.EntityNotFoundError, Database.Service> =>
+): Effect.Effect<Task.Task, InvalidParentTaskError | Error.EntityNotFoundError> =>
   Effect.gen(function* () {
-    const candidate = yield* Database.load(parentTask);
-    const subtree = yield* Task.collectSubtree(task);
-    if (subtree.some((member) => member.id === candidate.id)) {
-      return yield* Effect.fail(
-        new InvalidParentTaskError({ message: 'A task cannot be re-parented under itself or its own sub-tasks.' }),
-      );
+    const candidate = Database.peek(parentTask) ?? (yield* Database.load(parentTask));
+    const seen = new Set<string>();
+    let ancestor: Task.Task | undefined = candidate;
+    while (ancestor && !seen.has(ancestor.id)) {
+      if (ancestor.id === task.id) {
+        return yield* Effect.fail(
+          new InvalidParentTaskError({ message: 'A task cannot be re-parented under itself or its own sub-tasks.' }),
+        );
+      }
+      seen.add(ancestor.id);
+      ancestor = ancestor.parentTask
+        ? (Database.peek(ancestor.parentTask) ?? (yield* Database.load(ancestor.parentTask)))
+        : undefined;
     }
     const belongs = taskSet ? taskSet.tasks.some((ref) => Task.refEntityId(ref) === candidate.id) : false;
     if (!belongs) {

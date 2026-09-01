@@ -65,7 +65,7 @@ const SplitStory = () => {
 // Two main planks side by side; click either to move attention — only the attended plank's sigil and
 // title take the accent color.
 const TwoPanesStory = () => (
-  <div className='w-full flex h-full px-3 gap-3 dx-deck-surface'>
+  <div className='dx-fill flex px-3 gap-3 dx-deck-surface'>
     <MainPane id='plank-a' label='Pane A' />
     <MainPane id='plank-b' label='Pane B' />
   </div>

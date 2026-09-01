@@ -124,7 +124,7 @@ export const ReaderPane = ({
     }
   }, [view, selected]);
 
-  return <div className={mx('flex grow min-h-0 overflow-hidden', classNames)} ref={parentRef} />;
+  return <div className={mx('flex dx-grow overflow-hidden', classNames)} ref={parentRef} />;
 };
 
 ReaderPane.displayName = 'ReaderPane';
