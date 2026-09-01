@@ -27,8 +27,9 @@ const RELATIVE_TS_IMPORT = /((?:from\s*|import\s*\(\s*)['"])(\.\.?\/[^'"]+?)\.(t
  * file's own imports on the same explicit-extension style as everything else in the repo.
  */
 const rewriteTsImportExtensions = (text: string): string =>
-  text.replace(RELATIVE_TS_IMPORT, (_match, prefix, path, ext, suffix) =>
-    `${prefix}${path}.${ext === 'tsx' ? 'jsx' : 'js'}${suffix}`,
+  text.replace(
+    RELATIVE_TS_IMPORT,
+    (_match, prefix, path, ext, suffix) => `${prefix}${path}.${ext === 'tsx' ? 'jsx' : 'js'}${suffix}`,
   );
 
 class SubstitutionsFileSystemHost extends RealFileSystemHost {
