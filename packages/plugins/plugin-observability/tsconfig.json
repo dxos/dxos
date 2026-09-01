@@ -31,9 +31,6 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/compute/ai"
-    },
-    {
       "path": "../../core/compute/compute"
     },
     {

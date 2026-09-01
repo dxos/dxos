@@ -389,8 +389,11 @@ const feedPosition = (message: Message.Message): number => {
 /**
  * Span annotations identifying the conversation a model call belongs to. The space is read off the
  * feed's URI (`echo://<spaceId>/<objectId>`) rather than passed in, so it cannot go missing.
+ *
+ * The space is what the capture policy keys on, and an absent one reports metadata only — so this
+ * is exported to be tested rather than left to an integration test to notice.
  */
-const sessionAnnotations = (feed: Feed.Feed): Record<string, string> => {
+export const sessionAnnotations = (feed: Feed.Feed): Record<string, string> => {
   // `prefer: 'absolute'` because the relative form (`echo:///<objectId>`) carries no space, and a
   // span with no space reports metadata only.
   const uri = Obj.getURI(feed, { prefer: 'absolute' });

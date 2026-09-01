@@ -135,7 +135,6 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/client": "workspace:*",
@@ -155,7 +154,6 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@effect/atom-react": "catalog:",
-    "@opentelemetry/sdk-trace-base": "2.2.0",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "react": "catalog:",

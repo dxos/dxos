@@ -16,6 +16,26 @@ import * as ObservabilityExtension from './ObservabilityExtension';
 
 export * from './storage';
 
+/**
+ * Reports model calls to whichever extension implements the `generations` kind.
+ *
+ * Imported on demand: this module is the package's barrel entry and so is parsed at boot, while the
+ * AI sink is only ever wanted once a model call has happened.
+ */
+const attachAiCapture = async (observability: Observability): Promise<CleanupFn> => {
+  const { AiSpanProcessor, contentCaptureAllowed } = await import('./ai/AiObservability');
+  const { Otel } = await import('./extensions');
+  return Otel.addSpanProcessor(
+    new AiSpanProcessor({
+      captureGeneration: (generation) => observability.generations.captureGeneration(generation),
+      // Read per span: the user can toggle telemetry mid-session, and leaving the decision to a
+      // backend client would gate on its own opt-out flag, which is a separate store.
+      captureEnabled: () => observability.enabled,
+      allowContent: contentCaptureAllowed,
+    }),
+  );
+};
+
 // TODO(wittjosiah): Figure out how to handle when telemetry is disabled.
 //   In theory the setting should be both persisted and synchronized.
 //   Initialize probably should still run for the cases where data is emitted manually (e.g., feedback).
@@ -76,6 +96,7 @@ class ObservabilityImpl implements Observability {
 
       const cleanups = yield* Effect.all(this._dataProviders.map((provider) => provider(this)));
       this._subscriptions.add(...cleanups.filter((cleanup) => cleanup !== undefined));
+      this._subscriptions.add(yield* Effect.promise(() => attachAiCapture(this)));
       this._initialized = true;
     }).pipe(
       Effect.catch((error) =>

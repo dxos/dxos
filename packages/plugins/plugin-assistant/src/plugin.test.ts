@@ -2,19 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import { BasicTracerProvider, InMemorySpanExporter, SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Tracer from 'effect/Tracer';
 import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 import { describe, test } from 'vitest';
 
 import { AgentService as AgentServiceRuntime } from '@dxos/agent-runtime';
 import { AiService } from '@dxos/ai';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
-import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
-import * as Capabilities from '@dxos/app-framework/Capabilities';
-import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { AiContext } from '@dxos/assistant';
@@ -25,7 +20,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Query, Ref, Registry } from '@dxos/echo';
-import { EffectEx, makeTracer } from '@dxos/effect';
+import { EffectEx } from '@dxos/effect';
 import { DXN, EntityId } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
@@ -213,76 +208,6 @@ describe('AssistantPlugin', () => {
         expect(result).toEqual({ capital: 'paris' });
       }).pipe(Effect.provide(ServiceResolver.provide({ space: defaultSpace.id }, Database.Service))),
     );
-  });
-
-  test('exports model-call spans through a runtime-installed tracer', async ({ expect }) => {
-    const exporter = new InMemorySpanExporter();
-    const provider = new BasicTracerProvider({ spanProcessors: [new SimpleSpanProcessor(exporter)] });
-    // Stands in for plugin-observability: contributes a tracer with no knowledge of the AI stack.
-    const TracerPlugin = Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.test.tracer'), name: 'Tracer' })).pipe(
-      Plugin.addModule(
-        Capability.inlineModule(
-          'tracer',
-          { provides: [Capabilities.RuntimeServices], activatesOn: ActivationEvents.Startup },
-          () =>
-            Effect.succeed([
-              Capability.contribute(
-                Capabilities.RuntimeServices,
-                Layer.succeed(Tracer.Tracer, makeTracer(provider, 'test')),
-              ),
-            ]),
-        ),
-      ),
-      Plugin.make,
-    );
-
-    await using harness = await createComposerTestApp({
-      plugins: [
-        ClientPlugin.make({}),
-        AssistantPlugin({
-          aiServiceMiddleware: ScriptedLanguageModel.scriptedAiServiceMiddleware([
-            { parts: [ScriptedLanguageModel.toolCall('completeJob', { success: { capital: 'paris' } })] },
-            { parts: [ScriptedLanguageModel.text('Done.')] },
-          ]),
-        }),
-        RoutinePlugin.make(),
-        TracerPlugin(),
-      ],
-    });
-
-    const { defaultSpace } = await EffectEx.runAndForwardErrors(
-      initializeIdentity(harness.get(ClientCapabilities.Client)),
-    );
-
-    await harness.runPromise(
-      Effect.gen(function* () {
-        const instructions = yield* Database.add(
-          Instructions.make({
-            name: 'tracer-test',
-            text: 'Call completeJob with success set to { "capital": "<lowercase country capital>" }.',
-          }),
-        );
-        yield* Database.flush();
-        yield* Operation.invoke(
-          RunInstructions,
-          {
-            instructions: Ref.make(instructions),
-            input: { country: 'France' },
-            model: DXN.make('com.anthropic.model.claude-haiku-4-5.default'),
-          },
-          { spaceId: defaultSpace.id },
-        );
-      }).pipe(Effect.provide(ServiceResolver.provide({ space: defaultSpace.id }, Database.Service))),
-    );
-    await provider.forceFlush();
-
-    // The point of the test: nothing above wired a tracer into the model call. It arrives because
-    // every fiber on the process-manager runtime inherits what `RuntimeServices` contributed.
-    const spans = exporter.getFinishedSpans();
-    const modelSpan = spans.find(({ name }) => name.startsWith('LanguageModel.'));
-    expect(modelSpan).toBeDefined();
-    expect(modelSpan!.attributes['dxos.ai.session_id']).toBeTypeOf('string');
-    expect(modelSpan!.attributes['dxos.ai.space_id']).toEqual(defaultSpace.id);
   });
 
   test(

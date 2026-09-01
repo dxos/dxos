@@ -9,11 +9,24 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import type * as LanguageModel from 'effect/unstable/ai/LanguageModel';
+import * as Telemetry from 'effect/unstable/ai/Telemetry';
 
 import { DXN } from '@dxos/keys';
 
 import * as AiService from './AiService';
+import * as AiTelemetry from './AiTelemetry';
 import { AiModelNotAvailableError } from './errors';
+
+/**
+ * Rides with every resolved model, so a model call records what the GenAI conventions leave out —
+ * the prompt, the response, the tool names, and the prompt-cache counts — without a caller arranging
+ * it. Effect offers content only through this hook, and only to whoever holds the model, which is
+ * why it is scoped here rather than installed across a runtime.
+ *
+ * Stamping is unconditional and costs a `JSON.stringify` per call, immaterial beside the round trip
+ * it accompanies. Whether any of it leaves the device is decided later, by the sink.
+ */
+const telemetryLayer = Layer.succeed(Telemetry.CurrentSpanTransformer, AiTelemetry.makeSpanTransformer());
 
 /**
  * v4 removed `Layer.fail`; a failing layer is the failure effect lifted with `Layer.unwrap`.
@@ -32,7 +45,7 @@ export const buildAiService: Layer.Layer<AiService.AiService, never, AiModelReso
     const resolver = yield* AiModelResolver;
     return {
       metadata: resolver.metadata,
-      model: (name, options) => resolver.model(name, options),
+      model: (name, options) => Layer.merge(resolver.model(name, options), telemetryLayer),
     } satisfies Context.Service.Shape<typeof AiService.AiService>;
   }),
 );

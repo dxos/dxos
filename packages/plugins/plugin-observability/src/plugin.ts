@@ -8,7 +8,6 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 
 import {
-  AiObservability,
   ClientReady,
   InvocationListener,
   Namespace,
@@ -24,7 +23,6 @@ import { meta } from '#meta';
 import { ObservabilityCapabilities, ObservabilityOptions } from '#types';
 
 export const ObservabilityPlugin = Plugin.define<ObservabilityOptions.ObservabilityPluginOptions>(meta).pipe(
-  Plugin.addModule(AiObservability),
   Plugin.addModule(ClientReady),
   Plugin.addModule(InvocationListener),
   Plugin.addModule(Namespace),
