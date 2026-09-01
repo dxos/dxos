@@ -79,7 +79,6 @@ export const optimizeDepsInclude: string[] = [
   '@dxos/devtools > @dxos/react-ui-graph > js-clipper',
   '@dxos/devtools > @dxos/react-ui-list > @atlaskit/pragmatic-drag-and-drop-auto-scroll/element',
   '@dxos/devtools > @dxos/react-ui-list > @atlaskit/pragmatic-drag-and-drop-hitbox/util/get-reorder-destination-index',
-  '@dxos/devtools > @dxos/react-ui-list > @radix-ui/react-accordion',
   '@dxos/devtools > @dxos/react-ui-syntax-highlighter > react-syntax-highlighter/dist/esm/create-element',
   '@dxos/devtools > @dxos/react-ui-syntax-highlighter > react-syntax-highlighter/dist/esm/prism-async-light',
   '@dxos/devtools > @dxos/react-ui-syntax-highlighter > react-syntax-highlighter/dist/esm/styles/prism',
