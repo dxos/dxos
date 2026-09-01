@@ -213,6 +213,13 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
     // only churns clients.
     const score = (candidate: Command[]) => candidate.filter(mutatesData).length;
     const chosen = candidates.reduce((best, candidate) => (score(candidate) > score(best) ? candidate : best));
+    // A run that executes nothing reports success, which is the same vacuity that made "24 planned,
+    // 3 executed" look like a passing test. Small `maxCommands` makes it reachable: every command
+    // but `CreateSpace` needs a space, so a short pool can contain nothing runnable at all.
+    invariant(
+      chosen.length > 0,
+      `no executable command drawn from ${spec.sampleDraws} pools; raise maxCommands or set planFile`,
+    );
 
     log.info('command sequence drawn', {
       draws: draws.length,

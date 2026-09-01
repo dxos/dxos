@@ -7,8 +7,10 @@ devicesPerIdentity: [1]
 agents: false
 maxSpaces: 1
 maxDocumentsPerSpace: 1
-maxCommands: 1
+maxCommands: 2
 sampleDraws: 4
+# Fixed rather than drawn: a probe whose job is to prove cleanup must create something to clean up.
+planFile: configs/plans/dev-probe.json
 maxRuntimeMs: 300000
 quiescenceTimeoutMs: 90000
 checkpoints: false

@@ -330,6 +330,14 @@ Two lessons worth keeping:
 - The counters on the same document were correct in every failing run. That should have been the
   clue: a CRDT that interleaved text would not keep per-writer registers exact.
 
+### A run can draw an empty plan and report success
+
+The dev probe (`maxCommands: 1`) drew `plan: []` and exited 0 having executed nothing — the same
+vacuity as the old "24 planned, 3 executed", reached from the other direction: every command except
+`CreateSpace` needs a space to exist, so a short pool can contain nothing runnable at all. `_drawPlan`
+now rejects an empty plan outright, and the probe uses a fixed two-command `planFile` instead of
+drawing — a probe whose job is to prove cleanup has to create something to clean up.
+
 ### Cleaning up after a run that never got to clean up
 
 Per-run cleanup handles assertion failures (it runs in `finally`) but not a dead orchestrator —
@@ -361,8 +369,17 @@ the hub under `/hub/` (`http://localhost:8787/hub/`, `https://dev.dxos.network/h
 
 Verified both ends: locally, both identities bound and `account/email/exists` confirms the rows;
 against **deployed dev**, the probe bound its identity and then **self-serve cleanup succeeded with
-no admin key** — `{"event":"cleanup","spaces":1,"accepted":2,"refused":[]}` — the request that
-previously answered 403.
+no admin key** — the request that previously answered 403. Reconfirmed on a later container with a
+deterministic two-command probe (`configs/plans/dev-probe.json`):
+
+```
+{"event":"plan","commands":["CreateSpace(0)","CreateDocument(0, 0)"]}
+{"event":"done","planned":2,"commands":2}
+{"event":"cleanup","spaces":1,"accepted":2,"refused":[]}
+```
+
+The Hub account row survives the identity deletion, which is what makes the alias strategy stable:
+the row is rebound to the next run's fresh identity rather than accumulating.
 
 Caveats: concurrent runs sharing the alias set would fight over the rebind (fine for one runner;
 use a per-runner suffix if that changes), and none of this applies to real deployments — there the
