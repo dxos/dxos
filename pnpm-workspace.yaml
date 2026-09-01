@@ -347,6 +347,7 @@ catalog:
   '@xterm/xterm': ^5.5.0
   '@xyflow/react': ^12.8.1
   '@zag-js/core': ^1.43.3
+  '@zag-js/hotkeys': ^1.43.3
   '@zag-js/react': ^1.43.3
   '@zag-js/splitter': ^1.43.3
   '@zag-js/vanilla': ^1.43.3

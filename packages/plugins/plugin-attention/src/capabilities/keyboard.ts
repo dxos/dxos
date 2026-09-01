@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { nestHotkeyScope, setHotkeyScope } from '@dxos/react-focus';
+import { nestHotkeyScope, setHotkeyScope } from '@dxos/react-focus/store';
 
 import { AttentionCapabilities } from '#types';
 

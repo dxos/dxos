@@ -12,7 +12,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { debounce } from '@dxos/async';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { runAction } from '@dxos/plugin-graph';
-import { destroyHotkeys, hotkeyStore, initHotkeys, setHotkeyScope } from '@dxos/react-focus';
+import { destroyHotkeys, hotkeyStore, initHotkeys, setHotkeyScope } from '@dxos/react-focus/store';
 import { getHostPlatform } from '@dxos/util';
 
 import { KEY_BINDING } from '#meta';

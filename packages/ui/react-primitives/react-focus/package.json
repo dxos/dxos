@@ -17,6 +17,11 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./store": {
+      "source": "./src/hotkey-store.ts",
+      "types": "./dist/types/src/hotkey-store.d.ts",
+      "import": "./dist/lib/hotkey-store.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -26,7 +31,8 @@
   ],
   "dependencies": {
     "@ark-ui/react": "catalog:",
-    "@dxos/util": "workspace:*"
+    "@dxos/util": "workspace:*",
+    "@zag-js/hotkeys": "catalog:"
   },
   "devDependencies": {
     "@testing-library/react": "catalog:",

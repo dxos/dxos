@@ -41,7 +41,6 @@
     "@dxos/ui-theme": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@effect/atom-react": "catalog:",
-    "@radix-ui/react-accordion": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "@radix-ui/react-slot": "catalog:",
     "@radix-ui/react-use-controllable-state": "catalog:"
