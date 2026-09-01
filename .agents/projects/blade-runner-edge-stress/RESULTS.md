@@ -82,6 +82,8 @@ generator was fixed.
 | E | `run-e-second-seed` | `partitions: false` | 8 | `Cannot modify ECHO object property "0"` — replicant bug, fixed |
 | F | `run-e-second-seed` | `partitions: false` | **25** | final assertion: `differentDocuments: 1` after 21 data operations — finding 6 |
 | G | `run-e-second-seed` | `partitions: false`, **linked stack** | **25** | identical failure to F — finding 6 is not version skew |
+| K | `run-e-second-seed` | linked, single-char tokens | 10 + 1 thrown | command 11: a document client 2 created one command earlier never reached client 0 in 60 s |
+| L | `run-e-second-seed` | linked, single-char tokens | **25** | final assertion, space 1, client 0 only: `differentDocuments: 1` |
 
 B, C and D share a seed and drew byte-identical `plan` lines across three intervening changes to
 the executor — the generator depends on the seed and nothing else. The seed fixes the sequence,
@@ -374,7 +376,13 @@ sync did not quiesce for space 0 within 60000ms:
 ```
 
 So finding 6 stands on its own: it is a convergence defect, not a consequence of running a client
-against older workers. The `subduction: unexpected inbound frame type { type: 'collection-state' }`
+against older workers. Runs K and L (post token fix, §4c) confirm two more things: it is independent
+of the retracted token-encoding bug, and its *location* is nondeterministic — the same plan stalled
+at command 11 in one run (a fresh document never delivered to a second identity, while the creator's
+log shows `missingOnRemote` naming it for the full window) and completed all 25 in the next, failing
+on a different space at the final assertion. One reading semantics note for the table above: the
+trace records a command when it starts, so run K's `commands: 11` means the 11th command is the one
+that threw — an earlier analysis here misread that as "11 done, failed on 12". The `subduction: unexpected inbound frame type { type: 'collection-state' }`
 warning also persists with matched versions, confirming it is an edge-side gap in db-service's
 frame decoder rather than skew.
 

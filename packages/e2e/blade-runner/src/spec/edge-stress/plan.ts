@@ -119,7 +119,16 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
           // a disagreement here is a defect in `advance`, not an unlucky draw — fail loudly rather
           // than silently skipping, which is what made earlier runs look longer than they were.
           invariant(canRun(command, model), `command unreachable at execution time: ${describe(command)}`);
-          await execute(command, model, real);
+          try {
+            await execute(command, model, real);
+          } catch (err) {
+            if (err instanceof BudgetExhausted) {
+              throw err;
+            }
+            // The trace records a command when it *starts*, so a bare error reads as the command
+            // after the failing one — an off-by-one that has already produced a wrong diagnosis.
+            throw new Error(`command ${real.counters.commands} ${describe(command)} failed`, { cause: err });
+          }
         }
       } catch (err) {
         if (!(err instanceof BudgetExhausted)) {
