@@ -69,10 +69,6 @@ export class OtelLogs {
     });
   };
 
-  /**
-   * Emit one already-mapped record; the current tags are merged under the given attributes.
-   * `timestamp` is the producing log call's time — export happens later, from a batch.
-   */
   emit(record: { severityNumber: SeverityNumber; body?: string; timestamp: Date; attributes: AnyValueMap }): void {
     const logger = this._loggerProvider.getLogger(
       'dxos-observability',

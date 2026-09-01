@@ -24,10 +24,16 @@ const DEFAULT_LOG_FILTER = 'debug';
  * lines, plus forwarded metric instrument calls (posted via the `observabilityWorker` handle
  * `initializeObservability` wires up).
  */
-export type ObservabilityWorkerMessage = string | { type: 'flush' } | OtelLogSinkMessage | OtelMetricsSinkMessage;
+/** One pre-serialized JSONL log line; the hot path carries no envelope. */
+export type SerializedLogLine = string;
+
+export type ObservabilityWorkerMessage =
+  | SerializedLogLine
+  | { type: 'flush' }
+  | OtelLogSinkMessage
+  | OtelMetricsSinkMessage;
 
 export type WorkerLogProcessorOptions = {
-  /** The observability worker (`workers/observability-worker.ts`). */
   worker: Worker;
   /** Identifier embedded in every record's `i` field. Defaults to {@link inferEnvironmentName}. */
   tabId?: string;

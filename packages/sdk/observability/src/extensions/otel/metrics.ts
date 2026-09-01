@@ -25,10 +25,9 @@ import { type CleanupFn } from '@dxos/async';
 import { log } from '@dxos/log';
 import { type MetricData, type MetricObserver, TRACE_PROCESSOR } from '@dxos/tracing';
 
+import { METRIC_EXPORT_INTERVAL } from './intervals';
 import { type OtelOptions, resolveOtlpUrl, setDiagLogger } from './otel';
 import { metricDataToAttributes } from './remote-metrics';
-
-const EXPORT_INTERVAL = 60 * 1000;
 
 const METER_NAME = 'dxos-observability';
 
@@ -76,12 +75,6 @@ const HISTOGRAM_VIEWS: ViewOptions[] = [
 export type OtelMetricsOptions = OtelOptions & {
   /** Test seam: replaces the OTLP exporter. */
   exporter?: PushMetricExporter;
-  /**
-   * Register with `TRACE_PROCESSOR.remoteMetrics` to receive instrument calls made in this
-   * realm. Default true. The worker-side sink disables it: its records arrive over the
-   * port, and per-connection registration would export any worker-local metric once per
-   * connected realm.
-   */
   registerTraceProcessor?: boolean;
 };
 
@@ -110,7 +103,7 @@ export class OtelMetrics {
           // downstream as a counter reset.
           temporalityPreference: AggregationTemporalityPreference.DELTA,
         }),
-      exportIntervalMillis: EXPORT_INTERVAL,
+      exportIntervalMillis: METRIC_EXPORT_INTERVAL,
     });
 
     this._meterProvider = new MeterProvider({
