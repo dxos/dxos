@@ -582,6 +582,14 @@ export class RepoProxy extends Resource {
         if (this._lifecycleState === LifecycleState.CLOSED) {
           return;
         }
+        // A pass a reconnect abandoned must not `_confirmSync`: a newer pass may have advanced the
+        // handles' in-flight heads, and confirming those would suppress that pass's retry. Its ids
+        // are re-queued instead — the host applies the duplicate delivery idempotently.
+        if (generation !== this._generation) {
+          updateIds.forEach((id) => this._pendingUpdateIds.add(id));
+          this._sendUpdatesJob?.trigger();
+          return;
+        }
         for (const { documentId } of updates) {
           // Handle may have been removed between RPC start and ack — skip silently.
           this._handles[documentId]?._confirmSync();
