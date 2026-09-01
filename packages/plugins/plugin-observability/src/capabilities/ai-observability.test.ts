@@ -47,6 +47,8 @@ describe('AI observability wiring', () => {
       expect(events[0]?.properties.$ai_input).toBeUndefined();
       expect(events[0]?.properties.$ai_output_choices).toBeUndefined();
       expect(events[0]?.properties.$ai_model).toEqual('test-model');
+      // Cache counts are metadata: they price the call and survive the content policy.
+      expect(events[0]?.properties.$ai_cache_read_input_tokens).toEqual(11);
       expect(JSON.stringify(events[0]?.properties)).not.toContain('hello');
     }),
   );
@@ -94,7 +96,10 @@ const stubModel = LanguageModel.make({
         {
           type: 'finish' as const,
           reason: 'stop' as const,
-          usage: { inputTokens: { total: 3 }, outputTokens: { total: 5 } },
+          usage: {
+            inputTokens: { uncached: 3, total: 21, cacheRead: 11, cacheWrite: 7 },
+            outputTokens: { total: 5 },
+          },
         },
       ];
     }),
@@ -126,7 +131,7 @@ const setup = ({
     const layer = Layer.mergeAll(
       Layer.effect(LanguageModel.LanguageModel, stubModel),
       Layer.succeed(Tracer.Tracer, makeTracer(provider, 'test')),
-      Layer.succeed(Telemetry.CurrentSpanTransformer, AiTelemetry.makeContentSpanTransformer()),
+      Layer.succeed(Telemetry.CurrentSpanTransformer, AiTelemetry.makeSpanTransformer()),
     );
 
     // How `AiSession` declares its space: an annotation on the enclosing effect, inherited by the

@@ -15,14 +15,21 @@ import { makeTracer } from '@dxos/effect';
 
 import * as AiTelemetry from './AiTelemetry';
 
-const stubModel = LanguageModel.make({
-  generateText: () =>
-    Effect.succeed([
-      { type: 'text', text: 'hello' },
-      { type: 'finish', reason: 'stop', usage: { inputTokens: { total: 3 }, outputTokens: { total: 5 } } },
-    ]),
-  streamText: () => Stream.empty,
-});
+const makeStub = (inputTokens: Record<string, number>) =>
+  LanguageModel.make({
+    generateText: () =>
+      Effect.succeed([
+        { type: 'text', text: 'hello' },
+        { type: 'finish', reason: 'stop', usage: { inputTokens, outputTokens: { total: 5 } } },
+      ]),
+    streamText: () => Stream.empty,
+  });
+
+/** Shaped like Anthropic's: `uncached` is what lands in `gen_ai.usage.input_tokens`. */
+const stubModel = makeStub({ uncached: 3, total: 21, cacheRead: 11, cacheWrite: 7 });
+
+/** An OpenAI-compatible endpoint, which reports no cache figures at all. */
+const uncachedModel = makeStub({ uncached: 3, total: 3 });
 
 describe('AiTelemetry', () => {
   it.effect('stamps prompt and response content onto the model-call span', () =>
@@ -96,8 +103,35 @@ describe('AiTelemetry', () => {
       output: 'dxos.ai.output',
       tools: 'dxos.ai.tools',
       truncated: 'dxos.ai.truncated',
+      cacheReadTokens: 'dxos.ai.cache_read_tokens',
+      cacheWriteTokens: 'dxos.ai.cache_write_tokens',
     });
   });
+
+  it.effect('stamps the prompt-cache counts the GenAI conventions have no room for', () =>
+    Effect.gen(function* () {
+      const { exporter, provider, layer } = setup();
+      yield* LanguageModel.generateText({ prompt: 'hi' }).pipe(Effect.provide(layer));
+      yield* Effect.promise(() => provider.forceFlush());
+
+      const span = modelSpan(exporter);
+      expect(span.attributes[AiTelemetry.ATTRIBUTES.cacheReadTokens]).toEqual(11);
+      expect(span.attributes[AiTelemetry.ATTRIBUTES.cacheWriteTokens]).toEqual(7);
+    }),
+  );
+
+  it.effect('stamps nothing when the provider reports no cache counts', () =>
+    Effect.gen(function* () {
+      const { exporter, provider, layer } = setup({}, uncachedModel);
+      yield* LanguageModel.generateText({ prompt: 'hi' }).pipe(Effect.provide(layer));
+      yield* Effect.promise(() => provider.forceFlush());
+
+      // Absent rather than zero, so a consumer can tell "no cache" from "provider does not report".
+      const span = modelSpan(exporter);
+      expect(span.attributes[AiTelemetry.ATTRIBUTES.cacheReadTokens]).toBeUndefined();
+      expect(span.attributes[AiTelemetry.ATTRIBUTES.cacheWriteTokens]).toBeUndefined();
+    }),
+  );
 
   it.effect('leaves the span bare when no transformer is installed', () =>
     Effect.gen(function* () {
@@ -114,14 +148,14 @@ describe('AiTelemetry', () => {
   );
 });
 
-const setup = (options?: AiTelemetry.ContentTransformerOptions) => {
+const setup = (options?: AiTelemetry.SpanTransformerOptions, model = stubModel) => {
   const exporter = new InMemorySpanExporter();
   const provider = new BasicTracerProvider({ spanProcessors: [new SimpleSpanProcessor(exporter)] });
   // Mirrors what the app installs into the process-manager runtime.
   const layer = Layer.mergeAll(
-    Layer.effect(LanguageModel.LanguageModel, stubModel),
+    Layer.effect(LanguageModel.LanguageModel, model),
     Layer.succeed(Tracer.Tracer, makeTracer(provider, 'test')),
-    Layer.succeed(Telemetry.CurrentSpanTransformer, AiTelemetry.makeContentSpanTransformer(options)),
+    Layer.succeed(Telemetry.CurrentSpanTransformer, AiTelemetry.makeSpanTransformer(options)),
   );
   return { exporter, provider, layer };
 };

@@ -110,6 +110,27 @@ describe('AiSpanProcessor', () => {
     expect(events[0]?.properties.$ai_output_choices).toEqual('[{"role":"assist');
   });
 
+  test('reports the prompt-cache counts as metadata, even when content is denied', async ({ expect }) => {
+    const { events, tracer } = await setup({ allowContent: () => false });
+    tracer
+      .startSpan('LanguageModel.generateText', {
+        attributes: {
+          'gen_ai.system': 'anthropic',
+          'gen_ai.usage.input_tokens': 3,
+          'dxos.ai.space_id': 'encrypted-space',
+          'dxos.ai.cache_read_tokens': 11,
+          'dxos.ai.cache_write_tokens': 7,
+        },
+      })
+      .end();
+
+    expect(events[0]?.properties).toMatchObject({
+      $ai_input_tokens: 3,
+      $ai_cache_read_input_tokens: 11,
+      $ai_cache_creation_input_tokens: 7,
+    });
+  });
+
   test('drops content the policy rejects, keeping metadata', async ({ expect }) => {
     const { events, tracer } = await setup({ allowContent: (spaceId) => spaceId === PLAINTEXT_SPACE });
     tracer

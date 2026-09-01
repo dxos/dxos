@@ -18,8 +18,9 @@ import { log } from '@dxos/log';
  *   The gate is checked here, before an event is built, rather than left to the PostHog client's
  *   own opt-out flag: that flag lives in a separate store keyed by API token, so it is not the
  *   same answer as the user's DXOS-side preference.
- * - **Metadata** — model, provider, request parameters, token counts, latency, trace/span/session
- *   ids, error class.
+ * - **Metadata** — model, provider, request parameters, token counts (including the prompt-cache
+ *   reads and writes, which price the call and give the hit rate), latency, trace/span/session ids,
+ *   error class.
  * - **Content** — `$ai_input` / `$ai_output_choices` / `$ai_tools`, forwarded only for a span that
  *   names its space and whose space {@link Options.allowContent} accepts. Content is always stamped
  *   on the span upstream (`AiTelemetry` in `@dxos/ai`) and dropped here, rather than conditionally
@@ -67,6 +68,8 @@ const INPUT_ATTR = 'dxos.ai.input';
 const OUTPUT_ATTR = 'dxos.ai.output';
 const TOOLS_ATTR = 'dxos.ai.tools';
 const TRUNCATED_ATTR = 'dxos.ai.truncated';
+const CACHE_READ_TOKENS_ATTR = 'dxos.ai.cache_read_tokens';
+const CACHE_WRITE_TOKENS_ATTR = 'dxos.ai.cache_write_tokens';
 
 /**
  * Forwards finished GenAI spans to PostHog as `$ai_generation` events via the injected capture
@@ -114,8 +117,12 @@ export class AiSpanProcessor implements SpanProcessor {
       $ai_parent_id: span.parentSpanContext?.spanId,
       $ai_provider: attributes['gen_ai.system'],
       $ai_model: attributes['gen_ai.response.model'] ?? attributes['gen_ai.request.model'],
+      // `gen_ai.usage.input_tokens` is the uncached count, which is what PostHog expects alongside
+      // the two cache figures — together they price the call, and their ratio is the hit rate.
       $ai_input_tokens: attributes['gen_ai.usage.input_tokens'],
       $ai_output_tokens: attributes['gen_ai.usage.output_tokens'],
+      $ai_cache_read_input_tokens: attributes[CACHE_READ_TOKENS_ATTR],
+      $ai_cache_creation_input_tokens: attributes[CACHE_WRITE_TOKENS_ATTR],
       $ai_latency: hrTimeToSeconds(span.duration),
       $ai_stream: span.name === `${MODEL_CALL_SPAN_PREFIX}streamText` ? true : undefined,
       $ai_session_id: attributes[SESSION_ID_ATTR],

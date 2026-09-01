@@ -85,10 +85,11 @@ export default Capability.makeModule(
 
     // Paired deliberately: the transformer serializes every prompt and response, so it is installed
     // with the exporter that consumes its output rather than by the harness that would pay for it
-    // whether or not anything reads it.
+    // whether or not anything reads it. It also carries the prompt-cache counts, which the GenAI
+    // conventions have no attribute for.
     const layer = Layer.mergeAll(
       Layer.succeed(Tracer.Tracer, makeTracer(provider, '@dxos/plugin-observability/ai')),
-      Layer.succeed(Telemetry.CurrentSpanTransformer, AiTelemetry.makeContentSpanTransformer()),
+      Layer.succeed(Telemetry.CurrentSpanTransformer, AiTelemetry.makeSpanTransformer()),
     );
 
     return Capability.contribute(Capabilities.RuntimeServices, layer);
