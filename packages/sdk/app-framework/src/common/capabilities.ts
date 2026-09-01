@@ -8,7 +8,6 @@ import type * as Fiber$ from 'effect/Fiber';
 import type * as Layer$ from 'effect/Layer';
 import type * as ManagedRuntime$ from 'effect/ManagedRuntime';
 import * as Option from 'effect/Option';
-import type * as Tracer$ from 'effect/Tracer';
 import type * as Command$ from 'effect/unstable/cli/Command';
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
@@ -151,9 +150,6 @@ export const TraceSink = Capability$.make<TraceSinkFactory>()('org.dxos.app-fram
 export const RuntimeServices = Capability$.make<Layer$.Layer<never>>()(
   'org.dxos.app-framework.capability.runtimeServices',
 );
-
-/** Re-exported so a contributor can type its layer without depending on effect's Tracer path. */
-export type Tracer = Tracer$.Tracer;
 
 /**
  * Source of ephemeral trace messages broadcast by remote runtimes over the space swarm (DX-1125).

@@ -11,6 +11,7 @@ import { AiTelemetry } from '@dxos/ai';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { makeTracer } from '@dxos/effect';
+import { log } from '@dxos/log';
 import { AiObservability, type Observability } from '@dxos/observability';
 
 import { ObservabilityCapabilities } from '#types';
@@ -64,7 +65,9 @@ export default Capability.makeModule(
     const observability = (): Observability.Observability | undefined =>
       capabilities.getAll(ObservabilityCapabilities.Observability)[0];
 
-    const provider = yield* Effect.promise(() =>
+    // The provider's chunk is fetched on demand, and a chunk fetch fails routinely after a redeploy.
+    // Telemetry setup degrades to no capture rather than failing a Startup module.
+    const provider = yield* Effect.tryPromise(() =>
       AiObservability.createAiTracerProvider({
         captureEvent: (event, properties) => observability()?.events.captureEvent(event, properties),
         // Read per span rather than captured: the user can toggle telemetry mid-session, and
@@ -73,7 +76,11 @@ export default Capability.makeModule(
         captureEnabled: () => observability()?.enabled ?? false,
         allowContent: contentCaptureAllowed,
       }),
-    );
+    ).pipe(Effect.catch((err) => Effect.sync(() => log.catch(err))));
+
+    if (!provider) {
+      return [];
+    }
 
     // Paired deliberately: the transformer serializes every prompt and response, so it is installed
     // with the exporter that consumes its output rather than by the harness that would pay for it
