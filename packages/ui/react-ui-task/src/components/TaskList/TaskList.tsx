@@ -60,6 +60,8 @@ import {
   subtreeIds,
   walkTaskTree,
 } from './hierarchy';
+import { TaskTreeContent } from './TaskTreeContent';
+import { type TaskNode } from './tree-model';
 
 const TASK_LIST_NAME = 'TaskList.Root';
 
@@ -98,6 +100,9 @@ const [TaskListProvider, useTaskListContext] = createContext<TaskListContextValu
 
 /** Shared empty set, so a list with nothing in flight does not allocate one per render. */
 const EMPTY_IDS: ReadonlySet<string> = new Set<string>();
+
+/** Shared empty map, for a tree rendered without the ordinal gutter. */
+const EMPTY_ORDINALS: ReadonlyMap<string, number> = new Map<string, number>();
 
 //
 // Root — headless context provider. Renders no DOM.
@@ -298,6 +303,10 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
     hierarchical,
     showGutter,
     isCollapsed,
+    onCollapseToggle,
+    selected,
+    onTaskSelect,
+    onTaskUpdate,
     dragging,
   } = useTaskListContext('TaskList.Content');
   // Collapsed ids are read through the context callback rather than held here, so the walk still
@@ -330,6 +339,23 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
     return new Map(visible.map((task, index) => [task.id, index + 1]));
   }, [rows, groups, dragging]);
 
+  if (rows) {
+    return (
+      <TaskTreeContent
+        tasks={tasks}
+        collapsed={collapsed}
+        showGutter={showGutter}
+        ordinals={showOrdinals ? ordinals : EMPTY_ORDINALS}
+        selected={selected}
+        translationKey={translationKey}
+        onCollapseToggle={onCollapseToggle}
+        onTaskSelect={onTaskSelect}
+        onTaskUpdate={onTaskUpdate}
+        renderTrailing={TaskTreeTrailing}
+      />
+    );
+  }
+
   return (
     <Listbox.Content
       {...composableProps(props, {
@@ -346,23 +372,14 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
       aria-label='Tasks'
       ref={forwardedRef}
     >
-      {rows
-        ? rows.map((row) => (
-            <TaskListItem
-              key={row.task.id}
-              task={row.task}
-              ordinal={showOrdinals ? ordinals.get(row.task.id) : undefined}
-              row={row}
-            />
-          ))
-        : groups.map(({ status, tasks }) => (
-            <Fragment key={status ?? 'all'}>
-              {status && showGroupLabels && <TaskListGroupLabel>{t(`status-${status}.label`)}</TaskListGroupLabel>}
-              {tasks.map((task) => (
-                <TaskListItem key={task.id} task={task} ordinal={showOrdinals ? ordinals.get(task.id) : undefined} />
-              ))}
-            </Fragment>
+      {groups.map(({ status, tasks }) => (
+        <Fragment key={status ?? 'all'}>
+          {status && showGroupLabels && <TaskListGroupLabel>{t(`status-${status}.label`)}</TaskListGroupLabel>}
+          {tasks.map((task) => (
+            <TaskListItem key={task.id} task={task} ordinal={showOrdinals ? ordinals.get(task.id) : undefined} />
           ))}
+        </Fragment>
+      ))}
     </Listbox.Content>
   );
 });
@@ -880,6 +897,26 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
     );
   },
 );
+
+/** Trailing cells of a tree row — the same content the flat row puts after its title. */
+const TaskTreeTrailing = ({ item }: { item: TaskNode }) => {
+  const { t } = useTranslation(translationKey);
+  const task = item.task;
+  if (!task) {
+    return null;
+  }
+
+  return (
+    <>
+      <div className='flex h-8 items-center justify-start gap-1'>
+        {task.priority && task.priority !== 'none' && <Tag hue='neutral'>{task.priority}</Tag>}
+        <TaskListItemArtifacts task={task} />
+        {task.assignee && <TaskListAssignee assignee={task.assignee} />}
+      </div>
+      <TaskListItemActions task={task} />
+    </>
+  );
+};
 
 //
 // Item actions — the trailing cell of a row.

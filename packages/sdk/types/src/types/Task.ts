@@ -58,35 +58,31 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
       }),
     ),
     description: Schema.optional(
-      Schema.String.annotate({ title: 'Description' }).pipe(
+      Schema.String.pipe(
+        Schema.annotate({ title: 'Description' }),
         GeneratorAnnotation.set({
           generator: 'lorem.paragraphs',
           args: [{ min: 1, max: 3 }],
         }),
       ),
     ),
-    priority: Priority.pipe(
-      FormatAnnotation.set(Format.TypeFormat.SingleSelect),
-      GeneratorAnnotation.set({
-        generator: 'helpers.arrayElement',
-        args: [Priority.literals],
-      }),
-      Schema.annotate({
-        title: 'Priority',
-        [PropertyMetaAnnotationId]: {
-          singleSelect: {
-            options: [
-              { id: 'none', title: 'None', color: 'gray' },
-              { id: 'low', title: 'Low', color: 'indigo' },
-              { id: 'medium', title: 'Medium', color: 'purple' },
-              { id: 'high', title: 'High', color: 'amber' },
-              { id: 'urgent', title: 'Urgent', color: 'red' },
-            ],
-          },
-        },
-      }),
-      Schema.optional,
+
+    /**
+     * Parent in the sub-task hierarchy (unbounded depth); unset means a root task. App-level: the
+     * ECHO parent edge means membership in the owning TaskSet, so nothing cascades through this field.
+     */
+    parentTask: Schema.optional(
+      Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task).annotate({ title: 'Parent Task' })),
     ),
+
+    /**
+     * Execution-ordering dependencies: this task is ready to start only when every referenced
+     * task is `done`. Orthogonal to `parentTask` (hierarchy) and `milestone` (grouping).
+     */
+    dependsOn: Schema.optional(
+      Schema.Array(Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task))).annotate({ title: 'Depends On' }),
+    ),
+
     status: Status.pipe(
       FormatAnnotation.set(Format.TypeFormat.SingleSelect),
       GeneratorAnnotation.set({
@@ -111,6 +107,33 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
       Schema.optional,
     ),
 
+    // TODO(burdon): Customize or opinionated?
+    priority: Priority.pipe(
+      FormatAnnotation.set(Format.TypeFormat.SingleSelect),
+      GeneratorAnnotation.set({
+        generator: 'helpers.arrayElement',
+        args: [Priority.literals],
+      }),
+      Schema.annotate({
+        title: 'Priority',
+        [PropertyMetaAnnotationId]: {
+          singleSelect: {
+            options: [
+              { id: 'none', title: 'None', color: 'gray' },
+              { id: 'low', title: 'Low', color: 'indigo' },
+              { id: 'medium', title: 'Medium', color: 'purple' },
+              { id: 'high', title: 'High', color: 'amber' },
+              { id: 'urgent', title: 'Urgent', color: 'red' },
+            ],
+          },
+        },
+      }),
+      Schema.optional,
+    ),
+
+    // TODO(burdon): Unit could be hours, or fibonacci?
+    estimate: Schema.optional(Schema.Number.annotate({ title: 'Estimate' })),
+
     /** Human or agent assignment: a HALO identity (DID), a Person ref, a bare email, or a display name. */
     assignee: Schema.optional(Actor.Actor.annotate({ title: 'Assignee' })),
 
@@ -119,37 +142,6 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
      * `done`, so delegated work comes back to whoever asked for it.
      */
     reviewers: Schema.optional(Schema.Array(Actor.Actor).annotate({ title: 'Reviewers' })),
-
-    /**
-     * What the task produced — the documents, sketches and records made while working it. Refs
-     * rather than an ECHO parent edge: an artifact belongs to the project (or wherever it was
-     * filed) and merely records which task made it, so completing a task must not cascade to it.
-     */
-    artifacts: Schema.optional(
-      Schema.Array(Ref.Ref(Obj.Unknown)).pipe(
-        Annotation.FormInputAnnotation.set(false),
-        Schema.annotate({ title: 'Artifacts' }),
-      ),
-    ),
-    estimate: Schema.optional(Schema.Number.annotate({ title: 'Estimate' })),
-
-    /**
-     * Parent in the sub-task hierarchy (unbounded depth); unset means a root task. App-level: the
-     * ECHO parent edge means membership in the owning TaskSet, so nothing cascades through this field.
-     */
-    // `Schema.suspend` because the type refers to itself; clear the field with `delete` rather
-    // than an `undefined` assignment, which the suspended schema rejects on validation.
-    parentTask: Schema.optional(
-      Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task).annotate({ title: 'Parent Task' })),
-    ),
-
-    /**
-     * Execution-ordering dependencies: this task is ready to start only when every referenced
-     * task is `done`. Orthogonal to `parentTask` (hierarchy) and `milestone` (grouping).
-     */
-    dependsOn: Schema.optional(
-      Schema.Array(Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task))).annotate({ title: 'Depends On' }),
-    ),
 
     /**
      * The milestone this task belongs to; unset means backlog. A sub-task inherits its nearest
@@ -164,6 +156,18 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
      */
     history: Schema.optional(
       Schema.Array(HistoryEntry).pipe(Annotation.FormInputAnnotation.set(false), Schema.annotate({ title: 'History' })),
+    ),
+
+    /**
+     * What the task produced — the documents, sketches and records made while working it. Refs
+     * rather than an ECHO parent edge: an artifact belongs to the project (or wherever it was
+     * filed) and merely records which task made it, so completing a task must not cascade to it.
+     */
+    artifacts: Schema.optional(
+      Schema.Array(Ref.Ref(Obj.Unknown)).pipe(
+        Annotation.FormInputAnnotation.set(false),
+        Schema.annotate({ title: 'Artifacts' }),
+      ),
     ),
 
     // Set membership is the `TaskSet.tasks` array (flat, ordered, sub-tasks included), not a

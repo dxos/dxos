@@ -85,6 +85,18 @@ export type IconRenderer<T extends { id: string } = any> = FC<{
   props: TreeItemDataProps;
 }>;
 
+/**
+ * Replaces the heading — the row's leading content beside the toggle. `TreeItemDataProps` describes
+ * a label with an optional icon and count; a caller whose row leads with its own controls (a
+ * checkbox, an inline-editable title) supplies them here instead.
+ */
+export type HeadingRenderer<T extends { id: string } = any> = FC<{
+  item: T;
+  path: string[];
+  props: TreeItemDataProps;
+  open: boolean;
+}>;
+
 export type ColumnRenderer<T extends { id: string } = any> = FC<{
   item: T;
   path: string[];
@@ -98,6 +110,7 @@ export type TreeRenderContextValue<T extends { id: string } = any> = {
   draggable: boolean;
   renderColumns?: ColumnRenderer<T>;
   renderIcon?: IconRenderer<T>;
+  renderHeading?: HeadingRenderer<T>;
   blockInstruction?: (params: { instruction: Instruction; source: TreeData; target: TreeData }) => boolean;
   canDrop?: (params: { source: TreeData; target: TreeData }) => boolean;
   onOpenChange?: (params: { item: T; path: string[]; open: boolean }) => void;
