@@ -48,6 +48,7 @@ export const translations = [
         'feedback-textarea.placeholder': 'Please enter your feedback, technical issue, or feature request.',
         'include-debug-logs.label': 'Include debug logs',
         'send-feedback.label': 'Send Feedback',
+        'sending-feedback.label': 'Sending…',
         'create-github-issue.label': 'Create GitHub Issue',
         'github-issue-toast.label': 'GitHub issue draft opened',
         'github-issue-toast.description': 'Finish the submission in the GitHub tab.',
