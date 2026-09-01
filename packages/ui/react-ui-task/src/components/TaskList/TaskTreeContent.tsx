@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
+import React, { useCallback, useContext, useMemo, useRef } from 'react';
 
 import { Icon, IconButton, Tag, useTranslation } from '@dxos/react-ui';
 import { type ColumnRenderer, type HeadingRenderer, Tree } from '@dxos/react-ui-list';
@@ -50,20 +51,28 @@ export const TaskTreeContent = ({
   onTaskUpdate,
   renderTrailing,
 }: TaskTreeContentProps) => {
-  // Rebuilt whenever the set changes: tasks are live ECHO objects, so the model cannot own the
-  // collapsed state — it is seeded from `collapsed`, which the list holds.
-  const model = useMemo(() => createTaskTreeModel(tasks, { collapsed }), [tasks, collapsed]);
+  const registry = useContext(RegistryContext);
 
-  // Toggling `collapsed` rebuilds the model, whose `isOpen` seeds from it — so the list's own state
-  // stays the single source and the model needs no separate write. Collapse is keyed by id, which is
-  // unambiguous here: a task has one parent, so it appears at exactly one path.
+  // Read at construction only. Keeping `collapsed` out of the memo's dependencies is what makes the
+  // model identity stable across a toggle: `Tree` memoizes its walk on the model, so a new model on
+  // every collapse rebuilt the collection and the branch never got to run its conceal animation.
+  const collapsedRef = useRef(collapsed);
+  collapsedRef.current = collapsed;
+  const model = useMemo(() => createTaskTreeModel(tasks, { collapsed: collapsedRef.current }), [tasks]);
+
+  // Written into the model rather than left to a rebuild, so the tree keeps its identity through the
+  // disclosure animation, and mirrored onto the list's own collapsed set, which survives the model
+  // being rebuilt when the task array changes. Collapse is keyed by id, which is unambiguous here:
+  // a task has one parent, so it appears at exactly one path.
   const handleOpenChange = useCallback(
-    ({ item, open }: { item: TaskNode; open: boolean }) => {
-      if (open === collapsed.has(item.id)) {
+    ({ item, path, open }: { item: TaskNode; path: string[]; open: boolean }) => {
+      const atom = model.stateAtom(path);
+      registry.set(atom, { ...registry.get(atom), open });
+      if (open === collapsedRef.current.has(item.id)) {
         onCollapseToggle(item.id);
       }
     },
-    [collapsed, onCollapseToggle],
+    [model, registry, onCollapseToggle],
   );
 
   const handleSelect = useCallback(

@@ -70,7 +70,14 @@ const seed = (): Task.Task[] => [
  * ordinals into double digits, and put more than one task under each group heading, which a
  * seven-task list does not.
  */
-const manySeed = (n = 10): Task.Task[] => Array.from({ length: n }, (_, i) => Task.make({ title: `Task ${i + 1}` }));
+const manySeed = (n = 30): Task.Task[] =>
+  Array.from({ length: n }, () =>
+    Task.make({
+      title: random.lorem.sentence(random.number.int({ min: 5, max: 10 })),
+      description: random.number.int({ min: 0, max: 1 }) ? random.lorem.paragraphs(1) : undefined,
+      priority: random.helpers.arrayElement([...Task.Priority.literals]),
+    }),
+  );
 
 /**
  * Two roots with sub-tasks two levels deep. Array order is sibling order only, so the seed
@@ -234,9 +241,10 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /** A list long enough to scroll, group and number into double digits. */
-export const TenTasks: Story = {
+export const ManyTasks: Story = {
   args: {
     many: true,
+    showDescriptions: true,
     showOrdinals: true,
   },
 };
