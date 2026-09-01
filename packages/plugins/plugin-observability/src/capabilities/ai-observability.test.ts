@@ -60,7 +60,7 @@ describe('AI observability wiring', () => {
     }),
   );
 
-  it.effect('records only the model call, not the spans around it', () =>
+  it.effect('reports only the model call, not the spans around it', () =>
     Effect.gen(function* () {
       const { events, flush, callModel } = yield* setup();
       yield* callModel;
@@ -116,13 +116,18 @@ const setup = ({
 } = {}) =>
   Effect.gen(function* () {
     const events: Captured[] = [];
-    const provider = yield* Effect.promise(() =>
-      AiObservability.createAiTracerProvider({
-        captureGeneration: (generation) => events.push(generation),
-        captureEnabled,
-        allowContent,
-      }),
-    );
+    // Mirrors the app: one provider for the realm, with the AI processor attached alongside
+    // whatever else observes spans.
+    const { BasicTracerProvider } = yield* Effect.promise(() => import('@opentelemetry/sdk-trace-base'));
+    const provider = new BasicTracerProvider({
+      spanProcessors: [
+        new AiObservability.AiSpanProcessor({
+          captureGeneration: (generation) => events.push(generation),
+          captureEnabled,
+          allowContent,
+        }),
+      ],
+    });
 
     const layer = Layer.mergeAll(
       Layer.effect(LanguageModel.LanguageModel, stubModel),
@@ -134,9 +139,8 @@ const setup = ({
     // model-call span beneath it.
     const annotations = declaresSpace ? { [AiTelemetry.ATTRIBUTES.spaceId]: SPACE_ID } : {};
     const callModel = LanguageModel.generateText({ prompt: 'hi' }).pipe(
-      // The enclosing span stands in for `AiSession.createRequest`. The provider samples it away —
-      // only model calls are recorded — so reaching the policy at all proves the annotation travels
-      // on the fiber rather than through the parent span.
+      // The enclosing span stands in for `AiSession.createRequest`: it is recorded like any other
+      // span now, and the processor ignores it for want of `gen_ai.*` markers.
       Effect.withSpan('AiSession.createRequest'),
       Effect.annotateSpans(annotations),
       Effect.provide(layer),
