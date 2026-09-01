@@ -4,108 +4,27 @@
 
 // @import-as-namespace
 
-import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
-import * as Stream from 'effect/Stream';
-import * as Tracer from 'effect/Tracer';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 import type * as Prompt from 'effect/unstable/ai/Prompt';
-import * as Telemetry from 'effect/unstable/ai/Telemetry';
-
-import type * as AiService from './AiService';
-
-export type WrapOptions = ContentTransformerOptions & {
-  /** Tracer receiving the model-call spans; when omitted the ambient tracer is left in place. */
-  tracer?: Tracer.Tracer;
-  /** Stamped on every model-call span, for the sink to filter on (e.g. the space id). */
-  attributes?: Record<string, string>;
-};
-
-/**
- * Wraps an {@link AiService.Service} so every resolved model runs with the given tracer, routing
- * the `gen_ai.*` spans the effect-ai layers already emit. Prompt and response content is always
- * stamped on the span; whether it is forwarded is decided by the sink, so no capture policy is
- * evaluated here (see `AiSpanProcessor` in `@dxos/observability`).
- */
-export const wrap = (service: AiService.Service, options: WrapOptions = {}): AiService.Service => {
-  const spanTransformer = makeContentSpanTransformer(options);
-  return {
-    ...service,
-    model: (model, resolveOptions) =>
-      Layer.effect(
-        LanguageModel.LanguageModel,
-        Effect.map(LanguageModel.LanguageModel, (languageModel) =>
-          wrapLanguageModel(languageModel, { tracer: options.tracer, spanTransformer }),
-        ),
-      ).pipe(Layer.provide(service.model(model, resolveOptions))),
-  };
-};
-
-const wrapLanguageModel = (
-  languageModel: LanguageModel.Service,
-  { tracer, spanTransformer }: { tracer?: Tracer.Tracer; spanTransformer: Telemetry.SpanTransformer },
-): LanguageModel.Service => ({
-  generateText: wrapMethod(languageModel.generateText, (effect) => provide(effect, tracer, spanTransformer)),
-  generateObject: wrapMethod(languageModel.generateObject, (effect) => provide(effect, tracer, spanTransformer)),
-  streamText: wrapMethod(languageModel.streamText, (stream) => provideStream(stream, tracer, spanTransformer)),
-});
-
-// Delegating through a wrapper erases overload signatures; the cast restores them unchanged.
-const wrapMethod = <F extends (...args: never[]) => unknown>(method: F, decorate: (result: any) => unknown): F =>
-  ((...args: never[]) => decorate(method(...args))) as F;
-
-const provide = <A, E, R>(
-  effect: Effect.Effect<A, E, R>,
-  tracer?: Tracer.Tracer,
-  spanTransformer?: Telemetry.SpanTransformer,
-): Effect.Effect<A, E, R> => {
-  let result = effect;
-  if (tracer) {
-    result = Effect.provideService(result, Tracer.Tracer, tracer);
-  }
-  if (spanTransformer) {
-    result = Effect.provideService(result, Telemetry.CurrentSpanTransformer, spanTransformer);
-  }
-  return result;
-};
-
-const provideStream = <A, E, R>(
-  stream: Stream.Stream<A, E, R>,
-  tracer?: Tracer.Tracer,
-  spanTransformer?: Telemetry.SpanTransformer,
-): Stream.Stream<A, E, R> => {
-  let result = stream;
-  if (tracer) {
-    result = Stream.provideService(result, Tracer.Tracer, tracer);
-  }
-  if (spanTransformer) {
-    result = Stream.provideService(result, Telemetry.CurrentSpanTransformer, spanTransformer);
-  }
-  return result;
-};
+import type * as Telemetry from 'effect/unstable/ai/Telemetry';
 
 export type ContentTransformerOptions = {
   /** Cap per serialized content attribute; oversized values are cut mid-JSON and forwarded raw. */
   maxContentLength?: number;
-  /** Stamped alongside the content, for the sink to filter on. */
-  attributes?: Record<string, string>;
 };
 
 const DEFAULT_MAX_CONTENT_LENGTH = 200_000;
 
 /**
  * Span transformer stamping prompt, response, and tool names onto the model-call span as
- * `dxos.ai.*` attributes.
+ * `dxos.ai.*` attributes. Effect's `LanguageModel` invokes it only when one is installed, so
+ * whether content is serialized at all is the installer's decision, and whether it then leaves
+ * the device is the sink's.
  */
 export const makeContentSpanTransformer = (options?: ContentTransformerOptions): Telemetry.SpanTransformer => {
   const maxLength = options?.maxContentLength ?? DEFAULT_MAX_CONTENT_LENGTH;
-  const attributes = Object.entries(options?.attributes ?? {});
   const truncate = (value: string): string => (value.length > maxLength ? value.slice(0, maxLength) : value);
 
   return ({ prompt, tools, response, span }) => {
-    for (const [key, value] of attributes) {
-      span.attribute(key, value);
-    }
     span.attribute('dxos.ai.input', truncate(JSON.stringify(serializePrompt(prompt))));
     span.attribute('dxos.ai.output', truncate(JSON.stringify(serializeResponse(response))));
     if (tools.length > 0) {
