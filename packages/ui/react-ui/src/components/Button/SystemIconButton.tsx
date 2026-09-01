@@ -15,6 +15,7 @@ import React, {
 import { useTranslation } from 'react-i18next';
 
 import { AI_ACTION_ICON } from '@dxos/ui-types';
+import { downloadBlob } from '@dxos/util';
 
 import { translationKey } from '#translations';
 
@@ -269,15 +270,7 @@ const DownloadIconButton = forwardRef<HTMLButtonElement, DownloadIconButtonProps
           return;
         }
 
-        const url = URL.createObjectURL(blob);
-
-        // TODO(burdon): Use Domino.
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        a.click();
-
-        URL.revokeObjectURL(url);
+        await downloadBlob(blob, filename);
       } catch {
         // Best-effort: blob generation or the download click may fail; swallow to avoid an unhandled
         // promise rejection (the click handler discards the returned promise with `void`).

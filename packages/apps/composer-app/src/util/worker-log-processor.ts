@@ -25,8 +25,8 @@ const DEFAULT_LOG_FILTER = 'debug';
 export type TelemetryWorkerMessage = string | { type: 'flush' } | OtelLogSinkMessage;
 
 export type WorkerLogProcessorOptions = {
-  /** The telemetry worker (`workers/telemetry-worker.ts`), or the `port` of a SharedWorker running it. */
-  worker: Worker | MessagePort;
+  /** The telemetry worker (`workers/telemetry-worker.ts`). */
+  worker: Worker;
   /** Identifier embedded in every record's `i` field. Defaults to {@link inferEnvironmentName}. */
   tabId?: string;
   /** Same syntax as `DX_LOG` — entries below the minimum level are not sent. Default `debug`. */
@@ -43,7 +43,7 @@ export type WorkerLogProcessorOptions = {
  * directly — IDB keeps the data.
  */
 export class WorkerLogProcessor {
-  readonly #worker: Worker | MessagePort;
+  readonly #worker: Worker;
   readonly #tabId: string;
   readonly #filters: LogFilter[];
 
@@ -52,11 +52,6 @@ export class WorkerLogProcessor {
     this.#tabId = options.tabId ?? inferEnvironmentName();
     this.#filters = parseFilter(options.logFilter ?? DEFAULT_LOG_FILTER);
 
-    // A SharedWorker port delivers nothing until started; the worker sends nothing back, so
-    // there is no message handler to install.
-    if ('start' in this.#worker) {
-      this.#worker.start();
-    }
     this.#installLifecycleHandlers();
   }
 

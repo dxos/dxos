@@ -14,11 +14,12 @@ import { InvalidOperationInput } from '../errors';
 
 const handler: Operation.WithHandler<typeof TaskOperation.MoveTask> = TaskOperation.MoveTask.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ task: taskRef, before, parentTask }) {
-      const task = yield* Database.load(taskRef);
-      const taskSet = yield* TaskSet.findTaskSet(task);
-      if (!taskSet) {
-        return yield* Effect.fail(new InvalidOperationInput({ message: 'The task does not belong to a task set.' }));
+    Effect.fnUntraced(function* ({ task: taskRef, taskSet: taskSetRef, before, parentTask }) {
+      const task = Database.peek(taskRef) ?? (yield* Database.load(taskRef));
+      const taskSet = Database.peek(taskSetRef) ?? (yield* Database.load(taskSetRef));
+
+      if (!taskSet.tasks.some((ref) => Task.refEntityId(ref) === task.id)) {
+        return yield* Effect.fail(new InvalidOperationInput({ message: 'The task does not belong to the task set.' }));
       }
 
       // Resolved before either write, so a rejected parent leaves the position untouched too — a
@@ -30,7 +31,7 @@ const handler: Operation.WithHandler<typeof TaskOperation.MoveTask> = TaskOperat
         beforeId: before ? Task.refEntityId(before) : undefined,
       });
 
-      return { task: task };
+      return { task };
     }),
   ),
 );

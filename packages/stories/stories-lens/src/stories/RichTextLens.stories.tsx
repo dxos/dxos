@@ -64,7 +64,7 @@ const SideBySideStory = () => {
   }
 
   return (
-    <div className='absolute inset-0 grid grid-cols-3 gap-3 p-3 overflow-hidden'>
+    <div className='dx-fullscreen grid grid-cols-3 gap-3 p-3 overflow-hidden'>
       <DemoPanel label='Markdown — the string as stored' testId='markdown-panel'>
         <MarkdownEditor text={text} />
       </DemoPanel>

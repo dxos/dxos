@@ -12,8 +12,7 @@ import { type TelemetryWorkerMessage } from '../util/worker-log-processor';
 
 // Telemetry worker: owns the queue, flush timer, chunked IDB writes and eviction, so log
 // persistence never depends on the sending thread's event loop turning (see DX-1224).
-// `WorkerLogProcessor` is the sending side. Handles both dedicated (`onmessage`) and shared
-// (`onconnect`) worker scopes.
+// `WorkerLogProcessor` is the sending side.
 //
 // On `otel-init` (sent by the Otel observability extension in the producing realm) the worker
 // additionally exports the lines it receives to the OTLP endpoint via an `OtelLogSink` — from
@@ -26,8 +25,6 @@ const store = new IdbLogStore({ dbName: LOG_STORE_DB_NAME, maxBytes: LOG_STORE_M
 /** Caps messages buffered while the sink module import is in flight. */
 const MAX_PENDING = 5_000;
 
-// Per connection: a SharedWorker serves one producing realm per port, each with its own
-// resource identity (process type, session id), so sink state cannot be shared.
 const createMessageHandler = (): ((event: MessageEvent<TelemetryWorkerMessage>) => void) => {
   let sink: OtelLogSink | undefined;
   // Set when `otel-init` arrives; holds messages in arrival order until the dynamic import
@@ -92,13 +89,4 @@ const createMessageHandler = (): ((event: MessageEvent<TelemetryWorkerMessage>) 
   };
 };
 
-if ('onconnect' in globalThis) {
-  // SharedWorker scope — one connection (port) per context.
-  onconnect = (event: MessageEvent) => {
-    for (const port of event.ports) {
-      port.onmessage = createMessageHandler();
-    }
-  };
-} else {
-  globalThis.onmessage = createMessageHandler();
-}
+globalThis.onmessage = createMessageHandler();
