@@ -86,7 +86,6 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "tabster": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {

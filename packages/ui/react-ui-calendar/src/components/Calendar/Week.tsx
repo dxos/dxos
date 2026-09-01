@@ -309,7 +309,7 @@ const CalendarWeek = composable<HTMLDivElement, CalendarWeekProps>(
     return (
       <div
         {...composableProps(props, {
-          classNames: ['flex flex-col h-full w-full overflow-hidden outline-hidden', classNames],
+          classNames: ['flex flex-col dx-fill overflow-hidden outline-hidden', classNames],
         })}
         ref={forwardedRef}
       >

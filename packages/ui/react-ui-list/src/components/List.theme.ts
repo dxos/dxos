@@ -10,7 +10,7 @@ import { tv } from '@dxos/ui-theme';
  * Each slot function accepts an optional `{ class: ... }` override for per-instance merging.
  *
  * Structural pattern shared across list components:
- * - viewport: ScrollArea wrapper (`dx-container`)
+ * - viewport: ScrollArea wrapper (`dx-expand`)
  * - content:  flex-col item container
  * - item:     base row (interactive affordances come from dx-hover / dx-selected / dx-current)
  */
@@ -36,7 +36,7 @@ const listStyles = tv({
     //
     // Listbox
     //
-    listboxViewport: 'dx-container',
+    listboxViewport: 'dx-expand',
     listboxContent: 'flex flex-col',
     // `dx-selected` pairs with `aria-selected="true"` set per-option (see
     // `ui-theme/src/css/components/state.md`). `outline-none` removes the native focus
@@ -49,7 +49,7 @@ const listStyles = tv({
     //
     // OrderedList
     //
-    orderedListViewport: 'dx-container',
+    orderedListViewport: 'dx-expand',
     orderedListContent: 'flex flex-col',
     // `dx-current` enables `aria-current` row styling (not listbox/option semantics).
     orderedListItem: 'relative dx-current',
