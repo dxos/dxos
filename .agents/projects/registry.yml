@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: ark
+    status: active
+    user: burdon
+    host: burdon-mbp-2092
+    created: 2026-08-31
+    summary: 'Adoption of @ark-ui/react (Zag state machines) in @dxos/react-ui-list — Phase 1 rebuilds Tree on ark TreeView for the APG keymap, machine-owned focus and ARIA, keeping the atom TreeModel, pragmatic-drag-and-drop and the public prop surface.'
+    tasks: .agents/projects/ark/TASKS.md
+    design: packages/ui/react-ui-list/docs/TREE.md
+    prs: [12873]
+    resume: 'PR #12873 OPEN — Tree rebuilt on @ark-ui/react TreeView. Design lives in packages/ui/react-ui-list/docs/TREE.md; this project overlaps ui-theme-tree, which tracks the same PR from the theme side. DONE SINCE THE FIRST WRITE-UP: the orphaned role=gridcell wrappers are removed from plugin-navtree (verified live: role=tree + 3 treeitem, 0 gridcell); docs refreshed; ProcessTree and devtools ObjectsTree both migrated onto Tree; AtprotoCompanion moved to a plain role=table; and TREEGRID IS DELETED — it has no consumers left. Tree gained an optional renderIcon slot, and react-ui-list gained createStaticTreeModel (8 tests) so a caller holding a plain tree does not hand-write ~110 lines of atom plumbing. BUNDLE COST MEASURED, DO NOT RE-ESTIMATE: total app JS +82,205 bytes (+0.12%); eager boot graph +1,652 only, so check-boot-budget is untouched at 4.18 of 4.45 MB; the cost is one lazy chunk, 13,398 -> 30,580 brotli, of which ~64.6 KB minified is ark/zag. WIDER ADOPTION IS NOT A SAVING, DO NOT REOPEN AS ONE: the shared Zag runtime is ~24.5 KB raw and the Tree already bought all of it (Accordion +8,125 raw marginal, Listbox +22,470, Combobox +87,936). The one real prize is removing @fluentui/react-tabster: 68,256 bytes in the EAGER boot graph, held by just three @dxos/react-ui files (Focus.tsx, MainContext.ts, Carousel.tsx) — the other ten importers are lazy and attribute zero, so migrating react-ui-list saves nothing, and Ark is not the replacement (no groupper). OPEN DEFECT: ProcessTree collapse flips aria-expanded but the branch content stays at its natural height; Tree own story collapses correctly, so it is that integration — next step is comparing computed animation-name/fill-mode on [data-part=branch-content] between the two stories. UNRESOLVED, NOT A REPO DEFECT UNTIL REPRODUCED IN A NORMAL BROWSER: withPluginManager stories never seed in the agent browser (space stuck at SPACE_INITIALIZING); ObjectsTree renders fine for the user, so the agent environment is implicated.'
   - name: ui-theme-tree
     status: active
     user: burdon

@@ -21,6 +21,7 @@ catalog:
   '@anthropic-ai/sdk': ^0.117.1
   '@antv/graphlib': ^2.0.4
   '@antv/layout': ^1.2.13
+  '@ark-ui/react': ^5.39.1
   '@ark-ui/solid': ^5.30.0
   '@assistant-ui/react': ^0.12.24
   '@astrojs/rss': ^4.0.18

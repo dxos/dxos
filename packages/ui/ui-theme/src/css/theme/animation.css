@@ -77,6 +77,35 @@
   --animate-slide-right-and-fade: slide-right-and-fade 400ms cubic-bezier(0.16, 1, 0.3, 1);
 
   /**
+   * Tree disclosure (enter only — Ark's BranchContent hides immediately on collapse).
+   * Height animates where `interpolate-size: allow-keywords` is supported (the element opts in);
+   * elsewhere block-size flips discretely mid-animation and the fade carries the reveal.
+   */
+  @keyframes tree-disclose {
+    from {
+      opacity: 0;
+      block-size: 0;
+    }
+    to {
+      opacity: 1;
+      block-size: auto;
+    }
+  }
+  --animate-tree-disclose: tree-disclose 200ms ease-out;
+  @keyframes tree-conceal {
+    from {
+      opacity: 1;
+      block-size: auto;
+    }
+    to {
+      opacity: 0;
+      block-size: 0;
+    }
+  }
+  /* `forwards` holds the collapsed frame until the model close lands and the machine hides the content. */
+  --animate-tree-conceal: tree-conceal 200ms ease-in forwards;
+
+  /**
    * Popover/hover-card fade+zoom (shadcn-style).
    * Pair with `origin-(--radix-popover-content-transform-origin)` so the zoom emanates from the anchor.
    */

@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomSet, useAtomValue } from '@effect/atom-react/Hooks';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Array from 'effect/Array';
 import { pipe } from 'effect/Function';
 import * as Match from 'effect/Match';
@@ -18,8 +19,14 @@ import { type Database, Entity, Filter, Obj, Query, Ref, Relation } from '@dxos/
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { DropdownMenu, Icon, IconButton } from '@dxos/react-ui';
-import { Treegrid, TREEGRID_PARENT_OF_SEPARATOR, TreeItemToggle, paddingIndentation } from '@dxos/react-ui-list';
+import { DropdownMenu, Icon, IconButton, ScrollArea } from '@dxos/react-ui';
+import {
+  type ColumnRenderer,
+  type IconRenderer,
+  Tree,
+  type TreeItemDataProps,
+  type TreeModel,
+} from '@dxos/react-ui-list';
 import { getStyles, hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
 export interface ObjectsTreeProps {
@@ -40,40 +47,70 @@ export const ObjectsTree = ({ db, root, onSelect, onOpen, canOpen }: ObjectsTree
     );
   }, [db, root]);
 
-  const rootNodes = useAtomValue(model.rootNodes);
+  const registry = useContext(RegistryContext);
   const contextValue = useMemo(() => ({ model, onOpen, canOpen }), [model, onOpen, canOpen]);
+
+  // The walk is gated by id while rows are addressed by path, so a toggle writes both.
+  const handleOpenChange = useCallback(
+    ({ item, path, open }: { item: ObjectsTreeItem; path: string[]; open: boolean }) => {
+      registry.set(model.openAtPath(path), open);
+      registry.set(model.markOpen(item.id), open);
+    },
+    [model, registry],
+  );
+
+  const handleSelect = useCallback(({ item }: { item: ObjectsTreeItem }) => model.onSelect(item.entity), [model]);
 
   return (
     <ObjectsTreeContext.Provider value={contextValue}>
-      <Treegrid.Root
-        gridTemplateColumns='[tree-row-start] 1fr min-content [tree-row-end]'
-        classNames='grid-cols-1 gap-0'
-      >
-        {rootNodes.map((node) => (
-          <ObjectsTreeRow key={node.id} node={node} level={1} parent={null} />
-        ))}
-      </Treegrid.Root>
+      <ScrollArea.Root classNames='dx-expand' thin>
+        <ScrollArea.Viewport>
+          <Tree<ObjectsTreeItem>
+            id={ROOT_ANCHOR}
+            model={model.treeModel}
+            // `minmax(0, 1fr)`, not `1fr`: a bare `1fr` is `minmax(auto, 1fr)`, whose automatic
+            // minimum is the content's min-content width, so a long relation typename on a deep row
+            // would widen the track and push the trailing columns instead of truncating.
+            //
+            // The role sits in the SAME track as the actions rather than its own: a separate
+            // `min-content` column is sized from the widest role across the whole subgrid, so
+            // expanding a node whose child carries a role widened that track and visibly shifted
+            // every row's action button.
+            gridTemplateColumns='[tree-row-start] minmax(0, 1fr) min-content [tree-row-end]'
+            classNames='w-full min-w-0'
+            renderIcon={ObjectsTreeIcon}
+            renderColumns={ObjectsTreeColumns}
+            onOpenChange={handleOpenChange}
+            onSelect={handleSelect}
+          />
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
     </ObjectsTreeContext.Provider>
   );
 };
 
-const ObjectsTreeRow = ({
-  node,
-  level,
-  parent,
-}: {
-  node: ObjectsTreeItem;
-  level: number;
-  parent: ObjectsTreeItem | null;
-}) => {
-  const { model, onOpen, canOpen } = useContext(ObjectsTreeContext) ?? raise(new Error('ObjectsTreeContext not found'));
-  const expanded = useAtomValue(model.expanded(node.id, level));
-  const setExpanded = useAtomSet(model.expanded(node.id, level));
-  const children = useAtomValue(model.getChildren(node.id));
-  const hasChildren = children.length > 0;
-  const parentOf = hasChildren ? children.map((child) => child.id).join(TREEGRID_PARENT_OF_SEPARATOR) : undefined;
+/** Relation direction arrow plus the entity's own glyph, which a static icon name cannot express. */
+const ObjectsTreeIcon: IconRenderer<ObjectsTreeItem> = ({ item, path }) => {
+  const { model } = useContext(ObjectsTreeContext) ?? raise(new Error('ObjectsTreeContext not found'));
+  const scoped = useAtomValue(model.itemAt(path)) ?? item;
+  const styles = scoped.iconHue ? getStyles(scoped.iconHue) : undefined;
+  return (
+    <>
+      {scoped.type === 'outgoing-relation' && (
+        <Icon icon='ph--arrow-right--regular' classNames='shrink-0 w-4 h-4 opacity-70' />
+      )}
+      {scoped.type === 'incoming-relation' && (
+        <Icon icon='ph--arrow-left--regular' classNames='shrink-0 w-4 h-4 opacity-70' />
+      )}
+      <Icon icon={scoped.icon} classNames={['shrink-0 w-4 h-4', styles?.text]} />
+    </>
+  );
+};
 
-  const styles = node.iconHue ? getStyles(node.iconHue) : undefined;
+/** Trailing columns: the reference key this entity is held under, and the per-row action menu. */
+const ObjectsTreeColumns: ColumnRenderer<ObjectsTreeItem> = ({ item, path }) => {
+  const { model, onOpen, canOpen } = useContext(ObjectsTreeContext) ?? raise(new Error('ObjectsTreeContext not found'));
+  const node = useAtomValue(model.itemAt(path)) ?? item;
 
   const showOpen =
     onOpen != null && !node.deleted && node.type === 'object' && (canOpen == null || canOpen(node.entity));
@@ -94,99 +131,70 @@ const ObjectsTreeRow = ({
     const obj = await model.database.query(Query.select(Filter.id(node.id)).options({ deleted: 'include' })).first();
     // eslint-disable-next-line no-console
     console.log(obj);
-  }, [node.entity]);
+  }, [node.id, model.database]);
   const handleDelete = useCallback(async () => {
     const obj = await model.database.query(Query.select(Filter.id(node.id)).options({ deleted: 'include' })).first();
     model.database.remove(obj);
     await model.database.flush({ indexes: true });
-  }, [node.entity, model.database]);
+  }, [node.id, model.database]);
   const handleRestore = useCallback(async () => {
     const obj = await model.database.query(Query.select(Filter.id(node.id)).options({ deleted: 'include' })).first();
     model.database.add(obj);
     await model.database.flush({ indexes: true });
-  }, [node.entity, model.database]);
+  }, [node.id, model.database]);
 
   return (
-    <>
-      <Treegrid.Row
-        id={node.id}
-        open={expanded}
-        onOpenChange={setExpanded}
-        {...(parentOf && { parentOf })}
-        classNames='grid grid-cols-subgrid col-[tree-row] cursor-pointer hover:bg-hover-surface'
-        onClick={() => model.onSelect(node.entity)}
-      >
-        <div className='indent relative grid grid-cols-subgrid col-[tree-row]' style={paddingIndentation(level)}>
-          <Treegrid.Cell indent classNames='flex items-center gap-1 min-w-0'>
-            <TreeItemToggle isBranch={hasChildren} open={expanded} onClick={() => setExpanded((prev) => !prev)} />
-            {node.type === 'outgoing-relation' && (
-              <Icon icon='ph--arrow-right--regular' classNames='shrink-0 w-4 h-4 opacity-70' />
-            )}
-            {node.type === 'incoming-relation' && (
-              <Icon icon='ph--arrow-left--regular' classNames='shrink-0 w-4 h-4 opacity-70' />
-            )}
-            <Icon icon={node.icon} classNames={['shrink-0 w-4 h-4', styles?.text]} />
-            <span className={node.deleted ? 'line-through opacity-60' : 'truncate'}>{node.label}</span>
-            {node.role && <span className='text-subdued text-xs'>{node.role}</span>}
-          </Treegrid.Cell>
-          <Treegrid.Cell classNames='contents'>
-            <DropdownMenu.Root>
-              <DropdownMenu.Trigger asChild>
-                <IconButton
-                  classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
-                  variant='ghost'
-                  icon='ph--dots-three-vertical--regular'
-                  iconOnly
-                  label='Actions'
-                  data-testid='objects-tree.row.actions'
-                />
-              </DropdownMenu.Trigger>
-              <DropdownMenu.Content>
-                {showOpen && (
-                  <DropdownMenu.Item onClick={handleOpen}>
-                    <Icon icon='ph--arrow-square-out--regular' />
-                    Open
-                  </DropdownMenu.Item>
-                )}
-                {!node.deleted && (
-                  <DropdownMenu.Item onClick={handleDelete}>
-                    <Icon icon='ph--trash--regular' />
-                    Delete
-                  </DropdownMenu.Item>
-                )}
-                {node.deleted && (
-                  <DropdownMenu.Item onClick={handleRestore}>
-                    <Icon icon='ph--arrow-counter-clockwise--regular' />
-                    Restore
-                  </DropdownMenu.Item>
-                )}
+    <div className='flex shrink-0 items-center gap-1'>
+      {node.role && <span className='text-subdued text-xs'>{node.role}</span>}
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger asChild>
+          <IconButton
+            classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
+            variant='ghost'
+            icon='ph--dots-three-vertical--regular'
+            iconOnly
+            label='Actions'
+            data-testid='objects-tree.row.actions'
+          />
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Content>
+          {showOpen && (
+            <DropdownMenu.Item onClick={handleOpen}>
+              <Icon icon='ph--arrow-square-out--regular' />
+              Open
+            </DropdownMenu.Item>
+          )}
+          {!node.deleted && (
+            <DropdownMenu.Item onClick={handleDelete}>
+              <Icon icon='ph--trash--regular' />
+              Delete
+            </DropdownMenu.Item>
+          )}
+          {node.deleted && (
+            <DropdownMenu.Item onClick={handleRestore}>
+              <Icon icon='ph--arrow-counter-clockwise--regular' />
+              Restore
+            </DropdownMenu.Item>
+          )}
 
-                <DropdownMenu.Separator />
-                <DropdownMenu.Item onClick={handleCopyDXN}>
-                  <Icon icon='ph--copy--regular' />
-                  Copy DXN
-                </DropdownMenu.Item>
-                <DropdownMenu.Item onClick={handleCopyJSON}>
-                  <Icon icon='ph--brackets-curly--regular' />
-                  Copy JSON
-                </DropdownMenu.Item>
-                <DropdownMenu.Item onClick={handlePrintToConsole}>
-                  <Icon icon='ph--terminal-window--regular' />
-                  Print to console
-                </DropdownMenu.Item>
-              </DropdownMenu.Content>
-            </DropdownMenu.Root>
-          </Treegrid.Cell>
-        </div>
-      </Treegrid.Row>
-      {expanded &&
-        children
-          .filter((child) => child.id !== parent?.id)
-          .map((child, index) => <ObjectsTreeRow key={child.id} node={child} level={level + 1} parent={node} />)}
-    </>
+          <DropdownMenu.Separator />
+          <DropdownMenu.Item onClick={handleCopyDXN}>
+            <Icon icon='ph--copy--regular' />
+            Copy DXN
+          </DropdownMenu.Item>
+          <DropdownMenu.Item onClick={handleCopyJSON}>
+            <Icon icon='ph--brackets-curly--regular' />
+            Copy JSON
+          </DropdownMenu.Item>
+          <DropdownMenu.Item onClick={handlePrintToConsole}>
+            <Icon icon='ph--terminal-window--regular' />
+            Print to console
+          </DropdownMenu.Item>
+        </DropdownMenu.Content>
+      </DropdownMenu.Root>
+    </div>
   );
 };
-ObjectsTreeRow.displayName = 'ObjectsTreeRow';
 
 type ObjectsTreeContextValue = {
   model: ObjectsTreeModel;
@@ -253,6 +261,99 @@ class ObjectsTreeModel {
   expanded(id: string, level: number): Atom.Writable<boolean> {
     return this.#expandedState(Schema.encodeSync(ExpandedKeySchema)([id, '-', level]));
   }
+
+  /** Open state keyed by the tree's path, which is what `Tree` addresses rows by. */
+  openAtPath(path: string[]): Atom.Writable<boolean> {
+    return this.#expandedState(path.join('/'));
+  }
+
+  /**
+   * `TreeModel` view over the same atoms.
+   *
+   * `childIds` yields nothing until the node is open, so the tree's walk — which recurses into every
+   * branch regardless of `open` — stops one level ahead rather than querying the whole reachable
+   * object graph. `itemProps.parentOf` still reads that one level, which is what the row needed
+   * anyway to decide whether to draw a toggle.
+   */
+  get treeModel(): TreeModel<ObjectsTreeItem> {
+    return {
+      childIds: (parentId?: string) => this.#childIdsFamily(parentId ?? ROOT_ANCHOR),
+      item: (id: string) => this.#itemFamily(id),
+      itemProps: (path: string[]) => this.#itemPropsFamily(path.join('/')),
+      itemOpen: (path: string[]) => this.openAtPath(path),
+      itemCurrent: () => NEVER_CURRENT,
+    };
+  }
+
+  #childIdsFamily = Atom.family((anchor: string) =>
+    Atom.make((get): string[] => {
+      if (anchor !== ROOT_ANCHOR && !get(this.#openIds(anchor))) {
+        return [];
+      }
+      const children = get(this.#atoms(anchor === ROOT_ANCHOR ? null : anchor));
+      return children.map((child) => child.id);
+    }),
+  );
+
+  /** True when any path addressing this node is open; the walk is keyed by id, the rows by path. */
+  #openIds = Atom.family((id: string) => Atom.make((get) => get(this.#openIdState(id))));
+  #openIdState = Atom.family((_id: string) => Atom.make(false));
+
+  /** Walk-gating state, keyed by id — `Tree` addresses rows by path, but `childIds` only has the id. */
+  markOpen(id: string): Atom.Writable<boolean> {
+    return this.#openIdState(id);
+  }
+
+  #itemFamily = Atom.family((id: string) => {
+    const entities = this.#database.query(
+      Query.select(Filter.id(id)).options({ deleted: 'include' }).from(this.#database),
+    ).atom;
+    return Atom.make((get): ObjectsTreeItem | undefined => {
+      const entity = get(entities)[0];
+      return entity ? this.#mapEntityToTreeItems(get(Entity.atom(entity)), null) : undefined;
+    });
+  });
+
+  /**
+   * The node as reached through `path`. `model.item(id)` cannot carry this: `type` — and so the
+   * relation arrow — is computed relative to the anchor, so an id-keyed lookup reports every
+   * relation as incoming.
+   */
+  itemAt(path: string[]): Atom.Atom<ObjectsTreeItem | undefined> {
+    return this.#itemAtFamily(path.join('/'));
+  }
+
+  #itemAtFamily = Atom.family((key: string) =>
+    Atom.make((get): ObjectsTreeItem | undefined => {
+      const path = key.split('/');
+      const id = path[path.length - 1];
+      // The synthetic root is not an entity id, and `#atoms` asserts that it is one.
+      const parent = path.length > 1 ? path[path.length - 2] : null;
+      const anchor = parent === ROOT_ANCHOR ? null : parent;
+      return get(this.#atoms(anchor)).find((sibling) => sibling.id === id) ?? get(this.#itemFamily(id));
+    }),
+  );
+
+  /**
+   * Props are keyed by path, not id: `type` and the relation arrows are computed relative to the
+   * anchor the node was reached through, so the same entity reads differently under two parents.
+   */
+  #itemPropsFamily = Atom.family((key: string) =>
+    Atom.make((get): TreeItemDataProps => {
+      const path = key.split('/');
+      const id = path[path.length - 1];
+      const item = get(this.#itemAtFamily(key));
+      const children = get(this.#atoms(id));
+      return {
+        id,
+        label: item?.label ?? id,
+        icon: item?.icon,
+        iconHue: item?.iconHue,
+        headingClassName: item?.deleted ? 'line-through opacity-60' : undefined,
+        ...(children.length > 0 && { parentOf: children.map((child) => child.id) }),
+      };
+    }),
+  );
 
   #makeNodeAtom(anchor: string | null): Atom.Atom<ObjectsTreeItem[]> {
     log('makeNodeAtom', { anchor });
@@ -324,6 +425,12 @@ class ObjectsTreeModel {
     };
   }
 }
+
+/** Synthetic anchor for the top level; `childIds` is ungated here so roots always load. */
+const ROOT_ANCHOR = 'objects';
+
+/** Selection is reported through `onSelect`, not held in the model. */
+const NEVER_CURRENT = Atom.make(false);
 
 const DEFAULT_OBJECT_ICON = 'ph--cube--regular';
 const DEFAULT_RELATION_ICON = 'ph--link--regular';

@@ -4,3 +4,4 @@
 
 export * from './hierarchy';
 export * from './TaskList';
+export * from './tree-model';
