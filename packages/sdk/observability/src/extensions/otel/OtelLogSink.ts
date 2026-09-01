@@ -77,10 +77,14 @@ export class Sink {
    * Never throws — a malformed line is dropped.
    */
   append(line: string): void {
-    let record: JsonlLogRecord;
+    let record: JsonlLogRecord | null;
     try {
       record = JSON.parse(line);
     } catch {
+      return;
+    }
+    // `JSON.parse` also succeeds on bare primitives; only an object carries the record fields.
+    if (record === null || typeof record !== 'object') {
       return;
     }
     const level = levelFromShortName.get(record.l);
