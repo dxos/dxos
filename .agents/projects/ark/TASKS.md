@@ -421,3 +421,15 @@ substituting for.
 - [ ] Check whether `TogglePanel` has other consumers, or whether this migration retires it.
 - [ ] Verify in the assistant stories, not just by build — this is a widget rendered inside the
       editor, so its collapsed height interacts with the editor's heightmap.
+
+## Phase 11: Collapsible disclosure for form objects
+
+Tracked 2026-09-01. Now that `TogglePanel` is an Ark Collapsible and the Accordion carries the APG
+keymap, the same disclosure should back nested objects in `react-ui-form` — an object field is a
+disclosure by nature, and the form currently expresses it without one.
+
+- [ ] **Use a collapsible disclosure for form objects.** Establish first whether a nested object
+      wants `Collapsible` (one independent region) or `Accordion` (a set where the machine tracks
+      which are open), since the form renders many siblings and that is what decides the choice.
+- [ ] Check it against the `Form.Viewport`/`Form.Section` composition rather than wrapping fields in
+      a new container — the viewport owns the gutter, and an extra wrapper there loses it.
