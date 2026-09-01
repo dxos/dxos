@@ -84,6 +84,34 @@ export const subtreeIds = (tasks: readonly Task.Task[], task: Task.Task): Set<st
 export type TaskDropIntent = 'reorder-above' | 'reorder-below' | 'make-child';
 
 /**
+ * Places a task after `target`'s ancestor `levels` steps up — the tree hitbox's `reparent`, which
+ * is how a drop past the last child escapes the subtree it would otherwise join. `levels` of 1 is
+ * "after my parent", 2 "after my grandparent", and so on; running out of ancestors rejects rather
+ * than silently landing at the root.
+ */
+export const resolveReparent = (
+  tasks: readonly Task.Task[],
+  source: Task.Task,
+  target: Task.Task,
+  levels: number,
+): TaskPlacement | undefined => {
+  if (levels < 1) {
+    return undefined;
+  }
+  let ancestor: Task.Task | undefined = target;
+  for (let step = 0; step < levels; step++) {
+    const parentId: string | undefined = ancestor && Task.parentTaskId(ancestor);
+    ancestor = parentId === undefined ? undefined : tasks.find((task) => task.id === parentId);
+    if (!ancestor) {
+      return undefined;
+    }
+  }
+  return subtreeIds(tasks, source).has(ancestor.id)
+    ? undefined
+    : resolveTaskPlacement({ tasks, source, target: ancestor, intent: 'reorder-below' });
+};
+
+/**
  * Where a task lands, in the two terms `MoveTask` takes. `parentTask` is `null` for a root task
  * (matching the verb's convention) and `before` is undefined when the task goes last — which is
  * also last among its new siblings, since nothing after it in the array shares the parent.

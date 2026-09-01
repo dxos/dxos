@@ -18,6 +18,7 @@ import {
   resolveIndent,
   resolveNudge,
   resolveOutdent,
+  resolveReparent,
   resolveTaskPlacement,
 } from './hierarchy';
 import { TaskDescription } from './TaskDescription';
@@ -195,12 +196,18 @@ export const TaskTreeContent = ({
 
         // The hitbox's instruction is taken as given: dropping onto a row makes the task its child,
         // and the reorder zones at the row's edges are what place it before or after instead.
-        const placement = resolveTaskPlacement({
-          tasks,
-          source: sourceTask,
-          target: targetTask,
-          intent: instruction.type as TaskDropIntent,
-        });
+        // `reparent` is the shallow band under a last child, and is the only way out of a subtree
+        // for a drop past its final row — without it the task can only ever join that subtree.
+        const placement =
+          instruction.type === 'reparent'
+            ? // `desiredLevel` is absolute, so the number of ancestors to climb is the drop in depth.
+              resolveReparent(tasks, sourceTask, targetTask, instruction.currentLevel - instruction.desiredLevel)
+            : resolveTaskPlacement({
+                tasks,
+                source: sourceTask,
+                target: targetTask,
+                intent: instruction.type as TaskDropIntent,
+              });
         if (placement) {
           onTaskMove(sourceTask, placement);
         }
@@ -218,6 +225,9 @@ export const TaskTreeContent = ({
       // Any task can gain a sub-task, so a childless peer is still a drop target — without this the
       // hitbox offers no make-child zone on one, and so no drop indicator either.
       leavesAcceptChildren
+      // The highlight is what tells the reader where they are; a tree that only highlights (rather
+      // than navigating on select) wants it to travel with the arrows.
+      selectionFollowsFocus
       renderHeading={renderHeading}
       renderColumns={renderTrailing}
       onOpenChange={handleOpenChange}

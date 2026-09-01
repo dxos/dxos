@@ -5,6 +5,8 @@
 import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import React, { type CSSProperties, type HTMLAttributes } from 'react';
 
+import { DEFAULT_INDENTATION } from './helpers';
+
 // Tree-item instruction indicator. Atlaskit's `react-drop-indicator` ships `box`/`list-item`
 // renderers but no `tree-item` one, so this stays a small Tailwind port (theme-aware via
 // `bg-accent-bg`). See `react-ui-list/AUDIT.md` D4.
@@ -63,7 +65,9 @@ export const TreeDropIndicator = ({ instruction, gap = 0 }: TreeDropIndicatorPro
           '--terminal-radius': `${terminalSize / 2}px`,
           '--negative-terminal-size': `-${terminalSize}px`,
           '--offset-terminal': `${offsetToAlignTerminalWithLine}px`,
-          '--horizontal-indent': `${desiredInstruction.currentLevel * desiredInstruction.indentPerLevel + 4}px`,
+          // The tree's own indent, not the instruction's: the hitbox reasons in a wider one so the
+          // reparent bands are reachable, and using that here would push the line off the row.
+          '--horizontal-indent': `${desiredInstruction.currentLevel * DEFAULT_INDENTATION + 4}px`,
         } as CSSProperties
       }
       className={`absolute z-10 pointer-events-none before:w-(--terminal-size) before:h-(--terminal-size) box-border before:absolute before:border-[length:--line-thickness] before:border-solid before:border-accent-bg before:rounded-full ${orientationStyles[orientation]} ${instructionStyles[desiredInstruction.type]}`}

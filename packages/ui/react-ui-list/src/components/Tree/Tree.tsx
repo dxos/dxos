@@ -43,7 +43,7 @@ import {
 } from '@dxos/ui-theme';
 
 import { Path } from '../../util';
-import { DEFAULT_INDENTATION, paddingIndentation } from './helpers';
+import { DROP_INDENTATION, paddingIndentation } from './helpers';
 import { type TreeData } from './tree-data';
 import {
   type ColumnRenderer,
@@ -201,6 +201,12 @@ export type TreeProps<T extends { id: string } = any> = {
    * no drop indicator either.
    */
   leavesAcceptChildren?: boolean;
+  /**
+   * Move selection with the roving tabstop. An APG tree leaves selection to an explicit activation,
+   * which is right when selecting navigates; a list whose selection only highlights a row wants the
+   * highlight to follow the arrows instead.
+   */
+  selectionFollowsFocus?: boolean;
   canSelect?: (params: { item: T; path: string[] }) => boolean;
   onOpenChange?: (params: { item: T; path: string[]; open: boolean }) => void;
   onSelect?: (params: { item: T; path: string[]; current: boolean; option: boolean; shift: boolean }) => void;
@@ -228,6 +234,7 @@ export const Tree = <T extends { id: string } = any>({
   blockInstruction,
   canDrop,
   leavesAcceptChildren = false,
+  selectionFollowsFocus = false,
   canSelect,
   onOpenChange,
   onSelect,
@@ -315,6 +322,21 @@ export const Tree = <T extends { id: string } = any>({
     [expanded, byValue, onOpenChange],
   );
 
+  // Focus moves without a selection event of its own, so the follow is driven from the machine's
+  // focus change rather than inferred from the selection one.
+  const handleFocusChange = useCallback(
+    ({ focusedValue }: { focusedValue: string | null }) => {
+      if (!selectionFollowsFocus || !focusedValue || selected.includes(focusedValue)) {
+        return;
+      }
+      const entry = byValue.get(focusedValue);
+      if (entry) {
+        onSelectNode(entry, { option: false, shift: false });
+      }
+    },
+    [selectionFollowsFocus, selected, byValue, onSelectNode],
+  );
+
   const handleSelectionChange = useCallback(
     ({ selectedValue, focusedValue }: { selectedValue: string[]; focusedValue: string | null }) => {
       const previous = new Set(selected);
@@ -379,6 +401,7 @@ export const Tree = <T extends { id: string } = any>({
       lazyMount
       onExpandedChange={handleExpandedChange}
       onSelectionChange={handleSelectionChange}
+      onFocusChange={handleFocusChange}
       className='contents'
     >
       <TreeRenderProvider value={renderContext as TreeRenderContextValue}>
@@ -607,7 +630,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
         attachInstruction(data, {
           input,
           element,
-          indentPerLevel: DEFAULT_INDENTATION,
+          indentPerLevel: DROP_INDENTATION,
           currentLevel: level,
           mode,
           block: branch || leavesAcceptChildren ? [] : ['make-child'],
@@ -700,6 +723,9 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
     <Comp
       ref={rowRef}
       data-object-id={id}
+      // The live drop instruction, so a test can read which zone the pointer is in rather than
+      // inferring it from the indicator's classes (make-child and reparent render identically).
+      data-instruction={instruction?.type}
       data-testid={props.testId}
       className={mx(
         'grid grid-cols-subgrid col-[tree-row] mt-0.5 outline-none cursor-pointer select-none',

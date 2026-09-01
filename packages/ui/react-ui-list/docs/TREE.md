@@ -254,11 +254,20 @@ drag. It was verified with Playwright driving real drags against `TaskList.stori
 `DragTargets` (`A` with children `B`, `C`), which is the fixture the drop rules are reasoned about
 with. Measured zone map per 32px row, and the resulting tree after each drop:
 
-| pointer band | instruction     | result when dragging `C`       |
-| ------------ | --------------- | ------------------------------ |
-| y 4–7        | `reorder-above` | before the target, as its peer |
-| y 10–22      | `make-child`    | **first** child of the target  |
-| y 25–31      | `reorder-below` | after the target, as its peer  |
+| pointer band (32px row)           | instruction     | result                                                 |
+| --------------------------------- | --------------- | ------------------------------------------------------ |
+| y 4–7                             | `reorder-above` | before the target, as its peer                         |
+| y 10–22                           | `make-child`    | **first** child of the target                          |
+| y 25–31, x > ~52                  | `reorder-below` | after the target, as its peer                          |
+| y 25–31, x 12–52, last child only | `reparent`      | after the target's ancestor — the way out of a subtree |
+
+Two measurement traps, both of which produced wrong readings before they were understood:
+
+1. **Re-measure the target after the drag starts.** The dragged row leaves the layout, so every row
+   below it shifts up by its height and coordinates taken beforehand address the wrong row.
+2. **The indicator cannot identify the zone.** `make-child` and `reparent` both render with the
+   "child" orientation. Read `data-instruction` off the row instead — it carries the live
+   instruction type for exactly this purpose.
 
 ### Manual script
 
@@ -269,26 +278,39 @@ Run `moon run storybook-react:serve` and open
    toggles. This asymmetry is inherited from the machine's select-vs-toggle policy and is the one
    behaviour still open for a decision.
 2. Click a chevron. The branch animates open and closed.
-3. Press `ArrowDown`/`ArrowUp`. Focus steps row to row; selection does not follow, which is APG tree
-   behaviour and differs from the flat list's listbox.
+3. Press `ArrowDown`/`ArrowUp`. The highlight travels with focus — `selectionFollowsFocus`, which
+   the task tree opts into. An APG tree leaves selection to an explicit activation; that is right
+   when selecting navigates, and wrong here where selection only highlights a row.
 4. Press `Shift+ArrowDown` / `Shift+ArrowUp`. The focused row moves among its siblings.
 5. Press `Shift+ArrowRight` / `Shift+ArrowLeft`. The focused row indents under its previous sibling,
    or outdents to become its parent's next sibling.
 6. In `Drag Targets`, drag `C`. It leaves the list for the duration of the gesture, so you see
    `A > B`. Check each landing place: before `A`; onto `A` (first child); before `B`; onto `B`;
    after `B`; and `A`'s bottom edge, which places `C` after `A`'s whole subtree as its next peer.
-7. Drag a row that has children (`Approve the label art` in `Hierarchical Draggable`). The subtree
+7. In `Hierarchical Draggable`, drag a row onto the **left end** of the last row's bottom edge (the
+   first ~40px). That is the `reparent` band: the task lands after the last row's parent rather than
+   joining it, which is the only way out of a subtree at its final row.
+8. Drag a row that has children (`Approve the label art` in `Hierarchical Draggable`). The subtree
    goes with it and lands under the new parent.
-8. Confirm every disclosure chevron sits on its title's centreline, including the row that carries a
+9. Confirm every disclosure chevron sits on its title's centreline, including the row that carries a
    description.
+
+### Indent: visual vs hitbox
+
+`DEFAULT_INDENTATION` (8px) is what rows indent by; `DROP_INDENTATION` (24px) is what the hitbox
+reasons in. They differ deliberately. The `reparent` zones under a last child are carved out of the
+row's bottom band **by indent**, so at 8px they are 8px-wide strips: the instruction is produced and
+measurable, but unhittable by hand — which presents as "there is no way to drop past the last
+child". `TreeDropIndicator` keeps using the visual indent, so its line still lands under the row it
+refers to.
 
 ### Known gap
 
-`A`'s own reorder-below zone is what places a task after an expanded branch's subtree. A branch that
-is expanded but **not** last in its group has no below zone at all (atlaskit's `expanded` mode drops
-it by design), so "after this subtree" is unreachable for such a row. Options — collapse a hovered
-branch during a drag, or force `standard` mode — are unresolved; forcing `standard` would change
-navtree's drag behaviour too.
+A branch that is expanded but **not** last in its group has no reorder-below zone at all (atlaskit's
+`expanded` mode drops it by design, since "below an open branch" and "its first child" are the same
+place). "After this subtree" is therefore unreachable for such a row; a last-in-group branch is fine,
+because `reparent` covers it. Options — collapse a hovered branch during a drag, or force `standard`
+mode — are unresolved; forcing `standard` would change navtree's drag behaviour too.
 
 ## References
 
