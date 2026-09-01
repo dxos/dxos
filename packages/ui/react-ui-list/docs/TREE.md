@@ -294,6 +294,15 @@ Run `moon run storybook-react:serve` and open
    goes with it and lands under the new parent.
 9. Confirm every disclosure chevron sits on its title's centreline, including the row that carries a
    description.
+10. Open `Drag Debug` to see every band at once, without holding a drag.
+
+### Seeing the zones without dragging
+
+`Tree` takes a `debug` prop that paints every row's bands and labels them — `above` / `child` /
+`below` in blue and green, and one amber band per ancestor a `reparent` can lift the row out to.
+`TaskList.Root` forwards it; the `Drag Debug` story turns it on. It is the fastest way to answer
+"where do I aim", and it makes the gap below visible at a glance: an expanded, non-last branch has
+no `below` band painted at all.
 
 ### Indent: visual vs hitbox
 

@@ -56,6 +56,7 @@ import {
   TreeRenderProvider,
   useTreeRender,
 } from './TreeContext';
+import { TreeDropDebug } from './TreeDropDebug';
 import { TreeDropIndicator } from './TreeDropIndicator';
 import { TreeItemToggle } from './TreeItemToggle';
 
@@ -207,6 +208,12 @@ export type TreeProps<T extends { id: string } = any> = {
    * highlight to follow the arrows instead.
    */
   selectionFollowsFocus?: boolean;
+  /**
+   * Paint every row's drop bands and label them, so the zones a drag can land in are visible
+   * without holding one. A development affordance — the geometry mirrors the hitbox's, so a band
+   * that looks wrong here is a band that behaves wrong under the pointer.
+   */
+  debug?: boolean;
   canSelect?: (params: { item: T; path: string[] }) => boolean;
   onOpenChange?: (params: { item: T; path: string[]; open: boolean }) => void;
   onSelect?: (params: { item: T; path: string[]; current: boolean; option: boolean; shift: boolean }) => void;
@@ -235,6 +242,7 @@ export const Tree = <T extends { id: string } = any>({
   canDrop,
   leavesAcceptChildren = false,
   selectionFollowsFocus = false,
+  debug = false,
   canSelect,
   onOpenChange,
   onSelect,
@@ -368,6 +376,7 @@ export const Tree = <T extends { id: string } = any>({
       blockInstruction,
       canDrop,
       leavesAcceptChildren,
+      debug,
       onOpenChange,
       onItemHover,
       selectNode: onSelectNode,
@@ -383,6 +392,7 @@ export const Tree = <T extends { id: string } = any>({
       blockInstruction,
       canDrop,
       leavesAcceptChildren,
+      debug,
       onSelectNode,
       closingValues,
       onOpenChange,
@@ -563,6 +573,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
     blockInstruction,
     canDrop,
     leavesAcceptChildren,
+    debug,
     onOpenChange,
     onItemHover,
     selectNode,
@@ -773,6 +784,14 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
         </div>
         {Columns && <Columns item={item} path={path} open={open} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />}
         {instruction && <TreeDropIndicator instruction={instruction} gap={2} />}
+        {debug && (
+          <TreeDropDebug
+            mode={mode}
+            level={level}
+            acceptsChildren={branch || leavesAcceptChildren === true}
+            draggable={treeDraggable}
+          />
+        )}
       </div>
     </Comp>
   );

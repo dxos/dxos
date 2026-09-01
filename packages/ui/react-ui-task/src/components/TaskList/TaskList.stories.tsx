@@ -145,6 +145,7 @@ const DefaultStory = ({
   draggable = false,
   many,
   dragFixture,
+  debug,
   framed = true,
 }: {
   readonly?: boolean;
@@ -160,6 +161,8 @@ const DefaultStory = ({
   many?: boolean;
   /** Seed the minimal `A > B, C` fixture the drop zones are reasoned about with. */
   dragFixture?: boolean;
+  /** Paint every row's drop bands, so the zones are visible without holding a drag. */
+  debug?: boolean;
   /** Insets the pane in a card, as an article does. Off for the tests that measure the pane's own
       columns against a row's, which the inset would offset. */
   framed?: boolean;
@@ -219,6 +222,7 @@ const DefaultStory = ({
     <TaskList.Root
       tasks={tasks}
       hierarchical={hierarchical}
+      debug={debug}
       selected={selected}
       showGroupLabels={showGroupLabels}
       showOrdinals={showOrdinals}
@@ -313,16 +317,14 @@ export const HierarchicalDraggable: Story = {
   },
 };
 
-/**
- * `A > B, C` with drag on. Dragging `C` must leave every landing place reachable: before `A`, onto
- * `A`, before `B`, onto `B`, after `B`, and after `A`'s children as `A`'s next peer.
- */
-export const DragTargets: Story = {
+/** The drop bands painted on every row, so the zones can be seen without holding a drag. */
+export const DragDebug: Story = {
   args: {
     hierarchical: true,
     draggable: true,
-    dragFixture: true,
+    debug: true,
     showOrdinals: true,
+    showDescriptions: true,
     framed: false,
   },
 };

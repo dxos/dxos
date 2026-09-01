@@ -115,6 +115,8 @@ export type TreeRenderContextValue<T extends { id: string } = any> = {
   canDrop?: (params: { source: TreeData; target: TreeData }) => boolean;
   /** Whether a childless row can be dropped onto to adopt the dragged item. */
   leavesAcceptChildren?: boolean;
+  /** Paint every row's drop bands, so the zones can be seen without holding a drag. */
+  debug?: boolean;
   onOpenChange?: (params: { item: T; path: string[]; open: boolean }) => void;
   onItemHover?: (params: { item: T }) => void;
   /** Applies the select-vs-toggle policy for a row activation. */

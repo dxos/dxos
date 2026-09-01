@@ -87,6 +87,8 @@ type TaskListContextValue = {
   showOrdinals: boolean;
   showDescriptions: boolean;
   hierarchical: boolean;
+  /** Paint the tree's drop bands on every row (development affordance). */
+  debug: boolean;
   /** Whether the leading gutter is rendered at all — it holds the ordinal and the drag handle. */
   showGutter: boolean;
   selected?: string;
@@ -153,6 +155,8 @@ type TaskListRootProps = PropsWithChildren<{
    * mutually exclusive, since a tree regrouped by status is no longer a tree.
    */
   hierarchical?: boolean;
+  /** Paint the tree's drop bands on every row (development affordance). */
+  debug?: boolean;
   /**
    * Enables restructuring by drag and by keyboard; called with the one move the gesture means.
    * `MoveTask` takes exactly this pair, so a drop is a single mutation rather than a re-parent
@@ -177,6 +181,7 @@ const TaskListRoot = ({
   showOrdinals = false,
   showDescriptions = false,
   hierarchical = false,
+  debug = false,
   collapsed,
   selected: selectedProp,
   selectable: selectableProp,
@@ -239,6 +244,7 @@ const TaskListRoot = ({
       showOrdinals={showOrdinals}
       showDescriptions={showDescriptions}
       hierarchical={hierarchical}
+      debug={debug}
       // The handle lives in the ordinal's gutter, so a movable list reserves the track even when it
       // shows no numbers.
       showGutter={showOrdinals || !!onTaskMove}
@@ -319,6 +325,7 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
     onTaskSelect,
     onTaskUpdate,
     onTaskMove,
+    debug,
     dragging,
   } = useTaskListContext('TaskList.Content');
   // Collapsed ids are read through the context callback rather than held here, so the walk still
@@ -367,6 +374,7 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
         onTaskUpdate={onTaskUpdate}
         onTaskMove={onTaskMove}
         showDescriptions={showDescriptions}
+        debug={debug}
         renderTrailing={TaskTreeTrailing}
       />
     );

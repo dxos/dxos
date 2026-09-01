@@ -49,6 +49,8 @@ export type TaskTreeContentProps = {
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
   onTaskMove?: (task: Task.Task, placement: TaskPlacement) => void;
   renderTrailing?: ColumnRenderer<TaskNode>;
+  /** Paint the drop bands on every row (development affordance). */
+  debug?: boolean;
 };
 
 /** Columns after the title: assignee, tags and the contributed actions live here. */
@@ -67,6 +69,7 @@ export const TaskTreeContent = ({
   onTaskUpdate,
   onTaskMove,
   renderTrailing,
+  debug,
 }: TaskTreeContentProps) => {
   const registry = useContext(RegistryContext);
 
@@ -228,6 +231,7 @@ export const TaskTreeContent = ({
       // The highlight is what tells the reader where they are; a tree that only highlights (rather
       // than navigating on select) wants it to travel with the arrows.
       selectionFollowsFocus
+      debug={debug}
       renderHeading={renderHeading}
       renderColumns={renderTrailing}
       onOpenChange={handleOpenChange}
