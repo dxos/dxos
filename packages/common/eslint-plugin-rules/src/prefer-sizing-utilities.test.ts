@@ -3,7 +3,7 @@
 //
 
 import { RuleTester } from 'eslint';
-import { describe, it } from 'vitest';
+import { describe, test } from 'vitest';
 
 import rule from '../rules/prefer-sizing-utilities.js';
 
@@ -102,6 +102,10 @@ describe('prefer-sizing-utilities', () => {
         { filename, code: "<div className='dx-shrink' />" },
         // The clip is on a descendant, not on this element.
         { filename, code: "<div className='min-h-0 [&>*]:overflow-hidden' />" },
+        // `overflow-clip` clips without scrolling, so it is not a scroll container and the
+        // automatic minimum size still applies — the class stays load-bearing.
+        { filename, code: "<div className='min-h-0 overflow-clip' />" },
+        { filename, code: "<div className='dx-shrink overflow-x-clip' />" },
       ],
       invalid: [
         {

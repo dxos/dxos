@@ -9,4 +9,4 @@ Add `dx-shrink`, and remove the `min-*-0` that a clip had already applied.
 
 `dx-shrink` (`min-h-0 min-w-0`) names that intent, and `dx-grow` becomes `flex-1 dx-shrink` so the two decisions — may I be small, do I claim the rest — compose rather than hiding inside one bundle.
 
-Also deletes 27 `min-*-0` that never did anything: any non-visible overflow zeroes the same minimum, so a `min-h-0` beside `overflow-hidden` is dead weight that reads as load-bearing. `prefer-sizing-utilities` now reports those, and flags `dx-grow dx-fill` as the long spelling of `dx-expand`.
+Also deletes 27 `min-*-0` that never did anything: a scroll container has already zeroed the same minimum, so a `min-h-0` beside `overflow-hidden`, `-auto` or `-scroll` is dead weight that reads as load-bearing. `overflow-clip` is excluded — it clips without scrolling, so the minimum still applies there. `prefer-sizing-utilities` now reports the redundant ones, and flags `dx-grow dx-fill` as the long spelling of `dx-expand`.

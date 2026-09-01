@@ -47,13 +47,17 @@
  * Scrolling is a CONSEQUENCE: the inner element only scrolls once something finally squeezed it.
  * A layout that never scrolls fails the same way — a toolbar pushed off, a container blown out.
  *
- * ## Overflow says it too, which is why so many `min-*-0` do nothing
+ * ## A scroll container says it too, which is why so many `min-*-0` do nothing
  *
- * For a flex or grid item, `min-height:auto` applies only while `overflow` is `visible`
- * (CSS Flexbox §4.5, CSS Grid §6.6). So an element that sets ANY non-visible overflow has already
- * zeroed its automatic minimum size, and a `min-h-0` beside it is a no-op — measured identical,
- * with and without. Write `min-*-0` (or `dx-shrink`) only where the element's own overflow stays
- * visible.
+ * A flex or grid item's automatic minimum size applies only while the item is not a scroll
+ * container (CSS Sizing 3 §5.2; CSS Flexbox §4.5 words it as `overflow: visible`). So
+ * `overflow-hidden`, `-auto` and `-scroll` have already zeroed it, and a `min-h-0` beside one is a
+ * no-op — measured identical, with and without.
+ *
+ * `overflow-clip` is the exception worth knowing: it clips without scrolling, so it is NOT a scroll
+ * container and the minimum still applies. Measured in a 200px column over a 40px footer, a 500px
+ * child leaves the footer at 500 under both `clip` and `visible`, and at 160 under `hidden`/`auto`.
+ * Keep `min-*-0` next to `overflow-clip`.
  *
  * Add `overflow-hidden` for a clip you actually want — a rounded or bordered box whose child
  * surface would paint over the radius, a host for something that draws past its bounds (a map, a
@@ -71,7 +75,7 @@
  * | class           | expands to                | use when                                       |
  * | --------------- | ------------------------- | ---------------------------------------------- |
  * | `dx-fill`       | `h-full w-full`           | parent has a definite size                     |
- * | `dx-shrink`     | `min-h-0 min-w-0`         | must not shove siblings, but must not grow      |
+ * | `dx-shrink`     | `min-h-0 min-w-0`         | must not shove siblings, but must not grow       |
  * | `dx-grow`       | `flex-1 dx-shrink`        | flex/grid child taking the remainder            |
  * | `dx-expand`     | `dx-grow dx-fill`         | parent's display type is unknown or varies      |
  * | `dx-fullscreen` | `absolute inset-0`        | pinned to a positioned ancestor                 |

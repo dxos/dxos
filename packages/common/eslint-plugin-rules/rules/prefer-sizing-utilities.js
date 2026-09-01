@@ -52,8 +52,15 @@ const COMBINATIONS = [
 /** Utility pairs that are the long spelling of another utility. */
 const COMPOSITIONS = [{ classes: ['dx-grow', 'dx-fill'], suggestion: 'dx-expand' }];
 
-/** Any non-visible overflow already zeroes the automatic minimum size. */
-const CLIPS = /^overflow(-[xy])?-(hidden|auto|scroll|clip)$/;
+/**
+ * Overflow values that already zero the automatic minimum size — the ones that make the box a
+ * scroll container.
+ *
+ * `overflow-clip` is deliberately absent: it clips without scrolling, so it is NOT a scroll
+ * container and the minimum still applies. Measured in a 200px column over a 40px footer, a 500px
+ * child leaves the footer at 500 under both `clip` and `visible`, and at 160 under `hidden`/`auto`.
+ */
+const CLIPS = /^overflow(-[xy])?-(hidden|auto|scroll)$/;
 
 /** The classes that only exist to zero that same minimum. */
 const MINIMUMS = ['min-h-0', 'min-w-0', 'dx-shrink'];
