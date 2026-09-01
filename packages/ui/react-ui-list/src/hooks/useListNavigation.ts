@@ -2,8 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type TabsterDOMAttribute, useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { type FocusEvent, useCallback, useMemo } from 'react';
+
+import { type UseFocusGroupResult, useFocusGroup } from '@dxos/react-focus';
 
 export type ListNavigationMode = 'list' | 'listbox' | 'grid';
 
@@ -35,16 +36,13 @@ type ItemRole = 'listitem' | 'option' | 'row';
 
 export type UseListNavigationReturn = {
   /**
-   * Spread onto the container element to apply role + ARIA + Tabster attributes.
+   * Spread onto the container element to apply role + ARIA + arrow-key navigation.
    * Also wires a focus-on-entry handler that redirects to the selected or first
-   * focusable item — Tabster doesn't cover initial focus, only traversal.
+   * focusable item — the group handles traversal, not initial focus.
    *
-   * The shape is intentionally open — Tabster's `useArrowNavigationGroup` returns
-   * `TabsterDOMAttribute` (one or more `data-tabster*` attributes that may be undefined
-   * when the runtime is disabled), and the precise key set isn't part of Tabster's
-   * stable contract.
+   * Carries the group's `ref`, so a consumer that attaches its own must merge the two.
    */
-  containerProps: TabsterDOMAttribute & {
+  containerProps: Omit<UseFocusGroupResult, 'onFocus'> & {
     'role': ContainerRole;
     'aria-orientation'?: 'vertical' | 'horizontal';
     'onFocus': (event: FocusEvent<HTMLElement>) => void;
@@ -91,31 +89,29 @@ const findListboxEntryTarget = (container: HTMLElement): HTMLElement | null => {
 };
 
 /**
- * Keyboard navigation + ARIA role aspect for list-shaped surfaces. Wraps Tabster's
- * `useArrowNavigationGroup` with a `mode` that selects the appropriate role bundle
- * and adds a focus-on-entry redirect (Tabster handles traversal once focus is on a
- * child; first-entry is the consumer's responsibility).
+ * Keyboard navigation + ARIA role aspect for list-shaped surfaces. Wraps `useFocusGroup`
+ * with a `mode` that selects the appropriate role bundle and adds a focus-on-entry
+ * redirect (the group handles traversal once focus is on a child; first-entry is the
+ * consumer's responsibility).
  *
  * The canonical roving-tabindex keyboard aspect. Currently consumed by `Listbox` and
  * `OrderedList`; `Tree` (Ark TreeView machine), `Picker`/`Combobox` (input-driven virtual focus), and
  * `Mosaic.Stack` still ship bespoke navigation — see `react-ui-list/AUDIT.md` for the
- * convergence analysis. Non-list focus zones — e.g. Composer's multi-pane chrome — keep
- * their own Tabster wiring (`Focus.Group`).
+ * convergence analysis. Non-list focus zones — e.g. Composer's multi-pane chrome — use
+ * `useFocusGroup` directly (`Focus.Group`).
  */
 export const useListNavigation = ({
   mode,
   axis,
   memorizeCurrent = true,
 }: UseListNavigationOptions): UseListNavigationReturn => {
-  const tabsterAttrs = useArrowNavigationGroup({
-    axis: axis ?? defaultAxisByMode[mode],
-    memorizeCurrent,
-  });
+  const focusGroup = useFocusGroup({ axis: axis ?? defaultAxisByMode[mode], memorizeCurrent });
 
   const handleFocus = useCallback(
     (event: FocusEvent<HTMLElement>) => {
+      focusGroup.onFocus(event);
       if (event.target !== event.currentTarget) {
-        // Focus is already on a descendant; Tabster handles traversal from here.
+        // Focus is already on a descendant; the group handles traversal from here.
         return;
       }
       if (mode !== 'listbox') {
@@ -126,10 +122,10 @@ export const useListNavigation = ({
       const target = findListboxEntryTarget(event.currentTarget);
       target?.focus();
     },
-    [mode],
+    [mode, focusGroup],
   );
 
-  // `aria-orientation` only accepts 'vertical' or 'horizontal'. Tabster's `axis` permits
+  // `aria-orientation` only accepts 'vertical' or 'horizontal'. The group's `axis` permits
   // grid-shaped values too ('grid', 'grid-linear', 'both'); collapse those (and the grid mode
   // itself) so we never leak an invalid ARIA value into the DOM.
   const orientation: 'vertical' | 'horizontal' | undefined =
@@ -139,13 +135,13 @@ export const useListNavigation = ({
     () => ({
       role: containerRoleByMode[mode],
       ...(orientation && { 'aria-orientation': orientation }),
-      ...tabsterAttrs,
+      ...focusGroup,
       onFocus: handleFocus,
     }),
-    [mode, orientation, tabsterAttrs, handleFocus],
+    [mode, orientation, focusGroup, handleFocus],
   );
 
-  // Listbox items need tabIndex=0 so Tabster can focus them; list/grid items inherit
+  // Listbox items need tabIndex=0 so the group can focus them; list/grid items inherit
   // their tabIndex from their interactive descendants (button-shaped handles, links).
   const itemRole = itemRoleByMode[mode];
   const itemTabIndex = mode === 'listbox' ? 0 : -1;

@@ -101,7 +101,13 @@ to re-derive:
    with APG conformance maintained upstream. Size the migration against that, and price the ~85 KB
    Combobox explicitly since it is the one that decides the total.
 
-## Phase 5: Replace `@fluentui/react-tabster`
+## Phase 5: Replace `@fluentui/react-tabster` — done
+
+Design record:
+[`packages/ui/react-primitives/react-focus/docs/FOCUS.md`](../../../packages/ui/react-primitives/react-focus/docs/FOCUS.md)
+— the mechanism
+(sentinels, the `Tab` hand-off, what "entered" means), the alternatives that do not work, the
+size accounting, and every call site.
 
 Tracked 2026-08-31. The largest measured win available in this area, and — despite living in this
 ledger — **a `@dxos/react-ui` project, not an Ark adoption**. Prize: **68,256 bytes minified in the
@@ -126,15 +132,39 @@ Three constraints, all measured:
 
 ### Tasks
 
-- [ ] **Write the in-house roving-tabindex/groupper hook** in `@dxos/react-ui` covering
-      `useArrowNavigationGroup` + `useFocusableGroup`. This is the whole project's critical path.
-- [ ] **Cut the three boot-reachable files over** (`Focus.tsx`, `MainContext.ts`, `Carousel.tsx`),
-      then re-run `moon run composer-app:bundle` + `check-boot-budget` and confirm the eager graph
-      drops by ~66 KB. Ark's `carousel` machine is a candidate for the third file if the hook does
-      not cover it cleanly.
-- [ ] **Migrate the remaining ten importers** to drop the dependency from `package.json` entirely.
-- [ ] **Re-baseline `MAX_PRELOAD_BYTES`** in `composer-app/scripts/check-boot-budget.mjs` downward
-      once the win lands — a budget left at 4.45 MB silently absorbs the gain.
+- [x] **Write the in-house roving-tabindex/groupper hook** —
+      [`useFocusGroup`](../../../packages/ui/react-primitives/react-focus/src/useFocusGroup.ts) over the DOM
+      primitives in [`focus.ts`](../../../packages/ui/react-primitives/react-focus/src/focus.ts). One hook
+      covers both tabster concerns: `axis` gives arrow-key navigation (a mover), `tabBehavior` gives
+      the `Tab` boundary (a groupper), so `useMergedTabsterAttributes_unstable` has no successor.
+      Boundaries are a pair of zero-size sentinel children — tabster's mechanism, and the reason
+      neither tabindex nor React's rendering has to be fought. `useFocusFinders` becomes the plain
+      `findFirstFocusable` / `findLastFocusable`. Nine unit tests in `useFocusGroup.test.tsx`.
+- [x] **Cut the three boot-reachable files over** (`Focus.tsx`, `MainContext.ts`, `Carousel.tsx`).
+      `keyborg` went the same way: the only signal read from it — `data-w-keyboard` — is now set by
+      `trackKeyboardModality`. Ark's `carousel` machine was not needed. Measured after
+      `moon run composer-app:bundle`: **zero `tabster` or `keyborg` modules in the eager graph**
+      (checked against every preload chunk's sourcemap `sources`), 4,360,490 bytes over 21 entries.
+- [x] **Migrate the remaining ten importers** — `@fluentui/react-tabster`, `tabster` and `keyborg`
+      are gone from every `package.json`, the catalog and the lockfile.
+- [x] **Re-baseline `MAX_PRELOAD_BYTES`** to 4.35 MB, keeping the same ~200 KB margin.
+
+Two defects the keyboard verification caught, neither of which the build or the types would have:
+
+- `Main.tsx`'s sidebars never received the group's ref. `useForwardedRef` writes the forwarded ref
+  once in an effect, which never delivers the node when `Root` swaps between `Primitive.div` and
+  `DialogContent` on a media-query change — so the landmark grouppers silently did nothing.
+  `useMergeRefs` instead.
+- "Entered" cannot be derived from focus alone. A container that is not itself a tab stop has no
+  state to be entered from: focus reaching its contents is how an enclosing group steps ONTO it.
+  Without that, `Listbox` in `list` mode (rows are `tabIndex=-1`) lost arrow navigation entirely.
+
+Verified by keyboard in Storybook against the exemplar, `Focus`, `Main`, `Carousel` and `Listbox`:
+arrow traversal and its axis/edge behaviour, `Escape` out of a row, the trap's wrap, landmark `Tab`
+between panes, a listbox as a single tab stop, and re-entry landing on the memorized row.
+
+Phase 5 grew into its own project: the code now lives in `@dxos/react-focus`, and attention and
+hotkeys join it there. See [`.agents/projects/react-focus/TASKS.md`](../react-focus/TASKS.md).
 
 ## Phase 6: Theme variants for `react-ui-list`
 

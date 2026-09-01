@@ -9,7 +9,8 @@ import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type Space, useSpaceSyncState } from '@dxos/react-client/echo';
 import { Tooltip, useTranslation } from '@dxos/react-ui';
-import { AttentionGlyph, useAttention } from '@dxos/react-ui-attention';
+import { AttentionGlyph } from '@dxos/react-ui';
+import { useAttention } from '@dxos/react-ui-attention';
 
 import { useEdgeStatus } from '#hooks';
 import { meta } from '#meta';

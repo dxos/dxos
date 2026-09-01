@@ -722,10 +722,15 @@ export const Test: Story = {
       return left + width / 2;
     };
 
-    const rowIcon = row.firstElementChild;
+    // `:not([data-focus-sentinel])`: a focus group inserts zero-size boundary elements as its first
+    // and last children, so the first *rendered* cell is not the first element child.
+    const firstCell = (element: HTMLElement) => element.querySelector(':scope > *:not([data-focus-sentinel])');
+    const labelCell = (element: HTMLElement) =>
+      element.querySelectorAll<HTMLElement>(':scope > *:not([data-focus-sentinel])')[1];
+    const rowIcon = firstCell(row);
     // The pane is one grid whose first cells ARE the title line, so its gutter cell is its first
     // child — the same column a row's status toggle occupies.
-    const createIcon = create.firstElementChild;
+    const createIcon = firstCell(create);
     if (!rowIcon || !createIcon) {
       throw new Error('Row icons not found.');
     }
@@ -734,7 +739,7 @@ export const Test: Story = {
     await expect(Math.abs(center(rowIcon) - center(createIcon))).toBeLessThan(1);
     // ...and the labels start at the same x.
     await expect(
-      Math.abs(row.children[1].getBoundingClientRect().left - create.children[1].getBoundingClientRect().left),
+      Math.abs(labelCell(row).getBoundingClientRect().left - labelCell(create).getBoundingClientRect().left),
     ).toBeLessThan(1);
 
     // The row spans the full width, so trailing actions sit at the far edge.

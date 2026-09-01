@@ -145,7 +145,7 @@ export const RevealPlayer = composable<HTMLDivElement, RevealProps>(
       };
     });
 
-    // TOOD(burdon): Trap cursor keys (otherwise tabster grabs focus.)
+    // TODO(burdon): Trap cursor keys (otherwise the enclosing focus group grabs focus.)
     return (
       <div
         {...composableProps(props, {
