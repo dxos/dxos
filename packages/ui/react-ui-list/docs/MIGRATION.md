@@ -61,7 +61,36 @@ What Ark adds that we do not have: a **recorder** (capture a chord from the user
 Those are exactly the pieces you need for a user-facing keybinding editor or a discoverable shortcut
 list, and building them ourselves is not free either.
 
-**Verdict: no on size alone; revisit if a keybinding editor or shortcut palette becomes real work.**
+**Verdict at the time: no on size alone; revisit if a keybinding editor or shortcut palette becomes
+real work.**
+
+### Revisited 2026-09-01 — adopted, but not through Ark
+
+`@dxos/keyboard` is deleted and hotkeys now run on Zag's store
+([`@dxos/react-focus`](../../react-primitives/react-focus/docs/FOCUS.md)). Two things changed the
+answer:
+
+- **It stopped being about size alone.** The incumbent's dispatch fired only the most specific
+  matching binding, and its "context" was a single mutable path string that every consumer had to
+  save and restore by hand — `Preview.tsx` and `useArticleKeyboardNavigation` each hand-rolled the
+  same save/restore dance. It also had no way to express "only while this surface is attended"
+  except by owning the global cursor. Three keyboard systems existed (`@dxos/keyboard`,
+  `react-hotkeys-hook` in the canvas editor, and the focus-group handlers); consolidating them was
+  the actual motive, and the size question is downstream of it.
+- **The barrel finding above is exactly the trap it warned about.** Ark's hooks being barrel-only is
+  not merely "a deviation": these bindings register at startup, so importing them put **60 Ark
+  modules and 61 Zag modules (~248 KB of source) into the EAGER boot graph** — 23 preload entries,
+  4.23 MB — where Zag had previously lived only in the lazy `react-ui-list` chunk. That would have
+  eaten the entire tabster win.
+
+  The resolution is to skip Ark's React layer: `@zag-js/hotkeys` is framework-agnostic, depends only
+  on `@zag-js/dom-query`, and the hook Ark wraps it in is ~50 lines of registration bookkeeping that
+  `react-focus` now owns. That took the graph to **21 entries / 4.20 MB with zero Ark modules** and
+  Zag down to 21 modules / 63,557 B.
+
+**If you reach for an Ark provider hook again, measure the boot graph before and after.** The barrel
+tree-shakes fine for a component used in one lazy chunk (TREE.md §6) and does not for anything the
+app touches at startup.
 That is the only scenario where ~18 KB buys something `@dxos/keyboard` cannot.
 
 ## 3. `format/*` — the cheapest candidate, with a provider caveat

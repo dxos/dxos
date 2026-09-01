@@ -30,7 +30,6 @@
     "src"
   ],
   "dependencies": {
-    "@ark-ui/react": "catalog:",
     "@dxos/util": "workspace:*",
     "@zag-js/hotkeys": "catalog:"
   },
