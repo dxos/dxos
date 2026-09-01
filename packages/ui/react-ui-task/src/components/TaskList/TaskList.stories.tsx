@@ -297,19 +297,6 @@ export const HierarchicalDraggable: Story = {
   },
 };
 
-/**
- * The same tree with `onTaskMove` withheld. Nothing is draggable and no drop indicator can appear —
- * the comparison that shows drag is opt-in rather than a property of the hierarchy.
- */
-export const HierarchicalStatic: Story = {
-  args: {
-    hierarchical: true,
-    draggable: false,
-    showOrdinals: true,
-    showDescriptions: true,
-  },
-};
-
 export const TestEdit: Story = {
   args: { showGroupLabels: false, showOrdinals: true },
   // The pane is the detail half: it creates when nothing is selected and edits the selection
