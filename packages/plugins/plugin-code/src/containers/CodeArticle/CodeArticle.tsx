@@ -62,7 +62,7 @@ const languageForPath = (path: string) => {
 //   └───────────┴─────────────────┘
 //
 // 30rem fixed left column, 1fr right; left split 1:2 vertically. Same
-// `dx-container grid` + `divide-x`/`divide-y separator` idiom as the
+// `dx-expand grid` + `divide-x`/`divide-y separator` idiom as the
 // introspect explorer so the visual rhythm matches across panels.
 export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
   ({ role, subject: project, attendableId }, forwardedRef) => {
@@ -214,7 +214,7 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
     const fileEntries = useMemo(() => resolvedFiles.map(({ path }) => ({ path })), [resolvedFiles]);
 
     return (
-      <Panel.Root classNames='dx-expander' role={role} ref={forwardedRef}>
+      <Panel.Root classNames='dx-expand' role={role} ref={forwardedRef}>
         <Panel.Toolbar>
           <CodeToolbar
             attendableId={attendableId}
@@ -227,7 +227,7 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
         <Panel.Content asChild>
           <Grid cols={['30rem', '1fr']} classNames='divide-x divide-separator'>
             <Grid rows={[1, 2]} classNames='divide-y divide-subdued-separator'>
-              <div role='region' aria-label={t('browse-pane.label')} className='dx-container grid overflow-auto'>
+              <div role='region' aria-label={t('browse-pane.label')} className='dx-expand grid overflow-auto'>
                 <FileTree
                   files={fileEntries}
                   selectedPath={selectedPath}
@@ -235,15 +235,11 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
                   emptyMessage={t('view.code.empty.placeholder')}
                 />
               </div>
-              <div role='region' aria-label={t('inspect-pane.label')} className='dx-container grid overflow-hidden'>
+              <div role='region' aria-label={t('inspect-pane.label')} className='dx-expand grid'>
                 <BuildOutput state={projectState} />
               </div>
             </Grid>
-            <div
-              role='region'
-              aria-label={t('output-pane.label')}
-              className='dx-container grid min-h-0 overflow-hidden'
-            >
+            <div role='region' aria-label={t('output-pane.label')} className='dx-expand grid'>
               {selected ? <FileEditor file={selected} role={role} /> : null}
             </div>
           </Grid>

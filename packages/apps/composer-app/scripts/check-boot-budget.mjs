@@ -54,8 +54,15 @@ const MAX_PRELOAD_ENTRIES = 25;
  * The ~200 KB margin is deliberately at the low end of the 200-550 KB leak classes above, which
  * preserves the property the 6.00 MB ceiling had given up: a single leak of any known class trips
  * this. Expect it to catch accepted growth too — that is the review point, not a false positive.
+ *
+ * Re-baselined 2026-08-31 (was 4.45 MB) after `@fluentui/react-tabster` was replaced by
+ * `useFocusGroup` in `@dxos/react-ui`, which evicted `tabster` (59,820 bytes), `keyborg` (6,298)
+ * and the fluentui wrapper (2,138) from the eager graph — 68,256 bytes attributed through the boot
+ * chunks' sourcemaps (`.agents/projects/ark/TASKS.md` Phase 5). Measured at 4,360,490 bytes; the
+ * ceiling is set to keep the same ~200 KB margin rather than to bank the whole win, since a budget
+ * left where it was would silently absorb it.
  */
-const MAX_PRELOAD_BYTES = 4.45 * 1024 * 1024;
+const MAX_PRELOAD_BYTES = 4.35 * 1024 * 1024;
 
 const buildDir = path.join(process.cwd(), 'out');
 const outDir = path.join(buildDir, 'composer');

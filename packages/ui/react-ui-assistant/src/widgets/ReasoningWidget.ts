@@ -51,7 +51,7 @@ export class ReasoningWidget extends WidgetType {
                 .classNames('flex p-1 shrink-0 items-center justify-center self-start')
                 .append(Domino.svg('ph--brain--regular').classNames('shrink-0 size-4')),
               Domino.of('div')
-                .classNames('flex items-center max-h-[5lh] overflow-y-auto dx-scrollbar-thin min-w-0 text-description')
+                .classNames('flex items-center max-h-[5lh] overflow-y-auto dx-scrollbar-thin text-description')
                 .text(this.text)
                 .attributes({ 'data-reasoning-text': '' }),
             ),

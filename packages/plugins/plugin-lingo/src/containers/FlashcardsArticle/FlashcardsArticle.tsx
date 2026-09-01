@@ -96,12 +96,12 @@ export const FlashcardsArticle = ({ role, subject: deck, attendableId }: Flashca
   return (
     <Menu.Root {...menuActions} attendableId={attentionId}>
       <Panel.Root role={role}>
-        <Panel.Toolbar asChild classNames='dx-container'>
+        <Panel.Toolbar asChild classNames='dx-expand'>
           <Menu.Toolbar>
             <Menu.Items />
           </Menu.Toolbar>
         </Panel.Toolbar>
-        <Panel.Content classNames='dx-container flex flex-col'>
+        <Panel.Content classNames='flex flex-col'>
           {word ? (
             <Flashcard
               key={word.id}

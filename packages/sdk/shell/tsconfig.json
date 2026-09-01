@@ -47,6 +47,9 @@
       "path": "../../core/protocols"
     },
     {
+      "path": "../../ui/react-primitives/react-focus"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {

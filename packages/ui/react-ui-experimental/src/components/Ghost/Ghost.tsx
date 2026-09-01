@@ -41,6 +41,6 @@ export const Ghost = forwardRef<GhostController, Partial<GhostProps>>(
         }
       : undefined;
 
-    return <canvas ref={setCanvas} className={mx('h-full w-full', classNames)} style={frameStyle} />;
+    return <canvas ref={setCanvas} className={mx('dx-fill', classNames)} style={frameStyle} />;
   },
 );
