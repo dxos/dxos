@@ -96,6 +96,7 @@
     "lodash.defaultsdeep": "catalog:"
   },
   "devDependencies": {
+    "@opentelemetry/sdk-trace-base": "2.2.0",
     "@types/lodash.defaultsdeep": "catalog:",
     "effect": "catalog:"
   },

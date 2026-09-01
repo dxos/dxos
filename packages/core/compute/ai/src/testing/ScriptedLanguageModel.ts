@@ -12,6 +12,7 @@ import * as AiError from 'effect/unstable/ai/AiError';
 import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 import type * as Prompt from 'effect/unstable/ai/Prompt';
 import * as Response from 'effect/unstable/ai/Response';
+import * as Telemetry from 'effect/unstable/ai/Telemetry';
 
 import * as AiService from '../AiService';
 
@@ -167,6 +168,18 @@ const encodeStreamTurn = (
   return out;
 };
 
+/**
+ * The GenAI annotations a real provider writes. Without them a scripted call is invisible to
+ * anything reading `gen_ai.*` off the span — which is how telemetry identifies a model call at all,
+ * so a double that omits them silently exempts every scripted test from that half of the system.
+ */
+const annotate = (span: LanguageModel.ProviderOptions['span']): void =>
+  Telemetry.addGenAIAnnotations(span, {
+    system: 'scripted',
+    operation: { name: 'chat' },
+    request: { model: 'scripted' },
+  });
+
 /** Encodes a turn as the aggregated parts a non-streaming `generateText` would return. */
 const encodeTurn = (
   parts: readonly ScriptedPart[],
@@ -242,6 +255,7 @@ export const makeScriptedLanguageModel = (script: Script): Effect.Effect<Languag
     return yield* LanguageModel.make({
       generateText: (options) =>
         Effect.gen(function* () {
+          annotate(options.span);
           const { index, turn } = yield* nextTurn(options.prompt);
           if (isFailure(turn)) {
             return yield* Effect.fail(turn.fail);
@@ -251,6 +265,7 @@ export const makeScriptedLanguageModel = (script: Script): Effect.Effect<Languag
       streamText: (options) =>
         Stream.unwrap(
           Effect.gen(function* () {
+            annotate(options.span);
             const { index, turn } = yield* nextTurn(options.prompt);
             if (isFailure(turn)) {
               return Stream.fail(turn.fail);
