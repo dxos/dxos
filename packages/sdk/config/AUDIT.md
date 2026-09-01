@@ -18,9 +18,10 @@ Goals:
 > **Superseded in part.** The per-service hosts catalogued below are no longer addresses held by the
 > client: by default every EDGE service is reached as `<edge>/<service>`, derived from
 > `runtime.services.edge.url` by `getEdgeServiceEndpoint` ([`edge-services.ts`](src/edge-services.ts)).
-> An explicit `runtime.services.edgeServices` entry still overrides that, and is what the tables below
-> describe; they are kept as the record of what the sprawl was, so read them as history rather than as
-> current state.
+> An explicit `runtime.services.edgeServices` entry still overrides that. The tables below do NOT
+> describe that override -- they record where each address came from BEFORE this change, which in every
+> row but `introspect` was a per-service config field or a hardcoded call site. Read them as the record
+> of what the sprawl was, not as current state.
 >
 > Scope note: this is the static-analysis phase. The cleanup is staged — see
 > [§6 Cleanup plan](#6-cleanup-plan). Phase 1 (this change) consolidates the
