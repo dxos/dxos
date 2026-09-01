@@ -256,7 +256,7 @@ space, or its automerge doc never loads. `slow AM open {duration: 5005ms}` hints
 - [ ] Consider a timeout or fallback on the `propertiesAvailable` wait — a space that waits forever
       for an object that will never exist is unrecoverable and gives the caller no signal.
 
-## Phase 8: `ProcessTree` on the Tree — landed with one open defect
+## Phase 8: `ProcessTree` on the Tree — landed, verified
 
 Done 2026-08-31. `ProcessTree` no longer uses `Treegrid`: it builds a pruned process forest, adapts
 it with `createStaticTreeModel`, and renders through `Tree`. Verified in Storybook (client-free
@@ -275,17 +275,18 @@ render unchanged when the slot is absent.
 tick. Open state is therefore held in a `useRef` outside the model and re-seeded through `isOpen`, or
 a collapse would be undone by the next tick.
 
-- [ ] **DEFECT: collapse sets the ARIA state but does not visually collapse.** Clicking the branch
-      trigger flips `aria-expanded` to `false` and `data-state` to `closed`, but the branch content
-      stays at `blockSize: 34px` with the child still visible; `getAnimations()` is empty 6 s later.
-      The same interaction in `ui/react-ui-list/Tree`'s own story collapses correctly (child
-      `offsetParent` null), so this is the `ProcessTree` integration, not `Tree`. Suspects, in order:
-      the `ScrollArea.Root`/`Viewport` wrapper (two ancestors report `blockSize: 0px`), the custom
-      three-column `gridTemplateColumns`, and whether writing `open: false` straight into the state
-      atom races `Tree`'s own conceal-then-`commitClose` sequencing (docs/TREE.md §2 gap 1).
-      Next diagnostic: compare the computed `animation-name`/`fill-mode` on `[data-part=
-"branch-content"]` between the two stories — that distinguishes "animation never applied" from
-      "ran and reverted".
+- [x] **RETRACTED — there was no defect; collapse works.** Confirmed by screenshot: collapsing
+      "Trigger watcher" removes the nested "Translate content" row (5 rows to 4). The report was
+      built on two bad measurements, both mine: - `offsetParent` was used as a visibility test. It is `null` for any `display: contents`
+      element, and Ark's branch wrapper is exactly that — so the check reported "hidden" in
+      `Tree`'s own story and "visible" here purely from where each element sat in the parts tree,
+      never from whether anything was on screen. - The conceal animation being cancelled mid-flight, and `block-size` never reaching 0, were
+      treated as the failure. `Tree`'s own story does both identically (animation cancelled by
+      150 ms, `block-size` held at 136 px, no `hidden` attribute) and collapses correctly, so that
+      is shared, normal behaviour rather than a symptom.
+
+      Lesson worth keeping: for "is it visible", take the screenshot. Three rounds of DOM
+          instrumentation pointed the wrong way; one before/after image settled it in seconds.
 
 ## Phase 9: `ObjectsTree` on the Tree — VERIFIED by the user
 
