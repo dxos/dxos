@@ -288,13 +288,22 @@ a collapse would be undone by the next tick.
 "branch-content"]` between the two stories — that distinguishes "animation never applied" from
       "ran and reverted".
 
-## Phase 9: `ObjectsTree` on the Tree — NOT VERIFIED BY THE AGENT
+## Phase 9: `ObjectsTree` on the Tree — VERIFIED by the user
 
 Done 2026-08-31. `devtools/ObjectsTree` no longer uses `Treegrid`; it exposes a `TreeModel` view over
-its existing atoms and renders through `Tree`. **Builds and lints clean, but the agent's browser
-cannot render this story** (see the corrected `SPACE_INITIALIZING` entry), so it is unverified —
-the user has the working story at
-`http://localhost:9009/?path=/story/devtools-devtools-objectstree--default`.
+its existing atoms and renders through `Tree`. The agent's browser cannot render this story (see the corrected
+`SPACE_INITIALIZING` entry), so it was verified by the user from a screenshot: top-level rows render,
+icon hues survive, nesting indents correctly, chevrons show mixed expanded/collapsed state, and
+**both relation arrow directions appear** — the discriminating case for the bug below.
+
+Three bugs were found after the first commit; the first is what broke the story:
+
+1. `itemProps` passed the synthetic root anchor into `#atoms`, which asserts `EntityId.isValid`, so
+   every top-level row threw.
+2. `#itemFamily` built its query atom inside the compute function, introducing a fresh dependency on
+   every recomputation.
+3. The renderers read the id-keyed `item`, whose `type` resolves against a `null` anchor, so every
+   relation drew the incoming arrow. They now read `model.itemAt(path)`.
 
 Two corrections to earlier analysis in this ledger, both found by reading `Tree`'s walk rather than
 assuming:
@@ -316,8 +325,14 @@ relation arrow) is computed relative to the anchor a node was reached through �
 differently under two parents. Open state is written twice on toggle: by path (what `Tree` addresses
 rows by) and by id (what gates the walk).
 
-- [ ] **Verify in the story** — expand/collapse, relation arrows on both directions, the role label,
-      the row action menu, and deleted-object strikethrough.
+- [x] **Verify in the story** — rows, arrows (both directions), hues, nesting and chevron state
+      confirmed by the user.
+- [ ] Still unchecked: the role label (`$.key`), the row action menu, and deleted-object
+      strikethrough.
+- [ ] Cosmetic, PRE-EXISTING: a branch whose only child is the ancestor you arrived through shows a
+      chevron that opens to nothing (`parentOf` counts it before the walk drops it). The old code had
+      the same shape; it should now occur less often, since `Tree` excludes all ancestors rather than
+      only the immediate parent.
 - [ ] Confirm expanding into a relation cycle terminates (it should now be handled by `Tree`'s
       ancestor check rather than `ObjectsTree`'s single-level one).
 - [ ] With this landed, `Treegrid`'s only remaining consumer is `plugin-atproto`'s
