@@ -27,6 +27,9 @@ const store = new IdbLogStore({ dbName: LOG_STORE_DB_NAME, maxBytes: LOG_STORE_M
 /** Caps messages buffered while a sink module import is in flight. */
 const MAX_PENDING = 5_000;
 
+type Tags = { type: 'otel-tags'; tags: Record<string, string> };
+type Flush = { type: 'otel-flush' };
+
 const createMessageHandler = (): ((event: MessageEvent<ObservabilityWorkerMessage>) => void) => {
   let logSink: OtelLogSink | undefined;
   let metricsSink: OtelMetricsSink | undefined;
@@ -35,7 +38,7 @@ const createMessageHandler = (): ((event: MessageEvent<ObservabilityWorkerMessag
   // init are persisted (logs) or dropped (metrics) — same as the in-process pipelines,
   // which only start once observability initializes.
   let pendingLogs: (string | Exclude<OtelLogSinkMessage, { type: 'otel-init' }>)[] | undefined;
-  let pendingMetrics: OtelMetricRecord[] | undefined;
+  let pendingMetrics: (OtelMetricRecord | Tags | Flush)[] | undefined;
 
   const toLogSink = (message: string | Exclude<OtelLogSinkMessage, { type: 'otel-init' }>): void => {
     if (logSink) {
@@ -44,15 +47,26 @@ const createMessageHandler = (): ((event: MessageEvent<ObservabilityWorkerMessag
       } else {
         logSink.handleMessage(message);
       }
-    } else if (pendingLogs && pendingLogs.length < MAX_PENDING) {
+    } else if (pendingLogs && (typeof message !== 'string' || pendingLogs.length < MAX_PENDING)) {
       pendingLogs.push(message);
     }
   };
 
-  // Fire-and-forget, mirroring the sender's pagehide semantics; a failed export retries on
-  // the sink's own timer.
-  const flushMetrics = (): void => {
-    void metricsSink?.flush().catch(() => {});
+  const toMetricsSink = (message: OtelMetricRecord | Tags | Flush): void => {
+    if (metricsSink) {
+      switch (message.type) {
+        case 'otel-metric':
+          return metricsSink.append(message);
+        case 'otel-tags':
+          return metricsSink.setTags(message.tags);
+        case 'otel-flush':
+          // Fire-and-forget, mirroring the sender's pagehide semantics; a failed export
+          // retries on the sink's own timer.
+          return void metricsSink.flush().catch(() => {});
+      }
+    } else if (pendingMetrics && (message.type !== 'otel-metric' || pendingMetrics.length < MAX_PENDING)) {
+      pendingMetrics.push(message);
+    }
   };
 
   return (event: MessageEvent<ObservabilityWorkerMessage>): void => {
@@ -71,7 +85,7 @@ const createMessageHandler = (): ((event: MessageEvent<ObservabilityWorkerMessag
         // Fire-and-forget, mirroring the sender's pagehide semantics; `flush` never rejects.
         void store.flush();
         toLogSink({ type: 'otel-flush' });
-        flushMetrics();
+        toMetricsSink({ type: 'otel-flush' });
         break;
       }
       case 'otel-init': {
@@ -101,9 +115,7 @@ const createMessageHandler = (): ((event: MessageEvent<ObservabilityWorkerMessag
         void import('@dxos/observability/otel-metrics-sink')
           .then(({ OtelMetricsSink }) => {
             metricsSink = new OtelMetricsSink(data);
-            for (const record of pendingMetrics ?? []) {
-              metricsSink.append(record);
-            }
+            pendingMetrics?.forEach(toMetricsSink);
             pendingMetrics = undefined;
           })
           .catch(() => {
@@ -113,23 +125,17 @@ const createMessageHandler = (): ((event: MessageEvent<ObservabilityWorkerMessag
         break;
       }
       case 'otel-metric': {
-        if (metricsSink) {
-          metricsSink.append(data);
-        } else if (pendingMetrics && pendingMetrics.length < MAX_PENDING) {
-          pendingMetrics.push(data);
-        }
+        toMetricsSink(data);
         break;
       }
       case 'otel-tags': {
-        // A tags update racing the metrics-sink import is dropped for metrics — the window
-        // is the ms-scale module load at startup, well before identity tags arrive.
         toLogSink(data);
-        metricsSink?.setTags(data.tags);
+        toMetricsSink(data);
         break;
       }
       case 'otel-flush': {
         toLogSink(data);
-        flushMetrics();
+        toMetricsSink(data);
         break;
       }
     }
