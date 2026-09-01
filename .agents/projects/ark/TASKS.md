@@ -341,3 +341,26 @@ rows by) and by id (what gates the walk).
 - [ ] With this landed, `Treegrid`'s only remaining consumer is `plugin-atproto`'s
       `AtprotoCompanion`, whose rows are read-only — Phase 3 can be settled by moving it to grouped
       semantic markup and deleting `Treegrid`.
+
+## Phase 10: Reimplement `ToolWidget` on the Ark-backed Accordion
+
+Tracked 2026-09-01. `packages/ui/react-ui-assistant/src/widgets/ToolWidget.tsx` (274 lines) renders a
+run of tool blocks as one collapsible panel with a row per call. It currently drives that with
+`TogglePanel` from `@dxos/react-ui-components` plus its own `useState` open flag, where
+`react-ui-list`'s `Accordion` — now on `@ark-ui/react`, so it carries the APG keymap — expresses the
+same thing.
+
+Why it is worth doing rather than left alone: the file already carries two comments about disclosure
+defects it works around — a heightmap left taller than the row, and _"a scrollbar on open and a
+flicker on close"_, which is why it passes `duration={0}` and opts out of the animation entirely. A
+machine-managed disclosure with a real height variable is the thing those workarounds are
+substituting for.
+
+- [ ] **Map `TogglePanel` onto `Accordion`.** The widget's single-call case collapses the summary
+      into the row (`single?.title ?? summary`), so it needs one item whose header is the call —
+      check that lands cleanly on `Accordion.Item` + `ItemHeader` rather than needing another slot.
+- [ ] **Restore the animation.** It sets `duration={0}` to dodge the flicker; with Ark's `--height`
+      the accordion animates properly, so re-enable it and confirm the flicker does not return.
+- [ ] Check whether `TogglePanel` has other consumers, or whether this migration retires it.
+- [ ] Verify in the assistant stories, not just by build — this is a widget rendered inside the
+      editor, so its collapsed height interacts with the editor's heightmap.
