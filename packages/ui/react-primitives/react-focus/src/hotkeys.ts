@@ -73,18 +73,28 @@ export const useHotkeys = ({ commands, id, store = hotkeyStore }: UseHotkeysProp
   }, [store, signature]);
 };
 
-/** Every registered command, whether or not its scope is active. */
-export const useHotkeyRegistrations = (store: HotkeyStore = hotkeyStore): HotkeyCommand[] => {
-  // The store's subscribe is selector-based; select the command map's identity, which it replaces
-  // on every register/unregister, so a snapshot comparison stays referentially stable between them.
-  const subscribe = useCallback(
-    (onChange: () => void) => store.subscribe((state) => state.commands, onChange),
-    [store],
-  );
-  const snapshot = useCallback(() => store.getState().commands, [store]);
-  const commands = useSyncExternalStore(subscribe, snapshot, snapshot);
-  return Array.from(commands.values());
+/**
+ * A string identifying what the hooks below render from: which commands are registered, and which
+ * scopes are active.
+ *
+ * The store's `subscribe` is selector-based and its command map keeps its identity when only the
+ * active scopes change — so selecting the map alone would leave `useActiveHotkeys` showing the
+ * scopes of whichever surface was attended when it last re-rendered.
+ */
+const registrationKey = (store: HotkeyStore): string => {
+  const state = store.getState();
+  return `${[...state.commands.keys()].join(',')}|${store.getActiveScopes().slice().sort().join(',')}`;
 };
+
+const useRegistrations = (store: HotkeyStore): HotkeyCommand[] => {
+  const key = useCallback(() => registrationKey(store), [store]);
+  const subscribe = useCallback((onChange: () => void) => store.subscribe(key, onChange), [store, key]);
+  useSyncExternalStore(subscribe, key, key);
+  return Array.from(store.getState().commands.values());
+};
+
+/** Every registered command, whether or not its scope is active. */
+export const useHotkeyRegistrations = (store: HotkeyStore = hotkeyStore): HotkeyCommand[] => useRegistrations(store);
 
 /**
  * The commands that would fire right now: unscoped ones, plus those whose scope is active. This is
@@ -92,7 +102,7 @@ export const useHotkeyRegistrations = (store: HotkeyStore = hotkeyStore): Hotkey
  * surfaces the user is not looking at.
  */
 export const useActiveHotkeys = (store: HotkeyStore = hotkeyStore): HotkeyCommand[] => {
-  const commands = useHotkeyRegistrations(store);
+  const commands = useRegistrations(store);
   const active = new Set(store.getActiveScopes());
   return commands.filter(({ scopes }) => !scopes?.length || scopes.some((scope: string) => active.has(scope)));
 };
