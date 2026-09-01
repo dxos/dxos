@@ -3,7 +3,7 @@
 //
 
 import { IdbLogStore } from '@dxos/log-store-idb';
-import { type OtelLogSink, type OtelLogSinkMessage } from '@dxos/observability/otel-log-sink';
+import { type OtelLogSinkInit } from '@dxos/observability/otel-log-sink';
 
 // Direct module import: the util barrel would pull the whole config/observability graph into
 // this worker's bundle.
@@ -22,72 +22,86 @@ import { type ObservabilityWorkerMessage } from '../util/worker-log-processor';
 
 const store = new IdbLogStore({ dbName: LOG_STORE_DB_NAME, maxBytes: LOG_STORE_MAX_BYTES });
 
-/** Caps messages buffered while the sink module import is in flight. */
+/** Caps records buffered while the sink module import is in flight. */
 const MAX_PENDING = 5_000;
 
-const createMessageHandler = (): ((event: MessageEvent<ObservabilityWorkerMessage>) => void) => {
-  let sink: OtelLogSink | undefined;
-  // Set when `otel-init` arrives; holds messages in arrival order until the dynamic import
-  // resolves, then replays them into the sink. Lines arriving before any `otel-init` are
-  // persisted but not exported — same as the in-process pipeline, which only starts
-  // exporting once observability initializes.
-  let pending: (string | Exclude<OtelLogSinkMessage, { type: 'otel-init' }>)[] | undefined;
+type Tags = { type: 'otel-tags'; tags: Record<string, string> };
+type Flush = { type: 'otel-flush' };
 
-  /**
-   * Hands a message to the sink, or queues it in arrival order while the module import is in
-   * flight. Only records count against the cap: control messages are few, and dropping one
-   * loses a flush rather than a line.
-   */
-  const deliver = (message: string | Exclude<OtelLogSinkMessage, { type: 'otel-init' }>): void => {
-    if (sink) {
-      if (typeof message === 'string') {
-        sink.append(message);
-      } else {
-        sink.handleMessage(message);
+/**
+ * One lazily-imported export pipeline. `init` starts the (one-shot) module load; messages
+ * delivered before it resolves are buffered in order. Only records count against
+ * {@link MAX_PENDING}: control messages are few, and dropping one loses a flush rather than a
+ * record. A failed load drops export for this connection — IDB persistence is unaffected.
+ */
+const lazySink = <TInit, TMessage>(
+  load: (init: TInit) => Promise<(message: TMessage) => void>,
+  isRecord: (message: TMessage) => boolean,
+): { init: (init: TInit) => void; deliver: (message: TMessage) => void } => {
+  let deliver: ((message: TMessage) => void) | undefined;
+  let pending: TMessage[] | undefined;
+  return {
+    init: (init) => {
+      if (deliver !== undefined || pending !== undefined) {
+        return;
       }
-    } else if (pending && (typeof message !== 'string' || pending.length < MAX_PENDING)) {
-      pending.push(message);
-    }
+      pending = [];
+      load(init)
+        .then((loaded) => {
+          deliver = loaded;
+          pending?.forEach(loaded);
+          pending = undefined;
+        })
+        .catch(() => {
+          pending = undefined;
+        });
+    },
+    deliver: (message) => {
+      if (deliver !== undefined) {
+        deliver(message);
+      } else if (pending !== undefined && (!isRecord(message) || pending.length < MAX_PENDING)) {
+        pending.push(message);
+      }
+    },
   };
+};
+
+// One worker per producing realm, so the sink below is that realm's — its resource identity
+// (process type, session id) arrives with the init message.
+const createMessageHandler = (): ((event: MessageEvent<ObservabilityWorkerMessage>) => void) => {
+  const logs = lazySink<OtelLogSinkInit, string | Tags | Flush>(
+    (init) =>
+      import('@dxos/observability/otel-log-sink').then(({ OtelLogSink }) => {
+        const sink = new OtelLogSink(init);
+        return (message) => (typeof message === 'string' ? sink.append(message) : sink.handleMessage(message));
+      }),
+    (message) => typeof message === 'string',
+  );
 
   return (event: MessageEvent<ObservabilityWorkerMessage>): void => {
     const data = event.data;
     // Hot path: a bare string is one pre-serialized JSONL line.
     if (typeof data === 'string') {
       store.append(data);
-      deliver(data);
+      logs.deliver(data);
       return;
     }
     if (data == null) {
       return;
     }
     switch (data.type) {
-      case 'flush': {
+      case 'flush':
         // Fire-and-forget, mirroring the sender's pagehide semantics; `flush` never rejects.
         void store.flush();
-        deliver({ type: 'otel-flush' });
+        logs.deliver({ type: 'otel-flush' });
         break;
-      }
-      case 'otel-init': {
-        if (sink !== undefined || pending !== undefined) {
-          break;
-        }
-        pending = [];
-        void import('@dxos/observability/otel-log-sink')
-          .then(({ OtelLogSink }) => {
-            sink = new OtelLogSink(data);
-            pending?.forEach(deliver);
-            pending = undefined;
-          })
-          .catch(() => {
-            // No OTel export for this connection; IDB persistence is unaffected.
-            pending = undefined;
-          });
+      case 'otel-init':
+        logs.init(data);
         break;
-      }
-      default: {
-        deliver(data);
-      }
+      case 'otel-tags':
+      case 'otel-flush':
+        logs.deliver(data);
+        break;
     }
   };
 };
