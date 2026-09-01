@@ -192,12 +192,14 @@ export const TaskTreeContent = ({
           return;
         }
 
-        const placement = resolveTaskPlacement({
-          tasks,
-          source: sourceTask,
-          target: targetTask,
-          intent: instruction.type as TaskDropIntent,
-        });
+        // Dropping onto a peer positions after it rather than nesting under it: two siblings are
+        // an ordering, and a drop in the middle of one reads as "put it here", not "put it inside".
+        // A drop onto a non-peer still nests, which is the only way to re-parent by drag.
+        const peers = Task.parentTaskId(sourceTask) === Task.parentTaskId(targetTask);
+        const intent: TaskDropIntent =
+          peers && instruction.type === 'make-child' ? 'reorder-below' : (instruction.type as TaskDropIntent);
+
+        const placement = resolveTaskPlacement({ tasks, source: sourceTask, target: targetTask, intent });
         if (placement) {
           onTaskMove(sourceTask, placement);
         }
@@ -264,6 +266,11 @@ const TaskTreeHeading = ({
     <div
       className={mx(
         'grid min-w-0 grow items-center gap-x-1',
+        // The title band is one control tall whether or not a description follows. Left to size
+        // itself, a described row's tracks exactly fill the row and the title sits flush to its
+        // top, while an undescribed row has slack to centre in — so the two titles disagreed by a
+        // few pixels down the list.
+        'grid-rows-[var(--dx-control)_auto]',
         showGutter ? 'grid-cols-[auto_auto_minmax(0,1fr)]' : 'grid-cols-[auto_minmax(0,1fr)]',
       )}
     >

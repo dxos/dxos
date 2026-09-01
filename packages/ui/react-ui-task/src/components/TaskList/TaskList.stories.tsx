@@ -131,6 +131,7 @@ const DefaultStory = ({
   showDescriptions,
   showDescription = true,
   hierarchical,
+  draggable = true,
   many,
   framed = true,
 }: {
@@ -141,6 +142,8 @@ const DefaultStory = ({
   /** Edit the selected task's description in the pane; the pane's own prop, not the rows'. */
   showDescription?: boolean;
   hierarchical?: boolean;
+  /** Wire `onTaskMove`, which is what turns rows into drag sources. */
+  draggable?: boolean;
   /** Seed the longer, ten-task list instead of the default seven. */
   many?: boolean;
   /** Insets the pane in a card, as an article does. Off for the tests that measure the pane's own
@@ -207,7 +210,7 @@ const DefaultStory = ({
       onTaskCreate={readonly ? undefined : handleCreate}
       onTaskUpdate={readonly ? undefined : handleUpdate}
       getTaskActions={readonly ? undefined : getTaskActions}
-      onTaskMove={readonly || !hierarchical ? undefined : handleMove}
+      onTaskMove={readonly || !hierarchical || !draggable ? undefined : handleMove}
       onTaskSelect={(task) => setSelected(task?.id)}
     >
       <TaskList.Viewport>
@@ -279,6 +282,29 @@ export const WithDescriptions: Story = {
 export const Hierarchical: Story = {
   args: {
     hierarchical: true,
+    showOrdinals: true,
+    showDescriptions: true,
+  },
+};
+
+/** Rows are drag sources: `onTaskMove` is wired, so the tree publishes each row to pragmatic-dnd. */
+export const HierarchicalDraggable: Story = {
+  args: {
+    hierarchical: true,
+    draggable: true,
+    showOrdinals: true,
+    showDescriptions: true,
+  },
+};
+
+/**
+ * The same tree with `onTaskMove` withheld. Nothing is draggable and no drop indicator can appear —
+ * the comparison that shows drag is opt-in rather than a property of the hierarchy.
+ */
+export const HierarchicalStatic: Story = {
+  args: {
+    hierarchical: true,
+    draggable: false,
     showOrdinals: true,
     showDescriptions: true,
   },

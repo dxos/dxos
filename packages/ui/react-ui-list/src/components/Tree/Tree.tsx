@@ -535,7 +535,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
   const rowRef = useRef<HTMLDivElement | null>(null);
   const openRef = useRef(false);
   const cancelExpandRef = useRef<NodeJS.Timeout | null>(null);
-  const [, setDragState] = useState<TreeItemDragState>('idle');
+  const [dragState, setDragState] = useState<TreeItemDragState>('idle');
   const [instruction, setInstruction] = useState<Instruction | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -687,6 +687,10 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
       data-testid={props.testId}
       className={mx(
         'grid grid-cols-subgrid col-[tree-row] mt-0.5 outline-none cursor-pointer select-none',
+        // The row leaves the list for the duration of the drag: the pointer is carrying it, and a
+        // copy left behind in place reads as a second row rather than as the one being moved. A
+        // branch's children go with it, since the drag start collapses it.
+        dragState === 'dragging' && 'hidden',
         // Selection keys off zag's `data-selected`: for branches, `aria-selected` lands on the
         // Branch wrapper (display:contents) while the visible row is the control. No focus-within
         // background — after a chevron click focus rests inside the row, and a persistent fill
