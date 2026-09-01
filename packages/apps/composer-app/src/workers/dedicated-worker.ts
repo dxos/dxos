@@ -11,8 +11,8 @@ import { LOG_STORE_DB_NAME, LOG_STORE_MAX_BYTES, WorkerLogProcessor, initializeO
 import { initAutomergeWasm } from '../util/automerge-wasm';
 
 // This worker hosts echo and can saturate its own loop, so the log sink runs in a nested
-// worker of its own (SharedWorker is unavailable inside workers). The IdbLogStore is the
-// read handle for observability exports; the nested worker owns writes and eviction.
+// worker of its own. The IdbLogStore is the read handle for observability exports; the
+// nested worker owns writes and eviction.
 const logStore = new IdbLogStore({ dbName: LOG_STORE_DB_NAME, maxBytes: LOG_STORE_MAX_BYTES, evictionInterval: 0 });
 const observabilityWorker = new Worker(new URL('./observability-worker', import.meta.url), {
   type: 'module',

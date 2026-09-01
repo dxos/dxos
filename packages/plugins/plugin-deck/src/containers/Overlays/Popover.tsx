@@ -20,6 +20,7 @@ import {
 } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
 import { Menu } from '@dxos/react-ui-menu';
+import { getStyles } from '@dxos/ui-theme';
 
 import { useDeckState } from '#hooks';
 import { meta } from '#meta';
@@ -82,7 +83,10 @@ export const PopoverContent = () => {
     state.popoverAnchor instanceof Element ? Attention.getRootAttendableId(state.popoverAnchor) : undefined;
   const objectMenuItems = useObjectMenuItems(popoverSubject, pivotId);
   const title = state.popoverTitle ? toLocalizedString(state.popoverTitle, t) : 'Unknown';
-  const icon = isObjectPopover ? (Obj.getIcon(popoverSubject)?.icon ?? 'ph--circle-dashed--regular') : undefined;
+  const iconAnnotation = isObjectPopover ? Obj.getIcon(popoverSubject) : undefined;
+  const icon = isObjectPopover ? (iconAnnotation?.icon ?? 'ph--circle-dashed--regular') : undefined;
+  // Same hue treatment as the masonry ObjectTile, so the card depicts the type consistently.
+  const iconStyles = iconAnnotation?.hue ? getStyles(iconAnnotation.hue) : undefined;
   const content = state.popoverContent;
   // Base and rename popovers render a plugin-provided component; everything else falls through to the card.
   const isComponentPopover =
@@ -113,10 +117,26 @@ export const PopoverContent = () => {
         event.preventDefault();
         return;
       }
+      // A pointer-down inside a PORTALED layer spawned from the card (its ⋮ menu, a select) is not
+      // "outside" either — Radix's own nested-layer coordination cannot be relied on here because
+      // the workspace resolves several copies of react-dismissable-layer (vendored popover + menu
+      // forks), whose module-level layer registries are disjoint.
+      if ('detail' in event && typeof event.detail === 'object' && event.detail !== null) {
+        const target = event.detail.originalEvent.target;
+        if (
+          target instanceof Element &&
+          target.closest('[data-radix-popper-content-wrapper], [data-radix-menu-content]')
+        ) {
+          event.preventDefault();
+          return;
+        }
+      }
       handleClose();
     },
     [handleClose],
   );
+
+  const roundedClassNames = 'rounded-md';
 
   return (
     <Popover.Portal>
@@ -124,20 +144,23 @@ export const PopoverContent = () => {
         side={side}
         sticky='always'
         hideWhenDetached
-        // Rename focuses its input; other popovers keep focus where it was.
         onOpenAutoFocus={isRename ? undefined : (event) => event.preventDefault()}
         onInteractOutside={handleInteractOutside}
         onEscapeKeyDown={handleInteractOutside}
-        // Reuse the dialog's enter/exit motion so the rename popover does not flicker on open.
-        classNames={
-          isRename
-            ? ['data-[state=open]:animate-slide-up-and-fade', 'data-[state=closed]:animate-slide-down-and-fade']
-            : undefined
-        }
+        classNames={[
+          roundedClassNames,
+          !isRename && [
+            'origin-(--radix-popover-content-transform-origin)',
+            'data-[state=open]:animate-popover-in',
+            'data-[state=closed]:animate-popover-out',
+          ],
+        ]}
       >
         <Popover.Viewport>
           {isComponentPopover && content && 'component' in content ? (
-            /* Base popover: a plugin-provided component (e.g. editor link preview). */
+            /*
+             * Base popover: a plugin-provided component (e.g., editor link preview).
+             */
             <Surface.Surface type={AppSurface.Popover} data={content} limit={1} />
           ) : (
             /*
@@ -148,10 +171,12 @@ export const PopoverContent = () => {
              * objects like a raw Feed that have no registered card and no renderable fields).
              */
             <Menu.Root>
-              <Card.Root border={false} classNames='dx-card-popover'>
+              <Card.Root border={false} classNames={['dx-card-popover', roundedClassNames]}>
                 <Card.Header>
                   <Card.Block>
-                    <CardIconSlot subject={popoverSubject}>{icon && <Icon icon={icon} />}</CardIconSlot>
+                    <CardIconSlot subject={popoverSubject}>
+                      {icon && <Icon icon={icon} classNames={iconStyles?.text} />}
+                    </CardIconSlot>
                   </Card.Block>
                   <Card.Title>{title}</Card.Title>
                   {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
@@ -170,6 +195,7 @@ export const PopoverContent = () => {
                 </Card.Header>
 
                 {content && 'subject' in content ? (
+                  /** CardContent must render the Card.Body. */
                   <Surface.Surface type={AppSurface.CardContent} data={content} limit={1} />
                 ) : (
                   <Card.Body classNames='min-h-8'>

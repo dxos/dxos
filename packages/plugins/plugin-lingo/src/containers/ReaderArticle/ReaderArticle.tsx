@@ -463,13 +463,13 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
   return (
     <Menu.Root {...menuActions} attendableId={attentionId} alwaysActive>
       <Panel.Root role={role}>
-        <Panel.Toolbar asChild classNames='dx-container'>
+        <Panel.Toolbar asChild classNames='dx-expand'>
           <Menu.Toolbar>
             <Menu.Items />
           </Menu.Toolbar>
         </Panel.Toolbar>
         {/* The editor scrolls itself, so the panel must not: it only supplies the box to fill. */}
-        <Panel.Content classNames='dx-container flex flex-col min-h-0 overflow-hidden'>
+        <Panel.Content classNames='flex flex-col'>
           {text === undefined ? (
             <div className='p-8 text-description'>{t('no-text.message')}</div>
           ) : passageText === undefined ? (

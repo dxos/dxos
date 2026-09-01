@@ -52,11 +52,7 @@ export type State = {
 export type PluginConfig = State & {
   /** Raises a fatal client-initialization failure to the entry point (see `onFatalError` in main.tsx). */
   onFatalError?: (error: unknown) => void;
-  /**
-   * Whether this build exposes the plugin registry — the catalog, its settings surface and the dev
-   * plugin loader. Defaults to true; the curated set (`plugin-defs.production.tsx`) turns it off.
-   */
-  isExtensible?: boolean;
+  externalPlugins?: boolean;
   isDev?: boolean;
   isLocal?: boolean;
   isPwa?: boolean;
@@ -88,7 +84,7 @@ export const getCorePlugins = ({
   observability,
   logStore,
   onFatalError,
-  isExtensible = true,
+  externalPlugins = true,
   isLocal,
   isPwa,
   isTauri,
@@ -157,7 +153,7 @@ export const getCorePlugins = ({
     ProcessManagerPlugin(),
     ProgressPlugin.make(),
     !isTauri && isPwa && PwaPlugin.make(),
-    isExtensible && RegistryPlugin.make(),
+    RegistryPlugin.make({ externalPlugins }),
     RoutinePlugin.make(),
     SearchPlugin.make(),
     SettingsPlugin.make(),

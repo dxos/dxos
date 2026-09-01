@@ -16,8 +16,7 @@ import { type ObservabilityWorkerMessage } from '../util/worker-log-processor';
 // see DX-1224) and, once a connection sends its `otel-*-init` messages, OTLP export of that
 // connection's logs, metrics, and spans. Everything runs on this worker's own event loop, so
 // persistence and export keep going while a producing realm is blocked by a long synchronous
-// task. `WorkerLogProcessor` and the Otel extension are the sending side. Handles both
-// dedicated (`onmessage`) and shared (`onconnect`) worker scopes.
+// task. `WorkerLogProcessor` and the Otel extension are the sending side.
 
 const store = new IdbLogStore({ dbName: LOG_STORE_DB_NAME, maxBytes: LOG_STORE_MAX_BYTES });
 
@@ -69,8 +68,8 @@ const fireFlush = (result: Promise<void>): void => {
   void result.catch(() => {});
 };
 
-// Per connection: a SharedWorker serves one producing realm per port, each with its own
-// resource identity (process type, session id), so sink state cannot be shared.
+// One worker per producing realm, so the sinks below are that realm's — its resource
+// identity (process type, session id) arrives with the init messages.
 const createMessageHandler = (): ((event: MessageEvent<ObservabilityWorkerMessage>) => void) => {
   const logs = lazySink<OtelLogSink.Init, string | Tags | Flush>((init) =>
     import('@dxos/observability/OtelLogSink').then(({ Sink }) => {
@@ -146,13 +145,4 @@ const createMessageHandler = (): ((event: MessageEvent<ObservabilityWorkerMessag
   };
 };
 
-if ('onconnect' in globalThis) {
-  // SharedWorker scope — one connection (port) per context.
-  onconnect = (event: MessageEvent) => {
-    for (const port of event.ports) {
-      port.onmessage = createMessageHandler();
-    }
-  };
-} else {
-  globalThis.onmessage = createMessageHandler();
-}
+globalThis.onmessage = createMessageHandler();

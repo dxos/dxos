@@ -260,7 +260,7 @@ type TaskListViewportProps = ComposableProps;
 const TaskListViewport = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   const { className, ...rest } = composableProps(props);
   return (
-    <Listbox.Viewport {...rest} classNames={mx('min-w-0 min-h-0', className)} ref={forwardedRef}>
+    <Listbox.Viewport {...rest} classNames={mx('dx-shrink', className)} ref={forwardedRef}>
       {children}
     </Listbox.Viewport>
   );
@@ -796,7 +796,7 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
                 data-testid='taskList.dragHandle'
                 aria-hidden
                 className={mx(
-                  'absolute inset-0 grid place-items-center text-subdued cursor-grab active:cursor-grabbing',
+                  'dx-fullscreen grid place-items-center text-subdued cursor-grab active:cursor-grabbing',
                   // A handle with no ordinal beneath it is the cell's only content, so it stays put;
                   // otherwise it appears only while the row is under the cursor or holds focus.
                   ordinal !== undefined && 'invisible group-hover/row:visible group-has-[:focus-visible]/row:visible',

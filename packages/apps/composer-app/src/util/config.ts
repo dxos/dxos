@@ -81,6 +81,8 @@ const feedbackLogsEndpoint = (config: Config, isTauri: boolean): string | undefi
     ? (getEnvString(config, 'DX_FEEDBACK_LOGS_ENDPOINT') ?? `https://${APP_DOMAIN}${FEEDBACK_LOGS_PATH}`)
     : undefined;
 
+const composerBuildVersion = (config: Config): string | undefined => config.get('runtime.app.build.version');
+
 /** Initialize observability extensions and data providers for Composer. */
 export const initializeObservability = async (
   config: Config,
@@ -114,7 +116,7 @@ export const initializeObservability = async (
     Observability.addExtension(
       ObservabilityExtension.PostHog.extensions({
         config,
-        release: DXOS_VERSION,
+        release: composerBuildVersion(config),
         environment: getEnvString(config, 'DX_ENVIRONMENT') ?? 'unknown',
         logStore,
         feedbackLogMaxSize: LOG_STORE_MAX_BYTES,
