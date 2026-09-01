@@ -145,11 +145,11 @@ The amortization argument fails from both ends. Ark's shared Zag runtime is ~24.
 alone costs 32,580; added on top of the Tree it costs 8,125) — and the Tree has already bought all of
 it. Every further machine is marginal cost against a much smaller hand-rolled component:
 
-| component | Ark marginal (raw / gzip) | displaces (attributed)              | net     |
-| --------- | ------------------------- | ----------------------------------- | ------- |
-| Accordion | +8,125 / +2,038           | `@radix-ui/react-accordion` — 3,509 | +4.6 KB |
-| Listbox   | +22,470 / +5,330          | custom `Listbox.tsx` — 2,493        | +20 KB  |
-| Combobox  | +87,936 / +26,847         | custom `Combobox.tsx` — 3,236       | +85 KB  |
+| component | Ark marginal (raw / gzip) | displaces (attributed)              | net     | status   |
+| --------- | ------------------------- | ----------------------------------- | ------- | -------- |
+| Accordion | +8,125 / +2,038           | `@radix-ui/react-accordion` — 3,509 | +4.6 KB | **done** |
+| Listbox   | +22,470 / +5,330          | custom `Listbox.tsx` — 2,493        | +20 KB  | no       |
+| Combobox  | +87,936 / +26,847         | custom `Combobox.tsx` — 3,236       | +85 KB  | no       |
 
 Combobox is the outlier because it drags in a floating layer the Tree never needed —
 `@zag-js/popper` + `@zag-js/dismissable` + `@floating-ui/core` + `@floating-ui/dom`, ~27.5 KB of its
@@ -187,24 +187,44 @@ plausible answer for the third file. It also does not get cheaper by migrating m
 **Migrate a component to Ark for its behavior, not to spread a fixed cost. There is none left to
 spread.**
 
-## 8. `Treegrid` after the rebuild
+Accordion is the one that met that bar and has landed. It was never about bytes — it is net +4.6 KB —
+but the component carried a `TODO(burdon): Support key navigation` and the machine supplies the APG
+keymap outright. Verified in its story: ArrowDown moves focus between triggers and End jumps to the
+last. The public surface (`Root`/`Item`/`ItemHeader`/`ItemBody`) is unchanged, so no consumer moved,
+and `@radix-ui/react-accordion` is gone along with its `composer-app` prebundle entry. One structural
+note for anyone porting another component: Ark exposes no `Header` part — `ItemTrigger` is the
+control — so a header row that also holds trailing controls has to be a plain element wrapping the
+trigger.
 
-`Tree.tsx` now has zero `Treegrid` references, where `main` rendered `Treegrid.Root` +
+Listbox and Combobox remain "no" on the numbers above; nothing about the Accordion result changes
+them.
+
+## 8. `Treegrid` after the rebuild — deleted
+
+`Tree.tsx` ended up with zero `Treegrid` references, where `main` rendered `Treegrid.Root` +
 `Treegrid.Row`/`Cell`; the Ark markup absorbed the column layout via `grid-cols-subgrid`. Verified in
-Storybook: the Tree renders 1 `role="tree"` and 4 `role="treeitem"`, with zero
+Storybook: the Tree renders `role="tree"` and `role="treeitem"`, with zero
 `treegrid`/`row`/`gridcell`.
 
 That decoupling had one consequence worth recording. `plugin-navtree`'s `NavTreeItemColumns` wrapped
 its output in `Treegrid.Cell`, which was valid while the enclosing row was a `Treegrid.Row` and
 became an orphaned `role="gridcell"` — no `row` ancestor — the moment the row became an Ark
-`treeitem`. `display: contents` hid it from layout but not from the accessibility tree. The wrappers
-are removed; the empty one is now a plain `<div />` holding the actions column in the subgrid.
+`treeitem`. `display: contents` hid it from layout but not from the accessibility tree. Those
+wrappers are gone.
 
-`Treegrid` is left a standalone multi-column grid primitive with three consumers, only one of which
-is a hierarchy — devtools `ObjectsTree`; `plugin-assistant`'s `ProcessTree` pre-flattens its rows and
-has no disclosure, and `plugin-atproto`'s `AtprotoCompanion` is a flat field table whose `depth` is
-inline padding. Disposition (rename to match what it is, or migrate `ObjectsTree` onto `Tree` and
-delete it) is tracked in the `ark` project ledger.
+With `Tree` no longer using it, `Treegrid` was left a standalone multi-column grid with three
+consumers, only one of which was a hierarchy. All three have since moved and **the component is
+deleted**:
+
+| former consumer                     | moved to                                                                    |
+| ----------------------------------- | --------------------------------------------------------------------------- |
+| `devtools` `ObjectsTree`            | `Tree`, via a `TreeModel` view over its existing atoms                      |
+| `plugin-assistant` `ProcessTree`    | `Tree`, via `createStaticTreeModel`                                         |
+| `plugin-atproto` `AtprotoCompanion` | a plain `role="table"` — its rows are read-only, so it was never a treegrid |
+
+The last of those is the point worth keeping: a component whose entire value is its ARIA role was
+being used by two consumers that were not the thing that role describes, which is how the navtree
+`gridcell` bug survived as long as it did.
 
 ## References
 

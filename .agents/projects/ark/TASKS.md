@@ -50,12 +50,11 @@ Tracked 2026-08-31. The rebuild decoupled `Tree` from `Treegrid` entirely — `T
 | `plugin-assistant` `ProcessTree`      | Root + Row + Cell, 4 cols            | pre-flattened rows, no disclosure    |
 | `plugin-atproto` `AtprotoCompanion`   | Root + Row + Cell, 3 cols            | flat field table; `depth` is padding |
 
-- [ ] **Decide what `Treegrid` is for.** Either keep it as a generic multi-column grid primitive and
-      **rename it** (`role=treegrid` misdescribes two of its three uses), or migrate `ObjectsTree`
-      onto `Tree` and delete it. Do not "replace it with `Tree`" wholesale: `ProcessTree` would gain
-      nothing (no disclosure to model) and `AtprotoCompanion` is a flat table that wants a grid.
-- [ ] **Scope the `ObjectsTree` → `Tree` migration** — the only genuine candidate, but it is a
-      rewrite onto the `TreeModel` atom-family contract, not a swap.
+- [x] **Decided and done: `Treegrid` is DELETED.** All three consumers moved — `ObjectsTree` and
+      `ProcessTree` onto `Tree` (Phases 9 and 8), and `AtprotoCompanion` onto a plain `role="table"`,
+      since its rows are read-only and it was never a treegrid. The directory, its export and its
+      theme are gone; `react-ui-list` builds, and so do all four former consumers.
+- [x] **`ObjectsTree` → `Tree` migration** — done and verified (Phase 9).
 - [x] Drop the stale `Treegrid` mention in `react-ui-list/src/hooks/useListNavigation.ts:100` — now
       reads `Tree (Ark TreeView machine)`.
 
@@ -71,8 +70,11 @@ cost against a much smaller hand-rolled component (Accordion +4.6 KB net, Listbo
       59,820 + `keyborg` 6,298 in `boot-4`, plus the 2,138-byte fluentui wrapper in `boot-5`); the
       used API surface bundles to 76,623 raw / 21,736 gzip / 19,392 brotli. Bigger than the entire
       Ark Tree cost, and in the eager graph rather than a lazy chunk.
-- [ ] Evaluate Ark's Accordion on merit (+4.6 KB net over `@radix-ui/react-accordion`) — the only
-      swap cheap enough to decide on behavior alone.
+- [x] **Accordion migrated to Ark** (+4.6 KB net over `@radix-ui/react-accordion`). Done on merit,
+      not bytes: the component carried a `TODO(burdon): Support key navigation` and the machine
+      supplies the APG keymap. Verified in its story — ArrowDown moves focus between triggers, End
+      jumps to the last, pointer expand opens the content. Public surface unchanged, so no consumer
+      moved; the radix dependency and its `composer-app` prebundle entry are gone.
 - [ ] **Evaluate moving the core of `react-ui-list` and `@fluentui/react-tabster` to
       `@ark-ui/react`** — the whole-stack version of the question, as one evaluation rather than
       per-component. Tracked 2026-08-31. Constraints below.
@@ -221,3 +223,151 @@ not have today — the same argument that justified the navtree rebuild.
       `expandedValue` reproduces it rather than assuming path-keyed state is equivalent.
 - [ ] Port `hierarchy.test.ts` (155 lines) to whatever replaces the walk, rather than dropping the
       coverage with the module.
+
+## Suspect — `SPACE_INITIALIZING` stall seen in the agent browser (attribution CORRECTED)
+
+Found 2026-08-31 while trying to verify `AtprotoCompanion`. Not ark work and not caused by this
+branch.
+
+> **CORRECTION (same day).** This was first written up as a repo-wide defect to hand to an ECHO
+> owner. That attribution is **not supported**: the user reports `devtools/ObjectsTree` renders fine
+> in their browser, while in the agent's in-app browser it renders an empty root with
+> `Timeout [5,000ms] at Trigger.wait` (`useAsyncEffect.ts:17`). So the agent browser is at least
+> partly implicated, and this must NOT be handed to an owner as a confirmed repo defect until
+> someone reproduces it in a normal browser. The mechanism below is accurately described; only the
+> blame is uncertain.
+>
+> Note also that two _different_ harnesses are involved, with two different symptoms, which the
+> original entry conflated:
+>
+> - `withPluginManager` + `ClientPlugin` (`AtprotoCompanion`, `ConnectionView`) → story's own
+>   `<Loading />` fallback, identity created, space stuck at state 4, zero objects.
+> - `withClientProvider` (`ObjectsTree`) → nothing rendered at all, `Trigger.wait` timeout.
+>
+> **Decisive open check:** does a `withPluginManager` story (e.g.
+> `plugins-plugin-atproto-atprotocompanion--published`) seed correctly in a normal browser? If yes,
+> delete this entry — it is an agent-environment artefact.
+
+**Symptom.** Every ECHO-client-backed story hangs in `<Loading />` forever. Confirmed on
+`plugin-atproto` `AtprotoCompanion` (all four stories) and `plugin-connector` `ConnectionView`, which
+this branch does not touch.
+
+**Root cause.** `SpaceProxy._initializeDb`
+([space-proxy.ts:449](../../../packages/sdk/client/src/echo/space-proxy.ts)) ends by blocking on a
+`propertiesAvailable` trigger that only wakes when `query(Filter.type(SpaceProperties))` returns
+**exactly one** result. The space contains **zero objects**, so it never wakes, `_initializeDb` never
+returns, `_initializationComplete` never fires, and `waitUntilReady()`
+([line 542](../../../packages/sdk/client/src/echo/space-proxy.ts)) never resolves. Every story seed's
+second line is `waitUntilReady()`, so seeding stops there and nothing is ever added.
+
+**Evidence** (probed against the live client in the running story):
+
+| probe                           | value   | meaning                                       |
+| ------------------------------- | ------- | --------------------------------------------- |
+| `client.halo.identity.get()`    | present | `initializeIdentity` ran — the seed started   |
+| `space.state.get()`             | `4`     | `SPACE_INITIALIZING`, never `SPACE_READY` (3) |
+| `db.query(Filter.everything())` | `0`     | seed never got past `waitUntilReady()`        |
+| `client.spaces.default`         | `false` | default space never completed                 |
+
+The recurring console warning `Action "Finding properties for a space" is taking more then 5,000ms`
+is emitted by the `warnAfterTimeout` wrapping that exact wait, which ties the log to the deadlock.
+
+**Ruled out:** machine load (16 cores, load average 2.8, 81% memory free — an earlier claim of mine
+that the numbers did not support); stale Storybook state (reproduced after a restart with
+`.cache/storybook` deleted); cold start (still zero objects at 83 s on a warm server); this branch
+(reproduced on `origin/main` via a second Storybook on port 9010); and browser capability or stale
+state in the agent browser (SharedWorker, Worker, OPFS and IndexedDB all present and working; OPFS
+empty, no Web Locks held or pending, no service workers).
+
+**NOT ruled out:** something specific to the agent's in-app browser that the capability probes above
+do not cover.
+
+**Not yet known:** _why_ `SpaceProperties` never materialises — never created, created in another
+space, or its automerge doc never loads. `slow AM open {duration: 5005ms}` hints at the last.
+
+- [ ] Run the decisive check above in a normal browser BEFORE handing this to anyone.
+- [ ] Consider a timeout or fallback on the `propertiesAvailable` wait — a space that waits forever
+      for an object that will never exist is unrecoverable and gives the caller no signal.
+
+## Phase 8: `ProcessTree` on the Tree — landed, verified
+
+Done 2026-08-31. `ProcessTree` no longer uses `Treegrid`: it builds a pruned process forest, adapts
+it with `createStaticTreeModel`, and renders through `Tree`. Verified in Storybook (client-free
+story, so unaffected by the `SPACE_INITIALIZING` deadlock above).
+
+**Gained:** real `role=tree` / `role=treeitem` with machine-managed `aria-level` (1/2/1/1/1 measured)
+and `aria-expanded` on branches only, the APG keymap, and expand/collapse the flattened view never
+had. `aria-level` used to be derived by counting `~` separators in the DOM `id`.
+
+**Enabling change:** `Tree` gained an optional `renderIcon` slot (`IconRenderer` in `TreeContext`).
+`TreeItemDataProps.icon` names a static glyph, which cannot express `ProcessTree`'s status icon —
+`animate-spin` on RUNNING, per-state hue, and a tooltip carrying the state. Verified the Tree stories
+render unchanged when the slot is absent.
+
+**Live-data note:** `processes` carries live metrics, so the forest and model are rebuilt on every
+tick. Open state is therefore held in a `useRef` outside the model and re-seeded through `isOpen`, or
+a collapse would be undone by the next tick.
+
+- [x] **RETRACTED — there was no defect; collapse works.** Confirmed by screenshot: collapsing
+      "Trigger watcher" removes the nested "Translate content" row (5 rows to 4). The report was
+      built on two bad measurements, both mine: - `offsetParent` was used as a visibility test. It is `null` for any `display: contents`
+      element, and Ark's branch wrapper is exactly that — so the check reported "hidden" in
+      `Tree`'s own story and "visible" here purely from where each element sat in the parts tree,
+      never from whether anything was on screen. - The conceal animation being cancelled mid-flight, and `block-size` never reaching 0, were
+      treated as the failure. `Tree`'s own story does both identically (animation cancelled by
+      150 ms, `block-size` held at 136 px, no `hidden` attribute) and collapses correctly, so that
+      is shared, normal behaviour rather than a symptom.
+
+Lesson worth keeping: for "is it visible", take the screenshot. Three rounds of DOM instrumentation
+pointed the wrong way; one before/after image settled it immediately.
+
+## Phase 9: `ObjectsTree` on the Tree — VERIFIED by the user
+
+Done 2026-08-31. `devtools/ObjectsTree` no longer uses `Treegrid`; it exposes a `TreeModel` view over
+its existing atoms and renders through `Tree`. The agent's browser cannot render this story (see the corrected
+`SPACE_INITIALIZING` entry), so it was verified by the user from a screenshot: top-level rows render,
+icon hues survive, nesting indents correctly, chevrons show mixed expanded/collapsed state, and
+**both relation arrow directions appear** — the discriminating case for the bug below.
+
+Three bugs were found after the first commit; the first is what broke the story:
+
+1. `itemProps` passed the synthetic root anchor into `#atoms`, which asserts `EntityId.isValid`, so
+   every top-level row threw.
+2. `#itemFamily` built its query atom inside the compute function, introducing a fresh dependency on
+   every recomputation.
+3. The renderers read the id-keyed `item`, whose `type` resolves against a `null` anchor, so every
+   relation drew the incoming arrow. They now read `model.itemAt(path)`.
+
+Two corrections to earlier analysis in this ledger, both found by reading `Tree`'s walk rather than
+assuming:
+
+1. **`Tree` already guards cycles.** `Tree.tsx:107` skips any child whose id is already on
+   `parentPath` — strictly stronger than `ObjectsTree`'s old `child.id !== parent?.id`, which only
+   excluded the immediate parent. An earlier entry here claimed `TreeModel.childIds` had to be
+   extended with the path to make this migration possible. **That was wrong; no contract change was
+   needed.**
+2. **The real constraint is that the walk recurses into every branch regardless of `open`** — `open`
+   only decides what lands in `expanded`. Left alone that would query the entire reachable object
+   graph on first render. `childIds` is therefore gated on the node being open, so the walk stops one
+   level ahead; `itemProps.parentOf` still reads that level, which the row needed anyway to decide
+   whether to draw a toggle. This is the "unloaded branch" case `TreeContext` documents via
+   `childrenCount`.
+
+Design notes for whoever reviews it: props are keyed by path, not id, because `type` (and so the
+relation arrow) is computed relative to the anchor a node was reached through — the same entity reads
+differently under two parents. Open state is written twice on toggle: by path (what `Tree` addresses
+rows by) and by id (what gates the walk).
+
+- [x] **Verify in the story** — rows, arrows (both directions), hues, nesting and chevron state
+      confirmed by the user.
+- [ ] Still unchecked: the role label (`$.key`), the row action menu, and deleted-object
+      strikethrough.
+- [ ] Cosmetic, PRE-EXISTING: a branch whose only child is the ancestor you arrived through shows a
+      chevron that opens to nothing (`parentOf` counts it before the walk drops it). The old code had
+      the same shape; it should now occur less often, since `Tree` excludes all ancestors rather than
+      only the immediate parent.
+- [ ] Confirm expanding into a relation cycle terminates (it should now be handled by `Tree`'s
+      ancestor check rather than `ObjectsTree`'s single-level one).
+- [ ] With this landed, `Treegrid`'s only remaining consumer is `plugin-atproto`'s
+      `AtprotoCompanion`, whose rows are read-only — Phase 3 can be settled by moving it to grouped
+      semantic markup and deleting `Treegrid`.

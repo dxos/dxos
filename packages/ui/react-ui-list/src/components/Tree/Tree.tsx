@@ -47,6 +47,7 @@ import { DEFAULT_INDENTATION, paddingIndentation } from './helpers';
 import { type TreeData } from './tree-data';
 import {
   type ColumnRenderer,
+  type IconRenderer,
   type TreeItemDataProps,
   type TreeModel,
   type TreeNodeEntry,
@@ -187,6 +188,7 @@ export type TreeProps<T extends { id: string } = any> = {
   draggable?: boolean;
   selectionMode?: 'single' | 'multiple';
   renderColumns?: ColumnRenderer<T>;
+  renderIcon?: IconRenderer<T>;
   blockInstruction?: (params: { instruction: Instruction; source: TreeData; target: TreeData }) => boolean;
   canDrop?: (params: { source: TreeData; target: TreeData }) => boolean;
   canSelect?: (params: { item: T; path: string[] }) => boolean;
@@ -205,6 +207,7 @@ export const Tree = <T extends { id: string } = any>({
   draggable = false,
   selectionMode = 'single',
   renderColumns,
+  renderIcon,
   blockInstruction,
   canDrop,
   canSelect,
@@ -319,6 +322,7 @@ export const Tree = <T extends { id: string } = any>({
     () => ({
       draggable,
       renderColumns,
+      renderIcon,
       blockInstruction,
       canDrop,
       onOpenChange,
@@ -331,6 +335,7 @@ export const Tree = <T extends { id: string } = any>({
     [
       draggable,
       renderColumns,
+      renderIcon,
       blockInstruction,
       canDrop,
       onSelectNode,
@@ -690,7 +695,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
           ) : (
             <TreeItemToggle isBranch={false} />
           )}
-          <TreeNodeHeading props={props} />
+          <TreeNodeHeading item={item} path={path} props={props} />
         </div>
         {Columns && <Columns item={item} path={path} open={open} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />}
         {instruction && <TreeDropIndicator instruction={instruction} gap={2} />}
@@ -702,8 +707,17 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
 TreeNodeRowContent.displayName = 'Tree.NodeRowContent';
 
 /** Icon + truncating label + count badge. The row itself is the interactive element. */
-const TreeNodeHeading = ({ props }: { props: TreeItemDataProps }) => {
+const TreeNodeHeading = <T extends { id: string }>({
+  item,
+  path,
+  props,
+}: {
+  item: T;
+  path: string[];
+  props: TreeItemDataProps;
+}) => {
   const { t } = useTranslation();
+  const { renderIcon: RenderIcon } = useTreeRender<T>();
   const styles = props.iconHue ? getStyles(props.iconHue) : undefined;
   const text = toLocalizedString(props.label, t);
   return (
@@ -716,7 +730,11 @@ const TreeNodeHeading = ({ props }: { props: TreeItemDataProps }) => {
           props.headingClassName,
         )}
       >
-        {props.icon && <Icon size={5} icon={props.icon} classNames={['my-1', styles?.text]} />}
+        {RenderIcon ? (
+          <RenderIcon item={item} path={path} props={props} />
+        ) : (
+          props.icon && <Icon size={5} icon={props.icon} classNames={['my-1', styles?.text]} />
+        )}
         <span className='min-w-0 truncate text-start' data-tooltip>
           {text}
         </span>
