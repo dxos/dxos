@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 
-import { getCategoryPredicate } from './categories';
+import { REGISTRY_CATEGORIES, getCategoryPredicate, getPopulatedCategories } from './categories';
 
 const context = { core: [], enabled: [], remoteIds: new Set<string>() };
 
@@ -38,6 +38,22 @@ describe('getCategoryPredicate', () => {
     const predicate = getCategoryPredicate('labs', { ...context, core: [key] });
     expect(predicate(makePlugin(key, ['labs']))).toBe(true);
     expect(predicate(makePlugin('alpha-plugin', ['alpha']))).toBe(false);
+  });
+});
+
+describe('getPopulatedCategories', () => {
+  test('drops categories with no members', ({ expect }) => {
+    const counts: Record<string, number> = { bundled: 3, installed: 1 };
+    expect(getPopulatedCategories((category) => counts[category] ?? 0).map(({ id }) => id)).toEqual([
+      'bundled',
+      'installed',
+    ]);
+  });
+
+  test('keeps display order and carries the count', ({ expect }) => {
+    const populated = getPopulatedCategories(() => 2);
+    expect(populated.map(({ id }) => id)).toEqual(REGISTRY_CATEGORIES.map(({ id }) => id));
+    expect(populated.every(({ count }) => count === 2)).toBe(true);
   });
 });
 

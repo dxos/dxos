@@ -570,7 +570,7 @@ catalog:
   postcss: ^8.5.12
   postcss-import: ^16.1.0
   postcss-nesting: ^13.0.1
-  posthog-js: ^1.353.0
+  posthog-js: ^1.422.5
   preact: ^10.26.10
   prettier: ^3.6.2
   prosemirror-commands: ^1.7.1
