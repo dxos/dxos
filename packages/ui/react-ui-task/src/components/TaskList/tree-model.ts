@@ -85,6 +85,9 @@ export const createTaskTreeModel = (
     getChildren: (node) => node.children,
     getProps: (node) => ({
       label: node.task?.title ?? node.id,
+      // The same hook the flat row publishes, so a caller (or a test) addresses a task row the
+      // same way in either mode.
+      testId: 'taskList.item',
     }),
     isOpen: (node) => !collapsed?.has(node.id),
   });

@@ -197,6 +197,12 @@ export type TreeProps<T extends { id: string } = any> = {
   onOpenChange?: (params: { item: T; path: string[]; open: boolean }) => void;
   onSelect?: (params: { item: T; path: string[]; current: boolean; option: boolean; shift: boolean }) => void;
   onItemHover?: (params: { item: T }) => void;
+  /**
+   * Keydown on the tree container. The escape hatch for gestures the machine does not own — zag
+   * ignores modified arrows, so a consumer can bind e.g. `Alt+Arrow` restructuring here rather
+   * than wrapping the tree in an element that would only exist to carry the handler.
+   */
+  onKeyDown?: (event: React.KeyboardEvent<HTMLDivElement>) => void;
 };
 
 export const Tree = <T extends { id: string } = any>({
@@ -217,6 +223,7 @@ export const Tree = <T extends { id: string } = any>({
   onOpenChange,
   onSelect,
   onItemHover,
+  onKeyDown,
 }: TreeProps<T>) => {
   const treePath = useMemo(() => (path ? [...path, id] : [id]), [id, path]);
   const walkAtom = useMemo(() => createTreeWalkAtom(model, rootId, treePath), [model, rootId, treePath]);
@@ -370,6 +377,7 @@ export const Tree = <T extends { id: string } = any>({
           className={mx('grid outline-none', ...(Array.isArray(classNames) ? classNames : [classNames]))}
           style={{ gridTemplateColumns }}
           onPointerDownCapture={handlePointerDownCapture}
+          onKeyDown={onKeyDown}
         >
           {root.children?.map((node) => (
             <TreeNodeRow key={node.value} node={node} />

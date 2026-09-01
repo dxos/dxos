@@ -317,6 +317,7 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
     selected,
     onTaskSelect,
     onTaskUpdate,
+    onTaskMove,
     dragging,
   } = useTaskListContext('TaskList.Content');
   // Collapsed ids are read through the context callback rather than held here, so the walk still
@@ -363,6 +364,7 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
         onCollapseToggle={onCollapseToggle}
         onTaskSelect={onTaskSelect}
         onTaskUpdate={onTaskUpdate}
+        onTaskMove={onTaskMove}
         renderTrailing={TaskTreeTrailing}
       />
     );

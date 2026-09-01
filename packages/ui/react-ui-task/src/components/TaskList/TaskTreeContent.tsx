@@ -10,6 +10,7 @@ import { type ColumnRenderer, type HeadingRenderer, Tree } from '@dxos/react-ui-
 import { Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
+import { type TaskPlacement, resolveIndent, resolveNudge, resolveOutdent } from './hierarchy';
 import { TASK_TREE_ROOT_ID, type TaskNode, buildTaskForest, buildTaskPaths, createTaskTreeModel } from './tree-model';
 
 /**
@@ -33,6 +34,7 @@ export type TaskTreeContentProps = {
   onCollapseToggle: (id: string) => void;
   onTaskSelect?: (task: Task.Task | undefined) => void;
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
+  onTaskMove?: (task: Task.Task, placement: TaskPlacement) => void;
   renderTrailing?: ColumnRenderer<TaskNode>;
 };
 
@@ -49,6 +51,7 @@ export const TaskTreeContent = ({
   onCollapseToggle,
   onTaskSelect,
   onTaskUpdate,
+  onTaskMove,
   renderTrailing,
 }: TaskTreeContentProps) => {
   const registry = useContext(RegistryContext);
@@ -107,6 +110,44 @@ export const TaskTreeContent = ({
     [showGutter, ordinals, translationKey, onTaskUpdate],
   );
 
+  // Restructuring is keyboard-driven, and the machine ignores modified arrows — so the gesture is
+  // handled here rather than per row. The focused row names its task through `data-object-id`,
+  // which is what lets one container-level handler serve every depth.
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLDivElement>) => {
+      if (!onTaskMove || !event.altKey) {
+        return;
+      }
+      const id = (event.target as HTMLElement | null)
+        ?.closest<HTMLElement>('[data-object-id]')
+        ?.getAttribute('data-object-id');
+      const task = id ? tasks.find((task) => task.id === id) : undefined;
+      if (!task) {
+        return;
+      }
+      const placement = (() => {
+        switch (event.key) {
+          case 'ArrowRight':
+            return resolveIndent(tasks, task);
+          case 'ArrowLeft':
+            return resolveOutdent(tasks, task);
+          case 'ArrowUp':
+            return resolveNudge(tasks, task, 'up');
+          case 'ArrowDown':
+            return resolveNudge(tasks, task, 'down');
+          default:
+            return undefined;
+        }
+      })();
+      if (placement) {
+        event.preventDefault();
+        event.stopPropagation();
+        onTaskMove(task, placement);
+      }
+    },
+    [onTaskMove, tasks],
+  );
+
   return (
     <Tree<TaskNode>
       id={TASK_TREE_ROOT_ID}
@@ -117,6 +158,7 @@ export const TaskTreeContent = ({
       renderColumns={renderTrailing}
       onOpenChange={handleOpenChange}
       onSelect={handleSelect}
+      onKeyDown={handleKeyDown}
     />
   );
 };

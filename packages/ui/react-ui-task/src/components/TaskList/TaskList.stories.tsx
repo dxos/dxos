@@ -566,12 +566,18 @@ export const TestHierarchy: Story = {
   // cannot).
   play: async ({ canvasElement }) => {
     const rows = () =>
-      Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]')).map((row) => ({
-        row,
-        title: row.querySelector('.truncate')?.textContent ?? '',
-        level: Number(row.getAttribute('aria-level')),
-        ordinal: row.querySelector('.tabular-nums')?.textContent ?? '',
-      }));
+      Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]'))
+        // A collapsed branch HIDES its descendants rather than unmounting them, so presence in the
+        // DOM is not visibility — the flat list dropped them from the walk instead.
+        .filter((row) => !row.closest('[hidden]'))
+        .map((row) => ({
+          row,
+          title: row.querySelector('.truncate')?.textContent ?? '',
+          // A leaf IS the `treeitem`, but a branch's `treeitem` is a `display: contents` wrapper
+          // around the focusable row — so the level is read from whichever of the two carries it.
+          level: Number(row.closest('[role="treeitem"]')?.getAttribute('aria-level')),
+          ordinal: row.querySelector('.tabular-nums')?.textContent ?? '',
+        }));
     const shape = () => rows().map(({ title, level }) => `${title}:${level}`);
     const toggle = (row: HTMLElement) => row.querySelector<HTMLElement>('[data-testid="treeItem.toggle"]')!;
     const press = (row: HTMLElement, key: string) => {
@@ -594,8 +600,9 @@ export const TestHierarchy: Story = {
     // interleaves the two branches, so the two orders differ.
     await expect(rows().map(({ ordinal }) => ordinal)).toEqual(['1', '2', '3', '4', '5', '6', '7']);
 
-    // Collapsing a branch hides its descendants and marks the row.
-    toggle(rows()[0].row).click();
+    // Collapsing a branch hides its descendants and marks the row. `userEvent`, not `.click()`:
+    // the disclosure is a zag machine and it ignores the untrusted event a bare click dispatches.
+    await userEvent.click(toggle(rows()[0].row));
     await waitFor(async () => {
       await expect(rows().map(({ title }) => title)).toEqual([
         'Ship the spring release',
@@ -603,9 +610,10 @@ export const TestHierarchy: Story = {
         'Sample the Ethiopian lots',
         'Log every profile',
       ]);
-      await expect(rows()[0].row.getAttribute('aria-expanded')).toEqual('false');
+      // On the `treeitem` for the same reason as `aria-level`, not on the focusable row inside it.
+      await expect(rows()[0].row.closest('[role="treeitem"]')?.getAttribute('aria-expanded')).toEqual('false');
     });
-    toggle(rows()[0].row).click();
+    await userEvent.click(toggle(rows()[0].row));
     await waitFor(async () => expect(rows()).toHaveLength(7));
 
     // Alt-ArrowLeft outdents: the sub-task becomes the next sibling of its parent.
@@ -637,19 +645,16 @@ export const TestHierarchy: Story = {
       ]),
     );
 
-    // Arrow keys step row to row and selection follows focus — the listbox aspect's own mechanism,
-    // which only works because each row is a Tabster groupper: without one the arrow lands on the
-    // row's first button instead of the next row.
+    // Arrow keys step row to row. Focus, not selection: an APG tree moves the roving tabstop and
+    // leaves selection to an explicit activation, where the flat listbox let selection follow
+    // focus. The machine owns this now, so the assertion is on where focus landed.
+    const focusedRow = () => document.activeElement?.closest('[data-testid="taskList.item"]')?.textContent;
     const secondRowTitle = rows()[1].title;
     rows()[0].row.focus();
     await userEvent.keyboard('{ArrowDown}');
-    await waitFor(async () =>
-      expect(canvasElement.querySelector('[aria-selected="true"]')?.textContent).toContain(secondRowTitle),
-    );
+    await waitFor(async () => expect(focusedRow()).toContain(secondRowTitle));
     await userEvent.keyboard('{ArrowUp}');
-    await waitFor(async () =>
-      expect(canvasElement.querySelector('[aria-selected="true"]')?.textContent).toContain(rows()[0].title),
-    );
+    await waitFor(async () => expect(focusedRow()).toContain(rows()[0].title));
 
     // Moving a parent carries its sub-tasks: only the parent's own parentTask is written, so the
     // descendants' refs still point at it wherever it lands.
