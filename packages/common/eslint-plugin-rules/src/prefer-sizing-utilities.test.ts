@@ -94,6 +94,48 @@ describe('prefer-sizing-utilities', () => {
     });
   });
 
+  it('reports a minimum that a clip has already applied', () => {
+    ruleTester.run('prefer-sizing-utilities', rule, {
+      valid: [
+        // The element's own overflow stays visible, so the minimum is load-bearing.
+        { filename, code: "<div className='min-h-0' />" },
+        { filename, code: "<div className='dx-shrink' />" },
+        // The clip is on a descendant, not on this element.
+        { filename, code: "<div className='min-h-0 [&>*]:overflow-hidden' />" },
+      ],
+      invalid: [
+        {
+          filename,
+          code: "<div className='min-h-0 overflow-hidden' />",
+          errors: [{ messageId: 'minimumUnderClip', data: { minimum: 'min-h-0', overflow: 'overflow-hidden' } }],
+        },
+        {
+          filename,
+          code: "<div className='min-w-0 overflow-y-auto' />",
+          errors: [{ messageId: 'minimumUnderClip', data: { minimum: 'min-w-0', overflow: 'overflow-y-auto' } }],
+        },
+        {
+          filename,
+          code: "<div className='dx-shrink overflow-scroll' />",
+          errors: [{ messageId: 'minimumUnderClip', data: { minimum: 'dx-shrink', overflow: 'overflow-scroll' } }],
+        },
+      ],
+    });
+  });
+
+  it('reports two utilities that compose into a third', () => {
+    ruleTester.run('prefer-sizing-utilities', rule, {
+      valid: [],
+      invalid: [
+        {
+          filename,
+          code: "<div className='flex dx-fill dx-grow' />",
+          errors: [{ messageId: 'handRolled', data: { classes: 'dx-grow dx-fill', suggestion: 'dx-expand' } }],
+        },
+      ],
+    });
+  });
+
   it('reports a utility stacked on what it already applies', () => {
     ruleTester.run('prefer-sizing-utilities', rule, {
       valid: [],
