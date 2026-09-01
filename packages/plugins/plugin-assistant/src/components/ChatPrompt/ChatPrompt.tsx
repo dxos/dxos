@@ -13,7 +13,7 @@ import { type Event } from '@dxos/async';
 import * as Project from '@dxos/compute/Project';
 import { type Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import {
   ChatEditor,
   type ChatEditorController,
@@ -81,8 +81,6 @@ export const ChatPrompt = ({
   const { t } = useTranslation(meta.profile.key);
   const error = useAtomValue(processor.error).pipe(Option.getOrUndefined);
   const streaming = useAtomValue(processor.streaming);
-  const active = useAtomValue(processor.active);
-  const activeRef = useDynamicRef(active);
 
   const editorRef = useRef<ChatEditorController>(null);
   useEffect(() => {
@@ -132,21 +130,18 @@ export const ChatPrompt = ({
     [],
   );
 
-  // Keyed to `active`, the same signal `handleSubmit` guards on — `streaming` only flips on the
-  // first agent token, so gating on it would leave the control enabled but inert until then.
-  const canSend = hasText && !active;
-
   const extensions = useMemo(
     () => [keymapExtensions, pendingText(), commandsExtension, emptinessExtension],
     [keymapExtensions, commandsExtension, emptinessExtension],
   );
 
+  // Always emits and clears the prompt, whether or not a turn is in flight: `Chat.Root` decides
+  // whether to run the request now or queue it for when the current one finishes, so the button
+  // and the Enter keybinding stay this one path regardless of processing state.
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
     (text) => {
-      if (!activeRef.current) {
-        event.emit({ type: 'submit', text });
-        return true;
-      }
+      event.emit({ type: 'submit', text });
+      return true;
     },
     [event],
   );
@@ -218,7 +213,7 @@ export const ChatPrompt = ({
             attendableId={attendableId}
             customActions={customActions}
             processing={streaming}
-            canSend={canSend}
+            canSend={hasText}
             tasksVisible={tasksVisible}
             onSend={handleSend}
             onEvent={handleEvent}

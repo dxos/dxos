@@ -89,6 +89,17 @@ export const StopReplacesSendWhileProcessing: Story = {
   },
 };
 
+/** Typed while the prior turn is still running: sending it now queues it rather than stopping. */
+export const SendQueuesWhileProcessing: Story = {
+  args: { processing: true, canSend: true, tasksVisible: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const send = await canvas.findByTestId('assistant.send', {}, { timeout: 10_000 });
+    await expect(send).toHaveAccessibleName('Send');
+    await expect(send).toBeEnabled();
+  },
+};
+
 export const TaskToggleFlips: Story = {
   args: { canSend: true, tasksVisible: true },
   play: async ({ canvasElement, userEvent }) => {

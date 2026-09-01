@@ -88,6 +88,10 @@ const ChatRoot = ({
   const lastPrompt = useRef<string | undefined>(undefined);
   // A slash command runs outside the processor, so `streaming` does not cover it.
   const commandPending = useRef(false);
+  // A submission made while the current turn is still streaming waits here instead of running (or
+  // being dropped) immediately; the effect below flushes it the moment `streaming` goes false.
+  const queuedMessage = useRef<string | undefined>(undefined);
+  const wasStreaming = useRef(streaming);
   // Transient chats have no database of their own; fall back to the supplied space db so
   // the message query and context controls operate before the chat is persisted.
   const db = (chat && Obj.getDatabase(chat)) || dbFallback;
@@ -124,6 +128,85 @@ const ChatRoot = ({
     }
   }, [event, error]);
 
+  // The actual work of a submission, shared by an immediate submit and a queued one flushed once
+  // the prior turn finishes streaming.
+  const performSubmit = useCallback(
+    (text: string) => {
+      // A leading /command is a deterministic shortcut — executed directly, no model in
+      // the loop; an unknown command falls through to the model as plain text.
+      const resolved = resolveSlashCommand(text, TaskSlashCommands);
+      if (resolved) {
+        // One command at a time: `invokePromise` does not queue, so two quick submissions
+        // would interleave their operations and land their summaries out of order.
+        if (commandPending.current) {
+          return;
+        }
+        commandPending.current = true;
+        // One rejection handler for the whole chain: `onSubmit` can throw synchronously and
+        // `appendToFeed` can reject, and either would otherwise be lost with no error shown.
+        void (async () => {
+          await Promise.resolve(onSubmit?.(text));
+          // Re-read after `onSubmit`: that is what persists a transient chat, so a chat that
+          // began without a database has one only now.
+          const currentDb = (chat && Obj.getDatabase(chat)) || db;
+          if (!chat || !currentDb) {
+            throw new Error('Command requires a persisted chat.');
+          }
+
+          const result = await resolved.command.execute(resolved.args, {
+            db: currentDb,
+            chat,
+            invoke: invokePromise,
+          });
+          if (result instanceof Error) {
+            throw result;
+          }
+
+          // The command's effect is otherwise invisible in the conversation: the prompt was
+          // never sent, so nothing records that the user ran it. The feed is re-read here
+          // because `onSubmit` is what persists a transient chat, creating it.
+          const currentFeed = feed ?? chat.feed?.target;
+          if (currentFeed && result.summary) {
+            await currentDb.appendToFeed(currentFeed, [
+              Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text }] }),
+              Message.make({ sender: { role: 'assistant' }, blocks: [{ _tag: 'text', text: result.summary }] }),
+            ]);
+          }
+
+          if (result.followUp) {
+            // Some effects run on the supervisor loop (delegation spawns post-turn), so the
+            // command wakes the conversation with a short synthetic prompt.
+            void processor.request({ message: result.followUp });
+          }
+        })()
+          .catch((error) => {
+            event.emit({ type: 'error', error: error instanceof Error ? error : new Error(String(error)) });
+          })
+          .finally(() => {
+            commandPending.current = false;
+          });
+        return;
+      }
+      lastPrompt.current = text;
+      const context = getContext?.();
+      // Await persistence (transient chat) before requesting so the agent resolves the
+      // now-durable conversation feed; resolves immediately when there is no hook.
+      void Promise.resolve(onSubmit?.(text)).then(() => processor.request({ message: text, context }));
+    },
+    [chat, db, event, feed, getContext, invokePromise, onSubmit, processor],
+  );
+
+  // Flushes a message queued while the prior turn was streaming, the moment it finishes — the
+  // send control only offers queueing when the prompt has text, so there is at most one waiting.
+  useEffect(() => {
+    if (wasStreaming.current && !streaming && queuedMessage.current) {
+      const text = queuedMessage.current;
+      queuedMessage.current = undefined;
+      performSubmit(text);
+    }
+    wasStreaming.current = streaming;
+  }, [streaming, performSubmit]);
+
   useEffect(() => {
     return event.on((ev) => {
       switch (ev.type) {
@@ -141,68 +224,16 @@ const ChatRoot = ({
 
         case 'submit': {
           const text = ev.text.trim();
-          if (!streaming && text.length) {
-            // A leading /command is a deterministic shortcut — executed directly, no model in
-            // the loop; an unknown command falls through to the model as plain text.
-            const resolved = resolveSlashCommand(text, TaskSlashCommands);
-            if (resolved) {
-              // One command at a time: `invokePromise` does not queue, so two quick submissions
-              // would interleave their operations and land their summaries out of order.
-              if (commandPending.current) {
-                break;
-              }
-              commandPending.current = true;
-              // One rejection handler for the whole chain: `onSubmit` can throw synchronously and
-              // `appendToFeed` can reject, and either would otherwise be lost with no error shown.
-              void (async () => {
-                await Promise.resolve(onSubmit?.(text));
-                // Re-read after `onSubmit`: that is what persists a transient chat, so a chat that
-                // began without a database has one only now.
-                const currentDb = (chat && Obj.getDatabase(chat)) || db;
-                if (!chat || !currentDb) {
-                  throw new Error('Command requires a persisted chat.');
-                }
-
-                const result = await resolved.command.execute(resolved.args, {
-                  db: currentDb,
-                  chat,
-                  invoke: invokePromise,
-                });
-                if (result instanceof Error) {
-                  throw result;
-                }
-
-                // The command's effect is otherwise invisible in the conversation: the prompt was
-                // never sent, so nothing records that the user ran it. The feed is re-read here
-                // because `onSubmit` is what persists a transient chat, creating it.
-                const currentFeed = feed ?? chat.feed?.target;
-                if (currentFeed && result.summary) {
-                  await currentDb.appendToFeed(currentFeed, [
-                    Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text }] }),
-                    Message.make({ sender: { role: 'assistant' }, blocks: [{ _tag: 'text', text: result.summary }] }),
-                  ]);
-                }
-
-                if (result.followUp) {
-                  // Some effects run on the supervisor loop (delegation spawns post-turn), so the
-                  // command wakes the conversation with a short synthetic prompt.
-                  void processor.request({ message: result.followUp });
-                }
-              })()
-                .catch((error) => {
-                  event.emit({ type: 'error', error: error instanceof Error ? error : new Error(String(error)) });
-                })
-                .finally(() => {
-                  commandPending.current = false;
-                });
-              break;
-            }
-            lastPrompt.current = ev.text;
-            const context = getContext?.();
-            // Await persistence (transient chat) before requesting so the agent resolves the
-            // now-durable conversation feed; resolves immediately when there is no hook.
-            void Promise.resolve(onSubmit?.(text)).then(() => processor.request({ message: text, context }));
+          if (!text.length) {
+            break;
           }
+          if (streaming) {
+            // The current turn hasn't finished; hold this one and send it once it does, rather
+            // than dropping it or interleaving it mid-stream.
+            queuedMessage.current = text;
+            break;
+          }
+          performSubmit(text);
           break;
         }
 
@@ -235,6 +266,9 @@ const ChatRoot = ({
               event.emit({ type: 'update-prompt', text: lastPrompt.current });
             }
           }
+          // Cancelling the turn means the reader no longer wants it continued, so a message
+          // queued behind it should not fire on its own once cancellation completes.
+          queuedMessage.current = undefined;
           break;
         }
       }
@@ -243,7 +277,7 @@ const ChatRoot = ({
     });
     // `feed` and `messages` are dependencies because the rewind branch reads and writes them: without
     // them the handler would keep resolving rewinds against whatever was mounted first.
-  }, [event, dump, processor, streaming, onEvent, onSubmit, getContext, feed, messages, chat, db]);
+  }, [event, dump, processor, streaming, onEvent, feed, messages, performSubmit]);
 
   return (
     <ChatContextProvider
