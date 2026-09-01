@@ -108,6 +108,9 @@ export class RepoProxy extends Resource {
    */
   private _resubscribeAttempts = 0;
 
+  /** Delay of the pending resubscribe, so {@link flush} waits out the actual backoff step. */
+  private _resubscribeDelay = 0;
+
   readonly saveStateChanged = new Event<SaveStateChangedEvent>();
 
   constructor(
@@ -205,18 +208,16 @@ export class RepoProxy extends Resource {
       if (attempt >= FLUSH_ATTEMPTS) {
         throw this._lastSendError ?? new Error('Failed to send document updates.');
       }
-      // A dropped subscription is replaced only after {@link RESUBSCRIBE_DELAY_MS}, so a shorter
-      // sleep burns every attempt against a subscription known to be gone.
-      await sleep(FLUSH_RETRY_DELAY_MS * attempt + (this._isReconnecting ? RESUBSCRIBE_DELAY_MS : 0));
+      // A dropped subscription is replaced only after the scheduled backoff, so a shorter sleep
+      // burns every attempt against a subscription known to be gone.
+      await sleep(FLUSH_RETRY_DELAY_MS * attempt + (this._isReconnecting ? this._resubscribeDelay : 0));
     }
   }
 
   protected override async _open(): Promise<void> {
     // A close during the resubscribe delay cancels the task that clears this flag.
     this._isReconnecting = false;
-    this._sendUpdatesJob = new UpdateScheduler(this._ctx, async () => this._sendUpdates(), {
-      maxFrequency: MAX_UPDATE_FREQ,
-    });
+    this._sendUpdatesJob = this._createSendUpdatesJob();
     // TODO(dmaretskyi): Set proper space id.
     this._subscribe();
   }
@@ -257,35 +258,38 @@ export class RepoProxy extends Resource {
     // Abandon the old scheduler - don't wait for it since it may be blocked on dead RPC.
     // Create a fresh scheduler that will use the new data service.
     // The old scheduler's task will eventually fail/timeout but we don't care.
-    this._sendUpdatesJob = new UpdateScheduler(this._ctx, async () => this._sendUpdates(), {
-      maxFrequency: MAX_UPDATE_FREQ,
-    });
+    this._sendUpdatesJob = this._createSendUpdatesJob();
 
-    try {
-      this._subscribe();
-    } finally {
-      // Left set by a throwing pass, `_sendUpdates` would early-out for the life of the space.
-      this._isReconnecting = false;
-    }
+    this._replaceSubscription();
 
     // Hands the documents `_subscribe` re-queued to the fresh subscription, raising if they cannot
     // be registered — the caller resumes replication on the strength of this call returning.
     await this.flush();
   }
 
+  private _createSendUpdatesJob(): UpdateScheduler {
+    return new UpdateScheduler(this._ctx, async () => this._sendUpdates(), { maxFrequency: MAX_UPDATE_FREQ });
+  }
+
+  /** Left set by a throwing `_subscribe`, `_sendUpdates` would early-out for the life of the space. */
+  private _replaceSubscription(): void {
+    try {
+      this._subscribe();
+    } finally {
+      this._isReconnecting = false;
+    }
+  }
+
   /**
    * Opens the document-updates subscription and queues every held document for registration with it.
-   *
-   * The host drops a subscription as soon as its stream ends, so this is not a once-per-space call:
-   * a replacement stream starts from an empty document set on the host, and everything the client
-   * still holds has to be added again.
+   * The host forgets a subscription as soon as its stream ends, so a replacement starts from an
+   * empty document set.
    */
   private _subscribe(): void {
     // Closing the previous stream first makes its outstanding RPC calls fail fast.
     this._subscriptionCleanup?.();
-    // Woken before it is re-armed because `reset` abandons parked waiters: a `_sendUpdates` left
-    // waiting on the subscription being replaced holds the scheduler, blocking every later batch
-    // until its RPC timeout. It resumes, fails against the dead subscription, and re-queues.
+    // Wake before re-arming: `reset` abandons parked waiters, and a `_sendUpdates` stranded on the
+    // old trigger holds the scheduler until its RPC timeout.
     this._subscriptionReady.wake();
     this._subscriptionReady.reset();
     this._subscriptionCleanup = subscribeStream(
@@ -299,21 +303,21 @@ export class RepoProxy extends Resource {
     );
 
     // Queued rather than sent directly so a failed pass is retried by the scheduler with the rest of
-    // the batch, instead of leaving the host subscribed to nothing.
-    for (const documentId of Object.keys(this._handles) as DocumentId[]) {
-      this._pendingRemoveIds.delete(documentId);
-      this._pendingAddIds.add(documentId);
+    // the batch.
+    for (const handle of Object.values(this._handles)) {
+      const documentId = handle.documentId;
+      if (documentId) {
+        this._pendingRemoveIds.delete(documentId);
+        this._pendingAddIds.add(documentId);
+      }
     }
   }
 
   /**
-   * Replaces a subscription whose stream ended without this proxy closing it — the host restarted,
-   * or the transport dropped the stream under us. The host deletes the subscription along with the
-   * stream, so every later call on that id fails with "Subscription not found"; the client has to
-   * subscribe again rather than keep using an id the host has forgotten.
-   *
-   * Not reached for a stream this proxy tore down itself: {@link subscribeStream}'s cleanup marks
-   * the subscription done before interrupting it.
+   * Replaces a subscription whose stream ended without this proxy closing it (a host restart, a
+   * dropped transport): the host forgets the subscription with the stream, so every later call on
+   * the id would fail with "Subscription not found". Not reached for a stream this proxy tore down
+   * itself — {@link subscribeStream}'s cleanup marks the subscription done before interrupting it.
    */
   private _onSubscriptionDropped(error?: Error): void {
     if (this._ctx.disposed || this._isReconnecting) {
@@ -323,27 +327,24 @@ export class RepoProxy extends Resource {
     log.warn('document subscription dropped, re-subscribing', { spaceId: this._spaceId, error });
     // Keeps the scheduler idle until the replacement is in place.
     this._isReconnecting = true;
-    // Abandons the batch racing the subscription the host has already forgotten, so it re-queues its
-    // ids quietly instead of raising the failure the replacement is about to make moot.
+    // Abandons the batch racing the dead subscription, so it re-queues quietly instead of raising.
     this._generation++;
     const generation = this._generation;
-    const delay = Math.min(RESUBSCRIBE_DELAY_MS * 2 ** this._resubscribeAttempts++, RESUBSCRIBE_MAX_DELAY_MS);
+    this._resubscribeDelay = Math.min(
+      RESUBSCRIBE_DELAY_MS * 2 ** this._resubscribeAttempts++,
+      RESUBSCRIBE_MAX_DELAY_MS,
+    );
     scheduleTask(
       this._ctx,
       () => {
-        // A reconnect that ran during the delay already replaced the subscription; replacing it
-        // again would tear down the healthy stream it just created.
+        // A reconnect that ran during the delay already replaced the subscription.
         if (this._generation !== generation) {
           return;
         }
-        try {
-          this._subscribe();
-        } finally {
-          this._isReconnecting = false;
-        }
+        this._replaceSubscription();
         this._sendUpdatesJob?.trigger();
       },
-      delay,
+      this._resubscribeDelay,
     );
   }
 
@@ -590,16 +591,15 @@ export class RepoProxy extends Resource {
       this._releaseDeferred();
       this._emitSaveStateEvent();
     } catch (err) {
-      // A reconnection or a replaced subscription happened under this task, making its failure the
-      // old connection's rather than this proxy's.
+      // A reconnect replaced the subscription under this task, so its failure is not raised below.
       const isAbandoned = generation !== this._generation;
-      // Recorded even for an abandoned task: its ids are re-queued below, so a `flush` resolving on
-      // an unchanged counter would report a write as delivered that the host never received.
+      // Recorded even for an abandoned task: `flush` must see the counter move for the re-queued ids.
       this._lastSendError = err as Error;
       this._sendFailureCount++;
-      // Restored even for an abandoned task: nothing else re-queues a pending mutation, so dropping
-      // these ids would strand the writes in their handles until the document changed again.
-      addIds.forEach((id) => this._pendingAddIds.add(id));
+      // Re-queued even for an abandoned task: nothing else re-sends a pending mutation. Adds are
+      // restored only for handles still held — a released document's add would re-subscribe the
+      // host to a document nothing owns.
+      addIds.filter((id) => this._handles[id]).forEach((id) => this._pendingAddIds.add(id));
       removeIds.forEach((id) => this._pendingRemoveIds.add(id));
       updateIds.forEach((id) => this._pendingUpdateIds.add(id));
 

@@ -441,21 +441,7 @@ describe('RepoProxy', () => {
   });
 
   test('re-subscribes after the host drops the subscription', async () => {
-    const created: { instance?: DroppableDataService } = {};
-    const { dataService, host } = await setup(
-      undefined,
-      (props) => (created.instance = new DroppableDataService(props)),
-    );
-    const droppable = created.instance;
-    invariant(droppable);
-
-    const [clientRepo] = createProxyRepos(dataService);
-    await openAndClose(clientRepo);
-
-    const clientHandle = clientRepo.create<{ text: string }>();
-    await clientHandle.whenReady();
-    // Registers the document with the first subscription, so the drop below has something to lose.
-    await clientRepo.flush();
+    const { droppable, host, clientRepo, clientHandle } = await setupWithDroppableSubscription();
 
     droppable.dropSubscription.wake();
     await expect.poll(() => droppable.subscribeCount, { timeout: 5000 }).toEqual(2);
@@ -473,20 +459,7 @@ describe('RepoProxy', () => {
   });
 
   test('flush during a dropped subscription delivers the write', async () => {
-    const created: { instance?: DroppableDataService } = {};
-    const { dataService, host } = await setup(
-      undefined,
-      (props) => (created.instance = new DroppableDataService(props)),
-    );
-    const droppable = created.instance;
-    invariant(droppable);
-
-    const [clientRepo] = createProxyRepos(dataService);
-    await openAndClose(clientRepo);
-
-    const clientHandle = clientRepo.create<{ text: string }>();
-    await clientHandle.whenReady();
-    await clientRepo.flush();
+    const { droppable, host, clientRepo, clientHandle } = await setupWithDroppableSubscription();
 
     // Race the write against subscription recovery: `flush` must not resolve until the replacement
     // subscription has taken the mutation, since a short-lived writer closes right after it.
@@ -504,6 +477,25 @@ describe('RepoProxy', () => {
     expect(hostHandle.doc()?.text).toEqual(text);
   });
 });
+
+/**
+ * A repo whose document handle is registered with a first subscription that
+ * {@link DroppableDataService.dropSubscription} ends on demand.
+ */
+const setupWithDroppableSubscription = async () => {
+  let droppable: DroppableDataService | undefined;
+  const { dataService, host } = await setup(undefined, (props) => (droppable = new DroppableDataService(props)));
+  invariant(droppable);
+
+  const [clientRepo] = createProxyRepos(dataService);
+  await openAndClose(clientRepo);
+
+  const clientHandle = clientRepo.create<{ text: string }>();
+  await clientHandle.whenReady();
+  await clientRepo.flush();
+
+  return { droppable, host, clientRepo, clientHandle };
+};
 
 /**
  * Ends the first `subscribe` stream on demand, so the host runs the finalizer that forgets the
