@@ -1,5 +1,7 @@
 ---
 '@dxos/react-ui-list': minor
+'@dxos/react-ui-task': minor
+'@dxos/ui-theme': minor
 ---
 
 `TaskList` renders its hierarchical mode as a `Tree`, so disclosure, roving focus and the WAI-ARIA
@@ -9,3 +11,5 @@ signal-strength glyph on every row that opens a menu to set the level. `Tree` ga
 `renderHeading` slot for rows that lead with their own controls instead of a label. Fixes the
 accordion's open/close animation, which had stopped moving because its keyframes targeted a
 Radix-only CSS variable.
+
+Task descriptions now render in the hierarchical mode as well as the flat one; the tree heading is a grid so a description starts in the title's own column rather than reading as part of the row above.

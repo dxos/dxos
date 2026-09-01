@@ -558,8 +558,10 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
         getInitialDataForExternal: () => (shouldSeedNativeDragData ? { 'text/plain': id } : {}),
         onDragStart: () => {
           setDragState('dragging');
+          // Stamped every drag, not only when open: a row left over from an earlier open-branch
+          // drag would otherwise still read `true` here and be reopened on drop.
+          openRef.current = open;
           if (open) {
-            openRef.current = true;
             onOpenChange?.({ item, path, open: false });
           }
         },
