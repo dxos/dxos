@@ -14,12 +14,7 @@ import { getWebAutoInstrumentations } from '@opentelemetry/auto-instrumentations
 import { W3CTraceContextPropagator } from '@opentelemetry/core';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { registerInstrumentations } from '@opentelemetry/instrumentation';
-import {
-  AlwaysOnSampler,
-  BatchSpanProcessor,
-  ParentBasedSampler,
-  TraceIdRatioBasedSampler,
-} from '@opentelemetry/sdk-trace-base';
+import { AlwaysOnSampler, BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
 import { ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 
@@ -29,6 +24,7 @@ import { type RemoteSpan, type StartSpanOptions, TRACE_ALL_KEY, TRACE_PROCESSOR 
 import { type OtelOptions, signalUrl } from './otel';
 import * as OtelSpanSink from './OtelSpanSink';
 import { TagInjectorSpanProcessor } from './span-processors';
+import * as TailSampling from './tail-sampling';
 
 export type OtelTracesOptions = OtelOptions & {
   /**
@@ -45,26 +41,35 @@ export class OtelTraces {
   constructor(private readonly options: OtelTracesOptions) {
     propagation.setGlobalPropagator(new W3CTraceContextPropagator());
 
+    // Opt-out of thinning entirely, for a local debugging session.
     const forceTraceAll = typeof localStorage !== 'undefined' && localStorage.getItem(TRACE_ALL_KEY) === 'true';
 
     this._tracerProvider = new WebTracerProvider({
       resource: this.options.resource,
-      sampler: new ParentBasedSampler({
-        root: forceTraceAll ? new AlwaysOnSampler() : new TraceIdRatioBasedSampler(0.3),
-      }),
+      // Records every span, because what is worth keeping cannot be known when a span starts: an
+      // error has not happened yet, and the GenAI attributes that mark a model call are not on it
+      // yet. The ratio this replaced lives in the worker's `TailSampler`, which sees ended spans and
+      // can also keep errors and model calls outright. Without a worker the spans are exported here
+      // and nothing thins them — see the processor list below.
+      sampler: new AlwaysOnSampler(),
       spanProcessors: [
         new TagInjectorSpanProcessor(this.options.getTags),
         ...(options.spanSink
-          ? [new OtelSpanSink.PortSpanProcessor(options.spanSink.post)]
-          : this.options.destinations.map(
+          ? // Everything crosses to the worker, which owns the keep/drop decision.
+            [new OtelSpanSink.PortSpanProcessor(options.spanSink.post)]
+          : // No worker to decide, so the same rules are applied here before the exporter.
+            this.options.destinations.map(
               (destination) =>
-                new BatchSpanProcessor(
-                  new OTLPTraceExporter({
-                    url: signalUrl(destination, 'traces'),
-                    headers: destination.headers,
-                    concurrencyLimit: 10,
-                  }),
-                  { scheduledDelayMillis: 5_000 },
+                new TailSampling.TailSamplingSpanProcessor(
+                  new BatchSpanProcessor(
+                    new OTLPTraceExporter({
+                      url: signalUrl(destination, 'traces'),
+                      headers: destination.headers,
+                      concurrencyLimit: 10,
+                    }),
+                    { scheduledDelayMillis: 5_000 },
+                  ),
+                  { ratio: forceTraceAll ? 1 : undefined },
                 ),
             )),
       ],

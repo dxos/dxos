@@ -37,7 +37,9 @@ describe('OtelSpanSink', () => {
 
   const makeSink = () => {
     const exporter = new InMemorySpanExporter();
-    sink = new OtelSpanSink.Sink(defaultInit, { exporter });
+    // `ratio: 1` so these exercise the port and the exporter, not the keep/drop rules —
+    // `tail-sampling.test.ts` covers those.
+    sink = new OtelSpanSink.Sink(defaultInit, { exporter, sampling: { ratio: 1 } });
     return { sink, exporter };
   };
 
@@ -91,7 +93,7 @@ describe('OtelSpanSink', () => {
     expect(exportedChild.spanContext().traceId).toBe(exportedParent.spanContext().traceId);
   });
 
-  test('unsampled spans are not forwarded', () => {
+  test('forwards an unsampled span, leaving the decision to the worker', () => {
     const records: OtelSpanSink.Span[] = [];
     const processor = new OtelSpanSink.PortSpanProcessor((record) => records.push(record));
     const unsampled: ReadableSpan = {
@@ -113,7 +115,10 @@ describe('OtelSpanSink', () => {
       droppedLinksCount: 0,
     };
 
+    // Whether it errored, or was a model call, is only knowable once it has ended — so the port
+    // carries every recorded span and `TailSampler` decides on the other side.
     processor.onEnd(unsampled);
-    expect(records).toEqual([]);
+    expect(records).toHaveLength(1);
+    expect(records[0]?.name).toEqual('unsampled');
   });
 });
