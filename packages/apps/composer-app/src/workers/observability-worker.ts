@@ -33,16 +33,29 @@ const createMessageHandler = (): ((event: MessageEvent<ObservabilityWorkerMessag
   // exporting once observability initializes.
   let pending: (string | Exclude<OtelLogSinkMessage, { type: 'otel-init' }>)[] | undefined;
 
+  /**
+   * Hands a message to the sink, or queues it in arrival order while the module import is in
+   * flight. Only records count against the cap: control messages are few, and dropping one
+   * loses a flush rather than a line.
+   */
+  const deliver = (message: string | Exclude<OtelLogSinkMessage, { type: 'otel-init' }>): void => {
+    if (sink) {
+      if (typeof message === 'string') {
+        sink.append(message);
+      } else {
+        sink.handleMessage(message);
+      }
+    } else if (pending && (typeof message !== 'string' || pending.length < MAX_PENDING)) {
+      pending.push(message);
+    }
+  };
+
   return (event: MessageEvent<ObservabilityWorkerMessage>): void => {
     const data = event.data;
     // Hot path: a bare string is one pre-serialized JSONL line.
     if (typeof data === 'string') {
       store.append(data);
-      if (sink) {
-        sink.append(data);
-      } else if (pending && pending.length < MAX_PENDING) {
-        pending.push(data);
-      }
+      deliver(data);
       return;
     }
     if (data == null) {
@@ -52,7 +65,7 @@ const createMessageHandler = (): ((event: MessageEvent<ObservabilityWorkerMessag
       case 'flush': {
         // Fire-and-forget, mirroring the sender's pagehide semantics; `flush` never rejects.
         void store.flush();
-        sink?.handleMessage({ type: 'otel-flush' });
+        deliver({ type: 'otel-flush' });
         break;
       }
       case 'otel-init': {
@@ -63,13 +76,7 @@ const createMessageHandler = (): ((event: MessageEvent<ObservabilityWorkerMessag
         void import('@dxos/observability/otel-log-sink')
           .then(({ OtelLogSink }) => {
             sink = new OtelLogSink(data);
-            for (const message of pending ?? []) {
-              if (typeof message === 'string') {
-                sink.append(message);
-              } else {
-                sink.handleMessage(message);
-              }
-            }
+            pending?.forEach(deliver);
             pending = undefined;
           })
           .catch(() => {
@@ -79,11 +86,7 @@ const createMessageHandler = (): ((event: MessageEvent<ObservabilityWorkerMessag
         break;
       }
       default: {
-        if (sink) {
-          sink.handleMessage(data);
-        } else if (pending && pending.length < MAX_PENDING) {
-          pending.push(data);
-        }
+        deliver(data);
       }
     }
   };
