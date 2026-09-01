@@ -12,7 +12,6 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Keyboard } from '@dxos/keyboard';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as MapPlugin from '@dxos/plugin-map/MapPlugin';
@@ -21,6 +20,7 @@ import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
+import { initHotkeys } from '@dxos/react-focus';
 import { AttendableContainer, useSelection } from '@dxos/react-ui-attention';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
@@ -142,8 +142,8 @@ const ATTENDABLE_ID = 'story';
 // article's 'j'/'k' bindings dispatch in isolation.
 const withKeyboard: Decorator = (Story) => {
   useEffect(() => {
-    Keyboard.singleton.initialize();
-    return () => Keyboard.singleton.destroy();
+    // No teardown: the store is shared, and destroying it would unbind every other story.
+    initHotkeys();
   }, []);
 
   return <Story />;
