@@ -48,6 +48,23 @@ export const buildTaskForest = (tasks: readonly Task.Task[]): TaskNode => {
   };
 };
 
+/**
+ * Path to each task, keyed by id and including the synthetic root — what `Tree` addresses rows by.
+ * Unambiguous because a task has exactly one parent, so it appears at exactly one path.
+ */
+export const buildTaskPaths = (root: TaskNode): Map<string, string[]> => {
+  const paths = new Map<string, string[]>();
+  const visit = (node: TaskNode, path: string[]): void => {
+    const next = [...path, node.id];
+    if (node.task) {
+      paths.set(node.id, next);
+    }
+    node.children.forEach((child) => visit(child, next));
+  };
+  visit(root, []);
+  return paths;
+};
+
 export type TaskTreeModelOptions = {
   /** Ids whose sub-tasks are hidden. Keyed by id, matching `TaskList`'s own collapsed set. */
   collapsed?: ReadonlySet<string>;

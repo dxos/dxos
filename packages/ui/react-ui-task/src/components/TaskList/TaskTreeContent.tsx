@@ -3,14 +3,14 @@
 //
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import React, { useCallback, useContext, useMemo, useRef } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 
 import { Icon, IconButton, Tag, useTranslation } from '@dxos/react-ui';
 import { type ColumnRenderer, type HeadingRenderer, Tree } from '@dxos/react-ui-list';
 import { Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
-import { TASK_TREE_ROOT_ID, type TaskNode, createTaskTreeModel } from './tree-model';
+import { TASK_TREE_ROOT_ID, type TaskNode, buildTaskForest, buildTaskPaths, createTaskTreeModel } from './tree-model';
 
 /**
  * The hierarchical list rendered as a `Tree`, so the machine owns disclosure, roving focus and the
@@ -59,6 +59,28 @@ export const TaskTreeContent = ({
   const collapsedRef = useRef(collapsed);
   collapsedRef.current = collapsed;
   const model = useMemo(() => createTaskTreeModel(tasks, { collapsed: collapsedRef.current }), [tasks]);
+  const paths = useMemo(() => buildTaskPaths(buildTaskForest(tasks)), [tasks]);
+
+  // Selection is owned by `TaskList.Root`, so it is driven into the model rather than held there —
+  // otherwise selecting a task elsewhere (or clearing it from the edit pane) leaves the tree's own
+  // current state stale.
+  const previousSelected = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    const setCurrent = (id: string | undefined, current: boolean) => {
+      const path = id && paths.get(id);
+      if (!path) {
+        return;
+      }
+      const atom = model.stateAtom(path);
+      registry.set(atom, { ...registry.get(atom), current });
+    };
+
+    if (previousSelected.current !== selected) {
+      setCurrent(previousSelected.current, false);
+      previousSelected.current = selected;
+    }
+    setCurrent(selected, true);
+  }, [selected, model, paths, registry]);
 
   // Written into the model rather than left to a rebuild, so the tree keeps its identity through the
   // disclosure animation, and mirrored onto the list's own collapsed set, which survives the model

@@ -451,20 +451,26 @@ const TreeBranchContent: FC<TreeNodeRowProps> = ({ node }) => {
     [mountedRef],
   );
 
+  // The latest entry, read by the close callback without being the effect's identity: a model that
+  // rebuilds on every tick (live data) produces new entry objects, and depending on the object would
+  // clear and re-arm the commit timer indefinitely, stranding the branch in `closingValues`.
+  const nodeRef = useRef(node);
+  nodeRef.current = node;
+
   useEffect(() => {
     if (!closing) {
       return;
     }
     const element = elementRef.current;
     if (!element || element.hidden) {
-      commitClose(node);
+      commitClose(nodeRef.current);
       return;
     }
     let done = false;
     const finish = () => {
       if (!done) {
         done = true;
-        commitClose(node);
+        commitClose(nodeRef.current);
       }
     };
     const handleAnimationEnd = (event: AnimationEvent) => {
@@ -483,7 +489,7 @@ const TreeBranchContent: FC<TreeNodeRowProps> = ({ node }) => {
         finish();
       }
     };
-  }, [closing, node, commitClose]);
+  }, [closing, node.value, commitClose]);
 
   return (
     <TreeView.BranchContent
