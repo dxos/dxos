@@ -14,8 +14,8 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { Organization, TestLayout } from '../../../../../testing';
-import { Form } from '../../../Form';
+import { Organization, TestLayout } from '../../../../../testing/index.ts';
+import { Form } from '../../../Form.tsx';
 
 // Picker: select an existing Organization.
 const RefSchema = Schema.Struct({

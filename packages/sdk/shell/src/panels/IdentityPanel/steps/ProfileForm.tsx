@@ -11,10 +11,10 @@ import { useClipboard, useTranslation } from '@dxos/react-ui';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
 import { hexToEmoji, hexToHue } from '@dxos/util';
 
-import { Action, ActionBar, InputLabel, TextInput } from '../../../components';
-import { translationKey } from '../../../translations';
-import { type IdentityEvent } from '../identityMachine';
-import { type IdentityPanelStepProps } from '../IdentityPanelProps';
+import { Action, ActionBar, InputLabel, TextInput } from '../../../components/index.ts';
+import { translationKey } from '../../../translations.ts';
+import { type IdentityEvent } from '../identityMachine.ts';
+import { type IdentityPanelStepProps } from '../IdentityPanelProps.ts';
 
 export type ProfileFormProps = Omit<IdentityPanelStepProps, 'send' | 'devices'> & {
   send?: (event: SingleOrArray<Event<IdentityEvent>>) => void;

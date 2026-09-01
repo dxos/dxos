@@ -9,15 +9,15 @@ import { describe, expect, test } from 'vitest';
 
 import { DXN, EID } from '@dxos/keys';
 
-import { Relation } from '../../index';
-import { TestSchema } from '../../testing';
-import * as Type from '../../Type';
-import { getTypeURI } from '../Annotation';
-import { ATTR_TYPE, getSchema } from '../common/types';
-import { ATTR_META } from '../common/types/meta';
-import { ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, isInstanceOf } from '../Entity';
-import { createObject } from './create-object';
-import { objectToJSON } from './json-serializer';
+import { Relation } from '../../index.ts';
+import { TestSchema } from '../../testing/index.ts';
+import * as Type from '../../Type.ts';
+import { getTypeURI } from '../Annotation/index.ts';
+import { ATTR_TYPE, getSchema } from '../common/types/index.ts';
+import { ATTR_META } from '../common/types/meta.ts';
+import { ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, isInstanceOf } from '../Entity/index.ts';
+import { createObject } from './create-object.ts';
+import { objectToJSON } from './json-serializer.ts';
 
 describe('create (static version)', () => {
   test('defaults', ({ expect }) => {

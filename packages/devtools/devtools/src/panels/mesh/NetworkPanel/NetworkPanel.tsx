@@ -10,8 +10,8 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { GraphForceProjector, type GraphLayoutNode, SVG, type SVGContext } from '@dxos/react-ui-graph';
 
-import { DataSpaceSelector } from '../../../containers';
-import { useDevtoolsState } from '../../../hooks';
+import { DataSpaceSelector } from '../../../containers/index.ts';
+import { useDevtoolsState } from '../../../hooks/index.ts';
 
 export type NetworkGraphNode = {
   id: string;

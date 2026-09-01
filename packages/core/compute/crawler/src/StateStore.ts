@@ -12,9 +12,9 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { type SqlTransaction } from '@dxos/sql-sqlite';
 
-import { type StateError } from './errors';
-import { makeSql, migrate } from './internal/state-store-sql';
-import type * as Type from './types';
+import { type StateError } from './errors.ts';
+import { makeSql, migrate } from './internal/state-store-sql.ts';
+import type * as Type from './types.ts';
 
 export type RunStatus = 'idle' | 'running' | 'paused' | 'done' | 'error';
 

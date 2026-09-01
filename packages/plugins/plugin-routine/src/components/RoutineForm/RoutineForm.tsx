@@ -17,8 +17,8 @@ import { Form, type FormFieldMap, type FormUpdateMeta, RefField, useFormValues }
 
 import { meta } from '#meta';
 
-import { wireTriggers } from '../../util';
-import { InstructionsEditor } from '../InstructionsEditor';
+import { wireTriggers } from '../../util/index.ts';
+import { InstructionsEditor } from '../InstructionsEditor/index.ts';
 import {
   TriggerForm,
   type TriggerFormInput,
@@ -27,7 +27,7 @@ import {
   applyTriggerValues,
   triggerFieldMap,
   triggerFormValues,
-} from '../TriggerEditor';
+} from '../TriggerEditor/index.ts';
 
 //
 // Schema — one composite form over the routine's editable surface. The general fields are picked from the

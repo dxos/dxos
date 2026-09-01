@@ -9,7 +9,12 @@ import { log } from '@dxos/log';
 import { type Messenger } from '@dxos/protocols';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 
-import { type AwarenessInfo, type AwarenessPosition, type AwarenessProvider, type AwarenessState } from './awareness';
+import {
+  type AwarenessInfo,
+  type AwarenessPosition,
+  type AwarenessProvider,
+  type AwarenessState,
+} from './awareness.ts';
 
 type ProtocolMessage =
   | {

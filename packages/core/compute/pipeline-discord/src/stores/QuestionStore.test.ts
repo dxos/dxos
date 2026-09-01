@@ -11,7 +11,7 @@ import { expect } from 'vitest';
 
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import * as QuestionStore from './QuestionStore';
+import * as QuestionStore from './QuestionStore.ts';
 
 const suite = (name: string, layer: Layer.Layer<QuestionStore.QuestionStore>) =>
   describe(name, () => {

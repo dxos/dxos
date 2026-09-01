@@ -25,9 +25,9 @@ import { Button, DropdownMenu, Flex, Icon, Input, ThemedClassName, useTranslatio
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '../../../meta';
-import { OAUTH_RECOVERY_REDIRECT_PATH } from '../../../operations/shared';
-import { type WelcomeError, type WelcomeScreenProps, WelcomeState, validEmail } from './types';
+import { meta } from '../../../meta.ts';
+import { OAUTH_RECOVERY_REDIRECT_PATH } from '../../../operations/shared.ts';
+import { type WelcomeError, type WelcomeScreenProps, WelcomeState, validEmail } from './types.ts';
 
 const supportsPasskeys =
   (navigator.credentials && 'create' in navigator.credentials) || NativePasskey.supportsNativePasskeys();

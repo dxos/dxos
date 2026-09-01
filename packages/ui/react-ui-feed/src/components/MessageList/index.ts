@@ -2,5 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './MessageList';
-export * from './position-log';
+export * from './MessageList.tsx';
+export * from './position-log.ts';

@@ -9,7 +9,7 @@ import { DropdownMenu, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
 
-import { type ModalController, type TableModel } from '../../model';
+import { type ModalController, type TableModel } from '../../model/index.ts';
 
 export type ColumnActionsMenuProps = {
   model: TableModel;

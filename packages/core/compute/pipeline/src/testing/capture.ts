@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import * as Pipeline from '../Pipeline';
+import * as Pipeline from '../Pipeline.ts';
 
 /** In-memory sink capturing every emitted value for assertions. */
 export type CaptureSink<Out> = {

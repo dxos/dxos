@@ -7,7 +7,7 @@ import { expect } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { FeedStory, type FeedStoryProps } from '../testing';
+import { FeedStory, type FeedStoryProps } from '../testing/index.ts';
 
 /**
  * How long the first fill takes, and what it spends the time on.

@@ -9,9 +9,9 @@ import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
 import { mx } from '@dxos/ui-theme';
 
-import { useComputeNodeState } from '../hooks';
-import { Box, type BoxActionHandler } from './common';
-import { type FeedShape } from './feed-def';
+import { useComputeNodeState } from '../hooks/index.ts';
+import { Box, type BoxActionHandler } from './common/index.ts';
+import { type FeedShape } from './feed-def.ts';
 
 export const FeedComponent = ({ shape }: ShapeComponentProps<FeedShape>) => {
   const { runtime } = useComputeNodeState(shape);

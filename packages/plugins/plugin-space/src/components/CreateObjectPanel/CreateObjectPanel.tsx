@@ -19,7 +19,7 @@ import { useInputSurfaceLookup } from '#hooks';
 import { meta } from '#meta';
 import { SpaceCapabilities } from '#types';
 
-import { getSpaceDisplayName } from '../../util';
+import { getSpaceDisplayName } from '../../util/index.ts';
 
 /** Display-ready option for the create object search list. */
 export type CreateObjectOption = {

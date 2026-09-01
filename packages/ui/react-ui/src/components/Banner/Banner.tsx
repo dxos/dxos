@@ -13,11 +13,11 @@ import { type Elevation, type MessageValence, type SlottableProps } from '@dxos/
 
 import { translationKey } from '#translations';
 
-import { useElevationContext, useThemeContext } from '../../hooks';
-import { type ThemedClassName } from '../../util';
-import { IconButton } from '../Button';
-import { Column } from '../Column';
-import { Icon } from '../Icon';
+import { useElevationContext, useThemeContext } from '../../hooks/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
+import { IconButton } from '../Button/index.ts';
+import { Column } from '../Column/index.ts';
+import { Icon } from '../Icon/index.ts';
 
 const bannerIcons: Record<MessageValence, string> = {
   success: 'ph--check-circle--duotone',

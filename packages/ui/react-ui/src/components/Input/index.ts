@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export { useInputTrigger } from './InputTriggerContext';
+export { useInputTrigger } from './InputTriggerContext.ts';
 
-export * from './Input';
-export * from './SegmentedInput';
+export * from './Input.tsx';
+export * from './SegmentedInput.tsx';

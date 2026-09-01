@@ -7,9 +7,9 @@ import { it as test } from 'mocha';
 
 import { Stream } from '@dxos/async';
 
-import { MyKey } from './my-key';
-import { schema } from './proto';
-import { TaskType } from './proto/gen/example/testing/types';
+import { MyKey } from './my-key.ts';
+import { TaskType } from './proto/gen/example/testing/types.ts';
+import { schema } from './proto/index.ts';
 
 test('services', async () => {
   const service = schema.getService('example.testing.service.TestService');

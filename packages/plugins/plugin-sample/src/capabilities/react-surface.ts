@@ -24,7 +24,7 @@ import { Position } from '@dxos/util';
 import { SampleArticle, SampleCompanionPanel, SampleProperties } from '#containers';
 import { SampleItem } from '#types';
 
-import { SampleDeckCompanionSurface, SampleStatusSurface } from './SampleSurfaces';
+import { SampleDeckCompanionSurface, SampleStatusSurface } from './SampleSurfaces.tsx';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

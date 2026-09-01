@@ -19,7 +19,7 @@ import { type EditorViewMode } from '@dxos/ui-editor/types';
 
 import { meta } from '#meta';
 
-import type * as Markdown from './Markdown';
+import type * as Markdown from './Markdown.ts';
 
 export type EditorViewEntry = { view: EditorView; documentId: string };
 

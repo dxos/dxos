@@ -23,12 +23,12 @@ import { FOCUS_GROUP_ATTR, KEYBOARD_MODALITY_ATTR } from '@dxos/react-focus';
 import { useMediaQuery, useMergeRefs } from '@dxos/react-hooks';
 import { osTranslations } from '@dxos/ui-theme';
 
-import { useThemeContext } from '../../hooks';
-import { type Label, toLocalizedString, useTranslation } from '../../primitives';
-import { type MainStyleProps } from '../../theme';
-import { type ThemedClassName } from '../../util';
-import { MAIN_NAME, MainProvider, type SidebarState, useLandmarkMover, useMainContext } from './MainContext';
-import { useSwipeToDismiss } from './useSwipeToDismiss';
+import { useThemeContext } from '../../hooks/index.ts';
+import { type Label, toLocalizedString, useTranslation } from '../../primitives/index.ts';
+import { type MainStyleProps } from '../../theme/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
+import { MAIN_NAME, MainProvider, type SidebarState, useLandmarkMover, useMainContext } from './MainContext.ts';
+import { useSwipeToDismiss } from './useSwipeToDismiss.ts';
 
 const MAIN_ROOT_NAME = 'Main.Root';
 const MAIN_OVERLAY_NAME = 'Main.Overlay';

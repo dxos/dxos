@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-export { Pipeline, type PipelineAccessor } from './pipeline';
-export * from './timeframe-clock';
-export * from './codec';
-export * from './feeds';
+export { Pipeline, type PipelineAccessor } from './pipeline.ts';
+export * from './timeframe-clock.ts';
+export * from './codec.ts';
+export * from './feeds.ts';

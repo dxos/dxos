@@ -12,8 +12,8 @@ import {
   getRelativeName,
   getSafeNamespaceIdentifier,
   namesEqual,
-} from '../namespaces';
-import { type SubstitutionsMap } from '../parser';
+} from '../namespaces.ts';
+import { type SubstitutionsMap } from '../parser/index.ts';
 
 const f = ts.factory;
 

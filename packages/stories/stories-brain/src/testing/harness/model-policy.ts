@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { MODEL_POLICY } from './config';
-import { ALL_VARIANTS, type ModelVariant } from './models';
+import { MODEL_POLICY } from './config.ts';
+import { ALL_VARIANTS, type ModelVariant } from './models.ts';
 
 // Declarative model routing (REPORT §5): one place that maps each per-message / per-corpus pipeline
 // stage to the model it should run on, instead of hard-coding a `ModelVariant` at every call site.

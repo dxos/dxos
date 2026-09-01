@@ -7,8 +7,8 @@ import React from 'react';
 
 import { withLayout } from '@dxos/react-ui/testing';
 
-import { makeCallState, makeUser, useSeedCallManager, withCallManager } from '../../testing';
-import { CallArticle } from './CallArticle';
+import { makeCallState, makeUser, useSeedCallManager, withCallManager } from '../../testing/index.ts';
+import { CallArticle } from './CallArticle.tsx';
 
 const self = makeUser('self', 'Alice');
 const state = makeCallState(self, [self, makeUser('bob', 'Bob'), makeUser('carol', 'Carol', { raisedHand: true })]);

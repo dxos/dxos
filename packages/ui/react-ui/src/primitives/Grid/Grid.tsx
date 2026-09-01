@@ -8,8 +8,8 @@ import React from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
-import { composableProps, slottable } from '../../util';
-import { type Align, type Gap, alignClasses, gapClasses } from '../layout';
+import { composableProps, slottable } from '../../util/index.ts';
+import { type Align, type Gap, alignClasses, gapClasses } from '../layout.ts';
 
 /** A single track: a CSS track size, or a number read as `<n>fr`. */
 export type GridTrack = string | number;

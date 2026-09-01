@@ -12,7 +12,7 @@ import { useConfig, useEdgeServiceEndpoint } from '@dxos/react-client';
 
 import { type SupportOperation } from '#types';
 
-import { captureScreenshot, uploadScreenshot } from './screenshot';
+import { captureScreenshot, uploadScreenshot } from './screenshot.ts';
 
 /** Lets the deck animation settle after collapsing the companion, before html-to-image walks the DOM. */
 const SETTLE_DELAY = 150;

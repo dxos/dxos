@@ -13,6 +13,11 @@ const resolveModule = (source, fromFile) => {
     return null;
   }
   const base = path.resolve(path.dirname(fromFile), source);
+  // The specifier may already carry its extension (`./types/index.ts`) — resolve it directly
+  // rather than appending another one on top, which would never exist on disk.
+  if (MODULE_EXTENSIONS.some((ext) => base.endsWith(ext))) {
+    return fs.existsSync(base) ? base : null;
+  }
   for (const ext of MODULE_EXTENSIONS) {
     if (fs.existsSync(base + ext)) {
       return base + ext;

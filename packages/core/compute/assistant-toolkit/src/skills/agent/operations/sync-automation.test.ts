@@ -13,10 +13,10 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 
-import { OperationTestLayer } from '../../../testing';
-import { Agent } from '../../../types';
-import AgentSkillDef from '../skill';
-import { Relay, SyncAutomation } from './definitions';
+import { OperationTestLayer } from '../../../testing/index.ts';
+import { Agent } from '../../../types/index.ts';
+import AgentSkillDef from '../skill.ts';
+import { Relay, SyncAutomation } from './definitions.ts';
 
 EntityId.dangerouslyDisableRandomness();
 

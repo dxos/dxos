@@ -4,9 +4,9 @@
 
 import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
-import type { CellGridAtoms } from '../state/atoms';
-import type { Cell, CellCoord, Headers, SelectionRange, Tool } from '../state/types';
-import { cellKey, hitTestCell } from '../state/viewport';
+import type { CellGridAtoms } from '../state/atoms.ts';
+import type { Cell, CellCoord, Headers, SelectionRange, Tool } from '../state/types.ts';
+import { cellKey, hitTestCell } from '../state/viewport.ts';
 
 /**
  * 'set' / 'unset' are idempotent — the receiver must add or remove the cell

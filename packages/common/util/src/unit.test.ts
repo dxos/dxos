@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { Unit } from './unit';
+import { Unit } from './unit.ts';
 
 describe('url', () => {
   test('magnitudes', ({ expect }) => {

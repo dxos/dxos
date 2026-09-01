@@ -10,8 +10,8 @@ import { type Database, Filter, Obj, Query } from '@dxos/echo';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { Repo, TaskSet } from '@dxos/types';
 
-import { GITHUB_SOURCE } from '../constants';
-import { githubReferences, referenceUrl } from '../extensions';
+import { GITHUB_SOURCE } from '../constants.ts';
+import { githubReferences, referenceUrl } from '../extensions/index.ts';
 
 /** `owner/repo` — what `sync` writes as the name of the TaskSet mirroring a repository. */
 const REPO_NAME = /^[\w.-]+\/[\w.-]+$/;

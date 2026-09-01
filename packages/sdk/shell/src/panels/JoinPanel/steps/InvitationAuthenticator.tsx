@@ -8,9 +8,9 @@ import { Invitation } from '@dxos/react-client/invitations';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { hexToEmoji } from '@dxos/util';
 
-import { Action, ActionBar, Emoji, InputLabel, Label } from '../../../components';
-import { translationKey } from '../../../translations';
-import { type JoinStepProps } from '../JoinPanelProps';
+import { Action, ActionBar, Emoji, InputLabel, Label } from '../../../components/index.ts';
+import { translationKey } from '../../../translations.ts';
+import { type JoinStepProps } from '../JoinPanelProps.ts';
 
 const pinLength = 6;
 

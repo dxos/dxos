@@ -9,10 +9,10 @@ import { globSync } from 'glob';
 import { resolve } from 'node:path';
 import readPkg from 'read-pkg';
 
-import { preconfigureProtobufjs } from './configure';
-import { ModuleSpecifier } from './module-specifier';
-import { registerResolver } from './parser';
-import { parseAndGenerateSchema } from './type-generator';
+import { preconfigureProtobufjs } from './configure.ts';
+import { ModuleSpecifier } from './module-specifier.ts';
+import { registerResolver } from './parser/index.ts';
+import { parseAndGenerateSchema } from './type-generator.ts';
 
 const main = async () => {
   const { version } = await readPkg();

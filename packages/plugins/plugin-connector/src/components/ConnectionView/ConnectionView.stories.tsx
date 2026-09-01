@@ -20,8 +20,8 @@ import { Expando } from '@dxos/schema';
 import { type TestConnectionStatus } from '#hooks';
 import { translations } from '#translations';
 
-import * as Binding from '../../Binding';
-import { ConnectionView } from './ConnectionView';
+import * as Binding from '../../Binding.ts';
+import { ConnectionView } from './ConnectionView.tsx';
 
 // Sample per-binding options schema (real connectors contribute their own via `connector.optionsSchema`).
 const OptionsSchema = Schema.Struct({

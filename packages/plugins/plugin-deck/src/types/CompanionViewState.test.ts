@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 
 import { ViewState, createDefaultBackends } from '@dxos/react-ui-attention';
 
-import * as CompanionViewState from './CompanionViewState';
+import * as CompanionViewState from './CompanionViewState.ts';
 
 describe('CompanionViewState.aspect', () => {
   test('declares one local aspect for the selected variant', ({ expect }) => {

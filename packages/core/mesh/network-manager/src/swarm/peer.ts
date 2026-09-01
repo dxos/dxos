@@ -11,11 +11,11 @@ import { type PeerInfo } from '@dxos/messaging';
 import { CancelledError, SystemError } from '@dxos/protocols';
 import { type Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
-import { type OfferMessage, type SignalMessage, type SignalMessenger } from '../signal';
-import { type TransportFactory } from '../transport';
-import { type WireProtocolProvider } from '../wire-protocol';
-import { Connection, ConnectionState } from './connection';
-import { type ConnectionLimiter } from './connection-limiter';
+import { type OfferMessage, type SignalMessage, type SignalMessenger } from '../signal/index.ts';
+import { type TransportFactory } from '../transport/index.ts';
+import { type WireProtocolProvider } from '../wire-protocol.ts';
+import { type ConnectionLimiter } from './connection-limiter.ts';
+import { Connection, ConnectionState } from './connection.ts';
 
 export class ConnectionDisplacedError extends SystemError {
   constructor() {

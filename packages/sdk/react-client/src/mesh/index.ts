@@ -4,4 +4,4 @@
 
 export * from '@dxos/client/mesh';
 
-export * from './useNetworkStatus';
+export * from './useNetworkStatus.ts';

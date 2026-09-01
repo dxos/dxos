@@ -20,9 +20,9 @@ import { McpServer } from '@dxos/mcp-server';
 import * as ProjectsEvents from '@dxos/plugin-projects/ProjectsEvents';
 import { isRecordEnabled, loadPlugins } from '@dxos/plugin-registry';
 
-import { makeLocalServer } from './local-server';
-import { SpaceToolkit, spaceHandlers } from './space-tools';
-import { WATCH_CHILD_ENV, formatReady } from './watch-protocol';
+import { makeLocalServer } from './local-server.ts';
+import { SpaceToolkit, spaceHandlers } from './space-tools.ts';
+import { WATCH_CHILD_ENV, formatReady } from './watch-protocol.ts';
 
 /**
  * Names of the statically-defined tools; the projection refuses to build if one of them collides
@@ -78,7 +78,7 @@ export const serve = Command.make(
     if (watch) {
       // Imported here rather than at the top so the supervisor is absent from the module graph of
       // the child it supervises, which would otherwise reload itself on every one of its own edits.
-      const { runWatchSupervisor } = yield* Effect.promise(() => import('./watch'));
+      const { runWatchSupervisor } = yield* Effect.promise(() => import('./watch.ts'));
       return yield* runWatchSupervisor();
     }
 

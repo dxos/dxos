@@ -6,11 +6,11 @@ import { EditorSelection, EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
-import { join } from '../../../util';
-import { createMarkdownExtensions } from '../../language/markdown';
-import { blockSelectionField } from '../blocks';
-import { getDropIndent, getExtent, moveBlocks, replaceBlocks, selectAllItems, selectDown, selectUp } from './dnd';
-import { outlinerTree, treeFacet } from './tree';
+import { join } from '../../../util/index.ts';
+import { createMarkdownExtensions } from '../../language/markdown/index.ts';
+import { blockSelectionField } from '../blocks/index.ts';
+import { getDropIndent, getExtent, moveBlocks, replaceBlocks, selectAllItems, selectDown, selectUp } from './dnd.ts';
+import { outlinerTree, treeFacet } from './tree.ts';
 
 const LINES = ['- [ ] 1', '- [ ] 2', '  - [ ] 2.1', '  - [ ] 2.2', '    - 2.2.1', '  - [ ] 2.3', '- [ ] 3'];
 const DOC = join(...LINES);

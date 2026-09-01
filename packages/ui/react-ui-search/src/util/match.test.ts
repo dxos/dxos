@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { buildSnippet, computeMatchSpans } from './match';
+import { buildSnippet, computeMatchSpans } from './match.ts';
 
 describe('computeMatchSpans', () => {
   test('finds case-insensitive occurrences', () => {

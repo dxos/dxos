@@ -16,10 +16,10 @@ import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { Outline, Task } from '@dxos/types';
 
-import { Agent, Chat } from '../../../types';
-import PlanningSkill from '../skill';
-import { UpdateTasks } from './definitions';
-import { PlanningHandlers } from './index';
+import { Agent, Chat } from '../../../types/index.ts';
+import PlanningSkill from '../skill.ts';
+import { UpdateTasks } from './definitions.ts';
+import { PlanningHandlers } from './index.ts';
 
 EntityId.dangerouslyDisableRandomness();
 

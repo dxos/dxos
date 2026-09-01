@@ -20,7 +20,7 @@ import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { LayerDependencyCycleError } from './errors';
+import { LayerDependencyCycleError } from './errors.ts';
 
 interface LayerStackOpts {
   readonly layers: LayerSpec.LayerSpec[];

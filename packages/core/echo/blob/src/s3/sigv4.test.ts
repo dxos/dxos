@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { encodeObjectKey, formatTimestamps, presignUrl, sha256Hex, signRequest, uriEncode } from './sigv4';
+import { encodeObjectKey, formatTimestamps, presignUrl, sha256Hex, signRequest, uriEncode } from './sigv4.ts';
 
 /**
  * Credentials and timestamp from the published AWS SigV4 examples. The expected signatures below are

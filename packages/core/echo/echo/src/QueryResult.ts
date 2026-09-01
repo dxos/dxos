@@ -8,7 +8,7 @@ import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { type CleanupFn } from '@dxos/async';
 
-import type * as Entity from './Entity';
+import type * as Entity from './Entity.ts';
 
 /**
  * Individual query result entry.

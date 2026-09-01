@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './useConnector';
-export * from './useReauthenticate';
-export * from './useSyncConnection';
-export * from './useSyncTargetsChecklist';
-export * from './useTestConnection';
+export * from './useConnector.ts';
+export * from './useReauthenticate.ts';
+export * from './useSyncConnection.ts';
+export * from './useSyncTargetsChecklist.ts';
+export * from './useTestConnection.ts';

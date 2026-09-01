@@ -9,7 +9,7 @@ import { type Registry, type View } from '@dxos/echo';
 import { Popover } from '@dxos/react-ui';
 import { FieldEditor } from '@dxos/react-ui-form';
 
-import { type ModalController, type TableModel } from '../../model';
+import { type ModalController, type TableModel } from '../../model/index.ts';
 
 type ColumnSettingsProps = {
   registry?: Registry.Registry;

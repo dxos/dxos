@@ -11,9 +11,9 @@ import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { type XmlWidgetRegistry, type XmlWidgetState } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
-import { createBlockExtensions } from './extensions';
-import { type HighlightRange, setHighlights } from './highlight';
-import { useSelectionGroup } from './selection-group';
+import { createBlockExtensions } from './extensions.ts';
+import { type HighlightRange, setHighlights } from './highlight.ts';
+import { useSelectionGroup } from './selection-group.ts';
 
 export type MarkdownBlockProps = ThemedClassName<{
   text: string;

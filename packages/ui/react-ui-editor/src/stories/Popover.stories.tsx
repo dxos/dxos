@@ -25,8 +25,8 @@ import {
   formattingCommands,
   linkSlashCommands,
   useEditorMenu,
-} from '../components';
-import { EditorStory } from './components';
+} from '../components/index.ts';
+import { EditorStory } from './components/index.ts';
 
 const generator: ValueGenerator = random as any;
 

@@ -6,8 +6,8 @@ import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
-import { createMarkdownExtensions } from './bundle';
-import { decorateMarkdown } from './decorate';
+import { createMarkdownExtensions } from './bundle.ts';
+import { decorateMarkdown } from './decorate.ts';
 
 /** The GFM parser produces the nodes; only `decorateMarkdown` turns one into an anchor. */
 const createView = (doc: string) => {

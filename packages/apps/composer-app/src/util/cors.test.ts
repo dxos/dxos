@@ -4,8 +4,8 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { DESKTOP_ORIGINS, DEV_SERVER_ORIGIN } from './constants';
-import { corsHeaders, isAllowedOrigin, nativeOrigins } from './cors';
+import { DESKTOP_ORIGINS, DEV_SERVER_ORIGIN } from './constants.ts';
+import { corsHeaders, isAllowedOrigin, nativeOrigins } from './cors.ts';
 
 const DEPLOYMENT = 'https://composer.space/api/feedback-logs';
 const DESKTOP = 'http://localhost:26777';

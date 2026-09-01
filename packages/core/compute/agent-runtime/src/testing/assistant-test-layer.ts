@@ -41,8 +41,8 @@ import { registryLayer } from '@dxos/echo-client';
 import { type TestContextService } from '@dxos/effect/testing';
 import { DXN } from '@dxos/keys';
 
-import { AgentService as AgentServiceRuntime } from '../agent-service';
-import { traceSinkPrettyLayer } from './trace-pretty-print';
+import { AgentService as AgentServiceRuntime } from '../agent-service/index.ts';
+import { traceSinkPrettyLayer } from './trace-pretty-print.ts';
 
 interface TestLayerOptions {
   aiServicePreset?: 'direct' | 'edge-local' | 'edge-remote' | 'ollama';

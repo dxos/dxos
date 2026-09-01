@@ -17,7 +17,7 @@ import { Collection, Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { Actor, Event, Message, type Person } from '@dxos/types';
 import { AI_ACTION_ICON } from '@dxos/ui-types';
 
-import * as Mailbox from './Mailbox';
+import * as Mailbox from './Mailbox.ts';
 
 export const AddMailbox = Operation.make({
   meta: {

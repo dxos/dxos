@@ -17,9 +17,9 @@ import { log } from '@dxos/log';
 import { Message, Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { RunInstructions } from '../operations';
-import { DelegationSkill } from '../skills';
-import { Agent, Chat } from '../types';
+import { RunInstructions } from '../operations/index.ts';
+import { DelegationSkill } from '../skills/index.ts';
+import { Agent, Chat } from '../types/index.ts';
 
 /**
  * Resolves the chat backed by the given conversation feed, if any.

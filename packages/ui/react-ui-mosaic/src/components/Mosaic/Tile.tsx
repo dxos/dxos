@@ -41,8 +41,8 @@ import {
   sizeStyle,
 } from '@dxos/react-ui-dnd';
 
-import { useMosaicContainerContext } from './MosaicContainerContext';
-import { MOSAIC_TILE_NAME, MosaicTileContextProvider, type MosaicTileState } from './MosaicTileContext';
+import { useMosaicContainerContext } from './MosaicContainerContext.ts';
+import { MOSAIC_TILE_NAME, MosaicTileContextProvider, type MosaicTileState } from './MosaicTileContext.ts';
 
 //
 // Tile

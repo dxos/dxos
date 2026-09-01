@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './toolkit';
+export * from './toolkit.ts';
 
-export * as AiContext from './AiContext';
-export * as AiSession from './AiSession';
-export * as Harness from './Harness';
-export * as SkillHooks from './SkillHooks';
-export { HarnessControl, type HarnessControlRpcs } from './harness-control';
-export { SessionLoader } from './SessionLoader';
-export * as SessionLink from './SessionLink';
+export * as AiContext from './AiContext.ts';
+export * as AiSession from './AiSession.ts';
+export * as Harness from './Harness.ts';
+export * as SkillHooks from './SkillHooks.ts';
+export { HarnessControl, type HarnessControlRpcs } from './harness-control.ts';
+export { SessionLoader } from './SessionLoader.ts';
+export * as SessionLink from './SessionLink.ts';

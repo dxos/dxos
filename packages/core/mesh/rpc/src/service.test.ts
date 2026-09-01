@@ -15,8 +15,8 @@ import {
   type TestStreamService,
 } from '@dxos/protocols/proto/example/testing/rpc';
 
-import { type ProtoRpcPeer, createProtoRpcPeer, createServiceBundle } from './service';
-import { createLinkedPorts, encodeMessage } from './testing';
+import { type ProtoRpcPeer, createProtoRpcPeer, createServiceBundle } from './service.ts';
+import { createLinkedPorts, encodeMessage } from './testing.ts';
 
 // TODO(dmaretskyi): Rename alice and bob to peer1 and peer2.
 

@@ -17,9 +17,9 @@ import { SqlTransaction } from '@dxos/sql-sqlite';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 
-import { FeedStore } from '../feed-store';
-import { SyncClient } from '../sync-client';
-import { SyncServer } from '../sync-server';
+import { FeedStore } from '../feed-store.ts';
+import { SyncClient } from '../sync-client.ts';
+import { SyncServer } from '../sync-server.ts';
 
 type ProtocolMessage = FeedProtocol.ProtocolMessage;
 const WellKnownNamespaces = FeedProtocol.WellKnownNamespaces;

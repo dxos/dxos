@@ -26,8 +26,8 @@ import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, type Key } from '@dxos/echo';
 
-import { type AiChatServices, chatLayer } from './runtime';
-import { operationHandlers as skillOperationHandlers, toolkits } from './skills';
+import { type AiChatServices, chatLayer } from './runtime.ts';
+import { operationHandlers as skillOperationHandlers, toolkits } from './skills.ts';
 
 export type TriggerRuntimeServices =
   | TriggerDispatcher

@@ -8,10 +8,10 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import type * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
-import * as AiModelResolver from '../../AiModelResolver';
-import { AiModelNotAvailableError } from '../../errors';
-import * as Model from '../../Model';
-import * as Provider from '../../Provider';
+import * as AiModelResolver from '../../AiModelResolver.ts';
+import { AiModelNotAvailableError } from '../../errors.ts';
+import * as Model from '../../Model.ts';
+import * as Provider from '../../Provider.ts';
 
 export const make = () =>
   AiModelResolver.resolver(

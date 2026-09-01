@@ -21,7 +21,7 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { meta } from '#meta';
 import { PresenterCapabilities, PresenterOperation } from '#types';
 
-import { isPresenting } from '../paths';
+import { isPresenting } from '../paths.ts';
 
 /** Match nodes that can be presented (Collection or Document). */
 const whenPresentable = (node: AppGraphNode.Node, get: Atom.AtomContext) =>

@@ -20,11 +20,11 @@ import {
   SpaceState,
 } from '@dxos/protocols/proto/dxos/client/services';
 
-import { type DataProvider } from '../observability';
-import { EventLoopLagTracker, LAG_SAMPLE_INTERVAL_MS, LAG_WINDOW_MS } from './event-loop-lag';
-import { type CrossRealmMemory, measureCrossRealmMemory, readHeap, supportsCrossRealmMemory } from './memory';
-import { SyncEpisodeTracker } from './sync-episodes';
-import { subscribeSyncSummary } from './sync-state';
+import { type DataProvider } from '../observability.ts';
+import { EventLoopLagTracker, LAG_SAMPLE_INTERVAL_MS, LAG_WINDOW_MS } from './event-loop-lag.ts';
+import { type CrossRealmMemory, measureCrossRealmMemory, readHeap, supportsCrossRealmMemory } from './memory.ts';
+import { SyncEpisodeTracker } from './sync-episodes.ts';
+import { subscribeSyncSummary } from './sync-state.ts';
 
 const SPACE_METRICS_MIN_INTERVAL = 1000 * 60 * 10; // 10 minutes
 const NETWORK_METRICS_MIN_INTERVAL = 1000 * 60 * 10; // 10 minutes

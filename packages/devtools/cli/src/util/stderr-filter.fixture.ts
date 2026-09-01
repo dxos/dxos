@@ -16,7 +16,7 @@
  * is a real regression guard.
  */
 
-import { installStderrFilter } from './stderr-filter';
+import { installStderrFilter } from './stderr-filter.ts';
 
 installStderrFilter();
 

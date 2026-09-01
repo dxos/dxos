@@ -2,6 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './resize-attributes';
+export * from './resize-attributes.ts';
 
-export * from './ResizeHandle';
+export * from './ResizeHandle.tsx';

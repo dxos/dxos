@@ -7,10 +7,10 @@ import React, { type PropsWithChildren, forwardRef, useImperativeHandle, useRef 
 
 import { type DxGridAxisMeta, type DxGridPosition } from '@dxos/react-ui-grid';
 
-import { type InsertRowResult } from '../../model';
-import { TableContent } from './TableContent';
-import { TableContextProvider } from './TableContext';
-import { TableToolbar } from './TableToolbar';
+import { type InsertRowResult } from '../../model/index.ts';
+import { TableContent } from './TableContent.tsx';
+import { TableContextProvider } from './TableContext.ts';
+import { TableToolbar } from './TableToolbar.tsx';
 
 const columnDefault = { grid: { minSize: 80, maxSize: 640 } };
 const rowDefault = { frozenRowsStart: { readonly: true, focusUnfurl: false } };
@@ -62,4 +62,4 @@ export const Table = {
 };
 
 export type { TableController, TableRootProps };
-export type { TableExportFormat } from './TableToolbar';
+export type { TableExportFormat } from './TableToolbar.tsx';

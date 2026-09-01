@@ -12,8 +12,8 @@ import { type Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type InvitationHostService, InvitationOptions } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 
-import { type FlowLockHolder } from './invitation-state';
-import { tryAcquireBeforeContextDisposed } from './utils';
+import { type FlowLockHolder } from './invitation-state.ts';
+import { tryAcquireBeforeContextDisposed } from './utils.ts';
 
 const OPTIONS_TIMEOUT = 10_000;
 

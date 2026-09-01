@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { createLinkLabel } from './changes';
+import { createLinkLabel } from './changes.ts';
 
 const testCases = [
   { input: 'https://www.example.com', expected: 'example.com' },

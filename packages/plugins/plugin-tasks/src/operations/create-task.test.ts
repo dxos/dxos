@@ -9,8 +9,8 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { Milestone, Task, TaskSet } from '@dxos/types';
 
-import createMilestone from './create-milestone';
-import createTask from './create-task';
+import createMilestone from './create-milestone.ts';
+import createTask from './create-task.ts';
 
 describe('create-task', () => {
   it.effect("defaults status and joins the set's tasks array", () =>

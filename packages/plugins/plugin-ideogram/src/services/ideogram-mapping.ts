@@ -4,7 +4,7 @@
 
 import type * as GenerationService from '@dxos/plugin-studio/GenerationService';
 
-import { type IdeogramRequestConfig } from './ideogram-request';
+import { type IdeogramRequestConfig } from './ideogram-request.ts';
 
 // The Ideogram API returns JSON `null` (not absent) for fields it has no value for — e.g.
 // `request_id: null`. The Generation schema's optional fields are `T | undefined` (not nullable), so

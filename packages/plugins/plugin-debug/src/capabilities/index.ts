@@ -16,10 +16,10 @@ import { Debug, DebugEvents } from '#types';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
   environments: ['node'],
 });
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: [
     'org.dxos.plugin.debug.surface.stats',
     'org.dxos.role.article',
@@ -31,7 +31,7 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
   requires: [Capabilities.AtomRegistry, Debug.DebugCapabilities.Settings, AppCapabilities.FileUploader],
   props: ({ logStore }: Debug.DebugPluginOptions) => ({ logStore }),
 });
-export const DebugSettings = AppCapability.settings(() => import('./settings'), {
+export const DebugSettings = AppCapability.settings(() => import('./settings.ts'), {
   activatesOn: ActivationEvents.Idle,
   provides: [Debug.DebugCapabilities.Settings],
   environments: ['node'],
@@ -44,18 +44,18 @@ export const StatsPanel = Capability.lazyModule(
     props: ({ persistStats }: Debug.DebugPluginOptions) => ({ persist: persistStats ?? true }),
     activatesOn: DebugEvents.Start,
   },
-  () => import('./stats-panel'),
+  () => import('./stats-panel.ts'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'));
 export const MarkdownMenu = Capability.lazyModule(
   'MarkdownMenu',
   { provides: [MarkdownCapabilities.MenuExtension], activatesOn: DebugEvents.Start },
-  () => import('./markdown-menu'),
+  () => import('./markdown-menu.ts'),
 );
 export const LogRecording = Capability.lazyModule(
   'LogRecording',
   { provides: [], activatesOn: DebugEvents.Start },
-  () => import('./log-recording'),
+  () => import('./log-recording.ts'),
 );
 export const Translations = AppCapability.translations(translations);
 export const PluginAsset = AppCapability.pluginAsset({

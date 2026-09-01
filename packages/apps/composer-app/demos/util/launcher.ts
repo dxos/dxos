@@ -4,7 +4,7 @@
 
 import { type Browser, type BrowserContext, type BrowserType, type Page, chromium } from '@playwright/test';
 
-import { type Bounds } from './grid';
+import { type Bounds } from './grid.ts';
 
 /**
  * https://playwright.dev/docs/api/class-playwright

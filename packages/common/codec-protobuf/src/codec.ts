@@ -5,10 +5,10 @@
 import { type IConversionOptions } from 'protobufjs';
 import type protobufjs from 'protobufjs';
 
-import { type Any, type EncodingOptions, type WithTypeUrl } from './common';
-import { type BidirectionalMapingDescriptors } from './mapping';
-import { type Mapper, createMessageMapper } from './precompiled-mapping/create-message-mapper';
-import type { Schema } from './schema';
+import { type Any, type EncodingOptions, type WithTypeUrl } from './common.ts';
+import { type BidirectionalMapingDescriptors } from './mapping.ts';
+import { type Mapper, createMessageMapper } from './precompiled-mapping/create-message-mapper.ts';
+import type { Schema } from './schema.ts';
 
 export const OBJECT_CONVERSION_OPTIONS: IConversionOptions = {
   // Represent long integers as strings.

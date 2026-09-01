@@ -25,7 +25,7 @@ import {
 import { type Key } from '@dxos/echo';
 import { SpacesService } from '@dxos/protocols/rpc';
 
-import { SpaceNotReadyError } from '../../../errors';
+import { SpaceNotReadyError } from '../../../errors.ts';
 
 const SPACE_READY_TIMEOUT = Duration.seconds(30);
 

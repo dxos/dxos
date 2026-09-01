@@ -11,7 +11,7 @@ import { formatForDisplay } from '@dxos/schema';
 
 import { Ibkr } from '#types';
 
-import { meta } from '../../meta';
+import { meta } from '../../meta.ts';
 
 export type FundamentalsPanelProps = {
   snapshot?: Ibkr.FundamentalsSnapshot;

@@ -10,8 +10,8 @@ import { log } from '@dxos/log';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
-import { meta } from '../../meta';
-import { OnboardingOperation } from '../../operations';
+import { meta } from '../../meta.ts';
+import { OnboardingOperation } from '../../operations/index.ts';
 
 export const ExemplarSettings = () => {
   const { t } = useTranslation(meta.profile.key);

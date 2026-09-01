@@ -10,10 +10,10 @@ import { TestDatabaseLayer, testStoragePath } from '@dxos/echo-client/testing';
 import { PublicKey } from '@dxos/keys';
 import { Milestone, Task, TaskSet } from '@dxos/types';
 
-import createMilestone from './create-milestone';
-import createTask from './create-task';
-import listMilestones from './list-milestones';
-import updateTask from './update-task';
+import createMilestone from './create-milestone.ts';
+import createTask from './create-task.ts';
+import listMilestones from './list-milestones.ts';
+import updateTask from './update-task.ts';
 
 describe('list-milestones', () => {
   it.effect('sequences the set and reports progress derived from its tasks', () =>

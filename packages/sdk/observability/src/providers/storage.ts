@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Schedule from 'effect/Schedule';
 
-import { type DataProvider } from '../observability';
+import { type DataProvider } from '../observability.ts';
 
 export const provider: DataProvider = Effect.fn(function* (observability) {
   if (typeof navigator !== 'undefined' && navigator.storage?.estimate) {

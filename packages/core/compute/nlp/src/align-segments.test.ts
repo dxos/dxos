@@ -4,9 +4,9 @@
 
 import { describe, test } from 'vitest';
 
-import { alignSegments } from './align-segments';
-import { sourceHash } from './hash';
-import { type RawSegment, segmentAt } from './Segmentation';
+import { alignSegments } from './align-segments.ts';
+import { sourceHash } from './hash.ts';
+import { type RawSegment, segmentAt } from './Segmentation.ts';
 
 const slice = (text: string, range: { start: number; end: number }) => text.slice(range.start, range.end);
 

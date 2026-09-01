@@ -18,7 +18,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import { useExpandPath } from '../hooks';
+import { useExpandPath } from '../hooks.ts';
 
 export type HomeProps = {};
 

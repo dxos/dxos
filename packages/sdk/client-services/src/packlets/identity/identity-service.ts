@@ -17,9 +17,9 @@ import {
 import { type Credential, type Presentation, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type IdentityService } from '@dxos/protocols/rpc';
 
-import { type Identity } from './identity';
-import { type CreateIdentityOptions, type IdentityManager } from './identity-manager';
-import { type EdgeIdentityRecoveryManager } from './identity-recovery-manager';
+import { type CreateIdentityOptions, type IdentityManager } from './identity-manager.ts';
+import { type EdgeIdentityRecoveryManager } from './identity-recovery-manager.ts';
+import { type Identity } from './identity.ts';
 
 export class IdentityServiceImpl extends Resource implements IdentityService.Handlers {
   'constructor'(

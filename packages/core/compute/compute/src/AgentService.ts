@@ -13,8 +13,8 @@ import type { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import type { ContentBlock } from '@dxos/types';
 
-import type * as Trace from './Trace';
-import { Instructions } from './types';
+import type * as Trace from './Trace.ts';
+import { Instructions } from './types/index.ts';
 
 /**
  * Service interface for the agent session manager.

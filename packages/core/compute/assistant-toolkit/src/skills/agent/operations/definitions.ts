@@ -12,7 +12,7 @@ import * as TriggerEvent from '@dxos/compute/TriggerEvent';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
-import { Agent, Chat } from '../../../types';
+import { Agent, Chat } from '../../../types/index.ts';
 
 export const Relay = Operation.make({
   meta: {

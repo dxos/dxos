@@ -12,4 +12,4 @@
  * and prevent external packages from using internals directly.
  */
 
-export * from './meta';
+export * from './meta.ts';

@@ -16,7 +16,7 @@ import { type MaybePromise } from '@dxos/util';
 
 import { type FormFieldStatus } from '#types';
 
-import { getDiscriminatorDefaults } from '../util';
+import { getDiscriminatorDefaults } from '../util/index.ts';
 
 /**
  * Form properties.

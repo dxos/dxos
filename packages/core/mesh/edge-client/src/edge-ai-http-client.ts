@@ -15,7 +15,7 @@ import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 import { log } from '@dxos/log';
 import { BYOK_HEADER } from '@dxos/protocols';
 
-import { type EdgeHttpClient } from './edge-http-client';
+import { type EdgeHttpClient } from './edge-http-client.ts';
 
 export type GetEdgeHttpClient = () => EdgeHttpClient;
 

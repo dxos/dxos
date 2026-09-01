@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './find-ref-option';
+export * from './find-ref-option.ts';
 
-export * from './RefField';
-export * from './InlineRefField';
+export * from './RefField.tsx';
+export * from './InlineRefField.tsx';

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './markers';
-export * from './projector';
-export * from './renderer';
-export * from './types';
+export * from './markers.ts';
+export * from './projector/index.ts';
+export * from './renderer/index.ts';
+export * from './types.ts';

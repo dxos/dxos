@@ -10,8 +10,8 @@ import { getBufService } from '@dxos/protocols/buf-service';
 import { type TestService } from '@dxos/protocols/proto/example/testing/rpc';
 import { createProtoRpcPeer } from '@dxos/rpc';
 
-import { Muxer } from './muxer';
-import { type RpcPort } from './rpc-port';
+import { Muxer } from './muxer.ts';
+import { type RpcPort } from './rpc-port.ts';
 
 const setupPeers = () => {
   const peer1 = new Muxer();

@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, useCallback, useRef } from 'react';
 
-import { DebugOverlayProvider } from './DebugOverlayContext';
+import { DebugOverlayProvider } from './DebugOverlayContext.ts';
 
 //
 // Context

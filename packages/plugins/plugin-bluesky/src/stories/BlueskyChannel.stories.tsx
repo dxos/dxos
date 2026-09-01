@@ -27,7 +27,7 @@ import { BlueskyPlugin } from '#plugin';
 import { translations } from '#translations';
 import { BlueskyChannel, makeBlueskyChannel } from '#types';
 
-import { ATPROTO_BACKEND_KIND } from '../constants';
+import { ATPROTO_BACKEND_KIND } from '../constants.ts';
 
 /** Public Bluesky handle whose author feed is displayed by the demo channel. */
 const DEMO_HANDLE = 'bsky.app';

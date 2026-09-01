@@ -22,9 +22,9 @@ import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 import { meta } from '#meta';
 import { ConnectorAnnotations, ConnectorSpec } from '#types';
 
-import * as Binding from '../Binding';
-import * as ConnectorAuth from '../ConnectorAuth';
-import { CONNECTIONS_SECTION_ID, CONNECTIONS_SECTION_TYPE } from '../constants';
+import * as Binding from '../Binding.ts';
+import * as ConnectorAuth from '../ConnectorAuth.ts';
+import { CONNECTIONS_SECTION_ID, CONNECTIONS_SECTION_TYPE } from '../constants.ts';
 
 /**
  * True when `connection`'s credential is for a different remote account than `target` already syncs, so

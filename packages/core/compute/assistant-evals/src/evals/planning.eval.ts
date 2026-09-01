@@ -11,9 +11,9 @@ import { EffectEx } from '@dxos/effect';
 import { Outline } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { completedBlocks, findObject, toolInvocations } from '../assertions';
-import { judge } from '../judge';
-import { createEvalRunner } from '../runner';
+import { completedBlocks, findObject, toolInvocations } from '../assertions.ts';
+import { judge } from '../judge.ts';
+import { createEvalRunner } from '../runner.ts';
 
 // Ported from the gated `Planning` scenario (../testing/planning.test.ts).
 // Grades the real outline-checklist DB state and tool-invocation trace directly instead of the agent's

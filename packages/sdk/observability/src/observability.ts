@@ -19,9 +19,9 @@ import {
   type Feedback,
   type Kind,
   type Metrics,
-} from './observability-extension';
+} from './observability-extension.ts';
 
-export * from './storage';
+export * from './storage/index.ts';
 
 // TODO(wittjosiah): Figure out how to handle when telemetry is disabled.
 //   In theory the setting should be both persisted and synchronized.

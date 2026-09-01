@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './extended-markdown';
-export * from './stub';
-export * from './xml-block-decoration';
-export * from './xml-formatting';
-export * from './xml-tags';
-export * from './widgets';
+export * from './extended-markdown.ts';
+export * from './stub.ts';
+export * from './xml-block-decoration.ts';
+export * from './xml-formatting.ts';
+export * from './xml-tags.ts';
+export * from './widgets/index.ts';

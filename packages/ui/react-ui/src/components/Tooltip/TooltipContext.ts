@@ -6,7 +6,7 @@ import { type Scope, createContextScope } from '@radix-ui/react-context';
 import { createPopperScope } from '@radix-ui/react-popper';
 import { type ReactNode, type RefObject } from 'react';
 
-import { type TooltipSide, type TooltipTriggerElement } from './Tooltip';
+import { type TooltipSide, type TooltipTriggerElement } from './Tooltip.tsx';
 
 // Kept out of `Tooltip.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so a context and its hook exported beside them force a full page reload on every edit.

@@ -19,7 +19,7 @@ import { Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 // otherwise needs a transitive `@dxos/keys` import that's hard for d.ts emit to surface.
 import { EID as _EchoURIReference } from '@dxos/keys';
 
-import { TriggerTemplate } from './Routine';
+import { TriggerTemplate } from './Routine.ts';
 export { _EchoURIReference };
 
 export const CreateTriggerFromTemplate = Operation.make({

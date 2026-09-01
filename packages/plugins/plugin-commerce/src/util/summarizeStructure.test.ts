@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { summarizeStructure } from './summarizeStructure';
+import { summarizeStructure } from './summarizeStructure.ts';
 
 const card = (index: number) => `
   <li data-advertid="ad-${index}" data-testid="advertCard-${index}">

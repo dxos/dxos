@@ -15,8 +15,8 @@ import { AnchoredTo, Message, Thread } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { getMessageMetadata } from '../../util';
-import { CommentThread } from './CommentThread';
+import { getMessageMetadata } from '../../util/index.ts';
+import { CommentThread } from './CommentThread.tsx';
 
 const DOCUMENT = 'The quick brown fox jumps over the lazy dog.';
 const PHRASE = 'quick brown fox';

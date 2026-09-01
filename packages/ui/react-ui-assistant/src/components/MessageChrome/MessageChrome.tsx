@@ -11,8 +11,8 @@ import { type MessageChromeProps, isPrompt } from '@dxos/react-ui-feed';
 import { type ContentBlock, Message } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
-import { translationKey } from '../../translations';
-import { formatTime } from './format-time';
+import { translationKey } from '../../translations.ts';
+import { formatTime } from './format-time.ts';
 
 //
 // Context

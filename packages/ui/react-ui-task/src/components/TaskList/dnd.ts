@@ -4,7 +4,7 @@
 
 import { type Instruction, type ItemMode } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 
-import { type TaskDropIntent } from './hierarchy';
+import { type TaskDropIntent } from './hierarchy.ts';
 
 /**
  * Drag payload for a task row. Tagged so a drop target can tell a task from any other draggable

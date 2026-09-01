@@ -15,9 +15,9 @@ import { MemoryTransportFactory } from '@dxos/network-manager';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 
-import * as Otel from '../../src/extensions/otel';
-import { type Observability, addExtension, initialize, make } from '../../src/observability';
-import { identityProvider } from '../../src/providers/client-observability';
+import * as Otel from '../../src/extensions/otel/index.ts';
+import { type Observability, addExtension, initialize, make } from '../../src/observability.ts';
+import { identityProvider } from '../../src/providers/client-observability.ts';
 
 // Dev-only: this suite is permanently skipped in CI. It boots two Clients against
 // the real edge-main worker and emits spans to a real SigNoz ingestion endpoint.

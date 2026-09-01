@@ -8,10 +8,10 @@ import React, { useState } from 'react';
 
 import { translations } from '#translations';
 
-import { withTheme } from '../../testing';
-import { type DateRange } from '../Calendar';
-import { Input } from '../Input';
-import { DatePicker } from './DatePicker';
+import { withTheme } from '../../testing/index.ts';
+import { type DateRange } from '../Calendar/index.ts';
+import { Input } from '../Input/index.ts';
+import { DatePicker } from './DatePicker.tsx';
 
 const toTime = (date: Date | undefined) => (date ? format(date, 'HH:mm') : '');
 const applyTime = (date: Date | undefined, time: string): Date => {

@@ -10,7 +10,7 @@ import { fromDigestHex } from '@dxos/blob';
 import { Blob, Database, Error } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 
-import { EchoTestBuilder } from '../testing';
+import { EchoTestBuilder } from '../testing/index.ts';
 
 describe('Blob', () => {
   let builder: EchoTestBuilder;

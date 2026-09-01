@@ -4,7 +4,7 @@
 
 import { expect, test } from 'vitest';
 
-import { FractionUtil } from './fraction';
+import { FractionUtil } from './fraction.ts';
 
 test('invalid', () => {
   expect(() => FractionUtil.validate([1, 0])).to.throw();

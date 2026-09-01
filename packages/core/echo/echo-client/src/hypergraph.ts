@@ -22,11 +22,11 @@ import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { entry } from '@dxos/util';
 
-import { BlobManager } from './blob';
-import { type ItemsUpdatedEvent } from './core-db';
-import { type LoadBackend, LoadOpTable, type LoadResult } from './core-db/load-op';
-import { RequestImpl } from './core-db/ref-resolver-request';
-import { type DatabaseImpl } from './proxy-db';
+import { BlobManager } from './blob/index.ts';
+import { type ItemsUpdatedEvent } from './core-db/index.ts';
+import { type LoadBackend, LoadOpTable, type LoadResult } from './core-db/load-op.ts';
+import { RequestImpl } from './core-db/ref-resolver-request.ts';
+import { type DatabaseImpl } from './proxy-db/index.ts';
 import {
   GraphQueryContext,
   type QueryContext,
@@ -35,8 +35,8 @@ import {
   type QuerySource,
   RegistryQuerySource,
   SpaceQuerySource,
-} from './query';
-import { makeRegistry } from './registry';
+} from './query/index.ts';
+import { makeRegistry } from './registry/index.ts';
 
 const TRACE_REF_RESOLUTION = false;
 

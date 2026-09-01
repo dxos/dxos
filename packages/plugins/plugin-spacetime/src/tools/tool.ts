@@ -4,7 +4,7 @@
 
 import { type PointerInfo } from '@babylonjs/core';
 
-import { type ToolContext } from './tool-context';
+import { type ToolContext } from './tool-context.ts';
 
 /** Lifecycle interface for a tool plugin. */
 export interface Tool {

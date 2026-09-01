@@ -9,9 +9,9 @@ import { DefaultOutput, JsonTransformInput } from '@dxos/conductor';
 import { type ShapeDef } from '@dxos/react-ui-canvas-editor';
 import { createAnchorMap } from '@dxos/react-ui-canvas-editor';
 
-import { createFunctionAnchors, getHeight } from './common';
-import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs';
-import { JsonComponent, JsonTransformComponent } from './Json';
+import { createFunctionAnchors, getHeight } from './common/index.ts';
+import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs.ts';
+import { JsonComponent, JsonTransformComponent } from './Json.tsx';
 
 // Kept out of `Json.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on every edit.

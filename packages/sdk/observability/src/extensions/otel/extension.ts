@@ -14,9 +14,9 @@ import { LogLevel, log } from '@dxos/log';
 import { isNode, isNonNullable } from '@dxos/util';
 
 import buildSecrets from '../../cli-observability-secrets.json';
-import { type Extension, type ExtensionApi } from '../../observability-extension';
-import { getOtelLogLevel, isObservabilityDisabled, storeObservabilityDisabled } from '../../storage';
-import { stubExtension } from '../stub';
+import { type Extension, type ExtensionApi } from '../../observability-extension.ts';
+import { getOtelLogLevel, isObservabilityDisabled, storeObservabilityDisabled } from '../../storage/index.ts';
+import { stubExtension } from '../stub.ts';
 
 export type ExtensionsOptions = {
   /** For the OTEL, the name of the entity for which signals (metrics or trace) are collected. */
@@ -52,9 +52,9 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   metrics: metricsEnabled = false,
   traces: tracesEnabled = false,
 }) {
-  const { OtelLogs } = yield* Effect.promise(() => import('./logs'));
-  const { OtelMetrics } = yield* Effect.promise(() => import('./metrics'));
-  const { OtelTraces } = yield* Effect.promise(() => import('./traces'));
+  const { OtelLogs } = yield* Effect.promise(() => import('./logs.ts'));
+  const { OtelMetrics } = yield* Effect.promise(() => import('./metrics.ts'));
+  const { OtelTraces } = yield* Effect.promise(() => import('./traces.ts'));
 
   const cachedDisabled = yield* Effect.promise(() => isObservabilityDisabled(serviceName));
   const disabled = cachedDisabled || isObservabilityDisabledSync(serviceName);

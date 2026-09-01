@@ -12,14 +12,14 @@ import {
   OrderedListItem,
   type OrderedListItemProps,
   OrderedListTitle,
-} from './OrderedListItem';
+} from './OrderedListItem.tsx';
 import {
   OrderedListContent,
   OrderedListRoot,
   type OrderedListRootProps,
   OrderedListViewport,
   type OrderedListViewportProps,
-} from './OrderedListRoot';
+} from './OrderedListRoot.tsx';
 
 /**
  * Reorderable, single-expandable master-detail list.

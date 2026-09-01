@@ -18,9 +18,9 @@ import { Position, isNonNullable } from '@dxos/util';
 
 import { scheduleTask, yieldOrContinue } from '#scheduler';
 
-import * as Graph from './AppGraph';
-import * as Node from './AppGraphNode';
-import { nodeArgsUnchanged, normalizeRelation, withLabel } from './util';
+import * as Graph from './AppGraph.ts';
+import * as Node from './AppGraphNode.ts';
+import { nodeArgsUnchanged, normalizeRelation, withLabel } from './util.ts';
 
 //
 // Extension Types

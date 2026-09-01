@@ -12,8 +12,8 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 
-import * as Rpc from './internal/rpc';
-import * as RpcTiming from './RpcTiming';
+import * as Rpc from './internal/rpc.ts';
+import * as RpcTiming from './RpcTiming.ts';
 
 class TimingRpcs extends RpcGroup.make(
   EffectRpc.make('reportTiming', {

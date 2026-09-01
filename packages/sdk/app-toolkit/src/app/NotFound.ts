@@ -14,7 +14,7 @@ import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Attention } from '@dxos/react-ui-attention/types';
 
-import * as GraphPath from './GraphPath';
+import * as GraphPath from './GraphPath.ts';
 
 export const NOT_FOUND_NODE_ID = 'not-found';
 

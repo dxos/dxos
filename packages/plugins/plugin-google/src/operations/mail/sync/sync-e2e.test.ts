@@ -25,7 +25,7 @@ import { ErrorCodec, FunctionRuntimeKind } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { Message } from '@dxos/types';
 
-import { GMAIL_CONNECTOR_ID } from '../../../constants';
+import { GMAIL_CONNECTOR_ID } from '../../../constants.ts';
 
 const config = configPreset({ edge: 'local' });
 

@@ -6,7 +6,7 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { runAndForwardErrors, unwrapExit } from './internal/errors';
+import { runAndForwardErrors, unwrapExit } from './internal/errors.ts';
 
 /**
  * Provides effect runtime with services to run effects.

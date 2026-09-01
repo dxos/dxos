@@ -7,9 +7,9 @@ import React from 'react';
 
 import { type ChromaticPalette } from '@dxos/ui-types';
 
-import { withLayout, withTheme } from '../../testing';
-import { type Gap, gapClasses } from '../layout';
-import { Flex } from './Flex';
+import { withLayout, withTheme } from '../../testing/index.ts';
+import { type Gap, gapClasses } from '../layout.ts';
+import { Flex } from './Flex.tsx';
 
 const Cell = ({ label, hue }: { label: string; hue: ChromaticPalette }) => (
   <div data-hue={hue} className='flex w-full dx-callout p-2 text-sm font-mono border rounded-sm'>

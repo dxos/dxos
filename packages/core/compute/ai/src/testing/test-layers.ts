@@ -9,11 +9,11 @@ import * as Layer from 'effect/Layer';
 import * as Redacted from 'effect/Redacted';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
-import * as AiModelResolver from '../AiModelResolver';
-import type * as AiService from '../AiService';
-import { AnthropicResolver, LMStudioResolver, OllamaResolver } from '../resolvers';
-import { LanguageModelFixture } from './model-fixture';
-import { tapHttpErrors } from './tap';
+import * as AiModelResolver from '../AiModelResolver.ts';
+import type * as AiService from '../AiService.ts';
+import { AnthropicResolver, LMStudioResolver, OllamaResolver } from '../resolvers/index.ts';
+import { LanguageModelFixture } from './model-fixture/index.ts';
+import { tapHttpErrors } from './tap.ts';
 
 export type AiServiceLayer = Layer.Layer<AiService.AiService, ConfigError.ConfigError, never>;
 

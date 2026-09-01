@@ -10,7 +10,7 @@ import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { trim } from '@dxos/util';
 
-import { CalculatorTool, calculatorHandler } from './calculator';
+import { CalculatorTool, calculatorHandler } from './calculator.ts';
 
 export const TestingToolkit = Toolkit.make(
   CalculatorTool,

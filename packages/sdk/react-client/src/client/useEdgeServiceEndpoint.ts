@@ -6,7 +6,7 @@ import { useContext } from 'react';
 
 import { type EdgeServiceName, getEdgeServiceEndpoint } from '@dxos/config';
 
-import { ClientContext } from './context';
+import { ClientContext } from './context.ts';
 
 /**
  * Hook resolving an EDGE service endpoint from the client config; `undefined` when the service is

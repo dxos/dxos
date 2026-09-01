@@ -14,7 +14,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { PluginDetail } from './PluginDetail';
+import { PluginDetail } from './PluginDetail.tsx';
 
 const plugin = Plugin.define(
   Plugin.makeMeta({

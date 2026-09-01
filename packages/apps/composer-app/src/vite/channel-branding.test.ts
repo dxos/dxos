@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, test, vi } from 'vitest';
 
-import { applyChannelFavicons, bootMarkPath, channelVariant } from './channel-branding';
+import { applyChannelFavicons, bootMarkPath, channelVariant } from './channel-branding.ts';
 
 const FAVICONS = [
   'favicon.svg',

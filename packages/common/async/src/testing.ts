@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import { sleep } from './timeout';
-import { Trigger } from './trigger';
+import { sleep } from './timeout.ts';
+import { Trigger } from './trigger.ts';
 
 /**
  * NOTE: THIS SHOULD ONLY BE USED IN TESTS.

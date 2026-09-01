@@ -7,7 +7,7 @@ import { type EditorView, ViewPlugin } from '@codemirror/view';
 
 import { log } from '@dxos/log';
 
-import { treeFacet } from './tree';
+import { treeFacet } from './tree.ts';
 
 const LIST_ITEM_REGEX = /^\s*- (\[ \]|\[x\])? /;
 

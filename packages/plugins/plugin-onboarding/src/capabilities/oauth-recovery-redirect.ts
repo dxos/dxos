@@ -17,12 +17,12 @@ import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ClientOperation } from '@dxos/plugin-client/ClientOperation';
 
-import { OnboardingOperation } from '../operations';
+import { OnboardingOperation } from '../operations/index.ts';
 import {
   OAUTH_RECOVERY_REDIRECT_PATH,
   type OAuthRecoveryPendingSnapshot,
   oauthRecoveryPendingKey,
-} from '../operations/shared';
+} from '../operations/shared.ts';
 
 const RECOVER_IDENTITY_RPC_TIMEOUT = 30_000;
 

@@ -11,8 +11,8 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import { trim } from '@dxos/util';
 
-import { findObject, objectExists } from '../assertions';
-import { createEvalRunner } from '../runner';
+import { findObject, objectExists } from '../assertions.ts';
+import { createEvalRunner } from '../runner.ts';
 
 // Ported from the gated `Markdown` scenarios (../testing/markdown.test.ts).
 // Grades the DB effect directly instead of the agent's self-reported `completedCriteria`.

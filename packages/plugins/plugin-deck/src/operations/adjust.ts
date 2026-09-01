@@ -18,9 +18,9 @@ import { Position } from '@dxos/util';
 
 import { CompanionViewState, DeckCapabilities, DeckOperation, DeckSchema } from '#types';
 
-import { incrementPlank } from '../layout';
-import { computeActiveUpdates, isCompanionOpen, openCompanionPlank } from '../util';
-import { updateActiveDeck } from './helpers';
+import { incrementPlank } from '../layout.ts';
+import { computeActiveUpdates, isCompanionOpen, openCompanionPlank } from '../util/index.ts';
+import { updateActiveDeck } from './helpers.ts';
 
 const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperation.Adjust.pipe(
   Operation.withHandler(

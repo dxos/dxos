@@ -21,7 +21,7 @@ import { beforeEach } from 'vitest';
 
 import { LogLevel, type LogProcessor, log } from '@dxos/log';
 
-import { layerOtel } from './otel';
+import { layerOtel } from './otel.ts';
 
 const resource = resourceFromAttributes({
   [ATTR_SERVICE_NAME]: 'test',

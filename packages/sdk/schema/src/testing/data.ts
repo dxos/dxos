@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { DXN, Filter, Format, JsonSchema, Query, Type, type View } from '@dxos/echo';
 
-import { ViewModel } from '../types';
+import { ViewModel } from '../types/index.ts';
 
 /**
  * @deprecated Use (@dxos/echo/testing)

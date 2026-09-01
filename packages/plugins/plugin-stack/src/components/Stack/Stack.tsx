@@ -30,7 +30,7 @@ import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 
 import { meta } from '#meta';
 
-import { StackContext, useStack, useStackContext } from './StackContext';
+import { StackContext, useStack, useStackContext } from './StackContext.ts';
 
 //
 // Types

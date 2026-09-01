@@ -25,8 +25,15 @@ import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import { type Space } from '@dxos/react-client/echo';
 import { Outline, Task, TaskSet } from '@dxos/types';
 
-import { StoryRole } from '../modules';
-import { Calculate, CalculatorSkill, ModuleContainer, config, createDecorators, storyParameters } from '../testing';
+import { StoryRole } from '../modules/index.ts';
+import {
+  Calculate,
+  CalculatorSkill,
+  ModuleContainer,
+  config,
+  createDecorators,
+  storyParameters,
+} from '../testing/index.ts';
 
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Chat',

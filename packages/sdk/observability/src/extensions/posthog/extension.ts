@@ -9,8 +9,8 @@ import { type Config, getEnvString } from '@dxos/config';
 import { log } from '@dxos/log';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 
-import { type Extension } from '../../observability-extension';
-import { stubExtension } from '../stub';
+import { type Extension } from '../../observability-extension.ts';
+import { stubExtension } from '../stub.ts';
 
 export type ExtensionsOptions = {
   config: Config;
@@ -86,7 +86,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   }
 
   const { default: posthog } = yield* Effect.promise(() => import('posthog-js'));
-  const { logProcessor } = yield* Effect.promise(() => import('./log-processor'));
+  const { logProcessor } = yield* Effect.promise(() => import('./log-processor.ts'));
   let feedbackSurveyAvailable: boolean | null = null;
   let unregisterPosthogProcessors: (() => void) | undefined;
 

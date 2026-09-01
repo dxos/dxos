@@ -10,10 +10,10 @@ import { Feed, Obj } from '@dxos/echo';
 
 import { Ibkr, IbkrOperation } from '#types';
 
-import { IBKR_SOURCE } from '../constants';
-import { IbkrConnectionError, IbkrSyncError } from '../errors';
-import { fetchFlexReportXml, parseCash, parsePositions, parseTrades } from '../services';
-import { getOrCreatePortfolioFeed } from './feed';
+import { IBKR_SOURCE } from '../constants.ts';
+import { IbkrConnectionError, IbkrSyncError } from '../errors.ts';
+import { fetchFlexReportXml, parseCash, parsePositions, parseTrades } from '../services/index.ts';
+import { getOrCreatePortfolioFeed } from './feed.ts';
 
 const getCredential = Effect.gen(function* () {
   const credential = yield* Credential.CredentialsService.getCredential({ service: IBKR_SOURCE });

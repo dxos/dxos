@@ -5,9 +5,9 @@
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type SchedulerEnvImpl } from '../env';
-import { type Platform, type ReplicantsSummary, type TestPlan, type TestProps } from '../plan';
-import { WsReplicant } from '../replicants/ws-replicant';
+import { type SchedulerEnvImpl } from '../env/index.ts';
+import { type Platform, type ReplicantsSummary, type TestPlan, type TestProps } from '../plan/index.ts';
+import { WsReplicant } from '../replicants/ws-replicant.ts';
 
 export type EdgeWsTestSpec = {
   platform: Platform;

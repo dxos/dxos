@@ -10,18 +10,18 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { assertArgument } from '@dxos/invariant';
 
-import type * as Entity from '../../Entity';
-import type * as Obj from '../../Obj';
-import type * as Ref from '../../Ref';
-import type * as Relation from '../../Relation';
-import { getLabel } from '../Annotation';
-import { snapshotEquals, snapshotForComparison } from '../common/atom-snapshot';
-import { subscribe } from '../common/proxy/reactive';
-import { getDatabase, isEntity } from '../Entity';
-import { RefTypeId } from '../Ref/ref';
-import { loadRefTarget } from '../Ref/utils';
-import { isDeleted } from './deleted';
-import { getSnapshot } from './snapshot';
+import type * as Entity from '../../Entity.ts';
+import type * as Obj from '../../Obj.ts';
+import type * as Ref from '../../Ref.ts';
+import type * as Relation from '../../Relation.ts';
+import { getLabel } from '../Annotation/index.ts';
+import { snapshotEquals, snapshotForComparison } from '../common/atom-snapshot.ts';
+import { subscribe } from '../common/proxy/reactive.ts';
+import { getDatabase, isEntity } from '../Entity/index.ts';
+import { RefTypeId } from '../Ref/ref.ts';
+import { loadRefTarget } from '../Ref/utils.ts';
+import { isDeleted } from './deleted.ts';
+import { getSnapshot } from './snapshot.ts';
 
 const isRef = (obj: unknown): obj is Ref.Ref<any> =>
   obj != null && typeof obj === 'object' && RefTypeId in (obj as object);

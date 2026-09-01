@@ -22,10 +22,10 @@ import type { Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type Teleport } from '@dxos/teleport';
 import { ComplexMap } from '@dxos/util';
 
-import { type IMetadataStore, IMetadataStoreService } from '../metadata';
-import { CredentialRetrieverExtension } from './admission-discovery-extension';
-import { Space } from './space';
-import { SpaceProtocol, type SwarmIdentity } from './space-protocol';
+import { type IMetadataStore, IMetadataStoreService } from '../metadata/index.ts';
+import { CredentialRetrieverExtension } from './admission-discovery-extension.ts';
+import { SpaceProtocol, type SwarmIdentity } from './space-protocol.ts';
+import { Space } from './space.ts';
 
 export type SpaceManagerProps = {
   feedStore: FeedStore<FeedMessage>;

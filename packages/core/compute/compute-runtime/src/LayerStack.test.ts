@@ -14,7 +14,7 @@ import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { EffectEx } from '@dxos/effect';
 import { SpaceId } from '@dxos/keys';
 
-import * as LayerStack from './LayerStack';
+import * as LayerStack from './LayerStack.ts';
 
 //
 // Test service tags.

@@ -5,9 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '../../testing';
-import { Icon } from '../Icon';
-import { ToggleGroup, ToggleGroupItem, type ToggleGroupProps } from './ToggleGroup';
+import { withTheme } from '../../testing/index.ts';
+import { Icon } from '../Icon/index.ts';
+import { ToggleGroup, ToggleGroupItem, type ToggleGroupProps } from './ToggleGroup.tsx';
 
 // TODO(burdon): Create Radix-style Root, Item, etc?
 const DefaultStory = (props: ToggleGroupProps) => {

@@ -12,7 +12,7 @@ import { writeFileSync } from 'node:fs';
 import { CommandConfig, formatBytes } from '@dxos/cli-util';
 import { type SpaceExportResult } from '@dxos/protocols';
 
-import { adminDownload, adminRequest, formatAdminError } from '../util';
+import { adminDownload, adminRequest, formatAdminError } from '../util.ts';
 
 type ExportTriggerResponse = SpaceExportResult & { downloadUrl: string };
 

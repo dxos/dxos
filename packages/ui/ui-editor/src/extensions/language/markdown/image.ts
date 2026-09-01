@@ -13,7 +13,7 @@ import {
 } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, WidgetType } from '@codemirror/view';
 
-import { focusField } from '../../state/focus';
+import { focusField } from '../../state/focus.ts';
 
 export type ImageNodeData = { name: 'Image'; url: string };
 

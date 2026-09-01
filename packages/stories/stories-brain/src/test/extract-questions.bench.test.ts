@@ -12,7 +12,7 @@ import {
   round,
   runItemsBench,
   selectVariants,
-} from '../testing/harness';
+} from '../testing/harness/index.ts';
 
 describe.skipIf(!fixtureExists())('extract questions/requests per message (multi-model)', () => {
   test(

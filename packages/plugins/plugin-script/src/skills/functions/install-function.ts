@@ -10,7 +10,7 @@ import { Context } from '@dxos/context';
 import { Filter, Obj } from '@dxos/echo';
 import { FunctionsServiceClient } from '@dxos/edge-compute';
 
-import { InstallFunction } from './definitions';
+import { InstallFunction } from './definitions.ts';
 
 export default InstallFunction.pipe(
   Operation.withHandler(

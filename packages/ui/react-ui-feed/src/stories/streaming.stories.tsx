@@ -7,7 +7,7 @@ import { expect } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { FeedStory, type FeedStoryProps } from '../testing';
+import { FeedStory, type FeedStoryProps } from '../testing/index.ts';
 
 /**
  * The deciding case: a model answering into the tail while the reader watches.

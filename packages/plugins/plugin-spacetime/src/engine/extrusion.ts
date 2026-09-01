@@ -6,7 +6,7 @@ import type { Manifold, ManifoldToplevel, Vec2 } from 'manifold-3d';
 
 import { Model } from '#types';
 
-import { getFaceNormal } from './mesh-converter';
+import { getFaceNormal } from './mesh-converter.ts';
 
 /** Minimum object dimension on any axis (matches grid step). */
 export const MIN_SIZE = 1;

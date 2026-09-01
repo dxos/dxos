@@ -29,7 +29,7 @@ import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
 import README_CONTENT from '../content/readme.md?raw';
-import { README_DOCUMENT_NAME } from './default-content';
+import { README_DOCUMENT_NAME } from './default-content.ts';
 
 /**
  * Contributes the assistant's prompt-run extension so the ```prompt blocks in the README (e.g. the

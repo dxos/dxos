@@ -7,8 +7,8 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { asyncTimeout, latch, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 
-import { type Message } from './signal-methods';
-import { PAYLOAD_1, PAYLOAD_2, PAYLOAD_3, TestBuilder, messageEqual } from './testing';
+import { type Message } from './signal-methods.ts';
+import { PAYLOAD_1, PAYLOAD_2, PAYLOAD_3, TestBuilder, messageEqual } from './testing/index.ts';
 
 export const messengerTests = (signalManagerFactory: TestBuilder['createSignalManager']) => {
   test('Message between peers', async () => {

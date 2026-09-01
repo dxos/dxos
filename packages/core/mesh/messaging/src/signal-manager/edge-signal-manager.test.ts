@@ -7,9 +7,9 @@ import { describe, test } from 'vitest';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 
-import { type Message, type PeerInfo } from '../signal-methods';
-import { TestEdgeMesh } from '../testing';
-import { EdgeSignalManager } from './edge-signal-manager';
+import { type Message, type PeerInfo } from '../signal-methods.ts';
+import { TestEdgeMesh } from '../testing/index.ts';
+import { EdgeSignalManager } from './edge-signal-manager.ts';
 
 // DX-1125: exercise the broadcast pub/sub paths of EdgeSignalManager against an in-memory edge.
 

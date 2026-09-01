@@ -18,8 +18,8 @@ import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { meta } from '#meta';
 import { Result, Search } from '#types';
 
-import { ResultDetail } from './ResultDetail';
-import { ResultTile } from './ResultTile';
+import { ResultDetail } from './ResultDetail.tsx';
+import { ResultTile } from './ResultTile.tsx';
 
 export type SearchArticleProps = AppSurface.ObjectArticleProps<Search.Search>;
 

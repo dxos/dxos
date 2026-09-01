@@ -7,9 +7,9 @@ import React from 'react';
 
 import { random } from '@dxos/random';
 
-import { withTheme } from '../../testing';
-import { Button } from '../Button';
-import { AlertDialog } from './AlertDialog';
+import { withTheme } from '../../testing/index.ts';
+import { Button } from '../Button/index.ts';
+import { AlertDialog } from './AlertDialog.tsx';
 
 type StoryArgs = Partial<{
   title: string;

@@ -29,9 +29,9 @@ import { PLACES, TripBuilder, fakeRoute, fakeRoutingService } from '#testing';
 import { translations } from '#translations';
 import { Booking, Place, Routing, Segment, Trip, TripCapabilities } from '#types';
 
-import { TripPlugin } from '../../testing';
-import { SegmentArticle } from '../SegmentArticle/SegmentArticle';
-import { TripArticle } from './TripArticle';
+import { TripPlugin } from '../../testing.ts';
+import { SegmentArticle } from '../SegmentArticle/SegmentArticle.tsx';
+import { TripArticle } from './TripArticle.tsx';
 
 /** Inline plugin that contributes a `RoutingService` so `PlanRoute` resolves inside the story. */
 const RoutingStoryPlugin = (service: Routing.RoutingService) =>

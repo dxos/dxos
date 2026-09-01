@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Blob } from './Blob';
+import { Blob } from './Blob.tsx';
 
 const meta = {
   title: 'ui/react-ui-experimental/Blob',

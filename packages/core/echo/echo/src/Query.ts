@@ -10,20 +10,20 @@ import type * as Schema from 'effect/Schema';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { EID, type URI } from '@dxos/keys';
 
-import type * as Aggregate from './Aggregate';
-import type * as Collection from './Collection';
-import * as Database from './Database';
-import type * as Dataset from './Dataset';
-import type * as Feed from './Feed';
-import * as Filter from './Filter';
-import * as internal from './internal';
-import * as Obj from './Obj';
-import type * as Order from './Order';
-import type * as Ref from './Ref';
-import type * as Relation from './Relation';
+import type * as Aggregate from './Aggregate.ts';
+import type * as Collection from './Collection.ts';
+import * as Database from './Database.ts';
+import type * as Dataset from './Dataset.ts';
+import type * as Feed from './Feed.ts';
+import * as Filter from './Filter.ts';
+import * as internal from './internal/index.ts';
+import * as Obj from './Obj.ts';
+import type * as Order from './Order.ts';
+import type * as Ref from './Ref.ts';
+import type * as Relation from './Relation.ts';
 // eslint-disable-next-line @dxos/rules/import-as-namespace
-import type * as Type$ from './Type';
-import type * as View from './View';
+import type * as Type$ from './Type.ts';
+import type * as View from './View.ts';
 
 // TODO(dmaretskyi): Split up into interfaces for objects and relations so they can have separate verbs.
 // TODO(dmaretskyi): Undirected relation traversals.

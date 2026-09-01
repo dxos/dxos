@@ -32,14 +32,14 @@ import { log } from '@dxos/log';
 import { type QueryReactivity, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
 import { compositeKey, getDeep, isNonNullable } from '@dxos/util';
 
-import type { AutomergeHost } from '../automerge';
-import type { SpaceStateManager } from '../db-host';
-import { type InvalidationHint, canonicalTypename } from '../db-host/invalidation-hint';
-import { filterMatchDoc, filterMatchObjectJSON } from '../filter';
-import { QueryError } from './errors';
-import { type GroupAggregates, GroupBy, type GroupKeyValue } from './group-by';
-import { QueryPlan } from './plan';
-import { QueryPlanner, filterContainsInQuery } from './query-planner';
+import type { AutomergeHost } from '../automerge/index.ts';
+import type { SpaceStateManager } from '../db-host/index.ts';
+import { type InvalidationHint, canonicalTypename } from '../db-host/invalidation-hint.ts';
+import { filterMatchDoc, filterMatchObjectJSON } from '../filter/index.ts';
+import { QueryError } from './errors.ts';
+import { type GroupAggregates, GroupBy, type GroupKeyValue } from './group-by.ts';
+import { QueryPlan } from './plan.ts';
+import { QueryPlanner, filterContainsInQuery } from './query-planner.ts';
 
 type QueryExecutorOptions = {
   indexEngine: IndexEngine;

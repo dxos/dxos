@@ -23,7 +23,7 @@ import { log } from '@dxos/log';
 import { type Message } from '@dxos/types';
 import { isTruthy } from '@dxos/util';
 
-import { type AiChatServices, skillRegistry } from '../../util';
+import { type AiChatServices, skillRegistry } from '../../util/index.ts';
 
 export type ChatProcessorOptions = {
   runtime: Context.Context<AiChatServices>;

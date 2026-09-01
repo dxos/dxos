@@ -10,7 +10,7 @@ import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
 import { AccessToken } from '@dxos/link';
 
-import * as Provider from './Provider';
+import * as Provider from './Provider.ts';
 
 /**
  * A user's account / membership with an external service.

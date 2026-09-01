@@ -11,7 +11,7 @@ import { type SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devto
 import { useMulticastObservable } from '@dxos/react-hooks';
 import { Timeframe } from '@dxos/timeframe';
 
-import { PropertiesTable, PropertySchemaFormat } from '../../../components';
+import { PropertiesTable, PropertySchemaFormat } from '../../../components/index.ts';
 
 export const SpaceProperties: FC<{ space: Space; metadata: SubscribeToSpacesResponse.SpaceInfo }> = ({
   space,

@@ -31,9 +31,9 @@ import {
 import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-types';
 import { safeParseInt, trim } from '@dxos/util';
 
-import { EditorPreviewProvider, useEditorPreview } from '../components';
-import { useTextEditor } from '../hooks';
-import { EditorStory } from './components';
+import { EditorPreviewProvider, useEditorPreview } from '../components/index.ts';
+import { useTextEditor } from '../hooks/index.ts';
+import { EditorStory } from './components/index.ts';
 
 random.seed(123);
 

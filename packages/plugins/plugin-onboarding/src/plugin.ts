@@ -16,7 +16,7 @@ import {
   Translations,
 } from '#capabilities';
 
-import { meta } from './meta';
+import { meta } from './meta.ts';
 
 export const OnboardingPlugin = Plugin.define<OnboardingOptions>(meta).pipe(
   Plugin.addModule(AppGraphBuilder),

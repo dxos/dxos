@@ -5,7 +5,7 @@
 import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
 import { describe, expect, test } from 'vitest';
 
-import { createResources } from './extension';
+import { createResources } from './extension.ts';
 
 describe('createResources', () => {
   const attributes = { [ATTR_SERVICE_NAME]: 'composer', 'deployment.environment': 'test' };

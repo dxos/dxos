@@ -17,9 +17,9 @@ import { EID } from '@dxos/keys';
 import { type TreeData } from '@dxos/react-ui-list';
 import { Position, inferObjectOrder } from '@dxos/util';
 
-import { AppNodeMatcher } from '../app-graph';
-import { AppNode } from '../app-graph';
-import { AppAnnotation } from '../echo';
+import { AppNodeMatcher } from '../app-graph/index.ts';
+import { AppNode } from '../app-graph/index.ts';
+import { AppAnnotation } from '../echo/index.ts';
 
 /** Stable rearrange callback that persists section order via SectionOrderAnnotation on space.properties. */
 export const makeSectionRearrangeCallback = AppNode.createFactory(

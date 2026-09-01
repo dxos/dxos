@@ -12,7 +12,7 @@ import { type XmlWidgetProps, getXmlTextChild } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { safeParseJson } from '@dxos/util';
 
-import { translationKey } from '../translations';
+import { translationKey } from '../translations.ts';
 
 export type ToolWidgetProps = XmlWidgetProps;
 

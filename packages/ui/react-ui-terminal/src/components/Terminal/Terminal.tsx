@@ -15,8 +15,8 @@ import React, { type MutableRefObject, useEffect, useRef } from 'react';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { XtermBridge, XtermContext, runShell } from '../../cli';
-import { createXtermTheme } from './theme';
+import { XtermBridge, XtermContext, runShell } from '../../cli/index.ts';
+import { createXtermTheme } from './theme.ts';
 
 /** Imperative surface for hosts that render controls beside the terminal (a clear button, e.g.). */
 export type TerminalApi = {

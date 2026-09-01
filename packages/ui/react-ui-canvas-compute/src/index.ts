@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './graph';
-export * from './hooks';
-export * from './registry';
-export * from './shapes';
-export * from './compute-layout';
+export * from './graph/index.ts';
+export * from './hooks/index.ts';
+export * from './registry.ts';
+export * from './shapes/index.ts';
+export * from './compute-layout.ts';

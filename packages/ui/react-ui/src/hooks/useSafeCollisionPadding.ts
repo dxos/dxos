@@ -5,8 +5,8 @@
 import { type TooltipContentProps } from '@radix-ui/react-tooltip';
 import { useMemo } from 'react';
 
-import { type SafeAreaPadding } from './useSafeArea';
-import { useThemeContext } from './useThemeContext';
+import { type SafeAreaPadding } from './useSafeArea.ts';
+import { useThemeContext } from './useThemeContext.ts';
 
 type PaddingProp = TooltipContentProps['collisionPadding'];
 type PaddingRecord = Exclude<PaddingProp, number | undefined>;

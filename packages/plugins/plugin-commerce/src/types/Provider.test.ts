@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import * as Provider from './Provider';
+import * as Provider from './Provider.ts';
 
 describe('Provider type', () => {
   test('make + instanceOf', ({ expect }) => {

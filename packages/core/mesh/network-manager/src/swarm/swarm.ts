@@ -12,14 +12,14 @@ import { type ListeningHandle, type Messenger, type PeerInfo, PeerInfoHash, type
 import { type Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap, isNonNullable } from '@dxos/util';
 
-import { type OfferMessage, type SignalMessage, SwarmMessenger } from '../signal';
-import { type SwarmController, type Topology } from '../topology';
-import { type TransportFactory } from '../transport';
-import { type Topic } from '../types';
-import { type WireProtocolProvider } from '../wire-protocol';
-import { type Connection, ConnectionState } from './connection';
-import { type ConnectionLimiter } from './connection-limiter';
-import { Peer } from './peer';
+import { type OfferMessage, type SignalMessage, SwarmMessenger } from '../signal/index.ts';
+import { type SwarmController, type Topology } from '../topology/index.ts';
+import { type TransportFactory } from '../transport/index.ts';
+import { type Topic } from '../types.ts';
+import { type WireProtocolProvider } from '../wire-protocol.ts';
+import { type ConnectionLimiter } from './connection-limiter.ts';
+import { type Connection, ConnectionState } from './connection.ts';
+import { Peer } from './peer.ts';
 
 const INITIATION_DELAY = 100;
 

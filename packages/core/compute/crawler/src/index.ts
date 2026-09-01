@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as Type from './types';
-export * from './errors';
-export * from './Source';
-export * as StateStore from './StateStore';
-export * as AgentRegistry from './AgentRegistry';
-export * from './Stage';
-export * as Crawler from './Crawler';
-export * from './stages/extract-facts';
-export * from './stages/agent-profile';
-export * from './stages/topics';
+export * as Type from './types.ts';
+export * from './errors.ts';
+export * from './Source.ts';
+export * as StateStore from './StateStore.ts';
+export * as AgentRegistry from './AgentRegistry.ts';
+export * from './Stage.ts';
+export * as Crawler from './Crawler.ts';
+export * from './stages/extract-facts.ts';
+export * from './stages/agent-profile.ts';
+export * from './stages/topics.ts';

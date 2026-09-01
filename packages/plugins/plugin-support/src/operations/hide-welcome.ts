@@ -12,7 +12,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { HelpOperation } from '#types';
 
-import { WelcomeDismissedAnnotation } from '../annotations';
+import { WelcomeDismissedAnnotation } from '../annotations.ts';
 
 const handler: Operation.WithHandler<typeof HelpOperation.HideWelcome> = HelpOperation.HideWelcome.pipe(
   Operation.withHandler(

@@ -46,9 +46,9 @@ import { arrayMove } from '@dxos/util';
 import { useNavTreeState } from '#hooks';
 import { meta } from '#meta';
 
-import { l0ItemType } from '../../util';
-import { useNavTreeContext } from '../NavTreeContext';
-import { UserAccountAvatar } from '../UserAccountAvatar';
+import { l0ItemType } from '../../util.ts';
+import { useNavTreeContext } from '../NavTreeContext/index.ts';
+import { UserAccountAvatar } from '../UserAccountAvatar/index.ts';
 
 //
 // L0Item

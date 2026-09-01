@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { Obj } from '@dxos/echo';
 import { Branch, Version } from '@dxos/versioning';
 
-import * as Markdown from './Markdown';
+import * as Markdown from './Markdown.ts';
 
 describe('Versioning schema', () => {
   test('document accepts an optional history struct', () => {

@@ -10,8 +10,8 @@ import { Avatar, Button, DropdownMenu, Icon, Tag, type ThemedClassName, useId, u
 import { Listbox } from '@dxos/react-ui-list';
 import { hexToFallback } from '@dxos/util';
 
-import { translationKey } from '../../translations';
-import { type AgentFormProps, type DeviceListItemProps, type ShellDevice } from './DeviceListProps';
+import { translationKey } from '../../translations.ts';
+import { type AgentFormProps, type DeviceListItemProps, type ShellDevice } from './DeviceListProps.ts';
 
 /** Icon per device kind; an unreported kind falls back to the key-derived emoji. */
 const KIND_ICONS: Record<NonNullable<ShellDevice['kind']>, string> = {

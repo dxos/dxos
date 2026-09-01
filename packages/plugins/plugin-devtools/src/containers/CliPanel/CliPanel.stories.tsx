@@ -16,7 +16,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { CliPanel } from './CliPanel';
+import { CliPanel } from './CliPanel.tsx';
 
 const meta = {
   title: 'plugins/plugin-devtools/containers/CliPanel',

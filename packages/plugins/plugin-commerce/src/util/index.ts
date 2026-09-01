@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './bindRequest';
-export * from './cleanHtml';
-export * from './deriveMapping';
-export * from './extractResults';
-export * from './fetch';
-export * from './renderViaCrx';
-export * from './summarizeStructure';
-export * from './unionSchema';
+export * from './bindRequest.ts';
+export * from './cleanHtml.ts';
+export * from './deriveMapping.ts';
+export * from './extractResults.ts';
+export * from './fetch.ts';
+export * from './renderViaCrx.ts';
+export * from './summarizeStructure.ts';
+export * from './unionSchema.ts';

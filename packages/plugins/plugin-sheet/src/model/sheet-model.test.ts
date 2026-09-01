@@ -12,8 +12,8 @@ import { log } from '@dxos/log';
 
 import { Sheet, SheetUtil } from '#types';
 
-import { SheetModel } from './sheet-model';
-import { createTestGrid } from './testing';
+import { SheetModel } from './sheet-model.ts';
+import { createTestGrid } from './testing.ts';
 
 describe('SheetModel', () => {
   let testBuilder: TestBuilder;

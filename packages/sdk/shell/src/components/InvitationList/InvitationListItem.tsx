@@ -26,9 +26,9 @@ import { Listbox } from '@dxos/react-ui-list';
 import { getSize, mx } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
-import { translationKey } from '../../translations';
-import { AuthCode } from '../AuthCode/AuthCode';
-import { type SharedInvitationListProps } from './InvitationListProps';
+import { translationKey } from '../../translations.ts';
+import { AuthCode } from '../AuthCode/AuthCode.tsx';
+import { type SharedInvitationListProps } from './InvitationListProps.ts';
 
 export type InvitationListItemProps = SharedInvitationListProps & {
   invitation: CancellableInvitationObservable;

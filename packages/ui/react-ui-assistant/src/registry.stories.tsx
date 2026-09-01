@@ -10,8 +10,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ContentBlock } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { assistantRegistry } from './registry';
-import { translations } from './translations';
+import { assistantRegistry } from './registry.tsx';
+import { translations } from './translations.ts';
 
 /**
  * Every tag {@link assistantRegistry} registers, rendered through the shipping path: the document

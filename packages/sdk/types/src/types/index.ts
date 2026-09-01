@@ -2,31 +2,31 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Account from './Account';
-import * as Actor from './Actor';
-import * as AnchoredTo from './AnchoredTo';
-import * as Channel from './Channel';
-import * as ContentBlock from './ContentBlock';
-import * as DraftMessage from './DraftMessage';
-import * as Employer from './Employer';
-import * as Event from './Event';
-import * as File from './File';
-import * as Geo from './Geo';
-import * as HasConnection from './HasConnection';
-import * as HasRelationship from './HasRelationship';
-import * as HasSubject from './HasSubject';
-import * as Message from './Message';
-import * as Milestone from './Milestone';
-import * as Organization from './Organization';
-import * as Outline from './Outline';
-import * as Person from './Person';
-import * as Pipeline from './Pipeline';
-import * as Provider from './Provider';
-import * as Repo from './Repo';
-import * as Task from './Task';
-import * as TaskSet from './TaskSet';
-import * as Thread from './Thread';
-import * as Transcript from './Transcript';
+import * as Account from './Account.ts';
+import * as Actor from './Actor.ts';
+import * as AnchoredTo from './AnchoredTo.ts';
+import * as Channel from './Channel.ts';
+import * as ContentBlock from './ContentBlock.ts';
+import * as DraftMessage from './DraftMessage.ts';
+import * as Employer from './Employer.ts';
+import * as Event from './Event.ts';
+import * as File from './File.ts';
+import * as Geo from './Geo.ts';
+import * as HasConnection from './HasConnection.ts';
+import * as HasRelationship from './HasRelationship.ts';
+import * as HasSubject from './HasSubject.ts';
+import * as Message from './Message.ts';
+import * as Milestone from './Milestone.ts';
+import * as Organization from './Organization.ts';
+import * as Outline from './Outline.ts';
+import * as Person from './Person.ts';
+import * as Pipeline from './Pipeline.ts';
+import * as Provider from './Provider.ts';
+import * as Repo from './Repo.ts';
+import * as Task from './Task.ts';
+import * as TaskSet from './TaskSet.ts';
+import * as Thread from './Thread.ts';
+import * as Transcript from './Transcript.ts';
 
 /**
  * Common data types.
@@ -78,6 +78,6 @@ export {
 //
 
 // eslint-disable-next-line @dxos/rules/import-as-namespace
-export { LegacyOrganization } from './Organization';
+export { LegacyOrganization } from './Organization.ts';
 // eslint-disable-next-line @dxos/rules/import-as-namespace
-export { LegacyPerson } from './Person';
+export { LegacyPerson } from './Person.ts';

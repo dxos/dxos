@@ -7,14 +7,14 @@ import { describe, expect, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
-import * as Obj from '../../../Obj';
-import { TestSchema } from '../../../testing';
-import { EchoObjectSchema } from '../../Entity';
-import { setValue } from '../../Obj';
-import { Ref } from '../../Ref';
-import { foreignKey, getMeta } from '../types/meta';
-import { makeObject } from './make-object';
-import { change, subscribe } from './reactive';
+import * as Obj from '../../../Obj.ts';
+import { TestSchema } from '../../../testing/index.ts';
+import { EchoObjectSchema } from '../../Entity/index.ts';
+import { setValue } from '../../Obj/index.ts';
+import { Ref } from '../../Ref/index.ts';
+import { foreignKey, getMeta } from '../types/meta.ts';
+import { makeObject } from './make-object.ts';
+import { change, subscribe } from './reactive.ts';
 
 describe('complex schema validations', () => {
   test('any', () => {

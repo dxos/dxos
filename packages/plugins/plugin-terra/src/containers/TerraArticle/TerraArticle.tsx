@@ -18,9 +18,9 @@ import { TelemetryPanel, type TelemetryRow, TerraForm, TerraMap } from '#compone
 import { meta } from '#meta';
 import { Terra, TerraCapabilities, TerraObject } from '#types';
 
-import { PlanetCache, SceneFpsWidget, SceneManager, type TerraConfigValues, seaRadius } from '../../engine';
-import { ChaseCamera, ExplosionLayer, GizmoLayer, ObjectLayer, TrailLayer } from '../../scene';
-import { SimEngine, type SimObject, buildNavGrid, toGeo } from '../../sim';
+import { PlanetCache, SceneFpsWidget, SceneManager, type TerraConfigValues, seaRadius } from '../../engine/index.ts';
+import { ChaseCamera, ExplosionLayer, GizmoLayer, ObjectLayer, TrailLayer } from '../../scene/index.ts';
+import { SimEngine, type SimObject, buildNavGrid, toGeo } from '../../sim/index.ts';
 
 /** Tracks pause state for the render-loop clock: while paused, `pausedAtMs` freezes the sim time; on resume, the elapsed pause duration is folded into `pausedTotalMs` so the clock continues from where it froze rather than jumping ahead. */
 type SimClock = { pausedTotalMs: number; pausedAtMs: number | null };

@@ -14,7 +14,7 @@ import { type Identity as Identity$, type Space as Space$ } from '@dxos/halo';
 
 import { meta } from '#meta';
 
-import { type AccountCache as AccountCacheType } from './AccountCache';
+import { type AccountCache as AccountCacheType } from './AccountCache.ts';
 
 export const Client = Capability.makeSingleton<Client$>()(`${meta.profile.key}.capability.client`);
 export const Schema = Capability.make<Type.AnyEntity[]>()(`${meta.profile.key}.capability.schema`);

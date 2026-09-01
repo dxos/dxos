@@ -49,7 +49,7 @@ import { type ComposableProps } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
-import { INDENT_PER_LEVEL, TASK_DRAG_TYPE, type TaskDragData, dropIntent, isTaskDragData, itemMode } from './dnd';
+import { INDENT_PER_LEVEL, TASK_DRAG_TYPE, type TaskDragData, dropIntent, isTaskDragData, itemMode } from './dnd.ts';
 import {
   type TaskPlacement,
   type TaskTreeRow,
@@ -59,7 +59,7 @@ import {
   resolveTaskPlacement,
   subtreeIds,
   walkTaskTree,
-} from './hierarchy';
+} from './hierarchy.ts';
 
 const TASK_LIST_NAME = 'TaskList.Root';
 

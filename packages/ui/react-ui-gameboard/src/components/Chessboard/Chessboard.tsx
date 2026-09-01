@@ -21,8 +21,8 @@ import {
   getRelativeBounds,
   locationToString,
   useGameboardContext,
-} from '../Gameboard';
-import { type ChessModel, type ChessPiece, ChessPieces, boardStyles, getSquareColor, locationToPos } from './chess';
+} from '../Gameboard/index.ts';
+import { type ChessModel, type ChessPiece, ChessPieces, boardStyles, getSquareColor, locationToPos } from './chess.ts';
 
 /** Fallback atom for when model is undefined. */
 const EMPTY_PIECES_ATOM = Atom.make<PieceMap<ChessPiece>>({});

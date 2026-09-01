@@ -16,12 +16,12 @@ import {
 
 import { INPUT_NAME, type InputScopedProps, useInputContext } from '@dxos/react-input';
 
-import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
-import { type ThemedClassName } from '../../util';
-import { DatePicker } from '../DatePicker';
-import { Popover } from '../Popover';
-import { type InputSharedProps } from './Input';
-import { useInputTrigger } from './InputTriggerContext';
+import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
+import { DatePicker } from '../DatePicker/index.ts';
+import { Popover } from '../Popover/index.ts';
+import { type InputSharedProps } from './Input.tsx';
+import { useInputTrigger } from './InputTriggerContext.ts';
 
 //
 // Value <-> @internationalized/date adapters.

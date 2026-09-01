@@ -9,7 +9,7 @@ import type * as Script from '@dxos/compute/Script';
 import { Database, Obj } from '@dxos/echo';
 import { Doc, applyEdits } from '@dxos/echo-doc';
 
-import { Update } from './definitions';
+import { Update } from './definitions.ts';
 
 export default Update.pipe(
   Operation.withHandler(

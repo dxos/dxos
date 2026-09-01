@@ -14,7 +14,7 @@ import { CONSOLE_PROCESSOR, LogLevel, type LogProcessor, log } from '@dxos/log';
 import { createFileProcessor } from '@dxos/log/file-processor';
 import { trim } from '@dxos/util';
 
-import { type GlobalOptions, type Platform, type ReplicantProps, type ReplicantRuntimeProps } from './spec';
+import { type GlobalOptions, type Platform, type ReplicantProps, type ReplicantRuntimeProps } from './spec.ts';
 
 const DEBUG_PORT_START = 9229;
 

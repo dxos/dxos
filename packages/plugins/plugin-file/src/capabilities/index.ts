@@ -19,9 +19,9 @@ import { FileCapabilities, FileEvents } from '#types';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
-export const Schema = AppCapability.schema(() => import('./schema'));
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
+export const Schema = AppCapability.schema(() => import('./schema.ts'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'), {
   environments: ['node', 'workerd'],
 });
 export const EdgeBackend = Capability.lazyModule(
@@ -32,7 +32,7 @@ export const EdgeBackend = Capability.lazyModule(
     activatesOn: FileEvents.Start,
     environments: ['node', 'workerd'],
   },
-  () => import('./edge-backend'),
+  () => import('./edge-backend.ts'),
 );
 export const FileUploader = Capability.lazyModule(
   'FileUploader',
@@ -41,27 +41,27 @@ export const FileUploader = Capability.lazyModule(
     provides: [AppCapabilities.FileUploader],
     activatesOn: FileEvents.Start,
   },
-  () => import('./file-uploader'),
+  () => import('./file-uploader.ts'),
 );
 export const InlineBackend = Capability.lazyModule(
   'InlineBackend',
   { provides: [FileCapabilities.Backend], activatesOn: FileEvents.Start, environments: ['node', 'workerd'] },
-  () => import('./inline-backend'),
+  () => import('./inline-backend.ts'),
 );
 // Browser-only: the `image` editor extension mounts a React tree into the CodeMirror widget via
 // `react-dom/client`.
 export const Markdown = Capability.lazyModule(
   'MarkdownExtension',
   { provides: [MarkdownCapabilities.ExtensionProvider], activatesOn: MarkdownEvents.Start, environments: [] },
-  () => import('./markdown-extension'),
+  () => import('./markdown-extension.ts'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.formInput', 'org.dxos.role.section', 'org.dxos.role.slide'],
 });
-export const Settings = AppCapability.settings(() => import('./settings'), {
+export const Settings = AppCapability.settings(() => import('./settings.ts'), {
   activatesOn: ActivationEvents.Idle,
   provides: [FileCapabilities.SettingsAtom],
 });

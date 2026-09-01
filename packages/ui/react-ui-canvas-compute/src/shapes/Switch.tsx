@@ -8,8 +8,8 @@ import { DEFAULT_OUTPUT } from '@dxos/conductor';
 import { Input } from '@dxos/react-ui';
 import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
 
-import { useComputeNodeState } from '../hooks';
-import { type SwitchShape } from './switch-def';
+import { useComputeNodeState } from '../hooks/index.ts';
+import { type SwitchShape } from './switch-def.ts';
 
 // TODO(burdon): Should model as a constant.
 export const SwitchComponent = ({ shape }: ShapeComponentProps<SwitchShape>) => {

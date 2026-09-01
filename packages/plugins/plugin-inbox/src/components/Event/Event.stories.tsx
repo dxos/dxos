@@ -18,7 +18,7 @@ import { Event as EventType, Person } from '@dxos/types';
 import { ContactPreview, useContactCreate } from '#testing';
 import { translations } from '#translations';
 
-import { Event } from './Event';
+import { Event } from './Event.tsx';
 
 const generator: ValueGenerator = random as any;
 

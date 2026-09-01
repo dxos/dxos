@@ -12,7 +12,7 @@ import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexSet } from '@dxos/util';
 
-import { useDevtoolsDispatch } from '../../../hooks';
+import { useDevtoolsDispatch } from '../../../hooks/index.ts';
 
 export type PipelineTableRow = {
   id: string;

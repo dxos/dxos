@@ -9,8 +9,8 @@ import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext, Messenger } from '@dxos/messaging';
 import { type Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
-import { type OfferMessage, type SignalMessage } from './signal-messenger';
-import { SwarmMessenger } from './swarm-messenger';
+import { type OfferMessage, type SignalMessage } from './signal-messenger.ts';
+import { SwarmMessenger } from './swarm-messenger.ts';
 
 describe('SwarmMessenger', { timeout: 7000 }, () => {
   let topic: PublicKey;

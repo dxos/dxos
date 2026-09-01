@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { type Database, Obj, type Type } from '@dxos/echo';
 
-import { type IdentitySpec, identityKeys } from './IdentitySpec';
+import { type IdentitySpec, identityKeys } from './IdentitySpec.ts';
 
 /**
  * A set of objects the engine believes are the same entity — the "duplicate tuple". Membership is

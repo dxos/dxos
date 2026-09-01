@@ -6,7 +6,7 @@ import { getIndentUnit } from '@codemirror/language';
 import { type EditorState, type Extension } from '@codemirror/state';
 import { type Command, EditorView } from '@codemirror/view';
 
-import { bulletListIndentationWidth } from '../../language/markdown/styles';
+import { bulletListIndentationWidth } from '../../language/markdown/styles.ts';
 import {
   type Block,
   type BlockOps,
@@ -14,8 +14,8 @@ import {
   createBlockDrag,
   createBlockSelection,
   setBlockSelection,
-} from '../blocks';
-import { type Item, type Tree, getRange, treeFacet } from './tree';
+} from '../blocks/index.ts';
+import { type Item, type Tree, getRange, treeFacet } from './tree.ts';
 
 /**
  * Flattens the tree into draggable units in document order, one per item. Each unit spans only the

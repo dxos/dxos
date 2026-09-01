@@ -5,7 +5,7 @@
 import { type Meta } from '@storybook/react-vite';
 import React, { type PropsWithChildren, useLayoutEffect, useRef, useState } from 'react';
 
-import { mx } from './util';
+import { mx } from './util/index.ts';
 
 //
 // The sizing utilities exist to answer one question: how is this element sized by its parent?

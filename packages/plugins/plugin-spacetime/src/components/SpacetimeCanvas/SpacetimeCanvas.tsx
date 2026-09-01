@@ -20,7 +20,7 @@ import {
   importOBJ,
   manifoldToBabylon,
   rawDataToBabylon,
-} from '../../engine';
+} from '../../engine/index.ts';
 import {
   DEFAULT_EDITOR_STATE,
   type EditorState,
@@ -28,9 +28,9 @@ import {
   ToolManager,
   createToolManager,
   getSelectedObjectIds,
-} from '../../tools';
-import { type DebugInfo, DebugPanel } from './DebugPanel';
-import { extractSolidDebugInfo } from './solid-debug-info';
+} from '../../tools/index.ts';
+import { type DebugInfo, DebugPanel } from './DebugPanel.tsx';
+import { extractSolidDebugInfo } from './solid-debug-info.ts';
 
 export type SpacetimeCanvasProps = {
   showFps?: boolean;

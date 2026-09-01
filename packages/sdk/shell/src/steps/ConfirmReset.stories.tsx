@@ -7,9 +7,9 @@ import React from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { StorybookDialog } from '../story-components';
-import { translations } from '../translations';
-import { ConfirmReset } from './ConfirmReset';
+import { StorybookDialog } from '../story-components/index.ts';
+import { translations } from '../translations.ts';
+import { ConfirmReset } from './ConfirmReset.tsx';
 
 const meta = {
   title: 'sdk/shell/ConfirmReset',

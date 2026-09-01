@@ -8,7 +8,7 @@ import { Annotation, type Database, DXN, Feed, Filter, Obj, Ref, Tag, Type } fro
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { TagIndex } from '@dxos/schema';
 
-import { Provider } from './Provider';
+import { Provider } from './Provider.ts';
 
 /** System {@link Tag} foreign key for the user-applied star flag on a Result (within a Search). */
 export const STARRED_TAG = { source: 'org.dxos.plugin.commerce', id: 'starred' };

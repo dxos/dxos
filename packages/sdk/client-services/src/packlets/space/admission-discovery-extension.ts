@@ -14,7 +14,7 @@ import {
 } from '@dxos/protocols/proto/dxos/mesh/teleport';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 
-import { type Space } from './space';
+import { type Space } from './space.ts';
 
 /**
  * Guest's side for a connection to a concrete peer in p2p network during invitation.

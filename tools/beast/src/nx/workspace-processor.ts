@@ -8,8 +8,8 @@ import path from 'path';
 
 import { log } from '@dxos/log';
 
-import { type PackageJson, type Project, type WorkspaceJson } from '../types';
-import { array } from '../util';
+import { type PackageJson, type Project, type WorkspaceJson } from '../types.ts';
+import { array } from '../util.ts';
 
 type WorkspaceProcessorOptions = {
   verbose?: boolean;

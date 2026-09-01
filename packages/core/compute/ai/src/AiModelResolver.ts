@@ -12,8 +12,8 @@ import type * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { DXN } from '@dxos/keys';
 
-import * as AiService from './AiService';
-import { AiModelNotAvailableError } from './errors';
+import * as AiService from './AiService.ts';
+import { AiModelNotAvailableError } from './errors.ts';
 
 /**
  * v4 removed `Layer.fail`; a failing layer is the failure effect lifted with `Layer.unwrap`.

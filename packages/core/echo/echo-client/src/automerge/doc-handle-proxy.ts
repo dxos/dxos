@@ -10,7 +10,7 @@ import { Trigger, TriggerState } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 
-import * as Doc from './Doc';
+import * as Doc from './Doc.ts';
 
 export type ChangeEvent<T> = {
   handle: DocHandleProxy<T>;

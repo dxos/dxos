@@ -20,7 +20,7 @@ import { Text } from '@dxos/schema';
 import { translations } from '#translations';
 import { Artifact, Variant } from '#types';
 
-import { ArtifactCard } from './ArtifactCard';
+import { ArtifactCard } from './ArtifactCard.tsx';
 
 const DefaultStory = () => {
   const spaces = useSpaces();

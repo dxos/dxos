@@ -15,9 +15,9 @@ import { iconSize, mx } from '@dxos/ui-theme';
 import { type DeckCompanion, useBreakpoints, useDeckCompanions, useDeckState } from '#hooks';
 import { meta } from '#meta';
 
-import { layoutAppliesTopbar } from '../../util';
-import { PlankErrorFallback, PlankLoading } from '../Deck/PlankFallback';
-import { ToggleComplementarySidebarButton } from './SidebarButton';
+import { layoutAppliesTopbar } from '../../util/index.ts';
+import { PlankErrorFallback, PlankLoading } from '../Deck/PlankFallback.tsx';
+import { ToggleComplementarySidebarButton } from './SidebarButton.tsx';
 
 const label = ['complementary-sidebar.title', { ns: meta.profile.key }] satisfies Label;
 

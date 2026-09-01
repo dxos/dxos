@@ -4,9 +4,9 @@
 
 import React, { type ComponentPropsWithRef, type PropsWithChildren, forwardRef } from 'react';
 
-import { useThemeContext } from '../../hooks';
-import { type ThemedClassName } from '../../util';
-import { IconBlockStyleProps } from './Icon.theme';
+import { useThemeContext } from '../../hooks/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
+import { IconBlockStyleProps } from './Icon.theme.ts';
 
 export type IconBlockProps = ThemedClassName<ComponentPropsWithRef<'div'> & PropsWithChildren<IconBlockStyleProps>>;
 

@@ -8,7 +8,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
 
-import { Framer, decodeFrame, encodeFrame } from './framer';
+import { Framer, decodeFrame, encodeFrame } from './framer.ts';
 
 const pipeWithRandomizedChunks = (from: NodeJS.ReadableStream, to: NodeJS.WritableStream): (() => void) => {
   let buffers: Buffer[] = [];

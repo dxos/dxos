@@ -10,7 +10,7 @@ import { type Event as EventType } from '@dxos/types';
 import { automerge } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
-import { Editor } from '../Editor';
+import { Editor } from '../Editor/index.ts';
 
 export type EventBodyEditorProps = ThemedClassName<{
   event: EventType.Event;

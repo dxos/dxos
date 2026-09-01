@@ -9,7 +9,7 @@ import { getBufService } from '@dxos/protocols/buf-service';
 import { type TestService } from '@dxos/protocols/proto/example/testing/rpc';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 
-import { type ExtensionContext, type TeleportExtension } from '../teleport';
+import { type ExtensionContext, type TeleportExtension } from '../teleport.ts';
 
 interface TestExtensionCallbacks {
   onOpen?: () => Promise<void>;

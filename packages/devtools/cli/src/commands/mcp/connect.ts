@@ -13,7 +13,7 @@ import { CommandConfig, FormBuilder, print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { BaseError } from '@dxos/errors';
 
-import { authorize, initialize, saveSession } from './client';
+import { authorize, initialize, saveSession } from './client.ts';
 
 class McpConnectError extends BaseError.extend('McpConnectError', 'MCP connect failed') {}
 

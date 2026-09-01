@@ -14,10 +14,10 @@ import { log } from '@dxos/log';
 
 import { WnfsCapabilities } from '#types';
 
-import { WnfsStateAnnotation } from '../annotations';
-import { Rng, filePath, store } from './common';
-import { loadWnfs } from './load';
-import { wnfsUrl } from './wnfs-url';
+import { WnfsStateAnnotation } from '../annotations.ts';
+import { Rng, filePath, store } from './common.ts';
+import { loadWnfs } from './load.ts';
+import { wnfsUrl } from './wnfs-url.ts';
 
 export const upload = async ({
   file,

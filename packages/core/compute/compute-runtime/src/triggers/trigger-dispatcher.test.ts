@@ -28,10 +28,10 @@ import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { invariant } from '@dxos/invariant';
 import { Person, Task } from '@dxos/types';
 
-import * as ProcessManager from '../ProcessManager';
-import { credentialsLayerConfig } from '../services/credentials';
-import { LEGACY_KEY_FEED_CURSOR, TriggerDispatcher } from './trigger-dispatcher';
-import { TriggerStateStore } from './trigger-state-store';
+import * as ProcessManager from '../ProcessManager.ts';
+import { credentialsLayerConfig } from '../services/credentials.ts';
+import { LEGACY_KEY_FEED_CURSOR, TriggerDispatcher } from './trigger-dispatcher.ts';
+import { TriggerStateStore } from './trigger-state-store.ts';
 
 /**
  * Strict resolver that mimics the production {@link LayerStack}: refuses

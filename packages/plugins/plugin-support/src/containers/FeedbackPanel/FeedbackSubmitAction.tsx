@@ -12,8 +12,8 @@ import { FeedbackForm, type FeedbackSubmitHandler } from '#components';
 import { meta } from '#meta';
 import { SupportOperation } from '#types';
 
-import { formatRequestMessage } from './request';
-import { useScreenshotAttachment } from './useScreenshotAttachment';
+import { formatRequestMessage } from './request.ts';
+import { useScreenshotAttachment } from './useScreenshotAttachment.ts';
 
 export type FeedbackSubmitActionProps = {
   disabled?: boolean;

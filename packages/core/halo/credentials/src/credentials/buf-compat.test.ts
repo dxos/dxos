@@ -12,9 +12,9 @@ import { CredentialSchema, PresentationSchema } from '@dxos/protocols/buf/dxos/h
 import { schema } from '@dxos/protocols/proto';
 import { type Credential, type Presentation, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { createCredential } from './credential-factory';
-import { canonicalStringify, getCredentialProofPayload } from './signing';
-import { verifyCredential } from './verifier';
+import { createCredential } from './credential-factory.ts';
+import { canonicalStringify, getCredentialProofPayload } from './signing.ts';
+import { verifyCredential } from './verifier.ts';
 
 // A credential's signature covers the canonical stringification of the decoded object, so a shape
 // drift in the compat layer invalidates every credential ever issued.

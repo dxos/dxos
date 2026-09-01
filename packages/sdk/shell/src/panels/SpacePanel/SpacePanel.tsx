@@ -9,13 +9,13 @@ import { useInvitationStatus } from '@dxos/react-client/invitations';
 import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
 import { Icon, useId, useTranslation } from '@dxos/react-ui';
 
-import { CloseButton, Heading, Viewport } from '../../components';
-import { InvitationManager } from '../../steps';
-import { stepStyles } from '../../styles';
-import { translationKey } from '../../translations';
-import { useSpaceMachine } from './space-machine';
-import { SpaceManager } from './SpaceManager';
-import { type SpacePanelHeadingProps, type SpacePanelImplProps, type SpacePanelProps } from './SpacePanelProps';
+import { CloseButton, Heading, Viewport } from '../../components/index.ts';
+import { InvitationManager } from '../../steps/index.ts';
+import { stepStyles } from '../../styles/index.ts';
+import { translationKey } from '../../translations.ts';
+import { useSpaceMachine } from './space-machine.ts';
+import { SpaceManager } from './SpaceManager.tsx';
+import { type SpacePanelHeadingProps, type SpacePanelImplProps, type SpacePanelProps } from './SpacePanelProps.ts';
 
 type SpacePanelActiveView = SpacePanelImplProps['activeView'];
 

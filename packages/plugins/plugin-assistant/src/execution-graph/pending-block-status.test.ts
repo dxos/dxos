@@ -10,7 +10,7 @@ import {
   formatPendingBlockStatus,
   pendingStatusFromEphemeralMessage,
   resolveEphemeralStatusUpdate,
-} from './pending-block-status';
+} from './pending-block-status.ts';
 
 describe('formatPendingBlockStatus', () => {
   test('formats pending text as generating tokens', ({ expect }) => {

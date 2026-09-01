@@ -16,8 +16,8 @@ import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 
-import { TestSchema } from '../testing';
-import { DataTypes } from '../types';
+import { TestSchema } from '../testing/index.ts';
+import { DataTypes } from '../types/index.ts';
 
 random.seed(1);
 

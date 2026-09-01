@@ -25,9 +25,9 @@ import {
 } from '@dxos/react-ui-grid';
 import { type FieldProjection } from '@dxos/schema';
 
-import { type ModalController, type TableModel } from '../../model';
-import { CellValidationMessage } from './CellValidationMessage';
-import { FormCellEditor, type OnCreateHandler } from './FormCellEditor';
+import { type ModalController, type TableModel } from '../../model/index.ts';
+import { CellValidationMessage } from './CellValidationMessage.tsx';
+import { FormCellEditor, type OnCreateHandler } from './FormCellEditor.tsx';
 
 /**
  * Option to create new object/value.

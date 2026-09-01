@@ -11,10 +11,10 @@ import { useAsyncEffect } from '@dxos/react-hooks';
 import { type RpcPort, createProtoRpcPeer } from '@dxos/rpc';
 import { PortMuxer } from '@dxos/rpc-tunnel';
 
-import { Channels } from './channels';
+import { Channels } from './channels.ts';
 // eslint-disable-next-line
 // @ts-ignore
-import SharedWorker from './test-worker?sharedworker';
+import SharedWorker from './test-worker.ts?sharedworker';
 
 const App = ({ id, port }: { id: string; port: RpcPort }) => {
   const [closed, setClosed] = useState(true);

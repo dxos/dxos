@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export { default as AutomationSkill } from './skill';
+export { default as AutomationSkill } from './skill.ts';

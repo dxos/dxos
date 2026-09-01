@@ -8,7 +8,7 @@ import { EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 import { type CleanupFn, addEventListener } from '@dxos/async';
 import { Domino } from '@dxos/ui';
 
-import { GUTTER_WIDTH } from '../blocks';
+import { GUTTER_WIDTH } from '../blocks/index.ts';
 
 // Square trigger size (px), matching the drag grip (`dx-button` density `xs` + `aspect-square` → `size-6`).
 // The right-hand strip (`GUTTER_WIDTH`, shared with the grip's left strip) centers the trigger within it.

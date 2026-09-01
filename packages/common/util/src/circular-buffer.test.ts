@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { CircularBuffer } from './circular-buffer';
+import { CircularBuffer } from './circular-buffer.ts';
 
 describe('CircularBuffer', () => {
   test('single element', () => {

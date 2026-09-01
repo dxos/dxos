@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { type TerraConfigValues, generatePlanet } from './generate-planet';
+import { type TerraConfigValues, generatePlanet } from './generate-planet.ts';
 
 const config: TerraConfigValues = {
   seed: 'terra-1',

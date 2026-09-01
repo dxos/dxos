@@ -15,19 +15,19 @@ import { AccessToken, Connection, Cursor } from '@dxos/link';
 import * as Kanban from '@dxos/plugin-kanban/Kanban';
 import { Expando } from '@dxos/schema';
 
-import { TRELLO_SOURCE } from '../constants';
-import { TrelloApi } from '../services';
-import getTrelloBoardsHandler from './get-trello-boards';
-import materializeTrelloTargetHandler from './materialize-target';
-import syncTrelloBoardHandler from './sync';
+import { TRELLO_SOURCE } from '../constants.ts';
+import { TrelloApi } from '../services/index.ts';
+import getTrelloBoardsHandler from './get-trello-boards.ts';
+import materializeTrelloTargetHandler from './materialize-target.ts';
+import syncTrelloBoardHandler from './sync.ts';
 
 type TrelloBoard = TrelloApi.TrelloBoard;
 type TrelloCard = TrelloApi.TrelloCard;
 type TrelloList = TrelloApi.TrelloList;
 
 // Stub the network layer so handlers run against fixtures, not real Trello.
-vi.mock('../services/trello-api', async () => {
-  const actual = await vi.importActual<typeof import('../services/trello-api')>('../services/trello-api');
+vi.mock('../services/trello-api.ts', async () => {
+  const actual = await vi.importActual<typeof import('../services/trello-api.ts')>('../services/trello-api.ts');
   const boards: TrelloBoard[] = [
     {
       id: 'board-a',
@@ -250,7 +250,7 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
   });
 
   test('failing fetch on a board writes lastError on its binding', async ({ expect }) => {
-    const trelloApi = await import('../services/trello-api');
+    const trelloApi = await import('../services/trello-api.ts');
     // Make fetchLists fail for board-b only.
     const fetchLists = trelloApi.fetchLists as unknown as ReturnType<typeof vi.fn>;
     fetchLists.mockImplementation((boardId: string) => {

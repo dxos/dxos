@@ -15,7 +15,7 @@ import { EdgeAiHttpClient, EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import { ANTHROPIC_SOURCE } from '../constants';
+import { ANTHROPIC_SOURCE } from '../constants.ts';
 
 const edgeModelResolver = Capability.makeModule(
   Effect.fnUntraced(function* () {

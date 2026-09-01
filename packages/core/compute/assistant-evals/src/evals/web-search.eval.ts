@@ -10,8 +10,8 @@ import { WebSearchSkill } from '@dxos/assistant-toolkit';
 import { Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-import { completedBlocks, toolInvocations } from '../assertions';
-import { createEvalRunner } from '../runner';
+import { completedBlocks, toolInvocations } from '../assertions.ts';
+import { createEvalRunner } from '../runner.ts';
 
 // Ported from the gated `Web` scenario (../testing/web-search.test.ts).
 // Grades the real tool-invocation and transcript effects directly instead of the agent's

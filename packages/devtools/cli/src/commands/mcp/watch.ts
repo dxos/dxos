@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 
 import { BaseError } from '@dxos/errors';
 
-import { WATCH_CHILD_ENV, parseReady } from './watch-protocol';
+import { WATCH_CHILD_ENV, parseReady } from './watch-protocol.ts';
 
 export class WatchError extends BaseError.extend('WatchError', 'MCP watch supervisor error') {}
 

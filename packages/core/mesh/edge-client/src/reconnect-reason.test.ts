@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { classifyCloseCode, classifySocketError } from './reconnect-reason';
+import { classifyCloseCode, classifySocketError } from './reconnect-reason.ts';
 
 describe('classifyCloseCode', () => {
   test('offline wins over any close code', () => {

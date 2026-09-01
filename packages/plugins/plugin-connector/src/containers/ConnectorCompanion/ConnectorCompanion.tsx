@@ -20,7 +20,7 @@ import { Form } from '@dxos/react-ui-form';
 import { useConnector } from '#hooks';
 import { meta } from '#meta';
 
-import { connectionDeckSubject } from '../../constants';
+import { connectionDeckSubject } from '../../constants.ts';
 
 const EMPTY_SCHEMA = Schema.Struct({});
 const EMPTY_VALUES = {};

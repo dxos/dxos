@@ -6,9 +6,9 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import React, { type PropsWithChildren, forwardRef } from 'react';
 import { afterEach, describe, test } from 'vitest';
 
-import { ThemeProvider } from '../../primitives';
-import { defaultTx } from '../../theme';
-import { Tooltip } from './Tooltip';
+import { ThemeProvider } from '../../primitives/index.ts';
+import { defaultTx } from '../../theme/index.ts';
+import { Tooltip } from './Tooltip.tsx';
 
 /**
  * A single provider serves every trigger in the app, so these pin the two consequences of that: the

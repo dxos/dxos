@@ -2,17 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-export * as AiModelResolver from './AiModelResolver';
-export * as AiParser from './AiParser';
-export * as AiPreprocessor from './AiPreprocessor';
-export * as AiService from './AiService';
-export * as AiSummarizer from './AiSummarizer';
-export * as Model from './Model';
-export * as Provider from './Provider';
-export * as ToolFormatter from './ToolFormatter';
-export * as OpaqueToolkit from './OpaqueToolkit';
+export * as AiModelResolver from './AiModelResolver.ts';
+export * as AiParser from './AiParser.ts';
+export * as AiPreprocessor from './AiPreprocessor.ts';
+export * as AiService from './AiService.ts';
+export * as AiSummarizer from './AiSummarizer.ts';
+export * as Model from './Model.ts';
+export * as Provider from './Provider.ts';
+export * as ToolFormatter from './ToolFormatter.ts';
+export * as OpaqueToolkit from './OpaqueToolkit.ts';
 
-export * from './errors';
-export * from './status-report';
-export * from './tools';
-export * from './util';
+export * from './errors.ts';
+export * from './status-report.ts';
+export * from './tools/index.ts';
+export * from './util/index.ts';

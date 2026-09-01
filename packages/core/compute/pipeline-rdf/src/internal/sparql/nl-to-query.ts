@@ -10,9 +10,9 @@ import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 import { AiService } from '@dxos/ai';
 import { trim } from '@dxos/util';
 
-import { SemanticIndexError } from '../../errors';
-import { DEFAULT_MODEL } from '../stages/extract';
-import { type SemanticQuery } from './query-builder';
+import { SemanticIndexError } from '../../errors.ts';
+import { DEFAULT_MODEL } from '../stages/extract.ts';
+import { type SemanticQuery } from './query-builder.ts';
 
 const QueryShape = Schema.Struct({
   subjectEntity: Schema.optional(Schema.String),

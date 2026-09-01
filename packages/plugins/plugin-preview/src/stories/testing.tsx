@@ -9,8 +9,8 @@ import { Obj } from '@dxos/echo';
 import { Card } from '@dxos/react-ui';
 import { CardContainer, type CardContainerProps } from '@dxos/react-ui-mosaic/testing';
 
-import { JsonCard } from '../cards';
-import { omitImage } from './fixtures';
+import { JsonCard } from '../cards/index.ts';
+import { omitImage } from './fixtures.ts';
 
 export type StoryArgs<T extends Obj.Any, P extends {} = {}> = {
   Component: FC<AppSurface.ObjectCardProps<T> & P>;

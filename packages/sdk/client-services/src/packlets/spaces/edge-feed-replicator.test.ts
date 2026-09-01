@@ -20,8 +20,8 @@ import { openAndClose } from '@dxos/test-utils';
 import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
 
-import { valueEncoding } from '../pipeline';
-import { EdgeFeedReplicator } from './edge-feed-replicator';
+import { valueEncoding } from '../pipeline/index.ts';
+import { EdgeFeedReplicator } from './edge-feed-replicator.ts';
 
 describe('EdgeFeedReplicator', () => {
   test('requests metadata after connection is open', async () => {

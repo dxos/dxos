@@ -7,7 +7,7 @@ import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Metrics, type MetricsSnapshot, type MetricValue, makeMetrics } from './metrics';
+import { Metrics, type MetricsSnapshot, type MetricValue, makeMetrics } from './metrics.ts';
 
 /** A named configuration to benchmark (e.g. a model). */
 export type BenchmarkVariant<Config> = {

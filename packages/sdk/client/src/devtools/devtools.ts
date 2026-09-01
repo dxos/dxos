@@ -17,9 +17,9 @@ import { Runtime_Client_StorageSchema } from '@dxos/protocols/buf/dxos/config_pb
 import { type DiagnosticMetadata, TRACE_PROCESSOR, type TraceProcessor } from '@dxos/tracing';
 import { clearIndexedDB, clearOPFS, joinTables } from '@dxos/util';
 
-import { type Client } from '../client';
-import { SpaceState } from '../echo';
-import { type DebugPortController, getDebugPortController } from './debug-port-controller';
+import { type Client } from '../client/index.ts';
+import { SpaceState } from '../echo/index.ts';
+import { type DebugPortController, getDebugPortController } from './debug-port-controller.ts';
 
 // Didn't want to add a dependency on feed store.
 type FeedWrapper = unknown;

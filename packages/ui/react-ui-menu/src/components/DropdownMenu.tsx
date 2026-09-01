@@ -8,10 +8,10 @@ import React, { type MouseEvent, useCallback } from 'react';
 import { type DropdownMenuRootProps, Icon, DropdownMenu as NaturalDropdownMenu } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { type MenuAction, type MenuItem, type MenuItemGroup, isSeparator } from '../types';
-import { executeMenuAction } from '../util';
-import { ActionLabel } from './ActionLabel';
-import { type MenuScopedProps, useMenuItems, useMenuScoped } from './MenuContext';
+import { type MenuAction, type MenuItem, type MenuItemGroup, isSeparator } from '../types.ts';
+import { executeMenuAction } from '../util.ts';
+import { ActionLabel } from './ActionLabel.tsx';
+import { type MenuScopedProps, useMenuItems, useMenuScoped } from './MenuContext.ts';
 
 export type DropdownMenuProps = DropdownMenuRootProps & {
   group?: MenuItemGroup;

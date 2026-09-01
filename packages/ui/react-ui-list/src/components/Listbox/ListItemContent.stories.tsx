@@ -8,7 +8,7 @@ import React from 'react';
 import { Icon } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { ListItemContent } from './ListItemContent';
+import { ListItemContent } from './ListItemContent.tsx';
 
 const meta = {
   title: 'ui/react-ui-list/ItemContent',

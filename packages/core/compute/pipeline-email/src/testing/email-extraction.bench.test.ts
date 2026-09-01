@@ -18,9 +18,9 @@ import { Pipeline } from '@dxos/pipeline';
 import { type DocumentFacts, extractFactsStage } from '@dxos/pipeline-rdf';
 import { captureSink, instrument, renderBenchmark, runBenchmark } from '@dxos/pipeline/testing';
 
-import { EMAIL_EXTRACT_OPTIONS, messageToDocument } from '../stages/facts';
-import { emailToMessage } from './email-fixtures';
-import { parquetSource } from './parquet';
+import { EMAIL_EXTRACT_OPTIONS, messageToDocument } from '../stages/facts.ts';
+import { emailToMessage } from './email-fixtures.ts';
+import { parquetSource } from './parquet.ts';
 
 // Compares fact-extraction quality across local models over the head of the Enron dataset. Same
 // gating as email-pipeline.test.ts: needs the dataset under ROOT_DIR and a running Ollama, so CI and

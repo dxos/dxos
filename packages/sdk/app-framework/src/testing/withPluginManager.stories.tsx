@@ -8,11 +8,11 @@ import React from 'react';
 import { ThrowError } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { Capabilities } from '../common';
-import * as Role from '../common/Role';
-import { Capability } from '../core';
-import { Surface } from '../ui';
-import { withPluginManager } from './withPluginManager';
+import { Capabilities } from '../common/index.ts';
+import * as Role from '../common/Role.ts';
+import { Capability } from '../core/index.ts';
+import { Surface } from '../ui/index.ts';
+import { withPluginManager } from './withPluginManager.tsx';
 
 const MainRole = Role.make<Record<string, never>>('org.dxos.test.role.main');
 

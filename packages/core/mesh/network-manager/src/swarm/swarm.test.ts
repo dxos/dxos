@@ -15,12 +15,12 @@ import {
 } from '@dxos/messaging';
 import { ComplexSet } from '@dxos/util';
 
-import { TestWireProtocol } from '../testing/test-wire-protocol';
-import { FullyConnectedTopology } from '../topology';
-import { createRtcTransportFactory } from '../transport';
-import { ConnectionState } from './connection';
-import { ConnectionLimiter } from './connection-limiter';
-import { Swarm } from './swarm';
+import { TestWireProtocol } from '../testing/test-wire-protocol.ts';
+import { FullyConnectedTopology } from '../topology/index.ts';
+import { createRtcTransportFactory } from '../transport/index.ts';
+import { ConnectionLimiter } from './connection-limiter.ts';
+import { ConnectionState } from './connection.ts';
+import { Swarm } from './swarm.ts';
 
 type TestPeer = {
   swarm: Swarm;

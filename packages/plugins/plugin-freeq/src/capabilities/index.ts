@@ -12,7 +12,7 @@ import { translations } from '#translations';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
-import * as FreeqCapabilities from '../FreeqCapabilities';
+import * as FreeqCapabilities from '../FreeqCapabilities.ts';
 
 // Contributes both the connection manager and the channel backend (see channel-backend.ts).
 export const ChannelBackend = Capability.lazyModule(
@@ -21,7 +21,7 @@ export const ChannelBackend = Capability.lazyModule(
     provides: [FreeqCapabilities.ConnectionManager, ThreadCapabilities.ChannelBackend],
     activatesOn: ThreadEvents.Start,
   },
-  () => import('./channel-backend'),
+  () => import('./channel-backend.ts'),
 );
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
@@ -29,5 +29,5 @@ export const PluginAsset = AppCapability.pluginAsset({
   content: pluginSpec,
   mimeType: 'application/x-mdl',
 });
-export const Schema = AppCapability.schema(() => import('./schema'));
+export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const Translations = AppCapability.translations(translations);

@@ -10,7 +10,7 @@ import { type Database } from '@dxos/echo';
 import { Pipeline } from '@dxos/pipeline';
 import { Message } from '@dxos/types';
 
-import { buildThreads } from './internal/threads';
+import { buildThreads } from './internal/threads.ts';
 import {
   EmailPipelineCtx,
   type FactIndexer,
@@ -21,8 +21,8 @@ import {
   extractFactsStage,
   statsStage,
   summarizeStage,
-} from './stages';
-import { type Thread } from './types';
+} from './stages/index.ts';
+import { type Thread } from './types/index.ts';
 
 export type EmailPipelineOptions = {
   /** ECHO space database: extract-contacts persists Person/Organization, threads are added here. */

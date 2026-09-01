@@ -18,7 +18,7 @@ import { iconValues } from '@dxos/ui-types';
 
 import { SpaceCapabilities, SpaceEvents, SpaceOperation } from '#types';
 
-import { SpaceNotReadyError } from '../errors';
+import { SpaceNotReadyError } from '../errors.ts';
 
 /** Bounds how long space creation waits for the new space's properties object to become available. */
 const SPACE_READY_TIMEOUT = Duration.seconds(10);

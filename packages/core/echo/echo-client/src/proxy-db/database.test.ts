@@ -18,9 +18,9 @@ import { PublicKey } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
-import { clone, getObjectCore } from '../echo-handler';
-import { type DatabaseImpl } from '../proxy-db';
-import { EchoTestBuilder, createTmpPath } from '../testing';
+import { clone, getObjectCore } from '../echo-handler/index.ts';
+import { type DatabaseImpl } from '../proxy-db/index.ts';
+import { EchoTestBuilder, createTmpPath } from '../testing/index.ts';
 
 /** Narrows `db.rootUrl` once at the point the database is known to have persisted its root, per `no-casts`. */
 const getRootUrl = (db: DatabaseImpl): string => {

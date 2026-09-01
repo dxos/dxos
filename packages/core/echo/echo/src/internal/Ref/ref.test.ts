@@ -7,10 +7,10 @@ import { describe, expect, test } from 'vitest';
 
 import { DXN, EID, EntityId } from '@dxos/keys';
 
-import * as Type from '../../Type';
-import { EchoObjectSchema, getObjectEchoUri } from '../Entity';
-import { createObject } from '../Obj';
-import { Ref, getReferenceAst } from './ref';
+import * as Type from '../../Type.ts';
+import { EchoObjectSchema, getObjectEchoUri } from '../Entity/index.ts';
+import { createObject } from '../Obj/index.ts';
+import { Ref, getReferenceAst } from './ref.ts';
 
 const Task = Schema.Struct({
   title: Schema.optional(Schema.String),

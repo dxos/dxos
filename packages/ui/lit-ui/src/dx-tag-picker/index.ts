@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './dx-tag-picker-item';
+export * from './dx-tag-picker-item.ts';

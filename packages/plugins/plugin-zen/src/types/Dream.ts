@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
 
-import { Sequence } from './Sequence';
+import { Sequence } from './Sequence.ts';
 
 export class Dream extends Type.makeObject<Dream>(DXN.make('dxos.org.type.Dream', '0.1.0'))(
   Schema.Struct({

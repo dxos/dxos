@@ -10,8 +10,8 @@ import { Database } from '@dxos/echo';
 import { archiveVaultCredential, listVaultCredentials } from '#api';
 import { ClaudeAgentOperation, ClaudeAgentSession } from '#types';
 
-import { getApiKey } from '../credentials';
-import { CredentialNotBoundError, SessionNotLinkedError, SessionVaultMissingError } from '../errors';
+import { getApiKey } from '../credentials.ts';
+import { CredentialNotBoundError, SessionNotLinkedError, SessionVaultMissingError } from '../errors.ts';
 
 const handler: Operation.WithHandler<typeof ClaudeAgentOperation.RevokeSessionCredentials> =
   ClaudeAgentOperation.RevokeSessionCredentials.pipe(

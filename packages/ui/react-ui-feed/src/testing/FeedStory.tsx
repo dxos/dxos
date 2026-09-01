@@ -9,15 +9,15 @@ import { IconButton, Input, Panel, ThemedClassName, Toolbar } from '@dxos/react-
 import { Message } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
-import { Outline, type OutlineMarker } from '../components';
-import { type MessageChromeProps, MessageList, useMessageList } from '../components';
-import { type Decoration, DecorationsProvider, ItemSelectionProvider } from '../hooks';
-import { SearchHit, defaultRenderer, isPrompt, searchFeed, sliceFeed, useFeedModel } from '../model';
-import { FeedStats, useFeedDebug } from './debug';
-import { createMessages } from './generator';
-import { type FeedScenario, createScenario } from './scenarios';
-import { createAnswer, textStream } from './stream';
-import { streamTurn } from './turn';
+import { Outline, type OutlineMarker } from '../components/index.ts';
+import { type MessageChromeProps, MessageList, useMessageList } from '../components/index.ts';
+import { type Decoration, DecorationsProvider, ItemSelectionProvider } from '../hooks/index.ts';
+import { SearchHit, defaultRenderer, isPrompt, searchFeed, sliceFeed, useFeedModel } from '../model/index.ts';
+import { FeedStats, useFeedDebug } from './debug/index.ts';
+import { createMessages } from './generator.ts';
+import { type FeedScenario, createScenario } from './scenarios.tsx';
+import { createAnswer, textStream } from './stream.ts';
+import { streamTurn } from './turn.ts';
 
 /** Pause between one answer finishing and the next question arriving. */
 const TURN_DELAY = 800;

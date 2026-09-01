@@ -10,7 +10,7 @@ import { createRoot } from 'react-dom/client';
 import { DevtoolsApp } from '@dxos/devtools';
 import { meta as devtoolsMeta } from '@dxos/plugin-devtools';
 
-import { initAutomergeWasm } from '../util/automerge-wasm';
+import { initAutomergeWasm } from '../util/automerge-wasm.ts';
 
 const main = async () => {
   const enter =

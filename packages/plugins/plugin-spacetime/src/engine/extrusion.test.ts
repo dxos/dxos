@@ -5,8 +5,8 @@
 import type { Manifold, ManifoldToplevel } from 'manifold-3d';
 import { type ExpectStatic, afterAll, beforeAll, describe, test } from 'vitest';
 
-import { MIN_SIZE, applyExtrusion, extractFaceBoundary, extractFaceBoundaryFromSolid } from './extrusion';
-import { getFaceNormal } from './mesh-converter';
+import { MIN_SIZE, applyExtrusion, extractFaceBoundary, extractFaceBoundaryFromSolid } from './extrusion.ts';
+import { getFaceNormal } from './mesh-converter.ts';
 
 /** Tolerance for floating-point comparisons in geometry tests. */
 const TOLERANCE = 0.01;

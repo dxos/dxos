@@ -22,9 +22,9 @@ import { mx } from '@dxos/ui-theme';
 import { meta } from '#meta';
 import { SpaceCapabilities, SpaceOperation } from '#types';
 
-import { ObjectMasonry, type TileData } from '../ObjectMasonry';
-import { useDuplicatesGroup } from './duplicatesGroup';
-import { useDuplicates } from './useDuplicates';
+import { ObjectMasonry, type TileData } from '../ObjectMasonry/index.ts';
+import { useDuplicatesGroup } from './duplicatesGroup.tsx';
+import { useDuplicates } from './useDuplicates.ts';
 
 /** Sidebar layout modes for a type article. */
 type Layout = 'masonry' | 'table' | 'duplicates';

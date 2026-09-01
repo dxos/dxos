@@ -12,8 +12,8 @@ import { Annotation, Collection, Database, Filter, Obj, Query, Ref, Type } from 
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { invariant } from '@dxos/invariant';
 
-import * as AppNode from '../app-graph/AppNode';
-import { AppAnnotation } from '../echo';
+import * as AppNode from '../app-graph/AppNode.ts';
+import { AppAnnotation } from '../echo/index.ts';
 
 type AddProps = {
   object: Obj.Unknown;

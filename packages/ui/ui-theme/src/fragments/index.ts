@@ -4,6 +4,6 @@
 
 // TODO(burdon): Remove export of fragments.
 
-export * from './disabled';
-export * from './hover';
-export * from './text';
+export * from './disabled.ts';
+export * from './hover.ts';
+export * from './text.ts';

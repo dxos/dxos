@@ -40,7 +40,7 @@ import {
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { InvitationsService, SpacesService, SystemService } from '@dxos/protocols/rpc';
 
-import { remainingLifetimeSeconds } from '../spaces/data-space-manager';
+import { remainingLifetimeSeconds } from '../spaces/data-space-manager.ts';
 
 //
 // Helpers & Schema for test suite 2

@@ -20,8 +20,8 @@ import { Milestone, Person, Task, TaskSet } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import * as TasksPlugin from '../../TasksPlugin';
-import { TaskSetArticle } from './TaskSetArticle';
+import * as TasksPlugin from '../../TasksPlugin.ts';
+import { TaskSetArticle } from './TaskSetArticle.tsx';
 
 /** Kept so a play function can mutate the source objects and assert the article follows. */
 let seeded: { space: Space; taskSet: TaskSet.TaskSet; roasting: Milestone.Milestone } | undefined;

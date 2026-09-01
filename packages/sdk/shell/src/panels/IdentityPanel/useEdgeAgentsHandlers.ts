@@ -12,7 +12,7 @@ import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata
 import { useClient } from '@dxos/react-client';
 import { type Identity } from '@dxos/react-client/halo';
 
-import { type AgentFormProps } from '../../components';
+import { type AgentFormProps } from '../../components/index.ts';
 
 export const useEdgeAgentHandlers = ({
   identity,

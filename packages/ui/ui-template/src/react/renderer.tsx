@@ -20,10 +20,10 @@ import { Combobox, Listbox } from '@dxos/react-ui-list';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/ui-theme';
 
-import { type Binding, type ModuleView, type Node, type Scope, resolve } from '../model';
-import { type CreateRendererOptions, type Renderer, type RenderOptions, present, render } from '../render';
-import { useAttention } from './attention';
-import { Splitter } from './Splitter';
+import { type Binding, type ModuleView, type Node, type Scope, resolve } from '../model.ts';
+import { type CreateRendererOptions, type Renderer, type RenderOptions, present, render } from '../render.ts';
+import { useAttention } from './attention.tsx';
+import { Splitter } from './Splitter.tsx';
 
 const asText = (value: unknown): string => (value == null ? '' : String(value));
 

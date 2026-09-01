@@ -7,9 +7,9 @@ import React, { type PropsWithChildren, type ReactNode, useRef, useState } from 
 
 import { random } from '@dxos/random';
 
-import { withTheme } from '../../testing';
-import { Button } from '../Button';
-import { Popover } from './Popover';
+import { withTheme } from '../../testing/index.ts';
+import { Button } from '../Button/index.ts';
+import { Popover } from './Popover.tsx';
 
 random.seed(1234);
 

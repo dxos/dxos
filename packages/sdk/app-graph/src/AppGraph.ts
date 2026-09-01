@@ -19,7 +19,7 @@ import { type MakeOptional } from '@dxos/util';
 
 import { scheduleTask } from '#scheduler';
 
-import * as Node from './AppGraphNode';
+import * as Node from './AppGraphNode.ts';
 import {
   normalizeRelation,
   primaryKey,
@@ -28,7 +28,7 @@ import {
   secondaryParts,
   shallowEqual,
   withLabel,
-} from './util';
+} from './util.ts';
 
 //
 // The app graph: the vocabulary, the store that holds it, and the operations over it. One module

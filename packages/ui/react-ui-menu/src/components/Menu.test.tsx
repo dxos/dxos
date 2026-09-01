@@ -7,10 +7,10 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type PropsWithChildren, useEffect } from 'react';
 import { afterEach, describe, test } from 'vitest';
 
-import { type MenuItem, type MenuItemsAccessor } from '../types';
-import { createMenuAction } from '../util';
-import { Menu } from './Menu';
-import { useMenu, useMenuItems } from './MenuContext';
+import { type MenuItem, type MenuItemsAccessor } from '../types.ts';
+import { createMenuAction } from '../util.ts';
+import { Menu } from './Menu.tsx';
+import { useMenu, useMenuItems } from './MenuContext.ts';
 
 const TEST_CONTRIBUTOR = 'TestContributor';
 

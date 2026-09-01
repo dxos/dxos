@@ -17,7 +17,7 @@ import { useChatProcessor, useChatServices, usePresets } from '#hooks';
 import { meta } from '#meta';
 import { AssistantCapabilities, AssistantOperation } from '#types';
 
-import { getChatPath } from '../../paths';
+import { getChatPath } from '../../paths.ts';
 
 type SpaceScopedProps = {
   space?: Space;

@@ -9,11 +9,11 @@ import { generatePath, useOutletContext, useParams } from 'react-router-dom';
 import { Annotation, Obj, Ref } from '@dxos/echo';
 import { type Space, useObject, useObjects, useSpaceProperties } from '@dxos/react-client/echo';
 
-import { FILTER } from '../constants';
-import { Todo, TodoListAnnotation } from '../types';
-import { Header } from './Header';
-import { TodoContainer } from './TodoContainer';
-import { TodoFooter } from './TodoFooter';
+import { FILTER } from '../constants.ts';
+import { Todo, TodoListAnnotation } from '../types.ts';
+import { Header } from './Header.tsx';
+import { TodoContainer } from './TodoContainer.tsx';
+import { TodoFooter } from './TodoFooter.tsx';
 
 export const Todos = () => {
   const inputRef = useRef<HTMLInputElement | null>(null);

@@ -12,7 +12,7 @@ import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { DropdownMenu, Icon, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 
-import { Bitbar, JsonView } from '../../../components';
+import { Bitbar, JsonView } from '../../../components/index.ts';
 
 // TODO(burdon): Rewrite this panel as a table.
 

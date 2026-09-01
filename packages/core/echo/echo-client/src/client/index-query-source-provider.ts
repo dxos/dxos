@@ -22,16 +22,16 @@ import {
 import { type QueryService } from '@dxos/protocols/rpc';
 import { isNonNullable } from '@dxos/util';
 
-import { type FeedHandle } from '../feed/feed-handle';
-import { type QuerySourceProvider, recordObjectDiagnostic } from '../hypergraph';
-import { DatabaseImpl } from '../proxy-db';
+import { type FeedHandle } from '../feed/feed-handle.ts';
+import { type QuerySourceProvider, recordObjectDiagnostic } from '../hypergraph.ts';
+import { DatabaseImpl } from '../proxy-db/index.ts';
 import {
   type QuerySource,
   type SourceEntry,
   getQueryDeletedOption,
   getTargetSpacesForQuery,
   queryTargetsSpacesOrFeeds,
-} from '../query';
+} from '../query/index.ts';
 
 export type LoadObjectProps = {
   spaceId: SpaceId;

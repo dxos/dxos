@@ -9,8 +9,8 @@ import React, { useState } from 'react';
 import queryApi from '@dxos/echo-query/api.d.ts?raw';
 import { useAsyncEffect } from '@dxos/react-ui';
 
-import { Compiler } from '../../compiler';
-import { TypescriptEditor, type TypescriptEditorProps } from '../TypescriptEditor';
+import { Compiler } from '../../compiler/index.ts';
+import { TypescriptEditor, type TypescriptEditorProps } from '../TypescriptEditor/index.ts';
 
 const GLOBALS = `
   namespace QueryAPI {

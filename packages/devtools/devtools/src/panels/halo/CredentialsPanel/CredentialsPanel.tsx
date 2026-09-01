@@ -10,9 +10,9 @@ import { type Space } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 
-import { MasterDetailTable } from '../../../components';
-import { SpaceSelector } from '../../../containers';
-import { useCredentials, useDevtoolsState } from '../../../hooks';
+import { MasterDetailTable } from '../../../components/index.ts';
+import { SpaceSelector } from '../../../containers/index.ts';
+import { useCredentials, useDevtoolsState } from '../../../hooks/index.ts';
 
 export const CredentialsPanel = (props: { space?: Space }) => {
   const state = useDevtoolsState();

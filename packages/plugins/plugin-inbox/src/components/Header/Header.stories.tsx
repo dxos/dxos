@@ -16,7 +16,7 @@ import { type Actor, Person } from '@dxos/types';
 import { ContactPreview, useContactCreate } from '#testing';
 import { translations } from '#translations';
 
-import { Header } from './Header';
+import { Header } from './Header.tsx';
 
 /** An actor with a known address, so `contacts` can name one without a non-null assertion. */
 type StoryActor = Actor.Actor & { email: string };

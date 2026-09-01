@@ -12,7 +12,7 @@ import { EffectEx } from '@dxos/effect';
 
 import { Booking, Segment, Trip } from '#types';
 
-import mergeTripHandler from './merge-trip';
+import mergeTripHandler from './merge-trip.ts';
 
 describe('MergeTrip', () => {
   let builder: EchoTestBuilder;

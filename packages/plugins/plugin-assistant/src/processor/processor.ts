@@ -41,8 +41,8 @@ import { Message } from '@dxos/types';
 
 import { AssistantOperation } from '#types';
 
-import { findInCause } from '../util/error-cause';
-import { type ProcessorRequestContext, createPromptContent } from './prompt';
+import { findInCause } from '../util/error-cause.ts';
+import { type ProcessorRequestContext, createPromptContent } from './prompt.ts';
 
 /**
  * Space-scoped services materialised by the layer passed into

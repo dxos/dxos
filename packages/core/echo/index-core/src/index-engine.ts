@@ -11,7 +11,7 @@ import { ATTR_TYPE } from '@dxos/echo/internal';
 import type { EntityId, SpaceId } from '@dxos/keys';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
-import { type IndexCursor, IndexTracker } from './index-tracker';
+import { type IndexCursor, IndexTracker } from './index-tracker.ts';
 import {
   type EntityMeta,
   EntityMetaIndex,
@@ -23,7 +23,7 @@ import {
   type QueueWindow,
   ReverseRefIndex,
   type ReverseRefQuery,
-} from './indexes';
+} from './indexes/index.ts';
 
 /**
  * Result of a single indexing pass over a data source.

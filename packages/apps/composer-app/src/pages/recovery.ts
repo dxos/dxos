@@ -26,7 +26,7 @@ import {
   resetComposerStorage,
   runRecoveryDiagnostics,
   runSqlStorageDiagnostics,
-} from '../recovery';
+} from '../recovery/index.ts';
 
 const { print, setBusy, setDebugPortActive, onAction } = createRecoveryUi({
   container: document.getElementById('root')!,

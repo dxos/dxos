@@ -17,7 +17,7 @@ import * as Kanban from '@dxos/plugin-kanban/Kanban';
 import { meta } from '#meta';
 import { TrelloOperation } from '#types';
 
-import { TRELLO_SOURCE } from '../constants';
+import { TRELLO_SOURCE } from '../constants.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

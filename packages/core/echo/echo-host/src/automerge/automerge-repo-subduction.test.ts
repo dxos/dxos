@@ -18,7 +18,7 @@ import { beforeAll, describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, sleep } from '@dxos/async';
 
-import { TestAdapter } from '../testing';
+import { TestAdapter } from '../testing/index.ts';
 import {
   FIND_STATES,
   NEGATIVE_ASSERTION_DELAY_MS,
@@ -35,7 +35,7 @@ import {
   shutdownRepo,
   waitForQueryState,
   waitForSubductionSave,
-} from './subduction-test-utils';
+} from './subduction-test-utils.ts';
 
 // TODO(mykola): subduction wasm/network tests are flaky on CI runners
 // (limited concurrency, signal-server timing). Re-enable once the suite

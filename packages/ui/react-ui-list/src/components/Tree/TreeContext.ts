@@ -9,7 +9,7 @@ import { type FC, type MutableRefObject, createContext, useContext } from 'react
 import { raise } from '@dxos/debug';
 import { type Label } from '@dxos/react-ui';
 
-import { type TreeData } from './tree-data';
+import { type TreeData } from './tree-data.ts';
 
 // Kept out of the tree components: react-refresh only fast-refreshes a module whose exports are all
 // components, so a context and hook exported beside one force a full page reload on every edit.

@@ -13,7 +13,7 @@ import { SqlMigrations, SqlTransaction } from '@dxos/sql-sqlite';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
 
 import init from './0001_init.sql?raw';
-import { MIGRATIONS, MIGRATIONS_TABLE } from './index';
+import { MIGRATIONS, MIGRATIONS_TABLE } from './index.ts';
 
 const STORES = [{ name: '.', init, manifest: MIGRATIONS, table: MIGRATIONS_TABLE }];
 

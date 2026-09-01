@@ -22,8 +22,8 @@ import { mx, toHue } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { useActorContact } from '../../hooks';
-import { Avatar, type AvatarProps, avatarName } from '../Avatar';
+import { useActorContact } from '../../hooks/index.ts';
+import { Avatar, type AvatarProps, avatarName } from '../Avatar/index.ts';
 
 /**
  * Shared Card-row primitives rendered inside a `Card.Body`. These are the single source for the

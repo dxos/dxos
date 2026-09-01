@@ -11,8 +11,8 @@ import { makeRoutine } from '@dxos/plugin-routine';
 import type * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 import { AI_ACTION_ICON } from '@dxos/ui-types';
 
-import * as InboxOperation from '../types/InboxOperation';
-import * as Mailbox from '../types/Mailbox';
+import * as InboxOperation from '../types/InboxOperation.ts';
+import * as Mailbox from '../types/Mailbox.ts';
 
 /** Default cron for the cascade (daily, early); the user edits the schedule on the trigger. */
 const DEFAULT_CRON = '0 6 * * *';

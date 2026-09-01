@@ -2,6 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './Space';
-export * from './SyncStatus';
-export * from './SyncStatusPanel';
+export * from './Space.tsx';
+export * from './SyncStatus.tsx';
+export * from './SyncStatusPanel.tsx';

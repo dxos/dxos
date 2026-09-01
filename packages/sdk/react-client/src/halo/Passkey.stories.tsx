@@ -12,10 +12,10 @@ import { Button } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { useClient } from '../client';
-import { withClientProvider } from '../testing';
-import { useCredentials } from './useCredentials';
-import { useIdentity } from './useIdentity';
+import { useClient } from '../client/index.ts';
+import { withClientProvider } from '../testing/index.ts';
+import { useCredentials } from './useCredentials.ts';
+import { useIdentity } from './useIdentity.ts';
 
 const getNewChallenge = () => Math.random().toString(36).substring(2);
 

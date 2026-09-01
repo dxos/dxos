@@ -30,8 +30,8 @@ import { ComplexMap, reduceGroupBy } from '@dxos/util';
 
 import { SpaceCapabilities, SpaceOperation } from '#types';
 
-import { migrateToSettingsSpace } from '../migrations/settings-space';
-import { catchNonInterrupt, resolveSettingsSpace, runSettingsSpaceHealing } from '../util/settings-space';
+import { migrateToSettingsSpace } from '../migrations/settings-space.ts';
+import { catchNonInterrupt, resolveSettingsSpace, runSettingsSpaceHealing } from '../util/settings-space.ts';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 const WAIT_FOR_OBJECT_TIMEOUT = 5_000;

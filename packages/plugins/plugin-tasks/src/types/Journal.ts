@@ -10,7 +10,7 @@ import { updateText } from '@dxos/echo-client';
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { CollectionItemAnnotation, Text } from '@dxos/schema';
 
-import { getDateString, parseDateString } from './TasksUtil';
+import { getDateString, parseDateString } from './TasksUtil.ts';
 
 export class JournalEntry extends Type.makeObject<JournalEntry>(DXN.make('org.dxos.type.journalEntry', '0.1.0'))(
   Schema.Struct({

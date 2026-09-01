@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './useListDisclosure';
-export * from './useListGrid';
-export * from './useListNavigation';
-export * from './useListSelection';
-export * from './useReorder';
+export * from './useListDisclosure.ts';
+export * from './useListGrid.ts';
+export * from './useListNavigation.ts';
+export * from './useListSelection.ts';
+export * from './useReorder.ts';

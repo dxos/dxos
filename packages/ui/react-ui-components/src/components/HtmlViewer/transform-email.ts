@@ -4,9 +4,9 @@
 
 import { Domino } from '@dxos/ui';
 
-import { applyAuthoredDarkRules } from './color-scheme';
-import { type HtmlDialect, type HtmlSrcResolver, type HtmlTransform } from './Html';
-import { type ThemeColorParams, cssColorToOklch, processEmailColors } from './transform-colors';
+import { applyAuthoredDarkRules } from './color-scheme.ts';
+import { type HtmlDialect, type HtmlSrcResolver, type HtmlTransform } from './Html.tsx';
+import { type ThemeColorParams, cssColorToOklch, processEmailColors } from './transform-colors.ts';
 
 // Email-specific rules layered on the sandbox's base CSS.
 const EMAIL_CSS = [

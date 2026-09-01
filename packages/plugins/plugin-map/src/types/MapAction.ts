@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import * as SpaceForm from '@dxos/plugin-space/SpaceForm';
 
-import * as MapCapabilities from './MapCapabilities';
+import * as MapCapabilities from './MapCapabilities.ts';
 
 export const CreateMap = Schema.Struct({
   name: Schema.optional(Schema.String),

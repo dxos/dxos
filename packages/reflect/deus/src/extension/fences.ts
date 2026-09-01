@@ -6,7 +6,7 @@ import { syntaxTree } from '@codemirror/language';
 import { type Extension, RangeSetBuilder } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
-import { BLOCK_TYPES } from './constants';
+import { BLOCK_TYPES } from './constants.ts';
 
 // Per-type hue palette for block type keyword.
 const BLOCK_TYPE_COLORS: Record<(typeof BLOCK_TYPES)[number], string> = {

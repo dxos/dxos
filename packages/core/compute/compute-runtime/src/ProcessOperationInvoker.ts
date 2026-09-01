@@ -26,10 +26,10 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type OperationInvoker } from '@dxos/operation';
 
-import type { ProcessNotFoundError } from './errors';
-import { ProcessManagerService } from './process-manager-service';
-import type * as ProcessManager from './ProcessManager';
-import * as RemoteOperationInvoker from './RemoteOperationInvoker';
+import type { ProcessNotFoundError } from './errors.ts';
+import { ProcessManagerService } from './process-manager-service.ts';
+import type * as ProcessManager from './ProcessManager.ts';
+import * as RemoteOperationInvoker from './RemoteOperationInvoker.ts';
 
 export interface OperationFiber<T> {
   pid: Process.ID;

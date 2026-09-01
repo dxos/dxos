@@ -14,11 +14,17 @@ import { Input } from '@dxos/react-ui';
 
 import { type FormPresentation } from '#types';
 
-import { useFormContext, useFormFieldState } from '../../../hooks';
-import { formTheme } from '../Form.theme';
-import { FormField, FormFieldErrorBoundary, FormFieldLabel, type FormFieldProps, presentationFor } from '../FormField';
-import { type LayoutNode, LayoutParseError, parseLayout } from './parser';
-import { resolveLayoutField } from './resolve-layout-field';
+import { useFormContext, useFormFieldState } from '../../../hooks/index.ts';
+import { formTheme } from '../Form.theme.ts';
+import {
+  FormField,
+  FormFieldErrorBoundary,
+  FormFieldLabel,
+  type FormFieldProps,
+  presentationFor,
+} from '../FormField/index.ts';
+import { type LayoutNode, LayoutParseError, parseLayout } from './parser.ts';
+import { resolveLayoutField } from './resolve-layout-field.ts';
 
 const FORM_LAYOUT_NAME = 'Form.Layout';
 

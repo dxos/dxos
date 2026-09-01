@@ -16,10 +16,10 @@ import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { Outline, Task } from '@dxos/types';
 
-import { Agent, Chat } from '../../../types';
-import DelegationSkill from '../skill';
-import { DelegateTask } from './definitions';
-import { DelegationSkillHandlers } from './index';
+import { Agent, Chat } from '../../../types/index.ts';
+import DelegationSkill from '../skill.ts';
+import { DelegateTask } from './definitions.ts';
+import { DelegationSkillHandlers } from './index.ts';
 
 EntityId.dangerouslyDisableRandomness();
 

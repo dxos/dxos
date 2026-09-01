@@ -12,8 +12,8 @@ import { CreateSphere } from '@babylonjs/core/Meshes/Builders/sphereBuilder';
 import { type Mesh } from '@babylonjs/core/Meshes/mesh';
 import { type Scene } from '@babylonjs/core/scene';
 
-import { scale } from '../engine';
-import { type SimObject } from '../sim';
+import { scale } from '../engine/index.ts';
+import { type SimObject } from '../sim/index.ts';
 
 /** Blast shells, innermost first: each is a fraction of the full radius, its own colour, and its own opacity at the moment of impact. */
 const SHELLS = [

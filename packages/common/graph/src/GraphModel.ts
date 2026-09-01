@@ -15,8 +15,8 @@ import { inspectCustom } from '@dxos/debug';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { type MakeOptional, type Specialize } from '@dxos/util';
 
-import * as GraphEdge from './GraphEdge';
-import * as GraphNode from './GraphNode';
+import * as GraphEdge from './GraphEdge.ts';
+import * as GraphNode from './GraphNode.ts';
 
 /**
  * Serialized graph; the shape persisted by ECHO types and returned by the model's snapshot.

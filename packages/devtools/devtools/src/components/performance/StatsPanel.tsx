@@ -8,8 +8,8 @@ import { getSyncSummary, useFeedSyncState, useSyncState } from '@dxos/react-clie
 import { Icon, ScrollArea, Toggle } from '@dxos/react-ui';
 import { Accordion } from '@dxos/react-ui-list';
 
-import { type Stats, removeEmpty } from '../../hooks';
-import { Panel } from './Panel';
+import { type Stats, removeEmpty } from '../../hooks/index.ts';
+import { Panel } from './Panel.tsx';
 import {
   DatabasePanel,
   EdgePanel,
@@ -24,7 +24,7 @@ import {
   type SurfaceProfilerStats,
   SwarmTracePanel,
   SyncStatusPanel,
-} from './panels';
+} from './panels/index.ts';
 
 const LOCAL_STORAGE_KEY = 'org.dxos.plugin.debug.panels';
 

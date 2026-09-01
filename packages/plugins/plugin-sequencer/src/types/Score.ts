@@ -8,8 +8,8 @@ import * as Skill from '@dxos/compute/Skill';
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
 
-import { Sequence } from './Sequence';
-import { Track } from './Track';
+import { Sequence } from './Sequence.ts';
+import { Track } from './Track.ts';
 
 export const SKILL_KEY = 'org.dxos.skill.sequencer';
 

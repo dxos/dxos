@@ -17,11 +17,11 @@ import { defaultTx } from '@dxos/react-ui';
 import { Expando } from '@dxos/schema';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 
-import { AppContainer, Error, Main } from './components';
-import { SyncBench } from './components/SyncBench';
-import { getConfig } from './config';
-import { Document, Item } from './data';
-import { translations } from './translations';
+import { AppContainer, Error, Main } from './components/index.ts';
+import { SyncBench } from './components/SyncBench.tsx';
+import { getConfig } from './config.ts';
+import { Document, Item } from './data.ts';
+import { translations } from './translations.ts';
 
 TRACE_PROCESSOR.setInstanceTag('app');
 

@@ -28,8 +28,8 @@ import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { type MaybePromise } from '@dxos/util';
 
-import { ClientServicesHost } from '../services';
-import { WorkerSession } from './worker-session';
+import { ClientServicesHost } from '../services/index.ts';
+import { WorkerSession } from './worker-session.ts';
 
 // Session transports are effect-rpc protocol layers handed over by the worker framework: appProtocol
 // serves the client services (+ WorkerService); systemProtocol carries the reverse-direction

@@ -8,7 +8,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { FileSystemCapabilities, FileSystemEvents } from '#types';
 
-export * as FileSystemManager from './FileSystemManager';
+export * as FileSystemManager from './FileSystemManager.ts';
 export const State = Capability.lazyModule(
   'State',
   {
@@ -16,5 +16,5 @@ export const State = Capability.lazyModule(
     provides: [FileSystemCapabilities.State, FileSystemCapabilities.FileSystemManager],
     activatesOn: FileSystemEvents.Start,
   },
-  () => import('./state'),
+  () => import('./state.ts'),
 );

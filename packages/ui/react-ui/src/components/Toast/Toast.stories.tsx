@@ -5,9 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type ReactNode, useState } from 'react';
 
-import { withTheme } from '../../testing';
-import { Button } from '../Button';
-import { Toast } from './Toast';
+import { withTheme } from '../../testing/index.ts';
+import { Button } from '../Button/index.ts';
+import { Toast } from './Toast.tsx';
 
 type ActionTriggerProps = { altText: string; trigger: ReactNode };
 

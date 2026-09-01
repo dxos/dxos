@@ -7,8 +7,8 @@ import React from 'react';
 
 import { type MessageValence } from '@dxos/ui-types';
 
-import { withLayoutVariants, withTheme } from '../../testing';
-import { Icon } from '../Icon';
+import { withLayoutVariants, withTheme } from '../../testing/index.ts';
+import { Icon } from '../Icon/index.ts';
 import {
   type CheckboxProps,
   type DateInputProps,
@@ -19,7 +19,7 @@ import {
   type TextAreaProps,
   type TextInputProps,
   type TimeProps,
-} from './Input';
+} from './Input.tsx';
 
 type VariantMap = {
   text: TextInputProps;

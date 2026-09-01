@@ -11,8 +11,8 @@ import { TestHelpers } from '@dxos/effect/testing';
 
 import { SpaceOperation } from '#types';
 
-import AddRelationHandler from './add-relation';
-import { TestObject, TestRelation, makeTestLayer } from './testing';
+import AddRelationHandler from './add-relation.ts';
+import { TestObject, TestRelation, makeTestLayer } from './testing.ts';
 
 const TestLayer = makeTestLayer(AddRelationHandler);
 

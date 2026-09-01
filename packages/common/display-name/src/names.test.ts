@@ -6,7 +6,7 @@ import { expect, test } from 'vitest';
 
 import { PublicKey } from '@dxos/keys';
 
-import { generateName } from './names';
+import { generateName } from './names.ts';
 
 test('example', () => {
   const examples = Array.from({ length: 5 }).map(() => {

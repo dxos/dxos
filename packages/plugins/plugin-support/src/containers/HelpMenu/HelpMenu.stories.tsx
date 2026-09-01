@@ -14,7 +14,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { HelpMenu } from './HelpMenu';
+import { HelpMenu } from './HelpMenu.tsx';
 
 const DefaultStory = () => (
   <StatusBar.EndContent>

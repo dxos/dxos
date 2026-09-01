@@ -14,8 +14,8 @@ import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { type Teleport } from '@dxos/teleport';
 import { ComplexMap, ComplexSet, range } from '@dxos/util';
 
-import { ReplicatorExtension } from './replicator-extension';
-import { createStreamPair } from './testing';
+import { ReplicatorExtension } from './replicator-extension.ts';
+import { createStreamPair } from './testing.ts';
 
 const MAX_NUM_FEEDS = 3;
 

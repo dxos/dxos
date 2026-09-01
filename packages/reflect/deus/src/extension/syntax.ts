@@ -4,7 +4,7 @@
 
 import { LRLanguage } from '@codemirror/language';
 
-import { parser } from './gen/mdl';
+import { parser } from './gen/mdl.ts';
 
 /**
  * Language definition for the interior of Spec fenced blocks.

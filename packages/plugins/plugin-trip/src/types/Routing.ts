@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation, Format } from '@dxos/echo';
 
-import { Place } from './Place';
+import { Place } from './Place.ts';
 
 /**
  * Transient routing types shared by plugin-trip and routing-service implementations

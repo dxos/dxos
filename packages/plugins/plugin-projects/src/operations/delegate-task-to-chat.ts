@@ -23,7 +23,7 @@ import { trim } from '@dxos/util';
 
 import { ProjectOperation } from '#types';
 
-import { getProjectChatPath } from '../paths';
+import { getProjectChatPath } from '../paths.ts';
 
 /**
  * Skills the delegated session needs beyond a chat's defaults: the checklist it works from, the

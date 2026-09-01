@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export { default as SandboxSkill } from './sandbox-skill';
+export { default as SandboxSkill } from './sandbox-skill.ts';

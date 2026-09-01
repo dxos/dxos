@@ -28,7 +28,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { translations } from '#translations';
 
-import { useTextEditor } from '../hooks';
+import { useTextEditor } from '../hooks/index.ts';
 
 const initialContent = ['# Hello world!', 'Hello Automerge', ''].join('\n\n');
 

@@ -19,7 +19,7 @@ import { EffectEx } from '@dxos/effect';
 import { Connection } from '@dxos/link';
 import * as Publisher from '@dxos/plugin-blogger/Publisher';
 
-import { TYPEFULLY_CONNECTOR_ID, TYPEFULLY_SOURCE } from '../constants';
+import { TYPEFULLY_CONNECTOR_ID, TYPEFULLY_SOURCE } from '../constants.ts';
 
 // Typefully API v2 (v1 key access was disabled Dec 2025 — see the v1→v2 migration guide:
 // https://support.typefully.com/en/articles/13133296-typefully-api-v1-v2-migration-guide). Drafts are

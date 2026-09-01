@@ -4,7 +4,7 @@
 
 import { type Scope, createContextScope } from '@radix-ui/react-context';
 
-import { type GridContextValue } from './Grid';
+import { type GridContextValue } from './Grid.tsx';
 
 // Kept out of `Grid.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so a context, fragments and re-exported helpers force a full page reload on every edit.

@@ -20,9 +20,9 @@ import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 import { getListActions, useActions, useLoadDescendents } from '#hooks';
 import { meta } from '#meta';
 
-import { NAV_TREE_ITEM } from '../NavTree';
-import { useNavTreeContext } from '../NavTreeContext';
-import { NavTreeItemColumns } from '../NavTreeItem/NavTreeItemColumns';
+import { NAV_TREE_ITEM } from '../NavTree/index.ts';
+import { useNavTreeContext } from '../NavTreeContext/index.ts';
+import { NavTreeItemColumns } from '../NavTreeItem/NavTreeItemColumns.tsx';
 
 /**
  * Delay before the unavailable-workspace message appears, timed from the last change to the set of

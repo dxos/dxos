@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols/proto';
 import { type ComplexSet } from '@dxos/util';
 
-import { type AuthProvider, type AuthVerifier } from '../space';
+import { type AuthProvider, type AuthVerifier } from '../space/index.ts';
 
 const Credential = schema.getCodecForType('dxos.halo.credentials.Credential');
 

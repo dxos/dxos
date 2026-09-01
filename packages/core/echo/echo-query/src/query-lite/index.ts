@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './query-lite';
+export * from './query-lite.ts';

@@ -14,9 +14,9 @@ import { type SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { type Cypher, CypherError } from './cypher';
-import { PositionConflictError } from './errors';
-import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations';
+import { type Cypher, CypherError } from './cypher.ts';
+import { PositionConflictError } from './errors.ts';
+import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/index.ts';
 
 type AppendRequest = FeedProtocol.AppendRequest;
 type AppendResponse = FeedProtocol.AppendResponse;

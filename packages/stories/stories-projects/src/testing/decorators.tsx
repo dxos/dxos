@@ -29,7 +29,7 @@ import { TagIndex, Text } from '@dxos/schema';
 import { StoryAiPlugin, createStoryDecorators, makeModuleSurfacesPlugin } from '@dxos/storybook-testing';
 import { Message, Organization, Person } from '@dxos/types';
 
-import { moduleSurfaces } from '../modules';
+import { moduleSurfaces } from '../modules/index.ts';
 
 /** Shared CSF parameters for this package's stories (fullscreen canvas + plugin translations). */
 export const storyParameters = {

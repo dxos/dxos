@@ -6,13 +6,13 @@ import * as ts from '@typescript/typescript6';
 import { dirname, join } from 'path';
 import type pb from 'protobufjs';
 
-import { ASYNC_MODULE, CODEC_MODULE, ModuleSpecifier } from '../module-specifier';
-import { getSafeNamespaceIdentifier, parseFullyQualifiedName } from '../namespaces';
-import { type SubstitutionsMap } from '../parser';
-import { type GeneratorContext } from './context';
-import { createDeclarations, createTypeDictionary } from './declaration-generator';
-import { createSerializerDefinition } from './serializer-definition-generator';
-import { createServicesDictionary } from './service';
+import { ASYNC_MODULE, CODEC_MODULE, ModuleSpecifier } from '../module-specifier.ts';
+import { getSafeNamespaceIdentifier, parseFullyQualifiedName } from '../namespaces.ts';
+import { type SubstitutionsMap } from '../parser/index.ts';
+import { type GeneratorContext } from './context.ts';
+import { createDeclarations, createTypeDictionary } from './declaration-generator.ts';
+import { createSerializerDefinition } from './serializer-definition-generator.ts';
+import { createServicesDictionary } from './service.ts';
 
 const f = ts.factory;
 

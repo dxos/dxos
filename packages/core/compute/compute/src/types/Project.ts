@@ -10,9 +10,9 @@ import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { FormInlineAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { Outline, Repo, TaskSet } from '@dxos/types';
 
-import * as Instructions from './Instructions';
-import * as Routine from './Routine';
-import * as Skill from './Skill';
+import * as Instructions from './Instructions.ts';
+import * as Routine from './Routine.ts';
+import * as Skill from './Skill.ts';
 
 /** Work-stream lifecycle state; what done means lives on the task set's milestones. */
 export const ProjectStatus = Schema.Literals(['active', 'paused', 'blocked', 'ended']);

@@ -14,7 +14,7 @@ import { ClientPlugin } from '#plugin';
 import { initializeIdentity } from '#testing';
 import { translations } from '#translations';
 
-import { DevicesContainer } from './DevicesContainer';
+import { DevicesContainer } from './DevicesContainer.tsx';
 
 const meta = {
   title: 'plugins/plugin-client/containers/DevicesContainer',

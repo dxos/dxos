@@ -4,7 +4,7 @@
 
 import { createContext } from '@radix-ui/react-context';
 
-import { type GameboardModel, type Move, type PieceRecord } from './types';
+import { type GameboardModel, type Move, type PieceRecord } from './types.ts';
 
 // Kept out of `Gameboard.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so a context and its hook exported beside them force a full page reload on every edit.

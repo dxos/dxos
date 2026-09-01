@@ -15,8 +15,8 @@ import { Common } from '@dxos/cli-util';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { AccessToken, Connection } from '@dxos/link';
 
-import { performOAuthFlow } from './oauth';
-import { OAUTH_PRESETS, type OAuthPreset, printTokenAdded } from './util';
+import { performOAuthFlow } from './oauth.ts';
+import { OAUTH_PRESETS, type OAuthPreset, printTokenAdded } from './util.ts';
 
 export const add = Command.make(
   'add',

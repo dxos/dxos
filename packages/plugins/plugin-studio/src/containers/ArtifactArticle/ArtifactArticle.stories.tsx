@@ -23,7 +23,7 @@ import { StudioPlugin } from '#plugin';
 import { translations } from '#translations';
 import { Artifact, GenerationService, StudioCapabilities, Variant } from '#types';
 
-import { ArtifactArticle } from './ArtifactArticle';
+import { ArtifactArticle } from './ArtifactArticle.tsx';
 
 /** The request config the mock provider exposes (drives the schema-driven form). */
 const MockRequestSchema = Schema.Struct({

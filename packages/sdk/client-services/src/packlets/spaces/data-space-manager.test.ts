@@ -21,10 +21,10 @@ import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceMember, type SpaceMember as SpaceMemberAssertion } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { openAndClose } from '@dxos/test-utils';
 
-import { AuthStatus } from '../space';
-import { TestBuilder, type TestPeer } from '../testing';
-import { openCredentialsDocument } from './credentials-document-store';
-import { remainingLifetimeSeconds } from './data-space-manager';
+import { AuthStatus } from '../space/index.ts';
+import { TestBuilder, type TestPeer } from '../testing/index.ts';
+import { openCredentialsDocument } from './credentials-document-store.ts';
+import { remainingLifetimeSeconds } from './data-space-manager.ts';
 
 describe('remainingLifetimeSeconds', () => {
   // `Invitation.lifetime` is a protobuf int32; a fractional value fails to encode, which killed the

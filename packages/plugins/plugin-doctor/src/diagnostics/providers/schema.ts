@@ -9,8 +9,8 @@ import { Obj, Type } from '@dxos/echo';
 
 import { meta } from '#meta';
 
-import { getReadySpaces, labelObject, queryAllObjects } from '../helpers';
-import { type DiagnosticIssue, type DiagnosticProvider } from '../types';
+import { getReadySpaces, labelObject, queryAllObjects } from '../helpers.ts';
+import { type DiagnosticIssue, type DiagnosticProvider } from '../types.ts';
 
 /**
  * Validate every ECHO object against its declared schema and surface objects whose

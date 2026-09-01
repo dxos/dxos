@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type ResizeHandleProps } from '../components';
-import { type Size } from '../types';
+import { type ResizeHandleProps } from '../components/index.ts';
+import { type Size } from '../types.ts';
 
 export const sizeStyle = (
   size: Size,

@@ -4,9 +4,9 @@
 
 import * as Command from 'effect/unstable/cli/Command';
 
-import { create } from './create';
-import { list } from './list';
-import { revoke } from './revoke';
+import { create } from './create.ts';
+import { list } from './list.ts';
+import { revoke } from './revoke.ts';
 
 export const code: Command.Command<any, any, any, any, any> = Command.make('code').pipe(
   Command.withDescription('Manage invitation codes.'),

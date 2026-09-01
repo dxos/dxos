@@ -24,7 +24,7 @@ import { Message } from '@dxos/types';
 import { buildSearchQuery, toSearchResults } from '#hooks';
 import { translations } from '#translations';
 
-import { SearchResultList } from './SearchResultList';
+import { SearchResultList } from './SearchResultList.tsx';
 
 random.seed(0);
 

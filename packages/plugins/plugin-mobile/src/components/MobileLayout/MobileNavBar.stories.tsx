@@ -13,7 +13,7 @@ import { withRegistry } from '@dxos/storybook-utils';
 
 import { translations } from '#translations';
 
-import { MobileNavBar } from './MobileNavBar';
+import { MobileNavBar } from './MobileNavBar.tsx';
 
 const MAIN_MENU_GROUP_ID = 'navbar-main-menu';
 

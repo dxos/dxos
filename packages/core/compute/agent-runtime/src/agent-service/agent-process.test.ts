@@ -10,7 +10,7 @@ import { storageServiceLayer } from '@dxos/compute-runtime';
 import * as Process from '@dxos/compute/Process';
 import { ContentBlock } from '@dxos/types';
 
-import { AlarmManager, computeAlarmDelay, isAgentWorkPending } from './agent-process';
+import { AlarmManager, computeAlarmDelay, isAgentWorkPending } from './agent-process.ts';
 
 const NOW = new Date('2026-06-04T12:00:00.000Z').getTime();
 

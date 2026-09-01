@@ -18,9 +18,9 @@ import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { Message, Outline, Task } from '@dxos/types';
 
-import { Agent, Chat } from '../../../types';
-import { PlanReminder } from './definitions';
-import { PlanningHandlers } from './index';
+import { Agent, Chat } from '../../../types/index.ts';
+import { PlanReminder } from './definitions.ts';
+import { PlanningHandlers } from './index.ts';
 
 EntityId.dangerouslyDisableRandomness();
 

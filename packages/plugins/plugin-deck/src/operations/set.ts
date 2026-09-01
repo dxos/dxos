@@ -12,9 +12,9 @@ import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabili
 
 import { DeckCapabilities } from '#types';
 
-import { updatePlankNames } from '../layout';
-import { computeActiveUpdates } from '../util';
-import { updateActiveDeck } from './helpers';
+import { updatePlankNames } from '../layout.ts';
+import { computeActiveUpdates } from '../util/index.ts';
+import { updateActiveDeck } from './helpers.ts';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.Set> = LayoutOperation.Set.pipe(
   Operation.withHandler(

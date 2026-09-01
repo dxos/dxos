@@ -8,8 +8,8 @@ import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
-import { computeCharHunks } from './diff';
-import { trackChanges } from './track-changes';
+import { computeCharHunks } from './diff.ts';
+import { trackChanges } from './track-changes.ts';
 
 const MAIN = 'alpha\nbravo\ncharlie';
 

@@ -4,7 +4,7 @@
 
 import { next as A } from '@automerge/automerge';
 
-import { getObjectCore } from './echo-object-utils';
+import { getObjectCore } from './echo-object-utils.ts';
 
 export type ObjectVersion = {
   heads: string[];

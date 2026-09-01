@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
 
-import * as Model from './Model';
+import * as Model from './Model.ts';
 
 export class Scene extends Type.makeObject<Scene>(DXN.make('org.dxos.type.spacetime.scene', '0.1.0'))(
   Schema.Struct({

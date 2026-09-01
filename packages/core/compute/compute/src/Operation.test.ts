@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
-import * as Operation from './Operation';
+import * as Operation from './Operation.ts';
 
 const KEY = DXN.make('com.example.test.op');
 

@@ -30,8 +30,8 @@ import { EventStack, type EventStackActionHandler, useTargetConnection } from '#
 import { meta } from '#meta';
 import { Calendar, DraftEvent, SystemTags } from '#types';
 
-import { getCalendarRangeSelectionId } from '../../paths';
-import { InitializeCalendar } from './InitializeCalendar';
+import { getCalendarRangeSelectionId } from '../../paths.ts';
+import { InitializeCalendar } from './InitializeCalendar.tsx';
 
 const byDate =
   (direction = -1) =>

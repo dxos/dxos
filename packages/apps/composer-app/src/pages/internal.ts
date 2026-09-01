@@ -4,7 +4,7 @@
 
 import { Observability } from '@dxos/observability';
 
-import { APP_KEY } from '../util';
+import { APP_KEY } from '../util/index.ts';
 
 const run = async () => {
   const searchProps = new URLSearchParams(window.location.search);

@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Ref } from '@dxos/echo';
 
-import * as Person from './Person';
+import * as Person from './Person.ts';
 
 // TOOD(burdon): This is very specific to AI.
 export const Role = Schema.Literals(['user', 'assistant', 'tool']);

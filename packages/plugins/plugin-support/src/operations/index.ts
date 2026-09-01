@@ -8,11 +8,11 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { HelpOperation, SupportOperation } from '#types';
 
 export const SupportOperationHandlerSet = OperationHandlerSet.lazy([
-  SupportOperation.CaptureUserFeedback.pipe(Operation.lazyHandler(() => import('./capture-feedback'))),
-  SupportOperation.CreateTicket.pipe(Operation.lazyHandler(() => import('./create-ticket'))),
-  HelpOperation.HideWelcome.pipe(Operation.lazyHandler(() => import('./hide-welcome'))),
-  SupportOperation.MarkInProgress.pipe(Operation.lazyHandler(() => import('./mark-in-progress'))),
-  SupportOperation.ResolveTicket.pipe(Operation.lazyHandler(() => import('./resolve-ticket'))),
-  SupportOperation.SearchDocs.pipe(Operation.lazyHandler(() => import('./search-docs'))),
-  HelpOperation.Start.pipe(Operation.lazyHandler(() => import('./start'))),
+  SupportOperation.CaptureUserFeedback.pipe(Operation.lazyHandler(() => import('./capture-feedback.ts'))),
+  SupportOperation.CreateTicket.pipe(Operation.lazyHandler(() => import('./create-ticket.ts'))),
+  HelpOperation.HideWelcome.pipe(Operation.lazyHandler(() => import('./hide-welcome.ts'))),
+  SupportOperation.MarkInProgress.pipe(Operation.lazyHandler(() => import('./mark-in-progress.ts'))),
+  SupportOperation.ResolveTicket.pipe(Operation.lazyHandler(() => import('./resolve-ticket.ts'))),
+  SupportOperation.SearchDocs.pipe(Operation.lazyHandler(() => import('./search-docs.ts'))),
+  HelpOperation.Start.pipe(Operation.lazyHandler(() => import('./start.ts'))),
 ]);

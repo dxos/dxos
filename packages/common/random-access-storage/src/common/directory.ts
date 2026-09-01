@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type File } from './file';
-import { type StorageType } from './storage';
-import { getFullPath } from './utils';
+import { type File } from './file.ts';
+import { type StorageType } from './storage.ts';
+import { getFullPath } from './utils.ts';
 
 export type DirectoryProps = {
   type: StorageType;

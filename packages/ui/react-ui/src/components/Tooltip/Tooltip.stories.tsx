@@ -7,9 +7,9 @@ import React from 'react';
 
 import { random } from '@dxos/random';
 
-import { withTheme } from '../../testing';
-import { Button } from '../Button';
-import { Tooltip } from './Tooltip';
+import { withTheme } from '../../testing/index.ts';
+import { Button } from '../Button/index.ts';
+import { Tooltip } from './Tooltip.tsx';
 
 type StoryArgs = {
   tooltips: { label: string; content: string }[];

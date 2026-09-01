@@ -9,7 +9,7 @@ import * as Command from 'effect/unstable/cli/Command';
 import { CommandConfig } from '@dxos/cli-util';
 import { type AdminListInvitationCodesResponse } from '@dxos/protocols';
 
-import { formatHubError, hubApiRequest } from '../util';
+import { formatHubError, hubApiRequest } from '../util.ts';
 
 const statusOf = (row: AdminListInvitationCodesResponse['codes'][number]): string => {
   if (row.revokedAt) {

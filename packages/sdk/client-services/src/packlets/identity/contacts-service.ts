@@ -14,9 +14,9 @@ import { type Contact, type ContactBook } from '@dxos/protocols/proto/dxos/clien
 import { type ContactsService } from '@dxos/protocols/rpc';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
-import { type SpaceManager } from '../space';
-import { type DataSpaceManager } from '../spaces';
-import { type IdentityManager } from './identity-manager';
+import { type SpaceManager } from '../space/index.ts';
+import { type DataSpaceManager } from '../spaces/index.ts';
+import { type IdentityManager } from './identity-manager.ts';
 
 export class ContactsServiceImpl implements ContactsService.Handlers {
   'constructor'(

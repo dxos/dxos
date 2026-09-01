@@ -13,7 +13,7 @@ import * as localForage from 'localforage';
 import { type Config } from '@dxos/config';
 import { log } from '@dxos/log';
 
-import { type DataProvider } from '../observability';
+import { type DataProvider } from '../observability.ts';
 
 const IP_DATA_CACHE_TIMEOUT = 6 * 60 * 60 * 1000; // 6 hours
 

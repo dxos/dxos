@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { meta } from './meta';
+import { meta } from './meta.ts';
 
 /**
  * Surface keys, apart from the components they address: the onboarding manager and app-graph

@@ -27,8 +27,8 @@ import { Position } from '@dxos/util';
 import { meta } from '#meta';
 import { HelpCapabilities, HelpOperation, SupportCapabilities } from '#types';
 
-import { WelcomeDismissedAnnotation } from '../annotations';
-import { SHORTCUTS_DIALOG } from '../constants';
+import { WelcomeDismissedAnnotation } from '../annotations.ts';
+import { SHORTCUTS_DIALOG } from '../constants.ts';
 
 // Graph node/action label tuples. These MUST be module-level singletons: connectors/actions re-evaluate
 // whenever their matched node emits, and `addNodeImpl` dedupes properties by reference. A label tuple

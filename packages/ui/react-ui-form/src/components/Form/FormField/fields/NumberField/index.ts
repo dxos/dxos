@@ -2,6 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './numeric-constraints';
+export * from './numeric-constraints.ts';
 
-export * from './NumberField';
+export * from './NumberField.tsx';

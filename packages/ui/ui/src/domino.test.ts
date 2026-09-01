@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { mx } from '@dxos/ui-theme';
 
-import { Domino } from './domino';
+import { Domino } from './domino.ts';
 
 describe('domino', () => {
   test('classNames uses mx for class merging', () => {

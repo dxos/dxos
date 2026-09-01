@@ -5,7 +5,7 @@
 import { type EditorState, type Extension, Prec, StateEffect, StateField } from '@codemirror/state';
 import { EditorView, RectangleMarker, keymap, layer } from '@codemirror/view';
 
-import { type Block, type BlockExtent } from './types';
+import { type Block, type BlockExtent } from './types.ts';
 
 // Amount (px) the highlight extends left of the content, matching the outline boxes and drag preview.
 const BOX_INSET_X = 8;

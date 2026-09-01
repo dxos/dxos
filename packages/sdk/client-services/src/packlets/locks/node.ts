@@ -8,7 +8,7 @@ import { invariant } from '@dxos/invariant';
 import { LockFile } from '@dxos/lock-file';
 import { log, logInfo } from '@dxos/log';
 
-import { type ResourceLock, type ResourceLockOptions } from './resource-lock';
+import { type ResourceLock, type ResourceLockOptions } from './resource-lock.ts';
 
 // TODO(mykola): Factor out.
 export class Lock implements ResourceLock {

@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 
 import { VideoOperation } from '#types';
 
-import { fetchPage, parseYouTubeDescription } from '../util';
+import { fetchPage, parseYouTubeDescription } from '../util/index.ts';
 
 const handler: Operation.WithHandler<typeof VideoOperation.FetchDescription> = VideoOperation.FetchDescription.pipe(
   Operation.withHandler(

@@ -10,8 +10,8 @@ import { type Any, type TaggedType } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
 import { type TYPES } from '@dxos/protocols/proto';
 
-import { RpcPeer } from './rpc';
-import { createLinkedPorts, encodeMessage } from './testing';
+import { RpcPeer } from './rpc.ts';
+import { createLinkedPorts, encodeMessage } from './testing.ts';
 
 const createPayload = (value = ''): TaggedType<TYPES, 'google.protobuf.Any'> => ({
   '@type': 'google.protobuf.Any',

@@ -25,12 +25,12 @@ import {
 import { formatForEditing } from '@dxos/schema';
 import { type ProjectionModel, type PropertyType, type ValidationError, validateSchema } from '@dxos/schema';
 
-import { type Table } from '../types';
-import { extractOrder } from '../util';
-import { compareValues } from '../util/sort';
-import { extractTagIds } from '../util/tag';
-import { type SelectionMode, SelectionModel } from './selection-model';
-import { type FieldSortType, tableSortAspect } from './table-view-state';
+import { type Table } from '../types/index.ts';
+import { extractOrder } from '../util/index.ts';
+import { compareValues } from '../util/sort.ts';
+import { extractTagIds } from '../util/tag.ts';
+import { type SelectionMode, SelectionModel } from './selection-model.ts';
+import { type FieldSortType, tableSortAspect } from './table-view-state.ts';
 
 /**
  * Callback type for wrapping mutations in Obj.update().

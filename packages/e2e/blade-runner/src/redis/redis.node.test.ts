@@ -19,8 +19,8 @@ import { type TYPES } from '@dxos/protocols';
 import { RpcPeer } from '@dxos/rpc';
 import { openAndClose } from '@dxos/test-utils';
 
-import { REDIS_PORT } from './defaults';
-import { createRedisReadableStream, createRedisRpcPort, createRedisWritableStream } from './util';
+import { REDIS_PORT } from './defaults.ts';
+import { createRedisReadableStream, createRedisRpcPort, createRedisWritableStream } from './util.ts';
 
 /**
  * NOTE(mykola): This test is disabled because it requires a running Redis server.

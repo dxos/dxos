@@ -6,9 +6,9 @@ import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
-import { useElevationContext, useThemeContext } from '../../hooks';
-import { useSafeCollisionPadding } from '../../hooks/useSafeCollisionPadding';
-import { type ThemedClassName } from '../../util';
+import { useElevationContext, useThemeContext } from '../../hooks/index.ts';
+import { useSafeCollisionPadding } from '../../hooks/useSafeCollisionPadding.ts';
+import { type ThemedClassName } from '../../util/index.ts';
 
 type ContextMenuRootProps = ContextMenuPrimitive.ContextMenuProps;
 

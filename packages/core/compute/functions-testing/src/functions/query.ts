@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Query as EchoQuery, Filter } from '@dxos/echo';
 
-import { QueryDb } from './definitions';
+import { QueryDb } from './definitions.ts';
 
 export default QueryDb.pipe(
   Operation.withHandler(

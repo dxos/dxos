@@ -8,8 +8,8 @@ import { Column } from '@dxos/react-ui';
 import { Window, type WindowController, type WindowState, useListModel } from '@dxos/react-ui-virtual';
 import { type Message } from '@dxos/types';
 
-import { HtmlBlock, MarkdownBlock, type MessageChromeProps } from '../components';
-import { type MessageRenderer, defaultRenderer } from '../model';
+import { HtmlBlock, MarkdownBlock, type MessageChromeProps } from '../components/index.ts';
+import { type MessageRenderer, defaultRenderer } from '../model/index.ts';
 
 /**
  * A feed of real messages placed by `Window`, and nothing else.

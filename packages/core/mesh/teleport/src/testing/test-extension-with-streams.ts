@@ -12,7 +12,7 @@ import { getBufService } from '@dxos/protocols/buf-service';
 import { type TestServiceWithStreams } from '@dxos/protocols/proto/example/testing/rpc';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 
-import { type ExtensionContext, type TeleportExtension } from '../teleport';
+import { type ExtensionContext, type TeleportExtension } from '../teleport.ts';
 
 interface TestExtensionWithStreamsCallbacks {
   onOpen?: () => Promise<void>;

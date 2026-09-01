@@ -13,7 +13,7 @@ import { type FormFieldMap, type FormFieldRendererProps, SelectField } from '@dx
 
 import { type GenerationOption, makeHeyGenProvider } from '#services';
 
-import { HEYGEN_SOURCE } from '../../constants';
+import { HEYGEN_SOURCE } from '../../constants.ts';
 
 type Status = 'idle' | 'loading' | 'ready' | 'error';
 

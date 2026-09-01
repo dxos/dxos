@@ -4,7 +4,7 @@
 
 import { type CleanupFn } from '@dxos/async';
 
-import { type GossipMessage } from './proto/gen/dxos/mesh/teleport/gossip';
+import { type GossipMessage } from './proto/gen/dxos/mesh/teleport/gossip.ts';
 
 /**
  * Message passing abstraction.

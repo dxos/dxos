@@ -9,8 +9,8 @@ import { safeParseFloat } from '@dxos/util';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { FormRow } from '../../FormRow';
-import { getNumericConstraints } from './numeric-constraints';
+import { FormRow } from '../../FormRow.tsx';
+import { getNumericConstraints } from './numeric-constraints.ts';
 
 export const NumberField = ({
   type,

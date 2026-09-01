@@ -12,7 +12,7 @@ import { type PeerState } from '@dxos/protocols/proto/dxos/mesh/presence';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { ComplexMap } from '@dxos/util';
 
-import { type Gossip } from './gossip';
+import { type Gossip } from './gossip.ts';
 
 export type PresenceProps = {
   /**

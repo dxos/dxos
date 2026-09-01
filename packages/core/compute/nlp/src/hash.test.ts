@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { sourceHash } from './hash';
+import { sourceHash } from './hash.ts';
 
 describe('sourceHash', () => {
   test('returns the expected FNV-1a digest for known inputs', ({ expect }) => {

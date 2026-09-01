@@ -9,14 +9,14 @@ import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
 import { entries, range } from '@dxos/util';
 
-import { type TestSchemaType } from './data';
+import { type TestSchemaType } from './data.ts';
 import {
   type MutationsProviderProps,
   type TestGeneratorMap,
   type TestMutationsMap,
   type TestObjectProvider,
   type TestSchemaMap,
-} from './types';
+} from './types.ts';
 
 /**
  * Typed object generator.

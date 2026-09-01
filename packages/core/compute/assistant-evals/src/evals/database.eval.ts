@@ -9,8 +9,8 @@ import { evalite } from 'evalite';
 import { Organization } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { objectExists, toolInvocations } from '../assertions';
-import { createEvalRunner } from '../runner';
+import { objectExists, toolInvocations } from '../assertions.ts';
+import { createEvalRunner } from '../runner.ts';
 
 const QUERY_OPERATION_KEY = 'dxn:org.dxos.operation.space.queryObjects';
 

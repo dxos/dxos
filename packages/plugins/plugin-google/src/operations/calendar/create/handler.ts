@@ -11,8 +11,8 @@ import { log } from '@dxos/log';
 import { GoogleCalendar } from '#apis';
 import { GoogleOperation } from '#types';
 
-import { GoogleCredentials } from '../../../services/google-credentials';
-import { toGoogleEvent } from '../mapper';
+import { GoogleCredentials } from '../../../services/google-credentials.ts';
+import { toGoogleEvent } from '../mapper.ts';
 
 const handler = GoogleOperation.CreateGoogleCalendarEvent.pipe(
   Operation.withHandler(({ event, googleCalendarId, connection: connectionRef }) =>

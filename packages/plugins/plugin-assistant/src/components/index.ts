@@ -3,11 +3,11 @@
 //
 // TODO(wittjosiah): Factor components out of plugin-assistant into a standalone package.
 
-export * from './AgentProperties';
-export * from './Chat';
-export * from './ConnectorAuthMenu';
-export { TracePanel } from '../containers/TracePanel/TracePanel';
-export * from './ProcessTree';
-export * from './Toolbox';
+export * from './AgentProperties/index.ts';
+export * from './Chat/index.ts';
+export * from './ConnectorAuthMenu/index.ts';
+export { TracePanel } from '../containers/TracePanel/TracePanel.tsx';
+export * from './ProcessTree/index.ts';
+export * from './Toolbox/index.ts';
 
-export { ChatPrompt, type ChatPromptProps } from './ChatPrompt/ChatPrompt';
+export { ChatPrompt, type ChatPromptProps } from './ChatPrompt/ChatPrompt.tsx';

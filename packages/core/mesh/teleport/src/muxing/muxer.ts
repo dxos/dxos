@@ -16,8 +16,8 @@ import { CommandSchema } from '@dxos/protocols/buf/dxos/mesh/muxer_pb';
 import { type ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { type Command } from '@dxos/protocols/proto/dxos/mesh/muxer';
 
-import { Balancer } from './balancer';
-import { type RpcPort } from './rpc-port';
+import { Balancer } from './balancer.ts';
+import { type RpcPort } from './rpc-port.ts';
 
 const Command = compatCodec<Command>(CommandSchema);
 

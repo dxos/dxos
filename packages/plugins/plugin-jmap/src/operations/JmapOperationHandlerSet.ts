@@ -8,7 +8,7 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { JmapOperation } from '#types';
 
 export const handlers = OperationHandlerSet.lazy([
-  JmapOperation.MaterializeJmapTarget.pipe(Operation.lazyHandler(() => import('./mail/materialize/handler'))),
-  JmapOperation.JmapSend.pipe(Operation.lazyHandler(() => import('./mail/send'))),
-  JmapOperation.JmapSync.pipe(Operation.lazyHandler(() => import('./mail/sync'))),
+  JmapOperation.MaterializeJmapTarget.pipe(Operation.lazyHandler(() => import('./mail/materialize/handler.ts'))),
+  JmapOperation.JmapSend.pipe(Operation.lazyHandler(() => import('./mail/send/index.ts'))),
+  JmapOperation.JmapSync.pipe(Operation.lazyHandler(() => import('./mail/sync/index.ts'))),
 ]);

@@ -11,7 +11,7 @@ import * as Options from 'effect/unstable/cli/Flag';
 import { CommandConfig } from '@dxos/cli-util';
 import { type DeleteIdentityResponse, type LegacyDeleteIdentityResponse } from '@dxos/protocols';
 
-import { adminRequest, formatAdminError, readIdentityDid } from '../util';
+import { adminRequest, formatAdminError, readIdentityDid } from '../util.ts';
 
 export const del = Command.make(
   'delete',

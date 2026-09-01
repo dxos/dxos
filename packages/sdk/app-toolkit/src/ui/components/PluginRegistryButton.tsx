@@ -8,8 +8,8 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { osTranslations } from '@dxos/ui-theme';
 
-import { SettingsOperation } from '../../operations';
-import { usePluginRegistryAvailable } from '../hooks';
+import { SettingsOperation } from '../../operations/index.ts';
+import { usePluginRegistryAvailable } from '../hooks/index.ts';
 
 export type PluginRegistryButtonProps = Partial<Omit<ComponentPropsWithoutRef<typeof IconButton>, 'icon' | 'label'>>;
 

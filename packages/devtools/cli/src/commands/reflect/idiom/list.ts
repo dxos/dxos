@@ -10,7 +10,7 @@ import * as Options from 'effect/unstable/cli/Flag';
 import { CommandConfig } from '@dxos/cli-util';
 import { scanIdioms } from '@dxos/introspect/idioms';
 
-import { findMonorepoRoot } from '../util';
+import { findMonorepoRoot } from '../util.ts';
 
 const handler = Effect.fn(function* ({ root }: { root: string }) {
   const { json } = yield* CommandConfig;

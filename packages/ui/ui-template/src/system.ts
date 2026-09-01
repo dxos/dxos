@@ -20,7 +20,7 @@
 // neither imports ECHO nor casts around it.
 //
 
-import { type ModuleView, type ScopeFrame } from './model';
+import { type ModuleView, type ScopeFrame } from './model.ts';
 
 /** Published UI state: a nested tree of scope ids ending in slot values. */
 export type UiState = Readonly<Record<string, unknown>>;

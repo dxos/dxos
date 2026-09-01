@@ -15,8 +15,8 @@ import { type EntityNotFoundError } from '@dxos/echo/Error';
 import { EffectEx } from '@dxos/effect';
 import { IdentityDid } from '@dxos/keys';
 
-import { HarnessContextError } from '../errors';
-import * as Chat from './Chat';
+import { HarnessContextError } from '../errors.ts';
+import * as Chat from './Chat.ts';
 
 /**
  * An agent identity: a personality (attribution DID) plus its preset payload (instructions with

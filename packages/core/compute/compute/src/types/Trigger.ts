@@ -15,8 +15,8 @@ import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { OptionsAnnotationId } from '@dxos/echo/Format';
 import { SchemaAST } from '@dxos/effect';
 
-import * as Runnable from '../Runnable';
-import type * as TriggerEvent from './TriggerEvent';
+import * as Runnable from '../Runnable.ts';
+import type * as TriggerEvent from './TriggerEvent.ts';
 
 /**
  * Type discriminator for TriggerType.

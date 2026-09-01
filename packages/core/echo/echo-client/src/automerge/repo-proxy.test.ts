@@ -23,9 +23,9 @@ import { makeInProcessClient } from '@dxos/protocols';
 import { DataService } from '@dxos/protocols/rpc';
 import { openAndClose } from '@dxos/test-utils';
 
-import { createTmpPath } from '../testing';
-import { type DocHandleProxy } from './doc-handle-proxy';
-import { RepoProxy } from './repo-proxy';
+import { createTmpPath } from '../testing/index.ts';
+import { type DocHandleProxy } from './doc-handle-proxy.ts';
+import { RepoProxy } from './repo-proxy.ts';
 
 describe('RepoProxy', () => {
   test('create document from client', async () => {

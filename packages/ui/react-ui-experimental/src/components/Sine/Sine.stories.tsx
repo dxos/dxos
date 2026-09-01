@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Sine } from './Sine';
+import { Sine } from './Sine.tsx';
 
 const meta = {
   title: 'ui/react-ui-experimental/Sine',

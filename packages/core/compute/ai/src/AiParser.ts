@@ -18,7 +18,7 @@ import { EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type ContentBlock } from '@dxos/types';
 
-import { type StreamBlock, StreamTransform } from './parser';
+import { type StreamBlock, StreamTransform } from './parser/index.ts';
 
 /**
  * Tags that are used by the model to indicate the type of content.

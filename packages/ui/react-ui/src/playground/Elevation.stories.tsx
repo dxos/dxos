@@ -25,8 +25,8 @@ import {
   Tag,
   Toolbar,
   useSidebars,
-} from '../components';
-import { withLayout, withTheme } from '../testing';
+} from '../components/index.ts';
+import { withLayout, withTheme } from '../testing/index.ts';
 
 random.seed(1);
 

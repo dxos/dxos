@@ -16,7 +16,7 @@ import { log } from '@dxos/log';
 import { meta } from '#meta';
 import { ConnectorCoordination, ConnectorSpec } from '#types';
 
-import * as Binding from './Binding';
+import * as Binding from './Binding.ts';
 
 /**
  * The "Connect" control for an object that can be bound to a remote account: one dropdown group whose

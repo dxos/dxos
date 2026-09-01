@@ -23,7 +23,7 @@ import { InboxPlugin } from '#plugin';
 import { initializeMailbox } from '#testing';
 import { Mailbox } from '#types';
 
-import { InitializeMailbox } from './InitializeMailbox';
+import { InitializeMailbox } from './InitializeMailbox.tsx';
 
 type StoryArgs = {
   withToken?: boolean;

@@ -8,5 +8,5 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { ScriptOperation } from '#types';
 
 export const handlers = OperationHandlerSet.lazy([
-  ScriptOperation.CreateScript.pipe(Operation.lazyHandler(() => import('./create-script'))),
+  ScriptOperation.CreateScript.pipe(Operation.lazyHandler(() => import('./create-script.ts'))),
 ]);

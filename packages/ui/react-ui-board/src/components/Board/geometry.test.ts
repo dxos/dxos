@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type Point, type Scroll, anchoredScroll, boardPad, viewportCenterAnchor } from './geometry';
+import { type Point, type Scroll, anchoredScroll, boardPad, viewportCenterAnchor } from './geometry.ts';
 
 const viewport = { width: 1000, height: 800 };
 const board = { width: 3000, height: 2400 };

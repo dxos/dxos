@@ -9,8 +9,8 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 
-import { Phoenix } from './phoenix';
-import { TEST_DIR, clearFiles, neverEndingProcess } from './testing-utils';
+import { Phoenix } from './phoenix.ts';
+import { TEST_DIR, clearFiles, neverEndingProcess } from './testing-utils.ts';
 
 describe.skipIf(process.env.CI)('DaemonManager', () => {
   test('kill process by pid', async () => {

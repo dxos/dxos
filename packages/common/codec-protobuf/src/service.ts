@@ -8,9 +8,9 @@ import { Stream } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { getAsyncProviderValue } from '@dxos/util';
 
-import { type Any, type EncodingOptions } from './common';
-import { type RequestOptions } from './request-options';
-import type { Schema } from './schema';
+import { type Any, type EncodingOptions } from './common.ts';
+import { type RequestOptions } from './request-options.ts';
+import type { Schema } from './schema.ts';
 
 /**
  * Service endpoint.

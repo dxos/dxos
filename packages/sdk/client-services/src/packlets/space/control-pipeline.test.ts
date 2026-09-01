@@ -15,9 +15,9 @@ import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
 
-import { MetadataStore } from '../metadata';
-import { valueEncoding } from '../pipeline';
-import { ControlPipeline } from './control-pipeline';
+import { MetadataStore } from '../metadata/index.ts';
+import { valueEncoding } from '../pipeline/index.ts';
+import { ControlPipeline } from './control-pipeline.ts';
 
 describe('space/control-pipeline', () => {
   test('admits feeds', async () => {

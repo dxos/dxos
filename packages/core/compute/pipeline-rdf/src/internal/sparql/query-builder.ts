@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { PROV, SX, entityIri } from '../vocab';
+import { PROV, SX, entityIri } from '../vocab.ts';
 
 export type SemanticQuery = {
   /** Entity id constrained to the subject position. */

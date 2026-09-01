@@ -20,11 +20,11 @@ import { useMergeRefs } from '@dxos/react-hooks';
 import { mx } from '@dxos/ui-theme';
 import { type SlottableProps } from '@dxos/ui-types';
 
-import { composable, composableProps, slottable } from '../../util';
-import { type ThemedClassName } from '../../util';
-import { IconButton } from '../Button';
-import { ScrollArea, type ScrollAreaRootProps } from '../ScrollArea';
-import { ScrollContainerProvider, useScrollContainerContext } from './ScrollContainerContext';
+import { composable, composableProps, slottable } from '../../util/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
+import { IconButton } from '../Button/index.ts';
+import { ScrollArea, type ScrollAreaRootProps } from '../ScrollArea/index.ts';
+import { ScrollContainerProvider, useScrollContainerContext } from './ScrollContainerContext.ts';
 
 const isBottom = (el: HTMLElement | null) => {
   return !!(el && el.scrollHeight - el.scrollTop === el.clientHeight);

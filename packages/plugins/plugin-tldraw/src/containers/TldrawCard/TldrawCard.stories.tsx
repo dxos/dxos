@@ -13,7 +13,7 @@ import { meta as pluginMeta } from '#meta';
 import { RecordBuilder } from '#model';
 import { Tldraw } from '#types';
 
-import { TldrawCard } from './TldrawCard';
+import { TldrawCard } from './TldrawCard.tsx';
 
 const CardStory = () => {
   const { drawing, canvas } = useMemo(() => {

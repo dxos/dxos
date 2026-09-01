@@ -16,14 +16,14 @@ import { DeckCapabilities } from '#types';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'));
 export const CheckAppScheme = Capability.lazyModule(
   'CheckAppScheme',
   {
     requires: [DeckCapabilities.Settings, Capabilities.OperationInvoker, AppCapabilities.NavigationHandler],
     provides: [],
   },
-  () => import('./check-app-scheme'),
+  () => import('./check-app-scheme.ts'),
 );
 export const NotificationTracker = Capability.lazyModule(
   'NotificationTracker',
@@ -38,20 +38,20 @@ export const NotificationTracker = Capability.lazyModule(
     ],
     provides: [],
   },
-  () => import('./notification-tracker'),
+  () => import('./notification-tracker.ts'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'));
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',
   content: pluginSpec,
   mimeType: 'application/x-mdl',
 });
-export const ReactRoot = AppCapability.reactRoot(() => import('./react-root'));
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const ReactRoot = AppCapability.reactRoot(() => import('./react-root.tsx'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.article'],
 });
-export const DeckSettings = AppCapability.settings(() => import('./settings'), {
+export const DeckSettings = AppCapability.settings(() => import('./settings.ts'), {
   provides: [DeckCapabilities.Settings],
 });
 export const DeckState = Capability.lazyModule(
@@ -70,7 +70,7 @@ export const DeckState = Capability.lazyModule(
       DeckCapabilities.Platform,
     ],
   },
-  () => import('./state'),
+  () => import('./state.ts'),
 );
 export const Translations = AppCapability.translations(translations);
 export const UrlHandler = Capability.lazyModule(
@@ -93,5 +93,5 @@ export const UrlHandler = Capability.lazyModule(
     ],
     provides: [],
   },
-  () => import('./url-handler'),
+  () => import('./url-handler.ts'),
 );

@@ -7,10 +7,10 @@ import { describe, test } from 'vitest';
 import { sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 
-import { TestWireProtocol } from '../testing/test-wire-protocol';
-import { createRtcTransportFactory } from '../transport';
-import { chooseInitiatorPeer } from '../transport/webrtc/utils';
-import { Connection } from './connection';
+import { TestWireProtocol } from '../testing/test-wire-protocol.ts';
+import { createRtcTransportFactory } from '../transport/index.ts';
+import { chooseInitiatorPeer } from '../transport/webrtc/utils.ts';
+import { Connection } from './connection.ts';
 
 // Segfault in node-datachannel.
 describe.skip('Connection', () => {

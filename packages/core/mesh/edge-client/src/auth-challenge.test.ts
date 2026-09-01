@@ -12,8 +12,8 @@ import {
   fetchAuthChallengeInfo,
   parseChallengeHeader,
   readAuthChallenge,
-} from './auth-challenge';
-import { type EdgeIdentity } from './edge-identity';
+} from './auth-challenge.ts';
+import { type EdgeIdentity } from './edge-identity.ts';
 
 const CHALLENGE = 'AQAAAZlqjGgAq83vEjRWeJCrze8SNFZ4kA==';
 

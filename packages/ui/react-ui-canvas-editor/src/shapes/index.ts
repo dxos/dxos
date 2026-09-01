@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './defs';
-export * from './registry';
+export * from './defs.ts';
+export * from './registry.ts';
 
-export * from './ellipse-def';
-export * from './note-def';
-export * from './path-def';
+export * from './ellipse-def.ts';
+export * from './note-def.ts';
+export * from './path-def.ts';
 
-export * from './Ellipse';
-export * from './Note';
-export * from './Path';
-export * from './Rectangle';
+export * from './Ellipse.tsx';
+export * from './Note.tsx';
+export * from './Path.tsx';
+export * from './Rectangle.tsx';

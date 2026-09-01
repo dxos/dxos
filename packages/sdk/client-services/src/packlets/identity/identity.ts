@@ -31,9 +31,9 @@ import { type Presence } from '@dxos/teleport-extension-gossip';
 import { trace } from '@dxos/tracing';
 import { type ComplexMap, ComplexSet } from '@dxos/util';
 
-import { type Space } from '../space';
-import { EdgeFeedReplicator } from '../spaces';
-import { TrustedKeySetAuthVerifier } from './authenticator';
+import { type Space } from '../space/index.ts';
+import { EdgeFeedReplicator } from '../spaces/index.ts';
+import { TrustedKeySetAuthVerifier } from './authenticator.ts';
 
 export type IdentityProps = {
   did: IdentityDid;

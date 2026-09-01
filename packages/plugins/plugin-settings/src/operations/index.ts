@@ -7,6 +7,6 @@ import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 export const SettingsOperationHandlerSet = OperationHandlerSet.lazy([
-  SettingsOperation.Open.pipe(Operation.lazyHandler(() => import('./open'))),
-  SettingsOperation.OpenPluginRegistry.pipe(Operation.lazyHandler(() => import('./open-plugin-registry'))),
+  SettingsOperation.Open.pipe(Operation.lazyHandler(() => import('./open.ts'))),
+  SettingsOperation.OpenPluginRegistry.pipe(Operation.lazyHandler(() => import('./open-plugin-registry.ts'))),
 ]);

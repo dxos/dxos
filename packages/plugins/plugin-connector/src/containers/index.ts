@@ -4,24 +4,24 @@
 
 import { type ComponentType, type LazyExoticComponent, lazy } from 'react';
 
-import type { ConnectionArticleProps } from './ConnectionArticle';
-import type { ConnectionSettingsArticleProps } from './ConnectionSettingsArticle';
-import type { ConnectorCompanionProps } from './ConnectorCompanion';
-import type { CustomTokenDialogProps } from './CustomTokenDialog';
-import type { SyncTargetsDialogProps } from './SyncTargetsDialog';
+import type { ConnectionArticleProps } from './ConnectionArticle/index.ts';
+import type { ConnectionSettingsArticleProps } from './ConnectionSettingsArticle/index.ts';
+import type { ConnectorCompanionProps } from './ConnectorCompanion/index.ts';
+import type { CustomTokenDialogProps } from './CustomTokenDialog/index.ts';
+import type { SyncTargetsDialogProps } from './SyncTargetsDialog/index.ts';
 
 export const ConnectionArticle: LazyExoticComponent<ComponentType<ConnectionArticleProps>> = lazy(
-  () => import('./ConnectionArticle'),
+  () => import('./ConnectionArticle/index.ts'),
 );
 export const ConnectionSettingsArticle: LazyExoticComponent<ComponentType<ConnectionSettingsArticleProps>> = lazy(
-  () => import('./ConnectionSettingsArticle'),
+  () => import('./ConnectionSettingsArticle/index.ts'),
 );
 export const ConnectorCompanion: LazyExoticComponent<ComponentType<ConnectorCompanionProps>> = lazy(
-  () => import('./ConnectorCompanion'),
+  () => import('./ConnectorCompanion/index.ts'),
 );
 export const SyncTargetsDialog: LazyExoticComponent<ComponentType<SyncTargetsDialogProps>> = lazy(
-  () => import('./SyncTargetsDialog'),
+  () => import('./SyncTargetsDialog/index.ts'),
 );
 export const CustomTokenDialog: LazyExoticComponent<ComponentType<CustomTokenDialogProps>> = lazy(
-  () => import('./CustomTokenDialog'),
+  () => import('./CustomTokenDialog/index.ts'),
 );

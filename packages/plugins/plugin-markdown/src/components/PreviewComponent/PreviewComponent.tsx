@@ -17,7 +17,7 @@ import { Attention } from '@dxos/react-ui-attention';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
 import { type XmlWidgetProps } from '@dxos/ui-editor';
 
-import { parseEmbedLabel } from './parse-embed-label';
+import { parseEmbedLabel } from './parse-embed-label.ts';
 
 // Persisted height (px) lives in the image alt text after the label, Obsidian-style: `![label|320](dxn)`.
 

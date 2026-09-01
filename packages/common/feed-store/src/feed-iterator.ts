@@ -8,9 +8,9 @@ import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { FeedQueue } from './feed-queue';
-import { type FeedWrapper } from './feed-wrapper';
-import { type FeedBlock } from './types';
+import { FeedQueue } from './feed-queue.ts';
+import { type FeedWrapper } from './feed-wrapper.ts';
+import { type FeedBlock } from './types.ts';
 
 /**
  * Base class for an async iterable feed.

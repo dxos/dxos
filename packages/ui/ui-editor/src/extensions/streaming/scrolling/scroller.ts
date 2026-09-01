@@ -6,8 +6,8 @@ import { type Extension } from '@codemirror/state';
 
 import { isTruthy } from '@dxos/util';
 
-import { type AutoScrollProps, autoScroll as autoScrollExtension } from './auto-scroll';
-import { type CrawlerOptions, crawler } from './crawler';
+import { type AutoScrollProps, autoScroll as autoScrollExtension } from './auto-scroll.ts';
+import { type CrawlerOptions, crawler } from './crawler.ts';
 
 export type ScrollerOptions = CrawlerOptions &
   AutoScrollProps & {

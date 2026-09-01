@@ -5,11 +5,11 @@
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import type * as Annotation from '../../Annotation';
-import type * as Entity from '../../Entity';
-import { getMetaChecked } from '../common/api/meta';
-import { type Mutable, change } from '../common/proxy/reactive';
-import { isEntity, isSnapshot } from '../Entity/guard';
+import type * as Annotation from '../../Annotation.ts';
+import type * as Entity from '../../Entity.ts';
+import { getMetaChecked } from '../common/api/meta.ts';
+import { type Mutable, change } from '../common/proxy/reactive.ts';
+import { isEntity, isSnapshot } from '../Entity/guard.ts';
 
 /**
  * Get the value of an annotation from an entity instance or snapshot.

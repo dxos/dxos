@@ -13,9 +13,9 @@ import { subscribeStream } from '@dxos/protocols';
 import { type Space } from '@dxos/protocols/proto/dxos/client/services';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { type ServiceContext } from '../services';
-import { createServiceContext } from '../testing';
-import { SpacesServiceImpl } from './spaces-service';
+import { type ServiceContext } from '../services/index.ts';
+import { createServiceContext } from '../testing/index.ts';
+import { SpacesServiceImpl } from './spaces-service.ts';
 
 describe('SpacesService', () => {
   let serviceContext: ServiceContext;

@@ -9,8 +9,8 @@ import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { type Chain, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { createCredential } from './credential-factory';
-import { verifyCredential } from './verifier';
+import { createCredential } from './credential-factory.ts';
+import { verifyCredential } from './verifier.ts';
 
 describe('verifier', () => {
   describe('no chain', () => {

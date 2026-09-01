@@ -10,7 +10,7 @@ import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref } from '@dxos/echo';
 
-import * as Ibkr from './Ibkr';
+import * as Ibkr from './Ibkr.ts';
 
 const ForeignKey = Schema.Struct({
   source: Schema.String,

@@ -25,9 +25,9 @@ import { FactoryAnnotation, type FactoryFn } from '@dxos/schema';
 
 import { translations } from '#translations';
 
-import * as SpaceOperationHandlerSet from '../../operations/SpaceOperationHandlerSet';
-import { type ObjectFormHandle, makeObjectFormHandle } from '../../util';
-import { ObjectFormDialog } from './ObjectFormDialog';
+import * as SpaceOperationHandlerSet from '../../operations/SpaceOperationHandlerSet.ts';
+import { type ObjectFormHandle, makeObjectFormHandle } from '../../util/index.ts';
+import { ObjectFormDialog } from './ObjectFormDialog.tsx';
 
 /** A child object the bookmark's required ref points at — only the factory below can supply it. */
 class Visits extends Type.makeObject<Visits>(DXN.make('com.example.type.visits', '0.1.0'))(

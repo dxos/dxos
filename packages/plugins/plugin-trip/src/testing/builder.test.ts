@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { PLACES, TripBuilder } from './builder';
+import { PLACES, TripBuilder } from './builder.ts';
 
 describe('TripBuilder', () => {
   // The sequence `TripArticle`'s Default story seeds: five flights and two trains, the shape that

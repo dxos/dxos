@@ -17,7 +17,7 @@ import { meta } from '#meta';
 
 export const Namespace = Capability.makeSingleton<string>()(`${meta.profile.key}.capability.namespace`);
 
-export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings').Settings>>()(
+export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings.ts').Settings>>()(
   `${meta.profile.key}.capability.settings`,
 );
 

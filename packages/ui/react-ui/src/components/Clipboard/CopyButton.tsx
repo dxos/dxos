@@ -6,11 +6,11 @@ import React from 'react';
 
 import { mx, osTranslations } from '@dxos/ui-theme';
 
-import { useTranslation } from '../../primitives';
-import { Button, type ButtonProps, IconButton } from '../Button';
-import { Icon, type IconProps } from '../Icon';
-import { type TooltipScopedProps, useTooltipContext } from '../Tooltip';
-import { useClipboard } from './ClipboardContext';
+import { useTranslation } from '../../primitives/index.ts';
+import { Button, type ButtonProps, IconButton } from '../Button/index.ts';
+import { Icon, type IconProps } from '../Icon/index.ts';
+import { type TooltipScopedProps, useTooltipContext } from '../Tooltip/index.ts';
+import { useClipboard } from './ClipboardContext.ts';
 
 export type CopyButtonProps = ButtonProps &
   Pick<IconProps, 'size'> & {

@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { snapshotEquals, snapshotForComparison } from './atom-snapshot';
+import { snapshotEquals, snapshotForComparison } from './atom-snapshot.ts';
 
 describe('snapshotEquals', () => {
   test('an array holding a record always compares unequal', ({ expect }) => {

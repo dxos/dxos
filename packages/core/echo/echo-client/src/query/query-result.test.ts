@@ -9,8 +9,8 @@ import { describe, test } from 'vitest';
 import { Event } from '@dxos/async';
 import { Filter, Query } from '@dxos/echo';
 
-import { type QueryContext } from './query-context';
-import { QueryResultImpl } from './query-result';
+import { type QueryContext } from './query-context.ts';
+import { QueryResultImpl } from './query-result.ts';
 
 describe('QueryResultImpl', () => {
   // Every result registers a diagnostic carrying a `StackTrace`, and an unformatted stack retains

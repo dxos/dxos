@@ -11,7 +11,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import { type ChatEvent } from '../Chat/events';
+import { type ChatEvent } from '../Chat/events.ts';
 
 /**
  * 44px at the 16px (pointer: fine) root font-size, the iOS HIG minimum touch target; the density

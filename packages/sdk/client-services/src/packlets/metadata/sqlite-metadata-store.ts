@@ -31,8 +31,8 @@ import { SqlTransaction } from '@dxos/sql-sqlite';
 import { type Timeframe } from '@dxos/timeframe';
 import { ComplexMap, arrayToBuffer, forEachAsync, isNonNullable } from '@dxos/util';
 
-import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/metadata';
-import { type IMetadataStore, IMetadataStoreService, hasInvitationExpired } from './metadata-store';
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/metadata/index.ts';
+import { type IMetadataStore, IMetadataStoreService, hasInvitationExpired } from './metadata-store.ts';
 
 // SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
 type SqlTransactionTag = SqlTransaction.SqlTransaction;

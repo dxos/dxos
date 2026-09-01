@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type DocumentFacts } from '../stages';
-import { type Assertion, type ExtractDocument } from '../types';
+import { type DocumentFacts } from '../stages/index.ts';
+import { type Assertion, type ExtractDocument } from '../types/index.ts';
 
 // Gold-standard corpus for the multi-model extraction benchmark: each document is paired with the RDF
 // facts a correct extraction should yield, so the benchmark can score precision/recall/F1 in addition

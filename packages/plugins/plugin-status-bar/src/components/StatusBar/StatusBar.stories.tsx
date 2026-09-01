@@ -8,7 +8,7 @@ import React from 'react';
 import { Icon, IconButton } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { StatusBar } from './index';
+import { StatusBar } from './index.ts';
 
 const DefaultStory = () => (
   <StatusBar.EndContent>

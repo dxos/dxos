@@ -33,8 +33,8 @@ import {
   isCompanionOpen,
   resolveCompanionAnchor,
   serializeDeckToUrl,
-} from '../util';
-import { shouldDeferNavigationHandlers } from './check-app-scheme';
+} from '../util/index.ts';
+import { shouldDeferNavigationHandlers } from './check-app-scheme.ts';
 
 /**
  * Deadline for a cold restore's container chain to materialize. Not a poll interval: resolution

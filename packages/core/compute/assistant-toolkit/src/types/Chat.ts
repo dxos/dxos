@@ -15,7 +15,7 @@ import { Annotation, Database, DXN, Feed, Filter, Obj, Ref, Type } from '@dxos/e
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { Task } from '@dxos/types';
 
-import { HarnessContextError } from '../errors';
+import { HarnessContextError } from '../errors.ts';
 
 /**
  * AI chat session.

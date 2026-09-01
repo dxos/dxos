@@ -39,9 +39,9 @@ import {
 import { type RpcPort, layerProtocolRpcPortClient, layerProtocolRpcPortServer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
-import { DEFAULT_CLIENT_CHANNEL } from './config';
-import * as Rpc from './Rpc';
-import { type ClientServices } from './service';
+import { DEFAULT_CLIENT_CHANNEL } from './config.ts';
+import * as Rpc from './Rpc.ts';
+import { type ClientServices } from './service.ts';
 
 export type MessagePortLike = MessagePort;
 

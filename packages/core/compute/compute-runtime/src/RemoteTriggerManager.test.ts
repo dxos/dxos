@@ -9,7 +9,7 @@ import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 
-import * as RemoteTriggerManager from './RemoteTriggerManager';
+import * as RemoteTriggerManager from './RemoteTriggerManager.ts';
 
 describe('RemoteTriggerManager', () => {
   test('layerNoop yields no triggers', async ({ expect }) => {

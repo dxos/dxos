@@ -6,7 +6,7 @@ import { type CSSProperties, type Dispatch, type SetStateAction, createContext, 
 
 import { raise } from '@dxos/debug';
 
-import { type Projection, type ProjectionState } from './projection';
+import { type Projection, type ProjectionState } from './projection.tsx';
 
 // Kept out of the canvas components: react-refresh only fast-refreshes a module whose exports are all
 // components, so a context and hook exported beside one force a full page reload on every edit.

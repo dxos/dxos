@@ -11,8 +11,8 @@ import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref } from '@dxos/echo';
 
-import * as Artifact from './Artifact';
-import * as Variant from './Variant';
+import * as Artifact from './Artifact.ts';
+import * as Variant from './Variant.ts';
 
 /**
  * Generate variants for an Artifact from its prompt and append them. Resolves the

@@ -4,7 +4,7 @@
 
 import { type Client } from '@dxos/client';
 
-import { SandboxClient } from './SandboxClient';
+import { SandboxClient } from './SandboxClient.ts';
 
 /**
  * Sandbox-service worker origin (`runtime.services.sandbox.url`).

@@ -11,7 +11,7 @@ import { useAgentHostingClient, useClient } from '@dxos/react-client';
 import { type Identity } from '@dxos/react-client/halo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 
-import { type AgentFormProps } from '../../components';
+import { type AgentFormProps } from '../../components/index.ts';
 
 export const useKubeAgentHandlers = ({
   invitations,

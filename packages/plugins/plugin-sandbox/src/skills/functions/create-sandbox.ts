@@ -10,7 +10,7 @@ import { Database, Obj } from '@dxos/echo';
 
 import { Sandbox, SandboxOperation } from '#types';
 
-import { createSandboxClient } from '../../services/sandbox-url';
+import { createSandboxClient } from '../../services/sandbox-url.ts';
 
 export default SandboxOperation.CreateSandbox.pipe(
   Operation.withHandler(

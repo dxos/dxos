@@ -25,7 +25,7 @@ import { BloggerOperationHandlerSet } from '#operations';
 import { translations } from '#translations';
 import { Blog } from '#types';
 
-import { PostArticle } from './PostArticle';
+import { PostArticle } from './PostArticle.tsx';
 
 /** Builds a `Post` whose single body document is seeded with recognizable text for the assertion. */
 const makeStoryPost = (): Blog.Post => {

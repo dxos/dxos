@@ -9,7 +9,7 @@ import { Focus, Mosaic } from '@dxos/react-ui-mosaic';
 
 import { Segment } from '#types';
 
-import { type SegmentCardActionHandler, SegmentTile } from '../SegmentCard';
+import { type SegmentCardActionHandler, SegmentTile } from '../SegmentCard/index.ts';
 
 export type SegmentStackProps = ThemedClassName<{
   id: string;

@@ -8,7 +8,7 @@ import * as Result from 'effect/Result';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Operation from '@dxos/compute/Operation';
 
-import { DisablePlugins } from './definitions';
+import { DisablePlugins } from './definitions.ts';
 
 const handler: Operation.WithHandler<typeof DisablePlugins> = DisablePlugins.pipe(
   Operation.withHandler(

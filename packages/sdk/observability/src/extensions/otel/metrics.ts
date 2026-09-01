@@ -24,7 +24,7 @@ import { type CleanupFn } from '@dxos/async';
 import { log } from '@dxos/log';
 import { type MetricData, type MetricObserver, TRACE_PROCESSOR } from '@dxos/tracing';
 
-import { type OtelOptions, resolveOtlpUrl, setDiagLogger } from './otel';
+import { type OtelOptions, resolveOtlpUrl, setDiagLogger } from './otel.ts';
 
 const EXPORT_INTERVAL = 60 * 1000;
 

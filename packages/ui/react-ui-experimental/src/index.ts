@@ -2,5 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './components';
-export * from './util';
+export * from './components/index.ts';
+export * from './util/index.ts';

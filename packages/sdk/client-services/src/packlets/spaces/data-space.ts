@@ -37,15 +37,15 @@ import { Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 import { type AsyncCallback, CallbackCollection, ComplexSet } from '@dxos/util';
 
-import { TrustedKeySetAuthVerifier } from '../identity';
-import { type IMetadataStore } from '../metadata';
-import { createMappedFeedWriter } from '../pipeline';
-import { type Space } from '../space';
-import { AutomergeSpaceState } from './automerge-space-state';
-import { type SigningContext } from './data-space-manager';
-import { EdgeFeedReplicator } from './edge-feed-replicator';
-import { runEpochMigration } from './epoch-migrations';
-import { NotarizationPlugin } from './notarization-plugin';
+import { TrustedKeySetAuthVerifier } from '../identity/index.ts';
+import { type IMetadataStore } from '../metadata/index.ts';
+import { createMappedFeedWriter } from '../pipeline/index.ts';
+import { type Space } from '../space/index.ts';
+import { AutomergeSpaceState } from './automerge-space-state.ts';
+import { type SigningContext } from './data-space-manager.ts';
+import { EdgeFeedReplicator } from './edge-feed-replicator.ts';
+import { runEpochMigration } from './epoch-migrations.ts';
+import { NotarizationPlugin } from './notarization-plugin.ts';
 
 export type DataSpaceCallbacks = {
   /**

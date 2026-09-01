@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { mountLoader } from './mount';
-import { DEFAULT_ROOT_ID } from './types';
+import { mountLoader } from './mount.tsx';
+import { DEFAULT_ROOT_ID } from './types.ts';
 
 //
 // Production entry — bundled to a self-contained IIFE by `bootLoaderPlugin` and

@@ -5,8 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Icon, Input, Select, Toggle, Toolbar } from '../components';
-import { withLayoutVariants, withTheme } from '../testing';
+import { Icon, Input, Select, Toggle, Toolbar } from '../components/index.ts';
+import { withLayoutVariants, withTheme } from '../testing/index.ts';
 
 const DefaultStory = () => {
   const [checked, setChecked] = useState<boolean>(false);

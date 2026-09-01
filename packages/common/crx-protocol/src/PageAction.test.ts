@@ -6,7 +6,7 @@ import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { PageAction } from './index';
+import { PageAction } from './index.ts';
 
 describe('PageAction schema', () => {
   test('decodes a valid list request', ({ expect }) => {

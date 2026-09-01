@@ -6,7 +6,7 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type SwarmController, type Topology } from './topology';
+import { type SwarmController, type Topology } from './topology.ts';
 
 export class StarTopology implements Topology {
   private _controller?: SwarmController;

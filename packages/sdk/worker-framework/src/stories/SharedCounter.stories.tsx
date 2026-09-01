@@ -7,8 +7,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { CounterConnection, type CounterSessionInfo, type PingMeasurement } from './counter-connection';
-import { type TimingStatsSnapshot } from './counter-service';
+import { CounterConnection, type CounterSessionInfo, type PingMeasurement } from './counter-connection.ts';
+import { type TimingStatsSnapshot } from './counter-service.ts';
 
 const PING_INTERVAL_MS = 1_000;
 const DEFAULT_BLOCK_MS = 500;

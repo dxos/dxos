@@ -25,7 +25,7 @@ import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 import type { DeckCapabilities } from '#types';
 
-import { Plank } from './Plank';
+import { Plank } from './Plank.tsx';
 
 random.seed(99);
 

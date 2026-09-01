@@ -5,7 +5,7 @@
 import * as Operation from '@dxos/compute/Operation';
 import { type Database } from '@dxos/echo';
 
-import * as Chat from './types/Chat';
+import * as Chat from './types/Chat.ts';
 
 /**
  * A deterministic prompt shortcut: a leading `/command args` line runs an operation directly, with

@@ -18,7 +18,7 @@ import { BrainCapabilities } from '#types';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });
 export const PluginAsset = AppCapability.pluginAsset({
@@ -27,19 +27,19 @@ export const PluginAsset = AppCapability.pluginAsset({
   content: pluginSpec,
   mimeType: 'application/x-mdl',
 });
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
 // No `export * from './fact-store'` here: that barrel re-export made the module a static import of
 // the definition, which value-imports `FactStoreLive` from the `@dxos/pipeline-rdf` barrel and
 // pulls SPARQL (~1.5 MB) into the definition closure — defeating this lazy module. Consumers of
 // `FactStoreRegistry` / `makeFactStoreRegistry` import the module directly.
-export const FactStore = AppCapability.layerSpec(() => import('./fact-store'), {
+export const FactStore = AppCapability.layerSpec(() => import('./fact-store.ts'), {
   name: 'FactStore',
   provides: [BrainCapabilities.FactStoreRegistry],
 });
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.plugin.brain.surface.facts'],
 });
-export const Settings = AppCapability.settings(() => import('./settings'), {
+export const Settings = AppCapability.settings(() => import('./settings.ts'), {
   activatesOn: ActivationEvents.Idle,
   provides: [BrainCapabilities.Settings],
 });
@@ -50,16 +50,16 @@ export const MailboxProcessor = Capability.lazyModule(
     provides: [InboxCapabilities.MailboxProcessor],
     activatesOn: InboxEvents.Start,
   },
-  () => import('./mailbox-processor'),
+  () => import('./mailbox-processor.ts'),
 );
 export const ReplyGenerator = Capability.lazyModule(
   'ReplyGenerator',
   { provides: [InboxCapabilities.ReplyGenerator], activatesOn: InboxEvents.Start },
-  () => import('./reply-generator'),
+  () => import('./reply-generator.ts'),
 );
 export const ProjectTemplates = Capability.lazyModule(
   'ProjectTemplates',
   { provides: [ProjectCapabilities.Template], activatesOn: ProjectsEvents.Start },
-  () => import('./project-templates'),
+  () => import('./project-templates.ts'),
 );
 export const Translations = AppCapability.translations(translations);

@@ -7,9 +7,9 @@ import { it as test } from 'mocha';
 import { join, resolve } from 'path';
 import pb from 'protobufjs';
 
-import { preconfigureProtobufjs } from './configure';
-import { splitSchemaIntoNamespaces } from './namespaces';
-import { registerResolver } from './parser';
+import { preconfigureProtobufjs } from './configure.ts';
+import { splitSchemaIntoNamespaces } from './namespaces.ts';
+import { registerResolver } from './parser/index.ts';
 
 test('split namespaces', async () => {
   const baseDir = resolve(process.cwd(), './test/proto');

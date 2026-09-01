@@ -18,8 +18,8 @@ import { ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 import { log } from '@dxos/log';
 import { type RemoteSpan, type StartSpanOptions, TRACE_PROCESSOR } from '@dxos/tracing';
 
-import { type OtelOptions, resolveOtlpUrl } from './otel';
-import { TagInjectorSpanProcessor } from './span-processors';
+import { type OtelOptions, resolveOtlpUrl } from './otel.ts';
+import { TagInjectorSpanProcessor } from './span-processors.ts';
 
 export class OtelTraces {
   private _tracer: Tracer;

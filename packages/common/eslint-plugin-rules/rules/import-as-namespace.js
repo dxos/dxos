@@ -80,6 +80,11 @@ export default {
       }
       const dir = path.dirname(currentFile);
       const resolved = path.resolve(dir, source);
+      // The specifier may already carry its extension (`./types/index.ts`) — resolve it directly
+      // rather than appending another one on top, which would never exist on disk.
+      if (TS_EXTENSIONS.some((ext) => resolved.endsWith(ext))) {
+        return fs.existsSync(resolved) ? resolved : null;
+      }
       for (const ext of TS_EXTENSIONS) {
         const filePath = resolved + ext;
         if (fs.existsSync(filePath)) {

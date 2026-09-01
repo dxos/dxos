@@ -6,8 +6,8 @@ import { IdbLogStore } from '@dxos/log-store-idb';
 
 // Direct module import: the util barrel would pull the whole config/observability graph into
 // this worker's bundle.
-import { LOG_STORE_DB_NAME, LOG_STORE_MAX_BYTES } from '../util/constants';
-import { type LogWriterMessage } from '../util/worker-log-processor';
+import { LOG_STORE_DB_NAME, LOG_STORE_MAX_BYTES } from '../util/constants.ts';
+import { type LogWriterMessage } from '../util/worker-log-processor.ts';
 
 // Log-writer worker: owns the queue, flush timer, chunked IDB writes and eviction, so log
 // persistence never depends on the sending thread's event loop turning (see DX-1224).

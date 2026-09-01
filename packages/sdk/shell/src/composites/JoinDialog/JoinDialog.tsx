@@ -6,8 +6,8 @@ import React from 'react';
 
 import { AlertDialog, type AlertDialogContentProps, useId, useTranslation, useVisualViewport } from '@dxos/react-ui';
 
-import { JoinPanel, type JoinPanelProps } from '../../panels';
-import { translationKey } from '../../translations';
+import { JoinPanel, type JoinPanelProps } from '../../panels/index.ts';
+import { translationKey } from '../../translations.ts';
 
 export interface JoinDialogProps
   extends Omit<AlertDialogContentProps, 'children'>, Omit<JoinPanelProps, 'exitActionParent' | 'doneActionParent'> {}

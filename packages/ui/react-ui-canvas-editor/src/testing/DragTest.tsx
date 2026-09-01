@@ -13,7 +13,7 @@ import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { type Dimension, type Point, useCanvasContext } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/ui-theme';
 
-import { getInputPoint, pointSubtract } from '../layout';
+import { getInputPoint, pointSubtract } from '../layout/index.ts';
 
 const size: Dimension = { width: 128, height: 128 };
 

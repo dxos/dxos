@@ -52,9 +52,9 @@ import {
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
-import { createMarkdownStreamController } from './create-controller';
-import { footer, setFooterVisibleEffect } from './footer';
-import { type StreamerOptions, createStreamer } from './stream';
+import { createMarkdownStreamController } from './create-controller.ts';
+import { footer, setFooterVisibleEffect } from './footer.ts';
+import { type StreamerOptions, createStreamer } from './stream.ts';
 
 /** Document offset range (CodeMirror positions). */
 export type DocumentRange = { from: number; to: number };

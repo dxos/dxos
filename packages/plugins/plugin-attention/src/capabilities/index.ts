@@ -20,12 +20,12 @@ export const Attention = Capability.lazyModule(
     requires: [Capabilities.AtomRegistry],
     provides: [AttentionCapabilities.Attention, AttentionCapabilities.ViewState],
   },
-  () => import('./attention'),
+  () => import('./attention.ts'),
 );
 export const Keyboard = Capability.lazyModule(
   'Keyboard',
   { requires: [AppCapabilities.AppGraph, AttentionCapabilities.Attention], provides: [] },
-  () => import('./keyboard'),
+  () => import('./keyboard.ts'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
-export const ReactContext = AppCapability.reactContext(() => import('./react-context'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'));
+export const ReactContext = AppCapability.reactContext(() => import('./react-context.tsx'));

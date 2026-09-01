@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-export * as ExplorerPlugin from '../ExplorerPlugin.testing';
+export * as ExplorerPlugin from '../ExplorerPlugin.testing.ts';
 
-export * from './generator';
-export * from './relations';
+export * from './generator.ts';
+export * from './relations.ts';

@@ -9,7 +9,7 @@ import { expect } from 'storybook/test';
 import { ListModel, Window, type WindowController } from '@dxos/react-ui-virtual';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { MarkdownBlock } from '../components';
+import { MarkdownBlock } from '../components/index.ts';
 
 /**
  * The inline axis against real content — editors, not boxes.

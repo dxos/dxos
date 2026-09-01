@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { type FileEntry, FileTree } from './FileTree';
+import { type FileEntry, FileTree } from './FileTree.tsx';
 
 const FILES: FileEntry[] = [
   { path: 'package.json' },

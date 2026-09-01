@@ -9,7 +9,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { DebugConsole } from './DebugConsole';
+import { DebugConsole } from './DebugConsole.tsx';
 
 const meta = {
   title: 'plugins/plugin-debug/DebugConsole',

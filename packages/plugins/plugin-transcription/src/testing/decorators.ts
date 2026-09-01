@@ -17,7 +17,7 @@ import { seedTestData } from '@dxos/types/testing';
 
 import { TranscriptionPlugin } from '#plugin';
 
-import { TestItem } from './testing';
+import { TestItem } from './testing.ts';
 
 // TODO(mykola): Make API easier to use.
 // TODO(mykola): Delete after enabling vector indexing by default.

@@ -10,7 +10,7 @@ import { Format, Obj, Ref } from '@dxos/echo';
 import { AccessToken, Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
-import { ANTHROPIC_PROVIDER_ID, ANTHROPIC_SOURCE } from '../constants';
+import { ANTHROPIC_PROVIDER_ID, ANTHROPIC_SOURCE } from '../constants.ts';
 
 /** API-key form for the Anthropic BYOK provider; key is best-effort validated against `/v1/models`. */
 const AnthropicTokenForm = Schema.Struct({

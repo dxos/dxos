@@ -18,7 +18,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { FeedbackPanel } from './FeedbackPanel';
+import { FeedbackPanel } from './FeedbackPanel.tsx';
 
 // Minimal Observability stub — just enough surface to satisfy FeedbackPanel's
 // `isAvailable('feedback')` probe and a no-op `captureUserFeedback`. The full

@@ -26,9 +26,9 @@ import type { AnchoredTo } from '@dxos/types';
 import type { Position } from '@dxos/util';
 
 // eslint-disable-next-line @dxos/rules/import-as-namespace
-import type * as Translations$ from '../app/Translations';
+import type * as Translations$ from '../app/Translations.ts';
 // eslint-disable-next-line @dxos/rules/import-as-namespace
-import type * as ObservabilityMapping$ from './ObservabilityMapping';
+import type * as ObservabilityMapping$ from './ObservabilityMapping.ts';
 
 export const LAYOUT_CAPABILITY_ID = 'org.dxos.app-framework.capability.layout';
 

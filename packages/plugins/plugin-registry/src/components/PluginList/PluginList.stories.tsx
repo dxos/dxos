@@ -16,7 +16,7 @@ import { getHashHue } from '@dxos/ui-theme';
 import { translations } from '#translations';
 import { RegistryTagType } from '#types';
 
-import { PluginList } from './PluginList';
+import { PluginList } from './PluginList.tsx';
 
 random.seed(1);
 

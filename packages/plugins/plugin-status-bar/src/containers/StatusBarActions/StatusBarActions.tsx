@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Flex } from '@dxos/react-ui';
 
-import VersionNumber from '../VersionNumber';
+import VersionNumber from '../VersionNumber/index.ts';
 
 export type StatusBarActionsProps = {};
 

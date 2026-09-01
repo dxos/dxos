@@ -10,8 +10,8 @@ import { Form } from '@dxos/react-ui-form';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Splitter } from '../Splitter';
-import { MultiSelectList } from './MultiSelectList';
+import { Splitter } from '../Splitter.tsx';
+import { MultiSelectList } from './MultiSelectList.tsx';
 
 //
 // SPIKE stories for the zag probe: the custom multi-select machine driving a list, and the stock

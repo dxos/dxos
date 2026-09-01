@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './TradingViewChart';
+export * from './TradingViewChart.tsx';

@@ -22,7 +22,7 @@ import { log } from '@dxos/log';
 import { ContentBlock, type Message } from '@dxos/types';
 import { bufferToArray } from '@dxos/util';
 
-import { PromptPreprocessingError as PromptPreprocesorError } from './errors';
+import { PromptPreprocessingError as PromptPreprocesorError } from './errors.ts';
 
 export type CacheControl = 'no-cache' | 'ephemeral';
 

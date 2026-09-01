@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-export * as AppActivationEvents from './AppActivationEvents';
-export * as AppCapabilities from './AppCapabilities';
-export * as AppCapability from './AppCapability';
-export * as ObjectAction from './ObjectAction';
-export * as ObservabilityMapping from './ObservabilityMapping';
-export * from './progress-registry';
-export * from './progress-trace-sink';
+export * as AppActivationEvents from './AppActivationEvents.ts';
+export * as AppCapabilities from './AppCapabilities.ts';
+export * as AppCapability from './AppCapability.ts';
+export * as ObjectAction from './ObjectAction.ts';
+export * as ObservabilityMapping from './ObservabilityMapping.ts';
+export * from './progress-registry.ts';
+export * from './progress-trace-sink.ts';

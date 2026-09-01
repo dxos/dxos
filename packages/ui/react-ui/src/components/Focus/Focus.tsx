@@ -10,9 +10,9 @@ import React, { type FocusEvent, type KeyboardEvent, type MouseEvent, useCallbac
 import { useFocusGroup } from '@dxos/react-focus';
 import { type Axis } from '@dxos/ui-types';
 
-import { useThemeContext } from '../../hooks';
-import { composableProps, slottable } from '../../util';
-import { FOCUS_STATE_ATTR, FocusContext, type FocusState } from './FocusContext';
+import { useThemeContext } from '../../hooks/index.ts';
+import { composableProps, slottable } from '../../util/index.ts';
+import { FOCUS_STATE_ATTR, FocusContext, type FocusState } from './FocusContext.ts';
 
 //
 // Group

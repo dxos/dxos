@@ -6,7 +6,7 @@
 // TODO(burdon): Consider mathjs for variance, standard deviations, etc.
 // https://www.npmjs.com/package/mathjs
 
-import { defaultMap } from './map';
+import { defaultMap } from './map.ts';
 
 export type Accessor<T, V> = string | ((value: T) => V);
 

@@ -9,7 +9,7 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 
 import { Booking, Segment, Trip, TripOperation } from '#types';
 
-import { getTripGapDays } from './extractor/config';
+import { getTripGapDays } from './extractor/config.ts';
 
 export default TripOperation.MergeTrip.pipe(
   Operation.withHandler(

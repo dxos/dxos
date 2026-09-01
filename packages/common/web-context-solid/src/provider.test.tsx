@@ -8,7 +8,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import { CONTEXT_REQUEST_EVENT, ContextRequestEvent, createContext } from '@dxos/web-context';
 
-import { ContextProtocolProvider } from './provider';
+import { ContextProtocolProvider } from './provider.tsx';
 
 describe('ContextProtocolProvider', () => {
   // Clean up after each test

@@ -13,7 +13,7 @@ import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
 import { EffectEx } from '@dxos/effect';
 
-import { handler } from './export';
+import { handler } from './export.ts';
 
 const ExportTestLayer = Layer.mergeAll(TestLayer, NodeServices.layer);
 

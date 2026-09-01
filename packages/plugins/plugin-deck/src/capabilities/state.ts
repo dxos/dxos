@@ -13,7 +13,7 @@ import { invariant } from '@dxos/invariant';
 import { meta } from '#meta';
 import { DeckCapabilities, DeckSchema } from '#types';
 
-import { migratePersistedState } from '../util';
+import { migratePersistedState } from '../util/index.ts';
 
 const STATE_KEY = `${meta.profile.key}.state`;
 

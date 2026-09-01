@@ -12,8 +12,8 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { random } from '@dxos/random';
 
-import { type ActionGraphProps } from '../hooks/useMenuActions';
-import { type MenuItem, type MenuItemGroup, type MenuItemsAccessor } from '../types';
+import { type ActionGraphProps } from '../hooks/useMenuActions.ts';
+import { type MenuItem, type MenuItemGroup, type MenuItemsAccessor } from '../types.ts';
 
 export type CreateActionsProps = Partial<{
   type?: typeof AppGraphNode.ActionType | typeof AppGraphNode.ActionGroupType;

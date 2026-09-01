@@ -11,8 +11,8 @@ import { useAsyncEffect } from '@dxos/react-ui';
 
 import { Tour } from '#types';
 
-import { Tooltip, floaterProps } from '../Tooltip';
-import { TourContext } from './TourContext';
+import { Tooltip, floaterProps } from '../Tooltip/index.ts';
+import { TourContext } from './TourContext.ts';
 
 const addStepClass = (target: string | HTMLElement) => {
   const element = typeof target === 'string' ? document.querySelector(target) : target;

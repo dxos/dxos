@@ -25,9 +25,9 @@ import { log } from '@dxos/log';
 // alias instead of a relative `node_modules` path (TS2883).
 import { OperationInvoker } from '@dxos/operation';
 
-import { Capabilities } from '../common';
-import { Capability, Plugin } from '../core';
-import { layerIdb } from './idb-key-value-store';
+import { Capabilities } from '../common/index.ts';
+import { Capability, Plugin } from '../core/index.ts';
+import { layerIdb } from './idb-key-value-store.ts';
 
 //
 // Capability Module

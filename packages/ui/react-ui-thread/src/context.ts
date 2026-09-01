@@ -9,7 +9,7 @@ import { type FC, type ReactNode } from 'react';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { type Message } from '@dxos/types';
 
-import { type ThreadContextValue } from './types';
+import { type ThreadContextValue } from './types.ts';
 
 /**
  * Context provided by `Thread.Root` and consumed by its parts. Extends the

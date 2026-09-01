@@ -9,8 +9,8 @@ import { Context } from '@dxos/context';
 import { AlreadyJoinedError } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
-import { type ServiceContext } from '../services';
-import { createPeers, createServiceContext, performInvitation } from '../testing';
+import { type ServiceContext } from '../services/index.ts';
+import { createPeers, createServiceContext, performInvitation } from '../testing/index.ts';
 
 const closeAfterTest = async (peer: ServiceContext) => {
   onTestFinished(async () => {

@@ -8,10 +8,10 @@ import { describe, test } from 'vitest';
 
 import { trim } from '@dxos/util';
 
-import { extendedMarkdown } from './extended-markdown';
+import { extendedMarkdown } from './extended-markdown.ts';
 import TEXT from './testing/text.md?raw';
-import { type XmlWidgetRegistry, xmlTags } from './xml-tags';
-import { type Tag, nodeToJson } from './xml-util';
+import { type XmlWidgetRegistry, xmlTags } from './xml-tags.ts';
+import { type Tag, nodeToJson } from './xml-util.ts';
 
 type ParsedElement = Tag & {
   /** Element spans the entire document (opening through closing tag). */

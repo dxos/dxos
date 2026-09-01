@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { toUnit } from '../../sim';
-import { MAP_HEIGHT, MAP_WIDTH, project, projectPath, splitPath } from './projection';
+import { toUnit } from '../../sim/index.ts';
+import { MAP_HEIGHT, MAP_WIDTH, project, projectPath, splitPath } from './projection.ts';
 
 describe('project', () => {
   test('maps the corners and centre of the graticule', ({ expect }) => {

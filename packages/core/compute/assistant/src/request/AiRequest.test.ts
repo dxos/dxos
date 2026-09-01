@@ -17,7 +17,7 @@ import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { ContentBlock, type Message } from '@dxos/types';
 
-import * as AiRequest from './AiRequest';
+import * as AiRequest from './AiRequest.ts';
 
 const { text, toolCall, scriptedLanguageModelLayer } = ScriptedLanguageModel;
 

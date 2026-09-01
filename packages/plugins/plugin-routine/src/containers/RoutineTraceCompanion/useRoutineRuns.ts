@@ -11,7 +11,7 @@ import { type Database, Filter, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
 
-import { type RoutineRun, groupIntoRuns } from './runs';
+import { type RoutineRun, groupIntoRuns } from './runs.ts';
 
 /**
  * Returns the execution runs for a routine.

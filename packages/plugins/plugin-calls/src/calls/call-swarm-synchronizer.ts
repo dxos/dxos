@@ -17,7 +17,7 @@ import { ActivitySchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 import { ConnectionState, type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import { isNonNullable } from '@dxos/util';
 
-import { type ActivityState, type UserState, codec } from './types';
+import { type ActivityState, type UserState, codec } from './types.ts';
 
 export type CallState = {
   /**

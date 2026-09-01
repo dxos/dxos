@@ -23,7 +23,7 @@ import { EffectEx } from '@dxos/effect';
 import { DiscordPipeline, MessageStore } from '@dxos/pipeline-discord';
 import { storesLayer } from '@dxos/pipeline-discord/testing';
 
-import { discordSourceLayer } from '../services';
+import { discordSourceLayer } from '../services/index.ts';
 
 const token = process.env.DISCORD_TOKEN;
 // Defaults: DXOS #general, #composer-vip, #dxos-team.

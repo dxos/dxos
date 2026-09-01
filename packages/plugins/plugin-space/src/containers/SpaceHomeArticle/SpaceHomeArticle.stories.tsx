@@ -25,7 +25,7 @@ import { SpaceHomeDashboard, SpaceHomeRecent } from '#containers';
 import { translations } from '#translations';
 import { SpaceSurface } from '#types';
 
-import { SpaceHomeArticle } from './SpaceHomeArticle';
+import { SpaceHomeArticle } from './SpaceHomeArticle.tsx';
 
 class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.test.task', '0.1.0'))(
   Schema.Struct({

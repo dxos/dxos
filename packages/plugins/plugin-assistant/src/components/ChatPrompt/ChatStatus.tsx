@@ -10,7 +10,7 @@ import { Matrix } from '@dxos/react-ui-components';
 import { type ContentBlock } from '@dxos/types';
 import { Unit } from '@dxos/util';
 
-import { type ChatRequestTiming, useChatContext } from '../Chat/context';
+import { type ChatRequestTiming, useChatContext } from '../Chat/context.ts';
 
 const CHAT_STREAM_STATUS_NAME = 'Chat.StreamStatus';
 const TICK_MS = 1_000;

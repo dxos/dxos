@@ -11,7 +11,7 @@ import { type Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
-import { stateToString } from './utils';
+import { stateToString } from './utils.ts';
 
 export interface FlowLockHolder {
   hasFlowLock(): boolean;

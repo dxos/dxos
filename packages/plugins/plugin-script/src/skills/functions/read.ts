@@ -8,7 +8,7 @@ import * as Operation from '@dxos/compute/Operation';
 import type * as Script from '@dxos/compute/Script';
 import { Database } from '@dxos/echo';
 
-import { Read } from './definitions';
+import { Read } from './definitions.ts';
 
 export default Read.pipe(
   Operation.withHandler(

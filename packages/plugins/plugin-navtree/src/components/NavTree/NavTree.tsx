@@ -14,8 +14,8 @@ import { Position } from '@dxos/util';
 
 import { useLoadDescendents } from '#hooks';
 
-import { useNavTreeContext } from '../NavTreeContext';
-import { L0Menu, L1Tabs, type L1TabsProps } from '../Sidebar';
+import { useNavTreeContext } from '../NavTreeContext/index.ts';
+import { L0Menu, L1Tabs, type L1TabsProps } from '../Sidebar/index.ts';
 
 export const NAV_TREE_ITEM = 'NavTreeItem';
 

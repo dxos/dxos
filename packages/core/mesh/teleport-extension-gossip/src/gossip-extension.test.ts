@@ -9,7 +9,7 @@ import { PublicKey } from '@dxos/keys';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { TestBuilder, TestPeer } from '@dxos/teleport/testing';
 
-import { GossipExtension } from './gossip-extension';
+import { GossipExtension } from './gossip-extension.ts';
 
 describe('GossipExtension', () => {
   test('Two peers discover each other', async () => {

@@ -3,4 +3,4 @@
 //
 
 // TODO(wittjosiah): Factor out.
-export * from './useTriggerRuntimeControls';
+export * from './useTriggerRuntimeControls.ts';

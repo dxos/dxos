@@ -15,10 +15,10 @@ import { type Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 import { type AsyncCallback, Callback } from '@dxos/util';
 
-import { type IMetadataStore } from '../metadata';
-import { type PipelineAccessor } from '../pipeline';
-import { ControlPipeline } from './control-pipeline';
-import { type SpaceProtocol } from './space-protocol';
+import { type IMetadataStore } from '../metadata/index.ts';
+import { type PipelineAccessor } from '../pipeline/index.ts';
+import { ControlPipeline } from './control-pipeline.ts';
+import { type SpaceProtocol } from './space-protocol.ts';
 
 // TODO(burdon): Factor out?
 type FeedProvider = (feedKey: PublicKey, opts?: FeedOptions) => Promise<FeedWrapper<FeedMessage>>;

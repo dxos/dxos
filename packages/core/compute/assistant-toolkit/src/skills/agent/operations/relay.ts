@@ -14,8 +14,8 @@ import { Database, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
-import { Agent, Chat } from '../../../types';
-import { Relay } from './definitions';
+import { Agent, Chat } from '../../../types/index.ts';
+import { Relay } from './definitions.ts';
 
 /**
  * The relay pattern (plugin-projects PLAN.md phase C): one trigger per subscribed feed runs this

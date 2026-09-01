@@ -8,7 +8,7 @@ import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 
-import { Root, Todos } from './components';
+import { Root, Todos } from './components/index.ts';
 
 const router = createBrowserRouter([
   {

@@ -11,7 +11,7 @@ import * as ConnectorAnnotations from '@dxos/plugin-connector/ConnectorAnnotatio
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 
-import { PublisherService } from './BloggerCapabilities';
+import { PublisherService } from './BloggerCapabilities.ts';
 
 /** Publication lifecycle of a post: local-only `draft` vs synced-to-a-publisher `published`. */
 export const PostStatus = Schema.Literals(['draft', 'published']);

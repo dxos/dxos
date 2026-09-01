@@ -8,7 +8,7 @@ import React from 'react';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { diffView } from '@dxos/ui-editor';
 
-import { EditorStory } from './components';
+import { EditorStory } from './components/index.ts';
 
 // Two versions of a markdown document. The editor shows `modified` with insertions and deletions
 // marked relative to `original` — exactly what the branch compare view renders (current branch vs

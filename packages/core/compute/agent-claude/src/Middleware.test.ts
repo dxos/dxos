@@ -7,7 +7,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterAll, describe, expect, test } from 'vitest';
 
-import * as Middleware from './Middleware';
+import * as Middleware from './Middleware.ts';
 
 // Real directories, not fixed strings: `resolveCwd` resolves symlinks and rejects paths that do
 // not exist, so the boundary can only be exercised against a live filesystem.

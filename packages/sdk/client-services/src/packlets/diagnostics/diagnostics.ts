@@ -22,10 +22,10 @@ import { type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type DevtoolsHost, type LoggingService } from '@dxos/protocols/rpc';
 
-import { DXOS_VERSION } from '../../version';
-import { type ServiceContext } from '../services';
-import { getPlatform } from '../services/platform';
-import { type DataSpace } from '../spaces';
+import { DXOS_VERSION } from '../../version.ts';
+import { type ServiceContext } from '../services/index.ts';
+import { getPlatform } from '../services/platform.ts';
+import { type DataSpace } from '../spaces/index.ts';
 
 const DEFAULT_TIMEOUT = 1_000;
 

@@ -15,7 +15,7 @@ import { FunctionsServiceClient, incrementSemverPatch } from '@dxos/edge-compute
 import { bundleFunction, initializeBundler } from '@dxos/edge-compute/bundler';
 import { FunctionRuntimeKind } from '@dxos/protocols';
 
-import { Deploy } from './definitions';
+import { Deploy } from './definitions.ts';
 
 export default Deploy.pipe(
   Operation.withHandler(

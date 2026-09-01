@@ -2,5 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './base';
-export * from './errors';
+export * from './base.ts';
+export * from './errors.ts';

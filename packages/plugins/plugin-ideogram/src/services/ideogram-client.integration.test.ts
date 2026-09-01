@@ -5,7 +5,7 @@
 import * as Redacted from 'effect/Redacted';
 import { describe, test } from 'vitest';
 
-import { generateWithIdeogram } from './ideogram-client';
+import { generateWithIdeogram } from './ideogram-client.ts';
 
 //
 // Live integration test against the real Ideogram API. Skipped unless IDEOGRAM_API_KEY is set, so it

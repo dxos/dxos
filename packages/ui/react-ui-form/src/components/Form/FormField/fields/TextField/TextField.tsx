@@ -8,7 +8,7 @@ import { Input, type TextInputProps } from '@dxos/react-ui';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { FormRow } from '../../FormRow';
+import { FormRow } from '../../FormRow.tsx';
 
 export const TextField = ({
   type,

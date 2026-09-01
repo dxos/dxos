@@ -15,9 +15,9 @@ import {
 } from '@dxos/pipeline-transcription';
 import { type ContentBlock } from '@dxos/types';
 
-import { MediaStreamRecorder } from '../capture';
-import { type PipelinePhase } from '../types';
-import { useAudioTrack } from './useAudioTrack';
+import { MediaStreamRecorder } from '../capture/index.ts';
+import { type PipelinePhase } from '../types.ts';
+import { useAudioTrack } from './useAudioTrack.ts';
 
 // Recorder chunk interval; the transcriber's chunk threshold derives from this.
 const RECORDER_INTERVAL_MS = 200;

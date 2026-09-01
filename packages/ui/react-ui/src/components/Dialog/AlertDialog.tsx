@@ -6,18 +6,18 @@ import * as AlertDialogPrimitive from '@radix-ui/react-alert-dialog';
 import { createContext } from '@radix-ui/react-context';
 import React, { type ForwardRefExoticComponent, type FunctionComponent, forwardRef } from 'react';
 
-import { useThemeContext } from '../../hooks';
-import { ElevationProvider } from '../../primitives';
-import { type DialogSize } from '../../theme';
-import { type ThemedClassName } from '../../util';
-import { Column } from '../Column';
+import { useThemeContext } from '../../hooks/index.ts';
+import { ElevationProvider } from '../../primitives/index.ts';
+import { type DialogSize } from '../../theme/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
+import { Column } from '../Column/index.ts';
 import {
   Dialog,
   type DialogActionBarProps,
   type DialogActionIconButtonProps,
   type DialogBodyProps,
   type DialogHeaderProps,
-} from './Dialog';
+} from './Dialog.tsx';
 
 //
 // Root

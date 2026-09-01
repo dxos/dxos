@@ -34,8 +34,8 @@ import { TagIndex } from '@dxos/schema';
 import { ModuleContainer, UpdateCompanionStubPlugin } from '@dxos/storybook-testing';
 import { Message, Organization, Person } from '@dxos/types';
 
-import { StoryRole } from '../modules';
-import { StoryModulesPlugin } from '../testing/modules';
+import { StoryRole } from '../modules/index.ts';
+import { StoryModulesPlugin } from '../testing/modules.tsx';
 
 const TYPES = [
   AccessToken.AccessToken,

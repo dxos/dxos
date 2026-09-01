@@ -9,9 +9,9 @@ import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { TestHelpers } from '@dxos/effect/testing';
 
-import { WebSearchHandlers } from './operations';
-import WebSearchSkill from './skill';
-import { WebSearchToolkitOpaque } from './toolkit';
+import { WebSearchHandlers } from './operations/index.ts';
+import WebSearchSkill from './skill.ts';
+import { WebSearchToolkitOpaque } from './toolkit.ts';
 
 const TestLayer = AssistantTestLayer({
   skills: [WebSearchSkill.make()],

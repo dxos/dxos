@@ -11,8 +11,8 @@ import { useAsyncEffect } from '@dxos/react-hooks';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
-import { Channels } from './channels';
-import { TestClient } from './test-client';
+import { Channels } from './channels.ts';
+import { TestClient } from './test-client.ts';
 
 const IN_IFRAME = window.parent !== window;
 

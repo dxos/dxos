@@ -12,9 +12,9 @@ import {
   VertexData,
 } from '@babylonjs/core';
 
-import { getFaceNormal } from '../../engine';
-import { type Tool } from '../tool';
-import { type ToolContext } from '../tool-context';
+import { getFaceNormal } from '../../engine/index.ts';
+import { type ToolContext } from '../tool-context.ts';
+import { type Tool } from '../tool.ts';
 
 const theme = {
   selected: new Color3(1.0, 0.2, 0.2),

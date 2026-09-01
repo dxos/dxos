@@ -10,7 +10,7 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { RuntimeProvider } from '@dxos/effect';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { SqliteStorageAdapter } from '../automerge/sqlite-storage-adapter';
+import { SqliteStorageAdapter } from '../automerge/sqlite-storage-adapter.ts';
 
 // SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
 type SqlTransactionTag = SqlTransaction.SqlTransaction;

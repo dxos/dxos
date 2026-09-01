@@ -13,7 +13,7 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { SampleOperation } from '#types';
 
 export const SampleOperationHandlerSet = OperationHandlerSet.lazy([
-  SampleOperation.CreateSampleItem.pipe(Operation.lazyHandler(() => import('./create-sample-item'))),
-  SampleOperation.Randomize.pipe(Operation.lazyHandler(() => import('./randomize'))),
-  SampleOperation.UpdateStatus.pipe(Operation.lazyHandler(() => import('./update-status'))),
+  SampleOperation.CreateSampleItem.pipe(Operation.lazyHandler(() => import('./create-sample-item.ts'))),
+  SampleOperation.Randomize.pipe(Operation.lazyHandler(() => import('./randomize.ts'))),
+  SampleOperation.UpdateStatus.pipe(Operation.lazyHandler(() => import('./update-status.ts'))),
 ]);

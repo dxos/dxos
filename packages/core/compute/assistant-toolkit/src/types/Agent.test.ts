@@ -14,7 +14,7 @@ import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { Outline } from '@dxos/types';
 
-import { Agent, Chat } from '../types';
+import { Agent, Chat } from '../types/index.ts';
 
 EntityId.dangerouslyDisableRandomness();
 

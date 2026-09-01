@@ -28,9 +28,9 @@ import { DXN, EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { ContentBlock } from '@dxos/types';
 
-import { AGENT_PROCESS_KEY, AgentProcess } from './agent-process';
-import { type DelegationStrategy } from './delegation-strategy';
-import { type MakeTurnProducer } from './turn-producer';
+import { AGENT_PROCESS_KEY, AgentProcess } from './agent-process.ts';
+import { type DelegationStrategy } from './delegation-strategy.ts';
+import { type MakeTurnProducer } from './turn-producer.ts';
 
 /** The RPC control surface declared by {@link AgentProcess}, recovered from the executable type. */
 type AgentRpcs = ReturnType<typeof AgentProcess> extends Process.Process<any, any, any, infer Rpcs> ? Rpcs : never;

@@ -4,10 +4,10 @@
 
 import { type ContentBlock } from '@dxos/types';
 
-import { type LivePipeline, type RunOptions, runLivePipeline } from '../runtime';
-import { type AudioRecorder } from './audio-recorder';
-import { SentenceBuffer } from './sentence-buffer';
-import { type TranscribeConfig, type TranscribeFn, Transcriber } from './transcriber';
+import { type LivePipeline, type RunOptions, runLivePipeline } from '../runtime/index.ts';
+import { type AudioRecorder } from './audio-recorder.ts';
+import { SentenceBuffer } from './sentence-buffer.ts';
+import { type TranscribeConfig, type TranscribeFn, Transcriber } from './transcriber.ts';
 
 export type AsrPipelineOptions = Omit<RunOptions, 'source'> & {
   /** Audio source — browser `MediaStreamRecorder` or any `AudioRecorder` implementation. */

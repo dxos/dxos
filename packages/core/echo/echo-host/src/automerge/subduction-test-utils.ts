@@ -22,7 +22,7 @@ import { onTestFinished } from 'vitest';
 import { Trigger, sleep } from '@dxos/async';
 import { isNonNullable } from '@dxos/util';
 
-import { TestAdapter, type TestConnectionStateProvider, createTestSqliteStorageAdapter } from '../testing';
+import { TestAdapter, type TestConnectionStateProvider, createTestSqliteStorageAdapter } from '../testing/index.ts';
 
 export const HOST_AND_CLIENT: [string, string] = ['host', 'client'];
 export const SUBDUCTION_SERVICE_NAME = 'test-subduction-service';

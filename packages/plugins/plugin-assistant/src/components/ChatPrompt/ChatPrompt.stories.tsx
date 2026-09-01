@@ -27,7 +27,7 @@ import { AssistantPlugin } from '#plugin';
 import { translations } from '#translations';
 import { AssistantCapabilities } from '#types';
 
-import { Chat, type ChatEvent } from '../Chat';
+import { Chat, type ChatEvent } from '../Chat/index.ts';
 
 type StoryArgs = {
   /** Seed the chat's checklist, so the tasks toggle has something to show. */

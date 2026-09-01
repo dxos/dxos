@@ -48,8 +48,8 @@ export {
 // TODO(wittjosiah): Should all api errors be exported here?
 
 // For some reason the * re-export from ./client gets removed by TSC. Looks like a compiler bug.
-export { Client } from './client';
-export * from './client';
-export * from './edge';
-export * from './services';
-export * from './version';
+export { Client } from './client/index.ts';
+export * from './client/index.ts';
+export * from './edge/index.ts';
+export * from './services/index.ts';
+export * from './version.ts';

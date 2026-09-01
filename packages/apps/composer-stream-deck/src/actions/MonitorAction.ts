@@ -13,8 +13,8 @@ import {
 
 import type * as Protocol from '@dxos/plugin-stream-deck/Protocol';
 
-import { offlineDial } from '../offline';
-import { assignSlots, slotOf } from '../server/slots';
+import { offlineDial } from '../offline.ts';
+import { assignSlots, slotOf } from '../server/slots.ts';
 
 export const MONITOR_ACTION_UUID = 'org.dxos.composer.monitor';
 

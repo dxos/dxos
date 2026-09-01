@@ -6,8 +6,8 @@
 import { type Extension } from '@codemirror/state';
 import { Decoration, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
 
-import { clientRectsFor, flattenRect } from '../../util';
-import { isBusy } from '../state/busy';
+import { clientRectsFor, flattenRect } from '../../util/index.ts';
+import { isBusy } from '../state/busy.ts';
 
 type Content = string | HTMLElement | ((view: EditorView) => HTMLElement);
 

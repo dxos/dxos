@@ -4,7 +4,7 @@
 
 import { createContext } from '@radix-ui/react-context';
 
-import { type DatePickerMode, type ValueByMode } from './DatePicker';
+import { type DatePickerMode, type ValueByMode } from './DatePicker.tsx';
 
 // Kept out of `DatePicker.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so a context and its hook exported beside them force a full page reload on every edit.

@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { useSvgContext } from '../../hooks';
+import { useSvgContext } from '../../hooks/index.ts';
 
 export type FPSCorner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 

@@ -17,9 +17,9 @@ import { downloadBlob } from '@dxos/util';
 import { SequenceGrid, TrackList } from '#components';
 import { Score, Sequence, Track } from '#types';
 
-import { ScorePlayer } from '../../audio';
-import { type LeadSheetDocument, formatLeadSheet, parseLeadSheet } from '../../util/lead-sheet';
-import { type MutableScore, applyLeadSheetToScore, scoreToLeadSheet } from '../../util/score-leadsheet';
+import { ScorePlayer } from '../../audio/index.ts';
+import { type LeadSheetDocument, formatLeadSheet, parseLeadSheet } from '../../util/lead-sheet.ts';
+import { type MutableScore, applyLeadSheetToScore, scoreToLeadSheet } from '../../util/score-leadsheet.ts';
 
 export type ScoreArticleProps = AppSurface.ObjectArticleProps<Score.Score>;
 

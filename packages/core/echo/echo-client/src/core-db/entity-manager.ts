@@ -39,11 +39,11 @@ import type { DataService, QueryService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 import { ComplexSet, chunkArray, deepMapValues } from '@dxos/util';
 
-import { type ChangeEvent, type DocHandleProxy, RepoProxy, type SaveStateChangedEvent } from '../automerge';
-import { type HypergraphImpl } from '../hypergraph';
-import { type BranchStore, forkDump, referencedObjectIds } from './branching';
-import { type IDatabaseBinding, ObjectCore } from './object-core';
-import { ObjectCoreRegistry } from './object-core-registry';
+import { type ChangeEvent, type DocHandleProxy, RepoProxy, type SaveStateChangedEvent } from '../automerge/index.ts';
+import { type HypergraphImpl } from '../hypergraph.ts';
+import { type BranchStore, forkDump, referencedObjectIds } from './branching.ts';
+import { ObjectCoreRegistry } from './object-core-registry.ts';
+import { type IDatabaseBinding, ObjectCore } from './object-core.ts';
 import {
   type AddCoreOptions,
   type AtomicReplaceObjectProps,
@@ -54,8 +54,8 @@ import {
   type LoadObjectOptions,
   type ReleaseObjectOptions,
   type SpaceDocumentHeads,
-} from './types';
-import { getInlineAndLinkChanges, getRemovedObjectIds } from './util';
+} from './types.ts';
+import { getInlineAndLinkChanges, getRemovedObjectIds } from './util.ts';
 
 const THROTTLED_UPDATE_FREQUENCY = 10;
 

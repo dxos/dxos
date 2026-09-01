@@ -13,10 +13,10 @@ import { ErrorFallback } from '@dxos/react-error-boundary';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { type MaybeProvider, getProviderValue } from '@dxos/util';
 
-import { ActivationEvents, Capabilities } from '../common';
-import { type ActivationEvent, Capability, CapabilityManager, Plugin, PluginManager } from '../core';
-import { type UseAppOptions, useApp } from '../ui';
-import { activateDemandGatedModules } from './demand-gated';
+import { ActivationEvents, Capabilities } from '../common/index.ts';
+import { type ActivationEvent, Capability, CapabilityManager, Plugin, PluginManager } from '../core/index.ts';
+import { type UseAppOptions, useApp } from '../ui/index.ts';
+import { activateDemandGatedModules } from './demand-gated.ts';
 
 let defaultFallback: NonNullable<UseAppOptions['fallback']> = ErrorFallback;
 

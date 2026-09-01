@@ -4,7 +4,7 @@
 
 import { type Component, For, createEffect, createSignal, onCleanup, onMount } from 'solid-js';
 
-import { type LoaderStore } from './store';
+import { type LoaderStore } from './store.ts';
 
 // Ring geometry in the SVG's `0 0 100 100` viewBox. The radius leaves a couple
 // of units of padding so the stroke, its round cap, and the end marker aren't

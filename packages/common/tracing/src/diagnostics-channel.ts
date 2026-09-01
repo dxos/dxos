@@ -12,8 +12,8 @@ import {
   type DiagnosticsData,
   type DiagnosticsManager,
   type DiagnosticsRequest,
-} from './diagnostic';
-import { createId } from './util';
+} from './diagnostic.ts';
+import { createId } from './util.ts';
 
 const DEFAULT_CHANNEL_NAME = 'dxos-diagnostics';
 

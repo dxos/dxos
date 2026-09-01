@@ -18,7 +18,7 @@ import { log } from '@dxos/log';
 import { Invitation, QueryInvitationsResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { RPC_TIMEOUT } from '../common';
+import { RPC_TIMEOUT } from '../common.ts';
 
 /**
  * Budget for the initial invitations snapshot. Bounded because `open()` sits on the client

@@ -5,10 +5,10 @@
 import merge from 'lodash.merge';
 import pb from 'protobufjs';
 
-import { ProtoCodec } from './codec';
-import { type Substitutions } from './common';
-import { type BidirectionalMapingDescriptors, createMappingDescriptors } from './mapping';
-import { ServiceDescriptor } from './service';
+import { ProtoCodec } from './codec.ts';
+import { type Substitutions } from './common.ts';
+import { type BidirectionalMapingDescriptors, createMappingDescriptors } from './mapping.ts';
+import { ServiceDescriptor } from './service.ts';
 
 export class Schema<T = unknown, S extends {} = {}> {
   static fromJson<T extends Record<string, any>, S extends Record<string, any> = {}>(

@@ -18,10 +18,10 @@ import { type TreeData } from '@dxos/react-ui-list';
 import { CollectionItemAnnotation } from '@dxos/schema';
 import { type Position } from '@dxos/util';
 
-import { NotFound } from '../app';
-import { Translations } from '../app';
-import { AppAnnotation } from '../echo';
-import * as DeckSpec from './DeckSpec';
+import { NotFound } from '../app/index.ts';
+import { Translations } from '../app/index.ts';
+import { AppAnnotation } from '../echo/index.ts';
+import * as DeckSpec from './DeckSpec.ts';
 
 //
 //

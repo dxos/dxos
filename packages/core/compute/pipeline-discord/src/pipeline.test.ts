@@ -11,9 +11,9 @@ import { expect } from 'vitest';
 import { AgentRegistry, StateStore, type Type } from '@dxos/crawler';
 import { FactStore } from '@dxos/pipeline-rdf';
 
-import { DiscordPipeline } from './pipeline';
-import { MessageStore, QuestionStore } from './stores';
-import { THREADED_FIXTURE, deterministicAiService, fixtureSourceLayer, storesLayer } from './testing';
+import { DiscordPipeline } from './pipeline.ts';
+import { MessageStore, QuestionStore } from './stores/index.ts';
+import { THREADED_FIXTURE, deterministicAiService, fixtureSourceLayer, storesLayer } from './testing/index.ts';
 
 const CONFIG: Type.Config = { channels: ['chan-1'], descendThreads: true };
 

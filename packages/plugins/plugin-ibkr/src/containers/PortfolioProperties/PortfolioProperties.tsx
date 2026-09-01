@@ -14,8 +14,8 @@ import { Form } from '@dxos/react-ui-form';
 
 import { Ibkr } from '#types';
 
-import { meta } from '../../meta';
-import { createDailySyncTrigger, findSyncOperation, findSyncTrigger } from '../../sync';
+import { meta } from '../../meta.ts';
+import { createDailySyncTrigger, findSyncOperation, findSyncTrigger } from '../../sync.ts';
 
 export type PortfolioPropertiesProps = AppSurface.ObjectPropertiesProps<Ibkr.Portfolio>;
 

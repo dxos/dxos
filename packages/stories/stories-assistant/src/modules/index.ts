@@ -6,13 +6,13 @@ import * as Role from '@dxos/app-framework/Role';
 import { Surface } from '@dxos/app-framework/ui';
 import { ModuleRole, moduleSurfaces as commonSurfaces } from '@dxos/storybook-testing/modules';
 
-import { AgentModule } from './AgentModule';
-import { ChatModule } from './ChatModule';
-import { ContextModule } from './ContextModule';
-import { GraphModule } from './GraphModule';
-import { ResearchInputModule } from './ResearchInputModule';
-import { ResearchOutputModule } from './ResearchOutputModule';
-import { TasksModule } from './TasksModule';
+import { AgentModule } from './AgentModule.tsx';
+import { ChatModule } from './ChatModule.tsx';
+import { ContextModule } from './ContextModule.tsx';
+import { GraphModule } from './GraphModule.tsx';
+import { ResearchInputModule } from './ResearchInputModule.tsx';
+import { ResearchOutputModule } from './ResearchOutputModule.tsx';
+import { TasksModule } from './TasksModule.tsx';
 
 /**
  * Custom roles for story panels that are NOT bound to a story-created object — the harness chat and
@@ -78,4 +78,4 @@ export const moduleSurfaces: Surface.Definition[] = [
   }),
 ];
 
-export { AgentModule } from './AgentModule';
+export { AgentModule } from './AgentModule.tsx';

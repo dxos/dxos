@@ -14,8 +14,8 @@ import { type Platform, type SystemStatus } from '@dxos/protocols/proto/dxos/cli
 import { SystemService } from '@dxos/protocols/rpc';
 import { type MaybePromise, jsonKeyReplacer } from '@dxos/util';
 
-import { type Diagnostics } from '../diagnostics';
-import { getPlatform } from '../services/platform';
+import { type Diagnostics } from '../diagnostics/index.ts';
+import { getPlatform } from '../services/platform.ts';
 
 export type SystemServiceOptions = {
   config?: () => MaybePromise<Config | undefined>;

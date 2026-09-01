@@ -13,8 +13,8 @@ import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { StoreError } from '../errors';
-import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/message';
+import { StoreError } from '../errors.ts';
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/message/index.ts';
 
 /** A crawled message persisted outside ECHO — the pipeline's replayable working set. */
 export type StoredMessage = {

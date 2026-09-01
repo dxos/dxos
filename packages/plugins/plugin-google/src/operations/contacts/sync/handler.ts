@@ -22,8 +22,8 @@ import { GoogleContacts } from '#apis';
 import { GoogleCredentials } from '#services';
 import { GoogleOperation } from '#types';
 
-import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
-import { mapGooglePerson } from '../mapper';
+import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants.ts';
+import { mapGooglePerson } from '../mapper.ts';
 
 const COMMIT_PAGE_SIZE = 10;
 

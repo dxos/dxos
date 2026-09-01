@@ -10,8 +10,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { ResponsiveGrid, type ResponsiveGridProps } from './ResponsiveGrid';
-import { ResponsiveGridItem, type ResponsiveGridItemProps } from './ResponsiveGridItem';
+import { ResponsiveGrid, type ResponsiveGridProps } from './ResponsiveGrid.tsx';
+import { ResponsiveGridItem, type ResponsiveGridItemProps } from './ResponsiveGridItem.tsx';
 
 type TestItem = {
   id: string;

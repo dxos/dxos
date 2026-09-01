@@ -11,9 +11,9 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { TestLayout } from '../../../../../testing';
-import { Form } from '../../../Form';
-import { TupleField } from './TupleField';
+import { TestLayout } from '../../../../../testing/index.ts';
+import { Form } from '../../../Form.tsx';
+import { TupleField } from './TupleField.tsx';
 
 // TupleField isn't auto-dispatched and needs a `binding`; wire it via `fieldMap`.
 const schema = Schema.Struct({

@@ -23,13 +23,13 @@ import { StorageType } from '@dxos/random-access-storage';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
-import { InvitationsHandler, InvitationsManager, SpaceInvitationProtocol } from '../invitations';
-import { SqliteMetadataStore } from '../metadata';
-import { valueEncoding } from '../pipeline';
-import { ClientServicesHost, type ServiceContext, type ServiceContextRuntimeProps } from '../services';
-import { SqliteStorage } from '../services/sqlite-storage';
-import { SpaceManager } from '../space';
-import { DataSpaceManager, type DataSpaceManagerRuntimeProps, type SigningContext } from '../spaces';
+import { InvitationsHandler, InvitationsManager, SpaceInvitationProtocol } from '../invitations/index.ts';
+import { SqliteMetadataStore } from '../metadata/index.ts';
+import { valueEncoding } from '../pipeline/index.ts';
+import { ClientServicesHost, type ServiceContext, type ServiceContextRuntimeProps } from '../services/index.ts';
+import { SqliteStorage } from '../services/sqlite-storage.ts';
+import { SpaceManager } from '../space/index.ts';
+import { DataSpaceManager, type DataSpaceManagerRuntimeProps, type SigningContext } from '../spaces/index.ts';
 
 //
 // TODO(burdon): Replace with test builder.

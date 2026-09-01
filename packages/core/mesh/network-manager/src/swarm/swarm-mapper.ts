@@ -8,8 +8,8 @@ import { log } from '@dxos/log';
 import { type PeerInfo as MessagingPeer, PeerInfoHash } from '@dxos/messaging';
 import { ComplexMap } from '@dxos/util';
 
-import { type ConnectionState } from './connection';
-import { type Swarm } from './swarm';
+import { type ConnectionState } from './connection.ts';
+import { type Swarm } from './swarm.ts';
 
 /**
  * State of the connection to the remote peer with additional info derived from network mapping.

@@ -33,7 +33,7 @@
 import { Primitive } from '@radix-ui/react-primitive';
 import React, { forwardRef } from 'react';
 
-import { LIST_NAME, type ListProps, ListProvider, type ListScopedProps } from './ListContext';
+import { LIST_NAME, type ListProps, ListProvider, type ListScopedProps } from './ListContext.ts';
 
 const List = forwardRef<HTMLOListElement, ListProps>((props: ListScopedProps<ListProps>, forwardedRef) => {
   const {

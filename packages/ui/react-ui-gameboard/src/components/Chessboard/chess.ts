@@ -10,7 +10,7 @@ import { type FC, type SVGProps } from 'react';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import * as Alpha from '../../gen/pieces/chess/alpha/index';
+import * as Alpha from '../../gen/pieces/chess/alpha/index.ts';
 import {
   type GameboardModel,
   type Location,
@@ -19,7 +19,7 @@ import {
   type PieceType,
   type Player,
   locationToString,
-} from '../Gameboard';
+} from '../Gameboard/index.ts';
 
 export type ChessPiece = 'BK' | 'BQ' | 'BR' | 'BB' | 'BN' | 'BP' | 'WK' | 'WQ' | 'WR' | 'WB' | 'WN' | 'WP';
 

@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Database, Feed, Filter, Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
-import * as SessionLink from './SessionLink';
+import * as SessionLink from './SessionLink.ts';
 
 /**
  * Loads and reifies conversation history by resolving SessionLink feed records.

@@ -5,12 +5,12 @@
 import * as ts from '@typescript/typescript6';
 import pb from 'protobufjs';
 
-import { normalizeFullyQualifiedName } from '../namespaces';
-import { type GeneratorContext } from './context';
-import { createEnumDeclaration } from './enum';
-import { createMessageDeclaration } from './message';
-import { createServiceDeclaration } from './service';
-import { getTypeReference } from './types';
+import { normalizeFullyQualifiedName } from '../namespaces.ts';
+import { type GeneratorContext } from './context.ts';
+import { createEnumDeclaration } from './enum.ts';
+import { createMessageDeclaration } from './message.ts';
+import { createServiceDeclaration } from './service.ts';
+import { getTypeReference } from './types.ts';
 
 const f = ts.factory;
 

@@ -9,7 +9,7 @@ import { useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
-import { Section } from './Section';
+import { Section } from './Section.tsx';
 
 export type ActionItem = {
   id: string;

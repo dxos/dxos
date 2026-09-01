@@ -9,8 +9,8 @@ import { DXN, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 
-import * as Tagging from './Tagging';
-import * as TagIndex from './TagIndex';
+import * as Tagging from './Tagging.ts';
+import * as TagIndex from './TagIndex.ts';
 
 /** A minimal immutable feed item. */
 const Item = Type.makeObject(DXN.make('org.dxos.test.tagging.Item', '0.1.0'))(

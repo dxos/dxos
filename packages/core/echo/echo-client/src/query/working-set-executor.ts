@@ -22,7 +22,7 @@ import { EscapedPropPath, referenceIndexKey } from '@dxos/index-core';
 import { EID, type EntityId, type SpaceId, type URI } from '@dxos/keys';
 import { getDeep, visitValues } from '@dxos/util';
 
-import type { ObjectCore } from '../core-db';
+import type { ObjectCore } from '../core-db/index.ts';
 
 export type WorkingSetItem = {
   objectId: EntityId;

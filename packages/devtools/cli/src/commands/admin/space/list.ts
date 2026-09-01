@@ -10,7 +10,7 @@ import * as Options from 'effect/unstable/cli/Flag';
 import { CommandConfig } from '@dxos/cli-util';
 import { type ListSpacesResponse, type SpaceActivityEntry } from '@dxos/protocols';
 
-import { adminRequest, formatAdminError } from '../util';
+import { adminRequest, formatAdminError } from '../util.ts';
 
 const formatSpaceRow = (space: SpaceActivityEntry): string => {
   const status = space.metadata?.status ?? 'unknown';

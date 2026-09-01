@@ -4,7 +4,7 @@
 
 import { createContext } from '@radix-ui/react-context';
 
-import { type CarouselContextValue } from './Carousel';
+import { type CarouselContextValue } from './Carousel.tsx';
 
 // Kept out of `Carousel.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so a context and its hook exported beside them force a full page reload on every edit.

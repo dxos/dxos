@@ -7,9 +7,9 @@ import React, { cloneElement, useEffect, useState } from 'react';
 import { log } from '@dxos/log';
 import { useTranslation } from '@dxos/react-ui';
 
-import { Action, ActionBar, InputLabel, TextInput } from '../../../components';
-import { translationKey } from '../../../translations';
-import { type JoinPanelProps, type JoinStepProps } from '../JoinPanelProps';
+import { Action, ActionBar, InputLabel, TextInput } from '../../../components/index.ts';
+import { translationKey } from '../../../translations.ts';
+import { type JoinPanelProps, type JoinStepProps } from '../JoinPanelProps.ts';
 
 export interface InvitationInputProps extends JoinStepProps, Pick<JoinPanelProps, 'onExit' | 'exitActionParent'> {
   Kind: 'Space' | 'Halo';

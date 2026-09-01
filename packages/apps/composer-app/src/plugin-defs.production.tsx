@@ -11,9 +11,9 @@ import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import * as ThreadPlugin from '@dxos/plugin-thread/ThreadPlugin';
 import * as TranscriptionPlugin from '@dxos/plugin-transcription/TranscriptionPlugin';
 
-import { type PluginConfig, getCorePlugins } from './plugin-defs.core';
+import { type PluginConfig, getCorePlugins } from './plugin-defs.core.tsx';
 
-export type { PluginConfig, State } from './plugin-defs.core';
+export type { PluginConfig, State } from './plugin-defs.core.tsx';
 
 /**
  * Curated set `composer.space` (and every iOS build) ships. Selection is build-time — swapping this

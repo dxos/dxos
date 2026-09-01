@@ -2,5 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './EditorStory';
-export * from './util';
+export * from './EditorStory.tsx';
+export * from './util.tsx';

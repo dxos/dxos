@@ -16,9 +16,9 @@ import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { Text } from '@dxos/schema';
 
-import { Chat } from '../../../types';
-import { Relay } from './definitions';
-import relayHandler from './relay';
+import { Chat } from '../../../types/index.ts';
+import { Relay } from './definitions.ts';
+import relayHandler from './relay.ts';
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: OperationHandlerSet.make(relayHandler),

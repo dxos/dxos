@@ -4,7 +4,7 @@
 
 import { DXN, EID, Obj } from '@dxos/echo';
 
-import * as Message from './Message';
+import * as Message from './Message.ts';
 
 /**
  * A draft message is identified by a `properties.mailbox` value that is a valid DXN or EID string

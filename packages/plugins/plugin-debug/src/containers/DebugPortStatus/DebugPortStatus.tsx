@@ -11,7 +11,7 @@ import { IconButton, Popover, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
-import { DebugConsole } from '../DebugConsole';
+import { DebugConsole } from '../DebugConsole/index.ts';
 
 export type DebugPortStatusProps = {
   /** Injectable for stories/tests; defaults to the page-wide controller. */

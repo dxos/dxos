@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { toLatLng } from './marker-provider';
+import { toLatLng } from './marker-provider.tsx';
 
 describe('toLatLng', () => {
   test('converts a [lng, lat] tuple', ({ expect }) => {

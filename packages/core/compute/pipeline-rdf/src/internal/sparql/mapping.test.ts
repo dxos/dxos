@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { type Fact } from '../../types';
-import { factToTriples, triplesToFacts } from './mapping';
+import { type Fact } from '../../types/index.ts';
+import { factToTriples, triplesToFacts } from './mapping.ts';
 
 const FACT: Fact = {
   id: 'fact-1',

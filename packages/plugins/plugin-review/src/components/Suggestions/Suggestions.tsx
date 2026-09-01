@@ -9,9 +9,9 @@ import { Branch } from '@dxos/versioning';
 
 import { type SuggestionGroup, buildSuggestionSources, suggestionHue } from '#hooks';
 
-import { SuggestionAuthors } from './SuggestionAuthors';
-import { SuggestionSources } from './SuggestionSources';
-import { SuggestionThread } from './SuggestionThread';
+import { SuggestionAuthors } from './SuggestionAuthors.tsx';
+import { SuggestionSources } from './SuggestionSources.tsx';
+import { SuggestionThread } from './SuggestionThread.tsx';
 
 type VersionedObject = Parameters<typeof Branch.bind>[0];
 

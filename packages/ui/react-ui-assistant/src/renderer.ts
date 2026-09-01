@@ -6,7 +6,7 @@ import { type URI } from '@dxos/keys';
 import { type MessageRenderer, isPrompt } from '@dxos/react-ui-feed';
 import { type ContentBlock, type Message } from '@dxos/types';
 
-import { type ChatView } from './types';
+import { type ChatView } from './types.ts';
 
 export type CreateRendererOptions = {
   /** Resolves a reference's display label; the tag carries the DXN either way. */

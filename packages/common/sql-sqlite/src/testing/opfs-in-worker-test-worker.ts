@@ -9,9 +9,9 @@ import * as Layer from 'effect/Layer';
 import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 
-import * as OpfsPool from '../OpfsPool';
-import * as SqliteClient from '../SqliteClient';
-import { TEST_HALO_CONTROL_FEED_KEY } from './opfs-test-helpers';
+import * as OpfsPool from '../OpfsPool.ts';
+import * as SqliteClient from '../SqliteClient.ts';
+import { TEST_HALO_CONTROL_FEED_KEY } from './opfs-test-helpers.ts';
 
 const DB_NAME = 'DXOS';
 

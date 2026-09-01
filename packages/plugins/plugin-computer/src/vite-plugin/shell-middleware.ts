@@ -9,8 +9,8 @@ import { log } from '@dxos/log';
 
 import { Shell } from '#shell';
 
-import { materializeScripts } from './apply-edits-program';
-import { resolveWithin } from './path-scope';
+import { materializeScripts } from './apply-edits-program.ts';
+import { resolveWithin } from './path-scope.ts';
 
 // Raw promises throughout: this module is the node platform boundary (a connect middleware over
 // `child_process` and stream callbacks), and an Effect runtime inside a dev-server request handler

@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './PaymentsSettings';
+export * from './PaymentsSettings/index.ts';

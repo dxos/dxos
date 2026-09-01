@@ -9,7 +9,7 @@ import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
 import { EffectEx } from '@dxos/effect';
 
-import { handler } from './identity';
+import { handler } from './identity.ts';
 
 describe('halo identity', () => {
   test('should log if identity is not initialized', ({ expect }) =>

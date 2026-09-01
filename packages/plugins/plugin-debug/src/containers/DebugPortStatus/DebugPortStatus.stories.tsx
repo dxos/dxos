@@ -13,7 +13,7 @@ import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { DebugPortStatus } from './DebugPortStatus';
+import { DebugPortStatus } from './DebugPortStatus.tsx';
 
 /**
  * Stand-in for the page-wide controller: the real one long-polls a loopback server and evaluates

@@ -16,7 +16,7 @@ import {
   getRelativeFilename,
 } from '@dxos/log';
 
-import { type OtelOptions, resolveOtlpUrl, setDiagLogger } from './otel';
+import { type OtelOptions, resolveOtlpUrl, setDiagLogger } from './otel.ts';
 
 const FLATTEN_DEPTH = 1;
 

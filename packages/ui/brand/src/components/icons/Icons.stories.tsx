@@ -8,13 +8,13 @@ import React from 'react';
 import { withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
-import { Composer } from './Composer';
-import { DXNS } from './DXNS';
-import { DXOS } from './DXOS';
-import { ECHO } from './ECHO';
-import { HALO } from './HALO';
-import { KUBE } from './KUBE';
-import { MESH } from './MESH';
+import { Composer } from './Composer.tsx';
+import { DXNS } from './DXNS.tsx';
+import { DXOS } from './DXOS.tsx';
+import { ECHO } from './ECHO.tsx';
+import { HALO } from './HALO.tsx';
+import { KUBE } from './KUBE.tsx';
+import { MESH } from './MESH.tsx';
 
 const Icon = () => null;
 

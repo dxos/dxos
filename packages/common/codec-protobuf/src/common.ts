@@ -2,8 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import { type TypeMapperContext } from './mapping';
-import type { Schema } from './schema';
+import { type TypeMapperContext } from './mapping.ts';
+import type { Schema } from './schema.ts';
 
 export interface EncodingOptions {
   /**

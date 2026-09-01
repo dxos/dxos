@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import * as Publisher from './Publisher';
+import * as Publisher from './Publisher.ts';
 
 describe('Publisher contract', () => {
   test('PublisherDraft decodes a minimal draft', () => {

@@ -8,8 +8,8 @@ import { Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { AccessToken, Connection } from '@dxos/link';
 
-import { TYPEFULLY_CONNECTOR_ID, TYPEFULLY_SOURCE } from '../constants';
-import { makeTypefullyPublisherService } from './typefully-api';
+import { TYPEFULLY_CONNECTOR_ID, TYPEFULLY_SOURCE } from '../constants.ts';
+import { makeTypefullyPublisherService } from './typefully-api.ts';
 
 const PROXY = 'https://cors.dxos.network/api.typefully.com/v2';
 

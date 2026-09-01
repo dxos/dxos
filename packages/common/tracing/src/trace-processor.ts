@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { AddLinkOptions } from './api';
-import { BUFFERED_PREFIX, BufferingTracingBackend } from './buffering-backend';
-import { DiagnosticsManager } from './diagnostic';
-import { DiagnosticsChannel } from './diagnostics-channel';
-import { RemoteMetrics } from './remote/metrics';
-import type { RemoteSpan, StartSpanOptions, TracingBackend } from './tracing-types';
+import type { AddLinkOptions } from './api.ts';
+import { BUFFERED_PREFIX, BufferingTracingBackend } from './buffering-backend.ts';
+import { DiagnosticsManager } from './diagnostic.ts';
+import { DiagnosticsChannel } from './diagnostics-channel.ts';
+import { RemoteMetrics } from './remote/metrics.ts';
+import type { RemoteSpan, StartSpanOptions, TracingBackend } from './tracing-types.ts';
 
 export class TraceProcessor {
   public readonly diagnostics = new DiagnosticsManager();

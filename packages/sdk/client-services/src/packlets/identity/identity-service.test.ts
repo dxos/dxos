@@ -13,9 +13,9 @@ import { subscribeStream } from '@dxos/protocols';
 import { type Identity } from '@dxos/protocols/proto/dxos/client/services';
 import { IdentityRecovery } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { type ServiceContext } from '../services';
-import { createServiceContext } from '../testing';
-import { IdentityServiceImpl } from './identity-service';
+import { type ServiceContext } from '../services/index.ts';
+import { createServiceContext } from '../testing/index.ts';
+import { IdentityServiceImpl } from './identity-service.ts';
 
 describe('IdentityService', () => {
   let serviceContext: ServiceContext;

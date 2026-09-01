@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as BrainCapabilities from './BrainCapabilities';
-export * as BrainEvents from './BrainEvents';
-export * as BrainOperation from './BrainOperation';
-export * as BrainSettings from './BrainSettings';
-export * as BrainSurface from './BrainSurface';
+export * as BrainCapabilities from './BrainCapabilities.ts';
+export * as BrainEvents from './BrainEvents.ts';
+export * as BrainOperation from './BrainOperation.ts';
+export * as BrainSettings from './BrainSettings.ts';
+export * as BrainSurface from './BrainSurface.ts';

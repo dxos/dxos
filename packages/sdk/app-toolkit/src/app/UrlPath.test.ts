@@ -5,7 +5,7 @@
 import * as Option from 'effect/Option';
 import { describe, test } from 'vitest';
 
-import * as UrlPath from './UrlPath';
+import * as UrlPath from './UrlPath.ts';
 
 const table: UrlPath.KeyTable = new Map<string, UrlPath.KeyTableEntry>([
   // The workspace tier is a declared anchor key (see the workspace-anchor extension), not a hard-coded token.

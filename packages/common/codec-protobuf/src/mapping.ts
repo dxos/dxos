@@ -6,7 +6,7 @@ import protobufjs from 'protobufjs';
 
 import { invariant } from '@dxos/invariant';
 
-import { type Substitutions } from './common';
+import { type Substitutions } from './common.ts';
 
 export type TypeMapperContext = {
   /**

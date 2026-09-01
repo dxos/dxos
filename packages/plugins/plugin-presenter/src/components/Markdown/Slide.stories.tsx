@@ -8,7 +8,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { createSlide } from '#testing';
 
-import { Slide } from './Slide';
+import { Slide } from './Slide.tsx';
 
 const meta = {
   title: 'plugins/plugin-presenter/components/Slide',

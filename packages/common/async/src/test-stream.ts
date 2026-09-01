@@ -4,8 +4,8 @@
 
 import { Duplex } from 'node:stream';
 
-import { Event } from './events';
-import { asyncTimeout } from './timeout';
+import { Event } from './events.ts';
+import { asyncTimeout } from './timeout.ts';
 
 /**
  * Duplex stream for testing.

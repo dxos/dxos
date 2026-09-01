@@ -22,12 +22,12 @@ import {
   type TestProps,
   runBrowser,
   runNode,
-} from '../plan';
-import { REDIS_PORT, WebSocketRedisProxy, createRedisReadableStream, createRedisRpcPort } from '../redis';
-import { writeEventStreamToAFile } from '../tracing';
-import { ReadableMuxer } from '../tracing/readable-muxer';
-import { type RpcHandle, type SchedulerEnv } from './interface';
-import { ReplicantRpcHandle, close, open } from './replicant-rpc-handle';
+} from '../plan/index.ts';
+import { REDIS_PORT, WebSocketRedisProxy, createRedisReadableStream, createRedisRpcPort } from '../redis/index.ts';
+import { writeEventStreamToAFile } from '../tracing/index.ts';
+import { ReadableMuxer } from '../tracing/readable-muxer.ts';
+import { type RpcHandle, type SchedulerEnv } from './interface.ts';
+import { ReplicantRpcHandle, close, open } from './replicant-rpc-handle.ts';
 
 // TODO(mykola): Unify with ReplicatorEnv.
 /**

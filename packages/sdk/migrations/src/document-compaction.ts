@@ -5,7 +5,7 @@
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { invariant } from '@dxos/invariant';
 
-import { MigrationBuilder } from './migration-builder';
+import { MigrationBuilder } from './migration-builder.ts';
 
 export type CompactDocumentsOptions = {
   /**

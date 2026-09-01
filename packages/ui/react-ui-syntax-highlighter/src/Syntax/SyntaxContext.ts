@@ -4,7 +4,7 @@
 
 import { type Scope, createContextScope } from '@radix-ui/react-context';
 
-import { type SyntaxContextValue } from './Syntax';
+import { type SyntaxContextValue } from './Syntax.tsx';
 
 // Kept out of `Syntax.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so a context and its hook exported beside them force a full page reload on every edit.

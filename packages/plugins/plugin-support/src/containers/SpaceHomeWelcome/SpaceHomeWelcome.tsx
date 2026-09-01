@@ -11,7 +11,7 @@ import { Carousel, Flex, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
-import { useWelcomeDismissed } from './use-welcome-dismissed';
+import { useWelcomeDismissed } from './use-welcome-dismissed.ts';
 
 const WELCOME_SLIDE = {
   src: 'https://customer-5rxcjpyab08avpmn.cloudflarestream.com/f58459bcdf3a6f3e93644a4e0f39b22a/iframe?poster=https%3A%2F%2Fcustomer-5rxcjpyab08avpmn.cloudflarestream.com%2Ff58459bcdf3a6f3e93644a4e0f39b22a%2Fthumbnails%2Fthumbnail.jpg%3Ftime%3D%26height%3D600',

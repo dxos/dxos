@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { inline, trim } from './string';
+import { inline, trim } from './string.ts';
 
 describe('string', () => {
   test('dedent', async ({ expect }) => {

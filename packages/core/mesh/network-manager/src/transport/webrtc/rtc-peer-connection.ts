@@ -8,11 +8,11 @@ import { log, logInfo } from '@dxos/log';
 import { ConnectivityError } from '@dxos/protocols';
 import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
-import type { IceProvider } from '../../signal';
-import { type TransportOptions } from '../transport';
-import { type RtcConnectionFactory } from './rtc-connection-factory';
-import { RtcTransportChannel } from './rtc-transport-channel';
-import { areSdpEqual, chooseInitiatorPeer } from './utils';
+import type { IceProvider } from '../../signal/index.ts';
+import { type TransportOptions } from '../transport.ts';
+import { type RtcConnectionFactory } from './rtc-connection-factory.ts';
+import { RtcTransportChannel } from './rtc-transport-channel.ts';
+import { areSdpEqual, chooseInitiatorPeer } from './utils.ts';
 
 export type RtcPeerChannelFactoryOptions = {
   ownPeerKey: string;

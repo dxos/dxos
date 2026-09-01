@@ -9,11 +9,11 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { StorybookCapabilities } from '#types';
 
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
-export const ReactContext = AppCapability.reactContext(() => import('./react-context'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'));
+export const ReactContext = AppCapability.reactContext(() => import('./react-context.tsx'));
 export const State = Capability.lazyModule(
   'State',
   // Shell state read by `Layout` on its first render — same class as the deck's `DeckState`.
   { activatesOn: ActivationEvents.Startup, provides: [StorybookCapabilities.LayoutState, AppCapabilities.Layout] },
-  () => import('./state'),
+  () => import('./state.tsx'),
 );

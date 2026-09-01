@@ -9,8 +9,8 @@ import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
 
-import { Pipeline } from './pipeline';
-import { TestFeedBuilder } from './testing';
+import { Pipeline } from './pipeline.ts';
+import { TestFeedBuilder } from './testing/index.ts';
 
 const TEST_MESSAGE: FeedMessage = {
   timeframe: new Timeframe(),

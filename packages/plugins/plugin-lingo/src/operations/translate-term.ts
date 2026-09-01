@@ -17,7 +17,7 @@ import { trim } from '@dxos/util';
 
 import { Language, LingoOperation } from '#types';
 
-import { lastText, parseJsonArray } from '../util';
+import { lastText, parseJsonArray } from '../util/index.ts';
 
 const handler: Operation.WithHandler<typeof LingoOperation.TranslateTerm> = LingoOperation.TranslateTerm.pipe(
   Operation.withHandler(

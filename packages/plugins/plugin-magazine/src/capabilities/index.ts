@@ -16,27 +16,27 @@ import { translations } from '#translations';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
   requires: [AttentionCapabilities.ViewState],
 });
 export const RoutineTemplates = Capability.lazyModule(
   'RoutineTemplates',
   { provides: [RoutineCapabilities.Template], activatesOn: RoutineEvents.Start },
-  () => import('./routine-templates'),
+  () => import('./routine-templates.ts'),
 );
-export const Schema = AppCapability.schema(() => import('./schema'));
+export const Schema = AppCapability.schema(() => import('./schema.ts'));
 // Startup rather than the default dependency-mode gate: the consumers read the capability set
 // (`capabilities.getAll`) instead of declaring it as a requirement, so nothing would ever demand it
 // and a Post would stay unreadable — no reading companion, no extraction.
-export const TextContent = AppCapability.textContent(() => import('./text-content'), {
+export const TextContent = AppCapability.textContent(() => import('./text-content.ts'), {
   activatesOn: ActivationEvents.Startup,
 });
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.objectProperties'],
 });
 export const Translations = AppCapability.translations(translations);

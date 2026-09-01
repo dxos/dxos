@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import { Input, Select, type SelectRootProps } from '@dxos/react-ui';
 import { FormFieldLabel, type FormFieldRendererProps } from '@dxos/react-ui-form';
 
-import type { FeedbackPluginOption } from './types';
+import type { FeedbackPluginOption } from './types.ts';
 
 /**
  * Plugin-picker field for the `area` slot of {@link SupportOperation.SupportRequest}.

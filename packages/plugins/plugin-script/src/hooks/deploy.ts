@@ -17,7 +17,7 @@ import { messageValence } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import { deployScript, getFunctionUrl, isScriptDeployed } from '../util';
+import { deployScript, getFunctionUrl, isScriptDeployed } from '../util/index.ts';
 
 export type DeployActionProperties = { type: 'deploy' } | { type: 'copy' };
 
@@ -28,7 +28,7 @@ export type DeployState = {
   error: string;
 };
 
-import { type ScriptToolbarStateStore } from './useToolbarState';
+import { type ScriptToolbarStateStore } from './useToolbarState.ts';
 
 export type CreateDeployOptions = {
   state: ScriptToolbarStateStore;

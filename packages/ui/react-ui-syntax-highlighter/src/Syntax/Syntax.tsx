@@ -9,9 +9,9 @@ import { Input, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { type ComposableProps } from '@dxos/ui-types';
 
-import { JsonHighlighter, type JsonReplacer } from '../JsonHighlighter';
-import { SyntaxHighlighter } from '../SyntaxHighlighter';
-import { SyntaxProvider, type SyntaxScopedProps, useSyntaxContext } from './SyntaxContext';
+import { JsonHighlighter, type JsonReplacer } from '../JsonHighlighter/index.ts';
+import { SyntaxHighlighter } from '../SyntaxHighlighter/index.ts';
+import { SyntaxProvider, type SyntaxScopedProps, useSyntaxContext } from './SyntaxContext.ts';
 
 //
 // Context

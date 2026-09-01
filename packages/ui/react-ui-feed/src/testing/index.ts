@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './FeedStory';
-export * from './MessageWindow';
-export * from './controls';
-export * from './debug';
-export * from './generator';
-export * from './scenarios';
-export * from './stream';
-export * from './turn';
-export * from './widgets';
+export * from './FeedStory.tsx';
+export * from './MessageWindow.tsx';
+export * from './controls.tsx';
+export * from './debug/index.ts';
+export * from './generator.ts';
+export * from './scenarios.tsx';
+export * from './stream.ts';
+export * from './turn.ts';
+export * from './widgets.tsx';

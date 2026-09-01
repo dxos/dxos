@@ -9,7 +9,7 @@ import { Card, Flex } from '@dxos/react-ui';
 import { Avatar, Row } from '@dxos/react-ui-card';
 import { type Message } from '@dxos/types';
 
-import { getMessageProps } from '../../util';
+import { getMessageProps } from '../../util/index.ts';
 
 export const MessageCard = ({ subject: message }: AppSurface.ObjectCardProps<Message.Message>) => {
   const { date, email, from, snippet } = getMessageProps(message, new Date(), { compact: true });

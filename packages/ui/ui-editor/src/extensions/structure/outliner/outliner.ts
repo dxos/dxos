@@ -7,13 +7,13 @@ import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate
 
 import { mx } from '@dxos/ui-theme';
 
-import { decorateMarkdown } from '../../language';
-import { CONTENT_WIDTH, blockSelectionField } from '../blocks';
-import { commands } from './commands';
-import { outlinerDnd } from './dnd';
-import { editor } from './editor';
-import { menu } from './menu';
-import { getRange, outlinerTree, treeFacet } from './tree';
+import { decorateMarkdown } from '../../language/index.ts';
+import { CONTENT_WIDTH, blockSelectionField } from '../blocks/index.ts';
+import { commands } from './commands.ts';
+import { outlinerDnd } from './dnd.ts';
+import { editor } from './editor.ts';
+import { menu } from './menu.ts';
+import { getRange, outlinerTree, treeFacet } from './tree.ts';
 
 // ISSUES: (move to DESIGN.md)
 // TODO(burdon): Remove requirement for continuous lines to be indented (so that user's can't accidentally delete them and break the layout).

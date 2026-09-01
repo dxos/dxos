@@ -12,12 +12,12 @@ import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { type Actor, type Event as EventType } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
-import { Header } from '../Header';
-import { MarkdownViewer } from '../MarkdownViewer';
-import { type ViewMode } from '../ViewMode';
-import { EventBodyEditor } from './EventBodyEditor';
-import { EventDetails } from './EventDetails';
-import { type UseEventToolbarActionsProps, useEventToolbarActions } from './useToolbar';
+import { Header } from '../Header/index.ts';
+import { MarkdownViewer } from '../MarkdownViewer/index.ts';
+import { type ViewMode } from '../ViewMode/index.ts';
+import { EventBodyEditor } from './EventBodyEditor.tsx';
+import { EventDetails } from './EventDetails.tsx';
+import { type UseEventToolbarActionsProps, useEventToolbarActions } from './useToolbar.tsx';
 
 //
 // Context

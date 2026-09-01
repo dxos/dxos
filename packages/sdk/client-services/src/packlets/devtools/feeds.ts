@@ -15,7 +15,7 @@ import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type DevtoolsHost } from '@dxos/protocols/rpc';
 import { ComplexMap } from '@dxos/util';
 
-import { type SpaceManager } from '../space';
+import { type SpaceManager } from '../space/index.ts';
 
 type FeedInfo = {
   feed: FeedWrapper<FeedMessage>;

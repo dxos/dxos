@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { AttachmentViewer } from './Attachment';
+import { AttachmentViewer } from './Attachment.tsx';
 
 // Data urls rather than fixtures: the viewer only needs *a* url, and inlining them keeps the story
 // runnable with no space, no client and no network.

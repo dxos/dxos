@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './functions-client';
-export * from './internal';
-export * from './types';
-export * from './wrap-handler-for-cloudflare';
-export * from './logger';
+export * from './functions-client.ts';
+export * from './internal/index.ts';
+export * from './types.ts';
+export * from './wrap-handler-for-cloudflare.ts';
+export * from './logger.ts';

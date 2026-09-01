@@ -21,8 +21,8 @@ import {
   type FormSubmitProps,
   FormViewport,
   type FormViewportProps,
-} from './FormControls';
-import { FormFieldLabel, FormRow, type FormRowProps } from './FormField';
+} from './FormControls.tsx';
+import { FormFieldLabel, FormRow, type FormRowProps } from './FormField/index.ts';
 
 export const Form = {
   Root: FormRoot,

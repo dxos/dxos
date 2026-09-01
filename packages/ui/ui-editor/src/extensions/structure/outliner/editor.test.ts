@@ -6,8 +6,8 @@ import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { type ChangeSpec, EditorSelection, EditorState } from '@codemirror/state';
 import { describe, test } from 'vitest';
 
-import { editor } from './editor';
-import { outlinerTree, treeFacet } from './tree';
+import { editor } from './editor.ts';
+import { outlinerTree, treeFacet } from './tree.ts';
 
 const extensions = [markdown({ base: markdownLanguage }), outlinerTree(), editor()];
 

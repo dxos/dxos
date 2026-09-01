@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { Obj, Type } from '@dxos/echo';
 
-import * as Routine from './Routine';
+import * as Routine from './Routine.ts';
 
 describe('Routine', () => {
   test('typename and factory', ({ expect }) => {

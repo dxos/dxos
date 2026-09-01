@@ -9,9 +9,9 @@ import { useClient } from '@dxos/react-client';
 import { useTranslation } from '@dxos/react-ui';
 import { type MaybePromise } from '@dxos/util';
 
-import { Action, ActionBar, InputLabel, TextInput } from '../../../components';
-import { translationKey } from '../../../translations';
-import { type JoinStepProps } from '../JoinPanelProps';
+import { Action, ActionBar, InputLabel, TextInput } from '../../../components/index.ts';
+import { translationKey } from '../../../translations.ts';
+import { type JoinStepProps } from '../JoinPanelProps.ts';
 
 export interface IdentityCreatorProps extends JoinStepProps {
   method: 'recover identity' | 'create identity';

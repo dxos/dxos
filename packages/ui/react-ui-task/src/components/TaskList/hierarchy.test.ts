@@ -14,7 +14,7 @@ import {
   resolveOutdent,
   resolveTaskPlacement,
   walkTaskTree,
-} from './hierarchy';
+} from './hierarchy.ts';
 
 describe('walkTaskTree', () => {
   test('walks the tree, not the array', ({ expect }) => {

@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './context';
+export * from './context.ts';
 
-export * from './useActionHandler';
-export * from './useDragMonitor';
-export * from './useEditorContext';
-export * from './useLayout';
-export * from './useRope';
-export * from './useSelectionEvents';
-export * from './useShapeDef';
-export * from './useShortcuts';
-export * from './useSnap';
+export * from './useActionHandler.ts';
+export * from './useDragMonitor.ts';
+export * from './useEditorContext.ts';
+export * from './useLayout.ts';
+export * from './useRope.ts';
+export * from './useSelectionEvents.ts';
+export * from './useShapeDef.ts';
+export * from './useShortcuts.ts';
+export * from './useSnap.ts';

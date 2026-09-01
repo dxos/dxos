@@ -15,7 +15,7 @@ import { FeedProtocol } from '@dxos/protocols';
 import { Text } from '@dxos/schema';
 import { Message, Outline, Task, TaskSet } from '@dxos/types';
 
-import { Chat } from '../types';
+import { Chat } from '../types/index.ts';
 
 EntityId.dangerouslyDisableRandomness();
 

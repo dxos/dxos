@@ -33,7 +33,7 @@ import React, {
   useState,
 } from 'react';
 
-import { useElevationContext, useThemeContext } from '../../hooks';
+import { useElevationContext, useThemeContext } from '../../hooks/index.ts';
 import {
   DEFAULT_DELAY_DURATION,
   TOOLTIP_NAME,
@@ -46,7 +46,7 @@ import {
   usePopperScope,
   useTooltipContext,
   useTooltipVolatileContext,
-} from './TooltipContext';
+} from './TooltipContext.ts';
 
 type TooltipProviderProps = {
   children?: ReactNode;

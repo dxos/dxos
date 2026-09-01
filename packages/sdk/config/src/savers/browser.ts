@@ -8,7 +8,7 @@ import localforage from 'localforage';
 
 import { log } from '@dxos/log';
 
-import { type ConfigInit } from '../types';
+import { type ConfigInit } from '../types.ts';
 
 let PERFORMING_CONFIG_SAVE = false;
 

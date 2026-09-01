@@ -2,13 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './config';
-export * from './constants';
-export * from './dev-rss-banner';
-export * from './halo';
-export * from './log-download';
-export * from './profiler';
-export * from './storage';
-export * from './translations';
-export * from './url';
-export * from './worker-log-processor';
+export * from './config.ts';
+export * from './constants.ts';
+export * from './dev-rss-banner.ts';
+export * from './halo.ts';
+export * from './log-download.ts';
+export * from './profiler.ts';
+export * from './storage.ts';
+export * from './translations.ts';
+export * from './url.ts';
+export * from './worker-log-processor.ts';

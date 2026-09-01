@@ -5,8 +5,7 @@
 import expect from 'expect';
 import { it as test } from 'mocha';
 
-import { MyKey } from './my-key';
-import { schema } from './proto';
+import { MyKey } from './my-key.ts';
 import {
   ComplexFields,
   type OptionalScalars,
@@ -15,8 +14,9 @@ import {
   type TaskList,
   TaskType,
   type WithTimestamp,
-} from './proto/gen/example/testing/types';
-import { type Test } from './proto/gen/example/testing/util'; // NOTE: From protobuf-test.
+} from './proto/gen/example/testing/types.ts';
+import { type Test } from './proto/gen/example/testing/util.ts'; // NOTE: From protobuf-test.
+import { schema } from './proto/index.ts';
 
 // TODO(burdon): Remove foo, bar, etc.
 

@@ -15,9 +15,9 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { Panel, useFileDownload } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 
-import { useDevtoolsDispatch } from '../../../hooks';
-import { importData } from './backup';
-import { DialogRestoreSpace } from './DialogRestoreSpace';
+import { useDevtoolsDispatch } from '../../../hooks/index.ts';
+import { importData } from './backup.ts';
+import { DialogRestoreSpace } from './DialogRestoreSpace.tsx';
 
 type SpaceData = {
   key: PublicKey;

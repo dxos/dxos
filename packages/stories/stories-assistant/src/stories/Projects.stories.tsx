@@ -11,8 +11,8 @@ import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
 import { type Space } from '@dxos/react-client/echo';
 import { trim } from '@dxos/util';
 
-import { StoryRole } from '../modules';
-import { ModuleContainer, createDecorators, storyParameters } from '../testing';
+import { StoryRole } from '../modules/index.ts';
+import { ModuleContainer, createDecorators, storyParameters } from '../testing/index.ts';
 
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Projects',

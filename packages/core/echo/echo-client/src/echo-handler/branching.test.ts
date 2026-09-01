@@ -10,10 +10,10 @@ import { TestReplicationNetwork } from '@dxos/echo-host/testing';
 import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 
-import { EchoTestBuilder } from '../testing';
-import { createBranch, deleteBranch, getBranches, getCurrentBranch, mergeBranch, switchBranch } from './branching';
-import { getEditHistoryWithDiffs } from './edit-history';
-import { getVersion } from './version';
+import { EchoTestBuilder } from '../testing/index.ts';
+import { createBranch, deleteBranch, getBranches, getCurrentBranch, mergeBranch, switchBranch } from './branching.ts';
+import { getEditHistoryWithDiffs } from './edit-history.ts';
+import { getVersion } from './version.ts';
 
 describe('branching', () => {
   let builder: EchoTestBuilder;

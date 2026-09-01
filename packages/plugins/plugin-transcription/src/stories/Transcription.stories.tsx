@@ -22,7 +22,7 @@ import { type ContentBlock, Message } from '@dxos/types';
 
 import { createStoryDecorators } from '#testing';
 
-import { renderByline } from '../util';
+import { renderByline } from '../util/index.ts';
 
 // The story names its transcription worker explicitly; the app reads it from
 // `runtime.services.edgeServices` and there is no built-in endpoint to fall back on.

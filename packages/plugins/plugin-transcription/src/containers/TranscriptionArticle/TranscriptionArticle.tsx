@@ -16,7 +16,7 @@ import { Message, type Transcript } from '@dxos/types';
 import { useTranscriptionRecording } from '#hooks';
 import { meta } from '#meta';
 
-import { renderByline } from '../../util';
+import { renderByline } from '../../util/index.ts';
 
 export type TranscriptionArticleProps = AppSurface.ObjectArticleProps<Transcript.Transcript>;
 

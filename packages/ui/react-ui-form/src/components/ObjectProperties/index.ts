@@ -2,4 +2,4 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './ObjectProperties';
+export * from './ObjectProperties.tsx';

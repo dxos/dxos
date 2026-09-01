@@ -2,5 +2,5 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './DensityContext';
-export * from './DensityProvider';
+export * from './DensityContext.ts';
+export * from './DensityProvider.tsx';

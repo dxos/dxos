@@ -10,9 +10,9 @@ import { DXN, Ref, Type } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { random } from '@dxos/random';
 
-import { SpaceObjectGenerator, TestObjectGenerator } from './generator';
-import { type TestGeneratorMap, type TestMutationsMap, type TestSchemaMap } from './types';
-import { randomText } from './util';
+import { SpaceObjectGenerator, TestObjectGenerator } from './generator.ts';
+import { type TestGeneratorMap, type TestMutationsMap, type TestSchemaMap } from './types.ts';
+import { randomText } from './util.ts';
 
 // TODO(burdon): Reconcile with @dxos/plugin-debug, @dxos/aurora/testing.
 // TODO(burdon): Bug when adding stale objects to space (e.g., static objects already added in previous story invocation).

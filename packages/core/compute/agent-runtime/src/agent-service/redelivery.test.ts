@@ -7,7 +7,7 @@ import { describe, it } from 'vitest';
 import * as Process from '@dxos/compute/Process';
 import { ContentBlock } from '@dxos/types';
 
-import { type AgentEvent, agentEventToPrompt, dropReportedToolResults } from './agent-process';
+import { type AgentEvent, agentEventToPrompt, dropReportedToolResults } from './agent-process.ts';
 
 // Recovering a tool result across a reload was, until now, exercised only when a race inside
 // `AgentService.test.ts`'s `recovers queued tool results after reload` happened to land on it, and no

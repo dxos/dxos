@@ -14,9 +14,9 @@ import { fileURLToPath } from 'node:url';
 import { ContentBlock } from '@dxos/types';
 import { Message } from '@dxos/types';
 
-import * as AiService from '../AiService';
-import { agenticLoop } from './process-messages';
-import { AiServiceTestingPreset } from './test-layers';
+import * as AiService from '../AiService.ts';
+import { agenticLoop } from './process-messages.ts';
+import { AiServiceTestingPreset } from './test-layers.ts';
 
 const EXAMPLE_PDF = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'TestData/test-pdf.pdf'));
 const EXAMPLE_IMAGE = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'TestData/test-image.jpg'));

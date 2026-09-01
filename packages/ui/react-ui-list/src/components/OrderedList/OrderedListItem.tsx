@@ -25,10 +25,10 @@ import {
 } from '@dxos/react-ui';
 import { mx, osTranslations } from '@dxos/ui-theme';
 
-import { useListGrid, useReorderItem } from '../../hooks';
-import { DropIndicator } from '../DropIndicator';
-import { listTheme } from '../List.theme';
-import { type ListItemRecord, useOrderedListContext } from './OrderedListContext';
+import { useListGrid, useReorderItem } from '../../hooks/index.ts';
+import { DropIndicator } from '../DropIndicator/index.ts';
+import { listTheme } from '../List.theme.ts';
+import { type ListItemRecord, useOrderedListContext } from './OrderedListContext.ts';
 
 const styles = listTheme.styles();
 

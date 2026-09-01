@@ -16,7 +16,7 @@ import * as Game from '@dxos/plugin-game/Game';
 import { ChessOperationHandlerSet } from '#operations';
 import { Chess, ChessOperation, ChessPositionIndex, PlayerReview } from '#types';
 
-import * as positionIndexInternal from '../internal/position-index';
+import * as positionIndexInternal from '../internal/position-index.ts';
 
 EntityId.dangerouslyDisableRandomness();
 

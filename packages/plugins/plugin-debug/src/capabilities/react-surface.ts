@@ -18,14 +18,14 @@ import { DebugPortStatus, DebugStatus, LogStatus, StatsPanel, Wireframe } from '
 import { meta } from '#meta';
 import { DebugNodes, DebugSurface } from '#types';
 
-import { DebugCapabilities } from '../types/Debug';
+import { DebugCapabilities } from '../types/Debug.ts';
 import {
   DebugSettingsSurface,
   LoggerSurface,
   ObjectDebugSurface,
   SpaceGeneratorSurface,
   SpaceObjectsSurface,
-} from './DebugSurfaces';
+} from './DebugSurfaces.tsx';
 
 type SpaceDebug = {
   type: string;

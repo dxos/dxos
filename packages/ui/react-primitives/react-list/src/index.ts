@@ -9,8 +9,8 @@ export {
   type ListVariant,
   createListScope,
   useListContext,
-} from './ListContext';
-export * from './List';
+} from './ListContext.ts';
+export * from './List.tsx';
 export {
   LIST_ITEM_NAME,
   type ListItemHeadingProps,
@@ -18,5 +18,5 @@ export {
   type ListItemScopedProps,
   createListItemScope,
   useListItemContext,
-} from './ListItemContext';
-export * from './ListItem';
+} from './ListItemContext.ts';
+export * from './ListItem.tsx';

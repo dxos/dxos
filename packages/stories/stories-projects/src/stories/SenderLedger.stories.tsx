@@ -7,8 +7,8 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import * as TablePlugin from '@dxos/plugin-table/TablePlugin';
 
-import { StoryRole } from '../modules';
-import { ModuleContainer, createDecorators, storyParameters } from '../testing';
+import { StoryRole } from '../modules/index.ts';
+import { ModuleContainer, createDecorators, storyParameters } from '../testing/index.ts';
 
 const MAILBOX_NAME = 'Work';
 

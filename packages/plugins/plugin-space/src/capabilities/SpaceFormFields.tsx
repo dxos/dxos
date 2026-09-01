@@ -15,7 +15,7 @@ import { Input } from '@dxos/react-ui';
 import { type FormFieldRendererProps, SelectField } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
-import { type TypeInputOptions, TypeInputOptionsAnnotationId } from '../types/SpaceForm';
+import { type TypeInputOptions, TypeInputOptionsAnnotationId } from '../types/SpaceForm.ts';
 
 /** The form renderer's own props ride alongside `data`; `type` comes from the field AST. */
 export type SpaceFormFieldProps = Surface.ComponentProps<AppSurface.FormInputData> &

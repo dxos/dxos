@@ -18,7 +18,7 @@ import { GalleryImage } from '#components';
 import { meta } from '#meta';
 import { Artifact } from '#types';
 
-import { useArtifactCoverSource } from '../../hooks';
+import { useArtifactCoverSource } from '../../hooks/index.ts';
 
 const isArtifact = Obj.instanceOf(Artifact.Artifact);
 

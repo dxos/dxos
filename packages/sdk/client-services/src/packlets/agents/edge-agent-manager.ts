@@ -19,8 +19,8 @@ import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/confi
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 
-import { type Identity, type IdentityProvider, IdentityProviderService } from '../identity';
-import { type DataSpaceManager, DataSpaceManagerService } from '../spaces';
+import { type Identity, type IdentityProvider, IdentityProviderService } from '../identity/index.ts';
+import { type DataSpaceManager, DataSpaceManagerService } from '../spaces/index.ts';
 const AGENT_STATUS_QUERY_RETRY_INTERVAL = 5000;
 const AGENT_STATUS_QUERY_RETRY_JITTER = 1000;
 const AGENT_FEED_ADDED_CHECK_INTERVAL_MS = 3000;

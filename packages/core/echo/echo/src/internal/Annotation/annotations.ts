@@ -11,10 +11,10 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, URI } from '@dxos/keys';
 import { type Primitive } from '@dxos/util';
 
-import type * as Annotation from '../../Annotation';
-import { type Mutable } from '../common/proxy';
-import { type AnyProperties, EntityKind, TypeId, getSchema } from '../common/types';
-import { createAnnotationHelper } from './util';
+import type * as Annotation from '../../Annotation.ts';
+import { type Mutable } from '../common/proxy/index.ts';
+import { type AnyProperties, EntityKind, TypeId, getSchema } from '../common/types/index.ts';
+import { createAnnotationHelper } from './util.ts';
 
 const ANNOTATION_TYPE_ID: Annotation.TypeId = '~@dxos/echo/Annotation' as const;
 
@@ -679,7 +679,7 @@ export const setDescription = (entity: Mutable<AnyProperties>, description: stri
   }
 };
 
-export { Dictionary, Key, getDictionary, setDictionary } from './dictionary';
+export { Dictionary, Key, getDictionary, setDictionary } from './dictionary.ts';
 
 export const getFromAst = <T>(ast: SchemaAST.AST, annotation: Annotation.Annotation<T>): Option.Option<T> => {
   const meta = SchemaAST.getAnnotation<PropertyMetaAnnotation>(ast, PropertyMetaAnnotationId);

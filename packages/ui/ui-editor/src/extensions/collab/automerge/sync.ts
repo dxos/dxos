@@ -11,9 +11,9 @@ import { type EditorView } from '@codemirror/view';
 import { Doc } from '@dxos/echo-doc';
 import { log } from '@dxos/log';
 
-import { type State, getLastHeads, getPath, isReconcile, reconcileAnnotation, updateHeads } from './defs';
-import { updateAutomerge } from './update-automerge';
-import { updateCodeMirror } from './update-codemirror';
+import { type State, getLastHeads, getPath, isReconcile, reconcileAnnotation, updateHeads } from './defs.ts';
+import { updateAutomerge } from './update-automerge.ts';
+import { updateCodeMirror } from './update-codemirror.ts';
 
 /**
  * Implements three-way merge (on each mutation).

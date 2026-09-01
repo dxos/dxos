@@ -17,7 +17,7 @@ import {
 import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { Timeframe } from '@dxos/timeframe';
 
-import { type CredentialSigner, createCredential } from './credential-factory';
+import { type CredentialSigner, createCredential } from './credential-factory.ts';
 
 // TODO(burdon): Normalize generate and functions below.
 //  Use throughout stack and in tests.

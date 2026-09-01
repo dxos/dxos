@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { type Space, SpaceState, type SpaceSyncState } from '@dxos/client/echo';
 
-import * as FormBuilder from './form-builder';
+import * as FormBuilder from './form-builder.ts';
 
 export type FormatSpaceOptions = {
   verbose?: boolean;

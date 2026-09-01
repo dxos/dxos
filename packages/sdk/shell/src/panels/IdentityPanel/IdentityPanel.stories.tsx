@@ -12,12 +12,12 @@ import { PublicKey } from '@dxos/react-client';
 import { Invitation } from '@dxos/react-client/invitations';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { InvitationManager, type InvitationManagerProps } from '../../steps';
-import { StorybookDialog } from '../../story-components';
-import { translations } from '../../translations';
-import { IdentityPanelImpl } from './IdentityPanel';
-import type { IdentityPanelImplProps } from './IdentityPanelProps';
-import { IdentityActionChooserImpl } from './steps';
+import { InvitationManager, type InvitationManagerProps } from '../../steps/index.ts';
+import { StorybookDialog } from '../../story-components/index.ts';
+import { translations } from '../../translations.ts';
+import { IdentityPanelImpl } from './IdentityPanel.tsx';
+import type { IdentityPanelImplProps } from './IdentityPanelProps.ts';
+import { IdentityActionChooserImpl } from './steps/index.ts';
 
 random.seed(1234);
 

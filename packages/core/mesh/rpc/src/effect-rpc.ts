@@ -16,7 +16,7 @@ import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 
 import { log } from '@dxos/log';
 
-import { type RpcPort } from './rpc';
+import { type RpcPort } from './rpc.ts';
 
 /**
  * Interval at which the client re-sends the initial Ping while waiting for the server to attach.

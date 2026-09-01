@@ -9,7 +9,7 @@ import { composable, composableProps } from '@dxos/react-ui';
 import { HuePicker } from '@dxos/react-ui-pickers';
 import { type Hue } from '@dxos/ui-theme';
 
-import { type ToolMode } from '../VoxelEditor';
+import { type ToolMode } from '../VoxelEditor/index.ts';
 
 export type VoxelToolbarProps = ToolbarRootProps & {
   /** Currently selected tool mode. */

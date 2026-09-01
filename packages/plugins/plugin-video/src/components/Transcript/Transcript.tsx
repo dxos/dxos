@@ -21,7 +21,7 @@ import {
   documentSlots,
 } from '@dxos/ui-editor';
 
-import { decorateTranscript, parseLineTimestamp, transcriptMarkdownExtensions } from './decorate-transcript';
+import { decorateTranscript, parseLineTimestamp, transcriptMarkdownExtensions } from './decorate-transcript.ts';
 
 export type TranscriptProps = {
   /** Stable editor/document id (used for collaboration + selection state). */

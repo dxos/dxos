@@ -15,8 +15,8 @@ import { useDiscordPresence } from '#hooks';
 import { meta } from '#meta';
 import { SupportOperation } from '#types';
 
-import { formatRequestMessage } from './request';
-import { useScreenshotAttachment } from './useScreenshotAttachment';
+import { formatRequestMessage } from './request.ts';
+import { useScreenshotAttachment } from './useScreenshotAttachment.ts';
 
 /** Build a direct PostHog event permalink (±15s search window via timestamp). */
 const makePostHogEventUrl = (projectId: string, eventUuid: string): string =>

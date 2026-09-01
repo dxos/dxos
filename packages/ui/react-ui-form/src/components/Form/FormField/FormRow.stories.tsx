@@ -10,8 +10,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { Form } from '../Form';
-import { FormRow } from './FormRow';
+import { Form } from '../Form.tsx';
+import { FormRow } from './FormRow.tsx';
 
 const DefaultStory = ({
   type,

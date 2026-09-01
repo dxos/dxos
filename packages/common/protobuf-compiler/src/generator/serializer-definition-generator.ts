@@ -7,8 +7,8 @@ import type protobufjs from 'protobufjs';
 
 import { compressSchema } from '@dxos/codec-protobuf';
 
-import { CODEC_MODULE, type ModuleSpecifier } from '../module-specifier';
-import { serializeSchemaToJson } from '../protobuf-json';
+import { CODEC_MODULE, type ModuleSpecifier } from '../module-specifier.ts';
+import { serializeSchemaToJson } from '../protobuf-json.ts';
 
 const f = ts.factory;
 

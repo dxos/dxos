@@ -16,7 +16,7 @@ import {
   type MenuItems,
   type MenuItemsAccessor,
   type MenuItemsMap,
-} from '../types';
+} from '../types.ts';
 
 // Kept out of `Menu.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so contexts and hooks exported beside them force a full page reload on every edit.

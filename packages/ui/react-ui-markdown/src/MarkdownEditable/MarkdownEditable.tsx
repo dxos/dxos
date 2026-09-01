@@ -16,7 +16,7 @@ import {
 } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
-import { MarkdownView, type MarkdownViewProps } from '../MarkdownView';
+import { MarkdownView, type MarkdownViewProps } from '../MarkdownView/index.ts';
 
 /**
  * Rendered markdown that becomes a markdown editor in place.

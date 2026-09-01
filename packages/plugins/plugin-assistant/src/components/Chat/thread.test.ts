@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 import { Feed, Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
-import { byAppendOrder, collapseToolRuns, projectThread, resolveRewind } from './thread';
+import { byAppendOrder, collapseToolRuns, projectThread, resolveRewind } from './thread.ts';
 
 describe('byAppendOrder', () => {
   test('orders by feed position when it discriminates', ({ expect }) => {

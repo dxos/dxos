@@ -8,7 +8,7 @@ import { assert, beforeAll, describe, expect, test } from 'vitest';
 
 import { isNode, trim } from '@dxos/util';
 
-import { bundleFunction, initializeBundler } from './bundler';
+import { bundleFunction, initializeBundler } from './bundler.ts';
 
 // SKipped because requies CDN
 describe.skip('Bundler', () => {

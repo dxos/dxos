@@ -8,7 +8,7 @@ import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 
-import { DISABLE_DEPENDENTS_DIALOG } from '../constants';
+import { DISABLE_DEPENDENTS_DIALOG } from '../constants.ts';
 
 /**
  * Returns `requestDisable(pluginId)` that gates `manager.disable` on a

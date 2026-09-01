@@ -6,8 +6,8 @@ import { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 
-import { LayoutOperation } from '../../operations';
-import { useLayout } from './useLayout';
+import { LayoutOperation } from '../../operations/index.ts';
+import { useLayout } from './useLayout.ts';
 
 export type ShowItemOptions = {
   /** Attention context id — typically the master surface's attendableId. */

@@ -23,7 +23,7 @@ import {
 } from '#containers';
 import { Account, ClientOptions } from '#types';
 
-import { JOIN_DIALOG, RECOVERY_CODE_DIALOG, RESET_DIALOG } from '../constants';
+import { JOIN_DIALOG, RECOVERY_CODE_DIALOG, RESET_DIALOG } from '../constants.ts';
 
 type ReactSurfaceOptions = Pick<ClientOptions.ClientPluginOptions, 'onReset' | 'identityTestActions'> & {
   createInvitationUrl: (invitationCode: string) => string;

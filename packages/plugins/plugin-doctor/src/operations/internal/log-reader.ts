@@ -4,7 +4,7 @@
 
 import { log } from '@dxos/log';
 
-import { LOG_STORE_DB_NAME, LOG_STORE_NAME } from './constants';
+import { LOG_STORE_DB_NAME, LOG_STORE_NAME } from './constants.ts';
 
 export type StoredLogRow = { seq: number; line: string };
 

@@ -7,7 +7,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { latch } from '@dxos/async';
 import { TestBuilder } from '@dxos/teleport/testing';
 
-import { TestAgent } from './testing';
+import { TestAgent } from './testing.ts';
 
 describe('Gossip', () => {
   test('Two peers exchange messages', async () => {

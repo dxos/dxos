@@ -17,8 +17,8 @@ import React, {
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { type EdgeDrift, type Extents, type Layout, Placement } from './placement';
-import { useFollow } from './useFollow';
+import { type EdgeDrift, type Extents, type Layout, Placement } from './placement.ts';
+import { useFollow } from './useFollow.ts';
 
 /**
  * What the window needs from a model, structurally — `ListModel`/`FeedModel` satisfy it, and the

@@ -4,7 +4,7 @@
 
 import { invariant } from '@dxos/invariant';
 
-import { type ReactiveHandler } from './proxy-types';
+import { type ReactiveHandler } from './proxy-types.ts';
 
 export const symbolIsProxy = Symbol.for('@dxos/schema/Proxy');
 

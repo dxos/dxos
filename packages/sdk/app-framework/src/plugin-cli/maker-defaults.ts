@@ -6,7 +6,7 @@ import * as fs from 'node:fs';
 import { createRequire as nodeCreateRequire } from 'node:module';
 import * as path from 'node:path';
 
-import { parseFile, ts } from './ts-util';
+import { parseFile, ts } from './ts-util.ts';
 
 /**
  * Per-family condition defaults, resolved from the module a barrel imports its makers from.

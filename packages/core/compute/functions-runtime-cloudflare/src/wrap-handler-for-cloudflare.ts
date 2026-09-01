@@ -15,8 +15,8 @@ import { EdgeResponse, makeInProcessClient } from '@dxos/protocols';
 import type { EdgeFunctionEnv, FunctionProtocol } from '@dxos/protocols';
 import { DataService, FeedService, QueryService } from '@dxos/protocols/rpc';
 
-import { ServiceContainer } from './internal';
-import { FUNCTION_ROUTE_HEADER, type FunctionMetadata, FunctionRouteValue } from './types';
+import { ServiceContainer } from './internal/index.ts';
+import { FUNCTION_ROUTE_HEADER, type FunctionMetadata, FunctionRouteValue } from './types.ts';
 
 /**
  * Wraps a user function in a Cloudflare-compatible handler.

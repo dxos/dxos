@@ -14,7 +14,7 @@ import { log } from '@dxos/log';
 import { type EdgeFunctionEnv } from '@dxos/protocols';
 import { type DataService } from '@dxos/protocols/rpc';
 
-import { copyUint8Array } from './utils';
+import { copyUint8Array } from './utils.ts';
 
 export class DataServiceImpl implements DataService.Handlers {
   private 'dataSubscriptions' = new Map<

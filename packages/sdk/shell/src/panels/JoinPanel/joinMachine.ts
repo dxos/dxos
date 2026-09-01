@@ -19,8 +19,8 @@ import { AlreadyJoinedError, type Client } from '@dxos/react-client';
 import { type Identity } from '@dxos/react-client/halo';
 import { type AuthenticatingInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 
-import { type FailReason } from '../../types';
-import { type JoinPanelInitialDisposition, type JoinPanelMode } from './JoinPanelProps';
+import { type FailReason } from '../../types/index.ts';
+import { type JoinPanelInitialDisposition, type JoinPanelMode } from './JoinPanelProps.ts';
 
 type InvitationKindContext = Partial<{
   failReason: FailReason | null;

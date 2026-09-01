@@ -7,8 +7,8 @@ import pb from 'protobufjs';
 
 import { invariant } from '@dxos/invariant';
 
-import { type SubstitutionsMap } from '../parser';
-import { types } from './types';
+import { type SubstitutionsMap } from '../parser/index.ts';
+import { types } from './types.ts';
 
 const f = ts.factory;
 

@@ -8,7 +8,7 @@ import React from 'react';
 import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Accordion } from './Accordion';
+import { Accordion } from './Accordion.tsx';
 
 random.seed(1);
 

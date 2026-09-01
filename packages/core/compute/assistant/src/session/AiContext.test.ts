@@ -9,7 +9,7 @@ import { describe, test } from 'vitest';
 import { Database, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 
-import * as AiContext from './AiContext';
+import * as AiContext from './AiContext.ts';
 
 const TypeA = Type.makeObject(DXN.make('org.dxos.type.a', '0.1.0'))(Schema.Struct({}));
 const TypeB = Type.makeObject(DXN.make('org.dxos.type.b', '0.1.0'))(Schema.Struct({}));

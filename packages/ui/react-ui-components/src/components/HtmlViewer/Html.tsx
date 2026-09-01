@@ -8,7 +8,7 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { type ColorScheme, detectColorScheme } from './color-scheme';
+import { type ColorScheme, detectColorScheme } from './color-scheme.ts';
 
 /** What the sandbox knows about the document, handed to every transform so a dialect stays pure. */
 export type HtmlTransformContext = {

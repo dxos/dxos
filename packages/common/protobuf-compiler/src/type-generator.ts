@@ -12,11 +12,11 @@ import {
   createNamespaceSourceFile,
   generatePackageExports,
   getFileNameForNamespace,
-} from './generator';
-import { Logger } from './logger';
-import { type ModuleSpecifier } from './module-specifier';
-import { splitSchemaIntoNamespaces } from './namespaces';
-import { type SubstitutionsMap, parseSubstitutionsFile } from './parser';
+} from './generator/index.ts';
+import { Logger } from './logger.ts';
+import { type ModuleSpecifier } from './module-specifier.ts';
+import { splitSchemaIntoNamespaces } from './namespaces.ts';
+import { type SubstitutionsMap, parseSubstitutionsFile } from './parser/index.ts';
 
 // TODO(dmaretskyi): Move all parsing into `generateSchema` and remove this function.
 export const parseAndGenerateSchema = async (

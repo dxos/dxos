@@ -19,7 +19,7 @@ import {
   parseCaptionTracks,
   parseTimedText,
   selectCaptionTrack,
-} from '../util';
+} from '../util/index.ts';
 
 const DEFAULT_LANG = 'en';
 

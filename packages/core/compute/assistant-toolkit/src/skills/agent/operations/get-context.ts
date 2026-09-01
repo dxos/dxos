@@ -9,9 +9,9 @@ import * as Operation from '@dxos/compute/Operation';
 import { Filter } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
-import { HarnessContextError } from '../../../errors';
-import { Agent, Chat } from '../../../types';
-import { GetContext } from './definitions';
+import { HarnessContextError } from '../../../errors.ts';
+import { Agent, Chat } from '../../../types/index.ts';
+import { GetContext } from './definitions.ts';
 
 export default GetContext.pipe(
   Operation.withHandler(

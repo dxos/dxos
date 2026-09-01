@@ -5,7 +5,7 @@
 import { type Actor } from '@dxos/types';
 import { toHue } from '@dxos/util';
 
-import { hashString } from '../../util';
+import { hashString } from '../../util.ts';
 
 // Kept out of `Avatar.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on

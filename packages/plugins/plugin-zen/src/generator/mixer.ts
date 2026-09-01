@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import type { Sequence } from '../types/Sequence';
-import { BinauralGenerator } from './generator';
-import { SamplePlayer } from './player';
+import type { Sequence } from '../types/Sequence.ts';
+import { BinauralGenerator } from './generator.ts';
+import { SamplePlayer } from './player.ts';
 
 export type LayerSource = BinauralGenerator | SamplePlayer;
 

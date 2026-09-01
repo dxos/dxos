@@ -14,8 +14,8 @@ import { EffectEx } from '@dxos/effect';
 import { type BridgeService as BridgeServiceRpc } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { BridgeService } from '@dxos/protocols/rpc';
 
-import * as Rpc from './Rpc';
-import { pbStreamToStream, streamToPbStream } from './service-rpc';
+import * as Rpc from './Rpc.ts';
+import { pbStreamToStream, streamToPbStream } from './service-rpc.ts';
 
 /**
  * The system channel runs the WebRTC {@link BridgeServiceRpc} in the worker→tab direction: the worker

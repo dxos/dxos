@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export { GameCard as default } from './GameCard';
+export { GameCard as default } from './GameCard.tsx';

@@ -9,7 +9,7 @@ import * as Account from '@dxos/app-toolkit/Account';
 import * as Operation from '@dxos/compute/Operation';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import { CompleteOAuthRegistration } from './definitions';
+import { CompleteOAuthRegistration } from './definitions.ts';
 
 /**
  * Completes OAuth recovery registration for the local identity — see

@@ -9,12 +9,12 @@ import { useClient, useMulticastObservable } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useId, useThemeContext } from '@dxos/react-ui';
 
-import { Viewport } from '../../components';
-import { ConfirmReset } from '../../steps';
-import { stepStyles } from '../../styles';
-import { JoinHeading } from './JoinHeading';
-import { useJoinMachine } from './joinMachine';
-import { type JoinPanelImplProps, type JoinPanelProps } from './JoinPanelProps';
+import { Viewport } from '../../components/index.ts';
+import { ConfirmReset } from '../../steps/index.ts';
+import { stepStyles } from '../../styles/index.ts';
+import { JoinHeading } from './JoinHeading.tsx';
+import { useJoinMachine } from './joinMachine.ts';
+import { type JoinPanelImplProps, type JoinPanelProps } from './JoinPanelProps.ts';
 import {
   AdditionMethodChooser,
   IdentityAdded,
@@ -22,7 +22,7 @@ import {
   InvitationAuthenticator,
   InvitationInput,
   InvitationRescuer,
-} from './steps';
+} from './steps/index.ts';
 
 // TODO(burdon): Needs to be reimplemented.
 export const JoinPanelImpl = ({

@@ -15,7 +15,7 @@ import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate
 
 import { Domino } from '@dxos/ui';
 
-import { escapeRegExpSource } from '../../util';
+import { escapeRegExpSource } from '../../util/index.ts';
 
 export type TypewriterOptions = {
   /** Show a blinking cursor at the insertion point while streaming. */

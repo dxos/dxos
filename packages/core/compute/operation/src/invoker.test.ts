@@ -18,7 +18,7 @@ import { NoHandlerError } from '@dxos/compute';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
-import * as OperationInvoker from './OperationInvoker';
+import * as OperationInvoker from './OperationInvoker.ts';
 
 const testRuntime = ManagedRuntime.make(Layer.empty) as unknown as ManagedRuntime.ManagedRuntime<any, any>;
 

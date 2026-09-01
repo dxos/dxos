@@ -26,7 +26,7 @@ import { useNavTreeModel, useNavTreeState } from '#hooks';
 import { meta } from '#meta';
 import { NavTreeNode } from '#types';
 
-import { filterItems, getParent, resolveMigrationOperation } from '../../util';
+import { filterItems, getParent, resolveMigrationOperation } from '../../util.ts';
 
 // TODO(thure): Is NavTree truly authoritative in this regard?
 export const NODE_TYPE = 'dxos/app-graph/node';

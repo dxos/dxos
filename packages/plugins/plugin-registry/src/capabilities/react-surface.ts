@@ -16,8 +16,8 @@ import { LoadPluginDialog, PluginArticle, PublicRegistryArticle, RegistrySetting
 import { meta } from '#meta';
 import { LOAD_PLUGIN_DIALOG, type RegistryPluginOptions } from '#types';
 
-import { DISABLE_DEPENDENTS_DIALOG } from '../constants';
-import { RegistryCategoryArticle } from './RegistryCategoryArticle';
+import { DISABLE_DEPENDENTS_DIALOG } from '../constants.ts';
+import { RegistryCategoryArticle } from './RegistryCategoryArticle.tsx';
 
 export default Capability.makeModule(({ externalPlugins = true }: RegistryPluginOptions = {}) => {
   const externalPluginSurfaces = externalPlugins

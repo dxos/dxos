@@ -11,8 +11,8 @@ import { Client, Config, PublicKey } from '@dxos/client';
 import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
 
-import { type SnapshotDescription } from './snapshots-registry';
-import { type SpacesDump, SpacesDumper } from './space-json-dump';
+import { type SnapshotDescription } from './snapshots-registry.ts';
+import { type SpacesDump, SpacesDumper } from './space-json-dump.ts';
 
 export const SNAPSHOTS_DIR = 'snapshots';
 export const SNAPSHOT_DIR = 'snapshot';

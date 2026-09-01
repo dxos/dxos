@@ -32,7 +32,7 @@ import {
   createTemplate,
   createText,
   createTextToImage,
-} from '../shapes';
+} from '../shapes/index.ts';
 
 //
 // Circuits

@@ -11,7 +11,7 @@ import { Database, Ref, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
-import * as Input from './input';
+import * as Input from './input.ts';
 
 const TaskSet = Type.makeObject<{ name: string }>(DXN.make('com.example.type.taskSet', '0.1.0'))(
   Schema.Struct({ name: Schema.String }),

@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './cursor';
-export * from './decorations';
-export * from './debug';
-export * from './dom';
-export * from './facet';
-export * from './util';
+export * from './cursor.ts';
+export * from './decorations.ts';
+export * from './debug.ts';
+export * from './dom.ts';
+export * from './facet.ts';
+export * from './util.ts';

@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { stringifyValues } from './logs';
+import { stringifyValues } from './logs.ts';
 
 describe('stringifyValues', () => {
   test('serializes errors via stack', ({ expect }) => {

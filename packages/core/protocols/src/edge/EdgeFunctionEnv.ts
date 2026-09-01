@@ -5,9 +5,9 @@
 import { type SpaceId, type URI } from '@dxos/keys';
 
 import { type CreateDocumentResponse } from '../DataService.ts';
-import type * as FeedProtocol from '../FeedProtocol';
-import type { SerializedError } from '../index';
-import { type QueryRequest, type QueryResponse } from '../proto/gen/dxos/echo/query';
+import type * as FeedProtocol from '../FeedProtocol.ts';
+import type { SerializedError } from '../index.ts';
+import { type QueryRequest, type QueryResponse } from '../proto/gen/dxos/echo/query.ts';
 
 /*
 

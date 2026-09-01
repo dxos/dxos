@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { type Extension } from '../observability-extension';
+import { type Extension } from '../observability-extension.ts';
 
 export const stubExtension: Extension = {
   initialize: () => Effect.succeed(undefined),

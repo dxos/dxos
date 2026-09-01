@@ -6,39 +6,39 @@ import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { UpdateProfile } from './definitions';
-import { ShareIdentity } from './definitions';
-import { RevokeRecoveryCredential } from './definitions';
-import { ResetStorage } from './definitions';
-import { RedeemToken } from './definitions';
-import { RedeemPasskey } from './definitions';
-import { RecoverIdentity } from './definitions';
-import { OpenUsage } from './definitions';
-import { JoinIdentity } from './definitions';
-import { GrantServiceAccess } from './definitions';
-import { CreateRecoveryCode } from './definitions';
-import { CreatePasskey } from './definitions';
-import { CreateIdentity } from './definitions';
-import { CreateAgent } from './definitions';
+import { UpdateProfile } from './definitions.ts';
+import { ShareIdentity } from './definitions.ts';
+import { RevokeRecoveryCredential } from './definitions.ts';
+import { ResetStorage } from './definitions.ts';
+import { RedeemToken } from './definitions.ts';
+import { RedeemPasskey } from './definitions.ts';
+import { RecoverIdentity } from './definitions.ts';
+import { OpenUsage } from './definitions.ts';
+import { JoinIdentity } from './definitions.ts';
+import { GrantServiceAccess } from './definitions.ts';
+import { CreateRecoveryCode } from './definitions.ts';
+import { CreatePasskey } from './definitions.ts';
+import { CreateIdentity } from './definitions.ts';
+import { CreateAgent } from './definitions.ts';
 
-export * as ClientOperation from './definitions';
+export * as ClientOperation from './definitions.ts';
 
 export const ClientOperationHandlerSet = OperationHandlerSet.lazy([
-  CreateAgent.pipe(Operation.lazyHandler(() => import('./create-agent'))),
-  CreateIdentity.pipe(Operation.lazyHandler(() => import('./create-identity'))),
-  CreatePasskey.pipe(Operation.lazyHandler(() => import('./create-passkey'))),
-  CreateRecoveryCode.pipe(Operation.lazyHandler(() => import('./create-recovery-code'))),
-  GrantServiceAccess.pipe(Operation.lazyHandler(() => import('./grant-service-access'))),
-  JoinIdentity.pipe(Operation.lazyHandler(() => import('./join-identity'))),
-  OpenUsage.pipe(Operation.lazyHandler(() => import('./open-usage'))),
-  RecoverIdentity.pipe(Operation.lazyHandler(() => import('./recover-identity'))),
-  RedeemPasskey.pipe(Operation.lazyHandler(() => import('./redeem-passkey'))),
-  RedeemToken.pipe(Operation.lazyHandler(() => import('./redeem-token'))),
-  ResetStorage.pipe(Operation.lazyHandler(() => import('./reset-storage'))),
-  RevokeRecoveryCredential.pipe(Operation.lazyHandler(() => import('./revoke-recovery-credential'))),
-  ShareIdentity.pipe(Operation.lazyHandler(() => import('./share-identity'))),
+  CreateAgent.pipe(Operation.lazyHandler(() => import('./create-agent.ts'))),
+  CreateIdentity.pipe(Operation.lazyHandler(() => import('./create-identity.ts'))),
+  CreatePasskey.pipe(Operation.lazyHandler(() => import('./create-passkey.ts'))),
+  CreateRecoveryCode.pipe(Operation.lazyHandler(() => import('./create-recovery-code.ts'))),
+  GrantServiceAccess.pipe(Operation.lazyHandler(() => import('./grant-service-access.ts'))),
+  JoinIdentity.pipe(Operation.lazyHandler(() => import('./join-identity.ts'))),
+  OpenUsage.pipe(Operation.lazyHandler(() => import('./open-usage.ts'))),
+  RecoverIdentity.pipe(Operation.lazyHandler(() => import('./recover-identity.ts'))),
+  RedeemPasskey.pipe(Operation.lazyHandler(() => import('./redeem-passkey.ts'))),
+  RedeemToken.pipe(Operation.lazyHandler(() => import('./redeem-token.ts'))),
+  ResetStorage.pipe(Operation.lazyHandler(() => import('./reset-storage.ts'))),
+  RevokeRecoveryCredential.pipe(Operation.lazyHandler(() => import('./revoke-recovery-credential.ts'))),
+  ShareIdentity.pipe(Operation.lazyHandler(() => import('./share-identity.ts'))),
   NavigationOperation.ResolveNavigationTargets.pipe(
-    Operation.lazyHandler(() => import('./resolve-navigation-targets')),
+    Operation.lazyHandler(() => import('./resolve-navigation-targets.ts')),
   ),
-  UpdateProfile.pipe(Operation.lazyHandler(() => import('./update-profile'))),
+  UpdateProfile.pipe(Operation.lazyHandler(() => import('./update-profile.ts'))),
 ]);

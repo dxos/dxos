@@ -8,8 +8,8 @@ import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext, Messenger, type PeerInfo } from '@dxos/messaging';
 
-import { type SignalMessage } from './signal-messenger';
-import { SwarmMessenger } from './swarm-messenger';
+import { type SignalMessage } from './signal-messenger.ts';
+import { SwarmMessenger } from './swarm-messenger.ts';
 
 describe('Signal Integration Test', () => {
   // In-memory signaling context connecting the peers in each test (replaces the KUBE server).

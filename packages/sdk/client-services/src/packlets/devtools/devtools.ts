@@ -19,12 +19,12 @@ import {
 } from '@dxos/protocols/proto/dxos/devtools/host';
 import { type DevtoolsHost } from '@dxos/protocols/rpc';
 
-import { type ServiceContext } from '../services';
-import { subscribeToFeedBlocks, subscribeToFeeds } from './feeds';
-import { subscribeToKeyringKeys } from './keys';
-import { subscribeToMetadata } from './metadata';
-import { subscribeToNetworkStatus, subscribeToSignal, subscribeToSwarmInfo } from './network';
-import { subscribeToSpaces } from './spaces';
+import { type ServiceContext } from '../services/index.ts';
+import { subscribeToFeedBlocks, subscribeToFeeds } from './feeds.ts';
+import { subscribeToKeyringKeys } from './keys.ts';
+import { subscribeToMetadata } from './metadata.ts';
+import { subscribeToNetworkStatus, subscribeToSignal, subscribeToSwarmInfo } from './network.ts';
+import { subscribeToSpaces } from './spaces.ts';
 
 export class DevtoolsHostEvents {
   readonly ready = new AsyncEvent();

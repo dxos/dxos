@@ -13,7 +13,7 @@ import { SwarmMessageSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 import { type Answer, type SwarmMessage } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap, type MakeOptional } from '@dxos/util';
 
-import { type OfferMessage, type SignalMessage, type SignalMessenger } from './signal-messenger';
+import { type OfferMessage, type SignalMessage, type SignalMessenger } from './signal-messenger.ts';
 
 interface OfferRecord {
   resolve: (answer: Answer) => void;

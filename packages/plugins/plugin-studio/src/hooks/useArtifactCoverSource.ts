@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 
 import { Variant } from '#types';
 
-import { useVariantSource } from './useVariantSource';
+import { useVariantSource } from './useVariantSource.ts';
 
 /** The subset of an Artifact needed to resolve its cover thumbnail (live object or snapshot). */
 export type ArtifactCoverLike = {

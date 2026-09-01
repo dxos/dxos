@@ -19,12 +19,12 @@ import { translations } from '#translations';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'));
 
 export const AutomationTemplates = Capability.lazyModule(
   'AutomationTemplates',
   { provides: [RoutineCapabilities.Template], activatesOn: RoutineEvents.Start },
-  () => import('./automation-templates'),
+  () => import('./automation-templates.ts'),
 );
 
 export const MailboxAction = Capability.lazyModule(
@@ -36,13 +36,13 @@ export const MailboxAction = Capability.lazyModule(
     provides: [InboxCapabilities.MailboxAction],
     activatesOn: InboxEvents.Start,
   },
-  () => import('./mailbox-action'),
+  () => import('./mailbox-action.ts'),
 );
 
 export const MailboxProcessor = Capability.lazyModule(
   'MailboxProcessor',
   { provides: [InboxCapabilities.MailboxProcessor], activatesOn: InboxEvents.Start },
-  () => import('./mailbox-processor'),
+  () => import('./mailbox-processor.ts'),
 );
 
 export const PluginAsset = AppCapability.pluginAsset({
@@ -56,19 +56,19 @@ export const SenderAction = Capability.lazyModule(
   // Rides the inbox feature it contributes to, like its MailboxAction sibling — the entry is
   // unreachable until a conversation renders.
   { requires: [ClientCapabilities.Client], provides: [InboxCapabilities.SenderAction], activatesOn: InboxEvents.Start },
-  () => import('./sender-action'),
+  () => import('./sender-action.ts'),
 );
 
 export const ProjectTemplates = Capability.lazyModule(
   'ProjectTemplates',
   { provides: [ProjectCapabilities.Template], activatesOn: ProjectsEvents.Start },
-  () => import('./project-templates'),
+  () => import('./project-templates.ts'),
 );
 
-export const Schema = AppCapability.schema(() => import('./schema'));
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
+export const Schema = AppCapability.schema(() => import('./schema.ts'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
 
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });
 export const Translations = AppCapability.translations(translations);

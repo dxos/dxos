@@ -2,5 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './FeedbackForm';
-export type { FeedbackPluginOption } from './types';
+export * from './FeedbackForm.tsx';
+export type { FeedbackPluginOption } from './types.ts';

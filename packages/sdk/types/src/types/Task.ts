@@ -14,8 +14,8 @@ import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { type EntityId } from '@dxos/echo/Key';
 import { type MakeRequired } from '@dxos/util';
 
-import * as Actor from './Actor';
-import * as Milestone from './Milestone';
+import * as Actor from './Actor.ts';
+import * as Milestone from './Milestone.ts';
 
 export const Priority = Schema.Literals(['none', 'low', 'medium', 'high', 'urgent']);
 export type Priority = Schema.Schema.Type<typeof Priority>;

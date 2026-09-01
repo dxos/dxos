@@ -15,7 +15,11 @@ import { EffectEx } from '@dxos/effect';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
-import { CHATS_SEGMENT, createProjectChatsChildrenExtension, createProjectChatsExtension } from './app-graph-builder';
+import {
+  CHATS_SEGMENT,
+  createProjectChatsChildrenExtension,
+  createProjectChatsExtension,
+} from './app-graph-builder.ts';
 
 const PROJECT_ID = 'project';
 

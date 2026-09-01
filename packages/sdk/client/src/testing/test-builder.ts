@@ -34,12 +34,12 @@ import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import * as Coordinator from '@dxos/worker-framework/Coordinator';
 import * as WorkerProtocol from '@dxos/worker-framework/WorkerProtocol';
 
-import { Client } from '../client';
-import { ClientServicesProxy, DedicatedWorkerClientServices, type LeaderTimeoutOptions } from '../services';
+import { Client } from '../client/index.ts';
+import { ClientServicesProxy, DedicatedWorkerClientServices, type LeaderTimeoutOptions } from '../services/index.ts';
 // `@dxos/client/testing` is itself a test-only entry, so reaching the in-process host directly is
 // the point here (see `../services/local.ts`).
-import { LocalClientServices } from '../services/local';
-import { TestWorkerFactory } from './test-worker-factory';
+import { LocalClientServices } from '../services/local.ts';
+import { TestWorkerFactory } from './test-worker-factory.ts';
 
 export const testConfigWithLocalSignal = new Config({
   version: 1,

@@ -14,8 +14,8 @@ import {
   eventsNone,
   shapeAttrs,
   styles,
-} from '../components';
-import { type PathShape } from '../types';
+} from '../components/index.ts';
+import { type PathShape } from '../types/index.ts';
 
 const createUrl = (ref: string | undefined) => (ref ? `url(#${MARKER_PREFIX}-${ref})` : undefined);
 

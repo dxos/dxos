@@ -13,7 +13,7 @@ import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { CreateSpaceDialog } from './CreateSpaceDialog';
+import { CreateSpaceDialog } from './CreateSpaceDialog.tsx';
 
 const DefaultStory = () => (
   <Dialog.Root defaultOpen>

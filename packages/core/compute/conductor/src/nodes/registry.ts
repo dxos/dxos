@@ -35,10 +35,10 @@ import {
   VoidOutput,
   defineComputeNode,
   synchronizedComputeFunction,
-} from '../types';
-import { gptNode } from './gpt';
-import { NODE_INPUT, NODE_OUTPUT, inputNode, outputNode } from './system';
-import { templateNode } from './template';
+} from '../types/index.ts';
+import { gptNode } from './gpt/index.ts';
+import { NODE_INPUT, NODE_OUTPUT, inputNode, outputNode } from './system.ts';
+import { templateNode } from './template/index.ts';
 
 export const isFalsy = (value: any) =>
   value === 'false' ||

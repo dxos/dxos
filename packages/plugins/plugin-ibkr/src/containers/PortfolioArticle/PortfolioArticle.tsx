@@ -20,10 +20,10 @@ import { Menu, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from
 
 import { Ibkr, IbkrOperation } from '#types';
 
-import { IBKR_CONNECTOR_ID } from '../../constants';
-import { meta } from '../../meta';
-import { parseCash, parsePositions, parseTrades } from '../../services';
-import { PortfolioImportAction } from './PortfolioImportAction';
+import { IBKR_CONNECTOR_ID } from '../../constants.ts';
+import { meta } from '../../meta.ts';
+import { parseCash, parsePositions, parseTrades } from '../../services/index.ts';
+import { PortfolioImportAction } from './PortfolioImportAction.tsx';
 
 export type PortfolioArticleProps = AppSurface.ObjectArticleProps<Ibkr.Portfolio>;
 

@@ -6,7 +6,7 @@ import { useCallback } from 'react';
 
 import { type Database, Obj, type Type } from '@dxos/echo';
 
-import { type InsertRowResult } from '../model';
+import { type InsertRowResult } from '../model/index.ts';
 
 export type UseAddRowProps = {
   db?: Database.Database;

@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { type ShapeComponentProps, TextBox } from '../components';
-import { type NoteShape } from '../types';
+import { type ShapeComponentProps, TextBox } from '../components/index.ts';
+import { type NoteShape } from '../types/index.ts';
 
 export const NoteComponent = ({ shape }: ShapeComponentProps<NoteShape>) => {
   const { text } = shape;

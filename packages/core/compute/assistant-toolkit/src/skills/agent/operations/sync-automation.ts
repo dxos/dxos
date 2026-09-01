@@ -11,8 +11,8 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { getFeedRef } from '@dxos/schema';
 
-import { Agent } from '../../../types';
-import { Relay, SyncAutomation } from './definitions';
+import { Agent } from '../../../types/index.ts';
+import { Relay, SyncAutomation } from './definitions.ts';
 
 export default SyncAutomation.pipe(
   Operation.withHandler(

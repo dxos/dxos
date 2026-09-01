@@ -8,9 +8,9 @@ import React, { useMemo, useState } from 'react';
 import { Input, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { useMapZoomHandler } from '../../hooks';
-import { type GeoMarker } from '../../types';
-import { Map, type MapController, MapMarkersProps, MapTilesProps } from './Map';
+import { useMapZoomHandler } from '../../hooks/index.ts';
+import { type GeoMarker } from '../../types.ts';
+import { Map, type MapController, MapMarkersProps, MapTilesProps } from './Map.tsx';
 
 type StoryArgs = Pick<MapTilesProps, 'url'> & Pick<MapMarkersProps, 'markers'>;
 

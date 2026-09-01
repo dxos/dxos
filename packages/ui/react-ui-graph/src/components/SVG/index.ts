@@ -2,4 +2,4 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './SVG';
+export * from './SVG.tsx';

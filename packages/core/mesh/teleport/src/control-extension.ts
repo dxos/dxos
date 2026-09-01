@@ -12,7 +12,7 @@ import { type ControlService } from '@dxos/protocols/proto/dxos/mesh/teleport/co
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { Callback } from '@dxos/util';
 
-import { type ExtensionContext, type TeleportExtension } from './teleport';
+import { type ExtensionContext, type TeleportExtension } from './teleport.ts';
 
 const HEARTBEAT_RTT_WARN_THRESH = 10_000;
 const DEBUG_PRINT_HEARTBEAT = false; // very noisy

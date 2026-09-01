@@ -6,8 +6,8 @@ import * as ts from '@typescript/typescript6';
 import { dirname, relative } from 'path';
 import type * as protobufjs from 'protobufjs';
 
-import { type GeneratorContext } from './context';
-import { attachDocComment } from './doc-comment';
+import { type GeneratorContext } from './context.ts';
+import { attachDocComment } from './doc-comment.ts';
 
 const f = ts.factory;
 

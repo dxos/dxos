@@ -36,20 +36,20 @@ import { Annotation } from '@dxos/echo';
 import type { SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type ProcessIdGenerator, UUIDProcessIdGenerator } from './process-id';
-import { ProcessManagerService } from './process-manager-service';
-import { type PersistedProcess, ProcessStore } from './process-store';
-import { createProcessTraceService } from './process-trace';
-import * as ProcessHandle from './ProcessHandle';
-import * as ProcessOperationInvoker from './ProcessOperationInvoker';
-import { layer as storageServiceLayer } from './storage-service-layer';
+import { type ProcessIdGenerator, UUIDProcessIdGenerator } from './process-id.ts';
+import { ProcessManagerService } from './process-manager-service.ts';
+import { type PersistedProcess, ProcessStore } from './process-store.ts';
+import { createProcessTraceService } from './process-trace.ts';
+import * as ProcessHandle from './ProcessHandle.ts';
+import * as ProcessOperationInvoker from './ProcessOperationInvoker.ts';
+import { layer as storageServiceLayer } from './storage-service-layer.ts';
 
 export {
   type ProcessIdGenerator,
   SequentialProcessIdGenerator as SequentialIdGenerator,
   SequentialProcessIdGenerator,
   UUIDProcessIdGenerator,
-} from './process-id';
+} from './process-id.ts';
 
 export { ProcessOperationInvoker };
 
@@ -636,7 +636,7 @@ export class ProcessManagerImpl implements Manager {
         setAlarm: (dueAt: number | null) => this.#store.setAlarm(id, dueAt),
         setState: (state: Process.State) => this.#store.setState(id, state),
         removeEvent: (seq: number) => this.#store.removeEvent(id, seq),
-        appendEvent: (event: import('./process-store').PersistedEventInput) => this.#store.appendEvent(id, event),
+        appendEvent: (event: import('./process-store.ts').PersistedEventInput) => this.#store.appendEvent(id, event),
         deleteRecord: () => this.#store.deleteProcess(id),
       };
 
@@ -839,7 +839,7 @@ export class ProcessManagerImpl implements Manager {
         setAlarm: (dueAt: number | null) => this.#store.setAlarm(id, dueAt),
         setState: (state: Process.State) => this.#store.setState(id, state),
         removeEvent: (seq: number) => this.#store.removeEvent(id, seq),
-        appendEvent: (event: import('./process-store').PersistedEventInput) => this.#store.appendEvent(id, event),
+        appendEvent: (event: import('./process-store.ts').PersistedEventInput) => this.#store.appendEvent(id, event),
         deleteRecord: () => this.#store.deleteProcess(id),
       };
 

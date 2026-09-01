@@ -12,7 +12,12 @@ import { EffectEx } from '@dxos/effect';
 import { EntityId } from '@dxos/keys';
 import { Message } from '@dxos/types';
 
-import { buildMailboxSelection, buildSystemTagSelection, buildThreadSemiJoin, getSearchText } from './mailbox-search';
+import {
+  buildMailboxSelection,
+  buildSystemTagSelection,
+  buildThreadSemiJoin,
+  getSearchText,
+} from './mailbox-search.ts';
 
 const TAG_MAP = { 'tag:work': Tag.make({ label: 'work' }), 'tag:urgent': Tag.make({ label: 'urgent' }) };
 

@@ -7,7 +7,7 @@ import React from 'react';
 import type { NetworkStatus } from '@dxos/client/mesh';
 import { ConnectionState } from '@dxos/network-manager';
 
-import { type CustomPanelProps, Panel } from '../Panel';
+import { type CustomPanelProps, Panel } from '../Panel.tsx';
 
 export const NetworkPanel = ({ network, ...props }: CustomPanelProps<{ network?: NetworkStatus }>) => {
   const swarmCount = network?.connectionInfo?.length ?? 0;

@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { runServiceCall, subscribeStream } from '@dxos/protocols';
 import { ConnectionState, type NetworkStatus } from '@dxos/protocols/proto/dxos/client/services';
 
-import { RPC_TIMEOUT } from '../common';
+import { RPC_TIMEOUT } from '../common.ts';
 
 /**
  * Public API for MESH services.

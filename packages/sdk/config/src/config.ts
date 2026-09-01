@@ -10,7 +10,7 @@ import { InvalidConfigError } from '@dxos/protocols';
 import { type Config as ConfigProto, ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { getDeep, setDeep } from '@dxos/util';
 
-import { type ConfigInit, type ConfigKey, type DeepIndex, type ParseKey } from './types';
+import { type ConfigInit, type ConfigKey, type DeepIndex, type ParseKey } from './types.ts';
 
 type MappingSpec = Record<string, { path: string; type?: string }>;
 

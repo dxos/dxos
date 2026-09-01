@@ -2,6 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export { createSyntaxScope } from './SyntaxContext';
+export { createSyntaxScope } from './SyntaxContext.ts';
 
-export * from './Syntax';
+export * from './Syntax.tsx';

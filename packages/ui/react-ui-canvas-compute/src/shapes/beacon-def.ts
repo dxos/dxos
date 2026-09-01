@@ -7,8 +7,8 @@ import * as Struct from 'effect/Struct';
 
 import { type ShapeDef, createAnchorMap } from '@dxos/react-ui-canvas-editor';
 
-import { BeaconComponent } from './Beacon';
-import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs';
+import { BeaconComponent } from './Beacon.tsx';
+import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs.ts';
 
 // Kept out of `Beacon.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on every edit.

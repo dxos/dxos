@@ -23,7 +23,7 @@ import {
   type MarkdownEditorEditorRootProps,
   MarkdownEditorProvider,
   type MarkdownEditorProviderProps,
-} from './MarkdownEditor';
+} from './MarkdownEditor.tsx';
 
 const CONTENT = [
   '# Markdown editor',

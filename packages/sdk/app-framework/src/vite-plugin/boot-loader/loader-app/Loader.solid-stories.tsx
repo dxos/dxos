@@ -7,8 +7,8 @@ import './boot-loader.css';
 import { onCleanup, onMount } from 'solid-js';
 import { type Meta, type StoryObj } from 'storybook-solidjs-vite';
 
-import { Loader } from './Loader';
-import { createLoaderStore } from './store';
+import { Loader } from './Loader.tsx';
+import { createLoaderStore } from './store.ts';
 
 /**
  * The boot loader, mounted from the same component the inlined bundle uses, so the two cannot drift.

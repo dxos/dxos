@@ -10,8 +10,8 @@ import { Column, Icon, IconBlock, IconButton, Panel, ScrollArea, type ThemedClas
 import { type ActionGraphProps, Menu, useMenuBuilder } from '@dxos/react-ui-menu';
 import { getStyles, mx } from '@dxos/ui-theme';
 
-import { Empty } from '../Empty';
-import { OrderedList } from '../OrderedList';
+import { Empty } from '../Empty/index.ts';
+import { OrderedList } from '../OrderedList/index.ts';
 
 // Presentation-only master-detail layout: a selectable list (master) above a single detail pane, with
 // an optional empty state. The parent owns the detail content (the selected item's form/preview) and

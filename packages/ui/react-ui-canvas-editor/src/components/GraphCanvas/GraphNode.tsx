@@ -9,8 +9,8 @@ import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { mx } from '@dxos/ui-theme';
 
-import { useEditorContext } from '../../hooks';
-import { type Polygon } from '../../types';
+import { useEditorContext } from '../../hooks/index.ts';
+import { type Polygon } from '../../types/index.ts';
 
 export type GraphNodeProps = NodeProps<Node<Polygon>>;
 

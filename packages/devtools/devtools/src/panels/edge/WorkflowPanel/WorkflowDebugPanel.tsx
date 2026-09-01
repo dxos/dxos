@@ -26,7 +26,7 @@ import { Avatar, Input, type ThemedClassName, Toolbar, useAsyncEffect } from '@d
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
-import { useDevtoolsState } from '../../../hooks';
+import { useDevtoolsState } from '../../../hooks/index.ts';
 
 // TODO: reconcile with DebugPanel in ScriptPlugin
 

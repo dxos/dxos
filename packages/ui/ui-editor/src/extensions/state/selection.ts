@@ -10,7 +10,7 @@ import * as Struct from 'effect/Struct';
 import { debounce } from '@dxos/async';
 import { isTruthy } from '@dxos/util';
 
-import { singleValueFacet } from '../../util';
+import { singleValueFacet } from '../../util/index.ts';
 
 /**
  * Currently edited document id as FQ string.

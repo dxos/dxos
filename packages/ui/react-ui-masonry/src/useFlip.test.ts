@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { shouldAnimateReflow } from './useFlip';
+import { shouldAnimateReflow } from './useFlip.ts';
 
 describe('shouldAnimateReflow', () => {
   test('animates a small add', ({ expect }) => {

@@ -11,7 +11,7 @@ import React, { type ComponentProps, type ForwardRefExoticComponent, forwardRef 
 
 import { useId } from '@dxos/react-hooks';
 
-import { LIST_NAME, type ListScopedProps, useListContext } from './ListContext';
+import { LIST_NAME, type ListScopedProps, useListContext } from './ListContext.ts';
 import {
   LIST_ITEM_NAME,
   type ListItemElement,
@@ -20,7 +20,7 @@ import {
   ListItemProvider,
   type ListItemScopedProps,
   useListItemContext,
-} from './ListItemContext';
+} from './ListItemContext.ts';
 
 const ListItemHeading = forwardRef<HTMLDivElement, ListItemHeadingProps>(
   ({ children, asChild, __listItemScope, ...props }, forwardedRef) => {

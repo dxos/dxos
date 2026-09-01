@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './useAppGraph';
-export * from './useActiveSpace';
-export * from './useHomeVisibility';
-export * from './useLayout';
-export * from './useObjectMenuItems';
-export * from './usePluginRegistryAvailable';
-export * from './useProgressMonitor';
-export * from './useSchemaFilter';
-export * from './useSettingsSpace';
-export * from './useShowItem';
-export * from './useTypeOptions';
+export * from './useAppGraph.ts';
+export * from './useActiveSpace.ts';
+export * from './useHomeVisibility.ts';
+export * from './useLayout.ts';
+export * from './useObjectMenuItems.ts';
+export * from './usePluginRegistryAvailable.ts';
+export * from './useProgressMonitor.ts';
+export * from './useSchemaFilter.ts';
+export * from './useSettingsSpace.ts';
+export * from './useShowItem.ts';
+export * from './useTypeOptions.ts';

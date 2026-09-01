@@ -16,7 +16,7 @@ import { print, waitForSync } from '@dxos/cli-util';
 import { FormBuilder } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 
-import { acceptInvitation } from './util';
+import { acceptInvitation } from './util.ts';
 
 export const handler = Effect.fn(function* ({
   invitationCode,

@@ -7,7 +7,7 @@ import { type Config } from '@dxos/config';
 import { SystemService } from '@dxos/protocols/rpc';
 import { type JsonKeyOptions, jsonKeyReplacer } from '@dxos/util';
 
-import { createCollectDiagnosticsBroadcastSender } from './diagnostics-broadcast';
+import { createCollectDiagnosticsBroadcastSender } from './diagnostics-broadcast.ts';
 
 const GET_DIAGNOSTICS_RPC_TIMEOUT = 10_000;
 

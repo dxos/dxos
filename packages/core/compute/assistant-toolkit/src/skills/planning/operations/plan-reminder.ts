@@ -12,8 +12,8 @@ import * as Operation from '@dxos/compute/Operation';
 import { ContentBlock } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { Chat } from '../../../types';
-import { PlanReminder } from './definitions';
+import { Chat } from '../../../types/index.ts';
+import { PlanReminder } from './definitions.ts';
 
 /**
  * End-request hook for the planning skill. When the conversation's checklist still has

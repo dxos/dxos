@@ -10,7 +10,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx, osTranslations } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
-import { OrderedList } from './OrderedList';
+import { OrderedList } from './OrderedList.tsx';
 
 type Item = { id: string; label: string };
 

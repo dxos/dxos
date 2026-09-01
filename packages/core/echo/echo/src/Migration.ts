@@ -8,10 +8,10 @@ import type * as Schema from 'effect/Schema';
 
 import { DXN, type URI } from '@dxos/keys';
 
-import type * as Database from './Database';
-import type * as Entity from './Entity';
-import { type EntityMeta, MetaId, getSchemaURI } from './internal';
-import * as Type from './Type';
+import type * as Database from './Database.ts';
+import type * as Entity from './Entity.ts';
+import { type EntityMeta, MetaId, getSchemaURI } from './internal/index.ts';
+import * as Type from './Type.ts';
 
 export const TypeId = '~@dxos/echo/Migration' as const;
 export type TypeId = typeof TypeId;

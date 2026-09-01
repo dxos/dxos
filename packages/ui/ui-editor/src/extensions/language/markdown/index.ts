@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './action';
-export * from './bundle';
-export * from './debug';
-export * from './decorate';
-export * from './formatting';
-export * from './highlight';
-export * from './image';
-export * from './link';
-export * from './substitutions';
-export * from './table';
+export * from './action.ts';
+export * from './bundle.ts';
+export * from './debug.ts';
+export * from './decorate.ts';
+export * from './formatting.ts';
+export * from './highlight.ts';
+export * from './image.ts';
+export * from './link.ts';
+export * from './substitutions.ts';
+export * from './table.ts';

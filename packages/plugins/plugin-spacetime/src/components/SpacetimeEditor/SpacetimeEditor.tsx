@@ -24,10 +24,10 @@ import { composable, composableProps } from '@dxos/react-ui';
 
 import { Scene } from '#types';
 
-import { DEFAULT_EDITOR_STATE, type EditorState, getSelectedObjectIds } from '../../tools';
-import { SpacetimeCanvas, type SpacetimeCanvasProps } from '../SpacetimeCanvas';
-import { type EditorActions, SpacetimeToolbar, type SpacetimeToolbarProps } from '../SpacetimeToolbar';
-import { handleExport as doExport, handleImport as doImport } from './import-export';
+import { DEFAULT_EDITOR_STATE, type EditorState, getSelectedObjectIds } from '../../tools/index.ts';
+import { SpacetimeCanvas, type SpacetimeCanvasProps } from '../SpacetimeCanvas/index.ts';
+import { type EditorActions, SpacetimeToolbar, type SpacetimeToolbarProps } from '../SpacetimeToolbar/index.ts';
+import { handleExport as doExport, handleImport as doImport } from './import-export.ts';
 
 //
 // Context

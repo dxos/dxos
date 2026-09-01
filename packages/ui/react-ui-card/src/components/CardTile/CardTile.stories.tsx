@@ -10,7 +10,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { CardTile } from './CardTile';
+import { CardTile } from './CardTile.tsx';
 
 // CardTile.Header standalone inside Card chrome; CardTile.Root's mosaic shell is exercised by the
 // EventStack / InboxStack stories (it requires a Mosaic.Container ancestor).

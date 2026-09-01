@@ -10,7 +10,7 @@ import * as Command from 'effect/unstable/cli/Command';
 import { CommandConfig } from '@dxos/cli-util';
 import { type InspectIdentityResponse, type LegacyInspectIdentityResponse } from '@dxos/protocols';
 
-import { adminRequest, formatAdminError, readIdentityDid } from '../util';
+import { adminRequest, formatAdminError, readIdentityDid } from '../util.ts';
 
 export const inspect = Command.make(
   'inspect',

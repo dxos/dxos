@@ -7,7 +7,7 @@ import { type RandomAccessStorage } from 'random-access-storage';
 
 import { invariant } from '@dxos/invariant';
 
-import { AbstractStorage, StorageType, getFullPath, wrapFile } from '../common';
+import { AbstractStorage, StorageType, getFullPath, wrapFile } from '../common/index.ts';
 
 const DELIM = '\0';
 /**

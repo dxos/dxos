@@ -6,10 +6,10 @@ import { getIndentUnit } from '@codemirror/language';
 import { type ChangeSpec, EditorSelection, type EditorState, type Extension } from '@codemirror/state';
 import { type Command, type EditorView, keymap } from '@codemirror/view';
 
-import { escapeLinkLabel } from '../../language/markdown';
-import { blockSelectionField, setBlockSelection } from '../blocks';
-import { mergeRanges, selectAllItems, selectDown, selectNoneItems, selectUp } from './dnd';
-import { type Item, getRange, treeFacet } from './tree';
+import { escapeLinkLabel } from '../../language/markdown/index.ts';
+import { blockSelectionField, setBlockSelection } from '../blocks/index.ts';
+import { mergeRanges, selectAllItems, selectDown, selectNoneItems, selectUp } from './dnd.ts';
+import { type Item, getRange, treeFacet } from './tree.ts';
 
 //
 // Menu / action scope.

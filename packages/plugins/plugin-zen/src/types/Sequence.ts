@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { PublicKey } from '@dxos/keys';
 
-import { BinauralConfigSchema, DEFAULT_CONFIG } from '../generator';
+import { BinauralConfigSchema, DEFAULT_CONFIG } from '../generator/index.ts';
 
 export const SAMPLE_NAMES: string[] = ['fireplace', 'ocean', 'rain', 'stream', 'thunder', 'gong-1', 'gong-2'];
 

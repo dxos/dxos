@@ -22,9 +22,9 @@ import {
   type IntroductionRequest,
 } from '@dxos/protocols/proto/dxos/halo/invitations';
 
-import { type DataSpaceManager, type SigningContext } from '../spaces';
-import { type InvitationProtocol } from './invitation-protocol';
-import { computeExpirationTime } from './utils';
+import { type DataSpaceManager, type SigningContext } from '../spaces/index.ts';
+import { type InvitationProtocol } from './invitation-protocol.ts';
+import { computeExpirationTime } from './utils.ts';
 
 export class SpaceInvitationProtocol implements InvitationProtocol {
   constructor(

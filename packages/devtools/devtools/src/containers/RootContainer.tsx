@@ -9,7 +9,7 @@ import { DeviceKind, useDevices, useIdentity } from '@dxos/react-client/halo';
 import { ErrorBoundary, Icon, ScrollArea } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { useSections } from '../hooks';
+import { useSections } from '../hooks/index.ts';
 
 export const RootContainer = () => {
   const { pathname } = useLocation();

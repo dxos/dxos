@@ -21,8 +21,8 @@ import { type DiscordPresence } from '#hooks';
 import { meta } from '#meta';
 import { SupportOperation } from '#types';
 
-import { AreaSelectField } from './AreaSelectField';
-import type { FeedbackPluginOption } from './types';
+import { AreaSelectField } from './AreaSelectField.tsx';
+import type { FeedbackPluginOption } from './types.ts';
 
 const FEEDBACK_FORM = 'FeedbackForm';
 

@@ -4,9 +4,9 @@
 
 import { type MakeOptional } from '@dxos/util';
 
-import { type ShapeDef } from '../components';
-import { type NoteShape } from '../types';
-import { NoteComponent } from './Note';
+import { type ShapeDef } from '../components/index.ts';
+import { type NoteShape } from '../types/index.ts';
+import { NoteComponent } from './Note.tsx';
 
 // Kept out of `Note.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so the factory and shape def exported beside one force a full page reload on every edit.

@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './analytics';
-export * from './suggestion-sources';
-export * from './useMarkdownEditorBinding';
-export * from './useReviewExtensions';
-export * from './useStatus';
-export * from './useVersionedEditor';
-export * from './useVersioning';
+export * from './analytics.ts';
+export * from './suggestion-sources.ts';
+export * from './useMarkdownEditorBinding.tsx';
+export * from './useReviewExtensions.ts';
+export * from './useStatus.ts';
+export * from './useVersionedEditor.ts';
+export * from './useVersioning.ts';

@@ -10,7 +10,7 @@ import * as Operation from '@dxos/compute/Operation';
 
 import { Account } from '#types';
 
-import { OpenUsage } from './definitions';
+import { OpenUsage } from './definitions.ts';
 
 const handler: Operation.WithHandler<typeof OpenUsage> = OpenUsage.pipe(
   Operation.withHandler(

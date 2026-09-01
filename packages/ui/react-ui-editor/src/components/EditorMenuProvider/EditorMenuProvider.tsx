@@ -31,7 +31,7 @@ import {
 
 import { translationKey } from '#translations';
 
-import { type EditorMenuGroup, type EditorMenuItem, getMenuItem } from './menu';
+import { type EditorMenuGroup, type EditorMenuItem, getMenuItem } from './menu.ts';
 
 export type EditorMenuProviderProps = PropsWithChildren<{
   // Provided as a getter (not a value prop) so the live `EditorView` is never carried in a React prop that

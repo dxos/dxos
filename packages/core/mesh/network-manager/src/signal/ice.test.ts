@@ -8,7 +8,7 @@ import { afterEach, describe, expect, test } from 'vitest';
 
 import { Runtime_Services_IceProviderSchema } from '@dxos/protocols/buf/dxos/config_pb';
 
-import { createIceProvider } from './ice';
+import { createIceProvider } from './ice.ts';
 
 describe('Ice', () => {
   const providerUrl = 'http://localhost:8787/ice';

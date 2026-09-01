@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { type LogConfig, type LogEntry, LogLevel } from '@dxos/log';
 
-import { IdbLogStore } from './idb-log-store';
+import { IdbLogStore } from './idb-log-store.ts';
 
 const fakeConfig = {} as LogConfig;
 

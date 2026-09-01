@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import * as Query from './Query';
+import * as Query from './Query.ts';
 
 describe('evalQuery', () => {
   test('should evaluate a query string', () => {

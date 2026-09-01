@@ -10,7 +10,7 @@ import { TestSchema } from '@dxos/echo/testing';
 import { EID } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 
-import { EchoTestBuilder } from './echo-test-builder';
+import { EchoTestBuilder } from './echo-test-builder.ts';
 
 describe('feeds', () => {
   let builder: EchoTestBuilder;

@@ -16,7 +16,7 @@ import React, {
 import '@dxos/lit-grid/dx-grid.pcss';
 import { type DxAxisResize, type DxEditRequest, type DxGridCellsSelect, DxGrid as NaturalDxGrid } from '@dxos/lit-grid';
 
-import { GRID_NAME, GridProvider, type GridScopedProps, useGridContext } from './GridContext';
+import { GRID_NAME, GridProvider, type GridScopedProps, useGridContext } from './GridContext.ts';
 
 type DxGridElement = NaturalDxGrid;
 

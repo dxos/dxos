@@ -14,9 +14,9 @@ import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type DataService } from '@dxos/protocols/rpc';
 
-import { type AutomergeHost, type DocumentLease, deriveCollectionIdFromSpaceId } from '../automerge';
-import { DocumentsSynchronizer } from './documents-synchronizer';
-import { type SpaceStateManager } from './space-state-manager';
+import { type AutomergeHost, type DocumentLease, deriveCollectionIdFromSpaceId } from '../automerge/index.ts';
+import { DocumentsSynchronizer } from './documents-synchronizer.ts';
+import { type SpaceStateManager } from './space-state-manager.ts';
 
 export type DataServiceProps = {
   automergeHost: AutomergeHost;

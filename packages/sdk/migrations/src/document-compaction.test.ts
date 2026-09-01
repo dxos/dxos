@@ -12,7 +12,7 @@ import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 
-import { compactDocumentsEpochMigration } from './document-compaction';
+import { compactDocumentsEpochMigration } from './document-compaction.ts';
 
 describe('document compaction', () => {
   test('compacts linked documents and creates a new epoch', async () => {

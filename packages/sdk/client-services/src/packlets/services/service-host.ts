@@ -80,24 +80,24 @@ import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { trace as Trace } from '@dxos/tracing';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
-import { type EdgeAgentManager, EdgeAgentManagerService } from '../agents';
-import { DevtoolsHostEvents, DevtoolsServiceImpl } from '../devtools';
+import { type EdgeAgentManager, EdgeAgentManagerService } from '../agents/index.ts';
+import { DevtoolsHostEvents, DevtoolsServiceImpl } from '../devtools/index.ts';
 import {
   type CollectDiagnosticsBroadcastHandler,
   createCollectDiagnosticsBroadcastHandler,
   createDiagnostics,
-} from '../diagnostics';
+} from '../diagnostics/index.ts';
+import {
+  type EdgeIdentityRecoveryManager,
+  EdgeIdentityRecoveryManagerService,
+} from '../identity/identity-recovery-manager.ts';
 import {
   type CreateIdentityOptions,
   type Identity,
   type IdentityManager,
   IdentityManagerService,
   type JoinIdentityProps,
-} from '../identity';
-import {
-  type EdgeIdentityRecoveryManager,
-  EdgeIdentityRecoveryManagerService,
-} from '../identity/identity-recovery-manager';
+} from '../identity/index.ts';
 import {
   DeviceInvitationProtocol,
   type InvitationProtocol,
@@ -106,30 +106,30 @@ import {
   type InvitationsManager,
   InvitationsManagerService,
   SpaceInvitationProtocol,
-} from '../invitations';
-import { Lock, type ResourceLock } from '../locks';
-import { LoggingServiceImpl } from '../logging';
-import { type IMetadataStore, IMetadataStoreService } from '../metadata';
-import { type SpaceManager, SpaceManagerService } from '../space';
+} from '../invitations/index.ts';
+import { Lock, type ResourceLock } from '../locks/index.ts';
+import { LoggingServiceImpl } from '../logging/index.ts';
+import { type IMetadataStore, IMetadataStoreService } from '../metadata/index.ts';
+import { type SpaceManager, SpaceManagerService } from '../space/index.ts';
 import {
   type DataSpaceManager,
   DataSpaceManagerService,
   type SigningContextProvider,
   SigningContextProviderService,
-} from '../spaces';
-import { SystemServiceImpl } from '../system';
-import { type ClientServicesRpcContext, ClientServicesRpcLayer } from './client-services-layer';
+} from '../spaces/index.ts';
+import { SystemServiceImpl } from '../system/index.ts';
+import { type ClientServicesRpcContext, ClientServicesRpcLayer } from './client-services-layer.ts';
 import {
   type CrossDeviceSpaceSynchronizer,
   CrossDeviceSpaceSynchronizerService,
-} from './cross-device-space-synchronizer';
-import { type FeedSyncer, FeedSyncerService } from './feed-syncer';
+} from './cross-device-space-synchronizer.ts';
+import { type FeedSyncer, FeedSyncerService } from './feed-syncer.ts';
 import {
   ServiceContextLayer,
   type ServiceContextRuntimeProps,
   type ServiceContextStackContext,
   StorageMigrationService,
-} from './service-context';
+} from './service-context.ts';
 
 export type ClientServicesHostProps = {
   /**

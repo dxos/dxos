@@ -13,8 +13,8 @@ import { Message } from '@dxos/types';
 
 import { createSyncProgressKey } from '#sync';
 
-import * as InboxOperation from './InboxOperation';
-import * as Mailbox from './Mailbox';
+import * as InboxOperation from './InboxOperation.ts';
+import * as Mailbox from './Mailbox.ts';
 
 describe('progress keys', () => {
   let builder: EchoTestBuilder;

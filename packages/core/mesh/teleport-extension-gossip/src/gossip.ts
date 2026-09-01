@@ -10,7 +10,7 @@ import { RpcClosedError, TimeoutError } from '@dxos/protocols';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
-import { GossipExtension } from './gossip-extension';
+import { GossipExtension } from './gossip-extension.ts';
 
 export type GossipProps = {
   localPeerId: PublicKey;

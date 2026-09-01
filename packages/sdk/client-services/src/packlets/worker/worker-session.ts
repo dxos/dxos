@@ -14,7 +14,7 @@ import { type BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { type WorkerService } from '@dxos/protocols/rpc';
 import { Callback, type MaybePromise } from '@dxos/util';
 
-import { type ClientServicesHost } from '../services';
+import { type ClientServicesHost } from '../services/index.ts';
 
 export type WorkerSessionProps = {
   serviceHost: ClientServicesHost;

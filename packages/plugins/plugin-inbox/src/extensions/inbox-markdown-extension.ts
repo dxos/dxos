@@ -5,8 +5,8 @@
 import { EditorView, type Extension, decorateMarkdown } from '@dxos/ui-editor';
 import { isTruthy } from '@dxos/util';
 
-import { hideImages } from './hide-images-extension';
-import { type Pattern, replacePatterns } from './replace-patterns-extension';
+import { hideImages } from './hide-images-extension.ts';
+import { type Pattern, replacePatterns } from './replace-patterns-extension.ts';
 
 // Permissive PSTN dial-in: `+` then digits/separators, `,,` pause, conference digits, `#`.
 const DIAL_IN = String.raw`\+[\d][\d\s\-()]*,,[\d]+#`;

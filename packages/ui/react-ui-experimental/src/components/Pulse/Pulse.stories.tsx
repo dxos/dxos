@@ -8,7 +8,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Button, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Pulse, type PulseProps, type PulseSignal } from './Pulse';
+import { Pulse, type PulseProps, type PulseSignal } from './Pulse.tsx';
 
 type StoryArgs = PulseProps & { interval?: number };
 

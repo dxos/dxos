@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { Event, sleep } from '@dxos/async';
 import { range } from '@dxos/util';
 
-import { TestBuilder, createReplicatorPair } from './testing';
+import { TestBuilder, createReplicatorPair } from './testing.ts';
 
 describe('ReplicatorExtension', () => {
   test('replicates a feed', async () => {

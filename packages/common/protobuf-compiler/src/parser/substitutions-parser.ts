@@ -5,7 +5,7 @@
 import * as ts from '@typescript/typescript6';
 import { Project, type Symbol, type TypeChecker } from 'ts-morph';
 
-import { type ModuleSpecifier } from '../module-specifier';
+import { type ModuleSpecifier } from '../module-specifier.ts';
 
 export interface ImportDescriptor {
   clause: ts.ImportClause;

@@ -9,9 +9,9 @@ import { Feed, Obj } from '@dxos/echo';
 
 import { Ibkr, IbkrOperation } from '#types';
 
-import { IbkrImportError } from '../errors';
-import { parseCash, parsePositions, parseTrades } from '../services';
-import { getOrCreatePortfolioFeed } from './feed';
+import { IbkrImportError } from '../errors.ts';
+import { parseCash, parsePositions, parseTrades } from '../services/index.ts';
+import { getOrCreatePortfolioFeed } from './feed.ts';
 
 const handler: Operation.WithHandler<typeof IbkrOperation.ImportPortfolioReport> =
   IbkrOperation.ImportPortfolioReport.pipe(

@@ -22,7 +22,7 @@ import { Position } from '@dxos/util';
 import { meta } from '#meta';
 import { Vocabulary } from '#types';
 
-import { getVocabulariesPath } from '../paths';
+import { getVocabulariesPath } from '../paths.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './benchmark';
-export * from './capture';
-export * from './instrument';
-export * from './metrics';
+export * from './benchmark.ts';
+export * from './capture.ts';
+export * from './instrument.ts';
+export * from './metrics.ts';

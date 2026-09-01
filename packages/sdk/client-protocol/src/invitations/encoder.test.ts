@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
-import { InvitationEncoder } from './encoder';
+import { InvitationEncoder } from './encoder.ts';
 
 const CREATED = new Date(1739956589 * 1000);
 

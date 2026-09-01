@@ -13,8 +13,8 @@ import { Surface, useCapabilities, useOperationInvoker, usePluginManager } from 
 import { EffectEx } from '@dxos/effect';
 import { Button } from '@dxos/react-ui';
 
-import { PlaygroundRoles } from '../roles';
-import { Number, createAlertOperation, createPluginId } from './generator';
+import { PlaygroundRoles } from '../roles.ts';
+import { Number, createAlertOperation, createPluginId } from './generator.ts';
 
 export const Toolbar = () => {
   const manager = usePluginManager();
