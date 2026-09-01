@@ -127,6 +127,8 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
             }
             // The trace records a command when it *starts*, so a bare error reads as the command
             // after the failing one — an off-by-one that has already produced a wrong diagnosis.
+            // Recording the failure in the trace itself keeps later analysis of the artifact honest.
+            trace({ event: 'failed', seq: real.counters.commands, command: describe(command) });
             throw new Error(`command ${real.counters.commands} ${describe(command)} failed`, { cause: err });
           }
         }
