@@ -230,7 +230,9 @@ const DisclosureStory = () => {
                   />
                 </button>
                 {expanded && (
-                  <div {...panelProps} className='ps-[var(--dx-rail-item)] px-3 pb-2 text-sm text-description'>
+                  // `ps-10` = the header's `px-3` + the icon's `size-5` + its `gap-2`, so the
+                  // description starts under the title rather than under the icon.
+                  <div {...panelProps} className='ps-10 pe-3 pb-2 text-sm text-description'>
                     {item.description}
                   </div>
                 )}

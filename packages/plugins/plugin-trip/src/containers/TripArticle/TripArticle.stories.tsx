@@ -5,6 +5,7 @@
 import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useEffect } from 'react';
+import { expect, waitFor } from 'storybook/test';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
@@ -314,6 +315,13 @@ export const Default: Story = {
     segments.forEach((segment: Segment.Segment) => space.db.add(segment));
     space.db.add(trip);
   }),
+  // The seed used to throw before `build()` — `airline.code` is not a `Provider` field — so nothing
+  // was ever added and the article sat on its loading state. Asserting a segment renders is what
+  // catches that; the render-only smoke test did not, because the throw was swallowed by the
+  // client-initialization Effect.
+  play: async ({ canvasElement }) => {
+    await waitFor(() => expect(canvasElement.textContent).toContain('AF 023'), { timeout: 20_000 });
+  },
 };
 
 // A multi-city driving route (London → Avignon → Barcelona) pre-planned with the deterministic fake

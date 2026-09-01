@@ -443,7 +443,9 @@ const CarouselIndicators = ({ classNames }: CarouselIndicatorsProps) => {
             key={i}
             role='tab'
             aria-selected={i === index}
-            classNames={mx(i === index ? 'text-primary-500' : 'text-description')}
+            // `dx-focus-ring-none`: focusing a dot selects its slide (`onFocus` below), so the fill
+            // already tracks focus — the ring on top of it is noise rather than the only indicator.
+            classNames={mx('dx-focus-ring-none', i === index ? 'text-primary-500' : 'text-description')}
             variant='ghost'
             density='sm'
             size={3}

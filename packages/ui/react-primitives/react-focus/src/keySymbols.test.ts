@@ -4,17 +4,18 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { keySymbols } from './keySymbols';
+import { SEQUENCE_SYMBOL, keySymbols } from './keySymbols';
 
 describe('keySymbols', () => {
   test('splits a chord into one cap per key', () => {
     expect(keySymbols('shift+meta+k')).toHaveLength(3);
   });
 
-  test('splits a sequence, so it does not render as a single cap', () => {
-    // Zag accepts `g > h`; left whole it would render as one key reading `G > H`.
-    expect(keySymbols('g > h')).toEqual(['G', 'H']);
-    expect(keySymbols('meta+k > p')).toHaveLength(3);
+  test('splits a sequence and keeps its boundary', () => {
+    // Zag accepts `g > h`. Left whole it renders as one cap reading `G > H`; split without the
+    // separator it renders as `GH`, since the command palette joins the caps with no delimiter.
+    expect(keySymbols('g > h')).toEqual(['G', SEQUENCE_SYMBOL, 'H']);
+    expect(keySymbols('meta+k > p').join('')).toContain(SEQUENCE_SYMBOL);
   });
 
   test('names the special keys', () => {
