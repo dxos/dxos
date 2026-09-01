@@ -13,6 +13,10 @@ import { trim } from '@dxos/util';
 import { assistantRegistry } from './registry';
 import { translations } from './translations';
 
+// Shared across stories: the store is the thread's, not an item's — a widget's state has to survive
+// the item unmounting as the reader scrolls past it.
+const store = createWidgetStateStore();
+
 /**
  * Every tag {@link assistantRegistry} registers, rendered through the shipping path: the document
  * the renderer emits, in the feed's own `MarkdownBlock` — the container a thread mounts per
@@ -22,10 +26,6 @@ import { translations } from './translations';
 type StoryArgs = {
   content: string;
 };
-
-// Shared across stories: the store is the thread's, not an item's — a widget's state has to survive
-// the item unmounting as the reader scrolls past it.
-const store = createWidgetStateStore();
 
 // Stands in for the query container a thread gets from `Column.Center`, so `cqi` is not the viewport.
 const DefaultStory = ({ content }: StoryArgs) => (

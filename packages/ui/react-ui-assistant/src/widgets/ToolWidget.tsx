@@ -290,9 +290,11 @@ const ToolSection = ({ label, data }: { label: string; data: unknown }) => (
     </div>
     <JsonHighlighter
       data={data}
-      // The payload is the scroll container: a long line must not scroll the whole widget, which
-      // would carry the summary row out of view with it.
-      classNames='text-xs bg-transparent overflow-x-auto'
+      // Scrolls on the inline axis only. The payload is the scroll container for a long line — it
+      // must not scroll the whole widget and carry the summary row out of view — but the block axis
+      // has to stay unscrollable: `JsonHighlighter` defaults to `overflow-auto`, so while the
+      // disclosure's height ramps the squeezed payload drew its own vertical scrollbar.
+      classNames='text-xs bg-transparent overflow-x-auto overflow-y-hidden'
       replacer={{ maxDepth: 3, maxArrayLen: 10, maxStringLen: 128 }}
     />
   </div>
