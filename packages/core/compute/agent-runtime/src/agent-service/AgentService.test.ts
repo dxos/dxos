@@ -605,10 +605,10 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
           Option.getOrNull(Annotation.getDictionary(handle.params.annotations, Process.HarnessHostAnnotation)),
         ).toBe(true);
 
-        // A Tier-B caller reaches the live AlarmManager over the process RPC loopback. The handler
-        // runs on the host's server fiber against the real closed-over AlarmManager; a successful
-        // void result proves the control-plane wiring end-to-end (persistence semantics are covered
-        // by the AlarmManager unit tests).
+        // A Tier-B caller reaches the live host over the process RPC loopback. The handler runs on
+        // the host's server fiber and appends an Alarm record to the feed; a successful void result
+        // proves the control-plane wiring end-to-end (persistence semantics are covered by the
+        // SessionStore tests).
         const now = yield* Clock.currentTimeMillis;
         const at = DateTime.makeUnsafe(now + Duration.toMillis(Duration.hours(1)));
         yield* handle.rpc.setAlarm({ at, message: 'finish the report' });

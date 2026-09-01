@@ -5,6 +5,7 @@
 import * as Array from 'effect/Array';
 import * as Order from 'effect/Order';
 
+import { getAck, isQueued } from '@dxos/assistant';
 import { Feed } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
@@ -51,7 +52,11 @@ export const projectThread = ({
   rewindFrom?: string;
 }): ThreadProjection => {
   const all = Array.dedupeWith([...feedMessages, ...pendingMessages], ({ id: a }, { id: b }) => a === b);
-  const sorted = Array.sort(all, byAppendOrder);
+  // A queued original renders while it awaits processing; once a turn acks it, its echo carries the
+  // turn and the original would double the prompt.
+  const acked = new Set(all.map(getAck).filter((id) => id !== undefined));
+  const visible = all.filter((message) => !(isQueued(message) && acked.has(message.id)));
+  const sorted = Array.sort(visible, byAppendOrder);
 
   if (rewindFrom !== undefined) {
     const index = sorted.findIndex((message) => message.id === rewindFrom);
