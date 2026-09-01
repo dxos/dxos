@@ -920,15 +920,16 @@ const PRIORITY_ICONS: Record<string, { icon: string; classNames: string }> = {
 /** Offered in ascending order, with `none` first so clearing is the reachable default. */
 const PRIORITIES: Task.Priority[] = ['none', 'low', 'medium', 'high', 'urgent'];
 
-const NO_PRIORITY_ICON = 'ph--minus--regular';
+const NO_PRIORITY_ICON = 'ph--dot--regular';
 
 /**
  * Priority as a signal-strength glyph rather than a word: the four levels are ordinal, so a ramp
  * reads at a glance where four differently-worded tags do not. `urgent` breaks the ramp deliberately
  * — it is a different kind of statement from "how much", and a filled mark carries that.
  *
- * The glyph is also the control: it opens a menu to set the level. A task with no priority shows
- * nothing until the row is hovered or focused, so an unset list stays quiet but is still settable.
+ * The glyph is also the control: it opens a menu to set the level. It renders on every row —
+ * including one with no priority, which shows a dot — so setting a priority never depends on
+ * discovering a hover affordance.
  */
 const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
   const { t } = useTranslation(translationKey);
@@ -948,7 +949,7 @@ const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
           icon={style?.icon ?? NO_PRIORITY_ICON}
           label={t('task-priority.label')}
           data-testid='taskList.item.priority'
-          classNames={mx(style?.classNames, !style && ROW_ACTION_CLASSNAMES)}
+          classNames={mx(style?.classNames ?? 'text-subdued')}
           // The row is the selection target; opening the menu must not also select it.
           onClick={(event) => event.stopPropagation()}
         />
