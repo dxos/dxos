@@ -9,9 +9,9 @@ import { type OtelMetricRecord, type OtelMetricsSink } from '@dxos/observability
 // Direct module import: the util barrel would pull the whole config/observability graph into
 // this worker's bundle.
 import { LOG_STORE_DB_NAME, LOG_STORE_MAX_BYTES } from '../util/constants';
-import { type TelemetryWorkerMessage } from '../util/worker-log-processor';
+import { type ObservabilityWorkerMessage } from '../util/worker-log-processor';
 
-// Telemetry worker: owns the queue, flush timer, chunked IDB writes and eviction, so log
+// Observability worker: owns the queue, flush timer, chunked IDB writes and eviction, so log
 // persistence never depends on the sending thread's event loop turning (see DX-1224).
 // `WorkerLogProcessor` is the sending side.
 //
@@ -27,7 +27,7 @@ const store = new IdbLogStore({ dbName: LOG_STORE_DB_NAME, maxBytes: LOG_STORE_M
 /** Caps messages buffered while a sink module import is in flight. */
 const MAX_PENDING = 5_000;
 
-const createMessageHandler = (): ((event: MessageEvent<TelemetryWorkerMessage>) => void) => {
+const createMessageHandler = (): ((event: MessageEvent<ObservabilityWorkerMessage>) => void) => {
   let logSink: OtelLogSink | undefined;
   let metricsSink: OtelMetricsSink | undefined;
   // Set when the matching init arrives; each holds messages in arrival order until the
@@ -55,7 +55,7 @@ const createMessageHandler = (): ((event: MessageEvent<TelemetryWorkerMessage>) 
     void metricsSink?.flush().catch(() => {});
   };
 
-  return (event: MessageEvent<TelemetryWorkerMessage>): void => {
+  return (event: MessageEvent<ObservabilityWorkerMessage>): void => {
     const data = event.data;
     // Hot path: a bare string is one pre-serialized JSONL line.
     if (typeof data === 'string') {

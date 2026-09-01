@@ -22,7 +22,7 @@ import { type OtelMetrics } from './metrics';
 import { type OtelMetricsSinkMessage } from './metrics-sink';
 import { RemoteMetricsForwarder } from './remote-metrics';
 
-/** Everything the producing realm posts to the telemetry worker's OTel sinks. */
+/** Everything the producing realm posts to the observability worker's OTel sinks. */
 export type OtelWorkerMessage = OtelLogSinkMessage | OtelMetricsSinkMessage;
 
 export type ExtensionsOptions = {
@@ -39,14 +39,14 @@ export type ExtensionsOptions = {
   /** Minimum log level to export. Defaults to INFO (i.e. info, warn, error). */
   logLevel?: LogLevel;
   /**
-   * When set, OTLP export runs in the telemetry worker instead of this realm: the resolved
+   * When set, OTLP export runs in the observability worker instead of this realm: the resolved
    * options are posted over this handle for the worker to build the sinks, and no local
    * pipelines are installed. Logs ride the JSONL lines the realm's log processor already
    * ships; metric instrument calls are forwarded as messages. Batching and export happen on
    * the worker's own event loop, so export keeps up while this realm is blocked by a long
    * synchronous task.
    */
-  telemetryWorker?: { post: (message: OtelWorkerMessage) => void };
+  observabilityWorker?: { post: (message: OtelWorkerMessage) => void };
   metrics?: boolean;
   traces?: boolean;
 };
@@ -65,7 +65,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   //   - logs should be flushed to the server if user opts to include them in a bug report
   logs: logsEnabled = false,
   logLevel = LogLevel.INFO,
-  telemetryWorker,
+  observabilityWorker,
   metrics: metricsEnabled = false,
   traces: tracesEnabled = false,
 }) {
@@ -136,9 +136,9 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   const sessionId = crypto.randomUUID();
   const { resource, metricsResource } = createResources(baseAttributes, sessionId);
 
-  // Remote takes precedence: with a telemetry worker, the worker owns the whole log pipeline and
+  // Remote takes precedence: with a observability worker, the worker owns the whole log pipeline and
   // this realm installs no processor at all.
-  const remoteLogs = logsEnabled ? telemetryWorker : undefined;
+  const remoteLogs = logsEnabled ? observabilityWorker : undefined;
   const logs =
     logsEnabled && !remoteLogs
       ? new OtelLogs({
@@ -153,9 +153,9 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   // Constructed eagerly (mirroring OtelMetrics, which registers with TRACE_PROCESSOR at
   // construction) but only when telemetry is on — a disabled session forwards nothing.
   const remoteMetrics =
-    metricsEnabled && telemetryWorker && !disabled ? new RemoteMetricsForwarder(telemetryWorker.post) : undefined;
+    metricsEnabled && observabilityWorker && !disabled ? new RemoteMetricsForwarder(observabilityWorker.post) : undefined;
   const metrics =
-    metricsEnabled && !telemetryWorker
+    metricsEnabled && !observabilityWorker
       ? new OtelMetrics({
           endpoint: resolvedEndpoint,
           headers: resolvedHeaders,
@@ -194,7 +194,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
           });
         }
         if (remoteMetrics) {
-          telemetryWorker?.post({
+          observabilityWorker?.post({
             type: 'otel-metrics-init',
             endpoint: resolvedEndpoint,
             headers: resolvedHeaders,
