@@ -49,12 +49,13 @@ export type UseFocusGroupOptions = {
 };
 
 export type UseFocusGroupResult = {
-  ref: (element: HTMLElement | null) => void;
-  onKeyDown: (event: KeyboardEvent<HTMLElement>) => void;
-  onFocus: (event: ReactFocusEvent<HTMLElement>) => void;
   [FOCUS_GROUP_ATTR]?: FocusGroupTabBehavior;
   [FOCUS_MOVER_ATTR]?: FocusGroupAxis;
   [FOCUS_TABBABLE_ATTR]?: '';
+
+  ref: (element: HTMLElement | null) => void;
+  onKeyDown: (event: KeyboardEvent<HTMLElement>) => void;
+  onFocus: (event: ReactFocusEvent<HTMLElement>) => void;
 };
 
 const HORIZONTAL_KEYS = ['ArrowLeft', 'ArrowRight'];
@@ -85,6 +86,7 @@ const contentEntry = (container: HTMLElement): HTMLElement | null => {
   if (current) {
     return isTabbable(current) ? current : getEntryTarget(current);
   }
+
   return findFirstFocusable(container);
 };
 
@@ -97,6 +99,7 @@ const enteredNestedGroup = (container: HTMLElement, target: HTMLElement): HTMLEl
     }
     element = element.parentElement;
   }
+
   return null;
 };
 
@@ -336,12 +339,13 @@ export const useFocusGroup = ({
 
   return useMemo(
     () => ({
-      ref,
-      onKeyDown: handleKeyDown,
-      onFocus: handleFocus,
       ...(tabBehavior && { [FOCUS_GROUP_ATTR]: tabBehavior }),
       ...(axis && { [FOCUS_MOVER_ATTR]: axis }),
       ...(axis && tabbable && { [FOCUS_TABBABLE_ATTR]: '' as const }),
+
+      ref,
+      onKeyDown: handleKeyDown,
+      onFocus: handleFocus,
     }),
     [ref, handleKeyDown, handleFocus, tabBehavior, axis, tabbable],
   );

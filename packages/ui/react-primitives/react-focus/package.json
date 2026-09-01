@@ -24,7 +24,10 @@
     "dist",
     "src"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "@ark-ui/react": "catalog:",
+    "@dxos/util": "workspace:*"
+  },
   "devDependencies": {
     "@testing-library/react": "catalog:",
     "@types/react": "catalog:",
