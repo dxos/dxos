@@ -48,6 +48,12 @@ export type EdgeStressSpec = {
   /** Draw `GoOffline`/`GoOnline`/`Restart`. Off isolates convergence from partition tolerance. */
   partitions: boolean;
   /**
+   * Hub-service base URL (e.g. `http://localhost:8787/hub/`). When set, every identity is bound to
+   * a Hub account at setup through the dev-only `test+*@dxos.org` hatch — which is what the
+   * self-serve cleanup routes require on a deployed environment. Unset skips binding.
+   */
+  hubUrl?: string;
+  /**
    * Replay this plan instead of drawing one: a `command-trace.jsonl` from an earlier run, or any
    * file whose last `plan` entry carries a `plan` array. Turns a counterexample into a fixture —
    * and lets one be shrunk by hand, since a sampled sequence has no fast-check shrinker.

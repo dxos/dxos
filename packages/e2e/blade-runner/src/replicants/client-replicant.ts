@@ -12,10 +12,11 @@ import { type CancellableInvitation, InvitationEncoder } from '@dxos/client-prot
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { LocalClientServices } from '@dxos/client/local';
 import { waitForSpace } from '@dxos/client/testing';
+import { Context } from '@dxos/context';
 import { DXN, Filter, Obj, Query, Type } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { isEdgePeerId } from '@dxos/echo-protocol';
-import { authenticateViaChallengeEndpoint, encodeAuthHeader } from '@dxos/edge-client';
+import { HubHttpClient, authenticateViaChallengeEndpoint, encodeAuthHeader } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { createRtcTransportFactory } from '@dxos/network-manager';
@@ -215,6 +216,30 @@ export class ClientReplicant {
   async createIdentity({ displayName }: { displayName: string }): Promise<{ identityDid: string }> {
     const identity = await this.#getClient().halo.createIdentity({ displayName });
     return { identityDid: identity.did };
+  }
+
+  /**
+   * Bind this identity to a Hub account through the dev-only test-email hatch.
+   *
+   * `POST /account/invitation-code/redeem` with a `test+*@dxos.org` email creates or *rebinds* the
+   * account with no invitation code and no verification round trip — live on dev-like
+   * environments only, which is exactly where the self-serve cleanup routes demand an account
+   * (`accountLookupViaHubService` 403s an unbound identity; measured, RESULTS.md §4b). Rebinding
+   * means a fixed alias per identity slot reuses one account row forever, so runs leave no rows.
+   */
+  @trace.span()
+  async bindTestAccount({ hubUrl, email }: { hubUrl: string; email: string }): Promise<{ accountId: string }> {
+    const identity = this.#getClient().halo.identity.get();
+    invariant(identity, 'no identity to bind');
+    const hub = new HubHttpClient(hubUrl);
+    const response = await hub.redeemInvitationCode(new Context(), {
+      email,
+      identityDid: identity.did,
+      identityKey: identity.identityKey.toHex(),
+    });
+    invariant('accountId' in response, `account binding refused: ${JSON.stringify(response)}`);
+    log.info('test account bound', { email, accountId: response.accountId });
+    return { accountId: response.accountId };
   }
 
   @trace.span()

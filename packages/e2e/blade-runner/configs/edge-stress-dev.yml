@@ -22,3 +22,4 @@ checkpoints: true
 # On until finding 5 (a cut link crashes the peer) is fixed; see RESULTS.md.
 partitions: false
 cleanup: true
+hubUrl: https://dev.dxos.network/hub/

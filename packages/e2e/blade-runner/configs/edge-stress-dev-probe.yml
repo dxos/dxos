@@ -14,3 +14,4 @@ quiescenceTimeoutMs: 90000
 checkpoints: false
 partitions: false
 cleanup: true
+hubUrl: https://dev.dxos.network/hub/

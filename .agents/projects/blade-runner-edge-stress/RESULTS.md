@@ -345,14 +345,36 @@ Proven end to end against the local stack: a `cleanup: false` run
 (`accepted`, exit 0). That was also the first live exercise of the admin-key path — a locally
 minted `DX_HUB_API_KEY` in the edge worker's `.env`, sent as `Authorization: Bearer`.
 
-Still open on cleanup, in order:
+### The Hub-account gate, closed with the test-email hatch
 
-1. Deployed environments: self-serve 403s on the Hub-account gate, so dev needs the real
-   `DX_HUB_API_KEY` (one run would prove it), an account-binding step at setup, or an EDGE policy
-   allowing an unbound identity to delete itself.
-2. The probe's leftovers on dev await that key: space `BLHSBW7YTLRFZZVFWT4M4MRVX5OO2XJHB`,
-   identity `did:halo:BDFMLFLXMZ5NOCYIF3VLBN6KYPG5XXEPC`.
-3. Deletion is enqueued (202) and never verified gone; acceptable for now, noted.
+The 403 in §4b was `accountLookupViaHubService` rejecting an identity with no Hub account. The hub
+carries a dev-only hatch for exactly this: `POST /account/invitation-code/redeem` with a
+`test+*@dxos.org` email calls `ensureLocalTestAccount` — no invitation code, no verification email,
+and deliberate **rebind** semantics — gated on `isDevLikeEnvironment`, so it is live on local
+wrangler dev and the deployed dev sandbox and off on preview/labs/staging/production.
+
+Setup now binds every identity when `spec.hubUrl` is set (`bindTestAccount`, via the SDK's
+`HubHttpClient.redeemInvitationCode`), one **fixed alias per identity slot**
+(`test+bladerunner-<slot>@dxos.org`): the email column is unique and rebinds to the newest
+identity, so every run reuses the same account rows and leaves none behind. Both edge origins serve
+the hub under `/hub/` (`http://localhost:8787/hub/`, `https://dev.dxos.network/hub/`).
+
+Verified both ends: locally, both identities bound and `account/email/exists` confirms the rows;
+against **deployed dev**, the probe bound its identity and then **self-serve cleanup succeeded with
+no admin key** — `{"event":"cleanup","spaces":1,"accepted":2,"refused":[]}` — the request that
+previously answered 403.
+
+Caveats: concurrent runs sharing the alias set would fight over the rebind (fine for one runner;
+use a per-runner suffix if that changes), and none of this applies to real deployments — there the
+admin key remains the only path, by design.
+
+Still open on cleanup:
+
+1. The original probe's leftovers on dev belong to an **unbound** identity, so they still need the
+   admin key: space `BLHSBW7YTLRFZZVFWT4M4MRVX5OO2XJHB`, identity
+   `did:halo:BDFMLFLXMZ5NOCYIF3VLBN6KYPG5XXEPC`. One `sweep-edge-stress.mjs` invocation once a key
+   exists.
+2. Deletion is enqueued (202) and never verified gone; acceptable for now, noted.
 
 ## 5. Harness gaps found
 

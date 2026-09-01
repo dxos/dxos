@@ -17,3 +17,5 @@ checkpoints: false
 partitions: false
 cleanup: true
 planFile: configs/plans/finding-6-candidate.json
+# Bind identities to Hub accounts (dev-only test-email hatch); required for self-serve cleanup.
+hubUrl: http://localhost:8787/hub/

@@ -15,3 +15,5 @@ quiescenceTimeoutMs: 60000
 checkpoints: true
 partitions: false
 cleanup: true
+# Bind identities to Hub accounts (dev-only test-email hatch); required for self-serve cleanup.
+hubUrl: http://localhost:8787/hub/

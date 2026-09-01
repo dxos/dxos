@@ -66,6 +66,7 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
       checkpoints: true,
       partitions: true,
       cleanup: true,
+      hubUrl: 'http://localhost:8787/hub/',
     };
   }
 
@@ -252,6 +253,13 @@ export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
         displayName: `edge-stress-identity-${identity}`,
       });
       identityDids.push(identityDid);
+      if (spec.hubUrl) {
+        // One fixed alias per identity slot: the hatch rebinds, so every run reuses the same rows.
+        await replicants[owner].brain.bindTestAccount({
+          hubUrl: spec.hubUrl,
+          email: `test+bladerunner-${identity}@dxos.org`,
+        });
+      }
       if (spec.agents) {
         await replicants[owner].brain.createAgent();
       }
