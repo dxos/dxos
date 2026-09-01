@@ -17,6 +17,7 @@ import {
   InstrumentType,
   MeterProvider,
   PeriodicExportingMetricReader,
+  type PushMetricExporter,
   type ViewOptions,
 } from '@opentelemetry/sdk-metrics';
 
@@ -24,9 +25,9 @@ import { type CleanupFn } from '@dxos/async';
 import { log } from '@dxos/log';
 import { type MetricData, type MetricObserver, TRACE_PROCESSOR } from '@dxos/tracing';
 
+import { METRIC_EXPORT_INTERVAL } from './intervals';
 import { type OtelOptions, resolveOtlpUrl, setDiagLogger } from './otel';
-
-const EXPORT_INTERVAL = 60 * 1000;
+import { metricDataToAttributes } from './remote-metrics';
 
 const METER_NAME = 'dxos-observability';
 
@@ -71,6 +72,12 @@ const HISTOGRAM_VIEWS: ViewOptions[] = [
   },
 ];
 
+export type OtelMetricsOptions = OtelOptions & {
+  /** Test seam: replaces the OTLP exporter. */
+  exporter?: PushMetricExporter;
+  registerTraceProcessor?: boolean;
+};
+
 export class OtelMetrics {
   private _meterProvider: MeterProvider;
   // Cached because re-creating an instrument per sample is pure allocation; one map per kind
@@ -81,20 +88,22 @@ export class OtelMetrics {
   readonly #observableGauges = new Map<string, ObservableGauge>();
   readonly #processor: Parameters<typeof TRACE_PROCESSOR.remoteMetrics.registerProcessor>[0];
 
-  constructor(private readonly options: OtelOptions) {
+  constructor(private readonly options: OtelMetricsOptions) {
     // TODO: improve error handling/logging
     //  https://github.com/open-telemetry/opentelemetry-js/issues/4823
     setDiagLogger(options.consoleDiagLogLevel);
 
     const metricReader = new PeriodicExportingMetricReader({
-      exporter: new OTLPMetricExporter({
-        url: resolveOtlpUrl(this.options.endpoint + '/v1/metrics'),
-        headers: this.options.headers,
-        // Delta because a cumulative counter restarting at 0 on every client reload reads
-        // downstream as a counter reset.
-        temporalityPreference: AggregationTemporalityPreference.DELTA,
-      }),
-      exportIntervalMillis: EXPORT_INTERVAL,
+      exporter:
+        options.exporter ??
+        new OTLPMetricExporter({
+          url: resolveOtlpUrl(this.options.endpoint + '/v1/metrics'),
+          headers: this.options.headers,
+          // Delta because a cumulative counter restarting at 0 on every client reload reads
+          // downstream as a counter reset.
+          temporalityPreference: AggregationTemporalityPreference.DELTA,
+        }),
+      exportIntervalMillis: METRIC_EXPORT_INTERVAL,
     });
 
     this._meterProvider = new MeterProvider({
@@ -106,23 +115,25 @@ export class OtelMetrics {
     this.#processor = {
       // TODO: update metrics names and remove prefix?
       increment: (name: string, value?: number, data?: MetricData) => {
-        this.increment(name, value, convertTags(data), data);
+        this.increment(name, value, metricDataToAttributes(data), data);
       },
       distribution: (name: string, value: number, data?: MetricData) => {
-        this.distribution(name, value, convertTags(data), data);
+        this.distribution(name, value, metricDataToAttributes(data), data);
       },
       set: (_name: string, _value: number | string, _data?: MetricData) => {
         // Not implemented, not part of Otel spec.
       },
       gauge: (name: string, value: number, data?: MetricData) => {
-        this.gauge(name, value, convertTags(data), data);
+        this.gauge(name, value, metricDataToAttributes(data), data);
       },
       observe: (name: string, callback: MetricObserver, data?: MetricData) => {
-        return this.observe(name, callback, convertTags(data), data);
+        return this.observe(name, callback, metricDataToAttributes(data), data);
       },
     };
 
-    TRACE_PROCESSOR.remoteMetrics.registerProcessor(this.#processor);
+    if (options.registerTraceProcessor ?? true) {
+      TRACE_PROCESSOR.remoteMetrics.registerProcessor(this.#processor);
+    }
   }
 
   gauge(name: string, value: number, tags?: Attributes, data?: MetricData): void {
@@ -210,18 +221,3 @@ export class OtelMetrics {
     return instrument;
   }
 }
-
-/** Projects tags onto OTel attributes, dropping nullish values that are not valid attribute values. */
-const convertTags = (data?: MetricData): Attributes => {
-  const tags = data?.tags;
-  if (!tags) {
-    return {};
-  }
-
-  return Object.entries(tags).reduce<Attributes>((attributes, [key, value]) => {
-    if (value !== null && value !== undefined) {
-      attributes[key] = value;
-    }
-    return attributes;
-  }, {});
-};

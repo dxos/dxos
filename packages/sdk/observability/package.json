@@ -20,6 +20,10 @@
     "./otel-log-sink": {
       "types": "./dist/types/src/extensions/otel/log-sink.d.ts",
       "import": "./dist/lib/otel-log-sink.mjs"
+    },
+    "./otel-metrics-sink": {
+      "types": "./dist/types/src/extensions/otel/metrics-sink.d.ts",
+      "import": "./dist/lib/otel-metrics-sink.mjs"
     }
   },
   "browser": {
