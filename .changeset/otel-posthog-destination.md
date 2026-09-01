@@ -12,8 +12,8 @@ side-effect free.
 The list is resolved in the producing realm and shipped in the log-writer worker's init messages, so
 the worker sinks fan out too. A span still crosses the port once, whatever the destination count.
 
-`PostHog.otelDestination(config)` builds a destination from `DX_POSTHOG_OTEL_HOST` and the existing
-`DX_POSTHOG_API_KEY`. PostHog serves OTLP under `/i` rather than the root, and authenticates with
-the public `phc_` project token, so no server-side proxy is needed to hold a secret. Composer sends
-to it alongside SigNoz on dev, preview, and staging; production is unchanged until the trial says
-what it costs.
+`PostHog.otelDestination(config)` builds a destination from the existing `DX_POSTHOG_API_HOST` and
+`DX_POSTHOG_API_KEY` — PostHog serves OTLP under `/i` of the same host it ingests product analytics
+on, and authenticates with the public `phc_` project token, so no server-side proxy is needed to
+hold a secret and no new variable is needed to address it. Composer sends to it alongside SigNoz on
+every deployed environment.

@@ -17,7 +17,6 @@ DX_OTEL_ENDPOINT=/api/otel
 DX_ENVIRONMENT=preview
 DX_POSTHOG_API_KEY=${COMPOSER_APP_PROD_POSTHOG_API_KEY}
 DX_POSTHOG_API_HOST=https://o.composer.space
-DX_POSTHOG_OTEL_HOST=https://o.composer.space
 IPFS_API_SECRET=${IPFS_API_SECRET}
 # End common vars
 DX_PWA=false

@@ -7,7 +7,7 @@ import { log } from '@dxos/log';
 
 import { type OtelDestination } from '../otel/otel';
 
-/** PostHog serves OTLP under `/i`, not at the root. */
+/** PostHog serves OTLP under `/i` of the same host it ingests product analytics on, not at the root. */
 const OTLP_PATH_PREFIX = '/i';
 
 /**
@@ -15,13 +15,13 @@ const OTLP_PATH_PREFIX = '/i';
  * secret, so the browser can post to it directly.
  */
 export const otelDestination = (config: Config): OtelDestination | undefined => {
-  const host = getEnvString(config, 'DX_POSTHOG_OTEL_HOST');
+  const host = getEnvString(config, 'DX_POSTHOG_API_HOST');
   const apiKey = getEnvString(config, 'DX_POSTHOG_API_KEY');
   if (!host) {
     return undefined;
   }
   if (!apiKey) {
-    log.info('DX_POSTHOG_OTEL_HOST is set without DX_POSTHOG_API_KEY; skipping PostHog OTLP export');
+    log.info('DX_POSTHOG_API_HOST is set without DX_POSTHOG_API_KEY; skipping PostHog OTLP export');
     return undefined;
   }
 
