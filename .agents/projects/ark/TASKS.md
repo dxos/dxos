@@ -226,12 +226,23 @@ What landed:
 
 Still open (the Phase 7 gaps):
 
-- [ ] **Descriptions in the tree path.** The flat list renders a task description row; the tree row
-      does not.
-- [ ] **Drag handles / reordering.** `dnd.ts` and `hierarchy.ts` are still present and still serve
-      the flat path. Moving drag onto the Tree's pragmatic-dnd contract is what finally deletes them
-      — and only then does `hierarchy.test.ts` (155 lines) get ported rather than dropped.
-- [ ] **Inline title editing** in the tree path.
+- [x] **Descriptions in the tree path.** Done. The tree heading rendered only the title, so a
+      hierarchical list silently dropped the descriptions the flat list showed. The heading is now a
+      grid so the description starts in the title's own column — clearing the ordinal and the status
+      control, rather than reading as part of the row above — and both paths share one
+      `TaskDescription` so they cannot drift on type scale or clamping. Verified in the
+      `Hierarchical` story.
+- [ ] **Drag handles / reordering.** The one real remaining gap. `dnd.ts` and `hierarchy.ts` are
+      still present and still serve the flat path; `TaskTreeContent` never passes `draggable` to
+      `Tree`. Moving drag onto the Tree's pragmatic-dnd contract is what finally deletes them — and
+      only then does `hierarchy.test.ts` (155 lines) get ported rather than dropped.
+      **Deliberately not attempted unattended:** pragmatic-dnd uses native HTML5 drag, so synthetic
+      drags no-op and the result cannot be verified without a human performing the gesture. Landing
+      unverifiable drag behaviour is worse than leaving the flat path in place.
+- [x] **Inline title editing — NOT a gap; the earlier entry was wrong.** The tree heading renders a
+      plain `<span>`, but so does the flat row (`TaskList.tsx`, the title cell). Editing lives in the
+      detail pane, which is path-independent — "the whole reason editing moved out of the row", as
+      the `TestEdit` story puts it. Neither path has inline title editing, so the tree is not behind.
 - [x] **Conceal animation — NOT a defect; the earlier entry was wrong.** This was written up as "the
       branch never runs its close animation in the task tree — rows disappear instantly". Measured
       in the `Hierarchical` story on 2026-09-01 and that is not what happens: collapsing a branch
