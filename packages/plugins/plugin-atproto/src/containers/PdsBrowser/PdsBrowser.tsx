@@ -255,7 +255,7 @@ export const PdsBrowser = ({ role, space }: PdsBrowserProps) => {
           <Button onClick={() => setActiveHandle(handleInput.trim() || undefined)}>{t('browse.label')}</Button>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content classNames='flex flex-col min-h-0 py-2'>
+      <Panel.Content classNames='flex flex-col dx-grow py-2'>
         {error && <div className='px-2 pb-2 text-sm text-error-text'>{error}</div>}
         <MasterDetail<CollectionItem>
           orientation='horizontal'

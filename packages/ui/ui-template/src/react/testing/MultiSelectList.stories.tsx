@@ -87,7 +87,7 @@ const DefaultStory = ({ splitter }: StoryArgs) => {
   }
 
   return (
-    <div className='flex flex-col w-96 min-h-0 dx-base-surface divide-y divide-separator border-e border-separator'>
+    <div className='flex flex-col dx-grow dx-base-surface divide-y divide-separator border-e border-separator'>
       <div className='flex flex-col dx-grow'>{list}</div>
       <div className='p-2 text-xs font-mono text-description'>
         {selection.size > 0 ? [...selection].join(', ') : 'Nothing selected.'}
@@ -99,7 +99,7 @@ const DefaultStory = ({ splitter }: StoryArgs) => {
 const meta: Meta<typeof DefaultStory> = {
   title: 'ui/ui-template/MultiSelect',
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen', classNames: '2-96' })],
   parameters: { layout: 'fullscreen', translations: formTranslations },
 };
 

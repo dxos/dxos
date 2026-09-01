@@ -34,7 +34,7 @@ export const Splitter = ({ orientation = 'horizontal', panes }: SplitterProps) =
 
   return (
     <div {...api.getRootProps()} className='dx-grow'>
-      <div {...api.getPanelProps({ id: 'start' })} className='flex flex-col min-w-0 min-h-0 overflow-hidden'>
+      <div {...api.getPanelProps({ id: 'start' })} className='flex flex-col dx-grow overflow-hidden'>
         {panes[0]}
       </div>
       <div

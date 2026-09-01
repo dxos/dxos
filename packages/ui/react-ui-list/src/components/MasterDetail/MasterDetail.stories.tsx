@@ -40,7 +40,7 @@ const ITEMS: Record<string, Row[]> = {
 // flex column that a horizontal `MasterDetail` fills via `flex-1`. Fixing scroll here fixes it there.
 const PageFrame = ({ children }: { children: React.ReactNode }) => (
   <Panel.Root>
-    <Panel.Content classNames='flex flex-col min-h-0'>{children}</Panel.Content>
+    <Panel.Content classNames='flex flex-col dx-grow'>{children}</Panel.Content>
   </Panel.Root>
 );
 

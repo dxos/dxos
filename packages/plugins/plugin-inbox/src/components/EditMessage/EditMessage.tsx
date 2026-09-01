@@ -316,7 +316,7 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
               </Input.Root>
             </Column.Center>
 
-            <Column.Center classNames='flex flex-col py-3 min-h-0'>
+            <Column.Center classNames='flex flex-col dx-grow py-3'>
               <Editor
                 compact
                 classNames='dx-input dx-expand'

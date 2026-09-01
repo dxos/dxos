@@ -72,7 +72,7 @@ const MapSurface = (props: MapSurfaceProps) => {
   });
 
   return (
-    <div class='flex dx-fill min-h-0'>
+    <div class='flex dx-fill dx-grow'>
       <Show when={type() === 'map'}>
         <MapControl markers={markers} onToggle={() => setType('globe')} />
       </Show>

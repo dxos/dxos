@@ -626,6 +626,7 @@ const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
     },
     [chat],
   );
+
   // Rendered even when empty, so `TaskList.Edit` can always add the first task.
   if (!chat) {
     return null;
@@ -633,8 +634,8 @@ const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
 
   return (
     <TaskList.Root tasks={tasks} showGroupLabels={false} showOrdinals onTaskCreate={handleCreate}>
-      <div {...composableProps(props, { classNames: 'flex flex-col min-h-0' })} ref={forwardedRef}>
-        <TaskList.Viewport classNames='min-h-0'>
+      <div {...composableProps(props, { classNames: 'flex flex-col dx-grow' })} ref={forwardedRef}>
+        <TaskList.Viewport>
           <TaskList.Content />
         </TaskList.Viewport>
         <TaskList.Edit grid classNames='shrink-0' />
