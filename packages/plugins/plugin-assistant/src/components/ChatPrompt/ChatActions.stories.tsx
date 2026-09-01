@@ -89,6 +89,21 @@ export const StopReplacesSendWhileProcessing: Story = {
   },
 };
 
+/**
+ * Mid-turn WITH text waiting: the control offers Send, not Stop. A prompt submitted now is queued
+ * behind the running turn, so refusing to send it (or offering only Stop) would strand what the
+ * reader just typed.
+ */
+export const SendWhileProcessingWithText: Story = {
+  args: { processing: true, canSend: true, tasksVisible: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const send = await canvas.findByTestId('assistant.send', {}, { timeout: 10_000 });
+    await expect(send).toHaveAccessibleName('Send');
+    await expect(send).toBeEnabled();
+  },
+};
+
 export const TaskToggleFlips: Story = {
   args: { canSend: true, tasksVisible: true },
   play: async ({ canvasElement, userEvent }) => {
