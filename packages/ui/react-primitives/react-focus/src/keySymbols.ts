@@ -65,16 +65,20 @@ const getSymbol = (part: string) => {
   }
 };
 
+/** Marks the boundary between the steps of a sequence binding, as its own element. */
+export const SEQUENCE_SYMBOL = '→';
+
 /**
  * The key caps to render for a binding, one per element.
  *
- * Splits sequences (`g > h`) as well as chords (`meta+k`): Zag's parser accepts both, and a
- * sequence left whole renders as a single cap reading `G > H`. Nothing binds a sequence today —
+ * Splits sequences (`g > h`) as well as chords (`meta+k`) — Zag's parser accepts both — and keeps
+ * the boundary as its own element, since consumers either render one cap per element or join them
+ * with no separator. Dropping it would render `g > h` as `GH`. Nothing binds a sequence today;
  * this keeps the formatter honest if something does.
  */
 export const keySymbols = (keyBinding: string): string[] =>
   keyBinding
     .split('>')
-    .flatMap((step) => step.trim().split('+'))
-    .filter(Boolean)
-    .map(getSymbol);
+    .map((step) => step.trim().split('+').filter(Boolean).map(getSymbol))
+    .filter((step) => step.length > 0)
+    .reduce<string[]>((caps, step, index) => (index === 0 ? step : [...caps, SEQUENCE_SYMBOL, ...step]), []);

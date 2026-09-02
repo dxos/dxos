@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { cleanup, render } from '@testing-library/react';
+import { act, cleanup, render } from '@testing-library/react';
 import React from 'react';
 import { afterEach, describe, expect, test } from 'vitest';
 
@@ -125,6 +125,33 @@ describe('hotkey scopes', () => {
     console.log('REGISTRATION:', JSON.stringify(seen.map(({ hotkey, label, scopes }) => ({ hotkey, label, scopes }))));
     expect(seen.some((command) => command.label === 'Search')).toBe(true);
     expect(seen.some((command) => command.label === 'Elsewhere')).toBe(false);
+  });
+
+  test('a scope change re-renders the active list, not just a registration change', async () => {
+    const store = hotkeyStore;
+    let seen: string[] = [];
+    const Probe = () => {
+      seen = useActiveHotkeys(store).map((command) => command.label ?? '');
+      return null;
+    };
+    render(
+      <>
+        <Bindings
+          store={store}
+          commands={[{ hotkey: 'q', scopes: ['root/elsewhere'], label: 'Elsewhere', action: () => {} }]}
+        />
+        <Probe />
+      </>,
+    );
+
+    expect(seen).not.toContain('Elsewhere');
+
+    // Only the active scopes change here — the command map keeps its identity, which is exactly the
+    // case a commands-only snapshot would miss.
+    await act(async () => {
+      setHotkeyScope('root/elsewhere', store);
+    });
+    expect(seen).toContain('Elsewhere');
   });
 
   test('the same hotkey bound at two depths fires both, unlike the path-scan it replaces', () => {

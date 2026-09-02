@@ -9,7 +9,7 @@ import type * as Plugin from '@dxos/app-framework/Plugin';
 import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { type Client, type ClientServicesProvider, type Config } from '@dxos/client';
 import { type IdbLogStore } from '@dxos/log-store-idb';
-import { type Observability } from '@dxos/observability';
+import type * as Observability from '@dxos/observability/Observability';
 import * as AtprotoPlugin from '@dxos/plugin-atproto/AtprotoPlugin';
 import * as AttentionPlugin from '@dxos/plugin-attention/AttentionPlugin';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';

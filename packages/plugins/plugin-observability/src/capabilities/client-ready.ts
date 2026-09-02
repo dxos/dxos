@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { log } from '@dxos/log';
-import { ObservabilityProvider } from '@dxos/observability';
+import * as ObservabilityProvider from '@dxos/observability/ObservabilityProvider';
 
 import { ObservabilityCapabilities, ObservabilityOperation } from '#types';
 
