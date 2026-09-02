@@ -35,9 +35,9 @@ import type * as ObservabilityExtension from '../observability-extension';
  *
  * Scrub rules enforced here regardless of the above:
  * - A span that does not name its space is treated as unknown, and unknown **denies** content. Only
- *   a call site that has declared where it runs can have its content captured, so the policy fails
- *   closed for one that has not (`AiSession` declares it; most utility model calls do not, and are
- *   reported as metadata only).
+ *   a call that runs in a known space can have its content captured, so the policy fails closed
+ *   for one that does not (`AiSession` names it, and a process scoped to a space stamps it on every
+ *   span it runs; a utility model call outside both is reported as metadata only).
  * - Attribute **allowlist**: only the fields of `Generation` are read; every other span attribute
  *   is dropped (so an accidental attribute upstream cannot leak through telemetry).
  * - Errors are reduced to the exception **class name** — `exception.message` and
@@ -110,7 +110,11 @@ const GEN_AI_MARKERS = ['gen_ai.system', 'gen_ai.request.model', 'gen_ai.respons
  * it; the integration test in `plugin-observability` drives both halves so a rename fails there.
  */
 const SESSION_ID_ATTR = 'dxos.ai.session_id';
-const SPACE_ID_ATTR = 'dxos.ai.space_id';
+/**
+ * Shared with the process handle and ECHO rather than AI-specific: a model call inside a
+ * space-scoped process carries it whether or not the call site named its space itself.
+ */
+const SPACE_ID_ATTR = 'spaceId';
 const INPUT_ATTR = 'dxos.ai.input';
 const OUTPUT_ATTR = 'dxos.ai.output';
 const TOOLS_ATTR = 'dxos.ai.tools';

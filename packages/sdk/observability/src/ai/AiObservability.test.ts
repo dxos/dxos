@@ -90,7 +90,7 @@ describe('AiSpanProcessor', () => {
       .startSpan('LanguageModel.generateText', {
         attributes: {
           'gen_ai.system': 'anthropic',
-          'dxos.ai.space_id': PLAINTEXT_SPACE,
+          'spaceId': PLAINTEXT_SPACE,
           'dxos.ai.input': JSON.stringify([{ role: 'user', content: 'hi' }]),
           'dxos.ai.output': '[{"role":"assist', // Truncated mid-JSON.
         },
@@ -107,7 +107,7 @@ describe('AiSpanProcessor', () => {
       .startSpan('LanguageModel.generateText', {
         attributes: {
           'gen_ai.system': 'anthropic',
-          'dxos.ai.space_id': PLAINTEXT_SPACE,
+          'spaceId': PLAINTEXT_SPACE,
           'dxos.ai.output': '[{"role":"assist',
           'dxos.ai.truncated': true,
         },
@@ -124,7 +124,7 @@ describe('AiSpanProcessor', () => {
         attributes: {
           'gen_ai.system': 'anthropic',
           'gen_ai.usage.input_tokens': 3,
-          'dxos.ai.space_id': 'encrypted-space',
+          'spaceId': 'encrypted-space',
           'dxos.ai.cache_read_tokens': 11,
           'dxos.ai.cache_write_tokens': 7,
         },
@@ -142,7 +142,7 @@ describe('AiSpanProcessor', () => {
         attributes: {
           'gen_ai.system': 'anthropic',
           'gen_ai.usage.input_tokens': 10,
-          'dxos.ai.space_id': 'encrypted-space',
+          'spaceId': 'encrypted-space',
           'dxos.ai.input': JSON.stringify([{ role: 'user', content: 'private' }]),
           'dxos.ai.output': JSON.stringify([{ role: 'assistant', content: 'private' }]),
           'dxos.ai.tools': JSON.stringify([{ name: 'search' }]),
@@ -182,7 +182,7 @@ describe('AiSpanProcessor', () => {
     const { generations, tracer } = await setup({ captureEnabled: () => false });
     tracer
       .startSpan('LanguageModel.generateText', {
-        attributes: { 'gen_ai.system': 'anthropic', 'dxos.ai.space_id': PLAINTEXT_SPACE },
+        attributes: { 'gen_ai.system': 'anthropic', 'spaceId': PLAINTEXT_SPACE },
       })
       .end();
 
@@ -208,7 +208,7 @@ describe('AiSpanProcessor', () => {
         attributes: {
           'dxos.ai.kind': 'turn',
           'dxos.ai.session_id': 'feed-1',
-          'dxos.ai.space_id': PLAINTEXT_SPACE,
+          'spaceId': PLAINTEXT_SPACE,
           'dxos.ai.input': JSON.stringify('hi'),
           'dxos.ai.output': JSON.stringify([{ role: 'assistant', blocks: [{ type: 'text', text: 'hello' }] }]),
         },
@@ -231,7 +231,7 @@ describe('AiSpanProcessor', () => {
         attributes: {
           'dxos.ai.kind': 'tool',
           'dxos.ai.name': 'Echo',
-          'dxos.ai.space_id': PLAINTEXT_SPACE,
+          'spaceId': PLAINTEXT_SPACE,
           'dxos.ai.input': JSON.stringify({ value: 'hello' }),
           'dxos.ai.output': JSON.stringify({ value: 'hello' }),
         },
@@ -249,7 +249,7 @@ describe('AiSpanProcessor', () => {
     const { turns, toolCalls, tracer } = await setup({ allowContent: () => false });
     tracer
       .startSpan('AiSession.createRequest', {
-        attributes: { 'dxos.ai.kind': 'turn', 'dxos.ai.space_id': PLAINTEXT_SPACE, 'dxos.ai.input': '"secret"' },
+        attributes: { 'dxos.ai.kind': 'turn', 'spaceId': PLAINTEXT_SPACE, 'dxos.ai.input': '"secret"' },
       })
       .end();
     // No space at all: denied before the policy is even asked.

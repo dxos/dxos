@@ -152,7 +152,7 @@ describe('AiTelemetry', () => {
     // disconnect capture.
     expect(AiTelemetry.ATTRIBUTES).toEqual({
       sessionId: 'dxos.ai.session_id',
-      spaceId: 'dxos.ai.space_id',
+      spaceId: 'spaceId',
       input: 'dxos.ai.input',
       output: 'dxos.ai.output',
       tools: 'dxos.ai.tools',
