@@ -10,6 +10,7 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 import type { CleanupFn } from '@dxos/async';
+import { SpanAttributes } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId, type URI } from '@dxos/keys';
 
@@ -391,15 +392,12 @@ export const layer = (db: Database): Layer.Layer<Service> => {
   return Layer.succeed(Service, makeService(db));
 };
 
-/** Span attribute naming the database's space, so a span can be filtered by the space it ran in. */
-export const SPACE_ID_ATTRIBUTE = 'spaceId';
-
 /**
  * Stamps the database's space on every span the effect opens, so a span can be filtered by the space
  * it ran in. Applied after `Effect.withSpan`, so the span it names is inside the annotated region.
  */
 export const withSpaceId = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R | Service> =>
-  Effect.flatMap(Service, ({ db }) => effect.pipe(Effect.annotateSpans(SPACE_ID_ATTRIBUTE, db.spaceId)));
+  Effect.flatMap(Service, ({ db }) => effect.pipe(Effect.annotateSpans(SpanAttributes.SPACE_ID, db.spaceId)));
 
 /**
  * Returns the space ID of the database.

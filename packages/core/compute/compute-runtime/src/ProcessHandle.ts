@@ -25,15 +25,12 @@ import * as RpcClient from 'effect/unstable/rpc/RpcClient';
 import * as Process from '@dxos/compute/Process';
 import type * as StorageService from '@dxos/compute/StorageService';
 import type * as Trace from '@dxos/compute/Trace';
-import { Performance } from '@dxos/effect';
+import { Performance, SpanAttributes } from '@dxos/effect';
 import { log } from '@dxos/log';
 
 import type { PersistedEvent, PersistedEventInput } from './process-store';
 import type * as ProcessManager from './ProcessManager';
 import { EphemeralTraceBuffer } from './trace-buffer';
-
-/** Span attribute naming the space a handler runs in; the same key ECHO stamps on its own spans. */
-const SPACE_ID_ATTRIBUTE = 'spaceId';
 
 /**
  * Output queue uses Option to signal completion: Some(value) for data, None for end-of-stream.
@@ -675,9 +672,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
         return yield* restore(fn()).pipe(
           Effect.provide(this.#services),
           // Every span the handler opens can then be filtered by space; app-level work has none.
-          this.environment.space !== undefined
-            ? Effect.annotateSpans(SPACE_ID_ATTRIBUTE, this.environment.space)
-            : (effect) => effect,
+          SpanAttributes.annotateSpace(this.environment.space),
           Effect.tap(() => Effect.sync(recordWall)),
           Performance.addTrackEntry({
             name,

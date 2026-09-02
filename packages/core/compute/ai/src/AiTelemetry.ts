@@ -9,6 +9,7 @@ import type * as Tracer from 'effect/Tracer';
 import type * as Prompt from 'effect/unstable/ai/Prompt';
 import type * as Telemetry from 'effect/unstable/ai/Telemetry';
 
+import { SpanAttributes } from '@dxos/effect';
 import { log } from '@dxos/log';
 
 /**
@@ -26,7 +27,7 @@ export const ATTRIBUTES = {
    * Space the call runs in; the same key the process handle and ECHO stamp on their spans, so one
    * filter finds a space's model calls and its other work. The sink denies content when it is absent.
    */
-  spaceId: 'spaceId',
+  spaceId: SpanAttributes.SPACE_ID,
   input: 'dxos.ai.input',
   output: 'dxos.ai.output',
   tools: 'dxos.ai.tools',
