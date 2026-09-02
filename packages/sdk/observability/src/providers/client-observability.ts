@@ -53,7 +53,7 @@ export const identityProvider = (clientServices: Partial<ClientServices>): DataP
       }
 
       observability.identify(idqr.identity.did);
-      observability.setTags({ identityDid: idqr.identity.did });
+      observability.setTags({ did: idqr.identity.did });
     });
 
     // TODO(wittjosiah): RPC subscribe returns void; cleanup requires upstream API change.
@@ -93,7 +93,7 @@ export const identityManagerProvider = (identityManager: IdentitySource): DataPr
     const apply = () => {
       const did = identityManager.identity?.did;
       if (did) {
-        observability.setTags({ identityDid: did });
+        observability.setTags({ did });
       }
     };
     identityManager.stateUpdate.on(apply);
