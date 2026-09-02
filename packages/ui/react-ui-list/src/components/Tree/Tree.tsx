@@ -382,6 +382,10 @@ export const Tree = <T extends { id: string } = any>({
   /** Last row the machine reported focus on — the target `Enter`/`Space` act upon. */
   const focusedValueRef = useRef<string | null>(null);
 
+  // Controlled, so focus can be directed (a drop returns it to the row that moved) rather than only
+  // observed. Mirrors the machine's own changes back, which is what keeps it a roving tabstop.
+  const [focusedValue, setFocusedValue] = useState<string | null>(null);
+
   // Focus moves without a selection event of its own, so the follow is driven from the machine's
   // focus change rather than inferred from the selection one.
   const handleFocusChange = useCallback(
@@ -389,6 +393,7 @@ export const Tree = <T extends { id: string } = any>({
       // Recorded whatever the follow setting is: the keyboard's own activation needs the focused
       // row, and the machine reports it nowhere else.
       focusedValueRef.current = focusedValue;
+      setFocusedValue(focusedValue);
       if (!selectionFollowsFocus || !focusedValue || selected.includes(focusedValue)) {
         return;
       }
@@ -454,6 +459,7 @@ export const Tree = <T extends { id: string } = any>({
   const renderContext = useMemo<TreeRenderContextValue<T>>(
     () => ({
       treeId: id,
+      focusNode: setFocusedValue,
       draggable,
       renderColumns,
       renderIcon,
@@ -472,6 +478,7 @@ export const Tree = <T extends { id: string } = any>({
     }),
     [
       id,
+      setFocusedValue,
       draggable,
       renderColumns,
       renderIcon,
@@ -493,6 +500,7 @@ export const Tree = <T extends { id: string } = any>({
     <TreeView.Root
       collection={collection}
       expandedValue={expanded}
+      focusedValue={focusedValue}
       selectedValue={selected}
       selectionMode={selectionMode}
       expandOnClick={false}
@@ -704,6 +712,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
     onOpenChange,
     onItemHover,
     selectNode,
+    focusNode,
   } = useTreeRender();
   const rowRef = useRef<HTMLDivElement | null>(null);
   const openRef = useRef(false);
@@ -712,7 +721,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
   const [instruction, setInstruction] = useState<Instruction | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const { id, item, path, level, branch, open, last, current, props } = node;
+  const { id, value, item, path, level, branch, open, last, current, props } = node;
   // `expanded` only applies to a branch that is actually showing children: the mode exists to drop
   // the reorder-below zone, because "below an open branch" and "its first child" are the same place.
   // A leaf reports `open` too (nothing distinguishes it in the model), and treating that as expanded
@@ -763,9 +772,10 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
           }
           // Return the roving tabstop to the row that moved, so the arrows carry on from where the
           // reader left it — a drag leaves focus on the body, which restarts navigation at the top
-          // of the tree. Deferred past the drop: the reorder moves this row's own DOM node, and
-          // moving a node blurs it, so focus claimed any earlier is thrown away.
-          setTimeout(() => rowRef.current?.focus());
+          // of the tree. Asking the machine rather than calling `focus()` here: the reorder moves
+          // this row's DOM node, and moving a node blurs it, so any focus set around the drop races
+          // the commit. As controlled state it is simply the focused value once the tree renders.
+          focusNode(value);
         },
       });
 
