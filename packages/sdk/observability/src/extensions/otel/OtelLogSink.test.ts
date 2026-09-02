@@ -65,6 +65,24 @@ describe('OtelLogSink', () => {
     expect(untraced.spanContext).toBeUndefined();
   });
 
+  test('flags the trace of a warning or error record, even one below the export level', async () => {
+    const flagged: string[] = [];
+    const exporter = new InMemoryLogRecordExporter();
+    sink = new OtelLogSink.Sink(
+      { ...defaultInit, logLevel: LogLevel.ERROR },
+      { exporter, onTraceFlagged: (id) => flagged.push(id) },
+    );
+    const trace = { traceId: '0af7651916cd43dd8448eb211c80319c', spanId: 'b7ad6b7169203331' };
+    sink.append(makeLine({ level: LogLevel.INFO, message: 'fine' }, trace));
+    sink.append(makeLine({ level: LogLevel.WARN, message: 'odd' }, trace));
+    sink.append(
+      makeLine({ level: LogLevel.ERROR, message: 'broken' }, { ...trace, traceId: 'ffffffffffffffffffffffffffffffff' }),
+    );
+    sink.append(makeLine({ level: LogLevel.ERROR, message: 'untraced' }));
+
+    expect(flagged).toEqual([trace.traceId, 'ffffffffffffffffffffffffffffffff']);
+  });
+
   test('drops lines below the export level', async () => {
     const { sink, records } = makeSink();
     sink.append(makeLine({ level: LogLevel.DEBUG, message: 'chatty' }));

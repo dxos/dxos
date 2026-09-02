@@ -148,6 +148,11 @@ export class Sink {
     );
   }
 
+  /** Keeps the rest of a trace something outside the span stream vouched for, e.g. a warning log. */
+  promote(traceId: string): void {
+    this.#sampler.promote(traceId);
+  }
+
   append(record: Span): void {
     // Decided before materializing: a dropped span should not cost the object graph the exporter
     // would have needed.

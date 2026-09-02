@@ -51,6 +51,9 @@ export interface FeedStoreOptions {
 /**
  * Effect service tag for {@link FeedStore}.
  */
+/** `Effect.withSpan` options naming the space, or none when the call is not scoped to one. */
+const spanWithSpace = (spaceId: string | null | undefined) => (spaceId ? { attributes: { spaceId } } : undefined);
+
 export class FeedStoreService extends EffectContext.Service<FeedStoreService, FeedStore>()('@dxos/feed/FeedStore') {}
 
 /**
@@ -114,7 +117,7 @@ export class FeedStore {
               INSERT INTO feeds (spaceId, feedId, feedNamespace) VALUES (${spaceId}, ${feedId}, ${namespace}) RETURNING feedPrivateId
           `;
         return newRows[0].feedPrivateId;
-      }).pipe(Effect.withSpan('FeedStore.ensureFeed')),
+      }).pipe(Effect.withSpan('FeedStore.ensureFeed', spanWithSpace(spaceId))),
   );
 
   /**
@@ -132,7 +135,7 @@ export class FeedStore {
         const token = crypto.randomUUID().replace(/-/g, '').slice(0, 6);
         yield* sql`INSERT INTO cursor_tokens (spaceId, token) VALUES (${spaceId}, ${token})`;
         return token;
-      }).pipe(Effect.withSpan('FeedStore.ensureCursorToken')),
+      }).pipe(Effect.withSpan('FeedStore.ensureCursorToken', spanWithSpace(spaceId))),
   );
 
   /**
@@ -342,7 +345,7 @@ export class FeedStore {
         }
 
         return { requestId: request.requestId, blocks, nextCursor, hasMore } satisfies QueryResponse;
-      }).pipe(Effect.withSpan('FeedStore.query')),
+      }).pipe(Effect.withSpan('FeedStore.query', spanWithSpace(request.spaceId))),
   );
 
   /**
@@ -377,7 +380,7 @@ export class FeedStore {
           subscriptionId,
           expiresAt,
         };
-      }).pipe(Effect.withSpan('FeedStore.subscribe')),
+      }).pipe(Effect.withSpan('FeedStore.subscribe', spanWithSpace(request.spaceId))),
   );
 
   /**
@@ -395,7 +398,7 @@ export class FeedStore {
         WHERE spaceId = ${opts.spaceId} AND feedNamespace = ${opts.feedNamespace}
       `;
       return rows[0]?.lastPulledPosition ?? -1;
-    }).pipe(Effect.withSpan('FeedStore.getSyncState'));
+    }).pipe(Effect.withSpan('FeedStore.getSyncState', spanWithSpace(opts.spaceId)));
 
   /**
    * Update the last pulled position for the given space and namespace.
@@ -412,7 +415,7 @@ export class FeedStore {
         VALUES (${opts.spaceId}, ${opts.feedNamespace}, ${opts.lastPulledPosition})
         ON CONFLICT (spaceId, feedNamespace) DO UPDATE SET lastPulledPosition = ${opts.lastPulledPosition}
       `;
-    }).pipe(Effect.withSpan('FeedStore.setSyncState'));
+    }).pipe(Effect.withSpan('FeedStore.setSyncState', spanWithSpace(opts.spaceId)));
 
   /**
    * Returns the number of blocks pending push (no global position yet) in a space/namespace.
@@ -432,7 +435,7 @@ export class FeedStore {
           AND blocks.position IS NULL
       `;
       return rows[0]?.count ?? 0;
-    }).pipe(Effect.withSpan('FeedStore.countUnpositionedBlocks'));
+    }).pipe(Effect.withSpan('FeedStore.countUnpositionedBlocks', spanWithSpace(opts.spaceId)));
 
   /**
    * Returns the total number of blocks stored locally for a space/namespace.
@@ -451,7 +454,7 @@ export class FeedStore {
           AND feeds.feedNamespace = ${opts.feedNamespace}
       `;
       return rows[0]?.count ?? 0;
-    }).pipe(Effect.withSpan('FeedStore.countNamespaceBlocks'));
+    }).pipe(Effect.withSpan('FeedStore.countNamespaceBlocks', spanWithSpace(opts.spaceId)));
 
   /**
    * Returns the number of stored blocks for a single feed in a space/namespace.
@@ -474,7 +477,7 @@ export class FeedStore {
           AND feeds.feedId = ${opts.feedId}
       `;
       return rows[0]?.count ?? 0;
-    }).pipe(Effect.withSpan('FeedStore.countBlocks'));
+    }).pipe(Effect.withSpan('FeedStore.countBlocks', spanWithSpace(opts.spaceId)));
 
   /**
    * Deletes the oldest blocks for a single feed in a space/namespace.

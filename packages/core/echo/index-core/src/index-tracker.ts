@@ -62,6 +62,9 @@ export class IndexTracker {
     ): Effect.Effect<IndexCursor[], SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
+        if (query.spaceId) {
+          yield* Effect.annotateCurrentSpan('spaceId', query.spaceId);
+        }
 
         const spaceIdParam = query.spaceId === undefined ? null : (query.spaceId ?? '');
         const sourceNameParam = query.sourceName === undefined ? null : query.sourceName;

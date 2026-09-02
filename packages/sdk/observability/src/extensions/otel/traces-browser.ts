@@ -38,12 +38,32 @@ export type OtelTracesOptions = OtelOptions & {
 export class OtelTraces {
   private _tracer: Tracer;
   private readonly _tracerProvider: WebTracerProvider;
+  readonly #samplingProcessors: TailSampling.TailSamplingSpanProcessor[];
 
   constructor(private readonly options: OtelTracesOptions) {
     propagation.setGlobalPropagator(new W3CTraceContextPropagator());
 
     // Opt-out of thinning entirely, for a local debugging session.
     const forceTraceAll = typeof localStorage !== 'undefined' && localStorage.getItem(TRACE_ALL_KEY) === 'true';
+
+    // No worker to decide, so the same rules are applied here before the exporter. Held so a
+    // warning log can promote a trace the way the worker's log sink does.
+    this.#samplingProcessors = options.spanSink
+      ? []
+      : this.options.destinations.map(
+          (destination) =>
+            new TailSampling.TailSamplingSpanProcessor(
+              new BatchSpanProcessor(
+                new OTLPTraceExporter({
+                  url: signalUrl(destination, 'traces'),
+                  headers: destination.headers,
+                  concurrencyLimit: 10,
+                }),
+                { scheduledDelayMillis: 5_000 },
+              ),
+              { ratio: forceTraceAll ? 1 : undefined },
+            ),
+        );
 
     this._tracerProvider = new WebTracerProvider({
       resource: this.options.resource,
@@ -60,21 +80,7 @@ export class OtelTraces {
         ...(options.spanSink
           ? // Everything crosses to the worker, which owns the keep/drop decision.
             [new OtelSpanSink.PortSpanProcessor(options.spanSink.post)]
-          : // No worker to decide, so the same rules are applied here before the exporter.
-            this.options.destinations.map(
-              (destination) =>
-                new TailSampling.TailSamplingSpanProcessor(
-                  new BatchSpanProcessor(
-                    new OTLPTraceExporter({
-                      url: signalUrl(destination, 'traces'),
-                      headers: destination.headers,
-                      concurrencyLimit: 10,
-                    }),
-                    { scheduledDelayMillis: 5_000 },
-                  ),
-                  { ratio: forceTraceAll ? 1 : undefined },
-                ),
-            )),
+          : this.#samplingProcessors),
       ],
     });
 
@@ -110,6 +116,16 @@ export class OtelTraces {
    */
   public async close(): Promise<void> {
     await this._tracerProvider.shutdown();
+  }
+
+  /**
+   * Keeps the rest of a trace a warning or error log named. Reaches the in-thread sampler only;
+   * with a worker deciding, its own log sink promotes there instead.
+   */
+  public promote(traceId: string): void {
+    for (const processor of this.#samplingProcessors) {
+      processor.promote(traceId);
+    }
   }
 
   public start(): void {

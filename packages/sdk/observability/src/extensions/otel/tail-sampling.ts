@@ -98,7 +98,7 @@ export class TailSampler {
   /** Whether the span should be forwarded to the exporter. */
   keep(span: Decidable): boolean {
     if (this._isPromotable(span)) {
-      this._promote(span.traceId);
+      this.promote(span.traceId);
       return true;
     }
     return this._promoted.has(span.traceId) || sampledByTraceId(span.traceId, this._ratio);
@@ -112,7 +112,11 @@ export class TailSampler {
     );
   }
 
-  private _promote(traceId: string): void {
+  /**
+   * Keeps every later span of the trace. Called for what the sampler cannot see itself: a log at
+   * warning or above names a trace worth keeping the same way an errored span does.
+   */
+  promote(traceId: string): void {
     // Re-inserting moves the id to the end, so an active trace is not evicted ahead of a stale one.
     this._promoted.delete(traceId);
     this._promoted.add(traceId);
@@ -168,6 +172,11 @@ export class TailSamplingSpanProcessor implements SpanProcessor {
 
   onStart(span: Span, parentContext: Context): void {
     this._delegate.onStart(span, parentContext);
+  }
+
+  /** See {@link TailSampler.promote}. */
+  promote(traceId: string): void {
+    this._sampler.promote(traceId);
   }
 
   onEnd(span: ReadableSpan): void {
