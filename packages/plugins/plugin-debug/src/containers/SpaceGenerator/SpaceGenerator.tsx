@@ -223,11 +223,20 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
                 />
                 <SchemaTable
                   classNames='py-1'
-                  types={[...presets.types, ...sampleSpaces.map(({ id }) => ({ typename: id }))]}
+                  types={presets.types}
                   objects={info.objects}
                   label='Presets'
                   onClick={handleCreateData}
                 />
+                {sampleSpaces.length > 0 && (
+                  <SchemaTable
+                    classNames='py-1'
+                    types={sampleSpaces.map(({ id, label }) => ({ typename: id, presetLabel: label }))}
+                    objects={info.objects}
+                    label='Sample Spaces'
+                    onClick={handleCreateData}
+                  />
+                )}
                 <ProgressGenerator classNames='py-1' />
               </ScrollArea.Viewport>
             </ScrollArea.Root>

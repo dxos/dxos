@@ -141,3 +141,33 @@ own chunk. Content that exists **only to generate a committed snapshot** stays i
 imports the definition.
 
 `composer-app:check-boot-budget` is the gate that proves the gating held.
+
+## Phase 7 — viewing a sample space
+
+- [x] `plugin-debug/src/stories/SampleSpaces.stories.tsx` — the existing `SpaceGenerator` story
+      already had the whole stack (client, identity, space), so the sample spaces host there rather
+      than needing a new home. The story pairs the generator with `DebugSpaceObjectsPanel`, the same
+      object tree the debug plugin shows in the app, so the collections, refs and feeds a sample
+      space builds are inspectable without exporting an archive.
+- [x] `Default` renders the empty space plus the picker; `Tidepool` and `Northwind` carry
+      `tags: ['test']` and a `play` that applies the space and waits for its content.
+      `moon run plugin-debug:test-storybook` — 12 passed (6 files).
+- [x] Verified in a real browser via Playwright MCP against a storybook on port 9019 (the user's own
+      on 9009 serves a different checkout and cannot see worktree files — start a second one, never
+      kill theirs). The tree showed all 17 Tidepool tasks, 3 milestones, the repo, the project, the
+      three documents with their Text bodies, and both collections.
+- [x] `SchemaTable` rows can carry a `presetLabel` so sample spaces list by name rather than preset
+      id, and the count column shows `—` for them (a preset has no object count).
+      **Use `presetLabel`, not `name`**: a class-based type entity already has `name` — its JS class
+      name — so keying off that suppressed the count on every real type row.
+
+Three defects this story surfaced, all fixed:
+
+1. `plugin-crm` will not activate without `plugin-inbox`, and `plugin-projects` without
+   `plugin-tasks`. A missing plugin dependency fails activation silently — only a console warning —
+   so the contributed sample spaces simply never appeared.
+2. `getByText` throws on multiple matches, and Tidepool names two objects "Offline sync v2" (its
+   task set and its project). The play test read as a 64s timeout; it was an assertion error
+   retrying. `getAllByText` fixed it and the test runs in ~3s.
+3. A per-package `storybook: { timeout }` raise was added while mis-diagnosing (2) and then
+   reverted — the default 15s is 5x the actual runtime.
