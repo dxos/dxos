@@ -44,7 +44,7 @@ import {
 
 import { Path } from '../../util';
 import { DROP_INDENTATION, paddingIndentation } from './helpers';
-import { type TreeData } from './tree-data';
+import { type TreeData, isTreeDataFor } from './tree-data';
 import {
   type ColumnRenderer,
   type HeadingRenderer,
@@ -280,6 +280,9 @@ export const Tree = <T extends { id: string } = any>({
   onKeyDown,
 }: TreeProps<T>) => {
   const treePath = useMemo(() => (path ? [...path, id] : [id]), [id, path]);
+  // Every tree sharing a path root is one drag scope, which is what a monitor claims: the navtree
+  // mounts a `Tree` per workspace tab, and a scope per tab would leave its own drops unclaimed.
+  const treeId = treePath[0];
   const walkAtom = useMemo(() => createTreeWalkAtom(model, rootId, treePath), [model, rootId, treePath]);
   const { root, expanded, selected, byValue } = useAtomValue(walkAtom);
 
@@ -508,7 +511,7 @@ export const Tree = <T extends { id: string } = any>({
 
   const renderContext = useMemo<TreeRenderContextValue<T>>(
     () => ({
-      treeId: id,
+      treeId,
       focusNode,
       draggable,
       renderColumns,
@@ -527,7 +530,7 @@ export const Tree = <T extends { id: string } = any>({
       mountedRef,
     }),
     [
-      id,
+      treeId,
       focusNode,
       draggable,
       renderColumns,
@@ -576,7 +579,7 @@ export const Tree = <T extends { id: string } = any>({
             <TreeNodeRow key={node.value} node={node} />
           ))}
           {dropAtEnd && draggable && (
-            <TreeEndDropTarget data={{ treeId: id, id: root.id, path: root.path, item: root.item }} />
+            <TreeEndDropTarget data={{ treeId, id: root.id, path: root.path, item: root.item }} />
           )}
         </TreeView.Tree>
       </TreeRenderProvider>
@@ -733,6 +736,7 @@ const TreeEndDropTarget = ({ data }: { data: TreeData }) => {
     return dropTargetForElements({
       element,
       getData: () => ({ ...data, atEnd: true }),
+      canDrop: ({ source }) => isTreeDataFor(source.data, data.treeId),
       onDragEnter: () => setOver(true),
       onDragLeave: () => setOver(false),
       onDrop: () => setOver(false),
@@ -849,7 +853,13 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
         }),
       canDrop: ({ source }) => {
         const permitted = canDrop ?? (() => true);
-        return source.element !== element && permitted({ source: source.data as TreeData, target: data });
+        // A target scopes the sources it accepts for the same reason a monitor scopes the drags it
+        // claims: a foreign row landing here is read by the claiming monitor as its own node type.
+        return (
+          source.element !== element &&
+          isTreeDataFor(source.data, treeId) &&
+          permitted({ source: source.data as TreeData, target: data })
+        );
       },
       getIsSticky: () => true,
       onDrag: ({ self, source }) => {
@@ -897,6 +907,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
     isItemDroppable,
     item,
     id,
+    treeId,
     mode,
     level,
     branch,
