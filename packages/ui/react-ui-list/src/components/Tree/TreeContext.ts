@@ -123,8 +123,8 @@ export type TreeRenderContextValue<T extends { id: string } = any> = {
   dropBelowExpanded?: boolean;
   onOpenChange?: (params: { item: T; path: string[]; open: boolean }) => void;
   onItemHover?: (params: { item: T }) => void;
-  /** Directs the machine's roving tabstop to a row, by value. */
-  focusNode: (value: string) => void;
+  /** Directs the machine's roving tabstop at a row, and takes DOM focus with it. */
+  focusNode: (id: string, value: string) => void;
   /** Applies the select-vs-toggle policy for a row activation. */
   selectNode: (node: TreeNodeEntry<T>, modifiers: { option: boolean; shift: boolean }) => void;
   /** False during the tree's initial commit — disclosure inserted then must not animate. */

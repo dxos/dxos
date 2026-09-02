@@ -386,6 +386,48 @@ export const Tree = <T extends { id: string } = any>({
   // observed. Mirrors the machine's own changes back, which is what keeps it a roving tabstop.
   const [focusedValue, setFocusedValue] = useState<string | null>(null);
 
+  /**
+   * Node awaiting DOM focus, by id. Held in a ref so the effect below survives the re-renders the
+   * drop causes, and keyed on the id rather than the value: a drop that reparents changes the row's
+   * path, so the value captured when the drag started no longer matches anything.
+   */
+  const pendingFocusRef = useRef<string | null>(null);
+
+  /**
+   * Directs the roving tabstop at a row, and takes DOM focus with it.
+   *
+   * The controlled value alone is not enough: the machine moves focus in response to interaction,
+   * and a drop is not one of its events — after one every row is left at `tabindex=-1`. The node is
+   * looked up when the effect runs rather than captured here, because the reorder replaces or moves
+   * the row's element, and focusing a node the commit is about to move only blurs it again.
+   */
+  const focusNode = useCallback((id: string, value: string) => {
+    pendingFocusRef.current = id;
+    setFocusedValue(value);
+  }, []);
+
+  // No dependency array: the render that lands the reorder is the one to follow, and which render
+  // that is depends on how the consumer commits the move.
+  useEffect(() => {
+    const id = pendingFocusRef.current;
+    if (!id) {
+      return;
+    }
+    // Queried off the document, not a ref to the tree: `TreeView.Tree` is Ark's element and may not
+    // forward one.
+    const row = document.querySelector<HTMLElement>(`[data-object-id="${CSS.escape(id)}"]`);
+    if (!row) {
+      return;
+    }
+    // Only while focus is still where the drag left it: the reader may have clicked away, and
+    // taking it back then would be worse than losing the tabstop.
+    const active = document.activeElement;
+    if (!active || active === document.body || row.parentElement?.contains(active)) {
+      pendingFocusRef.current = null;
+      row.focus();
+    }
+  });
+
   // Focus moves without a selection event of its own, so the follow is driven from the machine's
   // focus change rather than inferred from the selection one.
   const handleFocusChange = useCallback(
@@ -459,7 +501,7 @@ export const Tree = <T extends { id: string } = any>({
   const renderContext = useMemo<TreeRenderContextValue<T>>(
     () => ({
       treeId: id,
-      focusNode: setFocusedValue,
+      focusNode,
       draggable,
       renderColumns,
       renderIcon,
@@ -478,7 +520,7 @@ export const Tree = <T extends { id: string } = any>({
     }),
     [
       id,
-      setFocusedValue,
+      focusNode,
       draggable,
       renderColumns,
       renderIcon,
@@ -775,7 +817,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
           // of the tree. Asking the machine rather than calling `focus()` here: the reorder moves
           // this row's DOM node, and moving a node blurs it, so any focus set around the drop races
           // the commit. As controlled state it is simply the focused value once the tree renders.
-          focusNode(value);
+          focusNode(id, value);
         },
       });
 
