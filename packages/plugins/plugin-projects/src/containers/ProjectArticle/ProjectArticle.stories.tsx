@@ -412,7 +412,8 @@ export const TaskLink: Story = {
     await expect(canvas.getByTestId('projectsPlugin.tab.tasks')).toHaveAttribute('data-state', 'inactive');
 
     // Back is the way out, and the outline it came from is shown again.
-    await userEvent.click(await canvas.findByLabelText('Back', undefined, { timeout: 10_000 }));
+    // The label plugin-tasks contributes for the outline's own back action.
+    await userEvent.click(await canvas.findByRole('button', { name: 'Back to outline' }, { timeout: 10_000 }));
     await expect(canvas.findByText(OUTLINE_ITEM, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
   },
 };

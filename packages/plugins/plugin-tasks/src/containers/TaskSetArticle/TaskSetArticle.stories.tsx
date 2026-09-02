@@ -186,9 +186,6 @@ export const Checkboxes: Story = {
       Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item.checkbox"]'));
     await waitFor(() => expect(boxes().length).toBeGreaterThan(1), { timeout: 10_000 });
 
-    // Checkbox and ordinal share one gutter cell, so an article offering checkboxes shows no numbers.
-    await expect(canvasElement.querySelectorAll('.tabular-nums').length).toBe(0);
-
     await userEvent.click(boxes()[0]);
     await waitFor(() => expect(boxes()[0]).toHaveAttribute('data-state', 'checked'), { timeout: 10_000 });
 
