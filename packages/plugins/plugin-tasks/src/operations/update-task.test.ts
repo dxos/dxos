@@ -23,12 +23,12 @@ describe('update-task', () => {
         priority: 'low',
       });
 
-      yield* updateTask.handler({ task: Ref.make(task), status: 'started', estimate: 3 });
+      yield* updateTask.handler({ task: Ref.make(task), status: 'started', estimate: 'm' });
 
       expect(task.title).toBe('Draft');
       expect(task.priority).toBe('low');
       expect(task.status).toBe('started');
-      expect(task.estimate).toBe(3);
+      expect(task.estimate).toBe('m');
     }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 

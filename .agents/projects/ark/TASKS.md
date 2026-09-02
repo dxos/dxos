@@ -75,9 +75,10 @@ cost against a much smaller hand-rolled component (Accordion +4.6 KB net, Listbo
       supplies the APG keymap. Verified in its story — ArrowDown moves focus between triggers, End
       jumps to the last, pointer expand opens the content. Public surface unchanged, so no consumer
       moved; the radix dependency and its `composer-app` prebundle entry are gone.
-- [ ] **Evaluate moving the core of `react-ui-list` and `@fluentui/react-tabster` to
-      `@ark-ui/react`** — the whole-stack version of the question, as one evaluation rather than
-      per-component. Tracked 2026-08-31. Constraints below.
+- [ ] **Evaluate moving the core of `react-ui-list` to `@ark-ui/react`** — the whole-stack version
+      of the question, as one evaluation rather than per-component. Tracked 2026-08-31; narrowed
+      2026-09-01 when Phase 5 landed, which removed `@fluentui/react-tabster` from the repo and so
+      took it out of this item's scope. Constraints below.
 
 ### Constraints on that evaluation
 
@@ -88,14 +89,14 @@ to re-derive:
    already bought all of it; per-machine marginal cost then runs Accordion +8,125 raw, Listbox
    +22,470, Combobox +87,936 — each against a hand-rolled component an order of magnitude smaller. A
    full `react-ui-list` sweep is net **worse** on bytes.
-2. **Tabster and `react-ui-list` are separable problems.** All four `react-ui-list` tabster call
-   sites are in lazy chunks and attribute zero boot bytes; the 68 KB prize is behind three
-   `@dxos/react-ui` files. Migrating this package off tabster saves nothing, and taking the prize
-   does not require touching this package.
-3. **Ark has no groupper.** `useArrowNavigationGroup`/`useFocusableGroup` are generic
-   composite-widget focus zones; Zag's focus management is per-machine and `focus-trap` is a trap.
-   Any plan that ends tabster needs an in-house roving-tabindex hook regardless of how much Ark is
-   adopted.
+2. **Settled by Phase 5 — tabster is gone.** The separability this constraint argued for held: the
+   68 KB was taken without touching `react-ui-list`. Nothing in the repo depends on
+   `@fluentui/react-tabster` any more, so it is no longer a term in this evaluation. (Two stale
+   references remain in `OrderedListRoot.tsx` prose.)
+3. **Ark has no groupper — and the replacement already exists.** Zag's focus management is
+   per-machine and `focus-trap` is a trap, so ending tabster needed an in-house roving-tabindex
+   hook. Phase 5 built it: `useFocusGroup` in `@dxos/react-focus`. The evaluation inherits it
+   rather than having to budget for it.
 4. **The case, if there is one, is coherence** — one interaction/accessibility model across the
    package instead of four (Ark machine, tabster roving-tabindex, Radix, bespoke activedescendant),
    with APG conformance maintained upstream. Size the migration against that, and price the ~85 KB
@@ -184,68 +185,98 @@ non-class `behavior` record keyed by the same names (`showDescription`), and a `
 - [ ] **Decide the variant names from real call sites** rather than inventing them — the candidates
       are the density/context splits the components already hand-roll at the point of use (sidebar vs
       document vs dialog/popover), so survey those before fixing the axis.
-- [ ] **Fold `Treegrid.theme.ts` in or leave it deliberately separate.** It is a second, standalone
-      `tv` recipe with its own `rowLevel` lookup and no central registration; whether it joins
-      `List.theme.ts` depends on the Phase 3 decision about what `Treegrid` is for.
 - [ ] Confirm `bridgeTv` registration still resolves once the axis exists, since `listSlots` is
       derived from `styles()` and a variant axis changes nothing about slot names but does change
       what a consumer must pass.
 
-## Phase 7: Reimplement `react-ui-task` on the Tree
+## Phase 7: Reimplement `react-ui-task` on the Tree — landed
 
-Tracked 2026-08-31. `@dxos/react-ui-task` renders a hierarchical task list and, today, re-derives
-most of what the Ark-based `Tree` now provides. `TaskList.tsx` is **1,324 lines** plus a bespoke
-`hierarchy.ts` (191) and `dnd.ts` (46); it borrows only leaf pieces from `react-ui-list`
-(`Listbox`, `TreeDropIndicator`, `TreeItemToggle`, `paddingIndentation`, `useListDisclosure`) and
-hand-rolls its own roles, keyboard handling and drag wiring on top of `Task.parentTask`.
+Tracked 2026-08-31, implemented the same day. `@dxos/react-ui-task` rendered a hierarchical task
+list that re-derived most of what the Ark-based `Tree` provides: `TaskList.tsx` at **1,324 lines**
+plus a bespoke `hierarchy.ts` (191) and `dnd.ts` (46), borrowing only leaf pieces from
+`react-ui-list` and hand-rolling its own roles, keyboard handling and drag wiring on top of
+`Task.parentTask`.
 
-The prospective target, `@dxos/react-ui-tree`, **does not exist yet** — this item presupposes
-extracting `Tree` out of `react-ui-list` into its own package. That extraction is the real
-precondition and should be decided first, alongside the Phase 3 `Treegrid` question, since both are
-"what belongs in `react-ui-list`" decisions.
+**The `@dxos/react-ui-tree` extraction was NOT required and did not happen.** The original entry
+named it as a precondition; that was wrong. `react-ui-task` already depends on `react-ui-list`, so
+`TaskTreeContent` imports `Tree` from `@dxos/react-ui-list` directly and no new package — and no new
+layering edge — was introduced. Extraction remains an open _packaging_ question (see Phase 3), not a
+blocker for any consumer.
 
-Why it is worth doing: the Tree already owns the APG keymap, machine-managed focus and ARIA, and the
-pragmatic-dnd contract. Reimplementing `TaskList` on it should delete the bespoke hierarchy walk and
-most of the keyboard/role handling, and would give the task list the accessibility behaviour it does
-not have today — the same argument that justified the navtree rebuild.
+What landed:
 
-- [ ] **Decide whether `Tree` is extracted into `@dxos/react-ui-tree`.** Precondition for everything
-      below. Weigh against Phase 3 (Treegrid) and the `react-ui`→`react-ui-list` layering rule in
-      AUDIT.md §1.4 — a new package must not create an upward edge.
-- [ ] **Map `TaskList`'s requirements onto the `TreeModel` contract.** It stores hierarchy as
-      `Task.parentTask` and moves nodes with a single `MoveTask` mutation taking a parent/index pair;
-      the Tree's model is atom families keyed by path. Establish that the mapping is faithful before
-      committing — this is where the migration succeeds or fails.
-- [ ] **Reimplement `TaskList` on the Tree**, deleting `hierarchy.ts` + `dnd.ts` and the hand-rolled
-      roles/keyboard handling in favour of the machine's.
-- [ ] **Keep the sub-task disclosure semantics.** `TaskList` documents a per-viewer, per-list open
-      state and a rule about not hiding a newly added first sub-task; confirm the Tree's controlled
-      `expandedValue` reproduces it rather than assuming path-keyed state is equivalent.
-- [ ] Port `hierarchy.test.ts` (155 lines) to whatever replaces the walk, rather than dropping the
-      coverage with the module.
+- [x] **Mapped `TaskList` onto the `TreeModel` contract.** `tree-model.ts` builds a `TaskNode` forest
+      from `Task.parentTask` under a synthetic `TASK_TREE_ROOT_ID` root and feeds it to
+      `createStaticTreeModel`. A task has exactly one parent, so it occupies exactly one path — which
+      is what lets the list keep collapse keyed by id while `Tree` addresses rows by path.
+      `buildTaskPaths` is the bridge. Cycle-safe in the same way as `walkTaskTree`.
+- [x] **Rendered `TaskList` through `Tree`** (`TaskTreeContent.tsx`), so the machine owns disclosure,
+      roving focus and the APG keymap. Row anatomy becomes `[toggle][heading][columns]`; `Alt+Arrow`
+      restructuring still reaches the row handler because zag ignores modified arrows.
+- [x] **Kept the disclosure semantics.** Open state is seeded from the list's `collapsed` set and
+      written back through `onOpenChange`; the set survives model rebuilds when the task array
+      changes. `collapsed` is deliberately kept out of the model memo's deps — a new model per toggle
+      rebuilt the collection and repainted every row (the flicker).
+- [x] **Selection is driven in, not held.** `TaskList.Root` still owns `selected`; an effect writes
+      `current` into `model.stateAtom(path)` so selecting elsewhere cannot leave the tree stale.
+- [x] Coverage: `tree-model.test.ts` (7 tests) covers topology, sibling order, dangling parents,
+      cycles, seeded collapse and path uniqueness.
+
+Still open (the Phase 7 gaps):
+
+- [x] **Descriptions in the tree path.** Done. The tree heading rendered only the title, so a
+      hierarchical list silently dropped the descriptions the flat list showed. The heading is now a
+      grid so the description starts in the title's own column — clearing the ordinal and the status
+      control, rather than reading as part of the row above — and both paths share one
+      `TaskDescription` so they cannot drift on type scale or clamping. Verified in the
+      `Hierarchical` story.
+- [x] **Drag handles / reordering — done and verified by the user 2026-09-01.** `TaskTreeContent`
+      enables `Tree`'s `draggable` and installs the drop monitor; placements resolve through
+      `resolveTaskPlacement`, with `reparent` handled and an end-of-list strip (`dropAtEnd`) so a
+      task can be dropped past the last row. The dragged row leaves the list for the gesture and its
+      subtree travels with it. Drop semantics and the measured zone map: `docs/TREE.md` §9.
+- [x] **Retired `dnd.ts` and the flat path.** Every mode renders through `Tree`, so `TaskListItem`
+      and the drag machinery it owned (`useTaskDrag`, `subtreeRows`, `renderSubtreePreview`) were
+      unreachable: `dnd.ts` is deleted and `TaskList.tsx` drops from ~1,520 to 1,005 lines.
+      `walkTaskTree`/`TaskTreeRow` went with it — ordinals now flatten the same forest the tree
+      renders (`flattenVisibleTasks`), so the numbers cannot drift from the rows they label, and the
+      walk's tests moved onto it. `hierarchy.ts` keeps only its placement algebra, which
+      `TaskTreeContent` uses. `TaskList.Item`/`GroupLabel` left the namespace; nothing consumed them.
+
+- [x] **Inline title editing — NOT a gap; the earlier entry was wrong.** The tree heading renders a
+      plain `<span>`, but so does the flat row (`TaskList.tsx`, the title cell). Editing lives in the
+      detail pane, which is path-independent — "the whole reason editing moved out of the row", as
+      the `TestEdit` story puts it. Neither path has inline title editing, so the tree is not behind.
+- [x] **Conceal animation — NOT a defect; the earlier entry was wrong.** This was written up as "the
+      branch never runs its close animation in the task tree — rows disappear instantly". Measured
+      in the `Hierarchical` story on 2026-09-01 and that is not what happens: collapsing a branch
+      fires `animationstart`/`animationend` for `tree-conceal` on `branch-content`, and sampling
+      the element per frame shows height ramping 102 → 41 px with opacity 1.00 → 0.63 over ~114 ms
+      before landing at 0. `interpolate-size: allow-keywords` is supported, so the height keyframes
+      apply rather than degrading to opacity-only. Nothing to fix.
 
 ## Suspect — `SPACE_INITIALIZING` stall seen in the agent browser (attribution CORRECTED)
 
 Found 2026-08-31 while trying to verify `AtprotoCompanion`. Not ark work and not caused by this
 branch.
 
-> **RESOLVED 2026-09-01 for `plugin-trip`, and the attribution below was wrong twice over.** The
-> `TripArticle` Default story rendered nothing because its seed **threw before adding anything**:
-> `TripBuilder.addFlight` forwarded the caller's `{ name, code }` airline straight into `Segment`'s
-> `provider`, and `Provider` is `{ name, domain, ref }` — so `Segment.make` raised
-> `TypeError: Unknown property: details.provider.code`, inside `onClientInitialized`'s Effect where
-> it was swallowed. No exception surfaced, no object was added, and the article sat on its loading
-> state showing `{ space: true, db: true, trip: false }`. Fixed in `testing/builder.ts`, with a unit
-> test over the Default sequence and a `play` assertion on the story — the latter verified to fail
-> without the fix (30 s timeout) and pass with it. The render-only smoke test never caught it,
-> because a swallowed throw still renders.
->
-> Two diagnoses of my own were wrong on the way: that every `withPluginManager` story stalls (only
-> Default did — the others seed differently), and that `Empty` rendering nothing ruled out a seeding
-> fault (it shares the same decorators, so it proved nothing).
->
-> What remains unexplained is the SEPARATE `SPACE_INITIALIZING` observation below, which is about a
-> space with zero objects rather than a throwing seed. Do not merge the two.
+**RESOLVED 2026-09-01 for `plugin-trip`, and the attribution below was wrong twice over.** The
+`TripArticle` Default story rendered nothing because its seed **threw before adding anything**:
+`TripBuilder.addFlight` forwarded the caller's `{ name, code }` airline straight into `Segment`'s
+`provider`, and `Provider` is `{ name, domain, ref }` — so `Segment.make` raised
+`TypeError: Unknown property: details.provider.code`, inside `onClientInitialized`'s Effect where
+it was swallowed. No exception surfaced, no object was added, and the article sat on its loading
+state showing `{ space: true, db: true, trip: false }`. Fixed in `testing/builder.ts`, with a unit
+test over the Default sequence and a `play` assertion on the story — the latter verified to fail
+without the fix (30 s timeout) and pass with it. The render-only smoke test never caught it,
+because a swallowed throw still renders.
+
+Two diagnoses of my own were wrong on the way: that every `withPluginManager` story stalls (only
+Default did — the others seed differently), and that `Empty` rendering nothing ruled out a seeding
+fault (it shares the same decorators, so it proved nothing).
+
+What remains unexplained is the SEPARATE `SPACE_INITIALIZING` observation below, which is about a
+space with zero objects rather than a throwing seed. Do not merge the two.
 
 > **CORRECTION (same day).** This was first written up as a repo-wide defect to hand to an ECHO
 > owner. That attribution is **not supported**: the user reports `devtools/ObjectsTree` renders fine
@@ -386,6 +417,124 @@ rows by) and by id (what gates the walk).
       only the immediate parent.
 - [ ] Confirm expanding into a relation cycle terminates (it should now be handled by `Tree`'s
       ancestor check rather than `ObjectsTree`'s single-level one).
-- [ ] With this landed, `Treegrid`'s only remaining consumer is `plugin-atproto`'s
-      `AtprotoCompanion`, whose rows are read-only — Phase 3 can be settled by moving it to grouped
-      semantic markup and deleting `Treegrid`.
+- [x] Settled by Phase 3: `AtprotoCompanion` moved to semantic markup and `Treegrid` was deleted.
+      Nothing in the repo references it, so its theme file went with it.
+
+## Phase 10: Reimplement `ToolWidget` on the Ark-backed Accordion — landed
+
+Tracked and implemented 2026-09-01. `ToolWidget` rendered a run of tool blocks as one collapsible
+panel with a row per call, driven by `TogglePanel` plus its own `useState`. It now composes both Ark
+machines: `TogglePanel` (rebuilt on Collapsible) wraps the run, and the calls inside it are an
+`Accordion` from `react-ui-list`.
+
+- [x] **Mapped `TogglePanel` onto `Accordion`.** The run's calls are accordion items; a call with no
+      payload stays a plain row, since a caret that reveals emptiness reads as a failure. The
+      single-call case keeps its own shape — the summary collapses into the row and the panel's own
+      disclosure opens onto the detail — so it needed no extra slot.
+- [x] **Restored the animation**, and the workarounds it was substituting for are gone with it. The
+      `duration={0}` opt-out is removed; the body ramps against the Collapsible's `--height`
+      (measured 0 → 124px). The scrollbar that prompted the opt-out was never the panel's: the
+      block editor's `.cm-scroller` was a frame short of the growing widget for the whole animation
+      and painted one throughout. Pinned to `overflow-y: hidden`, which is honest — an item's editor
+      is auto-height and the feed is what scrolls.
+- [x] **`TogglePanel` is NOT retired.** Six consumers, and the compound's parts and props are
+      unchanged, so none of them moved. It gained `caret` (`'start' | 'end'`) and a `classNames`
+      pass-through; `ToolWidget` uses `caret='end'` so the summary reads as a line of prose with an
+      affordance after it rather than a panel header.
+- [x] **Verified in the assistant stories**, including the editor interaction the entry warned
+      about. The widget takes `w-0 min-w-full` so a wide payload no longer stretches CodeMirror's
+      content line and scrolls the whole block; the payload is its own inline-axis scroller. Also
+      fixed while there: the accordion's end items clipped their trigger's focus ring, and the copy
+      button sat off the disclosure caret's column.
+
+Not done, deliberately: the widget still owns its open state rather than delegating it, since
+`TogglePanel` is the run's disclosure and the accordion is only the rows inside it.
+
+## Phase 11: Collapsible disclosure for form objects
+
+Tracked 2026-09-01. Now that `TogglePanel` is an Ark Collapsible and the Accordion carries the APG
+keymap, the same disclosure should back nested objects in `react-ui-form` — an object field is a
+disclosure by nature, and the form currently expresses it without one.
+
+- [ ] **Use a collapsible disclosure for form objects.** Establish first whether a nested object
+      wants `Collapsible` (one independent region) or `Accordion` (a set where the machine tracks
+      which are open), since the form renders many siblings and that is what decides the choice.
+- [ ] Check it against the `Form.Viewport`/`Form.Section` composition rather than wrapping fields in
+      a new container — the viewport owns the gutter, and an extra wrapper there loses it.
+
+## Phase 12: Optional guide line inside branch content
+
+Tracked 2026-09-01. A `Tree` option to draw a vertical rule down a branch's content, connecting a
+parent to its descendants — the outliner convention for showing which rows belong to which branch
+once a list is deep enough that indentation alone stops carrying it.
+
+- [ ] **Draw it on `TreeBranchContent`**, which already spans the row grid and is the only element
+      that knows a subtree's full extent. A per-row border would restart at every row and leave a
+      dashed column rather than one line.
+- [ ] **Place it against the disclosure toggle's centreline**, not the indent step: the line reads as
+      descending _from_ the chevron, and the toggle is one control wide regardless of depth.
+- [ ] Check it survives the conceal animation — the content box is clipped and its height is
+      animated, so a line anchored to the box's bottom edge would be drawn mid-ramp and then cut.
+
+## Phase 13: Checkbox selection, and delegating the selected tasks
+
+Tracked 2026-09-01; merged with the ProjectArticle toolbar action 2026-09-02. A `TaskList` option to
+render a checkbox where the ordinal sits, and a `ProjectArticle` toolbar button that delegates the
+checked tasks to a new chat session.
+
+**The checkbox is selection, not a status write** — settled 2026-09-02. It does not complete a task,
+which is what the status control is for; it marks which rows an action will act on. Selection lives
+in `react-ui-attention`'s view state (`useSelection('multi', contextId)` and
+`useSelectionActions().toggle`, over `Selection.toggle`), so the rows and the toolbar read and write
+one set and neither owns it.
+
+- [ ] **Render the checkbox in the gutter cell**, where `TaskOrdinal` sits, not beside the status
+      control: the two would read as two ways to complete a task, and the row keeps one geometry so
+      the trailing columns do not move.
+- [ ] **Move `TaskList` off its own `selected` string.** It holds a single id with `onTaskSelect`,
+      and `Tree` runs `selectionMode='single'`; checkbox selection is a set. Decide whether the
+      current row (the roving tabstop's highlight) stays distinct from the checked set — a row can
+      be current _and_ checked — or whether `selected` becomes a view of the multi-selection.
+- [ ] **Key the view state per list.** `contextId` has to be the attendable the list belongs to, or
+      two task lists on one deck share a selection.
+- [ ] **`ProjectArticle` configures the embedded `TaskSetArticle` for checkboxes**, and contributes
+      the toolbar action beside `create-chat`/`add-artifact` in `useToolbarActions`, enabled only
+      when the checked set is non-empty.
+- [ ] **Delegate, not delete** (confirmed 2026-09-01): `AssistantOperation.CreateChat` +
+      `Chat.linkCompanion`, the path `create-chat` already uses.
+- [ ] **Decide what delegation does to membership.** `Chat.addTask` parents a task it creates to the
+      chat and `Chat.deleteTask` destroys only what the chat owns, so a delegated task keeping its
+      task set is the shape those primitives already assume.
+- [ ] Story coverage: a checkbox list, and the toolbar action over a checked set.
+
+## Phase 14: Dragging a task jumps — settle the write as one sync operation
+
+Tracked 2026-09-01, from the `TaskSetArticle` drag work.
+
+- [x] **Resolved.** The jump was self-inflicted: `0234feb119` moved the drop onto `useOperation`
+      (the invoker), which is asynchronous, so the tree painted from the model before the write
+      landed and again after. #12863 had deliberately made this path synchronous — `MoveTask` peeks
+      its refs and suspends only when one is unloaded, so with the rows in hand `Effect.runSync`
+      commits in the same tick the gesture ends. Restored.
+- [ ] The `Effect.runSync` path is only sound while every ref is loaded. Decide what should happen
+      when one is not: today the effect would suspend and `runSync` throws, which is a crash rather
+      than a slow drop.
+
+## Phase 15: `ProjectArticle` stops passing behaviour through Surface data
+
+Tracked 2026-09-02. The outline Surface is handed `extensions` and `onSelectTask` as `data`, which
+the file already flags: `// TODO(burdon): Should not pass callbacks!`. Surface data describes the
+subject; it is not a props channel, and a callback there couples the host to the implementation it
+is supposed to be decoupled from.
+
+- [ ] **Collect the editor extensions in `plugin-tasks`, where the surface is implemented**, not in
+      `ProjectArticle`. The host currently reads `MarkdownCapabilities.ExtensionProvider` and hands
+      the result down; the component that builds the editor should read the capability itself, which
+      is the same thing `MarkdownArticle` does for markdown documents.
+- [ ] **Remove `handleSelectTask` and the `onSelectTask` data property.** It only switches the
+      host's tab to `tasks`, so the effect belongs to whatever owns that tab state — an operation or
+      the layout, not a function smuggled through Surface data.
+- [ ] Leave `subject`, `attendableId` and `taskSet` on the Surface: those identify what is being
+      rendered, which is what `data` is for.
+- [ ] Check the other `Surface.Surface` in the file (the tasks section) for the same pattern before
+      calling this done.

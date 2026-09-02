@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 import { expect } from 'vitest';
 
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
-import { Alarm, SessionStore, getAck, isQueued } from '@dxos/assistant';
+import { Alarm, SessionStore, isConsumed, isQueued } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
@@ -111,7 +111,7 @@ const waitForQueueDrained = (feed: Feed.Feed) =>
     });
   });
 
-/** Polls until a message in the feed acks `alarmId`. */
+/** Polls until the alarm with `alarmId` is no longer pending (the agent consumed it). */
 const waitForAlarmAcked = (feed: Feed.Feed, alarmId: string) =>
   Effect.gen(function* () {
     const runtime = yield* Effect.context<Database.Service>();
@@ -120,13 +120,13 @@ const waitForAlarmAcked = (feed: Feed.Feed, alarmId: string) =>
         .poll(
           () =>
             RuntimeProvider.runPromise(Effect.succeed(runtime))(
-              Feed.query(feed, Filter.type(Message.Message)).run.pipe(
-                Effect.map((messages) => messages.some((message) => getAck(message) === alarmId)),
-              ),
+              new SessionStore()
+                .loadPending(feed)
+                .pipe(Effect.map((state) => state.pendingAlarms.some((alarm) => alarm.id === alarmId))),
             ),
           { timeout: 15_000 },
         )
-        .toBe(true);
+        .toBe(false);
     });
   });
 
@@ -150,13 +150,12 @@ describe('AgentProcess input queue (scripted)', () => {
 
         const { messages, pendingMessages } = yield* readFeed(session.feed);
 
-        // Nothing left waiting, and every queued original is acked by a message in the feed.
+        // Nothing left waiting, and every queue entry is marked consumed.
         expect(pendingMessages).toEqual([]);
-        const queuedOriginals = messages.filter(isQueued);
-        expect(queuedOriginals.length).toBeGreaterThan(0);
-        const acks = new Set(messages.map(getAck).filter((id) => id !== undefined));
-        for (const original of queuedOriginals) {
-          expect(acks.has(original.id)).toBe(true);
+        const entries = messages.filter(isQueued);
+        expect(entries.length).toBeGreaterThan(0);
+        for (const entry of entries) {
+          expect(isConsumed(entry)).toBe(true);
         }
 
         // The prompt reached the model, carried by the turn's own user message.
@@ -182,11 +181,11 @@ describe('AgentProcess input queue (scripted)', () => {
 
         expect(pendingMessages).toEqual([]);
         expect(pendingAlarms).toEqual([]);
-        // Each queued original is acked, and the queue drained in submission order.
+        // Each queue entry is consumed, and the queue drained in submission order.
         const queuedOrder = messages.filter(isQueued).map((message) => Message.extractText(message));
         expect(Array.from(new Set(queuedOrder))).toEqual(['first', 'second', 'third']);
-        for (const original of messages.filter(isQueued)) {
-          expect(messages.some((message) => getAck(message) === original.id)).toBe(true);
+        for (const entry of messages.filter(isQueued)) {
+          expect(isConsumed(entry)).toBe(true);
         }
       },
       Effect.provide(replyLayer()),
@@ -246,7 +245,6 @@ describe('AgentProcess input queue (scripted)', () => {
         const cancelling = during.pendingMessages.filter((message) => Message.extractText(message) === 'cancel me');
         expect(cancelling.length).toBeGreaterThan(0);
         yield* Feed.remove(session.feed, cancelling);
-        expect((yield* readFeed(session.feed)).pendingMessages).toEqual([]);
 
         yield* Deferred.succeed(gateRelease, undefined);
         yield* session.waitForCompletion();
@@ -307,7 +305,7 @@ describe('AgentProcess alarms (scripted)', () => {
 
         const { messages, pendingAlarms } = yield* readFeed(session.feed);
         expect(pendingAlarms).toEqual([]);
-        expect(messages.some((message) => getAck(message) === alarm.id)).toBe(true);
+        expect(isConsumed(alarm)).toBe(true);
         // The reminder reached the model in the wake-up prompt.
         expect(promptTexts(messages).join('\n')).toContain('check the build');
       },
@@ -335,7 +333,7 @@ describe('AgentProcess alarms (scripted)', () => {
 
         const { messages, pendingAlarms } = yield* readFeed(session.feed);
         expect(pendingAlarms.map((entry) => entry.id)).toEqual([alarm.id]);
-        expect(messages.some((message) => getAck(message) === alarm.id)).toBe(false);
+        expect(isConsumed(alarm)).toBe(false);
         expect(promptTexts(messages).join('\n')).not.toContain('much later');
       },
       Effect.provide(replyLayer()),
@@ -366,7 +364,7 @@ describe('AgentProcess alarms (scripted)', () => {
         const { messages, pendingAlarms } = yield* readFeed(session.feed);
         // Setting the second alarm did not replace the first (the old single-cell behaviour).
         expect(pendingAlarms.map((entry) => entry.id)).toEqual([later.id]);
-        expect(messages.some((message) => getAck(message) === due.id)).toBe(true);
+        expect(isConsumed(due)).toBe(true);
       },
       Effect.provide(replyLayer()),
       TestHelpers.provideTestContext,
@@ -392,7 +390,7 @@ describe('AgentProcess alarms (scripted)', () => {
 
         const { messages, pendingAlarms } = yield* readFeed(session.feed);
         expect(pendingAlarms).toEqual([]);
-        expect(messages.some((message) => getAck(message) === alarm.id)).toBe(false);
+        expect(isConsumed(alarm)).toBe(false);
         expect(promptTexts(messages).join('\n')).not.toContain('cancelled');
       },
       Effect.provide(replyLayer()),

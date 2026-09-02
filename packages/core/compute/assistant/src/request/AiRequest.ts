@@ -31,15 +31,14 @@ import type * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import type * as Skill from '@dxos/compute/Skill';
 import * as Trace from '@dxos/compute/Trace';
-import { Annotation, Database, Obj, type Ref, Registry } from '@dxos/echo';
+import { Database, Obj, Registry } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
 
-import { AckAnnotation } from '../session/SessionStore.ts';
-import { getOperationFromTool } from '../tool-runtime/services.ts';
-import { type AiAssistantError, CompleteBlock, PartialBlock } from '../util/index.ts';
-import { formatSystemPrompt, formatUserPrompt } from './format.ts';
-import { GenerationObserver } from './observer.ts';
+import { getOperationFromTool } from '../tool-runtime/services';
+import { type AiAssistantError, CompleteBlock, PartialBlock } from '../util';
+import { formatSystemPrompt, formatUserPrompt } from './format';
+import { GenerationObserver } from './observer';
 
 export type RunError = AiError.AiError | PromptPreprocessingError | AiToolNotFoundError | AiAssistantError;
 
@@ -109,11 +108,6 @@ export type BeginProps = {
   objects?: Obj.Unknown[];
   skills?: readonly Skill.Skill[];
   instructions?: readonly Instructions.Instructions[];
-  /**
-   * Queued feed item (message or alarm) this turn dequeues; stamped as `AckAnnotation` on the user
-   * prompt message so its append is the atomic ack.
-   */
-  ack?: Ref.Ref<Obj.Unknown>;
 };
 
 export type TurnProps<R = never> = {
@@ -237,7 +231,6 @@ export class Request {
     skills = [],
     objects = [],
     instructions = [],
-    ack,
   }: BeginProps): Effect.Effect<void, RunError, RunRequirements> =>
     Effect.gen({ self: this }, function* () {
       this._started = Date.now();
@@ -260,11 +253,7 @@ export class Request {
         }
       }
 
-      const userMessage = yield* formatUserPrompt({ prompt, history });
-      if (ack !== undefined) {
-        Obj.update(userMessage, (userMessage) => Annotation.set(userMessage, AckAnnotation, ack));
-      }
-      yield* this._submitMessage(userMessage);
+      yield* this._submitMessage(yield* formatUserPrompt({ prompt, history }));
     }).pipe(Effect.withSpan('AiRequest.begin'));
 
   /**

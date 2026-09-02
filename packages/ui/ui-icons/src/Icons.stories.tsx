@@ -20,7 +20,13 @@ import { PxIcons } from './index.ts';
 const sizes = [16, 12, 8, 6, 5, 4] as const;
 
 /** Phosphor glyphs shown beside the set, to catch weight or inset drift by eye. */
-const reference = ['ph--circle--regular', 'ph--github-logo--regular', 'ph--google-logo--regular'];
+const reference = [
+  // Reference
+  'ph--circle--regular',
+  // Logos
+  'ph--github-logo--regular',
+  'ph--google-logo--regular',
+];
 
 /**
  * One row per symbol, each size wrapped in a box that hugs the icon so the dashes show that size's

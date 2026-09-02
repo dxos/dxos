@@ -26,7 +26,7 @@ import { EdgeHttpClient } from '@dxos/edge-client/http';
 import { EffectEx } from '@dxos/effect';
 import { LogLevel, log } from '@dxos/log';
 import { IdbLogStore } from '@dxos/log-store-idb';
-import { Observability } from '@dxos/observability';
+import * as Observability from '@dxos/observability/Observability';
 import { translations as observabilityTranslations } from '@dxos/plugin-observability/translations';
 import { ErrorBoundary, ErrorFallback } from '@dxos/react-error-boundary';
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';
@@ -35,8 +35,7 @@ import { translations as reactUiTranslations } from '@dxos/react-ui/translations
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
 
-import { type PluginConfig, getDefaults, getPlugins } from './plugin-defs.tsx';
-import { initAutomergeWasm } from './util/automerge-wasm.ts';
+import { type PluginConfig, getDefaults, getPlugins } from './plugin-defs';
 import {
   APP_KEY,
   LOG_STORE_DB_NAME,
@@ -57,11 +56,12 @@ import {
   showDevRssBanner,
   startupProfiler,
   translations,
-} from './util/index.ts';
+} from './util';
+import { initAutomergeWasm } from './util/automerge-wasm';
 
 // Fatal-error-only UI, loaded on demand: its FeedbackForm pulls the whole form stack
 // (react-ui-form, editor, pickers) which must stay out of the static boot graph.
-const ResetDialog = lazy(() => import('./components/index.ts').then((module) => ({ default: module.ResetDialog })));
+const ResetDialog = lazy(() => import('./components').then((module) => ({ default: module.ResetDialog })));
 
 /**
  * Startup deadline override, in SECONDS (`VITE_DX_STARTUP_TIMEOUT=2`).
@@ -170,11 +170,11 @@ if (import.meta.env?.DEV) {
  */
 const createAssetCache = async (isPwa: boolean, isTauri: boolean): Promise<PluginAssetCache.Cache> => {
   if (isTauri) {
-    const { createTauriAssetCache } = await import('./asset-cache/tauri.ts');
+    const { createTauriAssetCache } = await import('./asset-cache/tauri');
     return createTauriAssetCache();
   }
   if (isPwa && typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
-    const { createServiceWorkerAssetCache } = await import('./asset-cache/service-worker.ts');
+    const { createServiceWorkerAssetCache } = await import('./asset-cache/service-worker');
     return createServiceWorkerAssetCache();
   }
   return PluginAssetCache.noop();
@@ -222,12 +222,11 @@ const main = async () => {
   // downloads and feedback exports (IDB keeps the data); the worker owns writes and eviction,
   // so the read handle's own sweep is disabled.
   const logStore = new IdbLogStore({ dbName: LOG_STORE_DB_NAME, evictionInterval: 0 });
-  const logProcessor = new WorkerLogProcessor({
-    worker: new Worker(new URL('./workers/log-writer-worker.ts', import.meta.url), {
-      type: 'module',
-      name: 'dxos-log-writer',
-    }),
+  const observabilityWorker = new Worker(new URL('./workers/observability-worker', import.meta.url), {
+    type: 'module',
+    name: 'dxos-observability',
   });
+  const logProcessor = new WorkerLogProcessor({ worker: observabilityWorker });
   log.addProcessor(logProcessor.processor);
 
   // Devtools convenience — also surfaced via the help panel and ResetDialog UI.
@@ -318,7 +317,9 @@ const main = async () => {
 
   // Intentionally do not await; the buffering backend in TRACE_PROCESSOR captures
   // early spans and replays them once the real OTEL backend registers.
-  const observability = initializeObservability(config, isTauri, logStore, observabilityDisabled);
+  const observability = initializeObservability(config, isTauri, logStore, observabilityDisabled, {
+    post: (message) => observabilityWorker.postMessage(message),
+  });
 
   // Capture a one-shot `composer.startup` event when the framework dispatches
   // `app-framework:startup-activated`. Includes total ms, per-phase ms, top-5
@@ -437,12 +438,12 @@ const main = async () => {
   );
   const services = await createClientServices(config, {
     createDedicatedWorker: () =>
-      new Worker(new URL('./workers/dedicated-worker.ts', import.meta.url), {
+      new Worker(new URL('./workers/dedicated-worker', import.meta.url), {
         type: 'module',
         name: 'dxos-client-worker',
       }),
     createCoordinatorWorker: () =>
-      new SharedWorker(new URL('./workers/coordinator-worker.ts', import.meta.url), {
+      new SharedWorker(new URL('./workers/coordinator-worker', import.meta.url), {
         type: 'module',
         // Dev: SharedWorkers are keyed by (URL, name) and outlive vite restarts, so suffix the name
         // with the server boot id — a restarted server then gets a fresh coordinator instead of

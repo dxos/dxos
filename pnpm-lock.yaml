@@ -585,9 +585,6 @@ catalogs:
     '@tldraw/utils':
       specifier: ^3.0.0
       version: 3.0.0
-    '@ts-morph/common':
-      specifier: ~0.17.0
-      version: 0.17.0
     '@types/argparse':
       specifier: ^2.0.0
       version: 2.0.10
@@ -3830,9 +3827,6 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../node-std
-      '@ts-morph/common':
-        specifier: 'catalog:'
-        version: 0.17.0
       argparse:
         specifier: 'catalog:'
         version: 2.0.1
@@ -20448,6 +20442,9 @@ importers:
       '@dxos/react-ui-feed':
         specifier: workspace:*
         version: link:../react-ui-feed
+      '@dxos/react-ui-list':
+        specifier: workspace:*
+        version: link:../react-ui-list
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../react-ui-syntax-highlighter
@@ -21121,6 +21118,9 @@ importers:
 
   packages/ui/react-ui-components:
     dependencies:
+      '@ark-ui/react':
+        specifier: 'catalog:'
+        version: 5.39.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@codemirror/language':
         specifier: 'catalog:'
         version: 6.12.4
@@ -22996,9 +22996,9 @@ importers:
       '@dxos/ui-types':
         specifier: workspace:*
         version: link:../ui-types
-      '@radix-ui/react-compose-refs':
+      '@effect/atom-react':
         specifier: 'catalog:'
-        version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
+        version: 4.0.0-rc.108(effect@4.0.0-rc.108)(react@19.2.7)(scheduler@0.27.0)
       '@radix-ui/react-context':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.17)(react@19.2.7)
@@ -23006,6 +23006,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.5.8(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(esbuild@0.28.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.5.8(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -23810,9 +23813,6 @@ importers:
       '@dxos/agent-claude':
         specifier: workspace:*
         version: link:../../packages/core/compute/agent-claude
-      '@dxos/app-framework':
-        specifier: workspace:*
-        version: link:../../packages/sdk/app-framework
       '@dxos/log':
         specifier: workspace:*
         version: link:../../packages/common/log

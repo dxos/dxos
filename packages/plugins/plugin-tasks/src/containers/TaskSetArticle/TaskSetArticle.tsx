@@ -19,7 +19,7 @@ import { Task, TaskSet } from '@dxos/types';
 import { meta } from '#meta';
 import { TaskOperation } from '#types';
 
-import { useTaskActions } from '../../hooks/useTaskActions.ts';
+import { useTaskActions } from '../../hooks';
 
 export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet>;
 
@@ -67,6 +67,10 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
     [contributed, handleDelete, t],
   );
 
+  // Run synchronously on the drop frame: `MoveTask` peeks its refs and only suspends when one is
+  // unloaded, so with the rows already in hand the write commits in the same tick the gesture ends.
+  // Going through the invoker instead re-rendered from the model before the write landed and again
+  // after it, which is the jump.
   const move = useOperationHandler(
     TaskOperation.MoveTask,
     (task: Task.Task, { parentTask, before }: TaskPlacement) => ({
@@ -85,17 +89,18 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
 
   const content = (
     <TaskList.Root
+      tasks={tasks}
       hierarchical
       selectable
-      showDescriptions
-      tasks={tasks}
+      showDescription
+      showEstimates
+      getTaskActions={getTaskActions}
       onTaskCreate={handleCreate}
       onTaskUpdate={handleUpdate}
-      getTaskActions={getTaskActions}
       onTaskMove={handleMove}
     >
       <TaskList.Viewport>
-        <TaskList.Content classNames='dx-document' />
+        <TaskList.Content classNames='dx-document border' />
       </TaskList.Viewport>
       <div className='p-2 pt-0'>
         <TaskList.Edit

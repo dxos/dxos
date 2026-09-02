@@ -297,7 +297,7 @@ describe('mutations', () => {
   it.effect('clears an optional field with null and says so', () =>
     Effect.gen(function* () {
       const task = yield* Database.add(
-        Task.make({ title: 'Draft launch email', status: 'todo', assignee: { name: 'Scout' }, estimate: 3 }),
+        Task.make({ title: 'Draft launch email', status: 'todo', assignee: { name: 'Scout' }, estimate: 'm' }),
       );
       yield* Database.flush();
 

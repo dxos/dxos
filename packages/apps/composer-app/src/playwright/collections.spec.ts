@@ -57,9 +57,11 @@ test.describe('Collection tests', () => {
 
     await host.toggleCollectionCollapsed(1);
     await host.dragTo(host.getObjectByName('Collection 1'), host.getObjectByName('Collection 2'), { x: 0, y: 0 });
-    // Collection 1 is now inside the Collection 2.
-    const collection1 = await host.getObjectByName('Collection 1').getAttribute('id');
-    expect(await host.getObjectByName('Collection 2').getAttribute('aria-owns')).toEqual(collection1);
+    // Collection 1 is now inside Collection 2: a row's `data-object-id` is the object's canonical
+    // graph path, so Collection 1's parent path is exactly Collection 2's path.
+    const collection1 = await host.getObjectByName('Collection 1').getAttribute('data-object-id');
+    const collection2 = await host.getObjectByName('Collection 2').getAttribute('data-object-id');
+    expect(collection1?.split('/').slice(0, -1).join('/')).toEqual(collection2);
   });
 
   test('delete a collection', async () => {

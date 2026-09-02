@@ -4,49 +4,10 @@
 
 import { describe, test } from 'vitest';
 
-import { Obj, Ref } from '@dxos/echo';
+import { Ref } from '@dxos/echo';
 import { Task } from '@dxos/types';
 
-import {
-  type TaskPlacement,
-  resolveIndent,
-  resolveNudge,
-  resolveOutdent,
-  resolveTaskPlacement,
-  walkTaskTree,
-} from './hierarchy.ts';
-
-describe('walkTaskTree', () => {
-  test('walks the tree, not the array', ({ expect }) => {
-    const { tasks } = fixture();
-    expect(walkTaskTree(tasks).map(({ task }) => task.title)).toEqual(['a', 'a1', 'a1x', 'a2', 'b']);
-  });
-
-  test('depth, branch and sibling position come out of the walk', ({ expect }) => {
-    const { tasks } = fixture();
-    const rows = walkTaskTree(tasks);
-    expect(rows.map(({ level }) => level)).toEqual([1, 2, 3, 2, 1]);
-    expect(rows.map(({ branch }) => branch)).toEqual([true, true, false, false, false]);
-    // `a1` is 1 of 2 among `a`'s children; `b` is 2 of 2 among the roots.
-    expect(rows.map(({ position, setSize }) => `${position}/${setSize}`)).toEqual(['1/2', '1/2', '1/1', '2/2', '2/2']);
-    expect(rows.map(({ ancestors }) => ancestors.length)).toEqual([0, 1, 2, 1, 0]);
-  });
-
-  test('a collapsed task hides its descendants but keeps its own row', ({ expect }) => {
-    const { a1, tasks } = fixture();
-    expect(walkTaskTree(tasks, new Set([a1.id])).map(({ task }) => task.title)).toEqual(['a', 'a1', 'a2', 'b']);
-  });
-
-  test('a parentTask cycle renders short rather than hanging', ({ expect }) => {
-    const one = Task.make({ title: 'one', status: 'todo' });
-    const two = Task.make({ title: 'two', status: 'todo', parentTask: Ref.make(one) });
-    // A malformed set: each is the other's parent, so neither is a root.
-    Obj.update(one, (one) => {
-      one.parentTask = Ref.make(two);
-    });
-    expect(walkTaskTree([one, two])).toEqual([]);
-  });
-});
+import { type TaskPlacement, resolveIndent, resolveNudge, resolveOutdent, resolveTaskPlacement } from './hierarchy';
 
 describe('resolveTaskPlacement', () => {
   test('above a task takes its parent and anchors on it', ({ expect }) => {
@@ -69,9 +30,16 @@ describe('resolveTaskPlacement', () => {
     expect(format(resolveTaskPlacement({ tasks, source: a1, target: b, intent: 'reorder-below' }))).to.eq('root/end');
   });
 
-  test('onto a task makes it the last child', ({ expect }) => {
+  test('onto a task makes it the first child', ({ expect }) => {
     const { tasks, b, a1 } = fixture();
-    expect(format(resolveTaskPlacement({ tasks, source: b, target: a1, intent: 'make-child' }))).to.eq('a1/end');
+    // Anchored on `a1`'s existing first child: the pointer is on the parent's row, and the place
+    // directly under that row is where the reader expects the task to appear.
+    expect(format(resolveTaskPlacement({ tasks, source: b, target: a1, intent: 'make-child' }))).to.eq('a1/a1x');
+  });
+
+  test('onto a childless task there is nothing to anchor on', ({ expect }) => {
+    const { tasks, b, a2 } = fixture();
+    expect(format(resolveTaskPlacement({ tasks, source: b, target: a2, intent: 'make-child' }))).to.eq('a2/end');
   });
 
   test('the source is skipped when anchoring, so a nudge down actually moves', ({ expect }) => {

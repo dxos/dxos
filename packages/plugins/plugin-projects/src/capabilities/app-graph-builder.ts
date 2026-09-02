@@ -362,7 +362,7 @@ export const createProjectArtifactsActionExtension = () =>
               });
             }),
           properties: {
-            label: ['add-artifact.label', { ns: meta.profile.key }],
+            label: ['create-artifact.label', { ns: meta.profile.key }],
             icon: 'ph--plus--regular',
             disposition: 'list-item-primary',
             testId: 'projectsPlugin.addArtifact',

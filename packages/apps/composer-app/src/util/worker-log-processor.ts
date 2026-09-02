@@ -12,17 +12,23 @@ import {
   serializeToJsonl,
   shouldLog,
 } from '@dxos/log';
+import type * as OtelLogSink from '@dxos/observability/OtelLogSink';
+import type * as OtelMetricsSink from '@dxos/observability/OtelMetricsSink';
+import type * as OtelSpanSink from '@dxos/observability/OtelSpanSink';
 
 const DEFAULT_LOG_FILTER = 'debug';
 
-/**
- * Sender → log-writer worker: a bare string is one pre-serialized JSONL log line (hot path —
- * no envelope), `{ type: 'flush' }` asks the worker to flush its queue now.
- */
-export type LogWriterMessage = string | { type: 'flush' };
+/** One pre-serialized JSONL log line; the hot path carries no envelope. */
+export type SerializedLogLine = string;
+
+export type ObservabilityWorkerMessage =
+  | SerializedLogLine
+  | { type: 'flush' }
+  | OtelLogSink.Message
+  | OtelMetricsSink.Message
+  | OtelSpanSink.Message;
 
 export type WorkerLogProcessorOptions = {
-  /** The log-writer worker (`workers/log-writer-worker.ts`). */
   worker: Worker;
   /** Identifier embedded in every record's `i` field. Defaults to {@link inferEnvironmentName}. */
   tabId?: string;
@@ -31,7 +37,7 @@ export type WorkerLogProcessorOptions = {
 };
 
 /**
- * Log processor that forwards each pre-serialized JSONL line to the log-writer worker, which
+ * Log processor that forwards each pre-serialized JSONL line to the observability worker, which
  * owns the queue, flush timer, IDB writes and eviction. `postMessage` enqueues synchronously
  * inside the log call and delivery does not need this thread's event loop to turn, so the
  * worker keeps persisting while this thread is blocked by a long synchronous task. Filtering
@@ -75,7 +81,7 @@ export class WorkerLogProcessor {
     this.#post({ type: 'flush' });
   }
 
-  #post(message: LogWriterMessage): void {
+  #post(message: ObservabilityWorkerMessage): void {
     try {
       this.#worker.postMessage(message);
     } catch {

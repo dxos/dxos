@@ -484,6 +484,59 @@ export const priorityNumberToTaskPriority = (
 };
 
 /**
+ * Linear estimates are story points on a per-team scale (commonly Fibonacci:
+ * 1, 2, 3, 5, 8). `Task.estimate` is a t-shirt size, because a size is what a
+ * reader can agree on without knowing the team's scale.
+ *
+ * The buckets are the Fibonacci points each size is usually written as, with
+ * anything larger folding into `xl` — an 800-point issue is not a new size, it
+ * is the same "very large". Returns undefined for 0 or absent, so the field
+ * stays empty rather than reading as a deliberate `xs`.
+ */
+export const estimatePointsToTaskEstimate = (points: number | undefined): Task.Estimate | undefined => {
+  if (points === undefined || points <= 0) {
+    return undefined;
+  }
+  if (points <= 1) {
+    return 'xs';
+  }
+  if (points <= 2) {
+    return 's';
+  }
+  if (points <= 3) {
+    return 'm';
+  }
+  if (points <= 5) {
+    return 'l';
+  }
+  return 'xl';
+};
+
+/**
+ * Reverse of {@link estimatePointsToTaskEstimate}. Each size pushes the
+ * representative point value of its bucket, so a round-trip is stable: a size
+ * that came from 5 goes back as 5, and one that came from 13 goes back as 8.
+ * That last case is lossy by construction — the size does not carry which
+ * large number it was — and is why a local edit is what triggers the push.
+ */
+export const taskEstimateToEstimatePoints = (estimate: Task.Estimate | undefined): number | undefined => {
+  switch (estimate) {
+    case 'xs':
+      return 1;
+    case 's':
+      return 2;
+    case 'm':
+      return 3;
+    case 'l':
+      return 5;
+    case 'xl':
+      return 8;
+    default:
+      return undefined;
+  }
+};
+
+/**
  * Reverse of {@link priorityNumberToTaskPriority}. Used when pushing local
  * priority edits back to Linear. We never produce 0 (No priority) on push —
  * the Task model treats absent as "no opinion", so a round-tripped issue

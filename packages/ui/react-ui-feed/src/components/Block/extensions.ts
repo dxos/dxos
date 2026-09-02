@@ -3,6 +3,7 @@
 //
 
 import { type Extension } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 
 import {
   type XmlWidgetRegistry,
@@ -92,4 +93,21 @@ const build = (registry: XmlWidgetRegistry | undefined, editable: boolean, theme
     registry?.prompt && xmlBlockDecoration({ tag: 'prompt', hideTags: true }),
     highlights,
     highlightTheme,
+    blockScrollerTheme,
   ].filter(Boolean) as Extension[];
+
+/**
+ * An item's editor never scrolls on the block axis: it is auto-height and the feed around it is
+ * what scrolls, so its content fits by construction.
+ *
+ * Left to `auto`, that invariant is broken transiently by any widget that changes height — a tool
+ * block's disclosure animating open grows the content every frame while `requestMeasure` lands the
+ * editor's new height a frame later, so the scroller is a frame short throughout and paints a
+ * scrollbar for the length of the animation. The inline axis keeps `auto`; a wide payload still
+ * scrolls.
+ */
+const blockScrollerTheme = EditorView.theme({
+  '.cm-scroller': {
+    overflowY: 'hidden',
+  },
+});

@@ -30,7 +30,7 @@ import {
   isPrompt,
   useFeedModel,
 } from '@dxos/react-ui-feed';
-import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
+import { Menu, MenuRootProps, createMenuAction } from '@dxos/react-ui-menu';
 import { TaskList } from '@dxos/react-ui-task';
 import { Message, Task } from '@dxos/types';
 import { keyToFallback } from '@dxos/util';
@@ -119,7 +119,7 @@ const ChatRoot = ({
     () => projectThread({ feedMessages, pendingMessages, rewindFrom: feedSnapshot?.rewindFrom }),
     [feedMessages, pendingMessages, feedSnapshot?.rewindFrom],
   );
-  const alarms = useMemo(() => projectAlarms({ feedAlarms, messages: feedMessages }), [feedAlarms, feedMessages]);
+  const alarms = useMemo(() => projectAlarms({ feedAlarms }), [feedAlarms]);
 
   // Cancelling is a plain feed removal: the queue and the alarm set are projections over the feed,
   // so dropping the record is what takes the item out of them.
@@ -635,6 +635,7 @@ const CHAT_TASK_LIST_NAME = 'Chat.TaskList';
 
 const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
   const { chat } = useChatContext(CHAT_TASK_LIST_NAME);
+  const { t } = useTranslation(meta.profile.key);
 
   // Both the chat (membership) and each ref (row objects): a query re-emits only on membership.
   const [chatSnapshot] = useObject(chat);
@@ -654,13 +655,50 @@ const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
     [chat],
   );
 
+  // The same primitive the task commands use: it sweeps the checklist and destroys only what the
+  // chat owns, so a delegated task keeps the set that parents it.
+  const handleDelete = useCallback(
+    (task: Task.Task) => {
+      const db = chat && Obj.getDatabase(chat);
+      if (chat && db) {
+        AssistantChat.deleteTask(db, chat, tasks, task);
+      }
+    },
+    [chat, tasks],
+  );
+
+  const handleUpdate = useCallback((task: Task.Task, patch: Task.Edit) => {
+    Task.update(task, patch);
+  }, []);
+
+  // Delete is a contributed action rather than fixed chrome, matching `TaskSetArticle`: a row shows
+  // one trailing affordance whatever ends up on the list.
+  const getTaskActions = useCallback(
+    (task: Task.Task) => [
+      createMenuAction(`delete-${task.id}`, () => handleDelete(task), {
+        label: t('delete-task.label'),
+        icon: 'ph--x--regular',
+        testId: 'tasks.task.delete',
+      }),
+    ],
+    [handleDelete, t],
+  );
+
   // Rendered even when empty, so `TaskList.Edit` can always add the first task.
   if (!chat) {
     return null;
   }
 
   return (
-    <TaskList.Root tasks={tasks} showGroupLabels={false} showOrdinals onTaskCreate={handleCreate}>
+    <TaskList.Root
+      tasks={tasks}
+      showGroupLabels={false}
+      showOrdinals
+      showEstimates
+      onTaskCreate={handleCreate}
+      onTaskUpdate={handleUpdate}
+      getTaskActions={getTaskActions}
+    >
       <div {...composableProps(props, { classNames: 'flex flex-col dx-grow' })} ref={forwardedRef}>
         <TaskList.Viewport>
           <TaskList.Content />

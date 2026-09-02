@@ -251,7 +251,9 @@ export const ConvertToTask: Story = {
 
 /** The task-list pane (third column); re-queried per assertion since React may replace the node. */
 const taskListPane = (canvasElement: HTMLElement): HTMLElement => {
-  const pane = canvasElement.querySelector<HTMLElement>('[aria-label="Tasks"]');
+  // By accessible name, not `aria-label`: the tree is named through the machine's own `Label` part,
+  // which it points `aria-labelledby` at.
+  const pane = within(canvasElement).queryByRole('tree', { name: 'Tasks' });
   invariant(pane, 'Task list not found.');
   return pane;
 };

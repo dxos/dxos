@@ -79,7 +79,7 @@ export const UpdateTask = Operation.make({
     description: Schema.optional(Schema.NullOr(Schema.String)),
     status: Schema.optional(Task.Status),
     priority: Schema.optional(Schema.NullOr(Task.Priority)),
-    estimate: Schema.optional(Schema.NullOr(Schema.Number)),
+    estimate: Schema.optional(Schema.NullOr(Task.Estimate)),
     assignee: Schema.optional(Schema.NullOr(Actor.Actor)),
     /** Re-file under a milestone; `null` moves the task to the backlog. */
     milestone: Schema.optional(Schema.NullOr(Ref.Ref(Milestone.Milestone))),

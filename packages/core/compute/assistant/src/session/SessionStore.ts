@@ -6,16 +6,16 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Database, EID, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Annotation, Database, Feed, Filter, Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
 import * as Alarm from './Alarm.ts';
 import * as SessionLink from './SessionLink.ts';
 
 /**
- * Marks a feed `Message` as queued agent input, pending processing. A queued message never enters
- * conversation history — when the agent dequeues it, the echo appended by {@link SessionStore.ackMessage}
- * carries the history instead.
+ * Marks a feed `Message` as queued agent input, pending processing. A queued message is the queue
+ * entry, not a turn, so it never enters conversation history — the turn the agent runs from it
+ * appends its own user message, which is what history shows.
  */
 export const QueuedAnnotation: Annotation.Annotation<boolean> = Annotation.make({
   id: 'org.dxos.annotation.queued',
@@ -23,26 +23,22 @@ export const QueuedAnnotation: Annotation.Annotation<boolean> = Annotation.make(
 });
 
 /**
- * References the queued item (a `Message` or an {@link Alarm.Alarm}) that the carrying message
- * dequeues.
+ * Marks a queued item (a `Message` or an {@link Alarm.Alarm}) as taken up and finished with.
+ *
+ * Written by the agent AFTER the turn it drove, never before: the mark is the ack in a queue, and an
+ * ack written up front would drop the item on a process that dies mid-turn. Because it lands late,
+ * an interrupted turn is redelivered — at-least-once, matching how tool results already behave.
  */
-export const AckAnnotation: Annotation.Annotation<Ref.Ref<Obj.Unknown>> = Annotation.make({
-  id: 'org.dxos.annotation.ack',
-  schema: Ref.Ref(Obj.Unknown),
+export const ConsumedAnnotation: Annotation.Annotation<boolean> = Annotation.make({
+  id: 'org.dxos.annotation.consumed',
+  schema: Schema.Boolean,
 });
 
 export const isQueued = (item: Obj.Unknown | Obj.Snapshot): boolean =>
   Option.getOrElse(Annotation.get(item, QueuedAnnotation), () => false);
 
-/** The entity id of the queued item the carrying message acks, or `undefined` when it acks nothing. */
-export const getAck = (item: Obj.Unknown | Obj.Snapshot): Obj.ID | undefined => {
-  const ref = Option.getOrUndefined(Annotation.get(item, AckAnnotation));
-  if (ref === undefined) {
-    return undefined;
-  }
-  const eid = EID.tryParse(ref.uri);
-  return eid !== undefined ? EID.getEntityId(eid) : undefined;
-};
+export const isConsumed = (item: Obj.Unknown | Obj.Snapshot): boolean =>
+  Option.getOrElse(Annotation.get(item, ConsumedAnnotation), () => false);
 
 /**
  * The pending (queued, un-acked) portion of a session's feed state.
@@ -67,8 +63,8 @@ export type SetAlarmProps = Alarm.MakeProps;
 /**
  * Maps between a session feed and reified session state: conversation history (resolving
  * `SessionLink` fork records), the pending input queue, and pending alarms — plus the writes that
- * advance that state. The pending queue is a projection: an item is pending until a message carrying
- * {@link AckAnnotation} names it; acked items stay in the feed, and `Feed.remove` is only the
+ * advance that state. The pending queue is a projection: an item is pending until it is marked with
+ * {@link ConsumedAnnotation}; consumed items stay in the feed, and `Feed.remove` is only the
  * cancellation of a still-pending item.
  */
 export class SessionStore {
@@ -94,26 +90,28 @@ export class SessionStore {
   /** One feed query, one linear scan: partitions items and projects the pending sets. */
   #scan(feed: Feed.Feed): Effect.Effect<PendingState & { ordered: Message.Message[] }, never, Database.Service> {
     return Effect.gen(function* () {
-      const items = yield* Feed.query(feed, Filter.everything()).run;
+      // The two record kinds by type rather than `Filter.everything()`: the queue only cares about
+      // these, and an everything-query also drags in the tombstone a cancellation leaves behind.
+      const items = yield* Feed.query(feed, Filter.or(Filter.type(Message.Message), Filter.type(Alarm.Alarm))).run;
 
       const messages: Message.Message[] = [];
       const alarms: Alarm.Alarm[] = [];
-      const acked = new Set<string>();
       for (const item of items) {
+        // A cancelled entry is removed from the feed, and `Feed.remove` leaves a tombstone that keeps
+        // the item's type and body (so it still looks queued) — skip it or a cancellation never takes.
+        if (Obj.isDeleted(item)) {
+          continue;
+        }
         if (Obj.instanceOf(Message.Message, item)) {
           messages.push(item);
-          const ack = getAck(item);
-          if (ack !== undefined) {
-            acked.add(ack);
-          }
         } else if (Obj.instanceOf(Alarm.Alarm, item)) {
           alarms.push(item);
         }
       }
 
       const ordered = [...messages].sort(byFeedPosition);
-      const pendingMessages = ordered.filter((message) => isQueued(message) && !acked.has(message.id));
-      const pendingAlarms = alarms.filter((alarm) => !acked.has(alarm.id)).sort((a, b) => a.wakeAt - b.wakeAt);
+      const pendingMessages = ordered.filter((message) => isQueued(message) && !isConsumed(message));
+      const pendingAlarms = alarms.filter((alarm) => !isConsumed(alarm)).sort((a, b) => a.wakeAt - b.wakeAt);
 
       return { ordered, pendingMessages, pendingAlarms };
     });
@@ -123,7 +121,7 @@ export class SessionStore {
    * Prepends linked history to `messages` when the feed contains a SessionLink.
    * Queries the feed for any SessionLink record; if found, loads messages from
    * the referenced feed up to and including `messageId` and prepends them.
-   * Queued originals never enter history — their ack echoes carry it.
+   * Queued entries never enter history — the turn driven from one appends its own user message.
    */
   reifyHistory(
     feed: Feed.Feed,
@@ -170,21 +168,15 @@ export class SessionStore {
   }
 
   /**
-   * Dequeues `original` by appending an echo of it that carries {@link AckAnnotation}. The echo is
-   * the message that enters history; the single append is the atomic ack. Returns the echo.
+   * Marks a queued item as consumed, taking it out of the pending projection. Re-appending an item
+   * by id is an upsert, so this records the mark without adding a record to the log.
+   *
+   * Call it AFTER the work the item drove: the pending set is what a rehydrated process reads, so an
+   * item marked early is an item silently dropped when that process dies mid-turn.
    */
-  ackMessage(feed: Feed.Feed, original: Message.Message): Effect.Effect<Message.Message, never, Database.Service> {
-    const echo = Message.make({
-      parentMessage: original.parentMessage,
-      threadId: original.threadId,
-      created: original.created,
-      sender: original.sender,
-      blocks: [...original.blocks],
-      attachments: original.attachments !== undefined ? [...original.attachments] : undefined,
-      properties: original.properties !== undefined ? { ...original.properties } : undefined,
-    });
-    Obj.update(echo, (echo) => Annotation.set(echo, AckAnnotation, Ref.make(original)));
-    return Feed.append(feed, [echo]).pipe(Effect.as(echo));
+  ack(feed: Feed.Feed, item: Message.Message | Alarm.Alarm): Effect.Effect<void, never, Database.Service> {
+    Obj.update(item, (item) => Annotation.set(item, ConsumedAnnotation, true));
+    return Feed.append(feed, [item]).pipe(Effect.asVoid);
   }
 
   /**
@@ -200,19 +192,6 @@ export class SessionStore {
    */
   cancelAlarm(feed: Feed.Feed, alarm: Alarm.Alarm): Effect.Effect<void, never, Database.Service> {
     return Feed.remove(feed, [alarm]);
-  }
-
-  /**
-   * Dequeues a fired alarm by appending its wake-up `message` stamped with {@link AckAnnotation}.
-   * Returns the appended message.
-   */
-  ackAlarm(
-    feed: Feed.Feed,
-    alarm: Alarm.Alarm,
-    message: Message.Message,
-  ): Effect.Effect<Message.Message, never, Database.Service> {
-    Obj.update(message, (message) => Annotation.set(message, AckAnnotation, Ref.make(alarm)));
-    return Feed.append(feed, [message]).pipe(Effect.as(message));
   }
 }
 

@@ -26,14 +26,23 @@ import { ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 import { log } from '@dxos/log';
 import { type RemoteSpan, type StartSpanOptions, TRACE_ALL_KEY, TRACE_PROCESSOR } from '@dxos/tracing';
 
-import { type OtelOptions, resolveOtlpUrl } from './otel.ts';
-import { TagInjectorSpanProcessor } from './span-processors.ts';
+import { type OtelOptions, signalUrl } from './otel';
+import * as OtelSpanSink from './OtelSpanSink';
+import { TagInjectorSpanProcessor } from './span-processors';
+
+export type OtelTracesOptions = OtelOptions & {
+  /**
+   * When set, ended spans are posted to the observability worker's `OtelSpanSink` instead of
+   * being batched and exported here. Sampling, IDs, and propagation stay in this realm.
+   */
+  spanSink?: OtelSpanSink.Handle;
+};
 
 export class OtelTraces {
   private _tracer: Tracer;
   private readonly _tracerProvider: WebTracerProvider;
 
-  constructor(private readonly options: OtelOptions) {
+  constructor(private readonly options: OtelTracesOptions) {
     propagation.setGlobalPropagator(new W3CTraceContextPropagator());
 
     const forceTraceAll = typeof localStorage !== 'undefined' && localStorage.getItem(TRACE_ALL_KEY) === 'true';
@@ -45,14 +54,19 @@ export class OtelTraces {
       }),
       spanProcessors: [
         new TagInjectorSpanProcessor(this.options.getTags),
-        new BatchSpanProcessor(
-          new OTLPTraceExporter({
-            url: resolveOtlpUrl(this.options.endpoint + '/v1/traces'),
-            headers: this.options.headers,
-            concurrencyLimit: 10,
-          }),
-          { scheduledDelayMillis: 5_000 },
-        ),
+        ...(options.spanSink
+          ? [new OtelSpanSink.PortSpanProcessor(options.spanSink.post)]
+          : this.options.destinations.map(
+              (destination) =>
+                new BatchSpanProcessor(
+                  new OTLPTraceExporter({
+                    url: signalUrl(destination, 'traces'),
+                    headers: destination.headers,
+                    concurrencyLimit: 10,
+                  }),
+                  { scheduledDelayMillis: 5_000 },
+                ),
+            )),
       ],
     });
 

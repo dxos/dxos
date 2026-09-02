@@ -26,6 +26,9 @@ const linkMark = (url: string, withButton = false) =>
       href: url,
       rel: 'noreferrer',
       target: '_blank',
+      // The document is reached with the caret, not with Tab: an anchor left tabbable inside the
+      // editing host takes the stop that leaves the editor, so a linked field becomes a trap.
+      tabindex: '-1',
     },
   });
 
@@ -604,6 +607,8 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
               href: url,
               rel: 'noreferrer',
               target: '_blank',
+              // See `linkMark`: a tabbable anchor inside the editing host traps Tab.
+              tabindex: '-1',
             },
           }),
         });

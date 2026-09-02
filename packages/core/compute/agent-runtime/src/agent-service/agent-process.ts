@@ -167,6 +167,13 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         };
         const reconcileAlarm = Effect.map(sessionStore.loadPending(feed), reconcileAlarmWith);
 
+        // Hydration: the work is durable (queued prompts and alarms on the feed, undelivered tool
+        // results in KV) but the process alarm is not, and a rehydrated process is not handed its
+        // pending input events again — so it must re-arm from that durable state here or sit idle
+        // with work waiting. What was already pending is also what `onSpawn` decides the fate of.
+        const startupPending = yield* sessionStore.loadPending(feed);
+        reconcileAlarmWith(startupPending);
+
         // Optional supervisor behaviour: when a strategy is provided, the agent reconciles
         // outstanding work into linked child processes after each turn and folds their results back
         // into the conversation on completion. Absent (the default), the process behaves as a plain
@@ -240,6 +247,20 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         const maybeComplete = Effect.flatMap(sessionStore.loadPending(feed), maybeCompleteWith);
 
         return {
+          // Runs on a fresh spawn only — never on a resume, which is what a hibernated process gets.
+          // So anything already pending here was left by a process that is gone for good: stopped by
+          // the user, or dead without being rehydrated. Redelivering it would re-run a prompt the
+          // reader stopped, and the next thing they type would queue behind it.
+          onSpawn: Effect.fnUntraced(function* () {
+            if (startupPending.pendingMessages.length > 0) {
+              log.info('discarding queue entries left by a previous process', {
+                count: startupPending.pendingMessages.length,
+              });
+              yield* Effect.forEach(startupPending.pendingMessages, (message) => sessionStore.ack(feed, message), {
+                discard: true,
+              });
+            }
+          }),
           // Control plane (§4.3): handlers run on the host process's server fiber, writing their
           // durable effect to the feed inline.
           rpcHandlers: yield* HarnessControl.toHandlers({
@@ -311,8 +332,6 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               yield* session
                 .runTurn({
                   prompt,
-                  // The append of the turn's user message is the atomic dequeue of the feed item.
-                  ack: dequeued !== undefined ? Ref.make(dequeued) : undefined,
                   // TODO(dmaretskyi): Polling currently broken, agent relies on completion notifications being delivered.
                   // toolkit: AsynchronousExectionToolkit,
                   system: options.systemPrompt,
@@ -329,24 +348,12 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               log('end request');
               yield* ToolResultsCell.set(toolResults);
 
-              // A producer that does not persist its prompt message (e.g. the SDK host) never acks;
-              // dequeue explicitly so the queue always progresses.
-              let after = yield* sessionStore.loadPending(feed);
+              // Ack only now: the turn is what the queue entry was for, so a process that dies before
+              // this point must find the entry still pending and redeliver it.
               if (dequeued !== undefined) {
-                const item = dequeued;
-                if (Obj.instanceOf(Message.Message, item)) {
-                  if (after.pendingMessages.some((pending) => pending.id === item.id)) {
-                    yield* sessionStore.ackMessage(feed, item);
-                    after = {
-                      ...after,
-                      pendingMessages: after.pendingMessages.filter((pending) => pending.id !== item.id),
-                    };
-                  }
-                } else if (after.pendingAlarms.some((pending) => pending.id === item.id)) {
-                  yield* sessionStore.ackAlarm(feed, item, Message.make({ sender: { role: 'user' }, blocks: prompt }));
-                  after = { ...after, pendingAlarms: after.pendingAlarms.filter((pending) => pending.id !== item.id) };
-                }
+                yield* sessionStore.ack(feed, dequeued);
               }
+              const after = yield* sessionStore.loadPending(feed);
 
               // Reconcile outstanding work into linked child processes (supervisor behaviour). The
               // children are linked, so their exits wake `onChildEvent` below.
