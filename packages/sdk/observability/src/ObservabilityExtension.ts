@@ -17,12 +17,12 @@ export * from './extensions';
  * - errors: Error tracking (e.g., PostHog)
  * - events: Product usage event tracking (e.g., PostHog)
  * - feedback: User feedback submission (e.g., PostHog)
- * - generations: AI model calls (e.g., PostHog LLM analytics)
+ * - ai: Model inferences, tool calls, and turns (e.g., PostHog LLM analytics, OTel gen_ai)
  * - logs: Structured logging (e.g., OTEL)
  * - metrics: Metric data (e.g., OTEL)
  * - traces: Distributed tracing (e.g., OTEL)
  */
-export type Kind = 'errors' | 'events' | 'feedback' | 'generations' | 'logs' | 'metrics' | 'traces';
+export type Kind = 'ai' | 'errors' | 'events' | 'feedback' | 'logs' | 'metrics' | 'traces';
 
 /**
  * Base for every extension API variant. All kinds implement availability the same way.
@@ -78,7 +78,7 @@ export type Events = {
  * after the OTel GenAI conventions rather than any vendor's schema — an extension maps it onto
  * whatever its backend calls these things.
  */
-export type Generation = {
+export type Inference = {
   traceId: string;
   spanId: string;
   parentSpanId?: string;
@@ -115,7 +115,7 @@ export type GenerationContent = {
   truncated?: boolean;
 };
 
-/** Fields a turn and a tool call share with a generation: identity, timing, and gated content. */
+/** Fields a turn and a tool call share with an inference: identity, timing, and gated content. */
 export type AiSpanBase = {
   traceId: string;
   spanId: string;
@@ -128,7 +128,7 @@ export type AiSpanBase = {
   latency: number;
   /** Absent entirely when the capture policy denied it. */
   content?: AiSpanContent;
-  /** Exception class name only, as on {@link Generation}. */
+  /** Exception class name only, as on {@link Inference}. */
   errorClass?: string;
 };
 
@@ -149,10 +149,10 @@ export type Turn = AiSpanBase;
 export type ToolCall = AiSpanBase;
 
 /**
- * Generations extension API (kind-specific methods only).
+ * AI extension API (kind-specific methods only).
  */
-export type Generations = {
-  captureGeneration(generation: Generation): void;
+export type Ai = {
+  captureInference(inference: Inference): void;
   captureTurn(turn: Turn): void;
   captureToolCall(toolCall: ToolCall): void;
 };
@@ -168,7 +168,7 @@ export type ExtensionApi =
   | (ExtensionApiBase<'errors'> & Errors)
   | (ExtensionApiBase<'events'> & Events)
   | (ExtensionApiBase<'feedback'> & Feedback)
-  | (ExtensionApiBase<'generations'> & Generations)
+  | (ExtensionApiBase<'ai'> & Ai)
   // TODO(wittjosiah): Direct logs api?
   | ExtensionApiBase<'logs'>
   | (ExtensionApiBase<'metrics'> & Metrics)

@@ -21,9 +21,9 @@ const attachAiCapture = async (observability: Observability): Promise<CleanupFn>
   const { Otel } = await import('./extensions');
   return Otel.addSpanProcessor(
     new AiSpanProcessor({
-      captureGeneration: (generation) => observability.generations.captureGeneration(generation),
-      captureTurn: (turn) => observability.generations.captureTurn(turn),
-      captureToolCall: (toolCall) => observability.generations.captureToolCall(toolCall),
+      captureInference: (inference) => observability.ai.captureInference(inference),
+      captureTurn: (turn) => observability.ai.captureTurn(turn),
+      captureToolCall: (toolCall) => observability.ai.captureToolCall(toolCall),
       captureEnabled: () => observability.enabled,
       allowContent: contentCaptureAllowed,
     }),
@@ -61,7 +61,7 @@ export interface Observability {
   errors: ObservabilityExtension.Errors;
   events: ObservabilityExtension.Events;
   feedback: ObservabilityExtension.Feedback;
-  generations: ObservabilityExtension.Generations;
+  ai: ObservabilityExtension.Ai;
   /** True if at least one extension of the given kind reports as available. */
   isAvailable(kind: ObservabilityExtension.Kind): Effect.Effect<boolean>;
   metrics: ObservabilityExtension.Metrics;
@@ -229,20 +229,20 @@ class ObservabilityImpl implements Observability {
     };
   }
 
-  get generations(): ObservabilityExtension.Generations {
+  get ai(): ObservabilityExtension.Ai {
     return {
-      captureGeneration: (generation) => {
-        for (const extension of this._getExtensions('generations')) {
-          extension.captureGeneration(generation);
+      captureInference: (inference) => {
+        for (const extension of this._getExtensions('ai')) {
+          extension.captureInference(inference);
         }
       },
       captureTurn: (turn) => {
-        for (const extension of this._getExtensions('generations')) {
+        for (const extension of this._getExtensions('ai')) {
           extension.captureTurn(turn);
         }
       },
       captureToolCall: (toolCall) => {
-        for (const extension of this._getExtensions('generations')) {
+        for (const extension of this._getExtensions('ai')) {
           extension.captureToolCall(toolCall);
         }
       },
