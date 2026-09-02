@@ -72,6 +72,8 @@ type TaskListContextValue = {
   /** Whether the leading gutter is rendered at all — it holds the ordinal and the drag handle. */
   showGutter: boolean;
   selected?: string;
+  /** Ids of the checked rows — the set an action acts on, distinct from the current row. */
+  checked: ReadonlySet<string>;
   /** Whether a branch's sub-tasks are hidden, and the toggle that flips it. */
   isCollapsed: (id: string) => boolean;
   onCollapseToggle: (id: string) => void;
@@ -83,6 +85,8 @@ type TaskListContextValue = {
   getTaskActions?: (task: Task.Task) => MenuItem[];
   /** Selects a task, or clears the selection with `undefined`; defined only when the list is selectable. */
   onTaskSelect?: (task: Task.Task | undefined) => void;
+  /** Toggles a row's membership of the checked set; defined only when the host wired checkboxes. */
+  onTaskCheck?: (task: Task.Task) => void;
   onTaskMove?: (task: Task.Task, placement: TaskPlacement) => void;
 };
 
@@ -135,6 +139,12 @@ type TaskListRootProps = PropsWithChildren<{
    * whose selection consumers (e.g. `Edit`) live inside the list's own context.
    */
   selectable?: boolean;
+  /**
+   * Ids of the checked rows (controlled, and only meaningful with `onTaskCheck`). Deliberately
+   * separate from `selected`: the current row is where the reader is, the checked set is what an
+   * action will act on, and a row is routinely both.
+   */
+  checked?: ReadonlySet<string>;
 
   //
   // What a row shows.
@@ -177,6 +187,11 @@ type TaskListRootProps = PropsWithChildren<{
    */
   onTaskSelect?: (task: Task.Task | undefined) => void;
   /**
+   * Enables the gutter checkbox, called with the row toggled. The host owns the set — this list is
+   * embedded in surfaces whose toolbars read the same selection — so nothing is tracked here.
+   */
+  onTaskCheck?: (task: Task.Task) => void;
+  /**
    * Enables restructuring by drag and by keyboard; called with the one move the gesture means.
    * `MoveTask` takes exactly this pair, so a drop is a single mutation rather than a re-parent
    * followed by a reposition.
@@ -201,10 +216,12 @@ const TaskListRoot = ({
   collapsed,
   selected: selectedProp,
   selectable: selectableProp,
+  checked = EMPTY_IDS,
   getTaskActions,
   onTaskCreate,
   onTaskUpdate,
   onTaskSelect,
+  onTaskCheck,
   onTaskMove,
   onCollapsedChange,
 }: TaskListRootProps) => {
@@ -264,11 +281,12 @@ const TaskListRoot = ({
       showEstimates={showEstimates}
       hierarchical={hierarchical}
       debug={debug}
-      // The handle lives in the ordinal's gutter, so a movable list reserves the track even when it
-      // shows no numbers.
-      showGutter={showOrdinals || !!onTaskMove}
+      // The checkbox and the handle share the ordinal's gutter, so a checkable or movable list
+      // reserves the track even when it shows no numbers.
+      showGutter={showOrdinals || !!onTaskMove || !!onTaskCheck}
       isCollapsed={isCollapsed}
       selected={selected}
+      checked={checked}
       dragging={dragging}
       getTaskActions={getTaskActions}
       onDraggingChange={setDraggingTask}
@@ -276,6 +294,7 @@ const TaskListRoot = ({
       onTaskCreate={onTaskCreate}
       onTaskUpdate={onTaskUpdate}
       onTaskSelect={selectable ? handleSelect : undefined}
+      onTaskCheck={onTaskCheck}
       onTaskMove={onTaskMove}
     >
       {/* Both roots are headless, so the pair renders no DOM of its own. */}
@@ -343,6 +362,7 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
     groupByStatus,
     hierarchical,
     selected,
+    checked,
     dragging,
     debug,
     showGroupLabels,
@@ -351,6 +371,7 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
     showGutter,
     isCollapsed,
     onCollapseToggle,
+    onTaskCheck,
     onTaskSelect,
     onTaskUpdate,
     onTaskMove,
@@ -389,10 +410,12 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
       showGutter={showGutter}
       ordinals={showOrdinals ? ordinals : EMPTY_ORDINALS}
       selected={selected}
+      checked={checked}
       showDescription={showDescription}
       renderTrailing={TaskTreeTrailing}
       translationKey={translationKey}
       onCollapseToggle={onCollapseToggle}
+      onTaskCheck={onTaskCheck}
       onTaskSelect={onTaskSelect}
       onTaskUpdate={onTaskUpdate}
       onTaskMove={onTaskMove}

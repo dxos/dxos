@@ -23,7 +23,7 @@ import {
   resolveTaskPlacement,
 } from './hierarchy';
 import { TaskDescription } from './TaskDescription';
-import { TaskOrdinal, TaskStatusControl } from './TaskRowCells';
+import { TaskCheckbox, TaskOrdinal, TaskStatusControl } from './TaskRowCells';
 import { TASK_TREE_ROOT_ID, type TaskNode, buildTaskForest, buildTaskPaths, createTaskTreeModel } from './tree-model';
 
 /** Columns after the title: assignee, tags and the contributed actions live here. */
@@ -56,10 +56,13 @@ export type TaskTreeContentProps = {
   showGutter: boolean;
   ordinals: ReadonlyMap<string, number>;
   selected?: string;
+  /** Ids of the checked rows; the gutter renders a checkbox instead of an ordinal once wired. */
+  checked?: ReadonlySet<string>;
   translationKey: string;
   /** Render each task's description under its title; rows grow to fit. */
   showDescription?: boolean;
   onCollapseToggle: (id: string) => void;
+  onTaskCheck?: (task: Task.Task) => void;
   onTaskSelect?: (task: Task.Task | undefined) => void;
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
   onTaskMove?: (task: Task.Task, placement: TaskPlacement) => void;
@@ -75,10 +78,12 @@ export const TaskTreeContent = ({
   showGutter,
   ordinals,
   selected,
+  checked,
   renderTrailing,
   translationKey,
   showDescription = false,
   onCollapseToggle,
+  onTaskCheck,
   onTaskSelect,
   onTaskUpdate,
   onTaskMove,
@@ -140,9 +145,12 @@ export const TaskTreeContent = ({
 
   const renderHeading: HeadingRenderer<TaskNode> = useCallback(
     ({ item }) => (
-      <TaskTreeHeading node={item} {...{ showGutter, ordinals, translationKey, showDescription, onTaskUpdate }} />
+      <TaskTreeHeading
+        node={item}
+        {...{ showGutter, ordinals, checked, translationKey, showDescription, onTaskCheck, onTaskUpdate }}
+      />
     ),
-    [showGutter, ordinals, translationKey, showDescription, onTaskUpdate],
+    [showGutter, ordinals, checked, translationKey, showDescription, onTaskCheck, onTaskUpdate],
   );
 
   // Restructuring is keyboard-driven, and the machine ignores modified arrows — so the gesture is
@@ -278,20 +286,28 @@ export const TaskTreeContent = ({
   );
 };
 
-/** Ordinal, status control and title — the row's leading content, beside the tree's own toggle. */
+/**
+ * The gutter cell, status control and title — the row's leading content, beside the tree's own
+ * toggle. The gutter holds either the checkbox or the ordinal, never both: they occupy one cell, and
+ * a number beside a box reads as two ways to act on the row.
+ */
 const TaskTreeHeading = ({
   node,
   showGutter,
   ordinals,
+  checked,
   translationKey,
   showDescription,
+  onTaskCheck,
   onTaskUpdate,
 }: {
   node: TaskNode;
   showGutter: boolean;
   ordinals: ReadonlyMap<string, number>;
+  checked?: ReadonlySet<string>;
   translationKey: string;
   showDescription: boolean;
+  onTaskCheck?: (task: Task.Task) => void;
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
 }) => {
   const task = node.task;
@@ -323,7 +339,9 @@ const TaskTreeHeading = ({
       )}
     >
       {showGutter &&
-        (ordinal !== undefined ? (
+        (onTaskCheck ? (
+          <TaskCheckbox task={task} checked={!!checked?.has(task.id)} onCheckedChange={onTaskCheck} />
+        ) : ordinal !== undefined ? (
           <TaskOrdinal task={task} ordinal={ordinal} />
         ) : (
           // Holds the gutter track so a numberless row's title still lines up with its neighbours.

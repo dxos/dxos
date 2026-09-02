@@ -488,24 +488,44 @@ in `react-ui-attention`'s view state (`useSelection('multi', contextId)` and
 `useSelectionActions().toggle`, over `Selection.toggle`), so the rows and the toolbar read and write
 one set and neither owns it.
 
-- [ ] **Render the checkbox in the gutter cell**, where `TaskOrdinal` sits, not beside the status
+- [x] **Render the checkbox in the gutter cell**, where `TaskOrdinal` sits, not beside the status
       control: the two would read as two ways to complete a task, and the row keeps one geometry so
-      the trailing columns do not move.
-- [ ] **Move `TaskList` off its own `selected` string.** It holds a single id with `onTaskSelect`,
-      and `Tree` runs `selectionMode='single'`; checkbox selection is a set. Decide whether the
-      current row (the roving tabstop's highlight) stays distinct from the checked set — a row can
-      be current _and_ checked — or whether `selected` becomes a view of the multi-selection.
-- [ ] **Key the view state per list.** `contextId` has to be the attendable the list belongs to, or
-      two task lists on one deck share a selection.
-- [ ] **`ProjectArticle` configures the embedded `TaskSetArticle` for checkboxes**, and contributes
-      the toolbar action beside `create-chat`/`add-artifact` in `useToolbarActions`, enabled only
-      when the checked set is non-empty.
-- [ ] **Delegate, not delete** (confirmed 2026-09-01): `AssistantOperation.CreateChat` +
+      the trailing columns do not move. `TaskCheckbox` in `TaskRowCells.tsx`; `TaskTreeHeading`
+      renders it INSTEAD of the ordinal, and `showGutter` now also reserves the track for it.
+- [x] **`TaskList` keeps its own `selected` string; the checked set is a second, independent one.**
+      Settled 2026-09-02: the current row is where the reader is (the roving tabstop's highlight,
+      what `Edit` follows), and the checked set is what an action acts on. A row is routinely both,
+      and collapsing them would mean arrowing down a list silently changed what a toolbar button
+      would do. `Tree` keeps `selectionMode='single'`; the checkbox is a `checked`/`onTaskCheck`
+      pair the host owns, and the row's click handler never sees it (the box stops propagation).
+- [x] **Key the view state per list.** `contextId` is the TASK SET's object id, not the attendable:
+      the attendable is the plank, so a project's embedded list and a task-set plank beside it would
+      share a set. `useCheckedTasks` in both `TaskSetArticle` and `ProjectArticle` keys off it.
+- [x] **The checkbox is offered when a `TasksCapabilities.TaskAction` exists**, rather than
+      configured by the host through Surface data — which Phase 15 was removing at the same time.
+      With nothing contributed to act on the set, the box is an affordance that does nothing.
+- [x] **`ProjectArticle` contributes the toolbar action** beside `create-chat` in
+      `useToolbarActions`, disabled (present, not absent) while the checked set is empty, and
+      clearing the set once the chat is open.
+- [x] **Delegate, not delete** (confirmed 2026-09-01): `AssistantOperation.CreateChat` +
       `Chat.linkCompanion`, the path `create-chat` already uses.
-- [ ] **Decide what delegation does to membership.** `Chat.addTask` parents a task it creates to the
-      chat and `Chat.deleteTask` destroys only what the chat owns, so a delegated task keeping its
-      task set is the shape those primitives already assume.
-- [ ] Story coverage: a checkbox list, and the toolbar action over a checked set.
+- [x] **Delegation leaves membership alone.** Settled 2026-09-02, and it is what the code already
+      did: `Chat.tasks` is a plain ref array, so a delegated task keeps the task set it came from —
+      the chat works on it, it does not take it. `Chat.deleteTask` destroys only what the chat owns,
+      so nothing the chat did not create is at risk. The operation's own docstring claimed the
+      opposite (`SetParent`); corrected, and the test that already asserted the parent survives is
+      now the record.
+- [x] **`DelegateTaskToChat` takes an ordered list**, guarded non-empty by the handler rather than by
+      `Schema.NonEmptyArray` — that serializes to `prefixItems`, which the persisted-operation JSON
+      schema does not carry (`serialize.test.ts` is what caught it). The row's own menu action passes
+      a one-element one — one write path for both. Order is the list's VISIBLE row order (the
+      `flattenVisibleTasks(buildTaskForest(...))` walk), not tick order: `Selection.toggle` appends,
+      so the toolbar re-orders at the point of use. N tasks produce ONE chat; it is named after the
+      task only when there is exactly one, since a chat holding three cannot be about the first.
+- [x] Story coverage: `TaskList.WithCheckboxes`/`TestCheckboxSelection` (the cell and that checking
+      is not a status write), `TaskSetArticle.Checkboxes` (offered off the capability, keyed per
+      set), and `ProjectArticle.DelegateCheckedTasks` (disabled → check two rows out of order →
+      one chat holding both in row order → cleared).
 
 ## Phase 14: Dragging a task jumps — settle the write as one sync operation
 
@@ -527,14 +547,21 @@ the file already flags: `// TODO(burdon): Should not pass callbacks!`. Surface d
 subject; it is not a props channel, and a callback there couples the host to the implementation it
 is supposed to be decoupled from.
 
-- [ ] **Collect the editor extensions in `plugin-tasks`, where the surface is implemented**, not in
-      `ProjectArticle`. The host currently reads `MarkdownCapabilities.ExtensionProvider` and hands
-      the result down; the component that builds the editor should read the capability itself, which
-      is the same thing `MarkdownArticle` does for markdown documents.
-- [ ] **Remove `handleSelectTask` and the `onSelectTask` data property.** It only switches the
-      host's tab to `tasks`, so the effect belongs to whatever owns that tab state — an operation or
-      the layout, not a function smuggled through Surface data.
-- [ ] Leave `subject`, `attendableId` and `taskSet` on the Surface: those identify what is being
+- [x] **Collect the editor extensions in `plugin-tasks`, where the surface is implemented**, not in
+      `ProjectArticle`. `OutlineArticle` reads `MarkdownCapabilities.ExtensionProvider` itself, as
+      `MarkdownArticle` does for markdown documents; the `extensions` prop and the host's
+      `outlineExtensions` are gone. The standalone outline article gains them as a side effect —
+      it never had them, and there was no reason for the embedded case alone to decorate links.
+- [x] **Removed `handleSelectTask` and the `onSelectTask` data property**, and the `onSelectTask`
+      prop on `OutlineArticle` with it. **Behaviour change:** following a promoted item's link
+      inside the project's Overview now swaps that section for the task's form (the outline's own
+      standalone behaviour) and Back returns, where the callback used to switch the host's tab to
+      Tasks. `ProjectArticle.TaskLink` asserts the new path.
+- [ ] **Follow-up: re-route the promoted link to the Tasks tab through something the host owns.**
+      The tab is `ProjectArticle`'s state, so the outline has to reach it through an operation or
+      the layout rather than a function handed down as Surface data. Tracked 2026-09-02.
+- [x] `subject`, `attendableId` and `taskSet` stay on the Surface: those identify what is being
       rendered, which is what `data` is for.
-- [ ] Check the other `Surface.Surface` in the file (the tasks section) for the same pattern before
-      calling this done.
+- [x] The tasks section's Surface was already clean — `{ subject: taskSet, attendableId }`, no
+      callbacks. Phase 13's checkbox is gated on a contributed capability rather than on a data
+      property for the same reason.

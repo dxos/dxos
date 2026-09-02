@@ -169,6 +169,7 @@
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-search": "workspace:*",
     "@dxos/react-ui-tabs": "workspace:*",
+    "@dxos/react-ui-task": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"

@@ -143,6 +143,7 @@ const DefaultStory = ({
   showDescription = true,
   showEstimates,
   draggable = false,
+  checkable = false,
   seed = seedFlat,
   debug,
   framed = true,
@@ -157,6 +158,8 @@ const DefaultStory = ({
   showEstimates?: boolean;
   /** Wire `onTaskMove`, which is what turns rows into drag sources. Off unless a story asks. */
   draggable?: boolean;
+  /** Wire `onTaskCheck`, which puts a checkbox in the gutter where the ordinal would sit. */
+  checkable?: boolean;
   /**
    * The tasks to start from. A factory rather than a named fixture, so a story can compose its own
    * (`() => seedMany(100)`) without a union to extend — and because `useState` reads its initial
@@ -173,6 +176,17 @@ const DefaultStory = ({
 
   // Selection is what the article wires, and what arrow-key navigation moves.
   const [selected, setSelected] = useState<string>();
+
+  // The checked set stands in for the view state the article keys by task-set id: a set of its own,
+  // so a row can be current and checked at once.
+  const [checked, setChecked] = useState<ReadonlySet<string>>(() => new Set<string>());
+  const handleCheck = useCallback((task: Task.Task) => {
+    setChecked((checked) => {
+      const next = new Set(checked);
+      next.has(task.id) ? next.delete(task.id) : next.add(task.id);
+      return next;
+    });
+  }, []);
 
   // Delete is an ordinary contributed action now, which is also what a plugin's own actions look like.
   const getTaskActions = useCallback(
@@ -233,6 +247,8 @@ const DefaultStory = ({
       getTaskActions={readonly ? undefined : getTaskActions}
       onTaskCreate={readonly ? undefined : handleCreate}
       onTaskUpdate={readonly ? undefined : handleUpdate}
+      checked={checked}
+      onTaskCheck={checkable ? handleCheck : undefined}
       onTaskMove={readonly || !hierarchical || !draggable ? undefined : handleMove}
       onTaskSelect={(task) => setSelected(task?.id)}
     >
@@ -292,6 +308,50 @@ export const WithOrdinals: Story = {
   args: {
     showGroupLabels: false,
     showOrdinals: true,
+  },
+};
+
+/** The gutter's checkbox: the set an action acts on, in place of the ordinal that would sit there. */
+export const WithCheckboxes: Story = {
+  args: {
+    showGroupLabels: false,
+    checkable: true,
+  },
+};
+
+/**
+ * Checking is selection, not a status write, and it is not the current row either: the box toggles
+ * independently of which row the reader is on, and leaves the task's status alone.
+ */
+export const TestCheckboxSelection: Story = {
+  args: { showGroupLabels: false, checkable: true, showOrdinals: true },
+  play: async ({ canvasElement }) => {
+    const boxes = () =>
+      Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item.checkbox"]'));
+    const statuses = () =>
+      Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item.status"]')).map(
+        (status) => status.querySelector('.sr-only')?.textContent,
+      );
+
+    await waitFor(async () => expect(boxes().length).toBeGreaterThan(1));
+    // Checkbox and ordinal are mutually exclusive: the box takes the gutter cell, so no row numbers.
+    await expect(canvasElement.querySelectorAll('.tabular-nums').length).toBe(0);
+
+    const before = statuses();
+    await userEvent.click(boxes()[0]);
+    await waitFor(async () => expect(boxes()[0].getAttribute('data-state')).toBe('checked'));
+    // A second row checks alongside the first — a set, not a single selection.
+    await userEvent.click(boxes()[1]);
+    await waitFor(async () => expect(boxes()[1].getAttribute('data-state')).toBe('checked'));
+    await expect(boxes()[0].getAttribute('data-state')).toBe('checked');
+
+    // Selection only: checking two rows moved no task's status, which is what the status control
+    // is for.
+    await expect(statuses()).toEqual(before);
+
+    // Toggles off.
+    await userEvent.click(boxes()[0]);
+    await waitFor(async () => expect(boxes()[0].getAttribute('data-state')).toBe('unchecked'));
   },
 };
 
