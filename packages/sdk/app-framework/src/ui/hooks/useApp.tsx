@@ -290,12 +290,9 @@ export const useApp = ({
       return yield* Fiber.join(listener);
     }).pipe(Effect.scoped, Effect.runFork);
 
-    // Startup deadline, counted in observed execution time rather than wall clock. The interval
-    // credits at most two slices per fire, so time the process did not run — WKWebView suspending
-    // the WebContent process of a hidden window, App Nap, system sleep — does not count against
-    // the boot. A wall-clock timer here converts a mid-boot suspension into a fatal dialog on a
-    // healthy boot: the 2026-08-28 native-app incident was exactly that, a 166s suspension eating
-    // the whole 30s budget of a startup whose modules had all activated.
+    // Startup deadline in observed execution time, not wall clock: each fire credits at most two
+    // slices, so time the process did not run (a suspended hidden webview, App Nap, system sleep)
+    // never counts against an otherwise healthy boot.
     const DEADLINE_SLICE_MS = 1_000;
     let deadlineElapsedMs = 0;
     let deadlineLastTickAt = performance.now();
