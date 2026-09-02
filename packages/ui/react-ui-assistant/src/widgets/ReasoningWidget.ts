@@ -56,7 +56,9 @@ export class ReasoningWidget extends WidgetType {
               // `items-start`, not centred: past `max-h` the box scrolls, and centred overflow puts
               // the first lines above the scroll origin where they cannot be reached.
               Domino.of('div')
-                .classNames('flex items-start max-h-[5lh] overflow-y-auto dx-scrollbar-thin text-description')
+                .classNames(
+                  'flex items-start max-h-[5lh] overflow-y-auto dx-scrollbar-thin text-description tabular-nums',
+                )
                 .text(this.text)
                 .attributes({ 'data-reasoning-text': '' }),
             ),

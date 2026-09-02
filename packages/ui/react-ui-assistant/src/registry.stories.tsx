@@ -71,13 +71,11 @@ export const Synthetic: Story = {
     content: trim`
       <synthetic>
       Completed the checklist:
-      \`\`\`
       <checklist>
       1. [ ] Review new messages.
       2. [ ] Respond to new messages.
       3. [ ] Archive old messages.
       </checklist>
-      \`\`\`
       </synthetic>`,
   },
 };

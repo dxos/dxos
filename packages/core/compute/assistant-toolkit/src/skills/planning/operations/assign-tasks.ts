@@ -49,8 +49,9 @@ export default AssignTasks.pipe(
 
       const rejected = requested.length - assignable.length;
       return trim`
-        Assigned ${added.length} task(s), unassigned ${removed.length}.
-        ${rejected > 0 ? `Ignored ${rejected} reference(s) that do not resolve to a task.` : ''}
+        Assigned ${added.length} task(s); unassigned ${removed.length};
+        ${rejected > 0 ? `ignored ${rejected} reference(s) that do not resolve to a task.` : ''}
+
         <checklist>
           ${yield* Chat.formatChecklist(chat)}
         </checklist>
