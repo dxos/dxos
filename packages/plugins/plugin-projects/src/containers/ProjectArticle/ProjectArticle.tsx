@@ -160,7 +160,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
       <Tabs.Root asChild orientation='horizontal' value={tab} onValueChange={(value) => setTab(value as Tab)}>
         <Panel.Root role={role}>
           <Panel.Toolbar>
-            <Menu.Toolbar classNames='dx-document'>
+            <Menu.Toolbar>
               <Tabs.Tablist classNames='w-auto p-0'>
                 <Tabs.Button value='overview' data-testid='projectsPlugin.tab.overview'>
                   {t('overview.label')}
@@ -313,15 +313,21 @@ const useToolbarActions = (project: Project.Project, onAddArtifact: () => void) 
           },
           () => void createChat(),
         )
-        .action(
-          'add-artifact',
-          {
-            label: ['add-artifact.label', { ns: meta.profile.key }],
-            icon: 'ph--plus--regular',
-            disposition: 'toolbar',
-            testId: 'projectsPlugin.addArtifact',
-          },
-          onAddArtifact,
+        // In the trailing overflow rather than on the toolbar: adding an artifact is occasional
+        // next to starting a chat, and a bare `+` beside the tabs read as adding a tab.
+        .menu(
+          'overflow',
+          (group) =>
+            group.action(
+              'add-artifact',
+              {
+                label: ['add-artifact.label', { ns: meta.profile.key }],
+                icon: 'ph--plus--regular',
+                testId: 'projectsPlugin.addArtifact',
+              },
+              onAddArtifact,
+            ),
+          'projectsPlugin.overflow',
         )
         .build(),
     [project, spaceId, invokePromise, onAddArtifact],
