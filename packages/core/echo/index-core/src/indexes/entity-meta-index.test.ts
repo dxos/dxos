@@ -13,6 +13,8 @@ import { ATTR_DELETED, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } f
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
+import { ConvergenceKeyIntentStore } from '../convergence-key-intent-store';
+import { IndexTracker } from '../index-tracker';
 import { EntityMetaIndex } from './entity-meta-index';
 import type { IndexerObject } from './interface';
 
@@ -530,6 +532,81 @@ describe('EntityMetaIndex', () => {
       expect(afterUpdate[0].queueNamespace).toBe('trace');
     }).pipe(Effect.provide(TestLayer)),
   );
+
+  it.effect('cursors under retired index names are purged so pre-convergenceKey data re-indexes', () =>
+    Effect.gen(function* () {
+      // A build before `convergenceKey` tracked its progress under the retired names (`fts5`,
+      // `reverseRef`); rows it indexed hold NULL keys and re-indexing is per-object, so those
+      // cursors must not survive the upgrade — the bumped names re-present every document.
+      // Simulate the old vintage: its own init created the table before the retirement
+      // migration existed, so the rows are in place when the migrations first run here.
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`CREATE TABLE indexCursor (
+        indexName TEXT NOT NULL,
+        spaceId TEXT NOT NULL DEFAULT '',
+        sourceName TEXT NOT NULL,
+        resourceId TEXT NOT NULL DEFAULT '',
+        cursor,
+        PRIMARY KEY (indexName, spaceId, sourceName, resourceId)
+      )`;
+      const tracker = new IndexTracker();
+      yield* tracker.updateCursors([
+        { indexName: 'fts5', spaceId: null, sourceName: 'automerge', resourceId: 'doc-1', cursor: 'heads-1' },
+        { indexName: 'reverseRef', spaceId: null, sourceName: 'automerge', resourceId: 'doc-1', cursor: 'heads-1' },
+        { indexName: 'fts6', spaceId: null, sourceName: 'automerge', resourceId: 'doc-1', cursor: 'heads-1' },
+      ]);
+
+      yield* tracker.migrate();
+
+      expect(yield* tracker.queryCursors({ indexName: 'fts5' })).toEqual([]);
+      expect(yield* tracker.queryCursors({ indexName: 'reverseRef' })).toEqual([]);
+      expect(yield* tracker.queryCursors({ indexName: 'fts6' })).toHaveLength(1);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('a fresh database keeps its index cursors across migration', () =>
+    Effect.gen(function* () {
+      const tracker = new IndexTracker();
+      yield* tracker.migrate();
+
+      const index = new EntityMetaIndex();
+      yield* index.migrate();
+      yield* tracker.updateCursors([
+        { indexName: 'fts6', spaceId: null, sourceName: 'automerge', resourceId: 'doc-1', cursor: 'heads-1' },
+      ]);
+
+      // Re-running the migrations (every startup does) must not wipe progress under live names.
+      yield* index.migrate();
+      yield* tracker.migrate();
+      expect(yield* tracker.queryCursors({ indexName: 'fts6' })).toHaveLength(1);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('convergence-key intents survive until cleared, bounded by the id captured at read time', () =>
+    Effect.gen(function* () {
+      const store = new ConvergenceKeyIntentStore();
+      yield* store.migrate();
+
+      const spaceId = SpaceId.random();
+      yield* store.record([
+        { spaceId, convergenceKey: 'example.com/thing/a' },
+        { spaceId, convergenceKey: 'example.com/thing/b' },
+        { spaceId, convergenceKey: 'example.com/thing/a' }, // Re-recorded — deduplicated on read.
+      ]);
+
+      const { maxId, intents } = yield* store.take();
+      expect([...(intents.get(spaceId) ?? [])].sort()).toEqual(['example.com/thing/a', 'example.com/thing/b']);
+
+      // A key recorded after the read (a concurrent indexing pass) must survive the clear.
+      yield* store.record([{ spaceId, convergenceKey: 'example.com/thing/a' }]);
+      yield* store.clear(spaceId, 'example.com/thing/a', maxId);
+      yield* store.clear(spaceId, 'example.com/thing/b', maxId);
+
+      const remaining = yield* store.take();
+      expect([...(remaining.intents.get(spaceId) ?? [])]).toEqual(['example.com/thing/a']);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
   it.effect('windows a queue read by cursor position and limit', () =>
     Effect.gen(function* () {
       const index = new EntityMetaIndex();

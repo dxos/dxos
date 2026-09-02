@@ -7,14 +7,31 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import { type CleanupFn, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
-import { type Entity, Query, type QueryAST, type QueryResult } from '@dxos/echo';
+import { type Entity, Query, QueryAST, type QueryResult } from '@dxos/echo';
 import { type AggregateValue, GroupBy } from '@dxos/echo-host/query';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { getDeep, isNonNullable } from '@dxos/util';
 
+import { getObjectCore, isEchoObject } from '../echo-handler';
 import { type QueryContext, type SourceEntry } from './query-context';
+
+/**
+ * True when any part of the query asks for deleted entities.
+ *
+ * `.options({ deleted })` produces a node that scoping wraps further, so the flag can sit at any
+ * depth rather than on the root.
+ */
+const _queryIncludesDeleted = (query: QueryAST.Query): boolean => {
+  let includesDeleted = false;
+  QueryAST.visit(query, (node) => {
+    if (node.type === 'options' && (node.options.deleted === 'include' || node.options.deleted === 'only')) {
+      includesDeleted = true;
+    }
+  });
+  return includesDeleted;
+};
 
 /**
  * Predicate based query.
@@ -222,6 +239,8 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     entries: QueryResult.EntityEntry<T>[];
     grouped: boolean;
   } {
+    entries = this._collapseDuplicates(entries);
+
     if (entries.length > 0 && entries[0].group !== undefined) {
       const { groups, entries: groupEntries } = _assembleGroups(entries, _groupAggregatesFromQuery(this._query.ast));
       // Boundary cast: T is the flat aggregate record for aggregate queries (per Query.aggregate's
@@ -235,6 +254,29 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     }
 
     return { objects: this._uniqueObjects(entries), entries, grouped: false };
+  }
+
+  /**
+   * Drop entities whose tombstone the index has not caught up with yet — the failure this
+   * prevents is code that reads `results.length` or asserts a singleton and breaks on a
+   * merged-away duplicate it did not create.
+   *
+   * Read-only by design: the merge itself runs in the worker off the indexing stream (see
+   * `echo-host`'s convergence-key merge), and its tombstones leave query results through ordinary
+   * deleted-filtering once re-indexed. This filter only covers the gap in between — cached
+   * reactive-query entries hydrated before the re-index. It keys on the deleted flag rather
+   * than `mergedInto` (the merge writes both in one change) so that it can never hide a live
+   * entity: a loser resurrected by `db.add` stays visible until the worker re-tombstones it,
+   * instead of becoming a live-but-unqueryable zombie.
+   */
+  private _collapseDuplicates(entries: SourceEntry<T>[]): SourceEntry<T>[] {
+    // A query that explicitly asks for tombstones is asking to see what was merged away, so
+    // filtering would defeat it — this is how a diagnostic inspects the losers.
+    if (_queryIncludesDeleted(this._query.ast)) {
+      return entries;
+    }
+
+    return entries.filter(({ result }) => !(isEchoObject(result) && getObjectCore(result).isDeleted()));
   }
 
   private _uniqueObjects(entries: SourceEntry<T>[]): T[] {

@@ -1,6 +1,6 @@
 # object-merging — Tasks
 
-_Resume: design review of DESIGN.md §7 open questions, then Phase 0 spike. Uncommitted: none. Last: research reworked per decision (no deterministic ids; merge engine only)._
+_Resume: worker-side merging is live and hardened through three review rounds (§4.8) plus dmaretskyi's structural rounds (2026-08-13, 2026-08-31). The field is `meta.convergenceKey` with NO dedicated accessors (assign via `Entity.getMeta` inside an update — 2026-08-31, per review). §4.11 IMPLEMENTED (2026-08-31): the worker rewrites references index-driven (`queryReferrers` = reverseRef ⋈ objectMeta; rewrite after tombstones and on every fold pass); `db.mergeDuplicates()` and the client executor are DELETED — no `Filter.everything()` anywhere; the merge core lives in `echo-host/src/db-host/merge-core.ts` and `@dxos/echo/internal` keeps only `resolveMergeRedirect`; e2e suites observe the worker (tests read state via `getObjectCore`). Branch merged with main 2026-08-31 (document leases, queue positions, depot CI; our migrations renumbered entity-meta 0005 / tracker 0003). Then the backlog — singleton/ensure APIs, doctor diagnostic, property-based determinism, relation endpoints, collaborative-text policy, mixed-version tests. All suites green._
 
 Design + feasibility research: [`DESIGN.md`](./DESIGN.md)
 (includes the decision log, merge algorithm, convergence argument, test plan, and
@@ -14,47 +14,166 @@ the phased rollout this ledger mirrors).
       same-id-two-docs stays an error; no deterministic object ids (DESIGN.md §4.5).
 - [x] **Decision: merge direction** — deterministic ordering; winner = minimum
       `EntityId` (keys are equal among duplicates, so ids are the tiebreaker).
-- [ ] **Design review** — settle the 5 open questions in DESIGN.md §7:
-  - Identity field: `meta.key` + `meta.version` (recommended) vs designated
-    `ForeignKey` source vs new field.
-  - Version matching: exact (recommended) vs semver-range.
-  - Merge-policy pluggability vs fixed field-wise semantics.
-  - Where the merge runs: client on space open vs host job vs indexer-triggered.
-  - Scope: objects only first; relations as merge subjects deferred?
+- [x] **Design review** — 4 of the 5 questions in DESIGN.md §7 settled:
+  - Identity field: **a new dedicated `EntityMeta` field** (not `meta.key`/`version`,
+    not a `ForeignKey`); the derived-key namespacing sub-question is moot as a result.
+  - Version matching: **exact**.
+  - Where the merge runs: **in the worker, off the indexing stream** — the final
+    answer after three homes: on space open (reverted: hydrated the whole space),
+    inside query evaluation (superseded: writes on the read path), on entity load
+    (subsumed: detection is write-driven now). DESIGN.md §4.8.
+  - Scope: **all entity kinds** (object, relation, type), phased — relations are
+    merge subjects eventually, not just endpoints.
+  - Merge-policy pluggability: left open, non-blocking; fixed semantics first.
+- [x] **Shape the identity field** — a **single opaque string**, not a
+      `{ key, version }` struct; callers encode generations in the string.
+- [x] **Name the identity field** — originally **`meta.naturalKey`** (§4.4; named the
+      caller's assertion rather than the mechanism); renamed **`meta.convergenceKey`**
+      2026-08-13 after review feedback — the new name states the engine's guarantee
+      (eventual convergence) in house vocabulary.
 
-## Phase 0: Spike (throwaway, tests only)
+## Phase 0: Spike — SUBSUMED
 
-Prove convergence end-to-end; time-boxed ~1–2 weeks. See DESIGN.md §6 Phase 0.
+Planned as throwaway code to prove convergence. Skipped: the design review settled
+the questions the spike existed to answer, so the work went straight into shippable
+form under Phases 1–2. Convergence is demonstrated by `convergence.test.ts` rather
+than by a spike.
 
-- [ ] **Minimal end-to-end merge** — 3 `EchoTestPeer`s, duplicate keyed objects,
-      min-id winner, `mergedInto` redirect, resolver hook, ref rewrite via
-      `Query.referencedBy`; convergence under randomized sync orders incl. the
-      partial-view chain case.
-- [ ] **Merge-function shape** — prototype field-wise winner-preference on 2–3
-      real types (Collection, Feed, Expando); check semantics are acceptable.
-- [ ] **Decision memo** — confirm identity field, merge-run location, and
-      merge-function semantics; go/no-go.
+- [x] **Minimal end-to-end merge** — two peers, duplicate keyed objects, min-id
+      winner, `mergedInto` redirect, ref rewrite, and the partial-view chain case.
+- [ ] **Merge-function shape on real types** — still only exercised on `TestSchema`;
+      run it against `Collection` / `Feed` / an Expando before Phase 4 adoption.
 
 ## Phase 1: Foundations (no merge engine)
 
-- [ ] `system.mergedInto` schema field + resolver redirect-following (inert) +
-      proto-guard snapshot.
+- [x] Dedicated identity field on `EntityMeta` — `meta.convergenceKey`, a single optional
+      string, with get/set accessors and grouping helpers (now
+      meta-field assignment + internal `findMergeDuplicates`; the dedicated
+      accessors were dropped 2026-08-31 — the meta field is the API).
+      Two hand-maintained meta field lists had to learn about it (see below).
+- [x] Pure merge core (`echo/src/Merge.ts`) — `selectWinner` (min id),
+      set-wise `merge` (permutation-independent, not a pairwise fold),
+      `resolveRedirect` (transitive, terminates on cycles and forward refs).
+      39 unit tests + 4 DB round-trip tests.
+- [x] `system.mergedInto` / `system.mergedAtHeads` schema fields + **resolver
+      redirect-following** (sync + async ref resolution, 2026-08-02): an
+      un-rewritten ref to a merged-away loser resolves to the survivor.
+- [ ] Proto-guard snapshot for the new `system` fields.
 - [ ] Internal relation-endpoint mutation (plumb `ObjectCore.setSource/setTarget`).
 - [ ] Creation-side API for declaring an identity key (+ `db.ensure`-style helper).
-- [ ] Feature flag, default off outside tests.
 
-## Phase 2: Merge engine (flagged)
+## Phase 2: Merge engine
 
-- [ ] Duplicate detection (query post-filter), deterministic merge executor,
-      tombstone+redirect, opportunistic ref rewrite.
+- [x] Duplicate detection (query post-filter), deterministic merge executor,
+      tombstone+redirect, opportunistic ref rewrite — `echo-client/src/merge/`.
+      `mergeDuplicates` writes per-field, records `mergedInto` + heads, tombstones;
+      `rewriteReferences` repoints refs (idempotent); `resolveMerged` follows chains.
+- [x] Multi-peer convergence tests (`convergence.test.ts`) over
+      `TestReplicationNetwork`: two peers seeding the same state converge; both
+      peers merging independently agree on the winner; a partial-view merge builds
+      a chain that still resolves to the global minimum.
+- [x] `db.mergeDuplicates()` — detection, merge, and reference rewriting in one call.
+- [x] `system.mergedFrom` on the winner — the reverse edge of `mergedInto`, stored
+      because deriving it means an unindexed reverse scan; transitively closed so a
+      collapsing chain carries absorbed ids forward. Read via `getMergedFrom`.
+- [x] Straggler fold (`foldLateEdits`) — asks automerge which data fields moved since
+      `mergedAtHeads` and carries exactly those to the winner, then advances the
+      watermark so the same edit is never folded twice.
+- [x] **Merge in the worker, off the indexing stream** (DESIGN.md §4.8, option A of
+      the 2026-07-31 review; supersedes the one-day query-evaluation implementation).
+      `IndexingResult.convergenceKeys` trigger set → `objectMeta.convergenceKey` point lookup
+      → raw-document merge in `echo-host/db-host/convergence-key-merge.ts`. Client query
+      path keeps a read-only filter dropping already-redirected losers. Covers
+      entities reached by id/ref too — detection is write-driven, not result-set
+      driven — which retires the separate merge-on-load item.
+- [x] **2026-08-02 hardening** (adversarial review of the shipped path; DESIGN
+      decision log has the full list): automatic straggler fold + sticky tombstone
+      (worker services redirected entities on re-index — restore converges back,
+      late edits reach the winner); objects-only enforced at API, detection, and
+      worker; RawString-safe clone; structural (not reference) write guard in the
+      client executor; `mergedFrom`/`meta.keys` append-in-place + dedup-on-read;
+      ref rewrite recurses into arrays/nested records; query filter keys on the
+      deleted flag (no restored-zombie); one-time cursor reset backfills the
+      `convergenceKey` column; chunked detection lookup; `@meta` stripped from FTS and
+      reverse-ref content for document objects.
+- [x] **2026-08-03 hardening** (second adversarial review; DESIGN decision log has
+      the full list): worker reads/computes/writes in one synchronous block —
+      load-time snapshots could put mid-merge edits below the fold watermark,
+      permanently (one variant deterministic in a single pass); watermark advances
+      only when the fold write applied; loser callbacks re-verify the convergence key
+      and deletion; winner deleted mid-flush stops the tombstones; **durable
+      convergence-key intent log** (`convergenceKeyIntents`, written transactionally with
+      the index cursors, cleared per serviced key, per-group error containment) —
+      no detected duplicate is ever silently dropped; winner doc flushed before
+      loser tombstones (cross-document crash ordering); client executor skips
+      user-deleted candidates and empty-string keys; `rewriteReferences` and
+      `foldLateEdits` never write to / fold into tombstoned or deleted parties;
+      migration cursor wipe moved before the ALTER; DESIGN §4.10 (key mutation),
+      canonicity→agreement, flag story, and stale claims reconciled. New unit
+      suite `echo-host/db-host/convergence-key-merge.test.ts` drives the group merge
+      against real repo handles with injected mid-load/mid-flush mutations.
+- [x] **2026-08-03 hardening, later** (third adversarial review; DESIGN decision
+      log "2026-08-03, later" has the full list): transitive deletion follows
+      `mergedInto` redirects — relations and children anchored at a merge loser
+      stay visible, judged at the survivor (was: silent permanent disappearance
+      on new clients, `@parent` included and previously undeclared);
+      prototype-safe field accumulation in `Merge.merge`/`candidateOf` — the `in`
+      check dropped `toString`/`constructor`/… fields and `__proto__` polluted
+      the accumulator; loser documents flushed before a group reports serviced — the
+      durability rule's dual, since the orchestrator clears the durable intent on
+      that report; fold watermark read as the union of the stored register and
+      its automerge conflicts in both engines, so a concurrent merge's stale
+      surviving watermark never re-folds already-folded edits over newer winner
+      state (residual value-register race documented in DESIGN §4.2 and
+      `Merge.merge`'s doc). Regression tests in `Merge.test.ts` (prototype
+      fields), `merge.test.ts` (relation/child at loser), and
+      `convergence-key-merge.test.ts` (flush ordering ×2, concurrent-merge watermark
+      conflict via forked-and-merged doc states).
+- [x] **2026-08-13 restructuring** (dmaretskyi PR review; DESIGN decision log
+      "2026-08-13" has the rationale): public `Merge` namespace dissolved —
+      `Entity.get/setConvergenceKey` is the user API, machinery
+      (`mergeCandidates`/`toMergeCandidate`/`findMergeDuplicates`/`resolveMergeRedirect`)
+      moved to `@dxos/echo/internal`, `selectWinner` deleted, `groupByConvergenceKey`
+      privatized; cursor wipe replaced by index-name versioning (`fts6`,
+      `reverseRef2`, `DEPRECATED_INDEX_NAMES`); intent log split into
+      `ConvergenceKeyIntentStore` joining the same transaction; `ConvergenceKeyMerger`
+      class with constructor-injected `loadDoc`/`flushDoc`/`queryByConvergenceKeys`.
+      Declined: `singletonKey` rename + `querySingleton`/`ensureSingleton` APIs
+      (API sketch noted against `db.ensure`). Resolved 2026-08-13, later: the field
+      renamed `naturalKey` → `meta.convergenceKey` across code, index, migrations,
+      and docs (DESIGN decision log has the rationale).
 - [ ] `plugin-doctor` duplicates diagnostic + "merge now" repair action; surface
       class-1 (same-id-two-docs) anomalies as an explicit diagnostic.
-- [ ] Multi-peer convergence + property test suite (DESIGN.md §5.2–5.4).
+- [ ] **Decide the collaborative-text policy before adoption widens** (§4.6 risk).
+      Min-id-wins discards the loser's entire text, and unrelated automerge documents
+      cannot have changes applied across them, so there is no cheap fix. Academic for
+      init-state objects; serious the moment documents are in scope.
+- [ ] Property-based determinism over randomized op schedules (§5.3).
+- [ ] Relation endpoints rewritten when an endpoint is merged away (needs
+      `ObjectCore.setSource/setTarget` plumbed).
 
 ## Phase 3: Indexing & automation
 
+- [x] **`meta.convergenceKey` index column** — `objectMeta.convergenceKey` + migration +
+      `(spaceId, convergenceKey)` index + `queryByConvergenceKeys` point lookup; populated
+      from `@meta` on index update (`objectStructureToJson` now emits the meta
+      section, which it previously omitted entirely).
+- [ ] `Filter.convergenceKey` equality pushdown for app-level lookups (optional; the
+      merge itself no longer needs it).
+- [x] Indexer key-collisions trigger the merge automatically — this is the shipped
+      §4.8 mechanism, which also serves as the §4.9 proactive worker pass (event
+      driven rather than a sweep).
 - [ ] Meta-key columns + planner pushdown for `Filter.key` / `Filter.foreignKeys`.
-- [ ] Indexer key-collision events trigger the merge automatically.
+
+## Phase 3b: Relations and types as merge subjects
+
+Scope decision 2026-07-30: every entity kind that can be stored is in scope, phased.
+
+- [ ] `EntityKind.Relation` as a merge subject — duplicate relations sharing an
+      identity key merge; reconcile endpoints that may themselves be mid-merge.
+- [ ] `EntityKind.Type` as a merge subject (§7 Q7) — needs its own convergence
+      argument: schema identity feeds the type registry and object `system.type`
+      refs, so a type merge is not just a data merge.
 
 ## Phase 4: Adoption & generalization
 
@@ -67,6 +186,47 @@ Prove convergence end-to-end; time-boxed ~1–2 weeks. See DESIGN.md §6 Phase 0
 ## Phase 5: GC (optional)
 
 - [ ] Epoch-based compaction of merged-away tombstones.
+
+### Gotchas found while implementing
+
+- **Adding a field to `EntityMeta` is not one change.** Two hand-maintained field
+  lists silently drop anything they do not enumerate, and neither fails loudly:
+  `getSnapshot` (`echo/src/internal/Obj/snapshot.ts`) rebuilds meta from an explicit
+  allowlist, so the field vanished from every snapshot; and `metaNotEmpty`
+  (`echo-client/src/echo-handler/echo-handler.ts`) decides whether meta is persisted
+  at all, so an object whose _only_ meta was a convergence key never wrote its meta
+  section. **Fixed at the root**: both now enumerate `SCALAR_META_FIELDS`, derived
+  from `EntityMetaSchema.fields`, so the next meta field needs one change.
+- **ECHO brand keys are strings, not symbols** (`~@dxos/echo/Kind` and friends), so
+  `Object.entries` on a snapshot sweeps them into what looks like user data.
+  `Merge.candidateOf` filters them by prefix.
+- **`waitUntilHeadsReplicated` is not a query barrier.** It covers document
+  replication, but queries read through the index, which settles a tick later — a
+  merge run immediately after it can see one object short. The convergence tests wait
+  on the observable result instead.
+- **`x ??= y` inside an automerge `change` callback returns the plain right-hand
+  value, not the proxy the document wraps it in.** Mutating the alias
+  (`(system.mergedFrom ??= []).push(id)`) writes into a detached array and the
+  document never sees it — silently. Assign, then re-read through the parent.
+- **The serialized object JSON fans out to three indexes.** Adding `@meta` for the
+  entity-meta column also fed full-text search and the reverse-ref index; both had
+  to learn to strip it for document objects (queue blocks always carried it).
+- **Re-indexing is per-object, so a new column never backfills by itself.** Rows
+  written before `convergenceKey` existed stay NULL until the object itself changes;
+  the migration resets index cursors once when it adds the column to an existing
+  table.
+- **A snapshot read before an `await` is not the document.** `handle.doc()` returns
+  an immutable value; changes replicating in during a doc load leave old references
+  stale. Mixing a stale snapshot (values, redirect chain) with the current doc
+  (diff, heads) is how edits vanished below the fold watermark. Read, compute, and
+  write in one synchronous block, and gate watermark advances on the write applying.
+- **An index cursor is not a durable trigger.** The cursor commits before the merge
+  runs, so anything derived from the batch in memory dies with a crash or a throw.
+  Intent rows written in the same transaction as the cursor, cleared after
+  servicing, are; `id <= maxId`-bounded deletes keep a concurrent pass's intents.
+- **`new Repo({ network: [] })` in echo-host tests needs `await initSubduction()`**
+  (beforeAll) — the subduction fork constructs a WASM `MemorySigner` in the
+  constructor.
 
 ### References
 

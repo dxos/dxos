@@ -9,11 +9,12 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { EncodedReference, isEncodedReference } from '@dxos/echo-protocol';
-import { DXN, EID, URI } from '@dxos/keys';
+import { ATTR_META } from '@dxos/echo/internal';
+import { DXN, EID, type EntityId, type SpaceId, URI } from '@dxos/keys';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/reverse-ref';
-import { EscapedPropPath, chunkArray } from '../utils';
+import { type EntityPropPath, EscapedPropPath, chunkArray } from '../utils';
 import type { Index, IndexerObject } from './interface';
 
 /**
@@ -80,6 +81,17 @@ export interface ReverseRefQuery {
 }
 
 /**
+ * One object holding references to a target, joined to the object metadata for its document.
+ * `propPaths` are the unescaped property paths within the referrer's data that the index
+ * recorded as pointing at the target.
+ */
+export type Referrer = {
+  objectId: EntityId;
+  documentId: string;
+  propPaths: EntityPropPath[];
+};
+
+/**
  * Indexes reverse references - tracks which objects reference which targets.
  * Only indexes references, not relations.
  */
@@ -116,6 +128,42 @@ export class ReverseRefIndex implements Index {
       }),
   );
 
+  /**
+   * Referrers of one target in one space, joined to the object metadata for the referrer's
+   * document — the point lookup behind merge reference rewriting. Queue entities carry no
+   * document to rewrite and rows from other spaces are not this space's to repoint, so both
+   * are excluded in SQL.
+   */
+  queryReferrers = Effect.fn('ReverseRefIndex.queryReferrers')(
+    ({
+      spaceId,
+      targetDXN,
+    }: {
+      spaceId: SpaceId;
+      targetDXN: URI.URI;
+    }): Effect.Effect<readonly Referrer[], SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        const normalized = referenceIndexKey(targetDXN);
+        if (normalized === undefined) {
+          return [];
+        }
+        const rows = yield* sql<{ objectId: EntityId; documentId: string; propPath: string }>`
+          SELECT om.objectId, om.documentId, rr.propPath
+          FROM reverseRef rr JOIN objectMeta om ON om.recordId = rr.recordId
+          WHERE rr.targetDXN = ${normalized} AND om.spaceId = ${spaceId} AND om.documentId != ''`;
+        const byReferrer = new Map<string, Referrer>();
+        for (const row of rows) {
+          // Object ids are unique within a space, but the row's document is the one the index saw.
+          const key = `${row.documentId}/${row.objectId}`;
+          const referrer = byReferrer.get(key) ?? { objectId: row.objectId, documentId: row.documentId, propPaths: [] };
+          referrer.propPaths.push(EscapedPropPath.unescape(row.propPath));
+          byReferrer.set(key, referrer);
+        }
+        return [...byReferrer.values()];
+      }),
+  );
+
   /** Delete reverse-reference rows by record id. Used by garbage collection. */
   deleteByRecordIds = Effect.fn('ReverseRefIndex.deleteByRecordIds')(
     (recordIds: readonly number[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
@@ -144,8 +192,16 @@ export class ReverseRefIndex implements Index {
               // Delete existing references for this record.
               yield* sql`DELETE FROM reverseRef WHERE recordId = ${recordId}`;
 
-              // Extract references from data.
-              const refs = extractReferences(data as unknown as Record<string, unknown>);
+              // Document objects carry `@meta` only so the entity-meta index can extract the
+              // convergence key — indexing `meta.tags` here would make `Query.incoming()` on a Tag
+              // return everything merely tagged with it. Queue blocks always carried meta, so
+              // their extraction is unchanged.
+              const extractable = object.documentId
+                ? Object.fromEntries(
+                    Object.entries(data as unknown as Record<string, unknown>).filter(([key]) => key !== ATTR_META),
+                  )
+                : (data as unknown as Record<string, unknown>);
+              const refs = extractReferences(extractable);
 
               // Insert new references.
               yield* Effect.forEach(

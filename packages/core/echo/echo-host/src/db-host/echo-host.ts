@@ -30,7 +30,7 @@ import { RuntimeProvider } from '@dxos/effect';
 import { FeedStore } from '@dxos/feed';
 import { IndexEngine, type IndexingResult } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
-import { type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
+import { EID, type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
 import { type DataService, type FeedService } from '@dxos/protocols/rpc';
@@ -50,6 +50,7 @@ import {
   deriveCollectionIdFromSpaceId,
 } from '../automerge';
 import { AutomergeDataSource } from './automerge-data-source';
+import { ConvergenceKeyMerger } from './convergence-key-merge';
 import { DataServiceImpl } from './data-service';
 import { type DatabaseRoot } from './database-root';
 import { DeletionResolver } from './deletion';
@@ -141,6 +142,7 @@ export class EchoHost extends Resource {
 
   private readonly _automergeDataSource: AutomergeDataSource;
   private readonly _indexEngine: IndexEngine;
+  private readonly _convergenceKeyMerger: ConvergenceKeyMerger;
   private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
   private readonly _feedStore: FeedStore;
   private readonly _feedDataSource: FeedDataSource;
@@ -204,6 +206,17 @@ export class EchoHost extends Resource {
 
     // SQLite-based index engine for all queries.
     this._indexEngine = new IndexEngine();
+
+    this._convergenceKeyMerger = new ConvergenceKeyMerger({
+      queryByConvergenceKeys: (spaceId, keys) =>
+        this._indexEngine.queryByConvergenceKeys(spaceId, keys).pipe(RuntimeProvider.runPromise(this._runtime)),
+      queryReferrers: (spaceId, targetId) =>
+        this._indexEngine
+          .queryReferrers(spaceId, EID.make({ entityId: targetId }))
+          .pipe(RuntimeProvider.runPromise(this._runtime)),
+      loadDoc: (ctx, documentId, opts) => this._automergeHost.loadDoc<DatabaseDirectory>(ctx, documentId, opts),
+      flushDoc: (ctx, documentId) => this._automergeHost.flush(ctx, { documentIds: [documentId] }),
+    });
 
     this._queryService = new QueryServiceImpl({
       automergeHost: this._automergeHost,
@@ -1105,6 +1118,35 @@ export class EchoHost extends Resource {
           .update(this._ctx, this._automergeDataSource, { spaceId: null, limit: 50 })
           .pipe(RuntimeProvider.runPromise(this._runtime));
         _mergeInto(combinedResult, result);
+
+        // Convergence-key duplicates are born from replication, and a replicated write is exactly what
+        // was just indexed — so this is the earliest a duplicate can be detected on this device.
+        // The trigger is the durable intent log written in the same transaction as the index
+        // cursors: a crash or a faulted merge pass leaves the intents in place, and this pass —
+        // which also runs once at every startup — retries them, so no detected duplicate is ever
+        // silently dropped. The merge's own writes land back here via `documentsSaved`, which
+        // re-indexes the tombstones; idempotence is what makes that follow-up pass a no-op.
+        const { maxId, intents } = await this._indexEngine
+          .takeConvergenceKeyIntents()
+          .pipe(RuntimeProvider.runPromise(this._runtime));
+        if (intents.size > 0) {
+          log('servicing convergence-key intents', {
+            spaces: intents.size,
+            keys: [...intents.values()].reduce((count, keys) => count + keys.size, 0),
+            upToId: maxId,
+          });
+          const { serviced } = await this._convergenceKeyMerger.mergeDuplicates(this._ctx, intents);
+          let cleared = 0;
+          for (const [spaceId, keys] of serviced) {
+            for (const key of keys) {
+              await this._indexEngine
+                .clearConvergenceKeyIntents(spaceId, key, maxId)
+                .pipe(RuntimeProvider.runPromise(this._runtime));
+              cleared++;
+            }
+          }
+          log('cleared serviced convergence-key intents', { cleared, upToId: maxId });
+        }
         performance.measure('Index Automerge', {
           start: 'indexEngine.update.automerge:start',
           detail: {

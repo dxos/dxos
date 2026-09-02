@@ -24,7 +24,7 @@ import {
   setSchema,
   setType,
 } from '../common/types';
-import { ATTR_META, EntityMetaSchema } from '../common/types/meta';
+import { ATTR_META, EntityMetaSchema, SCALAR_META_FIELDS } from '../common/types/meta';
 import { MetaId } from '../common/types/model-symbols';
 import {
   ATTR_DELETED,
@@ -269,9 +269,19 @@ export const objectStructureToJson = (objectId: EntityId, structure: EntityStruc
   const parent = EntityStructure.getParent(structure)?.['/'];
   const source = EntityStructure.getRelationSource(structure)?.['/'];
   const target = EntityStructure.getRelationTarget(structure)?.['/'];
+  // Included so the indexer sees the meta section (notably `convergenceKey`, the merge trigger) —
+  // matching the feed path, whose blocks carry `@meta` wholesale.
+  const meta = structure.meta;
+  const metaNotEmpty =
+    meta !== undefined &&
+    (meta.keys?.length > 0 ||
+      (meta.tags?.length ?? 0) > 0 ||
+      (meta.annotations !== undefined && Object.keys(meta.annotations).length > 0) ||
+      SCALAR_META_FIELDS.some((field) => (meta as Record<string, unknown>)[field] !== undefined));
   return {
     ...structure.data,
     id: objectId,
+    [ATTR_META]: metaNotEmpty ? (meta as Obj.JSON[typeof ATTR_META]) : undefined,
     [ATTR_TYPE]: typeRef ? URI.make(typeRef) : undefined,
     [ATTR_DELETED]: EntityStructure.isDeleted(structure),
     [ATTR_PARENT]: parent !== undefined ? EID.tryParse(parent) : undefined,
