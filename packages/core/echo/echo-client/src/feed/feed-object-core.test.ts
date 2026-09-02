@@ -9,13 +9,11 @@ import { TestSchema } from '@dxos/echo/testing';
 
 import { FeedObjectCore } from './feed-object-core';
 
-const jsonOf = (entity: Entity.Unknown): Record<string, unknown> => Entity.toJSON(entity) as Record<string, unknown>;
-
-// Large enough that retaining the canonical JSON per object would dominate the object itself —
-// the reason reconciliation compares digests (DX-1148).
-const LARGE_PAYLOAD = 'x'.repeat(512 * 1024);
-
 describe('FeedObjectCore', () => {
+  // Large enough that retaining the canonical JSON per object would dominate the object itself —
+  // the reason reconciliation compares digests (DX-1148).
+  const LARGE_PAYLOAD = 'x'.repeat(512 * 1024);
+
   test('an inbound read of identical content leaves the entity untouched', ({ expect }) => {
     const entity = Obj.make(TestSchema.Person, { name: LARGE_PAYLOAD });
     const core = new FeedObjectCore(entity, () => {});
@@ -81,3 +79,5 @@ describe('FeedObjectCore', () => {
     core.dispose();
   });
 });
+
+const jsonOf = (entity: Entity.Unknown): Record<string, unknown> => Entity.toJSON(entity) as Record<string, unknown>;
