@@ -19,8 +19,8 @@ runtime:
   services:
     agentHosting:
       type: LOCAL_TESTING
-    # EDGE preview by default. Point at EDGE dev or a local EDGE with DX_EDGE_BASE_URL.
+    # EDGE preview by default. Point at EDGE dev or a local EDGE with DX_EDGE_BASE_URL. Every other
+    # service is derived from it as `<edge>/<service>`; set `runtime.services.sandbox.url` to reach a
+    # sandbox-service that is not behind EDGE (e.g. `wrangler dev` on :8792).
     edge:
       url: https://preview.dxos.network/
-    sandbox:
-      url: https://sandbox-service.dxos.workers.dev
