@@ -496,7 +496,7 @@ export class ProcessManagerImpl implements Manager {
         name: options?.name,
       });
       const scope = yield* Scope.make();
-      const dispatchContext = yield* EffectEx.contextWithoutParentSpan;
+      const dispatchContext = yield* EffectEx.contextWithoutParentSpan();
       const outputQueue = yield* Queue.unbounded<ProcessHandle.OutputItem<O>>();
 
       const storage = storageServiceLayer(this.#kvStore, `process/${id}/`);
@@ -721,7 +721,7 @@ export class ProcessManagerImpl implements Manager {
       log('lifecycle: rehydrate', { pid: id, key: record.key });
 
       const scope = yield* Scope.make();
-      const dispatchContext = yield* EffectEx.contextWithoutParentSpan;
+      const dispatchContext = yield* EffectEx.contextWithoutParentSpan();
       const outputQueue = yield* Queue.unbounded<ProcessHandle.OutputItem<any>>();
       const storage = storageServiceLayer(this.#kvStore, `process/${id}/`);
 

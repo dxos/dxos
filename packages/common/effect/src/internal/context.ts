@@ -21,7 +21,8 @@ export const contextFromScope = (): Effect.Effect<Context, never, Scope.Scope> =
  * The current context minus the parent span: what work dispatched later (an alarm, a child event, a
  * forked refresh) should start from, so it does not nest under whatever happened to be running.
  */
-export const contextWithoutParentSpan: Effect.Effect<EffectContext.Context<never>> = Effect.map(
-  Effect.context<never>(),
-  EffectContext.omit(Tracer.ParentSpan),
-);
+export const contextWithoutParentSpan = <R = never>(): Effect.Effect<
+  EffectContext.Context<Exclude<R, Tracer.ParentSpan>>,
+  never,
+  R
+> => Effect.map(Effect.context<R>(), EffectContext.omit(Tracer.ParentSpan));
