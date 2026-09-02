@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Context, context as otelContext } from '@opentelemetry/api';
 import { type AnyValueMap, SeverityNumber } from '@opentelemetry/api-logs';
 import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-http';
 import { BatchLogRecordProcessor, LoggerProvider, type LogRecordExporter } from '@opentelemetry/sdk-logs';
@@ -69,10 +70,20 @@ export class OtelLogs {
         ...(entry.error ? { error: entry.error.stack } : {}),
         ...stringifyValues(getContextFromEntry(entry), 'ctx_'),
       },
+      // Processors run synchronously inside the log call, so the active span is the one the
+      // caller is in; the SDK reads the trace and span ids off it.
+      context: otelContext.active(),
     });
   };
 
-  emit(record: { severityNumber: SeverityNumber; body?: string; timestamp: Date; attributes: AnyValueMap }): void {
+  emit(record: {
+    severityNumber: SeverityNumber;
+    body?: string;
+    timestamp: Date;
+    attributes: AnyValueMap;
+    /** Context whose span the record links to; absent for a record with no trace. */
+    context?: Context;
+  }): void {
     const logger = this._loggerProvider.getLogger(
       'dxos-observability',
       this.options.resource.attributes[ATTR_SERVICE_VERSION]?.toString(),
@@ -83,6 +94,7 @@ export class OtelLogs {
       body: record.body,
       timestamp: record.timestamp,
       attributes: { ...this.options.getTags(), ...record.attributes },
+      context: record.context,
     });
   }
 

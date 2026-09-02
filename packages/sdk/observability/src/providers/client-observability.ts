@@ -52,7 +52,7 @@ export const identityProvider = (clientServices: Partial<ClientServices>): Obser
       }
 
       observability.identify(idqr.identity.did);
-      observability.setTags({ did: idqr.identity.did });
+      observability.setTags({ identityDid: idqr.identity.did });
     });
 
     // TODO(wittjosiah): RPC subscribe returns void; cleanup requires upstream API change.
@@ -71,6 +71,32 @@ export const identityProvider = (clientServices: Partial<ClientServices>): Obser
         observability.setTags({ deviceProfile: thisDevice.profile.label });
       }
     });
+  });
+
+/**
+ * What {@link identityManagerProvider} reads: the host-side identity manager, in a realm that has no
+ * client proxy to subscribe through.
+ */
+export type IdentitySource = {
+  readonly identity: { readonly did: string } | undefined;
+  readonly stateUpdate: { on(listener: () => void): unknown };
+};
+
+/**
+ * Tags every span and log of a realm with the identity, read from the services host itself. For the
+ * dedicated worker, whose tracer and tags are its own: the tab's {@link identityProvider} only tags
+ * the tab. Tags only — the tab already identifies the user with the analytics backend.
+ */
+export const identityManagerProvider = (identityManager: IdentitySource): DataProvider =>
+  Effect.fn(function* (observability) {
+    const apply = () => {
+      const did = identityManager.identity?.did;
+      if (did) {
+        observability.setTags({ identityDid: did });
+      }
+    };
+    identityManager.stateUpdate.on(apply);
+    apply();
   });
 
 /** Periodically publishes network connection and buffer metrics. */

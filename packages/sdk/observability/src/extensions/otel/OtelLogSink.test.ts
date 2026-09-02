@@ -53,6 +53,18 @@ describe('OtelLogSink', () => {
     expect(record.resource.attributes['session.id']).toBe('session-1');
   });
 
+  test('links a record to the trace it was emitted under', async () => {
+    const { sink, records } = makeSink();
+    const trace = { traceId: '0af7651916cd43dd8448eb211c80319c', spanId: 'b7ad6b7169203331' };
+    sink.append(makeLine({ level: LogLevel.INFO, message: 'traced' }, trace));
+    sink.append(makeLine({ level: LogLevel.INFO, message: 'untraced' }));
+
+    const [traced, untraced] = await records();
+    expect(traced.spanContext?.traceId).toBe(trace.traceId);
+    expect(traced.spanContext?.spanId).toBe(trace.spanId);
+    expect(untraced.spanContext).toBeUndefined();
+  });
+
   test('drops lines below the export level', async () => {
     const { sink, records } = makeSink();
     sink.append(makeLine({ level: LogLevel.DEBUG, message: 'chatty' }));
@@ -99,8 +111,11 @@ describe('OtelLogSink', () => {
   });
 });
 
-const makeLine = (init: ConstructorParameters<typeof LogEntry>[0]): string => {
-  const line = serializeToJsonl(new LogEntry(init), { env: 'test-env' });
+const makeLine = (
+  init: ConstructorParameters<typeof LogEntry>[0],
+  trace?: { traceId: string; spanId: string },
+): string => {
+  const line = serializeToJsonl(new LogEntry(init), { env: 'test-env', trace });
   invariant(line !== undefined);
   return line;
 };

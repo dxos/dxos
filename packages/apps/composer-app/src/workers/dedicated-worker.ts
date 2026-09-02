@@ -2,9 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import { runDedicatedWorker } from '@dxos/client/worker';
 import { log } from '@dxos/log';
 import { IdbLogStore } from '@dxos/log-store-idb';
+import * as ObservabilityExtension from '@dxos/observability/ObservabilityExtension';
+import * as ObservabilityProvider from '@dxos/observability/ObservabilityProvider';
 import { isTauri } from '@dxos/util';
 
 import { LOG_STORE_DB_NAME, LOG_STORE_MAX_BYTES, WorkerLogProcessor, initializeObservability } from '../util';
@@ -18,16 +22,34 @@ const observabilityWorker = new Worker(new URL('./observability-worker', import.
   type: 'module',
   name: 'dxos-observability',
 });
-const logProcessor = new WorkerLogProcessor({ worker: observabilityWorker });
+const logProcessor = new WorkerLogProcessor({
+  worker: observabilityWorker,
+  traceContext: ObservabilityExtension.Otel.activeTraceContext,
+});
 log.addProcessor(logProcessor.processor);
+
+// Resolved in `onBeforeStart`, read in `onStart`: the identity provider needs the runtime's services,
+// which do not exist until it has started.
+let observability: ReturnType<typeof initializeObservability> | undefined;
 
 runDedicatedWorker({
   onBeforeStart: async (cfg) => {
-    void initializeObservability(cfg, isTauri(), logStore, undefined, {
+    observability = initializeObservability(cfg, isTauri(), logStore, undefined, {
       post: (message) => observabilityWorker.postMessage(message),
-    }).catch((err) => log.catch(err));
+    });
+    observability.catch((err) => log.catch(err));
     // The runtime this worker starts hosts echo; automerge is slim-resolved and must be
     // initialized before it runs (see util/automerge-wasm.ts).
     await initAutomergeWasm();
+  },
+  // This realm has its own tracer and tags, so the identity has to be observed here too; the tab's
+  // provider tags only the tab's spans.
+  onStart: async (host) => {
+    const instance = await observability;
+    if (instance) {
+      await Effect.runPromise(
+        instance.addDataProvider(ObservabilityProvider.Client.identityManagerProvider(host.identityManager)),
+      );
+    }
   },
 });
