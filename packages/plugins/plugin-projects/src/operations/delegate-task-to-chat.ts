@@ -45,9 +45,21 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
 
         // The chat is filed under the tasks' project, so it lands in that project's navtree rather
         // than loose in the space. Walked from the tasks rather than taken as input: the list the
-        // action runs from knows the tasks and nothing else. The first that resolves one wins —
-        // a selection spans one list, so they share a project when they have one at all.
-        const project = tasks.map(findProject).find((project) => !!project);
+        // action runs from knows the tasks and nothing else.
+        //
+        // One chat can only be filed under one project, and its opening prompt tells the agent to
+        // file what it makes into THAT project — so a list spanning two is rejected rather than
+        // silently filed under whichever came first. The UI cannot produce one (a checked set comes
+        // from a single list), but the operation is a skill verb an agent calls with any refs.
+        // A task with no project rides along: nothing about it contradicts the chosen one.
+        const projects = new Map(
+          tasks.flatMap((task) => {
+            const project = findProject(task);
+            return project ? [[project.id, project] as const] : [];
+          }),
+        );
+        invariant(projects.size <= 1, 'Expected every delegated task to belong to the same project.');
+        const [project] = projects.values();
 
         const { object: chat } = yield* Operation.invoke(AssistantOperation.CreateChat, {
           // Named after the task only when it is about exactly one: a chat holding three would be

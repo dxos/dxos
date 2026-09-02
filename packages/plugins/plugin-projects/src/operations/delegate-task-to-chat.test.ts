@@ -108,6 +108,43 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     // Every delegated task is underway, and the one left unchecked is untouched.
     expect(tasks.map((task) => task.status)).toEqual(['started', 'todo', 'started']);
   });
+
+  test('refuses a list spanning two projects', async ({ expect }) => {
+    await using harness = await setup();
+    const space = AppSpace.getDefaultSpace(harness.get(ClientCapabilities.Client));
+    invariant(space, 'Expected a default space.');
+
+    // One chat is filed under one project and told to file its output there, so a list drawn from
+    // two has no answer. Unreachable from the UI — a checked set comes from a single list — but the
+    // operation is a skill verb an agent calls with any refs.
+    const taskIn = async (name: string, title: string) => {
+      const { project } = await harness.runPromise(
+        Operation.invoke(ProjectOperation.Create, { name }, { spaceId: space.id }),
+      );
+      const taskSet = await project.taskSet?.tryLoad();
+      invariant(taskSet, 'Expected the scaffolded task set.');
+      const task = space.db.add(Task.make({ title, status: 'todo' }));
+      Obj.setParent(task, taskSet);
+      return task;
+    };
+
+    const voyage = await taskIn('Voyage', 'Write a poem');
+    const harbour = await taskIn('Harbour', 'Draw a map');
+    await space.db.flush();
+
+    await expect(
+      harness.runPromise(
+        Operation.invoke(
+          ProjectOperation.DelegateTaskToChat,
+          { tasks: [Ref.make(voyage), Ref.make(harbour)] },
+          { spaceId: space.id },
+        ),
+      ),
+    ).rejects.toThrow();
+
+    // Nothing was started: the refusal happens before any task is marked or any chat exists.
+    expect([voyage.status, harbour.status]).toEqual(['todo', 'todo']);
+  });
 });
 
 const setup = async () => {
