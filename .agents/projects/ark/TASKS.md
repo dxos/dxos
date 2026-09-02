@@ -399,28 +399,35 @@ rows by) and by id (what gates the walk).
       `AtprotoCompanion`, whose rows are read-only — Phase 3 can be settled by moving it to grouped
       semantic markup and deleting `Treegrid`.
 
-## Phase 10: Reimplement `ToolWidget` on the Ark-backed Accordion
+## Phase 10: Reimplement `ToolWidget` on the Ark-backed Accordion — landed
 
-Tracked 2026-09-01. `packages/ui/react-ui-assistant/src/widgets/ToolWidget.tsx` (274 lines) renders a
-run of tool blocks as one collapsible panel with a row per call. It currently drives that with
-`TogglePanel` from `@dxos/react-ui-components` plus its own `useState` open flag, where
-`react-ui-list`'s `Accordion` — now on `@ark-ui/react`, so it carries the APG keymap — expresses the
-same thing.
+Tracked and implemented 2026-09-01. `ToolWidget` rendered a run of tool blocks as one collapsible
+panel with a row per call, driven by `TogglePanel` plus its own `useState`. It now composes both Ark
+machines: `TogglePanel` (rebuilt on Collapsible) wraps the run, and the calls inside it are an
+`Accordion` from `react-ui-list`.
 
-Why it is worth doing rather than left alone: the file already carries two comments about disclosure
-defects it works around — a heightmap left taller than the row, and _"a scrollbar on open and a
-flicker on close"_, which is why it passes `duration={0}` and opts out of the animation entirely. A
-machine-managed disclosure with a real height variable is the thing those workarounds are
-substituting for.
+- [x] **Mapped `TogglePanel` onto `Accordion`.** The run's calls are accordion items; a call with no
+      payload stays a plain row, since a caret that reveals emptiness reads as a failure. The
+      single-call case keeps its own shape — the summary collapses into the row and the panel's own
+      disclosure opens onto the detail — so it needed no extra slot.
+- [x] **Restored the animation**, and the workarounds it was substituting for are gone with it. The
+      `duration={0}` opt-out is removed; the body ramps against the Collapsible's `--height`
+      (measured 0 → 124px). The scrollbar that prompted the opt-out was never the panel's: the
+      block editor's `.cm-scroller` was a frame short of the growing widget for the whole animation
+      and painted one throughout. Pinned to `overflow-y: hidden`, which is honest — an item's editor
+      is auto-height and the feed is what scrolls.
+- [x] **`TogglePanel` is NOT retired.** Six consumers, and the compound's parts and props are
+      unchanged, so none of them moved. It gained `caret` (`'start' | 'end'`) and a `classNames`
+      pass-through; `ToolWidget` uses `caret='end'` so the summary reads as a line of prose with an
+      affordance after it rather than a panel header.
+- [x] **Verified in the assistant stories**, including the editor interaction the entry warned
+      about. The widget takes `w-0 min-w-full` so a wide payload no longer stretches CodeMirror's
+      content line and scrolls the whole block; the payload is its own inline-axis scroller. Also
+      fixed while there: the accordion's end items clipped their trigger's focus ring, and the copy
+      button sat off the disclosure caret's column.
 
-- [ ] **Map `TogglePanel` onto `Accordion`.** The widget's single-call case collapses the summary
-      into the row (`single?.title ?? summary`), so it needs one item whose header is the call —
-      check that lands cleanly on `Accordion.Item` + `ItemHeader` rather than needing another slot.
-- [ ] **Restore the animation.** It sets `duration={0}` to dodge the flicker; with Ark's `--height`
-      the accordion animates properly, so re-enable it and confirm the flicker does not return.
-- [ ] Check whether `TogglePanel` has other consumers, or whether this migration retires it.
-- [ ] Verify in the assistant stories, not just by build — this is a widget rendered inside the
-      editor, so its collapsed height interacts with the editor's heightmap.
+Not done, deliberately: the widget still owns its open state rather than delegating it, since
+`TogglePanel` is the run's disclosure and the accordion is only the rows inside it.
 
 ## Phase 11: Collapsible disclosure for form objects
 
