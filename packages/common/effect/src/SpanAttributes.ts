@@ -11,13 +11,6 @@ import * as Effect from 'effect/Effect';
 export const SPACE_ID = 'spaceId';
 
 /**
- * `Effect.withSpan` options naming the space, or none when the work is not scoped to one, since an
- * absent attribute is the honest answer and an undefined value is not an attribute.
- */
-export const withSpace = (spaceId: string | null | undefined): { attributes: { spaceId: string } } | undefined =>
-  spaceId ? { attributes: { [SPACE_ID]: spaceId } } : undefined;
-
-/**
  * Stamps the space on every span the effect opens, for a caller that knows the space but not which
  * spans the work below it will open. Leaves the effect alone when there is no space.
  */
