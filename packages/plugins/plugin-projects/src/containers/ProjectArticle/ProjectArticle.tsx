@@ -205,6 +205,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                             attendableId,
                             taskSet,
                             extensions: outlineExtensions,
+                            // TODO(burdon): Should not pass callbacks!
                             onSelectTask: handleSelectTask,
                           }}
                           limit={1}

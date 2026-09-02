@@ -322,19 +322,19 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
   const {
     tasks,
     groupByStatus,
+    hierarchical,
+    selected,
+    dragging,
+    debug,
     showGroupLabels,
     showOrdinals,
     showDescription,
-    hierarchical,
     showGutter,
     isCollapsed,
     onCollapseToggle,
-    selected,
     onTaskSelect,
     onTaskUpdate,
     onTaskMove,
-    debug,
-    dragging,
   } = useTaskListContext('TaskList.Content');
   // Collapsed ids are read through the context callback rather than held here, so the walk still
   // re-runs when one flips; the set itself lives in `Root`.
@@ -371,19 +371,19 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
   if (rows) {
     return (
       <TaskTreeContent
+        debug={debug}
         tasks={tasks}
         collapsed={collapsed}
         showGutter={showGutter}
         ordinals={showOrdinals ? ordinals : EMPTY_ORDINALS}
         selected={selected}
+        showDescription={showDescription}
+        renderTrailing={TaskTreeTrailing}
         translationKey={translationKey}
         onCollapseToggle={onCollapseToggle}
         onTaskSelect={onTaskSelect}
         onTaskUpdate={onTaskUpdate}
         onTaskMove={onTaskMove}
-        showDescription={showDescription}
-        debug={debug}
-        renderTrailing={TaskTreeTrailing}
       />
     );
   }
@@ -1046,7 +1046,10 @@ const TaskTreeTrailing = ({ item }: { item: TaskNode }) => {
 
   return (
     <>
-      <div className='flex h-8 items-center justify-start gap-1'>
+      {/* `justify-end`, as the flat row does: the chips are variable width, so left-aligning them
+          put the priority control wherever the artifact tag happened to end and the column read as
+          ragged. Anchored to the trailing edge, every row's controls line up. */}
+      <div className='flex h-8 items-center justify-end gap-1'>
         <TaskListItemArtifacts task={task} />
         {task.assignee && <TaskListAssignee assignee={task.assignee} />}
         {showEstimates && <TaskEstimateControl task={task} />}

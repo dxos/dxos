@@ -24,6 +24,9 @@ import { TaskDescription } from './TaskDescription';
 import { TaskOrdinal, TaskStatusControl } from './TaskRowCells';
 import { TASK_TREE_ROOT_ID, type TaskNode, buildTaskForest, buildTaskPaths, createTaskTreeModel } from './tree-model';
 
+/** Columns after the title: assignee, tags and the contributed actions live here. */
+const GRID_TEMPLATE = '[tree-row-start] minmax(0, 1fr) min-content min-content [tree-row-end]';
+
 /**
  * The hierarchical list rendered as a `Tree`, so the machine owns disclosure, roving focus and the
  * APG keymap instead of the row re-deriving `aria-level`/`posinset`/`setsize` by hand.
@@ -36,6 +39,8 @@ import { TASK_TREE_ROOT_ID, type TaskNode, buildTaskForest, buildTaskPaths, crea
  * tree's own story, so indent/outdent/nudge still reach the row handler.
  */
 export type TaskTreeContentProps = {
+  /** Paint the drop bands on every row (development affordance). */
+  debug?: boolean;
   tasks: readonly Task.Task[];
   collapsed: ReadonlySet<string>;
   showGutter: boolean;
@@ -49,27 +54,22 @@ export type TaskTreeContentProps = {
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
   onTaskMove?: (task: Task.Task, placement: TaskPlacement) => void;
   renderTrailing?: ColumnRenderer<TaskNode>;
-  /** Paint the drop bands on every row (development affordance). */
-  debug?: boolean;
 };
 
-/** Columns after the title: assignee, tags and the contributed actions live here. */
-const GRID_TEMPLATE = '[tree-row-start] minmax(0, 1fr) min-content min-content [tree-row-end]';
-
 export const TaskTreeContent = ({
+  debug,
   tasks,
   collapsed,
   showGutter,
   ordinals,
   selected,
+  renderTrailing,
   translationKey,
   showDescription = false,
   onCollapseToggle,
   onTaskSelect,
   onTaskUpdate,
   onTaskMove,
-  renderTrailing,
-  debug,
 }: TaskTreeContentProps) => {
   const registry = useContext(RegistryContext);
 
