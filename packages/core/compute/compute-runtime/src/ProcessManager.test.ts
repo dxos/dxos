@@ -382,11 +382,12 @@ const makeRecordingTracer = (names: string[], spans: Tracer.Span[] = []) => {
 };
 
 /** Sets an alarm on input (or at spawn, when `atSpawn` is given) and opens a span when it fires. */
-const makeTracedAlarmExecutable = (options: { atSpawn?: number } = {}) =>
+const makeTracedAlarmExecutable = (options: { atSpawn?: number; scheduleInSpan?: string } = {}) =>
   Process.make({ key: 'test.traced-alarm', input: Schema.Void, output: Schema.Void, services: [] }, (ctx) =>
     Effect.succeed({
       onSpawn: () => (options.atSpawn !== undefined ? ctx.setAlarm(options.atSpawn) : Effect.void),
-      onInput: () => ctx.setAlarm(0),
+      onInput: () =>
+        options.scheduleInSpan ? ctx.setAlarm(0).pipe(Effect.withSpan(options.scheduleInSpan)) : ctx.setAlarm(0),
       onAlarm: () =>
         Effect.void.pipe(
           Effect.withSpan('Alarm.handler'),
@@ -398,6 +399,7 @@ const makeTracedAlarmExecutable = (options: { atSpawn?: number } = {}) =>
 
 const spanNames: string[] = [];
 const spaceSpans: Tracer.Span[] = [];
+const alarmSpans: Tracer.Span[] = [];
 const rearmSpanNames: string[] = [];
 
 describe('ManagerImpl', () => {
@@ -449,6 +451,26 @@ describe('ManagerImpl', () => {
       },
       Effect.provide(TestLayer),
       Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer([], spaceSpans))),
+    ),
+  );
+
+  it.effect(
+    'runs an alarm handler outside the span that scheduled it',
+    Effect.fn(
+      function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        const handle = yield* manager.spawn(makeTracedAlarmExecutable({ scheduleInSpan: 'Input.span' }));
+        yield* handle.submitInput(undefined);
+        yield* handle.runToCompletion();
+
+        // The agent schedules each turn from inside the previous one; were the alarm to inherit the
+        // scheduling fiber's context, every turn would nest under the last, without end.
+        const alarm = alarmSpans.find(({ name }) => name === 'Alarm.handler');
+        expect(alarmSpans.some(({ name }) => name === 'Input.span')).toEqual(true);
+        expect(alarm && Option.isNone(alarm.parent)).toEqual(true);
+      },
+      Effect.provide(TestLayer),
+      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer([], alarmSpans))),
     ),
   );
 

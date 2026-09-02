@@ -135,8 +135,8 @@ export interface ProcessContext<I, O> {
   submitOutput(output: O): void;
 
   /**
-   * Set an alarm for the process to be woken up later. The timer is forked from the calling fiber,
-   * so `onAlarm` runs with the caller's context.
+   * Set an alarm for the process to be woken up later. `onAlarm` runs with the process's own
+   * context, not the caller's: an alarm scheduled from inside a handler does not nest under it.
    *
    * @param timeout - Optional timeout in milliseconds. If not provided, the process is woken up as soon as possible.
    */
