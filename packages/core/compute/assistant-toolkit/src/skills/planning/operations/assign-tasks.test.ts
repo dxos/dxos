@@ -29,16 +29,6 @@ const TestLayer = AssistantTestLayer({
   disableLlmMemoization: true,
 });
 
-/** A chat bound as the conversation's context, which is how the handler reaches it. */
-const setupChat = Effect.fnUntraced(function* () {
-  const feed = yield* Database.add(Feed.make());
-  const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
-  const runtime = yield* Effect.context<Database.Service>();
-  const binder = new AiContext.Binder({ feed, runtime });
-  yield* Effect.promise(() => binder.bind({ objects: [Ref.make(chat)] }));
-  return { chat, options: Operation.withInvocationOptions({ conversation: Obj.getURI(feed) }) };
-});
-
 describe('AssignTasks', () => {
   it('renders as a tool schema', ({ expect }) => {
     // A definition whose input cannot render as JSON Schema is dropped rather than raised, which
@@ -134,4 +124,14 @@ describe('AssignTasks', () => {
       TestHelpers.provideTestContext,
     ),
   );
+});
+
+/** A chat bound as the conversation's context, which is how the handler reaches it. */
+const setupChat = Effect.fnUntraced(function* () {
+  const feed = yield* Database.add(Feed.make());
+  const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+  const runtime = yield* Effect.context<Database.Service>();
+  const binder = new AiContext.Binder({ feed, runtime });
+  yield* Effect.promise(() => binder.bind({ objects: [Ref.make(chat)] }));
+  return { chat, options: Operation.withInvocationOptions({ conversation: Obj.getURI(feed) }) };
 });
