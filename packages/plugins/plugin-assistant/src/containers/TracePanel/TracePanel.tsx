@@ -261,7 +261,7 @@ type ProcessTreeContainerProps = Pick<ProcessTreeProps, 'onProcessSelect' | 'onP
 /** Entity id of a feed URI, the join key between a process environment and a chat's feed ref. */
 const feedKey = (uri: string): string => {
   const eid = EID.tryParse(uri);
-  return eid ? EID.getEntityId(eid) : uri;
+  return (eid && EID.getEntityId(eid)) ?? uri;
 };
 
 // Isolate `ProcessTree` updates from the rest of the panel.
