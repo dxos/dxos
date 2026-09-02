@@ -63,6 +63,26 @@ Design: [DESIGN.md](./DESIGN.md)
       existing presets, applied via `SampleSpace.applyTo`.
 - [ ] Port one scripted preset (`DXOS_TEAM`) to a phase as the proof.
 
-## Phase 5 — the second space
+## Phase 5 — the further spaces
 
-- [ ] Add a second sample space (vertical TBD) to prove phases compose across definitions.
+Two chosen, both of which reuse Bramble's `organizations`/`people` phases — which is the point:
+the phase catalog only earns its keep with a second consumer.
+
+- [ ] **CRM pipeline** — Email, Organization, Contact. Reuses `organizations`, `people` and a
+      trimmed `inbox`; adds a pipeline-stage view over Organization (`status` is already the Kanban
+      pivot in `contacts-views`). The nearest existing prior art is the `crm-pipeline-operations`
+      project registry entry — check it before authoring.
+- [ ] **Software project management** — a Markdown space: `.mdl` files, diagrams, and a Project with
+      a hierarchical TaskSet. Depends on: `plugin-projects`' `ExternalProject`, hierarchical tasks
+      via `Task.parentTask` (unbounded depth, already in the schema), and `plugin-illustrator`
+      drawings. Sub-task hierarchy is the one thing Bramble's `springBlend` phase does NOT exercise
+      (its tasks are flat), so `SampleSpace.children` may need a recursive sibling.
+
+## Phase 6 — content authoring for phases in `src`
+
+Bramble's content stays under `scripts/` because the builder must never reach the browser. A phase
+that a plugin wants to run in-app (Phase 4) has to live in `src` behind a lazily-imported subpath,
+and `composer-app:check-boot-budget` (21 entries / 4.15 MB against 25 / 4.35 MB today) is the gate
+that proves it stayed lazy.
+
+- [ ] Decide the convention: a `./Sample` subpath per plugin, or one definition inside plugin-debug.
