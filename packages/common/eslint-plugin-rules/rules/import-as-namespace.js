@@ -101,7 +101,11 @@ export default {
     };
 
     const namespaceFromSource = (source) => {
-      const parts = source.split('/');
+      // A directory barrel's extensioned form (`./Foo/index.ts`) names the same target the bare
+      // `./Foo` did before `rewriteRelativeImportExtensions` — strip the trailing index file so the
+      // namespace derives from the directory, not the literal file.
+      const withoutIndex = source.replace(/\/index\.\w+$/, '');
+      const parts = withoutIndex.split('/');
       const last = parts[parts.length - 1];
       return last.replace(/\.\w+$/, '');
     };

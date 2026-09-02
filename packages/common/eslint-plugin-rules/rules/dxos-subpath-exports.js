@@ -438,7 +438,11 @@ export default {
           if (!source.startsWith('.')) {
             continue;
           }
-          const segments = source.replace(/^\.\//, '').split('/');
+          // An extensioned directory barrel (`./services/index.ts`) addresses the same target the
+          // bare `./services` did before `rewriteRelativeImportExtensions` — strip the trailing
+          // index file so depth is counted the same way under either specifier form.
+          const withoutIndex = source.replace(/\/index\.\w+$/, '');
+          const segments = withoutIndex.replace(/^\.\//, '').split('/');
           if (segments.length < 2) {
             continue;
           }
