@@ -900,6 +900,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
     isItemDroppable,
     item,
     id,
+    treeId,
     mode,
     level,
     branch,
