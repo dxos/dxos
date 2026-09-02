@@ -1,4 +1,6 @@
 ---
+# multiple-changesets: five independent fixes along the agent boot-and-turn path plus one new tool,
+# each in a different package — a reader looks up the one they upgraded, never the others
 '@dxos/compute-runtime': patch
 '@dxos/agent-runtime': patch
 ---
