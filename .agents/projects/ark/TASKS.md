@@ -492,3 +492,17 @@ for a list read as things to tick off rather than things to refer to by number.
       hidden in this mode rather than leaving both live.
 - [ ] Both list paths, through `TaskOrdinal`'s cell: the flat gutter also hosts the drag handle on
       hover, so the checkbox has to share that cell rather than claim a column.
+
+## Phase 14: Dragging a task jumps — settle the write as one sync operation
+
+Tracked 2026-09-01, from the `TaskSetArticle` drag work.
+
+- [ ] **A drop visibly jumps: the row lands, then moves again.** `MoveTask` is invoked
+      asynchronously (`useOperation` → `invokePromise`), so the tree re-renders from the model
+      before the write lands and then again after it — two paints for one gesture.
+- [ ] **Use a sync operation for the move.** The drop is a single mutation and the list is already
+      controlled, so the placement should commit in the same tick the gesture ends rather than
+      round-tripping through the invoker.
+- [ ] Settle it against `useOperationHandler`: its effect requires the operation's declared
+      services, which is why `Effect.runSync` on it supplied none and failed (fixed in `0234feb119`
+      by moving to `useOperation`). A sync path needs those services provided, not skipped.
