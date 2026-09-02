@@ -497,12 +497,11 @@ for a list read as things to tick off rather than things to refer to by number.
 
 Tracked 2026-09-01, from the `TaskSetArticle` drag work.
 
-- [ ] **A drop visibly jumps: the row lands, then moves again.** `MoveTask` is invoked
-      asynchronously (`useOperation` → `invokePromise`), so the tree re-renders from the model
-      before the write lands and then again after it — two paints for one gesture.
-- [ ] **Use a sync operation for the move.** The drop is a single mutation and the list is already
-      controlled, so the placement should commit in the same tick the gesture ends rather than
-      round-tripping through the invoker.
-- [ ] Settle it against `useOperationHandler`: its effect requires the operation's declared
-      services, which is why `Effect.runSync` on it supplied none and failed (fixed in `0234feb119`
-      by moving to `useOperation`). A sync path needs those services provided, not skipped.
+- [x] **Resolved.** The jump was self-inflicted: `0234feb119` moved the drop onto `useOperation`
+      (the invoker), which is asynchronous, so the tree painted from the model before the write
+      landed and again after. #12863 had deliberately made this path synchronous — `MoveTask` peeks
+      its refs and suspends only when one is unloaded, so with the rows in hand `Effect.runSync`
+      commits in the same tick the gesture ends. Restored.
+- [ ] The `Effect.runSync` path is only sound while every ref is loaded. Decide what should happen
+      when one is not: today the effect would suspend and `runSync` throws, which is a crash rather
+      than a slow drop.

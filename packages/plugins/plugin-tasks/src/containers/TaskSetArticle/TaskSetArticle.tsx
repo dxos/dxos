@@ -3,10 +3,11 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useMemo } from 'react';
 
-import { useOperation } from '@dxos/app-framework/ui';
+import { useOperation, useOperationHandler } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { Panel, Switch, Toolbar, useTranslation } from '@dxos/react-ui';
@@ -66,10 +67,11 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
     [contributed, handleDelete, t],
   );
 
-  // Invoked like its siblings rather than run here: `useOperationHandler` returns an effect that
-  // still requires the operation's services, and `MoveTask` loads and writes through `Database`.
-  // `Effect.runSync` supplied none, so every drop failed.
-  const handleMove = useOperation(
+  // Run synchronously on the drop frame: `MoveTask` peeks its refs and only suspends when one is
+  // unloaded, so with the rows already in hand the write commits in the same tick the gesture ends.
+  // Going through the invoker instead re-rendered from the model before the write landed and again
+  // after it, which is the jump.
+  const move = useOperationHandler(
     TaskOperation.MoveTask,
     (task: Task.Task, { parentTask, before }: TaskPlacement) => ({
       task: Ref.make(task),
@@ -77,7 +79,12 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
       parentTask: parentTask ? Ref.make(parentTask) : null,
       ...(before ? { before: Ref.make(before) } : {}),
     }),
-    { spaceId },
+  );
+  const handleMove = useCallback(
+    (task: Task.Task, placement: TaskPlacement) => {
+      Effect.runSync(move(task, placement));
+    },
+    [move],
   );
 
   const content = (
