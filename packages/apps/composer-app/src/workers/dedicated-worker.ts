@@ -2,9 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-
 import { runDedicatedWorker } from '@dxos/client/worker';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { IdbLogStore } from '@dxos/log-store-idb';
 import * as ObservabilityClientProvider from '@dxos/observability/ObservabilityClientProvider';
@@ -47,7 +46,7 @@ runDedicatedWorker({
   onStart: async (host) => {
     const instance = await observability;
     if (instance) {
-      await Effect.runPromise(
+      await EffectEx.runPromise(
         instance.addDataProvider(ObservabilityClientProvider.Client.identityManagerProvider(host.identityManager)),
       );
     }
