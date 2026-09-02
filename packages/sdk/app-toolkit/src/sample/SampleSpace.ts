@@ -276,9 +276,13 @@ export const children: <P extends Obj.Any, T extends Obj.Any>(
     // Widened so `Database.add` resolves its type-entity rejection against a concrete type.
     const entity: Obj.Any = item;
     yield* Database.add(entity);
+  }
+  // Membership is written before the parent edges: `Obj.setParent` warns for a parent that does not
+  // yet reference the child, which would be one warning per item on every build.
+  Obj.update(parent, (parent) => attach(parent, items.map(Ref.make)));
+  for (const item of items) {
     Obj.setParent(item, parent);
   }
-  Obj.update(parent, (parent) => attach(parent, items.map(Ref.make)));
   return items;
 });
 
