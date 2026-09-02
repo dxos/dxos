@@ -2,23 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import {
-  type Instruction,
-  attachInstruction,
-  extractInstruction,
-} from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
-import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
-import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
-import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
 import React, {
-  type CSSProperties,
   type KeyboardEvent,
   type MouseEvent,
   type PropsWithChildren,
   useCallback,
-  useEffect,
   useMemo,
   useRef,
   useState,
@@ -41,7 +30,7 @@ import {
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
-import { Listbox, TreeDropIndicator, TreeItemToggle, paddingIndentation, useListDisclosure } from '@dxos/react-ui-list';
+import { Listbox, useListDisclosure } from '@dxos/react-ui-list';
 import { MarkdownEditable, type MarkdownEditableController } from '@dxos/react-ui-markdown';
 import {
   Menu,
@@ -57,28 +46,10 @@ import { type ComposableProps } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
-import { INDENT_PER_LEVEL, TASK_DRAG_TYPE, type TaskDragData, dropIntent, isTaskDragData, itemMode } from './dnd';
-import {
-  type TaskPlacement,
-  type TaskTreeRow,
-  resolveIndent,
-  resolveNudge,
-  resolveOutdent,
-  resolveTaskPlacement,
-  subtreeIds,
-  walkTaskTree,
-} from './hierarchy';
-import {
-  STATUS_ICONS,
-  STATUS_ORDER,
-  estimateTextStyle,
-  priorityIcon,
-  priorityTextStyle,
-  statusTextStyle,
-} from './status-icons';
-import { TaskDescription } from './TaskDescription';
+import { type TaskPlacement, subtreeIds } from './hierarchy';
+import { STATUS_ORDER, estimateTextStyle, priorityIcon, priorityTextStyle } from './status-icons';
 import { TaskTreeContent } from './TaskTreeContent';
-import { type TaskNode } from './tree-model';
+import { type TaskNode, buildTaskForest, flattenVisibleTasks } from './tree-model';
 
 const TASK_LIST_NAME = 'TaskList.Root';
 
@@ -393,7 +364,7 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
     const ordered = grouping
       ? grouping.flatMap((status) => tasks.filter((task) => (task.status ?? 'todo') === status))
       : hierarchical
-        ? walkTaskTree(tasks, collapsed).map((row) => row.task)
+        ? flattenVisibleTasks(buildTaskForest(tasks), collapsed)
         : tasks;
     // A dragged row and its sub-tasks are hidden rather than unmounted, so they are still in
     // `ordered` — numbering them would leave gaps in the column the reader can actually see.
@@ -447,487 +418,6 @@ const TaskListGroupLabel = composable<HTMLDivElement>(({ children, ...props }, f
 });
 
 TaskListGroupLabel.displayName = 'TaskList.GroupLabel';
-
-//
-// Drag and drop. The mechanics come from `react-ui-list` (the tree-item hitbox, its instructions,
-// and the drop indicator), so a task tree behaves like the navtree; the row itself stays a listbox
-// option rather than being re-expressed as a treegrid row.
-//
-
-/** How long the cursor must rest on a collapsed branch before it opens, so crossing one does not. */
-const EXPAND_DWELL = 600;
-
-/**
- * Distance from the title cell's own inline start to the title text: the disclosure toggle (`w-6`)
- * plus the cell's `gap-1`. The description sits in a different grid row and has to clear the same
- * distance to line up under the title.
- */
-const TOGGLE_INSET = '1.75rem';
-
-const useTaskDrag = ({
-  task,
-  row,
-  tasks,
-  isCollapsed,
-  onCollapseToggle,
-  onDraggingChange,
-  onTaskMove,
-}: {
-  task: Task.Task;
-  row?: TaskTreeRow;
-  tasks: readonly Task.Task[];
-  isCollapsed: (id: string) => boolean;
-  onCollapseToggle: (id: string) => void;
-  onDraggingChange: (task: Task.Task | undefined) => void;
-  onTaskMove?: (task: Task.Task, placement: TaskPlacement) => void;
-}) => {
-  const rowRef = useRef<HTMLLIElement | null>(null);
-  const dragHandleRef = useRef<HTMLSpanElement | null>(null);
-  const [instruction, setInstruction] = useState<Instruction | null>(null);
-  const expandTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const liftFrame = useRef<number | null>(null);
-
-  // Read through a ref so the listeners are registered once per row rather than re-registered on
-  // every keystroke elsewhere in the list; a drag in flight must not lose its target.
-  const latest = useRef({ tasks, onTaskMove, isCollapsed, onCollapseToggle, onDraggingChange, row });
-  latest.current = { tasks, onTaskMove, isCollapsed, onCollapseToggle, onDraggingChange, row };
-
-  const cancelLift = useCallback(() => {
-    if (liftFrame.current !== null) {
-      cancelAnimationFrame(liftFrame.current);
-      liftFrame.current = null;
-    }
-  }, []);
-
-  const cancelExpand = useCallback(() => {
-    if (expandTimeout.current) {
-      clearTimeout(expandTimeout.current);
-      expandTimeout.current = null;
-    }
-  }, []);
-
-  const enabled = !!onTaskMove && !!row;
-
-  useEffect(() => {
-    const element = rowRef.current;
-    const handle = dragHandleRef.current;
-    if (!enabled || !element || !handle) {
-      return;
-    }
-
-    const data: TaskDragData = { type: TASK_DRAG_TYPE, taskId: task.id };
-
-    /** The placement a drag over this row currently means, or undefined when the drop is refused. */
-    const placementFor = (instruction: Instruction | null): TaskPlacement | undefined => {
-      const intent = dropIntent(instruction);
-      const source = latest.current.tasks.find(({ id }) => id === draggingId.current);
-      if (!intent || !source) {
-        return undefined;
-      }
-      return resolveTaskPlacement({ tasks: latest.current.tasks, source, target: task, intent });
-    };
-
-    return combine(
-      draggable({
-        // Dragging is started from the handle alone: a whole-row drag would fight text selection and
-        // the row's own click-to-select.
-        element: handle,
-        getInitialData: () => data,
-        // ...but what is dragged is the task AND its sub-tasks, which travel with it, so the preview
-        // is the whole subtree. The browser's default drag image is the dragged element, which here
-        // would be the grip alone.
-        onGenerateDragPreview: ({ location, nativeSetDragImage }) => {
-          const rows = subtreeRows(element, latest.current.tasks, task);
-          const { left, top } = element.getBoundingClientRect();
-          const { clientX, clientY } = location.initial.input;
-          // Offset by where the grip was grabbed, so the preview does not jump under the cursor.
-          const offset = { x: clientX - left, y: clientY - top };
-          // Always a clone, one row or many: the live element cannot be made translucent without the
-          // row itself flashing before it is lifted out.
-          setCustomNativeDragPreview({
-            nativeSetDragImage,
-            getOffset: () => offset,
-            render: ({ container }) => renderSubtreePreview(container, element, rows),
-          });
-        },
-        onDragStart: () => {
-          draggingId.current = task.id;
-          // Deferred a frame: the browser snapshots the drag image as it finishes dispatching
-          // `dragstart`, and hiding the rows before that would hand it an empty picture.
-          liftFrame.current = requestAnimationFrame(() => latest.current.onDraggingChange(task));
-        },
-        // Also fires when the drag is cancelled, so the rows always come back.
-        onDrop: () => {
-          draggingId.current = undefined;
-          cancelLift();
-          latest.current.onDraggingChange(undefined);
-        },
-      }),
-      dropTargetForElements({
-        element,
-        getData: ({ input, element }) =>
-          attachInstruction(data, {
-            input,
-            element,
-            indentPerLevel: INDENT_PER_LEVEL,
-            currentLevel: (latest.current.row?.level ?? 1) - 1,
-            mode: itemMode({
-              branch: latest.current.row?.branch ?? false,
-              open: !latest.current.isCollapsed(task.id),
-              last: (latest.current.row?.position ?? 1) === (latest.current.row?.setSize ?? 1),
-            }),
-            // `make-child` is offered on a leaf too: dropping onto one is how a sub-task is made.
-            block: [],
-          }),
-        canDrop: ({ source }) => isTaskDragData(source.data) && source.data.taskId !== task.id,
-        getIsSticky: () => true,
-        onDrag: ({ self }) => {
-          const desired = extractInstruction(self.data);
-          // Refused drops are shown as blocked rather than silently ignored, so the cursor says no.
-          const next: Instruction | null =
-            desired !== null && desired.type !== 'instruction-blocked' && !placementFor(desired)
-              ? { type: 'instruction-blocked', desired }
-              : desired;
-          setInstruction(next);
-
-          const { row, isCollapsed, onCollapseToggle } = latest.current;
-          if (next?.type === 'make-child' && row?.branch && isCollapsed(task.id) && !expandTimeout.current) {
-            expandTimeout.current = setTimeout(() => {
-              expandTimeout.current = null;
-              onCollapseToggle(task.id);
-            }, EXPAND_DWELL);
-          } else if (next?.type !== 'make-child') {
-            cancelExpand();
-          }
-        },
-        onDragLeave: () => {
-          cancelExpand();
-          setInstruction(null);
-        },
-        onDrop: ({ self, source }) => {
-          cancelExpand();
-          setInstruction(null);
-          if (!isTaskDragData(source.data)) {
-            return;
-          }
-          const moved = latest.current.tasks.find(({ id }) => id === source.data.taskId);
-          const intent = dropIntent(extractInstruction(self.data));
-          if (!moved || !intent) {
-            return;
-          }
-          const placement = resolveTaskPlacement({ tasks: latest.current.tasks, source: moved, target: task, intent });
-          if (placement) {
-            latest.current.onTaskMove?.(moved, placement);
-          }
-        },
-      }),
-    );
-  }, [enabled, task.id, cancelExpand, cancelLift]);
-
-  useEffect(
-    () => () => {
-      cancelExpand();
-      cancelLift();
-    },
-    [cancelExpand, cancelLift],
-  );
-
-  return { instruction, rowRef, dragHandleRef, dragHandle: enabled };
-};
-
-/**
- * The rendered rows of `task`'s subtree, in document order: the row itself plus every visible
- * descendant. A collapsed branch contributes only its own row, which is what the reader sees.
- */
-const subtreeRows = (element: HTMLElement, tasks: readonly Task.Task[], task: Task.Task): HTMLElement[] => {
-  const list = element.parentElement;
-  const ids = subtreeIds(tasks, task);
-  return list
-    ? Array.from(list.querySelectorAll<HTMLElement>('[data-task-id]')).filter((row) =>
-        ids.has(row.dataset.taskId ?? ''),
-      )
-    : [element];
-};
-
-/** Translucent enough to read as picked up rather than dropped, while its own text stays legible. */
-const DRAG_PREVIEW_OPACITY = '0.8';
-
-/**
- * Clones the subtree into the drag preview. The container is made a grid carrying the list's own
- * track sizes: the rows are `grid-cols-subgrid`, so without them a detached copy collapses to its
- * content width and the columns no longer line up.
- */
-const renderSubtreePreview = (container: HTMLElement, element: HTMLElement, rows: HTMLElement[]): void => {
-  const list = element.parentElement;
-  const listStyle = list && getComputedStyle(list);
-  container.style.display = 'grid';
-  container.style.width = `${element.getBoundingClientRect().width}px`;
-  if (listStyle) {
-    container.style.gridTemplateColumns = listStyle.gridTemplateColumns;
-    container.style.columnGap = listStyle.columnGap;
-    container.style.gridAutoRows = listStyle.gridAutoRows;
-    container.style.alignItems = listStyle.alignItems;
-  }
-  // The preview is torn off the page, so it needs its own ground to sit on — and the opacity reads
-  // as "in hand", which is what distinguishes it from the rows it is being dragged over.
-  container.classList.add('bg-base-surface');
-  container.style.opacity = DRAG_PREVIEW_OPACITY;
-  for (const row of rows) {
-    container.appendChild(row.cloneNode(true));
-  }
-};
-
-/**
- * Id of the task currently being dragged. Module-level because the drag source and the row under
- * the cursor are different components, and the hitbox reports only the target's own data mid-drag;
- * a rejected drop has to be refused while the cursor is over it, not after the drop.
- */
-const draggingId = { current: undefined as string | undefined };
-
-//
-// Item — one row. Exported so a host can render its own selection of tasks.
-//
-
-type TaskListItemProps = ComposableProps<{ task: Task.Task; ordinal?: number; row?: TaskTreeRow }>;
-
-const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: number; row?: TaskTreeRow }>(
-  ({ task, ordinal, row, ...props }, forwardedRef) => {
-    const { t } = useTranslation(translationKey);
-    const {
-      tasks,
-      showDescription,
-      showEstimates,
-      showGutter,
-      onTaskUpdate,
-      getTaskActions,
-      selected,
-      onTaskSelect,
-      onTaskMove,
-      isCollapsed,
-      onCollapseToggle,
-      dragging,
-      onDraggingChange,
-    } = useTaskListContext('TaskList.Item');
-    const { className, ...rest } = composableProps(props);
-    const { instruction, rowRef, dragHandleRef, dragHandle } = useTaskDrag({
-      task,
-      row,
-      tasks,
-      onTaskMove,
-      onCollapseToggle,
-      isCollapsed,
-      onDraggingChange,
-    });
-    const open = row ? !isCollapsed(task.id) : undefined;
-
-    // Subscribe per row: a query re-emits when membership changes, not when a task's own fields do,
-    // so a rename elsewhere (task form, agent, sync) would otherwise leave the row stale.
-    const [snapshot] = useObject(task);
-    const current = snapshot ?? task;
-
-    const done = current.status === 'done';
-    const error = current.status === 'failed';
-
-    // Only when the list asks for it, and only when there is something to show — an empty second
-    // line would make every row taller for nothing.
-    const description = showDescription ? current.description?.trim() || undefined : undefined;
-
-    // Virtual: an open task whose dependencies (resolved within the set) are not all done.
-    const blocked = (current.status ?? 'todo') === 'todo' && !Task.isTaskReady(tasks, task);
-    // A started agent task is actively being worked by a sub-agent (started is stamped at spawn),
-    // so it spins; a human-started task keeps the static glyph.
-    const active = current.status === 'started' && current.assignee?.role === 'assistant';
-    const { icon, classNames: iconClassNames } = active
-      ? {
-          icon: 'ph--spinner--regular',
-          classNames: 'text-info-text animate-spin',
-        }
-      : {
-          icon: STATUS_ICONS[current.status ?? 'todo'].icon,
-          classNames: statusTextStyle(current.status ?? 'todo'),
-        };
-
-    const handleToggle = useCallback(
-      () => onTaskUpdate?.(task, { status: done ? 'todo' : 'done' }),
-      [onTaskUpdate, task, done],
-    );
-
-    // Restructuring keys. `Alt` rather than the outliner's bare `Tab`/`Shift-Tab`: a row is a
-    // listbox option, not a text field, and consuming `Tab` there would remove the only way to move
-    // focus out of the list. One modifier covers all four moves.
-    const handleKeyDown = useCallback(
-      (event: KeyboardEvent<HTMLLIElement>) => {
-        // A reader needs a way back out of a selection, and `Escape` is where they look for it.
-        if (event.key === 'Escape' && selected === task.id) {
-          event.preventDefault();
-          onTaskSelect?.(undefined);
-          return;
-        }
-        if (!onTaskMove || !row || !event.altKey) {
-          return;
-        }
-        const placement = (() => {
-          switch (event.key) {
-            case 'ArrowRight':
-              return resolveIndent(tasks, task);
-            case 'ArrowLeft':
-              return resolveOutdent(tasks, task);
-            case 'ArrowUp':
-              return resolveNudge(tasks, task, 'up');
-            case 'ArrowDown':
-              return resolveNudge(tasks, task, 'down');
-            default:
-              return undefined;
-          }
-        })();
-        if (placement) {
-          event.preventDefault();
-          event.stopPropagation();
-          onTaskMove(task, placement);
-        }
-      },
-      [onTaskMove, row, tasks, task, selected, onTaskSelect],
-    );
-
-    return (
-      <Listbox.Item
-        {...rest}
-        id={task.id}
-        data-testid='taskList.item'
-        // The drag preview has to find this row's descendants in the DOM, and `Listbox.Item`'s `id`
-        // is its selection key rather than a DOM id.
-        data-task-id={task.id}
-        // `px-0`: a subgrid's own inline padding shrinks its first and last tracks, so the listbox
-        // item's default inset would push the status control off the column the create row's `+`
-        // sits in. The list's inset belongs to the host, not the row.
-        classNames={mx(
-          'group/row col-span-full grid grid-cols-subgrid px-0 items-start relative',
-          // Hidden rather than unmounted: the drag is anchored to this row's handle, and removing it
-          // from the DOM mid-flight would cancel the gesture in some browsers.
-          dragging.has(task.id) && 'hidden',
-          className,
-        )}
-        // A row stays `role=option` (that is what carries selection and roving focus), so nesting is
-        // announced by these rather than by treegrid semantics.
-        aria-level={row?.level}
-        aria-posinset={row && row.position}
-        aria-setsize={row && row.setSize}
-        aria-expanded={row?.branch ? open : undefined}
-        // Depth is published once as variables: the title cell and the description sit in different
-        // grid rows and both step in by it, and the description additionally clears the toggle so it
-        // starts under the title text rather than under the toggle.
-        style={
-          row
-            ? ({
-                '--task-indent': paddingIndentation(row.level, INDENT_PER_LEVEL).paddingInlineStart,
-                '--task-title-inset': `calc(var(--task-indent) + ${TOGGLE_INSET})`,
-              } as CSSProperties)
-            : undefined
-        }
-        onKeyDown={handleKeyDown}
-        ref={useComposedRefs(rowRef, forwardedRef)}
-      >
-        {showGutter && (
-          // Handle and ordinal share one cell: the handle takes the ordinal's place on hover rather
-          // than claiming a column of its own, so no row shifts when the cursor crosses it.
-          <div className='relative flex h-8 items-center justify-center'>
-            {ordinal !== undefined && (
-              <Tag
-                hue={done ? 'green' : error ? 'rose' : 'neutral'}
-                classNames={mx(
-                  'tabular-nums',
-                  dragHandle && 'group-hover/row:invisible group-has-[:focus-visible]/row:invisible',
-                )}
-              >
-                {ordinal}
-              </Tag>
-            )}
-            {dragHandle && (
-              <span
-                data-testid='taskList.dragHandle'
-                aria-hidden
-                className={mx(
-                  'dx-fullscreen grid place-items-center text-subdued cursor-grab active:cursor-grabbing',
-                  // A handle with no ordinal beneath it is the cell's only content, so it stays put;
-                  // otherwise it appears only while the row is under the cursor or holds focus.
-                  ordinal !== undefined && 'invisible group-hover/row:visible group-has-focus-visible/row:visible',
-                )}
-                ref={dragHandleRef}
-              >
-                <Icon icon='ph--dots-six-vertical--regular' />
-              </span>
-            )}
-          </div>
-        )}
-        {onTaskUpdate ? (
-          <IconButton
-            classNames={mx('justify-self-center my-1', iconClassNames)}
-            variant='ghost'
-            density='sm'
-            icon={icon}
-            iconOnly
-            label={done ? t('mark-todo.label') : t('mark-done.label')}
-            onClick={handleToggle}
-          />
-        ) : (
-          <span className='grid h-8 place-items-center justify-self-center'>
-            <Icon icon={icon} classNames={iconClassNames} />
-            <span className='sr-only'>{t(`status-${current.status ?? 'todo'}.label`)}</span>
-          </span>
-        )}
-        <span
-          // Depth pads the title cell alone, so the status control and every trailing cell stay in
-          // their subgrid columns and the rows keep one geometry however deep the tree goes.
-          className={mx(
-            'flex h-8 items-center gap-1 min-w-0',
-            row && 'ps-(--task-indent)',
-            onTaskSelect && 'cursor-pointer',
-          )}
-        >
-          {row && (
-            <TreeItemToggle
-              isBranch={row.branch}
-              open={open}
-              onClick={(event) => {
-                // The row is the selection target; toggling a branch must not also re-select it.
-                event.stopPropagation();
-                onCollapseToggle(task.id);
-              }}
-            />
-          )}
-          <span className='truncate'>{current.title}</span>
-        </span>
-        {/* One column for every chip on the row — assignee, blocked, artifacts — with the priority
-            control last, immediately before the actions button. */}
-        <div className='h-8 flex justify-end items-center gap-1'>
-          {current.assignee && <TaskListAssignee assignee={current.assignee} />}
-          {blocked && <Tag hue='indigo'>{t('task-blocked.label')}</Tag>}
-          <TaskListItemArtifacts task={task} />
-          {showEstimates && <TaskEstimateControl task={task} />}
-          <TaskPriorityIcon task={task} />
-        </div>
-        <TaskListItemActions task={task} />
-        {instruction && <TreeDropIndicator instruction={instruction} gap={0} />}
-        {description && (
-          // Its own row in the subgrid, starting under the title and spanning the label columns.
-          <TaskDescription
-            content={description}
-            classNames={mx(
-              showGutter ? 'col-start-3' : 'col-start-2',
-              // Aligned under its own title — which sits past the disclosure toggle — so a
-              // sub-task's description does not read as belonging to the row above it.
-              row && 'ps-(--task-title-inset)',
-              // Ends before the chip column rather than spanning a fixed count: the grid has one
-              // fewer track since the chips collapsed into one, and a stale span ran the description
-              // under the priority and actions controls.
-              'col-end-[-3] pb-1',
-            )}
-          />
-        )}
-      </Listbox.Item>
-    );
-  },
-);
 
 /**
  * Estimate as its own label rather than a glyph: the sizes are a vocabulary a reader already knows
@@ -1196,14 +686,14 @@ TaskListItemArtifacts.displayName = 'TaskList.ItemArtifacts';
 
 TaskListItemActions.displayName = 'TaskList.ItemActions';
 
-TaskListItem.displayName = 'TaskList.Item';
-
 // TODO(burdon): Reconcile with `CompactIconButton` from `react-ui-form`.
 const CompactIconButton = (props: IconButtonProps) => {
   return (
-    <span className='grid size-8 shrink-0 place-items-center'>
+    // <span className='grid size-8 shrink-0 place-items-center border'>
+    <IconBlock>
       <IconButton variant='ghost' iconOnly density='sm' {...props} />
-    </span>
+    </IconBlock>
+    // </span>
   );
 };
 
@@ -1503,7 +993,6 @@ export const TaskList = {
   Viewport: TaskListViewport,
   Content: TaskListContent,
   GroupLabel: TaskListGroupLabel,
-  Item: TaskListItem,
   Edit: TaskListEdit,
   Assignee: TaskListAssignee,
 };
@@ -1513,7 +1002,6 @@ export type {
   TaskListContentProps,
   TaskListEditProps,
   TaskListGroupLabelProps,
-  TaskListItemProps,
   TaskListRootProps,
   TaskListViewportProps,
 };

@@ -235,13 +235,14 @@ Still open (the Phase 7 gaps):
       `resolveTaskPlacement`, with `reparent` handled and an end-of-list strip (`dropAtEnd`) so a
       task can be dropped past the last row. The dragged row leaves the list for the gesture and its
       subtree travels with it. Drop semantics and the measured zone map: `docs/TREE.md` §9.
-- [ ] **Retire `dnd.ts` / `hierarchy.ts` from the flat path.** The one real remaining gap. `dnd.ts` and `hierarchy.ts` are
-      still present and still serve the flat path; `TaskTreeContent` never passes `draggable` to
-      `Tree`. Moving drag onto the Tree's pragmatic-dnd contract is what finally deletes them — and
-      only then does `hierarchy.test.ts` (155 lines) get ported rather than dropped.
-      **Deliberately not attempted unattended:** pragmatic-dnd uses native HTML5 drag, so synthetic
-      drags no-op and the result cannot be verified without a human performing the gesture. Landing
-      unverifiable drag behaviour is worse than leaving the flat path in place.
+- [x] **Retired `dnd.ts` and the flat path.** Every mode renders through `Tree`, so `TaskListItem`
+      and the drag machinery it owned (`useTaskDrag`, `subtreeRows`, `renderSubtreePreview`) were
+      unreachable: `dnd.ts` is deleted and `TaskList.tsx` drops from ~1,520 to 1,005 lines.
+      `walkTaskTree`/`TaskTreeRow` went with it — ordinals now flatten the same forest the tree
+      renders (`flattenVisibleTasks`), so the numbers cannot drift from the rows they label, and the
+      walk's tests moved onto it. `hierarchy.ts` keeps only its placement algebra, which
+      `TaskTreeContent` uses. `TaskList.Item`/`GroupLabel` left the namespace; nothing consumed them.
+
 - [x] **Inline title editing — NOT a gap; the earlier entry was wrong.** The tree heading renders a
       plain `<span>`, but so does the flat row (`TaskList.tsx`, the title cell). Editing lives in the
       detail pane, which is path-independent — "the whole reason editing moved out of the row", as
@@ -512,14 +513,14 @@ and show a button in the toobar to delete all selected tasks to a new chat sessi
       "decide what it writes" against this use rather than in the abstract.
 - [ ] **Multi-select is not there yet.** `TaskList` tracks a single `selected` id and `Tree` runs in
       `selectionMode='single'`; checkboxes imply a set. Decide whether the checkbox set is selection
-      or a second, independent set — a row can be current *and* ticked, and conflating them makes
+      or a second, independent set — a row can be current _and_ ticked, and conflating them makes
       "the selected tasks" ambiguous.
 - [ ] **Toolbar action over the checked set**, alongside `create-chat`/`add-artifact` in
       `useToolbarActions`, enabled only when the set is non-empty.
 - [x] **Verb confirmed: delegate.** The checked tasks are delegated to a new chat session
       (`AssistantOperation.CreateChat` + `Chat.linkCompanion`, the path `create-chat` already
       uses), not deleted. Confirmed 2026-09-01.
-- [ ] **Decide what delegation does to the tasks' membership.** They are delegated *to* the chat,
+- [ ] **Decide what delegation does to the tasks' membership.** They are delegated _to_ the chat,
       so settle whether they stay in the task set as well — `Chat.addTask` parents a task it
       creates to the chat, and `Chat.deleteTask` destroys only what the chat owns, so a delegated
       task keeping its set is the shape those primitives already assume.

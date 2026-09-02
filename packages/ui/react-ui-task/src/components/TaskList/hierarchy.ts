@@ -17,54 +17,6 @@ import { Task } from '@dxos/types';
  */
 
 /** One rendered row: the task, its depth, and where it sits among its siblings. */
-export type TaskTreeRow = {
-  task: Task.Task;
-  /** 1 for a root task, incrementing per level. */
-  level: number;
-  /** Whether the task has sub-tasks — a leaf renders its ordinal where a branch renders a toggle. */
-  branch: boolean;
-  /** 1-based position among its siblings, and how many siblings there are (`aria-posinset`/`setsize`). */
-  position: number;
-  setSize: number;
-  /** Ids from the root down to (and excluding) the task, so a row knows what to collapse into. */
-  ancestors: string[];
-};
-
-/**
- * Walks the set's tree in sibling order, omitting the descendants of any collapsed task.
- * Cycle-safe: a malformed `parentTask` loop is visited once and then skipped, so a corrupt set
- * renders short rather than hanging the list.
- */
-export const walkTaskTree = (tasks: readonly Task.Task[], collapsed?: ReadonlySet<string>): TaskTreeRow[] => {
-  const rows: TaskTreeRow[] = [];
-  const seen = new Set<string>();
-
-  const visit = (siblings: Task.Task[], level: number, ancestors: string[]): void => {
-    siblings.forEach((task, index) => {
-      if (seen.has(task.id)) {
-        return;
-      }
-      seen.add(task.id);
-      const children = Task.subTasks(tasks, task);
-      rows.push({
-        task,
-        level,
-        branch: children.length > 0,
-        position: index + 1,
-        setSize: siblings.length,
-        ancestors,
-      });
-      if (children.length > 0 && !collapsed?.has(task.id)) {
-        visit(children, level + 1, [...ancestors, task.id]);
-      }
-    });
-  };
-
-  visit(Task.rootTasks(tasks), 1, []);
-  return rows;
-};
-
-/** Every task transitively under `task`, including `task` itself. Cycle-safe. */
 export const subtreeIds = (tasks: readonly Task.Task[], task: Task.Task): Set<string> => {
   const ids = new Set<string>();
   const visit = (current: Task.Task): void => {

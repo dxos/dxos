@@ -9,10 +9,9 @@ import { type Label } from '@dxos/ui-types';
 /**
  * Adapts a `TaskSet`'s flat task array to the `Tree`'s model.
  *
- * `TaskSet.tasks` is flat and `Task.parentTask` carries the hierarchy — the same shape
- * {@link walkTaskTree} reads, so this is the tree that walk produces, expressed as nodes rather
- * than as pre-flattened rows. Array order decides sibling order and nothing else, which is why the
- * forest is rebuilt from `rootTasks`/`subTasks` rather than by grouping the array.
+ * `TaskSet.tasks` is flat and `Task.parentTask` carries the hierarchy. Array order decides sibling
+ * order and nothing else, which is why the forest is rebuilt from `rootTasks`/`subTasks` rather
+ * than by grouping the array.
  *
  * A task has exactly one parent, so it appears at exactly one path. That is what lets collapsed
  * state stay keyed by id (as `TaskList` already keys it) while `Tree` addresses rows by path.
@@ -30,9 +29,8 @@ export type TaskNode = {
 export const TASK_TREE_ROOT_ID = 'tasks';
 
 /**
- * Builds the task forest. Cycle-safe in the same way as {@link walkTaskTree}: a malformed
- * `parentTask` loop is visited once and then skipped, so a corrupt set renders short rather than
- * hanging.
+ * Builds the task forest. Cycle-safe: a malformed `parentTask` loop is visited once and then
+ * skipped, so a corrupt set renders short rather than hanging.
  */
 export const buildTaskForest = (tasks: readonly Task.Task[]): TaskNode => {
   const seen = new Set<string>();
@@ -151,3 +149,25 @@ export const createTaskTreeModel = (
       isOpen: (node) => !collapsed?.has(node.id),
     },
   );
+
+/**
+ * Tasks in the order the tree shows them, a collapsed branch contributing only its own row.
+ *
+ * Derived from the forest the tree renders rather than from a second walk, so the ordinals a reader
+ * counts down cannot drift from the rows they number.
+ */
+export const flattenVisibleTasks = (root: TaskNode, collapsed?: ReadonlySet<string>): Task.Task[] => {
+  const tasks: Task.Task[] = [];
+  const visit = (nodes: readonly TaskNode[]): void => {
+    for (const node of nodes) {
+      if (node.task) {
+        tasks.push(node.task);
+      }
+      if (!collapsed?.has(node.id)) {
+        visit(node.children);
+      }
+    }
+  };
+  visit(root.children);
+  return tasks;
+};

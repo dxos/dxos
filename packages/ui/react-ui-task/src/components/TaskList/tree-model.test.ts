@@ -8,7 +8,13 @@ import { describe, test } from 'vitest';
 import { Obj, Ref } from '@dxos/echo';
 import { Task } from '@dxos/types';
 
-import { TASK_TREE_ROOT_ID, buildStatusGroups, buildTaskForest, createTaskTreeModel } from './tree-model';
+import {
+  TASK_TREE_ROOT_ID,
+  buildStatusGroups,
+  buildTaskForest,
+  createTaskTreeModel,
+  flattenVisibleTasks,
+} from './tree-model';
 
 describe('buildTaskForest', () => {
   test('builds the tree the walk describes, not the array order', ({ expect }) => {
@@ -28,12 +34,45 @@ describe('buildTaskForest', () => {
   test('a parentTask cycle terminates rather than hanging', ({ expect }) => {
     const one = Task.make({ title: 'one', status: 'todo' });
     const two = Task.make({ title: 'two', status: 'todo', parentTask: Ref.make(one) });
-    // A malformed set: each is the other's parent, so neither is a root — matching `walkTaskTree`,
+    // A malformed set: each is the other's parent, so neither is a root,
     // which renders nothing rather than looping.
     Obj.update(one, (one) => {
       one.parentTask = Ref.make(two);
     });
     expect(count(buildTaskForest([one, two]))).toEqual(0);
+  });
+});
+
+describe('flattenVisibleTasks', () => {
+  test('reads the tree in row order, not the array', ({ expect }) => {
+    const { tasks } = fixture();
+    expect(flattenVisibleTasks(buildTaskForest(tasks)).map(({ title }) => title)).toEqual([
+      'a',
+      'a1',
+      'a1x',
+      'a2',
+      'b',
+    ]);
+  });
+
+  test('a collapsed task hides its descendants but keeps its own row', ({ expect }) => {
+    const { a1, tasks } = fixture();
+    expect(flattenVisibleTasks(buildTaskForest(tasks), new Set([a1.id])).map(({ title }) => title)).toEqual([
+      'a',
+      'a1',
+      'a2',
+      'b',
+    ]);
+  });
+
+  test('a parentTask cycle flattens short rather than hanging', ({ expect }) => {
+    const one = Task.make({ title: 'one', status: 'todo' });
+    const two = Task.make({ title: 'two', status: 'todo', parentTask: Ref.make(one) });
+    // A malformed set: each is the other's parent, so neither is a root.
+    Obj.update(one, (one) => {
+      one.parentTask = Ref.make(two);
+    });
+    expect(flattenVisibleTasks(buildTaskForest([one, two]))).toEqual([]);
   });
 });
 
