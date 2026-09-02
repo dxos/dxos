@@ -35,14 +35,14 @@ export const toSpaceUpdate = (name: string | undefined, state: Database.SyncStat
 
   const notes: string[] = [];
   if (unsyncedDocuments > 0) {
-    notes.push(`${unsyncedDocuments} CRDTs`);
+    notes.push(`${unsyncedDocuments} objects`);
   }
   if (unsyncedBlocks > 0) {
     notes.push(`↓${blocksToPull} ↑${blocksToPush}`);
   }
 
   return {
-    label: `Syncing ${name ?? 'space'}`,
+    label: `Syncing ${name ?? 'Space'}`,
     current: Math.max(0, total - pending),
     total,
     note: notes.join(' · '),

@@ -28,16 +28,16 @@ describe('toSpaceUpdate', () => {
       label: 'Syncing Notes',
       current: 98,
       total: 110,
-      note: '4 CRDTs · ↓6 ↑2',
+      note: '4 objects · ↓6 ↑2',
     });
   });
 
   test('unsynced documents alone keep the meter up', () => {
     expect(toSpaceUpdate(undefined, makeState({ unsyncedDocumentCount: 3 }))).toEqual({
-      label: 'Syncing space',
+      label: 'Syncing Space',
       current: 0,
       total: 3,
-      note: '3 CRDTs',
+      note: '3 objects',
     });
   });
 

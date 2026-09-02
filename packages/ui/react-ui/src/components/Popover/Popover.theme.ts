@@ -27,7 +27,7 @@ const viewport: ComponentFunction<PopoverStyleProps> = ({ constrainBlock, constr
   mx(
     // Always clipped: with the content no longer clipping (see above), the viewport is what keeps a
     // square-cornered child inside the surface's rounded corners.
-    'grid grid-rows-[1fr] min-h-0 min-w-popover-min-width overflow-hidden',
+    'grid grid-rows-[1fr] min-w-popover-min-width overflow-hidden',
     constrainBlock && 'max-h-(--radix-popover-content-available-height)',
     constrainBlock &&
       'max-h-[min(var(--radix-popover-content-available-height),calc(100dvh-var(--spacing-screen-border)*2))]',

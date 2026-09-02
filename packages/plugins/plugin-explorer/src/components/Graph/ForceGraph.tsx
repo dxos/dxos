@@ -76,7 +76,7 @@ export const ForceGraph = composable<HTMLDivElement, ForceGraphProps>(
     );
 
     return (
-      <div {...composableProps(props, { classNames: 'dx-container' })} ref={forwardedRef}>
+      <div {...composableProps(props, { classNames: 'dx-expand' })} ref={forwardedRef}>
         <SVG.Root ref={svgRef}>
           <SVG.Markers />
           {grid && <SVG.Grid axis />}

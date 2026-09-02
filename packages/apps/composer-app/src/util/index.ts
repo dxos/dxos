@@ -11,3 +11,4 @@ export * from './profiler';
 export * from './storage';
 export * from './translations';
 export * from './url';
+export * from './worker-log-processor';

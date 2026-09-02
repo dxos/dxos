@@ -108,8 +108,7 @@ describe('metrics export', { tags: ['manual'], timeout: 60_000 }, () => {
 
   test('every instrument kind reaches the collector', async () => {
     const metrics = new OtelMetrics({
-      endpoint,
-      headers: parseHeaders(process.env.DX_OTEL_HEADERS),
+      destinations: [{ endpoint, headers: parseHeaders(process.env.DX_OTEL_HEADERS) }],
       resource: defaultResource().merge(
         resourceFromAttributes({
           'service.name': 'metrics-smoke',

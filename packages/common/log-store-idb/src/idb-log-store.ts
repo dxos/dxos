@@ -19,6 +19,8 @@ const DEFAULT_STORE_NAME = 'logs';
 const DEFAULT_LOG_FILTER = 'debug';
 const DEFAULT_FLUSH_INTERVAL = 250;
 const DEFAULT_FLUSH_BATCH_SIZE = 500;
+// Bounds memory (and loss) when IDB writes stall; newest lines are kept as they matter most in a crash.
+const DEFAULT_MAX_QUEUE_LINES = 10_000;
 // Sized for ~50 MB on disk at the observed Composer average of ~350 bytes per JSONL line.
 const DEFAULT_MAX_RECORDS = 150_000;
 const DEFAULT_MAX_BYTES = 50 * 1024 * 1024;
@@ -70,6 +72,12 @@ export type IdbLogStoreOptions = {
   /** Eviction sweep interval in milliseconds. Default `30_000`. */
   evictionInterval?: number;
   /**
+   * Hard cap on in-memory queued lines awaiting flush. When writes stall (e.g. IDB is
+   * unavailable or slow), the oldest queued lines are dropped past this point — the
+   * newest lines are the ones that matter in a crash. Default `10_000`.
+   */
+  maxQueueLines?: number;
+  /**
    * Identifier embedded in every record's `i` field.
    * Defaults to a scope-aware id of the form `<scope>:<name>:<suffix>` — see {@link inferEnvironmentName}.
    */
@@ -103,6 +111,7 @@ export class IdbLogStore {
   readonly #maxRecords: number;
   readonly #maxBytes: number;
   readonly #evictionInterval: number;
+  readonly #maxQueueLines: number;
   readonly #tabId: string;
   readonly #filters: LogFilter[];
   /** Distinguishes chunk keys written by concurrent contexts against the same database. */
@@ -112,7 +121,9 @@ export class IdbLogStore {
   #writerSeq = 0;
   #flushTask: ScheduledTask | undefined;
   #evictionTimer: ReturnType<typeof setInterval> | undefined;
-  #pendingFlush: Promise<void> | undefined;
+  /** Resolves when the drain loop has committed everything queued; settles, never rejects. */
+  #lastWrite: Promise<void> = Promise.resolve();
+  #writing = false;
   #db: IDBDatabase | undefined;
   #dbPromise: Promise<IDBDatabase> | undefined;
   #closed = false;
@@ -127,6 +138,9 @@ export class IdbLogStore {
     this.#maxRecords = options.maxRecords ?? DEFAULT_MAX_RECORDS;
     this.#maxBytes = options.maxBytes ?? DEFAULT_MAX_BYTES;
     this.#evictionInterval = options.evictionInterval ?? DEFAULT_EVICTION_INTERVAL;
+    // Guard against NaN/non-positive values, which would disable or degenerate the cap.
+    const maxQueueLines = options.maxQueueLines ?? DEFAULT_MAX_QUEUE_LINES;
+    this.#maxQueueLines = Number.isFinite(maxQueueLines) && maxQueueLines > 0 ? maxQueueLines : DEFAULT_MAX_QUEUE_LINES;
     this.#tabId = options.tabId ?? inferEnvironmentName();
     this.#filters = parseFilter(options.logFilter ?? DEFAULT_LOG_FILTER);
 
@@ -148,6 +162,19 @@ export class IdbLogStore {
     if (line === undefined) {
       return;
     }
+    this.append(line);
+  };
+
+  /**
+   * Enqueue one pre-serialized JSONL line, bypassing filtering and serialization.
+   */
+  append(line: string): void {
+    if (this.#closed) {
+      return;
+    }
+    if (this.#queue.length >= this.#maxQueueLines) {
+      this.#queue.splice(0, this.#queue.length - this.#maxQueueLines + 1);
+    }
     this.#queue.push(line);
 
     if (this.#queue.length >= this.#flushBatchSize) {
@@ -158,31 +185,38 @@ export class IdbLogStore {
         void this.flush();
       }, this.#flushInterval);
     }
-  };
+  }
 
   /**
-   * Force a flush now and resolve once the IDB transaction commits.
-   * Concurrent calls share a single in-flight flush.
+   * Force a flush now and resolve once every line queued so far is committed.
+   * A single drain loop swaps out the queue one batch at a time, so a stalled write can
+   * never wedge later flush triggers: new lines keep accumulating in the (capped) queue
+   * and are picked up by the next loop iteration. Memory is bounded by
+   * `maxQueueLines` + one in-flight batch.
    */
-  async flush(): Promise<void> {
+  flush(): Promise<void> {
     if (this.#flushTask !== undefined) {
       this.#flushTask.cancel();
       this.#flushTask = undefined;
     }
-    if (this.#pendingFlush) {
-      return this.#pendingFlush;
-    }
-    if (this.#queue.length === 0) {
-      return;
+    if (this.#queue.length === 0 || this.#writing) {
+      return this.#lastWrite;
     }
 
-    const batch = this.#queue;
-    this.#queue = [];
-
-    this.#pendingFlush = this.#writeBatch(batch).finally(() => {
-      this.#pendingFlush = undefined;
-    });
-    return this.#pendingFlush;
+    this.#writing = true;
+    this.#lastWrite = (async () => {
+      try {
+        while (this.#queue.length > 0) {
+          const batch = this.#queue;
+          this.#queue = [];
+          // Never rejects — write errors drop the batch (logs must never throw).
+          await this.#writeBatch(batch);
+        }
+      } finally {
+        this.#writing = false;
+      }
+    })();
+    return this.#lastWrite;
   }
 
   /**
@@ -227,6 +261,8 @@ export class IdbLogStore {
       this.#flushTask.cancel();
       this.#flushTask = undefined;
     }
+    // Let in-flight writes commit first so a pending batch cannot land after the clear.
+    await this.#lastWrite;
     const db = await this.#open();
     await runTransaction(db, this.#storeName, 'readwrite', (store) => {
       store.clear();
@@ -309,7 +345,13 @@ export class IdbLogStore {
           }
         };
         db.onversionchange = () => {
+          // Unblocks deleteDatabase/upgrades from other contexts (e.g. storage reset); drop the
+          // cached connection so later writes reopen instead of hitting a closed handle.
           db.close();
+          if (this.#db === db) {
+            this.#db = undefined;
+            this.#dbPromise = undefined;
+          }
         };
         return db;
       });
@@ -355,22 +397,27 @@ export class IdbLogStore {
       return;
     }
 
-    await runTransaction(db, this.#storeName, 'readwrite', async (store) => {
-      const keys = (await promisifyRequest(store.getAllKeys())) as ChunkKey[];
-      if (keys.length === 0) {
-        return;
-      }
-      const rows = (await promisifyRequest(store.getAll())) as LogChunk[];
-      const chunks = keys.map((key, index) => ({
-        key,
-        lineCount: key[3],
-        byteLength: byteLengthUtf8(rows[index]!.lines),
-      }));
-      const cutoff = findEvictionCutoff(chunks, this.#maxRecords, this.#maxBytes);
-      if (cutoff !== undefined) {
-        store.delete(IDBKeyRange.upperBound(cutoff));
-      }
-    });
+    try {
+      await runTransaction(db, this.#storeName, 'readwrite', async (store) => {
+        const keys = (await promisifyRequest(store.getAllKeys())) as ChunkKey[];
+        if (keys.length === 0) {
+          return;
+        }
+        const rows = (await promisifyRequest(store.getAll())) as LogChunk[];
+        const chunks = keys.map((key, index) => ({
+          key,
+          lineCount: key[3],
+          byteLength: byteLengthUtf8(rows[index]!.lines),
+        }));
+        const cutoff = findEvictionCutoff(chunks, this.#maxRecords, this.#maxBytes);
+        if (cutoff !== undefined) {
+          store.delete(IDBKeyRange.upperBound(cutoff));
+        }
+      });
+    } catch {
+      // Eviction runs un-awaited off the write path; a failed sweep must not surface as
+      // an unhandled rejection — the next sweep retries.
+    }
   }
 
   #installLifecycleHandlers(): void {

@@ -27,7 +27,7 @@ export type GridProps = {
   align?: Align;
   /** Center children on both axes (`place-items-center`). */
   center?: boolean;
-  /** Fill and clip the parent (`dx-container`). */
+  /** Fill and clip the parent (`dx-expand`). */
   grow?: boolean;
   /**
    * Collapse the wrapper to `display: contents`, so children join the parent grid directly. For a
@@ -83,9 +83,9 @@ export const Grid = slottable<HTMLDivElement, GridProps>(
             ? mx('contents', className)
             : mx(
                 'grid',
-                // `dx-container` already clips; a non-growing grid must not, or converting a plain
+                // `dx-expand` already clips; a non-growing grid must not, or converting a plain
                 // wrapper would silently start cutting off overflow (focus rings, popovers).
-                grow && 'dx-container',
+                grow && 'dx-expand',
                 cols === 'subgrid' && 'col-span-full',
                 rows === 'subgrid' && 'row-span-full',
                 gap && gapClasses[gap],

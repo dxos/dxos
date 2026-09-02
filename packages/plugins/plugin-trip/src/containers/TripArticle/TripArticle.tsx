@@ -258,7 +258,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
   }, [handleAddSegment, showGlobe, mapAvailable, hasRoad, planning, handlePlanRoute]);
 
   return (
-    <div role={role} className='@container dx-container overflow-hidden'>
+    <div role={role} className='@container dx-expand'>
       <div
         className={mx(
           'grid h-full',
@@ -266,7 +266,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
         )}
       >
         {/* Row 1: calendar + segment stack. */}
-        <div className='grid grid-cols-1 @3xl:grid-cols-[min-content_1fr] min-h-0 overflow-hidden'>
+        <div className='grid grid-cols-1 @3xl:grid-cols-[min-content_1fr] overflow-hidden'>
           <NaturalCalendar.Root>
             <Panel.Root classNames='hidden @3xl:block border-r border-subdued-separator'>
               <Panel.Toolbar asChild>
