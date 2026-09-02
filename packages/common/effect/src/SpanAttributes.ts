@@ -48,3 +48,26 @@ export const AI_KIND = {
   turn: 'turn',
   tool: 'tool',
 } as const;
+
+/** Attributes the process runtime stamps on the span around each handler dispatch. */
+export const PROCESS = {
+  id: 'dxos.process.id',
+  key: 'dxos.process.key',
+  parentId: 'dxos.process.parent_id',
+} as const;
+
+/** Attributes the trigger dispatcher stamps on a trigger invocation. */
+export const TRIGGER = {
+  id: 'dxos.trigger.id',
+  kind: 'dxos.trigger.kind',
+} as const;
+
+/** Attribute naming the operation an invocation runs. */
+export const OPERATION = {
+  key: 'dxos.operation.key',
+} as const;
+
+/** Attribute listing the service keys a layer materialization provides. */
+export const LAYER = {
+  provides: 'dxos.layer.provides',
+} as const;

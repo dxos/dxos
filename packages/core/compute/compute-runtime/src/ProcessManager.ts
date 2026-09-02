@@ -32,7 +32,7 @@ import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import { EffectEx, SpanAttributes } from '@dxos/effect';
 import type { SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -705,7 +705,7 @@ export class ProcessManagerImpl implements Manager {
       // while the public surface is the precise `Handle<I, O, _Rpcs>`. `RpcClient` is invariant, so
       // bridging the two requires a cast here (see design spec §4.4).
       return handle as unknown as Handle<I, O, _Rpcs>;
-    });
+    }).pipe(Effect.withSpan('ProcessManager.spawn', { attributes: { [SpanAttributes.PROCESS.key]: definition.key } }));
   }
 
   /**
@@ -892,7 +892,7 @@ export class ProcessManagerImpl implements Manager {
       }
 
       return handle;
-    });
+    }).pipe(Effect.withSpan('ProcessManager.shutdown'));
   }
 
   #hydrateFromDefinition<I, O, Rpcs extends Rpc.Any = never>(
@@ -929,7 +929,11 @@ export class ProcessManagerImpl implements Manager {
       log('lifecycle: hydrate', { pid: id, key: record.key });
       const handle = yield* this.#rehydrate(record, definition);
       return handle as unknown as Handle<I, O, Rpcs>;
-    });
+    }).pipe(
+      Effect.withSpan('ProcessManager.hydrate', {
+        attributes: { [SpanAttributes.PROCESS.id]: id, [SpanAttributes.PROCESS.key]: definition.key },
+      }),
+    );
   }
 
   /**
@@ -963,7 +967,7 @@ export class ProcessManagerImpl implements Manager {
           yield* this.#store.deleteProcess(pid);
         }
       }
-    });
+    }).pipe(Effect.withSpan('ProcessManager.startup'));
   }
 
   attach<I, O, Rpcs extends Rpc.Any = never>(id: Process.ID): Effect.Effect<Handle<I, O, Rpcs>> {
