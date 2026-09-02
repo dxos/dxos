@@ -20,7 +20,7 @@ import { log } from '@dxos/log';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { Task } from '@dxos/types';
-import { trim } from '@dxos/util';
+import { concat } from '@dxos/util';
 
 import { ProjectOperation } from '#types';
 
@@ -160,14 +160,14 @@ const resolvePath = Effect.fnUntraced(function* (chat: Chat.Chat) {
 });
 
 /**
- * References the checklist rather than restating the tasks: they are already bound to the chat, and
+ * References the tasklist rather than restating the tasks: they are already bound to the chat, and
  * a copy in the prompt is one the reader can edit into disagreeing with the original.
  */
-const OPENING_PROMPT = trim`
-  Work the tasks on your checklist, in the order they are listed. Read each one first, then do it.
-
-  File anything you create into this project's artifacts, and mark each task done as you finish
-  it — the checklist is what reports your progress.
+const OPENING_PROMPT = concat`
+  You have been assigned tasks to work on in this session.
+  Read all tasks, then work on them sequentially.
+  This may require you to read, update, or create artifacts asssociated with the project.
+  Update the tasklist as you work on each task, and mark tasks ready for review as you complete them.
 `;
 
 /** The delegating identity as an actor, for the reviewer field. */

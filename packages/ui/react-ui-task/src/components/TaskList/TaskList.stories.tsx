@@ -74,7 +74,11 @@ const seedMany = (n = 40): Task.Task[] =>
       title: random.lorem.sentence(random.number.int({ min: 5, max: 10 })),
       description: random.number.int({ min: 0, max: 1 }) ? random.lorem.paragraphs(1) : undefined,
       priority: random.helpers.arrayElement([...Task.Priority.literals]),
-      estimate: random.helpers.arrayElement([...Task.Estimate.literals]),
+      // Left unset on some rows, as descriptions are: the column has two states, and a seed that
+      // always sizes a task never shows the one that says "no size yet".
+      estimate: random.number.int({ min: 0, max: 1 })
+        ? random.helpers.arrayElement([...Task.Estimate.literals])
+        : undefined,
     }),
   );
 
