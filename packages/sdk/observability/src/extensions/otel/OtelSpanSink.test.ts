@@ -8,6 +8,7 @@ import { resourceFromAttributes } from '@opentelemetry/resources';
 import { BasicTracerProvider, InMemorySpanExporter, type ReadableSpan } from '@opentelemetry/sdk-trace-base';
 import { afterEach, describe, expect, test } from 'vitest';
 
+import { SpanAttributes } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import * as OtelSpanSink from './OtelSpanSink';
@@ -54,6 +55,22 @@ describe('OtelSpanSink', () => {
     records.forEach((record) => sink!.append(record));
     await sink.flush();
     expect(exporter.getFinishedSpans().map(({ name }) => name)).toEqual(['flagged']);
+  });
+
+  test('exports a model call without its content', async () => {
+    const { records, tracer } = makeProducer();
+    const { sink, exporter } = makeSink();
+
+    tracer
+      .startSpan('AiSession.createRequest', {
+        attributes: { [SpanAttributes.AI.kind]: 'turn', [SpanAttributes.AI.input]: '[{"role":"user"}]' },
+      })
+      .end();
+    sink.append(records[0]);
+    await sink.flush();
+
+    const [exported] = exporter.getFinishedSpans();
+    expect(exported.attributes).toEqual({ [SpanAttributes.AI.kind]: 'turn' });
   });
 
   test('round-trips an ended span through serialization into the export pipeline', async () => {

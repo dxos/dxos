@@ -19,6 +19,7 @@ import { ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 import { log } from '@dxos/log';
 import { type RemoteSpan, type StartSpanOptions, TRACE_PROCESSOR } from '@dxos/tracing';
 
+import * as AiContent from './ai-content';
 import { type OtelOptions, signalUrl } from './otel';
 import * as OtelSpanSink from './OtelSpanSink';
 import * as SpanFanout from './span-fanout';
@@ -46,12 +47,14 @@ export class OtelTraces {
           ? [new OtelSpanSink.PortSpanProcessor(options.spanSink.post)]
           : this.options.destinations.map(
               (destination) =>
-                new BatchSpanProcessor(
-                  new OTLPTraceExporter({
-                    url: signalUrl(destination, 'traces'),
-                    headers: destination.headers,
-                    concurrencyLimit: 10,
-                  }),
+                new AiContent.AiContentStrippingSpanProcessor(
+                  new BatchSpanProcessor(
+                    new OTLPTraceExporter({
+                      url: signalUrl(destination, 'traces'),
+                      headers: destination.headers,
+                      concurrencyLimit: 10,
+                    }),
+                  ),
                 ),
             )),
       ],
