@@ -48,7 +48,7 @@ runDedicatedWorker({
     const instance = await observability;
     if (instance) {
       await Effect.runPromise(
-        instance.addDataProvider(ObservabilityClientProvider.identityManagerProvider(host.identityManager)),
+        instance.addDataProvider(ObservabilityClientProvider.Client.identityManagerProvider(host.identityManager)),
       );
     }
   },
