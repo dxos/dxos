@@ -7536,6 +7536,9 @@ importers:
 
   packages/plugins/plugin-assistant:
     dependencies:
+      '@ark-ui/react':
+        specifier: 'catalog:'
+        version: 5.39.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@codemirror/language':
         specifier: 'catalog:'
         version: 6.12.4
@@ -13695,9 +13698,6 @@ importers:
 
   packages/plugins/plugin-projects:
     dependencies:
-      '@codemirror/state':
-        specifier: 'catalog:'
-        version: 6.7.1
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/compute/ai
@@ -13764,6 +13764,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-attention
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
@@ -13779,6 +13782,9 @@ importers:
       '@dxos/react-ui-tabs':
         specifier: workspace:*
         version: link:../../ui/react-ui-tabs
+      '@dxos/react-ui-task':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-task
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
@@ -13813,9 +13819,6 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
-      '@dxos/react-ui-attention':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-attention
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
@@ -16305,6 +16308,9 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
+      '@dxos/plugin-markdown':
+        specifier: workspace:*
+        version: link:../plugin-markdown
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -49040,7 +49046,7 @@ snapshots:
 
   '@floating-ui/core@1.7.3':
     dependencies:
-      '@floating-ui/utils': 0.2.10
+      '@floating-ui/utils': 0.2.12
 
   '@floating-ui/core@1.8.0':
     dependencies:

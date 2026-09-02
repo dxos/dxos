@@ -33,6 +33,7 @@ export const translations = [
         'priority-high.label': 'High',
         'priority-urgent.label': 'Urgent',
         'task-actions.label': 'Task actions',
+        'task-check.label': 'Select task',
         'task-title.placeholder': 'Untitled',
         'save-task.label': 'Save',
         'cancel-edit.label': 'Cancel',

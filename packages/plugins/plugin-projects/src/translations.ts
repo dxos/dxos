@@ -38,6 +38,7 @@ export const translations = [
         'outline.label': 'Outline',
         'create-artifact.label': 'Create artifact',
         'create-chat.label': 'Create chat',
+        'delegate-tasks.label': 'Assign selected tasks to agent',
         'create-panel.name.placeholder': 'Project name (optional)',
         'create-panel.template.placeholder': 'Filter templates…',
         'setup-project.label': 'Set up project',
