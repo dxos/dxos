@@ -68,17 +68,22 @@ const seedFlat = (): Task.Task[] => [
  * ordinals into double digits, and put more than one task under each group heading, which a
  * seven-task list does not.
  */
+/**
+ * A value on roughly half the rows, `undefined` on the rest.
+ *
+ * Every optional field goes through this: each one renders a control whether or not it is set, so a
+ * seed that fills them all leaves the unset half of the list — the dot, the blank description —
+ * with no story behind it.
+ */
+const sometimes = <T,>(value: () => T): T | undefined => (random.number.int({ min: 0, max: 1 }) ? value() : undefined);
+
 const seedMany = (n = 40): Task.Task[] =>
   Array.from({ length: n }, () =>
     Task.make({
       title: random.lorem.sentence(random.number.int({ min: 5, max: 10 })),
-      description: random.number.int({ min: 0, max: 1 }) ? random.lorem.paragraphs(1) : undefined,
-      priority: random.helpers.arrayElement([...Task.Priority.literals]),
-      // Left unset on some rows, as descriptions are: the column has two states, and a seed that
-      // always sizes a task never shows the one that says "no size yet".
-      estimate: random.number.int({ min: 0, max: 1 })
-        ? random.helpers.arrayElement([...Task.Estimate.literals])
-        : undefined,
+      description: sometimes(() => random.lorem.paragraphs(1)),
+      priority: sometimes(() => random.helpers.arrayElement([...Task.Priority.literals])),
+      estimate: sometimes(() => random.helpers.arrayElement([...Task.Estimate.literals])),
     }),
   );
 
