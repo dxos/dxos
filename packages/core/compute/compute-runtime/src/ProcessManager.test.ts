@@ -32,6 +32,7 @@ import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation, Database, DXN, Key } from '@dxos/echo';
+import { SpanAttributes } from '@dxos/effect';
 import { makeRecordingTracer } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -446,9 +447,17 @@ describe('ManagerImpl', () => {
         yield* handle.submitInput(undefined);
         yield* handle.runToCompletion();
 
-        const alarm = alarmSpans.find(({ name }) => name === 'Alarm.handler');
         expect(alarmSpans.some(({ name }) => name === 'Input.span')).toEqual(true);
-        expect(alarm && Option.isNone(alarm.parent)).toEqual(true);
+        // The dispatch span is the root of the alarm's trace: nothing above it, so the scheduling
+        // span cannot be an ancestor.
+        const ancestry: string[] = [];
+        let span: Tracer.AnySpan | undefined = alarmSpans.find(({ name }) => name === 'Alarm.handler');
+        while (span?._tag === 'Span') {
+          ancestry.push(span.name);
+          span = Option.getOrUndefined(span.parent);
+        }
+        expect(span).toBeUndefined();
+        expect(ancestry).toEqual(['Alarm.handler', 'Process.alarm']);
       },
       Effect.provide(TestLayer),
       Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(alarmSpans))),
@@ -465,6 +474,32 @@ describe('ManagerImpl', () => {
         yield* handle.runToCompletion();
 
         expect(recordedSpans.map(({ name }) => name)).toContain('Alarm.handler');
+      },
+      Effect.provide(TestLayer),
+      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(recordedSpans))),
+    ),
+  );
+
+  it.effect(
+    'wraps each handler dispatch in a Process span carrying the process identity',
+    Effect.fn(
+      function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        const executable = makeTracedAlarmExecutable();
+        const handle = yield* manager.spawn(executable);
+        yield* handle.submitInput(undefined);
+        yield* handle.runToCompletion();
+
+        const dispatch = recordedSpans.find(
+          ({ name, attributes }) =>
+            name === 'Process.alarm' && attributes.get(SpanAttributes.PROCESS.id) === handle.pid,
+        );
+        expect(dispatch?.attributes.get(SpanAttributes.PROCESS.key)).toEqual(executable.key);
+        const handler = recordedSpans.find(
+          ({ name, parent }) =>
+            name === 'Alarm.handler' && Option.exists(parent, ({ spanId }) => spanId === dispatch?.spanId),
+        );
+        expect(handler).toBeDefined();
       },
       Effect.provide(TestLayer),
       Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(recordedSpans))),

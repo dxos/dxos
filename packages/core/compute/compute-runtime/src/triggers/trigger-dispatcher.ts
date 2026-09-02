@@ -28,7 +28,7 @@ import * as Process from '@dxos/compute/Process';
 import * as Trigger from '@dxos/compute/Trigger';
 import * as TriggerEvent from '@dxos/compute/TriggerEvent';
 import { Annotation, Database, Entity, Feed, Filter, Obj, Query, QueryResult, Ref } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import { EffectEx, SpanAttributes } from '@dxos/effect';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { EntityId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -625,7 +625,15 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
       }));
 
       return triggerExecutionResult;
-    }).pipe(Effect.provide(this._services));
+    }).pipe(
+      Effect.withSpan('TriggerDispatcher.invokeTrigger', {
+        attributes: {
+          [SpanAttributes.TRIGGER.id]: options.trigger.id,
+          ...(options.trigger.spec ? { [SpanAttributes.TRIGGER.kind]: options.trigger.spec.kind } : {}),
+        },
+      }),
+      Effect.provide(this._services),
+    );
 
   /**
    * Distinguish a {@link RunAgainError} re-invocation request from a genuine failure. The process
@@ -864,7 +872,12 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
       invocations.push(...(yield* this._drainRetries({ untilExhausted })));
 
       return invocations;
-    }).pipe(Effect.provide(this._services));
+    }).pipe(
+      Effect.withSpan('TriggerDispatcher.invokeScheduledTriggers', {
+        attributes: { [SpanAttributes.TRIGGER.kind]: kinds },
+      }),
+      Effect.provide(this._services),
+    );
 
   /**
    * Re-invoke triggers with a pending {@link RunAgainError} retry. Retries respect the global

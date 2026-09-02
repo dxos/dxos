@@ -767,6 +767,7 @@ describe('TriggerDispatcher', () => {
             );
 
             expect(dispatcherSpans.map(({ name }) => name)).toContain('TriggerDispatcher.refreshTriggers');
+            expect(dispatcherSpans.map(({ name }) => name)).toContain('TriggerDispatcher.invokeTrigger');
             expect(traced, `recorded spans: ${JSON.stringify(dispatcherSpans.map(({ name }) => name))}`).toBe(true);
           }).pipe(Effect.ensuring(dispatcher.stop()));
         },

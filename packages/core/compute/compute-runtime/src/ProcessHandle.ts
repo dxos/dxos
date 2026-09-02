@@ -320,7 +320,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
         yield* this.#onTerminate();
       }
       yield* this.#cleanup();
-    });
+    }).pipe(Effect.withSpan('Process.terminate', { attributes: this.#spanAttributes() }));
   }
   hydrate(definition: Process.Process<I, O, any, any>): Effect.Effect<ProcessManager.Handle<I, O, any>> {
     if (definition.key !== this.key) {
@@ -680,6 +680,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
         };
         return yield* restore(fn()).pipe(
           Effect.provide(this.#services),
+          Effect.withSpan(`Process.${name}`, { attributes: this.#spanAttributes() }),
           SpanAttributes.annotateSpace(this.environment.space),
           Effect.tap(() => Effect.sync(recordWall)),
           Performance.addTrackEntry({
@@ -718,6 +719,14 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
         );
       }),
     );
+  }
+
+  #spanAttributes(): Record<string, string> {
+    return {
+      [SpanAttributes.PROCESS.id]: this.pid,
+      [SpanAttributes.PROCESS.key]: this.key,
+      ...(this.parentId ? { [SpanAttributes.PROCESS.parentId]: this.parentId } : {}),
+    };
   }
 
   #handlerCompleted(): Effect.Effect<void> {
