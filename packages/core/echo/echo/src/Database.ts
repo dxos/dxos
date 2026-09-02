@@ -395,15 +395,11 @@ export const layer = (db: Database): Layer.Layer<Service> => {
 export const SPACE_ID_ATTRIBUTE = 'spaceId';
 
 /**
- * `Effect.withSpan`, plus the space as an attribute. Requires the database service, which every
- * operation here does anyway.
+ * Stamps the database's space on every span the effect opens, so a span can be filtered by the space
+ * it ran in. Applied after `Effect.withSpan`, so the span it names is inside the annotated region.
  */
-export const traced =
-  (name: string) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R | Service> =>
-    Effect.flatMap(Service, ({ db }) =>
-      effect.pipe(Effect.withSpan(name), Effect.annotateSpans(SPACE_ID_ATTRIBUTE, db.spaceId)),
-    );
+export const withSpaceId = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R | Service> =>
+  Effect.flatMap(Service, ({ db }) => effect.pipe(Effect.annotateSpans(SPACE_ID_ATTRIBUTE, db.spaceId)));
 
 /**
  * Returns the space ID of the database.
@@ -448,7 +444,7 @@ export const resolve: {
     // the local `S extends Type.AnyEntity` parameter — runtime accepts it fine.
     invariant(!schema || isInstanceOf(schema as any, object), 'Object type mismatch.');
     return object as any;
-  }).pipe(traced('Database.resolve'))) as any;
+  }).pipe(Effect.withSpan('Database.resolve'), withSpaceId)) as any;
 
 /**
  * Loads an object reference.
@@ -493,21 +489,24 @@ export const peek = <T>(ref: Ref<T>): T | undefined => ref.peek();
 // point-free (`Effect.forEach(Database.add)`), where a second parameter would collide with the
 // iteratee index. Effect-style feed appends go through `Database.appendToFeed` / `Feed.append`.
 export const add = <T extends Entity.Unknown>(obj: T & RejectTypeEntity<T>): Effect.Effect<T, never, Service> =>
-  Service.pipe(Effect.map(({ db }) => db.add<T>(obj))).pipe(traced('Database.add'));
+  Service.pipe(Effect.map(({ db }) => db.add<T>(obj))).pipe(Effect.withSpan('Database.add'), withSpaceId);
 
 /**
  * Persists a Type definition to the database.
  * @see {@link Database.addType}
  */
 export const addType = <T extends Type.AnyEntity>(type: T): Effect.Effect<T, never, Service> =>
-  Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.addType(type)))).pipe(traced('Database.addType'));
+  Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.addType(type)))).pipe(
+    Effect.withSpan('Database.addType'),
+    withSpaceId,
+  );
 
 /**
  * Removes an object from the database.
  * @see {@link Database.remove}
  */
 export const remove = <T extends Entity.Unknown>(obj: T): Effect.Effect<void, never, Service> =>
-  Service.pipe(Effect.map(({ db }) => db.remove(obj))).pipe(traced('Database.remove'));
+  Service.pipe(Effect.map(({ db }) => db.remove(obj))).pipe(Effect.withSpan('Database.remove'), withSpaceId);
 
 /**
  * Appends entities to a feed.
@@ -515,7 +514,8 @@ export const remove = <T extends Entity.Unknown>(obj: T): Effect.Effect<void, ne
  */
 export const appendToFeed = (feed: Feed.Feed, entities: Entity.Unknown[]): Effect.Effect<void, never, Service> =>
   Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.appendToFeed(feed, entities)))).pipe(
-    traced('Database.appendToFeed'),
+    Effect.withSpan('Database.appendToFeed'),
+    withSpaceId,
   );
 
 /**
@@ -524,7 +524,8 @@ export const appendToFeed = (feed: Feed.Feed, entities: Entity.Unknown[]): Effec
  */
 export const deleteFromFeed = (feed: Feed.Feed, entities: Entity.Unknown[]): Effect.Effect<void, never, Service> =>
   Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.deleteFromFeed(feed, entities)))).pipe(
-    traced('Database.deleteFromFeed'),
+    Effect.withSpan('Database.deleteFromFeed'),
+    withSpaceId,
   );
 
 /**
@@ -532,7 +533,10 @@ export const deleteFromFeed = (feed: Feed.Feed, entities: Entity.Unknown[]): Eff
  * @see {@link Database.flush}
  */
 export const flush = (opts?: FlushOptions) =>
-  Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.flush(opts)))).pipe(traced('Database.flush'));
+  Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.flush(opts)))).pipe(
+    Effect.withSpan('Database.flush'),
+    withSpaceId,
+  );
 
 /**
  * Reclaims storage held by soft-deleted objects and the documents they orphan.
@@ -540,7 +544,8 @@ export const flush = (opts?: FlushOptions) =>
  */
 export const runGarbageCollection = (options?: GarbageCollectionOptions) =>
   Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.runGarbageCollection(options)))).pipe(
-    traced('Database.runGarbageCollection'),
+    Effect.withSpan('Database.runGarbageCollection'),
+    withSpaceId,
   );
 
 /**
@@ -548,14 +553,20 @@ export const runGarbageCollection = (options?: GarbageCollectionOptions) =>
  * @see {@link Database.retainObjects}
  */
 export const retainObjects = (keep: Iterable<string>) =>
-  Service.pipe(Effect.map(({ db }) => db.retainObjects(keep))).pipe(traced('Database.retainObjects'));
+  Service.pipe(Effect.map(({ db }) => db.retainObjects(keep))).pipe(
+    Effect.withSpan('Database.retainObjects'),
+    withSpaceId,
+  );
 
 /**
  * Per-space storage metrics.
  * @see {@link Database.stats}
  */
 export const stats = () =>
-  Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.stats()))).pipe(traced('Database.stats'));
+  Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.stats()))).pipe(
+    Effect.withSpan('Database.stats'),
+    withSpaceId,
+  );
 
 /**
  * Creates a `QueryResult` object that can be subscribed to.
@@ -566,7 +577,8 @@ export const query: {
 } = (queryOrFilter: Query.Any | Filter.Any) =>
   Service.pipe(
     Effect.map(({ db }) => db.query(queryOrFilter as any) as QueryResult.QueryResult<any>),
-    traced('Database.query'),
+    Effect.withSpan('Database.query'),
+    withSpaceId,
     queryInternal.makeQueryResultEffect,
   );
 
