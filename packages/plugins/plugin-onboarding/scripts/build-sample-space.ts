@@ -39,7 +39,7 @@ await EffectEx.runPromise(
     const aboutMd = yield* Effect.promise(() => readFile(ABOUT_MD_PATH, 'utf8'));
     const tourMd = yield* Effect.promise(() => readFile(TOUR_MD_PATH, 'utf8'));
 
-    yield* Effect.log('building\u2026');
+    yield* Effect.log('building…');
     const { json, objectCount } = yield* buildArchive(BrambleSpace({ aboutMd, tourMd }));
 
     // Stored as a single line so regenerations produce a 1-line diff rather than thousands of
