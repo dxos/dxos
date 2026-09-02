@@ -15,7 +15,7 @@ import { describe, expect, test } from 'vitest';
 import { AiTelemetry } from '@dxos/ai';
 import { makeTracer } from '@dxos/effect';
 
-import type * as ObservabilityExtension from '../observability-extension';
+import type * as ObservabilityExtension from '../ObservabilityExtension';
 import { AiSpanProcessor } from './AiObservability';
 
 const setup = async ({

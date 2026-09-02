@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as ObservabilityExtension from '../../observability-extension';
+import type * as ObservabilityExtension from '../../ObservabilityExtension';
 
 /**
  * PostHog's LLM analytics schema. Three events with `$ai_*` properties are what the product reads:

@@ -18,20 +18,24 @@
       "import": "./dist/lib/index.mjs"
     },
     "./AiObservability": {
-      "types": "./dist/types/src/ai/index.d.ts",
-      "import": "./dist/lib/AiObservability.mjs"
+      "types": "./dist/types/src/ai/AiObservability.d.ts",
+      "import": "./dist/lib/ai/AiObservability.mjs"
     },
     "./Observability": {
-      "types": "./dist/types/src/observability.d.ts",
-      "import": "./dist/lib/observability.mjs"
+      "types": "./dist/types/src/Observability.d.ts",
+      "import": "./dist/lib/Observability.mjs"
+    },
+    "./ObservabilityClientProvider": {
+      "types": "./dist/types/src/providers/ObservabilityClientProvider.d.ts",
+      "import": "./dist/lib/providers/ObservabilityClientProvider.mjs"
     },
     "./ObservabilityExtension": {
-      "types": "./dist/types/src/observability-extension.d.ts",
-      "import": "./dist/lib/observability-extension.mjs"
+      "types": "./dist/types/src/ObservabilityExtension.d.ts",
+      "import": "./dist/lib/ObservabilityExtension.mjs"
     },
     "./ObservabilityProvider": {
-      "types": "./dist/types/src/providers/index.d.ts",
-      "import": "./dist/lib/providers.mjs"
+      "types": "./dist/types/src/providers/ObservabilityProvider.d.ts",
+      "import": "./dist/lib/providers/ObservabilityProvider.mjs"
     },
     "./OtelLogSink": {
       "types": "./dist/types/src/extensions/otel/OtelLogSink.d.ts",

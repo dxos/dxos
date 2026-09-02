@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import type * as ObservabilityExtension from '../../observability-extension';
+import type * as ObservabilityExtension from '../../ObservabilityExtension';
 import { toAiGenerationProperties, toAiSpanProperties, toAiTraceProperties } from './llm-analytics';
 
 const inference = (overrides: Partial<ObservabilityExtension.Inference> = {}): ObservabilityExtension.Inference => ({
