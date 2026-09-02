@@ -5,14 +5,19 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Duration from 'effect/Duration';
 import { pipe } from 'effect/Function';
+import * as Option from 'effect/Option';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
 
+import { AGENT_PROCESS_KEY } from '@dxos/agent-runtime';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useAtomCapabilityState, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { Chat } from '@dxos/assistant-toolkit';
 import * as Process from '@dxos/compute/Process';
+import { Annotation, Filter } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
 import { ScrollContainer } from '@dxos/react-ui';
@@ -127,6 +132,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
         <TraceToolbar selected={environments} onSelectedChange={handleEnvironmentsChange} />
 
         <ProcessTreeContainer
+          space={space}
           environments={environments}
           onProcessSelect={handleProcessSelect}
           onProcessTerminate={onProcessTerminate}
@@ -248,12 +254,24 @@ const getExecutionGraph = (
 TracePanel.displayName = 'TracePanel';
 
 type ProcessTreeContainerProps = Pick<ProcessTreeProps, 'onProcessSelect' | 'onProcessTerminate'> & {
+  space: Space;
   environments: readonly ProcessEnvironment[];
+};
+
+/** Entity id of a feed URI, the join key between a process environment and a chat's feed ref. */
+const feedKey = (uri: string): string => {
+  const eid = EID.tryParse(uri);
+  return eid ? EID.getEntityId(eid) : uri;
 };
 
 // Isolate `ProcessTree` updates from the rest of the panel.
 // TODO(dmaretskyi): Currently not useful since `useExecutionGraph` also pulls in the updates.
-const ProcessTreeContainer = ({ environments, onProcessSelect, onProcessTerminate }: ProcessTreeContainerProps) => {
+const ProcessTreeContainer = ({
+  space,
+  environments,
+  onProcessSelect,
+  onProcessTerminate,
+}: ProcessTreeContainerProps) => {
   const monitor = useCapability(Capabilities.ProcessMonitor);
   const processes = useAtomValue(
     useMemo(() => monitor?.processTreeAtom.pipe(Atom.debounce(Duration.millis(500))) ?? atomEmpty, [monitor]),
@@ -267,9 +285,38 @@ const ProcessTreeContainer = ({ environments, onProcessSelect, onProcessTerminat
     () => filterProcesses(processesDeferred, environments),
     [processesDeferred, environments],
   );
+  // A process only knows the feed it serves, so the chat's name is joined in here rather than
+  // carried on the process itself.
+  const chats = useQuery(space.db, Filter.type(Chat.Chat));
+  const chatNamesByFeed = useMemo(() => {
+    const names = new Map<string, string>();
+    for (const chat of chats) {
+      const name = chat.name?.trim();
+      if (name) {
+        names.set(feedKey(chat.feed.uri), name);
+      }
+    }
+    return names;
+  }, [chats]);
+  // Only the agent process itself is renamed: its children inherit the conversation environment and
+  // keep their own operation names.
+  const resolveLabel = useCallback(
+    (process: Process.Info) => {
+      if (process.key !== AGENT_PROCESS_KEY) {
+        return undefined;
+      }
+      const target = Annotation.getDictionary(process.params.annotations, Process.TargetAnnotation).pipe(
+        Option.getOrUndefined,
+      );
+      return target === undefined ? undefined : chatNamesByFeed.get(feedKey(target.toString()));
+    },
+    [chatNamesByFeed],
+  );
+
   return (
     <ProcessTree
       processes={visibleProcesses}
+      resolveLabel={resolveLabel}
       depth={3}
       onProcessSelect={onProcessSelect}
       onProcessTerminate={onProcessTerminate}
