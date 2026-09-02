@@ -12,7 +12,7 @@ at the bottom — read those before picking up a thread.
 | 2   | Test/example protos                     | todo     | Untouched — `#3`'s harness was built against real dxos messages instead. |
 | 3   | Shape-compat layer                      | **done** | `@dxos/protocols/buf-shape-compat` + conformance harness (15 tests).     |
 | 4   | `dxos.config`                           | **done** | Converted natively; `@dxos/config` inputs are `ConfigInit`, values buf.  |
-| 5   | devtools                                | **part** | Enums, `JsonView`, and two mis-annotated imports moved; 14 left.         |
+| 5   | devtools                                | **part** | Enums (incl. the `cli-util`/`plugin-debug` stragglers) done; 15 blocked. |
 | 6   | `Stream` extraction                     | **done** | Moved to `@dxos/async`; generator emits it from there.                   |
 | 7   | `protoMessage()` / `serviceError` → buf | **done** | All 45 types route through buf, once `#3` learned to resolve `Any`.      |
 | 8   | Remaining `ServiceDescriptor` RPC       | todo     | 21 production sites / 11 services, all cross-peer; 36 more are tests.    |
@@ -21,11 +21,11 @@ at the bottom — read those before picking up a thread.
 | 9c  | `echo/metadata` + `echo/feed`           | **part** | Both metadata stores swapped; `pipeline/codec` held back for `#9d`.      |
 | 9d  | credentials signing/verification        | **part** | Signature stability proven by test; the type sweep is what is left.      |
 
-**Next up, in order:** `#8` (the last `ServiceDescriptor` RPC, ~1.5-2 weeks and the only remaining
-milestone-sized thread), then the import sweep that `#5`'s and `#9d`'s remainders both decompose
-into, then `pipeline/codec` as the tail of `#9c`/`#9d`. `#2` is independent and can slot in
-anywhere. `Any` support is done, so nothing is gated any more -- what is left is volume, not
-blockers.
+**Next up, in order:** `#8` (the last `ServiceDescriptor` RPC and the only remaining
+milestone-sized thread), then `pipeline/codec` as the tail of `#9c`/`#9d`, then `#9d`'s type sweep.
+`#5`'s remainder is **not** an independent sweep and must follow `#9c`/`#9d` -- see the correction
+under `#5` below. `#2` is independent and can slot in anywhere. `Any` support is done, so nothing
+is gated any more -- what is left is volume, not blockers.
 
 Deleting `protobuf-compiler`/`codec-protobuf` and dropping `protobufjs` from the catalog is the
 last step, and needs every thread above done.
@@ -173,17 +173,75 @@ simply pointing at the wrong type, and the fix is to point it at the Effect type
 declares.
 
 Two moved that way -- `KeyRecord` and `ConnectionInfo`, both to `DevtoolsHost.*` -- and
-`devtools:build` is the proof, per the attempt-and-let-`tsc`-rule habit below. `NetworkPanel`'s
-`PeerState` looked like a third and is not: `SpaceSyncState.PeerState` in `DataService` is a _sync_
-peer, unrelated to `dxos.mesh.presence.PeerState`, and `tsc` said so rather than the two silently
-unifying. Fourteen declarations remain, and those are the genuinely blocked ones: values whose wire
-type is `protoMessage`-carried (`SubscribeToSpacesResponse`, `SubscribeToFeedBlocksResponse`,
-`SubscribeToMetadataResponse`, `SignalResponse`, `Credential`, `Contact`, `LogEntry`,
-`QueryLogsRequest`, `QueryEdgeStatusResponse`, `Space`, `PeerState`). Each needs its type moved to `bufMessage`,
-which rewrites that type's consumers -- and `QueryEdgeStatusResponse` embeds `EdgeStatus`, which
-reaches **22 source files** across edge-client, echo-host, client-services and plugin-space's sync
-UI. `EdgePanel`'s nested-enum access (`WsStatus.ConnectionState.CONNECTED`, which buf emits as
-`EdgeStatus_ConnectionState`) is a one-line fix gated behind that slice.
+`devtools:build` is the proof, per the attempt-and-let-`tsc`-rule habit below.
+
+### Correction: `#5` does not ride on `#7`, and `NetworkPanel` was described backwards
+
+Two claims in the paragraph above were wrong, and both were measured against main `32584c984a` by
+applying all 15 remaining conversions at once and reading `dx-build`'s 64 errors.
+
+**`NetworkPanel`'s `PeerState` is `dxos.mesh.presence.PeerState`.** The earlier note had it as
+`SpaceSyncState.PeerState` from `DataService`; it is not. `NetworkPanel.tsx:7` imports
+`type PeerState` from `@dxos/protocols/proto/dxos/mesh/presence` and uses it at line 18. That
+message _is_ generated as a bufMessage (`PeerStateSchema` in `buf/dxos/mesh/presence_pb`), so
+codegen is not the blocker. The blocker is the **producer**: `teleport-extension-gossip`'s
+`Presence` still emits the protobuf.js-substituted shape, so `peerId` is a `@dxos/keys` `PublicKey`
+(hence `.truncate()` at line 98) rather than buf's `PublicKey` _message_. Nothing in the repo
+currently assigns `NetworkGraphNode.peer`, so converting it would type-check after adapting
+`.truncate()` -- and would be describing a shape no producer emits. It is gated on `#8.4`
+(teleport extensions), not on a missing bufMessage.
+
+**`#7` unblocked nothing here.** `protoMessage` is still typed
+`Schema.Codec<TYPES[K], Uint8Array>` over the protobuf.js `src/proto/gen` barrel; `#7` routed the
+_bytes_ through buf via the compat layer while deliberately preserving the protobuf.js type and
+substituted runtime shape. That is the whole point of the shape-compat layer -- call sites do not
+change when a codec is swapped -- so there is nothing for a devtools type sweep to ride on. Only
+`bufMessage` exposes a buf type, and just one `DevtoolsHost` field uses it today
+(`SignedMessageSchema`).
+
+All 15 remaining declarations are therefore blocked, in four mechanically distinct ways:
+
+- **Missing `$typeName`.** Every buf type is `Message<"name"> & {...}`, so a protobuf.js-shaped
+  value is never assignable to it. This is what breaks `useCredentials`, `useStats`' probe and
+  `LoggingPanel`.
+- **Substituted fields.** `Credential.id` is `@dxos/keys` `PublicKey` on protobuf.js and a
+  `PublicKey` _message_ on buf; likewise `Date` vs `Timestamp` (`.getTime()`), `Timeframe` vs
+  `TimeframeVector` (`.get()`), and `Any` vs a `['@type']`-indexable bag.
+- **`oneof` modelling.** buf emits a discriminated union, so `SignalResponse.swarmEvent` and
+  `.message` simply do not exist -- 17 of the 64 errors are this one difference in
+  `SignalMessageTable`.
+- **Optionality.** buf marks singular message fields optional (`metadata?`), protobuf.js does not.
+
+Two files -- `useStats.ts` and `EdgePanel.tsx` -- _compile_ after conversion, but only because
+`Object.assign({}, stats, { edge })` erases the mismatch. A direct probe
+(`const x: BufResp = protoShapedValue`) fails with the missing-`$typeName` error, so converting
+them would annotate buf types over protobuf.js values: a silent lie rather than a migration. They
+are counted as blocked.
+
+Each carrier would have to move `protoMessage` -> `bufMessage`, and tracing what that pulls in
+shows `#5`'s remainder is downstream of `#9c`/`#9d`, not of `#7`:
+`SubscribeToMetadataResponse` embeds `EchoMetadata` (the metadata store is on `compatCodec`, so its
+exposed type is still protobuf.js), `SubscribeToFeedBlocksResponse.Block` embeds `FeedMessage`
+(`pipeline/codec`, explicitly held back), and `SubscribeToSpacesResponse.SpaceInfo` embeds
+`Space.PipelineState` -> `TimeframeVector` + `Credential`. `QueryEdgeStatusResponse` embeds
+`EdgeStatus`, which reaches **22 source files** across edge-client, echo-host, client-services and
+plugin-space's sync UI. `EdgePanel`'s nested-enum access
+(`WsStatus.ConnectionState.CONNECTED`) is a one-line fix gated behind that slice.
+
+### Enums move iff the name survives
+
+`tsc` relates enum types by **name**, not by declaration — verified with a local probe: a bare
+`enum SameName` and a `namespace Outer { export enum SameName }` compare without complaint, while
+an identically-valued `enum DifferentName` raises `TS2367`. So:
+
+- **Top-level enums** keep their name under buf and convert with no call-site change. The last two
+  stragglers moved on that basis: `EdgeReplicationSetting` in `cli-util/src/util/space.ts` and
+  `ConnectionState` in `plugin-debug`'s `DebugStatus.tsx`, both value-identical
+  (`0`/`1`) and green under `cli-util:build` / `plugin-debug:build`.
+- **Nested enums** are flattened by buf (`EdgeStatus.ConnectionState` -> `EdgeStatus_ConnectionState`),
+  the name changes, and every `===` against the protobuf.js-typed field breaks. That is why
+  `EdgePanel` cannot be fixed ahead of its type move, and it generalises to any nested enum
+  elsewhere in the migration.
 
 ## `#8` is the last milestone-sized thread, and it is not a rider
 
@@ -438,7 +496,11 @@ with no casts. What remains in devtools needs `#7` first:
 protobuf.js `src/proto/gen` barrel — so every value the effect-rpc services hand devtools is
 protobuf.js-shaped. Re-pointing devtools' type imports at `@dxos/protocols/buf/*` while that
 holds would type buf shapes over protobuf.js values, and the only way to compile it is the casts
-the repo forbids. #5 is therefore ordered strictly after #7, not merely helped by it.
+the repo forbids.
+
+This still holds with `#7` landed: `#7` changed which codec writes the bytes, not the type
+`protoMessage` exposes nor the substituted shape it decodes to. `#5` is ordered after the type
+moves to `bufMessage` — i.e. after `#9c`/`#9d` — not after `#7`. See the correction under `#5`.
 
 ### Where buf and protobuf.js bytes actually differ
 
