@@ -755,6 +755,11 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
           if (openRef.current) {
             onOpenChange?.({ item, path, open: true });
           }
+          // Return the roving tabstop to the row that moved, so the arrows carry on from where the
+          // reader left it — a drag leaves focus on the body, which restarts navigation at the top
+          // of the tree. Deferred past the drop: the reorder moves this row's own DOM node, and
+          // moving a node blurs it, so focus claimed any earlier is thrown away.
+          setTimeout(() => rowRef.current?.focus());
         },
       });
 
