@@ -173,6 +173,11 @@ export const resolveRelativeModule = (fromDir: string, spec: string): string | n
     return null;
   }
   const base = path.resolve(fromDir, spec);
+  // The specifier may already carry its extension (`./foo/index.ts`) — resolve it directly rather
+  // than appending another one on top, which would never exist on disk.
+  if (/\.tsx?$/.test(base)) {
+    return fs.existsSync(base) ? base : null;
+  }
   const candidates = [`${base}.ts`, `${base}.tsx`, path.join(base, 'index.ts'), path.join(base, 'index.tsx')];
   return candidates.find((candidate) => fs.existsSync(candidate)) ?? null;
 };
