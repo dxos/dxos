@@ -68,7 +68,14 @@ import {
   subtreeIds,
   walkTaskTree,
 } from './hierarchy';
-import { STATUS_ICONS, STATUS_ORDER, estimateTextStyle, priorityTextStyle, statusTextStyle } from './status-icons';
+import {
+  STATUS_ICONS,
+  STATUS_ORDER,
+  estimateTextStyle,
+  priorityIcon,
+  priorityTextStyle,
+  statusTextStyle,
+} from './status-icons';
 import { TaskDescription } from './TaskDescription';
 import { TaskTreeContent } from './TaskTreeContent';
 import { type TaskNode } from './tree-model';
@@ -121,51 +128,18 @@ const EMPTY_ORDINALS: ReadonlyMap<string, number> = new Map<string, number>();
 
 type TaskListRootProps = PropsWithChildren<{
   tasks: readonly Task.Task[];
+
+  //
+  // Structure.
+  //
+
   /** Group rows into status sections (Linear order); flat list otherwise. */
   groupByStatus?: boolean;
-  /** Render the status heading above each group; grouping order is kept either way. */
-  showGroupLabels?: boolean;
-  /** Number rows 1..N down the list as rendered, so tasks can be referenced by ordinal. */
-  showOrdinals?: boolean;
-  /** Render each task's estimate beside the priority control. Off by default. */
-  showEstimates?: boolean;
-  /** Render each task's description under its title; rows grow to fit. Off by default, so a
-   * single-line list (e.g. the chat strip) keeps one row per task. */
-  showDescription?: boolean;
-  /** Enables `Create`; called with a draft carrying at least the trimmed title. */
-  onTaskCreate?: (task: Task.Draft) => void;
-  /** Enables the done toggle. Every mutation is delegated — the list never writes. */
-  onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
-  /**
-   * Trailing menu for a row. One item renders as a plain icon button, several as a `…` menu, none as
-   * nothing — so delete is an ordinary contributed action rather than a special case of its own.
-   */
-  getTaskActions?: (task: Task.Task) => MenuItem[];
-  /**
-   * Row click, and `Escape` — which passes `undefined`, since a reader needs a way back out of a
-   * selection. Wiring it (or `selected`) makes the list selectable, so the row shows as selected.
-   */
-  onTaskSelect?: (task: Task.Task | undefined) => void;
-  /** Selected task id (controlled); omit to let the list track the last row clicked. */
-  selected?: string;
-  /**
-   * Makes the list selectable without a controlled `selected` or an `onTaskSelect` — for a host
-   * whose selection consumers (e.g. `Edit`) live inside the list's own context.
-   */
-  selectable?: boolean;
   /**
    * Render the set as the tree it stores (`Task.parentTask`), not as status groups — the two are
    * mutually exclusive, since a tree regrouped by status is no longer a tree.
    */
   hierarchical?: boolean;
-  /** Paint the tree's drop bands on every row (development affordance). */
-  debug?: boolean;
-  /**
-   * Enables restructuring by drag and by keyboard; called with the one move the gesture means.
-   * `MoveTask` takes exactly this pair, so a drop is a single mutation rather than a re-parent
-   * followed by a reposition.
-   */
-  onTaskMove?: (task: Task.Task, placement: TaskPlacement) => void;
   /**
    * Ids of the branches whose sub-tasks are hidden (controlled). Collapsed rather than expanded
    * ids, because a branch is open by default: tracking the expanded set would render a task's new
@@ -173,7 +147,62 @@ type TaskListRootProps = PropsWithChildren<{
    * a collapsed branch is not a property of the work — so this is state, not stored on the object.
    */
   collapsed?: ReadonlySet<string>;
+
+  //
+  // Selection.
+  //
+
+  /** Selected task id (controlled); omit to let the list track the last row clicked. */
+  selected?: string;
+  /**
+   * Makes the list selectable without a controlled `selected` or an `onTaskSelect` — for a host
+   * whose selection consumers (e.g. `Edit`) live inside the list's own context.
+   */
+  selectable?: boolean;
+
+  //
+  // What a row shows.
+  //
+
+  /** Render the status heading above each group; grouping order is kept either way. */
+  showGroupLabels?: boolean;
+  /** Number rows 1..N down the list as rendered, so tasks can be referenced by ordinal. */
+  showOrdinals?: boolean;
+  /** Render each task's estimate beside the priority control. Off by default. */
+  showEstimates?: boolean;
+  /**
+   * Render each task's description under its title; rows grow to fit. Off by default, so a
+   * single-line list (e.g. the chat strip) keeps one row per task.
+   */
+  showDescription?: boolean;
+  /** Paint the tree's drop bands on every row (development affordance). */
+  debug?: boolean;
+
+  //
+  // Callbacks. Wiring one is what enables the affordance that calls it — the list never writes.
+  //
+
+  /** Enables `Create`; called with a draft carrying at least the trimmed title. */
+  onTaskCreate?: (task: Task.Draft) => void;
+  /** Enables the row's edit controls. Every mutation is delegated. */
+  onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
+  /**
+   * Row click, and `Escape` — which passes `undefined`, since a reader needs a way back out of a
+   * selection. Wiring it (or `selected`) makes the list selectable, so the row shows as selected.
+   */
+  onTaskSelect?: (task: Task.Task | undefined) => void;
+  /**
+   * Enables restructuring by drag and by keyboard; called with the one move the gesture means.
+   * `MoveTask` takes exactly this pair, so a drop is a single mutation rather than a re-parent
+   * followed by a reposition.
+   */
+  onTaskMove?: (task: Task.Task, placement: TaskPlacement) => void;
   onCollapsedChange?: (collapsed: ReadonlySet<string>) => void;
+  /**
+   * Trailing menu for a row. One item renders as a plain icon button, several as a `…` menu, none as
+   * nothing — so delete is an ordinary contributed action rather than a special case of its own.
+   */
+  getTaskActions?: (task: Task.Task) => MenuItem[];
 }>;
 
 const TaskListRoot = ({
@@ -701,7 +730,10 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
     // so it spins; a human-started task keeps the static glyph.
     const active = current.status === 'started' && current.assignee?.role === 'assistant';
     const { icon, classNames: iconClassNames } = active
-      ? { icon: 'ph--spinner--regular', classNames: 'text-info-text animate-spin' }
+      ? {
+          icon: 'ph--spinner--regular',
+          classNames: 'text-info-text animate-spin',
+        }
       : {
           icon: STATUS_ICONS[current.status ?? 'todo'].icon,
           classNames: statusTextStyle(current.status ?? 'todo'),
@@ -810,11 +842,11 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
                   'dx-fullscreen grid place-items-center text-subdued cursor-grab active:cursor-grabbing',
                   // A handle with no ordinal beneath it is the cell's only content, so it stays put;
                   // otherwise it appears only while the row is under the cursor or holds focus.
-                  ordinal !== undefined && 'invisible group-hover/row:visible group-has-[:focus-visible]/row:visible',
+                  ordinal !== undefined && 'invisible group-hover/row:visible group-has-focus-visible/row:visible',
                 )}
                 ref={dragHandleRef}
               >
-                <Icon icon='ph--dots-six-vertical--regular' size={4} />
+                <Icon icon='ph--dots-six-vertical--regular' />
               </span>
             )}
           </div>
@@ -831,7 +863,7 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
           />
         ) : (
           <span className='grid h-8 place-items-center justify-self-center'>
-            <Icon icon={icon} classNames={iconClassNames} size={4} />
+            <Icon icon={icon} classNames={iconClassNames} />
             <span className='sr-only'>{t(`status-${current.status ?? 'todo'}.label`)}</span>
           </span>
         )}
@@ -920,7 +952,7 @@ const TaskEstimateControl = ({ task }: { task: Task.Task }) => {
           data-testid='taskList.item.estimate'
           classNames={mx('w-6 px-0 text-xs tabular-nums', estimateTextStyle(estimate))}
           // The row is the selection target; opening the menu must not also select it.
-          onClick={(event: React.MouseEvent) => event.stopPropagation()}
+          onClick={(event: MouseEvent) => event.stopPropagation()}
         >
           {label}
         </Button>
@@ -951,24 +983,6 @@ TaskEstimateControl.displayName = 'TaskList.EstimateControl';
 
 /**
  * Priority as a signal-strength glyph rather than a word: the four levels are ordinal, so a ramp
- * reads at a glance where four differently-worded tags do not. The ramp itself is neutral — shape
- * carries the level — so only `urgent` is coloured, which is what makes it findable in a long list.
- */
-// The ramp levels carry no colour of their own so they follow the row's `--icons-color`, which
-// dims them at rest and lifts them when the row is hovered, focused or selected. A pinned
-// `text-subdued` overrides that variable and left the current row's priority grey against its
-// brightened title, which reads as the icon being disabled.
-const PRIORITY_ICONS: Record<string, { icon: string }> = {
-  low: { icon: 'px--bar-low--regular' },
-  medium: { icon: 'px--bar-medium--regular' },
-  high: { icon: 'px--bar-high--regular' },
-  urgent: { icon: 'ph--exclamation-mark--fill' },
-};
-
-const NO_PRIORITY_ICON = 'ph--dot--regular';
-
-/**
- * Priority as a signal-strength glyph rather than a word: the four levels are ordinal, so a ramp
  * reads at a glance where four differently-worded tags do not. `urgent` breaks the ramp deliberately
  * — it is a different kind of statement from "how much", and a filled mark carries that.
  *
@@ -980,7 +994,7 @@ const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
   const { t } = useTranslation(translationKey);
   const { onTaskUpdate } = useTaskListContext('TaskList.PriorityIcon');
   const priority = task.priority ?? 'none';
-  const style = PRIORITY_ICONS[priority];
+  const icon = priorityIcon(priority);
   const tint = priorityTextStyle(priority);
 
   if (!onTaskUpdate) {
@@ -988,7 +1002,7 @@ const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
     // in the same column its neighbours use, so the list reads as one column and not a ragged one.
     return (
       <IconBlock square>
-        <Icon icon={style?.icon ?? NO_PRIORITY_ICON} size={4} classNames={mx('shrink-0', tint)} />
+        <Icon icon={icon} classNames={mx('shrink-0', tint)} />
       </IconBlock>
     );
   }
@@ -998,7 +1012,7 @@ const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
       <Menu.Trigger asChild>
         <CompactIconButton
           variant='ghost'
-          icon={style?.icon ?? NO_PRIORITY_ICON}
+          icon={icon}
           label={t('task-priority.label')}
           data-testid='taskList.item.priority'
           // The hue goes on the icon, not the button: the row dims icons through `--icons-color`,
@@ -1011,14 +1025,22 @@ const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
       {/* Sourced from the schema's own option table, so the picker offers exactly what the field
           accepts and carries the same hue the form's select paints it with. */}
       <Menu.Content
-        items={Task.PriorityOptions.map(({ id }) =>
-          createMenuAction(`priority-${id}`, () => onTaskUpdate(task, { priority: id }), {
-            label: t(`priority-${id}.label`),
-            icon: PRIORITY_ICONS[id]?.icon ?? NO_PRIORITY_ICON,
-            iconClassNames: priorityTextStyle(id),
-            checked: priority === id,
+        items={[
+          // The table has no `none` row, so clearing is offered here or not at all.
+          createMenuAction('priority-none', () => onTaskUpdate(task, { priority: 'none' }), {
+            label: t('priority-none.label'),
+            icon: Task.NO_PRIORITY_ICON,
+            checked: priority === 'none',
           }),
-        )}
+          ...Task.PriorityOptions.map(({ id, icon: optionIcon }) =>
+            createMenuAction(`priority-${id}`, () => onTaskUpdate(task, { priority: id }), {
+              label: t(`priority-${id}.label`),
+              icon: optionIcon,
+              iconClassNames: priorityTextStyle(id),
+              checked: priority === id,
+            }),
+          ),
+        ]}
       />
     </Menu.Root>
   );
@@ -1346,11 +1368,7 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
             grid && (showGutter ? 'col-start-2' : 'col-start-1'),
           )}
         >
-          <Icon
-            icon={current ? 'ph--pencil-simple--regular' : 'ph--plus--regular'}
-            size={4}
-            classNames='text-subdued'
-          />
+          <Icon icon={current ? 'ph--pencil-simple--regular' : 'ph--plus--regular'} classNames='text-subdued' />
         </span>
         <Input.Root>
           <Input.TextInput

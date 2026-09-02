@@ -56,3 +56,8 @@ const textStyleFor = <T extends string>(options: readonly { id: T; color: string
 export const statusTextStyle = textStyleFor(Task.StatusOptions);
 export const priorityTextStyle = textStyleFor(Task.PriorityOptions);
 export const estimateTextStyle = textStyleFor(Task.EstimateOptions);
+
+/** A priority's glyph, from the same table that gives it a title and a hue. */
+const PRIORITY_ICONS = new Map(Task.PriorityOptions.map(({ id, icon }) => [id, icon]));
+
+export const priorityIcon = (priority: Task.Priority): string => PRIORITY_ICONS.get(priority) ?? Task.NO_PRIORITY_ICON;

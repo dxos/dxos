@@ -24,12 +24,21 @@ import * as Milestone from './Milestone';
 export const Priority = Schema.Literals(['none', 'low', 'medium', 'high', 'urgent']);
 export type Priority = Schema.Schema.Type<typeof Priority>;
 
-export const PriorityOptions: { id: Priority; title: string; color: string }[] = [
-  { id: 'low', title: 'Low', color: 'gray' },
-  { id: 'medium', title: 'Medium', color: 'gray' },
-  { id: 'high', title: 'High', color: 'gray' },
-  { id: 'urgent', title: 'Urgent', color: 'rose' },
+/**
+ * `icon` sits beside `color` so a row, its picker and the form's select cannot name the same
+ * priority with different glyphs. The ramp is neutral — shape carries the level — which is what
+ * leaves `urgent` the only coloured one and so the only one findable in a long list. The extra
+ * field is inert to `SelectOption`, which carries id/title/color and ignores the rest.
+ */
+export const PriorityOptions: { id: Priority; title: string; color: string; icon: string }[] = [
+  { id: 'low', title: 'Low', color: 'gray', icon: 'px--bar-low--regular' },
+  { id: 'medium', title: 'Medium', color: 'gray', icon: 'px--bar-medium--regular' },
+  { id: 'high', title: 'High', color: 'gray', icon: 'px--bar-high--regular' },
+  { id: 'urgent', title: 'Urgent', color: 'rose', icon: 'ph--exclamation-mark--fill' },
 ];
+
+/** No priority has no option row, so its glyph lives here — a dot, not an absent cell. */
+export const NO_PRIORITY_ICON = 'ph--dot--regular';
 
 //
 // Estimate (T-shirt sizes)
