@@ -686,14 +686,11 @@ TaskListItemArtifacts.displayName = 'TaskList.ItemArtifacts';
 
 TaskListItemActions.displayName = 'TaskList.ItemActions';
 
-// TODO(burdon): Reconcile with `CompactIconButton` from `react-ui-form`.
 const CompactIconButton = (props: IconButtonProps) => {
   return (
-    // <span className='grid size-8 shrink-0 place-items-center border'>
     <IconBlock>
       <IconButton variant='ghost' iconOnly density='sm' {...props} />
     </IconBlock>
-    // </span>
   );
 };
 

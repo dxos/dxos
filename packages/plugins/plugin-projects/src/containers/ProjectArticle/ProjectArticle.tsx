@@ -227,10 +227,10 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
               </Form.Root>
             )}
 
-            {/* The ledger gets the whole panel here, so the list scrolls on its own rather than
-                inside the form's viewport. */}
+            {/* The ledger gets the whole panel here, so the list scrolls on its own rather than inside the form's viewport. */}
             {tab === 'tasks' &&
               (taskSet ? (
+                // TODO(burdon): Inline component for more control?
                 <Surface.Surface type={AppSurface.Section} data={{ subject: taskSet, attendableId }} limit={1} />
               ) : (
                 <Flex justify='center' classNames='p-4 text-subdued'>

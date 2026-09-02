@@ -19,7 +19,7 @@ import { Task, TaskSet } from '@dxos/types';
 import { meta } from '#meta';
 import { TaskOperation } from '#types';
 
-import { useTaskActions } from '../../hooks/useTaskActions';
+import { useTaskActions } from '../../hooks';
 
 export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet>;
 
@@ -89,14 +89,14 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
 
   const content = (
     <TaskList.Root
+      tasks={tasks}
       hierarchical
       selectable
       showDescription
       showEstimates
-      tasks={tasks}
+      getTaskActions={getTaskActions}
       onTaskCreate={handleCreate}
       onTaskUpdate={handleUpdate}
-      getTaskActions={getTaskActions}
       onTaskMove={handleMove}
     >
       <TaskList.Viewport>
