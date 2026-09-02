@@ -40,7 +40,6 @@ import { defaultTx } from '@dxos/react-ui';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
-import { getConnectionDiagnostics } from '@dxos/worker-framework/Client';
 
 import { type PluginConfig, getDefaults, getPlugins } from './plugin-defs';
 import {
@@ -250,13 +249,16 @@ const main = async () => {
   // Load these in parallel; HTTP/2 multiplexes the three chunks and even on
   // local-disk the parser can interleave parses. The wasm init rides the same wave: it must
   // complete before anything touches automerge (slim entrypoints — see util/automerge-wasm.ts).
-  const [{ Config, defs, SaveConfig, getEnvString }, { Client, createClientServices }, AppMigrations] =
-    await Promise.all([
-      import('@dxos/config'),
-      import('@dxos/react-client'),
-      import('@dxos/app-toolkit/AppMigrations'),
-      initAutomergeWasm(),
-    ]);
+  const [
+    { Config, defs, SaveConfig, getEnvString },
+    { Client, createClientServices, getConnectionDiagnostics },
+    AppMigrations,
+  ] = await Promise.all([
+    import('@dxos/config'),
+    import('@dxos/react-client'),
+    import('@dxos/app-toolkit/AppMigrations'),
+    initAutomergeWasm(),
+  ]);
 
   startupMark('dynamic-imports:end');
   startupMeasure('dynamic-imports', 'dynamic-imports:start', 'dynamic-imports:end');
