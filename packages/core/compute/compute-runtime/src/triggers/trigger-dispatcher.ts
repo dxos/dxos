@@ -1054,7 +1054,9 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
           // otherwise a refresh forked just before shutdown could still complete afterward, see
           // `this.#triggerQuery` as already cleared, fall back to a fresh one-shot query, and
           // repopulate trigger state after the dispatcher has stopped.
-          this.#pendingRefreshFiber = Effect.runFork(
+          // Forked with the layer's captured context, so the refresh runs with the runtime's clock,
+          // tracer, and services rather than the defaults a detached fork would start from.
+          this.#pendingRefreshFiber = Effect.runForkWith(this._services)(
             this.refreshTriggers().pipe(
               Effect.tapCause((cause) =>
                 Effect.sync(() => log.error('failed to refresh triggers', { error: EffectEx.causeToError(cause) })),
@@ -1156,7 +1158,8 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
     // boundary runs its finalizer before `runFork` returns, so the finalizer must tolerate not
     // having the fiber yet — and the add below must not then resurrect a completed one.
     const forked: { fiber?: Fiber.Fiber<void, never>; done?: boolean } = {};
-    forked.fiber = Effect.runFork(
+    // Carries the captured context for the same reason as the refresh fork above.
+    forked.fiber = Effect.runForkWith(this._services)(
       this.#reactiveDispatchLock
         .withPermits(1)(this.invokeScheduledTriggers({ kinds: [kind], triggerIds: [triggerId], untilExhausted: true }))
         .pipe(

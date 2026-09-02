@@ -155,17 +155,15 @@ export const AgentProcess = (options: AgentProcessOptions) =>
 
         // Schedules the process alarm from durable state: immediately when work is queued, at the
         // earliest pending alarm otherwise, not at all when idle.
-        const reconcileAlarmWith = (state: PendingState): void => {
+        const reconcileAlarmWith = (state: PendingState): Effect.Effect<void> => {
           const delay = computeAlarmDelay({
             hasPendingWork: toolResults.length > 0 || state.pendingMessages.length > 0,
             wakeAt: state.pendingAlarms[0]?.wakeAt ?? null,
             now: now(),
           });
-          if (delay != null) {
-            ctx.setAlarm(delay);
-          }
+          return delay != null ? ctx.setAlarm(delay) : Effect.void;
         };
-        const reconcileAlarm = Effect.map(sessionStore.loadPending(feed), reconcileAlarmWith);
+        const reconcileAlarm = Effect.flatMap(sessionStore.loadPending(feed), reconcileAlarmWith);
 
         // Optional supervisor behaviour: when a strategy is provided, the agent reconciles
         // outstanding work into linked child processes after each turn and folds their results back
@@ -229,7 +227,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
             const after = yield* sessionStore.loadPending(feed);
             if (pendingWork(after)) {
               log('agent work enqueued by end-request hook, continuing');
-              reconcileAlarmWith(after);
+              yield* reconcileAlarmWith(after);
               return;
             }
 
@@ -255,14 +253,14 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 feed,
                 Message.make({ sender: { role: 'user' }, blocks: [...content] }),
               );
-              ctx.setAlarm(0);
+              yield* ctx.setAlarm(0);
             }),
           }),
           onInput: Effect.fnUntraced(function* (prompt: string | readonly ContentBlock.Any[]) {
             log('agent onInput received', { backlog: toolResults.length });
             const content = typeof prompt === 'string' ? [ContentBlock.Text.make({ text: prompt })] : [...prompt];
             yield* sessionStore.enqueueMessage(feed, Message.make({ sender: { role: 'user' }, blocks: content }));
-            ctx.setAlarm(0);
+            yield* ctx.setAlarm(0);
             log('agent onInput enqueued to feed');
           }),
           onAlarm: Effect.fnUntraced(
@@ -299,7 +297,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   ];
                 } else {
                   log('agent onAlarm empty queue', {});
-                  reconcileAlarmWith(state);
+                  yield* reconcileAlarmWith(state);
                   yield* maybeCompleteWith(state);
                   return;
                 }
@@ -364,7 +362,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               }
 
               // Reconcile so a pending alarm (or remaining queue work) is rescheduled.
-              reconcileAlarmWith(after);
+              yield* reconcileAlarmWith(after);
               yield* maybeCompleteWith(after);
             },
             Effect.orDie,
@@ -450,7 +448,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 toolResults.push(result);
                 log('agent onChildEvent persisted tool result', { depth: toolResults.length, childPid: event.pid });
                 yield* ToolResultsCell.set(toolResults);
-                ctx.setAlarm(0);
+                yield* ctx.setAlarm(0);
                 log('agent onChildEvent alarm scheduled', { depth: toolResults.length });
               } else {
                 log.verbose('childEvent ignored non-tool call and not a delegation', { pid: event.pid });

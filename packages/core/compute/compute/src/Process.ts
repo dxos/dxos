@@ -135,11 +135,12 @@ export interface ProcessContext<I, O> {
   submitOutput(output: O): void;
 
   /**
-   * Set an alarm for the process to be woken up later.
+   * Set an alarm for the process to be woken up later. The timer is forked from the calling fiber,
+   * so `onAlarm` runs with the caller's context.
    *
    * @param timeout - Optional timeout in milliseconds. If not provided, the process is woken up as soon as possible.
    */
-  setAlarm(timeout?: number): void;
+  setAlarm(timeout?: number): Effect.Effect<void>;
 }
 
 /**

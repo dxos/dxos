@@ -199,10 +199,7 @@ const makeParentAwaitingChild = () =>
     (ctx) =>
       Effect.succeed({
         onSpawn: () => Effect.void,
-        onInput: () =>
-          Effect.sync(() => {
-            ctx.setAlarm(0);
-          }),
+        onInput: () => ctx.setAlarm(0),
         onAlarm: () =>
           Effect.gen(function* () {
             const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
@@ -262,7 +259,7 @@ const makeWaitingExecutable = () =>
     Effect.succeed({
       onSpawn: () =>
         Effect.gen(function* () {
-          ctx.setAlarm(500);
+          yield* ctx.setAlarm(500);
         }),
       onInput: () => Effect.void,
       onAlarm: () =>
@@ -382,7 +379,23 @@ const makeRecordingTracer = (names: string[]) => {
   });
 };
 
+/** Sets an alarm on input (or at spawn, when `atSpawn` is given) and opens a span when it fires. */
+const makeTracedAlarmExecutable = (options: { atSpawn?: number } = {}) =>
+  Process.make({ key: 'test.traced-alarm', input: Schema.Void, output: Schema.Void, services: [] }, (ctx) =>
+    Effect.succeed({
+      onSpawn: () => (options.atSpawn !== undefined ? ctx.setAlarm(options.atSpawn) : Effect.void),
+      onInput: () => ctx.setAlarm(0),
+      onAlarm: () =>
+        Effect.void.pipe(
+          Effect.withSpan('Alarm.handler'),
+          Effect.tap(() => Effect.sync(() => ctx.succeed())),
+        ),
+      onChildEvent: () => Effect.void,
+    }),
+  );
+
 const spanNames: string[] = [];
+const rearmSpanNames: string[] = [];
 
 describe('ManagerImpl', () => {
   it.effect(
@@ -412,6 +425,53 @@ describe('ManagerImpl', () => {
         const handle = yield* manager.spawn(Process.fromOperation(Traced, handlers));
         yield* handle.runAndExit({ inputs: [undefined] }).pipe(Stream.runCollect);
         expect(spanNames).toContain('Handler.span');
+      },
+      Effect.provide(TestLayer),
+      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(spanNames))),
+    ),
+  );
+
+  it.effect(
+    'runs alarm-dispatched handlers under the ambient tracer',
+    Effect.fn(
+      function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        const handle = yield* manager.spawn(makeTracedAlarmExecutable());
+        yield* handle.submitInput(undefined);
+        yield* handle.runToCompletion();
+
+        // The alarm timer is forked into the process scope from the fiber that set it, so the
+        // handler it dispatches inherits that fiber's tracer instead of a detached fork's default.
+        expect(spanNames).toContain('Alarm.handler');
+      },
+      Effect.provide(TestLayer),
+      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(spanNames))),
+    ),
+  );
+
+  it.effect(
+    'runs child-event handlers under the ambient tracer',
+    Effect.fn(
+      function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        const childExited = yield* Deferred.make<void>();
+        const parent = yield* manager.spawn(
+          Process.make({ key: 'test.traced-parent', input: Schema.Void, output: Schema.Void, services: [] }, () =>
+            Effect.succeed({
+              onChildEvent: () =>
+                Effect.void.pipe(
+                  Effect.withSpan('ChildEvent.handler'),
+                  Effect.andThen(Deferred.succeed(childExited, undefined)),
+                ),
+            }),
+          ),
+        );
+        const child = yield* manager.spawn(Process.fromOperation(Double, handlers), { parentProcessId: parent.pid });
+        yield* child.runAndExit({ inputs: [{ value: 1 }] }).pipe(Stream.runCollect);
+        yield* Deferred.await(childExited);
+
+        expect(spanNames).toContain('ChildEvent.handler');
+        yield* parent.terminate();
       },
       Effect.provide(TestLayer),
       Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(spanNames))),
@@ -1544,6 +1604,34 @@ describe('durability', () => {
   );
 
   it.effect(
+    'fires a re-armed alarm under the ambient tracer after hydrate',
+    Effect.fn(
+      function* ({ expect }) {
+        const kv = yield* KeyValueStore.KeyValueStore;
+        const registry = yield* Registry.AtomRegistry;
+        const resolver = yield* ServiceResolver.ServiceResolver;
+        const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
+        const traceSink = yield* Trace.TraceSink;
+
+        const traced = makeTracedAlarmExecutable({ atSpawn: 500 });
+        const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+        yield* managerA.spawn(traced);
+        yield* managerA.shutdown();
+
+        // Re-arming forks the timer from the hydrating fiber, so the handler runs under its tracer.
+        const managerB = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+        const restored = yield* (yield* managerB.list({ key: 'test.traced-alarm' }))[0].hydrate(traced);
+        yield* TestClock.adjust(Duration.millis(500));
+        yield* restored.runToCompletion();
+
+        expect(rearmSpanNames).toContain('Alarm.handler');
+      },
+      Effect.provide(DurabilityTestLayer),
+      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(rearmSpanNames))),
+    ),
+  );
+
+  it.effect(
     're-runs onSpawn only when its spawn event is still pending',
     Effect.fn(function* ({ expect }) {
       const kv = yield* KeyValueStore.KeyValueStore;
@@ -1558,9 +1646,9 @@ describe('durability', () => {
         (ctx) =>
           Effect.succeed({
             onSpawn: () =>
-              Effect.sync(() => {
+              Effect.gen(function* () {
                 spawnCount++;
-                ctx.setAlarm(10_000);
+                yield* ctx.setAlarm(10_000);
               }),
             onInput: () => Effect.void,
             onAlarm: () => Effect.void,
@@ -1601,10 +1689,7 @@ describe('durability', () => {
         (ctx) =>
           Effect.succeed({
             onSpawn: () => Effect.void,
-            onInput: () =>
-              Effect.sync(() => {
-                ctx.setAlarm(0);
-              }),
+            onInput: () => ctx.setAlarm(0),
             onAlarm: () =>
               Effect.gen(function* () {
                 yield* Deferred.succeed(alarmStarted, undefined);
