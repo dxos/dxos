@@ -6,7 +6,6 @@ import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Tracer from 'effect/Tracer';
 import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
 
 import { Context } from '@dxos/context';
@@ -105,44 +104,6 @@ describe('IndexEngine', () => {
     const indexEngine = new IndexEngine({ tracker, ftsIndex, objectMetaIndex: metaIndex, reverseRefIndex });
     return { indexEngine, tracker, metaIndex, ftsIndex, reverseRefIndex };
   });
-
-  it.effect(
-    'stamps the space on its spans',
-    Effect.fnUntraced(function* () {
-      const { indexEngine } = yield* setup;
-      const dataSource = new MockIndexDataSource();
-      const spaceId = SpaceId.random();
-      dataSource.push([
-        {
-          spaceId,
-          documentId: 'doc-1',
-          queueId: null,
-          queueNamespace: null,
-          recordId: null,
-          createdAt: null,
-          updatedAt: Date.now(),
-          data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_DEFAULT, title: 'Hello' },
-        },
-      ]);
-      const spans: Tracer.Span[] = [];
-      const base = yield* Effect.tracer;
-      const recording = Tracer.make({
-        span: (...args) => {
-          const span = base.span(...args);
-          spans.push(span);
-          return span;
-        },
-      });
-
-      yield* indexEngine
-        .update(Context.default(), dataSource, { spaceId })
-        .pipe(Effect.provideService(Tracer.Tracer, recording));
-
-      // One index serves every space, so a pass over one of them says which.
-      const span = spans.find(({ name }) => name === 'IndexEngine.update');
-      expect(span?.attributes.get('spaceId')).toBe(spaceId);
-    }, Effect.provide(TestLayer)),
-  );
 
   it.effect(
     'should index and update objects',

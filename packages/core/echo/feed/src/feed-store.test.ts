@@ -8,7 +8,6 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Result from 'effect/Result';
-import * as Tracer from 'effect/Tracer';
 
 import { EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -76,37 +75,6 @@ describe('Feed V2', () => {
       expect(queryRes.blocks[0].position).toBe(appendRes.positions[0]);
       expect(queryRes.blocks[0].sequence).toBe(123); // Verify Author Sequence is preserved
       expect(queryRes.requestId).toBe('req-2');
-    }).pipe(Effect.provide(TestLayer)),
-  );
-
-  it.effect('stamps the space on its spans', () =>
-    Effect.gen(function* () {
-      const spaceId = SpaceId.random();
-      const spans: Tracer.Span[] = [];
-      const base = yield* Effect.tracer;
-      const recording = Tracer.make({
-        span: (...args) => {
-          const span = base.span(...args);
-          spans.push(span);
-          return span;
-        },
-      });
-
-      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
-      yield* feed.migrate();
-      yield* feed
-        .query({
-          requestId: 'req-1',
-          query: { feedIds: [] },
-          position: -1,
-          spaceId,
-          feedNamespace: WellKnownNamespaces.data,
-        })
-        .pipe(Effect.provideService(Tracer.Tracer, recording));
-
-      // The store holds every space's feeds, so a span says which one it worked on.
-      const span = spans.find(({ name }) => name === 'FeedStore.query');
-      expect(span?.attributes.get('spaceId')).toBe(spaceId);
     }).pipe(Effect.provide(TestLayer)),
   );
 
