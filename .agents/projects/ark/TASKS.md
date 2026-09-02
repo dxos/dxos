@@ -463,3 +463,17 @@ disclosure by nature, and the form currently expresses it without one.
       which are open), since the form renders many siblings and that is what decides the choice.
 - [ ] Check it against the `Form.Viewport`/`Form.Section` composition rather than wrapping fields in
       a new container — the viewport owns the gutter, and an extra wrapper there loses it.
+
+## Phase 12: Optional guide line inside branch content
+
+Tracked 2026-09-01. A `Tree` option to draw a vertical rule down a branch's content, connecting a
+parent to its descendants — the outliner convention for showing which rows belong to which branch
+once a list is deep enough that indentation alone stops carrying it.
+
+- [ ] **Draw it on `TreeBranchContent`**, which already spans the row grid and is the only element
+      that knows a subtree's full extent. A per-row border would restart at every row and leave a
+      dashed column rather than one line.
+- [ ] **Place it against the disclosure toggle's centreline**, not the indent step: the line reads as
+      descending _from_ the chevron, and the toggle is one control wide regardless of depth.
+- [ ] Check it survives the conceal animation — the content box is clipped and its height is
+      animated, so a line anchored to the box's bottom edge would be drawn mid-ramp and then cut.
