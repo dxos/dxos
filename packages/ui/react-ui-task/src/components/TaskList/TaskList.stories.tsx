@@ -321,6 +321,24 @@ export const WithOrdinals: Story = {
 };
 
 /** The gutter's checkbox: the set an action acts on, in place of the ordinal that would sit there. */
+/**
+ * The status glyph spins for a task an agent has taken and started — and only then.
+ *
+ * Both halves matter: `started` alone is a person working, and an agent assignee alone is work that
+ * is queued. The seed carries one of each, so a rule that dropped either half fails here.
+ */
+export const TestAgentSpinner: Story = {
+  args: { showGroupLabels: false },
+  play: async ({ canvasElement }) => {
+    const spinning = () =>
+      [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]')]
+        .filter((row) => row.querySelector('[data-testid="taskList.item.status"] .animate-spin'))
+        .map((row) => row.querySelector('span.truncate')?.textContent ?? '');
+
+    await waitFor(async () => expect(spinning()).toEqual(['Draft launch email']), { timeout: 10_000 });
+  },
+};
+
 export const WithCheckboxes: Story = {
   args: {
     showGroupLabels: false,

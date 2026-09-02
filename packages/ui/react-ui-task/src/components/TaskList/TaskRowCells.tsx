@@ -27,7 +27,10 @@ export type TaskStatusControlProps = {
   task: Task.Task;
   /** Absent for a readonly list, which renders the glyph without the control. */
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
-  /** Whether the assignee is an agent actively working the task; its glyph spins. */
+  /**
+   * Overrides whether the glyph spins. Defaults to {@link Task.isAgentWorking} — a host passes this
+   * only when it knows something the task does not, e.g. that the session behind it has stopped.
+   */
   active?: boolean;
   classNames?: string;
 };
@@ -36,9 +39,11 @@ export type TaskStatusControlProps = {
 export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: TaskStatusControlProps) => {
   const { t } = useTranslation(translationKey);
   const status = task.status ?? 'todo';
-  // A started agent task is actively being worked by a sub-agent (started is stamped at spawn), so
-  // it spins; a human-started task keeps the static glyph.
-  const { icon, classNames: iconClassNames } = active
+  // Derived from the task rather than wired down from the list: a task an agent has taken and
+  // started is being worked right now whoever renders it, and the row is the only place that says
+  // so. A human-started task keeps the static glyph.
+  const working = active ?? Task.isAgentWorking(task);
+  const { icon, classNames: iconClassNames } = working
     ? { icon: 'ph--spinner--regular', classNames: 'text-info-text animate-spin' }
     : { icon: STATUS_ICONS[status].icon, classNames: statusTextStyle(status) };
 
