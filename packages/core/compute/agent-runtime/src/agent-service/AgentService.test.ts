@@ -724,6 +724,40 @@ describe('Agent Service (control plane)', () => {
     ),
   );
 
+  it.effect(
+    'rediscovers a persisted agent whose hydration was skipped',
+    Effect.fnUntraced(
+      function* (_) {
+        const processManager = yield* ProcessManager.ProcessManagerService;
+        const feed = yield* Database.add(Feed.make());
+        yield* Database.flush();
+        const target = Obj.getURI(feed);
+
+        const spawned = yield* getSession(feed);
+        const [before] = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
+
+        // Reboot without hydrating: the record survives but no live handle does, so `list` yields
+        // a read-only dormant view. A service whose session cache does not carry over (boot-time
+        // hydration cleared it, or skipped this agent) rediscovers the process through that view
+        // and must adopt what `hydrate` returns — adopting the dormant view itself leaves every
+        // call on the session dying with "Process not hydrated".
+        yield* processManager.shutdown();
+        yield* processManager.startup();
+
+        const session = yield* getSession(feed).pipe(Effect.provide(AgentService.layer()));
+        expect(session).not.toBe(spawned);
+        const [after] = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
+        expect(String(after.pid)).toBe(String(before.pid));
+
+        // Exercises the live surface the dormant handle lacks, without needing a model turn.
+        yield* session.waitForCompletion();
+        yield* after.terminate();
+      },
+      Effect.provide(TestLayer()),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
   // Exercises the instruction-aware reuse identity on both paths — the session cache and the
   // remount (rediscovered process) path.
   it.effect(
