@@ -19,6 +19,7 @@ import * as Schedule from 'effect/Schedule';
 import * as Semaphore from 'effect/Semaphore';
 import * as Stream from 'effect/Stream';
 import * as Struct from 'effect/Struct';
+import * as Tracer from 'effect/Tracer';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
@@ -252,7 +253,9 @@ export class TriggerDispatcher extends Context.Service<
     Layer.effect(
       TriggerDispatcher,
       Effect.gen(function* () {
-        const services = yield* Effect.context<TriggerDispatcherServices>();
+        // Without the span the layer happened to be built under, which would otherwise parent every
+        // refresh and dispatch forked over this context.
+        const services = Context.omit(Tracer.ParentSpan)(yield* Effect.context<TriggerDispatcherServices>());
         return new TriggerDispatcherImpl({ ...options, services });
       }),
     );

@@ -16,6 +16,7 @@ import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import * as Semaphore from 'effect/Semaphore';
 import * as Stream from 'effect/Stream';
+import * as Tracer from 'effect/Tracer';
 import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
@@ -496,6 +497,10 @@ export class ProcessManagerImpl implements Manager {
         name: options?.name,
       });
       const scope = yield* Scope.make();
+      // The process's own context, for the work it dispatches itself (alarms, child events): the
+      // runtime's services, clock, and tracer, and not the span of whoever is spawning it, which
+      // would otherwise parent every span the process ever opens.
+      const context = Context.omit(Tracer.ParentSpan)(yield* Effect.context<never>());
       const outputQueue = yield* Queue.unbounded<ProcessHandle.OutputItem<O>>();
 
       const storage = storageServiceLayer(this.#kvStore, `process/${id}/`);
@@ -660,6 +665,7 @@ export class ProcessManagerImpl implements Manager {
         callbacks,
         scope,
         fullCtx,
+        context,
         this.#registry,
         outputQueue,
         storage,
@@ -719,6 +725,10 @@ export class ProcessManagerImpl implements Manager {
       log('lifecycle: rehydrate', { pid: id, key: record.key });
 
       const scope = yield* Scope.make();
+      // The process's own context, for the work it dispatches itself (alarms, child events): the
+      // runtime's services, clock, and tracer, and not the span of whoever is spawning it, which
+      // would otherwise parent every span the process ever opens.
+      const context = Context.omit(Tracer.ParentSpan)(yield* Effect.context<never>());
       const outputQueue = yield* Queue.unbounded<ProcessHandle.OutputItem<any>>();
       const storage = storageServiceLayer(this.#kvStore, `process/${id}/`);
 
@@ -849,6 +859,7 @@ export class ProcessManagerImpl implements Manager {
         callbacks,
         scope,
         fullCtx,
+        context,
         this.#registry,
         outputQueue,
         storage,
