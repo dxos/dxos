@@ -174,17 +174,6 @@ const DefaultStory = ({
   // Selection is what the article wires, and what arrow-key navigation moves.
   const [selected, setSelected] = useState<string>();
 
-  const handleCreate = useCallback(({ title, ...props }: Task.Draft) => {
-    setTasks((tasks) => [...tasks, Task.make({ title, status: 'todo', ...props })]);
-  }, []);
-
-  const handleUpdate = useCallback((task: Task.Task, patch: Task.Edit) => {
-    Obj.update(task, (task) => {
-      Object.assign(task, patch);
-    });
-    setTasks((tasks) => [...tasks]);
-  }, []);
-
   // Delete is an ordinary contributed action now, which is also what a plugin's own actions look like.
   const getTaskActions = useCallback(
     (task: Task.Task) => [
@@ -197,6 +186,17 @@ const DefaultStory = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
+
+  const handleCreate = useCallback(({ title, ...props }: Task.Draft) => {
+    setTasks((tasks) => [...tasks, Task.make({ title, status: 'todo', ...props })]);
+  }, []);
+
+  const handleUpdate = useCallback((task: Task.Task, patch: Task.Edit) => {
+    Obj.update(task, (task) => {
+      Object.assign(task, patch);
+    });
+    setTasks((tasks) => [...tasks]);
+  }, []);
 
   const handleDelete = useCallback((task: Task.Task) => {
     setTasks((tasks) => tasks.filter(({ id }) => id !== task.id));
@@ -221,18 +221,18 @@ const DefaultStory = ({
 
   return (
     <TaskList.Root
-      tasks={tasks}
-      hierarchical={hierarchical}
       debug={debug}
+      tasks={tasks}
       selected={selected}
-      showGroupLabels={showGroupLabels}
+      hierarchical={hierarchical}
       groupByStatus={groupByStatus}
+      showGroupLabels={showGroupLabels}
       showOrdinals={showOrdinals}
       showDescription={showDescription}
       showEstimates={showEstimates}
+      getTaskActions={readonly ? undefined : getTaskActions}
       onTaskCreate={readonly ? undefined : handleCreate}
       onTaskUpdate={readonly ? undefined : handleUpdate}
-      getTaskActions={readonly ? undefined : getTaskActions}
       onTaskMove={readonly || !hierarchical || !draggable ? undefined : handleMove}
       onTaskSelect={(task) => setSelected(task?.id)}
     >
