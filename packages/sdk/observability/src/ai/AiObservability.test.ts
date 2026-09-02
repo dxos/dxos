@@ -2,8 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
+import { it } from '@effect/vitest';
 import { SpanStatusCode } from '@opentelemetry/api';
-import { describe, test } from 'vitest';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Stream from 'effect/Stream';
+import * as Tracer from 'effect/Tracer';
+import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
+import * as Telemetry from 'effect/unstable/ai/Telemetry';
+import { describe, expect, test } from 'vitest';
+
+import { AiTelemetry } from '@dxos/ai';
+import { makeTracer } from '@dxos/effect';
 
 import type * as ObservabilityExtension from '../observability-extension';
 import { AiSpanProcessor } from './AiObservability';
@@ -283,3 +293,136 @@ describe('AiSpanProcessor', () => {
     expect(() => span.end()).not.toThrow();
   });
 });
+
+describe('AiSpanProcessor wired to @dxos/ai', () => {
+  it.effect('reports a model call with its content', () =>
+    Effect.gen(function* () {
+      const { events, flush, callModel } = yield* setupWired();
+      yield* callModel;
+      yield* flush;
+
+      expect(events).toHaveLength(1);
+      const [generation] = events;
+      expect(generation.content?.input).toEqual([{ role: 'user', content: [{ type: 'text', text: 'hi' }] }]);
+      expect(generation.content?.output).toEqual([{ role: 'assistant', content: [{ type: 'text', text: 'hello' }] }]);
+    }),
+  );
+
+  it.effect('reports metadata only when the policy rejects the space', () =>
+    Effect.gen(function* () {
+      const { events, flush, callModel } = yield* setupWired({ allowContent: () => false });
+      yield* callModel;
+      yield* flush;
+
+      expect(events[0]?.content).toBeUndefined();
+      expect(events[0]?.model).toEqual('test-model');
+      // Cache counts are metadata: they price the call and survive the content policy.
+      expect(events[0]?.cacheReadTokens).toEqual(11);
+      expect(JSON.stringify(events[0])).not.toContain('hello');
+    }),
+  );
+
+  it.effect('reports metadata only when the call site never named a space', () =>
+    Effect.gen(function* () {
+      const { events, flush, callModel } = yield* setupWired({ declaresSpace: false });
+      yield* callModel;
+      yield* flush;
+
+      expect(events[0]?.content).toBeUndefined();
+      expect(events[0]?.model).toEqual('test-model');
+    }),
+  );
+
+  it.effect('reports only the model call, not the spans around it', () =>
+    Effect.gen(function* () {
+      const { events, flush, callModel } = yield* setupWired();
+      yield* callModel;
+      yield* flush;
+
+      expect(events.map(({ spanName }) => spanName)).toEqual(['LanguageModel.generateText']);
+    }),
+  );
+
+  it.effect('reports nothing while telemetry is off', () =>
+    Effect.gen(function* () {
+      const { events, flush, callModel } = yield* setupWired({ captureEnabled: () => false });
+      yield* callModel;
+      yield* flush;
+
+      expect(events).toHaveLength(0);
+    }),
+  );
+});
+
+type Captured = ObservabilityExtension.Generation;
+
+const stubModel = LanguageModel.make({
+  generateText: ({ span }) =>
+    Effect.sync(() => {
+      Telemetry.addGenAIAnnotations(span, { system: 'anthropic', request: { model: 'test-model' } });
+      return [
+        { type: 'text' as const, text: 'hello' },
+        {
+          type: 'finish' as const,
+          reason: 'stop' as const,
+          usage: {
+            inputTokens: { uncached: 3, total: 21, cacheRead: 11, cacheWrite: 7 },
+            outputTokens: { total: 5 },
+          },
+        },
+      ];
+    }),
+  streamText: () => Stream.empty,
+});
+
+/**
+ * The real producer end to end: a provider-shaped stub model, `@dxos/ai`'s span transformer, and the
+ * Effect-to-OTel tracer, with the sink at the far end. The sink restates the attribute names it reads
+ * (it cannot import `AiTelemetry`), so these cases are what fails when either side renames one.
+ */
+const setupWired = ({
+  allowContent = () => true,
+  captureEnabled = () => true,
+  declaresSpace = true,
+}: {
+  allowContent?: (spaceId: string) => boolean;
+  captureEnabled?: () => boolean;
+  declaresSpace?: boolean;
+} = {}) =>
+  Effect.gen(function* () {
+    const events: Captured[] = [];
+    // Mirrors the app: one provider for the realm, with the AI processor attached alongside
+    // whatever else observes spans.
+    const { BasicTracerProvider } = yield* Effect.promise(() => import('@opentelemetry/sdk-trace-base'));
+    const provider = new BasicTracerProvider({
+      spanProcessors: [
+        new AiSpanProcessor({
+          captureGeneration: (generation) => events.push(generation),
+          captureTurn: () => {},
+          captureToolCall: () => {},
+          captureEnabled,
+          allowContent,
+        }),
+      ],
+    });
+
+    const layer = Layer.mergeAll(
+      Layer.effect(LanguageModel.LanguageModel, stubModel),
+      Layer.succeed(Tracer.Tracer, makeTracer(provider, 'test')),
+      // Installed explicitly here; `AiModelResolver.test.ts` covers that a resolved model brings it.
+      Layer.succeed(Telemetry.CurrentSpanTransformer, AiTelemetry.makeSpanTransformer()),
+    );
+
+    // How `AiSession` declares its space: an annotation on the enclosing effect, inherited by the
+    // model-call span beneath it.
+    const annotations = declaresSpace ? { [AiTelemetry.ATTRIBUTES.spaceId]: PLAINTEXT_SPACE } : {};
+    const callModel = LanguageModel.generateText({ prompt: 'hi' }).pipe(
+      // The enclosing span stands in for `AiSession.createRequest`: it is recorded like any other
+      // span now, and the processor ignores it for want of `gen_ai.*` markers.
+      Effect.withSpan('AiSession.createRequest'),
+      Effect.annotateSpans(annotations),
+      Effect.provide(layer),
+    );
+
+    return { events, callModel, flush: Effect.promise(() => provider.forceFlush()) };
+  });
