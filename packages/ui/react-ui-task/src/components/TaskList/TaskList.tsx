@@ -69,7 +69,7 @@ import {
   subtreeIds,
   walkTaskTree,
 } from './hierarchy';
-import { STATUS_ICONS, STATUS_ORDER } from './status-icons';
+import { STATUS_ICONS, STATUS_ORDER, estimateTextStyle, priorityTextStyle, statusTextStyle } from './status-icons';
 import { TaskDescription } from './TaskDescription';
 import { TaskTreeContent } from './TaskTreeContent';
 import { type TaskNode } from './tree-model';
@@ -700,7 +700,10 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
     const active = current.status === 'started' && current.assignee?.role === 'assistant';
     const { icon, classNames: iconClassNames } = active
       ? { icon: 'ph--spinner--regular', classNames: 'text-info-text animate-spin' }
-      : STATUS_ICONS[current.status ?? 'todo'];
+      : {
+          icon: STATUS_ICONS[current.status ?? 'todo'].icon,
+          classNames: statusTextStyle(current.status ?? 'todo'),
+        };
 
     const handleToggle = useCallback(
       () => onTaskUpdate?.(task, { status: done ? 'todo' : 'done' }),
@@ -884,9 +887,6 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task; ordinal?: numb
   },
 );
 
-/** Offered with `none` first, so clearing is reachable without hunting. */
-const ESTIMATES: (Task.Estimate | 'none')[] = ['none', 'xs', 's', 'm', 'l', 'xl'];
-
 /**
  * Estimate as its own label rather than a glyph: the sizes are a vocabulary a reader already knows
  * (`XS`…`XL`), and two ordinal ramps side by side would be read as one. Rendered on every row so
@@ -900,7 +900,13 @@ const TaskEstimateControl = ({ task }: { task: Task.Task }) => {
   const label = estimate ? estimate.toUpperCase() : '–';
 
   if (!onTaskUpdate) {
-    return <span className='grid h-8 w-6 shrink-0 place-items-center text-xs tabular-nums text-subdued'>{label}</span>;
+    return (
+      <span
+        className={mx('grid h-8 w-6 shrink-0 place-items-center text-xs tabular-nums', estimateTextStyle(estimate))}
+      >
+        {label}
+      </span>
+    );
   }
 
   return (
@@ -910,24 +916,30 @@ const TaskEstimateControl = ({ task }: { task: Task.Task }) => {
           variant='ghost'
           density='sm'
           data-testid='taskList.item.estimate'
-          classNames='w-6 px-0 text-xs tabular-nums text-subdued'
+          classNames={mx('w-6 px-0 text-xs tabular-nums', estimateTextStyle(estimate))}
           // The row is the selection target; opening the menu must not also select it.
           onClick={(event: React.MouseEvent) => event.stopPropagation()}
         >
           {label}
         </Button>
       </Menu.Trigger>
+      {/* Sourced from the schema's own option table, so the picker offers exactly what the field
+          accepts and carries the same hue the form's select paints it with. Clearing is offered
+          first; the table has no `none` row because the field is simply absent when unset. */}
       <Menu.Content
-        items={ESTIMATES.map((value) =>
-          createMenuAction(
-            `estimate-${value}`,
-            () => onTaskUpdate(task, { estimate: value === 'none' ? null : value }),
-            {
-              label: value === 'none' ? t('estimate-none.label') : value.toUpperCase(),
-              checked: (estimate ?? 'none') === value,
-            },
+        items={[
+          createMenuAction('estimate-none', () => onTaskUpdate(task, { estimate: null }), {
+            label: t('estimate-none.label'),
+            checked: !estimate,
+          }),
+          ...Task.EstimateOptions.map(({ id, title }) =>
+            createMenuAction(`estimate-${id}`, () => onTaskUpdate(task, { estimate: id }), {
+              label: title,
+              classNames: estimateTextStyle(id),
+              checked: estimate === id,
+            }),
           ),
-        )}
+        ]}
       />
     </Menu.Root>
   );
@@ -944,15 +956,12 @@ TaskEstimateControl.displayName = 'TaskList.EstimateControl';
 // dims them at rest and lifts them when the row is hovered, focused or selected. A pinned
 // `text-subdued` overrides that variable and left the current row's priority grey against its
 // brightened title, which reads as the icon being disabled.
-const PRIORITY_ICONS: Record<string, { icon: string; classNames: string }> = {
-  low: { icon: 'px--bar-low--regular', classNames: '' },
-  medium: { icon: 'px--bar-medium--regular', classNames: '' },
-  high: { icon: 'px--bar-high--regular', classNames: '' },
-  urgent: { icon: 'ph--exclamation-mark--fill', classNames: '[--icons-color:var(--color-rose-text)] opacity-100!' },
+const PRIORITY_ICONS: Record<string, { icon: string }> = {
+  low: { icon: 'px--bar-low--regular' },
+  medium: { icon: 'px--bar-medium--regular' },
+  high: { icon: 'px--bar-high--regular' },
+  urgent: { icon: 'ph--exclamation-mark--fill' },
 };
-
-/** Offered in ascending order, with `none` first so clearing is the reachable default. */
-const PRIORITIES: Task.Priority[] = ['none', 'low', 'medium', 'high', 'urgent'];
 
 const NO_PRIORITY_ICON = 'ph--dot--regular';
 
@@ -970,13 +979,14 @@ const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
   const { onTaskUpdate } = useTaskListContext('TaskList.PriorityIcon');
   const priority = task.priority ?? 'none';
   const style = PRIORITY_ICONS[priority];
+  const tint = priorityTextStyle(priority);
 
   if (!onTaskUpdate) {
     // Falls back to the dot rather than rendering nothing: a readonly row still says "no priority"
     // in the same column its neighbours use, so the list reads as one column and not a ragged one.
     return (
       <IconBlock square>
-        <Icon icon={style?.icon ?? NO_PRIORITY_ICON} size={4} classNames={mx('shrink-0', style?.classNames)} />
+        <Icon icon={style?.icon ?? NO_PRIORITY_ICON} size={4} classNames={mx('shrink-0', tint)} />
       </IconBlock>
     );
   }
@@ -989,17 +999,20 @@ const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
           icon={style?.icon ?? NO_PRIORITY_ICON}
           label={t('task-priority.label')}
           data-testid='taskList.item.priority'
-          classNames={mx(style?.classNames)}
+          classNames={mx(tint)}
           // The row is the selection target; opening the menu must not also select it.
           onClick={(event) => event.stopPropagation()}
         />
       </Menu.Trigger>
+      {/* Sourced from the schema's own option table, so the picker offers exactly what the field
+          accepts and carries the same hue the form's select paints it with. */}
       <Menu.Content
-        items={PRIORITIES.map((value) =>
-          createMenuAction(`priority-${value}`, () => onTaskUpdate(task, { priority: value }), {
-            label: t(`priority-${value}.label`),
-            icon: PRIORITY_ICONS[value]?.icon ?? NO_PRIORITY_ICON,
-            checked: priority === value,
+        items={Task.PriorityOptions.map(({ id }) =>
+          createMenuAction(`priority-${id}`, () => onTaskUpdate(task, { priority: id }), {
+            label: t(`priority-${id}.label`),
+            icon: PRIORITY_ICONS[id]?.icon ?? NO_PRIORITY_ICON,
+            iconClassNames: priorityTextStyle(id),
+            checked: priority === id,
           }),
         )}
       />

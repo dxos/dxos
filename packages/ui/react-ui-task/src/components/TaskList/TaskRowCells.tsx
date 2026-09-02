@@ -11,7 +11,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { STATUS_ICONS, STATUS_ORDER } from './status-icons';
+import { STATUS_ICONS, statusTextStyle } from './status-icons';
 
 /**
  * Cells shared by the flat row and the tree row.
@@ -40,7 +40,7 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
   // it spins; a human-started task keeps the static glyph.
   const { icon, classNames: iconClassNames } = active
     ? { icon: 'ph--spinner--regular', classNames: 'text-info-text animate-spin' }
-    : STATUS_ICONS[status];
+    : { icon: STATUS_ICONS[status].icon, classNames: statusTextStyle(status) };
 
   if (!onTaskUpdate) {
     // `IconBlock square` rather than a bare span: the glyph must hold the same square an
@@ -69,12 +69,15 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
           onClick={(event) => event.stopPropagation()}
         />
       </Menu.Trigger>
+      {/* Sourced from the schema's own option table, so the picker offers exactly what the field
+          accepts and carries the same hue the form's select paints it with. */}
       <Menu.Content
-        items={STATUS_ORDER.map((value) =>
-          createMenuAction(`status-${value}`, () => onTaskUpdate(task, { status: value }), {
-            label: t(`status-${value}.label`),
-            icon: STATUS_ICONS[value].icon,
-            checked: status === value,
+        items={Task.StatusOptions.map(({ id }) =>
+          createMenuAction(`status-${id}`, () => onTaskUpdate(task, { status: id }), {
+            label: t(`status-${id}.label`),
+            icon: STATUS_ICONS[id].icon,
+            iconClassNames: statusTextStyle(id),
+            checked: status === id,
           }),
         )}
       />

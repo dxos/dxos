@@ -24,12 +24,12 @@ import * as Milestone from './Milestone';
 export const Priority = Schema.Literals(['none', 'low', 'medium', 'high', 'urgent']);
 export type Priority = Schema.Schema.Type<typeof Priority>;
 
-const PriorityOptions: { id: Priority; title: string; color: string }[] = [
+export const PriorityOptions: { id: Priority; title: string; color: string }[] = [
   { id: 'none', title: 'None', color: 'gray' },
-  { id: 'low', title: 'Low', color: 'indigo' },
-  { id: 'medium', title: 'Medium', color: 'purple' },
-  { id: 'high', title: 'High', color: 'amber' },
-  { id: 'urgent', title: 'Urgent', color: 'red' },
+  { id: 'low', title: 'Low', color: 'gray' },
+  { id: 'medium', title: 'Medium', color: 'gray' },
+  { id: 'high', title: 'High', color: 'gray' },
+  { id: 'urgent', title: 'Urgent', color: 'rose' },
 ];
 
 //
@@ -42,12 +42,12 @@ const PriorityOptions: { id: Priority; title: string; color: string }[] = [
 export const Estimate = Schema.Literals(['xs', 's', 'm', 'l', 'xl']);
 export type Estimate = Schema.Schema.Type<typeof Estimate>;
 
-const EstimateOptions: { id: Estimate; title: string; color: string }[] = [
+export const EstimateOptions: { id: Estimate; title: string; color: string }[] = [
   { id: 'xs', title: 'XS', color: 'gray' },
-  { id: 's', title: 'S', color: 'indigo' },
-  { id: 'm', title: 'M', color: 'purple' },
-  { id: 'l', title: 'L', color: 'amber' },
-  { id: 'xl', title: 'XL', color: 'red' },
+  { id: 's', title: 'S', color: 'gray' },
+  { id: 'm', title: 'M', color: 'gray' },
+  { id: 'l', title: 'L', color: 'gray' },
+  { id: 'xl', title: 'XL', color: 'gray' },
 ];
 
 //
@@ -57,26 +57,26 @@ const EstimateOptions: { id: Estimate; title: string; color: string }[] = [
 export const Status = Schema.Literals([
   'todo',
   'backlog',
-  'blocked',
+  'duplicate',
   'started',
   'review',
   'done',
+  'blocked',
   'cancelled',
-  'duplicate',
   'failed',
 ]);
 export type Status = Schema.Schema.Type<typeof Status>;
 
-const StatusOptions: { id: Status; title: string; color: string }[] = [
-  { id: 'todo', title: 'Todo', color: 'indigo' },
+export const StatusOptions: { id: Status; title: string; color: string }[] = [
+  { id: 'todo', title: 'Todo', color: 'gray' },
   { id: 'backlog', title: 'Backlog', color: 'gray' },
-  { id: 'blocked', title: 'Blocked', color: 'indigo' },
-  { id: 'started', title: 'Started', color: 'purple' },
-  { id: 'review', title: 'In Review', color: 'cyan' },
-  { id: 'done', title: 'Done', color: 'amber' },
-  { id: 'cancelled', title: 'Cancelled', color: 'gray' },
   { id: 'duplicate', title: 'Duplicate', color: 'gray' },
-  { id: 'failed', title: 'Failed', color: 'red' },
+  { id: 'started', title: 'Started', color: 'sky' },
+  { id: 'review', title: 'In Review', color: 'cyan' },
+  { id: 'done', title: 'Done', color: 'green' },
+  { id: 'blocked', title: 'Blocked', color: 'rose' },
+  { id: 'cancelled', title: 'Cancelled', color: 'rose' },
+  { id: 'failed', title: 'Failed', color: 'rose' },
 ];
 
 /**
