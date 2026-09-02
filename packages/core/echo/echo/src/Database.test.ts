@@ -33,7 +33,7 @@ describe('Database.withSpaceId', () => {
       );
 
       const span = spans.find(({ name }) => name === 'Database.test');
-      expect(span?.attributes.get(Database.SPACE_ID_ATTRIBUTE)).toEqual('B7777777777777777777777777');
+      expect(span?.attributes.get('spaceId')).toEqual('B7777777777777777777777777');
     }),
   );
 });

@@ -9,6 +9,7 @@
 import { type Context, SpanStatusCode } from '@opentelemetry/api';
 import type { ReadableSpan, Span, SpanProcessor } from '@opentelemetry/sdk-trace-base';
 
+import { SpanAttributes } from '@dxos/effect';
 import { log } from '@dxos/log';
 
 import type * as ObservabilityExtension from '../ObservabilityExtension';
@@ -118,7 +119,7 @@ const SESSION_ID_ATTR = 'dxos.ai.session_id';
  * Shared with the process handle and ECHO rather than AI-specific: a model call inside a
  * space-scoped process carries it whether or not the call site named its space itself.
  */
-const SPACE_ID_ATTR = 'spaceId';
+const SPACE_ID_ATTR = SpanAttributes.SPACE_ID;
 const INPUT_ATTR = 'dxos.ai.input';
 const OUTPUT_ATTR = 'dxos.ai.output';
 const TOOLS_ATTR = 'dxos.ai.tools';

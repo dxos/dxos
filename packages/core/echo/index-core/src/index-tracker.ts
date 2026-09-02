@@ -8,6 +8,7 @@ import * as Migrator from 'effect/unstable/sql/Migrator';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 
+import { SpanAttributes } from '@dxos/effect';
 import { SpaceId } from '@dxos/keys';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
@@ -63,7 +64,7 @@ export class IndexTracker {
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
         if (query.spaceId) {
-          yield* Effect.annotateCurrentSpan('spaceId', query.spaceId);
+          yield* Effect.annotateCurrentSpan(SpanAttributes.SPACE_ID, query.spaceId);
         }
 
         const spaceIdParam = query.spaceId === undefined ? null : (query.spaceId ?? '');
