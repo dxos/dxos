@@ -185,6 +185,8 @@ export type TreeProps<T extends { id: string } = any> = {
   rootId?: string;
   path?: string[];
   id: string;
+  /** Drag scope, defaulting to `id`. Sibling trees served by one monitor pass the same value. */
+  treeId?: string;
   /**
    * Accessible name for the tree. Ark names it "Tree View" by default, which says what the widget
    * is and not which list it is — a page with more than one is then unnavigable by name. Rendered
@@ -258,6 +260,7 @@ export const Tree = <T extends { id: string } = any>({
   rootId,
   path,
   id,
+  treeId = id,
   ariaLabel,
   classNames,
   gridTemplateColumns = '[tree-row-start] minmax(0, 1fr) min-content [tree-row-end]',
@@ -508,7 +511,7 @@ export const Tree = <T extends { id: string } = any>({
 
   const renderContext = useMemo<TreeRenderContextValue<T>>(
     () => ({
-      treeId: id,
+      treeId,
       focusNode,
       draggable,
       renderColumns,
@@ -527,7 +530,7 @@ export const Tree = <T extends { id: string } = any>({
       mountedRef,
     }),
     [
-      id,
+      treeId,
       focusNode,
       draggable,
       renderColumns,
@@ -576,7 +579,7 @@ export const Tree = <T extends { id: string } = any>({
             <TreeNodeRow key={node.value} node={node} />
           ))}
           {dropAtEnd && draggable && (
-            <TreeEndDropTarget data={{ treeId: id, id: root.id, path: root.path, item: root.item }} />
+            <TreeEndDropTarget data={{ treeId, id: root.id, path: root.path, item: root.item }} />
           )}
         </TreeView.Tree>
       </TreeRenderProvider>

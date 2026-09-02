@@ -19,6 +19,9 @@ import { L0Menu, L1Tabs, type L1TabsProps } from '../Sidebar';
 
 export const NAV_TREE_ITEM = 'NavTreeItem';
 
+/** Drag scope shared by every tab's `Tree` and the monitor in `NavTreeContainer`. */
+export const NAV_TREE_DRAG_SCOPE = 'NavTree';
+
 export type NavTreeProps = { id: string; root?: AppGraphNode.Node; tab: string } & Pick<L1TabsProps, 'open'>;
 
 // TODO(wittjosiah): Refactor to Radix-style.
