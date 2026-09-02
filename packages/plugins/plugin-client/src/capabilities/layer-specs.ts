@@ -8,7 +8,6 @@ import * as Layer from 'effect/Layer';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { ClientService, fromClient } from '@dxos/client';
-import { INITIALIZE_TIMEOUT } from '@dxos/client-protocol';
 import { accessTokenResolverFromEdge, credentialsLayerFromDatabase } from '@dxos/compute-runtime';
 import * as Credential from '@dxos/compute/Credential';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
@@ -48,9 +47,11 @@ const ClientLayerSpec = LayerSpec.make(
         const client = yield* Capability.get(ClientCapabilities.Client);
         // The capability is contributed while `initialize()` is still in flight, so every
         // initialized-only getter (`client.spaces`, `client.halo`) would throw for any layer built
-        // before it settles. Bounded so a handshake that never completes fails the materialization
-        // instead of leaving it pending forever.
-        yield* Effect.tryPromise(() => client.waitUntilInitialized({ timeout: INITIALIZE_TIMEOUT }));
+        // before it settles. Bounded by the same budget the client capability resolved — a shorter
+        // one here would fail a host that deliberately widened it — so a handshake that never
+        // completes fails the materialization instead of leaving it pending forever.
+        const timeout = yield* Capability.get(ClientCapabilities.InitializeTimeout);
+        yield* Effect.tryPromise(() => client.waitUntilInitialized({ timeout }));
         return fromClient(client);
       }).pipe(Effect.orDie),
     ),
