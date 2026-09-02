@@ -8,7 +8,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Operation from '@dxos/compute/Operation';
-import { Observability } from '@dxos/observability';
+import * as Observability from '@dxos/observability/Observability';
 
 import { meta } from '#meta';
 import { ObservabilityCapabilities, ObservabilityOperation, Settings } from '#types';

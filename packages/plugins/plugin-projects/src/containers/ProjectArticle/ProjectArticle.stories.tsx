@@ -5,16 +5,19 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
-import { expect, userEvent, waitFor, within } from 'storybook/test';
+import { expect, screen, userEvent, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { Chat } from '@dxos/assistant-toolkit';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import * as Skill from '@dxos/compute/Skill';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
+import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as GitHubPlugin from '@dxos/plugin-github/GitHubPlugin';
+import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import { translations as routineTranslations } from '@dxos/plugin-routine/translations';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { translations as tasksTranslations } from '@dxos/plugin-tasks/translations';
@@ -178,6 +181,11 @@ const meta = {
       plugins: [
         ...corePlugins(),
         TasksPlugin.make(),
+        // The plugin under test, for its own contributions rather than its surfaces: the `TaskAction`
+        // module is what puts an action on a task row, and Assistant supplies the `CreateChat`
+        // handler that action runs.
+        ProjectsPlugin.make(),
+        AssistantPlugin.make(),
         // Contributes the `#123` decoration; `project.repo` is what it resolves against.
         GitHubPlugin.make(),
         ClientPlugin.make({
@@ -266,11 +274,122 @@ export const Sections: Story = {
   },
 };
 
+/** The contributed action's label, as written in `capabilities/task-action.ts`. */
+const TASK_ACTION_LABEL = 'Assign to agent';
+
 /**
- * A promoted item's link belongs to the project's own ledger, so following it shows the task where
- * the project keeps its tasks — the Tasks tab — rather than swapping the outline for a task form
- * inside the Overview.
+ * The whole cross-plugin path in one gesture: plugin-projects contributes a `TaskAction`, the task
+ * row shows it, and running it invokes the operation that opens a chat carrying the task.
+ *
+ * Asserted on the database rather than on any UI the chat might get, since the point is that the
+ * contribution reached the row and the row reached the operation.
  */
+export const TaskAction: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const { space, task } = await seedContent();
+
+    await showTab(canvas, 'tasks');
+    const title = await canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 });
+
+    // Scoped to this task's own row — every row carries a menu, so the seeded task has to be found
+    // through its title rather than by picking the first trigger on the page.
+    const row = title.closest('[data-testid="taskList.item"]');
+    await expect(row).toBeTruthy();
+
+    // Two actions on the row (the contributed one plus the list's own delete), so they collapse into
+    // the overflow menu rather than rendering as a bare button.
+    const trigger = await within(row as HTMLElement).findByTestId('taskList.item.actions', undefined, {
+      timeout: 10_000,
+    });
+    await userEvent.click(trigger);
+
+    // Every item resolves to a label: a key rendered raw (`delete-task.label`) means the container
+    // looked it up in a namespace that does not hold it, which typechecks and reaches the user.
+    const menu = (await screen.findByRole('menu', undefined, { timeout: 10_000 })).textContent ?? '';
+    await expect(menu).not.toMatch(/\.label\b/);
+
+    // The label the contribution carries (`capabilities/task-action.ts`); a rename there has to be
+    // made here too, which is the point — the assertion is that the row shows what was contributed.
+    const item = await screen.findByText(TASK_ACTION_LABEL, undefined, { timeout: 10_000 });
+    await userEvent.click(item);
+
+    // The chat is named for the task and carries it in its checklist.
+    await waitFor(
+      async () => {
+        const chats = await space.db.query(Filter.type(Chat.Chat)).run();
+        const chat = chats.find((chat) => chat.name === TASK_TITLE);
+        if (!chat) {
+          throw new Error('Chat not found.');
+        }
+        await expect(chat.tasks.map((ref) => Task.refEntityId(ref))).toContain(task.id);
+      },
+      { timeout: 10_000 },
+    );
+  },
+};
+
+/**
+ * Following a promoted item's link opens the task where the outline sits, and comes back from it.
+ *
+ * The host used to take the click and switch its own tab, through an `onSelectTask` callback passed
+ * as Surface data; that channel is gone, so the outline's own behaviour stands — the section shows
+ * the task's form, and Back returns to the outline. Re-routing this to the Tasks tab is the host's
+ * to do through an operation (see TASKS.md Phase 15).
+ */
+/**
+ * The toolbar half of the same path: the rows' checkboxes and the toolbar action read one selection,
+ * held in `react-ui-attention` view state under the task set's id, and the action hands the whole
+ * checked set to ONE chat rather than a chat per task.
+ */
+export const DelegateCheckedTasks: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const { space, taskSet } = await seedContent();
+    const [first, second] = TaskSet.resolveTasks(taskSet);
+
+    await showTab(canvas, 'tasks');
+    await expect(canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+
+    // Nothing checked: the action is present but dead, rather than absent and then appearing.
+    const button = await canvas.findByTestId('projectsPlugin.delegateTasks', undefined, { timeout: 10_000 });
+    await expect(button).toBeDisabled();
+
+    // Checked in reverse reading order, so the assertion below distinguishes tick order from the
+    // order the rows are shown in.
+    const checkbox = async (title: string) => {
+      const row = (await canvas.findByText(title, undefined, { timeout: 10_000 })).closest(
+        '[data-testid="taskList.item"]',
+      );
+      await expect(row).toBeTruthy();
+      return within(row as HTMLElement).getByTestId('taskList.item.checkbox');
+    };
+    await userEvent.click(await checkbox(LINK_TASK_TITLE));
+    await userEvent.click(await checkbox(TASK_TITLE));
+
+    await waitFor(() => expect(button).toBeEnabled(), { timeout: 10_000 });
+    await userEvent.click(button);
+
+    // One chat holding both, in the order the list shows them — not the order they were ticked.
+    await waitFor(
+      async () => {
+        const chats = await space.db.query(Filter.type(Chat.Chat)).run();
+        const chat = chats.find((chat) => chat.tasks.length === 2);
+        if (!chat) {
+          throw new Error('Chat not found.');
+        }
+        await expect(chat.tasks.map((ref) => Task.refEntityId(ref))).toEqual([first.id, second.id]);
+      },
+      { timeout: 10_000 },
+    );
+
+    // The boxes clear with the work, so the toolbar is dead again.
+    await waitFor(() => expect(button).toBeDisabled(), { timeout: 10_000 });
+  },
+};
+
 export const TaskLink: Story = {
   ...Default,
   play: async ({ canvasElement }) => {
@@ -287,13 +406,15 @@ export const TaskLink: Story = {
     const link = await canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 });
     await userEvent.click(link);
 
-    await waitFor(
-      () => expect(canvas.getByTestId('projectsPlugin.tab.tasks')).toHaveAttribute('data-state', 'active'),
-      { timeout: 10_000 },
-    );
-    // The task is on the tab it navigated to, and the outline it came from is no longer shown.
-    await expect(canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    // The section swaps the outline for the task's form; the tab the host owns is untouched.
+    await expect(canvas.findByDisplayValue(TASK_TITLE, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
     await waitFor(() => expect(canvas.queryByText(OUTLINE_ITEM)).toBeNull(), { timeout: 10_000 });
+    await expect(canvas.getByTestId('projectsPlugin.tab.tasks')).toHaveAttribute('data-state', 'inactive');
+
+    // Back is the way out, and the outline it came from is shown again.
+    // The label plugin-tasks contributes for the outline's own back action.
+    await userEvent.click(await canvas.findByRole('button', { name: 'Back to outline' }, { timeout: 10_000 }));
+    await expect(canvas.findByText(OUTLINE_ITEM, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
   },
 };
 

@@ -33,8 +33,8 @@ export const Splitter = ({ orientation = 'horizontal', panes }: SplitterProps) =
   const api = splitter.connect(service, normalizeProps);
 
   return (
-    <div {...api.getRootProps()} className='grow min-w-0 min-h-0'>
-      <div {...api.getPanelProps({ id: 'start' })} className='flex flex-col min-w-0 min-h-0 overflow-hidden'>
+    <div {...api.getRootProps()} className='dx-grow'>
+      <div {...api.getPanelProps({ id: 'start' })} className='flex flex-col dx-grow overflow-hidden'>
         {panes[0]}
       </div>
       <div
@@ -45,7 +45,7 @@ export const Splitter = ({ orientation = 'horizontal', panes }: SplitterProps) =
             : 'shrink-0 h-1 cursor-row-resize bg-separator hover:bg-active-separator'
         }
       />
-      <div {...api.getPanelProps({ id: 'end' })} className='flex flex-col min-w-0 min-h-0 overflow-hidden'>
+      <div {...api.getPanelProps({ id: 'end' })} className='flex flex-col overflow-hidden'>
         {panes[1]}
       </div>
     </div>

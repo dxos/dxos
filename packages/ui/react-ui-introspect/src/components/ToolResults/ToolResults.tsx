@@ -43,7 +43,7 @@ export const ToolResults = composable<HTMLDivElement, ToolResultsProps>(
     const { t } = useTranslation(translationKey);
     const state: State = loading ? 'loading' : error ? 'error' : result === undefined ? 'empty' : 'result';
     return (
-      <div {...composableProps(props, { classNames: 'dx-container' })} ref={forwardedRef}>
+      <div {...composableProps(props, { classNames: 'dx-expand' })} ref={forwardedRef}>
         {state === 'loading' && <p className='p-3 text-sm text-description'>{t('calling-tool.message')}</p>}
         {state === 'error' && (
           <Banner.Root valence='error'>

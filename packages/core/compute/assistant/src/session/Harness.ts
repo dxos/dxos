@@ -23,7 +23,7 @@ import { type ContentBlock, Message } from '@dxos/types';
 
 import * as AiContext from './AiContext';
 import { type HarnessControlRpcs } from './harness-control';
-import { SessionLoader } from './SessionLoader';
+import { SessionStore } from './SessionStore';
 
 export interface Service {
   /** The conversation {@link AiContext.Binder} (Tier A). */
@@ -197,7 +197,7 @@ const makeService = ({ feed, runtime, binder, owningHost }: MakeServiceOptions):
   binder: Effect.succeed(binder),
   history: Effect.gen(function* () {
     const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
-    return yield* new SessionLoader().reifyHistory(feed, messages);
+    return yield* new SessionStore().reifyHistory(feed, messages);
   }).pipe(Effect.provide(runtime)),
   queryContext: <T extends Obj.Unknown>(filter: Filter.Filter<T>) =>
     Effect.sync(() => {
@@ -238,5 +238,9 @@ const lookupOwningHost = (
     return host.rpc as unknown as RpcClient.RpcClient<HarnessControlRpcs>;
   });
 
+// TERMINATING counts as terminal: the handle is already `#finished` and no longer accepts input.
 const isTerminalProcess = (state: Process.State): boolean =>
-  state === Process.State.SUCCEEDED || state === Process.State.FAILED || state === Process.State.TERMINATED;
+  state === Process.State.SUCCEEDED ||
+  state === Process.State.FAILED ||
+  state === Process.State.TERMINATED ||
+  state === Process.State.TERMINATING;

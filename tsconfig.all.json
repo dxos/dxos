@@ -271,9 +271,6 @@
       "path": "packages/common/invariant/tsconfig.json"
     },
     {
-      "path": "packages/common/keyboard/tsconfig.json"
-    },
-    {
       "path": "packages/core/halo/keyring/tsconfig.json"
     },
     {
@@ -553,6 +550,9 @@
       "path": "packages/plugins/plugin-pwa/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-qa/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-registry/tsconfig.json"
     },
     {
@@ -698,6 +698,9 @@
     },
     {
       "path": "packages/ui/react-primitives/react-error-boundary/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-primitives/react-focus/tsconfig.json"
     },
     {
       "path": "packages/ui/react-primitives/react-hooks/tsconfig.json"

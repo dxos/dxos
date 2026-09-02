@@ -59,7 +59,7 @@ const noopMove = () => {};
  *
  * - `useReorderList` — drag-and-drop reorder via pragmatic-dnd.
  * - `useListDisclosure` (single mode) — single-expand state machine.
- * - `useListNavigation` (list mode) — Tabster keyboard nav across items.
+ * - `useListNavigation` (list mode) — roving-tabindex keyboard nav across items.
  *
  * Owns the drag-handle / delete / expand-caret chrome plus expand state. Renders no DOM
  * itself; `OrderedListContent` is the container.
@@ -111,7 +111,7 @@ export const OrderedListRoot = <T extends ListItemRecord>({
 
 /**
  * Container for the list. Applies the navigation aspect's `containerProps` so role,
- * aria-orientation, Tabster attributes, and focus-on-entry are wired in one place.
+ * aria-orientation, focus-group attributes, and focus-on-entry are wired in one place.
  */
 export const OrderedListContent = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => {
   const { navigation } = useOrderedListContext('OrderedList.Content');

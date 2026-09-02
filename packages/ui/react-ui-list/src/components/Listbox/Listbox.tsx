@@ -31,7 +31,7 @@
 // - `Viewport` — optional `ScrollArea.Root` + `ScrollArea.Viewport`. Always scrolls when
 //    present. Forwards ScrollArea knobs (`thin`, `padding`, `centered`).
 // - `Content` — the `<ul role='listbox'>` holding the items. Applies the navigation aspect's
-//    container props (Tabster arrow nav, focus-on-entry redirect, role + aria-orientation).
+//    container props (arrow-key navigation, focus-on-entry redirect, role + aria-orientation).
 // - `Item` — `<li role='option'>` with `aria-selected` on the selected row, paired with
 //    `dx-selected` styling. See `ui-theme/src/css/components/state.md`.
 // - `ItemLabel` — text helper that truncates and takes most of the row width.
@@ -46,7 +46,6 @@
 //   - Virtualization or drag-and-drop. Reach for `@dxos/react-ui-mosaic`.
 //   - Multi-select. Future expansion — the aspect (`useListSelection`) already supports it.
 
-import { useFocusableGroup } from '@fluentui/react-tabster';
 import React, {
   type ComponentPropsWithRef,
   type FocusEvent,
@@ -59,6 +58,7 @@ import React, {
   useMemo,
 } from 'react';
 
+import { useFocusGroup } from '@dxos/react-focus';
 import { List, ListItem } from '@dxos/react-list';
 import {
   Icon,
@@ -68,6 +68,7 @@ import {
   type ThemedClassName,
   composable,
   composableProps,
+  useMergeRefs,
 } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
@@ -190,7 +191,7 @@ const Viewport = composable<HTMLDivElement, ViewportProps>((props, forwardedRef)
 Viewport.displayName = LISTBOX_VIEWPORT_NAME;
 
 //
-// Content — the listbox `<ul>` (Tabster arrow group + aria-label + role).
+// Content — the listbox `<ul>` (arrow-key group + aria-label + role).
 //
 
 type ContentProps = {
@@ -204,7 +205,7 @@ type ContentProps = {
 const Content = composable<HTMLUListElement, ContentProps>((props, forwardedRef) => {
   const { selectable, multiselectable } = useListboxContext(LISTBOX_CONTENT_NAME);
 
-  // `useListNavigation` bundles role + aria-orientation + Tabster arrow nav. In `listbox` mode
+  // `useListNavigation` bundles role + aria-orientation + arrow-key navigation. In `listbox` mode
   // it also adds the focus-on-entry redirect (to selected, then first non-disabled option);
   // `list` mode is for the non-selectable rows (arrow nav across interactive descendants only).
   // External multi-select is still a listbox per WAI-ARIA, so it keeps option navigation.
@@ -213,7 +214,7 @@ const Content = composable<HTMLUListElement, ContentProps>((props, forwardedRef)
   const { children, ...rest } = props as PropsWithChildren<ContentProps & Record<string, unknown>>;
 
   // We render via the primitive `<List>` so descendant `<ListItem>`s satisfy their Radix
-  // context-scope check. The container's role/aria/Tabster wiring comes from the navigation
+  // context-scope check. The container's role/aria/navigation wiring comes from the navigation
   // aspect rather than the primitive's `selectable` plumbing — that keeps the ARIA grammar
   // (`aria-selected`) owned by `Item` below.
   const composed = composableProps<HTMLUListElement>(rest, { classNames: styles.listboxContent() });
@@ -224,7 +225,7 @@ const Content = composable<HTMLUListElement, ContentProps>((props, forwardedRef)
       {...composed}
       {...multiselectableProps}
       {...navigation.containerProps}
-      ref={forwardedRef as unknown as ForwardedRef<HTMLOListElement>}
+      ref={useMergeRefs([forwardedRef, navigation.containerProps.ref]) as unknown as ForwardedRef<HTMLOListElement>}
     >
       {children}
     </List>
@@ -306,6 +307,17 @@ const Item = composable<HTMLLIElement, ItemProps>((props, forwardedRef) => {
     [selectable, binding, onFocus],
   );
 
+  // A row that holds its own controls (a toggle, a delete button) would otherwise take the arrow
+  // keys one focusable at a time, stepping INTO the row instead of on to the next option. The
+  // group makes the row a single stop for the container's arrow navigation; `Enter` enters its
+  // controls and `Escape` returns. Rows with no focusable children are unaffected.
+  const {
+    ref: focusGroupRef,
+    onKeyDown: onFocusGroupKeyDown,
+    onFocus: _onFocusGroupFocus,
+    ...groupProps
+  } = useFocusGroup({ tabBehavior: 'limited' });
+
   // Options aren't natively-interactive elements (unlike `<button>`), so the browser won't fire
   // Enter/Space clicks on their own — wire that up for every interactive row (selectable or not),
   // matching `<button>`'s native activation keys per WAI-ARIA APG listbox guidance. Dispatches a
@@ -314,6 +326,7 @@ const Item = composable<HTMLLIElement, ItemProps>((props, forwardedRef) => {
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLLIElement>) => {
       onKeyDown?.(event);
+      onFocusGroupKeyDown(event);
       if (
         event.defaultPrevented ||
         !interactive ||
@@ -333,14 +346,10 @@ const Item = composable<HTMLLIElement, ItemProps>((props, forwardedRef) => {
         selection.clear();
       }
     },
-    [onKeyDown, interactive, disabled, selectable, selection],
+    [onKeyDown, onFocusGroupKeyDown, interactive, disabled, selectable, selection],
   );
 
-  // A row that holds its own controls (a toggle, a delete button) would otherwise take the arrow
-  // keys one focusable at a time, stepping INTO the row instead of on to the next option. The
-  // groupper makes the row a single stop for the container's mover; `Enter` enters its controls and
-  // `Escape` returns. Rows with no focusable children are unaffected — there is nothing to enter.
-  const groupProps = useFocusableGroup({ tabBehavior: 'limited' });
+  const itemRef = useMergeRefs<HTMLLIElement>([forwardedRef, focusGroupRef]);
 
   const composed = composableProps<HTMLLIElement>(rest, {
     classNames: styles.listboxItem({
@@ -366,7 +375,7 @@ const Item = composable<HTMLLIElement, ItemProps>((props, forwardedRef) => {
         onFocus={handleFocus}
         onKeyDown={handleKeyDown}
         onMouseDown={onMouseDown}
-        ref={forwardedRef}
+        ref={itemRef}
       >
         {children}
       </ListItem>

@@ -25,12 +25,12 @@ resolve error — reload once.
 
 Mobile rendering itself now lives in `@dxos/plugin-mobile` (a renderer over deck state, owning
 none of its own); `plugin-deck` stays headless on mobile — no React root, no mobile surfaces. The
-`mobile` plugin set (`DX_PLUGIN_SET=mobile`) has **no plugin registry**: it is a fixed set — core
-(`isExtensible: false`, dropping `RegistryPlugin`) plus Assistant/Markdown/Projects/Transcription —
-so there is no Registry entry in Settings and no catalog to browse, anywhere. The full dev registry
+`mobile` plugin set (`DX_PLUGIN_SET=mobile`) is fixed — core (`externalPlugins: false`) plus
+Assistant/Markdown/Projects/Transcription. Its registry lists those and nothing else: no public
+catalog, no load-by-URL, and no Registry entry in Settings. The full dev registry
 (`plugin-defs.tsx`) used by the plain `moon run composer-app:serve` dev server is unaffected and
-still extensible; `DX_MOBILE=1` there only swaps the _layout_, not the plugin set, so a Registry
-entry is still reachable in dev — the fixed-set assertion below only holds when built/served with
+still extensible; `DX_MOBILE=1` there only swaps the _layout_, not the plugin set, so the catalog is
+still reachable in dev — the fixed-set assertion below only holds when built/served with
 `DX_PLUGIN_SET=mobile`.
 
 ## A. Fixed on the branch — verify on device
@@ -52,10 +52,9 @@ entry is still reachable in dev — the fixed-set assertion below only holds whe
 | A13 | Registry plugin list — **dev-server only, see note**                            | Cards visibly distinct from the panel background.                                                                                   |
 | A14 | Any list panel on touch                                                         | First row is not highlighted at rest (keyboard selection unaffected on desktop).                                                    |
 
-**Note (A12/A13):** the `mobile` plugin set built for device/simulator has no `RegistryPlugin` at
-all (see Setup above), so there is nothing to navigate to on device — these two rows only exercise
-the dev-server's full, extensible registry (`DX_MOBILE=1 moon run composer-app:serve`), not the
-on-device build.
+**Note (A12/A13):** the `mobile` plugin set built for device/simulator carries `RegistryPlugin` but
+lists only the four plugins it ships (see Setup above), so the catalog rows these exercise exist
+only on the dev server (`DX_MOBILE=1 moon run composer-app:serve`), not in the on-device build.
 
 ## B. Simulator-verified, needs a human/device pass
 
@@ -99,8 +98,3 @@ on-device build.
 - `plugin-deck`'s own `PLUGIN.mdl` still describes the mobile rendering that moved out to
   `plugin-mobile`; its mobile prose needs a refresh to point at the new package instead of
   re-describing behaviour deck no longer owns.
-- A `DX_PLUGIN_SET=mobile` build still emits a handful of tiny inert chunks referencing the registry
-  (e.g. `open-plugin-registry-*.js`, an "open registry" Settings operation-handler) even though
-  `RegistryPlugin` itself is not part of the set and nothing in the UI can trigger loading them —
-  confirmed via `vite build` + `vite preview` that no Registry entry or catalog is reachable. Worth
-  chasing to full parity with the `production` set, which presumably has the same characteristic.

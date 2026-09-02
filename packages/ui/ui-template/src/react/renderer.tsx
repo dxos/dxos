@@ -90,7 +90,7 @@ const AttendableContainer = ({ id, gap, children }: PropsWithChildren<{ id?: str
         column
         gap={gap}
         classNames={mx(
-          'dx-container ring-2 ring-separator rounded-sm',
+          'dx-expand overflow-hidden ring-2 ring-separator rounded-sm',
           id && attended === id && 'ring-[var(--color-focus-ring-subtle)]',
         )}
       >
@@ -112,7 +112,7 @@ const capabilityApi = (scope: Scope, ref: unknown): unknown => {
 /** Create the React renderer: one function per kind tag, resolving `schema=` against the registry. */
 export const createReactRenderer = ({
   schemas,
-}: CreateRendererOptions<Schema.Codec<any, any>>): Renderer<ReactNode> => ({
+}: CreateRendererOptions<Schema.Codec<unknown, unknown>>): Renderer<ReactNode> => ({
   container: ({ path, props, children }) => (
     <AttendableContainer
       key={path}
@@ -137,13 +137,13 @@ export const createReactRenderer = ({
     }
     if (cols || rows) {
       return (
-        <Grid key={path} cols={cols} rows={rows} gap={oneOf(GAPS, props.gap)} grow={false} classNames='dx-container'>
+        <Grid key={path} cols={cols} rows={rows} gap={oneOf(GAPS, props.gap)} grow={false} classNames='dx-expand'>
           {children}
         </Grid>
       );
     } else {
       return (
-        <Flex key={path} {...flexProps(props)} classNames='dx-container'>
+        <Flex key={path} {...flexProps(props)} classNames='dx-expand'>
           {children}
         </Flex>
       );
@@ -294,7 +294,9 @@ export const createReactRenderer = ({
     return (
       <Form.Root
         key={`${path}:${identity}`}
-        schema={schema}
+        // The registry holds heterogeneous schemas (structs and scalars) under one widened type;
+        // `Form.Root` only ever receives one resolved by `schema=`, which is always struct-shaped.
+        schema={schema as Schema.Codec<Record<string, unknown>, unknown>}
         defaultValues={values}
         onSave={(next) => handlers.save?.(next)}
         onCancel={() => handlers.cancel?.()}

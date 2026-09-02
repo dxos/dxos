@@ -148,6 +148,185 @@ describe('collectSubtree', () => {
   );
 });
 
+describe('review', () => {
+  it.effect('carries reviewers and the artifacts a task produced', () =>
+    Effect.gen(function* () {
+      // Any object can be an artifact; a second task stands in so the test registers no extra type.
+      const doc = yield* Database.add(Task.make({ title: 'The poem' }));
+      const task = yield* Database.add(
+        Task.make({
+          title: 'Write a poem',
+          status: 'review',
+          reviewers: [{ name: 'Rich' }],
+          artifacts: [Ref.make(doc)],
+        }),
+      );
+      yield* Database.flush();
+
+      // `review` is a status of its own: work is finished but not closed, because someone was named.
+      expect(task.status).toEqual('review');
+      expect(task.reviewers?.map((reviewer) => reviewer.name)).toEqual(['Rich']);
+      // The artifact is a ref, not a child: completing the task must not cascade to what it made.
+      expect(Task.refEntityId(task.artifacts?.[0])).toEqual(doc.id);
+      expect(Obj.getParent(doc)?.id).not.toEqual(task.id);
+    }).pipe(Effect.provide(testLayer())),
+  );
+});
+
+describe('completion', () => {
+  it.effect('goes to review when someone was named, and done when nobody was', () =>
+    Effect.gen(function* () {
+      const reviewed = yield* Database.add(
+        Task.make({ title: 'Reviewed', status: 'started', reviewers: [{ name: 'Rich' }] }),
+      );
+      const unreviewed = yield* Database.add(Task.make({ title: 'Unreviewed', status: 'started' }));
+      yield* Database.flush();
+
+      // Every writer asks for `done` — the agent tools, the list's checkbox — and none of them know
+      // about reviewers, so the rule is on the write itself.
+      Task.setStatus(reviewed, 'done');
+      Task.setStatus(unreviewed, 'done');
+      yield* Database.flush();
+
+      // Finished, not closed: someone was named to look at it.
+      expect(reviewed.status).toEqual('review');
+      expect(unreviewed.status).toEqual('done');
+
+      // The log records the transition that happened, not the one that was asked for.
+      expect(reviewed.history?.at(-1)?.description).toEqual('Status changed from started to review.');
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('a task in review is not closed by asking again', () =>
+    Effect.gen(function* () {
+      const task = yield* Database.add(
+        Task.make({ title: 'Reviewed', status: 'review', reviewers: [{ name: 'Rich' }] }),
+      );
+      yield* Database.flush();
+
+      // What a session does: it asks for `done`, sees the task is not done, and asks again. Exempting
+      // `review → done` let the second call close it, which is the reviewer's move, not the worker's.
+      Task.setStatus(task, 'done');
+      yield* Database.flush();
+      expect(task.status).toEqual('review');
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('approve is the one write that closes a reviewed task', () =>
+    Effect.gen(function* () {
+      const task = yield* Database.add(
+        Task.make({ title: 'Reviewed', status: 'review', reviewers: [{ name: 'Rich' }] }),
+      );
+      yield* Database.flush();
+
+      Task.approve(task);
+      yield* Database.flush();
+      expect(task.status).toEqual('done');
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('an update naming a reviewed task done still records its other fields', () =>
+    Effect.gen(function* () {
+      const task = yield* Database.add(
+        Task.make({ title: 'Reviewed', status: 'started', reviewers: [{ name: 'Rich' }] }),
+      );
+      yield* Database.flush();
+
+      Task.update(task, { status: 'done', priority: 'high' });
+      yield* Database.flush();
+      expect(task.status).toEqual('review');
+      expect(task.priority).toEqual('high');
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('records what a task produced, once per object', () =>
+    Effect.gen(function* () {
+      const task = yield* Database.add(Task.make({ title: 'Write a poem' }));
+      const doc = yield* Database.add(Task.make({ title: 'The poem' }));
+      yield* Database.flush();
+
+      Task.addArtifact(task, doc);
+      Task.addArtifact(task, doc);
+      yield* Database.flush();
+
+      // Idempotent: a session that files the same object twice must not double it.
+      expect(task.artifacts).toHaveLength(1);
+      expect(Task.refEntityId(task.artifacts?.[0])).toEqual(doc.id);
+    }).pipe(Effect.provide(testLayer())),
+  );
+});
+
+describe('mutations', () => {
+  it.effect('records one entry per edit, naming what changed', () =>
+    Effect.gen(function* () {
+      const task = yield* Database.add(Task.make({ title: 'Draft launch email', status: 'todo' }));
+      yield* Database.flush();
+
+      const entry = Task.update(
+        task,
+        { status: 'done', assignee: { name: 'Scout', role: 'assistant' } },
+        { actor: { name: 'Rich' } },
+      );
+      yield* Database.flush();
+
+      // An edit is what the person did, so both fields share one note rather than one note each.
+      expect(task.history).toHaveLength(1);
+      expect(entry?.description).toEqual('Status changed from todo to done. Assigned to Scout.');
+      expect(task.history?.[0].event).toEqual('updated');
+      expect(task.history?.[0].actor?.name).toEqual('Rich');
+      expect(task.status).toEqual('done');
+      expect(task.assignee?.name).toEqual('Scout');
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('writes nothing when an edit changes nothing', () =>
+    Effect.gen(function* () {
+      const assignee = { name: 'Scout', role: 'assistant' as const };
+      const task = yield* Database.add(Task.make({ title: 'Draft launch email', status: 'todo', assignee }));
+      yield* Database.flush();
+
+      // Same values, and an equal-but-not-identical actor: a log of "done to done" is unreadable.
+      const entry = Task.update(task, { status: 'todo', assignee: { name: 'Scout', role: 'assistant' } });
+      yield* Database.flush();
+
+      expect(entry).toBeUndefined();
+      expect(task.history).toBeUndefined();
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('clears an optional field with null and says so', () =>
+    Effect.gen(function* () {
+      const task = yield* Database.add(
+        Task.make({ title: 'Draft launch email', status: 'todo', assignee: { name: 'Scout' }, estimate: 'm' }),
+      );
+      yield* Database.flush();
+
+      Task.setAssignee(task, null);
+      Task.update(task, { estimate: null });
+      yield* Database.flush();
+
+      expect(task.assignee).toBeUndefined();
+      expect(task.estimate).toBeUndefined();
+      expect(task.history?.map((entry) => entry.description)).toEqual(['Unassigned.', 'Estimate cleared.']);
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('setStatus records the transition, and the caller may date it', () =>
+    Effect.gen(function* () {
+      const task = yield* Database.add(Task.make({ title: 'Draft launch email' }));
+      yield* Database.flush();
+
+      Task.setStatus(task, 'started', { date: '2026-08-01T10:00:00.000Z' });
+      yield* Database.flush();
+
+      // No prior status, so the note states the value rather than inventing a transition.
+      expect(task.history?.[0].event).toEqual('updated');
+      expect(task.history?.[0].description).toEqual('Status set to started.');
+      expect(task.history?.[0].date).toEqual('2026-08-01T10:00:00.000Z');
+    }).pipe(Effect.provide(testLayer())),
+  );
+});
+
 describe('history', () => {
   it.effect('records an activity log that round-trips through the database', () =>
     Effect.gen(function* () {
@@ -168,14 +347,14 @@ describe('history', () => {
           {
             date: '2026-08-02T10:30:00.000Z',
             actor: { name: 'Scout', role: 'assistant' },
-            event: 'status-changed',
+            event: 'updated',
             description: 'Status changed from todo to done.',
           },
         ];
       });
       yield* Database.flush();
 
-      expect(task.history?.map((entry) => entry.event)).toEqual(['created', 'status-changed']);
+      expect(task.history?.map((entry) => entry.event)).toEqual(['created', 'updated']);
       expect(task.history?.[1].actor?.name).toEqual('Scout');
       expect(task.history?.[1].description).toEqual('Status changed from todo to done.');
       // The actor is optional: something the system did on its own has none.

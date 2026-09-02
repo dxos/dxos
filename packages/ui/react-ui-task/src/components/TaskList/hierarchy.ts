@@ -17,54 +17,6 @@ import { Task } from '@dxos/types';
  */
 
 /** One rendered row: the task, its depth, and where it sits among its siblings. */
-export type TaskTreeRow = {
-  task: Task.Task;
-  /** 1 for a root task, incrementing per level. */
-  level: number;
-  /** Whether the task has sub-tasks — a leaf renders its ordinal where a branch renders a toggle. */
-  branch: boolean;
-  /** 1-based position among its siblings, and how many siblings there are (`aria-posinset`/`setsize`). */
-  position: number;
-  setSize: number;
-  /** Ids from the root down to (and excluding) the task, so a row knows what to collapse into. */
-  ancestors: string[];
-};
-
-/**
- * Walks the set's tree in sibling order, omitting the descendants of any collapsed task.
- * Cycle-safe: a malformed `parentTask` loop is visited once and then skipped, so a corrupt set
- * renders short rather than hanging the list.
- */
-export const walkTaskTree = (tasks: readonly Task.Task[], collapsed?: ReadonlySet<string>): TaskTreeRow[] => {
-  const rows: TaskTreeRow[] = [];
-  const seen = new Set<string>();
-
-  const visit = (siblings: Task.Task[], level: number, ancestors: string[]): void => {
-    siblings.forEach((task, index) => {
-      if (seen.has(task.id)) {
-        return;
-      }
-      seen.add(task.id);
-      const children = Task.subTasks(tasks, task);
-      rows.push({
-        task,
-        level,
-        branch: children.length > 0,
-        position: index + 1,
-        setSize: siblings.length,
-        ancestors,
-      });
-      if (children.length > 0 && !collapsed?.has(task.id)) {
-        visit(children, level + 1, [...ancestors, task.id]);
-      }
-    });
-  };
-
-  visit(Task.rootTasks(tasks), 1, []);
-  return rows;
-};
-
-/** Every task transitively under `task`, including `task` itself. Cycle-safe. */
 export const subtreeIds = (tasks: readonly Task.Task[], task: Task.Task): Set<string> => {
   const ids = new Set<string>();
   const visit = (current: Task.Task): void => {
@@ -82,6 +34,34 @@ export const subtreeIds = (tasks: readonly Task.Task[], task: Task.Task): Set<st
 
 /** The three tree-item intents, matching `@atlaskit/pragmatic-drag-and-drop-hitbox`. */
 export type TaskDropIntent = 'reorder-above' | 'reorder-below' | 'make-child';
+
+/**
+ * Places a task after `target`'s ancestor `levels` steps up — the tree hitbox's `reparent`, which
+ * is how a drop past the last child escapes the subtree it would otherwise join. `levels` of 1 is
+ * "after my parent", 2 "after my grandparent", and so on; running out of ancestors rejects rather
+ * than silently landing at the root.
+ */
+export const resolveReparent = (
+  tasks: readonly Task.Task[],
+  source: Task.Task,
+  target: Task.Task,
+  levels: number,
+): TaskPlacement | undefined => {
+  if (levels < 1) {
+    return undefined;
+  }
+  let ancestor: Task.Task | undefined = target;
+  for (let step = 0; step < levels; step++) {
+    const parentId: string | undefined = ancestor && Task.parentTaskId(ancestor);
+    ancestor = parentId === undefined ? undefined : tasks.find((task) => task.id === parentId);
+    if (!ancestor) {
+      return undefined;
+    }
+  }
+  return subtreeIds(tasks, source).has(ancestor.id)
+    ? undefined
+    : resolveTaskPlacement({ tasks, source, target: ancestor, intent: 'reorder-below' });
+};
 
 /**
  * Where a task lands, in the two terms `MoveTask` takes. `parentTask` is `null` for a root task
@@ -120,9 +100,11 @@ export const resolveTaskPlacement = ({
   }
 
   if (intent === 'make-child') {
-    // Appended as the last child (the navtree's convention): with no anchor the task goes to the
-    // end of the array, where nothing following it can be an earlier sibling.
-    return { parentTask: target, before: undefined };
+    // Inserted as the FIRST child: the pointer is on the parent's own row, and the place directly
+    // under that row is where the reader expects the task to appear. Appending it last puts it
+    // somewhere off-screen for any parent with a few children.
+    const firstChild = Task.subTasks(tasks, target).find((child) => child.id !== source.id);
+    return { parentTask: target, before: firstChild };
   }
 
   const parentId = Task.parentTaskId(target);

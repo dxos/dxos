@@ -28,15 +28,16 @@ export type ScrollAreaStyleProps = {
 
 const root: ComponentFunction<ScrollAreaStyleProps> = ({ orientation, native }, ...etc) =>
   mx(
-    // Expand
-    'dx-container',
+    // Expand. `dx-scroll-boundary` marks this as a scroll root for `withColumn.propagate()`,
+    // which exempts it from the centre track so the scrollbar stays in the gutter.
+    'dx-expand overflow-hidden dx-scroll-boundary',
 
     // Positioning context for the absolutely positioned overlay thumbs.
     !native && 'relative',
 
     orientation === 'vertical' && 'group/scroll-v flex flex-col',
     orientation === 'horizontal' && 'group/scroll-h flex',
-    // `flex flex-col` is required (as in `vertical`) so the viewport's `flex-1 min-h-0` can
+    // `flex flex-col` is required (as in `vertical`) so the viewport's `dx-grow` can
     // bound its height; without it the viewport grows to content height and only scrolls
     // horizontally (the root clips the vertical overflow instead of scrolling it).
     orientation === 'all' && 'group/scroll-all flex flex-col',
@@ -55,7 +56,7 @@ const viewport: ComponentFunction<ScrollAreaStyleProps> = (
   ...etc
 ) => {
   return mx(
-    'flex-1 min-h-0 w-full',
+    'dx-grow w-full',
 
     // Reset --dx-col so nested components don't try to grid-position themselves.
     // ScrollArea has already consumed --gutter for padding.

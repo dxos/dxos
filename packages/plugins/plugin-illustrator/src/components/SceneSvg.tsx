@@ -339,7 +339,7 @@ export const SceneSvg = ({ classNames, objects, grid }: SceneSvgProps) => {
   const gridId = `${instanceId}-grid`;
 
   return (
-    <svg viewBox={viewBox} className={mx('h-full w-full text-neutral-800 dark:text-neutral-200', classNames)}>
+    <svg viewBox={viewBox} className={mx('dx-fill text-neutral-800 dark:text-neutral-200', classNames)}>
       <defs>
         <marker
           id={markerId}

@@ -8,7 +8,9 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
+import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
+import * as Tracer from 'effect/Tracer';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
@@ -25,6 +27,7 @@ import * as Trigger from '@dxos/compute/Trigger';
 import * as TriggerEvent from '@dxos/compute/TriggerEvent';
 import { Annotation, Database, DXN, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
+import { makeRecordingTracer } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { Person, Task } from '@dxos/types';
 
@@ -93,6 +96,25 @@ const SubjectProbeOp = Operation.make({
   output: Schema.Struct({ type: Schema.String, subjectId: Schema.optional(Schema.String) }),
   services: [Database.Service],
 });
+
+/** Opens a span when invoked, so a test can see which tracer a dispatched trigger ran under. */
+const TracedOp = Operation.make({
+  meta: { key: DXN.make('com.example.operation.triggerDispatcher.traced'), name: 'Traced' },
+  input: Schema.Any,
+  output: Schema.Void,
+});
+
+const TracedHandlers = OperationHandlerSet.make(
+  TracedOp.pipe(
+    Operation.withHandler(
+      Effect.fn(function* () {
+        yield* Effect.void.pipe(Effect.withSpan('Trigger.handler'));
+      }),
+    ),
+  ),
+);
+
+const dispatcherSpans: Tracer.Span[] = [];
 
 const TestHanlers = OperationHandlerSet.make(
   SubjectProbeOp.pipe(
@@ -169,7 +191,11 @@ const TestLayer = (
       }),
     ),
     Layer.provideMerge(KeyValueStore.layerMemory),
-    Layer.provideMerge(OperationHandlerSet.provide(OperationHandlerSet.merge(ExampleHandlers, TestHanlers))),
+    Layer.provideMerge(
+      OperationHandlerSet.provide(
+        OperationHandlerSet.merge(OperationHandlerSet.merge(ExampleHandlers, TestHanlers), TracedHandlers),
+      ),
+    ),
     Layer.provideMerge(Registry.layer),
     Layer.provideMerge(Trace.layerNoop),
   );
@@ -285,6 +311,44 @@ describe('TriggerDispatcher', () => {
         });
 
         expect(result).toEqual(Exit.succeed({ tick: 0 }));
+      }, Effect.provide(TestLayer())),
+    );
+
+    it.effect(
+      'refuses to invoke a disabled trigger',
+      Effect.fnUntraced(function* ({ expect }) {
+        const functionObj = yield* registerOperation(Reply);
+        const trigger = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: false,
+          spec: Trigger.specDirect(),
+        });
+        yield* Database.add(trigger);
+        const dispatcher = yield* TriggerDispatcher;
+        const { result } = yield* dispatcher.invokeTrigger({
+          trigger,
+          event: { data: {} } satisfies TriggerEvent.DirectEvent,
+        });
+
+        expect(Exit.isFailure(result)).toBe(true);
+      }, Effect.provide(TestLayer())),
+    );
+
+    it.effect(
+      'refuses to invoke a trigger with no runnable reference',
+      Effect.fnUntraced(function* ({ expect }) {
+        const trigger = Trigger.make({
+          enabled: true,
+          spec: Trigger.specDirect(),
+        });
+        yield* Database.add(trigger);
+        const dispatcher = yield* TriggerDispatcher;
+        const { result } = yield* dispatcher.invokeTrigger({
+          trigger,
+          event: { data: {} } satisfies TriggerEvent.DirectEvent,
+        });
+
+        expect(Exit.isFailure(result)).toBe(true);
       }, Effect.provide(TestLayer())),
     );
   });
@@ -589,10 +653,22 @@ describe('TriggerDispatcher', () => {
     it.effect(
       'should start and stop dispatcher',
       Effect.fnUntraced(
-        function* () {
+        function* ({ expect }) {
           const dispatcher = yield* TriggerDispatcher;
+          const registry = yield* Registry.AtomRegistry;
+
+          expect(dispatcher.running).toBe(false);
           yield* dispatcher.start();
+          expect(dispatcher.running).toBe(true);
+          expect(registry.get(dispatcher.state)).toEqual(expect.objectContaining({ enabled: true, errors: [] }));
+
           yield* dispatcher.stop();
+          expect(dispatcher.running).toBe(false);
+          expect(registry.get(dispatcher.state).enabled).toBe(false);
+
+          // A second stop on an already-stopped dispatcher is a no-op, not a re-teardown.
+          yield* dispatcher.stop();
+          expect(dispatcher.running).toBe(false);
         },
         Effect.provide(TestLayer({ timeControl: 'natural' })),
       ),
@@ -656,6 +732,47 @@ describe('TriggerDispatcher', () => {
           }).pipe(Effect.ensuring(dispatcher.stop()));
         },
         Effect.provide(TestLayer({ timeControl: 'natural', livePollInterval: Duration.hours(1) })),
+      ),
+    );
+
+    it.live(
+      'forks the trigger refresh and reactive dispatches under the ambient tracer',
+      Effect.fnUntraced(
+        function* ({ expect }) {
+          const feed = yield* Database.add(Feed.make());
+          const functionObj = yield* registerOperation(TracedOp);
+          const trigger = Trigger.make({
+            runnable: Ref.make(functionObj),
+            enabled: true,
+            spec: Trigger.specFeed(feed),
+          });
+          yield* Database.add(trigger);
+
+          const dispatcher = yield* TriggerDispatcher;
+          const registry = yield* Registry.AtomRegistry;
+          yield* dispatcher.start();
+
+          yield* Effect.gen(function* () {
+            yield* Feed.append(feed, [Obj.make(Person.Person, { fullName: 'Jane Doe' })]);
+            yield* Database.flush();
+
+            const traced = yield* Effect.sync(
+              () =>
+                dispatcherSpans.some(({ name }) => name === 'Trigger.handler') &&
+                registry.get(dispatcher.state).invocations.some((invocation) => invocation.trigger.id === trigger.id),
+            ).pipe(
+              Effect.repeat({ until: (traced) => traced, schedule: Schedule.spaced(Duration.millis(25)) }),
+              Effect.timeoutOption(Duration.seconds(2)),
+              Effect.map(Option.getOrElse(() => false)),
+            );
+
+            expect(dispatcherSpans.map(({ name }) => name)).toContain('TriggerDispatcher.refreshTriggers');
+            expect(dispatcherSpans.map(({ name }) => name)).toContain('TriggerDispatcher.invokeTrigger');
+            expect(traced, `recorded spans: ${JSON.stringify(dispatcherSpans.map(({ name }) => name))}`).toBe(true);
+          }).pipe(Effect.ensuring(dispatcher.stop()));
+        },
+        Effect.provide(TestLayer({ timeControl: 'natural', livePollInterval: Duration.hours(1) })),
+        Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(dispatcherSpans))),
       ),
     );
   });
@@ -1325,11 +1442,27 @@ describe('TriggerDispatcher', () => {
         yield* Database.add(trigger);
         yield* dispatcher.invokeTrigger({ trigger, event: {} });
 
+        const registry = yield* Registry.AtomRegistry;
+        {
+          // A `RunAgainError` from the first invocation enqueues a pending retry, distinct from a
+          // genuine failure -- no cooldown, and the runtime status reports it as pending.
+          const status = registry.get(dispatcher.state);
+          const triggerStatus = status.triggers.find((t) => t.triggerId === trigger.id);
+          expect(triggerStatus?.retryPending).toBe(true);
+          expect(triggerStatus?.cooldownUntil).toBeUndefined();
+        }
+
         yield* dispatcher.invokeScheduledTriggers({ untilExhausted: true });
         const counter = yield* Database.query(Filter.type(RetryCounter)).first.pipe(
           Effect.flatMap((result) => Effect.fromOption(result)),
         );
         expect(counter.count).toBe(3);
+
+        // The final invocation succeeds (count reaches the cap and stops requesting retries), so
+        // the pending flag clears.
+        const status = registry.get(dispatcher.state);
+        const triggerStatus = status.triggers.find((t) => t.triggerId === trigger.id);
+        expect(triggerStatus?.retryPending).toBe(false);
       }, Effect.provide(TestLayer())),
     );
 

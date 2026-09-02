@@ -5,13 +5,16 @@
 import { describe, it } from '@effect/vitest';
 import * as Clock from 'effect/Clock';
 import * as DateTime from 'effect/DateTime';
+import * as Deferred from 'effect/Deferred';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
+import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
+import * as Tracer from 'effect/Tracer';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { expect } from 'vitest';
 
@@ -28,6 +31,7 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation, Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
+import { makeRecordingTracer } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { ContentBlock, Message, Organization } from '@dxos/types';
@@ -85,6 +89,26 @@ const Ping = Operation.make({
 /** Set by {@link Ping}'s handler so a test can assert the model actually reached the tool. */
 let pingCount = 0;
 
+/**
+ * A tool that does not unwind on interrupt. Terminating while it runs leaves the process scope
+ * pinned open, which is the mid-turn cancel that produced the wedged-chat bug: teardown blocks, and
+ * anything reading the handle's state meanwhile decides whether the next prompt reaches a process.
+ */
+const Stall = Operation.make({
+  meta: {
+    key: DXN.make('com.example.operation.stall'),
+    name: 'Stall',
+    description: 'Runs a long job and returns when it finishes. Takes no arguments.',
+  },
+  input: Schema.Void,
+  output: Schema.String,
+});
+
+/** Resolved by the test to let the stalled tool — and with it the blocked teardown — finish. */
+let stallRelease: Deferred.Deferred<void> | undefined;
+/** Fulfilled once the tool is actually running, so the test stops at the right moment. */
+let stallStarted: Deferred.Deferred<void> | undefined;
+
 const handlers = OperationHandlerSet.make(
   Ping.pipe(
     Operation.withHandler(
@@ -110,6 +134,15 @@ const handlers = OperationHandlerSet.make(
       }),
     ),
   ),
+  Stall.pipe(
+    Operation.withHandler(
+      Effect.fnUntraced(function* () {
+        yield* Deferred.succeed(stallStarted!, undefined);
+        yield* Deferred.await(stallRelease!).pipe(Effect.uninterruptible);
+        return 'finished';
+      }),
+    ),
+  ),
 );
 
 const ResearchSkill = Skill.make({
@@ -122,6 +155,12 @@ const PingSkill = Skill.make({
   key: 'org.dxos.skill.ping',
   name: 'Ping',
   tools: Skill.toolDefinitions({ operations: [Ping] }),
+});
+
+const StallSkill = Skill.make({
+  key: 'org.dxos.skill.stall',
+  name: 'Stall',
+  tools: Skill.toolDefinitions({ operations: [Stall] }),
 });
 
 const assistantTestLayerOptions = {
@@ -138,6 +177,13 @@ const TestLayer = ({ enableToolBackgrounding = false }: { enableToolBackgroundin
     ...assistantTestLayerOptions,
     agent: { enableToolBackgrounding },
   });
+
+// Separate layer so the extra registry seed lands after every other fixture test's ids: the module
+// PRNG is shared file-wide, and reseeding earlier would invalidate their recorded conversations.
+const StallTestLayer = AssistantTestLayer({
+  ...assistantTestLayerOptions,
+  skills: [...assistantTestLayerOptions.skills, StallSkill],
+});
 
 //
 // Delegation (supervisor) fixtures.
@@ -183,6 +229,8 @@ const DelegationTestLayer = AssistantTestLayer({
   ...assistantTestLayerOptions,
   agent: { delegationStrategy: StubDelegationStrategy },
 });
+
+const turnSpans: Tracer.Span[] = [];
 
 describe('Agent Service', { tags: ['model-fixture'] }, () => {
   it.effect(
@@ -562,10 +610,10 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
           Option.getOrNull(Annotation.getDictionary(handle.params.annotations, Process.HarnessHostAnnotation)),
         ).toBe(true);
 
-        // A Tier-B caller reaches the live AlarmManager over the process RPC loopback. The handler
-        // runs on the host's server fiber against the real closed-over AlarmManager; a successful
-        // void result proves the control-plane wiring end-to-end (persistence semantics are covered
-        // by the AlarmManager unit tests).
+        // A Tier-B caller reaches the live host over the process RPC loopback. The handler runs on
+        // the host's server fiber and appends an Alarm record to the feed; a successful void result
+        // proves the control-plane wiring end-to-end (persistence semantics are covered by the
+        // SessionStore tests).
         const now = yield* Clock.currentTimeMillis;
         const at = DateTime.makeUnsafe(now + Duration.toMillis(Duration.hours(1)));
         yield* handle.rpc.setAlarm({ at, message: 'finish the report' });
@@ -599,6 +647,52 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
     ),
     { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
   );
+
+  // Stopping mid-tool-call finishes the handle while its teardown is still blocked on the in-flight
+  // turn. A handle left readable as live is adopted by the next session, whose prompt is then dropped
+  // by the `#finished` guard — the conversation wedges with no error until the page reloads. Uses a
+  // tool that ignores interruption, since a tool that unwinds lets teardown complete and never
+  // produces the stranded handle. The runtime seam is covered in ProcessManager.test.ts.
+  it.effect(
+    'accepts a new prompt after being stopped mid-tool-call',
+    Effect.fnUntraced(
+      function* (_) {
+        stallStarted = yield* Deferred.make<void>();
+        stallRelease = yield* Deferred.make<void>();
+
+        const session = yield* AgentService.createSession({ skills: [StallSkill] });
+        const processManager = yield* ProcessManager.ProcessManagerService;
+        const [handle] = yield* processManager.list({ target: Obj.getURI(session.feed), key: AGENT_PROCESS_KEY });
+
+        yield* session.submitPrompt('Run the stall tool.');
+        yield* Deferred.await(stallStarted);
+
+        // The stop button returns at once; `terminate` does not, because the tool holds the scope
+        // open. Forking is what the UI effectively does — and what leaves the handle observable
+        // mid-teardown. `terminate` publishes the state before its first yield, so one turn is enough.
+        const stopping = yield* Effect.forkChild(session.terminate());
+        yield* Effect.yieldNow;
+        expect(handle.status.state).not.toBe(Process.State.RUNNING);
+
+        // Same feed: the user typing again after hitting stop. The stopped handle must not be
+        // adopted — neither from the session cache nor by the remount lookup that follows it.
+        const resumed = yield* getSession(session.feed);
+        expect(resumed).not.toBe(session);
+
+        yield* resumed.submitPrompt('What is the capital of France? Reply with just the city name.');
+        yield* resumed.waitForCompletion();
+        const messages = yield* Feed.query(resumed.feed, Filter.type(Message.Message)).run;
+        expect(messages.map(Message.extractText).join('\n').toLocaleLowerCase()).toContain('paris');
+
+        // Let the stalled tool finish so the blocked teardown can complete with the test.
+        yield* Deferred.succeed(stallRelease, undefined);
+        yield* Fiber.join(stopping);
+      },
+      Effect.provide(StallTestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : 30_000 },
+  );
 });
 
 // Control-plane coverage (no LLM turn), so it runs ungated in CI unlike the replay suite above.
@@ -629,6 +723,40 @@ describe('Agent Service (control plane)', () => {
         yield* handle.terminate();
         expect(registry.get(session.running)).toBe(false);
         expect(observed).toEqual([false]);
+      },
+      Effect.provide(TestLayer()),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'rediscovers a persisted agent whose hydration was skipped',
+    Effect.fnUntraced(
+      function* (_) {
+        const processManager = yield* ProcessManager.ProcessManagerService;
+        const feed = yield* Database.add(Feed.make());
+        yield* Database.flush();
+        const target = Obj.getURI(feed);
+
+        const spawned = yield* getSession(feed);
+        const [before] = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
+
+        // Reboot without hydrating: the record survives but no live handle does, so `list` yields
+        // a read-only dormant view. A service whose session cache does not carry over (boot-time
+        // hydration cleared it, or skipped this agent) rediscovers the process through that view
+        // and must adopt what `hydrate` returns — adopting the dormant view itself leaves every
+        // call on the session dying with "Process not hydrated".
+        yield* processManager.shutdown();
+        yield* processManager.startup();
+
+        const session = yield* getSession(feed).pipe(Effect.provide(AgentService.layer()));
+        expect(session).not.toBe(spawned);
+        const [after] = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
+        expect(String(after.pid)).toBe(String(before.pid));
+
+        // Exercises the live surface the dormant handle lacks, without needing a model turn.
+        yield* session.waitForCompletion();
+        yield* after.terminate();
       },
       Effect.provide(TestLayer()),
       TestHelpers.provideTestContext,
@@ -692,5 +820,28 @@ describe('Agent Service (control plane)', () => {
       Effect.provide(TestLayer()),
       TestHelpers.provideTestContext,
     ),
+  );
+  it.effect(
+    'traces a turn run through the agent process',
+    Effect.fnUntraced(
+      function* (_) {
+        const session = yield* AgentService.createSession();
+        yield* session.submitPrompt('What is the capital of France?');
+        yield* session.waitForCompletion();
+
+        expect(turnSpans.map(({ name }) => name)).toContain('AiSession.createRequest');
+
+        const turn = turnSpans.find((span) => span.name === 'AiSession.createRequest');
+        expect(turn?.attributes.get('dxos.ai.kind')).toEqual('turn');
+        expect(String(turn?.attributes.get('dxos.ai.input'))).toContain('capital of France');
+        expect(JSON.parse(String(turn?.attributes.get('dxos.ai.output')))).toEqual(
+          expect.arrayContaining([expect.objectContaining({ role: 'assistant' })]),
+        );
+      },
+      Effect.provide(TestLayer()),
+      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(turnSpans))),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
   );
 });

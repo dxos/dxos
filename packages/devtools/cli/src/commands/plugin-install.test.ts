@@ -56,7 +56,7 @@ describe('plugin add --dev', () => {
         expect(installed?.failure).toBeUndefined();
         expect(installed?.status).toBe('enabled');
         // A link is read in place, so nothing is copied under the CLI's own directory.
-        expect(fs.existsSync(installDir(home))).toBe(false);
+        expect(fs.existsSync(path.join(home, '.config', 'dx', 'plugins', FIXTURE_ID))).toBe(false);
 
         expect(runDx(['plugin', 'disable', FIXTURE_ID], { home }).status).toBe(0);
         const disabled = findFixture(home);
@@ -131,8 +131,12 @@ describe('plugin add <url>', () => {
       try {
         // The server is gone by this point. A snapshot that needed the network to say what it is
         // would be useless offline, and could not be rebuilt if the profile's record were lost.
-        expect(fs.existsSync(path.join(installDir(home), 'index.mjs'))).toBe(true);
-        expect(fs.existsSync(path.join(installDir(home), 'manifest.json'))).toBe(true);
+        expect(fs.existsSync(path.join(path.join(home, '.config', 'dx', 'plugins', FIXTURE_ID), 'index.mjs'))).toBe(
+          true,
+        );
+        expect(fs.existsSync(path.join(path.join(home, '.config', 'dx', 'plugins', FIXTURE_ID), 'manifest.json'))).toBe(
+          true,
+        );
 
         const row = findFixture(home);
         expect(row?.source).toBe('url');
@@ -144,7 +148,7 @@ describe('plugin add <url>', () => {
 
         expect(runDx(['plugin', 'remove', FIXTURE_ID], { home }).status).toBe(0);
         // A copy is the CLI's to delete, unlike a linked directory.
-        expect(fs.existsSync(installDir(home))).toBe(false);
+        expect(fs.existsSync(path.join(home, '.config', 'dx', 'plugins', FIXTURE_ID))).toBe(false);
       } finally {
         fs.rmSync(home, { recursive: true, force: true });
       }
@@ -160,7 +164,9 @@ describe('plugin remove', () => {
       withIsolatedHome((home) => {
         runDx(['plugin', 'add', '--dev', '--yes', FIXTURE_DIR], { home });
         expect(runDx(['plugin', 'remove', FIXTURE_ID], { home }).status).toBe(0);
-        expect(fs.readFileSync(pluginsFile(home), 'utf8')).not.toContain(FIXTURE_ID);
+        expect(fs.readFileSync(path.join(home, '.config', 'dx', 'plugins', 'default.yml'), 'utf8')).not.toContain(
+          FIXTURE_ID,
+        );
         // The user owns a linked directory; uninstalling must not delete their working copy.
         expect(fs.existsSync(path.join(FIXTURE_DIR, 'index.mjs'))).toBe(true);
 
@@ -190,8 +196,11 @@ describe('a broken install', () => {
         runDx(['plugin', 'add', '--dev', '--yes', FIXTURE_DIR], { home });
         // Point the record at a directory that no longer holds an entry module — the state a user
         // reaches by moving or deleting a linked checkout.
-        const contents = fs.readFileSync(pluginsFile(home), 'utf8');
-        fs.writeFileSync(pluginsFile(home), contents.replace(FIXTURE_DIR, path.join(home, 'gone')));
+        const contents = fs.readFileSync(path.join(home, '.config', 'dx', 'plugins', 'default.yml'), 'utf8');
+        fs.writeFileSync(
+          path.join(home, '.config', 'dx', 'plugins', 'default.yml'),
+          contents.replace(FIXTURE_DIR, path.join(home, 'gone')),
+        );
 
         // The plugin manager resolves lazy plugins inside its init chain, so an unhandled import
         // failure here would fail every command — including the ones needed to recover.
@@ -213,9 +222,6 @@ describe('a broken install', () => {
 const listPlugins = (home: string): PluginRow[] => JSON.parse(runDx(['--json', 'plugin', 'list'], { home }).stdout);
 
 const findFixture = (home: string) => listPlugins(home).find((row) => row.id === FIXTURE_ID);
-
-const pluginsFile = (home: string) => path.join(home, '.config', 'dx', 'plugins', 'default.yml');
-const installDir = (home: string) => path.join(home, '.config', 'dx', 'plugins', FIXTURE_ID);
 
 /**
  * Serves the fixture directory on a loopback port for the duration of `fn`.

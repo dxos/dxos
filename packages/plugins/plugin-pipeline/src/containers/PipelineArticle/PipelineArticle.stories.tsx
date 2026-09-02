@@ -39,7 +39,7 @@ const DefaultStory = () => {
   }
 
   return (
-    <div className='grow grid grid-cols-[1fr_350px] overflow-hidden h-full w-full'>
+    <div className='grow grid grid-cols-[1fr_350px] overflow-hidden dx-fill'>
       <PipelineArticle role='article' subject={pipeline} attendableId='test' />
       <div className='overflow-y-auto border-is border-separator'>
         <PipelineProperties subject={pipeline} />

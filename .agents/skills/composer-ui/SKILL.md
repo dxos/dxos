@@ -195,7 +195,8 @@ the layout can project onto a semantic element (`<header>`, `<ul>`) at no extra 
 - **`Column`** — the gutter grid: three tracks (leading gutter / content / trailing gutter) sized by
   `--gutter`. This is what aligns icons, controls, and scrollbars to the same vertical rules across
   every surface, so use it instead of hand-padding a content column.
-- **`Container`** — a bare `dx-container` (fill + clip) box, for when the only job is to fill and clip.
+- **`Container`** — a bare `dx-expand` box, for when the only job is to fill the parent. Add
+  `overflow-hidden` yourself if a clip is also wanted; it is no longer implied.
 
 ```tsx
 <Flex column gap='sm'>…</Flex>

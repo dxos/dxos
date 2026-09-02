@@ -125,7 +125,7 @@ const DefaultComponent = () => {
   }
 
   return (
-    <div className='grow grid grid-cols-[1fr_350px] overflow-hidden h-full w-full'>
+    <div className='grow grid grid-cols-[1fr_350px] overflow-hidden dx-fill'>
       <Surface.Surface type={AppSurface.Article} data={data} limit={1} />
       <div className='flex flex-col h-full overflow-hidden border-l border-separator'>
         <ViewEditor

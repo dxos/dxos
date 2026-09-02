@@ -45,7 +45,7 @@ export const VideoPlayer = composable<HTMLDivElement, VideoPlayerProps>(
         <iframe
           // Reload the player when the start offset changes (bare iframe has no seek API).
           key={startTime}
-          className='w-full h-full'
+          className='dx-fill'
           src={embedUrl}
           title={url}
           allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'

@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+export * from './AttentionGlyph';
 export * from './Avatars';
 export * from './Breadcrumb';
 export * from './Button';
@@ -23,6 +24,7 @@ export * from './Link';
 export * from './Main';
 export * from './MediaPlayer';
 export * from './Menu';
+export * from './MenuButton';
 export * from './Banner';
 export * from './Panel';
 export * from './Popover';

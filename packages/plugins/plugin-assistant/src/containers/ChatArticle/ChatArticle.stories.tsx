@@ -11,16 +11,20 @@ import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { type AiService } from '@dxos/ai';
 import { ScriptedLanguageModel, SERVICES_CONFIG } from '@dxos/ai/testing';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Chat } from '@dxos/assistant-toolkit';
+import { AiContext } from '@dxos/assistant';
+import { Chat, PlanningSkill } from '@dxos/assistant-toolkit';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
-import { Feed, Filter, Ref } from '@dxos/echo';
+import * as Skill from '@dxos/compute/Skill';
+import { Database, Feed, Filter, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
+import { SpacePlugin } from '@dxos/plugin-space/testing';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
@@ -108,7 +112,6 @@ const driveTurns = async (canvasElement: HTMLElement, messages: { prompt: string
 
 /** The chrome the desktop shell wraps the thread in, all of which the mobile app drops. */
 const desktopOnlyChrome = (canvasElement: HTMLElement) => ({
-  onlineSwitch: canvasElement.querySelector('input.dx-checkbox--switch'),
   outlineRail: canvasElement.querySelector('[role="navigation"]'),
   statusPill: canvasElement.querySelector('[data-testid="assistant.chat-status"]'),
 });
@@ -158,6 +161,27 @@ const meta = {
                 // story renders without waiting on a lazy resolution nothing triggers.
                 yield* Effect.promise(() => Promise.all(chat.tasks.map((task) => task.load())));
 
+                if (tasks.length > 0) {
+                  // Bind the conversation the way `CreateChat` binds a new chat's defaults, because
+                  // holding tasks is not the same as working them: the planning skill's update-tasks
+                  // tool and its end-request reminder both reach the checklist through
+                  // `Chat.getFromContext`, so without the chat in context the model gets the tool and
+                  // no list to apply it to.
+                  const registry = yield* Capability.get(Capabilities.AtomRegistry);
+                  const runtime = yield* Effect.context<Database.Service>().pipe(
+                    Effect.provide(Database.layer(space.db)),
+                  );
+                  const binder = new AiContext.Binder({ feed, runtime, registry });
+                  yield* Effect.promise(() =>
+                    binder.use((binder: AiContext.Binder) =>
+                      binder.bind({
+                        skills: [Ref.fromURI(Skill.registryURI(PlanningSkill.key))],
+                        objects: [Ref.make(chat)],
+                      }),
+                    ),
+                  );
+                }
+
                 yield* Effect.promise(() => space.db.flush({ indexes: true }));
               }),
           }),
@@ -169,6 +193,11 @@ const meta = {
               messages.length > 0 ? scriptedAiServiceMiddleware(messages.map(({ reply }) => reply)) : undefined,
           }),
           PreviewPlugin.make(),
+          // The assistant contributes the database SKILL unconditionally, but its tools resolve to
+          // operations this plugin owns. Without it the system prompt advertises `space-*` tools the
+          // toolkit cannot build, and the first turn that takes the model up on one dies with
+          // ToolNotFoundError.
+          SpacePlugin({}),
           // Contributes the task verbs the `/task:*` commands invoke.
           TasksPlugin.make(),
           StorybookPlugin.make({}),
@@ -197,7 +226,13 @@ export const Default: Story = {
   },
 };
 
-/** The article's working tasks: `Chat.TaskList` reading the chat's checklist through context. */
+/**
+ * The article's working tasks, and the disclosure that shows them.
+ *
+ * The checklist is `Chat.Prompt`'s own collapsible region rather than a sibling the article places,
+ * so the toggle in the composer's action bar is the only thing that opens and closes it — this is
+ * what asserts that wiring, since the button is not the collapsible's own trigger.
+ */
 export const Tasks: Story = {
   args: {
     tasks: [
@@ -213,6 +248,25 @@ export const Tasks: Story = {
       interval: 300,
     });
     await expect(canvasElement.textContent ?? '').toContain('Gather the requirements');
+
+    // Disclosed on mount, and the toggle reports it. Asserted on `hidden` rather than `data-state`:
+    // the machine only stamps that once it has run a transition, so a region open from the first
+    // render carries no state attribute at all.
+    const region = () => canvasElement.querySelector<HTMLElement>('[data-scope="collapsible"][data-part="content"]')!;
+    const toggle = () => canvasElement.querySelector<HTMLElement>('[data-testid="assistant.toggle-tasks"]')!;
+    await expect(region()).not.toHaveAttribute('hidden');
+    await expect(toggle()).toHaveAttribute('aria-pressed', 'true');
+
+    // Closing hides the region rather than unmounting it — the list keeps its subscriptions, so
+    // reopening shows the checklist it already had rather than refetching it.
+    await userEvent.click(toggle());
+    await waitFor(() => void expect(region()).toHaveAttribute('hidden'), { timeout: 10_000 });
+    await expect(toggle()).toHaveAttribute('aria-pressed', 'false');
+    await expect(region().textContent ?? '').toContain('Gather the requirements');
+
+    await userEvent.click(toggle());
+    await waitFor(() => void expect(region()).not.toHaveAttribute('hidden'), { timeout: 10_000 });
+    await expect(toggle()).toHaveAttribute('aria-pressed', 'true');
   },
 };
 
@@ -257,11 +311,6 @@ export const Send: Story = {
       interval: 300,
     });
 
-    // No deck plugin here, so the platform capability is absent and the prompt takes the desktop
-    // fallback — which is what keeps the online indicator. Pins the fallback against a regression
-    // that would blank the switch everywhere the deck is not loaded.
-    await expect(canvasElement.querySelector('input.dx-checkbox--switch')).not.toBeNull();
-
     await typePrompt(canvasElement, prompt);
     await waitFor(() => void expect(sendButton(canvasElement).disabled).toBe(false), {
       timeout: 5_000,
@@ -281,9 +330,40 @@ export const Send: Story = {
 };
 
 /**
- * The desktop baseline for the platform-gated chrome: after two turns the marker rail, the floating
- * status pill and the online indicator are all present. Without this, `MobilePlatform`'s absence
- * assertions would pass against a thread that never rendered them in the first place.
+ * Submitting again without waiting for the running turn: the second prompt is QUEUED on the feed and
+ * runs after the first, rather than being dropped (the composer used to ignore a submit while a turn
+ * was active) or cancelling the turn in flight (`processor.request` interrupts, `enqueue` does not).
+ *
+ * Deliberately no wait between the two submits — that is the whole case. Both replies landing is what
+ * proves the second prompt survived; the agent-level ordering and mid-turn arrival are pinned
+ * deterministically in `agent-runtime`'s `queue-scripted.test.ts`.
+ */
+export const QueueWhileProcessing: Story = {
+  args: {
+    messages: [
+      { prompt: 'First question', reply: 'The first answer.' },
+      { prompt: 'Second question', reply: 'The second answer.' },
+    ],
+  },
+  play: async ({ canvasElement, args: { messages = [] } }) => {
+    await submitPrompt(canvasElement, messages[0].prompt);
+    // No `waitFor` on the first reply: this submit is meant to land while the first turn is running.
+    await submitPrompt(canvasElement, messages[1].prompt);
+
+    for (const { prompt, reply } of messages) {
+      await waitFor(() => void expect(threadText(canvasElement)).toContain(reply), {
+        timeout: 30_000,
+        interval: 300,
+      });
+      await expect(threadText(canvasElement)).toContain(prompt);
+    }
+  },
+};
+
+/**
+ * The desktop baseline for the platform-gated chrome: after two turns the marker rail and the
+ * floating status pill are both present. Without this, `MobilePlatform`'s absence assertions would
+ * pass against a thread that never rendered them in the first place.
  */
 export const DesktopPlatform: Story = {
   args: {
@@ -294,8 +374,7 @@ export const DesktopPlatform: Story = {
     await driveTurns(canvasElement, messages);
     await waitFor(
       () => {
-        const { onlineSwitch, outlineRail, statusPill } = desktopOnlyChrome(canvasElement);
-        void expect(onlineSwitch).not.toBeNull();
+        const { outlineRail, statusPill } = desktopOnlyChrome(canvasElement);
         void expect(outlineRail).not.toBeNull();
         // Non-empty, not merely present: the wrapper renders whether or not the pill has anything
         // to report, so its text is what proves the pill itself rendered.
@@ -308,10 +387,9 @@ export const DesktopPlatform: Story = {
 
 /**
  * The mobile app's treatment of the same thread. The marker rail (a precision target pinned outside
- * the text column), the floating status pill (which would cover the reply it reports on) and the
- * read-only online indicator are all dropped; the send control stays, being the only submit
- * affordance a touch keyboard has. Keyed to the platform, not the viewport, so a narrowed desktop
- * window is unaffected.
+ * the text column) and the floating status pill (which would cover the reply it reports on) are
+ * dropped; the send control stays, being the only submit affordance a touch keyboard has. Keyed to
+ * the platform, not the viewport, so a narrowed desktop window is unaffected.
  */
 export const MobilePlatform: Story = {
   args: {
@@ -321,8 +399,7 @@ export const MobilePlatform: Story = {
   play: async ({ canvasElement, args: { messages = [] } }) => {
     await driveTurns(canvasElement, messages);
 
-    const { onlineSwitch, outlineRail, statusPill } = desktopOnlyChrome(canvasElement);
-    await expect(onlineSwitch).toBeNull();
+    const { outlineRail, statusPill } = desktopOnlyChrome(canvasElement);
     await expect(outlineRail).toBeNull();
     await expect(statusPill).toBeNull();
 

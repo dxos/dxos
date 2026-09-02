@@ -140,8 +140,8 @@ export class MetadataStore implements IMetadataStore {
         return;
       }
       // Loading file size from first 4 bytes.
-      const dataSize = fromBytesInt32(await file.read(0, 4));
-      const checksum = fromBytesInt32(await file.read(4, 4));
+      const dataSize = (await file.read(0, 4)).readInt32LE(0);
+      const checksum = (await file.read(4, 4)).readInt32LE(0);
       log('loaded', { size: dataSize, checksum, name: file.filename });
 
       if (fileLength < dataSize + 8) {
@@ -422,8 +422,6 @@ export class MetadataStore implements IMetadataStore {
     await this.flush();
   }
 }
-
-const fromBytesInt32 = (buf: Buffer) => buf.readInt32LE(0);
 
 export const hasInvitationExpired = (invitation: Invitation): boolean => {
   return Boolean(

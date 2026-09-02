@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { DialogContent, Root as DialogRoot, DialogTitle } from '@radix-ui/react-dialog';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
@@ -18,7 +19,8 @@ import React, {
 } from 'react';
 
 import { addEventListener } from '@dxos/async';
-import { useForwardedRef, useMediaQuery } from '@dxos/react-hooks';
+import { FOCUS_GROUP_ATTR, KEYBOARD_MODALITY_ATTR } from '@dxos/react-focus';
+import { useMediaQuery, useMergeRefs } from '@dxos/react-hooks';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { useThemeContext } from '../../hooks';
@@ -35,7 +37,7 @@ const NAVIGATION_SIDEBAR_NAME = 'Main.NavigationSidebar';
 const COMPLEMENTARY_SIDEBAR_NAME = 'Main.ComplementarySidebar';
 
 const handleOpenAutoFocus = (event: Event) => {
-  !document.body.hasAttribute('data-w-keyboard') && event.preventDefault();
+  !document.body.hasAttribute(KEYBOARD_MODALITY_ATTR) && event.preventDefault();
 };
 
 //
@@ -171,7 +173,11 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
     const [isLg] = useMediaQuery('lg');
     const { tx } = useThemeContext();
     const { t } = useTranslation(osTranslations);
-    const ref = useForwardedRef(forwardedRef);
+    // A ref object for `useSwipeToDismiss`, merged rather than synced: `useForwardedRef` writes the
+    // forwarded ref once in an effect, which never delivers the node when `Root` swaps between
+    // `Primitive.div` and `DialogContent` on a media-query change.
+    const ref = useRef<HTMLDivElement>(null);
+    const composedRef = useMergeRefs<HTMLDivElement>([ref, forwardedRef]);
     const noopRef = useRef(null);
 
     useSwipeToDismiss(swipeToDismiss ? ref : noopRef, {
@@ -182,7 +188,7 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
     //   intervention to `Tabs.Root` or `Tabs.Tabpenel` instances is somehow ineffectual.
     const handleKeyDown = useCallback(
       (event: KeyboardEvent<HTMLDivElement>) => {
-        const focusGroupParent = (event.target as HTMLElement).closest('[data-tabster]');
+        const focusGroupParent = (event.target as HTMLElement).closest(`[${FOCUS_GROUP_ATTR}]`);
         if (event.key === 'Escape' && focusGroupParent) {
           event.preventDefault();
           event.stopPropagation();
@@ -207,7 +213,7 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
           data-resizing={resizing ? 'true' : 'false'}
           className={tx('main.sidebar', {}, classNames)}
           onKeyDownCapture={handleKeyDown}
-          ref={ref}
+          ref={composedRef}
         >
           {children}
         </Root>
@@ -224,7 +230,7 @@ type MainNavigationSidebarProps = Omit<MainSidebarProps, 'expanded' | 'side'>;
 
 const MainNavigationSidebar = forwardRef<HTMLDivElement, MainNavigationSidebarProps>((props, forwardedRef) => {
   const { navigationSidebarState, setNavigationSidebarState, resizing } = useMainContext(NAVIGATION_SIDEBAR_NAME);
-  const mover = useLandmarkMover(props.onKeyDown, '0');
+  const { ref: moverRef, ...mover } = useLandmarkMover(props.onKeyDown, '0');
 
   return (
     <MainSidebar
@@ -234,7 +240,7 @@ const MainNavigationSidebar = forwardRef<HTMLDivElement, MainNavigationSidebarPr
       onStateChange={setNavigationSidebarState}
       resizing={resizing}
       side='w-start'
-      ref={forwardedRef}
+      ref={useComposedRefs<HTMLDivElement>(forwardedRef, moverRef)}
     />
   );
 });
@@ -250,7 +256,7 @@ type MainComplementarySidebarProps = Omit<MainSidebarProps, 'expanded' | 'side'>
 const MainComplementarySidebar = forwardRef<HTMLDivElement, MainComplementarySidebarProps>((props, forwardedRef) => {
   const { complementarySidebarState, setComplementarySidebarState, resizing } =
     useMainContext(COMPLEMENTARY_SIDEBAR_NAME);
-  const mover = useLandmarkMover(props.onKeyDown, '2');
+  const { ref: moverRef, ...mover } = useLandmarkMover(props.onKeyDown, '2');
 
   return (
     <MainSidebar
@@ -260,7 +266,7 @@ const MainComplementarySidebar = forwardRef<HTMLDivElement, MainComplementarySid
       onStateChange={setComplementarySidebarState}
       resizing={resizing}
       side='w-end'
-      ref={forwardedRef}
+      ref={useComposedRefs<HTMLDivElement>(forwardedRef, moverRef)}
     />
   );
 });
@@ -283,7 +289,7 @@ const MainContent = forwardRef<HTMLDivElement, MainContentProps>(
     const { navigationSidebarState, complementarySidebarState } = useMainContext(MAIN_NAME);
     const { tx } = useThemeContext();
     const Comp = asChild ? Slot : role ? Primitive.div : 'main';
-    const mover = useLandmarkMover(props.onKeyDown, '1');
+    const { ref: moverRef, ...mover } = useLandmarkMover(props.onKeyDown, '1');
 
     return (
       <Comp
@@ -294,7 +300,7 @@ const MainContent = forwardRef<HTMLDivElement, MainContentProps>(
         data-sidebar-right-state={complementarySidebarState}
         data-handles-focus={handlesFocus}
         className={tx('main.content', { bounce, handlesFocus }, classNames)}
-        ref={forwardedRef}
+        ref={useComposedRefs<HTMLDivElement>(forwardedRef, handlesFocus ? moverRef : null)}
       >
         {children}
       </Comp>

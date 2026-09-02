@@ -12,7 +12,7 @@
   ],
   "references": [
     {
-      "path": "../../common/util"
+      "path": "../../common/random"
     },
     {
       "path": "../../core/echo/echo"
@@ -31,6 +31,9 @@
     },
     {
       "path": "../react-ui-markdown"
+    },
+    {
+      "path": "../react-ui-menu"
     },
     {
       "path": "../ui-theme"

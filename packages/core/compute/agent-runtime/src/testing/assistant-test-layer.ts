@@ -13,7 +13,7 @@ import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { AiService, OpaqueToolkit, Provider } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
-import { Harness } from '@dxos/assistant';
+import { Alarm, Harness } from '@dxos/assistant';
 import { ServiceNotAvailableError } from '@dxos/compute';
 import {
   FeedTraceSink,
@@ -116,7 +116,7 @@ export const AssistantTestLayer = (
     options.model ??
     (options.aiServicePreset === 'ollama'
       ? DXN.make('com.openai.model.gpt-oss-20b.default')
-      : DXN.make('com.anthropic.model.claude-opus-4-8.default'));
+      : DXN.make('com.anthropic.model.claude-opus-5.default'));
 
   // The catalog's shared model ids need a provider to resolve; pair the resolved model with the
   // provider its preset registers a resolver for.
@@ -270,6 +270,7 @@ export const AssistantTestBaseLayer = ({
     Feed.Feed,
     Trigger.Trigger,
     Tag.Tag,
+    Alarm.Alarm,
   );
   types = Array.dedupeWith(types, (a, b) => Type.getTypename(a) === Type.getTypename(b));
 

@@ -79,14 +79,14 @@ export const REMOTE_VARIANTS: readonly ModelVariant[] = [
   },
   {
     name: 'claude-sonnet',
-    model: 'com.anthropic.model.claude-sonnet-4-6.default',
+    model: 'com.anthropic.model.claude-sonnet-5.default',
     provider: Provider.edge.id,
     preset: 'direct',
     strict: true,
   },
   {
     name: 'claude-opus',
-    model: 'com.anthropic.model.claude-opus-4-8.default',
+    model: 'com.anthropic.model.claude-opus-5.default',
     provider: Provider.edge.id,
     preset: 'direct',
     strict: true,
