@@ -330,6 +330,61 @@ Verified by real drags: below an expanded, non-last branch lands the task after 
 subtree; below the last root lands it at the end of the list as that root's peer — the move that was
 previously unreachable.
 
+## 10. One row, one path (target)
+
+Settled 2026-09-02 after a session in which every visual defect found by hand had the same cause:
+`TaskList` had two implementations of one row — a flat `Listbox.Item` and a tree heading — and they
+drifted. Circular status glyphs where the flat row had nine; a selected row whose icons faded; a
+description misaligned against its title; a disclosure chevron off the title's centreline; chips
+anchored left in one and right in the other; a title that went stale because only one path
+subscribed to the object. None of these were disagreements about behaviour. They were copies.
+
+### The shape
+
+**One path.** Every mode renders through `Tree`. A flat list is a tree of depth one, and grouping is
+already expressible: a node with `disposition: 'group'` renders as a section header and is spliced
+out of the collection's topology, so keyboard traversal never lands on it.
+
+**One row component**, whose anatomy is:
+
+```
+[toggle] [ main line (+ optional second line) ] [estimate] [priority] [actions]
+```
+
+The row is `grid-cols-subgrid` over the tree's own `gridTemplateColumns`, so every trailing control
+owns a **column** rather than sharing one flex cell. Sharing a cell is what made the trailing icons
+ragged: their position depended on the width of whatever tag preceded them, and anchoring the cell
+to the trailing edge only hid it for rows whose content happened to be similar.
+
+The second line is a property of the row, not of the task: the title band is pinned to one control
+height so a described row and a bare one put their titles on the same baseline, and the description
+starts in the title's own column rather than the row's.
+
+### What this costs, accepted deliberately
+
+Rows stop being `role="option"` and become `role="treeitem"`. Selection stops following focus as a
+listbox property and becomes the tree's `selectionFollowsFocus` opt-in. Anything asserting listbox
+semantics — `TaskSetArticle`'s behaviour story does — is updated as part of the change. This is a
+real break, not an implementation detail.
+
+### Ark: what we adopt and what we build on top
+
+The parts are Ark's (`Root`/`Tree`/`Branch`/`BranchControl`/`BranchContent`/`BranchTrigger`/`Item`),
+and two of their consequences are inherent rather than ours to fix:
+
+1. `Branch` is `display: contents`, so `role="treeitem"`, `aria-level` and `aria-expanded` sit on the
+   wrapper while the visible row is `BranchControl`. Selection styling therefore keys off zag's
+   `data-selected`, and any test reading a level must go through `closest('[role="treeitem"]')`.
+2. Ark's item anatomy is text plus indicator; it has no concept of trailing columns. The row grid is
+   a composition _inside_ `BranchControl`/`Item`. That is not a deviation from the structure and it
+   is not going away — a tree whose rows carry controls needs it.
+
+### Consequence for the flat machinery
+
+`walkTaskTree` and `dnd.ts` exist only to serve the flat path and go with it. `hierarchy.ts`'s
+placement algebra (`resolveTaskPlacement`, `resolveIndent`, `resolveOutdent`, `resolveNudge`) stays —
+it is the model-level meaning of a move and is shared by drag and the keyboard.
+
 ## References
 
 - [MIGRATION.md](./MIGRATION.md) — which Ark **utilities** (focus-trap, hotkeys, format, frame,
