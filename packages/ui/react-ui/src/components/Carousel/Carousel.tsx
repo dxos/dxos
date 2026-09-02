@@ -2,19 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, {
-  Children,
-  type KeyboardEvent,
-  type PropsWithChildren,
-  type ReactNode,
-  type TransitionEvent,
-  cloneElement,
-  isValidElement,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+// `Carousel` — slides shown one at a time, built on `@ark-ui/react`'s Carousel (zag state machine).
+// The machine owns the scroll-snap track and which page it is on, the wrap-around, the auto-advance
+// and its stopping the moment the reader takes over, the arrow keys, and the `region` / `slide`
+// roles. DXOS owns the geometry — a three-column grid with the viewport in the middle — the media
+// each slide renders, and the indicator strip's tab semantics.
+
+import { Carousel as CarouselPrimitive, useCarouselContext } from '@ark-ui/react/carousel';
+import React, { type PropsWithChildren, type ReactNode, useMemo } from 'react';
 
 import { useFocusGroup } from '@dxos/react-focus';
 import { mx } from '@dxos/ui-theme';
@@ -25,37 +20,6 @@ import { useTranslation } from '../../primitives';
 import { type ThemedClassName, composable, composableProps } from '../../util';
 import { IconButton } from '../Button';
 import { type MediaKind, MediaPlayer } from '../MediaPlayer';
-import { CarouselProvider, useCarousel } from './CarouselContext';
-
-// TODO(burdon): Controller.
-
-//
-// Context
-//
-
-/** Slide change behaviour: `none` hard-swaps the active slide, `slide` animates a horizontal track. */
-export type CarouselTransition = 'none' | 'slide';
-
-export type CarouselContextValue = {
-  index: number;
-  count: number;
-  transition: CarouselTransition;
-  /** When `transition === 'slide'`, wrap-around advances continue in the same direction (clone + snap). */
-  continuous: boolean;
-  /**
-   * Track position in slide units. Equals `index` except mid-wrap, when it points at a clone cell
-   * (`count` = trailing clone of the first slide, `-1` = leading clone of the last) so the track keeps
-   * moving in the travel direction. Settled back to the real index once the transition ends.
-   */
-  offset: number;
-  /** Whether the track transform should animate; disabled for the instantaneous post-wrap snap. */
-  animate: boolean;
-  /** Snap a clone cell back to its real slide once the wrap transition completes. */
-  settle: () => void;
-  setIndex: (index: number) => void;
-  next: () => void;
-  prev: () => void;
-};
 
 //
 // Root
@@ -70,12 +34,7 @@ export type CarouselRootProps = PropsWithChildren<{
    */
   autoAdvance?: number;
   defaultIndex?: number;
-  /** Slide change behaviour. Defaults to `none` (hard swap); `slide` animates a horizontal track. */
-  transition?: CarouselTransition;
-  /**
-   * Wrap-around in the same travel direction (last → first slides forward, first → last slides back).
-   * Only applies when `transition === 'slide'`; otherwise wrap is an instant index change.
-   */
+  /** Wrap-around in the same travel direction (last → first slides forward, first → last slides back). */
   continuous?: boolean;
 }>;
 
@@ -84,102 +43,35 @@ const CarouselRoot = ({
   count,
   autoAdvance = 0,
   defaultIndex = 0,
-  transition = 'none',
   continuous = false,
 }: CarouselRootProps) => {
-  const [index, setIndexState] = useState(defaultIndex);
-  const [offset, setOffset] = useState(defaultIndex);
-  const [animate, setAnimate] = useState(true);
-  const [autoEnabled, setAutoEnabled] = useState(autoAdvance > 0);
+  const { t } = useTranslation(translationKey);
 
-  // Continuous wrap is only meaningful for the animated track with more than one slide.
-  const wraps = continuous && transition === 'slide' && count > 1;
-
-  // Latest index without re-creating the advance/auto-advance callbacks on every change.
-  const indexRef = useRef(index);
-  useEffect(() => {
-    indexRef.current = index;
-  }, [index]);
-
-  // Reset to first slide if the slide count shrinks below the current index.
-  useEffect(() => {
-    if (index >= count) {
-      setIndexState(0);
-      setOffset(0);
-    }
-  }, [count, index]);
-
-  // Step one slide in `delta` direction. `stopAuto` halts auto-advance on user interaction. In wrap
-  // mode an edge step targets a clone cell (offset `count` / `-1`) so the track travels in `delta`'s
-  // direction; `settle` snaps it back to the real index after the transition.
-  const advance = useCallback(
-    (delta: 1 | -1, stopAuto: boolean) => {
-      if (stopAuto) {
-        setAutoEnabled(false);
-      }
-      const current = indexRef.current;
-      const nextIndex = (current + delta + count) % count;
-      setAnimate(true);
-      if (wraps && delta === 1 && current === count - 1) {
-        setOffset(count);
-      } else if (wraps && delta === -1 && current === 0) {
-        setOffset(-1);
-      } else {
-        setOffset(nextIndex);
-      }
-      setIndexState(nextIndex);
-    },
-    [count, wraps],
+  // The machine names its own controls in English; the app names them in the reader's language.
+  const translations = useMemo(
+    () => ({
+      prevTrigger: t('carousel-prev.label'),
+      nextTrigger: t('carousel-next.label'),
+      indicator: (index: number) => t('carousel-go-to.label', { index: index + 1 }),
+    }),
+    [t],
   );
-
-  // Auto-advance — stops permanently once the user interacts with any control.
-  useEffect(() => {
-    if (!autoEnabled || count <= 1 || autoAdvance <= 0) {
-      return;
-    }
-    const handle = setInterval(() => advance(1, false), autoAdvance);
-    return () => clearInterval(handle);
-  }, [autoEnabled, count, autoAdvance, advance]);
-
-  const setIndex = useCallback((next: number) => {
-    setAutoEnabled(false);
-    setAnimate(true);
-    setOffset(next);
-    setIndexState(next);
-  }, []);
-  const next = useCallback(() => advance(1, true), [advance]);
-  const prev = useCallback(() => advance(-1, true), [advance]);
-
-  // Once the wrap transition lands on a clone, jump (without animating) to the matching real slide.
-  const settle = useCallback(() => {
-    if (offset === count) {
-      setAnimate(false);
-      setOffset(0);
-    } else if (offset === -1) {
-      setAnimate(false);
-      setOffset(count - 1);
-    }
-  }, [offset, count]);
 
   if (count === 0) {
     return null;
   }
 
   return (
-    <CarouselProvider
-      index={index}
-      count={count}
-      transition={transition}
-      continuous={wraps}
-      offset={offset}
-      animate={animate}
-      settle={settle}
-      setIndex={setIndex}
-      next={next}
-      prev={prev}
+    <CarouselPrimitive.Root
+      slideCount={count}
+      defaultPage={defaultIndex}
+      loop={continuous}
+      autoplay={autoAdvance > 0 ? { delay: autoAdvance } : false}
+      translations={translations}
+      className='contents'
     >
       {children}
-    </CarouselProvider>
+    </CarouselPrimitive.Root>
   );
 };
 
@@ -216,84 +108,22 @@ CarouselContent.displayName = 'Carousel.Content';
 
 export type CarouselViewportProps = ThemedClassName<PropsWithChildren<{}>>;
 
+/** The scroll-snap track. The machine parks the tab stop here and answers the arrow keys on it. */
 const CarouselViewport = ({ children, classNames }: CarouselViewportProps) => {
   const { t } = useTranslation(translationKey);
-  const { count, transition, continuous, offset, animate, settle, next, prev } = useCarousel();
-
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLDivElement>) => {
-      if (count <= 1) {
-        return;
-      }
-      if (event.key === 'ArrowLeft') {
-        event.preventDefault();
-        prev();
-      } else if (event.key === 'ArrowRight') {
-        event.preventDefault();
-        next();
-      }
-    },
-    [count, next, prev],
-  );
-
-  // In continuous mode bracket the track with clones — last before first, first after last — so a wrap
-  // step has a real cell to slide into before `settle` snaps back to the matching slide.
-  const slides = Children.toArray(children);
-  const first = slides[0];
-  const last = slides[slides.length - 1];
-  const trackChildren =
-    continuous && slides.length > 1
-      ? [
-          isValidElement(last) ? cloneElement(last, { key: 'clone-last' }) : last,
-          ...slides,
-          isValidElement(first) ? cloneElement(first, { key: 'clone-first' }) : first,
-        ]
-      : slides;
-  // Leading clone occupies the first cell in continuous mode, so shift the translate by one.
-  const translate = continuous ? -(offset + 1) * 100 : -offset * 100;
-
-  const handleTransitionEnd = useCallback(
-    (event: TransitionEvent<HTMLDivElement>) => {
-      if (event.target === event.currentTarget && event.propertyName === 'transform') {
-        settle();
-      }
-    },
-    [settle],
-  );
 
   return (
-    <div
+    <CarouselPrimitive.ItemGroup
       // TODO(burdon): Move to ui-theme.
       className={mx(
         'relative w-full aspect-video overflow-hidden',
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500',
         classNames,
       )}
-      tabIndex={0}
-      role='region'
-      aria-roledescription='carousel'
       aria-label={t('carousel-viewport.label')}
-      onKeyDown={handleKeyDown}
     >
-      {transition === 'slide' ? (
-        // Lay slides side-by-side in a flex track and translate by the active index. Each slide
-        // sizes itself to the viewport via `shrink-0 basis-full` (see `Carousel.Slide`).
-        // `motion-reduce` respects the user's reduced-motion preference; the snap after a wrap also
-        // disables the transition (`animate === false`).
-        <div
-          className={mx(
-            'flex h-full motion-reduce:transition-none',
-            animate ? 'transition-transform duration-300 ease-out' : 'transition-none',
-          )}
-          style={{ transform: `translateX(${translate}%)` }}
-          onTransitionEnd={handleTransitionEnd}
-        >
-          {trackChildren}
-        </div>
-      ) : (
-        children
-      )}
-    </div>
+      {children}
+    </CarouselPrimitive.ItemGroup>
   );
 };
 
@@ -330,35 +160,24 @@ const CarouselSlide = ({
   muted,
   crossOrigin,
 }: CarouselSlideProps) => {
-  const { index: active, transition } = useCarousel();
-  // In `slide` mode every slide stays mounted as a fixed-width track cell so the track can animate;
-  // in `none` mode only the active slide mounts, overlaid via absolute positioning.
-  if (transition !== 'slide' && active !== index) {
-    return null;
-  }
+  const { page } = useCarouselContext();
 
   return (
-    <div
-      className={mx(
-        transition === 'slide'
-          ? 'relative shrink-0 basis-full h-full dx-base-surface'
-          : 'dx-fullscreen dx-fill dx-base-surface',
-        classNames,
-      )}
-    >
+    <CarouselPrimitive.Item index={index} className={mx('relative h-full dx-base-surface', classNames)}>
       <MediaPlayer
         src={src}
         kind={kind}
         alt={alt}
         classNames='dx-fill'
-        controls={controls}
-        // In `slide` mode every slide is mounted; only auto-play the active one to avoid off-screen playback.
-        autoPlay={autoPlay && active === index}
+        // Every slide stays in the track, so only the one on screen may play — the others would be
+        // heard rather than seen.
+        autoPlay={autoPlay && page === index}
         loop={loop}
         muted={muted}
+        controls={controls}
         crossOrigin={crossOrigin}
       />
-    </div>
+    </CarouselPrimitive.Item>
   );
 };
 
@@ -372,21 +191,22 @@ export type CarouselButtonProps = ThemedClassName<{}>;
 
 const CarouselPrevious = ({ classNames }: CarouselButtonProps) => {
   const { t } = useTranslation(translationKey);
-  const { count, prev } = useCarousel();
-  if (count <= 1) {
+  const { pageSnapPoints } = useCarouselContext();
+  if (pageSnapPoints.length <= 1) {
     return <div />;
   }
 
   return (
-    <IconButton
-      classNames={mx('self-center', classNames)}
-      square
-      variant='ghost'
-      icon='ph--caret-left--regular'
-      iconOnly
-      label={t('carousel-prev.label')}
-      onClick={prev}
-    />
+    <CarouselPrimitive.PrevTrigger asChild>
+      <IconButton
+        classNames={mx('self-center', classNames)}
+        square
+        variant='ghost'
+        icon='ph--caret-left--regular'
+        iconOnly
+        label={t('carousel-prev.label')}
+      />
+    </CarouselPrimitive.PrevTrigger>
   );
 };
 
@@ -394,21 +214,22 @@ CarouselPrevious.displayName = 'Carousel.Previous';
 
 const CarouselNext = ({ classNames }: CarouselButtonProps) => {
   const { t } = useTranslation(translationKey);
-  const { count, next } = useCarousel();
-  if (count <= 1) {
+  const { pageSnapPoints } = useCarouselContext();
+  if (pageSnapPoints.length <= 1) {
     return <div />;
   }
 
   return (
-    <IconButton
-      classNames={mx('self-center', classNames)}
-      square
-      variant='ghost'
-      icon='ph--caret-right--regular'
-      iconOnly
-      label={t('carousel-next.label')}
-      onClick={next}
-    />
+    <CarouselPrimitive.NextTrigger asChild>
+      <IconButton
+        classNames={mx('self-center', classNames)}
+        square
+        variant='ghost'
+        icon='ph--caret-right--regular'
+        iconOnly
+        label={t('carousel-next.label')}
+      />
+    </CarouselPrimitive.NextTrigger>
   );
 };
 
@@ -420,12 +241,18 @@ CarouselNext.displayName = 'Carousel.Next';
 
 export type CarouselIndicatorsProps = ThemedClassName<{}>;
 
-/** Tab-strip of slide indicators. Sits in the centre column so it matches the viewport's width. */
+/**
+ * Tab-strip of slide indicators. Sits in the centre column so it matches the viewport's width.
+ *
+ * Not the machine's own indicator group: that leaves every dot a tab stop and moves the page with
+ * the arrows without moving focus. A strip of dots is one control, so it keeps a roving tabstop and
+ * the slide follows whichever dot holds focus.
+ */
 const CarouselIndicators = ({ classNames }: CarouselIndicatorsProps) => {
   const { t } = useTranslation(translationKey);
-  const { count, index, setIndex } = useCarousel();
+  const { page, pageSnapPoints, scrollTo } = useCarouselContext();
   const { ref: focusGroupRef, ...focusGroupProps } = useFocusGroup({ axis: 'horizontal', memorizeCurrent: true });
-  if (count <= 1) {
+  if (pageSnapPoints.length <= 1) {
     return null;
   }
 
@@ -438,24 +265,24 @@ const CarouselIndicators = ({ classNames }: CarouselIndicatorsProps) => {
         aria-label={t('carousel-indicators.label')}
         ref={focusGroupRef}
       >
-        {Array.from({ length: count }).map((_, i) => (
-          <IconButton
-            key={i}
-            role='tab'
-            aria-selected={i === index}
-            // `dx-focus-ring-none`: focusing a dot selects its slide (`onFocus` below), so the fill
-            // already tracks focus — the ring on top of it is noise rather than the only indicator.
-            classNames={mx('dx-focus-ring-none', i === index ? 'text-primary-500' : 'text-description')}
-            variant='ghost'
-            density='sm'
-            size={3}
-            square
-            icon={i === index ? 'ph--circle--fill' : 'ph--circle--regular'}
-            iconOnly
-            label={t('carousel-go-to.label', { index: i + 1 })}
-            onClick={() => setIndex(i)}
-            onFocus={() => setIndex(i)}
-          />
+        {pageSnapPoints.map((_, index) => (
+          <CarouselPrimitive.Indicator key={index} index={index} asChild>
+            <IconButton
+              role='tab'
+              aria-selected={index === page}
+              // `dx-focus-ring-none`: focusing a dot selects its slide (`onFocus` below), so the fill
+              // already tracks focus — the ring on top of it is noise rather than the only indicator.
+              classNames={mx('dx-focus-ring-none', index === page ? 'text-primary-500' : 'text-description')}
+              variant='ghost'
+              density='sm'
+              size={3}
+              square
+              icon={index === page ? 'ph--circle--fill' : 'ph--circle--regular'}
+              iconOnly
+              label={t('carousel-go-to.label', { index: index + 1 })}
+              onFocus={() => scrollTo(index)}
+            />
+          </CarouselPrimitive.Indicator>
         ))}
       </div>
     </div>
@@ -475,8 +302,8 @@ export type CarouselCaptionProps = ThemedClassName<{
 
 /** Caption sized to the viewport's column. */
 const CarouselCaption = ({ children, classNames }: CarouselCaptionProps) => {
-  const { index } = useCarousel();
-  const content = children(index);
+  const { page } = useCarouselContext();
+  const content = children(page);
   if (content == null || content === false || content === '') {
     return null;
   }
