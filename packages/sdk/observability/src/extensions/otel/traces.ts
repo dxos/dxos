@@ -2,7 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ROOT_CONTEXT, SpanStatusCode, type Tracer, context as otelContext, trace } from '@opentelemetry/api';
+import {
+  ROOT_CONTEXT,
+  SpanStatusCode,
+  type Tracer,
+  context as otelContext,
+  propagation,
+  trace,
+} from '@opentelemetry/api';
 import { W3CTraceContextPropagator } from '@opentelemetry/core';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
