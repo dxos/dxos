@@ -170,7 +170,7 @@ const resolvePath = Effect.fnUntraced(function* (chat: Chat.Chat) {
 const OPENING_PROMPT = concat`
   You have been assigned tasks to work on in this session.
   Read all tasks, then work on them sequentially.
-  This may require you to read, update, or create artifacts asssociated with the project.
+  This may require you to read, update, or create artifacts associated with the project.
   Update the tasklist as you work on each task, and mark tasks ready for review as you complete them.
 `;
 

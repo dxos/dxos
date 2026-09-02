@@ -72,9 +72,9 @@ export const Synthetic: Story = {
       <synthetic>
       Completed the checklist:
       <checklist>
-      1. [ ] Review new messages.
-      2. [ ] Respond to new messages.
-      3. [ ] Archive old messages.
+      1. [x] Review new messages.
+      2. [x] Respond to new messages.
+      3. [x] Archive old messages.
       </checklist>
       </synthetic>`,
   },

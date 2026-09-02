@@ -68,22 +68,25 @@ const seedFlat = (): Task.Task[] => [
  * ordinals into double digits, and put more than one task under each group heading, which a
  * seven-task list does not.
  */
-/**
- * A value on roughly half the rows, `undefined` on the rest.
- *
- * Every optional field goes through this: each one renders a control whether or not it is set, so a
- * seed that fills them all leaves the unset half of the list — the dot, the blank description —
- * with no story behind it.
- */
-const sometimes = <T,>(value: () => T): T | undefined => (random.number.int({ min: 0, max: 1 }) ? value() : undefined);
+/** A value when `set`, `undefined` otherwise. */
+const when = <T,>(set: boolean, value: () => T): T | undefined => (set ? value() : undefined);
 
+/**
+ * Every optional field is left unset on some rows: each renders a control whether or not it holds a
+ * value, so a seed that fills them all leaves the unset half of the list — the dot, the blank
+ * description — with no story behind it.
+ *
+ * Which rows is a rule on the index rather than a coin flip: a flip can land the same way forty
+ * times, and a story that only sometimes covers the state it exists for is not coverage. The moduli
+ * differ per field so a row is rarely all-set or all-empty.
+ */
 const seedMany = (n = 40): Task.Task[] =>
-  Array.from({ length: n }, () =>
+  Array.from({ length: n }, (_, index) =>
     Task.make({
       title: random.lorem.sentence(random.number.int({ min: 5, max: 10 })),
-      description: sometimes(() => random.lorem.paragraphs(1)),
-      priority: sometimes(() => random.helpers.arrayElement([...Task.Priority.literals])),
-      estimate: sometimes(() => random.helpers.arrayElement([...Task.Estimate.literals])),
+      description: when(index % 2 === 0, () => random.lorem.paragraphs(1)),
+      priority: when(index % 3 !== 0, () => random.helpers.arrayElement([...Task.Priority.literals])),
+      estimate: when(index % 2 === 1, () => random.helpers.arrayElement([...Task.Estimate.literals])),
     }),
   );
 

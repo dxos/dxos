@@ -16,7 +16,7 @@ import { meta } from '#meta';
 import { SYNC_TARGETS_DIALOG } from '../constants';
 
 export type UseSyncTargetsResult = {
-  /** True when the connection's connector exposes `getSyncTargets`. Drives "edit" button visibility. */
+  /** True when the connection's connector exposes `sync.getTargets`. Drives "edit" button visibility. */
   readonly available: boolean;
   /** True while `openTargets` is awaiting the operation result. */
   readonly loading: boolean;
