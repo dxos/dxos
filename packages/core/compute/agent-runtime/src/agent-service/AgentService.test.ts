@@ -694,6 +694,32 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
 // Control-plane coverage (no LLM turn), so it runs ungated in CI unlike the replay suite above.
 describe('Agent Service (control plane)', () => {
   it.effect(
+    'concurrent cold-cache resolution spawns a single process',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const processManager = yield* ProcessManager.ProcessManagerService;
+        const feed = yield* Database.add(Feed.make());
+        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+        yield* Database.flush();
+
+        // Both callers start before either writes the session cache, which is what serializing the
+        // cache-miss path exists for: unserialized, each would spawn its own process for the chat.
+        const [first, second] = yield* Effect.all([getSession(chat), getSession(chat)], {
+          concurrency: 'unbounded',
+        });
+        expect(second).toBe(first);
+
+        const processes = yield* processManager.list({ target: Obj.getURI(chat), key: AGENT_PROCESS_KEY });
+        expect(processes).toHaveLength(1);
+
+        yield* first.terminate();
+      },
+      Effect.provide(TestLayer()),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
     'reports whether the session is working on a turn',
     Effect.fnUntraced(
       function* (_) {
