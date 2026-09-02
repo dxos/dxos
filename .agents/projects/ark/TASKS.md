@@ -505,3 +505,22 @@ Tracked 2026-09-01, from the `TaskSetArticle` drag work.
 - [ ] The `Effect.runSync` path is only sound while every ref is loaded. Decide what should happen
       when one is not: today the effect would suspend and `runSync` throws, which is a crash rather
       than a slow drop.
+
+## Phase 15: Selected-task action from the ProjectArticle toolbar
+
+Tracked 2026-09-01. Verbatim: "ProjectArticle should configure the TaskSetArticle to use checkboxes
+and show a button in the toobar to delete all selected tasks to a new chat session".
+
+- [ ] **Configure the embedded `TaskSetArticle` for checkboxes.** Depends on Phase 13, which puts a
+      checkbox in the gutter cell; this is the first caller that needs it, so settle Phase 13's
+      "decide what it writes" against this use rather than in the abstract.
+- [ ] **Multi-select is not there yet.** `TaskList` tracks a single `selected` id and `Tree` runs in
+      `selectionMode='single'`; checkboxes imply a set. Decide whether the checkbox set is selection
+      or a second, independent set — a row can be current *and* ticked, and conflating them makes
+      "the selected tasks" ambiguous.
+- [ ] **Toolbar action over the checked set**, alongside `create-chat`/`add-artifact` in
+      `useToolbarActions`, enabled only when the set is non-empty.
+- [ ] **Resolve the verb: "delete … to a new chat session" reads as a typo.** Delegating the checked
+      tasks to a new chat (`AssistantOperation.CreateChat` + `Chat.linkCompanion`, the path
+      `create-chat` already uses) is the reading that makes sense of "to a new chat session";
+      deleting them would have no destination. Confirm before building either.
