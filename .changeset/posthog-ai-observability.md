@@ -5,6 +5,9 @@
 '@dxos/observability': minor
 '@dxos/plugin-observability': minor
 '@dxos/assistant': patch
+'@dxos/compute': minor
+'@dxos/compute-runtime': minor
+'@dxos/agent-runtime': patch
 ---
 
 Model calls are now reported to PostHog as `$ai_generation` events, so LLM analytics shows traces, token counts, cost, and latency. Capture rides the existing observability opt-in: a user who has telemetry off sends nothing. Prompt and response content is reported for spaces EDGE replicates in plaintext, which is every space today, and a space whose plaintext never reaches infrastructure reports metadata only. `contentCaptureAllowed()` in `@dxos/observability` is the single decision point, and it is evaluated in the sink so it applies to every event on the way out.
@@ -22,3 +25,5 @@ The PostHog extension maps that record onto `$ai_generation` and PostHog's `$ai_
 `Events.captureEvent` accepts structured attribute values (arrays and nested objects), widening the previous scalar-only type; extensions implementing the events API must accept them.
 
 `@dxos/effect` adds `makeTracer`, which builds an Effect tracer over an explicit OpenTelemetry provider rather than the global one.
+
+`ProcessContext.setAlarm` now returns an Effect. A process handle used to start its alarm timer and child-event dispatch on Effect's default runtime, copying the clock and tracer across by hand, so a dispatched handler ran with whatever references someone had remembered to copy. `rearmAlarm`, `requestAlarm`, and `requestChildEvent` now fork into the process scope from the calling fiber, and the handler inherits that fiber's context. This is what made a conversation's model calls invisible: the assistant runs each turn from an alarm, so every generation traced to a default that exports nothing while the naming call, invoked directly, traced end to end. `TriggerDispatcher` forks its refresh and reactive dispatches over the context it captured at build for the same reason.

@@ -5,7 +5,6 @@
 // @import-as-namespace
 
 import * as Cause from 'effect/Cause';
-import * as Clock from 'effect/Clock';
 import type * as Context from 'effect/Context';
 import * as Deferred from 'effect/Deferred';
 import * as Duration from 'effect/Duration';
@@ -19,7 +18,6 @@ import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import * as Semaphore from 'effect/Semaphore';
 import * as Stream from 'effect/Stream';
-import * as Tracer from 'effect/Tracer';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import * as RpcClient from 'effect/unstable/rpc/RpcClient';
@@ -160,8 +158,6 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
   readonly #outputQueue: Queue.Queue<OutputItem<O>>;
   readonly #storage: StorageService.Service;
   readonly #traceSink: Trace.Sink;
-  readonly #clock: Clock.Clock;
-  readonly #tracer: Tracer.Tracer;
   readonly #ephemeralBuffer = new EphemeralTraceBuffer();
   readonly #ephemeralSubscribers: Queue.Queue<Option.Option<Trace.Message>>[] = [];
   readonly #onFinished: ((state: Process.State, cause?: Cause.Cause<never>) => Effect.Effect<void>) | undefined;
@@ -182,8 +178,6 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
     params: Process.Params,
     environment: Process.Environment,
     traceSink: Trace.Sink,
-    clock: Clock.Clock,
-    tracer: Tracer.Tracer,
     rpc: RpcClient.RpcClient<any>,
     onFinished?: (state: Process.State, cause?: Cause.Cause<never>) => Effect.Effect<void>,
     onStatusChanged?: () => void,
@@ -206,8 +200,6 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
     this.#outputQueue = outputQueue;
     this.#traceSink = traceSink;
     this.#storage = storage;
-    this.#clock = clock;
-    this.#tracer = tracer;
     this.rpc = rpc;
     this.#onFinished = onFinished;
     this.#onStatusChanged = onStatusChanged;
@@ -353,7 +345,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
       yield* this.#persistence.setState(state);
       this.#setStatus(state);
       // Clears in-memory timer only; does NOT touch persisted alarmDueAt.
-      this.#clearAlarm();
+      yield* this.#clearAlarm();
       Queue.offerUnsafe(this.#outputQueue, Option.none());
       for (const queue of this.#ephemeralSubscribers) {
         Queue.offerUnsafe(queue, Option.none());
@@ -371,19 +363,17 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
    * Re-arm the in-memory alarm timer for a persisted due-time (used by hydrate).
    * Does NOT persist the alarm — it is already in the persisted record.
    */
-  rearmAlarm(dueAt: number): void {
-    if (this.#finished) {
-      return;
-    }
-    this.#clearAlarm();
-    const delay = Math.max(0, dueAt - Date.now());
-    this.#alarmDueAt = dueAt;
-    log('lifecycle: alarm rearmed', { dueAt, delayMs: delay });
-    this.#alarmFiber = Effect.runFork(
-      Effect.provideService(this.#makeAlarmSleepEffect(delay), Clock.Clock, this.#clock).pipe(
-        Effect.provideService(Tracer.Tracer, this.#tracer),
-      ),
-    );
+  rearmAlarm(dueAt: number): Effect.Effect<void> {
+    return Effect.gen({ self: this }, function* () {
+      if (this.#finished) {
+        return;
+      }
+      yield* this.#clearAlarm();
+      const delay = Math.max(0, dueAt - Date.now());
+      this.#alarmDueAt = dueAt;
+      log('lifecycle: alarm rearmed', { dueAt, delayMs: delay });
+      this.#alarmFiber = yield* this.#forkAlarm(delay);
+    });
   }
   /**
    * Re-deliver a persisted event that never settled before shutdown.
@@ -563,23 +553,27 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
   readonly #restoring: boolean;
   readonly #encodeInput: (input: I) => Effect.Effect<unknown>;
 
-  requestAlarm(timeout?: number): void {
-    if (this.#finished) {
-      return;
-    }
-    this.#clearAlarm();
-    const delay = timeout ?? 0;
-    const dueAt = Date.now() + delay;
-    this.#alarmDueAt = dueAt;
-    log('lifecycle: alarm scheduled', { delayMs: delay, dueAt });
-    // Forked off the default runtime, so the captured ambient clock and tracer are provided to the
-    // whole effect (handler included) — otherwise the clock reverts to the live one, no `TestClock`
-    // reaches it, and the handler's spans go to Effect's default tracer, which exports nothing.
-    this.#alarmFiber = Effect.runFork(
-      Effect.provideService(this.#makeAlarmSleepEffect(delay), Clock.Clock, this.#clock).pipe(
-        Effect.provideService(Tracer.Tracer, this.#tracer),
-      ),
-    );
+  requestAlarm(timeout?: number): Effect.Effect<void> {
+    return Effect.gen({ self: this }, function* () {
+      if (this.#finished) {
+        return;
+      }
+      yield* this.#clearAlarm();
+      const delay = timeout ?? 0;
+      const dueAt = Date.now() + delay;
+      this.#alarmDueAt = dueAt;
+      log('lifecycle: alarm scheduled', { delayMs: delay, dueAt });
+      this.#alarmFiber = yield* this.#forkAlarm(delay);
+    });
+  }
+
+  /**
+   * Forked into the process scope from the caller's fiber, so the timer and the handler it
+   * dispatches inherit the caller's context (clock, tracer, and whatever else the runtime
+   * installs) rather than the defaults a detached fork would start from.
+   */
+  #forkAlarm(delay: number): Effect.Effect<Fiber.Fiber<void>> {
+    return Effect.forkIn(this.#makeAlarmSleepEffect(delay), this.#scope);
   }
 
   #makeAlarmSleepEffect(delay: number): Effect.Effect<void> {
@@ -627,29 +621,28 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
     Queue.offerUnsafe(this.#outputQueue, Option.some(output));
   }
 
-  requestChildEvent(event: Process.ChildEvent<unknown>): void {
-    log('lifecycle: child event', { tag: event._tag, childPid: event.pid });
-    // Guard against late child-exit notifications that arrive after the parent has already
-    // reached a terminal state. Without this, onFinished fires after the parent succeeds
-    // (the child's async cleanup outlasts the parent's handler), requestChildEvent clobbers
-    // the parent status to RUNNING via #runHandler, and #handlerCompleted exits early
-    // (finished=true) without resetting it — leaving the process permanently RUNNING.
-    if (this.#finished) {
-      log('lifecycle: child event ignored (already finished)', { tag: event._tag, childPid: event.pid });
-      return;
-    }
-    // Carries the captured clock and tracer for the same reason as the alarm fork above.
-    Effect.runFork(
-      Effect.provideService(
+  requestChildEvent(event: Process.ChildEvent<unknown>): Effect.Effect<void> {
+    return Effect.gen({ self: this }, function* () {
+      log('lifecycle: child event', { tag: event._tag, childPid: event.pid });
+      // Guard against late child-exit notifications that arrive after the parent has already
+      // reached a terminal state. Without this, onFinished fires after the parent succeeds
+      // (the child's async cleanup outlasts the parent's handler), requestChildEvent clobbers
+      // the parent status to RUNNING via #runHandler, and #handlerCompleted exits early
+      // (finished=true) without resetting it — leaving the process permanently RUNNING.
+      if (this.#finished) {
+        log('lifecycle: child event ignored (already finished)', { tag: event._tag, childPid: event.pid });
+        return;
+      }
+      // Into the process scope for the same reason as the alarm fork.
+      yield* Effect.forkIn(
         this.#persistence
           .appendEvent({ _tag: 'childEvent', event: toPersistedChildEvent(event) })
           .pipe(
             Effect.flatMap((seq) => this.#runHandler('childEvent', () => this.#callbacks.onChildEvent(event), seq)),
           ),
-        Clock.Clock,
-        this.#clock,
-      ).pipe(Effect.provideService(Tracer.Tracer, this.#tracer)),
-    );
+        this.#scope,
+      );
+    });
   }
 
   #runHandler(
@@ -772,7 +765,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
   #cleanup(): Effect.Effect<void> {
     return Effect.gen({ self: this }, function* () {
       log('lifecycle: cleanup');
-      this.#clearAlarm();
+      yield* this.#clearAlarm();
       Queue.offerUnsafe(this.#outputQueue, Option.none());
       for (const queue of this.#ephemeralSubscribers) {
         Queue.offerUnsafe(queue, Option.none());
@@ -784,14 +777,16 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
     });
   }
 
-  #clearAlarm(): void {
-    if (this.#alarmFiber !== null) {
-      const fiber = this.#alarmFiber;
-      this.#alarmFiber = null;
-      // Only interrupts while the alarm is still sleeping; once the sleep elapses `#alarmFiber` is
-      // cleared, so a running `onAlarm` handler is never interrupted here.
-      Effect.runFork(Fiber.interrupt(fiber));
-    }
+  #clearAlarm(): Effect.Effect<void> {
+    return Effect.gen({ self: this }, function* () {
+      if (this.#alarmFiber !== null) {
+        const fiber = this.#alarmFiber;
+        this.#alarmFiber = null;
+        // Only interrupts while the alarm is still sleeping; once the sleep elapses `#alarmFiber` is
+        // cleared, so a running `onAlarm` handler is never interrupted here.
+        yield* Fiber.interrupt(fiber);
+      }
+    });
   }
 
   #setStatus(state: Process.State, exit?: Exit.Exit<void>) {
