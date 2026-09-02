@@ -494,7 +494,7 @@ one set and neither owns it.
 - [ ] **Move `TaskList` off its own `selected` string.** It holds a single id with `onTaskSelect`,
       and `Tree` runs `selectionMode='single'`; checkbox selection is a set. Decide whether the
       current row (the roving tabstop's highlight) stays distinct from the checked set — a row can
-      be current *and* checked — or whether `selected` becomes a view of the multi-selection.
+      be current _and_ checked — or whether `selected` becomes a view of the multi-selection.
 - [ ] **Key the view state per list.** `contextId` has to be the attendable the list belongs to, or
       two task lists on one deck share a selection.
 - [ ] **`ProjectArticle` configures the embedded `TaskSetArticle` for checkboxes**, and contributes
@@ -519,7 +519,6 @@ Tracked 2026-09-01, from the `TaskSetArticle` drag work.
 - [ ] The `Effect.runSync` path is only sound while every ref is loaded. Decide what should happen
       when one is not: today the effect would suspend and `runSync` throws, which is a crash rather
       than a slow drop.
-
 
 ## Phase 15: `ProjectArticle` stops passing behaviour through Surface data
 
