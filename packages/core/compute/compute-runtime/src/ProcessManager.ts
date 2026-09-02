@@ -894,7 +894,7 @@ export class ProcessManagerImpl implements Manager {
       }
 
       return handle;
-    }).pipe(Effect.withSpan('ProcessManager.shutdown'));
+    }).pipe(Effect.withSpan('ProcessManager.rehydrate'));
   }
 
   #hydrateFromDefinition<I, O, Rpcs extends Rpc.Any = never>(
@@ -969,7 +969,7 @@ export class ProcessManagerImpl implements Manager {
           yield* this.#store.deleteProcess(pid);
         }
       }
-    }).pipe(Effect.withSpan('ProcessManager.startup'));
+    }).pipe(Effect.withSpan('ProcessManager.discardRecord'));
   }
 
   attach<I, O, Rpcs extends Rpc.Any = never>(id: Process.ID): Effect.Effect<Handle<I, O, Rpcs>> {
