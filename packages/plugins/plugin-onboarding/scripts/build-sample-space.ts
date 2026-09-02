@@ -78,7 +78,7 @@ const __dirname = dirname(__filename);
 
 const OUTPUT_PATH = resolve(__dirname, '../src/content/sample/space.dx.json');
 const ABOUT_MD_PATH = resolve(__dirname, '../src/content/sample/ABOUT.md');
-const WELCOME_MD_PATH = resolve(__dirname, '../src/content/space-tour.md');
+const WELCOME_MD_PATH = resolve(__dirname, '../src/content/sample/README.md');
 
 //
 // RoastLog — exemplar-specific schema defined entirely in this build script.

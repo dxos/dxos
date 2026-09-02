@@ -28,7 +28,7 @@ tasks:
       - ^:build
     inputs:
       - scripts/build-sample-space.ts
-      - src/content/space-tour.md
+      - src/content/sample/README.md
       - src/content/sample/ABOUT.md
     outputs:
       - src/content/sample/space.dx.json
