@@ -1046,13 +1046,15 @@ const TaskTreeTrailing = ({ item }: { item: TaskNode }) => {
 
   return (
     <>
-      {/* `justify-end`, as the flat row does: the chips are variable width, so left-aligning them
-          put the priority control wherever the artifact tag happened to end and the column read as
-          ragged. Anchored to the trailing edge, every row's controls line up. */}
+      {/* Variable-width chips share one cell — an artifact tag has no fixed size, so it cannot own a
+          column. Everything after it does, which is what makes those controls line up down the
+          list rather than sitting wherever the tags happened to end. */}
       <div className='flex h-8 items-center justify-end gap-1'>
         <TaskListItemArtifacts task={task} />
         {task.assignee && <TaskListAssignee assignee={task.assignee} />}
-        {showEstimates && <TaskEstimateControl task={task} />}
+      </div>
+      <div className='flex h-8 items-center justify-center'>{showEstimates && <TaskEstimateControl task={task} />}</div>
+      <div className='flex h-8 items-center justify-center'>
         <TaskPriorityIcon task={task} />
       </div>
       <TaskListItemActions task={task} />

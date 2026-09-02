@@ -25,7 +25,11 @@ import { TaskOrdinal, TaskStatusControl } from './TaskRowCells';
 import { TASK_TREE_ROOT_ID, type TaskNode, buildTaskForest, buildTaskPaths, createTaskTreeModel } from './tree-model';
 
 /** Columns after the title: assignee, tags and the contributed actions live here. */
-const GRID_TEMPLATE = '[tree-row-start] minmax(0, 1fr) min-content min-content [tree-row-end]';
+/**
+ * `[title][chips][estimate][priority][actions]`. Each trailing control owns a column so it lines up
+ * down the list; only the chips share one, because an artifact tag has no fixed width.
+ */
+const GRID_TEMPLATE = '[tree-row-start] minmax(0, 1fr) min-content min-content min-content min-content [tree-row-end]';
 
 /**
  * The hierarchical list rendered as a `Tree`, so the machine owns disclosure, roving focus and the
