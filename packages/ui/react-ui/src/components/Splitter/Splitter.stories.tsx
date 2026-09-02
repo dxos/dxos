@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type ComponentPropsWithoutRef, forwardRef, useState } from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../testing';
 import { Panel } from '../Panel';
@@ -76,6 +77,26 @@ const ToolbarStory = (args: SplitterRootProps) => {
   );
 };
 
+/**
+ * Drives a controlled splitter, as the deck does: the size is the app's state and the seam only
+ * reports where it was dragged to. The readout is in rem, which is what the app stores.
+ */
+const ControlledStory = (args: SplitterRootProps) => {
+  const [size, setSize] = useState(args.defaultSize ?? 20);
+  return (
+    <Panel.Root>
+      <Panel.Content asChild>
+        <Splitter.Root {...args} size={size} onSizeChange={setSize}>
+          <Panes />
+        </Splitter.Root>
+      </Panel.Content>
+      <Panel.Statusbar>
+        <span data-testid='splitter.size'>{size.toFixed(2)}rem</span>
+      </Panel.Statusbar>
+    </Panel.Root>
+  );
+};
+
 const meta: Meta<SplitterRootProps> = {
   title: 'ui/react-ui-core/components/Splitter',
   component: Splitter.Root,
@@ -143,5 +164,57 @@ export const HorizontalAnimated: Story = {
   args: {
     orientation: 'horizontal',
     transition: 250,
+  },
+};
+
+export const Controlled: Story = {
+  render: ControlledStory,
+  args: {
+    orientation: 'horizontal',
+    anchor: 'start',
+    resizable: true,
+    defaultSize: 30,
+    minSize: 6,
+  },
+};
+
+export const Test: Story = {
+  render: ControlledStory,
+  args: {
+    orientation: 'horizontal',
+    anchor: 'start',
+    resizable: true,
+    defaultSize: 30,
+    minSize: 6,
+  },
+  // The seam speaks percentages internally and rem to the app; what this checks is that the two
+  // agree, and that the seam takes no width of its own — the panes have to meet at it exactly.
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    const query = <T extends HTMLElement>(part: string): T => {
+      const element = canvasElement.querySelector<T>(`[data-scope="splitter"][data-part="${part}"]`);
+      if (!element) {
+        throw new Error(`No splitter ${part}`);
+      }
+      return element;
+    };
+
+    const root = query('root');
+    const panels = [...canvasElement.querySelectorAll('[data-scope="splitter"][data-part="panel"]')];
+    await expect(panels).toHaveLength(2);
+    const widths = () => panels.map((panel) => panel.getBoundingClientRect().width);
+    const reported = () => parseFloat(canvas.getByTestId('splitter.size').textContent ?? '');
+
+    await waitFor(async () => expect(Math.round(widths()[0] / rem)).toEqual(30));
+    // The handle straddles the seam rather than taking a slice out of it.
+    await expect(Math.round(widths()[0] + widths()[1])).toEqual(Math.round(root.getBoundingClientRect().width));
+    await expect(canvas.getByTestId('splitter.size')).toHaveTextContent('30.00rem');
+
+    // The keyboard drives the seam, and what it reports round-trips back through the controlled size.
+    query<HTMLElement>('resize-trigger').focus();
+    await userEvent.keyboard('{ArrowRight}');
+    await waitFor(async () => expect(canvas.getByTestId('splitter.size')).not.toHaveTextContent('30.00rem'));
+    await waitFor(async () => expect(Math.abs(widths()[0] / rem - reported())).toBeLessThan(0.05));
   },
 };
