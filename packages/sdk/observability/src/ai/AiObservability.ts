@@ -16,7 +16,7 @@ import type * as ObservabilityExtension from '../observability-extension';
  * The AI stack already annotates every model call with the OTel GenAI conventions (`gen_ai.*`,
  * emitted by the `effect/unstable/ai` provider layers) plus the `dxos.ai.*` attributes those
  * conventions have no room for. This reads the finished spans, applies the capture policy, and
- * hands each surviving call to a sink as a {@link ObservabilityExtension.Generation} — a shape
+ * hands each surviving call to a sink as a {@link ObservabilityExtension.Inference} — a shape
  * that follows the GenAI conventions, not any vendor's schema. Mapping onto a backend's own
  * vocabulary belongs to that backend's extension.
  *
@@ -39,7 +39,7 @@ import type * as ObservabilityExtension from '../observability-extension';
  *   a call that runs in a known space can have its content captured, so the policy fails closed
  *   for one that does not (`AiSession` names it, and a process scoped to a space stamps it on every
  *   span it runs; a utility model call outside both is reported as metadata only).
- * - Attribute **allowlist**: only the fields of `Generation` are read; every other span attribute
+ * - Attribute **allowlist**: only the fields of `Inference` are read; every other span attribute
  *   is dropped (so an accidental attribute upstream cannot leak through telemetry).
  * - Errors are reduced to the exception **class name** — `exception.message` and
  *   `exception.stacktrace` recorded on the span are never forwarded, since provider error
@@ -84,8 +84,8 @@ export const contentCaptureAllowed = (_spaceId: string): boolean => {
 };
 
 export type Options = {
-  /** Sink for a call that survived the policy — typically `Observability.generations`. */
-  captureGeneration: (generation: ObservabilityExtension.Generation) => void;
+  /** Sink for a call that survived the policy — typically `Observability.ai`. */
+  captureInference: (inference: ObservabilityExtension.Inference) => void;
   /** Sink for a conversation turn (`dxos.ai.kind = turn`), the unit its model calls group under. */
   captureTurn: (turn: ObservabilityExtension.Turn) => void;
   /** Sink for a tool call inside a turn (`dxos.ai.kind = tool`). */
@@ -130,7 +130,7 @@ const KIND_TOOL = SpanAttributes.AI_KIND.tool;
 const NAME_ATTR = SpanAttributes.AI.name;
 
 /**
- * Reports finished AI spans to the injected sinks: model calls (`gen_ai.*`) as generations, and the
+ * Reports finished AI spans to the injected sinks: model calls (`gen_ai.*`) as inferences, and the
  * turn and tool-call spans the AI stack marks with `dxos.ai.kind`. Every other span passes through
  * untouched.
  *
@@ -139,14 +139,14 @@ const NAME_ATTR = SpanAttributes.AI.name;
  * second sampler and a second tracer over the same spans.
  */
 export class AiSpanProcessor implements SpanProcessor {
-  private readonly _captureGeneration: Options['captureGeneration'];
+  private readonly _captureInference: Options['captureInference'];
   private readonly _captureTurn: Options['captureTurn'];
   private readonly _captureToolCall: Options['captureToolCall'];
   private readonly _captureEnabled: Options['captureEnabled'];
   private readonly _allowContent: Options['allowContent'];
 
-  constructor({ captureGeneration, captureTurn, captureToolCall, captureEnabled, allowContent }: Options) {
-    this._captureGeneration = captureGeneration;
+  constructor({ captureInference, captureTurn, captureToolCall, captureEnabled, allowContent }: Options) {
+    this._captureInference = captureInference;
     this._captureTurn = captureTurn;
     this._captureToolCall = captureToolCall;
     this._captureEnabled = captureEnabled;
@@ -205,7 +205,7 @@ export class AiSpanProcessor implements SpanProcessor {
     }
 
     const spanContext = span.spanContext();
-    const generation: ObservabilityExtension.Generation = {
+    const inference: ObservabilityExtension.Inference = {
       traceId: spanContext.traceId,
       spanId: spanContext.spanId,
       parentSpanId: span.parentSpanContext?.spanId,
@@ -234,7 +234,7 @@ export class AiSpanProcessor implements SpanProcessor {
       errorClass: span.status.code === SpanStatusCode.ERROR ? errorClass(span) : undefined,
     };
 
-    this._captureGeneration(generation);
+    this._captureInference(inference);
   }
 
   forceFlush(): Promise<void> {

@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import type * as ObservabilityExtension from '../../observability-extension';
 import { toAiGenerationProperties, toAiSpanProperties, toAiTraceProperties } from './llm-analytics';
 
-const generation = (overrides: Partial<ObservabilityExtension.Generation> = {}): ObservabilityExtension.Generation => ({
+const inference = (overrides: Partial<ObservabilityExtension.Inference> = {}): ObservabilityExtension.Inference => ({
   traceId: 'trace-1',
   spanId: 'span-1',
   spanName: 'LanguageModel.generateText',
@@ -17,9 +17,9 @@ const generation = (overrides: Partial<ObservabilityExtension.Generation> = {}):
 });
 
 describe('toAiGenerationProperties', () => {
-  test('maps a generation onto PostHog LLM analytics', ({ expect }) => {
+  test('maps an inference onto PostHog LLM analytics', ({ expect }) => {
     const properties = toAiGenerationProperties(
-      generation({
+      inference({
         parentSpanId: 'span-0',
         provider: 'anthropic',
         model: 'claude-sonnet-5',
@@ -51,8 +51,8 @@ describe('toAiGenerationProperties', () => {
     });
   });
 
-  test('omits what the generation does not carry', ({ expect }) => {
-    expect(toAiGenerationProperties(generation())).toEqual({
+  test('omits what the inference does not carry', ({ expect }) => {
+    expect(toAiGenerationProperties(inference())).toEqual({
       $ai_trace_id: 'trace-1',
       $ai_span_id: 'span-1',
       $ai_span_name: 'LanguageModel.generateText',
@@ -63,7 +63,7 @@ describe('toAiGenerationProperties', () => {
 
   test('carries content and its truncation marker', ({ expect }) => {
     const properties = toAiGenerationProperties(
-      generation({
+      inference({
         content: {
           input: [{ role: 'user' }],
           output: '[{"role":"assist',
@@ -82,7 +82,7 @@ describe('toAiGenerationProperties', () => {
   });
 
   test('reports an error as both the flag and the class', ({ expect }) => {
-    expect(toAiGenerationProperties(generation({ errorClass: 'TypeError' }))).toMatchObject({
+    expect(toAiGenerationProperties(inference({ errorClass: 'TypeError' }))).toMatchObject({
       $ai_is_error: true,
       $ai_error: 'TypeError',
     });

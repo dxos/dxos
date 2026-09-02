@@ -173,10 +173,10 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
         },
       },
       {
-        kind: 'generations',
+        kind: 'ai',
         isAvailable: () => Effect.succeed(true),
-        captureGeneration: (generation) => {
-          posthog.capture(AI_GENERATION_EVENT, toAiGenerationProperties(generation));
+        captureInference: (inference) => {
+          posthog.capture(AI_GENERATION_EVENT, toAiGenerationProperties(inference));
         },
         captureTurn: (turn) => {
           posthog.capture(AI_TRACE_EVENT, toAiTraceProperties(turn));
