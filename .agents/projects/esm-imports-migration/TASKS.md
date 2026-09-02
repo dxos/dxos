@@ -74,7 +74,27 @@
       (`echo-host` `automerge-repo-subduction-policy.test.ts`
       "authorizeFetch fires on BOTH proactive push and explicit fetch
       (empirical)"; the file documents its own flakiness and git log shows
-      only this branch's extension-only touch) — documented in a PR comment
-      since Depot-hosted jobs can't be re-run from here. NEXT: watch PR
-      #12893 for shard=1 to go green on the next push (main is still
-      moving) and for review.
+      only this branch's extension-only touch) — WRONG, corrected below.
+- [x] FOUND THE REAL shard=1 cause: with `CI=true` set (matching real CI —
+      my first pass had it unset, chasing a test that's `skipIf(CI)`),
+      `moon run cli:test` had ~23 deterministic failures, all tracing to a
+      FOURTH instance of the same resolveModule() double-extension bug
+      already fixed 3x in the oxlint rules — this one in
+      `packages/sdk/app-framework/src/plugin-cli/ts-util.ts`'s
+      `resolveRelativeModule`, used by `dx-plugin gen`. An already-extensioned
+      re-export specifier (`export * from './x/index.ts'`, exactly what this
+      migration produces from `./x`) resolved to a nonexistent path, so the
+      generator silently dropped that capability from every generated
+      per-env barrel — neither the real export nor its `undefined` stub.
+      `plugin-space`'s `NavigationHandler` and `plugin-connector`'s
+      `Coordinator` both hit it (also present in `plugin-client`,
+      `plugin-file-system`); either alone crashes the CLI's plugin manager
+      at startup for EVERY command, since it eagerly resolves every plugin.
+      Fixed with the same early-return pattern as the other three. Verified:
+      `cli:test` 23 failing -> 0; full-repo `:build`/`:lint`/
+      `:check-module-structure` clean. This explains the DETERMINISTIC
+      (every-commit) nature of the shard=1 failure far better than the two
+      flaky candidates I chased first (client-e2e's spaces.test.ts race,
+      genuinely reverted as a dead end; echo-host, which doesn't even run
+      under CI). NEXT: watch PR #12893 for shard=1 to go green on this push
+      (main may still move again) and for review.
