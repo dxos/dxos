@@ -326,6 +326,13 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 }
               }
 
+              // The turn appends its own user message built from `prompt`, so the queue entry that
+              // supplied it must leave the queue view now or the same content shows in both places
+              // until the late ack below.
+              if (dequeued !== undefined) {
+                yield* sessionStore.markInFlight(feed, dequeued);
+              }
+
               log('begin request', { prompt });
               log('trace agent request begin');
               yield* Trace.write(AgentRequestBegin, {});
