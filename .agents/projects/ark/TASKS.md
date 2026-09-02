@@ -75,9 +75,10 @@ cost against a much smaller hand-rolled component (Accordion +4.6 KB net, Listbo
       supplies the APG keymap. Verified in its story — ArrowDown moves focus between triggers, End
       jumps to the last, pointer expand opens the content. Public surface unchanged, so no consumer
       moved; the radix dependency and its `composer-app` prebundle entry are gone.
-- [ ] **Evaluate moving the core of `react-ui-list` and `@fluentui/react-tabster` to
-      `@ark-ui/react`** — the whole-stack version of the question, as one evaluation rather than
-      per-component. Tracked 2026-08-31. Constraints below.
+- [ ] **Evaluate moving the core of `react-ui-list` to `@ark-ui/react`** — the whole-stack version
+      of the question, as one evaluation rather than per-component. Tracked 2026-08-31; narrowed
+      2026-09-01 when Phase 5 landed, which removed `@fluentui/react-tabster` from the repo and so
+      took it out of this item's scope. Constraints below.
 
 ### Constraints on that evaluation
 
@@ -88,14 +89,14 @@ to re-derive:
    already bought all of it; per-machine marginal cost then runs Accordion +8,125 raw, Listbox
    +22,470, Combobox +87,936 — each against a hand-rolled component an order of magnitude smaller. A
    full `react-ui-list` sweep is net **worse** on bytes.
-2. **Tabster and `react-ui-list` are separable problems.** All four `react-ui-list` tabster call
-   sites are in lazy chunks and attribute zero boot bytes; the 68 KB prize is behind three
-   `@dxos/react-ui` files. Migrating this package off tabster saves nothing, and taking the prize
-   does not require touching this package.
-3. **Ark has no groupper.** `useArrowNavigationGroup`/`useFocusableGroup` are generic
-   composite-widget focus zones; Zag's focus management is per-machine and `focus-trap` is a trap.
-   Any plan that ends tabster needs an in-house roving-tabindex hook regardless of how much Ark is
-   adopted.
+2. **Settled by Phase 5 — tabster is gone.** The separability this constraint argued for held: the
+   68 KB was taken without touching `react-ui-list`. Nothing in the repo depends on
+   `@fluentui/react-tabster` any more, so it is no longer a term in this evaluation. (Two stale
+   references remain in `OrderedListRoot.tsx` prose.)
+3. **Ark has no groupper — and the replacement already exists.** Zag's focus management is
+   per-machine and `focus-trap` is a trap, so ending tabster needed an in-house roving-tabindex
+   hook. Phase 5 built it: `useFocusGroup` in `@dxos/react-focus`. The evaluation inherits it
+   rather than having to budget for it.
 4. **The case, if there is one, is coherence** — one interaction/accessibility model across the
    package instead of four (Ark machine, tabster roving-tabindex, Radix, bespoke activedescendant),
    with APG conformance maintained upstream. Size the migration against that, and price the ~85 KB
