@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: sample-spaces
+    status: active
+    user: burdon
+    host: burdon-mbp-2092
+    created: 2026-09-02
+    summary: 'Generalize test/demo space construction onto one mechanism — @dxos/app-toolkit/SampleSpace, an Effect phase builder (phase-declared schemas, fixed reference clock, deferred feed appends, root-collection bootstrap, cached space-relative tag URIs, seed tables) that runs headless into a .dx.json archive or against a live space. Replaces ~200 lines of mechanism duplicated across plugin-onboarding/scripts/build-sample-space.ts and plugin-google/scripts/import-mbox-space.ts; plugin-debug presets become phases. Driver is more sample spaces, so phases are shareable across definitions.'
+    tasks: .agents/projects/sample-spaces/TASKS.md
+    design: .agents/projects/sample-spaces/DESIGN.md
+    prs: []
+    resume: 'PHASE 0 + 1 DONE on branch sample-data, not pushed, no PR. Phase 0: onboarding content renamed (README.md, sample/ABOUT.md, sample/README.md, sample/space.dx.json, build-sample-space.ts) with every call site updated. Phase 1: @dxos/app-toolkit/SampleSpace exists (src/sample/SampleSpace.ts) + buildArchive/histogram/ephemeralClient in src/testing/SampleSpaceBuilder.ts; 7 tests green, lint/build/check-module-structure green. GOTCHAS: the archive keeps feed content in a separate top-level `feeds` key, NOT in `objects` — histogram() counts both, and asserting only on objects silently misses every mailbox/calendar message; the builder persists Collections itself so BASE_SCHEMAS must be registered on top of the phases declarations; repo lint forbids Effect.runPromise in favour of EffectEx.runPromise from @dxos/effect; `moon` on PATH is 1.41.2 and cannot parse .moon/workspace.yml — use ~/.proto/bin/moon (2.5.2). NEXT: Phase 2, port the Bramble content in build-sample-space.ts (1810 lines, ~1600 of it content) to phase modules and verify with histogram against the committed snapshot (23 typenames / 77 objects / 3 feeds).'
   - name: agent-feed-messages
     status: active
     user: dmaretskyi
