@@ -391,17 +391,6 @@ const callerSpans: Tracer.Span[] = [];
 // brings its own, so the caller's tracer is demonstrably the one in use.
 const unusedRuntimeSpans: Tracer.Span[] = [];
 
-/** Span names from the given span up to its trace root. */
-const ancestry = (spans: Tracer.Span[], name: string): string[] => {
-  const names: string[] = [];
-  let span: Tracer.AnySpan | undefined = spans.find((candidate) => candidate.name === name);
-  while (span?._tag === 'Span') {
-    names.push(span.name);
-    span = Option.getOrUndefined(span.parent);
-  }
-  return names;
-};
-
 describe('ManagerImpl', () => {
   it.effect(
     'spawns a process and produces output',
@@ -2268,3 +2257,14 @@ describe('durability', () => {
     }, Effect.provide(DurabilityTestLayer)),
   );
 });
+
+/** Span names from the given span up to its trace root. */
+const ancestry = (spans: Tracer.Span[], name: string): string[] => {
+  const names: string[] = [];
+  let span: Tracer.AnySpan | undefined = spans.find((candidate) => candidate.name === name);
+  while (span?._tag === 'Span') {
+    names.push(span.name);
+    span = Option.getOrUndefined(span.parent);
+  }
+  return names;
+};
