@@ -87,7 +87,7 @@ export type IdentitySource = {
  * dedicated worker, whose tracer and tags are its own: the tab's {@link identityProvider} only tags
  * the tab. Tags only — the tab already identifies the user with the analytics backend.
  */
-export const identityManagerProvider = (identityManager: IdentitySource): DataProvider =>
+export const identityManagerProvider = (identityManager: IdentitySource): Observability.DataProvider =>
   Effect.fn(function* (observability) {
     const apply = () => {
       const did = identityManager.identity?.did;
