@@ -5,7 +5,6 @@
 // @import-as-namespace
 
 import * as Cause from 'effect/Cause';
-import * as Clock from 'effect/Clock';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
