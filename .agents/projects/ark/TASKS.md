@@ -520,3 +520,22 @@ Tracked 2026-09-01, from the `TaskSetArticle` drag work.
       when one is not: today the effect would suspend and `runSync` throws, which is a crash rather
       than a slow drop.
 
+
+## Phase 15: `ProjectArticle` stops passing behaviour through Surface data
+
+Tracked 2026-09-02. The outline Surface is handed `extensions` and `onSelectTask` as `data`, which
+the file already flags: `// TODO(burdon): Should not pass callbacks!`. Surface data describes the
+subject; it is not a props channel, and a callback there couples the host to the implementation it
+is supposed to be decoupled from.
+
+- [ ] **Collect the editor extensions in `plugin-tasks`, where the surface is implemented**, not in
+      `ProjectArticle`. The host currently reads `MarkdownCapabilities.ExtensionProvider` and hands
+      the result down; the component that builds the editor should read the capability itself, which
+      is the same thing `MarkdownArticle` does for markdown documents.
+- [ ] **Remove `handleSelectTask` and the `onSelectTask` data property.** It only switches the
+      host's tab to `tasks`, so the effect belongs to whatever owns that tab state — an operation or
+      the layout, not a function smuggled through Surface data.
+- [ ] Leave `subject`, `attendableId` and `taskSet` on the Surface: those identify what is being
+      rendered, which is what `data` is for.
+- [ ] Check the other `Surface.Surface` in the file (the tasks section) for the same pattern before
+      calling this done.
