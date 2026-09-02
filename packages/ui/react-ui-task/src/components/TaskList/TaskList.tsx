@@ -69,15 +69,12 @@ import {
   subtreeIds,
   walkTaskTree,
 } from './hierarchy';
-import { STATUS_ICONS } from './status-icons';
+import { STATUS_ICONS, STATUS_ORDER } from './status-icons';
 import { TaskDescription } from './TaskDescription';
 import { TaskTreeContent } from './TaskTreeContent';
 import { type TaskNode } from './tree-model';
 
 const TASK_LIST_NAME = 'TaskList.Root';
-
-/** Linear-style status groups, most active first. */
-export const STATUS_ORDER: Task.Status[] = ['started', 'review', 'todo', 'done', 'failed', 'cancelled'];
 
 //
 // Context — plain Radix context (un-scoped); nesting task lists has no meaning today.

@@ -5,12 +5,13 @@
 import React from 'react';
 
 import { Icon, IconBlock, IconButton, Tag, useTranslation } from '@dxos/react-ui';
+import { Menu, createMenuAction } from '@dxos/react-ui-menu';
 import { Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { STATUS_ICONS } from './status-icons';
+import { STATUS_ICONS, STATUS_ORDER } from './status-icons';
 
 /**
  * Cells shared by the flat row and the tree row.
@@ -35,7 +36,6 @@ export type TaskStatusControlProps = {
 export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: TaskStatusControlProps) => {
   const { t } = useTranslation(translationKey);
   const status = task.status ?? 'todo';
-  const done = status === 'done';
   // A started agent task is actively being worked by a sub-agent (started is stamped at spawn), so
   // it spins; a human-started task keeps the static glyph.
   const { icon, classNames: iconClassNames } = active
@@ -55,20 +55,30 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
   }
 
   return (
-    <IconButton
-      data-testid='taskList.item.status'
-      classNames={mx('shrink-0', iconClassNames, classNames)}
-      variant='ghost'
-      density='sm'
-      icon={icon}
-      iconOnly
-      label={done ? t('mark-todo.label') : t('mark-done.label')}
-      onClick={(event) => {
-        // The row is the selection target; the status control must not also select it.
-        event.stopPropagation();
-        onTaskUpdate(task, { status: done ? 'todo' : 'done' });
-      }}
-    />
+    <Menu.Root>
+      <Menu.Trigger asChild>
+        <IconButton
+          data-testid='taskList.item.status'
+          classNames={mx('shrink-0', iconClassNames, classNames)}
+          variant='ghost'
+          density='sm'
+          icon={icon}
+          iconOnly
+          label={t('task-status.label')}
+          // The row is the selection target; opening the menu must not also select it.
+          onClick={(event) => event.stopPropagation()}
+        />
+      </Menu.Trigger>
+      <Menu.Content
+        items={STATUS_ORDER.map((value) =>
+          createMenuAction(`status-${value}`, () => onTaskUpdate(task, { status: value }), {
+            label: t(`status-${value}.label`),
+            icon: STATUS_ICONS[value].icon,
+            checked: status === value,
+          }),
+        )}
+      />
+    </Menu.Root>
   );
 };
 
