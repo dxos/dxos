@@ -23,6 +23,8 @@ describe('trace-context', () => {
 
   test('reads nothing without a context manager, rather than a bogus id', ({ expect }) => {
     // The API's no-op manager: `with` runs the callback without setting anything.
-    expect(context.with(trace.setSpanContext(ROOT_CONTEXT, { ...TRACE, traceFlags: 1 }), activeTraceContext)).toBeUndefined();
+    expect(
+      context.with(trace.setSpanContext(ROOT_CONTEXT, { ...TRACE, traceFlags: 1 }), activeTraceContext),
+    ).toBeUndefined();
   });
 });
