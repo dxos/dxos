@@ -92,11 +92,15 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         // the session has it.
         for (const task of tasks) {
           Task.setStatus(task, 'started', { actor: reviewer });
-          if (reviewer) {
-            Obj.update(task, (task) => {
+          Obj.update(task, (task) => {
+            // The chat's agent holds the work now, so the row says so rather than keeping whoever
+            // had it before. A bare role, as the delegation skill writes: `delegation-strategy`
+            // matches on the role, and a chat session has no name of its own to give.
+            task.assignee = { role: 'assistant' };
+            if (reviewer) {
               task.reviewers = [reviewer];
-            });
-          }
+            }
+          });
         }
 
         yield* bindDelegationContext(chat, project);
