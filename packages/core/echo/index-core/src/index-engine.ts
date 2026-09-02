@@ -271,7 +271,7 @@ export class IndexEngine {
           return recordIds.length;
         }),
       );
-    }).pipe(Effect.withSpan('IndexEngine.deleteObjects', SpanAttributes.withSpace(opts.spaceId)));
+    }).pipe(Effect.withSpan('IndexEngine.deleteObjects'), SpanAttributes.annotateSpace(opts.spaceId));
   }
 
   update(
@@ -324,7 +324,8 @@ export class IndexEngine {
       // The snapshot must be dropped even when a pass fails, or the next pass would diff against
       // stale heads and silently skip documents changed in between.
       Effect.ensuring(Effect.sync(() => dataSource.endPass?.())),
-      Effect.withSpan('IndexEngine.update', SpanAttributes.withSpace(opts.spaceId)),
+      Effect.withSpan('IndexEngine.update'),
+      SpanAttributes.annotateSpace(opts.spaceId),
     );
   }
 
@@ -384,6 +385,6 @@ export class IndexEngine {
           return { updated: objects.length, done: false, objects };
         }),
       );
-    }).pipe(Effect.withSpan('IndexEngine.#update', SpanAttributes.withSpace(opts.spaceId)));
+    }).pipe(Effect.withSpan('IndexEngine.#update'), SpanAttributes.annotateSpace(opts.spaceId));
   }
 }
