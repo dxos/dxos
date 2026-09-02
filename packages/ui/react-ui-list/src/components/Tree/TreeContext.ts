@@ -107,6 +107,8 @@ export type ColumnRenderer<T extends { id: string } = any> = FC<{
 
 /** Render-time context threaded to every row. */
 export type TreeRenderContextValue<T extends { id: string } = any> = {
+  /** Stamped into every row's drag payload so a monitor can reject another tree's drags. */
+  treeId: string;
   draggable: boolean;
   renderColumns?: ColumnRenderer<T>;
   renderIcon?: IconRenderer<T>;

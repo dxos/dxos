@@ -7,7 +7,7 @@ import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/ad
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 
-import { type ColumnRenderer, type HeadingRenderer, Tree, isTreeData } from '@dxos/react-ui-list';
+import { type ColumnRenderer, type HeadingRenderer, Tree, isTreeDataFor } from '@dxos/react-ui-list';
 import { Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -198,7 +198,8 @@ export const TaskTreeContent = ({
     }
 
     return monitorForElements({
-      canMonitor: ({ source }) => isTreeData(source.data),
+      // Scoped to this tree: monitors are global, so the navtree's drags reach here too.
+      canMonitor: ({ source }) => isTreeDataFor(source.data, TASK_TREE_ROOT_ID),
       onDrop: ({ location, source }) => {
         const target = location.current.dropTargets[0];
         if (!target) {

@@ -453,6 +453,7 @@ export const Tree = <T extends { id: string } = any>({
 
   const renderContext = useMemo<TreeRenderContextValue<T>>(
     () => ({
+      treeId: id,
       draggable,
       renderColumns,
       renderIcon,
@@ -470,6 +471,7 @@ export const Tree = <T extends { id: string } = any>({
       mountedRef,
     }),
     [
+      id,
       draggable,
       renderColumns,
       renderIcon,
@@ -512,7 +514,9 @@ export const Tree = <T extends { id: string } = any>({
           {root.children?.map((node) => (
             <TreeNodeRow key={node.value} node={node} />
           ))}
-          {dropAtEnd && draggable && <TreeEndDropTarget data={{ id: root.id, path: root.path, item: root.item }} />}
+          {dropAtEnd && draggable && (
+            <TreeEndDropTarget data={{ treeId: id, id: root.id, path: root.path, item: root.item }} />
+          )}
         </TreeView.Tree>
       </TreeRenderProvider>
     </TreeView.Root>
@@ -688,6 +692,7 @@ type TreeItemDragState = 'idle' | 'dragging' | 'preview' | 'parent-of-instructio
 /** The visible row: branch control or leaf item, with DnD wiring, columns, and the drop indicator. */
 const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
   const {
+    treeId,
     draggable: treeDraggable,
     renderColumns: Columns,
     renderHeading: RenderHeading,
@@ -713,7 +718,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
   // A leaf reports `open` too (nothing distinguishes it in the model), and treating that as expanded
   // stripped the below zone from every childless row — so nothing could be dropped after one.
   const mode: ItemMode = last ? 'last-in-group' : branch && open && !dropBelowExpanded ? 'expanded' : 'standard';
-  const data = { id, path, item } satisfies TreeData;
+  const data = { treeId, id, path, item } satisfies TreeData;
   const isItemDraggable = treeDraggable && props.draggable !== false;
   const isItemDroppable = props.droppable !== false;
   const shouldSeedNativeDragData = typeof document !== 'undefined' && document.body.hasAttribute('data-platform');
