@@ -185,9 +185,6 @@ non-class `behavior` record keyed by the same names (`showDescription`), and a `
 - [ ] **Decide the variant names from real call sites** rather than inventing them — the candidates
       are the density/context splits the components already hand-roll at the point of use (sidebar vs
       document vs dialog/popover), so survey those before fixing the axis.
-- [ ] **Fold `Treegrid.theme.ts` in or leave it deliberately separate.** It is a second, standalone
-      `tv` recipe with its own `rowLevel` lookup and no central registration; whether it joins
-      `List.theme.ts` depends on the Phase 3 decision about what `Treegrid` is for.
 - [ ] Confirm `bridgeTv` registration still resolves once the axis exists, since `listSlots` is
       derived from `styles()` and a variant axis changes nothing about slot names but does change
       what a consumer must pass.
@@ -419,9 +416,8 @@ rows by) and by id (what gates the walk).
       only the immediate parent.
 - [ ] Confirm expanding into a relation cycle terminates (it should now be handled by `Tree`'s
       ancestor check rather than `ObjectsTree`'s single-level one).
-- [ ] With this landed, `Treegrid`'s only remaining consumer is `plugin-atproto`'s
-      `AtprotoCompanion`, whose rows are read-only — Phase 3 can be settled by moving it to grouped
-      semantic markup and deleting `Treegrid`.
+- [x] Settled by Phase 3: `AtprotoCompanion` moved to semantic markup and `Treegrid` was deleted.
+      Nothing in the repo references it, so its theme file went with it.
 
 ## Phase 10: Reimplement `ToolWidget` on the Ark-backed Accordion — landed
 
