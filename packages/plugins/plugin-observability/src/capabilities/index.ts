@@ -13,8 +13,8 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { translations } from '#translations';
 import { ObservabilityCapabilities, ObservabilityEvents, ObservabilityOptions } from '#types';
 
-// The telemetry pipeline reads browser storage and the user's telemetry preference, neither of
-// which exists headlessly; only `OperationHandler` ships to headless runtimes.
+// `ClientReady` reads `window.performance` and browser-only client metrics; a node host wires its
+// own providers when it builds the instance it passes in.
 export const ClientReady = Capability.lazyModule(
   'ClientReady',
   {
@@ -64,7 +64,7 @@ export const PrivacyNotice = Capability.lazyModule(
 export const Namespace = Capability.inlineModule(
   'namespace',
   {
-    environments: [],
+    environments: ['node'],
     provides: [ObservabilityCapabilities.Namespace],
     props: (options: ObservabilityOptions.ObservabilityPluginOptions) => options.namespace,
   },
@@ -73,7 +73,7 @@ export const Namespace = Capability.inlineModule(
 export const Observability = Capability.inlineModule(
   'observability',
   {
-    environments: [],
+    environments: ['node'],
     provides: [ObservabilityCapabilities.Observability],
     props: (options: ObservabilityOptions.ObservabilityPluginOptions) => options.observability,
   },
@@ -84,14 +84,17 @@ export const Observability = Capability.inlineModule(
       return [Capability.contribute(ObservabilityCapabilities.Observability, obs)];
     }),
 );
-// `#operation-handler` resolves per condition: no headless host can send real telemetry (see
-// `operation-handler.headless.ts` for why), so they get a no-op `SendEvent` handler.
+// `#operation-handler` resolves per condition: workerd has no observability transport of its own
+// (see `operation-handler.headless.ts`), so it gets a no-op `SendEvent` handler.
 export const OperationHandler = AppCapability.operationHandler(() => import('#operation-handler'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article'],
 });
 export const ObservabilitySettings = AppCapability.settings(() => import('./settings'), {
   provides: [ObservabilityCapabilities.Settings],
+  // The atom is localStorage-backed; a headless host reaches the same state through the
+  // observability store instead (see `set-enabled`).
+  environments: [],
 });
 export const ObservabilityState = Capability.lazyModule(
   'ObservabilityState',

@@ -8,9 +8,13 @@ import { type PostHogConfig } from 'posthog-js';
 import { type Config, getEnvString } from '@dxos/config';
 import { log } from '@dxos/log';
 import { type IdbLogStore } from '@dxos/log-store-idb';
+import { isNode } from '@dxos/util';
 
 import { type Extension } from '../../observability-extension';
 import { stubExtension } from '../stub';
+
+/** PostHog ingestion hosts; the region a project belongs to is fixed when it is created. */
+export type Host = 'https://eu.i.posthog.com' | 'https://us.i.posthog.com';
 
 export type ExtensionsOptions = {
   config: Config;
@@ -37,6 +41,12 @@ export type ExtensionsOptions = {
    * pass the absolute URL of a deployment that does.
    */
   feedbackLogsEndpoint?: string;
+  /** Node only: pins the project instead of reading `DX_POSTHOG_API_KEY`. */
+  apiKey?: string;
+  /** Node only: the region the pinned project belongs to. */
+  host?: Host;
+  /** Node only: attribution for events captured before `identify`, since there is no ambient person. */
+  distinctId?: string;
 };
 
 /** Same-origin route of the web deployment, which proxies the upload to object storage. */
@@ -71,7 +81,12 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   logStore,
   feedbackLogMaxSize,
   feedbackLogsEndpoint = DEFAULT_FEEDBACK_LOGS_ENDPOINT,
+  ...nodeOptions
 }) {
+  if (isNode()) {
+    const { extensions: nodeExtensions } = yield* Effect.promise(() => import('./node'));
+    return yield* nodeExtensions({ config, release, environment, ...nodeOptions });
+  }
   if (typeof window === 'undefined') {
     log('PostHog is being stubbed because it is running in a worker.');
     return stubExtension;

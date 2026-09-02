@@ -42,5 +42,10 @@ export const getDebugName = (instance: any): string => {
   }
 
   const prototype = Object.getPrototypeOf(instance);
+  // A module namespace object — what a module-scope `log.*` call is attributed to — has none, and
+  // the id below keys a WeakMap on the prototype.
+  if (prototype == null) {
+    return 'Module';
+  }
   return `${prototype.constructor?.name ?? 'Object'}#${getPrototypeSpecificInstanceId(instance)}`;
 };

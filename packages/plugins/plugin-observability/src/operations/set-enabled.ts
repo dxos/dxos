@@ -19,15 +19,8 @@ const handler: Operation.WithHandler<typeof ObservabilityOperation.SetEnabled> =
       const namespace = yield* Capability.get(ObservabilityCapabilities.Namespace);
       const observability = yield* Capability.get(ObservabilityCapabilities.Observability);
       const capabilities = yield* Capability.Service;
-      const registry = capabilities.get(Capabilities.AtomRegistry);
-      const allSettings = capabilities.getAll(AppCapabilities.Settings);
-      const settingsObj = allSettings.find((s: AppCapabilities.Settings) => s.prefix === meta.profile.key);
-      if (!settingsObj) {
-        return false;
-      }
-      const settings = registry.get(settingsObj.atom) as Settings.Settings;
       const newEnabled = input.state;
-      registry.set(settingsObj.atom, { ...settings, enabled: newEnabled });
+
       observability.events.captureEvent('observability.toggle', {
         enabled: newEnabled,
       });
@@ -38,6 +31,18 @@ const handler: Operation.WithHandler<typeof ObservabilityOperation.SetEnabled> =
         yield* observability.disable();
       }
       yield* Effect.promise(() => Observability.storeObservabilityDisabled(namespace, !newEnabled));
+
+      // The settings atom is the browser's view of the same state; a headless host has none, and
+      // the store above is what both read back.
+      const settingsObj = capabilities
+        .getAll(AppCapabilities.Settings)
+        .find((candidate: AppCapabilities.Settings) => candidate.prefix === meta.profile.key);
+      if (settingsObj) {
+        const registry = capabilities.get(Capabilities.AtomRegistry);
+        const settings = registry.get(settingsObj.atom) as Settings.Settings;
+        registry.set(settingsObj.atom, { ...settings, enabled: newEnabled });
+      }
+
       return newEnabled;
     }),
   ),

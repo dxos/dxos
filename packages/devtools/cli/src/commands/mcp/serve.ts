@@ -17,9 +17,11 @@ import { DXOS_VERSION } from '@dxos/client';
 import { Registry } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { McpServer } from '@dxos/mcp-server';
+import * as ObservabilityCapabilities from '@dxos/plugin-observability/ObservabilityCapabilities';
 import * as ProjectsEvents from '@dxos/plugin-projects/ProjectsEvents';
 import { isRecordEnabled, loadPlugins } from '@dxos/plugin-registry';
 
+import { analyticsStdio } from './analytics';
 import { makeLocalServer } from './local-server';
 import { SpaceToolkit, spaceHandlers } from './space-tools';
 import { WATCH_CHILD_ENV, formatReady } from './watch-protocol';
@@ -93,6 +95,12 @@ export const serve = Command.make(
     // stdout carries the protocol, so progress goes to the log (stderr).
     log.info('serving MCP over stdio', { spaces: server.host.spaceIds.length });
 
+    // The session is already attributed and consent-gated by the observability instance `dx` builds
+    // at startup; an extension with no MCP transport answers `false` and the tap is left off.
+    const observability = yield* Capability.get(ObservabilityCapabilities.Observability);
+    const reporting = yield* observability.isAvailable('mcp');
+    const stdio = reporting ? McpServer.stdio.pipe(Layer.provide(analyticsStdio(observability.mcp))) : McpServer.stdio;
+
     const staticToolkits = McpServer.toolkit(SpaceToolkit).pipe(
       Layer.provide(SpaceToolkit.toLayer(spaceHandlers(server))),
     );
@@ -122,7 +130,7 @@ export const serve = Command.make(
             protocols: [McpProtocol.v2025_06_18],
           }),
         ),
-        Layer.provide(McpServer.stdio),
+        Layer.provide(stdio),
       ),
     );
   }),

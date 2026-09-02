@@ -9,6 +9,28 @@ tasks:
   build:
     deps:
       - ~:#prebuild
+      # Emitted first: the inherited `vite build` empties `dist/lib` only, so the node bundle survives.
+      - ~:build-node
+  # The same sources resolved for node, so a node host reaches the node halves of the storage and
+  # OTel-traces splits rather than the browser ones the default bundle inlines.
+  build-node:
+    command: pnpm exec vite build --logLevel silent -c vite.node.config.ts
+    deps:
+      - ~:#prebuild
+      - dx-build:build
+      - esbuild-plugins:build
+      - vite-plugin-import-source:build
+      - ^:build
+    inputs:
+      - /tsconfig.base.json
+      - /vite.base.config.ts
+      - vite.node.config.ts
+      - tsconfig.json
+      - '@group(sources)'
+    outputs:
+      - dist/lib-node/
+    options:
+      timeout: 120
   prebuild:
     command: node ./scripts/inject_api_keys.mjs
     inputs:

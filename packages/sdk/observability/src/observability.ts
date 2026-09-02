@@ -18,6 +18,7 @@ import {
   type ExtensionApi,
   type Feedback,
   type Kind,
+  type Mcp,
   type Metrics,
 } from './observability-extension';
 
@@ -50,6 +51,7 @@ export interface Observability {
   errors: Errors;
   events: Events;
   feedback: Feedback;
+  mcp: Mcp;
   /** True if at least one extension of the given kind reports as available. */
   isAvailable(kind: Kind): Effect.Effect<boolean>;
   metrics: Metrics;
@@ -220,6 +222,21 @@ class ObservabilityImpl implements Observability {
           eventUuid = (await extension.captureUserFeedback(form)) ?? eventUuid;
         }
         return eventUuid;
+      },
+    };
+  }
+
+  get mcp(): Mcp {
+    return {
+      captureInitialize: (client) => {
+        for (const extension of this._getExtensions('mcp')) {
+          extension.captureInitialize(client);
+        }
+      },
+      captureToolCall: (call) => {
+        for (const extension of this._getExtensions('mcp')) {
+          extension.captureToolCall(call);
+        }
       },
     };
   }

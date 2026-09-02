@@ -25,6 +25,11 @@ export type ExtensionsOptions = {
   serviceVersion: string;
   /** For the OTEL, the environment of the entity for which signals (metrics or trace) are collected. */
   environment: string;
+  /**
+   * Where the user's opt-out is stored — a localForage prefix in the browser, a config directory in
+   * node. Defaults to {@link ExtensionsOptions.serviceName}, which is only a usable path by accident.
+   */
+  namespace?: string;
   config: Config;
   endpoint?: string;
   headers?: Record<string, string>;
@@ -40,6 +45,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   serviceName,
   serviceVersion,
   environment,
+  namespace = serviceName,
   config,
   endpoint: _endpoint,
   headers: _headers,
@@ -56,9 +62,9 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   const { OtelMetrics } = yield* Effect.promise(() => import('./metrics'));
   const { OtelTraces } = yield* Effect.promise(() => import('./traces'));
 
-  const cachedDisabled = yield* Effect.promise(() => isObservabilityDisabled(serviceName));
-  const disabled = cachedDisabled || isObservabilityDisabledSync(serviceName);
-  const storedLogLevel = yield* Effect.promise(() => getOtelLogLevel(serviceName));
+  const cachedDisabled = yield* Effect.promise(() => isObservabilityDisabled(namespace));
+  const disabled = cachedDisabled || isObservabilityDisabledSync(namespace);
+  const storedLogLevel = yield* Effect.promise(() => getOtelLogLevel(namespace));
   const resolvedLogLevel =
     storedLogLevel != null ? (LogLevel[storedLogLevel.toUpperCase() as keyof typeof LogLevel] ?? logLevel) : logLevel;
   const enabledRef = yield* Ref.make(!disabled);
@@ -120,41 +126,42 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
     crypto.randomUUID(),
   );
 
-  const logs = logsEnabled
-    ? new OtelLogs({
-        endpoint: resolvedEndpoint,
-        headers: resolvedHeaders,
-        resource,
-        getTags: () => Object.fromEntries(tags),
-        logLevel: resolvedLogLevel,
-      })
-    : undefined;
+  // Gated on consent at construction, not just at `initialize`: a metric reader starts exporting on
+  // its own schedule, so an instance that merely reports `enabled: false` still sends.
+  const logs =
+    logsEnabled && !disabled
+      ? new OtelLogs({
+          endpoint: resolvedEndpoint,
+          headers: resolvedHeaders,
+          resource,
+          getTags: () => Object.fromEntries(tags),
+          logLevel: resolvedLogLevel,
+        })
+      : undefined;
 
-  const metrics = metricsEnabled
-    ? new OtelMetrics({
-        endpoint: resolvedEndpoint,
-        headers: resolvedHeaders,
-        resource: metricsResource,
-        getTags: () => Object.fromEntries(tags),
-      })
-    : undefined;
+  const metrics =
+    metricsEnabled && !disabled
+      ? new OtelMetrics({
+          endpoint: resolvedEndpoint,
+          headers: resolvedHeaders,
+          resource: metricsResource,
+          getTags: () => Object.fromEntries(tags),
+        })
+      : undefined;
 
-  const traces = tracesEnabled
-    ? new OtelTraces({
-        endpoint: resolvedEndpoint,
-        headers: resolvedHeaders,
-        resource,
-        getTags: () => Object.fromEntries(tags),
-      })
-    : undefined;
+  const traces =
+    tracesEnabled && !disabled
+      ? new OtelTraces({
+          endpoint: resolvedEndpoint,
+          headers: resolvedHeaders,
+          resource,
+          getTags: () => Object.fromEntries(tags),
+        })
+      : undefined;
 
   const extension: Extension = {
     initialize: () =>
       Effect.sync(() => {
-        if (disabled) {
-          return;
-        }
-
         if (logs) {
           log.runtimeConfig.processors.push(logs.logProcessor);
         }

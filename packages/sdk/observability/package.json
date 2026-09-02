@@ -15,12 +15,14 @@
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
+      "node": "./dist/lib-node/index.mjs",
       "import": "./dist/lib/index.mjs"
     }
   },
   "browser": {
     "./src/storage/node.ts": "./src/storage/browser.ts",
-    "./src/extensions/otel/traces.ts": "./src/extensions/otel/traces-browser.ts"
+    "./src/extensions/otel/traces.ts": "./src/extensions/otel/traces-browser.ts",
+    "./src/extensions/posthog/node.ts": "./src/extensions/posthog/node-stub.ts"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -54,9 +56,11 @@
     "@opentelemetry/sdk-trace-base": "catalog:",
     "@opentelemetry/sdk-trace-web": "catalog:",
     "@opentelemetry/semantic-conventions": "catalog:",
+    "@posthog/mcp": "catalog:",
     "js-yaml": "catalog:",
     "localforage": "catalog:",
     "posthog-js": "catalog:",
+    "posthog-node": "catalog:",
     "uuid": "catalog:",
     "zone.js": "catalog:"
   },

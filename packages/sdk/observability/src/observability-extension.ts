@@ -16,10 +16,11 @@ export * from './extensions';
  * - events: Product usage event tracking (e.g., PostHog)
  * - feedback: User feedback submission (e.g., PostHog)
  * - logs: Structured logging (e.g., OTEL)
+ * - mcp: MCP server sessions and tool calls (e.g., PostHog)
  * - metrics: Metric data (e.g., OTEL)
  * - traces: Distributed tracing (e.g., OTEL)
  */
-export type Kind = 'errors' | 'events' | 'feedback' | 'logs' | 'metrics' | 'traces';
+export type Kind = 'errors' | 'events' | 'feedback' | 'logs' | 'mcp' | 'metrics' | 'traces';
 
 /**
  * Base for every extension API variant. All kinds implement availability the same way.
@@ -65,6 +66,18 @@ export type Events = {
 };
 
 /**
+ * MCP extension API (kind-specific methods only).
+ *
+ * Separate from {@link Events} because the MCP events are a vendor-defined schema — the property
+ * names, the argument sanitizer and the exception fan-out belong to the backend, not to the caller,
+ * which is also why the payloads are richer than {@link Attributes} allows.
+ */
+export type Mcp = {
+  captureInitialize(client: { name?: string; version?: string }): void;
+  captureToolCall(call: { toolName: string; parameters?: unknown; durationMs: number; isError: boolean }): void;
+};
+
+/**
  * Feedback extension API (kind-specific methods only).
  */
 export type Feedback = {
@@ -77,6 +90,7 @@ export type ExtensionApi =
   | (ExtensionApiBase<'feedback'> & Feedback)
   // TODO(wittjosiah): Direct logs api?
   | ExtensionApiBase<'logs'>
+  | (ExtensionApiBase<'mcp'> & Mcp)
   | (ExtensionApiBase<'metrics'> & Metrics)
   // TODO(wittjosiah): Direct traces api?
   | ExtensionApiBase<'traces'>;
