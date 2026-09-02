@@ -7,18 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Tracer from 'effect/Tracer';
 import { expect } from 'vitest';
 
-import * as Database from './Database';
+import { makeRecordingTracer } from '@dxos/effect/testing';
 
-const makeRecordingTracer = (spans: Tracer.Span[]) => {
-  const base = Effect.runSync(Effect.tracer);
-  return Tracer.make({
-    span: (...args) => {
-      const span = base.span(...args);
-      spans.push(span);
-      return span;
-    },
-  });
-};
+import * as Database from './Database';
 
 describe('Database.withSpaceId', () => {
   it.effect('stamps the space on the span it opens', () =>

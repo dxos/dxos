@@ -57,6 +57,7 @@ describe('toAiGenerationProperties', () => {
       $ai_span_id: 'span-1',
       $ai_span_name: 'LanguageModel.generateText',
       $ai_latency: 1.5,
+      $ai_stream: false,
     });
   });
 

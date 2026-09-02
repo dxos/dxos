@@ -31,6 +31,7 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation, Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
+import { makeRecordingTracer } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { ContentBlock, Message, Organization } from '@dxos/types';
@@ -229,19 +230,6 @@ const DelegationTestLayer = AssistantTestLayer({
   agent: { delegationStrategy: StubDelegationStrategy },
 });
 
-const makeRecordingTracer = (names: string[], spans: Tracer.Span[] = []) => {
-  const base = Effect.runSync(Effect.tracer);
-  return Tracer.make({
-    span: (...args) => {
-      names.push((args[0] as any).name);
-      const span = base.span(...args);
-      spans.push(span);
-      return span;
-    },
-  });
-};
-
-const turnSpanNames: string[] = [];
 const turnSpans: Tracer.Span[] = [];
 
 describe('Agent Service', { tags: ['model-fixture'] }, () => {
@@ -841,7 +829,7 @@ describe('Agent Service (control plane)', () => {
         yield* session.submitPrompt('What is the capital of France?');
         yield* session.waitForCompletion();
 
-        expect(turnSpanNames).toContain('AiSession.createRequest');
+        expect(turnSpans.map(({ name }) => name)).toContain('AiSession.createRequest');
 
         const turn = turnSpans.find((span) => span.name === 'AiSession.createRequest');
         expect(turn?.attributes.get('dxos.ai.kind')).toEqual('turn');
@@ -851,7 +839,7 @@ describe('Agent Service (control plane)', () => {
         );
       },
       Effect.provide(TestLayer()),
-      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(turnSpanNames, turnSpans))),
+      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(turnSpans))),
       TestHelpers.provideTestContext,
     ),
     { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },

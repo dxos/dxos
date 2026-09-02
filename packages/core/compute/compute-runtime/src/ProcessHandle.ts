@@ -151,7 +151,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
   // letting runUntilSettled resolve during the persistence→dispatch hand-off before the turn runs.
   #alarmDispatching = false;
   #services: Context.Context<R | Process.BaseServices>;
-  readonly #context: Context.Context<never>;
+  readonly #dispatchContext: Context.Context<never>;
   #alarmSemaphore = Effect.runSync(Semaphore.make(1));
   readonly #callbacks: Process.Callbacks<I, O, R, any>;
   readonly #scope: Scope.Closeable;
@@ -172,7 +172,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
     callbacks: Process.Callbacks<I, O, R, any>,
     scope: Scope.Closeable,
     services: Context.Context<R | Process.BaseServices>,
-    context: Context.Context<never>,
+    dispatchContext: Context.Context<never>,
     registry: Registry.AtomRegistry,
     outputQueue: Queue.Queue<OutputItem<O>>,
     storage: StorageService.Service,
@@ -198,7 +198,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
     this.#callbacks = callbacks;
     this.#scope = scope;
     this.#services = services;
-    this.#context = context;
+    this.#dispatchContext = dispatchContext;
     this.#registry = registry;
     this.#outputQueue = outputQueue;
     this.#traceSink = traceSink;
@@ -576,7 +576,9 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
    */
   #forkAlarm(delay: number): Effect.Effect<Fiber.Fiber<void>> {
     return Effect.forkIn(
-      this.#makeAlarmSleepEffect(delay).pipe(Effect.updateContext((_: Context.Context<never>) => this.#context)),
+      this.#makeAlarmSleepEffect(delay).pipe(
+        Effect.updateContext((_: Context.Context<never>) => this.#dispatchContext),
+      ),
       this.#scope,
     );
   }
@@ -641,7 +643,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
       yield* Effect.forkIn(
         this.#persistence.appendEvent({ _tag: 'childEvent', event: toPersistedChildEvent(event) }).pipe(
           Effect.flatMap((seq) => this.#runHandler('childEvent', () => this.#callbacks.onChildEvent(event), seq)),
-          Effect.updateContext((_: Context.Context<never>) => this.#context),
+          Effect.updateContext((_: Context.Context<never>) => this.#dispatchContext),
         ),
         this.#scope,
       );

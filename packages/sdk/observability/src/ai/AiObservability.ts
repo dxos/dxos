@@ -110,24 +110,24 @@ const GEN_AI_MARKERS = ['gen_ai.system', 'gen_ai.request.model', 'gen_ai.respons
  * GenAI spec). Restated rather than imported because telemetry sits below the AI stack, not above
  * it; the `wired to @dxos/ai` cases in `AiObservability.test.ts` drive both halves so a rename fails there.
  */
-const SESSION_ID_ATTR = 'dxos.ai.session_id';
+const SESSION_ID_ATTR = SpanAttributes.AI.sessionId;
 /**
  * Shared with the process handle and ECHO rather than AI-specific: a model call inside a
  * space-scoped process carries it whether or not the call site named its space itself.
  */
 const SPACE_ID_ATTR = SpanAttributes.SPACE_ID;
-const INPUT_ATTR = 'dxos.ai.input';
-const OUTPUT_ATTR = 'dxos.ai.output';
-const TOOLS_ATTR = 'dxos.ai.tools';
-const TRUNCATED_ATTR = 'dxos.ai.truncated';
-const CACHE_READ_TOKENS_ATTR = 'dxos.ai.cache_read_tokens';
-const CACHE_WRITE_TOKENS_ATTR = 'dxos.ai.cache_write_tokens';
+const INPUT_ATTR = SpanAttributes.AI.input;
+const OUTPUT_ATTR = SpanAttributes.AI.output;
+const TOOLS_ATTR = SpanAttributes.AI.tools;
+const TRUNCATED_ATTR = SpanAttributes.AI.truncated;
+const CACHE_READ_TOKENS_ATTR = SpanAttributes.AI.cacheReadTokens;
+const CACHE_WRITE_TOKENS_ATTR = SpanAttributes.AI.cacheWriteTokens;
 /** What a non-model span is (`AiTelemetry.KIND`); a span with neither value is not AI at all. */
-const KIND_ATTR = 'dxos.ai.kind';
-const KIND_TURN = 'turn';
-const KIND_TOOL = 'tool';
+const KIND_ATTR = SpanAttributes.AI.kind;
+const KIND_TURN = SpanAttributes.AI_KIND.turn;
+const KIND_TOOL = SpanAttributes.AI_KIND.tool;
 /** Display name for a span whose OTel name is generic, e.g. the tool a `callTool` span ran. */
-const NAME_ATTR = 'dxos.ai.name';
+const NAME_ATTR = SpanAttributes.AI.name;
 
 /**
  * Reports finished AI spans to the injected sinks: model calls (`gen_ai.*`) as generations, and the
@@ -189,8 +189,8 @@ export class AiSpanProcessor implements SpanProcessor {
         latency: hrTimeToSeconds(span.duration),
         content: content
           ? {
-              input: parseJsonAttribute(attributes[INPUT_ATTR]),
-              output: parseJsonAttribute(attributes[OUTPUT_ATTR]),
+              input: parseJsonOrRaw(attributes[INPUT_ATTR]),
+              output: parseJsonOrRaw(attributes[OUTPUT_ATTR]),
               truncated: attributes[TRUNCATED_ATTR] === true ? true : undefined,
             }
           : undefined,
@@ -223,9 +223,9 @@ export class AiSpanProcessor implements SpanProcessor {
       streaming: span.name === STREAM_SPAN_NAME,
       content: content
         ? {
-            input: parseJsonAttribute(attributes[INPUT_ATTR]),
-            output: parseJsonAttribute(attributes[OUTPUT_ATTR]),
-            tools: parseJsonAttribute(attributes[TOOLS_ATTR]),
+            input: parseJsonOrRaw(attributes[INPUT_ATTR]),
+            output: parseJsonOrRaw(attributes[OUTPUT_ATTR]),
+            tools: parseJsonOrRaw(attributes[TOOLS_ATTR]),
             // A cut value no longer parses, so it is carried as the raw fragment; saying so keeps a
             // consumer from reading a string where an array was expected as a bug.
             truncated: attributes[TRUNCATED_ATTR] === true ? true : undefined,
@@ -262,7 +262,7 @@ const modelParameters = (attributes: ReadableSpan['attributes']): Record<string,
   return Object.keys(parameters).length > 0 ? parameters : undefined;
 };
 
-const parseJsonAttribute = (value: unknown): unknown => {
+const parseJsonOrRaw = (value: unknown): unknown => {
   if (typeof value !== 'string') {
     return undefined;
   }

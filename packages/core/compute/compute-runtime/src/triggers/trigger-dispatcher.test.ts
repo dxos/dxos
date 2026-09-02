@@ -27,6 +27,7 @@ import * as Trigger from '@dxos/compute/Trigger';
 import * as TriggerEvent from '@dxos/compute/TriggerEvent';
 import { Annotation, Database, DXN, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
+import { makeRecordingTracer } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { Person, Task } from '@dxos/types';
 
@@ -113,17 +114,7 @@ const TracedHandlers = OperationHandlerSet.make(
   ),
 );
 
-const makeRecordingTracer = (names: string[]) => {
-  const base = Effect.runSync(Effect.tracer);
-  return Tracer.make({
-    span: (...args) => {
-      names.push((args[0] as any).name);
-      return base.span(...args);
-    },
-  });
-};
-
-const dispatcherSpanNames: string[] = [];
+const dispatcherSpans: Tracer.Span[] = [];
 
 const TestHanlers = OperationHandlerSet.make(
   SubjectProbeOp.pipe(
@@ -767,7 +758,7 @@ describe('TriggerDispatcher', () => {
 
             const traced = yield* Effect.sync(
               () =>
-                dispatcherSpanNames.includes('Trigger.handler') &&
+                dispatcherSpans.some(({ name }) => name === 'Trigger.handler') &&
                 registry.get(dispatcher.state).invocations.some((invocation) => invocation.trigger.id === trigger.id),
             ).pipe(
               Effect.repeat({ until: (traced) => traced, schedule: Schedule.spaced(Duration.millis(25)) }),
@@ -775,12 +766,12 @@ describe('TriggerDispatcher', () => {
               Effect.map(Option.getOrElse(() => false)),
             );
 
-            expect(dispatcherSpanNames).toContain('TriggerDispatcher.refreshTriggers');
-            expect(traced, `recorded spans: ${JSON.stringify(dispatcherSpanNames)}`).toBe(true);
+            expect(dispatcherSpans.map(({ name }) => name)).toContain('TriggerDispatcher.refreshTriggers');
+            expect(traced, `recorded spans: ${JSON.stringify(dispatcherSpans.map(({ name }) => name))}`).toBe(true);
           }).pipe(Effect.ensuring(dispatcher.stop()));
         },
         Effect.provide(TestLayer({ timeControl: 'natural', livePollInterval: Duration.hours(1) })),
-        Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(dispatcherSpanNames))),
+        Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(dispatcherSpans))),
       ),
     );
   });

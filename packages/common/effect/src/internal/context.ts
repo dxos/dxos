@@ -2,8 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import type * as Scope from 'effect/Scope';
+import * as Tracer from 'effect/Tracer';
 
 import { Context } from '@dxos/context';
 
@@ -14,3 +16,12 @@ export const contextFromScope = (): Effect.Effect<Context, never, Scope.Scope> =
     yield* Effect.addFinalizer(() => Effect.promise(() => ctx.dispose()));
     return ctx;
   });
+
+/**
+ * The current context minus the parent span: what work dispatched later (an alarm, a child event, a
+ * forked refresh) should start from, so it does not nest under whatever happened to be running.
+ */
+export const contextWithoutParentSpan: Effect.Effect<EffectContext.Context<never>> = Effect.map(
+  Effect.context<never>(),
+  EffectContext.omit(Tracer.ParentSpan),
+);

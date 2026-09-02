@@ -7,19 +7,9 @@ import * as Tracer from 'effect/Tracer';
 import { describe, expect, test } from 'vitest';
 
 import * as SpanAttributes from './SpanAttributes';
+import { makeRecordingTracer } from './testing';
 
 const SPACE = 'B7777777777777777777777777';
-
-const recordingTracer = (spans: Tracer.Span[]) => {
-  const base = Effect.runSync(Effect.tracer);
-  return Tracer.make({
-    span: (...args) => {
-      const span = base.span(...args);
-      spans.push(span);
-      return span;
-    },
-  });
-};
 
 describe('SpanAttributes', () => {
   test('withSpace names the space, and names nothing when there is none', () => {
@@ -37,7 +27,7 @@ describe('SpanAttributes', () => {
       }).pipe(Effect.withSpan('outer'), SpanAttributes.annotateSpace(SPACE));
       yield* Effect.void.pipe(Effect.withSpan('skipped'), SpanAttributes.annotateSpace(null));
     });
-    Effect.runSync(program.pipe(Effect.provideService(Tracer.Tracer, recordingTracer(spans))));
+    Effect.runSync(program.pipe(Effect.provideService(Tracer.Tracer, makeRecordingTracer(spans))));
 
     const space = (name: string) => spans.find((span) => span.name === name)?.attributes.get(SpanAttributes.SPACE_ID);
     expect(space('outer')).toBe(SPACE);

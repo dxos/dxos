@@ -25,3 +25,26 @@ export const annotateSpace =
   (spaceId: string | null | undefined) =>
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
     spaceId ? Effect.annotateSpans(SPACE_ID, spaceId)(effect) : effect;
+
+/** Attributes the AI stack stamps on its spans and the AI analytics sink reads; one definition for both. */
+export const AI = {
+  /** Conversation identity, so the sink can group a conversation's turns. */
+  sessionId: 'dxos.ai.session_id',
+  input: 'dxos.ai.input',
+  output: 'dxos.ai.output',
+  tools: 'dxos.ai.tools',
+  /** Set when any of the above was cut to fit, so a consumer does not read a fragment as the whole. */
+  truncated: 'dxos.ai.truncated',
+  /** Prompt-cache token counts, which the GenAI conventions have nowhere for. */
+  cacheReadTokens: 'dxos.ai.cache_read_tokens',
+  cacheWriteTokens: 'dxos.ai.cache_write_tokens',
+  /** What a non-model span is to the sink: one of {@link AI_KIND}. */
+  kind: 'dxos.ai.kind',
+  /** Display name for a span whose OTel name is generic, e.g. the tool a `callTool` span ran. */
+  name: 'dxos.ai.name',
+} as const;
+
+export const AI_KIND = {
+  turn: 'turn',
+  tool: 'tool',
+} as const;

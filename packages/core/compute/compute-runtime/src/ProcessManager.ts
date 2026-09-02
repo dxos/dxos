@@ -15,7 +15,6 @@ import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import * as Semaphore from 'effect/Semaphore';
 import * as Stream from 'effect/Stream';
-import * as Tracer from 'effect/Tracer';
 import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
@@ -33,6 +32,7 @@ import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 import type { SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -496,7 +496,7 @@ export class ProcessManagerImpl implements Manager {
         name: options?.name,
       });
       const scope = yield* Scope.make();
-      const context = Context.omit(Tracer.ParentSpan)(yield* Effect.context<never>());
+      const dispatchContext = yield* EffectEx.contextWithoutParentSpan;
       const outputQueue = yield* Queue.unbounded<ProcessHandle.OutputItem<O>>();
 
       const storage = storageServiceLayer(this.#kvStore, `process/${id}/`);
@@ -661,7 +661,7 @@ export class ProcessManagerImpl implements Manager {
         callbacks,
         scope,
         fullCtx,
-        context,
+        dispatchContext,
         this.#registry,
         outputQueue,
         storage,
@@ -721,7 +721,7 @@ export class ProcessManagerImpl implements Manager {
       log('lifecycle: rehydrate', { pid: id, key: record.key });
 
       const scope = yield* Scope.make();
-      const context = Context.omit(Tracer.ParentSpan)(yield* Effect.context<never>());
+      const dispatchContext = yield* EffectEx.contextWithoutParentSpan;
       const outputQueue = yield* Queue.unbounded<ProcessHandle.OutputItem<any>>();
       const storage = storageServiceLayer(this.#kvStore, `process/${id}/`);
 
@@ -852,7 +852,7 @@ export class ProcessManagerImpl implements Manager {
         callbacks,
         scope,
         fullCtx,
-        context,
+        dispatchContext,
         this.#registry,
         outputQueue,
         storage,

@@ -62,6 +62,7 @@
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/log-store-idb": "workspace:*",
@@ -93,7 +94,6 @@
   "devDependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/client-services": "workspace:*",
-    "@dxos/effect": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@types/js-yaml": "catalog:"
   },

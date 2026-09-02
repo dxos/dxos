@@ -618,9 +618,10 @@ class Slice {
     return Effect.gen({ self: this }, function* () {
       // `ManagedRuntime.make` starts from an empty context, so the slice would otherwise trace to
       // Effect's default, which exports nothing.
-      const tracer = yield* Effect.tracer;
+      const defaultTracer = Context.make(Tracer.Tracer, yield* Effect.tracer);
+      const withDefaultTracer = (services: Context.Context<unknown>) => Context.merge(defaultTracer, services);
       const baseLayer: Layer.Layer<unknown, unknown, unknown> = Layer.syncContext(() =>
-        Context.merge(Context.make(Tracer.Tracer, tracer), this.#services),
+        withDefaultTracer(this.#services),
       ) as any;
       const combinedLayer = newLayers.reduce<Layer.Layer<unknown, unknown, unknown>>(
         (acc, spec) => Layer.provideMerge(spec.make(this.#context) as Layer.Layer<unknown, unknown, unknown>, acc),

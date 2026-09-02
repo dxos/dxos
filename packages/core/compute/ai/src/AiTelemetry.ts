@@ -7,42 +7,16 @@
 import * as Effect from 'effect/Effect';
 import type * as Tracer from 'effect/Tracer';
 import type * as Prompt from 'effect/unstable/ai/Prompt';
+import type * as Response from 'effect/unstable/ai/Response';
 import type * as Telemetry from 'effect/unstable/ai/Telemetry';
 
 import { SpanAttributes } from '@dxos/effect';
 import { log } from '@dxos/log';
 
 /** Span attributes carrying AI capture, outside the `gen_ai.*` semantic conventions. */
-export const ATTRIBUTES = {
-  /** Conversation identity, so the sink can group a conversation's turns. */
-  sessionId: 'dxos.ai.session_id',
-  /** Space the call runs in; the sink denies content when it is absent. */
-  spaceId: SpanAttributes.SPACE_ID,
-  input: 'dxos.ai.input',
-  output: 'dxos.ai.output',
-  tools: 'dxos.ai.tools',
-  /** Set when any of the above was cut to fit, so a consumer does not read a fragment as the whole. */
-  truncated: 'dxos.ai.truncated',
-  /**
-   * Prompt-cache token counts. Not content, and carried here only because the GenAI conventions have
-   * nowhere for them: `Telemetry.UsageAttributes` is input/output tokens and nothing else, so
-   * `gen_ai.usage.*` cannot express a cache hit.
-   */
-  cacheReadTokens: 'dxos.ai.cache_read_tokens',
-  cacheWriteTokens: 'dxos.ai.cache_write_tokens',
-  /**
-   * What a non-model span is to the sink: a {@link KIND.turn} is the unit an analytics backend
-   * groups a conversation's model calls under, a {@link KIND.tool} one step inside it.
-   */
-  kind: 'dxos.ai.kind',
-  /** Display name for a span whose OTel name is generic, e.g. the tool a `callTool` span ran. */
-  name: 'dxos.ai.name',
-} as const;
+export const ATTRIBUTES = { spaceId: SpanAttributes.SPACE_ID, ...SpanAttributes.AI } as const;
 
-export const KIND = {
-  turn: 'turn',
-  tool: 'tool',
-} as const;
+export const KIND = SpanAttributes.AI_KIND;
 
 export type Kind = (typeof KIND)[keyof typeof KIND];
 
@@ -119,12 +93,9 @@ export const makeSpanTransformer = (options?: SpanTransformerOptions): Telemetry
 };
 
 /** Nothing rather than zeroes when the provider reports no cache, so "no cache" reads apart from "no data". */
-const stampCacheUsage = (span: Tracer.Span, response: ReadonlyArray<{ readonly type: string }>): void => {
-  const finish = response.find((part) => part.type === 'finish');
-  if (!finish) {
-    return;
-  }
-  const inputTokens = (field(finish, 'usage') as { inputTokens?: Record<string, unknown> } | undefined)?.inputTokens;
+const stampCacheUsage = (span: Tracer.Span, response: ReadonlyArray<Response.AllParts<any>>): void => {
+  const finish = response.find((part): part is Response.FinishPart => part.type === 'finish');
+  const inputTokens = finish?.usage.inputTokens;
   if (!inputTokens) {
     return;
   }
@@ -136,54 +107,46 @@ const stampCacheUsage = (span: Tracer.Span, response: ReadonlyArray<{ readonly t
   }
 };
 
-const field = (part: { readonly type: string }, key: string): unknown =>
-  (part as unknown as Record<string, unknown>)[key];
-
-const textField = (part: { readonly type: string }, key: string): string => {
-  const value = field(part, key);
-  return typeof value === 'string' ? value : '';
-};
-
 const serializePrompt = (prompt: Prompt.Prompt): unknown[] =>
   prompt.content.map((message) => ({
     role: message.role,
     content: typeof message.content === 'string' ? message.content : message.content.map(serializePart),
   }));
 
-const serializePart = (part: { readonly type: string }): unknown => {
+const serializePart = (part: Prompt.Part): unknown => {
   switch (part.type) {
     case 'text':
     case 'reasoning':
-      return { type: part.type, text: field(part, 'text') };
+      return { type: part.type, text: part.text };
     case 'tool-call':
-      return { type: 'function', function: { name: field(part, 'name'), arguments: field(part, 'params') } };
+      return { type: 'function', function: { name: part.name, arguments: part.params } };
     case 'tool-result':
-      return { type: 'tool-result', name: field(part, 'name'), result: field(part, 'result') };
+      return { type: 'tool-result', name: part.name, result: part.result };
     default:
       return { type: part.type };
   }
 };
 
-const serializeResponse = (response: ReadonlyArray<{ readonly type: string }>): unknown[] => {
+const serializeResponse = (response: ReadonlyArray<Response.AllParts<any>>): unknown[] => {
   let text = '';
   let reasoning = '';
   const content: unknown[] = [];
   for (const part of response) {
     switch (part.type) {
       case 'text':
-        text += textField(part, 'text');
+        text += part.text;
         break;
       case 'text-delta':
-        text += textField(part, 'delta');
+        text += part.delta;
         break;
       case 'reasoning':
-        reasoning += textField(part, 'text');
+        reasoning += part.text;
         break;
       case 'reasoning-delta':
-        reasoning += textField(part, 'delta');
+        reasoning += part.delta;
         break;
       case 'tool-call':
-        content.push({ type: 'function', function: { name: field(part, 'name'), arguments: field(part, 'params') } });
+        content.push({ type: 'function', function: { name: part.name, arguments: part.params } });
         break;
     }
   }

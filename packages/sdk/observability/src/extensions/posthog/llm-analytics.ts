@@ -59,7 +59,7 @@ export const toAiGenerationProperties = (generation: ObservabilityExtension.Gene
     $ai_cache_read_input_tokens: generation.cacheReadTokens,
     $ai_cache_creation_input_tokens: generation.cacheWriteTokens,
     $ai_latency: generation.latency,
-    $ai_stream: generation.streaming ? true : undefined,
+    $ai_stream: generation.streaming,
     $ai_input: generation.content?.input,
     $ai_output_choices: generation.content?.output,
     $ai_tools: generation.content?.tools,

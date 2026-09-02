@@ -137,22 +137,6 @@ describe('AiTelemetry', () => {
     }).pipe(Effect.scoped),
   );
 
-  it('names the attributes the sink reads', () => {
-    expect(AiTelemetry.ATTRIBUTES).toEqual({
-      sessionId: 'dxos.ai.session_id',
-      spaceId: 'spaceId',
-      input: 'dxos.ai.input',
-      output: 'dxos.ai.output',
-      tools: 'dxos.ai.tools',
-      truncated: 'dxos.ai.truncated',
-      cacheReadTokens: 'dxos.ai.cache_read_tokens',
-      cacheWriteTokens: 'dxos.ai.cache_write_tokens',
-      kind: 'dxos.ai.kind',
-      name: 'dxos.ai.name',
-    });
-    expect(AiTelemetry.KIND).toEqual({ turn: 'turn', tool: 'tool' });
-  });
-
   it.effect('stamps the prompt-cache counts the GenAI conventions have no room for', () =>
     Effect.gen(function* () {
       const { exporter, provider, layer } = setup();

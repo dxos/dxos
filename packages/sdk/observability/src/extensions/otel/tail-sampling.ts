@@ -5,6 +5,8 @@
 import { type Attributes, type Context, SpanStatusCode } from '@opentelemetry/api';
 import type { ReadableSpan, Span, SpanProcessor } from '@opentelemetry/sdk-trace-base';
 
+import { SpanAttributes } from '@dxos/effect';
+
 /**
  * Tail sampling for spans arriving at the observability worker.
  *
@@ -132,8 +134,7 @@ export class TailSampler {
 const GEN_AI_PREFIX = 'gen_ai.';
 
 /** `gen_ai.*` marks a model call; `dxos.ai.kind` the turn around it and the tool calls inside it. */
-const isAiAttribute = (key: string): boolean => key.startsWith(GEN_AI_PREFIX) || key === AI_KIND_ATTR;
-const AI_KIND_ATTR = 'dxos.ai.kind';
+const isAiAttribute = (key: string): boolean => key.startsWith(GEN_AI_PREFIX) || key === SpanAttributes.AI.kind;
 
 /**
  * Deterministic per trace, so every span of a trace decides the same way. Reads the low 8 hex digits
