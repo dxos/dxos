@@ -22,8 +22,11 @@ import { log } from '@dxos/log';
 export const ATTRIBUTES = {
   /** Conversation identity, so the sink can group a conversation's turns. */
   sessionId: 'dxos.ai.session_id',
-  /** Space the call runs in. The sink denies content capture when it is absent. */
-  spaceId: 'dxos.ai.space_id',
+  /**
+   * Space the call runs in; the same key the process handle and ECHO stamp on their spans, so one
+   * filter finds a space's model calls and its other work. The sink denies content when it is absent.
+   */
+  spaceId: 'spaceId',
   input: 'dxos.ai.input',
   output: 'dxos.ai.output',
   tools: 'dxos.ai.tools',

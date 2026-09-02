@@ -2,17 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import {
-  ROOT_CONTEXT,
-  SpanStatusCode,
-  type Tracer,
-  context as otelContext,
-  propagation,
-  trace,
-} from '@opentelemetry/api';
+import { ROOT_CONTEXT, SpanStatusCode, type Tracer, context as otelContext, trace } from '@opentelemetry/api';
 import { W3CTraceContextPropagator } from '@opentelemetry/core';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
-import { BasicTracerProvider, BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
+import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
+import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
 import { ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 
 import { log } from '@dxos/log';
@@ -33,12 +27,10 @@ export type OtelTracesOptions = OtelOptions & {
 
 export class OtelTraces {
   private _tracer: Tracer;
-  private readonly _tracerProvider: BasicTracerProvider;
+  private readonly _tracerProvider: NodeTracerProvider;
 
   constructor(private readonly options: OtelTracesOptions) {
-    propagation.setGlobalPropagator(new W3CTraceContextPropagator());
-
-    this._tracerProvider = new BasicTracerProvider({
+    this._tracerProvider = new NodeTracerProvider({
       resource: this.options.resource,
       spanProcessors: [
         new TagInjectorSpanProcessor(this.options.getTags),
@@ -59,7 +51,11 @@ export class OtelTraces {
       ],
     });
 
-    trace.setGlobalTracerProvider(this._tracerProvider);
+    // Registers the provider, the propagator, and an async-hooks context manager. Without the
+    // last, `context.active()` is always the root, so the Effect tracer's context hook is inert and
+    // a log emitted inside a span cannot find it; async hooks carry it across awaits, which node
+    // code does constantly and the browser's stack manager could not follow.
+    this._tracerProvider.register({ propagator: new W3CTraceContextPropagator() });
     this._tracer = trace.getTracer(
       'dxos-observability',
       this.options.resource.attributes[ATTR_SERVICE_VERSION]?.toString(),
