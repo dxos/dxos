@@ -53,9 +53,21 @@ Design: [DESIGN.md](./DESIGN.md)
 
 ## Phase 3 — port the mbox importer
 
-- [ ] `plugin-google/scripts/import-mbox-space.ts` onto the builder, keeping the streaming/batched
-      append (a Takeout export is too large to hold in memory) and the `--limit` guard.
-- [ ] Replace its bespoke tag cache with `SampleSpace.Tags`.
+- [x] `plugin-google/scripts/import-mbox-space.ts` onto the builder. The harness is gone; the file
+      is now parseArgs + one phase + write.
+- [x] Streaming preserved, and now expressed as an Effect `Stream`: `Stream.fromAsyncIterable` →
+      `Stream.take(limit)` → `Stream.grouped(BATCH_SIZE)` → `Stream.runForEach`. A `for await` loop
+      is illegal inside `Effect.gen`'s non-async generator, which forced the rewrite — and the
+      stream version caps `--limit` exactly rather than rounding up to the next batch.
+      **This phase deliberately bypasses `SampleSpace.Feeds`** and appends eagerly: queuing a
+      multi-GB mailbox until the end of the build is the thing the streaming import exists to avoid.
+- [x] Bespoke tag cache replaced with `SampleSpace.Tags`. Side effect: membership is now keyed by
+      space-relative URIs instead of `Mailbox.tagUri`'s absolute ones. Behaviour is unchanged
+      because `TagIndex` normalizes both to a relative EID (`TagIndex.ts:153`), but the archive is
+      now space-agnostic like the onboarding one.
+- [x] Verified against the bundled fixture: 3 messages in the feed, 3 tags (Inbox/Important/
+      Finance), index keyed `echo:///01M1…` with no space id.
+      Run it with proto's Node 24 on PATH — `node:sqlite` does not exist on the PATH Node 20.
 
 ## Phase 4 — debug plugin
 
