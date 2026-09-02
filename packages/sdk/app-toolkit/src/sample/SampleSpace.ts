@@ -83,10 +83,7 @@ export const makeFeeds = (): Feeds['Service'] => {
   const queue: Array<{ feed: Feed.Feed; items: Obj.Unknown[] }> = [];
 
   return {
-    append: (feed, items) =>
-      Effect.sync(() => {
-        queue.push({ feed, items });
-      }),
+    append: (feed, items) => Effect.sync(() => queue.push({ feed, items })),
     drain: Effect.gen(function* () {
       yield* Database.flush();
       for (const { feed, items } of queue) {

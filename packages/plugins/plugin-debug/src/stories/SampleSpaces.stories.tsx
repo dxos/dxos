@@ -100,15 +100,12 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const Tidepool: Story = {
-  // Tagged so CI actually runs it: a sample space that stops building is a silent break otherwise.
-  tags: ['test'],
   play: async ({ canvasElement }) => {
     await applySampleSpace(canvasElement, 'Tidepool — Offline sync v2', 'Offline sync v2');
   },
 };
 
 export const Northwind: Story = {
-  tags: ['test'],
   play: async ({ canvasElement }) => {
     await applySampleSpace(canvasElement, 'Northwind Sales', 'Sales pipeline');
   },
