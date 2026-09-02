@@ -21,7 +21,6 @@ import {
   Icon,
   IconBlock,
   IconButton,
-  IconButtonProps,
   Input,
   Tag,
   Toolbar,
@@ -51,11 +50,13 @@ import { STATUS_ORDER, estimateTextStyle, priorityIcon, priorityTextStyle } from
 import { TaskTreeContent } from './TaskTreeContent';
 import { type TaskNode, buildTaskForest, flattenVisibleTasks } from './tree-model';
 
-const TASK_LIST_NAME = 'TaskList.Root';
+const shortDid = (did: string): string => `${did.slice(0, 12)}…`;
 
 //
 // Context — plain Radix context (un-scoped); nesting task lists has no meaning today.
 //
+
+const TASK_LIST_NAME = 'TaskList.Root';
 
 type TaskListContextValue = {
   tasks: readonly Task.Task[];
@@ -104,7 +105,9 @@ type TaskListRootProps = PropsWithChildren<{
   // Structure.
   //
 
-  /** Group rows into status sections (Linear order); flat list otherwise. */
+  /**
+   * Group rows into status sections (Linear order); flat list otherwise.
+   */
   groupByStatus?: boolean;
   /**
    * Render the set as the tree it stores (`Task.parentTask`), not as status groups — the two are
@@ -123,7 +126,9 @@ type TaskListRootProps = PropsWithChildren<{
   // Selection.
   //
 
-  /** Selected task id (controlled); omit to let the list track the last row clicked. */
+  /**
+   * Selected task id (controlled); omit to let the list track the last row clicked.
+   */
   selected?: string;
   /**
    * Makes the list selectable without a controlled `selected` or an `onTaskSelect` — for a host
@@ -158,7 +163,6 @@ type TaskListRootProps = PropsWithChildren<{
    * nothing — so delete is an ordinary contributed action rather than a special case of its own.
    */
   getTaskActions?: (task: Task.Task) => MenuItem[];
-
   /**
    * Enables `Create`; called with a draft carrying at least the trimmed title.
    */
@@ -432,20 +436,13 @@ const TaskEstimateControl = ({ task }: { task: Task.Task }) => {
   const label = estimate ? estimate.toUpperCase() : '–';
 
   if (!onTaskUpdate) {
-    return (
-      <span className={mx('grid size-8 shrink-0 place-items-center text-xs tabular-nums', estimateTextStyle(estimate))}>
-        {label}
-      </span>
-    );
+    return <IconBlock classNames={estimateTextStyle(estimate)}>{label}</IconBlock>;
   }
 
   return (
     <Menu.Root>
-      {/* The same square-inside-a-rail-slot as `CompactIconButton`, so the estimate column is the
-          width of the icon columns and its control the width of theirs — a button filling the whole
-          slot gave this one a wider hover and focus ring than its neighbours. */}
-      <span className='grid size-8 shrink-0 place-items-center'>
-        <Menu.Trigger asChild>
+      <Menu.Trigger asChild>
+        <IconBlock>
           <Button
             variant='ghost'
             density='sm'
@@ -456,8 +453,8 @@ const TaskEstimateControl = ({ task }: { task: Task.Task }) => {
           >
             {label}
           </Button>
-        </Menu.Trigger>
-      </span>
+        </IconBlock>
+      </Menu.Trigger>
       {/* Sourced from the schema's own option table, so the picker offers exactly what the field
           accepts and carries the same hue the form's select paints it with. Clearing is offered
           first; the table has no `none` row because the field is simply absent when unset. */}
@@ -510,17 +507,20 @@ const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
   return (
     <Menu.Root>
       <Menu.Trigger asChild>
-        <CompactIconButton
-          variant='ghost'
-          icon={icon}
-          label={t('task-priority.label')}
-          data-testid='taskList.item.priority'
-          // The hue goes on the icon, not the button: the row dims icons through `--icons-color`,
-          // which the `Icon` root reads, so a colour set on the button is overridden at rest.
-          iconClassNames={tint}
-          // The row is the selection target; opening the menu must not also select it.
-          onClick={(event) => event.stopPropagation()}
-        />
+        <IconBlock>
+          <IconButton
+            variant='ghost'
+            icon={icon}
+            iconOnly
+            label={t('task-priority.label')}
+            data-testid='taskList.item.priority'
+            // The hue goes on the icon, not the button: the row dims icons through `--icons-color`,
+            // which the `Icon` root reads, so a colour set on the button is overridden at rest.
+            iconClassNames={tint}
+            // The row is the selection target; opening the menu must not also select it.
+            onClick={(event) => event.stopPropagation()}
+          />
+        </IconBlock>
       </Menu.Trigger>
       {/* Sourced from the schema's own option table, so the picker offers exactly what the field
           accepts and carries the same hue the form's select paints it with. */}
@@ -592,37 +592,45 @@ const TaskListItemActions = ({ task }: { task: Task.Task }) => {
   const [only] = actions;
   if (actions.length === 1 && isMenuAction(only)) {
     return (
-      <CompactIconButton
-        variant='ghost'
-        icon={only.properties?.icon ?? fallbackIcon}
-        label={toLocalizedString(only.properties?.label, t)}
-        data-testid={only.properties?.testId}
-        classNames={ROW_ACTION_CLASSNAMES}
-        onClick={(event) => {
-          // The row is the selection target; running its action must not also select it.
-          event.stopPropagation();
-          void executeMenuAction(only);
-        }}
-      />
+      <IconBlock>
+        <IconButton
+          variant='ghost'
+          iconOnly
+          icon={only.properties?.icon ?? fallbackIcon}
+          label={toLocalizedString(only.properties?.label, t)}
+          data-testid={only.properties?.testId}
+          classNames={ROW_ACTION_CLASSNAMES}
+          onClick={(event) => {
+            // The row is the selection target; running its action must not also select it.
+            event.stopPropagation();
+            void executeMenuAction(only);
+          }}
+        />
+      </IconBlock>
     );
   }
 
   return (
     <Menu.Root>
       <Menu.Trigger asChild>
-        <CompactIconButton
-          variant='ghost'
-          icon='ph--dots-three-vertical--regular'
-          label={t('task-actions.label')}
-          data-testid='taskList.item.actions'
-          classNames={ROW_ACTION_CLASSNAMES}
-          onClick={(event) => event.stopPropagation()}
-        />
+        <IconBlock>
+          <IconButton
+            variant='ghost'
+            iconOnly
+            icon='ph--dots-three-vertical--regular'
+            label={t('task-actions.label')}
+            data-testid='taskList.item.actions'
+            classNames={ROW_ACTION_CLASSNAMES}
+            onClick={(event) => event.stopPropagation()}
+          />
+        </IconBlock>
       </Menu.Trigger>
       <Menu.Content items={actions} />
     </Menu.Root>
   );
 };
+
+TaskListItemActions.displayName = 'TaskList.ItemActions';
 
 /**
  * What a task produced, one tag each. Queried rather than read off `ref.target`: on a cold load the
@@ -651,6 +659,8 @@ const TaskListItemArtifacts = ({ task }: { task: Task.Task }) => {
     </>
   );
 };
+
+TaskListItemArtifacts.displayName = 'TaskList.ItemArtifacts';
 
 /**
  * One artifact, as a tag that opens the object's preview card — the row names what the task
@@ -681,18 +691,6 @@ const ArtifactTag = ({ artifact }: { artifact: Obj.Unknown }) => {
 };
 
 ArtifactTag.displayName = 'TaskList.ArtifactTag';
-
-TaskListItemArtifacts.displayName = 'TaskList.ItemArtifacts';
-
-TaskListItemActions.displayName = 'TaskList.ItemActions';
-
-const CompactIconButton = (props: IconButtonProps) => {
-  return (
-    <IconBlock>
-      <IconButton variant='ghost' iconOnly density='sm' {...props} />
-    </IconBlock>
-  );
-};
 
 //
 // Create — the add row; renders nothing unless the root supplies `onTaskCreate`.
@@ -880,14 +878,14 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
             // Placed explicitly, never by flow: the toolbar is absent until something is typed, so a
             // description left to auto-place would take the cell it vacates and fall into the icon
             // column — a field one word wide.
-            className={mx('flex min-w-0 col-end-[-2]', grid ? titleColumn : 'col-start-2')}
+            className={mx('flex min-w-0 -col-end-2', grid ? titleColumn : 'col-start-2')}
           >
             {/* A description is markdown, so it is edited as markdown. `editing` is held open —
-                  the pane IS the editor, so there is nothing to click into — and the key remounts
-                  it per task, since a field held open never re-reads its subject.
+                the pane IS the editor, so there is nothing to click into — and the key remounts
+                it per task, since a field held open never re-reads its subject.
 
-                  Creating, the field is uncontrolled: there is no task to read a value from, so it
-                  holds the draft itself until the create collects it. */}
+                Creating, the field is uncontrolled: there is no task to read a value from, so it
+                holds the draft itself until the create collects it. */}
             <MarkdownEditable
               key={current?.id ?? `create-${createEpoch}`}
               ref={descriptionRef}
@@ -978,8 +976,6 @@ const TaskListAssignee = composable<HTMLSpanElement, TaskListAssigneeProps>(({ a
 });
 
 TaskListAssignee.displayName = 'TaskList.Assignee';
-
-const shortDid = (did: string): string => `${did.slice(0, 12)}…`;
 
 //
 // TaskList

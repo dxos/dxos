@@ -7,6 +7,7 @@ import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/ad
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 
+import { useTranslation } from '@dxos/react-ui';
 import { type ColumnRenderer, type HeadingRenderer, Tree, isTreeDataFor } from '@dxos/react-ui-list';
 import { Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
@@ -81,6 +82,7 @@ export const TaskTreeContent = ({
   onTaskUpdate,
   onTaskMove,
 }: TaskTreeContentProps) => {
+  const { t } = useTranslation(translationKey);
   const registry = useContext(RegistryContext);
 
   // Read at construction only. Keeping `collapsed` out of the memo's dependencies is what makes the
@@ -251,6 +253,7 @@ export const TaskTreeContent = ({
   return (
     <Tree<TaskNode>
       id={TASK_TREE_ROOT_ID}
+      ariaLabel={t('task-list.label')}
       model={model}
       gridTemplateColumns={GRID_TEMPLATE}
       classNames='w-full min-w-0'

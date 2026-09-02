@@ -185,6 +185,11 @@ export type TreeProps<T extends { id: string } = any> = {
   rootId?: string;
   path?: string[];
   id: string;
+  /**
+   * Accessible name for the tree. Ark names it "Tree View" by default, which says what the widget
+   * is and not which list it is — a page with more than one is then unnavigable by name.
+   */
+  ariaLabel?: string;
   classNames?: string | (string | undefined)[];
   gridTemplateColumns?: string;
   draggable?: boolean;
@@ -251,6 +256,7 @@ export const Tree = <T extends { id: string } = any>({
   rootId,
   path,
   id,
+  ariaLabel,
   classNames,
   gridTemplateColumns = '[tree-row-start] minmax(0, 1fr) min-content [tree-row-end]',
   draggable = false,
@@ -554,6 +560,7 @@ export const Tree = <T extends { id: string } = any>({
     >
       <TreeRenderProvider value={renderContext as TreeRenderContextValue}>
         <TreeView.Tree
+          aria-label={ariaLabel}
           // `outline-none`: the machine parks focus on the tree container (tabIndex=-1) when no
           // row holds it, which must not draw a focus ring around the whole tree.
           className={mx('grid outline-none', ...(Array.isArray(classNames) ? classNames : [classNames]))}

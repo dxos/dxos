@@ -10,6 +10,7 @@ export const translations = [
   {
     'en-US': {
       [translationKey]: {
+        'task-list.label': 'Tasks',
         'mark-done.label': 'Mark done',
         'mark-todo.label': 'Mark todo',
         'status-backlog.label': 'Backlog',
