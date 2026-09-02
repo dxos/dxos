@@ -103,10 +103,10 @@ export const SchemaDefs = Capability.lazyModule(
 );
 export const RemoteTraceMonitor = Capability.lazyModule(
   'RemoteTraceMonitor',
-  // Startup: the process-manager runtime snapshots this capability once, in the Startup pass, and
-  // bakes a no-op remote source if it has not been contributed yet — demand activation always loses
-  // that race, silencing remote traces for every ProcessMonitor consumer.
-  { provides: [Capabilities.RemoteTraceMonitor], activatesOn: ActivationEvents.Startup },
+  // No Startup gate: the process-manager runtime reads this capability as a live view rather than a
+  // one-shot snapshot, so the aggregate ProcessMonitor picks the monitor up whenever it lands and
+  // nothing here has to run in the boot pass.
+  { provides: [Capabilities.RemoteTraceMonitor] },
   () => import('./remote-trace-monitor'),
 );
 export const SpaceReplicationProgress = Capability.lazyModule(
