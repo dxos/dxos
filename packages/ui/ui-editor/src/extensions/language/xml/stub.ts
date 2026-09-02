@@ -50,37 +50,67 @@ export interface XmlWidgetNotifier {
  * not-yet-measured content. Gradual scrolling does not jump. That is general CM heightmap behavior, not
  * fixable here — see upstream CM #1727 (https://code.haverbeke.berlin/codemirror/dev/issues/1727).
  */
+export type StubWidgetOptions<TProps> = {
+  id: string;
+  Component: FunctionComponent<TProps>;
+  props: TProps;
+  notifier: XmlWidgetNotifier;
+  /**
+   * Identity of the source text the props were built from. `eq` consults it because a widget id is not
+   * always content-derived: a streaming tag is keyed on its opening position alone (its end moves every
+   * tick), so a run that grows in place keeps its id and would otherwise leave CodeMirror holding the
+   * instance built from the first chunk.
+   */
+  signature?: string;
+  streaming?: boolean;
+  block?: boolean;
+  /**
+   * Reserved block height (px). Feeds CodeMirror's off-screen viewport estimate and pre-sizes the
+   * placeholder so the block occupies its final height before the portaled content resolves —
+   * otherwise it collapses to the 24px minimum, causing scroll jitter and a blank on scroll-back.
+   */
+  blockHeight?: number;
+  /**
+   * How `blockHeight` is applied. `fixed` (the default) pins the box, which is right when the
+   * height is known up front — an image, a chart. `min` makes it a floor, for content that can
+   * legitimately grow after it mounts: a disclosure the reader opens is pinned shut by `fixed`,
+   * and clipped by its `overflow: hidden`.
+   */
+  heightMode?: 'fixed' | 'min';
+  /** When true, trace the widget's DOM lifecycle to diagnose scroll-cull jitter/jump (see PreviewScrollSurface). */
+  debug?: boolean;
+};
+
 export class StubWidget<TProps extends XmlWidgetProps> extends WidgetType {
   #root: HTMLElement | null = null;
   #view: EditorView | undefined;
   // Throttle the (hot) coordsAt trace to at most once per frame.
   #coordsLoggedThisFrame = false;
 
-  constructor(
-    readonly id: string,
-    readonly Component: FunctionComponent<TProps>,
-    readonly props: TProps,
-    readonly notifier: XmlWidgetNotifier,
-    readonly streaming?: boolean,
-    readonly block?: boolean,
-    /**
-     * Reserved block height (px). Feeds CodeMirror's off-screen viewport estimate and pre-sizes the
-     * placeholder so the block occupies its final height before the portaled content resolves —
-     * otherwise it collapses to the 24px minimum, causing scroll jitter and a blank on scroll-back.
-     */
-    readonly blockHeight?: number,
-    /**
-     * How `blockHeight` is applied. `fixed` (the default) pins the box, which is right when the
-     * height is known up front — an image, a chart. `min` makes it a floor, for content that can
-     * legitimately grow after it mounts: a disclosure the reader opens is pinned shut by `fixed`,
-     * and clipped by its `overflow: hidden`.
-     */
-    readonly heightMode?: 'fixed' | 'min',
-    /** When true, trace the widget's DOM lifecycle to diagnose scroll-cull jitter/jump (see PreviewScrollSurface). */
-    readonly debug?: boolean,
-  ) {
+  readonly id: string;
+  readonly Component: FunctionComponent<TProps>;
+  readonly props: TProps;
+  readonly notifier: XmlWidgetNotifier;
+  readonly signature?: string;
+  readonly streaming?: boolean;
+  readonly block?: boolean;
+  readonly blockHeight?: number;
+  readonly heightMode?: 'fixed' | 'min';
+  readonly debug?: boolean;
+
+  constructor(options: StubWidgetOptions<TProps>) {
     super();
-    invariant(id);
+    this.id = options.id;
+    this.Component = options.Component;
+    this.props = options.props;
+    this.notifier = options.notifier;
+    this.signature = options.signature;
+    this.streaming = options.streaming;
+    this.block = options.block;
+    this.blockHeight = options.blockHeight;
+    this.heightMode = options.heightMode;
+    this.debug = options.debug;
+    invariant(this.id);
   }
 
   get root(): HTMLElement | null {
@@ -151,8 +181,11 @@ export class StubWidget<TProps extends XmlWidgetProps> extends WidgetType {
     // Context too, not just the id: props are captured at build time, so an id-only comparison makes
     // CodeMirror keep the existing widget (and its stale props) when the host publishes the context
     // after the first build — leaving every widget callback bound to `undefined`.
+    // The signature too: an id that does not encode the tag's content (a streaming tag is keyed on
+    // its opening position) would otherwise pin the widget to the props of the first chunk, so a run
+    // that keeps appending to the same tag never re-renders until the document is rebuilt.
     const context = (props: TProps) => (props as XmlWidgetProps).context;
-    return this.id === other.id && context(this.props) === context(other.props);
+    return this.id === other.id && this.signature === other.signature && context(this.props) === context(other.props);
   }
 
   override ignoreEvent() {
@@ -201,9 +234,12 @@ export class StubWidget<TProps extends XmlWidgetProps> extends WidgetType {
     return this.#root;
   }
 
-  override updateDOM(dom: HTMLElement) {
+  // Called on the REPLACEMENT widget with the outgoing instance's DOM, so `view` arrives as the
+  // argument — `#view` is only ever set by this instance's own `toDOM`, which has not run.
+  override updateDOM(dom: HTMLElement, view: EditorView) {
     this.#root = dom;
-    const props = Object.assign({}, this.props, { view: this.#view }) as TProps;
+    this.#view = view;
+    const props = Object.assign({}, this.props, { view }) as TProps;
     this.notifier.mounted({ id: this.id, root: this.#root, props, Component: this.Component });
     this.#trace('updateDOM (reuse/re-parent)', { connected: dom.isConnected });
     this.#measureAfterPaint('updateDOM');
