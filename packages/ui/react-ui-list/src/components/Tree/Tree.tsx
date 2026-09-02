@@ -817,6 +817,10 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
         hoverableFocusedKeyboardControls,
         hoverableFocusedWithinControls,
         hoverableDescriptionIcons,
+        // A selected row is a row the reader is looking at, so its controls are held at full
+        // strength like a focused one's. Both dimmers had a hover and a focus case but no selected
+        // case, which left the current row's icons faded — the opposite of what selection means.
+        'data-[selected]:[--controls-opacity:1] data-[selected]:[--icons-color:inherit]',
         props.className,
       )}
       onClick={handleClick}
