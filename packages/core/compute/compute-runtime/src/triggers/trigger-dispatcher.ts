@@ -252,7 +252,7 @@ export class TriggerDispatcher extends Context.Service<
     Layer.effect(
       TriggerDispatcher,
       Effect.gen(function* () {
-        const services = (yield* EffectEx.contextWithoutParentSpan) as Context.Context<TriggerDispatcherServices>;
+        const services = yield* EffectEx.contextWithoutParentSpan<TriggerDispatcherServices>();
         return new TriggerDispatcherImpl({ ...options, services });
       }),
     );
