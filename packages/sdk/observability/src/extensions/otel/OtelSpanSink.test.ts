@@ -8,6 +8,7 @@ import { resourceFromAttributes } from '@opentelemetry/resources';
 import { BasicTracerProvider, InMemorySpanExporter, type ReadableSpan } from '@opentelemetry/sdk-trace-base';
 import { afterEach, describe, expect, test } from 'vitest';
 
+import { SpanAttributes } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import * as OtelSpanSink from './OtelSpanSink';
@@ -37,9 +38,40 @@ describe('OtelSpanSink', () => {
 
   const makeSink = () => {
     const exporter = new InMemorySpanExporter();
-    sink = new OtelSpanSink.Sink(defaultInit, { exporter });
+    sink = new OtelSpanSink.Sink(defaultInit, { exporter, sampling: { ratio: 1 } });
     return { sink, exporter };
   };
+
+  test('exports a span the ratio would drop once its trace is promoted', async () => {
+    const { records, tracer } = makeProducer();
+    const exporter = new InMemorySpanExporter();
+    sink = new OtelSpanSink.Sink(defaultInit, { exporter, sampling: { ratio: 0 } });
+    const dropped = tracer.startSpan('quiet');
+    dropped.end();
+    const kept = tracer.startSpan('flagged');
+    sink.promote(kept.spanContext().traceId);
+    kept.end();
+
+    records.forEach((record) => sink!.append(record));
+    await sink.flush();
+    expect(exporter.getFinishedSpans().map(({ name }) => name)).toEqual(['flagged']);
+  });
+
+  test('exports a model call without its content', async () => {
+    const { records, tracer } = makeProducer();
+    const { sink, exporter } = makeSink();
+
+    tracer
+      .startSpan('AiSession.createRequest', {
+        attributes: { [SpanAttributes.AI.kind]: 'turn', [SpanAttributes.AI.input]: '[{"role":"user"}]' },
+      })
+      .end();
+    sink.append(records[0]);
+    await sink.flush();
+
+    const [exported] = exporter.getFinishedSpans();
+    expect(exported.attributes).toEqual({ [SpanAttributes.AI.kind]: 'turn' });
+  });
 
   test('round-trips an ended span through serialization into the export pipeline', async () => {
     const { records, tracer } = makeProducer();
@@ -91,7 +123,7 @@ describe('OtelSpanSink', () => {
     expect(exportedChild.spanContext().traceId).toBe(exportedParent.spanContext().traceId);
   });
 
-  test('unsampled spans are not forwarded', () => {
+  test('forwards an unsampled span, leaving the decision to the worker', () => {
     const records: OtelSpanSink.Span[] = [];
     const processor = new OtelSpanSink.PortSpanProcessor((record) => records.push(record));
     const unsampled: ReadableSpan = {
@@ -114,6 +146,7 @@ describe('OtelSpanSink', () => {
     };
 
     processor.onEnd(unsampled);
-    expect(records).toEqual([]);
+    expect(records).toHaveLength(1);
+    expect(records[0]?.name).toEqual('unsampled');
   });
 });

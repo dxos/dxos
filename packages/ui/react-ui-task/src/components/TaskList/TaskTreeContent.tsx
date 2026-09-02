@@ -23,7 +23,7 @@ import {
   resolveTaskPlacement,
 } from './hierarchy';
 import { TaskDescription } from './TaskDescription';
-import { TaskOrdinal, TaskStatusControl } from './TaskRowCells';
+import { TaskCheckbox, TaskOrdinal, TaskStatusControl } from './TaskRowCells';
 import { TASK_TREE_ROOT_ID, type TaskNode, buildTaskForest, buildTaskPaths, createTaskTreeModel } from './tree-model';
 
 /** Columns after the title: assignee, tags and the contributed actions live here. */
@@ -56,10 +56,13 @@ export type TaskTreeContentProps = {
   showGutter: boolean;
   ordinals: ReadonlyMap<string, number>;
   selected?: string;
+  /** Ids of the checked rows; the gutter renders a checkbox instead of an ordinal once wired. */
+  checked?: ReadonlySet<string>;
   translationKey: string;
   /** Render each task's description under its title; rows grow to fit. */
   showDescription?: boolean;
   onCollapseToggle: (id: string) => void;
+  onTaskCheck?: (task: Task.Task) => void;
   onTaskSelect?: (task: Task.Task | undefined) => void;
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
   onTaskMove?: (task: Task.Task, placement: TaskPlacement) => void;
@@ -75,10 +78,12 @@ export const TaskTreeContent = ({
   showGutter,
   ordinals,
   selected,
+  checked,
   renderTrailing,
   translationKey,
   showDescription = false,
   onCollapseToggle,
+  onTaskCheck,
   onTaskSelect,
   onTaskUpdate,
   onTaskMove,
@@ -140,9 +145,12 @@ export const TaskTreeContent = ({
 
   const renderHeading: HeadingRenderer<TaskNode> = useCallback(
     ({ item }) => (
-      <TaskTreeHeading node={item} {...{ showGutter, ordinals, translationKey, showDescription, onTaskUpdate }} />
+      <TaskTreeHeading
+        node={item}
+        {...{ showGutter, ordinals, checked, translationKey, showDescription, onTaskCheck, onTaskUpdate }}
+      />
     ),
-    [showGutter, ordinals, translationKey, showDescription, onTaskUpdate],
+    [showGutter, ordinals, checked, translationKey, showDescription, onTaskCheck, onTaskUpdate],
   );
 
   // Restructuring is keyboard-driven, and the machine ignores modified arrows — so the gesture is
@@ -278,20 +286,28 @@ export const TaskTreeContent = ({
   );
 };
 
-/** Ordinal, status control and title — the row's leading content, beside the tree's own toggle. */
+/**
+ * The gutter cell, status control and title — the row's leading content, beside the tree's own
+ * toggle. The gutter holds either the checkbox or the ordinal, never both: they occupy one cell, and
+ * a number beside a box reads as two ways to act on the row.
+ */
 const TaskTreeHeading = ({
   node,
   showGutter,
   ordinals,
+  checked,
   translationKey,
   showDescription,
+  onTaskCheck,
   onTaskUpdate,
 }: {
   node: TaskNode;
   showGutter: boolean;
   ordinals: ReadonlyMap<string, number>;
+  checked?: ReadonlySet<string>;
   translationKey: string;
   showDescription: boolean;
+  onTaskCheck?: (task: Task.Task) => void;
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
 }) => {
   const task = node.task;
@@ -319,12 +335,25 @@ const TaskTreeHeading = ({
         // top, while an undescribed row has slack to centre in — so the two titles disagreed by a
         // few pixels down the list.
         'grid-rows-[var(--dx-control)_auto]',
-        showGutter ? 'grid-cols-[auto_auto_minmax(0,1fr)]' : 'grid-cols-[auto_minmax(0,1fr)]',
+        // Fixed tracks, not `auto`: `TaskList.Edit` lays its own pane out on the same widths, and an
+        // intrinsic ordinal (12px for one digit, wider for two) put the pane's `+` 20px right of the
+        // rows' status controls. `2rem` is the gutter's two-digit width, `1.5rem` the status
+        // button's — the same pair `GRID_COLS` declares.
+        showGutter ? 'grid-cols-[2rem_1.5rem_minmax(0,1fr)]' : 'grid-cols-[1.5rem_minmax(0,1fr)]',
       )}
     >
+      {/* `justify-self-start`: the gutter track is two digits wide so the pane's columns line up
+          with it, but the badge and the box are their own size within it rather than stretched. */}
       {showGutter &&
-        (ordinal !== undefined ? (
-          <TaskOrdinal task={task} ordinal={ordinal} />
+        (onTaskCheck ? (
+          <TaskCheckbox
+            task={task}
+            checked={!!checked?.has(task.id)}
+            classNames='justify-self-start'
+            onCheckedChange={onTaskCheck}
+          />
+        ) : ordinal !== undefined ? (
+          <TaskOrdinal task={task} ordinal={ordinal} classNames='justify-self-start' />
         ) : (
           // Holds the gutter track so a numberless row's title still lines up with its neighbours.
           <span />

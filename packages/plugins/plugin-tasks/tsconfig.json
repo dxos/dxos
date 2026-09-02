@@ -106,6 +106,9 @@
       "path": "../plugin-github"
     },
     {
+      "path": "../plugin-markdown"
+    },
+    {
       "path": "../plugin-space"
     },
     {

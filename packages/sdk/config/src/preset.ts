@@ -15,7 +15,8 @@ export type ConfigPresetOptions = {
   edge?: 'local' | 'dev' | 'preview' | 'main' | 'production';
 
   /**
-   * Sandbox service (standalone worker; API at /api/sandbox).
+   * Sandbox service. Only `local` sets anything: every deployed sandbox-service is reached as
+   * `<edge>/sandbox`, so `edge` above already configures it.
    */
   sandbox?: 'local' | 'dev' | 'main' | 'production';
 };
@@ -31,18 +32,17 @@ const edgeUrl = (edge: NonNullable<ConfigPresetOptions['edge']>) =>
     Match.exhaustive,
   );
 
-// TODO(burdon): Hosted environments share a single worker until per-env deployments exist.
-const sandboxUrl = (sandbox: NonNullable<ConfigPresetOptions['sandbox']>) =>
+// `undefined` for every deployed environment: `runtime.services.sandbox.url` is the override for a
+// worker that is NOT behind EDGE, and leaving it unset is what makes the client derive `<edge>/sandbox`.
+const sandboxUrl = (sandbox: NonNullable<ConfigPresetOptions['sandbox']>): string | undefined =>
   Match.value(sandbox).pipe(
     Match.when('local', () => 'http://localhost:8792'),
-    Match.when('dev', () => 'https://sandbox-service.dxos.workers.dev'),
-    Match.when('main', () => 'https://sandbox-service.dxos.workers.dev'),
-    Match.when('production', () => 'https://sandbox-service.dxos.workers.dev'),
-    Match.exhaustive,
+    Match.orElse(() => undefined),
   );
 
-export const configPreset = ({ edge = 'preview', sandbox }: ConfigPresetOptions = {}) =>
-  new Config({
+export const configPreset = ({ edge = 'preview', sandbox }: ConfigPresetOptions = {}) => {
+  const sandboxOverride = sandbox && sandboxUrl(sandbox);
+  return new Config({
     version: 1,
     runtime: {
       client: {
@@ -56,7 +56,8 @@ export const configPreset = ({ edge = 'preview', sandbox }: ConfigPresetOptions 
         edge: {
           url: edgeUrl(edge),
         },
-        ...(sandbox ? { sandbox: { url: sandboxUrl(sandbox) } } : {}),
+        ...(sandboxOverride ? { sandbox: { url: sandboxOverride } } : {}),
       },
     },
   });
+};

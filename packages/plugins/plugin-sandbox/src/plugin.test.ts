@@ -19,7 +19,7 @@ import { SandboxPlugin } from '#plugin';
 import { Sandbox, SandboxOperation } from '#types';
 
 /**
- * Prereq: sandbox-service worker at http://localhost:8792 (API at /api/sandbox).
+ * Prereq: sandbox-service worker at http://localhost:8792 (routes served at its root).
  * Entity IDs must be unique per run (do not call `EntityId.dangerouslyDisableRandomness`) so sandbox-service
  * KV does not reject the same sandboxId under a new space from a prior run.
  */

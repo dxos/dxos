@@ -68,13 +68,25 @@ const seedFlat = (): Task.Task[] => [
  * ordinals into double digits, and put more than one task under each group heading, which a
  * seven-task list does not.
  */
+/** A value when `set`, `undefined` otherwise. */
+const when = <T,>(set: boolean, value: () => T): T | undefined => (set ? value() : undefined);
+
+/**
+ * Every optional field is left unset on some rows: each renders a control whether or not it holds a
+ * value, so a seed that fills them all leaves the unset half of the list — the dot, the blank
+ * description — with no story behind it.
+ *
+ * Which rows is a rule on the index rather than a coin flip: a flip can land the same way forty
+ * times, and a story that only sometimes covers the state it exists for is not coverage. The moduli
+ * differ per field so a row is rarely all-set or all-empty.
+ */
 const seedMany = (n = 40): Task.Task[] =>
-  Array.from({ length: n }, () =>
+  Array.from({ length: n }, (_, index) =>
     Task.make({
       title: random.lorem.sentence(random.number.int({ min: 5, max: 10 })),
-      description: random.number.int({ min: 0, max: 1 }) ? random.lorem.paragraphs(1) : undefined,
-      priority: random.helpers.arrayElement([...Task.Priority.literals]),
-      estimate: random.helpers.arrayElement([...Task.Estimate.literals]),
+      description: when(index % 2 === 0, () => random.lorem.paragraphs(1)),
+      priority: when(index % 3 !== 0, () => random.helpers.arrayElement([...Task.Priority.literals])),
+      estimate: when(index % 2 === 1, () => random.helpers.arrayElement([...Task.Estimate.literals])),
     }),
   );
 
@@ -143,6 +155,7 @@ const DefaultStory = ({
   showDescription = true,
   showEstimates,
   draggable = false,
+  checkable = false,
   seed = seedFlat,
   debug,
   framed = true,
@@ -157,6 +170,8 @@ const DefaultStory = ({
   showEstimates?: boolean;
   /** Wire `onTaskMove`, which is what turns rows into drag sources. Off unless a story asks. */
   draggable?: boolean;
+  /** Wire `onTaskCheck`, which puts a checkbox in the gutter where the ordinal would sit. */
+  checkable?: boolean;
   /**
    * The tasks to start from. A factory rather than a named fixture, so a story can compose its own
    * (`() => seedMany(100)`) without a union to extend — and because `useState` reads its initial
@@ -173,6 +188,17 @@ const DefaultStory = ({
 
   // Selection is what the article wires, and what arrow-key navigation moves.
   const [selected, setSelected] = useState<string>();
+
+  // The checked set stands in for the view state the article keys by task-set id: a set of its own,
+  // so a row can be current and checked at once.
+  const [checked, setChecked] = useState<ReadonlySet<string>>(() => new Set<string>());
+  const handleCheck = useCallback((task: Task.Task) => {
+    setChecked((checked) => {
+      const next = new Set(checked);
+      next.has(task.id) ? next.delete(task.id) : next.add(task.id);
+      return next;
+    });
+  }, []);
 
   // Delete is an ordinary contributed action now, which is also what a plugin's own actions look like.
   const getTaskActions = useCallback(
@@ -233,6 +259,8 @@ const DefaultStory = ({
       getTaskActions={readonly ? undefined : getTaskActions}
       onTaskCreate={readonly ? undefined : handleCreate}
       onTaskUpdate={readonly ? undefined : handleUpdate}
+      checked={checked}
+      onTaskCheck={checkable ? handleCheck : undefined}
       onTaskMove={readonly || !hierarchical || !draggable ? undefined : handleMove}
       onTaskSelect={(task) => setSelected(task?.id)}
     >
@@ -292,6 +320,68 @@ export const WithOrdinals: Story = {
   args: {
     showGroupLabels: false,
     showOrdinals: true,
+  },
+};
+
+/** The gutter's checkbox: the set an action acts on, in place of the ordinal that would sit there. */
+/**
+ * The status glyph spins for a task an agent has taken and started — and only then.
+ *
+ * Both halves matter: `started` alone is a person working, and an agent assignee alone is work that
+ * is queued. The seed carries one of each, so a rule that dropped either half fails here.
+ */
+export const TestAgentSpinner: Story = {
+  args: { showGroupLabels: false },
+  play: async ({ canvasElement }) => {
+    const spinning = () =>
+      [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]')]
+        .filter((row) => row.querySelector('[data-testid="taskList.item.status"] .animate-spin'))
+        .map((row) => row.querySelector('span.truncate')?.textContent ?? '');
+
+    await waitFor(async () => expect(spinning()).toEqual(['Draft launch email']), { timeout: 10_000 });
+  },
+};
+
+export const WithCheckboxes: Story = {
+  args: {
+    showGroupLabels: false,
+    checkable: true,
+  },
+};
+
+/**
+ * Checking is selection, not a status write, and it is not the current row either: the box toggles
+ * independently of which row the reader is on, and leaves the task's status alone.
+ */
+export const TestCheckboxSelection: Story = {
+  args: { showGroupLabels: false, checkable: true, showOrdinals: true },
+  play: async ({ canvasElement }) => {
+    const boxes = () =>
+      Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item.checkbox"]'));
+    const statuses = () =>
+      Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item.status"]')).map(
+        (status) => status.querySelector('.sr-only')?.textContent,
+      );
+
+    await waitFor(async () => expect(boxes().length).toBeGreaterThan(1));
+    // Checkbox and ordinal are mutually exclusive: the box takes the gutter cell, so no row numbers.
+    await expect(canvasElement.querySelectorAll('.tabular-nums').length).toBe(0);
+
+    const before = statuses();
+    await userEvent.click(boxes()[0]);
+    await waitFor(async () => expect(boxes()[0].getAttribute('data-state')).toBe('checked'));
+    // A second row checks alongside the first — a set, not a single selection.
+    await userEvent.click(boxes()[1]);
+    await waitFor(async () => expect(boxes()[1].getAttribute('data-state')).toBe('checked'));
+    await expect(boxes()[0].getAttribute('data-state')).toBe('checked');
+
+    // Selection only: checking two rows moved no task's status, which is what the status control
+    // is for.
+    await expect(statuses()).toEqual(before);
+
+    // Toggles off.
+    await userEvent.click(boxes()[0]);
+    await waitFor(async () => expect(boxes()[0].getAttribute('data-state')).toBe('unchecked'));
   },
 };
 
