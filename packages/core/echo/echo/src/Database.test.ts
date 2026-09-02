@@ -21,12 +21,13 @@ const makeRecordingTracer = (spans: Tracer.Span[]) => {
   });
 };
 
-describe('Database.traced', () => {
+describe('Database.withSpaceId', () => {
   it.effect('stamps the space on the span it opens', () =>
     Effect.gen(function* () {
       const spans: Tracer.Span[] = [];
       yield* Effect.void.pipe(
-        Database.traced('Database.test'),
+        Effect.withSpan('Database.test'),
+        Database.withSpaceId,
         Effect.provideService(Database.Service, { db: { spaceId: 'B7777777777777777777777777' } } as any),
         Effect.provideService(Tracer.Tracer, makeRecordingTracer(spans)),
       );
