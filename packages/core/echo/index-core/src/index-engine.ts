@@ -8,6 +8,7 @@ import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { type Context } from '@dxos/context';
 import { ATTR_TYPE } from '@dxos/echo/internal';
+import { SpanAttributes } from '@dxos/effect';
 import type { EntityId, SpaceId } from '@dxos/keys';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
@@ -120,9 +121,6 @@ export interface IndexEngineParams {
   ftsIndex: FtsIndex;
   reverseRefIndex: ReverseRefIndex;
 }
-
-/** `Effect.withSpan` options naming the space, or none for a pass over every space. */
-const spanWithSpace = (spaceId: string | null | undefined) => (spaceId ? { attributes: { spaceId } } : undefined);
 
 export class IndexEngine {
   readonly #tracker: IndexTracker;

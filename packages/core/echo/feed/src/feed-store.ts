@@ -9,6 +9,7 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { Event } from '@dxos/async';
+import { SpanAttributes } from '@dxos/effect';
 import { assertArgument } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
@@ -51,9 +52,6 @@ export interface FeedStoreOptions {
 /**
  * Effect service tag for {@link FeedStore}.
  */
-/** `Effect.withSpan` options naming the space, or none when the call is not scoped to one. */
-const spanWithSpace = (spaceId: string | null | undefined) => (spaceId ? { attributes: { spaceId } } : undefined);
-
 export class FeedStoreService extends EffectContext.Service<FeedStoreService, FeedStore>()('@dxos/feed/FeedStore') {}
 
 /**
