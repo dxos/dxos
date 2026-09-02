@@ -29,6 +29,12 @@ import { type InvitationProtocol } from './invitation-protocol';
 import { type FlowLockHolder, type GuardedInvitationState } from './invitation-state';
 import { tryAcquireBeforeContextDisposed } from './utils';
 
+/**
+ * The single EDGE call the invitation flow makes.
+ * Narrowed from the full client so callers (and tests) can supply just this one method.
+ */
+export type EdgeInvitationClient = Pick<EdgeHttpClient, 'joinSpaceByInvitation'>;
+
 export interface EdgeInvitationHandlerCallbacks {
   onInvitationSuccess(ctx: Context, response: AdmissionResponse, request: AdmissionRequest): Promise<void>;
 }
@@ -50,7 +56,7 @@ export class EdgeInvitationHandler implements FlowLockHolder {
 
   constructor(
     config: EdgeInvitationConfig | undefined,
-    private readonly _client: EdgeHttpClient | undefined,
+    private readonly _client: EdgeInvitationClient | undefined,
     private readonly _callbacks: EdgeInvitationHandlerCallbacks,
   ) {
     this._retryInterval = config?.retryInterval ?? DEFAULT_REQUEST_RETRY_INTERVAL_MS;

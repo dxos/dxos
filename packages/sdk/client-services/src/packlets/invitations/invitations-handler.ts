@@ -11,7 +11,7 @@ import { type PushStream, TimeoutError, type Trigger, scheduleTask } from '@dxos
 import { INVITATION_TIMEOUT, getExpirationTime } from '@dxos/client-protocol';
 import { type Context, ContextDisposedError } from '@dxos/context';
 import { createKeyPair, sign } from '@dxos/crypto';
-import { type EdgeHttpClient, EdgeHttpClientService } from '@dxos/edge-client';
+import { EdgeHttpClientService } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -30,7 +30,7 @@ import { type ExtensionContext, type TeleportExtension, type TeleportProps } fro
 import { trace as _trace } from '@dxos/tracing';
 import { ComplexSet } from '@dxos/util';
 
-import { type EdgeInvitationConfig, EdgeInvitationHandler } from './edge-invitation-handler';
+import { type EdgeInvitationClient, type EdgeInvitationConfig, EdgeInvitationHandler } from './edge-invitation-handler';
 import { InvitationGuestExtension } from './invitation-guest-extenstion';
 import { InvitationHostExtension, MAX_OTP_ATTEMPTS, isAuthenticationRequired } from './invitation-host-extension';
 import { type InvitationProtocol } from './invitation-protocol';
@@ -38,6 +38,20 @@ import { createGuardedInvitationState } from './invitation-state';
 import { InvitationTopology } from './invitation-topology';
 
 const metrics = _trace.metrics;
+
+/**
+ * Which peer recorded the sample, and over which transport the flow ran.
+ * Host and guest both observe the same invitation, so summing untagged samples would double-count it;
+ * `method` separates swarm flows from EDGE-admitted ones, which never reach the host at all.
+ */
+type InvitationMetricTags = {
+  role: 'host' | 'guest';
+  method: 'swarm' | 'edge';
+};
+
+const recordInvitationMetric = (name: string, tags: InvitationMetricTags): void => {
+  metrics.increment(name, 1, { tags });
+};
 
 const MAX_DELEGATED_INVITATION_HOST_TRIES = 3;
 
@@ -87,7 +101,7 @@ export class InvitationsHandler {
    */
   constructor(
     private readonly _networkManager: SwarmNetworkManager,
-    private readonly _edgeClient?: EdgeHttpClient,
+    private readonly _edgeClient?: EdgeInvitationClient,
     private readonly _connectionProps?: InvitationConnectionProps,
   ) {}
 
@@ -103,7 +117,7 @@ export class InvitationsHandler {
       kind: invitation.kind,
       type: invitation.type,
     });
-    metrics.increment('dxos.invitation.host');
+    recordInvitationMetric('dxos.invitation.host', { role: 'host', method: 'swarm' });
 
     const hostSpanId = `invitation-host-${invitation.invitationId}`;
     // Reassign ctx to the child context so downstream `@trace.span` calls stay in the same trace.
@@ -182,7 +196,7 @@ export class InvitationsHandler {
               const deviceKey = await extension.completedTrigger.wait({ timeout: invitation.timeout });
               log.verbose('admitted guest', { guest: deviceKey, ...protocol.toJSON() });
               guardedState.set(extension, Invitation.State.SUCCESS);
-              metrics.increment('dxos.invitation.success');
+              recordInvitationMetric('dxos.invitation.success', { role: 'host', method: 'swarm' });
               log('host invitation handler opened');
               admitted = true;
 
@@ -193,12 +207,12 @@ export class InvitationsHandler {
               const stateChanged = guardedState.set(extension, Invitation.State.CONNECTING);
               if (err instanceof TimeoutError) {
                 if (stateChanged) {
-                  metrics.increment('dxos.invitation.timeout');
+                  recordInvitationMetric('dxos.invitation.timeout', { role: 'host', method: 'swarm' });
                   log.verbose('timeout', { ...protocol.toJSON() });
                 }
               } else {
                 if (stateChanged) {
-                  metrics.increment('dxos.invitation.failed');
+                  recordInvitationMetric('dxos.invitation.failed', { role: 'host', method: 'swarm' });
                   log.error('failed', err);
                 }
               }
@@ -215,12 +229,12 @@ export class InvitationsHandler {
           }
           if (err instanceof TimeoutError) {
             if (stateChanged) {
-              metrics.increment('dxos.invitation.timeout');
+              recordInvitationMetric('dxos.invitation.timeout', { role: 'host', method: 'swarm' });
               log.verbose('timeout', { err });
             }
           } else {
             if (stateChanged) {
-              metrics.increment('dxos.invitation.failed');
+              recordInvitationMetric('dxos.invitation.failed', { role: 'host', method: 'swarm' });
               log.error('failed', err);
             }
           }
@@ -244,7 +258,7 @@ export class InvitationsHandler {
           // ensure the swarm is closed before changing state and closing the stream.
           await swarmConnection.close(ctx);
           guardedState.set(null, Invitation.State.EXPIRED);
-          metrics.increment('dxos.invitation.expired');
+          recordInvitationMetric('dxos.invitation.expired', { role: 'host', method: 'swarm' });
           await ctx.dispose();
         },
         expiresOn.getTime() - Date.now(),
@@ -308,6 +322,16 @@ export class InvitationsHandler {
 
     const triedPeersIds = new ComplexSet(PublicKey.hash);
     const guardedState = createGuardedInvitationState(ctx, invitation, stream);
+
+    // Guarded because the swarm and EDGE flows race for the same invitation and only one admission wins.
+    let successRecorded = false;
+    const recordGuestSuccess = (method: InvitationMetricTags['method']): void => {
+      if (successRecorded) {
+        return;
+      }
+      successRecorded = true;
+      recordInvitationMetric('dxos.invitation.success', { role: 'guest', method });
+    };
 
     const shouldCancelInvitationFlow = (extension: InvitationGuestExtension) => {
       const isLockedByAnotherConnection = guardedState.mutex.isLocked() && !extension.hasFlowLock();
@@ -421,6 +445,7 @@ export class InvitationsHandler {
                 invitationId: invitation.invitationId,
                 ...protocol.toJSON(),
               });
+              recordGuestSuccess('swarm');
               guardedState.complete({
                 ...guardedState.current,
                 ...result,
@@ -460,6 +485,7 @@ export class InvitationsHandler {
       onInvitationSuccess: async (edgeCtx, admissionResponse, admissionRequest) => {
         const result = await protocol.accept(edgeCtx, admissionResponse, admissionRequest);
         log.info('admitted by edge', { ...protocol.toJSON() });
+        recordGuestSuccess('edge');
         guardedState.complete({ ...guardedState.current, ...result, state: Invitation.State.SUCCESS });
       },
     });
