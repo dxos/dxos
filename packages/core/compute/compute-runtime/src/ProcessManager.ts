@@ -497,6 +497,8 @@ export class ProcessManagerImpl implements Manager {
       });
       const scope = yield* Scope.make();
       const dispatchContext = yield* EffectEx.contextWithoutParentSpan();
+      // Handed to the child invoker, whose promise entry point runs on a fresh, empty-context fiber.
+      const tracer = yield* Effect.tracer;
       const outputQueue = yield* Queue.unbounded<ProcessHandle.OutputItem<O>>();
 
       const storage = storageServiceLayer(this.#kvStore, `process/${id}/`);
@@ -580,6 +582,7 @@ export class ProcessManagerImpl implements Manager {
           manager: this,
           handlerSet: this.#handlerSet,
           parentProcessId: id,
+          tracer,
         });
         builtinCtx = Context.add(builtinCtx, Operation.Service, childInvoker);
         builtinCtx = Context.add(builtinCtx, ProcessOperationInvoker.Service, childInvoker);
@@ -722,6 +725,8 @@ export class ProcessManagerImpl implements Manager {
 
       const scope = yield* Scope.make();
       const dispatchContext = yield* EffectEx.contextWithoutParentSpan();
+      // Handed to the child invoker, whose promise entry point runs on a fresh, empty-context fiber.
+      const tracer = yield* Effect.tracer;
       const outputQueue = yield* Queue.unbounded<ProcessHandle.OutputItem<any>>();
       const storage = storageServiceLayer(this.#kvStore, `process/${id}/`);
 
@@ -788,6 +793,7 @@ export class ProcessManagerImpl implements Manager {
           manager: this,
           handlerSet: this.#handlerSet,
           parentProcessId: id,
+          tracer,
         });
         builtinCtx = Context.add(builtinCtx, Operation.Service, childInvoker);
         builtinCtx = Context.add(builtinCtx, ProcessOperationInvoker.Service, childInvoker);
