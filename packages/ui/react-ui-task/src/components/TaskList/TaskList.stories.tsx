@@ -139,6 +139,7 @@ const dragSeed = (): Task.Task[] => {
 const DefaultStory = ({
   readonly,
   showGroupLabels,
+  groupByStatus,
   showOrdinals,
   showDescription = true,
   showEstimates,
@@ -151,6 +152,8 @@ const DefaultStory = ({
 }: {
   readonly?: boolean;
   showGroupLabels?: boolean;
+  /** Group tasks under status headers. */
+  groupByStatus?: boolean;
   showOrdinals?: boolean;
   showDescription?: boolean;
   showEstimates?: boolean;
@@ -225,6 +228,7 @@ const DefaultStory = ({
       debug={debug}
       selected={selected}
       showGroupLabels={showGroupLabels}
+      groupByStatus={groupByStatus}
       showOrdinals={showOrdinals}
       showDescription={showDescription}
       showEstimates={showEstimates}
@@ -328,6 +332,19 @@ export const DragDebug: Story = {
     showOrdinals: true,
     showDescription: true,
     framed: false,
+  },
+};
+
+/**
+ * Status groups rendered through the tree: headers are `disposition: 'group'` nodes, spliced out of
+ * the collection's topology so the keyboard never lands on one.
+ */
+export const GroupedTree: Story = {
+  args: {
+    hierarchical: true,
+    groupByStatus: true,
+    showGroupLabels: true,
+    showOrdinals: true,
   },
 };
 
@@ -792,11 +809,13 @@ export const Test: Story = {
     const firstCell = (element: HTMLElement) => element.querySelector(':scope > *:not([data-focus-sentinel])');
     const labelCell = (element: HTMLElement) =>
       element.querySelectorAll<HTMLElement>(':scope > *:not([data-focus-sentinel])')[1];
-    const rowIcon = firstCell(row);
+    // A tree row leads with its disclosure toggle and carries the status control inside the
+    // heading, where the pane — which has no disclosure — leads with the status column itself.
+    const rowIcon = row.querySelector<HTMLElement>('[data-testid="taskList.item.status"]');
     // The pane is one grid whose first cells ARE the title line, so its gutter cell is its first
     // child — the same column a row's status toggle occupies.
     const createIcon = firstCell(create);
-    const rowLabel = labelCell(row);
+    const rowLabel = row.querySelector<HTMLElement>('.truncate');
     const createLabel = labelCell(create);
     // Guarded together: indexing a NodeList yields `undefined` for a missing cell, and reading
     // geometry off it would throw a TypeError instead of failing the alignment assertion.

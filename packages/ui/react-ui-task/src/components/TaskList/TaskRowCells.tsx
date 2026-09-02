@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Icon, IconButton, Tag, useTranslation } from '@dxos/react-ui';
+import { Icon, IconBlock, IconButton, Tag, useTranslation } from '@dxos/react-ui';
 import { Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -43,16 +43,20 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
     : STATUS_ICONS[status];
 
   if (!onTaskUpdate) {
+    // `IconBlock square` rather than a bare span: the glyph must hold the same square an
+    // `IconButton iconOnly` occupies, or the readonly list's status column collapses to the glyph's
+    // own width and stops lining up with the editable list's.
     return (
-      <span className={mx('grid h-8 place-items-center', classNames)}>
+      <IconBlock square aria-hidden={false} data-testid='taskList.item.status' classNames={classNames}>
         <Icon icon={icon} classNames={iconClassNames} size={4} />
         <span className='sr-only'>{t(`status-${status}.label`)}</span>
-      </span>
+      </IconBlock>
     );
   }
 
   return (
     <IconButton
+      data-testid='taskList.item.status'
       classNames={mx('shrink-0', iconClassNames, classNames)}
       variant='ghost'
       density='sm'

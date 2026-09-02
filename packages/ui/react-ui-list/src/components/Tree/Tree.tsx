@@ -309,6 +309,24 @@ export const Tree = <T extends { id: string } = any>({
     setClosingValues((previous) => (previous.has(value) ? previous : new Set(previous).add(value)));
   }, []);
 
+  /**
+   * Flips a branch's disclosure, from the row, the chevron or the keyboard alike.
+   *
+   * Closing goes through the same deferral the chevron uses: committing it here hid the content
+   * before it could animate, so the same gesture read as instant from the row and animated from the
+   * chevron.
+   */
+  const toggleOpen = useCallback(
+    (node: TreeNodeEntry<T>) => {
+      if (node.open) {
+        requestClose(node.value);
+      } else {
+        onOpenChange?.({ item: node.item, path: node.path, open: true });
+      }
+    },
+    [onOpenChange, requestClose],
+  );
+
   const onSelectNode = useCallback(
     (node: TreeNodeEntry<T>, modifiers: { option: boolean; shift: boolean }) => {
       // A branch that is already current, or an option-activation, toggles instead of selecting.
@@ -316,16 +334,12 @@ export const Tree = <T extends { id: string } = any>({
         // Closing goes through the same deferral the chevron uses. Calling `onOpenChange` here
         // committed the close at once, so the machine hid the content before it could animate —
         // the same gesture read as instant from the row and animated from the chevron.
-        if (node.open) {
-          requestClose(node.value);
-        } else {
-          onOpenChange?.({ item: node.item, path: node.path, open: true });
-        }
+        toggleOpen(node);
       } else if (canSelect?.({ item: node.item, path: node.path }) ?? true) {
         onSelect?.({ item: node.item, path: node.path, current: !node.current, ...modifiers });
       }
     },
-    [canSelect, onOpenChange, onSelect, requestClose],
+    [canSelect, onSelect, toggleOpen],
   );
 
   const onCommitClose = useCallback(
@@ -365,10 +379,16 @@ export const Tree = <T extends { id: string } = any>({
     [expanded, byValue, onOpenChange],
   );
 
+  /** Last row the machine reported focus on — the target `Enter`/`Space` act upon. */
+  const focusedValueRef = useRef<string | null>(null);
+
   // Focus moves without a selection event of its own, so the follow is driven from the machine's
   // focus change rather than inferred from the selection one.
   const handleFocusChange = useCallback(
     ({ focusedValue }: { focusedValue: string | null }) => {
+      // Recorded whatever the follow setting is: the keyboard's own activation needs the focused
+      // row, and the machine reports it nowhere else.
+      focusedValueRef.current = focusedValue;
       if (!selectionFollowsFocus || !focusedValue || selected.includes(focusedValue)) {
         return;
       }
@@ -393,6 +413,35 @@ export const Tree = <T extends { id: string } = any>({
       }
     },
     [selected, byValue, onSelectNode, recentModifiers],
+  );
+
+  /**
+   * `Enter`/`Space` on the current branch toggles it.
+   *
+   * The machine emits a selection change only when the selected value actually changes, so
+   * activating the row that is already selected reached nothing — the gesture that toggles by
+   * pointer did nothing by keyboard. Gated on `current` so it mirrors the pointer exactly: the
+   * first activation selects, the second discloses.
+   */
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLDivElement>) => {
+      onKeyDown?.(event);
+      if (event.defaultPrevented || (event.key !== 'Enter' && event.key !== ' ')) {
+        return;
+      }
+      // The row is a div with role=button, so a real inner control (chevron, status, rename input)
+      // keeps its own activation.
+      if ((event.target as HTMLElement).closest('button, input, textarea, [contenteditable="true"]')) {
+        return;
+      }
+      const focused = focusedValueRef.current;
+      const entry = focused ? byValue.get(focused) : undefined;
+      if (entry?.branch && entry.current) {
+        event.preventDefault();
+        toggleOpen(entry);
+      }
+    },
+    [onKeyDown, byValue, toggleOpen],
   );
 
   // Flipped after the first commit: branch content inserted during the initial paint (persisted
@@ -458,7 +507,7 @@ export const Tree = <T extends { id: string } = any>({
           className={mx('grid outline-none', ...(Array.isArray(classNames) ? classNames : [classNames]))}
           style={{ gridTemplateColumns }}
           onPointerDownCapture={handlePointerDownCapture}
-          onKeyDown={onKeyDown}
+          onKeyDown={handleKeyDown}
         >
           {root.children?.map((node) => (
             <TreeNodeRow key={node.value} node={node} />

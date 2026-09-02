@@ -45,6 +45,10 @@ const GRID_TEMPLATE = '[tree-row-start] minmax(0, 1fr) min-content min-content m
 export type TaskTreeContentProps = {
   /** Paint the drop bands on every row (development affordance). */
   debug?: boolean;
+  /** Render status headers with their tasks flat beneath, instead of the hierarchy. */
+  groupByStatus?: readonly Task.Status[];
+  /** Nest sub-tasks under their parent; off renders one row per task. */
+  hierarchical?: boolean;
   tasks: readonly Task.Task[];
   collapsed: ReadonlySet<string>;
   showGutter: boolean;
@@ -62,6 +66,8 @@ export type TaskTreeContentProps = {
 
 export const TaskTreeContent = ({
   debug,
+  groupByStatus,
+  hierarchical,
   tasks,
   collapsed,
   showGutter,
@@ -82,7 +88,10 @@ export const TaskTreeContent = ({
   // every collapse rebuilt the collection and the branch never got to run its conceal animation.
   const collapsedRef = useRef(collapsed);
   collapsedRef.current = collapsed;
-  const model = useMemo(() => createTaskTreeModel(tasks, { collapsed: collapsedRef.current }), [tasks]);
+  const model = useMemo(
+    () => createTaskTreeModel(tasks, { collapsed: collapsedRef.current, groupByStatus, translationKey, hierarchical }),
+    [tasks, groupByStatus, translationKey, hierarchical],
+  );
   const paths = useMemo(() => buildTaskPaths(buildTaskForest(tasks)), [tasks]);
 
   // Selection is owned by `TaskList.Root`, so it is driven into the model rather than held there —
@@ -139,6 +148,13 @@ export const TaskTreeContent = ({
   // `data-object-id`, which is what lets one container-level handler serve every depth.
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLDivElement>) => {
+      // A reader needs a way back out of a selection, and `Escape` is where they look for it.
+      if (event.key === 'Escape' && selected) {
+        event.preventDefault();
+        onTaskSelect?.(undefined);
+        return;
+      }
+
       if (!onTaskMove || !event.shiftKey) {
         return;
       }
@@ -169,7 +185,7 @@ export const TaskTreeContent = ({
         onTaskMove(task, placement);
       }
     },
-    [onTaskMove, tasks],
+    [onTaskMove, tasks, selected, onTaskSelect],
   );
 
   // The drop half of the gesture. `Tree` publishes each row as a pragmatic-dnd draggable carrying

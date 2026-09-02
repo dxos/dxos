@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 import { Obj, Ref } from '@dxos/echo';
 import { Task } from '@dxos/types';
 
-import { TASK_TREE_ROOT_ID, buildTaskForest, createTaskTreeModel } from './tree-model';
+import { TASK_TREE_ROOT_ID, buildStatusGroups, buildTaskForest, createTaskTreeModel } from './tree-model';
 
 describe('buildTaskForest', () => {
   test('builds the tree the walk describes, not the array order', ({ expect }) => {
@@ -83,6 +83,43 @@ describe('createTaskTreeModel', () => {
     };
     walk(buildTaskForest(tasks), []);
     expect(paths).toHaveLength(1);
+  });
+});
+
+describe('buildStatusGroups', () => {
+  test('one group per non-empty status, in the order given', ({ expect }) => {
+    const tasks = [
+      Task.make({ title: 'a', status: 'todo' }),
+      Task.make({ title: 'b', status: 'done' }),
+      Task.make({ title: 'c', status: 'todo' }),
+    ];
+    const root = buildStatusGroups(tasks, ['done', 'todo', 'cancelled']);
+    expect(root.children.map((group) => group.status)).toEqual(['done', 'todo']);
+    expect(root.children[1].children.map((child) => child.task?.title)).toEqual(['a', 'c']);
+  });
+
+  test('a task with no status counts as todo', ({ expect }) => {
+    const root = buildStatusGroups([Task.make({ title: 'a' })], ['todo']);
+    expect(root.children[0].children).toHaveLength(1);
+  });
+
+  test('groups are flat — a sub-task sits in its own status, not under its parent', ({ expect }) => {
+    const { a, a1, tasks } = fixture();
+    const root = buildStatusGroups(tasks, ['todo']);
+    const titles = root.children[0].children.map((child) => child.task?.title);
+    expect(titles).toContain(a.title);
+    expect(titles).toContain(a1.title);
+    expect(root.children[0].children.every((child) => child.children.length === 0)).toBe(true);
+  });
+
+  test('a group renders as a section header rather than a row', ({ expect }) => {
+    const registry = Registry.make();
+    const tasks = [Task.make({ title: 'a', status: 'todo' })];
+    const model = createTaskTreeModel(tasks, { groupByStatus: ['todo'] });
+    const group = registry.get(model.itemProps([TASK_TREE_ROOT_ID, 'status:todo']));
+    expect(group.disposition).toEqual('group');
+    // A header is not a row, so it carries no row test id.
+    expect(group.testId).toBeUndefined();
   });
 });
 

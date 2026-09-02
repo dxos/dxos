@@ -31,6 +31,7 @@ import {
   Button,
   DxAnchorActivate,
   Icon,
+  IconBlock,
   IconButton,
   IconButtonProps,
   Input,
@@ -246,7 +247,9 @@ const TaskListRoot = ({
   return (
     <TaskListProvider
       tasks={tasks}
-      groupByStatus={groupByStatus && !hierarchical}
+      // Not gated on `!hierarchical` any more: the tree expresses a status group as a `group` node,
+      // so grouping and hierarchy are a choice rather than mutually exclusive capabilities.
+      groupByStatus={groupByStatus}
       showGroupLabels={showGroupLabels}
       showOrdinals={showOrdinals}
       showDescription={showDescription}
@@ -310,9 +313,14 @@ TaskListViewport.displayName = 'TaskList.Viewport';
 /** Ordinals stop at 99: the gutter is sized for two digits. */
 const MAX_ORDINAL = 99;
 
+/**
+ * The edit pane's columns. The leading `1.5rem` stands in for the row's disclosure toggle, which
+ * the pane has no use for but must reserve: without it every row sits a toggle's width to the right
+ * of the pane and the two read as different grids.
+ */
 const GRID_COLS = {
-  content: 'grid-cols-[1.5rem_1fr_min-content_2rem]',
-  contentWithOrdinals: 'grid-cols-[2rem_1.5rem_1fr_min-content_2rem]',
+  content: 'grid-cols-[1.5rem_1.5rem_1fr_min-content_2rem]',
+  contentWithOrdinals: 'grid-cols-[1.5rem_2rem_1.5rem_1fr_min-content_2rem]',
 };
 
 type TaskListContentProps = ComposableProps;
@@ -336,83 +344,48 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
     onTaskUpdate,
     onTaskMove,
   } = useTaskListContext('TaskList.Content');
-  // Collapsed ids are read through the context callback rather than held here, so the walk still
-  // re-runs when one flips; the set itself lives in `Root`.
+  // Collapsed ids live in `Root`; read through the callback so a flip still recomputes.
   const collapsed = useMemo(() => new Set(tasks.map((task) => task.id).filter(isCollapsed)), [tasks, isCollapsed]);
-  const rows = useMemo(
-    () => (hierarchical ? walkTaskTree(tasks, collapsed) : undefined),
-    [hierarchical, tasks, collapsed],
-  );
-  const groups = useMemo(() => {
-    if (!groupByStatus) {
-      return tasks.length > 0 ? [{ status: undefined, tasks }] : [];
-    }
 
-    return STATUS_ORDER.map((status) => ({
-      status,
-      tasks: tasks.filter((task) => (task.status ?? 'todo') === status),
-    })).filter((group) => group.tasks.length > 0);
-  }, [tasks, groupByStatus]);
+  // Grouping and hierarchy are alternatives: a status group holds its tasks flat, because a
+  // sub-task's status need not match its parent's.
+  const grouping = !hierarchical && groupByStatus && showGroupLabels ? STATUS_ORDER : undefined;
 
-  // Numbered down the list as rendered, 1..N — grouping and the tree both reorder rows against the
-  // set's array, and a gutter whose numbers jump is not one a reader can count. Flat either way: an
-  // ordinal names a task ("run 3"), where a `1.2.1` path would renumber a whole branch.
+  // Numbered down the list as rendered, 1..N. Flat either way: an ordinal names a task ("run 3"),
+  // where a `1.2.1` path would renumber a whole branch.
   const ordinals = useMemo(() => {
-    const ordered = rows ? rows.map((row) => row.task) : groups.flatMap((group) => group.tasks);
-    // A dragged row and its sub-tasks are hidden rather than unmounted (the gesture is anchored to
-    // the row's handle), so they are still in `ordered` — numbering them would leave gaps in the
-    // column the reader can actually see.
+    const ordered = grouping
+      ? grouping.flatMap((status) => tasks.filter((task) => (task.status ?? 'todo') === status))
+      : hierarchical
+        ? walkTaskTree(tasks, collapsed).map((row) => row.task)
+        : tasks;
+    // A dragged row and its sub-tasks are hidden rather than unmounted, so they are still in
+    // `ordered` — numbering them would leave gaps in the column the reader can actually see.
     const visible = dragging.size > 0 ? ordered.filter((task) => !dragging.has(task.id)) : ordered;
-    // Past 99 the number outgrows the gutter, so it is dropped rather than shrunk — a two-digit
-    // column that occasionally goes blank reads better than one that reflows the whole list.
+    // Past 99 the number outgrows the gutter, so it is dropped rather than shrunk.
     return new Map(visible.flatMap((task, index) => (index < MAX_ORDINAL ? [[task.id, index + 1] as const] : [])));
-  }, [rows, groups, dragging]);
+  }, [tasks, collapsed, grouping, hierarchical, dragging]);
 
-  if (rows) {
-    return (
-      <TaskTreeContent
-        debug={debug}
-        tasks={tasks}
-        collapsed={collapsed}
-        showGutter={showGutter}
-        ordinals={showOrdinals ? ordinals : EMPTY_ORDINALS}
-        selected={selected}
-        showDescription={showDescription}
-        renderTrailing={TaskTreeTrailing}
-        translationKey={translationKey}
-        onCollapseToggle={onCollapseToggle}
-        onTaskSelect={onTaskSelect}
-        onTaskUpdate={onTaskUpdate}
-        onTaskMove={onTaskMove}
-      />
-    );
-  }
-
+  // One path: every mode renders through `Tree`. A flat list is a tree of depth one, and a status
+  // group is a `group` node the machine splices out of its own topology.
   return (
-    <Listbox.Content
-      {...composableProps(props, {
-        // Row height lives on the auto rows — an `h-8` on the grid itself would size the whole
-        // list to one row and let the rest overflow invisibly. A described row is taller than one
-        // line, so the tracks size to content and the cells align to the first line rather than to
-        // the middle of a two-line row.
-        classNames: mx(
-          'group grid gap-x-1 w-full min-w-0',
-          showDescription ? 'auto-rows-min items-start' : 'auto-rows-[2rem] items-center',
-          showGutter ? GRID_COLS.contentWithOrdinals : GRID_COLS.content,
-        ),
-      })}
-      aria-label='Tasks'
-      ref={forwardedRef}
-    >
-      {groups.map(({ status, tasks }) => (
-        <Fragment key={status ?? 'all'}>
-          {status && showGroupLabels && <TaskListGroupLabel>{t(`status-${status}.label`)}</TaskListGroupLabel>}
-          {tasks.map((task) => (
-            <TaskListItem key={task.id} task={task} ordinal={showOrdinals ? ordinals.get(task.id) : undefined} />
-          ))}
-        </Fragment>
-      ))}
-    </Listbox.Content>
+    <TaskTreeContent
+      debug={debug}
+      hierarchical={hierarchical}
+      groupByStatus={grouping}
+      tasks={tasks}
+      collapsed={collapsed}
+      showGutter={showGutter}
+      ordinals={showOrdinals ? ordinals : EMPTY_ORDINALS}
+      selected={selected}
+      showDescription={showDescription}
+      renderTrailing={TaskTreeTrailing}
+      translationKey={translationKey}
+      onCollapseToggle={onCollapseToggle}
+      onTaskSelect={onTaskSelect}
+      onTaskUpdate={onTaskUpdate}
+      onTaskMove={onTaskMove}
+    />
   );
 });
 
@@ -970,10 +943,14 @@ TaskEstimateControl.displayName = 'TaskList.EstimateControl';
  * reads at a glance where four differently-worded tags do not. The ramp itself is neutral — shape
  * carries the level — so only `urgent` is coloured, which is what makes it findable in a long list.
  */
+// The ramp levels carry no colour of their own so they follow the row's `--icons-color`, which
+// dims them at rest and lifts them when the row is hovered, focused or selected. A pinned
+// `text-subdued` overrides that variable and left the current row's priority grey against its
+// brightened title, which reads as the icon being disabled.
 const PRIORITY_ICONS: Record<string, { icon: string; classNames: string }> = {
   low: { icon: 'px--bar-low--regular', classNames: '' },
-  medium: { icon: 'px--bar-medium--regular', classNames: 'text-subdued' },
-  high: { icon: 'px--bar-high--regular', classNames: 'text-subdued' },
+  medium: { icon: 'px--bar-medium--regular', classNames: '' },
+  high: { icon: 'px--bar-high--regular', classNames: '' },
   urgent: { icon: 'ph--exclamation-mark--fill', classNames: '[--icons-color:var(--color-rose-text)] opacity-100!' },
 };
 
@@ -1001,11 +978,9 @@ const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
     // Falls back to the dot rather than rendering nothing: a readonly row still says "no priority"
     // in the same column its neighbours use, so the list reads as one column and not a ragged one.
     return (
-      <Icon
-        icon={style?.icon ?? NO_PRIORITY_ICON}
-        size={4}
-        classNames={mx('shrink-0', style?.classNames ?? 'text-subdued')}
-      />
+      <IconBlock square>
+        <Icon icon={style?.icon ?? NO_PRIORITY_ICON} size={4} classNames={mx('shrink-0', style?.classNames)} />
+      </IconBlock>
     );
   }
 
@@ -1017,7 +992,7 @@ const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
           icon={style?.icon ?? NO_PRIORITY_ICON}
           label={t('task-priority.label')}
           data-testid='taskList.item.priority'
-          classNames={mx(style?.classNames ?? 'text-subdued')}
+          classNames={mx(style?.classNames)}
           // The row is the selection target; opening the menu must not also select it.
           onClick={(event) => event.stopPropagation()}
         />
@@ -1332,7 +1307,8 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
     // On the list's template the pane has the rows' columns: the ordinal gutter it leaves empty, the
     // status column takes the icon, and the title column takes the field — which is what puts the
     // caret where the rows' titles start. Off it, the pane keeps a template of its own.
-    const titleColumn = grid && showGutter ? 'col-start-3' : 'col-start-2';
+    // One further right than the pane's own cells suggest, for the reserved toggle column.
+    const titleColumn = grid ? (showGutter ? 'col-start-4' : 'col-start-3') : 'col-start-2';
 
     return (
       // One grid, not a row of grids: the title and the description line up column for column, and
@@ -1354,8 +1330,9 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
         <span
           className={mx(
             'flex items-center justify-center h-8',
-            // The gutter column belongs to the rows' ordinals; the icon goes under their status.
-            grid && showGutter && 'col-start-2',
+            // Placed explicitly: column 1 is the reserved toggle, so implicit placement would put
+            // the icon a toggle's width left of the rows' status control.
+            grid && (showGutter ? 'col-start-3' : 'col-start-2'),
           )}
         >
           <Icon
