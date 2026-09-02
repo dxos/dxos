@@ -11,7 +11,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { STATUS_ICONS, statusTextStyle } from './status-icons';
+import { STATUS_ICONS, statusTextStyle } from './status-icons.ts';
 
 /**
  * Cells shared by the flat row and the tree row.

@@ -5,7 +5,7 @@
 import { type Config, getEnvString } from '@dxos/config';
 import { log } from '@dxos/log';
 
-import { type OtelDestination } from '../otel/otel';
+import { type OtelDestination } from '../otel/otel.ts';
 
 /** PostHog serves OTLP under `/i` of the same host it ingests product analytics on, not at the root. */
 const OTLP_PATH_PREFIX = '/i';

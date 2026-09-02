@@ -21,10 +21,16 @@ import {
   resolveOutdent,
   resolveReparent,
   resolveTaskPlacement,
-} from './hierarchy';
-import { TaskDescription } from './TaskDescription';
-import { TaskOrdinal, TaskStatusControl } from './TaskRowCells';
-import { TASK_TREE_ROOT_ID, type TaskNode, buildTaskForest, buildTaskPaths, createTaskTreeModel } from './tree-model';
+} from './hierarchy.ts';
+import { TaskDescription } from './TaskDescription.tsx';
+import { TaskOrdinal, TaskStatusControl } from './TaskRowCells.tsx';
+import {
+  TASK_TREE_ROOT_ID,
+  type TaskNode,
+  buildTaskForest,
+  buildTaskPaths,
+  createTaskTreeModel,
+} from './tree-model.ts';
 
 /** Columns after the title: assignee, tags and the contributed actions live here. */
 /**

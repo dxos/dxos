@@ -2,5 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './extension';
-export * from './otel-destination';
+export * from './extension.ts';
+export * from './otel-destination.ts';

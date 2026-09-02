@@ -9,9 +9,9 @@ import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { Message } from '@dxos/types';
 
-import * as Alarm from './Alarm';
-import * as SessionLink from './SessionLink';
-import { SessionStore, isConsumed, isQueued } from './SessionStore';
+import * as Alarm from './Alarm.ts';
+import * as SessionLink from './SessionLink.ts';
+import { SessionStore, isConsumed, isQueued } from './SessionStore.ts';
 
 // Monotonic timestamps so chronological sorting in SessionStore is deterministic.
 let clock = 0;

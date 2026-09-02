@@ -25,7 +25,7 @@ import {
   type SpanProcessor,
 } from '@opentelemetry/sdk-trace-base';
 
-import { type OtelDestination, signalUrl } from './otel';
+import { type OtelDestination, signalUrl } from './otel.ts';
 
 export type Init = {
   type: 'otel-traces-init';

@@ -10,7 +10,7 @@ import { afterEach, describe, expect, test } from 'vitest';
 
 import { invariant } from '@dxos/invariant';
 
-import * as OtelSpanSink from './OtelSpanSink';
+import * as OtelSpanSink from './OtelSpanSink.ts';
 
 const defaultInit: OtelSpanSink.Init = {
   type: 'otel-traces-init',

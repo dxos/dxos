@@ -4,8 +4,8 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { useThemeContext } from '../../hooks';
-import { composable, composableProps } from '../../util';
+import { useThemeContext } from '../../hooks/index.ts';
+import { composable, composableProps } from '../../util/index.ts';
 import { IconBlockStyleProps } from './Icon.theme';
 
 export type IconBlockProps = PropsWithChildren<IconBlockStyleProps>;

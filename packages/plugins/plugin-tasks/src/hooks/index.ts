@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './useTaskActions';
+export * from './useTaskActions.ts';

@@ -26,9 +26,9 @@ import { ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 import { log } from '@dxos/log';
 import { type RemoteSpan, type StartSpanOptions, TRACE_ALL_KEY, TRACE_PROCESSOR } from '@dxos/tracing';
 
-import { type OtelOptions, signalUrl } from './otel';
-import * as OtelSpanSink from './OtelSpanSink';
-import { TagInjectorSpanProcessor } from './span-processors';
+import { type OtelOptions, signalUrl } from './otel.ts';
+import * as OtelSpanSink from './OtelSpanSink.ts';
+import { TagInjectorSpanProcessor } from './span-processors.ts';
 
 export type OtelTracesOptions = OtelOptions & {
   /**

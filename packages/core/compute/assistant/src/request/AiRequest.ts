@@ -35,10 +35,10 @@ import { Database, Obj, Registry } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
 
-import { getOperationFromTool } from '../tool-runtime/services';
-import { type AiAssistantError, CompleteBlock, PartialBlock } from '../util';
-import { formatSystemPrompt, formatUserPrompt } from './format';
-import { GenerationObserver } from './observer';
+import { getOperationFromTool } from '../tool-runtime/services.ts';
+import { type AiAssistantError, CompleteBlock, PartialBlock } from '../util/index.ts';
+import { formatSystemPrompt, formatUserPrompt } from './format.ts';
+import { GenerationObserver } from './observer.ts';
 
 export type RunError = AiError.AiError | PromptPreprocessingError | AiToolNotFoundError | AiAssistantError;
 
