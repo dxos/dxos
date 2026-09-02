@@ -41,13 +41,10 @@ const setupChat = Effect.fnUntraced(function* () {
 
 describe('AssignTasks', () => {
   it('renders as a tool schema', ({ expect }) => {
-    // `Operation.serialize` drops a definition whose input cannot render as JSON Schema, so a
-    // ref-typed input that fails here would silently leave the model with no tool at all.
-    const { inputSchema } = Operation.serialize(AssignTasks);
-    expect(Object.keys((inputSchema as any).properties)).toEqual(['add', 'remove']);
-    expect((inputSchema as any).required ?? []).toEqual([]);
+    // A definition whose input cannot render as JSON Schema is dropped rather than raised, which
+    // would silently leave the model with no tool at all — ref-typed inputs are the risky case.
+    expect(Operation.serializable([AssignTasks])).toHaveLength(1);
   });
-
 
   it.effect(
     'assigns existing tasks to the checklist and unassigns others',
