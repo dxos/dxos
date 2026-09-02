@@ -202,18 +202,18 @@ export const shouldLog = (entry: LogEntry, filters?: LogFilter[]): boolean => {
   return results.length > 0 && !results.some((results) => results === false);
 };
 
-/**
- * Merges scope info, entry context, and error into a single record — preserving nested
- * objects and Error instances so rich consumers (console inspect, devtools) can format them.
- *
- * Prefer {@link LogEntry.computedContext} for serialized / JSON outputs.
- */
 /** An error's own structured detail, which `BaseError` declares and a plain `Error` may carry. */
 const readErrorContext = (value: unknown): object | undefined =>
   value instanceof Error && 'context' in value && typeof value.context === 'object' && value.context
     ? value.context
     : undefined;
 
+/**
+ * Merges scope info, entry context, and error into a single record — preserving nested
+ * objects and Error instances so rich consumers (console inspect, devtools) can format them.
+ *
+ * Prefer {@link LogEntry.computedContext} for serialized / JSON outputs.
+ */
 export const getContextFromEntry = (entry: LogEntry): Record<string, any> | undefined => {
   let context;
   if (entry.meta) {
