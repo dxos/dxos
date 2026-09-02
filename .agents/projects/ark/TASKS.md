@@ -516,7 +516,10 @@ and show a button in the toobar to delete all selected tasks to a new chat sessi
       "the selected tasks" ambiguous.
 - [ ] **Toolbar action over the checked set**, alongside `create-chat`/`add-artifact` in
       `useToolbarActions`, enabled only when the set is non-empty.
-- [ ] **Resolve the verb: "delete … to a new chat session" reads as a typo.** Delegating the checked
-      tasks to a new chat (`AssistantOperation.CreateChat` + `Chat.linkCompanion`, the path
-      `create-chat` already uses) is the reading that makes sense of "to a new chat session";
-      deleting them would have no destination. Confirm before building either.
+- [x] **Verb confirmed: delegate.** The checked tasks are delegated to a new chat session
+      (`AssistantOperation.CreateChat` + `Chat.linkCompanion`, the path `create-chat` already
+      uses), not deleted. Confirmed 2026-09-01.
+- [ ] **Decide what delegation does to the tasks' membership.** They are delegated *to* the chat,
+      so settle whether they stay in the task set as well — `Chat.addTask` parents a task it
+      creates to the chat, and `Chat.deleteTask` destroys only what the chat owns, so a delegated
+      task keeping its set is the shape those primitives already assume.
