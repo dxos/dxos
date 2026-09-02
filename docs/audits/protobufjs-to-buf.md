@@ -243,6 +243,60 @@ an identically-valued `enum DifferentName` raises `TS2367`. So:
   `EdgePanel` cannot be fixed ahead of its type move, and it generalises to any nested enum
   elsewhere in the migration.
 
+## `#2`: split by fate before converting, and most of it dies at teardown
+
+`#2`'s nominal file list spans four places. Judged per file rather than per directory, almost none
+of it is worth converting -- the packages that own it are what the teardown slice deletes.
+
+**Dies at teardown -- leave on protobuf.js:**
+
+| File                                                                          | Why                                                                                                                                                                                                                     |
+| ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `codec-protobuf/test/codec.node.test.ts` + its three `example/testing` protos | Exercises `@dxos/codec-protobuf` itself.                                                                                                                                                                                |
+| `codec-protobuf/src/substitutions/struct.test.ts`                             | Tests the legacy substitution table.                                                                                                                                                                                    |
+| `protobuf-compiler/test/*` (12 files)                                         | Tests the legacy generator's output.                                                                                                                                                                                    |
+| `protobuf-compiler/src/namespaces.test.ts`                                    | Same.                                                                                                                                                                                                                   |
+| **`tools/protobuf-test` (whole package)**                                     | Reads as a standalone fixture and is not: its own header says "Imported by protobuf-compiler tests", and `protobuf-compiler/test/types.test.ts:19` is its only reference in the repo. It goes with `protobuf-compiler`. |
+
+**Gated on `#8.2`, not `#2`:** the `example/testing/rpc` importers -- `rpc/service.test.ts`,
+`rpc/service-type-url.test.ts`, `teleport/testing/test-extension.ts`,
+`teleport/testing/test-extension-with-streams.ts`, `teleport/muxing/muxer.test.ts`,
+`websocket-rpc/e2e.node.test.ts`, `rpc-tunnel-e2e/test-client.ts`, `rpc-tunnel-e2e/test-worker.ts`.
+These already take their _descriptor_ from `getBufService`, but still import the protobuf.js
+**service interface** as the type argument. Deriving that interface from buf's `GenService` is
+`#8.2`'s remaining work; the methods have to move to buf shapes at the same time, because
+`BufServiceDescriptor` still hands back compat-shaped values.
+
+**Nothing left to migrate.** `example/testing/{data,rpc}.proto` are already buf-generated
+(`buf/proto/gen/example/testing/`), `buf/registry.ts` already consumes them, and there are no
+message-only consumers to move. `#2`'s remaining value is the ledger above, not a conversion.
+
+## Proto-guard: the downgrade leg needs its own dependency closure
+
+The dated snapshot proves old bytes decode on new code. The reverse -- bytes this codec writes being
+readable by a build already in the field -- is the direction that strands a rollback, and it is not
+covered.
+
+**Pin: `@dxos/protocols@0.11.1`, published 2026-08-05.** Derived as the last stable release
+preceding the first buf-migration commit on main (`bdb02cd3a1`, "protocols: audit protobuf.js usage
+and start the buf migration", 2026-08-24). The only thing published in between is a
+`1.0.0-next-<sha>` CI snapshot on 2026-08-10, which is not a release. The codec itself did not move
+until `48eb05d613` (2026-08-26), so either reading of "first buf-migration commit" selects the same
+version. Write it as a literal, never resolve "latest before X" at runtime -- that drifts silently.
+
+**It cannot be imported in-process.** `@dxos/protocols@0.11.1` pulls `@dxos/keys@0.11.1`, which is
+built against `effect@3.x` and calls `Schema.filter`; against the workspace's `effect@4.0.0-rc.108`
+that is `TypeError: Schema.filter is not a function`, thrown at import time before any test body
+runs. Aliasing the package into the workspace does not work.
+
+**It does work in an isolated closure**, which is what a downgrade test should use anyway -- a build
+in the field has its own dependency graph. Verified: an `npm install @dxos/protocols@0.11.1` in a
+scratch directory resolves `effect@3.21.4` and its codec round-trips
+(`dxos.echo.query.Heads` -> `0a04613162320a0463336434`). The remaining work is the harness: install
+the pinned version into a gitignored fixture directory and spawn it to decode bytes the current
+codec wrote. Assert shape and round-trip, not byte identity -- protobuf.js writes `nanos: 0` where
+buf omits the proto3 default, which is wire-compatible and expected.
+
 ## `#8` is the last milestone-sized thread, and it is not a rider
 
 Everything above landed behind an interface that hides which codec carried a value, which is why it
