@@ -170,7 +170,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         // pending input events again — so it must re-arm from that durable state here or sit idle
         // with work waiting. What was already pending is also what `onSpawn` decides the fate of.
         const startupPending = yield* sessionStore.loadPending(feed);
-        reconcileAlarmWith(startupPending);
+        yield* reconcileAlarmWith(startupPending);
 
         // Optional supervisor behaviour: when a strategy is provided, the agent reconciles
         // outstanding work into linked child processes after each turn and folds their results back
