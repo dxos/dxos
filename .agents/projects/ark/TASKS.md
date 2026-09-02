@@ -565,3 +565,68 @@ is supposed to be decoupled from.
 - [x] The tasks section's Surface was already clean — `{ subject: taskSet, attendableId }`, no
       callbacks. Phase 13's checkbox is gated on a contributed capability rather than on a data
       property for the same reason.
+
+## Phase 16: Migrate `@dxos/react-ui` from Radix to Ark — planned
+
+The plan is [packages/ui/react-ui/docs/MIGRATION.md](../../../packages/ui/react-ui/docs/MIGRATION.md)
+(commit `8a81160f5b`): a 42-row component inventory, the Radix→Ark primitive map with its gaps, the
+Radix modules every sibling package depends on, and six landable phases. This phase is the ledger for
+it; the reasoning stays in the doc. Phase 4's open item (the `react-ui-list` core — `Combobox`,
+`Listbox`) is deliberately **not** absorbed here; the doc lists them as candidates and leaves them to
+Phase 4.
+
+Findings that shaped the plan, so they are not re-derived:
+
+- Of ~230 `@radix-ui` imports under `packages/ui`, ~207 are scaffolding (`react-context`,
+  `react-primitive`, `react-slot`, `react-compose-refs`, `react-use-controllable-state`) that 28
+  sibling packages and 28 plugin/app/sdk files share. Ark publicly exports only `createContext`,
+  `mergeProps`, `ariaAttr`, `dataAttr` and the `ark` factory — `composeRefs` and
+  `useControllableState` are internal — so the scaffolding has to be owned in-repo, and that is
+  independent of any behavioural port.
+- Only 12 of 42 `react-ui` components wrap a Radix behavioural primitive; `Popover` (701 LOC),
+  `Tooltip` (942) and `Menu` (896) are forks that compose `popper`/`dismissable-layer`/
+  `focus-scope`/`presence`/`portal` directly. They are the expensive ones and the largest deletion.
+- `Calendar` and `DatePicker` are built on `react-aria-components`, not by hand, and RAC also backs
+  `Input`'s date/time fields and `react-ui-form`'s `DateField`. Consolidating it is a decision, not a
+  port. The four genuinely hand-built components with Ark machines are Carousel, Editable, Splitter,
+  Stepper.
+- Ark exposes `Positioner` and has no `Viewport`; Radix hides the positioner and exposes
+  `Select.Viewport`. Our `Popover.Viewport`/`Tooltip.Viewport` are ours (arrow-clipping rationale in
+  `Popover.theme.ts`) and survive. 95 `--radix-*` variable sites across 12 files map onto one generic
+  Zag set (`--reference-width`, `--available-height`, …); 20 of them are aliasing blocks that delete.
+- `Select` is the one API leak: Ark's takes a required `collection: ListCollection<T>` — 44 consumer
+  files.
+- Maintenance, 2026-09-02: both projects are one maintainer (Radix 95% single-committer, Ark 56%);
+  Radix had a 296-day release gap ending 2026-06-06, Ark's worst is 56 days; Radix has ~68× the
+  downloads.
+
+- [ ] **Phase 0 — port Carousel, Editable, Splitter, Stepper to Ark.** In flight as background task
+      `task_2d437290` on its own worktree from `main` (started 2026-09-02). ~2,264 LOC; consumers
+      4 / 13 / 8 / 3; adds `@ark-ui/react` to `react-ui` (catalog). Lands as
+      `react-ui: rebuild Carousel, Editable, Splitter and Stepper on Ark UI`.
+- [ ] **Phase 1 — own the scaffolding.** `composeRefs`, `useControllableState`, unscoped
+      `createContext` in `react-primitives`; `Primitive.*` (270 sites) → `ark.*`. Sweep the 28
+      sibling packages and 28 plugin/app/sdk files; re-point the plugins that import
+      `@radix-ui/react-tooltip`/`-toolbar`/`-toggle-group`/`-toggle`/`-toast` directly at
+      `@dxos/react-ui` (layering violations regardless). Update the `composite-components` skill for
+      the no-scope context. Worth doing even if nothing after it happens.
+- [ ] **Phase 2 — leaves.** Slider, Progress, Clipboard, Avatars, ScrollArea, Button toggles,
+      `Input.Checkbox`, `react-list` Collapsible, `react-ui-tabs`, hand-rolled Separator. Namespace
+      API holds for all of them.
+- [ ] **Phase 3 — the forks.** Tooltip → Popover → Menu. Add `Positioner`, keep our `Viewport`,
+      `Arrow` → `Arrow`+`ArrowTip` (`fill-separator` → `--arrow-background`), rename the five
+      variables, delete the three aliasing blocks, collapse DropdownMenu + ContextMenu onto one
+      `menu` machine, retire the 116 `__scope*` props. Removes ten Radix packages plus `aria-hidden`
+      and `react-remove-scroll`.
+- [ ] **Phase 4 — Dialog + Main, Toast, Select.** Evaluate `drawer` for `Main`'s sidebars (also the
+      missing mobile bottom sheet); Toast is a model change (`createToaster` store); decide whether
+      `Select.Option` keeps a children-driven layer that builds the collection so most of the 44
+      consumers change one import.
+- [ ] **Phase 5 — decisions.** RAC (keep for the date/time cluster vs consolidate onto Ark; default
+      keep); Toolbar (no Ark toolbar — focus group from `@dxos/react-focus` + `toggle-group`); Focus
+      (keep as the seam).
+- [ ] **Phase 6 — remove `@radix-ui/*`** from catalog and lockfile; `pnpm knip` is the gate.
+- [ ] **Separate, not this phase: touch drag in the Tree.** `pragmatic-drag-and-drop` is native
+      HTML5 DnD, which does not fire from touch in iPhone WKWebView, so Tree reordering is
+      desktop-only under Tauri mobile. Library-independent; verify on device first. Tracked
+      2026-09-02, unowned.
