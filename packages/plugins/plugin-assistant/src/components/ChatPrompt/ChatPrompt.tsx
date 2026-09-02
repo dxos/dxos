@@ -200,8 +200,8 @@ export const ChatPrompt = ({
       {db && settings && (
         <div className='flex items-center overflow-hidden p-1.5'>
           <ChatOptions
-            chat={chat}
             db={db}
+            chat={chat}
             registry={processor.registry}
             context={processor.context}
             preset={preset}

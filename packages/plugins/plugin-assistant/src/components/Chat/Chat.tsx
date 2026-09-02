@@ -635,13 +635,13 @@ type ChatPromptProps = Omit<NaturalChatPromptProps, 'chat' | 'db' | 'processor' 
  * trigger is not used: the toggle is a button inside the composer, which reports through the chat
  * event rather than being wrapped in a `Collapsible.Trigger` it cannot reach.
  */
-const ChatPrompt = ({ classNames, defaultTasksVisible = true, ...props }: ChatPromptProps) => {
+const ChatPrompt = ({ classNames, defaultTasksVisible = false, ...props }: ChatPromptProps) => {
   const { chat, db, processor, event } = useChatContext(CHAT_PROMPT_NAME);
 
   // Disclosed by default: a chat carrying a checklist should show it without being asked, and the
   // toggle is how the reader gets the room back once they have read it. Per mount rather than
   // persisted — it is a glance, not a preference.
-  const [tasksVisible, setTasksVisible] = useState(defaultTasksVisible);
+  const [tasksVisible, setTasksVisible] = useState(chat?.tasks?.length ? defaultTasksVisible : false);
   useEffect(() => {
     return event.on((ev) => {
       if (ev.type === 'toggle-tasks') {
@@ -659,15 +659,18 @@ const ChatPrompt = ({ classNames, defaultTasksVisible = true, ...props }: ChatPr
       lazyMount={false}
     >
       {/* The height the machine measures is what the ramp animates against, so the region clips. */}
-      <Collapsible.Content className='overflow-hidden data-[state=closed]:animate-slide-up data-[state=open]:animate-slide-down'>
-        <ChatTaskList classNames='shrink-0 max-h-[calc(4*2rem+1px)] border border-separator border-b-0 rounded-t-sm text-description' />
-      </Collapsible.Content>
+      {chat?.tasks != null && (
+        <Collapsible.Content className='overflow-hidden data-[state=closed]:animate-slide-up data-[state=open]:animate-slide-down'>
+          <ChatTaskList classNames='shrink-0 max-h-[calc(4*2rem+1px)] border border-separator border-b-0 rounded-t-sm text-description' />
+        </Collapsible.Content>
+      )}
+      <div>[{chat?.tasks?.length}]</div>
       <NaturalChatPrompt
         {...props}
         // Square where the checklist meets it, so the two read as one shell rather than two cards.
         classNames={[tasksVisible && 'rounded-t-none', classNames]}
-        chat={chat}
         db={db}
+        chat={chat}
         processor={processor}
         event={event}
         tasksVisible={tasksVisible}
