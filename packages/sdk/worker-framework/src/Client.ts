@@ -4,6 +4,7 @@
 
 import { AsyncTask, Event, Trigger, asyncTimeout, sleepWithContext } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
+import { withContext } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import type { MaybePromise } from '@dxos/util';
@@ -20,9 +21,6 @@ import * as WorkerProtocol from './WorkerProtocol';
 
 // Sentinel resolved when a follower gives up waiting for a port from the leader.
 const LEADER_TIMEOUT = Symbol('leader-timeout');
-
-const readContext = (error: Error): object =>
-  'context' in error && typeof error.context === 'object' && error.context ? error.context : {};
 
 /** How far this tab's own leader-election chain has got. */
 export type LeaderPhase =
@@ -249,10 +247,7 @@ export class Connection extends Resource {
       openTimeout,
       lockOrRpcTimeoutError('establishing initial worker connection', openTimeout),
     ).catch((error) => {
-      const failure = this.#lastConnectError ?? this.#lastLeaderError ?? error;
-      throw failure instanceof Error
-        ? Object.assign(failure, { context: { ...readContext(failure), ...this.#diagnostics } })
-        : failure;
+      throw withContext(this.#lastConnectError ?? this.#lastLeaderError ?? error, this.#diagnostics);
     });
     log('worker-connection: initial connection established');
   }

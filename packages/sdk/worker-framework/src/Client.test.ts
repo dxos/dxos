@@ -6,8 +6,10 @@ import * as Effect from 'effect/Effect';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event, Trigger, asyncTimeout, sleep } from '@dxos/async';
+import { errorContextPrimitives } from '@dxos/errors';
 
 import * as Client from './Client';
+import { WorkerConnectionError } from './errors';
 import { LOCK_OR_RPC_WAIT_TIMEOUT } from './internal/locks';
 import * as Worker from './Worker';
 import * as WorkerProtocol from './WorkerProtocol';
@@ -314,7 +316,7 @@ describe('Connection multi-client', () => {
     );
 
     expect(String(error)).toContain('TEST: worker creation failed');
-    expect(diagnosticsOf(error).workerLeaderFailures).toBeGreaterThan(0);
+    expect(errorContextPrimitives(error).workerLeaderFailures).toBeGreaterThan(0);
   }, 30_000);
 
   test('a tab that never receives a port reports the port timeouts it accrued', async () => {
@@ -343,7 +345,9 @@ describe('Connection multi-client', () => {
       (err) => err,
     );
 
-    const diagnostics = diagnosticsOf(error);
+    // Typed, so a consumer discriminates on the class rather than matching the message.
+    expect(WorkerConnectionError.is(error)).toBe(true);
+    const diagnostics = errorContextPrimitives(error);
     expect(diagnostics.workerPortTimeouts).toBeGreaterThan(0);
     expect(['requesting-port', 'port-timeout']).toContain(diagnostics.workerConnectPhase);
     expect(diagnostics.workerMsSinceLeaderHeartbeat).toBeUndefined();

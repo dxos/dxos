@@ -9,6 +9,7 @@ import * as PubSub from 'effect/PubSub';
 import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { EffectEx } from '@dxos/effect';
+import { BaseError, withContext } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ErrorBoundary, ErrorFallback, type FallbackProps } from '@dxos/react-error-boundary';
@@ -76,6 +77,9 @@ export const STARTUP_FAILED_EVENT = 'app-framework:startup-failed';
  * dismissed, carrying the milliseconds since navigation start as `detail`.
  */
 export const FIRST_INTERACTIVE_EVENT = 'app-framework:first-interactive';
+
+/** Startup did not complete before its deadline. Carries {@link StartupDiagnostics} as context. */
+export class StartupTimeoutError extends BaseError.extend('StartupTimeoutError', 'Startup timed out') {}
 
 /** Where startup had got to when the deadline expired. */
 export type StartupDiagnostics = {
@@ -345,12 +349,7 @@ export const useApp = ({
               }
               if (error$ && !readyRef.current) {
                 const diagnostics = collectDiagnostics('module-error');
-                if (error$ instanceof Error) {
-                  const existing =
-                    'context' in error$ && typeof error$.context === 'object' && error$.context ? error$.context : {};
-                  Object.assign(error$, { context: { ...existing, ...diagnostics } });
-                }
-                setError(error$);
+                setError(withContext(error$, diagnostics));
                 errorRef.current = error$;
                 reportFailure(diagnostics);
               }
@@ -380,7 +379,9 @@ export const useApp = ({
 
       const abort = () => {
         void EffectEx.runAndForwardErrors(Fiber.interrupt(fiber));
-        setError(Object.assign(new Error(`Startup timed out after ${timeout}ms`), { context: diagnostics }));
+        setError(
+          withContext(new StartupTimeoutError({ message: `Startup timed out after ${timeout}ms` }), diagnostics),
+        );
         reportFailure(diagnostics);
       };
 

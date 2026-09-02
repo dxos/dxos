@@ -30,6 +30,7 @@ import * as UrlLoader from '@dxos/app-framework/UrlLoader';
 // boot path uses.
 import { EdgeHttpClient } from '@dxos/edge-client/http';
 import { EffectEx } from '@dxos/effect';
+import { errorContextPrimitives } from '@dxos/errors';
 import { LogLevel, log } from '@dxos/log';
 import { IdbLogStore } from '@dxos/log-store-idb';
 import * as Observability from '@dxos/observability/Observability';
@@ -52,7 +53,6 @@ import {
   WorkerLogProcessor,
   defaultStorageIsEmpty,
   downloadLogs,
-  errorContextPrimitives,
   initializeObservability,
   isFalse,
   isTrue,

@@ -4,6 +4,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
+import { errorContextPrimitives } from '@dxos/errors';
 import { log } from '@dxos/log';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import type * as Observability from '@dxos/observability/Observability';
@@ -22,13 +23,7 @@ import {
 } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
-import {
-  RECOVERY_PATH,
-  composerLogFileName,
-  errorContextPrimitives,
-  exportManualLogDownload,
-  setSafeModeUrl,
-} from '../../util';
+import { RECOVERY_PATH, composerLogFileName, exportManualLogDownload, setSafeModeUrl } from '../../util';
 
 // TODO(burdon): Factor out.
 const parseError = (t: (name: string, context?: object) => string, error: Error) => {

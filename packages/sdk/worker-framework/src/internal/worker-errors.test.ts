@@ -4,6 +4,7 @@
 
 import { describe, test } from 'vitest';
 
+import { WorkerError } from '../errors';
 import { workerErrorFromEvent } from './worker-errors';
 
 describe('workerErrorFromEvent', () => {
@@ -17,7 +18,7 @@ describe('workerErrorFromEvent', () => {
     const event = { error: null, message: 'Script error.', filename: 'https://app/worker.js', lineno: 1, colno: 2 };
     const error = workerErrorFromEvent(event, 'coordinator');
 
-    expect(error).toBeInstanceOf(Error);
+    expect(WorkerError.is(error)).toBe(true);
     expect(error.message).toBe('coordinator worker error: Script error. (https://app/worker.js:1:2)');
     expect(error.cause).toBeUndefined();
   });

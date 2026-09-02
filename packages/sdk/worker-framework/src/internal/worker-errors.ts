@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { WorkerError } from '../errors';
+
 /** Which worker an `ErrorEvent` came from, for the synthesized message. */
 export type WorkerKind = 'dedicated' | 'coordinator';
 
@@ -20,10 +22,9 @@ export const workerErrorFromEvent = (
   }
 
   const location = event.filename ? ` (${event.filename}:${event.lineno}:${event.colno})` : '';
-  const error = new Error(`${kind} worker error: ${event.message || 'unknown error'}${location}`);
   // A worker that throws a non-Error (`throw 'boom'`) populates `error` with that value.
-  if (event.error != null) {
-    error.cause = event.error;
-  }
-  return error;
+  return new WorkerError({
+    message: `${kind} worker error: ${event.message || 'unknown error'}${location}`,
+    cause: event.error ?? undefined,
+  });
 };
