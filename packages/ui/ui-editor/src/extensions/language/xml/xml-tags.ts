@@ -640,6 +640,7 @@ const buildDecorations = (
                   def.streaming ? `cm-xml-${nodeRange.from}` : `cm-xml-${nodeRange.from}-${nodeRange.to}`,
                 );
                 const widgetState = widgetStateMap[widgetId];
+                const signature = state.sliceDoc(nodeRange.from, nodeRange.to);
                 const props = {
                   id: widgetId,
                   range: nodeRange,
@@ -654,17 +655,17 @@ const buildDecorations = (
                 const widget: WidgetType | undefined = factory
                   ? (factory(props) ?? undefined)
                   : Component
-                    ? new StubWidget(
-                        widgetId,
+                    ? new StubWidget({
+                        id: widgetId,
                         Component,
                         props,
                         notifier,
-                        false,
-                        !!block,
+                        signature,
+                        block: !!block,
                         blockHeight,
-                        def.heightMode,
-                        def.debug,
-                      )
+                        heightMode: def.heightMode,
+                        debug: def.debug,
+                      })
                     : undefined;
 
                 // Add decoration.
@@ -736,17 +737,17 @@ const buildDecorations = (
           const widget: WidgetType | undefined = def.factory
             ? (def.factory(props) ?? undefined)
             : def.Component
-              ? new StubWidget(
-                  widgetId,
-                  def.Component,
+              ? new StubWidget({
+                  id: widgetId,
+                  Component: def.Component,
                   props,
                   notifier,
-                  false,
-                  isBlock,
+                  signature: state.sliceDoc(nodeRange.from, nodeRange.to),
+                  block: isBlock,
                   blockHeight,
-                  def.heightMode,
-                  def.debug,
-                )
+                  heightMode: def.heightMode,
+                  debug: def.debug,
+                })
               : undefined;
           if (widget) {
             builder.add(
@@ -808,17 +809,15 @@ const buildDecorations = (
         const widget: WidgetType | undefined = def.factory
           ? (def.factory(mergedProps) ?? undefined)
           : def.Component
-            ? new StubWidget(
-                widgetId,
-                def.Component,
-                mergedProps,
+            ? new StubWidget({
+                id: widgetId,
+                Component: def.Component,
+                props: mergedProps,
                 notifier,
-                true,
-                undefined,
-                undefined,
-                def.heightMode,
-                def.debug,
-              )
+                streaming: true,
+                heightMode: def.heightMode,
+                debug: def.debug,
+              })
             : undefined;
 
         // Decorated even when the factory declined: a factory may return null while the tag is still
