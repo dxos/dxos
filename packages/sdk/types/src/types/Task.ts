@@ -25,7 +25,6 @@ export const Priority = Schema.Literals(['none', 'low', 'medium', 'high', 'urgen
 export type Priority = Schema.Schema.Type<typeof Priority>;
 
 export const PriorityOptions: { id: Priority; title: string; color: string }[] = [
-  { id: 'none', title: 'None', color: 'gray' },
   { id: 'low', title: 'Low', color: 'gray' },
   { id: 'medium', title: 'Medium', color: 'gray' },
   { id: 'high', title: 'High', color: 'gray' },
@@ -33,10 +32,7 @@ export const PriorityOptions: { id: Priority; title: string; color: string }[] =
 ];
 
 //
-// Estimate
-// T-shirt sizes: relative effort, which is what a reader can actually agree on, not hours.
-// `review` sits between working and done: a task whose {@link Task.reviewers} is non-empty lands
-// there when the work is finished, so nothing a reviewer was named for closes without them.
+// Estimate (T-shirt sizes)
 //
 
 export const Estimate = Schema.Literals(['xs', 's', 'm', 'l', 'xl']);

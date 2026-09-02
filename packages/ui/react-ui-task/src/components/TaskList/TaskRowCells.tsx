@@ -59,7 +59,11 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
       <Menu.Trigger asChild>
         <IconButton
           data-testid='taskList.item.status'
-          classNames={mx('shrink-0', iconClassNames, classNames)}
+          classNames={mx('shrink-0', classNames)}
+          // The hue goes on the icon, not the button: the row dims icons through `--icons-color`,
+          // which the `Icon` root reads, so a colour set on the button is overridden at rest and
+          // only reappears once selection invalidates the variable.
+          iconClassNames={iconClassNames}
           variant='ghost'
           density='sm'
           icon={icon}

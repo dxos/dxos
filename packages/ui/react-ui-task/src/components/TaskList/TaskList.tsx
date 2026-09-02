@@ -999,7 +999,9 @@ const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
           icon={style?.icon ?? NO_PRIORITY_ICON}
           label={t('task-priority.label')}
           data-testid='taskList.item.priority'
-          classNames={mx(tint)}
+          // The hue goes on the icon, not the button: the row dims icons through `--icons-color`,
+          // which the `Icon` root reads, so a colour set on the button is overridden at rest.
+          iconClassNames={tint}
           // The row is the selection target; opening the menu must not also select it.
           onClick={(event) => event.stopPropagation()}
         />
