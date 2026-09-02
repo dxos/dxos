@@ -311,14 +311,17 @@ TaskListViewport.displayName = 'TaskList.Viewport';
 const MAX_ORDINAL = 99;
 
 /**
- * The edit pane's columns. The leading `1.5rem` stands in for the row's disclosure toggle, which
- * the pane has no use for but must reserve: without it every row sits a toggle's width to the right
- * of the pane and the two read as different grids.
+ * The edit pane's columns, matching the rows' leading gutters. The row's disclosure toggle is
+ * cleared with padding rather than a spare column: a column of its own picks up the grid's
+ * `gap-x-1`, which put every pane cell 4px right of the row cell it is meant to sit under.
  */
 const GRID_COLS = {
-  content: 'grid-cols-[1.5rem_1.5rem_1fr_min-content_2rem]',
-  contentWithOrdinals: 'grid-cols-[1.5rem_2rem_1.5rem_1fr_min-content_2rem]',
+  content: 'grid-cols-[1.5rem_1fr_min-content_2rem]',
+  contentWithOrdinals: 'grid-cols-[2rem_1.5rem_1fr_min-content_2rem]',
 };
+
+/** The disclosure toggle's own width (`w-6`), which the pane reserves but does not fill. */
+const TOGGLE_GUTTER = 'ps-6';
 
 type TaskListContentProps = ComposableProps;
 
@@ -1319,8 +1322,7 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
     // On the list's template the pane has the rows' columns: the ordinal gutter it leaves empty, the
     // status column takes the icon, and the title column takes the field — which is what puts the
     // caret where the rows' titles start. Off it, the pane keeps a template of its own.
-    // One further right than the pane's own cells suggest, for the reserved toggle column.
-    const titleColumn = grid ? (showGutter ? 'col-start-4' : 'col-start-3') : 'col-start-2';
+    const titleColumn = grid && showGutter ? 'col-start-3' : 'col-start-2';
 
     return (
       // One grid, not a row of grids: the title and the description line up column for column, and
@@ -1332,9 +1334,7 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
         className={mx(
           'grid gap-x-1 w-full min-w-0 shrink-0',
           grid
-            ? showGutter
-              ? GRID_COLS.contentWithOrdinals
-              : GRID_COLS.content
+            ? [showGutter ? GRID_COLS.contentWithOrdinals : GRID_COLS.content, TOGGLE_GUTTER]
             : 'grid-cols-[1.5rem_1fr_min-content]',
           className,
         )}
@@ -1342,9 +1342,9 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
         <span
           className={mx(
             'flex items-center justify-center h-8',
-            // Placed explicitly: column 1 is the reserved toggle, so implicit placement would put
-            // the icon a toggle's width left of the rows' status control.
-            grid && (showGutter ? 'col-start-3' : 'col-start-2'),
+            // Placed explicitly: with ordinals the pane leaves column 1 empty, and implicit
+            // placement would drop the icon into that gutter.
+            grid && (showGutter ? 'col-start-2' : 'col-start-1'),
           )}
         >
           <Icon
