@@ -8,7 +8,7 @@ import React from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { Client } from '@dxos/agent-claude/client';
-import { Chat as ChatSchema } from '@dxos/assistant-toolkit';
+import * as ChatSchema from '@dxos/assistant/Chat';
 import { Database, Feed, Filter } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { type Space } from '@dxos/react-client/echo';

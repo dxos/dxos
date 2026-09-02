@@ -7,13 +7,14 @@
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Option from 'effect/Option';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { AiContext } from '@dxos/assistant';
+import * as Chat from '@dxos/assistant/Chat';
 import { ProcessManager } from '@dxos/compute-runtime';
 import {
   AgentService,
+  type Conversation,
   type GetSessionOptions,
   type Service,
   type Session,
@@ -75,7 +76,10 @@ export const createSession: (
     }),
   );
 
-  return yield* getSession(feed, { model: opts?.model, provider: opts?.provider });
+  // The agent process runs on a chat, so the conversation gets one even when the caller only
+  // wanted a bare session.
+  const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+  return yield* getSession(chat, { model: opts?.model, provider: opts?.provider });
 }, Effect.scoped);
 
 export interface AgentServiceOptions {
@@ -166,12 +170,15 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
       });
 
       const service: Service = {
-        getSession: (feed: Feed.Feed, options?: GetSessionOptions) =>
+        getSession: (chat: Conversation, options?: GetSessionOptions) =>
           Effect.gen(function* () {
             const model = options?.model ?? opts?.model;
             const provider = options?.provider ?? opts?.provider;
-            const instructions = options?.instructions?.uri;
-            const cached = sessionCache.get(feed.id);
+            // Read off the chat rather than passed in: the process is bound to the chat, so its
+            // steering is whatever the chat points at when the process is spawned.
+            const instructions = chat.instructions?.uri;
+            const feed = yield* Database.load(chat.feed).pipe(Effect.orDie);
+            const cached = sessionCache.get(chat.id);
             if (cached) {
               if (
                 cached.model === model &&
@@ -190,10 +197,10 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
                 // process replays.
                 yield* cached.handle.terminate();
               }
-              sessionCache.delete(feed.id);
+              sessionCache.delete(chat.id);
             }
 
-            const target = Obj.getURI(feed);
+            const target = Obj.getURI(chat);
             const parsedEchoUri = EID.tryParse(target);
             const spaceId = parsedEchoUri ? EID.getSpaceId(parsedEchoUri) : undefined;
             const executable = makeExecutable(model, provider);
@@ -203,18 +210,6 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
             // since the process key does not encode the model.
             const processes = yield* processManager.list({ target, key: executable.key });
             let activeProcess = processes.find((process) => !isTerminalProcess(process.status.state));
-
-            // Spawn annotations are immutable, so a running process found via the remount path may
-            // carry stale instructions; terminate it and respawn with the requested ref.
-            if (activeProcess) {
-              const processInstructions = Option.getOrUndefined(
-                Annotation.getDictionary(activeProcess.params.annotations, Process.InstructionsAnnotation),
-              );
-              if (processInstructions !== instructions) {
-                yield* activeProcess.terminate();
-                activeProcess = undefined;
-              }
-            }
 
             let handle: AgentHandle;
             if (activeProcess) {
@@ -228,13 +223,10 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
                 // lookup (set once at spawn, immutable — the identity plane).
                 annotations: Annotation.buildDictionary((dictionary) => {
                   Annotation.setDictionary(dictionary, Process.HarnessHostAnnotation, true);
-                  if (options?.instructions) {
-                    Annotation.setDictionary(dictionary, Process.InstructionsAnnotation, options.instructions.uri);
-                  }
                 }),
                 environment: {
                   ...(spaceId !== undefined ? { space: spaceId } : {}),
-                  conversation: target,
+                  conversation: Obj.getURI(feed),
                 },
                 traceMeta: {
                   conversation: Ref.make(feed),
@@ -243,10 +235,10 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
             }
 
             const releaseSession = () => {
-              sessionCache.delete(feed.id);
+              sessionCache.delete(chat.id);
             };
-            const session = makeSession(handle, feed, releaseSession);
-            sessionCache.set(feed.id, { model, provider, instructions, handle, session });
+            const session = makeSession(handle, chat, feed, releaseSession);
+            sessionCache.set(chat.id, { model, provider, instructions, handle, session });
             return session;
           }),
         hydrate: hydrateAgents,
@@ -256,7 +248,13 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
     }),
   );
 
-const makeSession = (process: AgentHandle, feed: Feed.Feed, releaseSession: () => void): Session => ({
+const makeSession = (
+  process: AgentHandle,
+  chat: Conversation,
+  feed: Feed.Feed,
+  releaseSession: () => void,
+): Session => ({
+  chat,
   feed,
   getContext: () =>
     Effect.gen(function* () {

@@ -8,11 +8,11 @@ import * as Prompt from 'effect/unstable/ai/Prompt';
 
 import { AiPreprocessor, AiService } from '@dxos/ai';
 import { Harness } from '@dxos/assistant';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import { ContentBlock } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { Chat } from '../../../types';
 import { PlanReminder } from './definitions';
 
 /**
@@ -28,7 +28,7 @@ export default PlanReminder.pipe(
   Operation.withHandler(
     Effect.fnUntraced(
       function* () {
-        const chat = yield* Chat.getFromContext.pipe(Effect.orElseSucceed(() => undefined));
+        const chat = yield* Harness.getChat.pipe(Effect.orElseSucceed(() => undefined));
         if (!chat) {
           return;
         }

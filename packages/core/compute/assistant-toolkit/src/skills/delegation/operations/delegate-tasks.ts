@@ -4,12 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
+import { Harness } from '@dxos/assistant';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { type Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { Chat } from '../../../types';
 import { DelegateTasks } from './definitions';
 
 /**
@@ -25,7 +26,7 @@ const handler: Operation.WithHandler<typeof DelegateTasks> = DelegateTasks.pipe(
         return yield* Effect.fail(new Error('Select at least one task (ordinal or title).'));
       }
 
-      const chat = yield* Chat.getFromContext;
+      const chat = yield* Harness.getChat;
       const all = yield* Chat.loadTasks(chat);
       if (all.length === 0) {
         return yield* Effect.fail(new Error('The conversation has no tasks to delegate.'));

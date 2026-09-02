@@ -4,12 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
+import { Harness } from '@dxos/assistant';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 import { Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { Chat } from '../../../types';
 import { UpdateTasks } from './definitions';
 
 /**
@@ -19,7 +20,7 @@ import { UpdateTasks } from './definitions';
 export default UpdateTasks.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ tasks }) {
-      const chat = yield* Chat.getFromContext;
+      const chat = yield* Harness.getChat;
       const { db } = yield* Database.Service;
 
       // Mutable copy: a payload naming the same new title twice must upsert its own creation.

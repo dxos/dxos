@@ -10,7 +10,8 @@ import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef,
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Alarm } from '@dxos/assistant';
-import { Chat as AssistantChat, resolveSlashCommand } from '@dxos/assistant-toolkit';
+import { resolveSlashCommand } from '@dxos/assistant-toolkit';
+import * as AssistantChat from '@dxos/assistant/Chat';
 import { Event } from '@dxos/async';
 import { type Database, Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';

@@ -8,14 +8,11 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import type { Harness } from '@dxos/assistant';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import { Annotation, Database, DXN, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { Task } from '@dxos/types';
-
-import { HarnessContextError } from '../errors';
 
 /**
  * AI chat session.
@@ -134,6 +131,25 @@ export const deleteTask = (
   return subtree;
 };
 
+/** The chat's feed entity id, readable without resolving the ref. */
+export const feedEntityId = (chat: Chat): string | undefined => Task.refEntityId(chat.feed);
+
+/**
+ * The chat that owns `feed`. The chat owns its feed (`SetParent`), so the parent edge answers this
+ * without a query; the scan is the fallback for a feed whose parent was never stamped.
+ */
+export const loadForFeed = (feed: Feed.Feed): Effect.Effect<Chat | undefined, never, Database.Service> =>
+  Effect.gen(function* () {
+    const parent = Obj.getParent(feed);
+    if (parent && Obj.instanceOf(Chat, parent)) {
+      return parent;
+    }
+    const chats = yield* Database.query(Filter.type(Chat)).run;
+    return chats.find((chat) => feedEntityId(chat) === feed.id);
+    // Every failure mode (an unregistered type in a bare test database, an unreadable ref) means
+    // the same thing to callers: this feed has no chat.
+  }).pipe(Effect.catchCause(() => Effect.succeed(undefined)));
+
 /** Bound on the parent walk below; a conversation sits one or two edges under its project. */
 const MAX_OWNER_DEPTH = 8;
 
@@ -209,24 +225,3 @@ export const renderNumberedChecklist = (tasks: readonly Task.Task[]): string => 
     })
     .join('\n');
 };
-
-/**
- * Resolves the bound session {@link Chat} for the current conversation.
- * Planning and other session-scoped tools require exactly one chat in harness context.
- */
-export const getFromContext: Effect.Effect<
-  Chat,
-  HarnessContextError | Harness.NotSupportedError,
-  Harness.HarnessService
-> = Effect.gen(function* () {
-  // Loaded here rather than imported: `@dxos/assistant` pulls the AI session runtime (MCP SDK,
-  // Anthropic client, ~280 KB), and this module carries the Chat *schema*, which core plugins
-  // reference for their operation definitions.
-  const { Harness: HarnessRuntime } = yield* Effect.promise(() => import('@dxos/assistant'));
-  const chats = yield* HarnessRuntime.queryContext(Filter.type(Chat));
-  if (chats.length !== 1) {
-    return yield* Effect.fail(new HarnessContextError({ type: 'chat', count: chats.length }));
-  }
-
-  return chats[0];
-});

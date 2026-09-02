@@ -15,8 +15,9 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AiContext } from '@dxos/assistant';
-import { Chat, PlanningSkill } from '@dxos/assistant-toolkit';
+import { PlanningSkill } from '@dxos/assistant-toolkit';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Filter, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
@@ -165,7 +166,7 @@ const meta = {
                   // Bind the conversation the way `CreateChat` binds a new chat's defaults, because
                   // holding tasks is not the same as working them: the planning skill's update-tasks
                   // tool and its end-request reminder both reach the checklist through
-                  // `Chat.getFromContext`, so without the chat in context the model gets the tool and
+                  // `Harness.getChat`, so without the chat in context the model gets the tool and
                   // no list to apply it to.
                   const registry = yield* Capability.get(Capabilities.AtomRegistry);
                   const runtime = yield* Effect.context<Database.Service>().pipe(

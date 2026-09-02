@@ -6,7 +6,7 @@ import React, { forwardRef, useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Chat } from '@dxos/assistant-toolkit';
+import * as Chat from '@dxos/assistant/Chat';
 import { Obj } from '@dxos/echo';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
