@@ -79,17 +79,16 @@ const createWorkerFactory = (storageLockKey: string) => () => {
   return channel.port2 as WorkerProtocol.WorkerOrPort;
 };
 
-/**
- * A coordinator link that is broken in both directions: nothing this tab sends reaches a peer, and
- * no heartbeat, `new-leader`, or `provide-port` ever reaches this tab. Models the observed wedged
- * tab whose SharedWorker link died — it can still take Web Locks, so it can still evict a leader.
- */
-/** Reads the diagnostics the connection merges into a failure, without asserting a shape. */
 const diagnosticsOf = (error: unknown): Record<string, unknown> =>
   error instanceof Error && 'context' in error && typeof error.context === 'object' && error.context
     ? { ...error.context }
     : {};
 
+/**
+ * A coordinator link that is broken in both directions: nothing this tab sends reaches a peer, and
+ * no heartbeat, `new-leader`, or `provide-port` ever reaches this tab. Models the observed wedged
+ * tab whose SharedWorker link died — it can still take Web Locks, so it can still evict a leader.
+ */
 const createBrokenCoordinator = (): WorkerProtocol.WorkerCoordinator => ({
   onMessage: new Event<WorkerProtocol.CoordinatorMessage>(),
   sendMessage: () => {},
@@ -290,8 +289,6 @@ describe('Connection multi-client', () => {
     expect(attempts).toBeGreaterThan(1);
   });
 
-  // The two branches the connection diagnostics exist to tell apart. `open()` cannot settle sooner
-  // than `portTimeout + LOCK_OR_RPC_WAIT_TIMEOUT`, so both run ~15s, in line with the rest of the file.
   test('a leader whose worker never starts rejects with the leader error, not the bare timeout', async () => {
     const hub = createHub();
     const keys = uniqueKeys();
@@ -316,8 +313,6 @@ describe('Connection multi-client', () => {
       (err) => err,
     );
 
-    // Surfacing the leader-session failure rather than `establishing initial worker connection`
-    // is what tells a reader the worker is the problem instead of the port exchange.
     expect(String(error)).toContain('TEST: worker creation failed');
     expect(diagnosticsOf(error).workerLeaderFailures).toBeGreaterThan(0);
   }, 30_000);
@@ -349,13 +344,9 @@ describe('Connection multi-client', () => {
     );
 
     const diagnostics = diagnosticsOf(error);
-    // The retry loop overwrites `port-timeout` with the next `requesting-port`, which is why the
-    // counter exists: the phase alone cannot distinguish one expiry from twenty.
     expect(diagnostics.workerPortTimeouts).toBeGreaterThan(0);
     expect(['requesting-port', 'port-timeout']).toContain(diagnostics.workerConnectPhase);
-    // -1, not a small number: a broken coordinator delivers no heartbeat, and this tab's own
-    // broadcasts must not be counted as one.
-    expect(diagnostics.workerMsSinceLeaderHeartbeat).toBe(-1);
+    expect(diagnostics.workerMsSinceLeaderHeartbeat).toBeUndefined();
   }, 30_000);
 
   test('a tab with a broken coordinator link stops stealing instead of restarting the leader forever', async () => {

@@ -40,15 +40,7 @@ export type ProfilerSnapshot = {
   graphBodies: Array<{ id: string; kind: string; startTime: number }>;
 };
 
-/**
- * Emits a `startup:<name>` performance mark.
- *
- * Unconditional, unlike the {@link Profiler} that reads these back: a mark is a timestamp
- * and a string, and the plugin manager already emits several hundred of them per boot in
- * production (one set per module), so gating these behind the dev-only profiler bought no
- * measurable time and cost every production `composer.startup` its phase timings, which
- * reported 0 because the measures they read never existed.
- */
+/** Emits a `startup:<name>` performance mark. */
 export const startupMark = (name: string): void => {
   performance.mark(`startup:${name}`);
 };
@@ -56,15 +48,12 @@ export const startupMark = (name: string): void => {
 /**
  * Emits a `startup:<name>` measure between two `startup:` marks.
  *
- * `performance.measure` throws when either mark is missing, which a boot path that skipped a
- * phase can legitimately produce; a timing must never take the app down.
+ * `performance.measure` throws when either mark is missing.
  */
 export const startupMeasure = (name: string, startMark: string, endMark: string): void => {
   try {
     performance.measure(`startup:${name}`, `startup:${startMark}`, `startup:${endMark}`);
-  } catch {
-    // Missing mark: the phase never ran.
-  }
+  } catch {}
 };
 
 export type Profiler = {
@@ -152,8 +141,6 @@ export const startupProfiler = (): Profiler => {
   return {
     snapshot: collect,
     dump: () => {
-      // The host marks these on both outcomes; only fill in when it has not, so a dev boot does
-      // not carry two `startup:ready` marks and two `startup:total` measures.
       if (performance.getEntriesByName('startup:ready').length === 0) {
         startupMark('ready');
         startupMeasure('total', 'main:start', 'ready');

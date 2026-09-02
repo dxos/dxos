@@ -215,8 +215,6 @@ const main = async () => {
   // profiler (strict mode requires the parameter, which is exactly what is missing).
   const profilerParam = url.searchParams.get(PARAM_PROFILER);
   const profilerEnabled = profilerParam === null ? Boolean(import.meta.env?.DEV) : isTrue(profilerParam);
-  // Marked before the profiler is (or is not) constructed: it is the origin of the `total`
-  // measure, which production reads even though only dev collects the full timeline.
   startupMark('main:start');
   const profiler = profilerEnabled ? startupProfiler() : undefined;
 
@@ -333,9 +331,6 @@ const main = async () => {
     post: (message) => observabilityWorker.postMessage(message),
   });
 
-  // Shared by the success and failure captures below, so a boot that missed its deadline is
-  // directly comparable against one that did not. Reads `performance.getEntriesByType`
-  // directly; the `startup:` measures it needs are emitted unconditionally (see `startupMark`).
   const captureStartupSummary = (): Record<string, string | number | boolean | undefined> => {
     const measures = performance.getEntriesByType('measure');
     const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
@@ -370,10 +365,11 @@ const main = async () => {
   };
   let startupActivated = false;
   let startupFailureReported = false;
-  const captureStartup = (event: string, extra?: Record<string, string | number | boolean | undefined>) => {
-    // `startup:aborted` on the failure path: `ready` is read by humans off a timeline and by the
-    // playwright waterfall, where marking it for a boot that never became ready reads as success.
-    const endMark = event === 'composer.startup' ? 'ready' : 'aborted';
+  const captureStartup = (
+    event: string,
+    endMark: 'ready' | 'aborted',
+    extra?: Record<string, string | number | boolean | undefined>,
+  ) => {
     startupMark(endMark);
     startupMeasure('total', 'main:start', endMark);
     const summary = { ...captureStartupSummary(), ...extra };
@@ -385,27 +381,22 @@ const main = async () => {
       .catch((error) => log.catch(error));
   };
 
-  // Every path to the fatal dialog reports, once. `startupActivated` separates a boot that never
-  // finished from one whose plugin graph came up and whose client died afterwards — the latter
-  // still emits `composer.startup`, because that event means `Startup` activated, not "boot worked".
   const captureStartupFailure = (extra?: Record<string, string | number | boolean | undefined>) => {
     if (startupFailureReported) {
       return;
     }
     startupFailureReported = true;
-    captureStartup('composer.startup.failed', { ...extra, startupActivated });
+    captureStartup('composer.startup.failed', 'aborted', { ...extra, startupActivated });
   };
 
   window.addEventListener(
     STARTUP_ACTIVATED_EVENT,
     () => {
       startupActivated = true;
-      captureStartup('composer.startup');
+      captureStartup('composer.startup', 'ready');
     },
     { once: true },
   );
-  // Separate from the startup summary: the shell renders at least two debounce ticks after
-  // `Startup` activates, so time-to-interactive does not exist yet when that summary is built.
   window.addEventListener(
     FIRST_INTERACTIVE_EVENT,
     (event) => {
@@ -416,8 +407,6 @@ const main = async () => {
     },
     { once: true },
   );
-  // Without this, a failed boot emits an exception and no timings at all, leaving no denominator
-  // for the success event and nothing to compare a stalled phase against.
   window.addEventListener(STARTUP_FAILED_EVENT, (event) => captureStartupFailure(event.detail), { once: true });
   // Detect if this is the popover window in Tauri.
   const isPopover = await Match.value(isTauri).pipe(
@@ -520,8 +509,6 @@ const main = async () => {
   // has to not reject unhandled.
   performance.mark('milestone:client-initialize:start');
   const client = new Client({ config, services });
-  // Named apart from plugin-client's own `client initialization failed` so one failure does not
-  // produce two identically-titled entries. Spread first so a context field cannot shadow `error`.
   void client
     .initialize()
     .catch((err) => log.error('client services failed to open', { ...errorContextPrimitives(err), error: err }));

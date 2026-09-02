@@ -23,7 +23,6 @@ describe('workerErrorFromEvent', () => {
   });
 
   test('synthesizes an error when the event carries nothing at all', ({ expect }) => {
-    // The shape a blocked worker script produces in practice: no error, no message, no filename.
     const event = { error: null, message: '', filename: '', lineno: 0, colno: 0 };
     const error = workerErrorFromEvent(event, 'coordinator');
 

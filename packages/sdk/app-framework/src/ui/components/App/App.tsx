@@ -78,9 +78,6 @@ export const App = ({ ready, error, debounce, progress }: AppProps) => {
     }
     if (performance.getEntriesByName(FIRST_INTERACTIVE_EVENT).length === 0) {
       performance.mark(FIRST_INTERACTIVE_EVENT);
-      // Dispatched as well as marked: hosts capture their startup summary on `Startup` activated,
-      // which is at least two debounce ticks before this mark exists, so a summary field reading
-      // the mark is always absent. The event carries the number instead of racing for it.
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent(FIRST_INTERACTIVE_EVENT, { detail: Math.round(performance.now()) }));
       }

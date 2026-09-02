@@ -67,9 +67,7 @@ export const STARTUP_ACTIVATED_EVENT = 'app-framework:startup-activated';
 
 /**
  * Event dispatched on `window` when startup misses its deadline, carrying
- * {@link StartupDiagnostics} as `detail`. Hosts capture it as the failure
- * counterpart to {@link STARTUP_ACTIVATED_EVENT}, which only ever fires for boots
- * that worked and so leaves failures with no denominator.
+ * {@link StartupDiagnostics} as `detail`.
  */
 export const STARTUP_FAILED_EVENT = 'app-framework:startup-failed';
 
@@ -79,14 +77,7 @@ export const STARTUP_FAILED_EVENT = 'app-framework:startup-failed';
  */
 export const FIRST_INTERACTIVE_EVENT = 'app-framework:first-interactive';
 
-/**
- * Where startup had got to when the deadline expired.
- *
- * Every field is a flat primitive because the consumers are telemetry sinks that only
- * forward `string | number | boolean` (see the PostHog log processor), and lists are
- * pre-joined or reduced to a count for the same reason: `activeModules` runs to a hundred
- * ids on a full profile, well past what is useful as an event property.
- */
+/** Where startup had got to when the deadline expired. */
 export type StartupDiagnostics = {
   /** Which failure produced these: the deadline expiring, or a module refusing to activate. */
   startupFailureKind: 'timeout' | 'module-error';
@@ -98,11 +89,7 @@ export type StartupDiagnostics = {
   startupActivatedModules: number;
   /** Modules registered in total. */
   startupTotalModules: number;
-  /**
-   * Comma-separated modules still activating, which is the set the stall is in. The scheduler
-   * runs a wave of {@link ActivationScheduler.WAVE_CONCURRENCY} at a time, so the last module to
-   * START is usually not the one that hung, and reporting it alone names the wrong culprit.
-   */
+  /** Comma-separated modules still activating, which is the set the stall is in. */
   startupInFlightModules: string;
   /** Activation event in flight when the failure hit. */
   startupLastEvent?: string;
@@ -110,8 +97,6 @@ export type StartupDiagnostics = {
   startupPendingReset: string;
 };
 
-// Declared so hosts get the `detail` type from `addEventListener` rather than asserting it at
-// every listener; these events exist to be consumed outside this package.
 declare global {
   interface WindowEventMap {
     [STARTUP_ACTIVATED_EVENT]: CustomEvent<void>;
@@ -248,9 +233,6 @@ export const useApp = ({
       module: 'org.dxos.app-framework.atom-registry',
     });
 
-    // The modules the scheduler currently has open. A wave runs
-    // `ActivationScheduler.WAVE_CONCURRENCY` at a time, so this is the set a stall lives in;
-    // the single most recent `activating` message is usually a sibling that already finished.
     const inFlightModules = new Set<string>();
 
     const collectDiagnostics = (startupFailureKind: StartupDiagnostics['startupFailureKind']): StartupDiagnostics => ({
@@ -264,8 +246,6 @@ export const useApp = ({
       startupPendingReset: manager.getPendingReset().join(','),
     });
 
-    // Both failure paths report, so `composer.startup.failed` counts every boot that reached the
-    // fatal dialog rather than only the ones that ran out the deadline.
     const reportFailure = (diagnostics: StartupDiagnostics) => {
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent(STARTUP_FAILED_EVENT, { detail: diagnostics }));
@@ -396,16 +376,10 @@ export const useApp = ({
 
       const diagnostics = collectDiagnostics('timeout');
 
-      // Local-only, and the richer of the two: the full module list is worth having in a
-      // downloaded log but is too long to ride on an event property.
       log.warn('startup timeout diagnostic', { ...diagnostics, activeModules: manager.getActive() });
 
       const abort = () => {
         void EffectEx.runAndForwardErrors(Fiber.interrupt(fiber));
-        // The failure point is the only one that knows where startup stopped, and the tab is
-        // usually closed seconds later, so the state travels on the error and the event rather
-        // than staying in a log the user never uploads. `context` is the key `@dxos/log` already
-        // merges into an entry, so no consumer needs a bespoke accessor to read it.
         setError(Object.assign(new Error(`Startup timed out after ${timeout}ms`), { context: diagnostics }));
         reportFailure(diagnostics);
       };

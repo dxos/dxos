@@ -21,8 +21,6 @@ import * as WorkerProtocol from './WorkerProtocol';
 // Sentinel resolved when a follower gives up waiting for a port from the leader.
 const LEADER_TIMEOUT = Symbol('leader-timeout');
 
-// `context` is not on `Error`, so read it the way the rest of the repo does rather than asserting
-// a shape: merging preserves whatever the thrown error already carried.
 const readContext = (error: Error): object =>
   'context' in error && typeof error.context === 'object' && error.context ? error.context : {};
 
@@ -44,31 +42,18 @@ export type ConnectPhase =
   | 'opening-handle'
   | 'connected';
 
-/**
- * Where the connection had got to when it failed.
- *
- * Both phases are reported because they answer different questions: a tab stuck at
- * `awaiting-lock`/`requesting-port` never heard from a leader, while one at
- * `opening-session`/`session-failed` was the leader and its own worker never came up. The
- * bare timeout these annotate cannot tell the two apart, and they need different fixes.
- * Flat primitives only, so telemetry sinks that forward `string | number | boolean` keep them.
- */
+/** Where the connection had got to when it failed. */
 export type ConnectionDiagnostics = {
   workerLeaderPhase: LeaderPhase;
   workerConnectPhase: ConnectPhase;
-  /** Whether this tab held the leader lock, so the heartbeat age below is readable. */
+  /** Whether this tab held the leader lock. */
   workerIsLeader: boolean;
   workerLeaderFailures: number;
   workerStealCount: number;
-  /** Port requests that expired without a `provide-port`; the phase alone is last-write-wins. */
+  /** Port requests that expired without a `provide-port`. */
   workerPortTimeouts: number;
-  /**
-   * Age of the last heartbeat from a leader OTHER than this tab, or -1 when none was ever seen.
-   * Excluding our own is what makes the number mean anything: the coordinator broadcasts to the
-   * sender too, so a leader heartbeating on a 1s interval while its worker fails to start would
-   * otherwise report a healthy sub-second age.
-   */
-  workerMsSinceLeaderHeartbeat: number;
+  /** Age of the last heartbeat from a leader OTHER than this tab; absent when none was seen. */
+  workerMsSinceLeaderHeartbeat?: number;
 };
 
 export interface LeaderTimeouts {
@@ -194,16 +179,10 @@ export class Connection extends Resource {
   #isInitialConnection = true;
   // Last error the connect task failed with, surfaced by `_open` in place of the bare timeout.
   #lastConnectError: unknown;
-  // Last error the leader session failed with, cleared once a session opens. Surfaced by `_open`
-  // when the connect task never got far enough to record one of its own: a leader whose worker
-  // will not start is strictly more informative than the timeout that would otherwise replace it.
   #lastLeaderError: unknown;
   #leaderPhase: LeaderPhase = 'idle';
   #connectPhase: ConnectPhase = 'idle';
-  // Separate from `#lastLeaderHeartbeat`, which counts this tab's own broadcasts on purpose.
-  #lastForeignLeaderHeartbeat = 0;
-  // `#connectPhase` is last-write-wins across the retry loop, so a repeated port timeout is
-  // invisible in the phase alone: the next run overwrites it with `requesting-port`.
+  #peerLeaderHeartbeat = 0;
   #portTimeoutCount = 0;
   // Monotonic connect-attempt counter sent with `request-port`, so the worker can tell a raced
   // duplicate of the current attempt from a reconnect after a failed one.
@@ -251,9 +230,8 @@ export class Connection extends Resource {
       // counting it avoids a steal in the window before its first heartbeat lands.
       if (message.type === 'leader-heartbeat' || message.type === 'new-leader') {
         this.#lastLeaderHeartbeat = Date.now();
-        // The steal heuristic above deliberately counts our own broadcast; the diagnostics must not.
         if (message.leaderId !== this.#clientId) {
-          this.#lastForeignLeaderHeartbeat = Date.now();
+          this.#peerLeaderHeartbeat = Date.now();
         }
       }
     });
@@ -272,9 +250,6 @@ export class Connection extends Resource {
       lockOrRpcTimeoutError('establishing initial worker connection', openTimeout),
     ).catch((error) => {
       const failure = this.#lastConnectError ?? this.#lastLeaderError ?? error;
-      // `context` rather than a private key: `@dxos/log` already merges `error.context` into a log
-      // entry, so the phase reaches the downloadable log and the reset dialog's copy payload
-      // without either of them knowing this package exists.
       throw failure instanceof Error
         ? Object.assign(failure, { context: { ...readContext(failure), ...this.#diagnostics } })
         : failure;
@@ -290,8 +265,7 @@ export class Connection extends Resource {
       workerLeaderFailures: this.#leaderFailureCount,
       workerStealCount: this.#stealCount,
       workerPortTimeouts: this.#portTimeoutCount,
-      workerMsSinceLeaderHeartbeat:
-        this.#lastForeignLeaderHeartbeat === 0 ? -1 : Date.now() - this.#lastForeignLeaderHeartbeat,
+      workerMsSinceLeaderHeartbeat: this.#peerLeaderHeartbeat ? Date.now() - this.#peerLeaderHeartbeat : undefined,
     };
   }
 

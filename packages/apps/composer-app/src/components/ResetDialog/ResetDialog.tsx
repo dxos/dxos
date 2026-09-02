@@ -95,9 +95,6 @@ export const ResetDialog = ({
     if (!errorProp) {
       return;
     }
-    // Spread first, and generically: the processor forwards only top-level primitives, and the
-    // dialog must not have to know whether startup or the worker connection produced them. Fixed
-    // keys last so a future context field cannot shadow `error` and drop the capture entirely.
     log.error('fatal dialog', { ...errorContextPrimitives(errorProp), error: errorProp, fatal_dialog: true });
   }, [errorProp]);
 

@@ -69,8 +69,6 @@ describe('useApp startup failure reporting', () => {
       window.removeEventListener(STARTUP_FAILED_EVENT, listener);
       unmount();
 
-      // Previously this path dispatched nothing, so the failure event counted only deadline
-      // expiries and read as a lower failure rate than reality.
       assert.strictEqual(reported[0].startupFailureKind, 'module-error');
       assert.isString(reported[0].startupEventsFired);
       assert.isNumber(reported[0].startupTotalModules);
@@ -79,8 +77,6 @@ describe('useApp startup failure reporting', () => {
 
   it.effect('the deadline names the modules still in flight, not the last one to start', () =>
     Effect.gen(function* () {
-      // The deadline defers to the boot loader in dev so a slow-but-healthy run is not killed;
-      // this exercises the production branch, where it raises.
       vi.stubEnv('DEV', false);
       const plugin = Plugin.define(testMeta).pipe(
         Plugin.addModule({
@@ -114,7 +110,6 @@ describe('useApp startup failure reporting', () => {
       vi.unstubAllEnvs();
 
       assert.strictEqual(reported[0].startupFailureKind, 'timeout');
-      // The stalled module, not merely the most recent `activating` message.
       assert.include(reported[0].startupInFlightModules, 'NeverResolves');
     }),
   );
