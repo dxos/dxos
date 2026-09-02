@@ -2,7 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { Fragment, useEffect, useState } from 'react';
+// `Stepper` — a fixed plan drawn as circles joined by lines, built on `@ark-ui/react`'s Steps
+// (zag state machine). The machine owns which stage is complete, in flight or still ahead, and
+// stamps that onto every part as `data-complete` / `data-current` / `data-incomplete` plus the
+// item's `aria-current`. DXOS owns everything the machine has no notion of: how far through the
+// stage in flight the run is, a stage that cannot be counted, a stage that failed, a stage the
+// caller singled out, and the handover that holds an advance back until the line has arrived.
+
+import { Steps, useStepsContext } from '@ark-ui/react/steps';
+import React, { useEffect, useState } from 'react';
 
 import { useThemeContext } from '../../hooks';
 import { type StepState } from '../../theme';
@@ -74,33 +82,26 @@ export const Stepper = composable<HTMLDivElement, StepperProps>(
   ) => {
     const { tx } = useThemeContext();
     const count = stepCount(steps);
-    const { shown, handover } = useHandover(active, options.duration);
+    const { shown } = useHandover(active, options.duration);
 
     return (
-      <div {...composableProps(props, { classNames: tx('stepper.root', {}), role: 'list' })} ref={forwardedRef}>
-        {Array.from({ length: count }, (_, index) => (
-          <Fragment key={stepAt(steps, index).id}>
-            {index > 0 && (
-              <Connector
-                // The line leaving a stage carries that stage's progress: full once the run is past
-                // it, fractional while it is the one in flight, empty ahead of it.
-                fraction={connectorFraction(index - 1, shown, handover, indeterminate ? 0 : fraction)}
-                error={error}
-                options={options}
-              />
-            )}
-            <Step
-              index={index}
-              step={stepAt(steps, index)}
-              state={stepState(index, shown, handover, error)}
-              selected={selected === index}
-              indeterminate={indeterminate}
-              options={options}
-              onClick={onSelect && (() => onSelect({ index, id: stepAt(steps, index).id }))}
-            />
-          </Fragment>
-        ))}
-      </div>
+      <Steps.Root
+        {...composableProps(props, { classNames: tx('stepper.root', {}), role: 'list' })}
+        count={count + PHANTOM}
+        step={machineStep(shown, count)}
+        ref={forwardedRef}
+      >
+        <StepperItems
+          steps={steps}
+          count={count}
+          fraction={indeterminate ? 0 : fraction}
+          indeterminate={indeterminate}
+          error={error}
+          selected={selected}
+          onSelect={onSelect}
+          options={options}
+        />
+      </Steps.Root>
     );
   },
 );
@@ -111,27 +112,76 @@ Stepper.displayName = 'Stepper';
 // Parts
 //
 
-type ConnectorProps = {
-  fraction: number;
-  error?: boolean;
-  options: StepOptions;
-};
+/**
+ * The machine has no "not started" step — it throws on an index outside `0..count` — so the plan is
+ * declared one stage longer than it is and every stage shifted up by one. Index 0 is that phantom
+ * stage: the machine resting on it means nothing has claimed a real one, and every real stage reads
+ * as ahead of the run.
+ */
+const PHANTOM = 1;
 
-/** The flexing line between two stages, filled to `fraction`. */
-const Connector = ({ fraction, error, options }: ConnectorProps) => {
+/** Where the machine rests, in its own (shifted) indices. */
+const machineStep = (shown: number | undefined, count: number): number =>
+  shown === undefined ? 0 : Math.min(Math.max(shown, 0) + PHANTOM, count + PHANTOM);
+
+type StepperItemsProps = Required<Pick<StepperProps, 'steps' | 'fraction' | 'options'>> &
+  Pick<StepperProps, 'indeterminate' | 'error' | 'selected' | 'onSelect'> & { count: number };
+
+const StepperItems = ({
+  steps,
+  count,
+  fraction,
+  indeterminate,
+  error,
+  selected,
+  onSelect,
+  options,
+}: StepperItemsProps) => {
   const { tx } = useThemeContext();
+  const api = useStepsContext();
+
   return (
-    <div role='separator' className={tx('stepper.connector', {})} style={{ height: options.thickness }}>
-      <div
-        className={tx('stepper.fill', { state: error ? 'error' : undefined })}
-        // Ease between updates so an incremental advance glides rather than jumps.
-        style={{ width: `${fraction * 100}%`, transition: `width ${options.duration}ms linear` }}
-      />
-    </div>
+    <>
+      {Array.from({ length: count }, (_, index) => {
+        const step = stepAt(steps, index);
+        const { current, completed } = api.getItemState({ index: index + PHANTOM });
+        const state = stepState(current, completed, error);
+        const last = index === count - 1;
+
+        return (
+          // The item stretches so its trailing line can flex; the last has no line to give it away.
+          <Steps.Item key={step.id} index={index + PHANTOM} role='listitem' className={tx('stepper.item', { last })}>
+            <Circle
+              index={index}
+              step={step}
+              state={state}
+              selected={selected === index}
+              indeterminate={indeterminate}
+              options={options}
+              onClick={onSelect && (() => onSelect({ index, id: step.id }))}
+            />
+            {!last && (
+              // The line leaving a stage carries that stage's progress: full once the run is past
+              // it, fractional while it is the one in flight, empty ahead of it.
+              <Steps.Separator className={tx('stepper.connector', {})} style={{ height: options.thickness }}>
+                <div
+                  className={tx('stepper.fill', { state: error ? 'error' : undefined })}
+                  // Ease between updates so an incremental advance glides rather than jumps.
+                  style={{
+                    width: `${connectorFraction(completed, current, fraction) * 100}%`,
+                    transition: `width ${options.duration}ms linear`,
+                  }}
+                />
+              </Steps.Separator>
+            )}
+          </Steps.Item>
+        );
+      })}
+    </>
   );
 };
 
-type StepProps = {
+type CircleProps = {
   index: number;
   step: Step;
   state: StepState;
@@ -142,7 +192,7 @@ type StepProps = {
 };
 
 /** One stage: a circle, ringed by a spinning notch while it runs uncounted. */
-const Step = ({ index, step, state, selected, indeterminate, options, onClick }: StepProps) => {
+const Circle = ({ index, step, state, selected, indeterminate, options, onClick }: CircleProps) => {
   const { tx } = useThemeContext();
   // A circle carries no text, and an anonymous plan supplies no label, so the position is the only
   // name the control can be given.
@@ -150,15 +200,11 @@ const Step = ({ index, step, state, selected, indeterminate, options, onClick }:
   const spinning = state === 'active' && !!indeterminate;
 
   return (
-    <div
-      role='listitem'
-      aria-current={state === 'active' ? 'step' : undefined}
-      className='relative shrink-0'
-      style={{ width: options.size, height: options.size }}
-    >
+    <div className='relative shrink-0' style={{ width: options.size, height: options.size }}>
       {onClick ? (
         // A selectable stage is a real button, so it takes focus and answers the keyboard without a
-        // key handler of its own; selection toggles, which is what `aria-pressed` describes.
+        // key handler of its own; selection toggles, which is what `aria-pressed` describes. Not the
+        // machine's own trigger: that is a `tab` pointing at a panel this stepper never renders.
         <button
           type='button'
           aria-label={label}
@@ -208,7 +254,8 @@ export const stepAt = (steps: number | Step[] | undefined, index: number): Step 
  * A run reports the next stage the moment it starts it, so without this the line is still travelling
  * to its end while the stage after it is already coloured and its own line already moving — two
  * things animating at once, and the first one never seen arriving. `shown` is the stage the chain is
- * drawing; `handover` says it is finishing the previous one rather than working the current one.
+ * drawing, and it is what the machine is told, so mid-handover the machine reads the stage being
+ * left as the one in flight and everything after it as still ahead.
  *
  * Only an advance waits. Going back, or starting from nothing, has no line in flight to finish, so
  * it lands immediately — a reset that eased into place would read as progress.
@@ -225,41 +272,24 @@ const useHandover = (active: number | undefined, duration: number) => {
     return () => clearTimeout(timer);
   }, [active, shown, duration]);
 
-  return { shown, handover: active !== undefined && shown !== undefined && active > shown };
+  return { shown };
 };
 
-const stepState = (
-  index: number,
-  shown: number | undefined,
-  handover: boolean,
-  error: boolean | undefined,
-): StepState => {
-  if (shown === undefined) {
-    // No stage in flight: the plan is laid out but nothing has claimed one yet.
-    return 'pending';
-  }
-  if (index < shown) {
+/** How a stage is drawn, given what the machine says about it and whether the run failed. */
+const stepState = (current: boolean, completed: boolean, error: boolean | undefined): StepState => {
+  if (completed) {
     return 'complete';
   }
-  if (index > shown) {
+  if (!current) {
     return 'pending';
-  }
-  // Mid-handover the stage is finished and the next has not started, so nothing is in flight: the
-  // stage ahead stays uncoloured until its line has arrived.
-  if (handover) {
-    return 'complete';
   }
   return error ? 'error' : 'active';
 };
 
-/** How much of the line leaving stage `index` is drawn. */
-const connectorFraction = (index: number, shown: number | undefined, handover: boolean, fraction: number): number => {
-  if (shown === undefined || index > shown) {
-    return 0;
-  }
-  if (index < shown) {
+/** How much of the line leaving a stage is drawn. */
+const connectorFraction = (completed: boolean, current: boolean, fraction: number): number => {
+  if (completed) {
     return 1;
   }
-  // The line leaving the stage in flight: its own fraction, or all the way when handing over.
-  return handover ? 1 : fraction;
+  return current ? fraction : 0;
 };

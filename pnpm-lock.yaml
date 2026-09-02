@@ -20249,6 +20249,9 @@ importers:
 
   packages/ui/react-ui:
     dependencies:
+      '@ark-ui/react':
+        specifier: 'catalog:'
+        version: 5.39.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async

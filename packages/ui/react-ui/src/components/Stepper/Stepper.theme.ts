@@ -16,6 +16,8 @@ export type StepperStyleProps = {
   interactive?: boolean;
   /** The stage is running uncounted, so its circle is inset to leave room for the notch. */
   spinning?: boolean;
+  /** The final stage, which has no trailing line. */
+  last?: boolean;
 };
 
 /** Circles ahead of the run read as an outline; everything the run has reached is filled. */
@@ -27,6 +29,13 @@ const stepFill: Record<StepState, string> = {
 };
 
 const root: ComponentFunction<StepperStyleProps> = (_props, ...etc) => mx('flex items-center w-full min-w-0', ...etc);
+
+/**
+ * A stage and the line leaving it. Stretches so the line can flex — except the last, which has no
+ * line, and would otherwise claim a share of the width and pull the final circle off the end.
+ */
+const item: ComponentFunction<StepperStyleProps> = ({ last }, ...etc) =>
+  mx('flex items-center min-w-0', !last && 'grow', ...etc);
 
 const step: ComponentFunction<StepperStyleProps> = ({ state = 'pending', selected, interactive, spinning }, ...etc) =>
   mx(
@@ -53,6 +62,7 @@ const fill: ComponentFunction<StepperStyleProps> = ({ state }, ...etc) =>
 
 export const stepperTheme: Theme<StepperStyleProps> = {
   root,
+  item,
   step,
   notch,
   connector,
