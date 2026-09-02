@@ -580,6 +580,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
         Effect.updateContext((_: Context.Context<never>) => this.#dispatchContext),
       ),
       this.#scope,
+      { startImmediately: true },
     );
   }
 
@@ -640,12 +641,15 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
         log('lifecycle: child event ignored (already finished)', { tag: event._tag, childPid: event.pid });
         return;
       }
+      // Started inline rather than on the next scheduler tick: a suspend that lands in between
+      // skips the handler and drops the persisted event, losing the child's result.
       yield* Effect.forkIn(
         this.#persistence.appendEvent({ _tag: 'childEvent', event: toPersistedChildEvent(event) }).pipe(
           Effect.flatMap((seq) => this.#runHandler('childEvent', () => this.#callbacks.onChildEvent(event), seq)),
           Effect.updateContext((_: Context.Context<never>) => this.#dispatchContext),
         ),
         this.#scope,
+        { startImmediately: true },
       );
     });
   }
