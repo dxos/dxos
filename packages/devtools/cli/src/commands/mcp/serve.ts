@@ -45,6 +45,13 @@ declare global {
    */
   // eslint-disable-next-line no-var
   var DX_CLI_BUNDLED: boolean | undefined;
+
+  /**
+   * The PostHog project a released binary reports to, substituted by the same `define`. Injected by
+   * whoever builds the binary rather than committed, so a build that was given none reports nowhere.
+   */
+  // eslint-disable-next-line no-var
+  var DX_CLI_POSTHOG_TOKEN: string | undefined;
 }
 
 /**

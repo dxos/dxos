@@ -12,8 +12,11 @@ import * as Observability from '@dxos/observability/Observability';
 import * as ObservabilityExtension from '@dxos/observability/ObservabilityExtension';
 import { getHostPlatform } from '@dxos/util';
 
-/** Public write-only project tokens; the non-production one is the dev deployment's own project. */
-const PRODUCTION_TOKEN = 'phc_G8oXhAk9fw9kevIE8XGiYySvbMujJntU4anYimHdnUl';
+/**
+ * The dev deployment's own project, and public write-only like every PostHog project token. Committed
+ * because it is what makes a source checkout report somewhere without per-developer setup; the
+ * production token is injected at bundle time instead (see `scripts/build.ts`).
+ */
 const DEVELOPMENT_TOKEN = 'phc_GERCUvfEnYtleBgJRWuKnVQo1R59FBqwV5fvIor86Aa';
 const POSTHOG_HOST = 'https://eu.i.posthog.com' as const;
 
@@ -39,15 +42,18 @@ export const observabilityNamespace = (profile: string): string => getProfilePat
 const reporting = (): boolean => !process.env.CI && !process.env.VITEST;
 
 /**
- * Released binaries report to the production project, a source build to the non-production one, and
- * `DX_POSTHOG_API_KEY` overrides both — which is how a locally built binary is exercised without
- * writing to the project the released one writes to.
+ * `DX_POSTHOG_API_KEY` first, so a locally built binary is exercised without writing to the project
+ * the released one writes to. A released binary otherwise reports to whatever project was injected
+ * at bundle time — nowhere, if none was — and a source build to the dev deployment's project.
  */
 export const projectToken = (): string | undefined => {
   if (!reporting()) {
     return undefined;
   }
-  return process.env.DX_POSTHOG_API_KEY ?? (globalThis.DX_CLI_BUNDLED ? PRODUCTION_TOKEN : DEVELOPMENT_TOKEN);
+  if (process.env.DX_POSTHOG_API_KEY) {
+    return process.env.DX_POSTHOG_API_KEY;
+  }
+  return globalThis.DX_CLI_BUNDLED ? globalThis.DX_CLI_POSTHOG_TOKEN || undefined : DEVELOPMENT_TOKEN;
 };
 
 /** `DX_OTEL_ENDPOINT` overrides this; the extension reads that variable itself and prefers it. */
