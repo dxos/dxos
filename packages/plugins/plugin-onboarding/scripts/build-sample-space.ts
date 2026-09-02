@@ -32,7 +32,7 @@ import {
 } from '@tldraw/tlschema';
 import { type IndexKey } from '@tldraw/utils';
 import * as Option from 'effect/Option';
-import * as S from 'effect/Schema';
+import * as Schema from 'effect/Schema';
 import { readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -91,22 +91,22 @@ const WELCOME_MD_PATH = resolve(__dirname, '../src/content/sample/README.md');
 // objects at runtime without the schema being registered in the app.
 //
 const RoastLog = Type.makeObject(DXN.make('example.type.roastLog', '0.1.0'))(
-  S.Struct({
-    title: S.String.pipe(S.annotate({ title: 'Batch' })),
-    date: S.optional(S.String.pipe(S.annotate({ title: 'Date' }))),
-    origin: S.optional(S.String.pipe(S.annotate({ title: 'Origin / Lot' }))),
-    machine: S.optional(S.String.pipe(S.annotate({ title: 'Machine' }))),
-    roaster: S.optional(Ref.Ref(Person.Person).annotate({ title: 'Roaster' })),
-    greenWeightKg: S.optional(S.Number.pipe(S.annotate({ title: 'Green (kg)' }))),
-    roastWeightKg: S.optional(S.Number.pipe(S.annotate({ title: 'Roast (kg)' }))),
-    chargeTemp: S.optional(S.Number.pipe(S.annotate({ title: 'Charge (°C)' }))),
-    firstCrackTime: S.optional(S.String.pipe(S.annotate({ title: 'First Crack' }))),
-    developmentTime: S.optional(S.String.pipe(S.annotate({ title: 'Dev Time' }))),
-    dropTemp: S.optional(S.Number.pipe(S.annotate({ title: 'Drop (°C)' }))),
-    roastLevel: S.optional(S.String.pipe(S.annotate({ title: 'Roast Level' }))),
-    status: S.Literals(['planned', 'roasted', 'cupped', 'approved']).pipe(
+  Schema.Struct({
+    title: Schema.String.pipe(Schema.annotate({ title: 'Batch' })),
+    date: Schema.optional(Schema.String.pipe(Schema.annotate({ title: 'Date' }))),
+    origin: Schema.optional(Schema.String.pipe(Schema.annotate({ title: 'Origin / Lot' }))),
+    machine: Schema.optional(Schema.String.pipe(Schema.annotate({ title: 'Machine' }))),
+    roaster: Schema.optional(Ref.Ref(Person.Person).annotate({ title: 'Roaster' })),
+    greenWeightKg: Schema.optional(Schema.Number.pipe(Schema.annotate({ title: 'Green (kg)' }))),
+    roastWeightKg: Schema.optional(Schema.Number.pipe(Schema.annotate({ title: 'Roast (kg)' }))),
+    chargeTemp: Schema.optional(Schema.Number.pipe(Schema.annotate({ title: 'Charge (°C)' }))),
+    firstCrackTime: Schema.optional(Schema.String.pipe(Schema.annotate({ title: 'First Crack' }))),
+    developmentTime: Schema.optional(Schema.String.pipe(Schema.annotate({ title: 'Dev Time' }))),
+    dropTemp: Schema.optional(Schema.Number.pipe(Schema.annotate({ title: 'Drop (°C)' }))),
+    roastLevel: Schema.optional(Schema.String.pipe(Schema.annotate({ title: 'Roast Level' }))),
+    status: Schema.Literals(['planned', 'roasted', 'cupped', 'approved']).pipe(
       FormatAnnotation.set(Format.TypeFormat.SingleSelect),
-      S.annotate({
+      Schema.annotate({
         title: 'Status',
         [PropertyMetaAnnotationId]: {
           singleSelect: {
@@ -120,7 +120,7 @@ const RoastLog = Type.makeObject(DXN.make('example.type.roastLog', '0.1.0'))(
         },
       }),
     ),
-    notes: S.optional(S.String.pipe(S.annotate({ title: 'Notes' }))),
+    notes: Schema.optional(Schema.String.pipe(Schema.annotate({ title: 'Notes' }))),
   }).pipe(
     LabelAnnotation.set(['title']),
     Annotation.IconAnnotation.set({ icon: 'ph--fire-simple--regular', hue: 'amber' }),
