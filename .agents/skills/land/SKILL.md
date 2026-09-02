@@ -138,6 +138,17 @@ Use `mcp__github__pull_request_read` to check for unresolved review threads. For
 
 ---
 
+## Step 7.5 — Rewrite the changeset
+
+Before enqueueing, reread the PR's `.changeset/*.md` against the whole diff as it stands now
+(`git diff origin/main...HEAD`). Review rounds and scope changes since the PR opened make the
+body stale; when it no longer summarizes the PR, rewrite the body from scratch (never append a
+sentence per fix), commit with `scope: description`, and push. A body that still describes the PR
+stays as it is. Rules for the body and bump level:
+[`agents/instructions/changesets.md`](../../../agents/instructions/changesets.md).
+
+---
+
 ## Step 8 — Enable auto-merge (merge queue)
 
 Once all required checks pass and there are no blocking reviews, enable auto-merge so the PR enters the merge queue automatically:
