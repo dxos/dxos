@@ -87,7 +87,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
     <TaskList.Root
       hierarchical
       selectable
-      showDescriptions
+      showDescription
       tasks={tasks}
       onTaskCreate={handleCreate}
       onTaskUpdate={handleUpdate}
