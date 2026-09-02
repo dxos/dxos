@@ -1898,6 +1898,37 @@ describe('durability', () => {
   );
 
   it.effect(
+    'discarding a handle hydrated since the listing still sweeps its dormant descendants',
+    Effect.fn(function* ({ expect }) {
+      const kv = yield* KeyValueStore.KeyValueStore;
+      const registry = yield* Registry.AtomRegistry;
+      const resolver = yield* ServiceResolver.ServiceResolver;
+      const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
+      const traceSink = yield* Trace.TraceSink;
+
+      const waiting = makeWaitingExecutable();
+      const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      const parent = yield* managerA.spawn(waiting);
+      const child = yield* managerA.spawn(waiting, { parentProcessId: parent.pid });
+      yield* managerA.shutdown();
+
+      const managerB = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      const dormantParent = (yield* managerB.list({ key: 'test.waiting' })).find(
+        (listed) => listed.pid === parent.pid,
+      )!;
+
+      // Another caller hydrates the parent between the listing and the discard. Live termination
+      // only visits children in the handle map, so the still-dormant child would survive.
+      yield* dormantParent.hydrate(waiting);
+      yield* dormantParent.terminate();
+
+      const store = new ProcessStore(kv);
+      expect(yield* store.getProcess(parent.pid)).toBeUndefined();
+      expect(yield* store.getProcess(child.pid)).toBeUndefined();
+    }, Effect.provide(DurabilityTestLayer)),
+  );
+
+  it.effect(
     'terminal processes are not hydrated',
     Effect.fn(function* ({ expect }) {
       const kv = yield* KeyValueStore.KeyValueStore;

@@ -96,6 +96,27 @@ describe('AssignTasks', () => {
   );
 
   it.effect(
+    'rejects a reference that does not point at a task',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { chat, options } = yield* setupChat();
+        const { db } = yield* Database.Service;
+        const notATask = yield* Database.add(Text.make({ content: 'Just some text' }));
+        // `Ref.Ref(Task.Task)` decodes on ref shape alone — a ref's target may not be loaded, so the
+        // schema cannot vouch for its type. Built from the URI the way the tool's decoder does, so
+        // the ref claims to be a task exactly as a model-supplied one would.
+        const claimsToBeATask = db.makeRef<Task.Task>(Obj.getURI(notATask));
+
+        yield* Operation.invoke(AssignTasks, { add: [claimsToBeATask] }).pipe(Effect.provide(options));
+
+        expect(chat.tasks).toEqual([]);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
     'keeps a task named on both sides of the same call',
     Effect.fnUntraced(
       function* ({ expect }) {

@@ -942,12 +942,10 @@ export class ProcessManagerImpl implements Manager {
    */
   #discardRecord(id: Process.ID): Effect.Effect<void> {
     return Effect.gen({ self: this }, function* () {
-      const live = this.#handles.get(id);
-      if (live) {
-        return yield* live.terminate();
-      }
-
-      log('lifecycle: discard dormant record', { pid: id });
+      // Read before anything is torn down: `terminate` deletes records, and a live termination only
+      // walks children in `#handles` — a process hydrated between the listing and this call would
+      // otherwise leave its still-dormant descendants in storage to be rediscovered later.
+      log('lifecycle: discard record', { pid: id });
       const persisted = yield* this.#store.listProcesses();
       const doomed = new Set<Process.ID>([id]);
       // Records carry no child index, so walk the flat list until it stops growing.
