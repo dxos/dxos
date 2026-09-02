@@ -83,29 +83,34 @@ Design: [DESIGN.md](./DESIGN.md)
 Two chosen, both of which reuse Bramble's `organizations`/`people` phases — which is the point:
 the phase catalog only earns its keep with a second consumer.
 
-- [ ] **CRM pipeline** — Email, Organization, Contact. Reuses `organizations`, `people` and a
-      trimmed `inbox`; adds a pipeline-stage view over Organization (`status` is already the Kanban
-      pivot in `contacts-views`). The nearest existing prior art is the `crm-pipeline-operations`
-      project registry entry — check it before authoring.
+- [x] **CRM pipeline** — the Northwind Sales space, in `plugin-crm/scripts/sample/` (accounts,
+      pipeline, inbox) + `scripts/build-sample-space.ts` + `src/sample.test.ts`. 28 objects,
+      2 tests green, built on demand.
+      - Uses `Pipeline` from `@dxos/types` — a board of View-backed columns, each `{ name, order,
+        view }`. Every column's view is `Filter.type(Organization, { status })`, so a stage IS a
+        query and moving a card is a status change, not a membership edit. `order` is stored
+        explicitly so a rearranged board keeps its order.
+      - `Organization.status` is `prospect | qualified | active | commit | reject` — five stages,
+        so `reject` gives the board its Closed-lost column.
+      - `@dxos/effect` had to be added to plugin-crm (`workspace:*`) for `EffectEx.runPromise`;
+        every other dep was already there.
+      - Note the `Pipeline` naming TODOs in `@dxos/types/Pipeline.ts`: it collides with
+        `@dxos/pipeline` and is slated to move into its owning plugin. If it is renamed, this space
+        and its test move with it.
 - [x] **Software project management** — the Tidepool space, in `plugin-projects/scripts/sample/`
       (team, people, docs, tasks, project) + `scripts/build-sample-space.ts` + `src/sample.test.ts`.
       42 objects. Built on demand rather than committed — no fixture to keep in step with schemas;
-      `src/sample.test.ts` asserts the shape instead (2 tests, green).
-      - `Project` lives in `@dxos/compute/Project` (0.6.0), NOT `@dxos/types`, and there is no
-        `ExternalProject` — that name survives only in two comments. `Project.make` creates its own
-        empty TaskSet unless one is passed, so the tasks phase's set is handed to it explicitly.
-      - `Task` has **no due-date field**. Its dates are `history` entries
-        (`{ date, event: 'created' | 'updated', description }`) — that is where the sample dates go.
-      - Hierarchy needs no `SampleSpace` helper after all: seeds are nested for legibility and
-        flattened depth-first onto `Task.parentTask`, because `parentTask` is a Task field a generic
-        helper would have nothing to say about. `SampleSpace.children` still writes the flat
-        membership array. Two levels deep, verified: 6 roots, 11 sub-tasks, 3 grandchildren.
-      - Diagrams are **mermaid blocks inside markdown**, not tldraw canvases: a real canvas needs
-        `plugin-illustrator` + `plugin-tldraw` + the `@tldraw/*` packages as new deps, and mermaid-in-
-        markdown is how software projects actually carry architecture diagrams. Swap later if wanted.
-      - `tsconfig.json`'s `include` is hand-maintained (the toolbox only manages `references`), so
-        `scripts/**/*.ts` had to be added by hand — and `scripts` added to `files`, since the
-        published `src` now contains a test that imports it.
+      `src/sample.test.ts` asserts the shape instead (2 tests, green). - `Project` lives in `@dxos/compute/Project` (0.6.0), NOT `@dxos/types`, and there is no
+      `ExternalProject` — that name survives only in two comments. `Project.make` creates its own
+      empty TaskSet unless one is passed, so the tasks phase's set is handed to it explicitly. - `Task` has **no due-date field**. Its dates are `history` entries
+      (`{ date, event: 'created' | 'updated', description }`) — that is where the sample dates go. - Hierarchy needs no `SampleSpace` helper after all: seeds are nested for legibility and
+      flattened depth-first onto `Task.parentTask`, because `parentTask` is a Task field a generic
+      helper would have nothing to say about. `SampleSpace.children` still writes the flat
+      membership array. Two levels deep, verified: 6 roots, 11 sub-tasks, 3 grandchildren. - Diagrams are **mermaid blocks inside markdown**, not tldraw canvases: a real canvas needs
+      `plugin-illustrator` + `plugin-tldraw` + the `@tldraw/*` packages as new deps, and mermaid-in-
+      markdown is how software projects actually carry architecture diagrams. Swap later if wanted. - `tsconfig.json`'s `include` is hand-maintained (the toolbox only manages `references`), so
+      `scripts/**/*.ts` had to be added by hand — and `scripts` added to `files`, since the
+      published `src` now contains a test that imports it.
 
 ## Phase 6 — content authoring for phases in `src`
 

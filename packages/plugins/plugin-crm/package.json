@@ -117,9 +117,13 @@
   "files": [
     "dist",
     "dx.config.ts",
+    "scripts",
     "src",
     "PLUGIN.mdl"
   ],
+  "scripts": {
+    "build-sample": "vite-node ./scripts/build-sample-space.ts"
+  },
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-graph": "workspace:*",
@@ -129,6 +133,7 @@
     "@dxos/config": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/edge-client": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/extractor": "workspace:*",
     "@dxos/extractor-lib": "workspace:*",
