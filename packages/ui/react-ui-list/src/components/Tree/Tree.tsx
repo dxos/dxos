@@ -44,7 +44,7 @@ import {
 
 import { Path } from '../../util';
 import { DROP_INDENTATION, paddingIndentation } from './helpers';
-import { type TreeData } from './tree-data';
+import { type TreeData, isTreeDataFor } from './tree-data';
 import {
   type ColumnRenderer,
   type HeadingRenderer,
@@ -736,6 +736,7 @@ const TreeEndDropTarget = ({ data }: { data: TreeData }) => {
     return dropTargetForElements({
       element,
       getData: () => ({ ...data, atEnd: true }),
+      canDrop: ({ source }) => isTreeDataFor(source.data, data.treeId),
       onDragEnter: () => setOver(true),
       onDragLeave: () => setOver(false),
       onDrop: () => setOver(false),
@@ -852,7 +853,13 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
         }),
       canDrop: ({ source }) => {
         const permitted = canDrop ?? (() => true);
-        return source.element !== element && permitted({ source: source.data as TreeData, target: data });
+        // A target scopes the sources it accepts for the same reason a monitor scopes the drags it
+        // claims: a foreign row landing here is read by the claiming monitor as its own node type.
+        return (
+          source.element !== element &&
+          isTreeDataFor(source.data, treeId) &&
+          permitted({ source: source.data as TreeData, target: data })
+        );
       },
       getIsSticky: () => true,
       onDrag: ({ self, source }) => {
