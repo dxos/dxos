@@ -15,11 +15,12 @@ export * from './extensions';
  * - errors: Error tracking (e.g., PostHog)
  * - events: Product usage event tracking (e.g., PostHog)
  * - feedback: User feedback submission (e.g., PostHog)
+ * - ai: Model inferences, tool calls, and turns (e.g., PostHog LLM analytics, OTel gen_ai)
  * - logs: Structured logging (e.g., OTEL)
  * - metrics: Metric data (e.g., OTEL)
  * - traces: Distributed tracing (e.g., OTEL)
  */
-export type Kind = 'errors' | 'events' | 'feedback' | 'logs' | 'metrics' | 'traces';
+export type Kind = 'ai' | 'errors' | 'events' | 'feedback' | 'logs' | 'metrics' | 'traces';
 
 /**
  * Base for every extension API variant. All kinds implement availability the same way.
@@ -58,10 +59,100 @@ export type Errors = {
 };
 
 /**
+ * Wider than {@link Attributes}: event properties carry structured values (message arrays,
+ * nested objects), not just scalars.
+ */
+export type EventAttributes = Record<string, unknown>;
+
+/**
  * Events extension API (kind-specific methods only).
  */
 export type Events = {
-  captureEvent(event: string, attributes?: Attributes): void;
+  captureEvent(event: string, attributes?: EventAttributes): void;
+};
+
+/**
+ * One model call, already filtered by the capture policy and scrubbed (see `AiObservability`). Shaped
+ * after the OTel GenAI conventions rather than any vendor's schema — an extension maps it onto
+ * whatever its backend calls these things.
+ */
+export type Inference = {
+  traceId: string;
+  spanId: string;
+  parentSpanId?: string;
+  /** Provider span name, e.g. `LanguageModel.streamText`. */
+  spanName: string;
+  /** `gen_ai.system` — the serving product, not the wire dialect. */
+  provider?: string;
+  model?: string;
+  /** Conversation the call belongs to, when the call site named one. */
+  sessionId?: string;
+  /** Request parameters the provider reported (temperature, max_tokens, …). */
+  parameters?: Record<string, unknown>;
+  /** Excludes tokens served from the prompt cache; add {@link cacheReadTokens} for the total. */
+  inputTokens?: number;
+  outputTokens?: number;
+  /** Absent rather than zero when the provider does not report prompt caching. */
+  cacheReadTokens?: number;
+  cacheWriteTokens?: number;
+  /** Wall-clock duration, in seconds. */
+  latency: number;
+  streaming: boolean;
+  /** Absent entirely when the capture policy denied it. */
+  content?: GenerationContent;
+  /** Exception class name only — a provider's message can embed request or response fragments. */
+  errorClass?: string;
+};
+
+export type GenerationContent = {
+  /** Parsed prompt messages, or the raw string when {@link truncated} left it unparseable. */
+  input?: unknown;
+  output?: unknown;
+  tools?: unknown;
+  /** Some field above was cut to fit, so it is a fragment rather than the whole. */
+  truncated?: boolean;
+};
+
+/** Fields a turn and a tool call share with an inference: identity, timing, and gated content. */
+export type AiSpanBase = {
+  traceId: string;
+  spanId: string;
+  parentSpanId?: string;
+  /** For a tool call, the tool's name rather than the span's. */
+  spanName: string;
+  /** Conversation the span belongs to, when the call site named one. */
+  sessionId?: string;
+  /** Wall-clock duration, in seconds. */
+  latency: number;
+  /** Absent entirely when the capture policy denied it. */
+  content?: AiSpanContent;
+  /** Exception class name only, as on {@link Inference}. */
+  errorClass?: string;
+};
+
+export type AiSpanContent = {
+  input?: unknown;
+  output?: unknown;
+  /** Some field above was cut to fit, so it is a fragment rather than the whole. */
+  truncated?: boolean;
+};
+
+/**
+ * One conversation turn: the unit a backend groups a turn's model calls and tool calls under (what
+ * PostHog calls a trace). Its input is the user prompt and its output the messages the turn produced.
+ */
+export type Turn = AiSpanBase;
+
+/** One tool call inside a turn (what PostHog calls a span), with the arguments and the result. */
+export type ToolCall = AiSpanBase;
+
+/**
+ * AI extension API (kind-specific methods only).
+ */
+export type Ai = {
+  captureInference(inference: Inference): void;
+  captureTurn(turn: Turn): void;
+  captureToolCall(toolCall: ToolCall): void;
 };
 
 /**
@@ -75,6 +166,7 @@ export type ExtensionApi =
   | (ExtensionApiBase<'errors'> & Errors)
   | (ExtensionApiBase<'events'> & Events)
   | (ExtensionApiBase<'feedback'> & Feedback)
+  | (ExtensionApiBase<'ai'> & Ai)
   // TODO(wittjosiah): Direct logs api?
   | ExtensionApiBase<'logs'>
   | (ExtensionApiBase<'metrics'> & Metrics)

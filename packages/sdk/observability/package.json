@@ -17,6 +17,10 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./AiObservability": {
+      "types": "./dist/types/src/ai/index.d.ts",
+      "import": "./dist/lib/AiObservability.mjs"
+    },
     "./Observability": {
       "types": "./dist/types/src/observability.d.ts",
       "import": "./dist/lib/observability.mjs"
@@ -58,6 +62,7 @@
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/log-store-idb": "workspace:*",
@@ -77,6 +82,7 @@
     "@opentelemetry/sdk-logs": "catalog:",
     "@opentelemetry/sdk-metrics": "catalog:",
     "@opentelemetry/sdk-trace-base": "catalog:",
+    "@opentelemetry/sdk-trace-node": "catalog:",
     "@opentelemetry/sdk-trace-web": "catalog:",
     "@opentelemetry/semantic-conventions": "catalog:",
     "js-yaml": "catalog:",
@@ -86,8 +92,8 @@
     "zone.js": "catalog:"
   },
   "devDependencies": {
+    "@dxos/ai": "workspace:*",
     "@dxos/client-services": "workspace:*",
-    "@dxos/effect": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@types/js-yaml": "catalog:"
   },

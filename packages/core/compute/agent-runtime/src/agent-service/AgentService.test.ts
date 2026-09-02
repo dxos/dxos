@@ -10,9 +10,11 @@ import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
+import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
+import * as Tracer from 'effect/Tracer';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { expect } from 'vitest';
 
@@ -29,6 +31,7 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation, Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
+import { makeRecordingTracer } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { ContentBlock, Message, Organization } from '@dxos/types';
@@ -226,6 +229,8 @@ const DelegationTestLayer = AssistantTestLayer({
   ...assistantTestLayerOptions,
   agent: { delegationStrategy: StubDelegationStrategy },
 });
+
+const turnSpans: Tracer.Span[] = [];
 
 describe('Agent Service', { tags: ['model-fixture'] }, () => {
   it.effect(
@@ -815,5 +820,28 @@ describe('Agent Service (control plane)', () => {
       Effect.provide(TestLayer()),
       TestHelpers.provideTestContext,
     ),
+  );
+  it.effect(
+    'traces a turn run through the agent process',
+    Effect.fnUntraced(
+      function* (_) {
+        const session = yield* AgentService.createSession();
+        yield* session.submitPrompt('What is the capital of France?');
+        yield* session.waitForCompletion();
+
+        expect(turnSpans.map(({ name }) => name)).toContain('AiSession.createRequest');
+
+        const turn = turnSpans.find((span) => span.name === 'AiSession.createRequest');
+        expect(turn?.attributes.get('dxos.ai.kind')).toEqual('turn');
+        expect(String(turn?.attributes.get('dxos.ai.input'))).toContain('capital of France');
+        expect(JSON.parse(String(turn?.attributes.get('dxos.ai.output')))).toEqual(
+          expect.arrayContaining([expect.objectContaining({ role: 'assistant' })]),
+        );
+      },
+      Effect.provide(TestLayer()),
+      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(turnSpans))),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
   );
 });

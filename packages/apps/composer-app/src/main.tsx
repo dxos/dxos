@@ -27,6 +27,7 @@ import { EffectEx } from '@dxos/effect';
 import { LogLevel, log } from '@dxos/log';
 import { IdbLogStore } from '@dxos/log-store-idb';
 import * as Observability from '@dxos/observability/Observability';
+import * as ObservabilityExtension from '@dxos/observability/ObservabilityExtension';
 import { translations as observabilityTranslations } from '@dxos/plugin-observability/translations';
 import { ErrorBoundary, ErrorFallback } from '@dxos/react-error-boundary';
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';
@@ -226,7 +227,10 @@ const main = async () => {
     type: 'module',
     name: 'dxos-observability',
   });
-  const logProcessor = new WorkerLogProcessor({ worker: observabilityWorker });
+  const logProcessor = new WorkerLogProcessor({
+    worker: observabilityWorker,
+    traceContext: ObservabilityExtension.Otel.activeTraceContext,
+  });
   log.addProcessor(logProcessor.processor);
 
   // Devtools convenience — also surfaced via the help panel and ResetDialog UI.

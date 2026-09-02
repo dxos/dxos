@@ -11,6 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import {
+  type Ai,
   type Attributes,
   type Errors,
   type Events,
@@ -22,6 +23,20 @@ import {
 } from './observability-extension';
 
 export * from './storage';
+
+const attachAiCapture = async (observability: Observability): Promise<CleanupFn> => {
+  const { AiSpanProcessor, contentCaptureAllowed } = await import('./ai/AiObservability');
+  const { Otel } = await import('./extensions');
+  return Otel.addSpanProcessor(
+    new AiSpanProcessor({
+      captureInference: (inference) => observability.ai.captureInference(inference),
+      captureTurn: (turn) => observability.ai.captureTurn(turn),
+      captureToolCall: (toolCall) => observability.ai.captureToolCall(toolCall),
+      captureEnabled: () => observability.enabled,
+      allowContent: contentCaptureAllowed,
+    }),
+  );
+};
 
 // TODO(wittjosiah): Figure out how to handle when telemetry is disabled.
 //   In theory the setting should be both persisted and synchronized.
@@ -50,6 +65,7 @@ export interface Observability {
   errors: Errors;
   events: Events;
   feedback: Feedback;
+  ai: Ai;
   /** True if at least one extension of the given kind reports as available. */
   isAvailable(kind: Kind): Effect.Effect<boolean>;
   metrics: Metrics;
@@ -78,6 +94,7 @@ class ObservabilityImpl implements Observability {
 
       const cleanups = yield* Effect.all(this._dataProviders.map((provider) => provider(this)));
       this._subscriptions.add(...cleanups.filter((cleanup) => cleanup !== undefined));
+      this._subscriptions.add(yield* Effect.promise(() => attachAiCapture(this)));
       this._initialized = true;
     }).pipe(
       Effect.catch((error) =>
@@ -207,6 +224,26 @@ class ObservabilityImpl implements Observability {
       captureEvent: (event, attributes) => {
         for (const extension of this._getExtensions('events')) {
           extension.captureEvent(event, attributes);
+        }
+      },
+    };
+  }
+
+  get ai(): Ai {
+    return {
+      captureInference: (inference) => {
+        for (const extension of this._getExtensions('ai')) {
+          extension.captureInference(inference);
+        }
+      },
+      captureTurn: (turn) => {
+        for (const extension of this._getExtensions('ai')) {
+          extension.captureTurn(turn);
+        }
+      },
+      captureToolCall: (toolCall) => {
+        for (const extension of this._getExtensions('ai')) {
+          extension.captureToolCall(toolCall);
         }
       },
     };

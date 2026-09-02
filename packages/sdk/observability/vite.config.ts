@@ -7,6 +7,7 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     'index': 'src/index.ts',
+    'AiObservability': 'src/ai/index.ts',
     'observability': 'src/observability.ts',
     'observability-extension': 'src/observability-extension.ts',
     'providers': 'src/providers/index.ts',

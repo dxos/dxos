@@ -5,7 +5,6 @@
 // @import-as-namespace
 
 import * as Cause from 'effect/Cause';
-import * as Clock from 'effect/Clock';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -33,6 +32,7 @@ import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation } from '@dxos/echo';
+import { EffectEx, SpanAttributes } from '@dxos/effect';
 import type { SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -488,7 +488,6 @@ export class ProcessManagerImpl implements Manager {
   ): Effect.Effect<Handle<I, O, _Rpcs>> {
     return Effect.gen({ self: this }, function* () {
       // Captured from the ambient runtime so alarms are driven by the same `Clock` (incl. `TestClock`).
-      const clock = yield* Clock.Clock;
       const id = this.#idGenerator();
       log('lifecycle: spawn', {
         pid: id,
@@ -497,6 +496,7 @@ export class ProcessManagerImpl implements Manager {
         name: options?.name,
       });
       const scope = yield* Scope.make();
+      const dispatchContext = yield* EffectEx.contextWithoutParentSpan();
       const outputQueue = yield* Queue.unbounded<ProcessHandle.OutputItem<O>>();
 
       const storage = storageServiceLayer(this.#kvStore, `process/${id}/`);
@@ -546,9 +546,7 @@ export class ProcessManagerImpl implements Manager {
         submitOutput: (output: O) => {
           handleRef?.requestSubmitOutput(output);
         },
-        setAlarm: (timeout?: number) => {
-          handleRef?.requestAlarm(timeout);
-        },
+        setAlarm: (timeout?: number) => handleRef?.requestAlarm(timeout) ?? Effect.void,
       };
 
       // One controller per run, fired by {@link ProcessHandle.ProcessHandleImpl.terminate} — the
@@ -617,7 +615,7 @@ export class ProcessManagerImpl implements Manager {
             const parentHandle = this.#handles.get(handle.parentId);
             if (parentHandle) {
               log('lifecycle: notify parent', { parentPid: handle.parentId, childPid: handle.pid });
-              parentHandle.requestChildEvent({
+              yield* parentHandle.requestChildEvent({
                 _tag: 'exited',
                 pid: handle.pid,
                 result: cause ? Exit.failCause(cause) : Exit.succeed(undefined),
@@ -663,6 +661,7 @@ export class ProcessManagerImpl implements Manager {
         callbacks,
         scope,
         fullCtx,
+        dispatchContext,
         this.#registry,
         outputQueue,
         storage,
@@ -670,7 +669,6 @@ export class ProcessManagerImpl implements Manager {
         params,
         environment,
         this.#traceSink,
-        clock,
         rpcClient,
         onFinished,
         () => this.#refreshProcessTree(),
@@ -707,7 +705,7 @@ export class ProcessManagerImpl implements Manager {
       // while the public surface is the precise `Handle<I, O, _Rpcs>`. `RpcClient` is invariant, so
       // bridging the two requires a cast here (see design spec §4.4).
       return handle as unknown as Handle<I, O, _Rpcs>;
-    });
+    }).pipe(Effect.withSpan('ProcessManager.spawn', { attributes: { [SpanAttributes.PROCESS.key]: definition.key } }));
   }
 
   /**
@@ -719,11 +717,11 @@ export class ProcessManagerImpl implements Manager {
   ): Effect.Effect<ProcessHandle.ProcessHandleImpl<any, any, any>> {
     return Effect.gen({ self: this }, function* () {
       // Captured from the ambient runtime so alarms are driven by the same `Clock` (incl. `TestClock`).
-      const clock = yield* Clock.Clock;
       const id = record.id;
       log('lifecycle: rehydrate', { pid: id, key: record.key });
 
       const scope = yield* Scope.make();
+      const dispatchContext = yield* EffectEx.contextWithoutParentSpan();
       const outputQueue = yield* Queue.unbounded<ProcessHandle.OutputItem<any>>();
       const storage = storageServiceLayer(this.#kvStore, `process/${id}/`);
 
@@ -760,9 +758,7 @@ export class ProcessManagerImpl implements Manager {
         submitOutput: (output: any) => {
           handleRef?.requestSubmitOutput(output);
         },
-        setAlarm: (timeout?: number) => {
-          handleRef?.requestAlarm(timeout);
-        },
+        setAlarm: (timeout?: number) => handleRef?.requestAlarm(timeout) ?? Effect.void,
       };
 
       const cancellation = new AbortController();
@@ -826,7 +822,7 @@ export class ProcessManagerImpl implements Manager {
             const parentHandle = this.#handles.get(handle.parentId);
             if (parentHandle) {
               log('lifecycle: notify parent', { parentPid: handle.parentId, childPid: handle.pid });
-              parentHandle.requestChildEvent({
+              yield* parentHandle.requestChildEvent({
                 _tag: 'exited',
                 pid: handle.pid,
                 result: cause ? Exit.failCause(cause) : Exit.succeed(undefined),
@@ -856,6 +852,7 @@ export class ProcessManagerImpl implements Manager {
         callbacks,
         scope,
         fullCtx,
+        dispatchContext,
         this.#registry,
         outputQueue,
         storage,
@@ -863,7 +860,6 @@ export class ProcessManagerImpl implements Manager {
         params,
         environment,
         this.#traceSink,
-        clock,
         rpcClient,
         onFinished,
         () => this.#refreshProcessTree(),
@@ -881,7 +877,7 @@ export class ProcessManagerImpl implements Manager {
 
       // Re-arm a still-pending alarm.
       if (record.alarmDueAt !== null) {
-        handle.rearmAlarm(record.alarmDueAt);
+        yield* handle.rearmAlarm(record.alarmDueAt);
       }
 
       // Re-deliver events that never settled (interrupted by shutdown), in seq order.
@@ -896,7 +892,7 @@ export class ProcessManagerImpl implements Manager {
       }
 
       return handle;
-    });
+    }).pipe(Effect.withSpan('ProcessManager.shutdown'));
   }
 
   #hydrateFromDefinition<I, O, Rpcs extends Rpc.Any = never>(
@@ -933,7 +929,11 @@ export class ProcessManagerImpl implements Manager {
       log('lifecycle: hydrate', { pid: id, key: record.key });
       const handle = yield* this.#rehydrate(record, definition);
       return handle as unknown as Handle<I, O, Rpcs>;
-    });
+    }).pipe(
+      Effect.withSpan('ProcessManager.hydrate', {
+        attributes: { [SpanAttributes.PROCESS.id]: id, [SpanAttributes.PROCESS.key]: definition.key },
+      }),
+    );
   }
 
   /**
@@ -967,7 +967,7 @@ export class ProcessManagerImpl implements Manager {
           yield* this.#store.deleteProcess(pid);
         }
       }
-    });
+    }).pipe(Effect.withSpan('ProcessManager.startup'));
   }
 
   attach<I, O, Rpcs extends Rpc.Any = never>(id: Process.ID): Effect.Effect<Handle<I, O, Rpcs>> {

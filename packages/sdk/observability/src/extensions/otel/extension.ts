@@ -136,6 +136,16 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   const sessionId = crypto.randomUUID();
   const { resource, metricsResource } = createResources(baseAttributes, sessionId);
 
+  const traces = tracesEnabled
+    ? new OtelTraces({
+        destinations,
+        resource,
+        getTags: () => Object.fromEntries(tags),
+        spanSink: observabilityWorker
+          ? { post: (record: OtelSpanSink.Span) => observabilityWorker.post(record) }
+          : undefined,
+      })
+    : undefined;
   const remoteLogs = logsEnabled ? observabilityWorker : undefined;
   const logs =
     logsEnabled && !remoteLogs
@@ -144,6 +154,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
           resource,
           getTags: () => Object.fromEntries(tags),
           logLevel: resolvedLogLevel,
+          onTraceFlagged: (traceId) => traces?.promote(traceId),
         })
       : undefined;
 
@@ -159,17 +170,6 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
           getTags: () => Object.fromEntries(tags),
         })
       : undefined;
-
-  const traces = tracesEnabled
-    ? new OtelTraces({
-        destinations,
-        resource,
-        getTags: () => Object.fromEntries(tags),
-        spanSink: observabilityWorker
-          ? { post: (record: OtelSpanSink.Span) => observabilityWorker.post(record) }
-          : undefined,
-      })
-    : undefined;
 
   const extension: Extension = {
     initialize: () =>

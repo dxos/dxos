@@ -11,6 +11,7 @@ import { type LogRecord as JsonlLogRecord, LogLevel, log, shortLevelName } from 
 
 import { OtelLogs, convertLevel } from './logs';
 import { type OtelDestination } from './otel';
+import { contextForTrace } from './trace-context';
 
 export type Init = {
   type: 'otel-init';
@@ -31,16 +32,23 @@ const levelFromShortName = new Map<string, LogLevel>(
 
 export type Options = {
   exporter?: LogRecordExporter;
+  /**
+   * Called with the trace id of every record at warning or above that names one, before the export
+   * level is applied: a warning the sink does not export still marks its trace as worth keeping.
+   */
+  onTraceFlagged?: (traceId: string) => void;
 };
 
 export class Sink {
   readonly #logs: OtelLogs;
   #tags: Record<string, string>;
   readonly #logLevel: LogLevel;
+  readonly #onTraceFlagged?: (traceId: string) => void;
 
   constructor(init: Init, options: Options = {}) {
     this.#tags = { ...init.tags };
     this.#logLevel = init.logLevel;
+    this.#onTraceFlagged = options.onTraceFlagged;
     this.#logs = new OtelLogs({
       destinations: init.destinations,
       resource: createResource(init.resourceAttributes),
@@ -66,7 +74,13 @@ export class Sink {
       return;
     }
     const level = levelFromShortName.get(record.l);
-    if (level === undefined || level < this.#logLevel) {
+    if (level === undefined) {
+      return;
+    }
+    if (level >= LogLevel.WARN && record.r !== undefined) {
+      this.#onTraceFlagged?.(record.r);
+    }
+    if (level < this.#logLevel) {
       return;
     }
 
@@ -79,6 +93,10 @@ export class Sink {
         ...(record.e !== undefined ? { error: record.e } : {}),
         ...parseContext(record.c),
       },
+      context:
+        record.r !== undefined && record.s !== undefined
+          ? contextForTrace({ traceId: record.r, spanId: record.s })
+          : undefined,
     });
   }
 

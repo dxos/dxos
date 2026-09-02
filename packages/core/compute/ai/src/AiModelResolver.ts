@@ -9,11 +9,15 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import type * as LanguageModel from 'effect/unstable/ai/LanguageModel';
+import * as Telemetry from 'effect/unstable/ai/Telemetry';
 
 import { DXN } from '@dxos/keys';
 
 import * as AiService from './AiService';
+import * as AiTelemetry from './AiTelemetry';
 import { AiModelNotAvailableError } from './errors';
+
+const telemetryLayer = Layer.succeed(Telemetry.CurrentSpanTransformer, AiTelemetry.makeSpanTransformer());
 
 /**
  * v4 removed `Layer.fail`; a failing layer is the failure effect lifted with `Layer.unwrap`.
@@ -32,7 +36,7 @@ export const buildAiService: Layer.Layer<AiService.AiService, never, AiModelReso
     const resolver = yield* AiModelResolver;
     return {
       metadata: resolver.metadata,
-      model: (name, options) => resolver.model(name, options),
+      model: (name, options) => Layer.merge(resolver.model(name, options), telemetryLayer),
     } satisfies Context.Service.Shape<typeof AiService.AiService>;
   }),
 );

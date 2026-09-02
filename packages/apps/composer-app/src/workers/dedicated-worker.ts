@@ -3,8 +3,11 @@
 //
 
 import { runDedicatedWorker } from '@dxos/client/worker';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { IdbLogStore } from '@dxos/log-store-idb';
+import * as ObservabilityExtension from '@dxos/observability/ObservabilityExtension';
+import * as ObservabilityProvider from '@dxos/observability/ObservabilityProvider';
 import { isTauri } from '@dxos/util';
 
 import { LOG_STORE_DB_NAME, LOG_STORE_MAX_BYTES, WorkerLogProcessor, initializeObservability } from '../util';
@@ -18,16 +21,30 @@ const observabilityWorker = new Worker(new URL('./observability-worker', import.
   type: 'module',
   name: 'dxos-observability',
 });
-const logProcessor = new WorkerLogProcessor({ worker: observabilityWorker });
+const logProcessor = new WorkerLogProcessor({
+  worker: observabilityWorker,
+  traceContext: ObservabilityExtension.Otel.activeTraceContext,
+});
 log.addProcessor(logProcessor.processor);
+
+let observability: ReturnType<typeof initializeObservability> | undefined;
 
 runDedicatedWorker({
   onBeforeStart: async (cfg) => {
-    void initializeObservability(cfg, isTauri(), logStore, undefined, {
+    observability = initializeObservability(cfg, isTauri(), logStore, undefined, {
       post: (message) => observabilityWorker.postMessage(message),
-    }).catch((err) => log.catch(err));
+    });
+    observability.catch((err) => log.catch(err));
     // The runtime this worker starts hosts echo; automerge is slim-resolved and must be
     // initialized before it runs (see util/automerge-wasm.ts).
     await initAutomergeWasm();
+  },
+  onStart: async (host) => {
+    const instance = await observability;
+    if (instance) {
+      await EffectEx.runPromise(
+        instance.addDataProvider(ObservabilityProvider.Client.identityManagerProvider(host.identityManager)),
+      );
+    }
   },
 });
