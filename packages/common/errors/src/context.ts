@@ -22,23 +22,3 @@ export const withContext = <T>(error: T, context: Record<string, unknown>): T =>
   }
   return error;
 };
-
-/**
- * Flattens the primitive fields of an error's `context` for a telemetry sink.
- *
- * Sinks that forward only top-level `string | number | boolean` from a log entry's own context
- * (the PostHog processor) need these lifted. Nested values are dropped rather than stringified, so
- * a caller cannot silently widen what leaves the device.
- */
-export const errorContextPrimitives = (error: unknown): Record<string, string | number | boolean> => {
-  if (!(error instanceof Error)) {
-    return {};
-  }
-
-  return Object.fromEntries(
-    Object.entries(readContext(error)).filter(
-      (entry): entry is [string, string | number | boolean] =>
-        typeof entry[1] === 'string' || typeof entry[1] === 'number' || typeof entry[1] === 'boolean',
-    ),
-  );
-};

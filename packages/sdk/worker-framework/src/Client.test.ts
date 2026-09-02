@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event, Trigger, asyncTimeout, sleep } from '@dxos/async';
-import { errorContextPrimitives } from '@dxos/errors';
 
 import * as Client from './Client';
 import { WorkerConnectionError } from './errors';
@@ -81,6 +80,7 @@ const createWorkerFactory = (storageLockKey: string) => () => {
   return channel.port2 as WorkerProtocol.WorkerOrPort;
 };
 
+/** Reads the diagnostics the connection merges into a failure. */
 const diagnosticsOf = (error: unknown): Record<string, unknown> =>
   error instanceof Error && 'context' in error && typeof error.context === 'object' && error.context
     ? { ...error.context }
@@ -316,7 +316,7 @@ describe('Connection multi-client', () => {
     );
 
     expect(String(error)).toContain('TEST: worker creation failed');
-    expect(errorContextPrimitives(error).workerLeaderFailures).toBeGreaterThan(0);
+    expect(diagnosticsOf(error).workerLeaderFailures).toBeGreaterThan(0);
   }, 30_000);
 
   test('a tab that never receives a port reports the port timeouts it accrued', async () => {
@@ -347,7 +347,7 @@ describe('Connection multi-client', () => {
 
     // Typed, so a consumer discriminates on the class rather than matching the message.
     expect(WorkerConnectionError.is(error)).toBe(true);
-    const diagnostics = errorContextPrimitives(error);
+    const diagnostics = diagnosticsOf(error);
     expect(diagnostics.workerPortTimeouts).toBeGreaterThan(0);
     expect(['requesting-port', 'port-timeout']).toContain(diagnostics.workerConnectPhase);
     expect(diagnostics.workerMsSinceLeaderHeartbeat).toBeUndefined();

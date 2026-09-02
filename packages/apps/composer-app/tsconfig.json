@@ -49,9 +49,6 @@
       "path": "../../common/effect-atom-solid"
     },
     {
-      "path": "../../common/errors"
-    },
-    {
       "path": "../../common/invariant"
     },
     {

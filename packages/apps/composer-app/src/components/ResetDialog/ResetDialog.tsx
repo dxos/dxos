@@ -4,7 +4,6 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { errorContextPrimitives } from '@dxos/errors';
 import { log } from '@dxos/log';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import type * as Observability from '@dxos/observability/Observability';
@@ -90,7 +89,7 @@ export const ResetDialog = ({
     if (!errorProp) {
       return;
     }
-    log.error('fatal dialog', { ...errorContextPrimitives(errorProp), error: errorProp, fatal_dialog: true });
+    log.error('fatal dialog', { error: errorProp, fatal_dialog: true });
   }, [errorProp]);
 
   const handleCopyError = useCallback(() => {

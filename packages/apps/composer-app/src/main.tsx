@@ -30,7 +30,6 @@ import * as UrlLoader from '@dxos/app-framework/UrlLoader';
 // boot path uses.
 import { EdgeHttpClient } from '@dxos/edge-client/http';
 import { EffectEx } from '@dxos/effect';
-import { errorContextPrimitives } from '@dxos/errors';
 import { LogLevel, log } from '@dxos/log';
 import { IdbLogStore } from '@dxos/log-store-idb';
 import * as Observability from '@dxos/observability/Observability';
@@ -509,9 +508,7 @@ const main = async () => {
   // has to not reject unhandled.
   performance.mark('milestone:client-initialize:start');
   const client = new Client({ config, services });
-  void client
-    .initialize()
-    .catch((err) => log.error('client services failed to open', { ...errorContextPrimitives(err), error: err }));
+  void client.initialize().catch((err) => log.error('client services failed to open', { error: err }));
 
   // Started here rather than from plugin-debug, which a plain local `serve` leaves disabled —
   // tying the flag to it would make the flag silently do nothing.
@@ -537,7 +534,8 @@ const main = async () => {
     observability,
     logStore,
     onFatalError: (error) => {
-      captureStartupFailure(errorContextPrimitives(error));
+      // The phase reaches PostHog on the exception itself; this event carries only the timings.
+      captureStartupFailure();
       raiseFatalError(error);
     },
 
