@@ -112,7 +112,7 @@ const GEN_AI_MARKERS = ['gen_ai.system', 'gen_ai.request.model', 'gen_ai.respons
 /**
  * Session/content attributes stamped by `AiTelemetry.ATTRIBUTES` in `@dxos/ai` (not part of the
  * GenAI spec). Restated rather than imported because telemetry sits below the AI stack, not above
- * it; the integration test in `plugin-observability` drives both halves so a rename fails there.
+ * it; the `wired to @dxos/ai` cases in `AiObservability.test.ts` drive both halves so a rename fails there.
  */
 const SESSION_ID_ATTR = 'dxos.ai.session_id';
 /**
