@@ -73,8 +73,9 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     expect(Obj.getParent(task)?.id).toBe(taskSet.id);
 
     // Started on delegation, not on completion: the row shows work is underway from the moment the
-    // session has it.
+    // session has it, and the chat's agent is who holds it.
     expect(task.status).toBe('started');
+    expect(task.assignee?.role).toBe('assistant');
 
     // The delegating identity reviews the result, which is what will send the task to `review`
     // rather than `done` when the work finishes.
@@ -105,8 +106,9 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     // Unnamed: a chat holding several tasks would be claiming to be about whichever came first.
     expect(chat.name).toBeUndefined();
 
-    // Every delegated task is underway, and the one left unchecked is untouched.
+    // Every delegated task is underway and assigned to the agent; the one left unchecked is untouched.
     expect(tasks.map((task) => task.status)).toEqual(['started', 'todo', 'started']);
+    expect(tasks.map((task) => task.assignee?.role)).toEqual(['assistant', undefined, 'assistant']);
   });
 
   test('refuses a list spanning two projects', async ({ expect }) => {

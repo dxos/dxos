@@ -46,7 +46,7 @@ import { type ComposableProps } from '@dxos/ui-types';
 import { translationKey } from '#translations';
 
 import { type TaskPlacement, subtreeIds } from './hierarchy';
-import { STATUS_ORDER, estimateTextStyle, priorityIcon, priorityTextStyle } from './status-icons';
+import { STATUS_ORDER, UNSET_ICON, estimateTextStyle, priorityIcon, priorityTextStyle } from './status-icons';
 import { TaskTreeContent } from './TaskTreeContent';
 import { type TaskNode, buildTaskForest, flattenVisibleTasks } from './tree-model';
 
@@ -449,14 +449,15 @@ TaskListGroupLabel.displayName = 'TaskList.GroupLabel';
 /**
  * Estimate as its own label rather than a glyph: the sizes are a vocabulary a reader already knows
  * (`XS`…`XL`), and two ordinal ramps side by side would be read as one. Rendered on every row so
- * setting an estimate never depends on discovering a hover affordance, and reading as `–` when
- * unset — a dash says "no size yet" where a blank cell says nothing at all.
+ * setting an estimate never depends on discovering a hover affordance, and falling back to
+ * {@link UNSET_ICON} when unset — the same dot the priority column shows, so a row with neither set
+ * reads as two empty controls rather than a dash beside a dot.
  */
 const TaskEstimateControl = ({ task }: { task: Task.Task }) => {
   const { t } = useTranslation(translationKey);
   const { onTaskUpdate } = useTaskListContext('TaskList.EstimateControl');
   const estimate = task.estimate;
-  const label = estimate ? estimate.toUpperCase() : '–';
+  const label = estimate?.toUpperCase() ?? <Icon icon={UNSET_ICON} classNames='shrink-0' />;
 
   if (!onTaskUpdate) {
     return <IconBlock classNames={estimateTextStyle(estimate)}>{label}</IconBlock>;

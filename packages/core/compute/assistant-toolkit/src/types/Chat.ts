@@ -206,6 +206,7 @@ export const loadTasks = (chat: Chat): Effect.Effect<Task.Task[], never, Databas
     const tasks = yield* Effect.forEach(chat.tasks, (task) =>
       Database.load(task).pipe(Effect.orElseSucceed(() => undefined)),
     );
+
     return Task.dedupeById(tasks);
   });
 
@@ -227,7 +228,8 @@ export const formatChecklist = (chat: Chat): Effect.Effect<string, never, Databa
     if (tasks.length === 0) {
       return 'No checklist found.';
     }
-    return renderNumberedChecklist(tasks);
+
+    return formatTasks(tasks);
   });
 
 /**
@@ -235,7 +237,7 @@ export const formatChecklist = (chat: Chat): Effect.Effect<string, never, Databa
  * their own indented line — appended to the title, models paste them back through title-keyed
  * upserts and duplicate the task.
  */
-export const renderNumberedChecklist = (tasks: readonly Task.Task[]): string => {
+const formatTasks = (tasks: readonly Task.Task[]): string => {
   const ordinals = new Map(tasks.map((task, index) => [task.id, index + 1]));
   return tasks
     .map((task, index) => {
@@ -244,6 +246,7 @@ export const renderNumberedChecklist = (tasks: readonly Task.Task[]): string => 
       if (task.status && task.status !== 'todo' && task.status !== 'done') {
         notes.push(task.status);
       }
+
       const deps = (task.dependsOn ?? [])
         .map((ref) => ref.target)
         .filter((target) => target !== undefined)
@@ -251,6 +254,7 @@ export const renderNumberedChecklist = (tasks: readonly Task.Task[]): string => 
       if (deps.length > 0) {
         notes.push(`depends on ${deps.join(', ')}`);
       }
+
       return notes.length > 0 ? `${line}\n   (${notes.join('; ')})` : line;
     })
     .join('\n');

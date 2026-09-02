@@ -68,7 +68,15 @@ export const LinkPreview: Story = {
 
 export const Synthetic: Story = {
   args: {
-    content: '<synthetic>Trigger fired: inbox.message.received (3 new messages).</synthetic>',
+    content: trim`
+      <synthetic>
+      Completed the checklist:
+      <checklist>
+      1. [x] Review new messages.
+      2. [x] Respond to new messages.
+      3. [x] Archive old messages.
+      </checklist>
+      </synthetic>`,
   },
 };
 

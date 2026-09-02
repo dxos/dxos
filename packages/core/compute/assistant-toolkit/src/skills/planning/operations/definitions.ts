@@ -18,7 +18,8 @@ import INSTRUCTIONS from './update-tasks.md?raw';
  * LLM-facing checklist entry: items are addressed by title (the checklist is markdown — see
  * `Outline.upsertChecklistItems`); `started` renders unchecked, nuance lives in conversation.
  */
-const ChecklistTask = Schema.Struct({
+// TODO(burdon): Reconcile with Task.
+const SimpleTask = Schema.Struct({
   title: Schema.String.annotate({ description: 'Task title; also the key for updates.' }),
   status: Schema.Literals(['todo', 'started', 'done']),
 });
@@ -31,7 +32,7 @@ export const UpdateTasks = Operation.make({
     icon: 'ph--check-square-offset--regular',
   },
   input: Schema.Struct({
-    tasks: Schema.Array(ChecklistTask),
+    tasks: Schema.Array(SimpleTask),
   }),
   output: Schema.Any,
   services: [Harness.HarnessService, Database.Service],
