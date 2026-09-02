@@ -25,6 +25,7 @@ import {
   type SpanProcessor,
 } from '@opentelemetry/sdk-trace-base';
 
+import * as AiContent from './ai-content';
 import { type OtelDestination, signalUrl } from './otel';
 import * as TailSampling from './tail-sampling';
 
@@ -194,7 +195,7 @@ export class Sink {
       startTime: record.startTime,
       endTime: record.endTime,
       status: record.status,
-      attributes: record.attributes,
+      attributes: AiContent.withoutAiContent(record.attributes),
       links,
       events: record.events.map((event) => ({
         name: event.name,
