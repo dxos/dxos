@@ -717,7 +717,13 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
   // the reorder-below zone, because "below an open branch" and "its first child" are the same place.
   // A leaf reports `open` too (nothing distinguishes it in the model), and treating that as expanded
   // stripped the below zone from every childless row — so nothing could be dropped after one.
-  const mode: ItemMode = last ? 'last-in-group' : branch && open && !dropBelowExpanded ? 'expanded' : 'standard';
+  //
+  // Tested before `last`, not after: an open branch that is also its parent's last child was taking
+  // `last-in-group`, which put a reorder-below band and the indent-split reparent bands on the
+  // branch's own row — directly above its first child, so two indicators competed for one gap. The
+  // zones that mean "after this branch" belong at the end of its subtree, where its last visible
+  // descendant is itself last-in-group and its indent chooses the level.
+  const mode: ItemMode = branch && open && !dropBelowExpanded ? 'expanded' : last ? 'last-in-group' : 'standard';
   const data = { treeId, id, path, item } satisfies TreeData;
   const isItemDraggable = treeDraggable && props.draggable !== false;
   const isItemDroppable = props.droppable !== false;

@@ -261,9 +261,6 @@ export const TaskTreeContent = ({
       // The highlight is what tells the reader where they are; a tree that only highlights (rather
       // than navigating on select) wants it to travel with the arrows.
       selectionFollowsFocus
-      // A task list's "below" already means after the row and its sub-tasks, so every row offers
-      // it — the alternative is the reparent slivers, which cannot be aimed at.
-      dropBelowExpanded
       // Dragging past the last row is the obvious way to say "put it last"; without a target there
       // the sticky rows keep the previous instruction and the drop lands somewhere else entirely.
       dropAtEnd
