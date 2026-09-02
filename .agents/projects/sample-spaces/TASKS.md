@@ -7,9 +7,17 @@ Design: [DESIGN.md](./DESIGN.md)
 - [x] Rename onboarding content: `readme.md` → `README.md`, `about-bramble.md` → `sample/ABOUT.md`,
       `space-tour.md` → `sample/README.md`, `exemplar-space.dx.json` → `sample/space.dx.json`,
       `build-exemplar-space.ts` → `build-sample-space.ts`; update every call site.
-- [ ] Rename the moon task and npm script `build-exemplar` → `build-sample`.
-- [ ] Rename `import-exemplar-space.ts` and the `ImportExemplarSpace` operation / `EXEMPLAR_SPACE_TAG`
-      identifiers (spreads into `app-toolkit` and other plugins).
+- [x] Rename the moon task and npm script `build-exemplar` → `build-sample`.
+- [x] Rename `import-exemplar-space.ts` → `import-sample-space.ts`, `ExemplarSettings` →
+      `SampleSettings`, `ImportExemplarSpace` → `ImportSampleSpace`, `EXEMPLAR_SPACE_TAG` →
+      `SAMPLE_SPACE_TAG`, `isExemplarSpace` → `isSampleSpace`, `generateExemplarSpace` →
+      `generateSampleSpace`, `settings.recreate-exemplar.*` → `settings.recreate-sample.*`.
+      **Two persisted strings deliberately keep the `exemplar` spelling**, each with a comment
+      saying why: the tag value `org.dxos.space.exemplar` (already in every onboarded profile's
+      space metadata — changing it makes the import's idempotency check miss the existing space and
+      flips `isVisibleSpace`) and the operation key
+      `org.dxos.operation.onboarding.importExemplarSpace` (operation keys can be referenced from
+      persisted user-side state). Renaming either needs a migration, not an edit.
 
 ## Phase 1 — the builder
 

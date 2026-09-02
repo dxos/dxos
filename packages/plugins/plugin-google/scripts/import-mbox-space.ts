@@ -15,7 +15,7 @@
  *     [--name Inbox] [--limit <count>]
  *
  * With no `--in`, the bundled synthetic fixture (`scripts/fixtures/sample.mbox`) is used so the tool
- * is runnable out of the box. Mirrors `plugin-onboarding/scripts/build-exemplar-space.ts`.
+ * is runnable out of the box. Mirrors `plugin-onboarding/scripts/build-sample-space.ts`.
  *
  * The mbox file is streamed rather than read into memory (real Takeout exports can be several GB —
  * too large for a single JS string) and messages are parsed/appended in bounded batches. `--limit`

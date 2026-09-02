@@ -22,8 +22,8 @@ tasks:
       - /pnpm-lock.yaml
     options:
       timeout: 60
-  build-exemplar:
-    script: pnpm run --silent build-exemplar
+  build-sample:
+    script: pnpm run --silent build-sample
     deps:
       - ^:build
     inputs:
