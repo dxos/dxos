@@ -187,7 +187,9 @@ export type TreeProps<T extends { id: string } = any> = {
   id: string;
   /**
    * Accessible name for the tree. Ark names it "Tree View" by default, which says what the widget
-   * is and not which list it is — a page with more than one is then unnavigable by name.
+   * is and not which list it is — a page with more than one is then unnavigable by name. Rendered
+   * into the machine's own `Label` part, so the tree carries one name rather than an `aria-label`
+   * competing with the `aria-labelledby` Ark points at that part regardless.
    */
   ariaLabel?: string;
   classNames?: string | (string | undefined)[];
@@ -558,9 +560,11 @@ export const Tree = <T extends { id: string } = any>({
       onFocusChange={handleFocusChange}
       className='contents'
     >
+      {/* The name the machine already points `aria-labelledby` at; `sr-only` because the tree is
+          labelled for assistive technology, not captioned on screen. */}
+      {ariaLabel && <TreeView.Label className='sr-only'>{ariaLabel}</TreeView.Label>}
       <TreeRenderProvider value={renderContext as TreeRenderContextValue}>
         <TreeView.Tree
-          aria-label={ariaLabel}
           // `outline-none`: the machine parks focus on the tree container (tabIndex=-1) when no
           // row holds it, which must not draw a focus ring around the whole tree.
           className={mx('grid outline-none', ...(Array.isArray(classNames) ? classNames : [classNames]))}
