@@ -487,7 +487,6 @@ export class ProcessManagerImpl implements Manager {
     options?: SpawnOptions,
   ): Effect.Effect<Handle<I, O, _Rpcs>> {
     return Effect.gen({ self: this }, function* () {
-      // Captured from the ambient runtime so alarms are driven by the same `Clock` (incl. `TestClock`).
       const id = this.#idGenerator();
       log('lifecycle: spawn', {
         pid: id,
@@ -497,6 +496,7 @@ export class ProcessManagerImpl implements Manager {
       });
       const scope = yield* Scope.make();
       const dispatchContext = yield* EffectEx.contextWithoutParentSpan();
+      const tracer = yield* Effect.tracer;
       const outputQueue = yield* Queue.unbounded<ProcessHandle.OutputItem<O>>();
 
       const storage = storageServiceLayer(this.#kvStore, `process/${id}/`);
@@ -580,6 +580,7 @@ export class ProcessManagerImpl implements Manager {
           manager: this,
           handlerSet: this.#handlerSet,
           parentProcessId: id,
+          tracer,
         });
         builtinCtx = Context.add(builtinCtx, Operation.Service, childInvoker);
         builtinCtx = Context.add(builtinCtx, ProcessOperationInvoker.Service, childInvoker);
@@ -716,12 +717,12 @@ export class ProcessManagerImpl implements Manager {
     definition: Process.Process<any, any, any, any>,
   ): Effect.Effect<ProcessHandle.ProcessHandleImpl<any, any, any>> {
     return Effect.gen({ self: this }, function* () {
-      // Captured from the ambient runtime so alarms are driven by the same `Clock` (incl. `TestClock`).
       const id = record.id;
       log('lifecycle: rehydrate', { pid: id, key: record.key });
 
       const scope = yield* Scope.make();
       const dispatchContext = yield* EffectEx.contextWithoutParentSpan();
+      const tracer = yield* Effect.tracer;
       const outputQueue = yield* Queue.unbounded<ProcessHandle.OutputItem<any>>();
       const storage = storageServiceLayer(this.#kvStore, `process/${id}/`);
 
@@ -788,6 +789,7 @@ export class ProcessManagerImpl implements Manager {
           manager: this,
           handlerSet: this.#handlerSet,
           parentProcessId: id,
+          tracer,
         });
         builtinCtx = Context.add(builtinCtx, Operation.Service, childInvoker);
         builtinCtx = Context.add(builtinCtx, ProcessOperationInvoker.Service, childInvoker);

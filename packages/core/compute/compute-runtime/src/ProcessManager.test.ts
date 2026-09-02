@@ -385,6 +385,9 @@ const recordedSpans: Tracer.Span[] = [];
 const spaceSpans: Tracer.Span[] = [];
 const alarmSpans: Tracer.Span[] = [];
 const rearmSpans: Tracer.Span[] = [];
+const runtimeSpans: Tracer.Span[] = [];
+const callerSpans: Tracer.Span[] = [];
+const unusedRuntimeSpans: Tracer.Span[] = [];
 
 describe('ManagerImpl', () => {
   it.effect(
@@ -532,6 +535,49 @@ describe('ManagerImpl', () => {
       },
       Effect.provide(TestLayer),
       Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(recordedSpans))),
+    ),
+  );
+
+  it.effect(
+    "traces an operation invoked through the promise entry point on the runtime's tracer",
+    Effect.fn(
+      function* ({ expect }) {
+        const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+        const { error } = yield* Effect.promise(() => invoker.invokePromise(Traced, undefined));
+        expect(error).toBeUndefined();
+
+        expect(spanNamesToRoot(runtimeSpans, 'Handler.span')).toEqual([
+          'Handler.span',
+          Traced.meta.key.toString(),
+          'Process.input',
+          'ProcessOperationInvoker.invoke',
+        ]);
+      },
+      Effect.provide(TestLayer),
+      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(runtimeSpans))),
+    ),
+  );
+
+  it.effect(
+    "nests an operation invoked from a fiber under that fiber's span",
+    Effect.fn(
+      function* ({ expect }) {
+        const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+        yield* invoker
+          .invoke(Traced, undefined)
+          .pipe(Effect.withSpan('Caller.span'), Effect.provideService(Tracer.Tracer, makeRecordingTracer(callerSpans)));
+
+        expect(spanNamesToRoot(callerSpans, 'Handler.span')).toEqual([
+          'Handler.span',
+          Traced.meta.key.toString(),
+          'Process.input',
+          'ProcessOperationInvoker.invoke',
+          'Caller.span',
+        ]);
+        expect(unusedRuntimeSpans).toEqual([]);
+      },
+      Effect.provide(TestLayer),
+      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(unusedRuntimeSpans))),
     ),
   );
 
@@ -2204,3 +2250,13 @@ describe('durability', () => {
     }, Effect.provide(DurabilityTestLayer)),
   );
 });
+
+const spanNamesToRoot = (spans: Tracer.Span[], name: string): string[] => {
+  const names: string[] = [];
+  let span: Tracer.AnySpan | undefined = spans.find((candidate) => candidate.name === name);
+  while (span?._tag === 'Span') {
+    names.push(span.name);
+    span = Option.getOrUndefined(span.parent);
+  }
+  return names;
+};
