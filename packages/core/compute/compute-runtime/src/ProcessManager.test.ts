@@ -387,8 +387,6 @@ const alarmSpans: Tracer.Span[] = [];
 const rearmSpans: Tracer.Span[] = [];
 const runtimeSpans: Tracer.Span[] = [];
 const callerSpans: Tracer.Span[] = [];
-// Recorder for the tracer the invoker captured at layer build; asserted empty when a caller
-// brings its own, so the caller's tracer is demonstrably the one in use.
 const unusedRuntimeSpans: Tracer.Span[] = [];
 
 describe('ManagerImpl', () => {
@@ -545,13 +543,10 @@ describe('ManagerImpl', () => {
     Effect.fn(
       function* ({ expect }) {
         const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
-        // `invokePromise` runs on a fresh fiber with an empty context. Without the invoker
-        // reinstating the runtime's tracer it falls back to Effect's native one, whose spans never
-        // reach a backend — and an OTel span opened under one is exported as its own trace root.
         const { error } = yield* Effect.promise(() => invoker.invokePromise(Traced, undefined));
         expect(error).toBeUndefined();
 
-        expect(ancestry(runtimeSpans, 'Handler.span')).toEqual([
+        expect(spanNamesToRoot(runtimeSpans, 'Handler.span')).toEqual([
           'Handler.span',
           Traced.meta.key.toString(),
           'Process.input',
@@ -572,9 +567,7 @@ describe('ManagerImpl', () => {
           .invoke(Traced, undefined)
           .pipe(Effect.withSpan('Caller.span'), Effect.provideService(Tracer.Tracer, makeRecordingTracer(callerSpans)));
 
-        // The caller's tracer wins over the one the invoker carries, and its span parents the
-        // operation rather than the operation opening a trace of its own.
-        expect(ancestry(callerSpans, 'Handler.span')).toEqual([
+        expect(spanNamesToRoot(callerSpans, 'Handler.span')).toEqual([
           'Handler.span',
           Traced.meta.key.toString(),
           'Process.input',
@@ -2258,8 +2251,7 @@ describe('durability', () => {
   );
 });
 
-/** Span names from the given span up to its trace root. */
-const ancestry = (spans: Tracer.Span[], name: string): string[] => {
+const spanNamesToRoot = (spans: Tracer.Span[], name: string): string[] => {
   const names: string[] = [];
   let span: Tracer.AnySpan | undefined = spans.find((candidate) => candidate.name === name);
   while (span?._tag === 'Span') {
