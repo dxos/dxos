@@ -23,7 +23,10 @@ export const TreeItemToggle = memo(
           variant='ghost'
           density='md'
           classNames={[
-            'h-full w-6 px-0',
+            // One control tall, not `h-full`: a row with a description is taller than its title
+            // line, and stretching the toggle centred the chevron against the whole row instead of
+            // against the title it discloses.
+            'h-(--dx-control) w-6 px-0',
             '[&_svg]:transition-transform [&_svg]:duration-200',
             open ? '[&_svg]:rotate-90' : '[&_svg]:rotate-0',
             hidden ? 'hidden' : !isBranch && 'invisible',

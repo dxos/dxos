@@ -69,10 +69,37 @@ Branch: `dm/agent-feed-messages`. Design: [DESIGN.md](./DESIGN.md).
       `streaming` — pinned by browser play tests that fail on the old wiring (verified by reverting).
 - [x] `Chat.Queue` mounted in ChatArticle, ChatDialog and the ChatPrompt story.
 
+## Phase 6 — durability corrections (follow-up PR; PR #12894 merged without them)
+
+PR #12894 merged on the strength of the required checks while the non-required
+`Model Fixture` job was red — that job is what caught the semantics below, so
+these land as a follow-up on the same branch.
+
+- [x] Ack moved from turn-begin to turn-end (`ConsumedAnnotation`), restoring
+      at-least-once: an interrupted turn is redelivered. The turn-begin version
+      broke `restart during tool call` and `recovers queued tool results after
+reload`, both of which are model-fixture tagged and therefore SKIPPED by a
+      plain `moon run agent-runtime:test` — run with `DX_RUN_MODEL_FIXTURE_TESTS=1`.
+- [x] Process re-arms its alarm from durable feed state at startup (a rehydrated
+      process is not handed its pending input events again).
+- [x] `onSpawn` discards entries inherited from a dead process, which is how an
+      explicitly stopped turn avoids redelivery (`terminate` blocks while a tool
+      holds the turn, so it cannot clean up after itself).
+- [x] Scan skips tombstones (`Feed.remove` leaves a typed tombstone that still
+      reads as queued) and filters by type rather than `Filter.everything()`.
+- [x] `AiContext` folds bindings in append order — a query returns an unordered
+      set, so an add/remove pair could fold backwards and silently keep an object
+      bound. Latent bug, exposed by the extra feed writes.
+- [x] Regenerated the two stale fixture suites (chat-context, memory).
+
 ## Follow-ups (tracked, not scheduled)
 
 - [ ] Fold `tool_result` events into the feed.
 - [ ] Chat/Agent move implementation (DESIGN.md §3 sequencing).
+- [ ] A synchronous `SessionStore` scan issued from OUTSIDE the process while a
+      turn is in flight blocks (found by a test that read the feed mid-turn).
+      Worth understanding at the echo level; the app is unaffected because its
+      reads are reactive queries.
 - [ ] No `Escape`-to-cancel keybinding: while a turn runs with text in the box the Stop affordance is
       not reachable from the button (clear the box to get it back). Add `Escape` → `cancel` in
       `useChatKeymap` if that proves annoying.

@@ -2012,6 +2012,97 @@ describe('durability', () => {
   );
 
   it.effect(
+    'hydrate returns a live handle; the dormant view stays inert',
+    Effect.fn(function* ({ expect }) {
+      const kv = yield* KeyValueStore.KeyValueStore;
+      const registry = yield* Registry.AtomRegistry;
+      const resolver = yield* ServiceResolver.ServiceResolver;
+      const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
+      const traceSink = yield* Trace.TraceSink;
+
+      const waiting = makeWaitingExecutable();
+      const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      const handle = yield* managerA.spawn(waiting);
+      yield* managerA.shutdown();
+
+      const managerB = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      const [dormant] = yield* managerB.list({ key: 'test.waiting' });
+
+      // The dormant view is read-only: callers must use what `hydrate` returns, not the listed
+      // handle (the AgentService regression that surfaced as "Process not hydrated" on submit).
+      const live = yield* dormant.hydrate(waiting);
+      expect(live).not.toBe(dormant);
+      expect(live.pid).toEqual(handle.pid);
+      yield* live.submitInput(undefined);
+      expect(Exit.isFailure(yield* dormant.submitInput(undefined).pipe(Effect.exit))).toBe(true);
+
+      // Hydrating again is idempotent — it returns the same live handle.
+      expect(yield* dormant.hydrate(waiting)).toBe(live);
+    }, Effect.provide(DurabilityTestLayer)),
+  );
+
+  it.effect(
+    'terminating a dormant handle discards the record and its descendants',
+    Effect.fn(function* ({ expect }) {
+      const kv = yield* KeyValueStore.KeyValueStore;
+      const registry = yield* Registry.AtomRegistry;
+      const resolver = yield* ServiceResolver.ServiceResolver;
+      const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
+      const traceSink = yield* Trace.TraceSink;
+
+      const waiting = makeWaitingExecutable();
+      const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      const parent = yield* managerA.spawn(waiting);
+      const child = yield* managerA.spawn(waiting, { parentProcessId: parent.pid });
+      yield* managerA.shutdown();
+
+      const managerB = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      const dormantParent = (yield* managerB.list({ key: 'test.waiting' })).find(
+        (listed) => listed.pid === parent.pid,
+      )!;
+
+      // Discarding a stale process must not require booting it first.
+      yield* dormantParent.terminate();
+
+      expect(yield* managerB.list({ key: 'test.waiting' })).toHaveLength(0);
+      const store = new ProcessStore(kv);
+      expect(yield* store.getProcess(parent.pid)).toBeUndefined();
+      expect(yield* store.getProcess(child.pid)).toBeUndefined();
+    }, Effect.provide(DurabilityTestLayer)),
+  );
+
+  it.effect(
+    'discarding a handle hydrated since the listing still sweeps its dormant descendants',
+    Effect.fn(function* ({ expect }) {
+      const kv = yield* KeyValueStore.KeyValueStore;
+      const registry = yield* Registry.AtomRegistry;
+      const resolver = yield* ServiceResolver.ServiceResolver;
+      const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
+      const traceSink = yield* Trace.TraceSink;
+
+      const waiting = makeWaitingExecutable();
+      const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      const parent = yield* managerA.spawn(waiting);
+      const child = yield* managerA.spawn(waiting, { parentProcessId: parent.pid });
+      yield* managerA.shutdown();
+
+      const managerB = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      const dormantParent = (yield* managerB.list({ key: 'test.waiting' })).find(
+        (listed) => listed.pid === parent.pid,
+      )!;
+
+      // Another caller hydrates the parent between the listing and the discard. Live termination
+      // only visits children in the handle map, so the still-dormant child would survive.
+      yield* dormantParent.hydrate(waiting);
+      yield* dormantParent.terminate();
+
+      const store = new ProcessStore(kv);
+      expect(yield* store.getProcess(parent.pid)).toBeUndefined();
+      expect(yield* store.getProcess(child.pid)).toBeUndefined();
+    }, Effect.provide(DurabilityTestLayer)),
+  );
+
+  it.effect(
     'terminal processes are not hydrated',
     Effect.fn(function* ({ expect }) {
       const kv = yield* KeyValueStore.KeyValueStore;
