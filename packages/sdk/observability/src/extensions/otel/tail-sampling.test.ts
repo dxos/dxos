@@ -7,9 +7,8 @@ import { describe, test } from 'vitest';
 
 import { type Decidable, DEFAULT_SLOW_MS, TailSampler, TailSamplingSpanProcessor } from './tail-sampling';
 
-/** Trace ids whose low 32 bits sit either side of the 0.3 ratio. */
-const KEPT_TRACE = '0'.repeat(24) + '00000000'; // 0.0 -> kept at any positive ratio.
-const DROPPED_TRACE = '0'.repeat(24) + 'ffffffff'; // ~1.0 -> dropped below ratio 1.
+const KEPT_TRACE = '0'.repeat(24) + '00000000';
+const DROPPED_TRACE = '0'.repeat(24) + 'ffffffff';
 
 const span = (overrides: Partial<Decidable> = {}): Decidable => ({
   traceId: DROPPED_TRACE,
@@ -43,7 +42,6 @@ describe('TailSampler', () => {
   });
 
   test('keeps a turn or tool-call span the ratio would have dropped', ({ expect }) => {
-    // These carry no `gen_ai.*`, but the AI sink reports them: a sampled-out turn has no trace event.
     expect(new TailSampler().keep(span({ attributes: { 'dxos.ai.kind': 'turn' } }))).toEqual(true);
     expect(new TailSampler().keep(span({ attributes: { 'dxos.ai.kind': 'tool' } }))).toEqual(true);
   });
@@ -53,15 +51,11 @@ describe('TailSampler', () => {
   });
 
   test('leaves a merely slow span to the ratio', ({ expect }) => {
-    // A model call runs for tens of seconds legitimately, which is why the threshold is set at a
-    // hang rather than the 5s the Collector's examples use. Its own sampler: the case above would
-    // otherwise have promoted this trace.
     expect(new TailSampler().keep(span({ durationMs: 5_000 }))).toEqual(false);
   });
 
   test('keeps the rest of a trace once something in it is promoted', ({ expect }) => {
     const sampler = new TailSampler();
-    // A parent ends after its children, so promoting on the error is what keeps the ancestors.
     expect(sampler.keep(span({ status: { code: SpanStatusCode.ERROR } }))).toEqual(true);
     expect(sampler.keep(span())).toEqual(true);
   });
@@ -79,7 +73,6 @@ describe('TailSampler', () => {
     sampler.keep(span({ traceId: first, status: { code: SpanStatusCode.ERROR } }));
     sampler.keep(span({ traceId: second, status: { code: SpanStatusCode.ERROR } }));
 
-    // Evicted rather than dropped outright: the trace falls back to the ratio, which rejects this id.
     expect(sampler.keep(span({ traceId: first }))).toEqual(false);
     expect(sampler.keep(span({ traceId: second }))).toEqual(true);
   });
@@ -105,7 +98,6 @@ describe('TailSamplingSpanProcessor', () => {
       forceFlush: async () => {},
       shutdown: async () => {},
     };
-    // Ratio 0: only a promotion can let a span through.
     const processor = new TailSamplingSpanProcessor(delegate as any, { ratio: 0 });
     const ended = (name: string) =>
       ({

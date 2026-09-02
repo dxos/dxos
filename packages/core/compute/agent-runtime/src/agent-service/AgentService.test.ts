@@ -31,6 +31,7 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation, Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
+import { makeRecordingTracer } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { ContentBlock, Message, Organization } from '@dxos/types';
@@ -229,20 +230,6 @@ const DelegationTestLayer = AssistantTestLayer({
   agent: { delegationStrategy: StubDelegationStrategy },
 });
 
-/** Records the name of every span opened, delegating the span itself to the built-in tracer. */
-const makeRecordingTracer = (names: string[], spans: Tracer.Span[] = []) => {
-  const base = Effect.runSync(Effect.tracer);
-  return Tracer.make({
-    span: (...args) => {
-      names.push((args[0] as any).name);
-      const span = base.span(...args);
-      spans.push(span);
-      return span;
-    },
-  });
-};
-
-const turnSpanNames: string[] = [];
 const turnSpans: Tracer.Span[] = [];
 
 describe('Agent Service', { tags: ['model-fixture'] }, () => {
@@ -842,11 +829,8 @@ describe('Agent Service (control plane)', () => {
         yield* session.submitPrompt('What is the capital of France?');
         yield* session.waitForCompletion();
 
-        // The agent runs on the caller's runtime, so the tracer it installed must reach the turn.
-        expect(turnSpanNames).toContain('AiSession.createRequest');
+        expect(turnSpans.map(({ name }) => name)).toContain('AiSession.createRequest');
 
-        // The turn span is what an analytics backend groups the model calls under, so it carries
-        // the prompt and the messages the turn produced.
         const turn = turnSpans.find((span) => span.name === 'AiSession.createRequest');
         expect(turn?.attributes.get('dxos.ai.kind')).toEqual('turn');
         expect(String(turn?.attributes.get('dxos.ai.input'))).toContain('capital of France');
@@ -855,7 +839,7 @@ describe('Agent Service (control plane)', () => {
         );
       },
       Effect.provide(TestLayer()),
-      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(turnSpanNames, turnSpans))),
+      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(turnSpans))),
       TestHelpers.provideTestContext,
     ),
     { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },

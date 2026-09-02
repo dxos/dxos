@@ -13,6 +13,7 @@ import * as Tracer from 'effect/Tracer';
 import { ServiceNotAvailableError } from '@dxos/compute';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { EffectEx } from '@dxos/effect';
+import { makeRecordingTracer } from '@dxos/effect/testing';
 import { SpaceId } from '@dxos/keys';
 
 import * as LayerStack from './LayerStack';
@@ -32,18 +33,7 @@ class ServiceD extends Context.Service<ServiceD, { readonly value: string }>()('
 const resolveWithScope = <A, E>(effect: Effect.Effect<A, E, Scope.Scope>) =>
   Effect.scoped(effect) as Effect.Effect<A, E, never>;
 
-/** Records the name of every span opened, delegating the span itself to the built-in tracer. */
-const makeRecordingTracer = (names: string[]) => {
-  const base = Effect.runSync(Effect.tracer);
-  return Tracer.make({
-    span: (...args) => {
-      names.push((args[0] as any).name);
-      return base.span(...args);
-    },
-  });
-};
-
-const sliceSpanNames: string[] = [];
+const sliceSpans: Tracer.Span[] = [];
 
 describe('LayerStack', () => {
   it.effect(
@@ -57,12 +47,9 @@ describe('LayerStack', () => {
         const stack = new LayerStack.LayerStack({ layers: [layer] });
         yield* resolveWithScope(stack.getServiceResolver().resolve(ServiceA, {}));
 
-        // Each slice gets its own `ManagedRuntime`, which starts from an empty context -- so without
-        // help the slice, and anything long-lived it builds (an agent process, say), runs on the
-        // default tracer, which keeps spans in memory and exports none of them.
-        expect(sliceSpanNames).toContain('Slice.build');
+        expect(sliceSpans.map(({ name }) => name)).toContain('Slice.build');
       },
-      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(sliceSpanNames))),
+      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(sliceSpans))),
     ),
   );
 

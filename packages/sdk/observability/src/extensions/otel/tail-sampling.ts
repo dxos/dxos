@@ -5,6 +5,8 @@
 import { type Attributes, type Context, SpanStatusCode } from '@opentelemetry/api';
 import type { ReadableSpan, Span, SpanProcessor } from '@opentelemetry/sdk-trace-base';
 
+import { SpanAttributes } from '@dxos/effect';
+
 /**
  * Tail sampling for spans arriving at the observability worker.
  *
@@ -21,7 +23,6 @@ import type { ReadableSpan, Span, SpanProcessor } from '@opentelemetry/sdk-trace
  *
  * - https://opentelemetry.io/blog/2022/tail-sampling/
  * - https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/processor/tailsamplingprocessor
- * - https://www.datadoghq.com/blog/control-trace-volume-with-opentelemetry-tail-based-sampling/
  *
  * Expressing them as a processor that filters in `onEnd` is the documented way to drop spans from a
  * JS SDK, since a `Sampler` cannot: https://github.com/open-telemetry/opentelemetry-js/discussions/2817
@@ -133,8 +134,7 @@ export class TailSampler {
 const GEN_AI_PREFIX = 'gen_ai.';
 
 /** `gen_ai.*` marks a model call; `dxos.ai.kind` the turn around it and the tool calls inside it. */
-const isAiAttribute = (key: string): boolean => key.startsWith(GEN_AI_PREFIX) || key === AI_KIND_ATTR;
-const AI_KIND_ATTR = 'dxos.ai.kind';
+const isAiAttribute = (key: string): boolean => key.startsWith(GEN_AI_PREFIX) || key === SpanAttributes.AI.kind;
 
 /**
  * Deterministic per trace, so every span of a trace decides the same way. Reads the low 8 hex digits

@@ -81,8 +81,6 @@ export class OtelLogs {
         ...(entry.error ? { error: entry.error.stack } : {}),
         ...stringifyValues(getContextFromEntry(entry), 'ctx_'),
       },
-      // Processors run synchronously inside the log call, so the active span is the one the
-      // caller is in; the SDK reads the trace and span ids off it.
       context: otelContext.active(),
     });
   };

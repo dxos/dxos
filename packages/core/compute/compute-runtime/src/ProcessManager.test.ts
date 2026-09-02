@@ -32,6 +32,7 @@ import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation, Database, DXN, Key } from '@dxos/echo';
+import { makeRecordingTracer } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Organization } from '@dxos/types';
@@ -363,24 +364,6 @@ const CapturingTraceTestLayer = Layer.mergeAll(ProcessManager.ProcessOperationIn
   Layer.provide(Layer.succeed(Trace.TraceSink, { write: (message) => capturedTraceMessages.push(message) })),
 );
 
-/**
- * Records the name of every span the ambient tracer is asked to open, delegating the span itself to
- * the built-in tracer. Stands in for the OTel-backed tracer the app installs: `Tracer.Tracer` is a
- * reference whose default builds in-memory spans that are never exported, so a handler that loses
- * the installed tracer still *looks* traced while emitting nothing.
- */
-const makeRecordingTracer = (names: string[], spans: Tracer.Span[] = []) => {
-  const base = Effect.runSync(Effect.tracer);
-  return Tracer.make({
-    span: (...args) => {
-      names.push((args[0] as any).name);
-      const span = base.span(...args);
-      spans.push(span);
-      return span;
-    },
-  });
-};
-
 /** Sets an alarm on input (or at spawn, when `atSpawn` is given) and opens a span when it fires. */
 const makeTracedAlarmExecutable = (options: { atSpawn?: number; scheduleInSpan?: string } = {}) =>
   Process.make({ key: 'test.traced-alarm', input: Schema.Void, output: Schema.Void, services: [] }, (ctx) =>
@@ -397,10 +380,10 @@ const makeTracedAlarmExecutable = (options: { atSpawn?: number; scheduleInSpan?:
     }),
   );
 
-const spanNames: string[] = [];
+const recordedSpans: Tracer.Span[] = [];
 const spaceSpans: Tracer.Span[] = [];
 const alarmSpans: Tracer.Span[] = [];
-const rearmSpanNames: string[] = [];
+const rearmSpans: Tracer.Span[] = [];
 
 describe('ManagerImpl', () => {
   it.effect(
@@ -429,10 +412,10 @@ describe('ManagerImpl', () => {
         const manager = yield* ProcessManager.Service;
         const handle = yield* manager.spawn(Process.fromOperation(Traced, handlers));
         yield* handle.runAndExit({ inputs: [undefined] }).pipe(Stream.runCollect);
-        expect(spanNames).toContain('Handler.span');
+        expect(recordedSpans.map(({ name }) => name)).toContain('Handler.span');
       },
       Effect.provide(TestLayer),
-      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(spanNames))),
+      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(recordedSpans))),
     ),
   );
 
@@ -450,7 +433,7 @@ describe('ManagerImpl', () => {
         expect(span?.attributes.get('spaceId')).toEqual('B7777777777777777777777777');
       },
       Effect.provide(TestLayer),
-      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer([], spaceSpans))),
+      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(spaceSpans))),
     ),
   );
 
@@ -463,14 +446,12 @@ describe('ManagerImpl', () => {
         yield* handle.submitInput(undefined);
         yield* handle.runToCompletion();
 
-        // The agent schedules each turn from inside the previous one; were the alarm to inherit the
-        // scheduling fiber's context, every turn would nest under the last, without end.
         const alarm = alarmSpans.find(({ name }) => name === 'Alarm.handler');
         expect(alarmSpans.some(({ name }) => name === 'Input.span')).toEqual(true);
         expect(alarm && Option.isNone(alarm.parent)).toEqual(true);
       },
       Effect.provide(TestLayer),
-      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer([], alarmSpans))),
+      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(alarmSpans))),
     ),
   );
 
@@ -483,12 +464,10 @@ describe('ManagerImpl', () => {
         yield* handle.submitInput(undefined);
         yield* handle.runToCompletion();
 
-        // The alarm timer is forked into the process scope from the fiber that set it, so the
-        // handler it dispatches inherits that fiber's tracer instead of a detached fork's default.
-        expect(spanNames).toContain('Alarm.handler');
+        expect(recordedSpans.map(({ name }) => name)).toContain('Alarm.handler');
       },
       Effect.provide(TestLayer),
-      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(spanNames))),
+      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(recordedSpans))),
     ),
   );
 
@@ -513,11 +492,11 @@ describe('ManagerImpl', () => {
         yield* child.runAndExit({ inputs: [{ value: 1 }] }).pipe(Stream.runCollect);
         yield* Deferred.await(childExited);
 
-        expect(spanNames).toContain('ChildEvent.handler');
+        expect(recordedSpans.map(({ name }) => name)).toContain('ChildEvent.handler');
         yield* parent.terminate();
       },
       Effect.provide(TestLayer),
-      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(spanNames))),
+      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(recordedSpans))),
     ),
   );
 
@@ -1661,16 +1640,15 @@ describe('durability', () => {
         yield* managerA.spawn(traced);
         yield* managerA.shutdown();
 
-        // Re-arming forks the timer from the hydrating fiber, so the handler runs under its tracer.
         const managerB = mkManager({ kv, registry, resolver, handlerSet, traceSink });
         const restored = yield* (yield* managerB.list({ key: 'test.traced-alarm' }))[0].hydrate(traced);
         yield* TestClock.adjust(Duration.millis(500));
         yield* restored.runToCompletion();
 
-        expect(rearmSpanNames).toContain('Alarm.handler');
+        expect(rearmSpans.map(({ name }) => name)).toContain('Alarm.handler');
       },
       Effect.provide(DurabilityTestLayer),
-      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(rearmSpanNames))),
+      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(rearmSpans))),
     ),
   );
 

@@ -26,8 +26,6 @@ const setup = async ({
   const turns: ObservabilityExtension.Turn[] = [];
   const toolCalls: ObservabilityExtension.ToolCall[] = [];
   const { BasicTracerProvider } = await import('@opentelemetry/sdk-trace-base');
-  // Stands in for the realm's provider, which in the app carries this processor alongside the
-  // exporter's.
   const provider = new BasicTracerProvider({
     spanProcessors: [
       new AiSpanProcessor({
@@ -42,7 +40,6 @@ const setup = async ({
   return { generations, turns, toolCalls, tracer: provider.getTracer('test') };
 };
 
-/** A span without a space never reports content, so every content case here names one. */
 const PLAINTEXT_SPACE = 'plaintext-space';
 
 describe('AiSpanProcessor', () => {
@@ -102,7 +99,7 @@ describe('AiSpanProcessor', () => {
           'gen_ai.system': 'anthropic',
           'spaceId': PLAINTEXT_SPACE,
           'dxos.ai.input': JSON.stringify([{ role: 'user', content: 'hi' }]),
-          'dxos.ai.output': '[{"role":"assist', // Truncated mid-JSON.
+          'dxos.ai.output': '[{"role":"assist',
         },
       })
       .end();
@@ -262,7 +259,6 @@ describe('AiSpanProcessor', () => {
         attributes: { 'dxos.ai.kind': 'turn', 'spaceId': PLAINTEXT_SPACE, 'dxos.ai.input': '"secret"' },
       })
       .end();
-    // No space at all: denied before the policy is even asked.
     tracer.startSpan('callTool', { attributes: { 'dxos.ai.kind': 'tool', 'dxos.ai.input': '"secret"' } }).end();
 
     expect(turns[0]?.content).toBeUndefined();
@@ -289,7 +285,6 @@ describe('AiSpanProcessor', () => {
       attributes: { 'gen_ai.system': 'anthropic' },
     });
 
-    // `onEnd` runs inside `end()`; an escaping error would fail the model call's own fiber.
     expect(() => span.end()).not.toThrow();
   });
 });
@@ -316,7 +311,6 @@ describe('AiSpanProcessor wired to @dxos/ai', () => {
 
       expect(events[0]?.content).toBeUndefined();
       expect(events[0]?.model).toEqual('test-model');
-      // Cache counts are metadata: they price the call and survive the content policy.
       expect(events[0]?.cacheReadTokens).toEqual(11);
       expect(JSON.stringify(events[0])).not.toContain('hello');
     }),
@@ -375,11 +369,6 @@ const stubModel = LanguageModel.make({
   streamText: () => Stream.empty,
 });
 
-/**
- * The real producer end to end: a provider-shaped stub model, `@dxos/ai`'s span transformer, and the
- * Effect-to-OTel tracer, with the sink at the far end. The sink restates the attribute names it reads
- * (it cannot import `AiTelemetry`), so these cases are what fails when either side renames one.
- */
 const setupWired = ({
   allowContent = () => true,
   captureEnabled = () => true,
@@ -391,8 +380,6 @@ const setupWired = ({
 } = {}) =>
   Effect.gen(function* () {
     const events: Captured[] = [];
-    // Mirrors the app: one provider for the realm, with the AI processor attached alongside
-    // whatever else observes spans.
     const { BasicTracerProvider } = yield* Effect.promise(() => import('@opentelemetry/sdk-trace-base'));
     const provider = new BasicTracerProvider({
       spanProcessors: [
@@ -409,16 +396,11 @@ const setupWired = ({
     const layer = Layer.mergeAll(
       Layer.effect(LanguageModel.LanguageModel, stubModel),
       Layer.succeed(Tracer.Tracer, makeTracer(provider, 'test')),
-      // Installed explicitly here; `AiModelResolver.test.ts` covers that a resolved model brings it.
       Layer.succeed(Telemetry.CurrentSpanTransformer, AiTelemetry.makeSpanTransformer()),
     );
 
-    // How `AiSession` declares its space: an annotation on the enclosing effect, inherited by the
-    // model-call span beneath it.
     const annotations = declaresSpace ? { [AiTelemetry.ATTRIBUTES.spaceId]: PLAINTEXT_SPACE } : {};
     const callModel = LanguageModel.generateText({ prompt: 'hi' }).pipe(
-      // The enclosing span stands in for `AiSession.createRequest`: it is recorded like any other
-      // span now, and the processor ignores it for want of `gen_ai.*` markers.
       Effect.withSpan('AiSession.createRequest'),
       Effect.annotateSpans(annotations),
       Effect.provide(layer),

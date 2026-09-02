@@ -52,13 +52,12 @@ describe('toAiGenerationProperties', () => {
   });
 
   test('omits what the generation does not carry', ({ expect }) => {
-    // Absent, not null or false: PostHog reads a present `$ai_input` as captured content, and a
-    // present `$ai_stream` as a streamed call.
     expect(toAiGenerationProperties(generation())).toEqual({
       $ai_trace_id: 'trace-1',
       $ai_span_id: 'span-1',
       $ai_span_name: 'LanguageModel.generateText',
       $ai_latency: 1.5,
+      $ai_stream: false,
     });
   });
 

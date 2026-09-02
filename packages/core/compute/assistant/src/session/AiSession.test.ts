@@ -244,8 +244,6 @@ describe('AiSession.sessionAnnotations', () => {
 
       const annotations = AiSession.sessionAnnotations(feed);
 
-      // The space is what the content-capture policy reads, and it is denied when absent — so the
-      // absolute form matters: the relative one (`echo:///<objectId>`) carries no space at all.
       expect(annotations.spaceId).toEqual(db.spaceId);
       expect(annotations['dxos.ai.session_id']).toContain(db.spaceId);
       expect(annotations['dxos.ai.session_id']).toContain(feed.id);

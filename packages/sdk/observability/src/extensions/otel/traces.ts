@@ -41,7 +41,6 @@ export class OtelTraces {
       resource: this.options.resource,
       spanProcessors: [
         new TagInjectorSpanProcessor(this.options.getTags),
-        // Lets a consumer observe ended spans without standing up a provider of its own.
         new SpanFanout.FanoutSpanProcessor(),
         ...(options.spanSink
           ? [new OtelSpanSink.PortSpanProcessor(options.spanSink.post)]

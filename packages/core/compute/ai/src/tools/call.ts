@@ -40,8 +40,6 @@ export const callTool: <Tools extends Record<string, Tool.Any>>(
   // Empty input means a tool without parameters; unparseable input is reported back as a tool
   // error so the model can retry rather than the tool running with no arguments.
   const input = toolCall.input.trim().length === 0 ? {} : safeParseJson<Record<string, unknown>>(toolCall.input);
-  // Reported as a step of the turn: the OTel span name is this function's, so the tool's own name
-  // rides as an attribute, and the arguments and result are stamped for the sink to gate.
   yield* AiTelemetry.annotateKind(AiTelemetry.KIND.tool);
   yield* Effect.annotateCurrentSpan(AiTelemetry.ATTRIBUTES.name, toolCall.name);
   const inputTruncated = yield* AiTelemetry.annotateContent(
@@ -135,7 +133,6 @@ export const callTool: <Tools extends Record<string, Tool.Any>>(
     },
   });
 
-  // `result` is JSON text by convention; stamped parsed so the sink does not carry it double-encoded.
   const outputTruncated = yield* AiTelemetry.annotateContent(AiTelemetry.ATTRIBUTES.output, () =>
     'error' in toolResult && toolResult.error !== undefined
       ? { error: toolResult.error }

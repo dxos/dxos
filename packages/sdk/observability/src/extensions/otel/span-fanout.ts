@@ -8,16 +8,9 @@ import type { ReadableSpan, Span, SpanProcessor } from '@opentelemetry/sdk-trace
 import { log } from '@dxos/log';
 
 /**
- * Lets a consumer observe ended spans without owning a tracer provider.
- *
- * The SDK takes its span processors at construction and offers no way to add one afterwards
- * (`addSpanProcessor` was removed in 2.x), while the provider is built during observability
- * initialization and its consumers — AI capture, for one — activate on their own schedule. Rather
- * than each growing a provider of its own, and with it a second sampler and a second `Tracer` for
- * the same spans, they attach here.
- *
- * Module-scoped to match what it bridges to: the provider it feeds is registered as the OTel global,
- * and a realm has one of each.
+ * Lets a consumer observe ended spans without owning a tracer provider: the SDK takes its span
+ * processors at construction and offers no way to add one afterwards (`addSpanProcessor` was
+ * removed in 2.x).
  */
 const processors = new Set<SpanProcessor>();
 

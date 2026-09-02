@@ -10,22 +10,10 @@ import * as Tracer from 'effect/Tracer';
 import { runAndForwardErrors, unwrapExit } from './internal/errors';
 import { makeGlobalTracer } from './otel';
 
-/**
- * A provider's context carries the services its caller assembled and nothing else, while
- * `Effect.runPromise` starts a fresh runtime whose defaults apply to everything absent. `Tracer` is
- * one of those defaults, and its default discards every span — so work run this way was invisible
- * however carefully its call sites annotated it, unlike work on the process-manager runtime, which
- * has a tracer in its base layer.
- *
- * Added beneath the caller's context so a provider that carries its own tracer still wins. It reads
- * the OpenTelemetry global, which is a proxy: spans no-op until something registers a real provider
- * and flow from then on, so this costs nothing when nothing is listening.
- */
 let defaultTracer: Context.Context<never> | undefined;
 
-const withTracer = <R>(context: Context.Context<R>): Context.Context<R> => {
+const withDefaultTracer = <R>(context: Context.Context<R>): Context.Context<R> => {
   defaultTracer ??= Context.make(Tracer.Tracer, makeGlobalTracer('@dxos/effect/RuntimeProvider'));
-  // Caller second, so a provider carrying its own tracer overrides this one.
   return Context.merge(defaultTracer, context);
 };
 
@@ -57,7 +45,7 @@ export const runPromise =
   <R>(provider: RuntimeProvider<R>) =>
   async <A>(effect: Effect.Effect<A, any, R>): Promise<A> => {
     const context = await runAndForwardErrors(provider);
-    return unwrapExit(await Effect.runPromiseExit(Effect.provideContext(effect, withTracer(context))));
+    return unwrapExit(await Effect.runPromiseExit(Effect.provideContext(effect, withDefaultTracer(context))));
   };
 
 /**
@@ -66,4 +54,4 @@ export const runPromise =
 export const provide: {
   <R2>(runtime: RuntimeProvider<R2>): <A, E, R>(self: Effect.Effect<A, E, R>) => Effect.Effect<A, E, Exclude<R, R2>>;
 } = (runtimeProvider) => (effect) =>
-  Effect.flatMap(runtimeProvider, (context) => Effect.provideContext(effect, withTracer(context)));
+  Effect.flatMap(runtimeProvider, (context) => Effect.provideContext(effect, withDefaultTracer(context)));

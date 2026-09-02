@@ -39,7 +39,6 @@ export const make = ({
   const clientLayer = ChatCompletionsAdapter.clientLayer({
     baseUrl: endpoint,
     apiFormat: 'openai',
-    // Wire dialect only; the serving product is LM Studio, and telemetry prices on the product.
     provider: 'lmstudio',
     transformClient,
   }).pipe(Layer.provide(FetchHttpClient.layer));

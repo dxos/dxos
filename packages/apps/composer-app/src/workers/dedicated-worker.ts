@@ -27,8 +27,6 @@ const logProcessor = new WorkerLogProcessor({
 });
 log.addProcessor(logProcessor.processor);
 
-// Resolved in `onBeforeStart`, read in `onStart`: the identity provider needs the runtime's services,
-// which do not exist until it has started.
 let observability: ReturnType<typeof initializeObservability> | undefined;
 
 runDedicatedWorker({
@@ -41,8 +39,6 @@ runDedicatedWorker({
     // initialized before it runs (see util/automerge-wasm.ts).
     await initAutomergeWasm();
   },
-  // This realm has its own tracer and tags, so the identity has to be observed here too; the tab's
-  // provider tags only the tab's spans.
   onStart: async (host) => {
     const instance = await observability;
     if (instance) {

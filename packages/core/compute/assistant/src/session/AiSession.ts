@@ -201,8 +201,6 @@ export class Session extends Resource {
     params: RunProps<R>,
   ): Effect.Effect<Message.Message[], AiRequest.RunError, AiRequest.RunRequirements | R> {
     return Effect.gen({ self: this }, function* () {
-      // The turn is what an analytics backend groups a conversation's model calls under; its input
-      // and output are stamped here and gated by the sink like a model call's content.
       yield* AiTelemetry.annotateKind(AiTelemetry.KIND.turn);
       const inputTruncated = yield* AiTelemetry.annotateContent(AiTelemetry.ATTRIBUTES.input, () =>
         serializePrompt(params.prompt),
@@ -302,8 +300,6 @@ export class Session extends Resource {
         ),
       ),
       Effect.withSpan('AiSession.createRequest'),
-      // Which conversation, and whose space, are properties of the conversation rather than of any
-      // observability backend, so every turn carries them whether or not one is installed.
       Effect.annotateSpans(sessionAnnotations(this._feed)),
     );
   }
@@ -403,8 +399,6 @@ export const serializeMessage = (message: Message.Message): unknown => ({
   blocks: message.blocks.map(serializeBlock),
 });
 
-// Text, tool calls, and tool results are what a reader of a turn needs; binary and
-// provider-specific blocks are elided by tag rather than serialized.
 const serializeBlock = (block: ContentBlock.Any): unknown => {
   switch (block._tag) {
     case 'text':
@@ -421,13 +415,8 @@ const serializeBlock = (block: ContentBlock.Any): unknown => {
 /**
  * Span annotations identifying the conversation a model call belongs to. The space is read off the
  * feed's URI (`echo://<spaceId>/<objectId>`) rather than passed in, so it cannot go missing.
- *
- * The space is what the capture policy keys on, and an absent one reports metadata only — so this
- * is exported to be tested rather than left to an integration test to notice.
  */
 export const sessionAnnotations = (feed: Feed.Feed): Record<string, string> => {
-  // `prefer: 'absolute'` because the relative form (`echo:///<objectId>`) carries no space, and a
-  // span with no space reports metadata only.
   const uri = Obj.getURI(feed, { prefer: 'absolute' });
   const eid = EID.tryParse(uri);
   const spaceId = eid && EID.getSpaceId(eid);

@@ -54,7 +54,6 @@ describe('OtelLogs', () => {
       destinations: [{ endpoint: 'http://localhost:1', headers: {} }],
       resource: resourceFromAttributes({}),
       getTags: () => ({}),
-      // Above the warning: flagging must not depend on the line being exported.
       logLevel: LogLevel.ERROR,
       exporter: new InMemoryLogRecordExporter(),
       onTraceFlagged: (traceId) => flagged.push(traceId),

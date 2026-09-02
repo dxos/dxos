@@ -137,9 +137,17 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
     const sessionId = crypto.randomUUID();
     const { resource, metricsResource } = createResources(baseAttributes, sessionId);
 
+    const traces = tracesEnabled
+      ? new OtelTraces({
+          destinations,
+          resource,
+          getTags: () => Object.fromEntries(tags),
+          spanSink: observabilityWorker
+            ? { post: (record: OtelSpanSink.Span) => observabilityWorker.post(record) }
+            : undefined,
+        })
+      : undefined;
     const remoteLogs = logsEnabled ? observabilityWorker : undefined;
-    // Assigned once the tracer exists below; a warning logged before then flags nothing.
-    let flagTrace: ((traceId: string) => void) | undefined;
     const logs =
       logsEnabled && !remoteLogs
         ? new OtelLogs({
@@ -147,7 +155,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
             resource,
             getTags: () => Object.fromEntries(tags),
             logLevel: resolvedLogLevel,
-            onTraceFlagged: (traceId) => flagTrace?.(traceId),
+            onTraceFlagged: (traceId) => traces?.promote(traceId),
           })
         : undefined;
 
@@ -163,18 +171,6 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
             getTags: () => Object.fromEntries(tags),
           })
         : undefined;
-
-    const traces = tracesEnabled
-      ? new OtelTraces({
-          destinations,
-          resource,
-          getTags: () => Object.fromEntries(tags),
-          spanSink: observabilityWorker
-            ? { post: (record: OtelSpanSink.Span) => observabilityWorker.post(record) }
-            : undefined,
-        })
-      : undefined;
-    flagTrace = (traceId) => traces?.promote(traceId);
 
     const extension: ObservabilityExtension.Extension = {
       initialize: () =>

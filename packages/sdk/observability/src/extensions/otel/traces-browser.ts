@@ -43,11 +43,8 @@ export class OtelTraces {
   constructor(private readonly options: OtelTracesOptions) {
     propagation.setGlobalPropagator(new W3CTraceContextPropagator());
 
-    // Opt-out of thinning entirely, for a local debugging session.
     const forceTraceAll = typeof localStorage !== 'undefined' && localStorage.getItem(TRACE_ALL_KEY) === 'true';
 
-    // No worker to decide, so the same rules are applied here before the exporter. Held so a
-    // warning log can promote a trace the way the worker's log sink does.
     this.#samplingProcessors = options.spanSink
       ? []
       : this.options.destinations.map(
@@ -67,27 +64,17 @@ export class OtelTraces {
 
     this._tracerProvider = new WebTracerProvider({
       resource: this.options.resource,
-      // Records every span, because what is worth keeping cannot be known when a span starts: an
-      // error has not happened yet, and the GenAI attributes that mark a model call are not on it
-      // yet. The ratio this replaced lives in the worker's `TailSampler`, which sees ended spans and
-      // can also keep errors and model calls outright. Without a worker the spans are exported here
-      // and nothing thins them — see the processor list below.
       sampler: new AlwaysOnSampler(),
       spanProcessors: [
         new TagInjectorSpanProcessor(this.options.getTags),
-        // Lets a consumer observe ended spans without standing up a provider of its own.
         new SpanFanout.FanoutSpanProcessor(),
-        ...(options.spanSink
-          ? // Everything crosses to the worker, which owns the keep/drop decision.
-            [new OtelSpanSink.PortSpanProcessor(options.spanSink.post)]
-          : this.#samplingProcessors),
+        ...(options.spanSink ? [new OtelSpanSink.PortSpanProcessor(options.spanSink.post)] : this.#samplingProcessors),
       ],
     });
 
     trace.setGlobalTracerProvider(this._tracerProvider);
     // Without a context manager `context.active()` is always the root, so the Effect tracer's
-    // context hook is inert and a log emitted inside a span cannot find it. The stack manager is
-    // synchronous, which is all the tracer needs: it wraps each fiber step, not an async boundary.
+    // context hook is inert and a log emitted inside a span cannot find it.
     otelContext.setGlobalContextManager(new StackContextManager().enable());
 
     this._tracer = trace.getTracer(

@@ -27,6 +27,7 @@ import * as Trigger from '@dxos/compute/Trigger';
 import * as TriggerEvent from '@dxos/compute/TriggerEvent';
 import { Annotation, Database, DXN, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
+import { makeRecordingTracer } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { Person, Task } from '@dxos/types';
 
@@ -113,18 +114,7 @@ const TracedHandlers = OperationHandlerSet.make(
   ),
 );
 
-/** Records the name of every span opened, delegating the span itself to the built-in tracer. */
-const makeRecordingTracer = (names: string[]) => {
-  const base = Effect.runSync(Effect.tracer);
-  return Tracer.make({
-    span: (...args) => {
-      names.push((args[0] as any).name);
-      return base.span(...args);
-    },
-  });
-};
-
-const dispatcherSpanNames: string[] = [];
+const dispatcherSpans: Tracer.Span[] = [];
 
 const TestHanlers = OperationHandlerSet.make(
   SubjectProbeOp.pipe(
@@ -745,7 +735,6 @@ describe('TriggerDispatcher', () => {
       ),
     );
 
-    // `it.live` for the same reason as above: the reactive path is driven by real subscriptions.
     it.live(
       'forks the trigger refresh and reactive dispatches under the ambient tracer',
       Effect.fnUntraced(
@@ -767,13 +756,9 @@ describe('TriggerDispatcher', () => {
             yield* Feed.append(feed, [Obj.make(Person.Person, { fullName: 'Jane Doe' })]);
             yield* Database.flush();
 
-            // The poll interval is an hour, so the invocation below came from the reactive fork. Polls
-            // for the handler's span rather than the invocation record: the state lists an invocation
-            // as soon as the dispatch starts, before the handler has opened its span, and the dispatch
-            // is forked, so nothing on this fiber can await it.
             const traced = yield* Effect.sync(
               () =>
-                dispatcherSpanNames.includes('Trigger.handler') &&
+                dispatcherSpans.some(({ name }) => name === 'Trigger.handler') &&
                 registry.get(dispatcher.state).invocations.some((invocation) => invocation.trigger.id === trigger.id),
             ).pipe(
               Effect.repeat({ until: (traced) => traced, schedule: Schedule.spaced(Duration.millis(25)) }),
@@ -781,14 +766,12 @@ describe('TriggerDispatcher', () => {
               Effect.map(Option.getOrElse(() => false)),
             );
 
-            // Both forks are detached from any caller, so neither can inherit a tracer by accident:
-            // the trigger refresh forked by the live query, and the dispatch forked by the feed.
-            expect(dispatcherSpanNames).toContain('TriggerDispatcher.refreshTriggers');
-            expect(traced, `recorded spans: ${JSON.stringify(dispatcherSpanNames)}`).toBe(true);
+            expect(dispatcherSpans.map(({ name }) => name)).toContain('TriggerDispatcher.refreshTriggers');
+            expect(traced, `recorded spans: ${JSON.stringify(dispatcherSpans.map(({ name }) => name))}`).toBe(true);
           }).pipe(Effect.ensuring(dispatcher.stop()));
         },
         Effect.provide(TestLayer({ timeControl: 'natural', livePollInterval: Duration.hours(1) })),
-        Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(dispatcherSpanNames))),
+        Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(dispatcherSpans))),
       ),
     );
   });
