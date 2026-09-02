@@ -2,11 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import type * as Atom from 'effect/unstable/reactivity/Atom';
-import { createContext, useContext } from 'react';
+import { type FC, type MutableRefObject, createContext, useContext } from 'react';
 
 import { raise } from '@dxos/debug';
 import { type Label } from '@dxos/react-ui';
+
+import { type TreeData } from './tree-data';
 
 // Kept out of the tree components: react-refresh only fast-refreshes a module whose exports are all
 // components, so a context and hook exported beside one force a full page reload on every edit.
@@ -46,8 +49,95 @@ export interface TreeModel<T extends { id: string } = any> {
   childIds: (parentId?: string) => Atom.Atom<string[]>;
 }
 
-const TreeContext = createContext<TreeModel | null>(null);
+/**
+ * One node of the reactive walk over a {@link TreeModel}: the collection node handed to Ark's
+ * TreeView machine, and the render node the tree recurses over (`children` keeps group wrappers;
+ * the collection sees groups spliced out via `nodeToChildren`).
+ */
+export type TreeNodeEntry<T extends { id: string } = any> = {
+  id: string;
+  /** Machine value — the joined path, so state stays per-path (the same node at two paths is independent). */
+  value: string;
+  path: string[];
+  /** Indentation level (group children stay at their header's level). */
+  level: number;
+  last: boolean;
+  item: T;
+  props: TreeItemDataProps;
+  group: boolean;
+  branch: boolean;
+  open: boolean;
+  current: boolean;
+  /** Marks unloaded branches for the machine (`isBranchNode` needs children or a count). */
+  childrenCount?: number;
+  children?: TreeNodeEntry<T>[];
+  /** Index path within the collection (groups spliced), assigned after the walk. */
+  indexPath: number[];
+};
 
-export const TreeProvider = TreeContext.Provider;
+/**
+ * Replaces the heading's leading icon. `TreeItemDataProps.icon` names a static glyph; a caller whose
+ * icon carries its own state — an animation, a tooltip, a per-state hue — needs to render it itself.
+ */
+export type IconRenderer<T extends { id: string } = any> = FC<{
+  item: T;
+  path: string[];
+  props: TreeItemDataProps;
+}>;
 
-export const useTree = () => useContext(TreeContext) ?? raise(new Error('TreeContext not found'));
+/**
+ * Replaces the heading — the row's leading content beside the toggle. `TreeItemDataProps` describes
+ * a label with an optional icon and count; a caller whose row leads with its own controls (a
+ * checkbox, an inline-editable title) supplies them here instead.
+ */
+export type HeadingRenderer<T extends { id: string } = any> = FC<{
+  item: T;
+  path: string[];
+  props: TreeItemDataProps;
+  open: boolean;
+}>;
+
+export type ColumnRenderer<T extends { id: string } = any> = FC<{
+  item: T;
+  path: string[];
+  open: boolean;
+  menuOpen: boolean;
+  setMenuOpen: (open: boolean) => void;
+}>;
+
+/** Render-time context threaded to every row. */
+export type TreeRenderContextValue<T extends { id: string } = any> = {
+  /** Stamped into every row's drag payload so a monitor can reject another tree's drags. */
+  treeId: string;
+  draggable: boolean;
+  renderColumns?: ColumnRenderer<T>;
+  renderIcon?: IconRenderer<T>;
+  renderHeading?: HeadingRenderer<T>;
+  blockInstruction?: (params: { instruction: Instruction; source: TreeData; target: TreeData }) => boolean;
+  canDrop?: (params: { source: TreeData; target: TreeData }) => boolean;
+  /** Whether a childless row can be dropped onto to adopt the dragged item. */
+  leavesAcceptChildren?: boolean;
+  /** Paint every row's drop bands, so the zones can be seen without holding a drag. */
+  debug?: boolean;
+  /** Offer an open branch a reorder-below zone meaning "after this row and its subtree". */
+  dropBelowExpanded?: boolean;
+  onOpenChange?: (params: { item: T; path: string[]; open: boolean }) => void;
+  onItemHover?: (params: { item: T }) => void;
+  /** Directs the machine's roving tabstop at a row, and takes DOM focus with it. */
+  focusNode: (id: string, value: string) => void;
+  /** Applies the select-vs-toggle policy for a row activation. */
+  selectNode: (node: TreeNodeEntry<T>, modifiers: { option: boolean; shift: boolean }) => void;
+  /** False during the tree's initial commit — disclosure inserted then must not animate. */
+  mountedRef: MutableRefObject<boolean>;
+  /** Branch values currently running their conceal animation before the close commits. */
+  closingValues: ReadonlySet<string>;
+  /** Commits the model close for a branch once its conceal animation ends. */
+  commitClose: (node: TreeNodeEntry) => void;
+};
+
+const TreeRenderContext = createContext<TreeRenderContextValue | null>(null);
+
+export const TreeRenderProvider = TreeRenderContext.Provider;
+
+export const useTreeRender = <T extends { id: string } = any>(): TreeRenderContextValue<T> =>
+  useContext(TreeRenderContext) ?? raise(new Error('TreeRenderContext not found'));

@@ -10,7 +10,7 @@ import * as EffectStdio from 'effect/Stdio';
 import * as Stream from 'effect/Stream';
 
 import { EffectEx } from '@dxos/effect';
-import { type ObservabilityExtension } from '@dxos/observability';
+import type * as ObservabilityExtension from '@dxos/observability/ObservabilityExtension';
 
 import { analyticsStdio, makeCorrelator } from './analytics';
 

@@ -34,9 +34,26 @@ A `minor` does **not** cascade the group to `1.0.0` (the tooling keeps standard 
 
 **`major` is rejected by CI while we are pre-1.0** (`pnpm check-changesets`, a gate in **Check**). The groups are `fixed`, so one stray `major` versions all ~300 packages to `1.0.0` in a single release — and nothing surfaces the mistake until `changeset version` runs on `main`. Write `minor` and describe the break in the body.
 
+## When to write it
+
+Write the changeset at two moments, each time from the **whole diff** against the merge base:
+
+1. **Opening the PR** — after the code is done, read `git diff origin/<base>...HEAD` and write the
+   body from what the PR changes as a whole. `<base>` is the branch the PR targets: `main` for a
+   standalone PR, the parent PR's head branch for a stacked one — diffing a stacked child against
+   `main` folds the parent's changes into this PR's changelog entry.
+2. **Before landing** — reread the file against the diff as it stands now. If the PR moved (review
+   fixes, scope changes), **rewrite the file from scratch**; a body that still describes the PR stays
+   as it is.
+
+Those two moments are the only ones: the file is a **summary** of the finished PR, and a reader of
+`CHANGELOG.md` wants what changed for them, not the order it was built in. Every update replaces
+the whole body. A body grown a sentence per commit or per review round ("Add X. Also fix Y. Rename
+Z per review.") is a **log**, and leaks process into the release notes.
+
 ## Body + format
 
-`.changeset/<slug>.md` (any unique slug). One or two sentences, **changelog quality** — the body ships verbatim in `CHANGELOG.md` (via `@changesets/changelog-git`), so write it from the **consumer's** point of view and end with a period.
+`.changeset/<slug>.md` (any unique slug). One or two sentences, **changelog quality** — the body ships verbatim in `CHANGELOG.md` (via `@changesets/changelog-git`), so write it from the **consumer's** point of view and end with a period. Describe the net effect of the PR: what the consumer can now do, or what stopped happening.
 
 ```md
 ---
@@ -46,7 +63,7 @@ A `minor` does **not** cascade the group to `1.0.0` (the tooling keeps standard 
 Fix subscription leak in the query handler.
 ```
 
-✅ `Add streaming variant of Query.run().` &nbsp;&nbsp; ❌ `refactored stuff` / `addresses review comments` / `WIP`
+✅ `Add streaming variant of Query.run().` &nbsp;&nbsp; ❌ `refactored stuff` / `addresses review comments` / `WIP` / `Add streaming query. Also fix the leak found in review.`
 
 Packages from _different_ groups in one PR → one line each **in the same file** (each still bumps its whole group):
 
@@ -65,8 +82,7 @@ Add streaming query API and surface it in the markdown plugin.
 check-changesets` in **Check** fails a PR that adds more than one `.changeset/*.md`, counted against
 the merge base. A changeset is a changelog entry, so the question is how many entries a reader wants —
 not how many packages, groups, or commits you touched. Work spanning two groups is still one story and
-belongs in one file with a line per group, as above; so does a fix that took five commits. When a PR
-grows and you have accumulated a file per commit, consolidate before opening it.
+belongs in one file with a line per group, as above; so does a fix that took five commits.
 
 Add a second file **only when the PR genuinely addresses two unrelated things** a reader would look up
 separately — e.g. a query-planner fix that happens to ride along with an unrelated toolbar change. If you

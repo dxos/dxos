@@ -8,7 +8,8 @@ import * as Function from 'effect/Function';
 import { type Client, type Config, DXOS_VERSION } from '@dxos/client';
 import { DX_CONFIG, getProfilePath } from '@dxos/client-protocol';
 import { log } from '@dxos/log';
-import { Observability, ObservabilityExtension } from '@dxos/observability';
+import * as Observability from '@dxos/observability/Observability';
+import * as ObservabilityExtension from '@dxos/observability/ObservabilityExtension';
 import { getHostPlatform } from '@dxos/util';
 
 /**

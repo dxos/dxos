@@ -85,6 +85,7 @@ export const translations: Resource[] = [
       },
       // TODO(burdon): Reconcile with react-ui-chat.
       [meta.profile.key]: {
+        'delete-task.label': 'Delete task',
         'templates.label': 'Templates',
         'open-ambient-chat.label': 'Open Assistant',
         'assistant-chat.label': 'Assistant',
@@ -124,6 +125,7 @@ export const translations: Resource[] = [
         'no-results.message': 'No results',
 
         'cancel.button': 'Cancel',
+        'cancel-queued.button': 'Remove from queue',
         'save.button': 'Save',
         'new-thread.button': 'New Chat',
         'rename-thread.button': 'Rename Chat',

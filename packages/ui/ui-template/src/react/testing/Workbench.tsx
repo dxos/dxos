@@ -38,11 +38,11 @@ export type WorkbenchProps = {
 
 /** The shared story frame: a stack of tool panes beside the rendered result. */
 export const Workbench = ({ panes, main }: WorkbenchProps) => (
-  <Flex classNames='dx-container grid grid-cols-2 divide-x divide-separator' align='stretch'>
+  <Flex classNames='dx-expand grid grid-cols-2 divide-x divide-separator' align='stretch'>
     <Flex
       column
       grow
-      classNames='dx-container grid divide-y divide-separator'
+      classNames='dx-expand grid divide-y divide-separator'
       style={{ gridTemplateRows: panes.map((pane) => `${pane.size ?? 1}fr`).join(' ') }}
     >
       {panes.map((pane) => (
@@ -51,7 +51,7 @@ export const Workbench = ({ panes, main }: WorkbenchProps) => (
         </Cell>
       ))}
     </Flex>
-    <div className='dx-container flex flex-col p-4'>{main.children}</div>
+    <div className='dx-expand flex flex-col p-4'>{main.children}</div>
   </Flex>
 );
 
@@ -66,9 +66,9 @@ export type CellProps = {
 
 /** One titled pane in a story grid. */
 export const Cell = ({ title, children }: CellProps) => (
-  <Flex column classNames='dx-container'>
+  <Flex column classNames='dx-expand'>
     <div className='px-2 py-1 text-xs uppercase tracking-wide text-description border-be border-separator'>{title}</div>
-    <Flex column grow classNames='dx-container'>
+    <Flex column grow classNames='dx-expand'>
       {children}
     </Flex>
   </Flex>
@@ -117,7 +117,7 @@ export const Editor = ({ value, extensions, onChange }: EditorProps) => {
     [themeMode, extensions, readOnly, readOnly ? value : null],
   );
 
-  return <div ref={parentRef} className='flex-1 min-h-0 overflow-auto' />;
+  return <div ref={parentRef} className='dx-grow overflow-auto' />;
 };
 
 //

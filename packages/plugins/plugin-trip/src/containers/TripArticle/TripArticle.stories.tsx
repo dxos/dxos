@@ -5,6 +5,7 @@
 import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useEffect } from 'react';
+import { expect, waitFor } from 'storybook/test';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
@@ -12,7 +13,6 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Keyboard } from '@dxos/keyboard';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as MapPlugin from '@dxos/plugin-map/MapPlugin';
@@ -21,6 +21,7 @@ import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
+import { initHotkeys } from '@dxos/react-focus';
 import { AttendableContainer, useSelection } from '@dxos/react-ui-attention';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
@@ -142,8 +143,8 @@ const ATTENDABLE_ID = 'story';
 // article's 'j'/'k' bindings dispatch in isolation.
 const withKeyboard: Decorator = (Story) => {
   useEffect(() => {
-    Keyboard.singleton.initialize();
-    return () => Keyboard.singleton.destroy();
+    // No teardown: the store is shared, and destroying it would unbind every other story.
+    initHotkeys();
   }, []);
 
   return <Story />;
@@ -166,9 +167,9 @@ const DefaultStory = ({ showMap }: { showMap?: boolean }) => {
   // AttendableContainer marks the subtree with `data-attendable-id` so focusing it establishes
   // attention for ATTENDABLE_ID. Two columns: the trip article, and the selected-segment companion.
   return (
-    <AttendableContainer id={ATTENDABLE_ID} classNames='dx-container grid grid-cols-2'>
+    <AttendableContainer id={ATTENDABLE_ID} classNames='dx-expand grid grid-cols-2'>
       <TripArticle role='article' subject={trip} attendableId={ATTENDABLE_ID} defaultShowGlobe={showMap} />
-      <div className='min-h-0 overflow-hidden border-is border-separator'>
+      <div className='overflow-hidden border-is border-separator'>
         {selected && (
           <SegmentArticle role='article' subject={selected} companionTo={trip} attendableId={ATTENDABLE_ID} />
         )}
@@ -314,6 +315,13 @@ export const Default: Story = {
     segments.forEach((segment: Segment.Segment) => space.db.add(segment));
     space.db.add(trip);
   }),
+  // The seed used to throw before `build()` — `airline.code` is not a `Provider` field — so nothing
+  // was ever added and the article sat on its loading state. Asserting a segment renders is what
+  // catches that; the render-only smoke test did not, because the throw was swallowed by the
+  // client-initialization Effect.
+  play: async ({ canvasElement }) => {
+    await waitFor(() => expect(canvasElement.textContent).toContain('AF 023'), { timeout: 20_000 });
+  },
 };
 
 // A multi-city driving route (London → Avignon → Barcelona) pre-planned with the deterministic fake

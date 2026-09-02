@@ -8,7 +8,7 @@ import * as Sink from 'effect/Sink';
 import * as EffectStdio from 'effect/Stdio';
 import * as Stream from 'effect/Stream';
 
-import { type ObservabilityExtension } from '@dxos/observability';
+import type * as ObservabilityExtension from '@dxos/observability/ObservabilityExtension';
 
 /** Beyond this many unanswered requests the oldest are dropped, so a server that outlives its client cannot grow without bound. */
 const MAX_PENDING_REQUESTS = 512;

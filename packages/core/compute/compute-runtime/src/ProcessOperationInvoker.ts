@@ -21,7 +21,7 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
 import { Context as DxosContext } from '@dxos/context';
-import { EffectEx } from '@dxos/effect';
+import { EffectEx, SpanAttributes } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type OperationInvoker } from '@dxos/operation';
@@ -179,6 +179,9 @@ export const make = (opts: {
       log('lifecycle: operation input submitted', { opKey: op.meta.key, handle });
       return fiber;
     }).pipe(
+      Effect.withSpan('ProcessOperationInvoker.invoke', {
+        attributes: { [SpanAttributes.OPERATION.key]: op.meta.key.toString() },
+      }),
       Effect.onInterrupt(() =>
         Effect.sync(() => {
           log('operation interrupted', { opKey: op.meta.key });

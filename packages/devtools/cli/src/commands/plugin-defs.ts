@@ -5,7 +5,7 @@
 import { ProcessManagerPlugin } from '@dxos/app-framework';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import { type Config } from '@dxos/client';
-import { type Observability } from '@dxos/observability';
+import type * as Observability from '@dxos/observability/Observability';
 import * as ChessPlugin from '@dxos/plugin-chess/ChessPlugin';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as ConnectorPlugin from '@dxos/plugin-connector/ConnectorPlugin';

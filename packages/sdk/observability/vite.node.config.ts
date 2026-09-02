@@ -5,15 +5,16 @@
 import { type Plugin } from 'vite';
 
 import { defineConfig } from '../../../vite.base.config.ts';
+import browserConfig from './vite.config.ts';
 
-const base = defineConfig({ entry: 'src/index.ts', outDir: 'dist/lib-node' });
+const base = defineConfig({ entry: (browserConfig as any).build.lib.entry, outDir: 'dist/lib-node' });
 
 /**
- * The same package, resolved for node.
+ * The same entrypoints, resolved for node.
  *
  * `browser` in `resolve.mainFields` is what applies this package's `browser` field, which swaps the
- * storage and OTel-traces modules for their browser halves — so dropping it is what makes the node
- * halves reachable by a node host. Declarations are emitted by the default build, not again here.
+ * storage, OTel-traces and PostHog-transport modules for their browser halves — so dropping it is
+ * what makes the node halves reachable by a node host. Declarations come from the default build.
  */
 export default {
   ...base,

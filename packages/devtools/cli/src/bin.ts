@@ -23,7 +23,7 @@ import { unrefTimeout } from '@dxos/async';
 import { ClientService, ConfigService, DXOS_VERSION, fromConfig } from '@dxos/client';
 import { DEFAULT_PROFILE } from '@dxos/client-protocol';
 import { LogLevel, levels, log } from '@dxos/log';
-import { Observability } from '@dxos/observability';
+import * as Observability from '@dxos/observability/Observability';
 import { isRecordEnabled, loadPlugins, makeInstalledPlugins } from '@dxos/plugin-registry';
 
 import {

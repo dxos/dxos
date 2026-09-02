@@ -53,7 +53,6 @@ export const DEFAULT_PACKAGES = [
   '@dxos/graph',
   '@dxos/hypercore',
   '@dxos/invariant',
-  '@dxos/keyboard',
   '@dxos/keys',
   '@dxos/log',
   '@dxos/merkle-search-tree',

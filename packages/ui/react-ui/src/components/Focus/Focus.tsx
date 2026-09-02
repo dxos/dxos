@@ -2,16 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import {
-  useArrowNavigationGroup,
-  useFocusableGroup,
-  useMergedTabsterAttributes_unstable,
-} from '@fluentui/react-tabster';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, { type FocusEvent, type KeyboardEvent, type MouseEvent, useCallback, useRef, useState } from 'react';
 
+import { useFocusGroup } from '@dxos/react-focus';
 import { type Axis } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
@@ -30,23 +26,41 @@ type GroupProps = {
 };
 
 /**
- * Provides arrow-key navigation across focusable children via tabster.
+ * Provides arrow-key navigation across focusable children, and makes the group a single `Tab`
+ * stop that `Enter` moves into and `Escape` leaves.
  * Does not manage `aria-current` — use `Focus.Item` on each child for that.
  */
 // TODO(wittjosiah): Consider how this could integrate with with react-ui-attention.
 //   Perhaps react-ui-attention comes under the mosaic umbrella as it supports selection?
 const Group = slottable<HTMLDivElement, GroupProps>(
-  ({ children, asChild, orientation = 'vertical', border = false, ...props }, forwardedRef) => {
+  ({ children, asChild, orientation = 'vertical', border = false, onKeyDown, ...props }, forwardedRef) => {
     const Comp = asChild ? Slot : Primitive.div;
     const { tx } = useThemeContext();
     const rootRef = useRef<HTMLDivElement>(null);
-    const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited-trap-focus' });
-    const arrowNavigationAttrs = useArrowNavigationGroup({ axis: orientation, memorizeCurrent: true });
-    const tabsterAttrs = useMergedTabsterAttributes_unstable(focusableGroupAttrs, arrowNavigationAttrs);
+    const {
+      ref: focusGroupRef,
+      onKeyDown: onFocusGroupKeyDown,
+      onFocus: onFocusGroupFocus,
+      ...focusGroupAttrs
+    } = useFocusGroup({ axis: orientation, tabBehavior: 'limited-trap-focus', memorizeCurrent: true });
     const [state, setState] = useState<FocusState | undefined>();
     const [groupHasFocus, setGroupHasFocus] = useState(false);
 
-    const handleFocusIn = useCallback(() => setGroupHasFocus(true), []);
+    const handleKeyDown = useCallback(
+      (event: KeyboardEvent<HTMLDivElement>) => {
+        onFocusGroupKeyDown(event);
+        onKeyDown?.(event);
+      },
+      [onFocusGroupKeyDown, onKeyDown],
+    );
+
+    const handleFocusIn = useCallback(
+      (event: FocusEvent<HTMLDivElement>) => {
+        onFocusGroupFocus(event);
+        setGroupHasFocus(true);
+      },
+      [onFocusGroupFocus],
+    );
     const handleFocusOut = useCallback((event: FocusEvent<HTMLDivElement>) => {
       const related = event.relatedTarget as HTMLElement | null;
       if (!related || !rootRef.current?.contains(related)) {
@@ -61,13 +75,14 @@ const Group = slottable<HTMLDivElement, GroupProps>(
           {...rest}
           tabIndex={0}
           className={tx('focus.group', { border }, className)}
-          {...tabsterAttrs}
+          {...focusGroupAttrs}
           {...(state && {
             [`data-${FOCUS_STATE_ATTR}`]: state,
           })}
           onBlur={handleFocusOut}
           onFocus={handleFocusIn}
-          ref={useComposedRefs<HTMLDivElement>(rootRef, forwardedRef)}
+          onKeyDown={handleKeyDown}
+          ref={useComposedRefs<HTMLDivElement>(rootRef, forwardedRef, focusGroupRef)}
         >
           {children}
         </Comp>
@@ -89,8 +104,8 @@ type ItemProps = {
 
 /**
  * Focusable item within a `Focus.Group`.
- * Uses `useFocusableGroup` so the parent Group's arrow navigation treats this as a single unit
- * (internal buttons are not arrow-navigation targets; Enter/Escape to go in/out).
+ * Marks itself a focus group so the parent Group's arrow navigation treats it as a single unit
+ * (internal buttons are not arrow-navigation targets; Escape returns focus to the item).
  * Supports controlled (`current` prop) and uncontrolled (focus-driven) `aria-current`.
  */
 const Item = slottable<HTMLDivElement, ItemProps>(
@@ -100,8 +115,13 @@ const Item = slottable<HTMLDivElement, ItemProps>(
   ) => {
     const Comp = asChild ? Slot : Primitive.div;
     const { tx } = useThemeContext();
-    // Tell tabster's groupper to ignore Enter so it doesn't move focus into the group.
-    const focusableGroupAttrs = useFocusableGroup({ ignoreDefaultKeydown: { Enter: true } });
+    // Enter selects the item rather than moving focus into it.
+    const {
+      ref: focusGroupRef,
+      onKeyDown: onFocusGroupKeyDown,
+      onFocus: _onFocusGroupFocus,
+      ...focusGroupAttrs
+    } = useFocusGroup({ tabBehavior: 'unlimited', ignoreKeys: ['Enter'] });
     const [focused, setFocused] = useState(false);
 
     const handleClick = useCallback(
@@ -114,11 +134,12 @@ const Item = slottable<HTMLDivElement, ItemProps>(
 
     const handleKeyDown = useCallback(
       (event: KeyboardEvent<HTMLDivElement>) => {
+        onFocusGroupKeyDown(event);
         if (event.key === 'Enter') {
           onCurrentChange?.();
         }
       },
-      [onCurrentChange],
+      [onFocusGroupKeyDown, onCurrentChange],
     );
 
     const handleFocus = useCallback(
@@ -147,13 +168,13 @@ const Item = slottable<HTMLDivElement, ItemProps>(
         {...rest}
         tabIndex={0}
         className={tx('focus.item', { border }, className)}
-        {...focusableGroupAttrs}
+        {...focusGroupAttrs}
         aria-current={isCurrent || undefined}
         onClick={handleClick}
         onKeyDown={handleKeyDown}
         onFocus={handleFocus}
         onBlur={handleBlur}
-        ref={forwardedRef}
+        ref={useComposedRefs<HTMLDivElement>(forwardedRef, focusGroupRef)}
       >
         {children}
       </Comp>

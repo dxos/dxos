@@ -30,12 +30,24 @@ export type LogRecord = {
   c?: string;
   /** Environment identifier (see {@link inferEnvironmentName}). */
   i?: string;
+  /** Trace id of the span that was active when the entry was emitted. */
+  r?: string;
+  /** Span id of that span. */
+  s?: string;
+};
+
+/** Identity of the span a log entry was emitted under, so a backend can link the two. */
+export type TraceContext = {
+  traceId: string;
+  spanId: string;
 };
 
 /**
  * Options for {@link serializeToJsonl}.
  */
 export type SerializeToJsonlOptions = {
+  /** Span the entry was emitted under, captured by the caller since this package knows no tracer. */
+  trace?: TraceContext;
   /**
    * Environment identifier embedded in the record's `i` field.
    * Use {@link inferEnvironmentName} for a default that disambiguates tabs and workers.
@@ -84,6 +96,10 @@ export const serializeToJsonl = (entry: LogEntry, opts: SerializeToJsonlOptions 
   }
   if (opts.env !== undefined) {
     record.i = opts.env;
+  }
+  if (opts.trace !== undefined) {
+    record.r = opts.trace.traceId;
+    record.s = opts.trace.spanId;
   }
 
   const computedContext = entry.computedContext;

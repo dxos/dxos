@@ -15,6 +15,9 @@
       "path": "../../common/random"
     },
     {
+      "path": "../react-primitives/react-focus"
+    },
+    {
       "path": "../react-ui"
     },
     {

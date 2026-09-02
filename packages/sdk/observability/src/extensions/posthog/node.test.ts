@@ -7,7 +7,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { Config } from '@dxos/config';
 import { EffectEx } from '@dxos/effect';
 
-import { type Extension, type ExtensionApi } from '../../observability-extension';
+import * as ObservabilityExtension from '../../ObservabilityExtension';
 import { extensions } from './node';
 
 const DID = 'did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK';
@@ -48,11 +48,16 @@ vi.mock('@posthog/mcp', () => ({
   },
 }));
 
-const make = (distinctId: string | undefined): Promise<Extension> =>
+const make = (distinctId: string | undefined): Promise<ObservabilityExtension.Extension> =>
   EffectEx.runPromise(extensions({ config: new Config({}), apiKey: TOKEN, release: '1.2.3', distinctId }));
 
-const api = <K extends ExtensionApi['kind']>(extension: Extension, kind: K): Extract<ExtensionApi, { kind: K }> => {
-  const found = extension.apis.find((entry): entry is Extract<ExtensionApi, { kind: K }> => entry.kind === kind);
+const api = <K extends ObservabilityExtension.ExtensionApi['kind']>(
+  extension: ObservabilityExtension.Extension,
+  kind: K,
+): Extract<ObservabilityExtension.ExtensionApi, { kind: K }> => {
+  const found = extension.apis.find(
+    (entry): entry is Extract<ObservabilityExtension.ExtensionApi, { kind: K }> => entry.kind === kind,
+  );
   if (!found) {
     throw new Error(`No ${kind} api on the extension.`);
   }

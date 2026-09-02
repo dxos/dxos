@@ -191,6 +191,26 @@
       "autoPort": false
     },
     {
+      "name": "storybook-dx-container-cleanup",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && cd \"$(git rev-parse --show-toplevel)/.claude/worktrees/dx-container-cleanup/tools/storybook-react\" && pnpm exec storybook dev --port 9017 --no-open --ci"
+      ],
+      "port": 9017,
+      "autoPort": false
+    },
+    {
+      "name": "composer-dx-container-cleanup",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && cd \"$(git rev-parse --show-toplevel)/.claude/worktrees/dx-container-cleanup\" && moon run composer-app:serve -- --port 5184 --strictPort"
+      ],
+      "port": 5184,
+      "autoPort": false
+    },
+    {
       "name": "storybook-moon-9014",
       "runtimeExecutable": "sh",
       "runtimeArgs": [

@@ -182,7 +182,7 @@ const TranscriptTabs = ({
           </Toolbar.Root>
         </Panel.Toolbar>
         <Panel.Content asChild>
-          <Tabs.Viewport classNames='dx-container grid grid-rows-[auto_1fr]'>
+          <Tabs.Viewport classNames='dx-expand grid grid-rows-[auto_1fr]'>
             <Tabs.Panel value='transcript' tabIndex={-1} classNames='overflow-hidden'>
               <Surface.Surface
                 type={AppSurface.Tabpanel}

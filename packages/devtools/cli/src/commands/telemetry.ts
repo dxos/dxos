@@ -9,7 +9,7 @@ import * as Command from 'effect/unstable/cli/Command';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { CommandConfig } from '@dxos/cli-util';
-import { Observability } from '@dxos/observability';
+import * as Observability from '@dxos/observability/Observability';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 
 import { observabilityNamespace } from '../observability';

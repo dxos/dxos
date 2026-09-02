@@ -17,7 +17,48 @@
       "types": "./dist/types/src/index.d.ts",
       "node": "./dist/lib-node/index.mjs",
       "import": "./dist/lib/index.mjs"
-    }
+    },
+    "./AiObservability": {
+      "types": "./dist/types/src/ai/AiObservability.d.ts",
+      "node": "./dist/lib-node/ai/AiObservability.mjs",
+      "import": "./dist/lib/ai/AiObservability.mjs"
+    },
+    "./Observability": {
+      "types": "./dist/types/src/Observability.d.ts",
+      "node": "./dist/lib-node/Observability.mjs",
+      "import": "./dist/lib/Observability.mjs"
+    },
+    "./ObservabilityClientProvider": {
+      "types": "./dist/types/src/providers/ObservabilityClientProvider.d.ts",
+      "node": "./dist/lib-node/providers/ObservabilityClientProvider.mjs",
+      "import": "./dist/lib/providers/ObservabilityClientProvider.mjs"
+    },
+    "./ObservabilityExtension": {
+      "types": "./dist/types/src/ObservabilityExtension.d.ts",
+      "node": "./dist/lib-node/ObservabilityExtension.mjs",
+      "import": "./dist/lib/ObservabilityExtension.mjs"
+    },
+    "./ObservabilityProvider": {
+      "types": "./dist/types/src/providers/ObservabilityProvider.d.ts",
+      "node": "./dist/lib-node/providers/ObservabilityProvider.mjs",
+      "import": "./dist/lib/providers/ObservabilityProvider.mjs"
+    },
+    "./OtelLogSink": {
+      "types": "./dist/types/src/extensions/otel/OtelLogSink.d.ts",
+      "node": "./dist/lib-node/extensions/otel/OtelLogSink.mjs",
+      "import": "./dist/lib/extensions/otel/OtelLogSink.mjs"
+    },
+    "./OtelMetricsSink": {
+      "types": "./dist/types/src/extensions/otel/OtelMetricsSink.d.ts",
+      "node": "./dist/lib-node/extensions/otel/OtelMetricsSink.mjs",
+      "import": "./dist/lib/extensions/otel/OtelMetricsSink.mjs"
+    },
+    "./OtelSpanSink": {
+      "types": "./dist/types/src/extensions/otel/OtelSpanSink.d.ts",
+      "node": "./dist/lib-node/extensions/otel/OtelSpanSink.mjs",
+      "import": "./dist/lib/extensions/otel/OtelSpanSink.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "browser": {
     "./src/storage/node.ts": "./src/storage/browser.ts",
@@ -35,6 +76,7 @@
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/log-store-idb": "workspace:*",
@@ -54,6 +96,7 @@
     "@opentelemetry/sdk-logs": "catalog:",
     "@opentelemetry/sdk-metrics": "catalog:",
     "@opentelemetry/sdk-trace-base": "catalog:",
+    "@opentelemetry/sdk-trace-node": "catalog:",
     "@opentelemetry/sdk-trace-web": "catalog:",
     "@opentelemetry/semantic-conventions": "catalog:",
     "@posthog/mcp": "catalog:",
@@ -65,8 +108,8 @@
     "zone.js": "catalog:"
   },
   "devDependencies": {
+    "@dxos/ai": "workspace:*",
     "@dxos/client-services": "workspace:*",
-    "@dxos/effect": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@types/js-yaml": "catalog:"
   },

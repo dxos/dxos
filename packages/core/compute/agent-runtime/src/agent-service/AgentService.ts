@@ -218,8 +218,9 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
 
             let handle: AgentHandle;
             if (activeProcess) {
-              yield* activeProcess.hydrate(executable);
-              handle = activeProcess;
+              // `hydrate` returns the live handle; the listed one may be a dormant view whose
+              // methods die with "Process not hydrated" (see ProcessManager's DormantHandle).
+              handle = yield* activeProcess.hydrate(executable);
             } else {
               handle = yield* processManager.spawn(executable, {
                 name: 'Agent',
@@ -285,6 +286,9 @@ const makeSession = (process: AgentHandle, feed: Feed.Feed, releaseSession: () =
   // Settle when the turn's reply is complete; do NOT block on background sub-agents
   // (a supervisor delegates work that runs after the turn and reports back out of band).
   waitForCompletion: () => process.runUntilSettled(),
+  // The stopped turn's queue entry is NOT discarded here: `terminate` blocks while a tool holds the
+  // turn open, so anything it did afterwards would land after the reader's next prompt. The next
+  // process to spawn on this feed discards what it inherits instead (see `onSpawn` in agent-process).
   terminate: () => process.terminate().pipe(Effect.tap(() => Effect.sync(releaseSession))),
   subscribeEphemeral: () => process.subscribeEphemeral(),
 });

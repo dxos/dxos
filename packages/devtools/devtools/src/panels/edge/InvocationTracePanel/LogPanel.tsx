@@ -28,7 +28,7 @@ export const LogPanel: FC<LogPanelProps> = ({ objects }) => {
   }, [objects]);
 
   return (
-    <div className='dx-container flex overflow-auto'>
+    <div className='dx-expand flex overflow-auto'>
       <table className='table-fixed min-w-full text-xs border-collapse'>
         <thead className='sticky top-0 z-10'>
           <tr>

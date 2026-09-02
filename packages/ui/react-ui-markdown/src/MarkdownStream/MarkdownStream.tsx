@@ -247,7 +247,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
     return (
       <>
         {/* Markdown editor. */}
-        <div className={mx('dx-container', classNames)} ref={parentRef} />
+        <div className={mx('dx-expand', classNames)} ref={parentRef} />
 
         {/* React widgets are rendered in portals outside of the editor. */}
         <ErrorBoundary name='markdown-stream'>

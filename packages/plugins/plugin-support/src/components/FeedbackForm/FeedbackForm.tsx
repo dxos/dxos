@@ -3,7 +3,15 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren, type RefObject, useCallback, useEffect, useMemo, useRef } from 'react';
+import React, {
+  type PropsWithChildren,
+  type RefObject,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { log } from '@dxos/log';
 import { IconButton, useTranslation } from '@dxos/react-ui';
@@ -29,6 +37,8 @@ export type FeedbackSubmitHandler = (
 
 type FeedbackFormContextValue = {
   submitHandlerRef: RefObject<FeedbackSubmitHandler | undefined>;
+  /** The handler currently in flight, or undefined when idle. */
+  pendingHandler: FeedbackSubmitHandler | undefined;
 };
 
 const [FeedbackFormProvider, useFeedbackFormContext] = createContext<FeedbackFormContextValue>(FEEDBACK_FORM);
@@ -60,6 +70,10 @@ const FeedbackFormRoot = ({ children, hidden, plugins }: FeedbackFormRootProps) 
   // The active submit button writes its handler here before `Form.Root` fires `onSave`.
   const submitHandlerRef = useRef<FeedbackSubmitHandler | undefined>(undefined);
 
+  // Submission is async (screenshot capture, PostHog/Discord round-trip); surface it so the form
+  // cannot be double-submitted while it runs.
+  const [pendingHandler, setPendingHandler] = useState<FeedbackSubmitHandler | undefined>(undefined);
+
   // Override the `area` field with a richer plugin picker. The closure captures
   // the runtime plugin list so the schema itself stays static — much cleaner
   // than the previous `Format.OptionsAnnotation.set(...)` runtime-schema-extension
@@ -90,13 +104,23 @@ const FeedbackFormRoot = ({ children, hidden, plugins }: FeedbackFormRootProps) 
         ...values,
         version: values.version ?? hidden?.version,
       };
-      await submitHandlerRef.current?.(submitted, formMeta);
+      const handler = submitHandlerRef.current;
+      if (!handler) {
+        return;
+      }
+
+      setPendingHandler(() => handler);
+      try {
+        await handler(submitted, formMeta);
+      } finally {
+        setPendingHandler(undefined);
+      }
     },
     [hidden?.version],
   );
 
   return (
-    <FeedbackFormProvider submitHandlerRef={submitHandlerRef}>
+    <FeedbackFormProvider submitHandlerRef={submitHandlerRef} pendingHandler={pendingHandler}>
       <Form.Root
         schema={SupportOperation.SupportRequest}
         defaultValues={defaultValues}
@@ -169,6 +193,40 @@ const FeedbackFormSubmitCapture = ({ handler, children }: SubmitCaptureProps) =>
 FeedbackFormSubmitCapture.displayName = `${FEEDBACK_FORM}.SubmitCapture`;
 
 //
+// Submit button
+//
+
+type SubmitButtonProps = {
+  handler: FeedbackSubmitHandler;
+  icon: string;
+  label: string;
+  disabled?: boolean;
+};
+
+/**
+ * A submit affordance that reflects the form's in-flight state: the active button shows a spinner
+ * and the pending label, while every button is disabled until the submission settles.
+ */
+const FeedbackFormSubmitButton = ({ handler, icon, label, disabled }: SubmitButtonProps) => {
+  const { t } = useTranslation(meta.profile.key);
+  const { pendingHandler } = useFeedbackFormContext(`${FEEDBACK_FORM}.SubmitButton`);
+  const pending = pendingHandler === handler;
+
+  return (
+    <FeedbackFormSubmitCapture handler={handler}>
+      <Form.Submit
+        classNames={pending ? '[&_svg]:animate-spin' : undefined}
+        icon={pending ? 'ph--spinner-gap--regular' : icon}
+        label={pending ? t('sending-feedback.label') : label}
+        disabled={disabled || !!pendingHandler || undefined}
+      />
+    </FeedbackFormSubmitCapture>
+  );
+};
+
+FeedbackFormSubmitButton.displayName = `${FEEDBACK_FORM}.SubmitButton`;
+
+//
 // SubmitPosthog
 //
 
@@ -194,13 +252,12 @@ const FeedbackFormSubmitPosthog = ({ onSubmit, disabled }: FeedbackFormSubmitPos
   }, [disabled, onSubmit, submitHandlerRef]);
 
   return (
-    <FeedbackFormSubmitCapture handler={onSubmit}>
-      <Form.Submit
-        icon='ph--paper-plane-tilt--regular'
-        label={t('send-feedback.label')}
-        disabled={disabled || undefined}
-      />
-    </FeedbackFormSubmitCapture>
+    <FeedbackFormSubmitButton
+      handler={onSubmit}
+      icon='ph--paper-plane-tilt--regular'
+      label={t('send-feedback.label')}
+      disabled={disabled}
+    />
   );
 };
 
@@ -223,13 +280,12 @@ const FeedbackFormSubmitGitHub = ({ onSubmit, disabled }: FeedbackFormSubmitGitH
   }
 
   return (
-    <FeedbackFormSubmitCapture handler={onSubmit}>
-      <Form.Submit
-        icon='ph--github-logo--regular'
-        label={t('create-github-issue.label')}
-        disabled={disabled || undefined}
-      />
-    </FeedbackFormSubmitCapture>
+    <FeedbackFormSubmitButton
+      handler={onSubmit}
+      icon='ph--github-logo--regular'
+      label={t('create-github-issue.label')}
+      disabled={disabled}
+    />
   );
 };
 
@@ -252,9 +308,12 @@ const FeedbackFormSubmitDiscord = ({ onSubmit, disabled }: FeedbackFormSubmitDis
   }
 
   return (
-    <FeedbackFormSubmitCapture handler={onSubmit}>
-      <Form.Submit icon='ph--discord-logo--regular' label={t('ask-for-help.label')} disabled={disabled || undefined} />
-    </FeedbackFormSubmitCapture>
+    <FeedbackFormSubmitButton
+      handler={onSubmit}
+      icon='ph--discord-logo--regular'
+      label={t('ask-for-help.label')}
+      disabled={disabled}
+    />
   );
 };
 

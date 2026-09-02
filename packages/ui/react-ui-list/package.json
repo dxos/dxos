@@ -29,21 +29,19 @@
     "src"
   ],
   "dependencies": {
+    "@ark-ui/react": "catalog:",
     "@atlaskit/pragmatic-drag-and-drop": "catalog:",
     "@atlaskit/pragmatic-drag-and-drop-auto-scroll": "catalog:",
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "catalog:",
     "@dxos/debug": "workspace:*",
-    "@dxos/invariant": "workspace:*",
+    "@dxos/react-focus": "workspace:*",
     "@dxos/react-list": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@effect/atom-react": "catalog:",
-    "@fluentui/react-tabster": "catalog:",
-    "@radix-ui/react-accordion": "catalog:",
     "@radix-ui/react-context": "catalog:",
-    "@radix-ui/react-primitive": "catalog:",
     "@radix-ui/react-slot": "catalog:",
     "@radix-ui/react-use-controllable-state": "catalog:"
   },
