@@ -267,6 +267,9 @@ Do not paste real credential values into any shell command, and do not paste the
 - **Skills** (`.agents/skills/*`) — deep, task-specific how-to. Follow the
   relevant skill for the area you're working in (echo, effect, composer-ui,
   operations, testing, code-style, submit-pr, land, …).
+- **Storybook verification** — serving a storybook to check a UI change, resolving
+  story ids, or structuring stories for manual testing → `storybook-testing`
+  skill (`.agents/skills/storybook-testing/SKILL.md`).
 - **Flaky test quarantining** — investigating a flaky/red CI run or setting up
   Trunk test uploads → `trunk-quarantine` skill
   (`.agents/skills/trunk-quarantine/SKILL.md`); adding the Trunk MCP server →
