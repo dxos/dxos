@@ -70,7 +70,7 @@ const seed = (): Task.Task[] => [
  * ordinals into double digits, and put more than one task under each group heading, which a
  * seven-task list does not.
  */
-const manySeed = (n = 30): Task.Task[] =>
+const manySeed = (n = 40): Task.Task[] =>
   Array.from({ length: n }, () =>
     Task.make({
       title: random.lorem.sentence(random.number.int({ min: 5, max: 10 })),

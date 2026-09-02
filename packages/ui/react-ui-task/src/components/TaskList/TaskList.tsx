@@ -68,6 +68,7 @@ import {
   subtreeIds,
   walkTaskTree,
 } from './hierarchy';
+import { STATUS_ICONS } from './status-icons';
 import { TaskDescription } from './TaskDescription';
 import { TaskTreeContent } from './TaskTreeContent';
 import { type TaskNode } from './tree-model';
@@ -677,18 +678,6 @@ const draggingId = { current: undefined as string | undefined };
 //
 // Item — one row. Exported so a host can render its own selection of tasks.
 //
-
-const STATUS_ICONS: Record<Task.Status, { icon: string; classNames?: string }> = {
-  backlog: { icon: 'ph--tray--regular', classNames: 'text-subdued' },
-  todo: { icon: 'ph--square--regular', classNames: 'text-subdued' },
-  blocked: { icon: 'ph--prohibit--regular', classNames: 'text-warning-text' },
-  started: { icon: 'ph--hourglass--regular', classNames: 'text-info-text' },
-  review: { icon: 'ph--eye--regular', classNames: 'text-info-text' },
-  done: { icon: 'ph--check--regular', classNames: 'text-success-text' },
-  failed: { icon: 'ph--x--regular', classNames: 'text-error-text' },
-  cancelled: { icon: 'ph--x--regular', classNames: 'text-error-text' },
-  duplicate: { icon: 'ph--copy--regular', classNames: 'text-subdued' },
-};
 
 type TaskListItemProps = ComposableProps<{ task: Task.Task; ordinal?: number; row?: TaskTreeRow }>;
 

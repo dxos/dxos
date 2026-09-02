@@ -21,6 +21,7 @@ import {
   resolveReparent,
   resolveTaskPlacement,
 } from './hierarchy';
+import { STATUS_ICONS } from './status-icons';
 import { TaskDescription } from './TaskDescription';
 import { TASK_TREE_ROOT_ID, type TaskNode, buildTaskForest, buildTaskPaths, createTaskTreeModel } from './tree-model';
 
@@ -288,8 +289,10 @@ const TaskTreeHeading = ({
     return null;
   }
 
-  const icon = done ? 'ph--check-circle--regular' : error ? 'ph--x-circle--regular' : 'ph--circle--regular';
-  const iconClassNames = done ? 'text-success-text' : error ? 'text-error-text' : 'text-subdued';
+  // The flat row's map, not a local set: a tree row that collapsed every status into three circles
+  // could not tell `todo` from `blocked` or `backlog`, and diverged again each time a status was
+  // added.
+  const { icon, classNames: iconClassNames } = STATUS_ICONS[status];
 
   const description = showDescription ? task.description?.trim() || undefined : undefined;
 
