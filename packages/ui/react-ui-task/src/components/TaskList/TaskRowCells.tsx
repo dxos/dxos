@@ -8,7 +8,8 @@ import { Icon, IconButton, Tag, useTranslation } from '@dxos/react-ui';
 import { Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
-import { translationKey } from '../../translations';
+import { translationKey } from '#translations';
+
 import { STATUS_ICONS } from './status-icons';
 
 /**
