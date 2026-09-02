@@ -12,22 +12,22 @@ import * as Observability from '@dxos/observability/Observability';
 import * as ObservabilityExtension from '@dxos/observability/ObservabilityExtension';
 import { getHostPlatform } from '@dxos/util';
 
-/**
- * Public write-only project tokens. A released binary reports to production, a source build to the
- * non-production project, and a test run or CI to neither.
- */
+/** Public write-only project tokens; the non-production one is the dev deployment's own project. */
 const PRODUCTION_TOKEN = 'phc_G8oXhAk9fw9kevIE8XGiYySvbMujJntU4anYimHdnUl';
 const DEVELOPMENT_TOKEN = 'phc_GERCUvfEnYtleBgJRWuKnVQo1R59FBqwV5fvIor86Aa';
 const POSTHOG_HOST = 'https://eu.i.posthog.com' as const;
 
 /**
- * Where a released binary sends OTel: the deployment's reverse proxy, which injects the SigNoz
- * ingestion key server-side — so a binary published to npm carries no credential of its own.
+ * Where OTel goes: each deployment's reverse proxy, which injects the SigNoz ingestion key
+ * server-side — so a binary published to npm carries no credential of its own. Paired with the
+ * PostHog projects above, so a source build reports to the dev deployment's tenant and its test
+ * project rather than to either production one.
  */
-const OTEL_ENDPOINT = 'https://composer.space/api/otel';
+const PRODUCTION_OTEL_ENDPOINT = 'https://composer.space/api/otel';
+const DEVELOPMENT_OTEL_ENDPOINT = 'https://dev.composer.space/api/otel';
 
-/** Segments both backends; a released binary is production unless the environment says otherwise. */
-const ENVIRONMENT = process.env.DX_ENVIRONMENT ?? (globalThis.DX_CLI_BUNDLED ? 'production' : 'development');
+/** Stamped on everything as `deployment.environment`, in the vocabulary the deployments use. */
+const ENVIRONMENT = process.env.DX_ENVIRONMENT ?? (globalThis.DX_CLI_BUNDLED ? 'production' : 'dev');
 
 /** Where `dx` keeps the profile's observability state; also the OTel service name's sibling. */
 export const observabilityNamespace = (profile: string): string => getProfilePath(DX_CONFIG, profile);
@@ -50,13 +50,13 @@ export const projectToken = (): string | undefined => {
   return process.env.DX_POSTHOG_API_KEY ?? (globalThis.DX_CLI_BUNDLED ? PRODUCTION_TOKEN : DEVELOPMENT_TOKEN);
 };
 
-/**
- * Only a released binary has somewhere to send traces: there is one SigNoz tenant rather than a
- * production and a non-production one, so a source build opts in with `DX_OTEL_ENDPOINT` instead of
- * mixing developer noise into it. The extension reads that variable itself and prefers it to this.
- */
-export const otelEndpoint = (): string | undefined =>
-  reporting() && globalThis.DX_CLI_BUNDLED ? OTEL_ENDPOINT : undefined;
+/** `DX_OTEL_ENDPOINT` overrides this; the extension reads that variable itself and prefers it. */
+export const otelEndpoint = (): string | undefined => {
+  if (!reporting()) {
+    return undefined;
+  }
+  return globalThis.DX_CLI_BUNDLED ? PRODUCTION_OTEL_ENDPOINT : DEVELOPMENT_OTEL_ENDPOINT;
+};
 
 /**
  * The subcommand path, with flags and their values dropped: a flag value is a file path, a space
