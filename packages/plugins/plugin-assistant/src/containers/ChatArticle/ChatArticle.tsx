@@ -3,7 +3,7 @@
 //
 
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { forwardRef, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
@@ -67,21 +67,6 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
       [graph, attendableId],
     );
 
-    // Shown by default: a chat carrying a checklist should show it without being asked, and the
-    // toggle is how the reader gets the room back once they have read it. Per mount rather than
-    // persisted — it is a glance, not a preference.
-    const [tasksVisible, setTasksVisible] = useState(true);
-    const handleEvent = useCallback<NonNullable<ChatArticleProps['onEvent']>>(
-      (event) => {
-        if (event.type === 'toggle-tasks') {
-          setTasksVisible((visible) => !visible);
-          return;
-        }
-        onEvent?.(event);
-      },
-      [onEvent],
-    );
-
     // Reset the one-shot guard when the target conversation changes, so a pending prompt for a new
     // `attendableId` is still auto-submitted within the same mount.
     const pendingSubmitted = useRef(false);
@@ -118,7 +103,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
         processor={processor}
         debug={debug}
         getContext={getContext}
-        onEvent={handleEvent}
+        onEvent={onEvent}
         onSubmit={onSubmit}
       >
         <Panel.Root role={role} ref={forwardedRef}>
@@ -144,16 +129,12 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
               <div className='dx-document flex flex-col px-4 pb-4'>
                 {/* Queued prompts the agent has not taken up yet, stacked right above the composer. */}
                 <ChatComponent.Queue classNames='shrink-0 items-end pb-1' />
-                {tasksVisible && (
-                  <ChatComponent.TaskList classNames='shrink-0 max-h-[calc(4*2rem+1px)] border border-separator border-b-0 rounded-t-sm text-description' />
-                )}
+                {/* Composer and checklist in one: `Chat.Prompt` owns the disclosure between them. */}
                 <ChatComponent.Prompt
                   {...chatProps}
-                  classNames={[tasksVisible && 'rounded-t-none']}
                   outline
                   attendableId={attendableId}
                   customActions={customActions}
-                  tasksVisible={tasksVisible}
                   preset={preset?.id}
                   companionTo={companionTo}
                 />

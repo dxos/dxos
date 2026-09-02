@@ -226,7 +226,13 @@ export const Default: Story = {
   },
 };
 
-/** The article's working tasks: `Chat.TaskList` reading the chat's checklist through context. */
+/**
+ * The article's working tasks, and the disclosure that shows them.
+ *
+ * The checklist is `Chat.Prompt`'s own collapsible region rather than a sibling the article places,
+ * so the toggle in the composer's action bar is the only thing that opens and closes it — this is
+ * what asserts that wiring, since the button is not the collapsible's own trigger.
+ */
 export const Tasks: Story = {
   args: {
     tasks: [
@@ -242,6 +248,25 @@ export const Tasks: Story = {
       interval: 300,
     });
     await expect(canvasElement.textContent ?? '').toContain('Gather the requirements');
+
+    // Disclosed on mount, and the toggle reports it. Asserted on `hidden` rather than `data-state`:
+    // the machine only stamps that once it has run a transition, so a region open from the first
+    // render carries no state attribute at all.
+    const region = () => canvasElement.querySelector<HTMLElement>('[data-scope="collapsible"][data-part="content"]')!;
+    const toggle = () => canvasElement.querySelector<HTMLElement>('[data-testid="assistant.toggle-tasks"]')!;
+    await expect(region()).not.toHaveAttribute('hidden');
+    await expect(toggle()).toHaveAttribute('aria-pressed', 'true');
+
+    // Closing hides the region rather than unmounting it — the list keeps its subscriptions, so
+    // reopening shows the checklist it already had rather than refetching it.
+    await userEvent.click(toggle());
+    await waitFor(() => void expect(region()).toHaveAttribute('hidden'), { timeout: 10_000 });
+    await expect(toggle()).toHaveAttribute('aria-pressed', 'false');
+    await expect(region().textContent ?? '').toContain('Gather the requirements');
+
+    await userEvent.click(toggle());
+    await waitFor(() => void expect(region()).not.toHaveAttribute('hidden'), { timeout: 10_000 });
+    await expect(toggle()).toHaveAttribute('aria-pressed', 'true');
   },
 };
 

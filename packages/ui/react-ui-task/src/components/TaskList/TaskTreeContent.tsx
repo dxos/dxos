@@ -335,14 +335,25 @@ const TaskTreeHeading = ({
         // top, while an undescribed row has slack to centre in — so the two titles disagreed by a
         // few pixels down the list.
         'grid-rows-[var(--dx-control)_auto]',
-        showGutter ? 'grid-cols-[auto_auto_minmax(0,1fr)]' : 'grid-cols-[auto_minmax(0,1fr)]',
+        // Fixed tracks, not `auto`: `TaskList.Edit` lays its own pane out on the same widths, and an
+        // intrinsic ordinal (12px for one digit, wider for two) put the pane's `+` 20px right of the
+        // rows' status controls. `2rem` is the gutter's two-digit width, `1.5rem` the status
+        // button's — the same pair `GRID_COLS` declares.
+        showGutter ? 'grid-cols-[2rem_1.5rem_minmax(0,1fr)]' : 'grid-cols-[1.5rem_minmax(0,1fr)]',
       )}
     >
+      {/* `justify-self-start`: the gutter track is two digits wide so the pane's columns line up
+          with it, but the badge and the box are their own size within it rather than stretched. */}
       {showGutter &&
         (onTaskCheck ? (
-          <TaskCheckbox task={task} checked={!!checked?.has(task.id)} onCheckedChange={onTaskCheck} />
+          <TaskCheckbox
+            task={task}
+            checked={!!checked?.has(task.id)}
+            classNames='justify-self-start'
+            onCheckedChange={onTaskCheck}
+          />
         ) : ordinal !== undefined ? (
-          <TaskOrdinal task={task} ordinal={ordinal} />
+          <TaskOrdinal task={task} ordinal={ordinal} classNames='justify-self-start' />
         ) : (
           // Holds the gutter track so a numberless row's title still lines up with its neighbours.
           <span />

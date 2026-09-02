@@ -876,6 +876,7 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
             : 'grid-cols-[1.5rem_1fr_min-content]',
           className,
         )}
+        ref={forwardedRef}
       >
         <span
           className={mx(
