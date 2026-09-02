@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 
 /** Drag-and-drop payload carried by every tree item. */
 export const TreeDataSchema = Schema.Struct({
-  /** The `Tree` this row belongs to, so a monitor can tell its own drags from another tree's. */
+  /** Root of the tree's path, so a monitor can tell its own drags from another tree's. */
   treeId: Schema.String,
   id: Schema.String,
   path: Schema.Array(Schema.String),
