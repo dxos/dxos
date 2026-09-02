@@ -3508,7 +3508,7 @@ importers:
     dependencies:
       debug:
         specifier: 'catalog:'
-        version: 4.4.3(supports-color@5.5.0)
+        version: 4.4.3(supports-color@8.1.1)
       domain-browser:
         specifier: 'catalog:'
         version: 4.22.0
@@ -6960,6 +6960,9 @@ importers:
 
   packages/devtools/devtools:
     dependencies:
+      '@bufbuild/protobuf':
+        specifier: 'catalog:'
+        version: 2.11.0
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/compute/ai

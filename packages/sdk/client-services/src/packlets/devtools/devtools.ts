@@ -9,10 +9,10 @@ import { Event as AsyncEvent } from '@dxos/async';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
+import { type SignalResponse } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import {
   type GetSpaceSnapshotResponse,
   type SaveSpaceSnapshotResponse,
-  type SignalResponse,
   type SubscribeToFeedBlocksResponse,
   type SubscribeToMetadataResponse,
   type SubscribeToSpacesResponse,
