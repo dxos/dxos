@@ -115,7 +115,7 @@ const Header = ({ classNames, children, icon, caret = 'start', ...props }: Heade
     <Collapsible.Trigger
       {...props}
       className={mx(
-        'group p-1 items-center select-none w-full text-start dx-focus-ring-inset',
+        'group p-1 items-center cursor-pointer select-none w-full text-start dx-focus-ring-inset',
         caret === 'end' ? 'flex' : 'grid grid-cols-[2rem_1fr_2rem]',
         classNames,
       )}
