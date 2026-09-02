@@ -177,7 +177,8 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
             // Read off the chat rather than passed in: the process is bound to the chat, so its
             // steering is whatever the chat points at when the process is spawned.
             const instructions = chat.instructions?.uri;
-            const feed = yield* Database.load(chat.feed).pipe(Effect.orDie);
+            // Read before the feed is loaded: a cache hit must not sit behind an await, or two
+            // callers resolving the same chat concurrently would both miss and spawn a process.
             const cached = sessionCache.get(chat.id);
             if (cached) {
               if (
@@ -200,6 +201,7 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
               sessionCache.delete(chat.id);
             }
 
+            const feed = yield* Database.load(chat.feed).pipe(Effect.orDie);
             const target = Obj.getURI(chat);
             const parsedEchoUri = EID.tryParse(target);
             const spaceId = parsedEchoUri ? EID.getSpaceId(parsedEchoUri) : undefined;
