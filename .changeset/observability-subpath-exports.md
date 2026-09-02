@@ -1,12 +1,10 @@
 ---
 '@dxos/observability': minor
-'@dxos/eslint-plugin-rules': patch
+'@dxos/plugin-observability': patch
 ---
 
-`@dxos/observability` exposes one entrypoint per namespace: `@dxos/observability/Observability`, `/ObservabilityExtension`, `/ObservabilityProvider`, `/ObservabilityClientProvider`, `/AiObservability`, `/OtelLogSink`, `/OtelMetricsSink`, and `/OtelSpanSink`. The barrel still exports the first four, so existing imports keep working, but importing it pulls the whole package into the consumer's eager graph. The `dxos-subpath-imports` lint now rewrites barrel imports of this package onto the subpaths.
+`@dxos/observability` exposes one entrypoint per namespace (`/Observability`, `/ObservabilityExtension`, `/ObservabilityProvider`, `/ObservabilityClientProvider`, `/AiObservability`, `/OtelLogSink`, `/OtelMetricsSink`, `/OtelSpanSink`), and the `dxos-subpath-imports` lint rewrites barrel imports onto them, so a consumer no longer pulls the whole package into its eager graph. The barrel keeps exporting the first four. The AI sink and the `Otel*Sink` trio are standalone entrypoints off the barrel, since only a lazily activated capability and the log-writer worker use them.
 
-The last four are standalone entrypoints rather than barrel namespaces: the AI sink is used only by a lazily-activated capability, and the `Otel*Sink` trio only by the log-writer worker, so hoisting any of them onto the barrel would put it in the eager graph of everyone importing the package. Each carries a header saying so in place of the `@import-as-namespace` directive, which is how `dxos-subpath-exports` tells the two apart.
+Breaking: the providers that reach `@dxos/client` moved from `ObservabilityProvider.Client` to `ObservabilityClientProvider.Client`, and `eventLoopLagProvider` to `ObservabilityProvider.EventLoopLag`.
 
-The providers split in two. `ObservabilityProvider` carries the ones that depend on nothing heavy (`EventLoopLag`, `IPData`, `Memory`, `Storage`), and the new `ObservabilityClientProvider` carries those reaching `@dxos/client` and `@dxos/protocols` (`Client`, `SyncState`). `eventLoopLagProvider` moved from `Client` to `EventLoopLag`, where its tracker already lived, so a caller that only samples event-loop lag no longer drags the client stack in. Callers of `ObservabilityProvider.Client.*` move to `ObservabilityClientProvider.Client.*`, and `ObservabilityProvider.Client.eventLoopLagProvider` becomes `ObservabilityProvider.EventLoopLag.eventLoopLagProvider`.
-
-`dxos-subpath-exports` resolved an exports entry only through its `source` condition. The toolbox strips that condition from every `dist-runtime` package, so the rule silently skipped them — a package could be opted into consumer rewriting while the check that keeps its barrel and its subpaths in agreement never ran. It now recovers the source from `types` when `source` is absent, which surfaced two barrels that had drifted while it was blind: `@dxos/sql-sqlite` was missing `SqlExport`, and the `Otel*Sink` entrypoints were declaring themselves namespaces while deliberately staying off their barrel.
+`dxos-subpath-exports` now resolves a `dist-runtime` package's entrypoints from `types` when the toolbox has stripped `source`, so the barrel-versus-subpath check runs for those packages too; it caught `@dxos/sql-sqlite` missing `SqlExport` from its barrel.
