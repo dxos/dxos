@@ -202,6 +202,12 @@ export class TriggerDispatcher extends Context.Service<
     get running(): boolean;
 
     /**
+     * Whether the fixed-interval timer loop is currently scheduled. False while the dispatcher is
+     * running but its trigger working set is empty, since an idle dispatcher schedules no wake.
+     */
+    get timerScheduled(): boolean;
+
+    /**
      * Start the trigger dispatcher.
      * Will automatically invoke triggers.
      */
@@ -297,6 +303,13 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
   private _running = false;
   private _internalTime: Date;
   private _timerFiber: Fiber.Fiber<void, void> | undefined;
+
+  /**
+   * Incremented per forked timer loop so a loop that ends (by exhausting its working set, or by
+   * crashing) only clears {@link _timerFiber} when it still owns the slot — a restart in between
+   * must not have its handle cleared by its predecessor's finalizer.
+   */
+  #timerGeneration = 0;
   private _triggers: Trigger.Trigger[] = [];
 
   /**
@@ -427,6 +440,10 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
     return this._running;
   }
 
+  get timerScheduled(): boolean {
+    return this._timerFiber !== undefined;
+  }
+
   get state(): Atom.Atom<TriggerDispatcherState> {
     return this._state;
   }
@@ -449,28 +466,10 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
 
       // Start natural time processing if enabled
       if (this.timeControl === 'natural') {
+        // The timer is not started here: `#subscribeToTriggers` fires immediately and every time the
+        // trigger set changes, and `#syncTimerToWorkingSet` starts the loop only once that set is
+        // non-empty, so a dispatcher with no triggers schedules no repeating wake at all.
         yield* this.#subscribeToTriggers();
-        this._timerFiber = yield* this._startNaturalTimeProcessing().pipe(
-          Effect.tapCause((cause) =>
-            Effect.gen({ self: this }, function* () {
-              const error = EffectEx.causeToError(cause);
-              log.error('trigger dispatcher error', { error });
-              this._running = false;
-              this._timerFiber = undefined;
-              registry.update(
-                this._state,
-                Struct.evolve({
-                  enabled: () => false,
-                  errors: (errors) => [...errors, error].slice(-MAX_TRACKED_ERRORS),
-                }),
-              );
-              // A crash bypasses `stop()` (`_running` is already false, so a later `stop()` call
-              // would no-op) — tear the subscription down here so it doesn't outlive the dispatcher.
-              yield* this.#teardownTriggerSubscription();
-            }),
-          ),
-          Effect.forkDetach,
-        );
       } else {
         return yield* Effect.die(new Error('TriggerDispatcher started in manual time control mode'));
       }
@@ -1056,6 +1055,8 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
           // repopulate trigger state after the dispatcher has stopped.
           this.#pendingRefreshFiber = Effect.runFork(
             this.refreshTriggers().pipe(
+              // Runs on this fiber, never the timer's, so `#stopTimer` can interrupt the loop safely.
+              Effect.flatMap(() => this.#syncTimerToWorkingSet()),
               Effect.tapCause((cause) =>
                 Effect.sync(() => log.error('failed to refresh triggers', { error: EffectEx.causeToError(cause) })),
               ),
@@ -1212,12 +1213,103 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
       }
     });
 
+  /**
+   * Whether anything in the working set justifies a repeating wake. An idle Composer tab defines no
+   * triggers at all, and a fixed-interval tick against an empty set is a pure no-op that keeps
+   * allocator pages committed — see `.agents/projects/memory-usage/TASKS.md` Phase 4, R1.
+   *
+   * Deliberately the whole working set rather than the timer-kind subset the tick actually invokes:
+   * cooldown and retry state is tracked for every kind, so narrowing this further would change
+   * dispatch semantics rather than just scheduling.
+   */
+  #hasSchedulableWork = (): boolean => this._triggers.length > 0;
+
+  /**
+   * Fork the fixed-interval timer loop unless one is already running. Idempotent: the trigger
+   * subscription fires on every change, and only an empty -> non-empty transition should start one.
+   */
+  #startTimer = (): Effect.Effect<void> =>
+    Effect.gen({ self: this }, function* () {
+      if (this._timerFiber) {
+        return;
+      }
+
+      const registry = yield* Registry.AtomRegistry;
+      const generation = ++this.#timerGeneration;
+      this._timerFiber = yield* this._startNaturalTimeProcessing().pipe(
+        Effect.tapCause((cause) =>
+          Effect.gen({ self: this }, function* () {
+            const error = EffectEx.causeToError(cause);
+            log.error('trigger dispatcher error', { error });
+            this._running = false;
+            registry.update(
+              this._state,
+              Struct.evolve({
+                enabled: () => false,
+                errors: (errors) => [...errors, error].slice(-MAX_TRACKED_ERRORS),
+              }),
+            );
+            // A crash bypasses `stop()` (`_running` is already false, so a later `stop()` call
+            // would no-op) — tear the subscription down here so it doesn't outlive the dispatcher.
+            yield* this.#teardownTriggerSubscription();
+          }),
+        ),
+        // Covers the loop ending on its own (empty working set) as well as crashing, so a later
+        // trigger can start a fresh one rather than finding a stale handle in the slot.
+        Effect.ensuring(
+          Effect.sync(() => {
+            if (this.#timerGeneration === generation) {
+              this._timerFiber = undefined;
+            }
+          }),
+        ),
+        Effect.forkDetach,
+      );
+    }).pipe(Effect.provide(this._services));
+
+  /**
+   * Interrupt the timer loop if one is running. Only ever called from the trigger-subscription
+   * fiber: `refreshTriggers` also runs on the timer fiber itself (via `invokeScheduledTriggers`),
+   * and interrupting the current fiber there would kill the tick mid-flight. The loop's own
+   * `while` guard covers that case instead.
+   */
+  #stopTimer = (): Effect.Effect<void> =>
+    Effect.gen({ self: this }, function* () {
+      const fiber = this._timerFiber;
+      if (!fiber) {
+        return;
+      }
+      this._timerFiber = undefined;
+      yield* Fiber.interrupt(fiber);
+    });
+
+  /** Match the timer to the working set, starting or stopping it across an empty/non-empty edge. */
+  #syncTimerToWorkingSet = (): Effect.Effect<void> =>
+    Effect.gen({ self: this }, function* () {
+      if (!this._running || this.timeControl !== 'natural') {
+        return;
+      }
+      if (this.#hasSchedulableWork()) {
+        yield* this.#startTimer();
+      } else {
+        yield* this.#stopTimer();
+      }
+    });
+
   private _startNaturalTimeProcessing = (): Effect.Effect<void> =>
     Effect.gen({ self: this }, function* () {
       // Timer triggers only: feed and subscription triggers are woken by `#reactiveSources` when
       // their data changes, so the wall clock no longer re-reads every feed on every tick.
       yield* this.invokeScheduledTriggers({ kinds: ['timer'] });
-    }).pipe(Effect.repeat(Schedule.fixed(this.livePollInterval)), Effect.asVoid);
+    }).pipe(
+      Effect.repeat({
+        schedule: Schedule.fixed(this.livePollInterval),
+        // Stops the loop when the last trigger goes away while the tick is executing on this very
+        // fiber, which `#stopTimer` cannot interrupt from the outside without self-interrupting.
+        while: () => this.#hasSchedulableWork(),
+      }),
+      Effect.asVoid,
+    );
 
   private _prepareInputData = (trigger: Trigger.Trigger, event: TriggerEvent.TriggerEvent): any => {
     return createInvocationPayload(trigger, event);
