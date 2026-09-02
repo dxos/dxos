@@ -38,18 +38,22 @@ export const observabilityNamespace = (profile: string): string => getProfilePat
  */
 const reporting = (): boolean => !process.env.CI && !process.env.VITEST;
 
-/** Released binaries report to the production project, a source build to the non-production one. */
+/**
+ * Released binaries report to the production project, a source build to the non-production one, and
+ * `DX_POSTHOG_API_KEY` overrides both — which is how a locally built binary is exercised without
+ * writing to the project the released one writes to.
+ */
 export const projectToken = (): string | undefined => {
   if (!reporting()) {
     return undefined;
   }
-  return globalThis.DX_CLI_BUNDLED ? PRODUCTION_TOKEN : DEVELOPMENT_TOKEN;
+  return process.env.DX_POSTHOG_API_KEY ?? (globalThis.DX_CLI_BUNDLED ? PRODUCTION_TOKEN : DEVELOPMENT_TOKEN);
 };
 
 /**
  * Only a released binary has somewhere to send traces: there is one SigNoz tenant rather than a
  * production and a non-production one, so a source build opts in with `DX_OTEL_ENDPOINT` instead of
- * mixing developer noise into it.
+ * mixing developer noise into it. The extension reads that variable itself and prefers it to this.
  */
 export const otelEndpoint = (): string | undefined =>
   reporting() && globalThis.DX_CLI_BUNDLED ? OTEL_ENDPOINT : undefined;
