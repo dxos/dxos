@@ -15,10 +15,61 @@ import {
   requestExclusiveLock,
   waitWithLockOrRpcTimeout,
 } from './internal/locks';
+import { workerErrorFromEvent } from './internal/worker-errors';
 import * as WorkerProtocol from './WorkerProtocol';
 
 // Sentinel resolved when a follower gives up waiting for a port from the leader.
 const LEADER_TIMEOUT = Symbol('leader-timeout');
+
+/** How far this tab's own leader-election chain has got. */
+export type LeaderPhase =
+  | 'idle'
+  | 'awaiting-lock'
+  | 'lock-held'
+  | 'opening-session'
+  | 'session-open'
+  | 'session-failed';
+
+/** How far this tab's connect task has got towards a usable worker port. */
+export type ConnectPhase =
+  | 'idle'
+  | 'requesting-port'
+  | 'port-timeout'
+  | 'port-received'
+  | 'opening-handle'
+  | 'connected';
+
+/**
+ * Where the connection had got to when it failed.
+ *
+ * Both phases are reported because they answer different questions: a tab stuck at
+ * `awaiting-lock`/`requesting-port` never heard from a leader, while one at
+ * `opening-session`/`session-failed` was the leader and its own worker never came up. The
+ * bare timeout these annotate cannot tell the two apart, and they need different fixes.
+ * Flat primitives only, so telemetry sinks that forward `string | number | boolean` keep them.
+ */
+export type ConnectionDiagnostics = {
+  workerLeaderPhase: LeaderPhase;
+  workerConnectPhase: ConnectPhase;
+  workerLeaderFailures: number;
+  workerStealCount: number;
+  workerMsSinceLeaderHeartbeat: number;
+};
+
+// Symbol-keyed so the diagnostics travel with the error without widening its shape.
+const CONNECTION_DIAGNOSTICS = Symbol.for('dxos.worker-framework.connection-diagnostics');
+
+type ConnectionDiagnosticsCarrier = { [CONNECTION_DIAGNOSTICS]?: ConnectionDiagnostics };
+
+/**
+ * Reads the diagnostics attached to a worker connection failure, if it carries any.
+ * Hosts spread these into the log context that reports the error, so the captured exception
+ * names the phase rather than only the elapsed timeout.
+ */
+export const getConnectionDiagnostics = (error: unknown): ConnectionDiagnostics | undefined =>
+  // The one assertion the boundary needs: the input is `unknown` by contract, so no source-level
+  // type can describe it — the optional carrier keeps the claim to the single key actually set.
+  (error as ConnectionDiagnosticsCarrier | undefined)?.[CONNECTION_DIAGNOSTICS];
 
 export interface LeaderTimeouts {
   /**
@@ -143,6 +194,12 @@ export class Connection extends Resource {
   #isInitialConnection = true;
   // Last error the connect task failed with, surfaced by `_open` in place of the bare timeout.
   #lastConnectError: unknown;
+  // Last error the leader session failed with, cleared once a session opens. Surfaced by `_open`
+  // when the connect task never got far enough to record one of its own: a leader whose worker
+  // will not start is strictly more informative than the timeout that would otherwise replace it.
+  #lastLeaderError: unknown;
+  #leaderPhase: LeaderPhase = 'idle';
+  #connectPhase: ConnectPhase = 'idle';
   // Monotonic connect-attempt counter sent with `request-port`, so the worker can tell a raced
   // duplicate of the current attempt from a reconnect after a failed one.
   #connectAttempt = 0;
@@ -205,9 +262,22 @@ export class Connection extends Resource {
       openTimeout,
       lockOrRpcTimeoutError('establishing initial worker connection', openTimeout),
     ).catch((error) => {
-      throw this.#lastConnectError ?? error;
+      const failure = this.#lastConnectError ?? this.#lastLeaderError ?? error;
+      throw failure instanceof Error
+        ? Object.assign(failure, { [CONNECTION_DIAGNOSTICS]: this.#diagnostics })
+        : failure;
     });
     log('worker-connection: initial connection established');
+  }
+
+  get #diagnostics(): ConnectionDiagnostics {
+    return {
+      workerLeaderPhase: this.#leaderPhase,
+      workerConnectPhase: this.#connectPhase,
+      workerLeaderFailures: this.#leaderFailureCount,
+      workerStealCount: this.#stealCount,
+      workerMsSinceLeaderHeartbeat: Date.now() - this.#lastLeaderHeartbeat,
+    };
   }
 
   override async _close(): Promise<void> {
@@ -227,8 +297,10 @@ export class Connection extends Resource {
     queueMicrotask(async () => {
       try {
         log('worker-connection: requesting leader lock', { clientId: this.#clientId });
+        this.#leaderPhase = 'awaiting-lock';
         await requestExclusiveLock(this.#leaderLockKey, this._ctx.signal, async () => {
           log('worker-connection: leader lock acquired (this tab is leader)', { clientId: this.#clientId });
+          this.#leaderPhase = 'lock-held';
           invariant(this.#coordinator);
           invariant(!this.#leaderSession);
 
@@ -253,8 +325,11 @@ export class Connection extends Resource {
             }
           });
           try {
+            this.#leaderPhase = 'opening-session';
             await waitWithLockOrRpcTimeout(this.#leaderSession.open(), 'opening worker leader session');
+            this.#leaderPhase = 'session-open';
             this.#leaderFailureCount = 0;
+            this.#lastLeaderError = undefined;
             await done.wait();
           } finally {
             removeDoneDisposer();
@@ -297,6 +372,8 @@ export class Connection extends Resource {
         const backoff = Math.min(this.#leaderRetryBackoff * 2 ** this.#leaderFailureCount, MAX_LEADER_RETRY_BACKOFF);
         const jitteredBackoff = backoff * (0.5 + Math.random() * 0.5);
         this.#leaderFailureCount++;
+        this.#leaderPhase = 'session-failed';
+        this.#lastLeaderError = error;
         log.warn('worker-connection: leader session failed, backing off and re-watching', {
           clientId: this.#clientId,
           error,
@@ -338,6 +415,7 @@ export class Connection extends Resource {
 
     try {
       log('worker-connection: requesting port from leader');
+      this.#connectPhase = 'requesting-port';
       const result = await new Promise<
         (WorkerProtocol.CoordinatorMessage & { type: 'provide-port' }) | typeof LEADER_TIMEOUT
       >((resolve) => {
@@ -379,6 +457,7 @@ export class Connection extends Resource {
       });
 
       if (result === LEADER_TIMEOUT) {
+        this.#connectPhase = 'port-timeout';
         log.warn('worker-connection: timed out waiting for provide-port', { clientId: this.#clientId });
         await this.#maybeStealStaleLeader();
         this.#connectTask.schedule();
@@ -387,6 +466,7 @@ export class Connection extends Resource {
 
       const { clientToWorker, workerToClient, leaderId, livenessLockKey, isOwner } = result;
       log('worker-connection: connected to worker', { leaderId, isOwner });
+      this.#connectPhase = 'port-received';
       this.#lastConnectError = undefined;
       // A port proves the coordinator link works, so the steal budget below is about the incumbent
       // rather than this tab.
@@ -412,10 +492,12 @@ export class Connection extends Resource {
         }
       });
 
+      this.#connectPhase = 'opening-handle';
       this.#connectionHandle = await waitWithLockOrRpcTimeout(
         this.#onConnect({ clientToWorker, workerToClient, leaderId, livenessLockKey, isOwner }),
         'opening worker connection handle',
       );
+      this.#connectPhase = 'connected';
 
       if (this.#isInitialConnection) {
         performance.mark('worker-connection:session-ready');
@@ -564,9 +646,10 @@ class LeaderSession extends Resource {
       }
     };
     if (isWorker(this.#worker)) {
-      this.#worker.onerror = (e) => {
-        ready.throw(e.error);
-        listening.throw(e.error);
+      this.#worker.onerror = (event) => {
+        const error = workerErrorFromEvent(event, 'dedicated');
+        ready.throw(error);
+        listening.throw(error);
       };
     }
 

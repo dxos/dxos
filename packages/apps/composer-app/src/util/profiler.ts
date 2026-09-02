@@ -40,6 +40,33 @@ export type ProfilerSnapshot = {
   graphBodies: Array<{ id: string; kind: string; startTime: number }>;
 };
 
+/**
+ * Emits a `startup:<name>` performance mark.
+ *
+ * Unconditional, unlike the {@link Profiler} that reads these back: a mark is a timestamp
+ * and a string, and the plugin manager already emits several hundred of them per boot in
+ * production (one set per module), so gating these behind the dev-only profiler bought no
+ * measurable time and cost every production `composer.startup` its phase timings, which
+ * reported 0 because the measures they read never existed.
+ */
+export const startupMark = (name: string): void => {
+  performance.mark(`startup:${name}`);
+};
+
+/**
+ * Emits a `startup:<name>` measure between two `startup:` marks.
+ *
+ * `performance.measure` throws when either mark is missing, which a boot path that skipped a
+ * phase can legitimately produce; a timing must never take the app down.
+ */
+export const startupMeasure = (name: string, startMark: string, endMark: string): void => {
+  try {
+    performance.measure(`startup:${name}`, `startup:${startMark}`, `startup:${endMark}`);
+  } catch {
+    // Missing mark: the phase never ran.
+  }
+};
+
 export type Profiler = {
   mark: (name: string) => void;
   measure: (name: string, startMark: string, endMark: string) => void;
@@ -54,8 +81,6 @@ export type Profiler = {
  * Tree-shaken in production when VITE_DEBUG is not set.
  */
 export const startupProfiler = (): Profiler => {
-  performance.mark('startup:main:start');
-
   let complete = false;
   let finishedAt: string | undefined;
 
@@ -127,13 +152,12 @@ export const startupProfiler = (): Profiler => {
   };
 
   return {
-    mark: (name: string) => performance.mark(`startup:${name}`),
-    measure: (name: string, startMark: string, endMark: string) =>
-      performance.measure(`startup:${name}`, `startup:${startMark}`, `startup:${endMark}`),
+    mark: startupMark,
+    measure: startupMeasure,
     snapshot: collect,
     dump: () => {
-      performance.mark('startup:ready');
-      performance.measure('startup:total', 'startup:main:start', 'startup:ready');
+      startupMark('ready');
+      startupMeasure('total', 'main:start', 'ready');
       complete = true;
       finishedAt = new Date().toISOString();
 

@@ -60,6 +60,75 @@ export type StartupProgress = {
   humanizedName?: string;
 };
 
+/**
+ * Event dispatched on `window` once the `Startup` activation event has fully completed.
+ */
+export const STARTUP_ACTIVATED_EVENT = 'app-framework:startup-activated';
+
+/**
+ * Event dispatched on `window` when startup misses its deadline, carrying
+ * {@link StartupDiagnostics} as `detail`. Hosts capture it as the failure
+ * counterpart to {@link STARTUP_ACTIVATED_EVENT}, which only ever fires for boots
+ * that worked and so leaves failures with no denominator.
+ */
+export const STARTUP_FAILED_EVENT = 'app-framework:startup-failed';
+
+/**
+ * Event dispatched on `window` the first time the app shell renders and the boot loader is
+ * dismissed, carrying the milliseconds since navigation start as `detail`.
+ */
+export const FIRST_INTERACTIVE_EVENT = 'app-framework:first-interactive';
+
+/**
+ * Where startup had got to when the deadline expired.
+ *
+ * Every field is a flat primitive because the consumers are telemetry sinks that only
+ * forward `string | number | boolean` (see the PostHog log processor), and lists are
+ * pre-joined or reduced to a count for the same reason: `activeModules` runs to a hundred
+ * ids on a full profile, well past what is useful as an event property.
+ */
+export type StartupDiagnostics = {
+  /** The deadline that expired, in ms. */
+  startupTimeoutMs: number;
+  /** Comma-separated activation events that completed before the deadline. */
+  startupEventsFired: string;
+  /** Modules that had finished activating. */
+  startupActivatedModules: number;
+  /** Modules registered in total. */
+  startupTotalModules: number;
+  /** Module mid-activation when the deadline hit; usually names the culprit outright. */
+  startupLastModule?: string;
+  /** Activation event in flight when the deadline hit. */
+  startupLastEvent?: string;
+  /** Comma-separated events queued for replay by a pending reset. */
+  startupPendingReset: string;
+};
+
+// Declared so hosts get the `detail` type from `addEventListener` rather than asserting it at
+// every listener; these events exist to be consumed outside this package.
+declare global {
+  interface WindowEventMap {
+    [STARTUP_ACTIVATED_EVENT]: CustomEvent<void>;
+    [STARTUP_FAILED_EVENT]: CustomEvent<StartupDiagnostics>;
+    [FIRST_INTERACTIVE_EVENT]: CustomEvent<number>;
+  }
+}
+
+// Keyed by symbol so the diagnostics ride along with the error without widening its own
+// shape, and without appearing in the `JSON.stringify` the reset dialog's copy button runs.
+const STARTUP_DIAGNOSTICS = Symbol.for('dxos.app-framework.startup-diagnostics');
+
+type StartupDiagnosticsCarrier = { [STARTUP_DIAGNOSTICS]?: StartupDiagnostics };
+
+/**
+ * Reads the diagnostics attached to a startup timeout error, if it carries any.
+ * Hosts forward these onto the captured exception so the report says where startup stopped.
+ */
+export const getStartupDiagnostics = (error: unknown): StartupDiagnostics | undefined =>
+  // The one assertion the boundary needs: the input is `unknown` by contract, so no source-level
+  // type can describe it — the optional carrier keeps the claim to the single key actually set.
+  (error as StartupDiagnosticsCarrier | undefined)?.[STARTUP_DIAGNOSTICS];
+
 export type UseAppOptions = {
   pluginManager?: PluginManager.PluginManager;
   pluginLoader?: PluginManager.ManagerOptions['pluginLoader'];
@@ -173,6 +242,11 @@ export const useApp = ({
     setupDevtools(manager);
   }, [manager]);
 
+  // Declared above the startup effect: the deadline callback reads the latest progress to name
+  // the module that was mid-activation when it fired.
+  const progressRef = useRef(startupProgress);
+  progressRef.current = startupProgress;
+
   useAsyncEffect(async () => {
     log('useApp: effect mount');
 
@@ -215,7 +289,7 @@ export const useApp = ({
                 // import a provider, and consumers can capture the startup
                 // summary without us picking one.
                 if (typeof window !== 'undefined') {
-                  window.dispatchEvent(new CustomEvent('app-framework:startup-activated'));
+                  window.dispatchEvent(new CustomEvent(STARTUP_ACTIVATED_EVENT));
                 }
                 return;
               }
@@ -296,15 +370,32 @@ export const useApp = ({
         return;
       }
 
-      log.warn('startup timeout diagnostic', {
-        eventsFired: manager.getEventsFired(),
-        activeModules: manager.getActive(),
-        pendingReset: manager.getPendingReset(),
-      });
+      const progress = progressRef.current;
+      const diagnostics: StartupDiagnostics = {
+        startupTimeoutMs: timeout,
+        startupEventsFired: manager.getEventsFired().join(','),
+        startupActivatedModules: manager.getActive().length,
+        startupTotalModules: manager.getModules().length,
+        startupLastModule: progress.module,
+        startupLastEvent: progress.event,
+        startupPendingReset: manager.getPendingReset().join(','),
+      };
+
+      // Local-only, and the richer of the two: the full module list is worth having in a
+      // downloaded log but is too long to ride on an event property.
+      log.warn('startup timeout diagnostic', { ...diagnostics, activeModules: manager.getActive() });
 
       const abort = () => {
         void EffectEx.runAndForwardErrors(Fiber.interrupt(fiber));
-        setError(new Error(`Startup timed out after ${timeout}ms`));
+        // The deadline is the only point that knows where startup stopped, and the tab is
+        // usually closed seconds later, so the state travels on the error and the event rather
+        // than staying in a log the user never uploads.
+        setError(
+          Object.assign(new Error(`Startup timed out after ${timeout}ms`), { [STARTUP_DIAGNOSTICS]: diagnostics }),
+        );
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent(STARTUP_FAILED_EVENT, { detail: diagnostics }));
+        }
       };
 
       // In development the deadline is a symptom, not a verdict: a cold OPFS, a rebuild or a paused
@@ -336,9 +427,6 @@ export const useApp = ({
       }
     };
   }, [manager]);
-
-  const progressRef = useRef(startupProgress);
-  progressRef.current = startupProgress;
 
   const surfaces = useMemo(() => new SurfaceManager(manager.capabilities, manager), [manager]);
 

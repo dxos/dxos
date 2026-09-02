@@ -4,6 +4,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
+import { getStartupDiagnostics } from '@dxos/app-framework/ui';
 import { log } from '@dxos/log';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import type * as Observability from '@dxos/observability/Observability';
@@ -89,7 +90,9 @@ export const ResetDialog = ({
     if (!errorProp) {
       return;
     }
-    log.error('fatal dialog', { error: errorProp, fatal_dialog: true });
+    // Spread rather than nest: the PostHog log processor forwards only primitive context values,
+    // and only at the top level, so nesting them would drop them from the captured exception.
+    log.error('fatal dialog', { error: errorProp, fatal_dialog: true, ...getStartupDiagnostics(errorProp) });
   }, [errorProp]);
 
   const handleCopyError = useCallback(() => {

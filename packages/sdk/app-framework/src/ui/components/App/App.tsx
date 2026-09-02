@@ -6,10 +6,15 @@ import React, { type PropsWithChildren, Suspense, useEffect, useLayoutEffect, us
 
 import { Capabilities } from '../../../common';
 import { topologicalSort } from '../../../helpers';
-import { LoadingState, type StartupProgress, type UseAppOptions, useCapabilities, useLoading } from '../../hooks';
+import {
+  FIRST_INTERACTIVE_EVENT,
+  LoadingState,
+  type StartupProgress,
+  type UseAppOptions,
+  useCapabilities,
+  useLoading,
+} from '../../hooks';
 import { bootLoader } from './loader';
-
-const FIRST_INTERACTIVE_MARK = 'app-framework:first-interactive';
 
 export type AppProps = Pick<UseAppOptions, 'debounce'> & {
   ready: boolean;
@@ -71,8 +76,14 @@ export const App = ({ ready, error, debounce, progress }: AppProps) => {
     if (!placeholderDismissed) {
       return;
     }
-    if (performance.getEntriesByName(FIRST_INTERACTIVE_MARK).length === 0) {
-      performance.mark(FIRST_INTERACTIVE_MARK);
+    if (performance.getEntriesByName(FIRST_INTERACTIVE_EVENT).length === 0) {
+      performance.mark(FIRST_INTERACTIVE_EVENT);
+      // Dispatched as well as marked: hosts capture their startup summary on `Startup` activated,
+      // which is at least two debounce ticks before this mark exists, so a summary field reading
+      // the mark is always absent. The event carries the number instead of racing for it.
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent(FIRST_INTERACTIVE_EVENT, { detail: Math.round(performance.now()) }));
+      }
     }
     bootLoader?.dismiss();
   }, [placeholderDismissed]);
