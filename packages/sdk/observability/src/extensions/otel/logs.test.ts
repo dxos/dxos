@@ -2,9 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, test } from 'vitest';
+import { ROOT_CONTEXT, context, trace } from '@opentelemetry/api';
+import { resourceFromAttributes } from '@opentelemetry/resources';
+import { InMemoryLogRecordExporter } from '@opentelemetry/sdk-logs';
+import { StackContextManager } from '@opentelemetry/sdk-trace-web';
+import { afterEach, describe, test } from 'vitest';
 
-import { stringifyValues } from './logs';
+import { LogEntry, LogLevel } from '@dxos/log';
+
+import { OtelLogs, stringifyValues } from './logs';
 
 describe('stringifyValues', () => {
   test('serializes errors via stack', ({ expect }) => {
@@ -35,5 +41,34 @@ describe('stringifyValues', () => {
   test('skips undefined values and handles a missing object', ({ expect }) => {
     expect(stringifyValues({ present: 'yes', absent: undefined })).toEqual({ present: 'yes' });
     expect(stringifyValues(undefined)).toEqual({});
+  });
+});
+
+describe('OtelLogs', () => {
+  afterEach(() => context.disable());
+
+  test('links a record to the span active when it was emitted', async ({ expect }) => {
+    context.setGlobalContextManager(new StackContextManager().enable());
+    const exporter = new InMemoryLogRecordExporter();
+    const logs = new OtelLogs({
+      destinations: [{ endpoint: 'http://localhost:1', headers: {} }],
+      resource: resourceFromAttributes({}),
+      getTags: () => ({}),
+      logLevel: LogLevel.INFO,
+      exporter,
+    });
+    const spanContext = { traceId: '0af7651916cd43dd8448eb211c80319c', spanId: 'b7ad6b7169203331', traceFlags: 1 };
+
+    context.with(trace.setSpanContext(ROOT_CONTEXT, spanContext), () => {
+      logs.logProcessor(undefined as never, new LogEntry({ level: LogLevel.INFO, message: 'inside' }));
+    });
+    logs.logProcessor(undefined as never, new LogEntry({ level: LogLevel.INFO, message: 'outside' }));
+    await logs.flush();
+
+    const [inside, outside] = exporter.getFinishedLogRecords();
+    expect(inside.spanContext?.traceId).toBe(spanContext.traceId);
+    expect(inside.spanContext?.spanId).toBe(spanContext.spanId);
+    expect(outside.spanContext).toBeUndefined();
+    await logs.close();
   });
 });

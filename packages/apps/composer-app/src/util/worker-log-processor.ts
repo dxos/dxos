@@ -7,6 +7,7 @@ import {
   type LogEntry,
   type LogFilter,
   type LogProcessor,
+  type TraceContext,
   inferEnvironmentName,
   parseFilter,
   serializeToJsonl,
@@ -34,6 +35,8 @@ export type WorkerLogProcessorOptions = {
   tabId?: string;
   /** Same syntax as `DX_LOG` — entries below the minimum level are not sent. Default `debug`. */
   logFilter?: string;
+  /** The span active on this thread, read per entry so the worker can link the record to its trace. */
+  traceContext?: () => TraceContext | undefined;
 };
 
 /**
@@ -49,11 +52,13 @@ export class WorkerLogProcessor {
   readonly #worker: Worker;
   readonly #tabId: string;
   readonly #filters: LogFilter[];
+  readonly #traceContext?: () => TraceContext | undefined;
 
   constructor(options: WorkerLogProcessorOptions) {
     this.#worker = options.worker;
     this.#tabId = options.tabId ?? inferEnvironmentName();
     this.#filters = parseFilter(options.logFilter ?? DEFAULT_LOG_FILTER);
+    this.#traceContext = options.traceContext;
 
     this.#installLifecycleHandlers();
   }
@@ -66,7 +71,7 @@ export class WorkerLogProcessor {
     if (!shouldLog(entry, this.#filters)) {
       return;
     }
-    const line = serializeToJsonl(entry, { env: this.#tabId });
+    const line = serializeToJsonl(entry, { env: this.#tabId, trace: this.#traceContext?.() });
     if (line === undefined) {
       return;
     }

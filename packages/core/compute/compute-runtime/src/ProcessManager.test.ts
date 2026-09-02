@@ -369,12 +369,14 @@ const CapturingTraceTestLayer = Layer.mergeAll(ProcessManager.ProcessOperationIn
  * reference whose default builds in-memory spans that are never exported, so a handler that loses
  * the installed tracer still *looks* traced while emitting nothing.
  */
-const makeRecordingTracer = (names: string[]) => {
+const makeRecordingTracer = (names: string[], spans: Tracer.Span[] = []) => {
   const base = Effect.runSync(Effect.tracer);
   return Tracer.make({
     span: (...args) => {
       names.push((args[0] as any).name);
-      return base.span(...args);
+      const span = base.span(...args);
+      spans.push(span);
+      return span;
     },
   });
 };
@@ -395,6 +397,7 @@ const makeTracedAlarmExecutable = (options: { atSpawn?: number } = {}) =>
   );
 
 const spanNames: string[] = [];
+const spaceSpans: Tracer.Span[] = [];
 const rearmSpanNames: string[] = [];
 
 describe('ManagerImpl', () => {
@@ -428,6 +431,24 @@ describe('ManagerImpl', () => {
       },
       Effect.provide(TestLayer),
       Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(spanNames))),
+    ),
+  );
+
+  it.effect(
+    'stamps the process space on every span a handler opens',
+    Effect.fn(
+      function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        const handle = yield* manager.spawn(Process.fromOperation(Traced, handlers), {
+          environment: { space: 'B7777777777777777777777777' as any },
+        });
+        yield* handle.runAndExit({ inputs: [undefined] }).pipe(Stream.runCollect);
+
+        const span = spaceSpans.find(({ name }) => name === 'Handler.span');
+        expect(span?.attributes.get('spaceId')).toEqual('B7777777777777777777777777');
+      },
+      Effect.provide(TestLayer),
+      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer([], spaceSpans))),
     ),
   );
 

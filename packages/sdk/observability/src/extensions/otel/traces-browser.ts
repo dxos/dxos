@@ -15,7 +15,7 @@ import { W3CTraceContextPropagator } from '@opentelemetry/core';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { registerInstrumentations } from '@opentelemetry/instrumentation';
 import { AlwaysOnSampler, BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
-import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
+import { StackContextManager, WebTracerProvider } from '@opentelemetry/sdk-trace-web';
 import { ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 
 import { log } from '@dxos/log';
@@ -79,6 +79,10 @@ export class OtelTraces {
     });
 
     trace.setGlobalTracerProvider(this._tracerProvider);
+    // Without a context manager `context.active()` is always the root, so the Effect tracer's
+    // context hook is inert and a log emitted inside a span cannot find it. The stack manager is
+    // synchronous, which is all the tracer needs: it wraps each fiber step, not an async boundary.
+    otelContext.setGlobalContextManager(new StackContextManager().enable());
 
     this._tracer = trace.getTracer(
       'dxos-observability',

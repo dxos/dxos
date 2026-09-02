@@ -8,6 +8,9 @@
 '@dxos/compute': minor
 '@dxos/compute-runtime': minor
 '@dxos/agent-runtime': patch
+'@dxos/log': patch
+'@dxos/client': patch
+'@dxos/echo': patch
 ---
 
 Model calls are now reported to PostHog as `$ai_generation` events, so LLM analytics shows traces, token counts, cost, and latency. Capture rides the existing observability opt-in: a user who has telemetry off sends nothing. Prompt and response content is reported for spaces EDGE replicates in plaintext, which is every space today, and a space whose plaintext never reaches infrastructure reports metadata only. `contentCaptureAllowed()` in `@dxos/observability` is the single decision point, and it is evaluated in the sink so it applies to every event on the way out.
@@ -29,3 +32,7 @@ The PostHog extension maps those onto `$ai_trace` and `$ai_span` — the events 
 `@dxos/effect` adds `makeTracer`, which builds an Effect tracer over an explicit OpenTelemetry provider rather than the global one.
 
 `ProcessContext.setAlarm` now returns an Effect. A process handle used to start its alarm timer and child-event dispatch on Effect's default runtime, copying the clock and tracer across by hand, so a dispatched handler ran with whatever references someone had remembered to copy. `rearmAlarm`, `requestAlarm`, and `requestChildEvent` now fork into the process scope from the calling fiber, and the handler inherits that fiber's context. This is what made a conversation's model calls invisible: the assistant runs each turn from an alarm, so every generation traced to a default that exports nothing while the naming call, invoked directly, traced end to end. `TriggerDispatcher` forks its refresh and reactive dispatches over the context it captured at build for the same reason.
+
+Spans and logs now carry what a reader filters by. Every span gets an `identityDid` tag (renamed from `did`), in the dedicated worker too, which runs the identity provider itself now via `runDedicatedWorker`'s new `onStart`. Spans opened by a process handler and by ECHO's `Database.*` and `Feed.*` operations carry a `spaceId` attribute.
+
+Logs link to the span they were emitted under. The browser tracer provider now registers a context manager, without which the active context was always the root and the Effect tracer's context hook did nothing; the in-thread log processor passes the active context to the SDK, and entries forwarded to the observability worker carry the trace and span ids in their JSONL record (`r`/`s`), captured by `WorkerLogProcessor` through `Otel.activeTraceContext` and rebuilt in `OtelLogSink`. A record emitted under a span the tail sampler later dropped still names that trace.

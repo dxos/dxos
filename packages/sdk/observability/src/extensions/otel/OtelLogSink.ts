@@ -11,6 +11,7 @@ import { type LogRecord as JsonlLogRecord, LogLevel, log, shortLevelName } from 
 
 import { OtelLogs, convertLevel } from './logs';
 import { type OtelDestination } from './otel';
+import { contextForTrace } from './trace-context';
 
 export type Init = {
   type: 'otel-init';
@@ -79,6 +80,12 @@ export class Sink {
         ...(record.e !== undefined ? { error: record.e } : {}),
         ...parseContext(record.c),
       },
+      // Captured on the emitting thread, where the span was active; rebuilt here so the SDK links
+      // the record to it.
+      context:
+        record.r !== undefined && record.s !== undefined
+          ? contextForTrace({ traceId: record.r, spanId: record.s })
+          : undefined,
     });
   }
 

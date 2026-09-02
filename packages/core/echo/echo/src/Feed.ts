@@ -252,7 +252,7 @@ export const append = (
         return db.appendToFeed(feed, items);
       }),
     ),
-  ).pipe(Effect.withSpan('Feed.append'));
+  ).pipe(Database.traced('Feed.append'));
 
 /**
  * Removes items from a feed.
@@ -276,7 +276,7 @@ export const remove = (
         ),
       ),
     ),
-  ).pipe(Effect.withSpan('Feed.remove'));
+  ).pipe(Database.traced('Feed.remove'));
 
 //
 // Lineage (soft fork)
@@ -482,7 +482,7 @@ export const query: {
  */
 export const sync = (feed: Feed, options?: SyncOptions): Effect.Effect<void, never, Database.Service> =>
   Database.Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.syncFeed(feed, options)))).pipe(
-    Effect.withSpan('Feed.sync'),
+    Database.traced('Feed.sync'),
   );
 
 /**
@@ -495,7 +495,7 @@ export const sync = (feed: Feed, options?: SyncOptions): Effect.Effect<void, nev
  */
 export const getSyncState = (feed: Feed): Effect.Effect<SyncState, never, Database.Service> =>
   Database.Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.getFeedSyncState(feed)))).pipe(
-    Effect.withSpan('Feed.getSyncState'),
+    Database.traced('Feed.getSyncState'),
   );
 
 /**
