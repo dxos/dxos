@@ -95,7 +95,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
       onTaskMove={handleMove}
     >
       <TaskList.Viewport>
-        <TaskList.Content classNames='dx-document' />
+        <TaskList.Content classNames='dx-document border' />
       </TaskList.Viewport>
       <div className='p-2 pt-0'>
         <TaskList.Edit

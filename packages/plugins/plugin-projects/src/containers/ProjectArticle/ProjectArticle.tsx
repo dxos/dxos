@@ -204,8 +204,8 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                             subject: outline,
                             attendableId,
                             taskSet,
-                            onSelectTask: handleSelectTask,
                             extensions: outlineExtensions,
+                            onSelectTask: handleSelectTask,
                           }}
                           limit={1}
                         />
