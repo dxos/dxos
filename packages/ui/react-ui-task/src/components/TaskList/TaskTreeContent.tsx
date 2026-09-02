@@ -21,8 +21,8 @@ import {
   resolveReparent,
   resolveTaskPlacement,
 } from './hierarchy';
-import { STATUS_ICONS } from './status-icons';
 import { TaskDescription } from './TaskDescription';
+import { TaskOrdinal, TaskStatusControl } from './TaskRowCells';
 import { TASK_TREE_ROOT_ID, type TaskNode, buildTaskForest, buildTaskPaths, createTaskTreeModel } from './tree-model';
 
 /**
@@ -273,26 +273,12 @@ const TaskTreeHeading = ({
   showDescription: boolean;
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
 }) => {
-  const { t } = useTranslation(translationKey);
   const task = node.task;
-  const status = task?.status ?? 'todo';
-  const done = status === 'done';
-  const error = status === 'failed' || status === 'cancelled';
   const ordinal = task && ordinals.get(task.id);
-
-  const handleToggle = useCallback(
-    () => task && onTaskUpdate?.(task, { status: done ? 'todo' : 'done' }),
-    [onTaskUpdate, task, done],
-  );
 
   if (!task) {
     return null;
   }
-
-  // The flat row's map, not a local set: a tree row that collapsed every status into three circles
-  // could not tell `todo` from `blocked` or `backlog`, and diverged again each time a status was
-  // added.
-  const { icon, classNames: iconClassNames } = STATUS_ICONS[status];
 
   const description = showDescription ? task.description?.trim() || undefined : undefined;
 
@@ -312,33 +298,12 @@ const TaskTreeHeading = ({
     >
       {showGutter &&
         (ordinal !== undefined ? (
-          <Tag hue={done ? 'green' : error ? 'rose' : 'neutral'} classNames='tabular-nums'>
-            {ordinal}
-          </Tag>
+          <TaskOrdinal task={task} ordinal={ordinal} />
         ) : (
           // Holds the gutter track so a numberless row's title still lines up with its neighbours.
           <span />
         ))}
-      {onTaskUpdate ? (
-        <IconButton
-          classNames={mx('shrink-0', iconClassNames)}
-          variant='ghost'
-          density='sm'
-          icon={icon}
-          iconOnly
-          label={done ? t('mark-todo.label') : t('mark-done.label')}
-          onClick={(event) => {
-            // The row is the selection target; the status control must not also select it.
-            event.stopPropagation();
-            handleToggle();
-          }}
-        />
-      ) : (
-        <span className='grid h-8 shrink-0 place-items-center'>
-          <Icon icon={icon} classNames={iconClassNames} size={4} />
-          <span className='sr-only'>{t(`status-${status}.label`)}</span>
-        </span>
-      )}
+      <TaskStatusControl task={task} onTaskUpdate={onTaskUpdate} />
       <span className='min-w-0 truncate'>{task.title}</span>
       {description && (
         <TaskDescription content={description} classNames={mx(showGutter ? 'col-start-3' : 'col-start-2', 'pb-1')} />

@@ -232,7 +232,12 @@ Still open (the Phase 7 gaps):
       control, rather than reading as part of the row above — and both paths share one
       `TaskDescription` so they cannot drift on type scale or clamping. Verified in the
       `Hierarchical` story.
-- [ ] **Drag handles / reordering.** The one real remaining gap. `dnd.ts` and `hierarchy.ts` are
+- [x] **Drag handles / reordering — done and verified by the user 2026-09-01.** `TaskTreeContent`
+      enables `Tree`'s `draggable` and installs the drop monitor; placements resolve through
+      `resolveTaskPlacement`, with `reparent` handled and an end-of-list strip (`dropAtEnd`) so a
+      task can be dropped past the last row. The dragged row leaves the list for the gesture and its
+      subtree travels with it. Drop semantics and the measured zone map: `docs/TREE.md` §9.
+- [ ] **Retire `dnd.ts` / `hierarchy.ts` from the flat path.** The one real remaining gap. `dnd.ts` and `hierarchy.ts` are
       still present and still serve the flat path; `TaskTreeContent` never passes `draggable` to
       `Tree`. Moving drag onto the Tree's pragmatic-dnd contract is what finally deletes them — and
       only then does `hierarchy.test.ts` (155 lines) get ported rather than dropped.

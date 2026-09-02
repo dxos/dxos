@@ -299,22 +299,35 @@ export const Tree = <T extends { id: string } = any>({
     return Date.now() - at < MODIFIER_WINDOW ? { option, shift } : { option: false, shift: false };
   }, []);
 
-  const onSelectNode = useCallback(
-    (node: TreeNodeEntry<T>, modifiers: { option: boolean; shift: boolean }) => {
-      // A branch that is already current, or an option-activation, toggles instead of selecting.
-      if (node.branch && (modifiers.option || node.current)) {
-        onOpenChange?.({ item: node.item, path: node.path, open: !node.open });
-      } else if (canSelect?.({ item: node.item, path: node.path }) ?? true) {
-        onSelect?.({ item: node.item, path: node.path, current: !node.current, ...modifiers });
-      }
-    },
-    [canSelect, onOpenChange, onSelect],
-  );
-
   // Values whose branch content is running its conceal animation; the model close commits when the
   // animation finishes (the machine hides content the instant the controlled value shrinks,
   // so an animated exit has to precede the commit).
   const [closingValues, setClosingValues] = useState<ReadonlySet<string>>(() => new Set());
+
+  /** Starts a branch's conceal animation; the model close commits when it ends. */
+  const requestClose = useCallback((value: string) => {
+    setClosingValues((previous) => (previous.has(value) ? previous : new Set(previous).add(value)));
+  }, []);
+
+  const onSelectNode = useCallback(
+    (node: TreeNodeEntry<T>, modifiers: { option: boolean; shift: boolean }) => {
+      // A branch that is already current, or an option-activation, toggles instead of selecting.
+      if (node.branch && (modifiers.option || node.current)) {
+        // Closing goes through the same deferral the chevron uses. Calling `onOpenChange` here
+        // committed the close at once, so the machine hid the content before it could animate —
+        // the same gesture read as instant from the row and animated from the chevron.
+        if (node.open) {
+          requestClose(node.value);
+        } else {
+          onOpenChange?.({ item: node.item, path: node.path, open: true });
+        }
+      } else if (canSelect?.({ item: node.item, path: node.path }) ?? true) {
+        onSelect?.({ item: node.item, path: node.path, current: !node.current, ...modifiers });
+      }
+    },
+    [canSelect, onOpenChange, onSelect, requestClose],
+  );
+
   const onCommitClose = useCallback(
     (node: TreeNodeEntry) => {
       onOpenChange?.({ item: node.item, path: node.path, open: false });
