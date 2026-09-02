@@ -5,7 +5,7 @@
 import { SpanStatusCode } from '@opentelemetry/api';
 import { describe, test } from 'vitest';
 
-import { type Decidable, DEFAULT_SLOW_MS, TailSampler } from './tail-sampling';
+import { type Decidable, DEFAULT_SLOW_MS, TailSampler, TailSamplingSpanProcessor } from './tail-sampling';
 
 /** Trace ids whose low 32 bits sit either side of the 0.3 ratio. */
 const KEPT_TRACE = '0'.repeat(24) + '00000000'; // 0.0 -> kept at any positive ratio.
@@ -84,8 +84,41 @@ describe('TailSampler', () => {
     expect(sampler.keep(span({ traceId: second }))).toEqual(true);
   });
 
+  test('keeps a trace something outside the span stream promoted', ({ expect }) => {
+    const sampler = new TailSampler();
+    sampler.promote(DROPPED_TRACE);
+    expect(sampler.keep(span({ traceId: DROPPED_TRACE }))).toEqual(true);
+  });
+
   test('keeps everything at ratio 1', ({ expect }) => {
     const sampler = new TailSampler({ ratio: 1 });
     expect(sampler.keep(span({ traceId: DROPPED_TRACE }))).toEqual(true);
+  });
+});
+
+describe('TailSamplingSpanProcessor', () => {
+  test('forwards a span the ratio would drop once its trace is promoted', ({ expect }) => {
+    const forwarded: string[] = [];
+    const delegate = {
+      onStart: () => {},
+      onEnd: (span: { name: string }) => forwarded.push(span.name),
+      forceFlush: async () => {},
+      shutdown: async () => {},
+    };
+    // Ratio 0: only a promotion can let a span through.
+    const processor = new TailSamplingSpanProcessor(delegate as any, { ratio: 0 });
+    const ended = (name: string) =>
+      ({
+        name,
+        spanContext: () => ({ traceId: DROPPED_TRACE }),
+        status: { code: SpanStatusCode.UNSET },
+        attributes: {},
+        duration: [0, 1],
+      }) as any;
+
+    processor.onEnd(ended('quiet'));
+    processor.promote(DROPPED_TRACE);
+    processor.onEnd(ended('flagged'));
+    expect(forwarded).toEqual(['flagged']);
   });
 });

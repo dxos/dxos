@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Context, context as otelContext } from '@opentelemetry/api';
+import { type Context, context as otelContext, trace } from '@opentelemetry/api';
 import { type AnyValueMap, SeverityNumber } from '@opentelemetry/api-logs';
 import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-http';
 import { BatchLogRecordProcessor, LoggerProvider, type LogRecordExporter } from '@opentelemetry/sdk-logs';
@@ -24,6 +24,11 @@ const FLATTEN_DEPTH = 1;
 export type OtelLogOptions = OtelOptions & {
   logLevel: LogLevel;
   exporter?: LogRecordExporter;
+  /**
+   * Called with the trace id of every entry at warning or above emitted inside a span, before the
+   * export level is applied, so the tail sampler can keep that trace.
+   */
+  onTraceFlagged?: (traceId: string) => void;
   /**
    * Include logs forwarded from the shared worker via LoggingService.
    *
@@ -54,6 +59,12 @@ export class OtelLogs {
   }
 
   public readonly logProcessor: LogProcessor = (_config: LogConfig, entry: LogEntry) => {
+    if (entry.level >= LogLevel.WARN && this.options.onTraceFlagged) {
+      const traceId = trace.getSpan(otelContext.active())?.spanContext().traceId;
+      if (traceId !== undefined) {
+        this.options.onTraceFlagged(traceId);
+      }
+    }
     if (
       entry.level < this.options.logLevel ||
       (!this.options.includeSharedWorkerLogs && entry.meta?.S?.remoteSessionId)

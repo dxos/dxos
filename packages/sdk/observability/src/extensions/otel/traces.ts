@@ -69,6 +69,9 @@ export class OtelTraces {
     );
   }
 
+  /** Same surface as the browser tracer; this one exports every span, so there is nothing to promote. */
+  public promote(_traceId: string): void {}
+
   /**
    * Forcibly flush the BatchSpanProcessor. Call before process exit to avoid
    * losing queued spans (which manifests as "Missing Span" in SigNoz — their

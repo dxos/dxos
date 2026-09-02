@@ -43,6 +43,22 @@ describe('OtelSpanSink', () => {
     return { sink, exporter };
   };
 
+  test('exports a span the ratio would drop once its trace is promoted', async () => {
+    const { records, tracer } = makeProducer();
+    const exporter = new InMemorySpanExporter();
+    // Ratio 0: nothing survives on its own, so an export can only come from the promotion.
+    sink = new OtelSpanSink.Sink(defaultInit, { exporter, sampling: { ratio: 0 } });
+    const dropped = tracer.startSpan('quiet');
+    dropped.end();
+    const kept = tracer.startSpan('flagged');
+    sink.promote(kept.spanContext().traceId);
+    kept.end();
+
+    records.forEach((record) => sink!.append(record));
+    await sink.flush();
+    expect(exporter.getFinishedSpans().map(({ name }) => name)).toEqual(['flagged']);
+  });
+
   test('round-trips an ended span through serialization into the export pipeline', async () => {
     const { records, tracer } = makeProducer();
     const { sink, exporter } = makeSink();

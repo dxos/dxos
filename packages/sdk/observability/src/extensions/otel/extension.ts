@@ -137,6 +137,8 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   const { resource, metricsResource } = createResources(baseAttributes, sessionId);
 
   const remoteLogs = logsEnabled ? observabilityWorker : undefined;
+  // Assigned once the tracer exists below; a warning logged before then flags nothing.
+  let flagTrace: ((traceId: string) => void) | undefined;
   const logs =
     logsEnabled && !remoteLogs
       ? new OtelLogs({
@@ -144,6 +146,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
           resource,
           getTags: () => Object.fromEntries(tags),
           logLevel: resolvedLogLevel,
+          onTraceFlagged: (traceId) => flagTrace?.(traceId),
         })
       : undefined;
 
@@ -170,6 +173,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
           : undefined,
       })
     : undefined;
+  flagTrace = (traceId) => traces?.promote(traceId);
 
   const extension: Extension = {
     initialize: () =>

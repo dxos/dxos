@@ -47,6 +47,30 @@ describe('stringifyValues', () => {
 describe('OtelLogs', () => {
   afterEach(() => context.disable());
 
+  test('flags the trace of a warning emitted inside a span, not of an info line', async ({ expect }) => {
+    context.setGlobalContextManager(new StackContextManager().enable());
+    const flagged: string[] = [];
+    const logs = new OtelLogs({
+      destinations: [{ endpoint: 'http://localhost:1', headers: {} }],
+      resource: resourceFromAttributes({}),
+      getTags: () => ({}),
+      // Above the warning: flagging must not depend on the line being exported.
+      logLevel: LogLevel.ERROR,
+      exporter: new InMemoryLogRecordExporter(),
+      onTraceFlagged: (traceId) => flagged.push(traceId),
+    });
+    const spanContext = { traceId: '0af7651916cd43dd8448eb211c80319c', spanId: 'b7ad6b7169203331', traceFlags: 1 };
+
+    context.with(trace.setSpanContext(ROOT_CONTEXT, spanContext), () => {
+      logs.logProcessor(undefined as never, new LogEntry({ level: LogLevel.INFO, message: 'fine' }));
+      logs.logProcessor(undefined as never, new LogEntry({ level: LogLevel.WARN, message: 'odd' }));
+    });
+    logs.logProcessor(undefined as never, new LogEntry({ level: LogLevel.WARN, message: 'untraced' }));
+
+    expect(flagged).toEqual([spanContext.traceId]);
+    await logs.close();
+  });
+
   test('links a record to the span active when it was emitted', async ({ expect }) => {
     context.setGlobalContextManager(new StackContextManager().enable());
     const exporter = new InMemoryLogRecordExporter();
