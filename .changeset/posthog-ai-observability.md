@@ -39,7 +39,7 @@ Logs link to the span they were emitted under. The browser tracer provider now r
 
 The node tracer (`dx`, agents) registers the async-hooks context manager the same way, so logs link there too. The space attribute is one key everywhere: `spaceId`, stamped by the process handle, by ECHO, and by the AI stack, which previously used `dxos.ai.space_id` of its own; the AI capture policy now recognises a model call as running in a known space whenever the process around it is scoped to one.
 
-Worker-side spans carry `spaceId` too: `FeedStore` and `IndexEngine` stamp it wherever a call is scoped to one space, which is nearly every call, since the store holds every space's data in one database and takes the space as an argument. Migrations and the automerge document stores have none to give.
+Worker-side spans carry `spaceId` too: `FeedStore` and `IndexEngine` stamp it on every span beneath a call scoped to one space, which is nearly every call, since the store holds every space's data in one database and takes the space as an argument. Migrations and the automerge document stores have none to give.
 
 A warning or error log now keeps its trace. The log sink hands the trace id of every record at warning or above to the span sink's tail sampler, before the export level is applied, so a trace with a worrying log survives the ratio the same way one with an errored span does; without a worker the in-thread log processor reaches the in-thread sampler the same way.
 
