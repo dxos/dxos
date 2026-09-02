@@ -321,6 +321,11 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
         const researchService = yield* ServiceResolver.resolve(ResearchService.ResearchService, {});
         yield* researchService.waitForTaskToAppear();
         yield* researchService.completeOneTask();
+        // Settle the turn before tearing down, so what survives the reload is the queued tool result
+        // alone. Without this the prompt's queue entry may also still be unacked, and recovery
+        // delivers the result AND redelivers the prompt — which re-issues the tool this test is
+        // asserting does not run twice.
+        yield* session.waitForCompletion();
 
         const processManager = yield* ProcessManager.ProcessManagerService;
         yield* processManager.shutdown();
@@ -333,11 +338,6 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
         // Recovery replays an already-queued result as a synthetic `<result pid=N>` block rather than
         // re-issuing the tool, so the research must not run a second time — a re-issue would duplicate
         // the side effects of an operation that had already completed.
-        //
-        // NOTE: whether the result is still queued at shutdown is a race with the agent consuming it,
-        // so this asserts the invariant that holds either way. Covering redelivery deterministically
-        // needs a seam that holds the turn loop while a result sits queued — see the effect-smol
-        // ledger entry "Cover the agent redelivery path deterministically".
         expect(researchService.getTasks().map((task) => task.state)).toEqual(['completed']);
         session = yield* getSession(session.chat);
 

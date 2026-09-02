@@ -179,15 +179,19 @@ export const make = ({
       Effect.orDie,
     );
     const boundBinder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
-    // The agent process is spawned against the chat, so the host is discovered by the chat's URI;
-    // a feed with no chat (e.g. a bare `AiSession`) keeps the feed as its own host target.
-    const chat = yield* Chat.loadForFeed(feed).pipe(Effect.provide(runtime));
+    // Cached rather than resolved up front: a harness is built for every operation the agent
+    // invokes, and most never ask for the chat — resolving one here would put a lookup on the tool
+    // path. The agent process is spawned against the chat, so the host is discovered by the chat's
+    // URI; a feed with no chat (e.g. a bare `AiSession`) keeps the feed as its own host target.
+    const chat = yield* Effect.cached(Chat.loadForFeed(feed).pipe(Effect.provide(runtime)));
     return makeService({
       feed,
-      chat: chatOrFail(Effect.succeed(chat)),
+      chat: chatOrFail(chat),
       runtime,
       binder: boundBinder,
-      owningHost: lookupOwningHost(processManager, chat ? Obj.getURI(chat) : conversation),
+      owningHost: Effect.flatMap(chat, (chat) =>
+        lookupOwningHost(processManager, chat ? Obj.getURI(chat) : conversation),
+      ),
     });
   });
 
