@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Icon, IconBlock, IconButton, Tag, useTranslation } from '@dxos/react-ui';
+import { Icon, IconBlock, IconButton, Input, Tag, useTranslation } from '@dxos/react-ui';
 import { Menu, createMenuAction } from '@dxos/react-ui-menu';
 import { Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
@@ -109,3 +109,34 @@ export const TaskOrdinal = ({ task, ordinal, classNames }: TaskOrdinalProps) => 
 };
 
 TaskOrdinal.displayName = 'TaskList.Ordinal';
+
+export type TaskCheckboxProps = {
+  task: Task.Task;
+  checked: boolean;
+  onCheckedChange: (task: Task.Task) => void;
+  classNames?: string;
+};
+
+/**
+ * The gutter's checkbox: which rows an action will act on, never a status write — completing a task
+ * is what the status control does. It takes the ordinal's cell rather than a column of its own, so a
+ * list that offers it keeps one row geometry and the trailing controls do not shift.
+ */
+export const TaskCheckbox = ({ task, checked, onCheckedChange, classNames }: TaskCheckboxProps) => {
+  const { t } = useTranslation(translationKey);
+  return (
+    <Input.Root>
+      <Input.Checkbox
+        checked={checked}
+        data-testid='taskList.item.checkbox'
+        aria-label={t('task-check.label')}
+        classNames={classNames}
+        onCheckedChange={() => onCheckedChange(task)}
+        // The row is the selection target; checking it must not also make it the current row.
+        onClick={(event) => event.stopPropagation()}
+      />
+    </Input.Root>
+  );
+};
+
+TaskCheckbox.displayName = 'TaskList.Checkbox';

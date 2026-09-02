@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Collapsible } from '@ark-ui/react/collapsible';
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Option from 'effect/Option';
 import * as Atom from 'effect/unstable/reactivity/Atom';
@@ -618,11 +619,61 @@ ChatOutline.displayName = CHAT_OUTLINE_NAME;
 
 const CHAT_PROMPT_NAME = 'Chat.Prompt';
 
-type ChatPromptProps = Omit<NaturalChatPromptProps, 'chat' | 'db' | 'processor' | 'event'>;
+type ChatPromptProps = Omit<NaturalChatPromptProps, 'chat' | 'db' | 'processor' | 'event' | 'tasksVisible'> & {
+  /** Whether the checklist is disclosed on mount. */
+  defaultTasksVisible?: boolean;
+};
 
-const ChatPrompt = (props: ChatPromptProps) => {
+/**
+ * The composer with the chat's checklist disclosed above it.
+ *
+ * One component rather than two siblings: they share a border and a rounded shell, and the control
+ * that discloses the checklist lives in the composer's own action bar — so a host that placed them
+ * side by side had to hold the disclosure state between them and coordinate the corner radius.
+ *
+ * Ark's `Collapsible` owns the disclosure (it measures the height the animation ramps against). Its
+ * trigger is not used: the toggle is a button inside the composer, which reports through the chat
+ * event rather than being wrapped in a `Collapsible.Trigger` it cannot reach.
+ */
+const ChatPrompt = ({ classNames, defaultTasksVisible = true, ...props }: ChatPromptProps) => {
   const { chat, db, processor, event } = useChatContext(CHAT_PROMPT_NAME);
-  return <NaturalChatPrompt {...props} chat={chat} db={db} processor={processor} event={event} />;
+
+  // Disclosed by default: a chat carrying a checklist should show it without being asked, and the
+  // toggle is how the reader gets the room back once they have read it. Per mount rather than
+  // persisted — it is a glance, not a preference.
+  const [tasksVisible, setTasksVisible] = useState(defaultTasksVisible);
+  useEffect(() => {
+    return event.on((ev) => {
+      if (ev.type === 'toggle-tasks') {
+        setTasksVisible((visible) => !visible);
+      }
+    });
+  }, [event]);
+
+  return (
+    <Collapsible.Root
+      open={tasksVisible}
+      onOpenChange={({ open }) => setTasksVisible(open)}
+      // Clipped rather than unmounted: the list holds its own subscriptions, and remounting it on
+      // every toggle would refetch the checklist to show what the reader just hid.
+      lazyMount={false}
+    >
+      {/* The height the machine measures is what the ramp animates against, so the region clips. */}
+      <Collapsible.Content className='overflow-hidden data-[state=closed]:animate-slide-up data-[state=open]:animate-slide-down'>
+        <ChatTaskList classNames='shrink-0 max-h-[calc(4*2rem+1px)] border border-separator border-b-0 rounded-t-sm text-description' />
+      </Collapsible.Content>
+      <NaturalChatPrompt
+        {...props}
+        // Square where the checklist meets it, so the two read as one shell rather than two cards.
+        classNames={[tasksVisible && 'rounded-t-none', classNames]}
+        chat={chat}
+        db={db}
+        processor={processor}
+        event={event}
+        tasksVisible={tasksVisible}
+      />
+    </Collapsible.Root>
+  );
 };
 
 ChatPrompt.displayName = CHAT_PROMPT_NAME;
@@ -684,7 +735,6 @@ const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
     [handleDelete, t],
   );
 
-  // Rendered even when empty, so `TaskList.Edit` can always add the first task.
   if (!chat) {
     return null;
   }
@@ -703,7 +753,7 @@ const ChatTaskList = composable<HTMLDivElement>((props, forwardedRef) => {
         <TaskList.Viewport>
           <TaskList.Content />
         </TaskList.Viewport>
-        <TaskList.Edit grid classNames='shrink-0' />
+        <TaskList.Edit grid />
       </div>
     </TaskList.Root>
   );
@@ -739,7 +789,6 @@ export const Chat = {
   Status: ChatStatus,
   Thread: ChatThread,
   Outline: ChatOutline,
-  TaskList: ChatTaskList,
 };
 
 export type {
