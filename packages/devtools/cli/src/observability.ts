@@ -12,22 +12,15 @@ import * as Observability from '@dxos/observability/Observability';
 import * as ObservabilityExtension from '@dxos/observability/ObservabilityExtension';
 import { getHostPlatform } from '@dxos/util';
 
-/**
- * The dev deployment's own project, and public write-only like every PostHog project token. Committed
- * because it is what makes a source checkout report somewhere without per-developer setup; the
- * production token is injected at bundle time instead (see `scripts/build.ts`).
- */
-const DEVELOPMENT_TOKEN = 'phc_GERCUvfEnYtleBgJRWuKnVQo1R59FBqwV5fvIor86Aa';
 const POSTHOG_HOST = 'https://eu.i.posthog.com' as const;
 
 /**
- * Where OTel goes: each deployment's reverse proxy, which injects the SigNoz ingestion key
- * server-side — so a binary published to npm carries no credential of its own. Paired with the
- * PostHog projects above, so a source build reports to the dev deployment's tenant and its test
- * project rather than to either production one.
+ * Where a released binary sends OTel: the deployment's reverse proxy, which injects the SigNoz
+ * ingestion key server-side — so a binary published to npm carries no credential of its own. A
+ * source build sends nowhere; point `DX_OTEL_ENDPOINT` at `https://dev.composer.space/api/otel` to
+ * exercise it against the dev deployment.
  */
-const PRODUCTION_OTEL_ENDPOINT = 'https://composer.space/api/otel';
-const DEVELOPMENT_OTEL_ENDPOINT = 'https://dev.composer.space/api/otel';
+const OTEL_ENDPOINT = 'https://composer.space/api/otel';
 
 /** Stamped on everything as `deployment.environment`, in the vocabulary the deployments use. */
 const ENVIRONMENT = process.env.DX_ENVIRONMENT ?? (globalThis.DX_CLI_BUNDLED ? 'production' : 'dev');
@@ -42,27 +35,21 @@ export const observabilityNamespace = (profile: string): string => getProfilePat
 const reporting = (): boolean => !process.env.CI && !process.env.VITEST;
 
 /**
- * `DX_POSTHOG_API_KEY` first, so a locally built binary is exercised without writing to the project
- * the released one writes to. A released binary otherwise reports to whatever project was injected
- * at bundle time — nowhere, if none was — and a source build to the dev deployment's project.
+ * A released binary reports to whatever project was injected at bundle time, and nothing else does
+ * unless asked: a source checkout is where the tests, the demos and the debugging happen, and none
+ * of that is usage. `DX_POSTHOG_API_KEY` is how a developer opts in, and how a locally built binary
+ * is exercised without writing to the project the released one writes to.
  */
 export const projectToken = (): string | undefined => {
   if (!reporting()) {
     return undefined;
   }
-  if (process.env.DX_POSTHOG_API_KEY) {
-    return process.env.DX_POSTHOG_API_KEY;
-  }
-  return globalThis.DX_CLI_BUNDLED ? globalThis.DX_CLI_POSTHOG_TOKEN || undefined : DEVELOPMENT_TOKEN;
+  return process.env.DX_POSTHOG_API_KEY || (globalThis.DX_CLI_BUNDLED ? globalThis.DX_CLI_POSTHOG_TOKEN : undefined);
 };
 
 /** `DX_OTEL_ENDPOINT` overrides this; the extension reads that variable itself and prefers it. */
-export const otelEndpoint = (): string | undefined => {
-  if (!reporting()) {
-    return undefined;
-  }
-  return globalThis.DX_CLI_BUNDLED ? PRODUCTION_OTEL_ENDPOINT : DEVELOPMENT_OTEL_ENDPOINT;
-};
+export const otelEndpoint = (): string | undefined =>
+  reporting() && globalThis.DX_CLI_BUNDLED ? OTEL_ENDPOINT : undefined;
 
 /**
  * The subcommand path, with flags and their values dropped: a flag value is a file path, a space

@@ -16,8 +16,9 @@ describe('CLI observability', () => {
     expect(commandPath(['--profile', 'work', 'space', 'list'])).to.equal('dx');
   });
 
-  // CI runs the released binary in the smoke test, which would otherwise land in production.
-  test('reports nowhere from a test run', ({ expect }) => {
+  // A source checkout is where the tests, demos and debugging happen, and CI runs the released
+  // binary in the smoke test — neither is usage, and neither should reach a project.
+  test('reports nowhere unless asked', ({ expect }) => {
     expect(projectToken()).to.be.undefined;
     expect(otelEndpoint()).to.be.undefined;
   });
