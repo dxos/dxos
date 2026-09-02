@@ -34,7 +34,7 @@ import { ToolExecutionServices } from '../tool-runtime';
 import { McpServerError } from '../util';
 import * as AiContext from './AiContext';
 import * as Harness from './Harness';
-import { SessionLoader } from './SessionLoader';
+import { SessionStore } from './SessionStore';
 import * as SkillHooks from './SkillHooks';
 import { createToolkit } from './toolkit';
 
@@ -89,7 +89,7 @@ export class Session extends Resource {
    */
   private readonly _binder: AiContext.Binder;
 
-  private readonly _sessionLoader = new SessionLoader();
+  private readonly _sessionStore = new SessionStore();
 
   public constructor(options: Options) {
     super();
@@ -124,7 +124,7 @@ export class Session extends Resource {
   public async getHistory(): Promise<Message.Message[]> {
     const { items: reachable } = Feed.history(await this.#messagesInAppendOrder());
     return RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
-      this._sessionLoader.reifyHistory(this._feed, reachable),
+      this._sessionStore.reifyHistory(this._feed, reachable),
     );
   }
 

@@ -18,16 +18,15 @@ import { type ActivationEvent, Capability, CapabilityManager, Plugin, PluginMana
 import { type UseAppOptions, useApp } from '../ui';
 import { activateDemandGatedModules } from './demand-gated';
 
-let defaultFallback: NonNullable<UseAppOptions['fallback']> = ErrorFallback;
-
 /**
- * Sets the fallback a crashed story renders, overridable per story via `withPluginManager({ fallback })`.
- * The storybook preview points this at the logger addon's, which a value import cannot reach from the
- * published `./testing` entrypoint.
+ * The fallback a crashed story renders, overridable per story via `withPluginManager({ fallback })`.
+ * A global because importing `./testing` from the storybook preview drags the plugin core into every
+ * project's dependency pre-bundle.
  */
-export const setStoryErrorFallback = (fallback: NonNullable<UseAppOptions['fallback']>) => {
-  defaultFallback = fallback;
-};
+declare global {
+  // eslint-disable-next-line no-var
+  var __STORY_ERROR_FALLBACK__: NonNullable<UseAppOptions['fallback']> | undefined;
+}
 
 /**
  * Builds a plugin manager for test hosts. Stories go through {@link withPluginManager}; headless
@@ -187,7 +186,11 @@ const WithPluginManagerApp = ({
     [fireEvents, pluginManager, storyId],
   );
 
-  const App = useApp({ pluginManager, setupEvents, fallback: fallback ?? defaultFallback });
+  const App = useApp({
+    pluginManager,
+    setupEvents,
+    fallback: fallback ?? globalThis.__STORY_ERROR_FALLBACK__ ?? ErrorFallback,
+  });
   return activated ? <App /> : <></>;
 };
 

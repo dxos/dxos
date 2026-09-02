@@ -142,6 +142,8 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                 )}
               </div>
               <div className='dx-document flex flex-col px-4 pb-4'>
+                {/* Queued prompts the agent has not taken up yet, stacked right above the composer. */}
+                <ChatComponent.Queue classNames='shrink-0 items-end pb-1' />
                 {tasksVisible && (
                   <ChatComponent.TaskList classNames='shrink-0 max-h-[calc(4*2rem+1px)] border border-separator border-b-0 rounded-t-sm text-description' />
                 )}
