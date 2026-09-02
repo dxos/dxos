@@ -38,8 +38,10 @@ A `minor` does **not** cascade the group to `1.0.0` (the tooling keeps standard 
 
 Write the changeset at two moments, each time from the **whole diff** against the merge base:
 
-1. **Opening the PR** — after the code is done, read `git diff origin/main...HEAD` and write the body
-   from what the PR changes as a whole.
+1. **Opening the PR** — after the code is done, read `git diff origin/<base>...HEAD` and write the
+   body from what the PR changes as a whole. `<base>` is the branch the PR targets: `main` for a
+   standalone PR, the parent PR's head branch for a stacked one — diffing a stacked child against
+   `main` folds the parent's changes into this PR's changelog entry.
 2. **Before landing** — reread the file against the diff as it stands now. If the PR moved (review
    fixes, scope changes), **rewrite the file from scratch**; a body that still describes the PR stays
    as it is.
