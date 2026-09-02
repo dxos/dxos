@@ -159,7 +159,10 @@ describe('AiTelemetry', () => {
       truncated: 'dxos.ai.truncated',
       cacheReadTokens: 'dxos.ai.cache_read_tokens',
       cacheWriteTokens: 'dxos.ai.cache_write_tokens',
+      kind: 'dxos.ai.kind',
+      name: 'dxos.ai.name',
     });
+    expect(AiTelemetry.KIND).toEqual({ turn: 'turn', tool: 'tool' });
   });
 
   it.effect('stamps the prompt-cache counts the GenAI conventions have no room for', () =>

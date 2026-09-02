@@ -11,7 +11,14 @@ import { type IdbLogStore } from '@dxos/log-store-idb';
 
 import * as ObservabilityExtension from '../../ObservabilityExtension';
 import { stubExtension } from '../stub';
-import { AI_GENERATION_EVENT, toAiGenerationProperties } from './ai-generation';
+import {
+  AI_GENERATION_EVENT,
+  AI_SPAN_EVENT,
+  AI_TRACE_EVENT,
+  toAiGenerationProperties,
+  toAiSpanProperties,
+  toAiTraceProperties,
+} from './llm-analytics';
 
 export type ExtensionsOptions = {
   config: Config;
@@ -171,6 +178,12 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
           isAvailable: () => Effect.succeed(true),
           captureGeneration: (generation) => {
             posthog.capture(AI_GENERATION_EVENT, toAiGenerationProperties(generation));
+          },
+          captureTurn: (turn) => {
+            posthog.capture(AI_TRACE_EVENT, toAiTraceProperties(turn));
+          },
+          captureToolCall: (toolCall) => {
+            posthog.capture(AI_SPAN_EVENT, toAiSpanProperties(toolCall));
           },
         },
         {

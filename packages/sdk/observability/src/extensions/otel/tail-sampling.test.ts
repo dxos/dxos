@@ -42,6 +42,12 @@ describe('TailSampler', () => {
     expect(sampler.keep(span({ attributes: { 'gen_ai.system': 'anthropic' } }))).toEqual(true);
   });
 
+  test('keeps a turn or tool-call span the ratio would have dropped', ({ expect }) => {
+    // These carry no `gen_ai.*`, but the AI sink reports them: a sampled-out turn has no trace event.
+    expect(new TailSampler().keep(span({ attributes: { 'dxos.ai.kind': 'turn' } }))).toEqual(true);
+    expect(new TailSampler().keep(span({ attributes: { 'dxos.ai.kind': 'tool' } }))).toEqual(true);
+  });
+
   test('keeps a span slower than the threshold', ({ expect }) => {
     expect(new TailSampler().keep(span({ durationMs: DEFAULT_SLOW_MS + 1 }))).toEqual(true);
   });

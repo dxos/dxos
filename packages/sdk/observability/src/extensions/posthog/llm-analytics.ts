@@ -5,15 +5,45 @@
 import type * as ObservabilityExtension from '../../ObservabilityExtension';
 
 /**
- * PostHog's LLM analytics schema. A `$ai_generation` event with `$ai_*` properties is what the
- * product reads to build traces, latency and cost; the names are PostHog's own, which is why this
- * mapping lives with the PostHog extension rather than with the capture policy that produces
- * {@link ObservabilityExtension.Generation}.
+ * PostHog's LLM analytics schema. Three events with `$ai_*` properties are what the product reads:
+ * `$ai_trace` is the top-level unit (a conversation turn here), `$ai_span` a step inside it (a tool
+ * call), `$ai_generation` a model call. They are linked by `$ai_trace_id`, and a span or generation
+ * names its parent with `$ai_parent_id`. The names are PostHog's own, which is why this mapping
+ * lives with the PostHog extension rather than with the capture policy that produces the records.
  *
  * `$ai_input_tokens` is the uncached count, which is what PostHog expects alongside the two cache
  * figures — together they price the call, and their ratio is the prompt-cache hit rate.
  */
 export const AI_GENERATION_EVENT = '$ai_generation';
+export const AI_TRACE_EVENT = '$ai_trace';
+export const AI_SPAN_EVENT = '$ai_span';
+
+/** `$ai_trace`: the turn, carrying the prompt and the messages it produced as its states. */
+export const toAiTraceProperties = (turn: ObservabilityExtension.Turn): Record<string, unknown> =>
+  stripUndefined({
+    ...spanProperties(turn),
+  });
+
+/** `$ai_span` of type `tool`: one tool call, carrying its arguments and result as its states. */
+export const toAiSpanProperties = (toolCall: ObservabilityExtension.ToolCall): Record<string, unknown> =>
+  stripUndefined({
+    ...spanProperties(toolCall),
+    $ai_span_type: 'tool',
+  });
+
+const spanProperties = (span: ObservabilityExtension.AiSpanBase): Record<string, unknown> => ({
+  $ai_trace_id: span.traceId,
+  $ai_span_id: span.spanId,
+  $ai_parent_id: span.parentSpanId,
+  $ai_span_name: span.spanName,
+  $ai_session_id: span.sessionId,
+  $ai_latency: span.latency,
+  $ai_input_state: span.content?.input,
+  $ai_output_state: span.content?.output,
+  $ai_content_truncated: span.content?.truncated,
+  $ai_is_error: span.errorClass ? true : undefined,
+  $ai_error: span.errorClass,
+});
 
 export const toAiGenerationProperties = (generation: ObservabilityExtension.Generation): Record<string, unknown> =>
   stripUndefined({

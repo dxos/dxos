@@ -207,6 +207,13 @@ export class Session extends Resource {
     params: RunProps<R>,
   ): Effect.Effect<Message.Message[], AiRequest.RunError, AiRequest.RunRequirements | R> {
     return Effect.gen({ self: this }, function* () {
+      // The turn is what an analytics backend groups a conversation's model calls under; its input
+      // and output are stamped here and gated by the sink like a model call's content.
+      yield* AiTelemetry.annotateKind(AiTelemetry.KIND.turn);
+      const inputTruncated = yield* AiTelemetry.annotateContent(AiTelemetry.ATTRIBUTES.input, () =>
+        serializePrompt(params.prompt),
+      );
+
       const history = yield* Effect.promise(() => this.getHistory());
       const skills = this.context.getSkills();
       const objects = this.context.getObjects();
@@ -280,7 +287,14 @@ export class Session extends Resource {
         toolCalls: request.toolCalls,
       });
 
-      return [...request.pending];
+      const output = [...request.pending];
+      const outputTruncated = yield* AiTelemetry.annotateContent(AiTelemetry.ATTRIBUTES.output, () =>
+        output.map(serializeMessage),
+      );
+      if (inputTruncated || outputTruncated) {
+        yield* Effect.annotateCurrentSpan(AiTelemetry.ATTRIBUTES.truncated, true);
+      }
+      return output;
     }).pipe(
       Effect.provide(
         Layer.mergeAll(
@@ -384,6 +398,31 @@ const feedPosition = (message: Message.Message): number => {
   const key = Obj.getKeys(message, FeedProtocol.KEY_QUEUE_POSITION).at(0)?.id;
   const position = key !== undefined ? Number(key) : Number.NaN;
   return Number.isNaN(position) ? Number.POSITIVE_INFINITY : position;
+};
+
+/** The prompt as the turn span carries it: text as is, blocks reduced to what identifies them. */
+export const serializePrompt = (prompt: string | readonly ContentBlock.Any[]): unknown =>
+  typeof prompt === 'string' ? prompt : prompt.map(serializeBlock);
+
+/** A turn's message as its span carries it. */
+export const serializeMessage = (message: Message.Message): unknown => ({
+  role: message.sender.role,
+  blocks: message.blocks.map(serializeBlock),
+});
+
+// Text, tool calls, and tool results are what a reader of a turn needs; binary and
+// provider-specific blocks are elided by tag rather than serialized.
+const serializeBlock = (block: ContentBlock.Any): unknown => {
+  switch (block._tag) {
+    case 'text':
+      return { type: 'text', text: block.text };
+    case 'toolCall':
+      return { type: 'toolCall', name: block.name, input: block.input };
+    case 'toolResult':
+      return { type: 'toolResult', name: block.name, result: block.result, error: block.error };
+    default:
+      return { type: block._tag };
+  }
 };
 
 /**

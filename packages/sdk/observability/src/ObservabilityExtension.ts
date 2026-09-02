@@ -115,11 +115,46 @@ export type GenerationContent = {
   truncated?: boolean;
 };
 
+/** Fields a turn and a tool call share with a generation: identity, timing, and gated content. */
+export type AiSpanBase = {
+  traceId: string;
+  spanId: string;
+  parentSpanId?: string;
+  /** For a tool call, the tool's name rather than the span's. */
+  spanName: string;
+  /** Conversation the span belongs to, when the call site named one. */
+  sessionId?: string;
+  /** Wall-clock duration, in seconds. */
+  latency: number;
+  /** Absent entirely when the capture policy denied it. */
+  content?: AiSpanContent;
+  /** Exception class name only, as on {@link Generation}. */
+  errorClass?: string;
+};
+
+export type AiSpanContent = {
+  input?: unknown;
+  output?: unknown;
+  /** Some field above was cut to fit, so it is a fragment rather than the whole. */
+  truncated?: boolean;
+};
+
+/**
+ * One conversation turn: the unit a backend groups a turn's model calls and tool calls under (what
+ * PostHog calls a trace). Its input is the user prompt and its output the messages the turn produced.
+ */
+export type Turn = AiSpanBase;
+
+/** One tool call inside a turn (what PostHog calls a span), with the arguments and the result. */
+export type ToolCall = AiSpanBase;
+
 /**
  * Generations extension API (kind-specific methods only).
  */
 export type Generations = {
   captureGeneration(generation: Generation): void;
+  captureTurn(turn: Turn): void;
+  captureToolCall(toolCall: ToolCall): void;
 };
 
 /**
