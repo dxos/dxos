@@ -543,7 +543,11 @@ const TaskTreeTrailing = ({ item }: { item: TaskNode }) => {
   const { t } = useTranslation(translationKey);
   const { showEstimates } = useTaskListContext('TaskList.TreeTrailing');
   const task = item.task;
-  if (!task) {
+  // Subscribed for the same reason as the heading: priority, estimate and assignee are property
+  // edits, which do not change the task array the model is built from.
+  const [snapshot] = useObject(task);
+  const current = snapshot ?? task;
+  if (!task || !current) {
     return null;
   }
 
@@ -554,7 +558,7 @@ const TaskTreeTrailing = ({ item }: { item: TaskNode }) => {
           list rather than sitting wherever the tags happened to end. */}
       <div className='flex h-8 items-center justify-end gap-1'>
         <TaskListItemArtifacts task={task} />
-        {task.assignee && <TaskListAssignee assignee={task.assignee} />}
+        {current.assignee && <TaskListAssignee assignee={current.assignee} />}
       </div>
       <div className='flex h-8 items-center justify-center'>{showEstimates && <TaskEstimateControl task={task} />}</div>
       <div className='flex h-8 items-center justify-center'>

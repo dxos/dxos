@@ -7,6 +7,7 @@ import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/ad
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 
+import { useObject } from '@dxos/echo-react';
 import { useTranslation } from '@dxos/react-ui';
 import { type ColumnRenderer, type HeadingRenderer, Tree, isTreeDataFor } from '@dxos/react-ui-list';
 import { Task } from '@dxos/types';
@@ -294,13 +295,18 @@ const TaskTreeHeading = ({
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
 }) => {
   const task = node.task;
+  // Subscribed per row: the model is rebuilt from the task array, whose identity a property edit
+  // does not change, so a rename made anywhere else would leave the row showing its old title.
+  // Read through the snapshot; the controls still take the live object, which is what they write to.
+  const [snapshot] = useObject(task);
+  const current = snapshot ?? task;
   const ordinal = task && ordinals.get(task.id);
 
-  if (!task) {
+  if (!task || !current) {
     return null;
   }
 
-  const description = showDescription ? task.description?.trim() || undefined : undefined;
+  const description = showDescription ? current.description?.trim() || undefined : undefined;
 
   return (
     // A grid rather than a flex row so the description can start in the title's own column: it has
@@ -324,7 +330,7 @@ const TaskTreeHeading = ({
           <span />
         ))}
       <TaskStatusControl task={task} onTaskUpdate={onTaskUpdate} />
-      <span className='min-w-0 truncate'>{task.title}</span>
+      <span className='min-w-0 truncate'>{current.title}</span>
       {description && (
         <TaskDescription content={description} classNames={mx(showGutter ? 'col-start-3' : 'col-start-2', 'pb-1')} />
       )}
