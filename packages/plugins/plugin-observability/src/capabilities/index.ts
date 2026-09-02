@@ -61,6 +61,18 @@ export const PrivacyNotice = Capability.lazyModule(
   },
   () => import('./privacy-notice'),
 );
+export const PrivacyBanner = Capability.lazyModule(
+  'PrivacyBanner',
+  {
+    environments: ['node'],
+    requires: [ObservabilityCapabilities.Namespace],
+    provides: [],
+    // Same event the toast rides: fired only for a genuinely new identity, never a recovered or
+    // joined one, so the notice reaches the person whose data collection is starting.
+    activatesOn: ObservabilityEvents.IdentityCreatedEvent,
+  },
+  () => import('./privacy-banner'),
+);
 export const Namespace = Capability.inlineModule(
   'namespace',
   {

@@ -155,10 +155,6 @@ const program = Effect.gen(function* () {
   registerSharedScope({ enabled: installed.length > 0 });
 
   const namespace = observabilityNamespace(profile);
-  // The notice is printed once per installation, before anything is sent.
-  yield* Effect.promise(() =>
-    Observability.showObservabilityBanner(namespace, (text) => process.stderr.write(`${text}\n\n`)),
-  );
   const installationId = yield* Effect.promise(() => Observability.getInstallationId(namespace));
   // Started here and awaited by the plugin's module, so extension setup overlaps plugin activation.
   const observability = initializeObservability({ config, namespace, distinctId: installationId });
