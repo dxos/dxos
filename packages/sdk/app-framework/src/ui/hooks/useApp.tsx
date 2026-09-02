@@ -205,7 +205,7 @@ export const useApp = ({
               // completion — leaving downstream capabilities (operation-invoker,
               // app-graph, …) un-registered when the boot loader dismisses.
               if (event === ActivationEvents.Startup.id && state === 'activated' && !module) {
-                clearTimeout(timeoutId);
+                clearInterval(timeoutId);
                 setReady(true);
                 readyRef.current = true;
                 // Trigger startup profiler dump if available.
@@ -290,8 +290,24 @@ export const useApp = ({
       return yield* Fiber.join(listener);
     }).pipe(Effect.scoped, Effect.runFork);
 
-    // Set up a timeout for startup.
-    const timeoutId = setTimeout(() => {
+    // Startup deadline, counted in observed execution time rather than wall clock. The interval
+    // credits at most two slices per fire, so time the process did not run — WKWebView suspending
+    // the WebContent process of a hidden window, App Nap, system sleep — does not count against
+    // the boot. A wall-clock timer here converts a mid-boot suspension into a fatal dialog on a
+    // healthy boot: the 2026-08-28 native-app incident was exactly that, a 166s suspension eating
+    // the whole 30s budget of a startup whose modules had all activated.
+    const DEADLINE_SLICE_MS = 1_000;
+    let deadlineElapsedMs = 0;
+    let deadlineLastTickAt = performance.now();
+    const timeoutId = setInterval(() => {
+      const now = performance.now();
+      const sinceLastMs = now - deadlineLastTickAt;
+      deadlineLastTickAt = now;
+      deadlineElapsedMs += Math.min(sinceLastMs, 2 * DEADLINE_SLICE_MS);
+      if (deadlineElapsedMs < timeout) {
+        return;
+      }
+      clearInterval(timeoutId);
       if (readyRef.current || errorRef.current) {
         return;
       }
@@ -325,11 +341,11 @@ export const useApp = ({
       }
 
       abort();
-    }, timeout);
+    }, DEADLINE_SLICE_MS);
 
     return () => {
       log('useApp: effect cleanup');
-      clearTimeout(timeoutId);
+      clearInterval(timeoutId);
       void EffectEx.runAndForwardErrors(Fiber.interrupt(fiber));
       if (!isExternalManager) {
         EffectEx.runDetached(manager.shutdown());

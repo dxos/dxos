@@ -250,6 +250,12 @@ pub fn run() {
                     // all drag events after dragstart, breaking pragmatic-drag-and-drop drop targets.
                     // Tradeoff: native file drop from Finder into the webview is disabled for now.
                     .disable_drag_drop_handler()
+                    // WKWebView's default inactive scheduling policy SUSPENDS the WebContent process
+                    // once the window sits hidden or occluded — every JS realm (page, workers, sync)
+                    // freezes for hours while this host process keeps running, and a suspension
+                    // overlapping startup trips the watchdog into the fatal dialog. `Disabled` maps
+                    // to WKInactiveSchedulingPolicyNone; macOS 14+/iOS 17+, ignored elsewhere.
+                    .background_throttling(tauri::utils::config::BackgroundThrottlingPolicy::Disabled)
                     .devtools(true)
                     .build()?;
 
@@ -291,18 +297,17 @@ pub fn run() {
 }
 
 // #region DEBUG
-/// [DEBUG H-suspend] Host-process heartbeat, shipped temporarily to confirm the native-app
-/// freeze diagnosis in the wild before the fix lands. Remove together with the JS probe in
-/// client-observability.ts and the release-logging override in `setup`.
+/// [DEBUG H-suspend] Host-process heartbeat, shipped temporarily to verify the WebContent
+/// suspension fix in the wild. Remove together with the JS probe in client-observability.ts
+/// and the release-logging override in `setup` once preview bundles confirm the fix.
 ///
-/// Diagnosis so far (2026-08-29 dev soak): with the window hidden, macOS suspended the
-/// WebContent process for hours (every JS realm frozen in lockstep, wall ≈ mono across the
-/// gap, machine awake) while this host process ticked every 15s without a single gap —
-/// WKWebView's default inactive scheduling policy. The same signature in a shipped bundle is
-/// JS-side `js wake after gap` lines with no `host gap` lines; both gapping means whole-app
-/// suspension instead, and wall≫mono flags system sleep. Prospective fix once confirmed:
-/// `background_throttling(Disabled)` on the window builder plus a suspension-aware startup
-/// deadline in useApp (both staged in commit aebe18803d, reverted pending confirmation).
+/// Diagnosis this probe settled (2026-08-29 soak): with the window hidden, macOS suspended the
+/// WebContent process for hours (every JS realm frozen in lockstep, wall ≈ mono across the gap,
+/// machine awake) while this host process ticked every 15s without a single gap — WKWebView's
+/// default inactive scheduling policy, countered by `background_throttling(Disabled)` on the
+/// window builder above. Post-fix, a shipped bundle should show neither JS-side gap lines nor
+/// `host gap` lines; either reappearing distinguishes a regressed fix (JS only) from whole-app
+/// suspension (both), and wall≫mono flags system sleep.
 #[cfg(target_os = "macos")]
 mod debug_suspension_probe {
     use std::time::{Duration, Instant, SystemTime};
