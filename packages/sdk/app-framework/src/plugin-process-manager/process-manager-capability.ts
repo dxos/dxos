@@ -100,10 +100,6 @@ export default Capability.makeModule(
     // contributed by plugins enabled later do not join the stack (same as the event window).
     const layerSpecs = layerSpecContributions.get();
 
-    // Every snapshot below is restart-scoped — they bake into one runtime, and rebuilding it for a
-    // late arrival would tear down every live service on it. A contribution arriving after this
-    // point is therefore silently absent, and the failure surfaces hops away (a missing service, or
-    // telemetry that simply never appears). Name it here instead.
     const warnOnLateContribution = <T>(capability: Capability.InterfaceDef<T>, label: string, fix: string) => {
       const atom = capabilityManager.atomByModule(capability);
       const modulesAtSnapshot = new Set(Object.keys(atomRegistry.get(atom)));
@@ -184,7 +180,6 @@ export default Capability.makeModule(
     // Sensible defaults are provided here; plugins that want alternative
     // implementations (e.g. persistent KV store) can contribute their own LayerSpec entries
     // against the ServiceResolver.
-    // Snapshotted like the LayerSpec list above: these bake into the runtime built below.
     const baseLayer = Layer.mergeAll(
       Layer.succeed(Capability.Service, capabilityManager),
       Layer.succeed(Plugin.Service, pluginManager),
@@ -193,11 +188,8 @@ export default Capability.makeModule(
       OperationHandlerSet.provide(handlerSet),
       layerIdb,
       Layer.succeed(Trace.TraceSink, mergedTraceSink),
-      // Effect's default `Tracer` discards every span, so the ~100 `withSpan` sites in the app and
-      // every operation invocation were unobservable. This one is inherited by every fiber the
-      // runtime runs. It reads the OpenTelemetry API's global provider, which is a proxy: it no-ops
-      // until something registers a real provider behind it and delegates from then on — so the
-      // framework installs it unconditionally, with no knowledge of whether observability exists.
+      // Over the OTel global provider, a proxy that no-ops until one is registered, so this is
+      // installed whether or not observability exists.
       Layer.succeed(Tracer.Tracer, makeGlobalTracer('@dxos/app-framework/process-manager')),
     );
 

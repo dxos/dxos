@@ -10,7 +10,6 @@ import * as SpanAttributes from './SpanAttributes';
 
 const SPACE = 'B7777777777777777777777777';
 
-/** Records every span opened, delegating the span itself to the built-in tracer. */
 const recordingTracer = (spans: Tracer.Span[]) => {
   const base = Effect.runSync(Effect.tracer);
   return Tracer.make({

@@ -7,8 +7,6 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     'index': 'src/index.ts',
-    // Deliberately absent from the root barrel, unlike the namespaces below: Composer's boot
-    // imports that barrel, and the boot set is the parse graph, so the AI sink would ride along.
     'AiObservability': 'src/ai/index.ts',
     'observability': 'src/observability.ts',
     'observability-extension': 'src/observability-extension.ts',

@@ -363,12 +363,6 @@ const CapturingTraceTestLayer = Layer.mergeAll(ProcessManager.ProcessOperationIn
   Layer.provide(Layer.succeed(Trace.TraceSink, { write: (message) => capturedTraceMessages.push(message) })),
 );
 
-/**
- * Records the name of every span the ambient tracer is asked to open, delegating the span itself to
- * the built-in tracer. Stands in for the OTel-backed tracer the app installs: `Tracer.Tracer` is a
- * reference whose default builds in-memory spans that are never exported, so a handler that loses
- * the installed tracer still *looks* traced while emitting nothing.
- */
 const makeRecordingTracer = (names: string[], spans: Tracer.Span[] = []) => {
   const base = Effect.runSync(Effect.tracer);
   return Tracer.make({
@@ -463,8 +457,6 @@ describe('ManagerImpl', () => {
         yield* handle.submitInput(undefined);
         yield* handle.runToCompletion();
 
-        // The agent schedules each turn from inside the previous one; were the alarm to inherit the
-        // scheduling fiber's context, every turn would nest under the last, without end.
         const alarm = alarmSpans.find(({ name }) => name === 'Alarm.handler');
         expect(alarmSpans.some(({ name }) => name === 'Input.span')).toEqual(true);
         expect(alarm && Option.isNone(alarm.parent)).toEqual(true);
@@ -483,8 +475,6 @@ describe('ManagerImpl', () => {
         yield* handle.submitInput(undefined);
         yield* handle.runToCompletion();
 
-        // The alarm timer is forked into the process scope from the fiber that set it, so the
-        // handler it dispatches inherits that fiber's tracer instead of a detached fork's default.
         expect(spanNames).toContain('Alarm.handler');
       },
       Effect.provide(TestLayer),
@@ -1661,7 +1651,6 @@ describe('durability', () => {
         yield* managerA.spawn(traced);
         yield* managerA.shutdown();
 
-        // Re-arming forks the timer from the hydrating fiber, so the handler runs under its tracer.
         const managerB = mkManager({ kv, registry, resolver, handlerSet, traceSink });
         const restored = yield* (yield* managerB.list({ key: 'test.traced-alarm' }))[0].hydrate(traced);
         yield* TestClock.adjust(Duration.millis(500));

@@ -8,8 +8,7 @@ import type * as ObservabilityExtension from '../../observability-extension';
  * PostHog's LLM analytics schema. Three events with `$ai_*` properties are what the product reads:
  * `$ai_trace` is the top-level unit (a conversation turn here), `$ai_span` a step inside it (a tool
  * call), `$ai_generation` a model call. They are linked by `$ai_trace_id`, and a span or generation
- * names its parent with `$ai_parent_id`. The names are PostHog's own, which is why this mapping
- * lives with the PostHog extension rather than with the capture policy that produces the records.
+ * names its parent with `$ai_parent_id`.
  *
  * `$ai_input_tokens` is the uncached count, which is what PostHog expects alongside the two cache
  * figures — together they price the call, and their ratio is the prompt-cache hit rate.
@@ -60,7 +59,6 @@ export const toAiGenerationProperties = (generation: ObservabilityExtension.Gene
     $ai_cache_read_input_tokens: generation.cacheReadTokens,
     $ai_cache_creation_input_tokens: generation.cacheWriteTokens,
     $ai_latency: generation.latency,
-    // Omitted rather than `false`, matching how PostHog's own SDKs report a non-streamed call.
     $ai_stream: generation.streaming ? true : undefined,
     $ai_input: generation.content?.input,
     $ai_output_choices: generation.content?.output,

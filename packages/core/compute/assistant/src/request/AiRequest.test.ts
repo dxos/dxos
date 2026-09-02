@@ -112,8 +112,6 @@ const textOf = (messages: readonly Message.Message[]): string =>
 const toolResultsOf = (messages: readonly Message.Message[]) =>
   messages.flatMap((message) => message.blocks).filter(ContentBlock.is('toolResult'));
 
-// Capture is only ever asserted against a stubbed `LanguageModel`; the app's path is this one —
-// `streamText`, an agent loop, a toolkit — and a model call that is never reported is invisible.
 describe('AiRequest.Request.run (telemetry)', () => {
   it.effect('reports the tool call as a tool span, named after the tool', () =>
     Effect.gen(function* () {
@@ -126,8 +124,6 @@ describe('AiRequest.Request.run (telemetry)', () => {
         .pipe(Effect.provideService(Tracer.Tracer, makeTracer(provider, 'test')));
       yield* Effect.promise(() => provider.forceFlush());
 
-      // The span is named for the function that ran the tool, so the tool's own name and its
-      // arguments and result ride as attributes for the analytics sink.
       const toolSpan = exporter.getFinishedSpans().find(({ name }) => name === 'callTool');
       expect(toolSpan?.attributes['dxos.ai.kind']).toEqual('tool');
       expect(toolSpan?.attributes['dxos.ai.name']).toEqual('Echo');
@@ -151,7 +147,6 @@ describe('AiRequest.Request.run (telemetry)', () => {
         .pipe(Effect.provideService(Tracer.Tracer, makeTracer(provider, 'test')));
       yield* Effect.promise(() => provider.forceFlush());
 
-      // Two model calls: the one that asks for the tool, and the one that answers after it ran.
       const modelSpans = exporter.getFinishedSpans().filter(({ name }) => name.startsWith('LanguageModel.'));
       expect(modelSpans).toHaveLength(2);
       expect(modelSpans.every((span) => span.attributes['gen_ai.system'] !== undefined)).toEqual(true);

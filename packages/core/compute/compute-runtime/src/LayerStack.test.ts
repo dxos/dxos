@@ -32,7 +32,6 @@ class ServiceD extends Context.Service<ServiceD, { readonly value: string }>()('
 const resolveWithScope = <A, E>(effect: Effect.Effect<A, E, Scope.Scope>) =>
   Effect.scoped(effect) as Effect.Effect<A, E, never>;
 
-/** Records the name of every span opened, delegating the span itself to the built-in tracer. */
 const makeRecordingTracer = (names: string[]) => {
   const base = Effect.runSync(Effect.tracer);
   return Tracer.make({
@@ -57,9 +56,6 @@ describe('LayerStack', () => {
         const stack = new LayerStack.LayerStack({ layers: [layer] });
         yield* resolveWithScope(stack.getServiceResolver().resolve(ServiceA, {}));
 
-        // Each slice gets its own `ManagedRuntime`, which starts from an empty context -- so without
-        // help the slice, and anything long-lived it builds (an agent process, say), runs on the
-        // default tracer, which keeps spans in memory and exports none of them.
         expect(sliceSpanNames).toContain('Slice.build');
       },
       Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(sliceSpanNames))),

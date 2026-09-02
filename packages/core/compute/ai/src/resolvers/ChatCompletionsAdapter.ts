@@ -966,7 +966,6 @@ export const make = (model: string) =>
     });
   });
 
-/** GenAI span annotations (OTel semantic conventions), matching what `@effect/ai-anthropic` emits. */
 const annotateRequest = (
   span: LanguageModel.ProviderOptions['span'],
   model: string,

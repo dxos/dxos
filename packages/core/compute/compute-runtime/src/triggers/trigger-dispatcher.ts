@@ -253,8 +253,6 @@ export class TriggerDispatcher extends Context.Service<
     Layer.effect(
       TriggerDispatcher,
       Effect.gen(function* () {
-        // Without the span the layer happened to be built under, which would otherwise parent every
-        // refresh and dispatch forked over this context.
         const services = Context.omit(Tracer.ParentSpan)(yield* Effect.context<TriggerDispatcherServices>());
         return new TriggerDispatcherImpl({ ...options, services });
       }),
@@ -1057,8 +1055,6 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
           // otherwise a refresh forked just before shutdown could still complete afterward, see
           // `this.#triggerQuery` as already cleared, fall back to a fresh one-shot query, and
           // repopulate trigger state after the dispatcher has stopped.
-          // Forked with the layer's captured context, so the refresh runs with the runtime's clock,
-          // tracer, and services rather than the defaults a detached fork would start from.
           this.#pendingRefreshFiber = Effect.runForkWith(this._services)(
             this.refreshTriggers().pipe(
               Effect.tapCause((cause) =>
@@ -1161,7 +1157,6 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
     // boundary runs its finalizer before `runFork` returns, so the finalizer must tolerate not
     // having the fiber yet — and the add below must not then resurrect a completed one.
     const forked: { fiber?: Fiber.Fiber<void, never>; done?: boolean } = {};
-    // Carries the captured context for the same reason as the refresh fork above.
     forked.fiber = Effect.runForkWith(this._services)(
       this.#reactiveDispatchLock
         .withPermits(1)(this.invokeScheduledTriggers({ kinds: [kind], triggerIds: [triggerId], untilExhausted: true }))

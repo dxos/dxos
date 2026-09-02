@@ -28,10 +28,8 @@ const makeStub = (inputTokens: Record<string, number>) =>
     streamText: () => Stream.empty,
   });
 
-/** Shaped like Anthropic's: `uncached` is what lands in `gen_ai.usage.input_tokens`. */
 const stubModel = makeStub({ uncached: 3, total: 21, cacheRead: 11, cacheWrite: 7 });
 
-/** An OpenAI-compatible endpoint, which reports no cache figures at all. */
 const uncachedModel = makeStub({ uncached: 3, total: 3 });
 
 const streamingModel = LanguageModel.make({
@@ -89,8 +87,6 @@ describe('AiTelemetry', () => {
   it.effect('drops only the attribute it cannot serialize, leaving the model call intact', () =>
     Effect.gen(function* () {
       const { exporter, provider, layer } = setup();
-      // Tool results are arbitrary values; a cycle throws from `JSON.stringify`. Reaching the model
-      // span at all proves the throw did not escape onto the call's own fiber.
       const cyclic: Record<string, unknown> = {};
       cyclic.self = cyclic;
       const prompt = [
@@ -110,7 +106,6 @@ describe('AiTelemetry', () => {
 
   it.effect('rides along with a resolved model, so no caller has to install it', () =>
     Effect.gen(function* () {
-      // What makes AI capture need no wiring of its own: whoever holds the model holds the hook.
       const transformer = yield* Effect.serviceOption(Telemetry.CurrentSpanTransformer);
       expect(transformer._tag).toEqual('Some');
     }).pipe(
@@ -135,10 +130,6 @@ describe('AiTelemetry', () => {
     Effect.gen(function* () {
       const { exporter, provider, layer } = setup({}, streamingModel);
 
-      // `streamText` opens its span with `makeSpanScoped`, so it ends when the enclosing scope does.
-      // Consuming the stream under `Effect.scoped` is what makes that the turn rather than whatever
-      // outlives it — a conversation, in the app. The outer scope here stands in for that: it is
-      // still open at the assertion, and the span must already have been exported anyway.
       yield* Effect.scoped(Stream.runCollect(LanguageModel.streamText({ prompt: 'hi' }))).pipe(Effect.provide(layer));
       yield* Effect.promise(() => provider.forceFlush());
 
@@ -147,9 +138,6 @@ describe('AiTelemetry', () => {
   );
 
   it('names the attributes the sink reads', () => {
-    // `AiSpanProcessor` in `@dxos/observability` restates these; it cannot import them (telemetry
-    // sits below the AI stack). Pinning the values here makes a rename fail rather than silently
-    // disconnect capture.
     expect(AiTelemetry.ATTRIBUTES).toEqual({
       sessionId: 'dxos.ai.session_id',
       spaceId: 'spaceId',
@@ -183,7 +171,6 @@ describe('AiTelemetry', () => {
       yield* LanguageModel.generateText({ prompt: 'hi' }).pipe(Effect.provide(layer));
       yield* Effect.promise(() => provider.forceFlush());
 
-      // Absent rather than zero, so a consumer can tell "no cache" from "provider does not report".
       const span = modelSpan(exporter);
       expect(span.attributes[AiTelemetry.ATTRIBUTES.cacheReadTokens]).toBeUndefined();
       expect(span.attributes[AiTelemetry.ATTRIBUTES.cacheWriteTokens]).toBeUndefined();
@@ -208,7 +195,6 @@ describe('AiTelemetry', () => {
 const setup = (options?: AiTelemetry.SpanTransformerOptions, model = stubModel) => {
   const exporter = new InMemorySpanExporter();
   const provider = new BasicTracerProvider({ spanProcessors: [new SimpleSpanProcessor(exporter)] });
-  // Mirrors what the app installs into the process-manager runtime.
   const layer = Layer.mergeAll(
     Layer.effect(LanguageModel.LanguageModel, model),
     Layer.succeed(Tracer.Tracer, makeTracer(provider, 'test')),

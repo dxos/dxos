@@ -168,11 +168,6 @@ const encodeStreamTurn = (
   return out;
 };
 
-/**
- * The GenAI annotations a real provider writes. Without them a scripted call is invisible to
- * anything reading `gen_ai.*` off the span — which is how telemetry identifies a model call at all,
- * so a double that omits them silently exempts every scripted test from that half of the system.
- */
 const annotate = (span: LanguageModel.ProviderOptions['span']): void =>
   Telemetry.addGenAIAnnotations(span, {
     system: 'scripted',

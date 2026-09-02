@@ -496,9 +496,6 @@ export class ProcessManagerImpl implements Manager {
         name: options?.name,
       });
       const scope = yield* Scope.make();
-      // The process's own context, for the work it dispatches itself (alarms, child events): the
-      // runtime's services, clock, and tracer, and not the span of whoever is spawning it, which
-      // would otherwise parent every span the process ever opens.
       const context = Context.omit(Tracer.ParentSpan)(yield* Effect.context<never>());
       const outputQueue = yield* Queue.unbounded<ProcessHandle.OutputItem<O>>();
 
@@ -724,9 +721,6 @@ export class ProcessManagerImpl implements Manager {
       log('lifecycle: rehydrate', { pid: id, key: record.key });
 
       const scope = yield* Scope.make();
-      // The process's own context, for the work it dispatches itself (alarms, child events): the
-      // runtime's services, clock, and tracer, and not the span of whoever is spawning it, which
-      // would otherwise parent every span the process ever opens.
       const context = Context.omit(Tracer.ParentSpan)(yield* Effect.context<never>());
       const outputQueue = yield* Queue.unbounded<ProcessHandle.OutputItem<any>>();
       const storage = storageServiceLayer(this.#kvStore, `process/${id}/`);

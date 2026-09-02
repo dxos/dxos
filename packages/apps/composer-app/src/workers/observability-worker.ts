@@ -63,8 +63,6 @@ const fireFlush = (result: Promise<void>): void => {
 };
 
 const createMessageHandler = (): ((event: MessageEvent<ObservabilityWorkerMessage>) => void) => {
-  // A warning or error log names a trace worth keeping; the span sink decides what to keep, so the
-  // log sink hands it the id. A log arriving before the span sink has loaded flags nothing.
   let spanSink: OtelSpanSink.Sink | undefined;
   const logs = lazySink<OtelLogSink.Init, string | Control>(
     (init) =>

@@ -137,7 +137,6 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   const { resource, metricsResource } = createResources(baseAttributes, sessionId);
 
   const remoteLogs = logsEnabled ? observabilityWorker : undefined;
-  // Assigned once the tracer exists below; a warning logged before then flags nothing.
   let flagTrace: ((traceId: string) => void) | undefined;
   const logs =
     logsEnabled && !remoteLogs

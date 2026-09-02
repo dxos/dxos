@@ -109,9 +109,6 @@ export class PortSpanProcessor implements SpanProcessor {
   onStart(_span: SdkSpan, _parentContext: Context): void {}
 
   onEnd(span: ReadableSpan): void {
-    // Every recorded span is forwarded. What to keep is decided in the worker, by {@link TailSampler},
-    // because the rules that matter — errored, or a model call — are only knowable once a span has
-    // ended. Filtering on the SAMPLED flag here would decide the question before it can be answered.
     this._post(serializeReadableSpan(span));
   }
 
@@ -153,8 +150,6 @@ export class Sink {
   }
 
   append(record: Span): void {
-    // Decided before materializing: a dropped span should not cost the object graph the exporter
-    // would have needed.
     if (
       !this.#sampler.keep({
         traceId: record.traceId,

@@ -229,7 +229,6 @@ const DelegationTestLayer = AssistantTestLayer({
   agent: { delegationStrategy: StubDelegationStrategy },
 });
 
-/** Records the name of every span opened, delegating the span itself to the built-in tracer. */
 const makeRecordingTracer = (names: string[], spans: Tracer.Span[] = []) => {
   const base = Effect.runSync(Effect.tracer);
   return Tracer.make({
@@ -842,11 +841,8 @@ describe('Agent Service (control plane)', () => {
         yield* session.submitPrompt('What is the capital of France?');
         yield* session.waitForCompletion();
 
-        // The agent runs on the caller's runtime, so the tracer it installed must reach the turn.
         expect(turnSpanNames).toContain('AiSession.createRequest');
 
-        // The turn span is what an analytics backend groups the model calls under, so it carries
-        // the prompt and the messages the turn produced.
         const turn = turnSpans.find((span) => span.name === 'AiSession.createRequest');
         expect(turn?.attributes.get('dxos.ai.kind')).toEqual('turn');
         expect(String(turn?.attributes.get('dxos.ai.input'))).toContain('capital of France');

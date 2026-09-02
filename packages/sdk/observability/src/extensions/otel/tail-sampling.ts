@@ -21,7 +21,6 @@ import type { ReadableSpan, Span, SpanProcessor } from '@opentelemetry/sdk-trace
  *
  * - https://opentelemetry.io/blog/2022/tail-sampling/
  * - https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/processor/tailsamplingprocessor
- * - https://www.datadoghq.com/blog/control-trace-volume-with-opentelemetry-tail-based-sampling/
  *
  * Expressing them as a processor that filters in `onEnd` is the documented way to drop spans from a
  * JS SDK, since a `Sampler` cannot: https://github.com/open-telemetry/opentelemetry-js/discussions/2817

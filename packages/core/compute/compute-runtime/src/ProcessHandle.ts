@@ -151,7 +151,6 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
   // letting runUntilSettled resolve during the persistence→dispatch hand-off before the turn runs.
   #alarmDispatching = false;
   #services: Context.Context<R | Process.BaseServices>;
-  /** What the process runs its own dispatches with; see {@link ProcessHandleImpl.requestAlarm}. */
   readonly #context: Context.Context<never>;
   #alarmSemaphore = Effect.runSync(Semaphore.make(1));
   readonly #callbacks: Process.Callbacks<I, O, R, any>;
@@ -572,10 +571,8 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
   }
 
   /**
-   * Forked into the process scope, with the process's own context rather than the caller's. An
-   * alarm is a scheduled entry point, not a continuation: the agent schedules each turn from inside
-   * the previous one, and inheriting the caller's context would parent every turn's spans under the
-   * last turn's, without end. The process context still carries the runtime's clock and tracer.
+   * With the process's context, not the caller's: an alarm is a scheduled entry point, and the agent
+   * schedules each turn from inside the last, so the caller's span would parent every turn forever.
    */
   #forkAlarm(delay: number): Effect.Effect<Fiber.Fiber<void>> {
     return Effect.forkIn(
@@ -641,8 +638,6 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
         log('lifecycle: child event ignored (already finished)', { tag: event._tag, childPid: event.pid });
         return;
       }
-      // Into the process scope with the process's own context, as for alarms: the caller here is
-      // the exiting child's fiber, whose spans and services are not this process's.
       yield* Effect.forkIn(
         this.#persistence.appendEvent({ _tag: 'childEvent', event: toPersistedChildEvent(event) }).pipe(
           Effect.flatMap((seq) => this.#runHandler('childEvent', () => this.#callbacks.onChildEvent(event), seq)),
@@ -679,7 +674,6 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
         };
         return yield* restore(fn()).pipe(
           Effect.provide(this.#services),
-          // Every span the handler opens can then be filtered by space; app-level work has none.
           SpanAttributes.annotateSpace(this.environment.space),
           Effect.tap(() => Effect.sync(recordWall)),
           Performance.addTrackEntry({

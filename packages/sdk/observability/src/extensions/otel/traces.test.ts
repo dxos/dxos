@@ -21,8 +21,6 @@ describe('OtelTraces', () => {
     });
     const spanContext = { traceId: '0af7651916cd43dd8448eb211c80319c', spanId: 'b7ad6b7169203331', traceFlags: 1 };
 
-    // A log processor runs on whatever tick the log call happens on; in node that is routinely
-    // after an await, which only an async-hooks context manager follows.
     await context.with(trace.setSpanContext(ROOT_CONTEXT, spanContext), async () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
       expect(activeTraceContext()).toEqual({ traceId: spanContext.traceId, spanId: spanContext.spanId });

@@ -37,8 +37,6 @@ describe('OtelSpanSink', () => {
 
   const makeSink = () => {
     const exporter = new InMemorySpanExporter();
-    // `ratio: 1` so these exercise the port and the exporter, not the keep/drop rules —
-    // `tail-sampling.test.ts` covers those.
     sink = new OtelSpanSink.Sink(defaultInit, { exporter, sampling: { ratio: 1 } });
     return { sink, exporter };
   };
@@ -46,7 +44,6 @@ describe('OtelSpanSink', () => {
   test('exports a span the ratio would drop once its trace is promoted', async () => {
     const { records, tracer } = makeProducer();
     const exporter = new InMemorySpanExporter();
-    // Ratio 0: nothing survives on its own, so an export can only come from the promotion.
     sink = new OtelSpanSink.Sink(defaultInit, { exporter, sampling: { ratio: 0 } });
     const dropped = tracer.startSpan('quiet');
     dropped.end();
@@ -131,8 +128,6 @@ describe('OtelSpanSink', () => {
       droppedLinksCount: 0,
     };
 
-    // Whether it errored, or was a model call, is only knowable once it has ended — so the port
-    // carries every recorded span and `TailSampler` decides on the other side.
     processor.onEnd(unsampled);
     expect(records).toHaveLength(1);
     expect(records[0]?.name).toEqual('unsampled');

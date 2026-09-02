@@ -9,7 +9,6 @@ import { expect } from 'vitest';
 
 import * as Database from './Database';
 
-/** Records every span opened, delegating the span itself to the built-in tracer. */
 const makeRecordingTracer = (spans: Tracer.Span[]) => {
   const base = Effect.runSync(Effect.tracer);
   return Tracer.make({
