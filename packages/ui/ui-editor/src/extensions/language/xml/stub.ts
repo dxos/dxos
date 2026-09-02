@@ -56,10 +56,12 @@ export type StubWidgetOptions<TProps> = {
   props: TProps;
   notifier: XmlWidgetNotifier;
   /**
-   * Identity of the source text the props were built from. `eq` consults it because a widget id is not
+   * The source text the props were built from, verbatim. `eq` consults it because a widget id is not
    * always content-derived: a streaming tag is keyed on its opening position alone (its end moves every
    * tick), so a run that grows in place keeps its id and would otherwise leave CodeMirror holding the
-   * instance built from the first chunk.
+   * instance built from the first chunk. Compared in full rather than hashed: a 32-bit hash collides on
+   * pairs as short as `ab`/`bA` (djb2's adjacent-character deltas cancel), and a collision here is a
+   * widget frozen at stale props — the bug this exists to prevent.
    */
   signature?: string;
   streaming?: boolean;

@@ -148,18 +148,3 @@ const decodeXmlEntity = (raw: string): string => {
   }
   return raw;
 };
-
-/**
- * Cheap identity (djb2) for the source text a widget's props were built from.
- *
- * Widget ids are not always content-derived — a streaming tag is keyed on its opening position alone —
- * so `StubWidget.eq` needs something that changes when the tag's content does. Length is folded in
- * because a 32-bit hash alone is not injective.
- */
-export const contentSignature = (text: string): string => {
-  let hash = 5381;
-  for (let index = 0; index < text.length; index++) {
-    hash = ((hash << 5) + hash + text.charCodeAt(index)) | 0;
-  }
-  return `${text.length}:${(hash >>> 0).toString(36)}`;
-};

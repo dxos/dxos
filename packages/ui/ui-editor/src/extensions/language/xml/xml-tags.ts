@@ -21,7 +21,7 @@ import { type Range } from '../../../types';
 import { decorationSetToArray, escapeRegExpSource } from '../../../util';
 import { crawlerLineEffect } from '../../streaming/scrolling';
 import { StubWidget, type XmlWidgetNotifier } from './stub';
-import { contentSignature, nodeToJson } from './xml-util';
+import { nodeToJson } from './xml-util';
 
 /**
  * StateEffect for navigating to previous bookmark.
@@ -640,7 +640,7 @@ const buildDecorations = (
                   def.streaming ? `cm-xml-${nodeRange.from}` : `cm-xml-${nodeRange.from}-${nodeRange.to}`,
                 );
                 const widgetState = widgetStateMap[widgetId];
-                const signature = contentSignature(state.sliceDoc(nodeRange.from, nodeRange.to));
+                const signature = state.sliceDoc(nodeRange.from, nodeRange.to);
                 const props = {
                   id: widgetId,
                   range: nodeRange,
@@ -742,7 +742,7 @@ const buildDecorations = (
                   Component: def.Component,
                   props,
                   notifier,
-                  signature: contentSignature(state.sliceDoc(nodeRange.from, nodeRange.to)),
+                  signature: state.sliceDoc(nodeRange.from, nodeRange.to),
                   block: isBlock,
                   blockHeight,
                   heightMode: def.heightMode,

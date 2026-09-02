@@ -717,8 +717,6 @@ describe('xmlTags widget content', () => {
     toolkit: { block: true, streaming: true, Component: () => null },
   };
 
-  const toolkit = (payload: string) => `<toolkit>${payload}</toolkit>`;
-
   test('a closed streaming tag whose content grows in place replaces its widget', async ({ expect }) => {
     const view = createView(toolkit('one'), { registry });
     await rebuild(view);
@@ -751,4 +749,22 @@ describe('xmlTags widget content', () => {
     expect(stubWidget(view, 'cm-xml-0').eq(before)).toBe(true);
     view.destroy();
   });
+
+  // `ab` and `bA` are the shortest djb2 collision: the +1 on the first character is worth +33 after the
+  // shift, which the -33 on the second cancels. A hashed signature would call these two documents equal.
+  test('content that collides under a 32-bit hash still replaces the widget', async ({ expect }) => {
+    const view = createView(toolkit('ab'), { registry });
+    await rebuild(view);
+
+    const before = stubWidget(view, 'cm-xml-0');
+    view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: toolkit('bA') } });
+    forceParsing(view, view.state.doc.length, 5_000);
+    view.dispatch({ effects: xmlTagRebuildEffect.of(null) });
+    await flush();
+
+    expect(stubWidget(view, 'cm-xml-0').eq(before)).toBe(false);
+    view.destroy();
+  });
 });
+
+const toolkit = (payload: string) => `<toolkit>${payload}</toolkit>`;
