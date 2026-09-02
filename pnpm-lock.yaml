@@ -15223,9 +15223,6 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/compute/assistant
-      '@dxos/assistant-toolkit':
-        specifier: workspace:*
-        version: link:../../core/compute/assistant-toolkit
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute
@@ -16885,9 +16882,6 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/compute/assistant
-      '@dxos/assistant-toolkit':
-        specifier: workspace:*
-        version: link:../../core/compute/assistant-toolkit
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -19229,9 +19223,9 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
-      '@dxos/assistant-toolkit':
+      '@dxos/assistant':
         specifier: workspace:*
-        version: link:../../core/compute/assistant-toolkit
+        version: link:../../core/compute/assistant
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -19317,9 +19311,9 @@ importers:
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/compute/ai
-      '@dxos/assistant':
+      '@dxos/assistant-toolkit':
         specifier: workspace:*
-        version: link:../../core/compute/assistant
+        version: link:../../core/compute/assistant-toolkit
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client

@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
@@ -12,6 +13,7 @@ import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import { Annotation, Database, DXN, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
+import { log } from '@dxos/log';
 import { Task } from '@dxos/types';
 
 /**
@@ -146,9 +148,17 @@ export const loadForFeed = (feed: Feed.Feed): Effect.Effect<Chat | undefined, ne
     }
     const chats = yield* Database.query(Filter.type(Chat)).run;
     return chats.find((chat) => feedEntityId(chat) === feed.id);
-    // Every failure mode (an unregistered type in a bare test database, an unreadable ref) means
-    // the same thing to callers: this feed has no chat.
-  }).pipe(Effect.catchCause(() => Effect.succeed(undefined)));
+    // A chat-less feed is legitimate (a bare `AiSession`, or a database with the type unregistered),
+    // so callers get `undefined` rather than a failure — but a query that actually broke is logged,
+    // since it is otherwise indistinguishable from the feed simply having no chat.
+  }).pipe(
+    Effect.catchCause((cause) =>
+      Effect.sync(() => {
+        log.warn('chat lookup failed; treating feed as chat-less', { feed: feed.id, cause: Cause.pretty(cause) });
+        return undefined;
+      }),
+    ),
+  );
 
 /** Bound on the parent walk below; a conversation sits one or two edges under its project. */
 const MAX_OWNER_DEPTH = 8;
