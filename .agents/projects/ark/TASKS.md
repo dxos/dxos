@@ -477,3 +477,17 @@ once a list is deep enough that indentation alone stops carrying it.
       descending _from_ the chevron, and the toggle is one control wide regardless of depth.
 - [ ] Check it survives the conceal animation — the content box is clipped and its height is
       animated, so a line anchored to the box's bottom edge would be drawn mid-ramp and then cut.
+
+## Phase 13: Checkbox in place of the ordinal
+
+Tracked 2026-09-01. A `TaskList` option to render a checkbox in the gutter where the ordinal sits,
+for a list read as things to tick off rather than things to refer to by number.
+
+- [ ] **Put it in the gutter cell, not beside the status control.** The two would read as two ways to
+      complete a task; the checkbox stands in for the ordinal, so the row keeps one geometry and the
+      trailing columns do not move.
+- [ ] **Decide what it writes.** `status: 'done'` is the obvious binding, which makes the checkbox
+      and the status control the same edit in two places — settle whether the status control is
+      hidden in this mode rather than leaving both live.
+- [ ] Both list paths, through `TaskOrdinal`'s cell: the flat gutter also hosts the drag handle on
+      hover, so the checkbox has to share that cell rather than claim a column.
