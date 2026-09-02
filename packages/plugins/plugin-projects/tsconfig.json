@@ -13,7 +13,6 @@
   ],
   "include": [
     "dx.config.ts",
-    "scripts/**/*.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/*.ts"

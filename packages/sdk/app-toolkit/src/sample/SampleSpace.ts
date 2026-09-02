@@ -10,6 +10,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
 import { Annotation, Collection, Database, type Feed, Obj, Ref, Tag, type Type } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 import { BaseError } from '@dxos/errors';
 import { Tagging } from '@dxos/schema';
 
@@ -418,3 +419,32 @@ export const applyTo = <Phases extends PhaseMap, A>(
     Effect.provide(Database.layer(space.db)),
   );
 };
+
+/**
+ * Wraps a definition as an offerable preset: registers its types on the client, then applies it.
+ *
+ * The result is a plain `{ id, label, apply }` record, which is what the `SampleSpace` capability
+ * carries — a picker that lists one needs neither the definition nor Effect.
+ */
+export const preset = <Phases extends PhaseMap, A>(options: {
+  readonly id: string;
+  readonly label: string;
+  readonly description?: string;
+  readonly definition: Definition<Phases, A>;
+}): {
+  readonly id: string;
+  readonly label: string;
+  readonly description?: string;
+  readonly apply: (options: {
+    readonly client: { addTypes: (types: Type.AnyEntity[]) => Promise<void> };
+    readonly space: { readonly db: Database.Database; readonly properties: Obj.Any };
+  }) => Promise<void>;
+} => ({
+  id: options.id,
+  label: options.label,
+  description: options.description,
+  apply: async ({ client, space }) => {
+    await client.addTypes([...options.definition.schemas]);
+    await EffectEx.runPromise(applyTo(options.definition, space));
+  },
+});

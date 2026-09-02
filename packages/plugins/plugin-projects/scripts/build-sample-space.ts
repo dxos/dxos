@@ -22,7 +22,7 @@ import { fileURLToPath } from 'node:url';
 import { buildArchive } from '@dxos/app-toolkit/testing';
 import { EffectEx } from '@dxos/effect';
 
-import { TidepoolSpace } from './sample';
+import { TidepoolSpace } from '../src/sample';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 

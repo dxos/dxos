@@ -138,7 +138,6 @@
   "files": [
     "dist",
     "dx.config.ts",
-    "scripts",
     "src"
   ],
   "scripts": {

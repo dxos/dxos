@@ -74,9 +74,29 @@ Design: [DESIGN.md](./DESIGN.md)
 
 ## Phase 4 — debug plugin
 
-- [ ] Expose sample-space definitions in `SpaceGenerator` alongside `staticGenerators` and the
-      existing presets, applied via `SampleSpace.applyTo`.
-- [ ] Port one scripted preset (`DXOS_TEAM`) to a phase as the proof.
+- [x] Sample spaces are a **contribution**, not a plugin-debug import: `AppCapabilities.SampleSpace` + `AppCapability.sampleSpaces(loader)`, gated on a new
+      `ActivationEvents.SampleSpacesRequested`. plugin-debug lists whatever was contributed and
+      depends on none of the contributors.
+- [x] The capability carries a **bound closure**, not the definition:
+      `{ id, label, description?, apply({ client, space }) }`, built by `SampleSpace.preset`. Handing
+      it the definition instead would drag the builder, its phase map and Effect into every picker —
+      and `Definition<Phases, A>` is contravariant in `Phases` through `build`, so a common
+      `Definition<PhaseMap, unknown>` supertype does not exist. The closure sidesteps both.
+- [x] plugin-crm and plugin-projects each contribute via `src/capabilities/sample-spaces.ts`, added
+      to their plugin module list. `dx-plugin gen` stubs the module for node/workerd on its own.
+- [x] `SpaceGenerator` fires the event on mount (same shape as `useCliApp` firing
+      `CommandsRequested`) and folds the presets into its existing `typeMap` — a sample space is
+      just a generator that ignores the count, so the container's structure is untouched.
+- [x] **Loader-only, and verified lazy**: boot graph still 21 entries / 4.15 MB (budget 25 / 4.35),
+      with the content in its own chunks (`sample-spaces-*.js`, 6.5 KB for the CRM one). An inline
+      contribution array would have been a static import in the plugin definition and charged every
+      session for it.
+- [x] The two new definitions moved `scripts/sample/` → `src/sample/` so a loader can reach them;
+      each `scripts/build-sample-space.ts` is now the only thing under `scripts/` and imports
+      `../src/sample`. That also reverted the `tsconfig` `include` and `files` additions.
+      **Bramble stays in `scripts/`** — 1600 lines whose whole point is not shipping.
+- [ ] Port a scripted preset (`DXOS_TEAM`) to a phase. Not needed for the proof any more: the two
+      real sample spaces are the proof, and `presets.items` still works as it did.
 
 ## Phase 5 — the further spaces
 
@@ -85,18 +105,14 @@ the phase catalog only earns its keep with a second consumer.
 
 - [x] **CRM pipeline** — the Northwind Sales space, in `plugin-crm/scripts/sample/` (accounts,
       pipeline, inbox) + `scripts/build-sample-space.ts` + `src/sample.test.ts`. 28 objects,
-      2 tests green, built on demand.
-      - Uses `Pipeline` from `@dxos/types` — a board of View-backed columns, each `{ name, order,
-        view }`. Every column's view is `Filter.type(Organization, { status })`, so a stage IS a
-        query and moving a card is a status change, not a membership edit. `order` is stored
-        explicitly so a rearranged board keeps its order.
-      - `Organization.status` is `prospect | qualified | active | commit | reject` — five stages,
-        so `reject` gives the board its Closed-lost column.
-      - `@dxos/effect` had to be added to plugin-crm (`workspace:*`) for `EffectEx.runPromise`;
-        every other dep was already there.
-      - Note the `Pipeline` naming TODOs in `@dxos/types/Pipeline.ts`: it collides with
-        `@dxos/pipeline` and is slated to move into its owning plugin. If it is renamed, this space
-        and its test move with it.
+      2 tests green, built on demand. - Uses `Pipeline` from `@dxos/types` — a board of View-backed columns, each `{ name, order,
+    view }`. Every column's view is `Filter.type(Organization, { status })`, so a stage IS a
+      query and moving a card is a status change, not a membership edit. `order` is stored
+      explicitly so a rearranged board keeps its order. - `Organization.status` is `prospect | qualified | active | commit | reject` — five stages,
+      so `reject` gives the board its Closed-lost column. - `@dxos/effect` had to be added to plugin-crm (`workspace:*`) for `EffectEx.runPromise`;
+      every other dep was already there. - Note the `Pipeline` naming TODOs in `@dxos/types/Pipeline.ts`: it collides with
+      `@dxos/pipeline` and is slated to move into its owning plugin. If it is renamed, this space
+      and its test move with it.
 - [x] **Software project management** — the Tidepool space, in `plugin-projects/scripts/sample/`
       (team, people, docs, tasks, project) + `scripts/build-sample-space.ts` + `src/sample.test.ts`.
       42 objects. Built on demand rather than committed — no fixture to keep in step with schemas;
@@ -112,11 +128,12 @@ the phase catalog only earns its keep with a second consumer.
       `scripts/**/*.ts` had to be added by hand — and `scripts` added to `files`, since the
       published `src` now contains a test that imports it.
 
-## Phase 6 — content authoring for phases in `src`
+## Phase 6 — content authoring for phases in `src` — SETTLED
 
-Bramble's content stays under `scripts/` because the builder must never reach the browser. A phase
-that a plugin wants to run in-app (Phase 4) has to live in `src` behind a lazily-imported subpath,
-and `composer-app:check-boot-budget` (21 entries / 4.15 MB against 25 / 4.35 MB today) is the gate
-that proves it stayed lazy.
+The convention, as shipped in Phase 4: content a plugin wants to run **in-app** lives in
+`src/sample/` and is reached only through a `sampleSpaces(loader)` contribution, so it stays in its
+own chunk. Content that exists **only to generate a committed snapshot** stays in `scripts/`. No
+`./Sample` export subpath is needed — the loader is internal to the plugin, and nothing outside it
+imports the definition.
 
-- [ ] Decide the convention: a `./Sample` subpath per plugin, or one definition inside plugin-debug.
+`composer-app:check-boot-budget` is the gate that proves the gating held.

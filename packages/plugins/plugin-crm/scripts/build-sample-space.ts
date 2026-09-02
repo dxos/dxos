@@ -21,7 +21,7 @@ import { fileURLToPath } from 'node:url';
 import { buildArchive } from '@dxos/app-toolkit/testing';
 import { EffectEx } from '@dxos/effect';
 
-import { PipelineSpace } from './sample';
+import { PipelineSpace } from '../src/sample';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
