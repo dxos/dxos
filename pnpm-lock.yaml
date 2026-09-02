@@ -6138,6 +6138,9 @@ importers:
 
   packages/core/halo/halo:
     dependencies:
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../echo/echo
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../../common/errors
