@@ -60,4 +60,7 @@ export const estimateTextStyle = textStyleFor(Task.EstimateOptions);
 /** A priority's glyph, from the same table that gives it a title and a hue. */
 const PRIORITY_ICONS = new Map(Task.PriorityOptions.map(({ id, icon }) => [id, icon]));
 
-export const priorityIcon = (priority: Task.Priority): string => PRIORITY_ICONS.get(priority) ?? Task.NO_PRIORITY_ICON;
+/** Guards a table edited to drop a row; every `Priority`, `none` included, has one today. */
+const FALLBACK_PRIORITY_ICON = 'ph--dot--regular';
+
+export const priorityIcon = (priority: Task.Priority): string => PRIORITY_ICONS.get(priority) ?? FALLBACK_PRIORITY_ICON;

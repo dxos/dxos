@@ -52,7 +52,7 @@ import {
   fallbackIcon,
 } from '@dxos/react-ui-menu';
 import { type Actor, Task } from '@dxos/types';
-import { mx } from '@dxos/ui-theme';
+import { hoverableControlItem, mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
@@ -164,6 +164,8 @@ type TaskListRootProps = PropsWithChildren<{
   // What a row shows.
   //
 
+  /** Paint the tree's drop bands on every row (development affordance). */
+  debug?: boolean;
   /** Render the status heading above each group; grouping order is kept either way. */
   showGroupLabels?: boolean;
   /** Number rows 1..N down the list as rendered, so tasks can be referenced by ordinal. */
@@ -175,16 +177,24 @@ type TaskListRootProps = PropsWithChildren<{
    * single-line list (e.g. the chat strip) keeps one row per task.
    */
   showDescription?: boolean;
-  /** Paint the tree's drop bands on every row (development affordance). */
-  debug?: boolean;
 
   //
   // Callbacks. Wiring one is what enables the affordance that calls it — the list never writes.
   //
 
-  /** Enables `Create`; called with a draft carrying at least the trimmed title. */
+  /**
+   * Trailing menu for a row. One item renders as a plain icon button, several as a `…` menu, none as
+   * nothing — so delete is an ordinary contributed action rather than a special case of its own.
+   */
+  getTaskActions?: (task: Task.Task) => MenuItem[];
+
+  /**
+   * Enables `Create`; called with a draft carrying at least the trimmed title.
+   */
   onTaskCreate?: (task: Task.Draft) => void;
-  /** Enables the row's edit controls. Every mutation is delegated. */
+  /**
+   * Enables the row's edit controls. Every mutation is delegated.
+   */
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
   /**
    * Row click, and `Escape` — which passes `undefined`, since a reader needs a way back out of a
@@ -197,30 +207,28 @@ type TaskListRootProps = PropsWithChildren<{
    * followed by a reposition.
    */
   onTaskMove?: (task: Task.Task, placement: TaskPlacement) => void;
-  onCollapsedChange?: (collapsed: ReadonlySet<string>) => void;
   /**
-   * Trailing menu for a row. One item renders as a plain icon button, several as a `…` menu, none as
-   * nothing — so delete is an ordinary contributed action rather than a special case of its own.
+   * Enables collapsing/expanding a task's sub-tasks; called with the new set of collapsed ids.
    */
-  getTaskActions?: (task: Task.Task) => MenuItem[];
+  onCollapsedChange?: (collapsed: ReadonlySet<string>) => void;
 }>;
 
 const TaskListRoot = ({
   children,
   tasks,
   groupByStatus = true,
+  debug = false,
   showGroupLabels = true,
   showOrdinals = false,
   showDescription = false,
   showEstimates = false,
   hierarchical = false,
-  debug = false,
   collapsed,
   selected: selectedProp,
   selectable: selectableProp,
+  getTaskActions,
   onTaskCreate,
   onTaskUpdate,
-  getTaskActions,
   onTaskSelect,
   onTaskMove,
   onCollapsedChange,
@@ -287,11 +295,11 @@ const TaskListRoot = ({
       isCollapsed={isCollapsed}
       selected={selected}
       dragging={dragging}
+      getTaskActions={getTaskActions}
       onDraggingChange={setDraggingTask}
       onCollapseToggle={onCollapseToggle}
       onTaskCreate={onTaskCreate}
       onTaskUpdate={onTaskUpdate}
-      getTaskActions={getTaskActions}
       onTaskSelect={selectable ? handleSelect : undefined}
       onTaskMove={onTaskMove}
     >
@@ -460,18 +468,18 @@ const useTaskDrag = ({
   task,
   row,
   tasks,
-  onTaskMove,
   isCollapsed,
   onCollapseToggle,
   onDraggingChange,
+  onTaskMove,
 }: {
   task: Task.Task;
   row?: TaskTreeRow;
   tasks: readonly Task.Task[];
-  onTaskMove?: (task: Task.Task, placement: TaskPlacement) => void;
   isCollapsed: (id: string) => boolean;
   onCollapseToggle: (id: string) => void;
   onDraggingChange: (task: Task.Task | undefined) => void;
+  onTaskMove?: (task: Task.Task, placement: TaskPlacement) => void;
 }) => {
   const rowRef = useRef<HTMLLIElement | null>(null);
   const dragHandleRef = useRef<HTMLSpanElement | null>(null);
@@ -961,19 +969,18 @@ const TaskEstimateControl = ({ task }: { task: Task.Task }) => {
           accepts and carries the same hue the form's select paints it with. Clearing is offered
           first; the table has no `none` row because the field is simply absent when unset. */}
       <Menu.Content
-        items={[
-          createMenuAction('estimate-none', () => onTaskUpdate(task, { estimate: null }), {
-            label: t('estimate-none.label'),
-            checked: !estimate,
-          }),
-          ...Task.EstimateOptions.map(({ id, title }) =>
-            createMenuAction(`estimate-${id}`, () => onTaskUpdate(task, { estimate: id }), {
+        items={Task.EstimateOptions.map(({ id, title }) =>
+          createMenuAction(
+            `estimate-${id}`,
+            // `none` is not an `Estimate`: an unset estimate is the absent property.
+            () => onTaskUpdate(task, { estimate: id === 'none' ? null : id }),
+            {
               label: title,
               classNames: estimateTextStyle(id),
-              checked: estimate === id,
-            }),
+              checked: (estimate ?? 'none') === id,
+            },
           ),
-        ]}
+        )}
       />
     </Menu.Root>
   );
@@ -1025,22 +1032,14 @@ const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
       {/* Sourced from the schema's own option table, so the picker offers exactly what the field
           accepts and carries the same hue the form's select paints it with. */}
       <Menu.Content
-        items={[
-          // The table has no `none` row, so clearing is offered here or not at all.
-          createMenuAction('priority-none', () => onTaskUpdate(task, { priority: 'none' }), {
-            label: t('priority-none.label'),
-            icon: Task.NO_PRIORITY_ICON,
-            checked: priority === 'none',
+        items={Task.PriorityOptions.map(({ id, icon: optionIcon }) =>
+          createMenuAction(`priority-${id}`, () => onTaskUpdate(task, { priority: id }), {
+            label: t(`priority-${id}.label`),
+            icon: optionIcon,
+            iconClassNames: priorityTextStyle(id),
+            checked: priority === id,
           }),
-          ...Task.PriorityOptions.map(({ id, icon: optionIcon }) =>
-            createMenuAction(`priority-${id}`, () => onTaskUpdate(task, { priority: id }), {
-              label: t(`priority-${id}.label`),
-              icon: optionIcon,
-              iconClassNames: priorityTextStyle(id),
-              checked: priority === id,
-            }),
-          ),
-        ]}
+        )}
       />
     </Menu.Root>
   );
@@ -1077,7 +1076,10 @@ const TaskTreeTrailing = ({ item }: { item: TaskNode }) => {
 // Item actions — the trailing cell of a row.
 //
 
-const ROW_ACTION_CLASSNAMES = 'invisible group-hover/row:visible group-has-[:focus-visible]/row:visible';
+// The row drives `--controls-opacity` on hover, focus and selection, so its controls reveal
+// together. The previous `group-hover/row:visible` named a group that only the flat row declared —
+// once rows became tree rows nothing matched it and the actions stayed hidden even on hover.
+const ROW_ACTION_CLASSNAMES = hoverableControlItem;
 
 const isMenuAction = (item: MenuItem): item is MenuAction => 'data' in item && typeof item.data === 'function';
 

@@ -31,14 +31,12 @@ export type Priority = Schema.Schema.Type<typeof Priority>;
  * field is inert to `SelectOption`, which carries id/title/color and ignores the rest.
  */
 export const PriorityOptions: { id: Priority; title: string; color: string; icon: string }[] = [
+  { id: 'none', title: 'None', color: 'gray', icon: 'ph--dot--regular' },
   { id: 'low', title: 'Low', color: 'gray', icon: 'px--bar-low--regular' },
   { id: 'medium', title: 'Medium', color: 'gray', icon: 'px--bar-medium--regular' },
   { id: 'high', title: 'High', color: 'gray', icon: 'px--bar-high--regular' },
   { id: 'urgent', title: 'Urgent', color: 'rose', icon: 'ph--exclamation-mark--fill' },
 ];
-
-/** No priority has no option row, so its glyph lives here — a dot, not an absent cell. */
-export const NO_PRIORITY_ICON = 'ph--dot--regular';
 
 //
 // Estimate (T-shirt sizes)
@@ -47,7 +45,13 @@ export const NO_PRIORITY_ICON = 'ph--dot--regular';
 export const Estimate = Schema.Literals(['xs', 's', 'm', 'l', 'xl']);
 export type Estimate = Schema.Schema.Type<typeof Estimate>;
 
-export const EstimateOptions: { id: Estimate; title: string; color: string }[] = [
+/**
+ * `none` is a row so a picker built from this table can clear the field. It is not an `Estimate` —
+ * an unset estimate is the absent property, not a literal — so it is the one id a writer maps to
+ * `null` rather than passing through.
+ */
+export const EstimateOptions: { id: Estimate | 'none'; title: string; color: string }[] = [
+  { id: 'none', title: 'None', color: 'gray' },
   { id: 'xs', title: 'XS', color: 'gray' },
   { id: 's', title: 'S', color: 'gray' },
   { id: 'm', title: 'M', color: 'gray' },
