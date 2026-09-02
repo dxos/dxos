@@ -144,7 +144,23 @@ export const TestDisabled: Story = {
     const canvas = within(canvasElement);
     const preview = canvas.getByTestId('editable.preview');
     await userEvent.click(preview);
-    // Still the preview: a disabled field cannot be opened by clicking it.
-    await expect(canvas.queryByTestId('editable.input')).toBeNull();
+    // Still the preview: a disabled field cannot be opened by clicking it. The input is in the DOM
+    // either way — the machine hides the part that is out of play rather than unmounting it, so the
+    // two never claim a row apiece.
+    await expect(canvas.getByTestId('editable.input')).not.toBeVisible();
+    await expect(preview).toBeVisible();
+  },
+};
+
+export const TestRevertFromEmpty: Story = {
+  args: { initialValue: '' },
+  // A field opened on nothing is the one `Escape` has to be trusted on: there is no committed text
+  // to fall back to, so a revert that keeps what was typed writes it instead of discarding it.
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByTestId('editable.preview'));
+    await userEvent.keyboard('Discard me{Escape}');
+    await waitFor(async () => expect(canvas.getByTestId('editable.preview')).toHaveTextContent('Untitled'));
+    await expect(canvas.getByTestId('editable.commits')).toHaveTextContent('No commits yet');
   },
 };
