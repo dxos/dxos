@@ -189,7 +189,9 @@ export const Behavior: Story = {
       cuppings.parentTask = Ref.make(label);
     });
     await flushRender();
-    await expect(canvas.getByText('Schedule cuppings').closest('[role="option"]')).toHaveAttribute('aria-level', '2');
+    // `treeitem`, not `option`: the list renders through `Tree` now, and `aria-level` sits on the
+    // branch wrapper the row is nested in (see react-ui-list/docs/TREE.md §10).
+    await expect(canvas.getByText('Schedule cuppings').closest('[role="treeitem"]')).toHaveAttribute('aria-level', '2');
 
     // Updates — removal: an array splice alone does not unlist a task (membership is the parent
     // edge) — deleting it does.

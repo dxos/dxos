@@ -85,6 +85,18 @@ export type IconRenderer<T extends { id: string } = any> = FC<{
   props: TreeItemDataProps;
 }>;
 
+/**
+ * Replaces the heading — the row's leading content beside the toggle. `TreeItemDataProps` describes
+ * a label with an optional icon and count; a caller whose row leads with its own controls (a
+ * checkbox, an inline-editable title) supplies them here instead.
+ */
+export type HeadingRenderer<T extends { id: string } = any> = FC<{
+  item: T;
+  path: string[];
+  props: TreeItemDataProps;
+  open: boolean;
+}>;
+
 export type ColumnRenderer<T extends { id: string } = any> = FC<{
   item: T;
   path: string[];
@@ -95,13 +107,24 @@ export type ColumnRenderer<T extends { id: string } = any> = FC<{
 
 /** Render-time context threaded to every row. */
 export type TreeRenderContextValue<T extends { id: string } = any> = {
+  /** Stamped into every row's drag payload so a monitor can reject another tree's drags. */
+  treeId: string;
   draggable: boolean;
   renderColumns?: ColumnRenderer<T>;
   renderIcon?: IconRenderer<T>;
+  renderHeading?: HeadingRenderer<T>;
   blockInstruction?: (params: { instruction: Instruction; source: TreeData; target: TreeData }) => boolean;
   canDrop?: (params: { source: TreeData; target: TreeData }) => boolean;
+  /** Whether a childless row can be dropped onto to adopt the dragged item. */
+  leavesAcceptChildren?: boolean;
+  /** Paint every row's drop bands, so the zones can be seen without holding a drag. */
+  debug?: boolean;
+  /** Offer an open branch a reorder-below zone meaning "after this row and its subtree". */
+  dropBelowExpanded?: boolean;
   onOpenChange?: (params: { item: T; path: string[]; open: boolean }) => void;
   onItemHover?: (params: { item: T }) => void;
+  /** Directs the machine's roving tabstop at a row, and takes DOM focus with it. */
+  focusNode: (id: string, value: string) => void;
   /** Applies the select-vs-toggle policy for a row activation. */
   selectNode: (node: TreeNodeEntry<T>, modifiers: { option: boolean; shift: boolean }) => void;
   /** False during the tree's initial commit — disclosure inserted then must not animate. */
