@@ -13,6 +13,8 @@ const setup = async ({
   captureEnabled = () => true,
 }: { allowContent?: (spaceId: string) => boolean; captureEnabled?: () => boolean } = {}) => {
   const generations: ObservabilityExtension.Generation[] = [];
+  const turns: ObservabilityExtension.Turn[] = [];
+  const toolCalls: ObservabilityExtension.ToolCall[] = [];
   const { BasicTracerProvider } = await import('@opentelemetry/sdk-trace-base');
   // Stands in for the realm's provider, which in the app carries this processor alongside the
   // exporter's.
@@ -20,12 +22,14 @@ const setup = async ({
     spanProcessors: [
       new AiSpanProcessor({
         captureGeneration: (generation) => generations.push(generation),
+        captureTurn: (turn) => turns.push(turn),
+        captureToolCall: (toolCall) => toolCalls.push(toolCall),
         captureEnabled,
         allowContent,
       }),
     ],
   });
-  return { generations, tracer: provider.getTracer('test') };
+  return { generations, turns, toolCalls, tracer: provider.getTracer('test') };
 };
 
 /** A span without a space never reports content, so every content case here names one. */
@@ -197,6 +201,65 @@ describe('AiSpanProcessor', () => {
     expect(generations).toHaveLength(1);
   });
 
+  test('reports a turn span with its prompt and messages', async ({ expect }) => {
+    const { generations, turns, tracer } = await setup();
+    tracer
+      .startSpan('AiSession.createRequest', {
+        attributes: {
+          'dxos.ai.kind': 'turn',
+          'dxos.ai.session_id': 'feed-1',
+          'dxos.ai.space_id': PLAINTEXT_SPACE,
+          'dxos.ai.input': JSON.stringify('hi'),
+          'dxos.ai.output': JSON.stringify([{ role: 'assistant', blocks: [{ type: 'text', text: 'hello' }] }]),
+        },
+      })
+      .end();
+
+    expect(generations).toHaveLength(0);
+    expect(turns).toHaveLength(1);
+    expect(turns[0]).toMatchObject({
+      spanName: 'AiSession.createRequest',
+      sessionId: 'feed-1',
+      content: { input: 'hi', output: [{ role: 'assistant', blocks: [{ type: 'text', text: 'hello' }] }] },
+    });
+  });
+
+  test('reports a tool span named after the tool it ran', async ({ expect }) => {
+    const { toolCalls, tracer } = await setup();
+    tracer
+      .startSpan('callTool', {
+        attributes: {
+          'dxos.ai.kind': 'tool',
+          'dxos.ai.name': 'Echo',
+          'dxos.ai.space_id': PLAINTEXT_SPACE,
+          'dxos.ai.input': JSON.stringify({ value: 'hello' }),
+          'dxos.ai.output': JSON.stringify({ value: 'hello' }),
+        },
+      })
+      .end();
+
+    expect(toolCalls).toHaveLength(1);
+    expect(toolCalls[0]).toMatchObject({
+      spanName: 'Echo',
+      content: { input: { value: 'hello' }, output: { value: 'hello' } },
+    });
+  });
+
+  test('applies the content policy to turns and tool calls as to model calls', async ({ expect }) => {
+    const { turns, toolCalls, tracer } = await setup({ allowContent: () => false });
+    tracer
+      .startSpan('AiSession.createRequest', {
+        attributes: { 'dxos.ai.kind': 'turn', 'dxos.ai.space_id': PLAINTEXT_SPACE, 'dxos.ai.input': '"secret"' },
+      })
+      .end();
+    // No space at all: denied before the policy is even asked.
+    tracer.startSpan('callTool', { attributes: { 'dxos.ai.kind': 'tool', 'dxos.ai.input': '"secret"' } }).end();
+
+    expect(turns[0]?.content).toBeUndefined();
+    expect(toolCalls[0]?.content).toBeUndefined();
+    expect(JSON.stringify([turns, toolCalls])).not.toContain('secret');
+  });
+
   test('survives a sink that throws', async ({ expect }) => {
     const { BasicTracerProvider } = await import('@opentelemetry/sdk-trace-base');
     const provider = new BasicTracerProvider({
@@ -205,6 +268,8 @@ describe('AiSpanProcessor', () => {
           captureGeneration: () => {
             throw new Error('sink exploded');
           },
+          captureTurn: () => {},
+          captureToolCall: () => {},
           captureEnabled: () => true,
           allowContent: () => true,
         }),

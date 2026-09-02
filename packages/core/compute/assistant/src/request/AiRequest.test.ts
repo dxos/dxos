@@ -115,6 +115,31 @@ const toolResultsOf = (messages: readonly Message.Message[]) =>
 // Capture is only ever asserted against a stubbed `LanguageModel`; the app's path is this one —
 // `streamText`, an agent loop, a toolkit — and a model call that is never reported is invisible.
 describe('AiRequest.Request.run (telemetry)', () => {
+  it.effect('reports the tool call as a tool span, named after the tool', () =>
+    Effect.gen(function* () {
+      const exporter = new InMemorySpanExporter();
+      const provider = new BasicTracerProvider({ spanProcessors: [new SimpleSpanProcessor(exporter)] });
+
+      const request = new AiRequest.Request();
+      yield* request
+        .run({ toolkit, prompt: 'Echo hello.', history: [] })
+        .pipe(Effect.provideService(Tracer.Tracer, makeTracer(provider, 'test')));
+      yield* Effect.promise(() => provider.forceFlush());
+
+      // The span is named for the function that ran the tool, so the tool's own name and its
+      // arguments and result ride as attributes for the analytics sink.
+      const toolSpan = exporter.getFinishedSpans().find(({ name }) => name === 'callTool');
+      expect(toolSpan?.attributes['dxos.ai.kind']).toEqual('tool');
+      expect(toolSpan?.attributes['dxos.ai.name']).toEqual('Echo');
+      expect(JSON.parse(String(toolSpan?.attributes['dxos.ai.input']))).toEqual({ value: 'hello' });
+      expect(JSON.parse(String(toolSpan?.attributes['dxos.ai.output']))).toEqual({ value: 'hello' });
+    }).pipe(
+      Effect.provide(
+        testLayer([{ parts: [toolCall('Echo', { value: 'hello' })] }, { parts: [text('Echoed the value.')] }]),
+      ),
+    ),
+  );
+
   it.effect('reports every model call of a turn', () =>
     Effect.gen(function* () {
       const exporter = new InMemorySpanExporter();

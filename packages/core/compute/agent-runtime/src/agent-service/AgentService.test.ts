@@ -230,17 +230,20 @@ const DelegationTestLayer = AssistantTestLayer({
 });
 
 /** Records the name of every span opened, delegating the span itself to the built-in tracer. */
-const makeRecordingTracer = (names: string[]) => {
+const makeRecordingTracer = (names: string[], spans: Tracer.Span[] = []) => {
   const base = Effect.runSync(Effect.tracer);
   return Tracer.make({
     span: (...args) => {
       names.push((args[0] as any).name);
-      return base.span(...args);
+      const span = base.span(...args);
+      spans.push(span);
+      return span;
     },
   });
 };
 
 const turnSpanNames: string[] = [];
+const turnSpans: Tracer.Span[] = [];
 
 describe('Agent Service', { tags: ['model-fixture'] }, () => {
   it.effect(
@@ -807,9 +810,18 @@ describe('Agent Service (control plane)', () => {
 
         // The agent runs on the caller's runtime, so the tracer it installed must reach the turn.
         expect(turnSpanNames).toContain('AiSession.createRequest');
+
+        // The turn span is what an analytics backend groups the model calls under, so it carries
+        // the prompt and the messages the turn produced.
+        const turn = turnSpans.find((span) => span.name === 'AiSession.createRequest');
+        expect(turn?.attributes.get('dxos.ai.kind')).toEqual('turn');
+        expect(String(turn?.attributes.get('dxos.ai.input'))).toContain('capital of France');
+        expect(JSON.parse(String(turn?.attributes.get('dxos.ai.output')))).toEqual(
+          expect.arrayContaining([expect.objectContaining({ role: 'assistant' })]),
+        );
       },
       Effect.provide(TestLayer()),
-      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(turnSpanNames))),
+      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(turnSpanNames, turnSpans))),
       TestHelpers.provideTestContext,
     ),
     { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },

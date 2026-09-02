@@ -15,6 +15,8 @@ import { log } from '@dxos/log';
 import { ContentBlock } from '@dxos/types';
 import { safeParseJson } from '@dxos/util';
 
+import * as AiTelemetry from '../AiTelemetry';
+
 // TODO(burdon): Not Used?
 export const callTools: <Tools extends Record<string, Tool.Any>>(
   toolkit: Toolkit.WithHandler<Tools>,
@@ -38,6 +40,14 @@ export const callTool: <Tools extends Record<string, Tool.Any>>(
   // Empty input means a tool without parameters; unparseable input is reported back as a tool
   // error so the model can retry rather than the tool running with no arguments.
   const input = toolCall.input.trim().length === 0 ? {} : safeParseJson<Record<string, unknown>>(toolCall.input);
+  // Reported as a step of the turn: the OTel span name is this function's, so the tool's own name
+  // rides as an attribute, and the arguments and result are stamped for the sink to gate.
+  yield* AiTelemetry.annotateKind(AiTelemetry.KIND.tool);
+  yield* Effect.annotateCurrentSpan(AiTelemetry.ATTRIBUTES.name, toolCall.name);
+  const inputTruncated = yield* AiTelemetry.annotateContent(
+    AiTelemetry.ATTRIBUTES.input,
+    () => input ?? toolCall.input,
+  );
   if (input === undefined) {
     log.warn('tool call arguments did not parse', { tool: toolCall.name, input: toolCall.input });
     return {
@@ -51,7 +61,7 @@ export const callTool: <Tools extends Record<string, Tool.Any>>(
 
   // TODO(burdon): Replace with spans? (CORE: Auto stringify proxy objects?)
   log('toolCall', { toolCall: toolCall.name, input });
-  const toolResult = yield* toolkit
+  const toolResult: ContentBlock.ToolResult = yield* toolkit
     .handle(
       // `toolCall.name`/`input` are untrusted runtime data from the model response, so nothing
       // statically ties them to one tool's key and parameters; a mismatch surfaces as a normal
@@ -125,6 +135,17 @@ export const callTool: <Tools extends Record<string, Tool.Any>>(
     },
   });
 
+  // `result` is JSON text by convention; stamped parsed so the sink does not carry it double-encoded.
+  const outputTruncated = yield* AiTelemetry.annotateContent(AiTelemetry.ATTRIBUTES.output, () =>
+    'error' in toolResult && toolResult.error !== undefined
+      ? { error: toolResult.error }
+      : typeof toolResult.result === 'string'
+        ? (safeParseJson(toolResult.result) ?? toolResult.result)
+        : toolResult.result,
+  );
+  if (inputTruncated || outputTruncated) {
+    yield* Effect.annotateCurrentSpan(AiTelemetry.ATTRIBUTES.truncated, true);
+  }
   return toolResult;
 });
 

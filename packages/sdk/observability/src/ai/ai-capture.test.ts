@@ -127,6 +127,8 @@ const setup = ({
       spanProcessors: [
         new AiObservability.AiSpanProcessor({
           captureGeneration: (generation) => events.push(generation),
+          captureTurn: () => {},
+          captureToolCall: () => {},
           captureEnabled,
           allowContent,
         }),

@@ -36,6 +36,8 @@ const attachAiCapture = async (observability: Observability): Promise<CleanupFn>
   return Otel.addSpanProcessor(
     new AiSpanProcessor({
       captureGeneration: (generation) => observability.generations.captureGeneration(generation),
+      captureTurn: (turn) => observability.generations.captureTurn(turn),
+      captureToolCall: (toolCall) => observability.generations.captureToolCall(toolCall),
       // Read per span: the user can toggle telemetry mid-session, and leaving the decision to a
       // backend client would gate on its own opt-out flag, which is a separate store.
       captureEnabled: () => observability.enabled,
@@ -240,6 +242,16 @@ class ObservabilityImpl implements Observability {
       captureGeneration: (generation) => {
         for (const extension of this._getExtensions('generations')) {
           extension.captureGeneration(generation);
+        }
+      },
+      captureTurn: (turn) => {
+        for (const extension of this._getExtensions('generations')) {
+          extension.captureTurn(turn);
+        }
+      },
+      captureToolCall: (toolCall) => {
+        for (const extension of this._getExtensions('generations')) {
+          extension.captureToolCall(toolCall);
         }
       },
     };

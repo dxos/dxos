@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import * as Effect from 'effect/Effect';
 import type * as Tracer from 'effect/Tracer';
 import type * as Prompt from 'effect/unstable/ai/Prompt';
 import type * as Telemetry from 'effect/unstable/ai/Telemetry';
@@ -37,7 +38,21 @@ export const ATTRIBUTES = {
    */
   cacheReadTokens: 'dxos.ai.cache_read_tokens',
   cacheWriteTokens: 'dxos.ai.cache_write_tokens',
+  /**
+   * What a non-model span is to the sink: a {@link KIND.turn} is the unit an analytics backend
+   * groups a conversation's model calls under, a {@link KIND.tool} one step inside it.
+   */
+  kind: 'dxos.ai.kind',
+  /** Display name for a span whose OTel name is generic, e.g. the tool a `callTool` span ran. */
+  name: 'dxos.ai.name',
 } as const;
+
+export const KIND = {
+  turn: 'turn',
+  tool: 'tool',
+} as const;
+
+export type Kind = (typeof KIND)[keyof typeof KIND];
 
 export type SpanTransformerOptions = {
   /** Cap per serialized content attribute; a value over it is cut and the span marked truncated. */
@@ -52,6 +67,47 @@ export type SpanTransformerOptions = {
 const DEFAULT_MAX_CONTENT_LENGTH = 64_000;
 
 /**
+ * Serializes a content value for a span attribute, cut to `maxLength`. `undefined` when it cannot be
+ * serialized at all — tool results are arbitrary values, and a cycle or a BigInt throws from
+ * `JSON.stringify` — so the caller loses that one attribute rather than the call.
+ */
+const serializeContent = (
+  key: string,
+  value: () => unknown,
+  maxLength: number,
+): { readonly serialized: string; readonly truncated: boolean } | undefined => {
+  try {
+    const serialized = JSON.stringify(value());
+    return { serialized: serialized.slice(0, maxLength), truncated: serialized.length > maxLength };
+  } catch (err) {
+    log.catch(err, { key });
+    return undefined;
+  }
+};
+
+/** Marks the current span as a {@link Kind}, so the sink reports it as a turn or a tool call. */
+export const annotateKind = (kind: Kind): Effect.Effect<void> => Effect.annotateCurrentSpan(ATTRIBUTES.kind, kind);
+
+/**
+ * Stamps a content attribute onto the current span, serialized and cut like the model-call
+ * transformer does, and reports whether it was cut. Meant for the turn and tool spans, which have
+ * no transformer hook: the sink applies the same capture policy to these attributes as to a
+ * model call's, so stamping here decides nothing about whether the content leaves the device.
+ */
+export const annotateContent = (
+  key: string,
+  value: () => unknown,
+  options?: SpanTransformerOptions,
+): Effect.Effect<boolean> =>
+  Effect.suspend(() => {
+    const content = serializeContent(key, value, options?.maxContentLength ?? DEFAULT_MAX_CONTENT_LENGTH);
+    if (content === undefined) {
+      return Effect.succeed(false);
+    }
+    return Effect.annotateCurrentSpan(key, content.serialized).pipe(Effect.as(content.truncated));
+  });
+
+/**
  * Span transformer stamping `dxos.ai.*` attributes onto the model-call span: the prompt, the
  * response, and tool names, plus the prompt-cache token counts. Effect's `LanguageModel` invokes it
  * only when one is installed, so whether any of this is serialized at all is the installer's
@@ -63,21 +119,18 @@ const DEFAULT_MAX_CONTENT_LENGTH = 64_000;
  */
 export const makeSpanTransformer = (options?: SpanTransformerOptions): Telemetry.SpanTransformer => {
   const maxLength = options?.maxContentLength ?? DEFAULT_MAX_CONTENT_LENGTH;
-  const truncate = (value: string): string => (value.length > maxLength ? value.slice(0, maxLength) : value);
 
   // Effect calls the transformer on the model call's own fiber with no error handling, so a throw
   // here fails the call. Tool results are arbitrary values — a cycle or a BigInt throws from
   // `JSON.stringify` — so each attribute is built and stamped independently, and a failure costs
   // only its own attribute.
   const stamp = (span: Tracer.Span, key: string, value: () => unknown): boolean => {
-    try {
-      const serialized = JSON.stringify(value());
-      span.attribute(key, truncate(serialized));
-      return serialized.length > maxLength;
-    } catch (err) {
-      log.catch(err, { key });
+    const content = serializeContent(key, value, maxLength);
+    if (content === undefined) {
       return false;
     }
+    span.attribute(key, content.serialized);
+    return content.truncated;
   };
 
   return ({ prompt, tools, response, span }) => {

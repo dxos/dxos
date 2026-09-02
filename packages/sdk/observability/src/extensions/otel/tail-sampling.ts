@@ -29,7 +29,8 @@ import type { ReadableSpan, Span, SpanProcessor } from '@opentelemetry/sdk-trace
  * In order:
  * - a span that **errored** is kept, and its trace is promoted;
  * - a span slower than {@link DEFAULT_SLOW_MS} is kept, and its trace is promoted;
- * - a span carrying `gen_ai.*` is kept, and its trace is promoted, so a model call is never a
+ * - a span carrying `gen_ai.*` or `dxos.ai.kind` — a model call, or the turn and tool calls
+ *   around it that the AI analytics sink reports — is kept, and its trace is promoted, so a model call is never a
  *   fraction of the calls that happened. This one is ours rather than canonical: the AI events are
  *   what price the product, and a sampled fraction of them reports a fraction of the spend;
  * - any other span of a **promoted** trace is kept;
@@ -107,7 +108,7 @@ export class TailSampler {
     return (
       span.status.code === SpanStatusCode.ERROR ||
       span.durationMs > this._slowMs ||
-      Object.keys(span.attributes).some(isGenAiAttribute)
+      Object.keys(span.attributes).some(isAiAttribute)
     );
   }
 
@@ -127,7 +128,9 @@ export class TailSampler {
 
 const GEN_AI_PREFIX = 'gen_ai.';
 
-const isGenAiAttribute = (key: string): boolean => key.startsWith(GEN_AI_PREFIX);
+/** `gen_ai.*` marks a model call; `dxos.ai.kind` the turn around it and the tool calls inside it. */
+const isAiAttribute = (key: string): boolean => key.startsWith(GEN_AI_PREFIX) || key === AI_KIND_ATTR;
+const AI_KIND_ATTR = 'dxos.ai.kind';
 
 /**
  * Deterministic per trace, so every span of a trace decides the same way. Reads the low 8 hex digits

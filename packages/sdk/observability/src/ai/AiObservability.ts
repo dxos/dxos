@@ -85,6 +85,10 @@ export const contentCaptureAllowed = (_spaceId: string): boolean => {
 export type Options = {
   /** Sink for a call that survived the policy — typically `Observability.generations`. */
   captureGeneration: (generation: ObservabilityExtension.Generation) => void;
+  /** Sink for a conversation turn (`dxos.ai.kind = turn`), the unit its model calls group under. */
+  captureTurn: (turn: ObservabilityExtension.Turn) => void;
+  /** Sink for a tool call inside a turn (`dxos.ai.kind = tool`). */
+  captureToolCall: (toolCall: ObservabilityExtension.ToolCall) => void;
   /** Whether the user's telemetry opt-in is on. Checked before an event is built. */
   captureEnabled: () => boolean;
   /**
@@ -113,9 +117,17 @@ const TOOLS_ATTR = 'dxos.ai.tools';
 const TRUNCATED_ATTR = 'dxos.ai.truncated';
 const CACHE_READ_TOKENS_ATTR = 'dxos.ai.cache_read_tokens';
 const CACHE_WRITE_TOKENS_ATTR = 'dxos.ai.cache_write_tokens';
+/** What a non-model span is (`AiTelemetry.KIND`); a span with neither value is not AI at all. */
+const KIND_ATTR = 'dxos.ai.kind';
+const KIND_TURN = 'turn';
+const KIND_TOOL = 'tool';
+/** Display name for a span whose OTel name is generic, e.g. the tool a `callTool` span ran. */
+const NAME_ATTR = 'dxos.ai.name';
 
 /**
- * Reports finished GenAI spans to the injected sink. Non-GenAI spans pass through untouched.
+ * Reports finished AI spans to the injected sinks: model calls (`gen_ai.*`) as generations, and the
+ * turn and tool-call spans the AI stack marks with `dxos.ai.kind`. Every other span passes through
+ * untouched.
  *
  * Attaches to the realm's tracer provider via `Otel.addSpanProcessor` rather than owning one: the
  * process manager's baseline tracer already records every span, so a second provider would mean a
@@ -123,11 +135,15 @@ const CACHE_WRITE_TOKENS_ATTR = 'dxos.ai.cache_write_tokens';
  */
 export class AiSpanProcessor implements SpanProcessor {
   private readonly _captureGeneration: Options['captureGeneration'];
+  private readonly _captureTurn: Options['captureTurn'];
+  private readonly _captureToolCall: Options['captureToolCall'];
   private readonly _captureEnabled: Options['captureEnabled'];
   private readonly _allowContent: Options['allowContent'];
 
-  constructor({ captureGeneration, captureEnabled, allowContent }: Options) {
+  constructor({ captureGeneration, captureTurn, captureToolCall, captureEnabled, allowContent }: Options) {
     this._captureGeneration = captureGeneration;
+    this._captureTurn = captureTurn;
+    this._captureToolCall = captureToolCall;
     this._captureEnabled = captureEnabled;
     this._allowContent = allowContent;
   }
@@ -145,7 +161,9 @@ export class AiSpanProcessor implements SpanProcessor {
 
   private _capture(span: ReadableSpan): void {
     const attributes = span.attributes;
-    if (!GEN_AI_MARKERS.some((key) => attributes[key] !== undefined)) {
+    const kind = attributes[KIND_ATTR];
+    const isModelCall = GEN_AI_MARKERS.some((key) => attributes[key] !== undefined);
+    if (kind !== KIND_TURN && kind !== KIND_TOOL && !isModelCall) {
       return;
     }
     if (!this._captureEnabled()) {
@@ -154,6 +172,32 @@ export class AiSpanProcessor implements SpanProcessor {
 
     const spaceId = attributes[SPACE_ID_ATTR];
     const content = typeof spaceId === 'string' && this._allowContent(spaceId);
+
+    if (kind === KIND_TURN || kind === KIND_TOOL) {
+      const spanContext = span.spanContext();
+      const record: ObservabilityExtension.AiSpanBase = {
+        traceId: spanContext.traceId,
+        spanId: spanContext.spanId,
+        parentSpanId: span.parentSpanContext?.spanId,
+        spanName: stringAttribute(attributes[NAME_ATTR]) ?? span.name,
+        sessionId: stringAttribute(attributes[SESSION_ID_ATTR]),
+        latency: hrTimeToSeconds(span.duration),
+        content: content
+          ? {
+              input: parseJsonAttribute(attributes[INPUT_ATTR]),
+              output: parseJsonAttribute(attributes[OUTPUT_ATTR]),
+              truncated: attributes[TRUNCATED_ATTR] === true ? true : undefined,
+            }
+          : undefined,
+        errorClass: span.status.code === SpanStatusCode.ERROR ? errorClass(span) : undefined,
+      };
+      if (kind === KIND_TURN) {
+        this._captureTurn(record);
+      } else {
+        this._captureToolCall(record);
+      }
+      return;
+    }
 
     const spanContext = span.spanContext();
     const generation: ObservabilityExtension.Generation = {
