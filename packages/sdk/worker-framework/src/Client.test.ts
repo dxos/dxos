@@ -84,6 +84,12 @@ const createWorkerFactory = (storageLockKey: string) => () => {
  * no heartbeat, `new-leader`, or `provide-port` ever reaches this tab. Models the observed wedged
  * tab whose SharedWorker link died — it can still take Web Locks, so it can still evict a leader.
  */
+/** Reads the diagnostics the connection merges into a failure, without asserting a shape. */
+const diagnosticsOf = (error: unknown): Record<string, unknown> =>
+  error instanceof Error && 'context' in error && typeof error.context === 'object' && error.context
+    ? { ...error.context }
+    : {};
+
 const createBrokenCoordinator = (): WorkerProtocol.WorkerCoordinator => ({
   onMessage: new Event<WorkerProtocol.CoordinatorMessage>(),
   sendMessage: () => {},
@@ -283,6 +289,74 @@ describe('Connection multi-client', () => {
     await asyncTimeout(connected.wait(), 10_000);
     expect(attempts).toBeGreaterThan(1);
   });
+
+  // The two branches the connection diagnostics exist to tell apart. `open()` cannot settle sooner
+  // than `portTimeout + LOCK_OR_RPC_WAIT_TIMEOUT`, so both run ~15s, in line with the rest of the file.
+  test('a leader whose worker never starts rejects with the leader error, not the bare timeout', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+
+    const connection = new Client.Connection({
+      createWorker: () => {
+        throw new Error('TEST: worker creation failed');
+      },
+      createCoordinator: () => hub.connect(),
+      leaderLockKey: keys.leaderLockKey,
+      leaderTimeouts: { heartbeatInterval: 50, staleTimeout: 1_000, portTimeout: 200, retryBackoff: 10 },
+      onConnect: async () => ({ close: async () => {} }),
+    });
+    onTestFinished(async () => {
+      await connection.close();
+    });
+
+    const error = await connection.open().then(
+      () => {
+        throw new Error('open() must not resolve: no leader session can ever open in this test.');
+      },
+      (err) => err,
+    );
+
+    // Surfacing the leader-session failure rather than `establishing initial worker connection`
+    // is what tells a reader the worker is the problem instead of the port exchange.
+    expect(String(error)).toContain('TEST: worker creation failed');
+    expect(diagnosticsOf(error).workerLeaderFailures).toBeGreaterThan(0);
+  }, 30_000);
+
+  test('a tab that never receives a port reports the port timeouts it accrued', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+    const timeouts = { heartbeatInterval: 20, staleTimeout: 100, portTimeout: 200 };
+
+    const leader = makeConnection(hub, keys, timeouts);
+    await asyncTimeout(leader.connection.open(), 10_000);
+    onTestFinished(async () => {
+      await leader.connection.close();
+    });
+
+    const wedged = makeConnection(hub, keys, timeouts, {
+      maxLeaderFailures: 2,
+      createCoordinator: createBrokenCoordinator,
+    });
+    onTestFinished(async () => {
+      await wedged.connection.close();
+    });
+
+    const error = await wedged.connection.open().then(
+      () => {
+        throw new Error('open() must not resolve: this coordinator never delivers a port.');
+      },
+      (err) => err,
+    );
+
+    const diagnostics = diagnosticsOf(error);
+    // The retry loop overwrites `port-timeout` with the next `requesting-port`, which is why the
+    // counter exists: the phase alone cannot distinguish one expiry from twenty.
+    expect(diagnostics.workerPortTimeouts).toBeGreaterThan(0);
+    expect(['requesting-port', 'port-timeout']).toContain(diagnostics.workerConnectPhase);
+    // -1, not a small number: a broken coordinator delivers no heartbeat, and this tab's own
+    // broadcasts must not be counted as one.
+    expect(diagnostics.workerMsSinceLeaderHeartbeat).toBe(-1);
+  }, 30_000);
 
   test('a tab with a broken coordinator link stops stealing instead of restarting the leader forever', async () => {
     const hub = createHub();

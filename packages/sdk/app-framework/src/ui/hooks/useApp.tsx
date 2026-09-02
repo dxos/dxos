@@ -88,17 +88,23 @@ export const FIRST_INTERACTIVE_EVENT = 'app-framework:first-interactive';
  * ids on a full profile, well past what is useful as an event property.
  */
 export type StartupDiagnostics = {
-  /** The deadline that expired, in ms. */
+  /** Which failure produced these: the deadline expiring, or a module refusing to activate. */
+  startupFailureKind: 'timeout' | 'module-error';
+  /** The deadline, in ms; reported for both kinds so the two are comparable. */
   startupTimeoutMs: number;
-  /** Comma-separated activation events that completed before the deadline. */
+  /** Comma-separated activation events that completed before the failure. */
   startupEventsFired: string;
   /** Modules that had finished activating. */
   startupActivatedModules: number;
   /** Modules registered in total. */
   startupTotalModules: number;
-  /** Module mid-activation when the deadline hit; usually names the culprit outright. */
-  startupLastModule?: string;
-  /** Activation event in flight when the deadline hit. */
+  /**
+   * Comma-separated modules still activating, which is the set the stall is in. The scheduler
+   * runs a wave of {@link ActivationScheduler.WAVE_CONCURRENCY} at a time, so the last module to
+   * START is usually not the one that hung, and reporting it alone names the wrong culprit.
+   */
+  startupInFlightModules: string;
+  /** Activation event in flight when the failure hit. */
   startupLastEvent?: string;
   /** Comma-separated events queued for replay by a pending reset. */
   startupPendingReset: string;
@@ -113,21 +119,6 @@ declare global {
     [FIRST_INTERACTIVE_EVENT]: CustomEvent<number>;
   }
 }
-
-// Keyed by symbol so the diagnostics ride along with the error without widening its own
-// shape, and without appearing in the `JSON.stringify` the reset dialog's copy button runs.
-const STARTUP_DIAGNOSTICS = Symbol.for('dxos.app-framework.startup-diagnostics');
-
-type StartupDiagnosticsCarrier = { [STARTUP_DIAGNOSTICS]?: StartupDiagnostics };
-
-/**
- * Reads the diagnostics attached to a startup timeout error, if it carries any.
- * Hosts forward these onto the captured exception so the report says where startup stopped.
- */
-export const getStartupDiagnostics = (error: unknown): StartupDiagnostics | undefined =>
-  // The one assertion the boundary needs: the input is `unknown` by contract, so no source-level
-  // type can describe it — the optional carrier keeps the claim to the single key actually set.
-  (error as StartupDiagnosticsCarrier | undefined)?.[STARTUP_DIAGNOSTICS];
 
 export type UseAppOptions = {
   pluginManager?: PluginManager.PluginManager;
@@ -242,11 +233,6 @@ export const useApp = ({
     setupDevtools(manager);
   }, [manager]);
 
-  // Declared above the startup effect: the deadline callback reads the latest progress to name
-  // the module that was mid-activation when it fired.
-  const progressRef = useRef(startupProgress);
-  progressRef.current = startupProgress;
-
   useAsyncEffect(async () => {
     log('useApp: effect mount');
 
@@ -262,12 +248,43 @@ export const useApp = ({
       module: 'org.dxos.app-framework.atom-registry',
     });
 
+    // The modules the scheduler currently has open. A wave runs
+    // `ActivationScheduler.WAVE_CONCURRENCY` at a time, so this is the set a stall lives in;
+    // the single most recent `activating` message is usually a sibling that already finished.
+    const inFlightModules = new Set<string>();
+
+    const collectDiagnostics = (startupFailureKind: StartupDiagnostics['startupFailureKind']): StartupDiagnostics => ({
+      startupFailureKind,
+      startupTimeoutMs: timeout,
+      startupEventsFired: manager.getEventsFired().join(','),
+      startupActivatedModules: manager.getActive().length,
+      startupTotalModules: manager.getModules().length,
+      startupInFlightModules: [...inFlightModules].join(','),
+      startupLastEvent: progressRef.current.event,
+      startupPendingReset: manager.getPendingReset().join(','),
+    });
+
+    // Both failure paths report, so `composer.startup.failed` counts every boot that reached the
+    // fatal dialog rather than only the ones that ran out the deadline.
+    const reportFailure = (diagnostics: StartupDiagnostics) => {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent(STARTUP_FAILED_EVENT, { detail: diagnostics }));
+      }
+    };
+
     const fiber = Effect.gen(function* () {
       const queue = yield* PubSub.subscribe(manager.activation);
       const listener = yield* Effect.forkDetach(
         PubSub.take(queue).pipe(
           Effect.tap(({ event, state, module, error: error$ }) =>
             Effect.sync(() => {
+              if (module) {
+                if (state === 'activating') {
+                  inFlightModules.add(module);
+                } else {
+                  inFlightModules.delete(module);
+                }
+              }
               // Event-level Startup activated (no `module` field) fires once,
               // after every module triggered by Startup has finished. Module
               // activations now also carry their parent event id (so the trace
@@ -347,8 +364,15 @@ export const useApp = ({
                 }));
               }
               if (error$ && !readyRef.current) {
+                const diagnostics = collectDiagnostics('module-error');
+                if (error$ instanceof Error) {
+                  const existing =
+                    'context' in error$ && typeof error$.context === 'object' && error$.context ? error$.context : {};
+                  Object.assign(error$, { context: { ...existing, ...diagnostics } });
+                }
                 setError(error$);
                 errorRef.current = error$;
+                reportFailure(diagnostics);
               }
             }),
           ),
@@ -370,16 +394,7 @@ export const useApp = ({
         return;
       }
 
-      const progress = progressRef.current;
-      const diagnostics: StartupDiagnostics = {
-        startupTimeoutMs: timeout,
-        startupEventsFired: manager.getEventsFired().join(','),
-        startupActivatedModules: manager.getActive().length,
-        startupTotalModules: manager.getModules().length,
-        startupLastModule: progress.module,
-        startupLastEvent: progress.event,
-        startupPendingReset: manager.getPendingReset().join(','),
-      };
+      const diagnostics = collectDiagnostics('timeout');
 
       // Local-only, and the richer of the two: the full module list is worth having in a
       // downloaded log but is too long to ride on an event property.
@@ -387,15 +402,12 @@ export const useApp = ({
 
       const abort = () => {
         void EffectEx.runAndForwardErrors(Fiber.interrupt(fiber));
-        // The deadline is the only point that knows where startup stopped, and the tab is
+        // The failure point is the only one that knows where startup stopped, and the tab is
         // usually closed seconds later, so the state travels on the error and the event rather
-        // than staying in a log the user never uploads.
-        setError(
-          Object.assign(new Error(`Startup timed out after ${timeout}ms`), { [STARTUP_DIAGNOSTICS]: diagnostics }),
-        );
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent(STARTUP_FAILED_EVENT, { detail: diagnostics }));
-        }
+        // than staying in a log the user never uploads. `context` is the key `@dxos/log` already
+        // merges into an entry, so no consumer needs a bespoke accessor to read it.
+        setError(Object.assign(new Error(`Startup timed out after ${timeout}ms`), { context: diagnostics }));
+        reportFailure(diagnostics);
       };
 
       // In development the deadline is a symptom, not a verdict: a cold OPFS, a rebuild or a paused
@@ -427,6 +439,9 @@ export const useApp = ({
       }
     };
   }, [manager]);
+
+  const progressRef = useRef(startupProgress);
+  progressRef.current = startupProgress;
 
   const surfaces = useMemo(() => new SurfaceManager(manager.capabilities, manager), [manager]);
 

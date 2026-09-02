@@ -68,8 +68,6 @@ export const startupMeasure = (name: string, startMark: string, endMark: string)
 };
 
 export type Profiler = {
-  mark: (name: string) => void;
-  measure: (name: string, startMark: string, endMark: string) => void;
   /** Returns a JSON snapshot of timings (works before or after `dump`). */
   snapshot: () => ProfilerSnapshot;
   /** Finalizes the profile, logs to console, persists to localStorage. */
@@ -152,12 +150,14 @@ export const startupProfiler = (): Profiler => {
   };
 
   return {
-    mark: startupMark,
-    measure: startupMeasure,
     snapshot: collect,
     dump: () => {
-      startupMark('ready');
-      startupMeasure('total', 'main:start', 'ready');
+      // The host marks these on both outcomes; only fill in when it has not, so a dev boot does
+      // not carry two `startup:ready` marks and two `startup:total` measures.
+      if (performance.getEntriesByName('startup:ready').length === 0) {
+        startupMark('ready');
+        startupMeasure('total', 'main:start', 'ready');
+      }
       complete = true;
       finishedAt = new Date().toISOString();
 

@@ -14,10 +14,6 @@ import * as Client from '@dxos/worker-framework/Client';
 
 import { ClientServicesProxy } from '../service-proxy';
 
-// Re-exported so a host can read the phase off a failed `Client.initialize()` without taking a
-// direct dependency on the worker framework.
-export { type ConnectionDiagnostics, getConnectionDiagnostics } from '@dxos/worker-framework/Client';
-
 export const LEADER_LOCK_KEY = '@dxos/client/DedicatedWorkerClientServices/LeaderLock';
 
 export type LeaderTimeoutOptions = Client.LeaderTimeouts;

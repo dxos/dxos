@@ -18,7 +18,8 @@ describe('workerErrorFromEvent', () => {
     const error = workerErrorFromEvent(event, 'coordinator');
 
     expect(error).toBeInstanceOf(Error);
-    expect(error.message).toBe('coordinator worker failed to load: Script error. (https://app/worker.js:1:2)');
+    expect(error.message).toBe('coordinator worker error: Script error. (https://app/worker.js:1:2)');
+    expect(error.cause).toBeUndefined();
   });
 
   test('synthesizes an error when the event carries nothing at all', ({ expect }) => {
@@ -27,6 +28,14 @@ describe('workerErrorFromEvent', () => {
     const error = workerErrorFromEvent(event, 'coordinator');
 
     expect(error).toBeInstanceOf(Error);
-    expect(error.message).toBe('coordinator worker failed to load: unknown error');
+    expect(error.message).toBe('coordinator worker error: unknown error');
+  });
+
+  test('carries a non-Error thrown value as the cause rather than dropping it', ({ expect }) => {
+    const event = { error: 'boom', message: 'Uncaught boom', filename: 'worker.js', lineno: 3, colno: 4 };
+    const error = workerErrorFromEvent(event, 'dedicated');
+
+    expect(error).toBeInstanceOf(Error);
+    expect(error.cause).toBe('boom');
   });
 });

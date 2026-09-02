@@ -52,6 +52,7 @@ import {
   WorkerLogProcessor,
   defaultStorageIsEmpty,
   downloadLogs,
+  errorContextPrimitives,
   initializeObservability,
   isFalse,
   isTrue,
@@ -249,16 +250,13 @@ const main = async () => {
   // Load these in parallel; HTTP/2 multiplexes the three chunks and even on
   // local-disk the parser can interleave parses. The wasm init rides the same wave: it must
   // complete before anything touches automerge (slim entrypoints — see util/automerge-wasm.ts).
-  const [
-    { Config, defs, SaveConfig, getEnvString },
-    { Client, createClientServices, getConnectionDiagnostics },
-    AppMigrations,
-  ] = await Promise.all([
-    import('@dxos/config'),
-    import('@dxos/react-client'),
-    import('@dxos/app-toolkit/AppMigrations'),
-    initAutomergeWasm(),
-  ]);
+  const [{ Config, defs, SaveConfig, getEnvString }, { Client, createClientServices }, AppMigrations] =
+    await Promise.all([
+      import('@dxos/config'),
+      import('@dxos/react-client'),
+      import('@dxos/app-toolkit/AppMigrations'),
+      initAutomergeWasm(),
+    ]);
 
   startupMark('dynamic-imports:end');
   startupMeasure('dynamic-imports', 'dynamic-imports:start', 'dynamic-imports:end');
@@ -370,9 +368,14 @@ const main = async () => {
     });
     return summary;
   };
+  let startupActivated = false;
+  let startupFailureReported = false;
   const captureStartup = (event: string, extra?: Record<string, string | number | boolean | undefined>) => {
-    startupMark('ready');
-    startupMeasure('total', 'main:start', 'ready');
+    // `startup:aborted` on the failure path: `ready` is read by humans off a timeline and by the
+    // playwright waterfall, where marking it for a boot that never became ready reads as success.
+    const endMark = event === 'composer.startup' ? 'ready' : 'aborted';
+    startupMark(endMark);
+    startupMeasure('total', 'main:start', endMark);
     const summary = { ...captureStartupSummary(), ...extra };
     void observability
       .then((obs) => {
@@ -381,7 +384,26 @@ const main = async () => {
       })
       .catch((error) => log.catch(error));
   };
-  window.addEventListener(STARTUP_ACTIVATED_EVENT, () => captureStartup('composer.startup'), { once: true });
+
+  // Every path to the fatal dialog reports, once. `startupActivated` separates a boot that never
+  // finished from one whose plugin graph came up and whose client died afterwards — the latter
+  // still emits `composer.startup`, because that event means `Startup` activated, not "boot worked".
+  const captureStartupFailure = (extra?: Record<string, string | number | boolean | undefined>) => {
+    if (startupFailureReported) {
+      return;
+    }
+    startupFailureReported = true;
+    captureStartup('composer.startup.failed', { ...extra, startupActivated });
+  };
+
+  window.addEventListener(
+    STARTUP_ACTIVATED_EVENT,
+    () => {
+      startupActivated = true;
+      captureStartup('composer.startup');
+    },
+    { once: true },
+  );
   // Separate from the startup summary: the shell renders at least two debounce ticks after
   // `Startup` activates, so time-to-interactive does not exist yet when that summary is built.
   window.addEventListener(
@@ -396,9 +418,7 @@ const main = async () => {
   );
   // Without this, a failed boot emits an exception and no timings at all, leaving no denominator
   // for the success event and nothing to compare a stalled phase against.
-  window.addEventListener(STARTUP_FAILED_EVENT, (event) => captureStartup('composer.startup.failed', event.detail), {
-    once: true,
-  });
+  window.addEventListener(STARTUP_FAILED_EVENT, (event) => captureStartupFailure(event.detail), { once: true });
   // Detect if this is the popover window in Tauri.
   const isPopover = await Match.value(isTauri).pipe(
     Match.when(
@@ -500,11 +520,11 @@ const main = async () => {
   // has to not reject unhandled.
   performance.mark('milestone:client-initialize:start');
   const client = new Client({ config, services });
-  // Spread rather than nest: the PostHog log processor forwards only top-level primitives, so
-  // nesting the phase would drop it from the very exception that needs it.
+  // Named apart from plugin-client's own `client initialization failed` so one failure does not
+  // produce two identically-titled entries. Spread first so a context field cannot shadow `error`.
   void client
     .initialize()
-    .catch((err) => log.error('client initialization failed', { error: err, ...getConnectionDiagnostics(err) }));
+    .catch((err) => log.error('client services failed to open', { ...errorContextPrimitives(err), error: err }));
 
   // Started here rather than from plugin-debug, which a plain local `serve` leaves disabled —
   // tying the flag to it would make the flag silently do nothing.
@@ -529,7 +549,10 @@ const main = async () => {
     client,
     observability,
     logStore,
-    onFatalError: (error) => raiseFatalError(error),
+    onFatalError: (error) => {
+      captureStartupFailure(errorContextPrimitives(error));
+      raiseFatalError(error);
+    },
 
     // Strictly the `dev` cloud environment (not preview) or a local `DX_DEV=true` opt-in, so a plain
     // local `serve` keeps the lean default plugin set (see `getDefaults` in plugin-defs.tsx).
