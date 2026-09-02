@@ -185,8 +185,6 @@ export type TreeProps<T extends { id: string } = any> = {
   rootId?: string;
   path?: string[];
   id: string;
-  /** Drag scope, defaulting to `id`. Sibling trees served by one monitor pass the same value. */
-  treeId?: string;
   /**
    * Accessible name for the tree. Ark names it "Tree View" by default, which says what the widget
    * is and not which list it is — a page with more than one is then unnavigable by name. Rendered
@@ -260,7 +258,6 @@ export const Tree = <T extends { id: string } = any>({
   rootId,
   path,
   id,
-  treeId = id,
   ariaLabel,
   classNames,
   gridTemplateColumns = '[tree-row-start] minmax(0, 1fr) min-content [tree-row-end]',
@@ -283,6 +280,9 @@ export const Tree = <T extends { id: string } = any>({
   onKeyDown,
 }: TreeProps<T>) => {
   const treePath = useMemo(() => (path ? [...path, id] : [id]), [id, path]);
+  // Every tree sharing a path root is one drag scope, which is what a monitor claims: the navtree
+  // mounts a `Tree` per workspace tab, and a scope per tab would leave its own drops unclaimed.
+  const treeId = treePath[0];
   const walkAtom = useMemo(() => createTreeWalkAtom(model, rootId, treePath), [model, rootId, treePath]);
   const { root, expanded, selected, byValue } = useAtomValue(walkAtom);
 

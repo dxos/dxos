@@ -1,8 +1,7 @@
 ---
 '@dxos/react-ui-list': patch
-'@dxos/plugin-navtree': patch
 ---
 
-Restore drag and drop in the navtree. Scoping each monitor to its own tree assumed one `Tree` per monitor, but the navtree mounts one per workspace tab, so its rows carried a per-tab id while the monitor watched for the graph root and claimed nothing: reordering and dropping into a collection both silently did nothing.
+Restore drag and drop in the navtree. A tree item's `treeId`, the scope a pragmatic-dnd monitor claims its own drags by, was the tree's own `id`. That holds only when a monitor serves exactly one `Tree`; the navtree mounts one per workspace tab, so its rows carried a per-tab id, the monitor watching for the graph root claimed nothing, and reordering a collection and dropping an object into one both silently did nothing.
 
-`Tree` now takes `treeId`, the drag scope, defaulting to `id`. Sibling trees served by one monitor pass the same value, and the navtree's panels and its monitor both reference one `NAV_TREE_DRAG_SCOPE` constant so they cannot drift apart again.
+The scope is now the root of the tree's path, so trees sharing a path root are one drag scope. Both existing monitors were already written against that value and are unchanged.

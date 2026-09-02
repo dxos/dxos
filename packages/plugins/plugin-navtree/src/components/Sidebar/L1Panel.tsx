@@ -20,7 +20,7 @@ import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 import { getListActions, useActions, useLoadDescendents } from '#hooks';
 import { meta } from '#meta';
 
-import { NAV_TREE_DRAG_SCOPE, NAV_TREE_ITEM } from '../NavTree';
+import { NAV_TREE_ITEM } from '../NavTree';
 import { useNavTreeContext } from '../NavTreeContext';
 import { NavTreeItemColumns } from '../NavTreeItem/NavTreeItemColumns';
 
@@ -144,7 +144,6 @@ const L1PanelContent = ({
             classNames='pt-[2px]'
             model={navTreeContext.model}
             id={item.id}
-            treeId={NAV_TREE_DRAG_SCOPE}
             rootId={item.id}
             path={path}
             draggable
