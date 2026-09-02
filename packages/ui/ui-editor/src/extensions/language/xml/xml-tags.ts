@@ -122,9 +122,30 @@ export type XmlWidgetDef = {
 
 export type XmlWidgetRegistry = Record<string, XmlWidgetDef>;
 
+/**
+ * The FIRST child, and only when it is a string.
+ *
+ * Enough for a tag whose content is one run of text; a tag holding a nested element gets everything
+ * from that element onwards dropped, because the parser splits contents into alternating text and
+ * element children. Use {@link getXmlInnerText} where nesting is possible.
+ */
 export const getXmlTextChild = (children: any[]): string | null => {
   const child = children?.[0];
   return typeof child === 'string' ? child : null;
+};
+
+/**
+ * All text inside a tag, nested elements contributing their text but not their markup.
+ *
+ * A model writes prose that happens to fence a block in tags of its own — a reminder quoting a
+ * `<checklist>`, say — and the reader wants the prose whole. Their tag NAMES are dropped rather
+ * than reserialised: they delimit the block for the model, and are noise on screen.
+ */
+export const getXmlInnerText = (children: any[]): string | null => {
+  const text = (children ?? [])
+    .map((child) => (typeof child === 'string' ? child : (getXmlInnerText(child?.children ?? []) ?? '')))
+    .join('');
+  return text.length > 0 ? text : null;
 };
 
 /** Stable id for portaled React/Solid widgets; explicit `id` on the tag wins for `updateWidget`. */
@@ -640,6 +661,7 @@ const buildDecorations = (
                   def.streaming ? `cm-xml-${nodeRange.from}` : `cm-xml-${nodeRange.from}-${nodeRange.to}`,
                 );
                 const widgetState = widgetStateMap[widgetId];
+                const signature = state.sliceDoc(nodeRange.from, nodeRange.to);
                 const props = {
                   id: widgetId,
                   range: nodeRange,
@@ -654,17 +676,17 @@ const buildDecorations = (
                 const widget: WidgetType | undefined = factory
                   ? (factory(props) ?? undefined)
                   : Component
-                    ? new StubWidget(
-                        widgetId,
+                    ? new StubWidget({
+                        id: widgetId,
                         Component,
                         props,
                         notifier,
-                        false,
-                        !!block,
+                        signature,
+                        block: !!block,
                         blockHeight,
-                        def.heightMode,
-                        def.debug,
-                      )
+                        heightMode: def.heightMode,
+                        debug: def.debug,
+                      })
                     : undefined;
 
                 // Add decoration.
@@ -736,17 +758,17 @@ const buildDecorations = (
           const widget: WidgetType | undefined = def.factory
             ? (def.factory(props) ?? undefined)
             : def.Component
-              ? new StubWidget(
-                  widgetId,
-                  def.Component,
+              ? new StubWidget({
+                  id: widgetId,
+                  Component: def.Component,
                   props,
                   notifier,
-                  false,
-                  isBlock,
+                  signature: state.sliceDoc(nodeRange.from, nodeRange.to),
+                  block: isBlock,
                   blockHeight,
-                  def.heightMode,
-                  def.debug,
-                )
+                  heightMode: def.heightMode,
+                  debug: def.debug,
+                })
               : undefined;
           if (widget) {
             builder.add(
@@ -808,17 +830,15 @@ const buildDecorations = (
         const widget: WidgetType | undefined = def.factory
           ? (def.factory(mergedProps) ?? undefined)
           : def.Component
-            ? new StubWidget(
-                widgetId,
-                def.Component,
-                mergedProps,
+            ? new StubWidget({
+                id: widgetId,
+                Component: def.Component,
+                props: mergedProps,
                 notifier,
-                true,
-                undefined,
-                undefined,
-                def.heightMode,
-                def.debug,
-              )
+                streaming: true,
+                heightMode: def.heightMode,
+                debug: def.debug,
+              })
             : undefined;
 
         // Decorated even when the factory declined: a factory may return null while the tag is still

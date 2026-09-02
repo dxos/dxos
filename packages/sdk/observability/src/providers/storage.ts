@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Schedule from 'effect/Schedule';
 
-import { type DataProvider } from '../observability';
+import * as Observability from '../Observability';
 
-export const provider: DataProvider = Effect.fn(function* (observability) {
+export const provider: Observability.DataProvider = Effect.fn(function* (observability) {
   if (typeof navigator !== 'undefined' && navigator.storage?.estimate) {
     const action = Effect.gen(function* () {
       const storageEstimate = yield* Effect.tryPromise(() => navigator.storage.estimate());

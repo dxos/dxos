@@ -10,9 +10,11 @@ import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
+import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
+import * as Tracer from 'effect/Tracer';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { expect } from 'vitest';
 
@@ -29,6 +31,7 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation, Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
+import { makeRecordingTracer } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { ContentBlock, Message, Organization } from '@dxos/types';
@@ -226,6 +229,8 @@ const DelegationTestLayer = AssistantTestLayer({
   ...assistantTestLayerOptions,
   agent: { delegationStrategy: StubDelegationStrategy },
 });
+
+const turnSpans: Tracer.Span[] = [];
 
 describe('Agent Service', { tags: ['model-fixture'] }, () => {
   it.effect(
@@ -605,10 +610,10 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
           Option.getOrNull(Annotation.getDictionary(handle.params.annotations, Process.HarnessHostAnnotation)),
         ).toBe(true);
 
-        // A Tier-B caller reaches the live AlarmManager over the process RPC loopback. The handler
-        // runs on the host's server fiber against the real closed-over AlarmManager; a successful
-        // void result proves the control-plane wiring end-to-end (persistence semantics are covered
-        // by the AlarmManager unit tests).
+        // A Tier-B caller reaches the live host over the process RPC loopback. The handler runs on
+        // the host's server fiber and appends an Alarm record to the feed; a successful void result
+        // proves the control-plane wiring end-to-end (persistence semantics are covered by the
+        // SessionStore tests).
         const now = yield* Clock.currentTimeMillis;
         const at = DateTime.makeUnsafe(now + Duration.toMillis(Duration.hours(1)));
         yield* handle.rpc.setAlarm({ at, message: 'finish the report' });
@@ -724,6 +729,40 @@ describe('Agent Service (control plane)', () => {
     ),
   );
 
+  it.effect(
+    'rediscovers a persisted agent whose hydration was skipped',
+    Effect.fnUntraced(
+      function* (_) {
+        const processManager = yield* ProcessManager.ProcessManagerService;
+        const feed = yield* Database.add(Feed.make());
+        yield* Database.flush();
+        const target = Obj.getURI(feed);
+
+        const spawned = yield* getSession(feed);
+        const [before] = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
+
+        // Reboot without hydrating: the record survives but no live handle does, so `list` yields
+        // a read-only dormant view. A service whose session cache does not carry over (boot-time
+        // hydration cleared it, or skipped this agent) rediscovers the process through that view
+        // and must adopt what `hydrate` returns — adopting the dormant view itself leaves every
+        // call on the session dying with "Process not hydrated".
+        yield* processManager.shutdown();
+        yield* processManager.startup();
+
+        const session = yield* getSession(feed).pipe(Effect.provide(AgentService.layer()));
+        expect(session).not.toBe(spawned);
+        const [after] = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
+        expect(String(after.pid)).toBe(String(before.pid));
+
+        // Exercises the live surface the dormant handle lacks, without needing a model turn.
+        yield* session.waitForCompletion();
+        yield* after.terminate();
+      },
+      Effect.provide(TestLayer()),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
   // Exercises the instruction-aware reuse identity on both paths — the session cache and the
   // remount (rediscovered process) path.
   it.effect(
@@ -781,5 +820,28 @@ describe('Agent Service (control plane)', () => {
       Effect.provide(TestLayer()),
       TestHelpers.provideTestContext,
     ),
+  );
+  it.effect(
+    'traces a turn run through the agent process',
+    Effect.fnUntraced(
+      function* (_) {
+        const session = yield* AgentService.createSession();
+        yield* session.submitPrompt('What is the capital of France?');
+        yield* session.waitForCompletion();
+
+        expect(turnSpans.map(({ name }) => name)).toContain('AiSession.createRequest');
+
+        const turn = turnSpans.find((span) => span.name === 'AiSession.createRequest');
+        expect(turn?.attributes.get('dxos.ai.kind')).toEqual('turn');
+        expect(String(turn?.attributes.get('dxos.ai.input'))).toContain('capital of France');
+        expect(JSON.parse(String(turn?.attributes.get('dxos.ai.output')))).toEqual(
+          expect.arrayContaining([expect.objectContaining({ role: 'assistant' })]),
+        );
+      },
+      Effect.provide(TestLayer()),
+      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(turnSpans))),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: LanguageModelFixture.isUpdateEnabled() ? 60_000 : undefined },
   );
 });

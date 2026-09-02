@@ -31,7 +31,7 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     await space.db.flush();
 
     const { chat } = await harness.runPromise(
-      Operation.invoke(ProjectOperation.DelegateTaskToChat, { task: Ref.make(task) }, { spaceId: space.id }),
+      Operation.invoke(ProjectOperation.DelegateTaskToChat, { tasks: [Ref.make(task)] }, { spaceId: space.id }),
     );
 
     // The chat is named for the task, so the conversation is findable by what it is about.
@@ -62,7 +62,7 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     await space.db.flush();
 
     const { chat } = await harness.runPromise(
-      Operation.invoke(ProjectOperation.DelegateTaskToChat, { task: Ref.make(task) }, { spaceId: space.id }),
+      Operation.invoke(ProjectOperation.DelegateTaskToChat, { tasks: [Ref.make(task)] }, { spaceId: space.id }),
     );
 
     // Filed under the project, so it reaches that project's navtree rather than the space root.
@@ -73,12 +73,79 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     expect(Obj.getParent(task)?.id).toBe(taskSet.id);
 
     // Started on delegation, not on completion: the row shows work is underway from the moment the
-    // session has it.
+    // session has it, and the chat's agent is who holds it.
     expect(task.status).toBe('started');
+    expect(task.assignee?.role).toBe('assistant');
 
     // The delegating identity reviews the result, which is what will send the task to `review`
     // rather than `done` when the work finishes.
     expect(task.reviewers).toHaveLength(1);
+  });
+
+  test('puts a whole checked set into one chat, in the order given', async ({ expect }) => {
+    await using harness = await setup();
+    const space = AppSpace.getDefaultSpace(harness.get(ClientCapabilities.Client));
+    invariant(space, 'Expected a default space.');
+
+    const titles = ['Source green coffee', 'Finalize roast curve', 'Design label'];
+    const tasks = titles.map((title) => space.db.add(Task.make({ title, status: 'todo' })));
+    await space.db.flush();
+
+    const { chat } = await harness.runPromise(
+      Operation.invoke(
+        ProjectOperation.DelegateTaskToChat,
+        { tasks: [Ref.make(tasks[2]), Ref.make(tasks[0])] },
+        { spaceId: space.id },
+      ),
+    );
+
+    // One chat for the whole selection, holding the tasks in the order the caller listed them —
+    // which is the order the list showed them, not the order they were ticked.
+    expect(chat.tasks.map((ref) => Task.refEntityId(ref))).toEqual([tasks[2].id, tasks[0].id]);
+
+    // Unnamed: a chat holding several tasks would be claiming to be about whichever came first.
+    expect(chat.name).toBeUndefined();
+
+    // Every delegated task is underway and assigned to the agent; the one left unchecked is untouched.
+    expect(tasks.map((task) => task.status)).toEqual(['started', 'todo', 'started']);
+    expect(tasks.map((task) => task.assignee?.role)).toEqual(['assistant', undefined, 'assistant']);
+  });
+
+  test('refuses a list spanning two projects', async ({ expect }) => {
+    await using harness = await setup();
+    const space = AppSpace.getDefaultSpace(harness.get(ClientCapabilities.Client));
+    invariant(space, 'Expected a default space.');
+
+    // One chat is filed under one project and told to file its output there, so a list drawn from
+    // two has no answer. Unreachable from the UI — a checked set comes from a single list — but the
+    // operation is a skill verb an agent calls with any refs.
+    const taskIn = async (name: string, title: string) => {
+      const { project } = await harness.runPromise(
+        Operation.invoke(ProjectOperation.Create, { name }, { spaceId: space.id }),
+      );
+      const taskSet = await project.taskSet?.tryLoad();
+      invariant(taskSet, 'Expected the scaffolded task set.');
+      const task = space.db.add(Task.make({ title, status: 'todo' }));
+      Obj.setParent(task, taskSet);
+      return task;
+    };
+
+    const voyage = await taskIn('Voyage', 'Write a poem');
+    const harbour = await taskIn('Harbour', 'Draw a map');
+    await space.db.flush();
+
+    await expect(
+      harness.runPromise(
+        Operation.invoke(
+          ProjectOperation.DelegateTaskToChat,
+          { tasks: [Ref.make(voyage), Ref.make(harbour)] },
+          { spaceId: space.id },
+        ),
+      ),
+    ).rejects.toThrow();
+
+    // Nothing was started: the refusal happens before any task is marked or any chat exists.
+    expect([voyage.status, harbour.status]).toEqual(['todo', 'todo']);
   });
 });
 

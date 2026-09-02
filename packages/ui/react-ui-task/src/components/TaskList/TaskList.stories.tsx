@@ -7,6 +7,7 @@ import React, { useCallback, useState } from 'react';
 import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { Obj, Ref } from '@dxos/echo';
+import { random } from '@dxos/random';
 import { createMenuAction } from '@dxos/react-ui-menu';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Task } from '@dxos/types';
@@ -16,7 +17,9 @@ import { translations } from '#translations';
 import { type TaskPlacement } from './hierarchy';
 import { TaskList } from './TaskList';
 
-const seed = (): Task.Task[] => [
+random.seed(1);
+
+const seedFlat = (): Task.Task[] => [
   Task.make({
     title: 'Source green coffee',
     status: 'done',
@@ -24,7 +27,6 @@ const seed = (): Task.Task[] => [
     description:
       'Two Ethiopian lots and one Colombian, sampled before committing to a full bag. Supplier list: https://example.com/suppliers',
   }),
-  // Artifacts render as tags beside priority: what the task produced, not what it is.
   Task.make({
     title: 'Write the launch poem',
     status: 'review',
@@ -41,7 +43,6 @@ const seed = (): Task.Task[] => [
   Task.make({
     title: 'Publish the tasting notes',
     status: 'todo',
-    // Reference forms the markdown surfaces are expected to linkify: a bare URL and a GitHub issue.
     description:
       'Draft lives at https://github.com/dxos/dxos/pull/12752 and the preview is https://pr-12752-composer-dev.dxos.workers.dev; blocked on #12431.',
   }),
@@ -67,105 +68,136 @@ const seed = (): Task.Task[] => [
  * ordinals into double digits, and put more than one task under each group heading, which a
  * seven-task list does not.
  */
-const manySeed = (): Task.Task[] => [
-  Task.make({ title: 'Source green coffee', status: 'done', priority: 'high' }),
-  Task.make({ title: 'Cup the samples', status: 'done' }),
-  Task.make({ title: 'Finalize roast curve', status: 'started', priority: 'high' }),
-  Task.make({ title: 'Draft launch email', status: 'started', assignee: { role: 'assistant', name: 'Scout' } }),
-  Task.make({
-    title: 'Write the launch poem',
-    status: 'review',
-    reviewers: [{ name: 'Rich', role: 'user' }],
-    artifacts: [Ref.make(Task.make({ title: 'Ode to a Coffee Bean' }))],
-  }),
-  Task.make({ title: 'Design label', status: 'todo', assignee: { email: 'riley@example.com' } }),
-  Task.make({ title: 'Publish the tasting notes', status: 'todo' }),
-  Task.make({ title: 'Book the launch venue', status: 'todo', priority: 'low' }),
-  Task.make({ title: 'Print run v1', status: 'cancelled' }),
-  Task.make({ title: 'Ship the pre-orders', status: 'failed', priority: 'urgent' }),
-];
+/** A value when `set`, `undefined` otherwise. */
+const when = <T,>(set: boolean, value: () => T): T | undefined => (set ? value() : undefined);
+
+/**
+ * Every optional field is left unset on some rows: each renders a control whether or not it holds a
+ * value, so a seed that fills them all leaves the unset half of the list — the dot, the blank
+ * description — with no story behind it.
+ *
+ * Which rows is a rule on the index rather than a coin flip: a flip can land the same way forty
+ * times, and a story that only sometimes covers the state it exists for is not coverage. The moduli
+ * differ per field so a row is rarely all-set or all-empty.
+ */
+const seedMany = (n = 40): Task.Task[] =>
+  Array.from({ length: n }, (_, index) =>
+    Task.make({
+      title: random.lorem.sentence(random.number.int({ min: 5, max: 10 })),
+      description: when(index % 2 === 0, () => random.lorem.paragraphs(1)),
+      priority: when(index % 3 !== 0, () => random.helpers.arrayElement([...Task.Priority.literals])),
+      estimate: when(index % 2 === 1, () => random.helpers.arrayElement([...Task.Estimate.literals])),
+    }),
+  );
 
 /**
  * Two roots with sub-tasks two levels deep. Array order is sibling order only, so the seed
  * deliberately interleaves the two branches — a list that walked the array instead of the tree
  * would render them out of order, which is the bug this story exists to catch.
  */
-const hierarchicalSeed = (): Task.Task[] => {
-  const release = Task.make({
+const seedHierarchy = (): Task.Task[] => {
+  const task1 = Task.make({
     title: 'Ship the spring release',
     status: 'started',
     priority: 'high',
   });
-  const roast = Task.make({
+  const task2 = Task.make({
     title: 'Dial in the roast',
     status: 'todo',
   });
-  const notes = Task.make({
+  const task3 = Task.make({
     title: 'Write the tasting notes',
     status: 'todo',
-    parentTask: Ref.make(release),
+    parentTask: Ref.make(task1),
     description: 'One paragraph per lot, in the order they are poured.',
   });
-  const sample = Task.make({
+  const task4 = Task.make({
     title: 'Sample the Ethiopian lots',
     status: 'done',
-    parentTask: Ref.make(roast),
+    parentTask: Ref.make(task2),
   });
-  const label = Task.make({
+  const task5 = Task.make({
     title: 'Approve the label art',
     status: 'todo',
-    parentTask: Ref.make(release),
+    parentTask: Ref.make(task1),
   });
-  const curve = Task.make({
+  const task6 = Task.make({
     title: 'Log every profile',
     status: 'started',
-    parentTask: Ref.make(roast),
+    parentTask: Ref.make(task2),
   });
-  const proof = Task.make({
+  const task7 = Task.make({
     title: 'Proofread the back label',
     status: 'todo',
-    parentTask: Ref.make(label),
+    parentTask: Ref.make(task5),
   });
 
-  return [release, roast, notes, sample, label, curve, proof];
+  return [task1, task2, task3, task4, task5, task6, task7];
+};
+
+/**
+ * The minimal shape the drop zones are reasoned about with: one parent and two children. Dragging
+ * `C` leaves `A > B`, against which every landing place has to be reachable.
+ */
+const seedDrag = (): Task.Task[] => {
+  const a = Task.make({ title: 'A', status: 'todo' });
+  const b = Task.make({ title: 'B', status: 'todo', parentTask: Ref.make(a) });
+  const c = Task.make({ title: 'C', status: 'todo', parentTask: Ref.make(a) });
+  return [a, b, c];
 };
 
 const DefaultStory = ({
   readonly,
   showGroupLabels,
-  showOrdinals,
-  showDescriptions,
-  showDescription = true,
+  groupByStatus,
   hierarchical,
-  many,
+  showOrdinals,
+  showDescription = true,
+  showEstimates,
+  draggable = false,
+  checkable = false,
+  seed = seedFlat,
+  debug,
   framed = true,
 }: {
   readonly?: boolean;
+  /** Group tasks under status headers. */
+  groupByStatus?: boolean;
+  hierarchical?: boolean;
   showGroupLabels?: boolean;
   showOrdinals?: boolean;
-  showDescriptions?: boolean;
-  /** Edit the selected task's description in the pane; the pane's own prop, not the rows'. */
   showDescription?: boolean;
-  hierarchical?: boolean;
-  /** Seed the longer, ten-task list instead of the default seven. */
-  many?: boolean;
+  showEstimates?: boolean;
+  /** Wire `onTaskMove`, which is what turns rows into drag sources. Off unless a story asks. */
+  draggable?: boolean;
+  /** Wire `onTaskCheck`, which puts a checkbox in the gutter where the ordinal would sit. */
+  checkable?: boolean;
+  /**
+   * The tasks to start from. A factory rather than a named fixture, so a story can compose its own
+   * (`() => seedMany(100)`) without a union to extend — and because `useState` reads its initial
+   * value once, which is what made the booleans this replaces useless as live controls.
+   */
+  seed?: () => Task.Task[];
+  /** Paint every row's drop bands, so the zones are visible without holding a drag. */
+  debug?: boolean;
   /** Insets the pane in a card, as an article does. Off for the tests that measure the pane's own
       columns against a row's, which the inset would offset. */
   framed?: boolean;
 }) => {
-  const [tasks, setTasks] = useState<Task.Task[]>(hierarchical ? hierarchicalSeed : many ? manySeed : seed);
+  const [tasks, setTasks] = useState<Task.Task[]>(seed);
+
   // Selection is what the article wires, and what arrow-key navigation moves.
   const [selected, setSelected] = useState<string>();
 
-  const handleCreate = useCallback(({ title, ...props }: Task.Draft) => {
-    setTasks((tasks) => [...tasks, Task.make({ title, status: 'todo', ...props })]);
-  }, []);
-
-  const handleUpdate = useCallback((task: Task.Task, patch: Task.Edit) => {
-    Obj.update(task, (task) => {
-      Object.assign(task, patch);
+  // The checked set stands in for the view state the article keys by task-set id: a set of its own,
+  // so a row can be current and checked at once.
+  const [checked, setChecked] = useState<ReadonlySet<string>>(() => new Set<string>());
+  const handleCheck = useCallback((task: Task.Task) => {
+    setChecked((checked) => {
+      const next = new Set(checked);
+      next.has(task.id) ? next.delete(task.id) : next.add(task.id);
+      return next;
     });
-    setTasks((tasks) => [...tasks]);
   }, []);
 
   // Delete is an ordinary contributed action now, which is also what a plugin's own actions look like.
@@ -180,6 +212,17 @@ const DefaultStory = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
+
+  const handleCreate = useCallback(({ title, ...props }: Task.Draft) => {
+    setTasks((tasks) => [...tasks, Task.make({ title, status: 'todo', ...props })]);
+  }, []);
+
+  const handleUpdate = useCallback((task: Task.Task, patch: Task.Edit) => {
+    Obj.update(task, (task) => {
+      Object.assign(task, patch);
+    });
+    setTasks((tasks) => [...tasks]);
+  }, []);
 
   const handleDelete = useCallback((task: Task.Task) => {
     setTasks((tasks) => tasks.filter(({ id }) => id !== task.id));
@@ -204,16 +247,21 @@ const DefaultStory = ({
 
   return (
     <TaskList.Root
+      debug={debug}
       tasks={tasks}
-      hierarchical={hierarchical}
       selected={selected}
+      hierarchical={hierarchical}
+      groupByStatus={groupByStatus}
       showGroupLabels={showGroupLabels}
       showOrdinals={showOrdinals}
-      showDescriptions={showDescriptions}
+      showDescription={showDescription}
+      showEstimates={showEstimates}
+      getTaskActions={readonly ? undefined : getTaskActions}
       onTaskCreate={readonly ? undefined : handleCreate}
       onTaskUpdate={readonly ? undefined : handleUpdate}
-      getTaskActions={readonly ? undefined : getTaskActions}
-      onTaskMove={readonly || !hierarchical ? undefined : handleMove}
+      checked={checked}
+      onTaskCheck={checkable ? handleCheck : undefined}
+      onTaskMove={readonly || !hierarchical || !draggable ? undefined : handleMove}
       onTaskSelect={(task) => setSelected(task?.id)}
     >
       <TaskList.Viewport>
@@ -247,9 +295,11 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /** A list long enough to scroll, group and number into double digits. */
-export const TenTasks: Story = {
+export const ManyTasks: Story = {
   args: {
-    many: true,
+    seed: seedMany,
+    showEstimates: true,
+    showDescription: true,
     showOrdinals: true,
   },
 };
@@ -273,19 +323,136 @@ export const WithOrdinals: Story = {
   },
 };
 
+/** The gutter's checkbox: the set an action acts on, in place of the ordinal that would sit there. */
+/**
+ * The status glyph spins for a task an agent has taken and started — and only then.
+ *
+ * Both halves matter: `started` alone is a person working, and an agent assignee alone is work that
+ * is queued. The seed carries one of each, so a rule that dropped either half fails here.
+ */
+export const TestAgentSpinner: Story = {
+  args: { showGroupLabels: false },
+  play: async ({ canvasElement }) => {
+    const spinning = () =>
+      [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]')]
+        .filter((row) => row.querySelector('[data-testid="taskList.item.status"] .animate-spin'))
+        .map((row) => row.querySelector('span.truncate')?.textContent ?? '');
+
+    await waitFor(async () => expect(spinning()).toEqual(['Draft launch email']), { timeout: 10_000 });
+  },
+};
+
+export const WithCheckboxes: Story = {
+  args: {
+    showGroupLabels: false,
+    checkable: true,
+  },
+};
+
+/**
+ * Checking is selection, not a status write, and it is not the current row either: the box toggles
+ * independently of which row the reader is on, and leaves the task's status alone.
+ */
+export const TestCheckboxSelection: Story = {
+  args: { showGroupLabels: false, checkable: true, showOrdinals: true },
+  play: async ({ canvasElement }) => {
+    const boxes = () =>
+      Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item.checkbox"]'));
+    const statuses = () =>
+      Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item.status"]')).map(
+        (status) => status.querySelector('.sr-only')?.textContent,
+      );
+
+    await waitFor(async () => expect(boxes().length).toBeGreaterThan(1));
+    // Checkbox and ordinal are mutually exclusive: the box takes the gutter cell, so no row numbers.
+    await expect(canvasElement.querySelectorAll('.tabular-nums').length).toBe(0);
+
+    const before = statuses();
+    await userEvent.click(boxes()[0]);
+    await waitFor(async () => expect(boxes()[0].getAttribute('data-state')).toBe('checked'));
+    // A second row checks alongside the first — a set, not a single selection.
+    await userEvent.click(boxes()[1]);
+    await waitFor(async () => expect(boxes()[1].getAttribute('data-state')).toBe('checked'));
+    await expect(boxes()[0].getAttribute('data-state')).toBe('checked');
+
+    // Selection only: checking two rows moved no task's status, which is what the status control
+    // is for.
+    await expect(statuses()).toEqual(before);
+
+    // Toggles off.
+    await userEvent.click(boxes()[0]);
+    await waitFor(async () => expect(boxes()[0].getAttribute('data-state')).toBe('unchecked'));
+  },
+};
+
 export const WithDescriptions: Story = {
   args: {
     showGroupLabels: false,
     showOrdinals: true,
-    showDescriptions: true,
+    showDescription: true,
   },
 };
 
 export const Hierarchical: Story = {
   args: {
+    seed: seedHierarchy,
     hierarchical: true,
     showOrdinals: true,
-    showDescriptions: true,
+    showDescription: true,
+  },
+};
+
+/** Rows are drag sources: `onTaskMove` is wired, so the tree publishes each row to pragmatic-dnd. */
+export const HierarchicalDraggable: Story = {
+  args: {
+    seed: seedHierarchy,
+    hierarchical: true,
+    draggable: true,
+    showOrdinals: true,
+    showDescription: true,
+  },
+};
+
+/** The drop bands painted on every row, so the zones can be seen without holding a drag. */
+export const DragDebug: Story = {
+  args: {
+    seed: seedHierarchy,
+    hierarchical: true,
+    draggable: true,
+    debug: true,
+    showOrdinals: true,
+    showDescription: true,
+    framed: false,
+  },
+};
+
+/**
+ * The minimal `A > B, C` shape TREE.md reasons the six landing places about, with the bands painted.
+ * Small enough that every zone is reachable without scrolling, which is what makes it the fixture to
+ * check a hitbox change against.
+ */
+export const DropZones: Story = {
+  args: {
+    seed: seedDrag,
+    hierarchical: true,
+    draggable: true,
+    debug: true,
+    showDescription: false,
+    framed: false,
+  },
+};
+
+/**
+ * Status groups rendered through the tree: headers are `disposition: 'group'` nodes, spliced out of
+ * the collection's topology so the keyboard never lands on one.
+ */
+export const GroupedTree: Story = {
+  args: {
+    seed: seedHierarchy,
+    hierarchical: true,
+    groupByStatus: true,
+    showGroupLabels: true,
+    showOrdinals: true,
   },
 };
 
@@ -439,7 +606,7 @@ export const TestEdit: Story = {
  * what is typed into it reaches `onTaskCreate` as part of the same draft as the title.
  */
 export const TestCreateWithDescription: Story = {
-  args: { showGroupLabels: false, showDescriptions: true },
+  args: { showGroupLabels: false, showDescription: true },
   play: async ({ canvasElement }) => {
     const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
     const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]')!;
@@ -480,7 +647,7 @@ export const TestCreateWithDescription: Story = {
  * field never calls back — so the mirror the create reads has to be cleared with the selection.
  */
 export const TestAbandonedDescriptionDoesNotLeak: Story = {
-  args: { showGroupLabels: false, showDescriptions: true },
+  args: { showGroupLabels: false, showDescription: true },
   play: async ({ canvasElement }) => {
     const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
     const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]')!;
@@ -549,7 +716,7 @@ export const TestEditWithoutDescription: Story = {
  * screen: 1..N from the top, with no gaps and nothing out of sequence.
  */
 export const TestOrdinalsAreLinear: Story = {
-  args: { many: true, showOrdinals: true },
+  args: { seed: seedMany, showOrdinals: true },
   play: async ({ canvasElement }) => {
     const ordinals = () =>
       Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]')).map(
@@ -564,24 +731,38 @@ export const TestOrdinalsAreLinear: Story = {
 };
 
 export const TestHierarchy: Story = {
-  // Descriptions on, so the alignment between a sub-task's description and its title is asserted.
-  args: { hierarchical: true, showOrdinals: true, showDescriptions: true, framed: false },
+  // Descriptions on, so the alignment between a sub-task's description and its title is asserted;
+  // draggable on, because the drag affordances are part of what this asserts.
+  args: {
+    seed: seedHierarchy,
+    hierarchical: true,
+    draggable: true,
+    showOrdinals: true,
+    showDescription: true,
+    framed: false,
+  },
   // The tree is what the walk produces, not what the array holds; and restructuring is driven from
   // the keyboard, which is the half of the gesture set that CAN be synthesized (a native HTML5 drag
   // cannot).
   play: async ({ canvasElement }) => {
     const rows = () =>
-      Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]')).map((row) => ({
-        row,
-        title: row.querySelector('.truncate')?.textContent ?? '',
-        level: Number(row.getAttribute('aria-level')),
-        ordinal: row.querySelector('.tabular-nums')?.textContent ?? '',
-      }));
+      Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]'))
+        // A collapsed branch HIDES its descendants rather than unmounting them, so presence in the
+        // DOM is not visibility — the flat list dropped them from the walk instead.
+        .filter((row) => !row.closest('[hidden]'))
+        .map((row) => ({
+          row,
+          title: row.querySelector('.truncate')?.textContent ?? '',
+          // A leaf IS the `treeitem`, but a branch's `treeitem` is a `display: contents` wrapper
+          // around the focusable row — so the level is read from whichever of the two carries it.
+          level: Number(row.closest('[role="treeitem"]')?.getAttribute('aria-level')),
+          ordinal: row.querySelector('.tabular-nums')?.textContent ?? '',
+        }));
     const shape = () => rows().map(({ title, level }) => `${title}:${level}`);
     const toggle = (row: HTMLElement) => row.querySelector<HTMLElement>('[data-testid="treeItem.toggle"]')!;
     const press = (row: HTMLElement, key: string) => {
       row.focus();
-      row.dispatchEvent(new KeyboardEvent('keydown', { key, altKey: true, bubbles: true }));
+      row.dispatchEvent(new KeyboardEvent('keydown', { key, shiftKey: true, bubbles: true }));
     };
 
     // Interleaved in the array, nested in the walk.
@@ -599,8 +780,9 @@ export const TestHierarchy: Story = {
     // interleaves the two branches, so the two orders differ.
     await expect(rows().map(({ ordinal }) => ordinal)).toEqual(['1', '2', '3', '4', '5', '6', '7']);
 
-    // Collapsing a branch hides its descendants and marks the row.
-    toggle(rows()[0].row).click();
+    // Collapsing a branch hides its descendants and marks the row. `userEvent`, not `.click()`:
+    // the disclosure is a zag machine and it ignores the untrusted event a bare click dispatches.
+    await userEvent.click(toggle(rows()[0].row));
     await waitFor(async () => {
       await expect(rows().map(({ title }) => title)).toEqual([
         'Ship the spring release',
@@ -608,12 +790,13 @@ export const TestHierarchy: Story = {
         'Sample the Ethiopian lots',
         'Log every profile',
       ]);
-      await expect(rows()[0].row.getAttribute('aria-expanded')).toEqual('false');
+      // On the `treeitem` for the same reason as `aria-level`, not on the focusable row inside it.
+      await expect(rows()[0].row.closest('[role="treeitem"]')?.getAttribute('aria-expanded')).toEqual('false');
     });
-    toggle(rows()[0].row).click();
+    await userEvent.click(toggle(rows()[0].row));
     await waitFor(async () => expect(rows()).toHaveLength(7));
 
-    // Alt-ArrowLeft outdents: the sub-task becomes the next sibling of its parent.
+    // Shift-ArrowLeft outdents: the sub-task becomes the next sibling of its parent.
     await expect(rows()[1].title).toEqual('Write the tasting notes');
     press(rows()[1].row, 'ArrowLeft');
     await waitFor(async () =>
@@ -642,19 +825,16 @@ export const TestHierarchy: Story = {
       ]),
     );
 
-    // Arrow keys step row to row and selection follows focus — the listbox aspect's own mechanism,
-    // which only works because each row is a Tabster groupper: without one the arrow lands on the
-    // row's first button instead of the next row.
+    // Arrow keys step row to row. Focus, not selection: an APG tree moves the roving tabstop and
+    // leaves selection to an explicit activation, where the flat listbox let selection follow
+    // focus. The machine owns this now, so the assertion is on where focus landed.
+    const focusedRow = () => document.activeElement?.closest('[data-testid="taskList.item"]')?.textContent;
     const secondRowTitle = rows()[1].title;
     rows()[0].row.focus();
     await userEvent.keyboard('{ArrowDown}');
-    await waitFor(async () =>
-      expect(canvasElement.querySelector('[aria-selected="true"]')?.textContent).toContain(secondRowTitle),
-    );
+    await waitFor(async () => expect(focusedRow()).toContain(secondRowTitle));
     await userEvent.keyboard('{ArrowUp}');
-    await waitFor(async () =>
-      expect(canvasElement.querySelector('[aria-selected="true"]')?.textContent).toContain(rows()[0].title),
-    );
+    await waitFor(async () => expect(focusedRow()).toContain(rows()[0].title));
 
     // Moving a parent carries its sub-tasks: only the parent's own parentTask is written, so the
     // descendants' refs still point at it wherever it lands.
@@ -674,8 +854,10 @@ export const TestHierarchy: Story = {
     press(rows().find(({ title }) => title === 'Ship the spring release')!.row, 'ArrowUp');
     await waitFor(async () => expect(rows()[0].title).toEqual('Ship the spring release'));
 
-    // Each row is findable by task id, which is how the drag preview collects a subtree to clone.
-    await expect(canvasElement.querySelectorAll('[data-task-id]')).toHaveLength(7);
+    // Each row is findable by task id. In the tree the attribute is `data-object-id`, stamped by
+    // `Tree` itself — the flat row's own `data-task-id` is what its drag preview reads to collect a
+    // subtree to clone, and that path is unchanged.
+    await expect(canvasElement.querySelectorAll('[data-object-id]')).toHaveLength(7);
 
     // The pane carries its own columns rather than the list's: it is a card below the list, so it
     // has no ordinal gutter and does not step in with the tree. Only its own two cells line up.
@@ -690,14 +872,24 @@ export const TestHierarchy: Story = {
     const paneInput = paneInputElement.getBoundingClientRect();
     await expect(Math.round(paneInput.left)).toBeGreaterThan(Math.round(create.getBoundingClientRect().left));
 
-    // Every row carries a handle in the ordinal's own gutter — the ordinal and the handle share one
-    // cell, so nothing shifts when the cursor crosses a row. The drop itself needs a real pointer
-    // (native HTML5 drag events cannot be synthesized), so the manual script covers the gesture.
-    const handles = canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.dragHandle"]');
-    await expect(handles).toHaveLength(7);
+    // The row itself is the drag source — the tree publishes each row to pragmatic-dnd rather than
+    // a handle in the gutter, which is what the navtree does too. The drop is a native HTML5 drag
+    // and cannot be driven from a play function; the manual script covers the gesture and its
+    // landing places.
     await expect(canvasElement.querySelectorAll('[draggable="true"]')).toHaveLength(7);
-    const gutter = (element: Element) => Math.round(element.getBoundingClientRect().left);
-    await expect(gutter(handles[0])).toEqual(gutter(rows()[0].row.querySelector('.tabular-nums')!.parentElement!));
+
+    // The disclosure toggle sits on the title's centreline whether or not a description follows.
+    for (const { row } of rows()) {
+      const toggle = row.querySelector<HTMLElement>('[data-testid="treeItem.toggle"]');
+      const rowTitle = row.querySelector<HTMLElement>('.truncate');
+      if (toggle && rowTitle) {
+        const centre = (element: HTMLElement) => {
+          const rect = element.getBoundingClientRect();
+          return rect.top + rect.height / 2;
+        };
+        await expect(Math.abs(centre(toggle) - centre(rowTitle))).toBeLessThan(1);
+      }
+    }
 
     // A description lines up under its own title, not under the column — it is indented with the
     // row and clears the disclosure toggle.
@@ -732,19 +924,25 @@ export const Test: Story = {
     const firstCell = (element: HTMLElement) => element.querySelector(':scope > *:not([data-focus-sentinel])');
     const labelCell = (element: HTMLElement) =>
       element.querySelectorAll<HTMLElement>(':scope > *:not([data-focus-sentinel])')[1];
-    const rowIcon = firstCell(row);
+    // A tree row leads with its disclosure toggle and carries the status control inside the
+    // heading, where the pane — which has no disclosure — leads with the status column itself.
+    const rowIcon = row.querySelector<HTMLElement>('[data-testid="taskList.item.status"]');
     // The pane is one grid whose first cells ARE the title line, so its gutter cell is its first
     // child — the same column a row's status toggle occupies.
     const createIcon = firstCell(create);
-    if (!rowIcon || !createIcon) {
-      throw new Error('Row icons not found.');
+    const rowLabel = row.querySelector<HTMLElement>('.truncate');
+    const createLabel = labelCell(create);
+    // Guarded together: indexing a NodeList yields `undefined` for a missing cell, and reading
+    // geometry off it would throw a TypeError instead of failing the alignment assertion.
+    if (!rowIcon || !createIcon || !rowLabel || !createLabel) {
+      throw new Error('Row icons or label cells not found.');
     }
 
     // Same icon column ⇒ same horizontal centre (sub-pixel tolerance for rounding).
     await expect(Math.abs(center(rowIcon) - center(createIcon))).toBeLessThan(1);
     // ...and the labels start at the same x.
     await expect(
-      Math.abs(labelCell(row).getBoundingClientRect().left - labelCell(create).getBoundingClientRect().left),
+      Math.abs(rowLabel.getBoundingClientRect().left - createLabel.getBoundingClientRect().left),
     ).toBeLessThan(1);
 
     // The row spans the full width, so trailing actions sit at the far edge.

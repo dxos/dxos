@@ -24,8 +24,10 @@ runs in. To land (merge) an existing PR, use the `land` skill.
 2. **Format.** Run `pnpm format` (oxfmt — CI checks `oxfmt --check`).
 3. **Lint.** `moon run :lint -- --fix` must succeed.
 4. **Test.** `moon run :test` must pass.
-5. **Changeset.** If the change is consumer-relevant, add a `.changeset/*.md`
-   — see
+5. **Changeset.** If the change is consumer-relevant, write one `.changeset/*.md`
+   now, from the whole diff against the base: a summary of what the PR changes
+   for a consumer, not a log of the commits. If a file already exists, rewrite
+   its body rather than appending. See
    [`agents/instructions/changesets.md`](../../../agents/instructions/changesets.md)
    for when one is needed, which package to name, and bump levels.
 6. **Account for every file.** `git status`; commit ALL modified/untracked

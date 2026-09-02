@@ -55,6 +55,9 @@ export const ChatActions = ({
   onEvent,
 }: ChatActionsProps) => {
   const { t } = useTranslation(meta.profile.key);
+  // While a turn runs the primary control interrupts it — unless there is text waiting, in which
+  // case sending it (which queues it behind the running turn) is what the reader is asking for.
+  const showStop = processing && !canSend;
   return (
     <div className={mx('flex items-center gap-1', classNames)}>
       {children}
@@ -90,16 +93,16 @@ export const ChatActions = ({
       {onSend && (
         // TODO(dmaretskyi): Set processing state correctly on rehydrated agents.
         <IconButton
-          disabled={!processing && !canSend}
+          disabled={!showStop && !canSend}
           variant='ghost'
-          classNames={mx(TOUCH_TARGET, processing ? 'text-error-text' : canSend && 'text-accent-text')}
-          icon={processing ? 'ph--square--duotone' : 'ph--paper-plane-right--regular'}
+          classNames={mx(TOUCH_TARGET, showStop ? 'text-error-text' : canSend && 'text-accent-text')}
+          icon={showStop ? 'ph--square--duotone' : 'ph--paper-plane-right--regular'}
           iconOnly
-          label={t(processing ? 'cancel-processing.button' : 'send.label')}
+          label={t(showStop ? 'cancel-processing.button' : 'send.label')}
           // One stable handle for the prompt's primary action; its mode is the accessible label,
           // which is also how a reader tells the two apart.
           data-testid='assistant.send'
-          onClick={() => (processing ? onEvent?.({ type: 'cancel' }) : onSend())}
+          onClick={() => (showStop ? onEvent?.({ type: 'cancel' }) : onSend())}
         />
       )}
     </div>

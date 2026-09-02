@@ -5,6 +5,7 @@
 import * as Array from 'effect/Array';
 import * as Order from 'effect/Order';
 
+import { type Alarm, isConsumed, isInFlight, isQueued } from '@dxos/assistant';
 import { Feed } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
@@ -28,6 +29,12 @@ export const byAppendOrder: Order.Order<Message.Message> = (a, b) => {
 export type ThreadProjection = {
   /** The turns to render, in append order. */
   messages: Message.Message[];
+  /**
+   * Queued input the agent has not taken up yet, in append order. Rendered as its own stack above
+   * the prompt rather than in the thread: it is work waiting, not a turn that happened. An entry the
+   * running turn has taken up is not waiting, so it leaves this stack the moment the thread shows it.
+   */
+  queued: Message.Message[];
 };
 
 /**
@@ -51,23 +58,44 @@ export const projectThread = ({
   rewindFrom?: string;
 }): ThreadProjection => {
   const all = Array.dedupeWith([...feedMessages, ...pendingMessages], ({ id: a }, { id: b }) => a === b);
-  const sorted = Array.sort(all, byAppendOrder);
+  // A queue entry is not a turn: the turn the agent runs from one appends its own user message, so an
+  // entry never joins the thread. While it waits it belongs to the queue stack instead.
+  const sorted = Array.sort(
+    all.filter((message) => !isQueued(message)),
+    byAppendOrder,
+  );
+  // An in-flight entry is already speaking through the thread's user message, and its ack does not
+  // land until the turn ends — so the flag, not the ack, is what takes it out of the queue.
+  const queued = Array.sort(
+    all.filter((message) => isQueued(message) && !isConsumed(message) && !isInFlight(message)),
+    byAppendOrder,
+  );
 
   if (rewindFrom !== undefined) {
     const index = sorted.findIndex((message) => message.id === rewindFrom);
     if (index === 0) {
       // Rewound to the first turn: nothing precedes it.
-      return { messages: [] };
+      return { messages: [], queued };
     }
     if (index > 0) {
-      return { messages: collapseToolRuns(Feed.history(sorted, { head: sorted[index - 1].id }).items) };
+      return { messages: collapseToolRuns(Feed.history(sorted, { head: sorted[index - 1].id }).items), queued };
     }
     // Not present — a stale pointer (e.g. the message never replicated); fall through to the feed's
     // own lineage rather than blanking the thread.
   }
 
-  return { messages: collapseToolRuns(Feed.history(sorted).items) };
+  return { messages: collapseToolRuns(Feed.history(sorted).items), queued };
 };
+
+/**
+ * The alarms still waiting to fire, earliest first: those the agent has not consumed and (for a
+ * cancelled one) not removed from the feed.
+ */
+export const projectAlarms = ({ feedAlarms }: { feedAlarms: readonly Alarm.Alarm[] }): Alarm.Alarm[] =>
+  Array.sort(
+    feedAlarms.filter((alarm) => !isConsumed(alarm)),
+    Order.mapInput(Order.Number, (alarm: Alarm.Alarm) => alarm.wakeAt),
+  );
 
 /**
  * Blocks that are the machinery of a turn rather than anything the reader wrote or read.

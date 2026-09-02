@@ -8,9 +8,11 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { PropsWithChildren, useCallback, useMemo } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { invariant } from '@dxos/invariant';
+import { corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Panel, useThemeContext } from '@dxos/react-ui';
@@ -169,6 +171,10 @@ const meta = {
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
+    // The article reads `MarkdownCapabilities.ExtensionProvider` for its editor's contributed
+    // extensions, which needs a plugin manager; nothing here contributes any, which is the point —
+    // the outline builds the same editor with an empty list.
+    withPluginManager({ plugins: corePlugins() }),
     withClientProvider({
       createIdentity: true,
       createSpace: true,
@@ -251,7 +257,9 @@ export const ConvertToTask: Story = {
 
 /** The task-list pane (third column); re-queried per assertion since React may replace the node. */
 const taskListPane = (canvasElement: HTMLElement): HTMLElement => {
-  const pane = canvasElement.querySelector<HTMLElement>('[aria-label="Tasks"]');
+  // By accessible name, not `aria-label`: the tree is named through the machine's own `Label` part,
+  // which it points `aria-labelledby` at.
+  const pane = within(canvasElement).queryByRole('tree', { name: 'Tasks' });
   invariant(pane, 'Task list not found.');
   return pane;
 };

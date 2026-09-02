@@ -7,19 +7,19 @@ import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useMemo } from 'react';
 
-import { useOperation, useOperationHandler } from '@dxos/app-framework/ui';
+import { useCapabilities, useOperation, useOperationHandler } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { Panel, Switch, Toolbar, useTranslation } from '@dxos/react-ui';
-import { useAttention } from '@dxos/react-ui-attention';
+import { useAttention, useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 import { createMenuAction } from '@dxos/react-ui-menu';
 import { TaskList, type TaskPlacement } from '@dxos/react-ui-task';
 import { Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
-import { TaskOperation } from '#types';
+import { TaskOperation, TasksCapabilities } from '#types';
 
-import { useTaskActions } from '../../hooks/useTaskActions';
+import { useTaskActions } from '../../hooks';
 
 export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet>;
 
@@ -35,6 +35,7 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
   const { hasAttention } = useAttention(attendableId);
   const spaceId = Obj.getDatabase(taskSet)?.spaceId;
   const tasks = useTasks(taskSet);
+  const { checked, onTaskCheck } = useCheckedTasks(taskSet);
 
   const handleCreate = useOperation(
     TaskOperation.CreateTask,
@@ -67,6 +68,10 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
     [contributed, handleDelete, t],
   );
 
+  // Run synchronously on the drop frame: `MoveTask` peeks its refs and only suspends when one is
+  // unloaded, so with the rows already in hand the write commits in the same tick the gesture ends.
+  // Going through the invoker instead re-rendered from the model before the write landed and again
+  // after it, which is the jump.
   const move = useOperationHandler(
     TaskOperation.MoveTask,
     (task: Task.Task, { parentTask, before }: TaskPlacement) => ({
@@ -85,17 +90,20 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
 
   const content = (
     <TaskList.Root
+      tasks={tasks}
       hierarchical
       selectable
-      showDescriptions
-      tasks={tasks}
+      showDescription
+      showEstimates
+      checked={checked}
+      getTaskActions={getTaskActions}
+      onTaskCheck={onTaskCheck}
       onTaskCreate={handleCreate}
       onTaskUpdate={handleUpdate}
-      getTaskActions={getTaskActions}
       onTaskMove={handleMove}
     >
       <TaskList.Viewport>
-        <TaskList.Content classNames='dx-document' />
+        <TaskList.Content classNames='dx-document border' />
       </TaskList.Viewport>
       <div className='p-2 pt-0'>
         <TaskList.Edit
@@ -127,6 +135,28 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
 };
 
 TaskSetArticle.displayName = 'TaskSetArticle';
+
+/**
+ * The checked rows, as the multi-selection `react-ui-attention` holds for this set.
+ *
+ * Keyed by the task set's object id, not by the attendable: two task lists on one deck would
+ * otherwise share a selection. The set lives in view state rather than in the article because the
+ * host's toolbar reads it too — neither the rows nor the toolbar owns it.
+ *
+ * Offered only when a plugin contributes a {@link TasksCapabilities.TaskAction}: the checkbox marks
+ * which rows an action will act on, so with nothing to act on it is an affordance that does nothing.
+ */
+const useCheckedTasks = (taskSet: TaskSet.TaskSet) => {
+  const actions = useCapabilities(TasksCapabilities.TaskAction);
+  const ids = useSelection(taskSet.id, 'multi');
+  const { toggle } = useSelectionActions(taskSet.id);
+  const checked = useMemo(() => new Set(ids), [ids]);
+  const handleTaskCheck = useCallback((task: Task.Task) => toggle(task.id), [toggle]);
+
+  return actions.length > 0
+    ? { checked, onTaskCheck: handleTaskCheck }
+    : { checked: undefined, onTaskCheck: undefined };
+};
 
 /**
  * The set's tasks via `childOf` — membership is the ECHO parent edge, and transitive tolerates

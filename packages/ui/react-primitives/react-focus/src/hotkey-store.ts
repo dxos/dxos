@@ -39,24 +39,36 @@ export const destroyHotkeys = (): void => {
 };
 
 // Scopes are shared: two groups can hold overlapping chains (`root/a` and `root/a/b` both hold
-// `root`), so the last holder — not the first to unmount — is what retires one.
-const scopeHolders = new Map<string, number>();
+// `root`), so the last holder — not the first to unmount — is what retires one. Keyed by store,
+// since `holdHotkeyScope` takes one: a count shared across stores would let a release in one leave
+// the scope active in another, with its commands still firing.
+const scopeHolders = new WeakMap<HotkeyStore, Map<string, number>>();
+
+const holdersOf = (store: HotkeyStore): Map<string, number> => {
+  let holders = scopeHolders.get(store);
+  if (!holders) {
+    holders = new Map();
+    scopeHolders.set(store, holders);
+  }
+  return holders;
+};
 
 /** Hold `path` and its ancestors active, returning the release for whichever holder is last out. */
 export const holdHotkeyScope = (path: string, store: HotkeyStore = hotkeyStore): (() => void) => {
   const scopes = scopeChain(path);
+  const holders = holdersOf(store);
   for (const scope of scopes) {
-    scopeHolders.set(scope, (scopeHolders.get(scope) ?? 0) + 1);
+    holders.set(scope, (holders.get(scope) ?? 0) + 1);
     store.addScope(scope);
   }
 
   return () => {
     for (const scope of scopes) {
-      const held = (scopeHolders.get(scope) ?? 1) - 1;
+      const held = (holders.get(scope) ?? 1) - 1;
       if (held > 0) {
-        scopeHolders.set(scope, held);
+        holders.set(scope, held);
       } else {
-        scopeHolders.delete(scope);
+        holders.delete(scope);
         store.removeScope(scope);
       }
     }

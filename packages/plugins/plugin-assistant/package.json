@@ -217,6 +217,7 @@
     "PLUGIN.mdl"
   ],
   "dependencies": {
+    "@ark-ui/react": "catalog:",
     "@codemirror/language": "catalog:",
     "@codemirror/state": "catalog:",
     "@codemirror/view": "catalog:",
