@@ -321,7 +321,7 @@ const useToolbarActions = (project: Project.Project, onAddArtifact: () => void) 
             group.action(
               'add-artifact',
               {
-                label: ['add-artifact.label', { ns: meta.profile.key }],
+                label: ['create-artifact.label', { ns: meta.profile.key }],
                 icon: 'ph--plus--regular',
                 testId: 'projectsPlugin.addArtifact',
               },

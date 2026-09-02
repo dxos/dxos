@@ -943,9 +943,7 @@ const TaskEstimateControl = ({ task }: { task: Task.Task }) => {
 
   if (!onTaskUpdate) {
     return (
-      <span
-        className={mx('grid h-8 w-6 shrink-0 place-items-center text-xs tabular-nums', estimateTextStyle(estimate))}
-      >
+      <span className={mx('grid size-8 shrink-0 place-items-center text-xs tabular-nums', estimateTextStyle(estimate))}>
         {label}
       </span>
     );
@@ -953,18 +951,23 @@ const TaskEstimateControl = ({ task }: { task: Task.Task }) => {
 
   return (
     <Menu.Root>
-      <Menu.Trigger asChild>
-        <Button
-          variant='ghost'
-          density='sm'
-          data-testid='taskList.item.estimate'
-          classNames={mx('w-6 px-0 text-xs tabular-nums', estimateTextStyle(estimate))}
-          // The row is the selection target; opening the menu must not also select it.
-          onClick={(event: MouseEvent) => event.stopPropagation()}
-        >
-          {label}
-        </Button>
-      </Menu.Trigger>
+      {/* The same square-inside-a-rail-slot as `CompactIconButton`, so the estimate column is the
+          width of the icon columns and its control the width of theirs — a button filling the whole
+          slot gave this one a wider hover and focus ring than its neighbours. */}
+      <span className='grid size-8 shrink-0 place-items-center'>
+        <Menu.Trigger asChild>
+          <Button
+            variant='ghost'
+            density='sm'
+            data-testid='taskList.item.estimate'
+            classNames={mx('w-6 px-0 text-xs tabular-nums', estimateTextStyle(estimate))}
+            // The row is the selection target; opening the menu must not also select it.
+            onClick={(event: MouseEvent) => event.stopPropagation()}
+          >
+            {label}
+          </Button>
+        </Menu.Trigger>
+      </span>
       {/* Sourced from the schema's own option table, so the picker offers exactly what the field
           accepts and carries the same hue the form's select paints it with. Clearing is offered
           first; the table has no `none` row because the field is simply absent when unset. */}
