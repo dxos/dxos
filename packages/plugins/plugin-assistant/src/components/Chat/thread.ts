@@ -5,7 +5,7 @@
 import * as Array from 'effect/Array';
 import * as Order from 'effect/Order';
 
-import { type Alarm, getAck, isQueued } from '@dxos/assistant';
+import { type Alarm, isConsumed, isInFlight, isQueued } from '@dxos/assistant';
 import { Feed } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
@@ -31,7 +31,8 @@ export type ThreadProjection = {
   messages: Message.Message[];
   /**
    * Queued input the agent has not taken up yet, in append order. Rendered as its own stack above
-   * the prompt rather than in the thread: it is work waiting, not a turn that happened.
+   * the prompt rather than in the thread: it is work waiting, not a turn that happened. An entry the
+   * running turn has taken up is not waiting, so it leaves this stack the moment the thread shows it.
    */
   queued: Message.Message[];
 };
@@ -57,15 +58,16 @@ export const projectThread = ({
   rewindFrom?: string;
 }): ThreadProjection => {
   const all = Array.dedupeWith([...feedMessages, ...pendingMessages], ({ id: a }, { id: b }) => a === b);
-  // A queued original never joins the thread: while it waits it belongs to the queue stack, and once
-  // a turn acks it the ack-carrying message is the turn, so the original would only double the prompt.
-  const acked = new Set(all.map(getAck).filter((id) => id !== undefined));
+  // A queue entry is not a turn: the turn the agent runs from one appends its own user message, so an
+  // entry never joins the thread. While it waits it belongs to the queue stack instead.
   const sorted = Array.sort(
     all.filter((message) => !isQueued(message)),
     byAppendOrder,
   );
+  // An in-flight entry is already speaking through the thread's user message, and its ack does not
+  // land until the turn ends — so the flag, not the ack, is what takes it out of the queue.
   const queued = Array.sort(
-    all.filter((message) => isQueued(message) && !acked.has(message.id)),
+    all.filter((message) => isQueued(message) && !isConsumed(message) && !isInFlight(message)),
     byAppendOrder,
   );
 
@@ -86,23 +88,14 @@ export const projectThread = ({
 };
 
 /**
- * The alarms still waiting to fire, earliest first: those no message has acked, and (for a cancelled
- * one) not removed from the feed.
+ * The alarms still waiting to fire, earliest first: those the agent has not consumed and (for a
+ * cancelled one) not removed from the feed.
  */
-export const projectAlarms = ({
-  feedAlarms,
-  messages,
-}: {
-  feedAlarms: readonly Alarm.Alarm[];
-  /** Every message read from the feed — an ack lives on the message that consumed the alarm. */
-  messages: readonly Message.Message[];
-}): Alarm.Alarm[] => {
-  const acked = new Set(messages.map(getAck).filter((id) => id !== undefined));
-  return Array.sort(
-    feedAlarms.filter((alarm) => !acked.has(alarm.id)),
+export const projectAlarms = ({ feedAlarms }: { feedAlarms: readonly Alarm.Alarm[] }): Alarm.Alarm[] =>
+  Array.sort(
+    feedAlarms.filter((alarm) => !isConsumed(alarm)),
     Order.mapInput(Order.Number, (alarm: Alarm.Alarm) => alarm.wakeAt),
   );
-};
 
 /**
  * Blocks that are the machinery of a turn rather than anything the reader wrote or read.

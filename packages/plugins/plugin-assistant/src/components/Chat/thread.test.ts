@@ -5,8 +5,8 @@
 import * as Array from 'effect/Array';
 import { describe, test } from 'vitest';
 
-import { AckAnnotation, Alarm, QueuedAnnotation } from '@dxos/assistant';
-import { Annotation, Feed, Obj, Ref } from '@dxos/echo';
+import { Alarm, ConsumedAnnotation, InFlightAnnotation, QueuedAnnotation } from '@dxos/assistant';
+import { Annotation, Feed, Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
 import { byAppendOrder, collapseToolRuns, projectAlarms, projectThread, resolveRewind } from './thread';
@@ -107,14 +107,32 @@ describe('queue projection', () => {
     expect(text(pending)).toEqual(['waiting']);
   });
 
-  test('an acked queued message leaves the queue — its ack-carrying turn is the thread entry', ({ expect }) => {
-    const original = queued(message('do the thing'));
-    const turn = acking(message('do the thing'), original);
-    const { messages, queued: pending } = projectThread({ feedMessages: [original, turn] });
+  test('a consumed queue entry leaves the queue — the turn it drove is the thread entry', ({ expect }) => {
+    const entry = consumed(queued(message('do the thing')));
+    const turn = message('do the thing');
+    const { messages, queued: pending } = projectThread({ feedMessages: [entry, turn] });
 
     // Exactly once in the thread, and no longer waiting.
     expect(text(messages)).toEqual(['do the thing']);
     expect(pending).toEqual([]);
+  });
+
+  // Regression: the entry stayed in the queue until the ack, which lands only after the turn — so the
+  // prompt was rendered in the queue and the thread at once for the whole turn.
+  test('an entry the running turn took up leaves the queue as soon as the thread shows it', ({ expect }) => {
+    const entry = inFlight(queued(message('do the thing')));
+    const turn = message('do the thing');
+    const { messages, queued: pending } = projectThread({ feedMessages: [entry, turn] });
+    expect(text(messages)).toEqual(['do the thing']);
+    expect(pending).toEqual([]);
+  });
+
+  test('an in-flight entry does not take the rest of the queue with it', ({ expect }) => {
+    const running = inFlight(queued(positioned(message('running'), 1)));
+    const waiting = queued(positioned(message('waiting'), 2));
+    const turn = positioned(message('running'), 3);
+    const { queued: pending } = projectThread({ feedMessages: [running, waiting, turn] });
+    expect(text(pending)).toEqual(['waiting']);
   });
 
   test('queued messages are ordered by append order', ({ expect }) => {
@@ -142,15 +160,14 @@ describe('projectAlarms', () => {
   test('pending alarms are ordered by wake time', ({ expect }) => {
     const later = Alarm.make({ wakeAt: 2_000 });
     const sooner = Alarm.make({ wakeAt: 1_000 });
-    const alarms = projectAlarms({ feedAlarms: [later, sooner], messages: [] });
+    const alarms = projectAlarms({ feedAlarms: [later, sooner] });
     expect(alarms.map((alarm) => alarm.wakeAt)).toEqual([1_000, 2_000]);
   });
 
-  test('an alarm a turn has acked is no longer pending', ({ expect }) => {
-    const fired = Alarm.make({ wakeAt: 1_000 });
+  test('an alarm the agent has consumed is no longer pending', ({ expect }) => {
+    const fired = consumed(Alarm.make({ wakeAt: 1_000 }));
     const pending = Alarm.make({ wakeAt: 2_000 });
-    const wake = acking(message('alarm fired'), fired);
-    const alarms = projectAlarms({ feedAlarms: [fired, pending], messages: [wake] });
+    const alarms = projectAlarms({ feedAlarms: [fired, pending] });
     expect(alarms.map((alarm) => alarm.id)).toEqual([pending.id]);
   });
 });
@@ -271,9 +288,14 @@ const queued = (message: Message.Message) => {
   return message;
 };
 
-const acking = (message: Message.Message, original: Obj.Unknown) => {
-  Obj.update(message, (message) => Annotation.set(message, AckAnnotation, Ref.make(original)));
-  return message;
+const inFlight = <T extends Obj.Unknown>(item: T): T => {
+  Obj.update(item, (item) => Annotation.set(item, InFlightAnnotation, true));
+  return item;
+};
+
+const consumed = <T extends Obj.Unknown>(item: T): T => {
+  Obj.update(item, (item) => Annotation.set(item, ConsumedAnnotation, true));
+  return item;
 };
 
 const text = (messages: readonly Message.Message[]) =>

@@ -65,6 +65,14 @@ Known gaps accepted up front:
 - **DnD**: `draggable`/`dropTargetForElements` + tree-item hitbox moved from the heading button to
   the row element; spring-loaded expand and drag-collapse via `onOpenChange`; `TreeData` payload
   and the navtree `monitorForElements` contract unchanged; `TreeDropIndicator` kept.
+- **Hitbox modes**: `last-in-group` for a last sibling, `expanded` only for a branch that is
+  actually showing children, else `standard`. The `branch &&` guard matters: a model that reports
+  every node as open (a task list has nothing else to say about a leaf) otherwise puts leaves in
+  `expanded`, and that mode exists precisely to drop the reorder-below zone — so nothing could be
+  dropped after a childless row.
+- **`leavesAcceptChildren`** (default off): whether a childless row offers a make-child zone. Off
+  suits a tree whose leaves are terminal (navtree documents); a task list turns it on, since any
+  task can gain a sub-task. With it off, a leaf shows no drop indicator at all on its middle band.
 - **Groups**: rendered as section headings; **spliced out of the collection topology** (their
   children become machine-children of the group's parent) so keyboard traversal never lands on a
   header. Levels are carried on the entries, so group children stay at the header's indent.
@@ -85,7 +93,11 @@ Known gaps accepted up front:
    collection (fine at sidebar scale; a memoized incremental walk is the escalation path).
 4. **pragmatic-dnd coexists with the machine** — no interference between zag's pointer handling
    and draggable/dropTarget on the same element (draggable attr stamped, instructions render).
-   Real drop verification needs a human drag (native HTML5 drag can't be automated).
+   **Correction (2026-09-01):** this entry previously claimed a real drop could only be verified by
+   hand because native HTML5 drag cannot be automated. That is wrong. Playwright drives native drag
+   in Chromium, so drops, zone boundaries and the resulting tree shape are all measurable — the drop
+   semantics in §9 were established that way. Only a Storybook play function is still limited, since
+   it has no driver.
 5. Verified 17/17 generic checks (render, chevron + full keyboard expand/collapse incl. typeahead
    keymap, click/keyboard selection, select-vs-toggle policy, groups, draggable wiring, zero
    console errors) plus navtree story parity vs main (identical DOM facts + pixel-equivalent
@@ -225,6 +237,153 @@ deleted**:
 The last of those is the point worth keeping: a component whose entire value is its ARIA role was
 being used by two consumers that were not the thing that role describes, which is how the navtree
 `gridcell` bug survived as long as it did.
+
+## 9. Testing
+
+Automated coverage lives in three places, and the drag contract is exercised end-to-end rather than
+asserted structurally.
+
+| layer                                                            | what it covers                                                                                                                 | how to run                                       |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------ |
+| unit — `hierarchy.test.ts` (26)                                  | placement algebra: above/below/make-child, indent, outdent, nudge, cycle and foreign-set rejection                             | `moon run react-ui-task:test`                    |
+| unit — `tree-model.test.ts` (7), `static-tree-model.test.ts` (8) | topology from `parentTask`, sibling order, seeded collapse, path uniqueness                                                    | `moon run react-ui-task:test react-ui-list:test` |
+| story — `TaskList.stories.tsx > Test Hierarchy` (16 in file)     | shape, levels, ordinals, collapse, `Shift+Arrow` restructuring, focus movement, row draggability, toggle/description alignment | `moon run react-ui-task:test-storybook`          |
+
+**The drop gesture is not covered by the story suite** — a play function cannot drive native HTML5
+drag. It was verified with Playwright driving real drags against `TaskList.stories.tsx`
+`DragTargets` (`A` with children `B`, `C`), which is the fixture the drop rules are reasoned about
+with. Measured zone map per 32px row, and the resulting tree after each drop:
+
+| pointer band (32px row)           | instruction     | result                                                 |
+| --------------------------------- | --------------- | ------------------------------------------------------ |
+| y 4–7                             | `reorder-above` | before the target, as its peer                         |
+| y 10–22                           | `make-child`    | **first** child of the target                          |
+| y 25–31, x > ~52                  | `reorder-below` | after the target, as its peer                          |
+| y 25–31, x 12–52, last child only | `reparent`      | after the target's ancestor — the way out of a subtree |
+
+Two measurement traps, both of which produced wrong readings before they were understood:
+
+1. **Re-measure the target after the drag starts.** The dragged row leaves the layout, so every row
+   below it shifts up by its height and coordinates taken beforehand address the wrong row.
+2. **The indicator cannot identify the zone.** `make-child` and `reparent` both render with the
+   "child" orientation. Read `data-instruction` off the row instead — it carries the live
+   instruction type for exactly this purpose.
+
+### Manual script
+
+Run `moon run storybook-react:serve` and open
+`ui/react-ui-task/TaskList` → `Hierarchical Draggable`, then `Drag Targets`.
+
+1. Click a row. It selects; the disclosure does **not** change. Click the same row again — now it
+   toggles. This asymmetry is inherited from the machine's select-vs-toggle policy and is the one
+   behaviour still open for a decision.
+2. Click a chevron. The branch animates open and closed.
+3. Press `ArrowDown`/`ArrowUp`. The highlight travels with focus — `selectionFollowsFocus`, which
+   the task tree opts into. An APG tree leaves selection to an explicit activation; that is right
+   when selecting navigates, and wrong here where selection only highlights a row.
+4. Press `Shift+ArrowDown` / `Shift+ArrowUp`. The focused row moves among its siblings.
+5. Press `Shift+ArrowRight` / `Shift+ArrowLeft`. The focused row indents under its previous sibling,
+   or outdents to become its parent's next sibling.
+6. In `Drag Targets`, drag `C`. It leaves the list for the duration of the gesture, so you see
+   `A > B`. Check each landing place: before `A`; onto `A` (first child); before `B`; onto `B`;
+   after `B`; and `A`'s bottom edge, which places `C` after `A`'s whole subtree as its next peer.
+7. In `Hierarchical Draggable`, drag a row onto the **left end** of the last row's bottom edge (the
+   first ~40px). That is the `reparent` band: the task lands after the last row's parent rather than
+   joining it, which is the only way out of a subtree at its final row.
+8. Drag a row that has children (`Approve the label art` in `Hierarchical Draggable`). The subtree
+   goes with it and lands under the new parent.
+9. Confirm every disclosure chevron sits on its title's centreline, including the row that carries a
+   description.
+10. Open `Drag Debug` to see every band at once, without holding a drag.
+
+### Seeing the zones without dragging
+
+`Tree` takes a `debug` prop that paints every row's bands and labels them — `above` / `child` /
+`below` in blue and green, and one amber band per ancestor a `reparent` can lift the row out to.
+`TaskList.Root` forwards it; the `Drag Debug` story turns it on. It is the fastest way to answer
+"where do I aim", and it is how the missing band on an expanded branch was found — the overlay
+showed `above,child` where every other row showed three.
+
+### Indent: visual vs hitbox
+
+`DEFAULT_INDENTATION` (8px) is what rows indent by; `DROP_INDENTATION` (24px) is what the hitbox
+reasons in. They differ deliberately. The `reparent` zones under a last child are carved out of the
+row's bottom band **by indent**, so at 8px they are 8px-wide strips: the instruction is produced and
+measurable, but unhittable by hand — which presents as "there is no way to drop past the last
+child". `TreeDropIndicator` keeps using the visual indent, so its line still lands under the row it
+refers to.
+
+### `dropBelowExpanded`: every row offers "after this subtree"
+
+The hitbox gives an expanded branch no reorder-below zone, because "below the row" and "its first
+child" are the same pixels; it offers `reparent` bands under the last descendant instead. Measured,
+those bands are indent-wide slivers whose x-range moves with the row's depth — a drop aimed at one
+produced no instruction at all. They are not a target anyone can aim at.
+
+A task list does not need them: its "below" already resolves to _after the row and its sub-tasks_,
+because the placement takes the target's parent and the sibling that follows it. So `Tree` takes
+`dropBelowExpanded`, which keeps every row in `standard` mode and gives all of them the same three
+bands. The task tree turns it on; it is off by default, since it changes what the zone means and the
+navtree relies on the hitbox's own reading.
+
+Verified by real drags: below an expanded, non-last branch lands the task after that branch's whole
+subtree; below the last root lands it at the end of the list as that root's peer — the move that was
+previously unreachable.
+
+## 10. One row, one path (target)
+
+Settled 2026-09-02 after a session in which every visual defect found by hand had the same cause:
+`TaskList` had two implementations of one row — a flat `Listbox.Item` and a tree heading — and they
+drifted. Circular status glyphs where the flat row had nine; a selected row whose icons faded; a
+description misaligned against its title; a disclosure chevron off the title's centreline; chips
+anchored left in one and right in the other; a title that went stale because only one path
+subscribed to the object. None of these were disagreements about behaviour. They were copies.
+
+### The shape
+
+**One path.** Every mode renders through `Tree`. A flat list is a tree of depth one, and grouping is
+already expressible: a node with `disposition: 'group'` renders as a section header and is spliced
+out of the collection's topology, so keyboard traversal never lands on it.
+
+**One row component**, whose anatomy is:
+
+```
+[toggle] [ main line (+ optional second line) ] [estimate] [priority] [actions]
+```
+
+The row is `grid-cols-subgrid` over the tree's own `gridTemplateColumns`, so every trailing control
+owns a **column** rather than sharing one flex cell. Sharing a cell is what made the trailing icons
+ragged: their position depended on the width of whatever tag preceded them, and anchoring the cell
+to the trailing edge only hid it for rows whose content happened to be similar.
+
+The second line is a property of the row, not of the task: the title band is pinned to one control
+height so a described row and a bare one put their titles on the same baseline, and the description
+starts in the title's own column rather than the row's.
+
+### What this costs, accepted deliberately
+
+Rows stop being `role="option"` and become `role="treeitem"`. Selection stops following focus as a
+listbox property and becomes the tree's `selectionFollowsFocus` opt-in. Anything asserting listbox
+semantics — `TaskSetArticle`'s behaviour story does — is updated as part of the change. This is a
+real break, not an implementation detail.
+
+### Ark: what we adopt and what we build on top
+
+The parts are Ark's (`Root`/`Tree`/`Branch`/`BranchControl`/`BranchContent`/`BranchTrigger`/`Item`),
+and two of their consequences are inherent rather than ours to fix:
+
+1. `Branch` is `display: contents`, so `role="treeitem"`, `aria-level` and `aria-expanded` sit on the
+   wrapper while the visible row is `BranchControl`. Selection styling therefore keys off zag's
+   `data-selected`, and any test reading a level must go through `closest('[role="treeitem"]')`.
+2. Ark's item anatomy is text plus indicator; it has no concept of trailing columns. The row grid is
+   a composition _inside_ `BranchControl`/`Item`. That is not a deviation from the structure and it
+   is not going away — a tree whose rows carry controls needs it.
+
+### Consequence for the flat machinery
+
+`walkTaskTree` and `dnd.ts` exist only to serve the flat path and go with it. `hierarchy.ts`'s
+placement algebra (`resolveTaskPlacement`, `resolveIndent`, `resolveOutdent`, `resolveNudge`) stays —
+it is the model-level meaning of a move and is shared by drag and the keyboard.
 
 ## References
 

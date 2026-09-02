@@ -21,7 +21,7 @@ import * as Operation from '@dxos/compute/Operation';
 import type * as Skill from '@dxos/compute/Skill';
 import * as Trace from '@dxos/compute/Trace';
 import { Resource } from '@dxos/context';
-import { Database, Feed, Filter, Obj, type Ref, Registry } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Registry } from '@dxos/echo';
 import { RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
@@ -56,12 +56,6 @@ export type RunProps<R = never> = {
    * @default true
    */
   persist?: boolean;
-
-  /**
-   * Queued feed item (message or alarm) this turn dequeues; stamped as `AckAnnotation` on the user
-   * prompt message so its append is the atomic ack.
-   */
-  ack?: Ref.Ref<Obj.Unknown>;
 };
 
 export type Options = {
@@ -238,7 +232,6 @@ export class Session extends Resource {
         instructions: this.#instructions,
         prompt: params.prompt,
         system: params.system,
-        ack: params.ack,
       });
 
       // Fire begin-request hooks declared by the bound skills. These run in the agent's turn

@@ -938,6 +938,40 @@ export class ProcessManagerImpl implements Manager {
     });
   }
 
+  /**
+   * Terminates a persisted process that is not live by deleting its record (and those of its
+   * dormant descendants), so a caller can discard it without hydrating it first.
+   */
+  #discardRecord(id: Process.ID): Effect.Effect<void> {
+    return Effect.gen({ self: this }, function* () {
+      // Read before anything is torn down: `terminate` deletes records, and a live termination only
+      // walks children in `#handles` — a process hydrated between the listing and this call would
+      // otherwise leave its still-dormant descendants in storage to be rediscovered later.
+      log('lifecycle: discard record', { pid: id });
+      const persisted = yield* this.#store.listProcesses();
+      const doomed = new Set<Process.ID>([id]);
+      // Records carry no child index, so walk the flat list until it stops growing.
+      for (let added = true; added;) {
+        added = false;
+        for (const record of persisted) {
+          if (record.parentId !== null && doomed.has(record.parentId) && !doomed.has(record.id)) {
+            doomed.add(record.id);
+            added = true;
+          }
+        }
+      }
+
+      for (const pid of doomed) {
+        const child = this.#handles.get(pid);
+        if (child) {
+          yield* child.terminate();
+        } else {
+          yield* this.#store.deleteProcess(pid);
+        }
+      }
+    });
+  }
+
   attach<I, O, Rpcs extends Rpc.Any = never>(id: Process.ID): Effect.Effect<Handle<I, O, Rpcs>> {
     return Effect.gen({ self: this }, function* () {
       const handle = this.#handles.get(id);
@@ -999,8 +1033,10 @@ export class ProcessManagerImpl implements Manager {
           continue;
         }
         results.push(
-          new DormantHandle(record, (definition) =>
-            this.#hydrateFromDefinition<unknown, unknown, any>(record.id, definition),
+          new DormantHandle(
+            record,
+            (definition) => this.#hydrateFromDefinition<unknown, unknown, any>(record.id, definition),
+            () => this.#discardRecord(record.id),
           ),
         );
       }
@@ -1037,12 +1073,15 @@ class DormantHandle<I, O> implements Handle<I, O, any> {
   // (`RpcClient<any>`) so the dormant handle is assignable to `Handle.Any` (see design spec §4.4).
   readonly rpc: RpcClient.RpcClient<any> = EMPTY_RPC_CLIENT;
   readonly #rehydrate: (definition: Process.Process<I, O, any, any>) => Effect.Effect<Handle<I, O, any>>;
+  readonly #discard: () => Effect.Effect<void>;
 
   constructor(
     record: PersistedProcess,
     rehydrate: (definition: Process.Process<I, O, any, any>) => Effect.Effect<Handle<I, O, any>>,
+    discard: () => Effect.Effect<void>,
   ) {
     this.#rehydrate = rehydrate;
+    this.#discard = discard;
     this.pid = record.id;
     this.parentId = record.parentId;
     this.key = record.key;
@@ -1072,7 +1111,9 @@ class DormantHandle<I, O> implements Handle<I, O, any> {
 
   subscribeEphemeral = (): Stream.Stream<Trace.Message> => Stream.die(new Error('Process not hydrated'));
 
-  terminate = (): Effect.Effect<void> => Effect.die(new Error('Process not hydrated'));
+  // Terminating without hydrating is the point: a caller discarding a stale process (e.g. one whose
+  // immutable spawn annotations no longer match) must not have to boot it first just to kill it.
+  terminate = (): Effect.Effect<void> => this.#discard();
 
   runToCompletion = (): Effect.Effect<void> => Effect.die(new Error('Process not hydrated'));
 

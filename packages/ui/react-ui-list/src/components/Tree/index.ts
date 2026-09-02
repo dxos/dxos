@@ -4,6 +4,7 @@
 
 export * from './Tree';
 export * from './TreeContext';
+export * from './TreeDropDebug';
 export * from './TreeDropIndicator';
 export * from './TreeItemToggle';
 export * from './helpers';

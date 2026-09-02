@@ -71,27 +71,40 @@ still present in the feed (not tombstoned), ordered by feed position. Regular
 feed CRUD manages it: cancel a queued prompt = `Feed.remove` it; edit =
 re-append by id.
 
-### 2.2 Atomic dequeue (ack by echo)
+### 2.2 Dequeue (ack after the work)
 
-When the agent takes a message from the input queue it appends its own copy
-("echo") of the message to the feed, carrying an ack annotation that names the
-original:
+A queue entry is marked consumed AFTER the turn it drove, never before:
 
 ```ts
-AckAnnotation: Annotation.Annotation<Ref.Ref<Obj.Unknown>>; // id: 'org.dxos.annotation.ack'
+ConsumedAnnotation: Annotation.Annotation<boolean>; // id: 'org.dxos.annotation.consumed'
 ```
 
-- The echo is the message that enters conversation history (the original never
-  does — history filters out `QueuedAnnotation` items).
-- The single `Feed.append` of the echo is the atomic ack: the pending queue is
-  a projection — queued items minus those an ack names — so the append alone
-  dequeues. Acked originals stay in the feed (nothing is removed on ack);
-  `Feed.remove` is only the user-facing cancel of a still-pending item.
+- Pending = queued ∧ ¬consumed. Re-appending an item by id is an upsert, so the
+  mark costs no extra record and the entry stays in the feed.
+- The entry is never history: the turn driven from it appends its own user
+  message, which is what the thread and the model see.
+- **The mark lands after the turn, and that is load-bearing.** An entry marked
+  up front is an entry silently dropped when the process dies mid-turn — the
+  pre-feed queue persisted its shift only after the turn, i.e. at-least-once,
+  and `AgentService.test.ts`'s hibernation tests pin exactly that. An earlier
+  draft of this work stamped the ack on the turn's first message and broke both
+  of them.
+- `Feed.remove` is the user-facing cancel of a still-pending entry. The scan
+  skips tombstones: `Feed.remove` leaves a typed tombstone that still looks
+  queued, so without that a cancellation never takes.
 
-The annotation holds a `Ref` to the original (user correction, 2026-09-01);
-typed `Ref.Ref(Obj.Unknown)` because the same annotation acks both Messages and
-Alarms. `getAck` projects the referenced entity id for the queue projection, so
-a cancelled (tombstoned) original never needs resolving.
+### 2.2a Stale entries after an explicit stop
+
+At-least-once means an interrupted turn is redelivered — correct for a
+hibernation or a crash, wrong for a stop the reader asked for. The two are
+indistinguishable from inside the turn, and `terminate()` cannot clean up after
+itself (it blocks while a tool holds the turn open, so its writes would land
+after the reader's next prompt).
+
+The discriminator is `onSpawn`, which the runtime calls on a fresh spawn and
+NOT on a resume. So a process discards whatever it finds pending at spawn: that
+work belonged to a process that is gone for good. A hibernated process resumes
+instead, skips `onSpawn`, and redelivers.
 
 ### 2.3 Alarms (feed CRUD, same ack)
 
