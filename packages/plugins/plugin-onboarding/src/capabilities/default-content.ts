@@ -19,7 +19,7 @@ import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceEvents from '@dxos/plugin-space/SpaceEvents';
 
 // Raw import keeps the welcome copy in a standalone Markdown file that renders in editors and diffs cleanly.
-import README_CONTENT from '../content/readme.md?raw';
+import README_CONTENT from '../content/README.md?raw';
 import { OnboardingOperation } from '../operations';
 import { type OnboardingOptions } from './capabilities';
 

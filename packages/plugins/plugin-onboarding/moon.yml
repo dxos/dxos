@@ -27,8 +27,8 @@ tasks:
     deps:
       - ^:build
     inputs:
-      - scripts/build-exemplar-space.ts
+      - scripts/build-sample-space.ts
       - src/content/space-tour.md
-      - src/content/about-bramble.md
+      - src/content/sample/ABOUT.md
     outputs:
-      - src/content/exemplar-space.dx.json
+      - src/content/sample/space.dx.json

@@ -13,7 +13,7 @@ import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { SpacesService } from '@dxos/protocols/rpc';
 
-import EXEMPLAR_SPACE_JSON from '../content/exemplar-space.dx.json?raw';
+import EXEMPLAR_SPACE_JSON from '../content/sample/space.dx.json?raw';
 import { ImportExemplarSpace } from './definitions';
 
 const EXEMPLAR_SPACE_ARCHIVE_FILENAME = 'exemplar-space.dx.json';

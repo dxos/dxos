@@ -6,14 +6,14 @@
  * Builds the Bramble Coffee Roasters exemplar space and writes its JSON snapshot to disk.
  *
  * The snapshot is committed at:
- *   packages/plugins/plugin-onboarding/src/content/exemplar-space.dx.json
+ *   packages/plugins/plugin-onboarding/src/content/sample/space.dx.json
  *
  * The onboarding plugin imports it on first launch so every new identity gets a
  * fully populated themed sample space without the script ever running in the browser.
  *
  * Run via the moon task: `moon run plugin-onboarding:build-exemplar`.
  *
- * Content is grounded in `about-bramble.md` in the same content/ directory — that document is
+ * Content is grounded in `sample/ABOUT.md` alongside the snapshot — that document is
  * the canonical reference for all Bramble world-facts (company history, team, suppliers, customers,
  * active initiatives, email conventions, map coordinates). When extending or regenerating the
  * fixture, read it first and update it if the world changes. All generated content must agree
@@ -76,8 +76,8 @@ import { Actor, ContentBlock, Event, Message, Milestone, Organization, Person, T
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const OUTPUT_PATH = resolve(__dirname, '../src/content/exemplar-space.dx.json');
-const ABOUT_MD_PATH = resolve(__dirname, '../src/content/about-bramble.md');
+const OUTPUT_PATH = resolve(__dirname, '../src/content/sample/space.dx.json');
+const ABOUT_MD_PATH = resolve(__dirname, '../src/content/sample/ABOUT.md');
 const WELCOME_MD_PATH = resolve(__dirname, '../src/content/space-tour.md');
 
 //
