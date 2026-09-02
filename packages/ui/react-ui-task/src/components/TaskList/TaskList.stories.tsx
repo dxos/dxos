@@ -19,7 +19,7 @@ import { TaskList } from './TaskList';
 
 random.seed(1);
 
-const seed = (): Task.Task[] => [
+const seedFlat = (): Task.Task[] => [
   Task.make({
     title: 'Source green coffee',
     status: 'done',
@@ -27,7 +27,6 @@ const seed = (): Task.Task[] => [
     description:
       'Two Ethiopian lots and one Colombian, sampled before committing to a full bag. Supplier list: https://example.com/suppliers',
   }),
-  // Artifacts render as tags beside priority: what the task produced, not what it is.
   Task.make({
     title: 'Write the launch poem',
     status: 'review',
@@ -44,7 +43,6 @@ const seed = (): Task.Task[] => [
   Task.make({
     title: 'Publish the tasting notes',
     status: 'todo',
-    // Reference forms the markdown surfaces are expected to linkify: a bare URL and a GitHub issue.
     description:
       'Draft lives at https://github.com/dxos/dxos/pull/12752 and the preview is https://pr-12752-composer-dev.dxos.workers.dev; blocked on #12431.',
   }),
@@ -70,7 +68,7 @@ const seed = (): Task.Task[] => [
  * ordinals into double digits, and put more than one task under each group heading, which a
  * seven-task list does not.
  */
-const manySeed = (n = 40): Task.Task[] =>
+const seedMany = (n = 40): Task.Task[] =>
   Array.from({ length: n }, () =>
     Task.make({
       title: random.lorem.sentence(random.number.int({ min: 5, max: 10 })),
@@ -85,51 +83,51 @@ const manySeed = (n = 40): Task.Task[] =>
  * deliberately interleaves the two branches — a list that walked the array instead of the tree
  * would render them out of order, which is the bug this story exists to catch.
  */
-const hierarchicalSeed = (): Task.Task[] => {
-  const release = Task.make({
+const seedHierarchy = (): Task.Task[] => {
+  const task1 = Task.make({
     title: 'Ship the spring release',
     status: 'started',
     priority: 'high',
   });
-  const roast = Task.make({
+  const task2 = Task.make({
     title: 'Dial in the roast',
     status: 'todo',
   });
-  const notes = Task.make({
+  const task3 = Task.make({
     title: 'Write the tasting notes',
     status: 'todo',
-    parentTask: Ref.make(release),
+    parentTask: Ref.make(task1),
     description: 'One paragraph per lot, in the order they are poured.',
   });
-  const sample = Task.make({
+  const task4 = Task.make({
     title: 'Sample the Ethiopian lots',
     status: 'done',
-    parentTask: Ref.make(roast),
+    parentTask: Ref.make(task2),
   });
-  const label = Task.make({
+  const task5 = Task.make({
     title: 'Approve the label art',
     status: 'todo',
-    parentTask: Ref.make(release),
+    parentTask: Ref.make(task1),
   });
-  const curve = Task.make({
+  const task6 = Task.make({
     title: 'Log every profile',
     status: 'started',
-    parentTask: Ref.make(roast),
+    parentTask: Ref.make(task2),
   });
-  const proof = Task.make({
+  const task7 = Task.make({
     title: 'Proofread the back label',
     status: 'todo',
-    parentTask: Ref.make(label),
+    parentTask: Ref.make(task5),
   });
 
-  return [release, roast, notes, sample, label, curve, proof];
+  return [task1, task2, task3, task4, task5, task6, task7];
 };
 
 /**
  * The minimal shape the drop zones are reasoned about with: one parent and two children. Dragging
  * `C` leaves `A > B`, against which every landing place has to be reachable.
  */
-const dragSeed = (): Task.Task[] => {
+const seedDrag = (): Task.Task[] => {
   const a = Task.make({ title: 'A', status: 'todo' });
   const b = Task.make({ title: 'B', status: 'todo', parentTask: Ref.make(a) });
   const c = Task.make({ title: 'C', status: 'todo', parentTask: Ref.make(a) });
@@ -140,39 +138,39 @@ const DefaultStory = ({
   readonly,
   showGroupLabels,
   groupByStatus,
+  hierarchical,
   showOrdinals,
   showDescription = true,
   showEstimates,
-  hierarchical,
   draggable = false,
-  many,
-  dragFixture,
+  seed = seedFlat,
   debug,
   framed = true,
 }: {
   readonly?: boolean;
-  showGroupLabels?: boolean;
   /** Group tasks under status headers. */
   groupByStatus?: boolean;
+  hierarchical?: boolean;
+  showGroupLabels?: boolean;
   showOrdinals?: boolean;
   showDescription?: boolean;
   showEstimates?: boolean;
-  hierarchical?: boolean;
   /** Wire `onTaskMove`, which is what turns rows into drag sources. Off unless a story asks. */
   draggable?: boolean;
-  /** Seed the longer, ten-task list instead of the default seven. */
-  many?: boolean;
-  /** Seed the minimal `A > B, C` fixture the drop zones are reasoned about with. */
-  dragFixture?: boolean;
+  /**
+   * The tasks to start from. A factory rather than a named fixture, so a story can compose its own
+   * (`() => seedMany(100)`) without a union to extend — and because `useState` reads its initial
+   * value once, which is what made the booleans this replaces useless as live controls.
+   */
+  seed?: () => Task.Task[];
   /** Paint every row's drop bands, so the zones are visible without holding a drag. */
   debug?: boolean;
   /** Insets the pane in a card, as an article does. Off for the tests that measure the pane's own
       columns against a row's, which the inset would offset. */
   framed?: boolean;
 }) => {
-  const [tasks, setTasks] = useState<Task.Task[]>(
-    dragFixture ? dragSeed : hierarchical ? hierarchicalSeed : many ? manySeed : seed,
-  );
+  const [tasks, setTasks] = useState<Task.Task[]>(seed);
+
   // Selection is what the article wires, and what arrow-key navigation moves.
   const [selected, setSelected] = useState<string>();
 
@@ -271,7 +269,7 @@ export const Default: Story = {};
 /** A list long enough to scroll, group and number into double digits. */
 export const ManyTasks: Story = {
   args: {
-    many: true,
+    seed: seedMany,
     showEstimates: true,
     showDescription: true,
     showOrdinals: true,
@@ -307,6 +305,7 @@ export const WithDescriptions: Story = {
 
 export const Hierarchical: Story = {
   args: {
+    seed: seedHierarchy,
     hierarchical: true,
     showOrdinals: true,
     showDescription: true,
@@ -316,6 +315,7 @@ export const Hierarchical: Story = {
 /** Rows are drag sources: `onTaskMove` is wired, so the tree publishes each row to pragmatic-dnd. */
 export const HierarchicalDraggable: Story = {
   args: {
+    seed: seedHierarchy,
     hierarchical: true,
     draggable: true,
     showOrdinals: true,
@@ -326,6 +326,7 @@ export const HierarchicalDraggable: Story = {
 /** The drop bands painted on every row, so the zones can be seen without holding a drag. */
 export const DragDebug: Story = {
   args: {
+    seed: seedHierarchy,
     hierarchical: true,
     draggable: true,
     debug: true,
@@ -336,11 +337,28 @@ export const DragDebug: Story = {
 };
 
 /**
+ * The minimal `A > B, C` shape TREE.md reasons the six landing places about, with the bands painted.
+ * Small enough that every zone is reachable without scrolling, which is what makes it the fixture to
+ * check a hitbox change against.
+ */
+export const DropZones: Story = {
+  args: {
+    seed: seedDrag,
+    hierarchical: true,
+    draggable: true,
+    debug: true,
+    showDescription: false,
+    framed: false,
+  },
+};
+
+/**
  * Status groups rendered through the tree: headers are `disposition: 'group'` nodes, spliced out of
  * the collection's topology so the keyboard never lands on one.
  */
 export const GroupedTree: Story = {
   args: {
+    seed: seedHierarchy,
     hierarchical: true,
     groupByStatus: true,
     showGroupLabels: true,
@@ -608,7 +626,7 @@ export const TestEditWithoutDescription: Story = {
  * screen: 1..N from the top, with no gaps and nothing out of sequence.
  */
 export const TestOrdinalsAreLinear: Story = {
-  args: { many: true, showOrdinals: true },
+  args: { seed: seedMany, showOrdinals: true },
   play: async ({ canvasElement }) => {
     const ordinals = () =>
       Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]')).map(
@@ -625,7 +643,14 @@ export const TestOrdinalsAreLinear: Story = {
 export const TestHierarchy: Story = {
   // Descriptions on, so the alignment between a sub-task's description and its title is asserted;
   // draggable on, because the drag affordances are part of what this asserts.
-  args: { hierarchical: true, draggable: true, showOrdinals: true, showDescription: true, framed: false },
+  args: {
+    seed: seedHierarchy,
+    hierarchical: true,
+    draggable: true,
+    showOrdinals: true,
+    showDescription: true,
+    framed: false,
+  },
   // The tree is what the walk produces, not what the array holds; and restructuring is driven from
   // the keyboard, which is the half of the gesture set that CAN be synthesized (a native HTML5 drag
   // cannot).
