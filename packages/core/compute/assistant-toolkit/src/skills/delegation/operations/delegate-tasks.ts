@@ -69,7 +69,6 @@ const handler: Operation.WithHandler<typeof DelegateTasks> = DelegateTasks.pipe(
       return trim`
         Delegated ${delegated} task(s) to sub-agents; each starts once its dependencies are done.
         ${skipped.length > 0 ? `Skipped: ${skipped.join(', ')}.` : ''}
-        Current checklist:
         <checklist>
           ${yield* Chat.formatChecklist(chat)}
         </checklist>

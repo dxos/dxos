@@ -15,16 +15,16 @@ import { meta } from '#meta';
 
 import { SYNC_TARGETS_DIALOG } from '../constants';
 
-export type UseSyncTargetsChecklistResult = {
+export type UseSyncTargetsResult = {
   /** True when the connection's connector exposes `getSyncTargets`. Drives "edit" button visibility. */
   readonly available: boolean;
-  /** True while `openChecklist` is awaiting the operation result. */
+  /** True while `openTargets` is awaiting the operation result. */
   readonly loading: boolean;
   /**
    * Fetches the available targets via `connector.sync.getTargets` and opens the
    * dialog through the layout system. No-op when `available` is false.
    */
-  readonly openChecklist: () => Promise<void>;
+  readonly openTargets: () => Promise<void>;
 };
 
 /**
@@ -34,17 +34,16 @@ export type UseSyncTargetsChecklistResult = {
  * The dialog itself is rendered by the layout system as a Surface — see
  * `react-surface.tsx` and `SYNC_TARGETS_DIALOG`.
  */
-export const useSyncTargetsChecklist = (
-  connection: Connection.Connection | undefined,
-): UseSyncTargetsChecklistResult => {
+export const useSyncTargets = (connection: Connection.Connection | undefined): UseSyncTargetsResult => {
   const { invokePromise } = useOperationInvoker();
   const connector = useConnector(connection?.connectorId);
   const [loading, setLoading] = useState(false);
 
-  const openChecklist = useCallback(async () => {
+  const openTargets = useCallback(async () => {
     if (!connection || !connector?.sync?.getTargets) {
       return;
     }
+
     setLoading(true);
     try {
       const result = await invokePromise(
@@ -82,6 +81,6 @@ export const useSyncTargetsChecklist = (
   return {
     available: !!connector?.sync?.getTargets,
     loading,
-    openChecklist,
+    openTargets,
   };
 };

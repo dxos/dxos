@@ -51,7 +51,6 @@ export default AssignTasks.pipe(
       return trim`
         Assigned ${added.length} task(s), unassigned ${removed.length}.
         ${rejected > 0 ? `Ignored ${rejected} reference(s) that do not resolve to a task.` : ''}
-        Current checklist:
         <checklist>
           ${yield* Chat.formatChecklist(chat)}
         </checklist>

@@ -47,11 +47,16 @@ export class ReasoningWidget extends WidgetType {
               'grid grid-cols-[24px_1fr] gap-x-0.5 items-start',
             )
             .append(
+              // One line tall, not padded: the glyph centres against the FIRST line of text however
+              // many follow it, and `1lh` tracks the text's own line-height rather than restating it.
+              // Padding made the cell 24px against a 20px line, which put the glyph 2px low.
               Domino.of('div')
-                .classNames('flex p-1 shrink-0 items-center justify-center self-start')
+                .classNames('flex h-[1lh] shrink-0 items-center justify-center self-start')
                 .append(Domino.svg('ph--brain--regular').classNames('shrink-0 size-4')),
+              // `items-start`, not centred: past `max-h` the box scrolls, and centred overflow puts
+              // the first lines above the scroll origin where they cannot be reached.
               Domino.of('div')
-                .classNames('flex items-center max-h-[5lh] overflow-y-auto dx-scrollbar-thin text-description')
+                .classNames('flex items-start max-h-[5lh] overflow-y-auto dx-scrollbar-thin text-description')
                 .text(this.text)
                 .attributes({ 'data-reasoning-text': '' }),
             ),
