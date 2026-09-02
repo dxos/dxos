@@ -218,8 +218,9 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
 
             let handle: AgentHandle;
             if (activeProcess) {
-              yield* activeProcess.hydrate(executable);
-              handle = activeProcess;
+              // `hydrate` returns the live handle; the listed one may be a dormant view whose
+              // methods die with "Process not hydrated" (see ProcessManager's DormantHandle).
+              handle = yield* activeProcess.hydrate(executable);
             } else {
               handle = yield* processManager.spawn(executable, {
                 name: 'Agent',
