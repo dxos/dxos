@@ -1626,6 +1626,70 @@ describe('durability', () => {
   );
 
   it.effect(
+    'a child exit handed over as the app closes still reaches the parent after hydrate',
+    Effect.fn(function* ({ expect }) {
+      const kv = yield* KeyValueStore.KeyValueStore;
+      const registry = yield* Registry.AtomRegistry;
+      const resolver = yield* ServiceResolver.ServiceResolver;
+      const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
+      const traceSink = yield* Trace.TraceSink;
+
+      SlowChildGate.taskSignal = yield* Queue.unbounded<void>();
+      SlowChildGate.completeDeferred = yield* Deferred.make<void>();
+      const alarmStarted = yield* Deferred.make<void>();
+      const alarmResume = yield* Deferred.make<void>();
+      const childEvents: string[] = [];
+      const delivered = yield* Deferred.make<void>();
+      const parentDefinition = Process.make(
+        {
+          key: 'test.parent-child-exit-at-close',
+          input: Schema.Void,
+          output: Schema.Void,
+          services: [ProcessManager.ProcessOperationInvoker.Service],
+        },
+        (ctx) =>
+          Effect.succeed({
+            onInput: () => ctx.setAlarm(0),
+            onAlarm: () =>
+              Effect.gen(function* () {
+                const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+                yield* Effect.forkChild(invoker.invokeFiber(SlowChild, { value: 1 }).pipe(Effect.asVoid));
+                yield* Deferred.succeed(alarmStarted, undefined);
+                yield* Deferred.await(alarmResume);
+              }),
+            onChildEvent: (event) =>
+              Effect.sync(() => {
+                childEvents.push(event._tag);
+              }).pipe(Effect.andThen(Deferred.succeed(delivered, undefined))),
+          }),
+      );
+
+      const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      const parent = yield* managerA.spawn(parentDefinition);
+      yield* parent.submitInput(undefined);
+      yield* Deferred.await(alarmStarted);
+      yield* Queue.take(SlowChildGate.taskSignal);
+
+      // The child completes inline from this fiber and the app closes before yielding again, as
+      // when a tool process finishes just before the agent runtime suspends. The exit must either
+      // be handled now or stay persisted for redelivery; dropping it loses the tool result.
+      yield* Deferred.succeed(SlowChildGate.completeDeferred, undefined);
+      yield* managerA.shutdown();
+
+      const managerB = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      const dormant = yield* managerB.list({ key: parentDefinition.key });
+      yield* dormant[0].hydrate(parentDefinition);
+      yield* Deferred.succeed(alarmResume, undefined);
+
+      yield* Deferred.await(delivered);
+      expect(childEvents).toContain('exited');
+
+      SlowChildGate.taskSignal = undefined;
+      SlowChildGate.completeDeferred = undefined;
+    }, Effect.provide(DurabilityTestLayer)),
+  );
+
+  it.effect(
     'fires a re-armed alarm under the ambient tracer after hydrate',
     Effect.fn(
       function* ({ expect }) {
