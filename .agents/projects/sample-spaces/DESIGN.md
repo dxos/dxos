@@ -7,11 +7,11 @@ mechanism, so a new themed sample space is a phase list rather than a 1800-line 
 
 Three mechanisms build test/demo content today, and the two that matter overlap heavily:
 
-| Mechanism | Shape | Lines |
-| --- | --- | --- |
-| `plugin-onboarding/scripts/build-sample-space.ts` | one coherent narrative world (Bramble Coffee Roasters), exported to a committed `.dx.json` | 1810 |
-| `plugin-google/scripts/import-mbox-space.ts` | file in → archive out, one Mailbox from an mbox | 174 |
-| `plugin-debug/src/components/SpaceGenerator/*` | `(space, n) => T[]` — n random objects per typename, plus scripted presets | ~1000 |
+| Mechanism                                         | Shape                                                                                      | Lines |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------ | ----- |
+| `plugin-onboarding/scripts/build-sample-space.ts` | one coherent narrative world (Bramble Coffee Roasters), exported to a committed `.dx.json` | 1810  |
+| `plugin-google/scripts/import-mbox-space.ts`      | file in → archive out, one Mailbox from an mbox                                            | 174   |
+| `plugin-debug/src/components/SpaceGenerator/*`    | `(space, n) => T[]` — n random objects per typename, plus scripted presets                 | ~1000 |
 
 Roughly 200 of the onboarding script's 1810 lines are mechanism; the rest is content. The mechanism
 is duplicated or near-duplicated:

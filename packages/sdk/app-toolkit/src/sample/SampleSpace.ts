@@ -211,24 +211,49 @@ export const makeTags = (): Tags['Service'] => {
   };
 };
 
-/** Tags every object in `objects` with `key`, recording membership in `index` when one is given. */
-export const tag = Effect.fnUntraced(function* (
-  objects: Obj.Any[],
-  key: string,
-  options: {
-    readonly index?: TagIndexOption;
-    readonly resolve?: (db: Database.Database) => Promise<Type.InstanceType<typeof Tag.Tag>>;
-  } = {},
+export type TagOptions = {
+  readonly index?: TagIndexOption;
+  /** Resolves a tag key to its object when it is not a plain label — system tags carry an origin. */
+  readonly resolve?: (db: Database.Database, key: string) => Promise<Type.InstanceType<typeof Tag.Tag>>;
+};
+
+/**
+ * Applies many (object, tag key) pairs at once, resolving each distinct key once.
+ *
+ * One `Tagging.setBatch` for the whole set: on the index path that is a single Automerge change and
+ * one reactive notification, where a call per key would be one of each per key.
+ */
+export const tagBatch = Effect.fnUntraced(function* (
+  entries: ReadonlyArray<{ readonly object: Obj.Any; readonly key: string }>,
+  options: TagOptions = {},
 ) {
-  if (objects.length === 0) {
+  if (entries.length === 0) {
     return;
   }
-  const uri = yield* Effect.flatMap(Tags, ({ uri }) => uri(key, options.resolve));
-  Tagging.setBatch(
-    objects.map((object) => ({ object, tagId: uri })),
-    { index: options.index },
-  );
+  const { uri } = yield* Tags;
+  const { resolve } = options;
+  const uris = new Map<string, string>();
+  for (const key of new Set(entries.map((entry) => entry.key))) {
+    uris.set(key, yield* uri(key, resolve && ((db) => resolve(db, key))));
+  }
+
+  const tagged: Array<{ object: Obj.Any; tagId: string }> = [];
+  for (const { object, key } of entries) {
+    const tagId = uris.get(key);
+    if (tagId === undefined) {
+      return yield* Effect.fail(new SampleSpaceError({ context: { reason: 'tag-unresolved', key } }));
+    }
+    tagged.push({ object, tagId });
+  }
+  Tagging.setBatch(tagged, { index: options.index });
 });
+
+/** Tags every object in `objects` with `key`, recording membership in `index` when one is given. */
+export const tag = (objects: Obj.Any[], key: string, options: TagOptions = {}) =>
+  tagBatch(
+    objects.map((object) => ({ object, key })),
+    options,
+  );
 
 //
 // Membership
@@ -289,22 +314,22 @@ export type Services = Database.Service | Clock | Feeds | Root | Tags;
  * A named, reusable unit of sample content. Phases declare the schemas their objects need so a
  * space's type registration is derived from its phase list rather than hand-maintained alongside it.
  */
-export interface Phase<A, In = void, R = never> {
+export interface Phase<A, In = void> {
   readonly name: string;
   readonly schemas: ReadonlyArray<Type.AnyEntity>;
-  readonly run: (input: In) => Effect.Effect<A, SampleSpaceError, R | Services>;
+  readonly run: (input: In) => Effect.Effect<A, SampleSpaceError, Services>;
 }
 
 /** Defines a phase. `In` is whatever earlier phases produced that this one needs. */
-export const phase = <A, In = void, R = never>(
+export const phase = <A, In = void>(
   name: string,
   options: {
     readonly schemas?: ReadonlyArray<Type.AnyEntity>;
-    readonly run: (input: In) => Effect.Effect<A, SampleSpaceError, R | Services>;
+    readonly run: (input: In) => Effect.Effect<A, SampleSpaceError, Services>;
   },
-): Phase<A, In, R> => ({ name, schemas: options.schemas ?? [], run: options.run });
+): Phase<A, In> => ({ name, schemas: options.schemas ?? [], run: options.run });
 
-export type PhaseMap = Record<string, Phase<any, any, any>>;
+export type PhaseMap = Record<string, Phase<any, any>>;
 
 /** The `run` functions of a phase map, as handed to a definition's `build`. */
 export type PhaseRunners<Phases extends PhaseMap> = { readonly [K in keyof Phases]: Phases[K]['run'] };

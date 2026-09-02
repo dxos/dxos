@@ -28,6 +28,7 @@ tasks:
       - ^:build
     inputs:
       - scripts/build-sample-space.ts
+      - scripts/sample/*.ts
       - src/content/sample/README.md
       - src/content/sample/ABOUT.md
     outputs:

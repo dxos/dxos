@@ -23,15 +23,25 @@ Design: [DESIGN.md](./DESIGN.md)
 
 ## Phase 2 — port the onboarding builder
 
-- [ ] Split the Bramble content out of `build-sample-space.ts` into phase modules under
-      `plugin-onboarding/src/sample/phases/` (organizations, people, mailbox, calendar, taskSet,
-      notes, sketches, sheets, roastLog).
-- [ ] Define the space with `SampleSpace.make`; drop the hand-maintained `SCHEMAS` array.
-- [ ] Reduce the script to: build the definition, write the archive.
-- [ ] Verify with `histogram()` — the rebuilt archive must match the committed snapshot's type
-      counts (23 typenames, 77 objects, 3 feeds at time of writing).
-- [ ] Regenerate the snapshot; check whether the stale `org.dxos.type.sketch` refs noted in
-      `plugin-tldraw/TASKS.md:126` clear as a side effect.
+- [x] Split the Bramble content out of `build-sample-space.ts` into phase modules under
+      `scripts/sample/` — 12 modules: docs, organizations, people, contacts-views, mailbox,
+      calendar, tasks, notes, drawings, sheets, roast-log, util.
+      **Content stays under `scripts/`, not `src/`**: the builder must never run in the browser
+      (that is the whole point of the committed snapshot) and `composer-app:check-boot-budget`
+      is a real gate. A debug-plugin preset should be its own smaller definition, not Bramble.
+- [x] Define the space with `SampleSpace.make` (`scripts/sample/index.ts`); the hand-maintained
+      `SCHEMAS` array is gone — types are derived from the phase map.
+- [x] Reduce the script to file-in/file-out: 1810 → 50 lines.
+- [x] Verified with the type histogram: 77 objects, 3 feeds, 127 typed entities — identical to the
+      previous snapshot. Only delta is `org.dxos.type.task` 0.3.0 → 0.5.0, a schema version the
+      committed fixture had drifted behind (the regeneration fixes it).
+- [x] The stale `org.dxos.type.sketch` refs noted in `plugin-tldraw/TASKS.md:126` are already gone —
+      the fixture seeds `org.dxos.type.drawing` directly. That note can be struck.
+- [x] `composer-app:check-boot-budget` after the port: 21 entries / 4.15 MB (budget 25 / 4.35 MB),
+      unchanged — nothing eager reaches `SampleSpace`.
+- [ ] `makeCalendar`'s `PEOPLE_SEEDS.find(...)!` was replaced by `personActor`, but `makeNotes` and
+      `makeRoastLogs` still carry pre-existing `!` and inline `Record<PersonKey, …>` params. Tidy
+      when next touched.
 
 ## Phase 3 — port the mbox importer
 
