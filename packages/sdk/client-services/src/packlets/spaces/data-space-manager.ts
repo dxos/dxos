@@ -49,7 +49,9 @@ import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError } from '@dxos/protocols';
+import { toPublicKey } from '@dxos/protocols/buf';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
+import { type PeerState } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { EdgeReplicationSetting, type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
@@ -60,7 +62,6 @@ import {
   SpaceMember,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
-import { type PeerState } from '@dxos/protocols/proto/dxos/mesh/presence';
 import { type Teleport } from '@dxos/teleport';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { type Timeframe } from '@dxos/timeframe';
@@ -1030,11 +1031,14 @@ export class DataSpaceManager extends Resource {
   private _handleMemberRoleChanges(presence: Presence, spaceProtocol: SpaceProtocol, memberInfo: MemberInfo[]): void {
     let closedSessions = 0;
     for (const member of memberInfo) {
-      if (member.key.equals(presence.getLocalState().identityKey)) {
+      if (member.key.equals(presence.localIdentityKey)) {
         continue;
       }
       const peers = presence.getPeersByIdentityKey(member.key);
-      const sessions = peers.map((p) => p.peerId && spaceProtocol.sessions.get(p.peerId));
+      const sessions = peers.map((peer) => {
+        const peerId = toPublicKey(peer.peerId);
+        return peerId && spaceProtocol.sessions.get(peerId);
+      });
       const sessionsToClose = sessions.filter((s): s is SpaceProtocolSession => {
         return (s && (member.role === SpaceMember.Role.REMOVED) !== (s.authStatus === AuthStatus.FAILURE)) ?? false;
       });
@@ -1053,11 +1057,18 @@ export class DataSpaceManager extends Resource {
   }
 
   private _handleNewPeerConnected(space: Space, peerState: PeerState): void {
-    const role = space.spaceState.getMemberRole(peerState.identityKey);
+    // `PeerState` is the wire message the gossip channel carries; the space state machine and
+    // the session map are keyed by the domain key type.
+    const identityKey = toPublicKey(peerState.identityKey);
+    const peerId = toPublicKey(peerState.peerId);
+    if (!identityKey) {
+      return;
+    }
+    const role = space.spaceState.getMemberRole(identityKey);
     if (role === SpaceMember.Role.REMOVED) {
-      const session = peerState.peerId && space.protocol.sessions.get(peerState.peerId);
+      const session = peerId && space.protocol.sessions.get(peerId);
       if (session != null) {
-        log('closing a session with a removed peer', { peerId: peerState.peerId });
+        log('closing a session with a removed peer', { peerId });
         void session.close().catch(log.error);
       }
     }

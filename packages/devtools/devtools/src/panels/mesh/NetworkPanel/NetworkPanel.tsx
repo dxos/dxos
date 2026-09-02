@@ -4,7 +4,8 @@
 
 import React, { useMemo, useRef } from 'react';
 
-import { type PeerState } from '@dxos/protocols/proto/dxos/mesh/presence';
+import { toPublicKey } from '@dxos/protocols/buf';
+import { type PeerState } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
 import { type Space, type SpaceMember, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Panel, Toolbar } from '@dxos/react-ui';
@@ -95,7 +96,7 @@ export const NetworkPanel = (props: { space?: Space }) => {
                   node.data!.member?.identity.profile?.displayName ??
                   node.data!.member?.identity.identityKey.truncate();
 
-                const peer = node.data!.peer?.peerId?.truncate();
+                const peer = toPublicKey(node.data!.peer?.peerId)?.truncate();
                 return `${peer} [${identity}]`;
               },
             }}
