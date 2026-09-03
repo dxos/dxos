@@ -11,7 +11,7 @@ tags:
 tasks:
   check-module-structure:
     command: >-
-      pnpm exec dx-trace-imports
+      bun $workspaceRoot/tools/dx-trace-imports/cli.js
       --export ./VideoPlugin
       --to "{react,react-dom}"
       --conditions workerd,worker
