@@ -10,9 +10,9 @@ import { log } from '@dxos/log';
 import buildSecrets from '../../cli-observability-secrets.json';
 import * as ObservabilityExtension from '../../ObservabilityExtension';
 import { stubExtension } from '../stub';
-import { type ExtensionsOptions, type Host } from './extension';
+import { type ExtensionsOptions } from './extension';
 
-const DEFAULT_HOST: Host = 'https://eu.i.posthog.com';
+const DEFAULT_HOST = 'https://eu.i.posthog.com';
 
 /**
  * PostHog for a node host, over `posthog-node`.

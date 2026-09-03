@@ -17,7 +17,7 @@ declare global {
   var DX_CLI_POSTHOG_TOKEN: string | undefined;
 }
 
-const POSTHOG_HOST = 'https://eu.i.posthog.com' as const;
+const POSTHOG_HOST = 'https://eu.i.posthog.com';
 
 const OTEL_ENDPOINT = 'https://composer.space/api/otel';
 

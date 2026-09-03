@@ -21,9 +21,6 @@ import {
   toAiTraceProperties,
 } from './llm-analytics';
 
-/** PostHog ingestion hosts; the region a project belongs to is fixed when it is created. */
-export type Host = 'https://eu.i.posthog.com' | 'https://us.i.posthog.com';
-
 export type ExtensionsOptions = {
   config: Config;
   /** Release identifier, e.g. `composer@0.8.3`. */
@@ -51,8 +48,8 @@ export type ExtensionsOptions = {
   feedbackLogsEndpoint?: string;
   /** Node only: pins the project instead of reading `DX_POSTHOG_API_KEY`. */
   apiKey?: string;
-  /** Node only: the region the pinned project belongs to. */
-  host?: Host;
+  /** Node only: ingestion host — a region, or a proxy on your own domain. */
+  host?: string;
   /** Node only: attribution for events captured before `identify`, since there is no ambient person. */
   distinctId?: string;
   /** Node only: which MCP server this host is, stamped on every `$mcp_*` event. */
