@@ -63,24 +63,44 @@ const populate = (desc: DescMessage, depth = 0): Record<string, unknown> | undef
 
   const init: Record<string, unknown> = {};
   let salt = 0;
+
+  const messageValue = (message: DescMessage): unknown => {
+    if (message.typeName === 'google.protobuf.Any') {
+      const payload = bufRegistry.getMessage(ANY_PAYLOAD_TYPE);
+      return payload === undefined
+        ? undefined
+        : { typeUrl: ANY_PAYLOAD_TYPE, value: toBinary(payload, create(payload, { hashes: ['any-payload'] })) };
+    }
+    return populate(message, depth + 1);
+  };
+
+  const lastEnumValue = (field: DescField & { enum: { values: { number: number }[] } }): number =>
+    field.enum.values[field.enum.values.length - 1]?.number ?? 0;
+
   const valueFor = (field: DescField): unknown => {
     salt += 1;
     switch (field.fieldKind) {
       case 'scalar':
         return scalarFor(field, salt);
       case 'enum':
-        return field.enum.values[field.enum.values.length - 1]?.number ?? 0;
-      case 'message': {
-        if (field.message.typeName === 'google.protobuf.Any') {
-          const payload = bufRegistry.getMessage(ANY_PAYLOAD_TYPE);
-          return payload === undefined
-            ? undefined
-            : {
-                typeUrl: ANY_PAYLOAD_TYPE,
-                value: toBinary(payload, create(payload, { hashes: ['any-payload'] })),
-              };
+        return lastEnumValue(field);
+      case 'message':
+        return messageValue(field.message);
+      // Repeated fields are their own kind in buf's descriptors, not a flag on the others — they
+      // were silently skipped until `moon build` rejected the `field.repeated` this replaced.
+      case 'list': {
+        switch (field.listKind) {
+          case 'scalar':
+            return [scalarFor(field, salt)];
+          case 'enum':
+            return [lastEnumValue(field)];
+          case 'message': {
+            const element = messageValue(field.message);
+            return element === undefined ? undefined : [element];
+          }
+          default:
+            return undefined;
         }
-        return populate(field.message, depth + 1);
       }
       default:
         return undefined;
@@ -101,7 +121,7 @@ const populate = (desc: DescMessage, depth = 0): Record<string, unknown> | undef
       }
       continue;
     }
-    init[field.localName] = field.repeated ? [value] : value;
+    init[field.localName] = value;
   }
   // An empty nested message is worse than an absent one: protobuf.js materialises absent
   // submessages with unsubstituted defaults, which is divergence 1 below.
@@ -167,7 +187,17 @@ const outcomeOf = (run: () => string[]): { paths: string[]; error?: string } => 
   }
 };
 
-const legacyCodec = (typeName: string) => schema.getCodecForType(typeName as never);
+type LegacyCodec = {
+  encode(value: unknown): Uint8Array;
+  decode(bytes: Uint8Array): unknown;
+};
+
+/**
+ * `getCodecForType` is keyed on the protobuf.js type union, which a registry walk cannot narrow to,
+ * so the codec is taken at the surface this file uses. Method syntax keeps the parameters bivariant
+ * and the assignment honest, matching `Substitution` in `shape-compat.ts`.
+ */
+const legacyCodec = (typeName: string): LegacyCodec => schema.getCodecForType(typeName as never);
 
 const knownToLegacy = (typeName: string): boolean => {
   try {
@@ -195,38 +225,114 @@ const covered = [...bufRegistry]
  */
 const KNOWN_DIVERGENCES: { typeName: string; decode: string[]; encode: string[] }[] = [
   {
+    typeName: 'dxos.client.services.ContactBook',
+    decode: ['contacts'],
+    encode: [],
+  },
+  {
     typeName: 'dxos.client.services.JoinSpaceResponse',
-    decode: ['space.pipeline.appliedEpoch.subject', 'space.pipeline.currentEpoch.subject'],
+    decode: ['space.members', 'space.pipeline.appliedEpoch.subject', 'space.pipeline.currentEpoch.subject'],
     encode: ['space.pipeline.appliedEpoch.subject', 'space.pipeline.currentEpoch.subject'],
   },
   {
-    typeName: 'dxos.devtools.host.GetSpaceSnapshotResponse',
-    decode: ['snapshot.database'],
-    encode: ['snapshot.database'],
+    typeName: 'dxos.client.services.LoadPersistentInvitationsResponse',
+    decode: ['invitations'],
+    encode: [],
   },
   {
-    typeName: 'dxos.devtools.host.SaveSpaceSnapshotResponse',
-    decode: ['snapshot.database'],
-    encode: ['snapshot.database'],
+    typeName: 'dxos.client.services.NetworkStatus',
+    decode: ['connectionInfo'],
+    encode: [],
+  },
+  {
+    typeName: 'dxos.client.services.QueryInvitationsResponse',
+    decode: ['invitations'],
+    encode: [],
+  },
+  {
+    typeName: 'dxos.client.services.QuerySpacesResponse',
+    decode: ['spaces'],
+    encode: ['spaces'],
+  },
+  {
+    typeName: 'dxos.client.services.Space',
+    decode: ['members'],
+    encode: [],
+  },
+  {
+    typeName: 'dxos.config.Config',
+    decode: ['package.modules'],
+    encode: [],
+  },
+  {
+    typeName: 'dxos.config.Module',
+    decode: ['deps'],
+    encode: [],
+  },
+  {
+    typeName: 'dxos.config.Package',
+    decode: ['modules'],
+    encode: [],
+  },
+  {
+    typeName: 'dxos.devtools.host.SubscribeToFeedBlocksResponse',
+    decode: ['blocks'],
+    encode: ['blocks'],
   },
   {
     typeName: 'dxos.devtools.host.SubscribeToFeedBlocksResponse.Block',
-    decode: ['data'],
-    encode: ['data'],
+    decode: ['data.payload'],
+    encode: ['data.payload'],
+  },
+  {
+    typeName: 'dxos.devtools.host.SubscribeToMetadataResponse',
+    decode: ['metadata.invitations', 'metadata.spaces'],
+    encode: [],
+  },
+  {
+    typeName: 'dxos.devtools.host.SubscribeToSpacesResponse',
+    decode: ['spaces'],
+    encode: [],
+  },
+  {
+    typeName: 'dxos.devtools.swarm.ConnectionInfo',
+    decode: ['streams'],
+    encode: [],
+  },
+  {
+    typeName: 'dxos.devtools.swarm.SwarmInfo',
+    decode: ['connections'],
+    encode: [],
   },
   {
     typeName: 'dxos.echo.feed.FeedMessage',
-    decode: ['payload.credential.credential.subject', 'timeframe'],
-    encode: ['payload.payload.value.credential.subject', 'timeframe'],
+    decode: ['payload.credential.credential.subject'],
+    encode: ['payload.payload.value.credential.subject'],
   },
   {
     typeName: 'dxos.echo.metadata.ControlPipelineSnapshot',
-    decode: ['timeframe'],
-    encode: ['timeframe'],
+    decode: ['messages'],
+    encode: [],
+  },
+  {
+    typeName: 'dxos.echo.metadata.EchoMetadata',
+    decode: ['invitations', 'spaces'],
+    encode: [],
+  },
+  {
+    typeName: 'dxos.echo.metadata.LargeSpaceMetadata',
+    decode: ['controlPipelineSnapshot.messages'],
+    encode: ['controlPipelineSnapshot.messages'],
   },
   {
     typeName: 'dxos.echo.object.EchoObject',
-    decode: ['snapshot.model.@type', 'snapshot.model.hashes', 'snapshot.model.type_url', 'snapshot.model.value'],
+    decode: [
+      'mutations',
+      'snapshot.model.@type',
+      'snapshot.model.hashes',
+      'snapshot.model.type_url',
+      'snapshot.model.value',
+    ],
     encode: [],
   },
   {
@@ -240,9 +346,19 @@ const KNOWN_DIVERGENCES: { typeName: string; decode: string[]; encode: string[] 
     encode: [],
   },
   {
+    typeName: 'dxos.echo.query.QueryResponse',
+    decode: ['objects', 'results'],
+    encode: [],
+  },
+  {
+    typeName: 'dxos.echo.snapshot.EchoSnapshot',
+    decode: ['items'],
+    encode: [],
+  },
+  {
     typeName: 'dxos.echo.snapshot.SpaceSnapshot',
-    decode: ['database'],
-    encode: ['database'],
+    decode: ['database.items'],
+    encode: [],
   },
   {
     typeName: 'dxos.edge.calls.Activity',
@@ -255,14 +371,39 @@ const KNOWN_DIVERGENCES: { typeName: string; decode: string[]; encode: string[] 
     encode: [],
   },
   {
+    typeName: 'dxos.edge.messenger.Message',
+    decode: ['target'],
+    encode: [],
+  },
+  {
+    typeName: 'dxos.edge.messenger.SwarmResponse',
+    decode: ['inactivePeers', 'peers'],
+    encode: [],
+  },
+  {
     typeName: 'dxos.halo.credentials.Credential',
     decode: ['proof.chain.credential.subject'],
     encode: ['proof.chain.credential.subject'],
   },
   {
-    typeName: 'dxos.halo.credentials.Epoch',
-    decode: ['timeframe'],
-    encode: ['timeframe'],
+    typeName: 'dxos.halo.credentials.Presentation',
+    decode: ['credentials', 'proofs'],
+    encode: ['proofs'],
+  },
+  {
+    typeName: 'dxos.halo.signed.KeyChain',
+    decode: ['message.signatures', 'parents'],
+    encode: ['message.signatures', 'parents'],
+  },
+  {
+    typeName: 'dxos.halo.signed.SignedMessage',
+    decode: ['signatures'],
+    encode: ['signatures'],
+  },
+  {
+    typeName: 'dxos.halo.signed.SignedMessage.Signature',
+    decode: ['keyChain.message.signatures', 'keyChain.parents'],
+    encode: ['keyChain.parents'],
   },
   {
     typeName: 'dxos.mesh.bridge.BridgeEvent.SignalEvent',
@@ -285,9 +426,19 @@ const KNOWN_DIVERGENCES: { typeName: string; decode: string[]; encode: string[] 
     encode: ['payload'],
   },
   {
+    typeName: 'dxos.mesh.teleport.notarization.NotarizeRequest',
+    decode: ['credentials'],
+    encode: [],
+  },
+  {
+    typeName: 'dxos.mesh.teleport.replicator.UpdateFeedsRequest',
+    decode: ['feeds'],
+    encode: [],
+  },
+  {
     typeName: 'dxos.service.agentmanager.Authentication',
-    decode: ['presentation'],
-    encode: ['presentation'],
+    decode: ['presentation.credentials', 'presentation.proofs'],
+    encode: [],
   },
 ];
 
@@ -301,7 +452,7 @@ describe('cross-codec agreement (current tree)', () => {
   });
 
   test('the divergence ledger does not grow, and holds no stale entries', () => {
-    expect(KNOWN_DIVERGENCES.length).toBe(19);
+    expect(KNOWN_DIVERGENCES.length).toBe(42);
     // A ledger entry for a message that no longer diverges is as much a defect as a missing one:
     // it would silence a future regression on a message that is currently clean.
     const names = new Set(covered.map((desc) => desc.typeName));
