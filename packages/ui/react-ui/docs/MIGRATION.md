@@ -518,103 +518,105 @@ the installed `@ark-ui/react@5.39.1` (`dist/components/*`, utilities such as `po
 `focus-trap` and `client-only` excluded); Radix from the `radix-ui@1.6.7` unified package's
 dependency list (internals such as `slot`, `popper`, `dismissable-layer` and the `use-*` hooks
 excluded); shadcn from its public registry index (`registry:ui` items, 63). shadcn is not a peer of
-the other two — it is styled components over Radix (and, for some, other libraries), so a ✓ there
-means "ships a component by this name", not "ships a primitive". Where the same thing carries a
-different name the note says which.
+the other two — it is styled components over Radix and, increasingly, Base UI (its registry's
+`drawer` already depends on `@base-ui/react`; `calendar`, `command`, `resizable`, `input-otp` and
+`sonner` wrap other libraries outright), so a ✓ there means "ships a component by this name", not
+"ships a primitive". Where the same thing carries a different name the note says which.
 
-| component                 | Ark | Radix | shadcn | note                                                                                   |
-| ------------------------- | :-: | :---: | :----: | -------------------------------------------------------------------------------------- |
-| `accordion`               |  ✓  |   ✓   |   ✓    |                                                                                        |
-| `alert`                   |     |       |   ✓    |                                                                                        |
-| `alert-dialog`            |     |   ✓   |   ✓    | Ark: `dialog` with `role="alertdialog"`                                                |
-| `angle-slider`            |  ✓  |       |        |                                                                                        |
-| `aspect-ratio`            |     |   ✓   |   ✓    |                                                                                        |
-| `attachment`              |     |       |   ✓    |                                                                                        |
-| `avatar`                  |  ✓  |   ✓   |   ✓    |                                                                                        |
-| `badge`                   |     |       |   ✓    |                                                                                        |
-| `breadcrumb`              |     |       |   ✓    |                                                                                        |
-| `bubble`                  |     |       |   ✓    |                                                                                        |
-| `button`                  |     |       |   ✓    |                                                                                        |
-| `button-group`            |     |       |   ✓    |                                                                                        |
-| `calendar`                |     |       |   ✓    | shadcn wraps react-day-picker; Ark: `date-picker`                                      |
-| `card`                    |     |       |   ✓    |                                                                                        |
-| `carousel`                |  ✓  |       |   ✓    |                                                                                        |
-| `chart`                   |     |       |   ✓    | Recharts wrappers                                                                      |
-| `checkbox`                |  ✓  |   ✓   |   ✓    |                                                                                        |
-| `clipboard`               |  ✓  |       |        |                                                                                        |
-| `collapsible`             |  ✓  |   ✓   |   ✓    |                                                                                        |
-| `color-picker`            |  ✓  |       |        |                                                                                        |
-| `combobox`                |  ✓  |       |   ✓    | shadcn composes `command` + `popover`                                                  |
-| `command`                 |     |       |   ✓    | a cmdk palette; nearest Ark: `combobox`/`listbox`                                      |
-| `context-menu`            |     |   ✓   |   ✓    | Ark: `menu` with `ContextTrigger`                                                      |
-| `date-input`              |  ✓  |       |        |                                                                                        |
-| `date-picker`             |  ✓  |       |        | shadcn: `calendar` + `popover`                                                         |
-| `dialog`                  |  ✓  |   ✓   |   ✓    |                                                                                        |
-| `direction`               |     |       |   ✓    | RTL provider, not a component                                                          |
-| `drawer`                  |  ✓  |       |   ✓    | shadcn: `drawer` (vaul) and `sheet`                                                    |
-| `dropdown-menu`           |     |   ✓   |   ✓    | Ark: `menu`                                                                            |
-| `editable`                |  ✓  |       |        | our `Editable`                                                                         |
-| `empty`                   |     |       |   ✓    |                                                                                        |
-| `field`                   |  ✓  |       |   ✓    | Ark: label/helper/error for one control; shadcn: the same idea                         |
-| `fieldset`                |  ✓  |       |        |                                                                                        |
-| `file-upload`             |  ✓  |       |        |                                                                                        |
-| `floating-panel`          |  ✓  |       |        |                                                                                        |
-| `form`                    |     |   ✓   |   ✓    | Radix Form (`react-form`); shadcn: react-hook-form wrappers; Ark: `field` + `fieldset` |
-| `hover-card`              |  ✓  |   ✓   |   ✓    |                                                                                        |
-| `image-cropper`           |  ✓  |       |        |                                                                                        |
-| `input`                   |     |       |   ✓    |                                                                                        |
-| `input-group`             |     |       |   ✓    |                                                                                        |
-| `input-otp`               |     |       |   ✓    | Ark: `pin-input`; Radix: `one-time-password-field`                                     |
-| `item`                    |     |       |   ✓    |                                                                                        |
-| `json-tree-view`          |  ✓  |       |        | devtools has `ObjectsTree` on `tree-view` instead                                      |
-| `kbd`                     |     |       |   ✓    |                                                                                        |
-| `label`                   |     |   ✓   |   ✓    |                                                                                        |
-| `listbox`                 |  ✓  |       |        |                                                                                        |
-| `marker`                  |     |       |   ✓    |                                                                                        |
-| `marquee`                 |  ✓  |       |        |                                                                                        |
-| `menu`                    |  ✓  |       |        | one machine for dropdown, context and nested menus                                     |
-| `menubar`                 |     |   ✓   |   ✓    | Ark: `menu` per item; no menubar machine                                               |
-| `message`                 |     |       |   ✓    |                                                                                        |
-| `message-scroller`        |     |       |   ✓    |                                                                                        |
-| `native-select`           |     |       |   ✓    | a styled `<select>`                                                                    |
-| `navigation-menu`         |  ✓  |   ✓   |   ✓    |                                                                                        |
-| `number-input`            |  ✓  |       |        |                                                                                        |
-| `one-time-password-field` |     |   ✓   |        | Ark: `pin-input`; shadcn: `input-otp`                                                  |
-| `pagination`              |  ✓  |       |   ✓    |                                                                                        |
-| `password-input`          |  ✓  |       |        | Radix: `password-toggle-field`                                                         |
-| `password-toggle-field`   |     |   ✓   |        | Ark: `password-input`                                                                  |
-| `pin-input`               |  ✓  |       |        | Radix: `one-time-password-field`; shadcn: `input-otp`                                  |
-| `popover`                 |  ✓  |   ✓   |   ✓    |                                                                                        |
-| `progress`                |  ✓  |   ✓   |   ✓    |                                                                                        |
-| `qr-code`                 |  ✓  |       |        |                                                                                        |
-| `questionnaire`           |     |       |   ✓    |                                                                                        |
-| `radio-group`             |  ✓  |   ✓   |   ✓    |                                                                                        |
-| `rating-group`            |  ✓  |       |        |                                                                                        |
-| `resizable`               |     |       |   ✓    | Ark: `splitter`                                                                        |
-| `scroll-area`             |  ✓  |   ✓   |   ✓    |                                                                                        |
-| `segment-group`           |  ✓  |       |        |                                                                                        |
-| `select`                  |  ✓  |   ✓   |   ✓    |                                                                                        |
-| `separator`               |     |   ✓   |   ✓    | no Ark part — hand-rolled `role="separator"`                                           |
-| `sheet`                   |     |       |   ✓    | Ark: `drawer`                                                                          |
-| `sidebar`                 |     |       |   ✓    | layout, not a primitive                                                                |
-| `signature-pad`           |  ✓  |       |        |                                                                                        |
-| `skeleton`                |     |       |   ✓    |                                                                                        |
-| `slider`                  |  ✓  |   ✓   |   ✓    |                                                                                        |
-| `sonner`                  |     |       |   ✓    | a toast host; Ark: `toast` (`createToaster`)                                           |
-| `spinner`                 |     |       |   ✓    |                                                                                        |
-| `splitter`                |  ✓  |       |        | shadcn: `resizable`                                                                    |
-| `steps`                   |  ✓  |       |        | our `Stepper`                                                                          |
-| `switch`                  |  ✓  |   ✓   |   ✓    |                                                                                        |
-| `table`                   |     |       |   ✓    |                                                                                        |
-| `tabs`                    |  ✓  |   ✓   |   ✓    |                                                                                        |
-| `tags-input`              |  ✓  |       |        |                                                                                        |
-| `textarea`                |     |       |   ✓    |                                                                                        |
-| `timer`                   |  ✓  |       |        |                                                                                        |
-| `toast`                   |  ✓  |   ✓   |   ✓    |                                                                                        |
-| `toc`                     |  ✓  |       |        |                                                                                        |
-| `toggle`                  |  ✓  |   ✓   |   ✓    |                                                                                        |
-| `toggle-group`            |  ✓  |   ✓   |   ✓    |                                                                                        |
-| `toolbar`                 |     |   ✓   |        | no Ark machine — roving focus from `@dxos/react-focus`                                 |
-| `tooltip`                 |  ✓  |   ✓   |   ✓    |                                                                                        |
-| `tour`                    |  ✓  |       |        |                                                                                        |
-| `tree-view`               |  ✓  |       |        | the reason Ark is in the app                                                           |
+| component                 |  Ark   | Radix  | shadcn | note                                                                                   |
+| ------------------------- | :----: | :----: | :----: | -------------------------------------------------------------------------------------- |
+| `accordion`               |   ✓    |   ✓    |   ✓    |                                                                                        |
+| `alert`                   |        |        |   ✓    |                                                                                        |
+| `alert-dialog`            |        |   ✓    |   ✓    | Ark: `dialog` with `role="alertdialog"`                                                |
+| `angle-slider`            |   ✓    |        |        |                                                                                        |
+| `aspect-ratio`            |        |   ✓    |   ✓    |                                                                                        |
+| `attachment`              |        |        |   ✓    |                                                                                        |
+| `avatar`                  |   ✓    |   ✓    |   ✓    |                                                                                        |
+| `badge`                   |        |        |   ✓    |                                                                                        |
+| `breadcrumb`              |        |        |   ✓    |                                                                                        |
+| `bubble`                  |        |        |   ✓    |                                                                                        |
+| `button`                  |        |        |   ✓    |                                                                                        |
+| `button-group`            |        |        |   ✓    |                                                                                        |
+| `calendar`                |        |        |   ✓    | shadcn wraps react-day-picker; Ark: `date-picker`                                      |
+| `card`                    |        |        |   ✓    |                                                                                        |
+| `carousel`                |   ✓    |        |   ✓    |                                                                                        |
+| `chart`                   |        |        |   ✓    | Recharts wrappers                                                                      |
+| `checkbox`                |   ✓    |   ✓    |   ✓    |                                                                                        |
+| `clipboard`               |   ✓    |        |        |                                                                                        |
+| `collapsible`             |   ✓    |   ✓    |   ✓    |                                                                                        |
+| `color-picker`            |   ✓    |        |        |                                                                                        |
+| `combobox`                |   ✓    |        |   ✓    | shadcn composes `command` + `popover`                                                  |
+| `command`                 |        |        |   ✓    | a cmdk palette; nearest Ark: `combobox`/`listbox`                                      |
+| `context-menu`            |        |   ✓    |   ✓    | Ark: `menu` with `ContextTrigger`                                                      |
+| `date-input`              |   ✓    |        |        |                                                                                        |
+| `date-picker`             |   ✓    |        |        | shadcn: `calendar` + `popover`                                                         |
+| `dialog`                  |   ✓    |   ✓    |   ✓    |                                                                                        |
+| `direction`               |        |        |   ✓    | RTL provider, not a component                                                          |
+| `drawer`                  |   ✓    |        |   ✓    | shadcn: `drawer` (on `@base-ui/react`) and `sheet`                                     |
+| `dropdown-menu`           |        |   ✓    |   ✓    | Ark: `menu`                                                                            |
+| `editable`                |   ✓    |        |        | our `Editable`                                                                         |
+| `empty`                   |        |        |   ✓    |                                                                                        |
+| `field`                   |   ✓    |        |   ✓    | Ark: label/helper/error for one control; shadcn: the same idea                         |
+| `fieldset`                |   ✓    |        |        |                                                                                        |
+| `file-upload`             |   ✓    |        |        |                                                                                        |
+| `floating-panel`          |   ✓    |        |        |                                                                                        |
+| `form`                    |        |   ✓    |   ✓    | Radix Form (`react-form`); shadcn: react-hook-form wrappers; Ark: `field` + `fieldset` |
+| `hover-card`              |   ✓    |   ✓    |   ✓    |                                                                                        |
+| `image-cropper`           |   ✓    |        |        |                                                                                        |
+| `input`                   |        |        |   ✓    |                                                                                        |
+| `input-group`             |        |        |   ✓    |                                                                                        |
+| `input-otp`               |        |        |   ✓    | Ark: `pin-input`; Radix: `one-time-password-field`                                     |
+| `item`                    |        |        |   ✓    |                                                                                        |
+| `json-tree-view`          |   ✓    |        |        | devtools has `ObjectsTree` on `tree-view` instead                                      |
+| `kbd`                     |        |        |   ✓    |                                                                                        |
+| `label`                   |        |   ✓    |   ✓    |                                                                                        |
+| `listbox`                 |   ✓    |        |        |                                                                                        |
+| `marker`                  |        |        |   ✓    |                                                                                        |
+| `marquee`                 |   ✓    |        |        |                                                                                        |
+| `menu`                    |   ✓    |        |        | one machine for dropdown, context and nested menus                                     |
+| `menubar`                 |        |   ✓    |   ✓    | Ark: `menu` per item; no menubar machine                                               |
+| `message`                 |        |        |   ✓    |                                                                                        |
+| `message-scroller`        |        |        |   ✓    |                                                                                        |
+| `native-select`           |        |        |   ✓    | a styled `<select>`                                                                    |
+| `navigation-menu`         |   ✓    |   ✓    |   ✓    |                                                                                        |
+| `number-input`            |   ✓    |        |        |                                                                                        |
+| `one-time-password-field` |        |   ✓    |        | Ark: `pin-input`; shadcn: `input-otp`                                                  |
+| `pagination`              |   ✓    |        |   ✓    |                                                                                        |
+| `password-input`          |   ✓    |        |        | Radix: `password-toggle-field`                                                         |
+| `password-toggle-field`   |        |   ✓    |        | Ark: `password-input`                                                                  |
+| `pin-input`               |   ✓    |        |        | Radix: `one-time-password-field`; shadcn: `input-otp`                                  |
+| `popover`                 |   ✓    |   ✓    |   ✓    |                                                                                        |
+| `progress`                |   ✓    |   ✓    |   ✓    |                                                                                        |
+| `qr-code`                 |   ✓    |        |        |                                                                                        |
+| `questionnaire`           |        |        |   ✓    |                                                                                        |
+| `radio-group`             |   ✓    |   ✓    |   ✓    |                                                                                        |
+| `rating-group`            |   ✓    |        |        |                                                                                        |
+| `resizable`               |        |        |   ✓    | Ark: `splitter`                                                                        |
+| `scroll-area`             |   ✓    |   ✓    |   ✓    |                                                                                        |
+| `segment-group`           |   ✓    |        |        |                                                                                        |
+| `select`                  |   ✓    |   ✓    |   ✓    |                                                                                        |
+| `separator`               |        |   ✓    |   ✓    | no Ark part — hand-rolled `role="separator"`                                           |
+| `sheet`                   |        |        |   ✓    | Ark: `drawer`                                                                          |
+| `sidebar`                 |        |        |   ✓    | layout, not a primitive                                                                |
+| `signature-pad`           |   ✓    |        |        |                                                                                        |
+| `skeleton`                |        |        |   ✓    |                                                                                        |
+| `slider`                  |   ✓    |   ✓    |   ✓    |                                                                                        |
+| `sonner`                  |        |        |   ✓    | a toast host; Ark: `toast` (`createToaster`)                                           |
+| `spinner`                 |        |        |   ✓    |                                                                                        |
+| `splitter`                |   ✓    |        |        | shadcn: `resizable`                                                                    |
+| `steps`                   |   ✓    |        |        | our `Stepper`                                                                          |
+| `switch`                  |   ✓    |   ✓    |   ✓    |                                                                                        |
+| `table`                   |        |        |   ✓    |                                                                                        |
+| `tabs`                    |   ✓    |   ✓    |   ✓    |                                                                                        |
+| `tags-input`              |   ✓    |        |        |                                                                                        |
+| `textarea`                |        |        |   ✓    |                                                                                        |
+| `timer`                   |   ✓    |        |        |                                                                                        |
+| `toast`                   |   ✓    |   ✓    |   ✓    |                                                                                        |
+| `toc`                     |   ✓    |        |        |                                                                                        |
+| `toggle`                  |   ✓    |   ✓    |   ✓    |                                                                                        |
+| `toggle-group`            |   ✓    |   ✓    |   ✓    |                                                                                        |
+| `toolbar`                 |        |   ✓    |        | no Ark machine — roving focus from `@dxos/react-focus`                                 |
+| `tooltip`                 |   ✓    |   ✓    |   ✓    |                                                                                        |
+| `tour`                    |   ✓    |        |        |                                                                                        |
+| `tree-view`               |   ✓    |        |        | the reason Ark is in the app                                                           |
+| **total**                 | **52** | **30** | **63** | 94 distinct names                                                                      |
