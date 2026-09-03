@@ -125,6 +125,15 @@ export const ISO_TIMESTAMP_PATTERN = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}
 export const UUID_PATTERN = /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/;
 
 /**
+ * Matches the whole `<result pid=N>` opening tag the agent wraps a redelivered tool result in. The
+ * pid is assigned by the process manager at spawn, so it differs between the run that recorded a
+ * conversation and any replay of it. The full tag is matched (rather than the bare number) because
+ * canonicalization substitutes the matched token everywhere it appears.
+ * @example <result pid=9>
+ */
+export const RESULT_PID_PATTERN = /<result pid=\d+>/;
+
+/**
  * Dynamic-value patterns canonicalized on every fixture match by default (see {@link make}). Because
  * deterministic id generation only holds the id sequence stable while the surrounding allocation
  * order is unchanged, an unrelated change to activation/allocation order silently drifts the ids —
@@ -133,6 +142,7 @@ export const UUID_PATTERN = /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-
  * token. Opt a fixture layer out by passing `dynamicValuePatterns: []`.
  */
 export const DEFAULT_DYNAMIC_VALUE_PATTERNS: readonly RegExp[] = [
+  RESULT_PID_PATTERN,
   SPACE_ID_PATTERN,
   ENTITY_ID_PATTERN,
   UUID_PATTERN,

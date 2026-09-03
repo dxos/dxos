@@ -22,16 +22,6 @@
       "types": "./dist/types/src/testing/index.d.ts",
       "import": "./dist/lib/testing.mjs"
     },
-    "./Agent": {
-      "source": "./src/types/Agent.ts",
-      "types": "./dist/types/src/types/Agent.d.ts",
-      "import": "./dist/lib/Agent.mjs"
-    },
-    "./Chat": {
-      "source": "./src/types/Chat.ts",
-      "types": "./dist/types/src/types/Chat.d.ts",
-      "import": "./dist/lib/Chat.mjs"
-    },
     "./McpServer": {
       "source": "./src/types/McpServer.ts",
       "types": "./dist/types/src/types/McpServer.d.ts",

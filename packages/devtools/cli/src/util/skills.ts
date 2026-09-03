@@ -4,18 +4,19 @@
 
 import * as Layer from 'effect/Layer';
 
-import { OpaqueToolkit } from '@dxos/ai';
-import { Chat, WebSearchToolkit } from '@dxos/assistant-toolkit';
-import { ChatContextHandlers, ChatContextSkill } from '@dxos/assistant-toolkit';
-import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
-import * as Skill from '@dxos/compute/Skill';
-import { Feed, Tag, type Type } from '@dxos/echo';
-import { makeRegistry } from '@dxos/echo-client';
 // Per-symbol subpath imports so the CLI's `bun run --conditions=source` only walks plugin source
 // files that are free of React-component imports. The plugin root barrels re-export the whole tree
 // (including React components that transitively pull `react-aria-components` — whose `source`
 // export condition advertises a TS file that isn't shipped in its dist, causing Bun resolution to
 // fail).
+import { OpaqueToolkit } from '@dxos/ai';
+import { WebSearchToolkit } from '@dxos/assistant-toolkit';
+import { ChatContextHandlers, ChatContextSkill } from '@dxos/assistant-toolkit';
+import * as Chat from '@dxos/assistant/Chat';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Skill from '@dxos/compute/Skill';
+import { Feed, Tag, type Type } from '@dxos/echo';
+import { makeRegistry } from '@dxos/echo-client';
 import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
 import * as Chess from '@dxos/plugin-chess/Chess';
 import * as ChessOperationHandlerSet from '@dxos/plugin-chess/ChessOperationHandlerSet';
