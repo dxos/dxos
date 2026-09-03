@@ -349,8 +349,8 @@ const GRID_COLS = {
   contentWithOrdinals: 'grid-cols-[2rem_2rem_1fr_min-content_2rem]',
 };
 
-/** The disclosure toggle's own width (`w-6`), which the pane reserves but does not fill. */
-const TOGGLE_GUTTER = 'ps-6';
+/** The disclosure toggle's own width (one control), which the pane reserves but does not fill. */
+const TOGGLE_GUTTER = 'ps-(--dx-control)';
 
 type TaskListContentProps = ComposableProps;
 
