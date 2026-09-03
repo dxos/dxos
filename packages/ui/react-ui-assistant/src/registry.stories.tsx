@@ -68,7 +68,15 @@ export const LinkPreview: Story = {
 
 export const Synthetic: Story = {
   args: {
-    content: '<synthetic>Trigger fired: inbox.message.received (3 new messages).</synthetic>',
+    content: trim`
+      <synthetic>
+      Completed the checklist:
+      <checklist>
+      1. [x] Review new messages.
+      2. [x] Respond to new messages.
+      3. [x] Archive old messages.
+      </checklist>
+      </synthetic>`,
   },
 };
 
@@ -155,6 +163,23 @@ const failure = (id: string, name: string, error: string): ContentBlock.ToolResu
   error,
   providerExecuted: false,
 });
+
+const operationCall = (
+  id: string,
+  name: string,
+  operationName: string,
+  operationIcon: string,
+  input: unknown = { query: 'status', limit: 10 },
+): ContentBlock.ToolCall => ({
+  ...call(id, name, input),
+  operationKey: `dxos.org/operation/${name}`,
+  operationName,
+  operationIcon,
+});
+
+const status = (text: string): ContentBlock.Status => ({ _tag: 'status', statusText: text });
+
+const reasoning = (text: string): ContentBlock.Reasoning => ({ _tag: 'reasoning', reasoningText: text });
 
 /** One tag per run, which is what the thread's projection produces after folding a turn's messages. */
 const toolkit = (blocks: ContentBlock.Any[]): string => `<toolkit>${JSON.stringify(blocks)}</toolkit>`;
@@ -259,6 +284,32 @@ export const ToolkitFailed: Story = {
 export const ToolkitUnmerged: Story = {
   args: {
     content: toolchain.map(([toolCall, toolResult]) => toolkit([toolCall, toolResult])).join('\n\n'),
+  },
+};
+
+/** Operation-backed calls: the row shows the operation's name and icon, not the raw tool name. */
+export const ToolkitOperations: Story = {
+  args: {
+    content: toolkit([
+      operationCall('tc-1', 'markdown-update', 'Update document', 'ph--file-text--regular'),
+      result('tc-1', 'markdown-update', { ok: true }),
+      operationCall('tc-2', 'space-query', 'Query space', 'ph--planet--regular'),
+      result('tc-2', 'space-query', { hits: 12 }),
+    ]),
+  },
+};
+
+/** Status and reasoning narrate the run from inside its panel, and the summary leads with status. */
+export const ToolkitNarrated: Story = {
+  args: {
+    content: toolkit([
+      reasoning('The document has to be read before it can be edited, so the read comes first.'),
+      operationCall('tc-1', 'markdown-update', 'Update document', 'ph--file-text--regular'),
+      result('tc-1', 'markdown-update', { ok: true }),
+      status('Indexing the space'),
+      operationCall('tc-2', 'space-query', 'Query space', 'ph--planet--regular'),
+      result('tc-2', 'space-query', { hits: 12 }),
+    ]),
   },
 };
 

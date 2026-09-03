@@ -9,7 +9,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { type Chat as ChatType } from '@dxos/assistant-toolkit';
+import type * as ChatType from '@dxos/assistant/Chat';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { ClientOperation } from '@dxos/plugin-client';
@@ -117,16 +117,20 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                 {!mobile && <ChatComponent.Outline classNames='absolute left-0 top-1/2 -translate-y-1/2 z-10' />}
                 {/* Main thread. */}
                 <ChatComponent.Thread viewType={viewType} tailLines={4} onViewUsage={handleViewUsage} />
-                {/* Floating thread status. */}
+                {/* Floating thread status: what the request is doing, above the counters it has run up. */}
                 {!mobile && viewType !== 'summary' && (
                   <div data-testid='assistant.chat-status' className='absolute bottom-2 left-0 right-0'>
-                    <div className='dx-document px-4'>
-                      <ChatComponent.Status classNames='px-3 rounded-sm bg-group-surface' />
-                    </div>
+                    <ChatComponent.StatusStack
+                      rowClassNames='dx-document px-4'
+                      pillClassNames='px-3 rounded-sm bg-group-surface'
+                    />
                   </div>
                 )}
               </div>
               <div className='dx-document flex flex-col px-4 pb-4'>
+                {/* On mobile (and in the summary view) the floating stack is dropped, so the activity
+                    line keeps its in-flow slot above the composer. */}
+                {(mobile || viewType === 'summary') && <ChatComponent.Activity classNames='shrink-0' />}
                 {/* Queued prompts the agent has not taken up yet, stacked right above the composer. */}
                 <ChatComponent.Queue classNames='shrink-0 items-end pb-1' />
                 {/* Composer and checklist in one: `Chat.Prompt` owns the disclosure between them. */}
@@ -134,9 +138,9 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                   {...chatProps}
                   outline
                   attendableId={attendableId}
+                  companionTo={companionTo}
                   customActions={customActions}
                   preset={preset?.id}
-                  companionTo={companionTo}
                 />
               </div>
             </ChatComponent.Content>

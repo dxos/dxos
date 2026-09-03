@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Chat, type OperationInvoke, type SlashCommand, parseTaskSelectors } from '@dxos/assistant-toolkit';
+import { type OperationInvoke, type SlashCommand, parseTaskSelectors } from '@dxos/assistant-toolkit';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import { Ref } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';

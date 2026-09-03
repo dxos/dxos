@@ -2,7 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Agent, Chat, McpServer } from '@dxos/assistant-toolkit';
+import { McpServer } from '@dxos/assistant-toolkit';
+import * as Agent from '@dxos/assistant/Agent';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Skill from '@dxos/compute/Skill';
 import { Sequence } from '@dxos/conductor';
@@ -116,6 +118,16 @@ export const translations: Resource[] = [
         'trace-environment-app.label': 'App',
         'trace-environment-space.label': 'Space',
         'trace-environment-conversation.label': 'Conversation',
+
+        'activity.starting.label': 'Starting agent',
+        'activity.preparing.label': 'Preparing request',
+        'activity.loading-history.label': 'Loading conversation',
+        'activity.summarizing.label': 'Summarizing conversation',
+        'activity.connecting-mcp.label': 'Connecting to MCP servers',
+        'activity.building-toolkit.label': 'Assembling tools',
+        'activity.encoding-prompt.label': 'Encoding prompt',
+        'activity.contacting-provider.label': 'Contacting inference provider',
+        'activity.attempt': 'attempt {{attempt}}',
 
         'assistant-dialog.title': 'Assistant',
         'open-assistant.label': 'Open assistant',

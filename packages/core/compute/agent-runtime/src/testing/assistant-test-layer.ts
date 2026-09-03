@@ -14,6 +14,7 @@ import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import { AiService, OpaqueToolkit, Provider } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
 import { Alarm, Harness } from '@dxos/assistant';
+import * as Chat from '@dxos/assistant/Chat';
 import { ServiceNotAvailableError } from '@dxos/compute';
 import {
   FeedTraceSink,
@@ -268,6 +269,8 @@ export const AssistantTestBaseLayer = ({
     Instructions.Instructions,
     Operation.PersistentOperation,
     Feed.Feed,
+    // The agent process runs on a chat, so every session — bare ones included — persists one.
+    Chat.Chat,
     Trigger.Trigger,
     Tag.Tag,
     Alarm.Alarm,

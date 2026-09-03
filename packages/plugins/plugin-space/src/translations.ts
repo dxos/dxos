@@ -221,6 +221,7 @@ export const translations = [
         'syncing.label': 'Space syncing',
         'show-all.label': 'Show all',
         'no-sync-status.label': 'No space with missing objects.',
+        'create-space-dialog.templates.label': 'Templates',
         'create-space-dialog.title': 'Create Space',
         'create-space-dialog.error.message': 'Failed to create space. Please try again.',
         'create-object-dialog.title': 'Create {{object}}',

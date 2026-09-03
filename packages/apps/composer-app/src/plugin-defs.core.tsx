@@ -147,7 +147,7 @@ export const getCorePlugins = ({
       observability: () => observability,
       downloadLogs: () => downloadLogs(logStore),
     }),
-    OnboardingPlugin.make({ generateExemplarSpace: !isLocal }),
+    OnboardingPlugin.make({ generateSampleSpace: !isLocal }),
     isTauri && !isMobile && !isPopover && NativePlugin.make(),
     PreviewPlugin.make(),
     ProcessManagerPlugin(),

@@ -9,7 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { type PublicKey } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
-import { Collection, Database, Obj } from '@dxos/echo';
+import { Annotation, Collection, Database, Obj } from '@dxos/echo';
 import { type ComplexMap } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -168,4 +168,8 @@ export const SpaceForm = Schema.Struct({
   hue: Schema.optional(Schema.String.annotate({ title: 'Color', [HueAnnotationId]: true })),
   private: Schema.optional(Schema.Boolean.annotate({ title: 'Private space' })),
   edgeReplication: Schema.optional(Schema.Boolean.annotate({ title: 'Enable EDGE Replication' })),
+  /** Id of a contributed `SpaceTemplate`; the picker below the form sets it, so it renders no field. */
+  template: Schema.optional(
+    Schema.String.annotate({ title: 'Template' }).pipe(Annotation.FormInputAnnotation.set(false)),
+  ),
 });

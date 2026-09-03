@@ -165,6 +165,14 @@ A remote-cache warning from moon is harmless — builds work, they just don't sh
 cache. Worth fixing anyway: `tools/moon-cache/install-certs.sh --op` installs the certificates
 once per machine, for every worktree.
 
+**Run every long task in the background.** A repo-wide build, `pnpm install`, a full `:test` sweep,
+a repo-wide `oxfmt`, a storybook or dev server — anything expected to run past ~30s — goes in the
+background (`run_in_background: true` on the Claude harness), and you keep working while it runs.
+A long task held in the foreground freezes the session: the user cannot redirect you, and killing
+the run is their only way to regain control — which also abandons whatever the task was verifying.
+To wait on a condition, background an `until <check>; do sleep 2; done`; never a foreground `sleep`.
+The foreground is for short commands whose result decides your next step.
+
 ## Code style
 
 Universal rules. Deeper conventions live in skills — see the pointers below.
