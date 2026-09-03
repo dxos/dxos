@@ -14,13 +14,18 @@ import type * as Rpc from 'effect/unstable/rpc/Rpc';
 import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
 import type * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
+import type * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import type * as Trace from '@dxos/compute/Trace';
-import type { Annotation } from '@dxos/echo';
-import type { SpaceId } from '@dxos/keys';
+import { Annotation } from '@dxos/echo';
+import type { SpaceId, URI } from '@dxos/keys';
+import { log } from '@dxos/log';
 // `Process.Info.error` is already a `SerializedError`, so the snapshot and its exit event speak the
 // same error shape as the domain type they extend.
 import type { SerializedError } from '@dxos/protocols';
+
+import type * as ProcessManager from './ProcessManager';
+import * as RemoteProcessHandle from './RemoteProcessHandle';
 
 /**
  * Cancel target for a remote (EDGE) run — the {@link Manager.cancel} argument. Addressed by `trigger`
@@ -158,9 +163,8 @@ export interface Control {
 export interface Manager {
   readonly processTree: Effect.Effect<readonly Process.Info[]>;
   /**
-   * Writable so a `RemoteProcessManagerAdapter` built over {@link control} publishes into the same
-   * atom the aggregate `ProcessMonitor` reads — otherwise a spawn through that façade is invisible
-   * in the process tree.
+   * Writable so {@link Manager.spawn} publishes into the same atom the aggregate `ProcessMonitor`
+   * reads — otherwise a remote spawn is invisible in the process tree.
    */
   readonly processTreeAtom: Atom.Writable<readonly Process.Info[]>;
 
@@ -176,7 +180,215 @@ export interface Manager {
    * built without an edge client — a monitor-only manager can read and cancel but not spawn.
    */
   readonly control?: Control;
+
+  /**
+   * Spawn one of the host's processes and return a handle on it. Present exactly when
+   * {@link control} is: a monitor-only manager can read and cancel but not spawn.
+   *
+   * Deliberately NOT a `ProcessManager.Manager`: a remote process is not a local one and consuming
+   * code picks between the two itself (unifying them, where a caller wants that, belongs a layer
+   * above — `AgentService` does it per session).
+   */
+  readonly spawn?: <_Input, _Output, _Rpcs extends Rpc.Any = never>(
+    options: SpawnOptions<_Input, _Output, _Rpcs>,
+  ) => Effect.Effect<ProcessManager.Handle<_Input, _Output, _Rpcs>>;
+
+  /** Handles on the host's matching processes; metadata views until `Handle.hydrate` supplies a definition. */
+  readonly list?: (options: ListOptions) => Effect.Effect<readonly ProcessManager.Handle.Any[]>;
+
+  /** Handle on one process by id. */
+  readonly attach?: (target: ProcessTarget) => Effect.Effect<ProcessManager.Handle.Any>;
+
+  /**
+   * Re-read the host's processes for a space into {@link processTreeAtom}. Needed at startup: the
+   * host's processes outlive the client, so a fresh stack that started from an empty tree would
+   * report nothing until the next spawn.
+   */
+  readonly refreshProcessTree?: (spaceId: SpaceId) => Effect.Effect<readonly Process.Info[]>;
 }
+
+/**
+ * What {@link Manager.spawn} takes: the space to spawn in, the host's key for the process, and the
+ * `ProcessManager.SpawnOptions` a remote host can honour.
+ *
+ * Only the `key` crosses the wire — the host resolves it against the processes it hosts — so a
+ * definition is not what identifies a remote process. It supplies the input/output codecs and the
+ * RPC group, which is the only reason it is accepted at all; without it the returned handle is a
+ * metadata and lifecycle view whose typed surface throws until `Handle.hydrate` attaches one.
+ */
+export interface SpawnOptions<_Input = unknown, _Output = unknown, _Rpcs extends Rpc.Any = never> {
+  readonly spaceId: SpaceId;
+  readonly key: string;
+  readonly definition?: Process.Process<_Input, _Output, any, _Rpcs>;
+  readonly name?: string;
+  readonly parentProcessId?: Process.ID;
+  readonly environment?: Process.Environment;
+  readonly target?: URI.URI;
+  readonly notify?: Operation.NotifyOptions;
+  readonly annotations?: Annotation.Dictionary;
+}
+
+/** {@link Manager.list} filters — `ListRequest` plus the one filter the host does not index. */
+export interface ListOptions extends ListRequest {
+  readonly parentProcessId?: Process.ID;
+}
+
+/**
+ * The {@link Manager} verbs that need a {@link Control}, implemented once for every transport.
+ *
+ * Spread into a manager alongside its `control`, so a manager built without one simply lacks them
+ * and a caller that needs to spawn remotely fails at the point it asks rather than silently.
+ */
+export const makeControlVerbs = (
+  control: Control,
+  registry: Registry.AtomRegistry,
+  processTreeAtom: Atom.Writable<readonly Process.Info[]>,
+): Required<Pick<Manager, 'spawn' | 'list' | 'attach' | 'refreshProcessTree'>> => {
+  const refreshProcessTree = (spaceId: SpaceId): Effect.Effect<readonly Process.Info[]> =>
+    control.list({ spaceId }).pipe(
+      // A `Snapshot` IS a `Process.Info` (plus `alarmDueAt`), so the tree needs no projection.
+      Effect.map((processes) => processes as readonly Process.Info[]),
+      Effect.tap((tree) => Effect.sync(() => registry.update(processTreeAtom, () => tree))),
+    );
+
+  const makeHandle = <_Input, _Output, _Rpcs extends Rpc.Any>(
+    spaceId: SpaceId,
+    info: Snapshot,
+    definition?: Process.Process<_Input, _Output, any, _Rpcs>,
+  ): Effect.Effect<ProcessManager.Handle<_Input, _Output, _Rpcs>> =>
+    RemoteProcessHandle.RemoteProcessHandle.make<_Input, _Output, _Rpcs>({
+      info,
+      control,
+      spaceId,
+      ...(definition !== undefined ? { definition } : {}),
+      registry,
+      onLifecycleChange: refreshProcessTree(spaceId).pipe(Effect.ignore, Effect.asVoid),
+    });
+
+  return {
+    refreshProcessTree,
+
+    spawn: <_Input, _Output, _Rpcs extends Rpc.Any = never>({
+      spaceId,
+      key,
+      definition,
+      name,
+      parentProcessId,
+      environment,
+      target,
+      notify,
+      annotations: extraAnnotations,
+    }: SpawnOptions<_Input, _Output, _Rpcs>) =>
+      Effect.gen(function* () {
+        const annotations = Annotation.buildDictionary((dictionary) => {
+          if (target !== undefined) {
+            Annotation.setDictionary(dictionary, Process.TargetAnnotation, target);
+          }
+          if (notify !== undefined) {
+            Annotation.setDictionary(dictionary, Process.NotifyAnnotation, notify);
+          }
+          Object.assign(dictionary, extraAnnotations ?? {});
+        });
+        // Rejected here, where the caller's stack still names the annotation.
+        assertJsonSafe(annotations);
+
+        const info = yield* control.spawn({
+          spaceId,
+          key,
+          ...(name !== undefined ? { name } : {}),
+          ...(parentProcessId !== undefined ? { parentPid: parentProcessId } : {}),
+          ...(environment !== undefined ? { environment } : {}),
+          annotations,
+        });
+        log('remote process spawned', { pid: info.pid, key: info.key });
+        // The process now exists on the host, so a later failure here would strand it: a caller that
+        // retries would spawn a second one and never hold the first.
+        const handle = yield* makeHandle<_Input, _Output, _Rpcs>(spaceId, info, definition).pipe(
+          Effect.onError(() => control.terminate({ spaceId, pid: info.pid }).pipe(Effect.ignore)),
+        );
+        // The aggregate `Process.Monitor` reads the tree atom rather than calling this manager, so
+        // the atom has to be current by the time spawn returns. Failing to read it back does not
+        // invalidate the spawn.
+        yield* refreshProcessTree(spaceId).pipe(Effect.ignore);
+        return handle;
+      }),
+
+    list: ({ spaceId, key, target, state, parentProcessId }: ListOptions) =>
+      control
+        .list({
+          spaceId,
+          ...(key !== undefined ? { key } : {}),
+          ...(target !== undefined ? { target } : {}),
+          ...(state !== undefined ? { state } : {}),
+        })
+        .pipe(
+          Effect.flatMap((processes) =>
+            Effect.forEach(
+              processes.filter(
+                // `parentProcessId` has no server-side filter (the host indexes by key/target/state),
+                // so it is applied here rather than silently ignored.
+                (info) => parentProcessId === undefined || info.parentPid === parentProcessId,
+              ),
+              (info) => makeHandle(spaceId, info),
+            ),
+          ),
+        ),
+
+    attach: ({ spaceId, pid }: ProcessTarget) =>
+      control.status({ spaceId, pid }).pipe(Effect.flatMap((info) => makeHandle(spaceId, info))),
+  };
+};
+
+/**
+ * Fails when an annotation is not already a JSON value: the wire protocol carries them as JSON, and a
+ * `Date`, `Map`, `NaN`, class instance or nested `undefined` would silently reach the host as
+ * something else.
+ */
+const assertJsonSafe = (annotations: Annotation.Dictionary): void => {
+  for (const [key, value] of Object.entries(annotations)) {
+    if (!isJsonValue(value, new Set())) {
+      throw new TypeError(`Process annotation '${key}' is not a JSON value`);
+    }
+  }
+};
+
+/**
+ * Whether a value is what `JSON.parse` could have produced — checked structurally, since a value
+ * compared against its own round trip matches however lossy its encoding was.
+ */
+const isJsonValue = (value: unknown, seen: Set<object>): boolean => {
+  switch (typeof value) {
+    case 'boolean':
+    case 'string':
+      return true;
+    case 'number':
+      // `NaN` and the infinities encode as `null`.
+      return Number.isFinite(value);
+    case 'object': {
+      if (value === null) {
+        return true;
+      }
+      if (seen.has(value)) {
+        // A cycle throws in `JSON.stringify`.
+        return false;
+      }
+      seen.add(value);
+      if (Array.isArray(value)) {
+        return value.every((entry) => isJsonValue(entry, seen));
+      }
+      // Anything with a prototype of its own (a `Date`, a `Map`, a class instance) encodes as
+      // something other than itself.
+      const prototype = Object.getPrototypeOf(value);
+      if (prototype !== Object.prototype && prototype !== null) {
+        return false;
+      }
+      return Object.values(value).every((entry) => isJsonValue(entry, seen));
+    }
+    default:
+      // `undefined`, functions and symbols are dropped; a `bigint` throws.
+      return false;
+  }
+};
 
 export class Service extends Context.Service<Service, Manager>()('@dxos/compute-runtime/RemoteProcessManager') {}
 

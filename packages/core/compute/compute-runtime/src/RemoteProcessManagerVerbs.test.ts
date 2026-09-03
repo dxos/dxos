@@ -10,6 +10,7 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import type * as Rpc from 'effect/unstable/rpc/Rpc';
 import { describe, test } from 'vitest';
 
 import * as Process from '@dxos/compute/Process';
@@ -17,18 +18,15 @@ import { Annotation } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { SpaceId } from '@dxos/keys';
 
-import * as ProcessManager from './ProcessManager';
-import * as ProcessMonitor from './ProcessMonitor';
+import type * as ProcessManager from './ProcessManager';
 import * as RemoteProcessManager from './RemoteProcessManager';
-import * as RemoteProcessManagerAdapter from './RemoteProcessManagerAdapter';
-import * as RemoteTraceMonitor from './RemoteTraceMonitor';
 
-describe('RemoteProcessManagerAdapter', () => {
+describe('RemoteProcessManager control verbs', () => {
   test('spawns by key and reports the host state', async ({ expect }) => {
     const host = makeFakeHost();
     const result = await run(
       Effect.gen(function* () {
-        const manager = yield* ProcessManager.Service;
+        const manager = yield* remoteManager;
         const handle = yield* manager.spawn(EchoProcess, { name: 'test' });
         const listed = yield* manager.list({ key: TEST_KEY });
         return { pid: handle.pid, state: handle.status.state, listed: listed.length };
@@ -42,7 +40,7 @@ describe('RemoteProcessManagerAdapter', () => {
     const host = makeFakeHost();
     const outputs = await run(
       Effect.gen(function* () {
-        const manager = yield* ProcessManager.Service;
+        const manager = yield* remoteManager;
         const handle = yield* manager.spawn(EchoProcess);
         // `runAndExit` takes the cursor before submitting, so it carries this call's outputs only,
         // and ends on IDLE — the local contract. Collecting it therefore terminates on its own.
@@ -58,7 +56,7 @@ describe('RemoteProcessManagerAdapter', () => {
     const host = makeFakeHost();
     const outputs = await run(
       Effect.gen(function* () {
-        const manager = yield* ProcessManager.Service;
+        const manager = yield* remoteManager;
         const handle = yield* manager.spawn(EchoProcess);
         // An earlier turn, whose output must not reach the subscription below.
         yield* handle.submitInput('old');
@@ -74,7 +72,7 @@ describe('RemoteProcessManagerAdapter', () => {
     const host = makeFakeHost();
     const state = await run(
       Effect.gen(function* () {
-        const manager = yield* ProcessManager.Service;
+        const manager = yield* remoteManager;
         const handle = yield* manager.spawn(EchoProcess);
         yield* handle.terminate();
         return handle.status.state;
@@ -90,7 +88,7 @@ describe('RemoteProcessManagerAdapter', () => {
     const host = makeFakeHost({ initialState: Process.State.RUNNING, settleAfterStatusCalls: 3 });
     await run(
       Effect.gen(function* () {
-        const manager = yield* ProcessManager.Service;
+        const manager = yield* remoteManager;
         const handle = yield* manager.spawn(EchoProcess);
         yield* handle.submitInput('hello');
         yield* handle.runUntilSettled();
@@ -105,7 +103,7 @@ describe('RemoteProcessManagerAdapter', () => {
     const host = makeFakeHost({ stateAfterInput: Process.State.FAILED });
     const exit = await runExit(
       Effect.gen(function* () {
-        const manager = yield* ProcessManager.Service;
+        const manager = yield* remoteManager;
         const handle = yield* manager.spawn(EchoProcess);
         return yield* Stream.runCollect(handle.runAndExit({ inputs: ['hello'] }));
       }),
@@ -119,7 +117,7 @@ describe('RemoteProcessManagerAdapter', () => {
     const host = makeFakeHost({ stateAfterInput: Process.State.TERMINATED });
     const exit = await runExit(
       Effect.gen(function* () {
-        const manager = yield* ProcessManager.Service;
+        const manager = yield* remoteManager;
         const handle = yield* manager.spawn(EchoProcess);
         return yield* Stream.runCollect(handle.runAndExit({ inputs: ['hello'] }));
       }),
@@ -134,7 +132,7 @@ describe('RemoteProcessManagerAdapter', () => {
     const host = makeFakeHost({ existing: true });
     const tree = await runWithMonitor(
       Effect.gen(function* () {
-        const manager = yield* ProcessManager.Service;
+        const manager = yield* remoteManager;
         yield* manager.startup();
         const remote = yield* RemoteProcessManager.Service;
         return yield* remote.processTree;
@@ -148,7 +146,7 @@ describe('RemoteProcessManagerAdapter', () => {
     const host = makeFakeHost();
     const tree = await runWithMonitor(
       Effect.gen(function* () {
-        const manager = yield* ProcessManager.Service;
+        const manager = yield* remoteManager;
         const handle = yield* manager.spawn(EchoProcess);
         yield* handle.terminate();
         const remote = yield* RemoteProcessManager.Service;
@@ -163,7 +161,7 @@ describe('RemoteProcessManagerAdapter', () => {
     for (const value of [new Date(0), new Map([['a', 1]]), Number.NaN, { nested: undefined }, () => 0]) {
       const exit = await runExit(
         Effect.gen(function* () {
-          const manager = yield* ProcessManager.Service;
+          const manager = yield* remoteManager;
           return yield* manager.spawn(EchoProcess, { annotations: annotations(value) });
         }),
         makeFakeHost(),
@@ -181,7 +179,7 @@ describe('RemoteProcessManagerAdapter', () => {
     // there. The merge itself is covered by the edge e2e, which has a real local manager too.
     const tree = await runWithMonitor(
       Effect.gen(function* () {
-        const manager = yield* ProcessManager.Service;
+        const manager = yield* remoteManager;
         yield* manager.spawn(EchoProcess, { name: 'test' });
         const remote = yield* RemoteProcessManager.Service;
         const registry = yield* Registry.AtomRegistry;
@@ -195,7 +193,7 @@ describe('RemoteProcessManagerAdapter', () => {
   test('spawn accepts an annotation that is already a JSON value', async ({ expect }) => {
     const exit = await runExit(
       Effect.gen(function* () {
-        const manager = yield* ProcessManager.Service;
+        const manager = yield* remoteManager;
         return yield* manager.spawn(EchoProcess, {
           annotations: annotations({ list: [1, 'two', null], nested: { flag: true } }),
         });
@@ -207,55 +205,44 @@ describe('RemoteProcessManagerAdapter', () => {
 });
 
 /**
- * Binds the adapter under `ProcessManager.Service` so the tests can drive it through the
- * `ProcessManager.Manager` verbs it implements. A test injection only: in a real stack the adapter
- * belongs to `RemoteProcessManager.Service` (see the class doc), and the tag means local execution.
+ * The remote manager's verbs bound to the test space, so a call site reads like the local manager's
+ * and the space stays where it belongs — a parameter of every remote call.
  */
-const adapterLayer = (
-  control: RemoteProcessManager.Control,
-  processTreeAtom?: Atom.Writable<readonly Process.Info[]>,
-) =>
-  Layer.effect(
-    ProcessManager.Service,
-    Effect.gen(function* () {
-      const registry = yield* Registry.AtomRegistry;
-      return new RemoteProcessManagerAdapter.RemoteProcessManagerAdapter(
-        control,
-        TEST_SPACE,
-        registry,
-        processTreeAtom,
-      );
-    }),
-  );
+const remoteManager = Effect.gen(function* () {
+  const remote = yield* RemoteProcessManager.Service;
+  const { spawn, list, refreshProcessTree } = remote;
+  if (!spawn || !list || !refreshProcessTree) {
+    return yield* Effect.die('remote manager has no process control');
+  }
+  return {
+    spawn: <I, O, Rpcs extends Rpc.Any>(
+      definition: Process.Process<I, O, any, Rpcs>,
+      options?: Omit<RemoteProcessManager.SpawnOptions, 'spaceId' | 'key' | 'definition'>,
+    ) => spawn<I, O, Rpcs>({ spaceId: TEST_SPACE, key: definition.key, definition, ...options }),
+    list: (options?: Omit<RemoteProcessManager.ListOptions, 'spaceId'>) => list({ spaceId: TEST_SPACE, ...options }),
+    startup: () => refreshProcessTree(TEST_SPACE),
+  };
+});
 
 /**
- * The stack a real client assembles around the adapter: it publishes into the *remote* manager's
- * process-tree atom, which is the half of the aggregate monitor where hosted processes belong.
+ * The EDGE manager as a client sees it: a tree atom plus the verbs built over `control`, which
+ * publish into that atom — the half of the aggregate `ProcessMonitor` where hosted processes belong.
  */
-const monitorStack = (control: RemoteProcessManager.Control) => {
-  const registryInstance = Registry.make();
-  const registry = Layer.succeed(Registry.AtomRegistry, registryInstance);
-  const remoteAtom = Atom.make<readonly Process.Info[]>([]);
-  registryInstance.mount(remoteAtom);
-  // The EDGE manager as a client sees it: a tree atom plus the control surface the adapter drives.
-  const remote = Layer.succeed(RemoteProcessManager.Service, {
-    processTree: Effect.sync(() => registryInstance.get(remoteAtom)),
-    processTreeAtom: remoteAtom,
-    control,
-  });
-  const manager = adapterLayer(control, remoteAtom).pipe(Layer.provide(registry));
-  return Layer.mergeAll(
-    manager,
-    remote,
-    registry,
-    ProcessMonitor.layer.pipe(
-      Layer.provide(manager),
-      Layer.provide(remote),
-      Layer.provide(RemoteTraceMonitor.layerNoop),
-      Layer.provide(registry),
-    ),
+const remoteLayer = (control: RemoteProcessManager.Control) =>
+  Layer.effect(
+    RemoteProcessManager.Service,
+    Effect.gen(function* () {
+      const registry = yield* Registry.AtomRegistry;
+      const processTreeAtom = Atom.make<readonly Process.Info[]>([]);
+      registry.mount(processTreeAtom);
+      return {
+        processTree: Effect.sync(() => registry.get(processTreeAtom)),
+        processTreeAtom,
+        control,
+        ...RemoteProcessManager.makeControlVerbs(control, registry, processTreeAtom),
+      } satisfies RemoteProcessManager.Manager;
+    }),
   );
-};
 
 /** One annotation under a valid key, decoded rather than asserted since keys are branded. */
 const annotations = (value: unknown): Annotation.Dictionary =>
@@ -351,25 +338,19 @@ const makeFakeHost = (
   };
 };
 
-const run = <A>(effect: Effect.Effect<A, never, ProcessManager.Service>, control: RemoteProcessManager.Control) =>
+type TestServices = RemoteProcessManager.Service | Registry.AtomRegistry;
+
+const run = <A>(effect: Effect.Effect<A, never, TestServices>, control: RemoteProcessManager.Control) =>
   EffectEx.runPromise(provide(effect, control));
 
-/** Runs against the aggregate monitor as well as the manager, over one shared adapter. */
-const runWithMonitor = <A>(
-  effect: Effect.Effect<
-    A,
-    never,
-    ProcessManager.Service | RemoteProcessManager.Service | Process.ProcessMonitorService | Registry.AtomRegistry
-  >,
-  control: RemoteProcessManager.Control,
-) => EffectEx.runPromise(effect.pipe(Effect.provide(monitorStack(control))));
+/** Reads the manager's own tree atom, which is what the aggregate `ProcessMonitor` renders. */
+const runWithMonitor = run;
 
-/** Runs to an `Exit`, so a defect the adapter raises can be asserted instead of failing the test. */
-const runExit = <A>(effect: Effect.Effect<A, never, ProcessManager.Service>, control: RemoteProcessManager.Control) =>
+/** Runs to an `Exit`, so a defect a verb raises can be asserted instead of failing the test. */
+const runExit = <A>(effect: Effect.Effect<A, never, TestServices>, control: RemoteProcessManager.Control) =>
   Effect.runPromiseExit(provide(effect, control));
 
-const provide = <A>(effect: Effect.Effect<A, never, ProcessManager.Service>, control: RemoteProcessManager.Control) =>
-  effect.pipe(
-    Effect.provide(adapterLayer(control)),
-    Effect.provide(Layer.succeed(Registry.AtomRegistry, Registry.make())),
-  );
+const provide = <A>(effect: Effect.Effect<A, never, TestServices>, control: RemoteProcessManager.Control) => {
+  const registry = Layer.succeed(Registry.AtomRegistry, Registry.make());
+  return effect.pipe(Effect.provide(remoteLayer(control).pipe(Layer.provideMerge(registry))));
+};

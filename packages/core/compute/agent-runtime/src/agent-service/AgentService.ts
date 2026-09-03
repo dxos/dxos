@@ -9,15 +9,13 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Semaphore from 'effect/Semaphore';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { AiContext } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import { ProcessManager, RemoteProcessManager } from '@dxos/compute-runtime';
-import { RemoteProcessManagerAdapter } from '@dxos/compute-runtime/remote-process';
 import {
-  AgentService,
   type AgentLocation,
+  AgentService,
   type Conversation,
   type GetSessionOptions,
   type Service,
@@ -136,56 +134,52 @@ export interface AgentServiceOptions {
 
 export const layer = (
   opts?: AgentServiceOptions,
-): Layer.Layer<
-  AgentService,
-  never,
-  ProcessManager.Service | RemoteProcessManager.Service | AtomRegistry.AtomRegistry
-> =>
+): Layer.Layer<AgentService, never, ProcessManager.Service | RemoteProcessManager.Service> =>
   Layer.effect(
     AgentService,
     Effect.gen(function* () {
       const processManager = yield* ProcessManager.Service;
       const remote = yield* RemoteProcessManager.Service;
-      const registry = yield* AtomRegistry.AtomRegistry;
 
-      // One remote manager serves every space, so the space-bound façade over its control surface is
-      // built per space and memoized — a second instance for the same space would hold a separate
-      // handle set, and the remount path below relies on finding the running process again.
-      const remoteManagers = new Map<SpaceId, typeof processManager>();
-      const remoteManagerFor = (spaceId: SpaceId): typeof processManager => {
-        const existing = remoteManagers.get(spaceId);
-        if (existing) {
-          return existing;
-        }
-        const control = remote.control;
-        if (!control) {
-          throw new Error('Agent requested on edge, but RemoteProcessManager offers no process control.');
-        }
-        const manager = new RemoteProcessManagerAdapter.RemoteProcessManagerAdapter(
-          control,
-          spaceId,
-          registry,
-          // The manager's own atom, so an edge spawn lands in the remote half of the aggregate
-          // `ProcessMonitor` rather than in a private atom nothing reads.
-          remote.processTreeAtom,
-        );
-        remoteManagers.set(spaceId, manager);
-        return manager;
-      };
+      // Spaces an edge session has been opened on this run. One remote manager spans them all and
+      // each of its verbs takes the space it addresses, so this is what `hydrate` has to walk.
+      const remoteSpaces = new Set<SpaceId>();
 
       /**
-       * The manager for a requested location. `edge` needs the space, since one remote manager spans
-       * them, and a chat with no space cannot name where its agent would run.
+       * The two process verbs a session needs, over the location it asked for.
+       *
+       * The choice is made here rather than behind a façade presenting the remote manager as a local
+       * one: a remote process is not a local one (the two manager tags say so), and unifying them for
+       * a caller that wants a single agent surface is this layer's job.
+       *
+       * `edge` needs the space, since one remote manager spans them, and a chat with no space cannot
+       * name where its agent would run.
        */
-      const managerFor = (location: AgentLocation | undefined, spaceId: SpaceId | undefined): typeof processManager => {
+      const processesFor = (location: AgentLocation | undefined, spaceId: SpaceId | undefined) => {
         if (location !== 'edge') {
-          return processManager;
+          return {
+            list: (options: ProcessManager.ListOptions) => processManager.list(options),
+            spawn: (definition: ReturnType<typeof makeExecutable>, options: ProcessManager.SpawnOptions) =>
+              processManager.spawn(definition, options),
+          };
         }
         if (!spaceId) {
           throw new Error('Agent requested on edge, but its conversation has no space.');
         }
-        return remoteManagerFor(spaceId);
+        const { list, spawn } = remote;
+        if (!list || !spawn) {
+          throw new Error('Agent requested on edge, but RemoteProcessManager offers no process control.');
+        }
+        remoteSpaces.add(spaceId);
+        return {
+          list: (options: ProcessManager.ListOptions) => list({ spaceId, ...options }),
+          spawn: (definition: ReturnType<typeof makeExecutable>, options: ProcessManager.SpawnOptions) =>
+            // Only the key crosses the wire; the definition stays local, supplying the codecs and the
+            // RPC group the returned handle is typed by.
+            spawn({ spaceId, key: definition.key, definition, ...options }),
+        };
       };
+
       // The agent's model and steering instructions are bound to its process at spawn time, so the
       // cache tracks what each session was created with. Requesting a different model or a repointed
       // instructions ref for the same feed tears down the old process and spawns a fresh one (see below).
@@ -232,12 +226,16 @@ export const layer = (
         sessionCache.clear();
 
         const executable = makeExecutable();
-        // Local, plus every space a session has already been opened on this run. A fresh client has
-        // no remote managers yet and this cannot enumerate spaces (one manager spans them all), but
-        // an edge agent does not need the pre-warm: `getSession` reattaches to a process still
-        // running for its chat, which is the path opening one takes.
-        const managers = [processManager, ...remoteManagers.values()];
-        const agents = (yield* Effect.forEach(managers, (each) => each.list({ key: AGENT_PROCESS_KEY }))).flat();
+        // Local, plus every space a session has already been opened on this run. A fresh client knows
+        // no edge spaces yet and cannot enumerate them (one manager spans them all), but an edge agent
+        // does not need the pre-warm: `getSession` reattaches to a process still running for its
+        // chat, which is the path opening one takes.
+        const agents = [
+          ...(yield* processManager.list({ key: AGENT_PROCESS_KEY })),
+          ...(yield* Effect.forEach([...remoteSpaces], (spaceId) =>
+            processesFor('edge', spaceId).list({ key: AGENT_PROCESS_KEY }),
+          )).flat(),
+        ];
         log('agent hydrate', { count: agents.length });
         for (const agent of agents) {
           yield* agent
@@ -288,13 +286,13 @@ export const layer = (
                 const target = Obj.getURI(chat);
                 const parsedEchoUri = EID.tryParse(target);
                 const spaceId = parsedEchoUri ? EID.getSpaceId(parsedEchoUri) : undefined;
-                const manager = managerFor(options?.location, spaceId);
+                const agentProcesses = processesFor(options?.location, spaceId);
                 const executable = makeExecutable(model, provider);
 
                 // Reuse a still-running process for this feed only when there was no cached session
                 // (e.g. after the UI remounted). After a model change we always spawn a fresh process,
                 // since the process key does not encode the model.
-                const processes = yield* manager.list({ target, key: executable.key });
+                const processes = yield* agentProcesses.list({ target, key: executable.key });
                 let activeProcess = processes.find((process) => !isTerminalProcess(process.status.state));
 
                 let handle: AgentHandle;
@@ -303,7 +301,7 @@ export const layer = (
                   // methods die with "Process not hydrated" (see ProcessManager's DormantHandle).
                   handle = yield* activeProcess.hydrate(executable);
                 } else {
-                  handle = yield* manager.spawn(executable, {
+                  handle = yield* agentProcesses.spawn(executable, {
                     name: 'Agent',
                     target,
                     // Stamp the host marker so the harness control surface is discoverable by annotation

@@ -29,8 +29,8 @@ import * as EdgeProcessControl from './EdgeProcessControl';
  * here is space-scoped and a stack needs no instance per space.
  *
  * `processTree` is the atom rather than a live read, because the index is per-space and this manager
- * spans them — a `RemoteProcessManagerAdapter` bound to a space publishes into it (that is what the
- * aggregate `ProcessMonitor` renders as the remote half). `cancel` force-cancels the current run of
+ * spans them — every spawn publishes the space it addressed into it (that is what the aggregate
+ * `ProcessMonitor` renders as the remote half). `cancel` force-cancels the current run of
  * an edge trigger (its in-flight execution and `runAgain` continuation chain) via
  * {@link EdgeHttpClient.cancelTriggerRun}.
  *
@@ -47,7 +47,9 @@ const makeManager = (
   return {
     processTree: Effect.sync(() => registry.get(processTreeAtom)),
     processTreeAtom,
-    ...(control ? { control } : {}),
+    // The verbs that need a control come as a set, so a manager built without one lacks all of them
+    // and a caller that needs to spawn remotely fails where it asks.
+    ...(control ? { control, ...RemoteProcessManager.makeControlVerbs(control, registry, processTreeAtom) } : {}),
     ...(getEdgeClient
       ? {
           cancel: ({ space, trigger }: RemoteProcessManager.CancelTarget) =>
