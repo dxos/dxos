@@ -11,15 +11,9 @@ import { randomUUID } from 'node:crypto';
 
 import type * as ObservabilityExtension from '@dxos/observability/ObservabilityExtension';
 
-/** Beyond this many unanswered requests the oldest are dropped, so a server that outlives its client cannot grow without bound. */
 const MAX_PENDING_REQUESTS = 512;
 
-/**
- * Stdio with every `initialize` and `tools/call` captured on its way through.
- *
- * The server is effect's `McpServer` rather than `@modelcontextprotocol/sdk`, so the vendor SDK has
- * no server to wrap and the NDJSON itself is the seam; install this beneath `McpServer.stdio`.
- */
+/** Stdio with every `initialize` and `tools/call` captured on its way through; install beneath `McpServer.stdio`. */
 export const analyticsStdio = (
   capture: ObservabilityExtension.Mcp,
 ): Layer.Layer<EffectStdio.Stdio, never, EffectStdio.Stdio> =>
@@ -28,12 +22,13 @@ export const analyticsStdio = (
     Effect.map(EffectStdio.Stdio, (stdio) => {
       const correlator = makeCorrelator(capture);
       const readRequests = makeLineReader(correlator.observeRequest);
+      const readResponses = makeLineReader(correlator.observeResponse);
       return EffectStdio.make({
         ...stdio,
         stdin: Stream.tap(stdio.stdin, (chunk) => Effect.sync(() => readRequests(chunk))),
         stdout: (options) =>
           Sink.mapInput(stdio.stdout(options), (chunk: string | Uint8Array) => {
-            correlator.observeResponse(typeof chunk === 'string' ? chunk : decoder.decode(chunk));
+            readResponses(chunk);
             return chunk;
           }),
       });
@@ -59,15 +54,9 @@ type PendingRequest = {
   readonly startedAt: number;
 };
 
-/**
- * Pairs a request line with the response line carrying its id, so what is timed is the round trip
- * the client waits on rather than any one leg of it.
- */
+/** Pairs a request line with the response line carrying its id, timing the round trip. */
 export const makeCorrelator = (capture: ObservabilityExtension.Mcp) => {
   const pending = new Map<string | number, PendingRequest>();
-  // One server process is one session, and the handshake is where the client names itself. Held so
-  // the calls that follow carry it too: the backend attributes a harness per event, not per session,
-  // and reads an unnamed one as `Other`.
   const session: ObservabilityExtension.McpSession = { sessionId: randomUUID() };
 
   const observeRequest = (line: string): void => {
@@ -106,7 +95,6 @@ export const makeCorrelator = (capture: ObservabilityExtension.Mcp) => {
       toolName: request.params?.name ?? 'unknown',
       parameters: request.params?.arguments,
       durationMs: Date.now() - request.startedAt,
-      // A tool that fails answers with `isError` on the result; a protocol-level fault answers with `error`.
       isError: message.error !== undefined || message.result?.isError === true,
     });
   };
@@ -114,14 +102,12 @@ export const makeCorrelator = (capture: ObservabilityExtension.Mcp) => {
   return { observeRequest, observeResponse };
 };
 
-const decoder = new TextDecoder();
-
-/** Reassembles the NDJSON lines a byte stream is chunked into; the decoder is per-reader because it holds the split-codepoint remainder. */
-const makeLineReader = (onLine: (line: string) => void): ((chunk: Uint8Array) => void) => {
-  const streamDecoder = new TextDecoder();
+/** Reassembles the NDJSON lines a byte stream is chunked into; the decoder holds the split-codepoint remainder. */
+const makeLineReader = (onLine: (line: string) => void): ((chunk: string | Uint8Array) => void) => {
+  const decoder = new TextDecoder();
   let buffer = '';
   return (chunk) => {
-    buffer += streamDecoder.decode(chunk, { stream: true });
+    buffer += typeof chunk === 'string' ? chunk : decoder.decode(chunk, { stream: true });
     const lines = buffer.split('\n');
     buffer = lines.pop() ?? '';
     for (const line of lines) {

@@ -12,34 +12,21 @@ import * as Observability from '@dxos/observability/Observability';
 import * as ObservabilityExtension from '@dxos/observability/ObservabilityExtension';
 import { getHostPlatform } from '@dxos/util';
 
+declare global {
+  // eslint-disable-next-line no-var
+  var DX_CLI_POSTHOG_TOKEN: string | undefined;
+}
+
 const POSTHOG_HOST = 'https://eu.i.posthog.com' as const;
 
-/**
- * Where a released binary sends OTel: the deployment's reverse proxy, which injects the SigNoz
- * ingestion key server-side — so a binary published to npm carries no credential of its own. A
- * source build sends nowhere; point `DX_OTEL_ENDPOINT` at `https://dev.composer.space/api/otel` to
- * exercise it against the dev deployment.
- */
 const OTEL_ENDPOINT = 'https://composer.space/api/otel';
 
-/** Stamped on everything as `deployment.environment`, in the vocabulary the deployments use. */
 const ENVIRONMENT = process.env.DX_ENVIRONMENT ?? (globalThis.DX_CLI_BUNDLED ? 'production' : 'dev');
 
-/** Where `dx` keeps the profile's observability state; also the OTel service name's sibling. */
 export const observabilityNamespace = (profile: string): string => getProfilePath(DX_CONFIG, profile);
 
-/**
- * Whether this process may report at all. A test run and CI report nowhere whatever they are
- * running — the smoke test runs the released binary, which would otherwise land in production.
- */
 const reporting = (): boolean => !process.env.CI && !process.env.VITEST;
 
-/**
- * A released binary reports to whatever project was injected at bundle time, and nothing else does
- * unless asked: a source checkout is where the tests, the demos and the debugging happen, and none
- * of that is usage. `DX_POSTHOG_API_KEY` is how a developer opts in, and how a locally built binary
- * is exercised without writing to the project the released one writes to.
- */
 export const projectToken = (): string | undefined => {
   if (!reporting()) {
     return undefined;
@@ -47,23 +34,15 @@ export const projectToken = (): string | undefined => {
   return process.env.DX_POSTHOG_API_KEY || (globalThis.DX_CLI_BUNDLED ? globalThis.DX_CLI_POSTHOG_TOKEN : undefined);
 };
 
-/** `DX_OTEL_ENDPOINT` overrides this; the extension reads that variable itself and prefers it. */
 export const otelEndpoint = (): string | undefined =>
   reporting() && globalThis.DX_CLI_BUNDLED ? OTEL_ENDPOINT : undefined;
 
-/** The shape of effect's `Command` this walks; taking the whole type would drag its five generics in. */
 type CommandNode = {
   readonly name: string;
   readonly subcommands: ReadonlyArray<{ readonly commands: ReadonlyArray<CommandNode> }>;
 };
 
-/**
- * The subcommand path the argv selects, matched against the command tree.
- *
- * Allowing through whatever precedes the first flag would name the event after a positional — a
- * file path for `fn deploy`, a payload for `fn invoke`, a space id for `admin space inspect` — so
- * only tokens that are subcommands of the node reached so far are kept.
- */
+/** The subcommand path the argv selects, matched against the command tree. */
 export const commandPath = (root: CommandNode, argv: readonly string[]): string => {
   const path: string[] = [];
   let node = root;
@@ -81,19 +60,10 @@ export const commandPath = (root: CommandNode, argv: readonly string[]): string 
 export type InitializeOptions = {
   readonly config: Config;
   readonly namespace: string;
-  /** Attribution for everything sent before an identity exists. */
   readonly distinctId: string | undefined;
 };
 
-/**
- * The `dx` observability instance: PostHog for events and errors, OTel for logs, metrics and traces.
- *
- * Mirrors Composer's `initializeObservability`. A disabled profile still builds an instance — the
- * plugin's capability has to resolve either way — but one whose extensions are stubs.
- */
 export const initializeObservability = async ({ config, namespace, distinctId }: InitializeOptions) => {
-  // Read before the extensions are built: an opted-out profile constructs no client at all, rather
-  // than one that is told not to send. posthog-node has no persisted opt-out of its own.
   const disabled = await Observability.isObservabilityDisabled(namespace);
   return Function.pipe(
     Observability.make(),
@@ -127,17 +97,10 @@ export const initializeObservability = async ({ config, namespace, distinctId }:
   );
 };
 
-/** Tags every event with where `dx` is running, matching Composer's `platformProvider`. */
 const platformProvider: Observability.DataProvider = Effect.fn(function* (observability) {
   observability.setTags({ appPlatform: 'cli', osPlatform: getHostPlatform(), cliVersion: DXOS_VERSION });
 });
 
-/**
- * Binds the session to the identity once there is one.
- *
- * Aliased rather than simply identified so the installation's pre-identity events — `dx account`
- * before it succeeds, most of all — stay attached to the person they belong to.
- */
 export const identifySession = (
   observability: Observability.Observability,
   client: Client,
@@ -154,10 +117,6 @@ export const identifySession = (
   }
 };
 
-/**
- * Flushes on the way out, bounded: a command that has printed its answer must not hang on an
- * unreachable ingestion endpoint.
- */
 export const flushObservability = (observability: Observability.Observability, timeout: number) =>
   observability.flush().pipe(
     Effect.timeout(timeout),

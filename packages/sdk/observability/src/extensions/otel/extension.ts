@@ -36,10 +36,7 @@ export type ExtensionsOptions = {
   serviceVersion: string;
   /** For the OTEL, the environment of the entity for which signals (metrics or trace) are collected. */
   environment: string;
-  /**
-   * Where the user's opt-out is stored — a localForage prefix in the browser, a config directory in
-   * node. Defaults to {@link ExtensionsOptions.serviceName}, which is only a usable path by accident.
-   */
+  /** Where the user's opt-out is stored: a localForage prefix in the browser, a config directory in node. */
   namespace?: string;
   config: Config;
   endpoint?: string;
@@ -143,9 +140,6 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
     const sessionId = crypto.randomUUID();
     const { resource, metricsResource } = createResources(baseAttributes, sessionId);
 
-    // Gated on consent at construction, not only at `initialize`: an exporter or a metric reader
-    // starts sending on its own schedule, so an instance that merely reports `enabled: false` still
-    // exports.
     const traces =
       tracesEnabled && !disabled
         ? new OtelTraces({
@@ -220,18 +214,21 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
         yield* Effect.promise(() => storeObservabilityDisabled(namespace, false));
         yield* Ref.update(enabledRef, () => true);
       }),
-      // Closing rather than only flagging: a metric reader and a batch span processor export on
-      // their own schedules, so a flag alone leaves a revoked consent sending until the next start.
-      // Re-enabling needs a restart, which was already true of logs and traces.
       disable: Effect.fn(function* () {
-        yield* Effect.promise(() => storeObservabilityDisabled(namespace, true));
+        // Intake stops first, so nothing is captured while the rest of this runs. The opt-out is
+        // persisted before the shutdown that can throw, or a failed shutdown would leave the user
+        // believing they opted out when nothing was recorded.
         yield* Ref.update(enabledRef, () => false);
+        yield* Effect.promise(() => storeObservabilityDisabled(namespace, true));
         if (logs) {
           const index = log.runtimeConfig.processors.indexOf(logs.logProcessor);
           if (index >= 0) {
             log.runtimeConfig.processors.splice(index, 1);
           }
         }
+        // `close` drains on the way out by design, so revoking consent still ships what is already
+        // queued. Discarding it needs a non-flushing shutdown on the three wrappers, which have none.
+        // TODO(wittjosiah): Shut the exporters down before their providers so the drain has nowhere to go.
         yield* extension.close!();
       }),
       close: () =>

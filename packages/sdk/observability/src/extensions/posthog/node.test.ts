@@ -17,7 +17,6 @@ const TOKEN = 'phc_test';
 const captured: { event: string; distinctId?: string; properties?: Record<string, unknown> }[] = [];
 const mcpCaptured: Record<string, unknown>[] = [];
 
-// A stand-in for the client, so the suite asserts what would be sent rather than sending it.
 vi.mock('@posthog/mcp', () => ({
   PostHogMCP: class {
     capture(message: { distinctId?: string; event: string; properties?: Record<string, unknown> }) {
@@ -103,7 +102,6 @@ describe('posthog node extension', () => {
     mcp.captureToolCall({ ...session, toolName: 'whoami', durationMs: 12, isError: false });
 
     expect(mcpCaptured[0]).to.include({ event: '$mcp_initialize', clientName: 'claude-code', sessionId: 'session-1' });
-    // The harness is attributed per event, so a call has to name the client the handshake named.
     expect(mcpCaptured[1]).to.include({ event: '$mcp_tool_call', toolName: 'whoami', sessionId: 'session-1' });
     expect(mcpCaptured[1].properties).to.include({
       $mcp_client_name: 'claude-code',

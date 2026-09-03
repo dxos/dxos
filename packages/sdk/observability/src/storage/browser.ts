@@ -12,7 +12,7 @@ const OBSERVABILITY_DISABLED_KEY = 'observability-disabled';
 const OBSERVABILITY_GROUP_KEY = 'observability-group';
 const OTEL_LOG_LEVEL_KEY = 'otel-log-level';
 
-/** No-op in browser contexts; the notice is a toast there. Async to match the node half it swaps for. */
+/** No-op in browser contexts; the notice is a toast there. */
 export const showObservabilityBanner = async (_namespace: string, _bannercb: (input: string) => void) => {
   log.warn('showObservabilityBanner is not supported in browser contexts.');
 };

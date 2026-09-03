@@ -27,7 +27,6 @@ export const showObservabilityBanner = async (configDir: string, bannercb: (inpu
     ].join(' '),
   );
 
-  // The marker is the first thing written to a fresh profile, so the directory may not exist yet.
   await mkdir(configDir, { recursive: true });
   await writeFile(path, '', 'utf-8');
 };
@@ -40,15 +39,13 @@ export const isObservabilityDisabled = async (configDir: string): Promise<boolea
     const observabilityState = await getObservabilityState(configDir);
     return observabilityState.disabled;
   } catch (err) {
-    // Consent is never inferred from a read that failed.
     log.catch('Failed to check if observability is disabled, assuming it is', err);
     return true;
   }
 };
 
 /**
- * Stable per-installation id, minted on first read. Attribution for events sent before there is an
- * identity to attribute them to.
+ * Stable per-installation id, minted on first read.
  *
  * @param configDir - Filesystem path to the directory containing the `observability.yml` state file.
  */

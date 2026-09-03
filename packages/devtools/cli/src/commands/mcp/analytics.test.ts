@@ -62,7 +62,6 @@ describe('MCP analytics', () => {
     );
     correlator.observeResponse(JSON.stringify({ jsonrpc: '2.0', id: 4, result: { content: [] } }));
 
-    // Answered out of order: each response pairs with its own request.
     expect(calls.toolCall).to.have.length(2);
     expect(calls.toolCall[0]).to.include({ toolName: 'whoami', isError: true });
     expect(calls.toolCall[1]).to.include({ toolName: 'loadSkill', isError: false });
@@ -72,7 +71,6 @@ describe('MCP analytics', () => {
     }
   });
 
-  // The harness is attributed per event: a call that does not name the client reads as `Other`.
   test('carries the handshake onto every later call', ({ expect }) => {
     const { calls, capture } = recordingCapture();
     const correlator = makeCorrelator(capture);
@@ -97,7 +95,6 @@ describe('MCP analytics', () => {
       clientVersion: '2.1.0',
       protocolVersion: '2025-06-18',
     });
-    // One process is one session, so the handshake and the call it precedes share an id.
     expect(calls.toolCall[0]).to.have.property('sessionId', (calls.initialize[0] as { sessionId: string }).sessionId);
   });
 
@@ -131,7 +128,6 @@ describe('MCP analytics', () => {
           analyticsStdio(capture).pipe(
             Layer.provide(
               EffectStdio.layerTest({
-                // Split mid-line, so the reader is exercised on partial frames rather than whole ones.
                 stdin: Stream.fromArray([encoder.encode(request.slice(0, 20)), encoder.encode(request.slice(20))]),
                 stdout: () =>
                   Sink.forEach((chunk: string | Uint8Array) =>

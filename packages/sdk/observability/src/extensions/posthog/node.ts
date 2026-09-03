@@ -17,11 +17,8 @@ const DEFAULT_HOST: Host = 'https://eu.i.posthog.com';
 /**
  * PostHog for a node host, over `posthog-node`.
  *
- * The client is `PostHogMCP` rather than plain `PostHog` — it is a drop-in subclass, and it is what
- * builds the canonical `$mcp_*` events this extension answers `kind: 'mcp'` with.
- *
- * Unlike posthog-js there is no ambient person, so the extension holds the distinct id `identify`
- * last set and stamps it on every capture.
+ * The client is `PostHogMCP` rather than plain `PostHog` — a drop-in subclass that builds the
+ * canonical `$mcp_*` events this extension answers `kind: 'mcp'` with.
  */
 export const extensions: (options: ExtensionsOptions) => Effect.Effect<ObservabilityExtension.Extension> = Effect.fn(
   function* ({ config, apiKey: _apiKey, host: _host, release, environment, distinctId: initialDistinctId, mcpServer }) {
@@ -38,7 +35,6 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
     const { PostHogMCP } = yield* Effect.promise(() => import('@posthog/mcp'));
     const client = new PostHogMCP(apiKey, { host: _host ?? DEFAULT_HOST, enableExceptionAutocapture: true });
 
-    // Registered on every event, the way posthog-js's `register` does it for the browser.
     const superProperties: ObservabilityExtension.Attributes = {
       ...(release ? { release } : {}),
       ...(environment ? { environment } : {}),
@@ -46,11 +42,9 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
     let distinctId = initialDistinctId;
     let enabled = true;
 
-    /** An event with nobody to attribute it to is dropped rather than sent under a made-up id. */
     const attribution = (): string | undefined => (enabled ? distinctId : undefined);
     const properties = (attributes?: ObservabilityExtension.EventAttributes) => ({ ...superProperties, ...attributes });
 
-    // The vendor's own property names, so its MCP dashboards read them without a mapping.
     const mcpProperties = () => ({
       ...superProperties,
       ...(mcpServer ? { $mcp_server_name: mcpServer.name, $mcp_server_version: mcpServer.version } : {}),
@@ -129,8 +123,8 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
                 sessionId,
                 protocolVersion,
                 distinctId: id,
-                // The payload takes a client name only on the handshake, so the calls carry it as
-                // the property that event would have produced — which is what attributes a harness.
+                // `captureToolCall` takes a client name only on the handshake, so the calls carry
+                // it as the property that event would have produced.
                 properties: {
                   ...mcpProperties(),
                   ...(clientName ? { $mcp_client_name: clientName } : {}),

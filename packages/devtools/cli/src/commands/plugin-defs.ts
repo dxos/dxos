@@ -21,7 +21,6 @@ import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 
 export type PluginConfig = {
   config?: Config;
-  /** Directory holding the profile's observability state; the opt-out is read and written there. */
   namespace: string;
   observability: () => Promise<Observability.Observability>;
   isDev?: boolean;

@@ -158,18 +158,7 @@ export type Ai = {
   captureToolCall(toolCall: ToolCall): void;
 };
 
-/**
- * MCP extension API (kind-specific methods only).
- *
- * Separate from {@link Events} because the MCP events are a vendor-defined schema — the property
- * names, the argument sanitizer and the exception fan-out belong to the backend, not to the caller,
- * which is also why the payloads are richer than {@link Attributes} allows.
- */
-/**
- * What every event in one MCP session carries. Learned at `initialize` and stamped on the calls that
- * follow, because the backend groups sessions and attributes a harness from these and not from the
- * handshake alone.
- */
+/** What every event in one MCP session carries; learned at `initialize` and stamped on the calls that follow. */
 export type McpSession = {
   /** Groups the session's events; one server process is one session over a stdio transport. */
   sessionId: string;
@@ -178,6 +167,7 @@ export type McpSession = {
   protocolVersion?: string;
 };
 
+/** MCP extension API (kind-specific methods only). */
 export type Mcp = {
   captureInitialize(session: McpSession): void;
   captureToolCall(

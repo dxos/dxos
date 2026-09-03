@@ -45,13 +45,6 @@ declare global {
    */
   // eslint-disable-next-line no-var
   var DX_CLI_BUNDLED: boolean | undefined;
-
-  /**
-   * The PostHog project a released binary reports to, substituted by the same `define`. Injected by
-   * whoever builds the binary rather than committed, so a build that was given none reports nowhere.
-   */
-  // eslint-disable-next-line no-var
-  var DX_CLI_POSTHOG_TOKEN: string | undefined;
 }
 
 /**
@@ -102,8 +95,6 @@ export const serve = Command.make(
     // stdout carries the protocol, so progress goes to the log (stderr).
     log.info('serving MCP over stdio', { spaces: server.host.spaceIds.length });
 
-    // The session is already attributed and consent-gated by the observability instance `dx` builds
-    // at startup; an extension with no MCP transport answers `false` and the tap is left off.
     const observability = yield* Capability.get(ObservabilityCapabilities.Observability);
     const reporting = yield* observability.isAvailable('mcp');
     const stdio = reporting ? McpServer.stdio.pipe(Layer.provide(analyticsStdio(observability.mcp))) : McpServer.stdio;

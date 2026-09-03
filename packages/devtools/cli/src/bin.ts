@@ -78,10 +78,6 @@ if (process.env.DX_TRACK_LEAKS) {
 }
 
 const EXIT_GRACE_PERIOD = 1_000;
-/**
- * A command that has printed its answer must not wait on telemetry to exit. A reachable endpoint
- * flushes in well under this; an unreachable one costs at most this much, once, and loses the batch.
- */
 const FLUSH_TIMEOUT = 500;
 const FORCE_EXIT = true;
 const CLI_CONFIG = {
@@ -138,8 +134,6 @@ const program = Effect.gen(function* () {
     return yield* runWatchSupervisor();
   }
 
-  // The same resolution `commandConfigLayer` uses, so the profile the client opens is the profile
-  // whose telemetry consent is read.
   const profile = readRootFlag('profile', 'p') ?? DXEnv.get(DXEnv.PROFILE, DEFAULT_PROFILE);
   const configPath = readRootFlag('config', 'c');
   const config = yield* ConfigService.load({ config: Option.fromNullishOr(configPath), profile });
@@ -158,7 +152,6 @@ const program = Effect.gen(function* () {
 
   const namespace = observabilityNamespace(profile);
   const installationId = yield* Effect.promise(() => Observability.getInstallationId(namespace));
-  // Started here and awaited by the plugin's module, so extension setup overlaps plugin activation.
   const observability = initializeObservability({ config, namespace, distinctId: installationId });
 
   const { command, layer: pluginLayer } = yield* createCliApp({
@@ -202,8 +195,6 @@ const program = Effect.gen(function* () {
   const context = yield* Layer.build(Layer.mergeAll(pluginLayer, fromConfig(config), commandConfigLayer(argv)));
   const layer = Layer.succeedContext(context);
 
-  // `Idle` is what the observability plugin's invocation listener activates on, and nothing else
-  // fires it for a plain command — without it every operation this run invokes goes unreported.
   const manager = yield* Capability.get(Capabilities.PluginManager).pipe(Effect.provide(layer));
   yield* manager.activate(ActivationEvents.Idle);
 
@@ -230,8 +221,6 @@ const program = Effect.gen(function* () {
     CLI_CONFIG,
   )(argv).pipe(
     Effect.provide(layer),
-    // Captured on the way out so the event carries the outcome. A session killed outright reports
-    // nothing, which is why `dx mcp serve` has events of its own.
     Effect.onExit((exit) =>
       Effect.sync(() =>
         observabilityInstance.events.captureEvent('cli.command', {

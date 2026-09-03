@@ -11,12 +11,6 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 import { ObservabilityOperation } from '#types';
 
-// TODO(wittjosiah): Give workerd a transport. `@dxos/observability`'s extensions are posthog-js
-//   (browser) and posthog-node (node); workerd has neither, and its invocations carry no caller
-//   identity to attribute events to, so `SendEvent` drops them rather than sending them
-//   unattributed. Node reaches the real handler — see `#operation-handler` in package.json.
-//   NOTE: The real handler cannot simply be used here — it resolves the capability with
-//   `Capability.waitFor`, which never settles when nothing contributes it, hanging the invocation.
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contribute(

@@ -14,10 +14,6 @@ import * as ObservabilityOperation from '@dxos/plugin-observability/Observabilit
 
 import { observabilityNamespace } from '../observability';
 
-/**
- * The same wording Composer's settings pane carries, so what is collected does not depend on which
- * surface the user asked from.
- */
 const DESCRIPTION =
   'When enabled, basic usage data is used to improve the product. This may include performance ' +
   'metrics, error logs, and usage data. No personally identifiable information, other than your ' +
@@ -34,7 +30,6 @@ const report = Effect.fn(function* (enabled: boolean) {
     return;
   }
   yield* Console.log(`Telemetry is ${enabled ? 'enabled' : 'disabled'}.`);
-  // The environment wins over the stored setting, so saying so saves a confused `dx telemetry enable`.
   if (!enabled && process.env.DX_DISABLE_OBSERVABILITY) {
     yield* Console.log('Set by DX_DISABLE_OBSERVABILITY in the environment.');
   }
@@ -44,8 +39,6 @@ const setEnabled = (state: boolean) =>
   Effect.fn(function* () {
     const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
     yield* Effect.promise(() => invokePromise(ObservabilityOperation.SetEnabled, { state }));
-    // Read back rather than echo the request: `DX_DISABLE_OBSERVABILITY` outranks the stored
-    // setting, so `enable` on a machine that sets it has not enabled anything.
     yield* report(yield* readEnabled());
   });
 

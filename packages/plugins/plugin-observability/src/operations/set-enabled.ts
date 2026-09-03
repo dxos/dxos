@@ -32,8 +32,6 @@ const handler: Operation.WithHandler<typeof ObservabilityOperation.SetEnabled> =
       }
       yield* Effect.promise(() => Observability.storeObservabilityDisabled(namespace, !newEnabled));
 
-      // The settings atom is the browser's view of the same state; a headless host has none, and
-      // the store above is what both read back.
       const settingsObj = capabilities
         .getAll(AppCapabilities.Settings)
         .find((candidate: AppCapabilities.Settings) => candidate.prefix === meta.profile.key);
