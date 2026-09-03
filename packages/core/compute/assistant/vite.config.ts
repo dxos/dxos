@@ -12,6 +12,7 @@ export default defineConfig({
     'session/AiContext': 'src/session/AiContext.ts',
     'request/AiRequest': 'src/request/AiRequest.ts',
     'session/AiSession': 'src/session/AiSession.ts',
+    'session/Alarm': 'src/session/Alarm.ts',
     'session/Harness': 'src/session/Harness.ts',
     'session/SessionLink': 'src/session/SessionLink.ts',
     'session/SkillHooks': 'src/session/SkillHooks.ts',

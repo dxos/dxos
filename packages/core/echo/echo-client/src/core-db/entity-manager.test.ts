@@ -37,7 +37,7 @@ describe('DatabaseImpl', () => {
       const testBuilder = new EchoTestBuilder();
       await openAndClose(testBuilder);
       const { db } = await testBuilder.createDatabase();
-      const object = createTextObject();
+      const object = Obj.make(TestSchema.Expando, { content: '' });
       db.add(object);
       await db.flush();
       const docHandles = getDocHandles(db);
@@ -46,7 +46,9 @@ describe('DatabaseImpl', () => {
     });
 
     test('reference loading via load() method', async () => {
-      const document = Obj.make(TestSchema.Expando, { text: Ref.make(createTextObject('Hello, world!')) });
+      const document = Obj.make(TestSchema.Expando, {
+        text: Ref.make(Obj.make(TestSchema.Expando, { content: 'Hello, world!' })),
+      });
       const db = await createClientDbInSpaceWithObject(document);
       const loadedDocument = await db.query(Query.type(TestSchema.Expando, { id: document.id })).first();
       expect(loadedDocument).not.to.be.undefined;
@@ -57,13 +59,13 @@ describe('DatabaseImpl', () => {
     });
 
     test('reference access triggers document loading', async () => {
-      const textObject = createTextObject('Hello, world!');
+      const textObject = Obj.make(TestSchema.Expando, { content: 'Hello, world!' });
       const db = await createClientDbInSpaceWithObject(textObject);
       await db.query(Query.type(TestSchema.Expando, { id: textObject.id })).first({ timeout: 1000 });
     });
 
     test("separate-doc object is treated as inline if it's both linked and inline", async () => {
-      const object = createTextObject();
+      const object = Obj.make(TestSchema.Expando, { content: '' });
       // The second peer treats text as inline right after opening the document
       const db = await createClientDbInSpaceWithObject(object, (handles) => {
         const textHandle = handles.linkedDocHandles[0]!;
@@ -87,7 +89,7 @@ describe('DatabaseImpl', () => {
 
   describe('space root document change', () => {
     test('new inline objects are loaded', async () => {
-      const db = await createClientDbInSpaceWithObject(createTextObject());
+      const db = await createClientDbInSpaceWithObject(Obj.make(TestSchema.Expando, { content: '' }));
       const newRootDocHandle = await createTestRootDoc(db._repo);
       const newObject = addObjectToDoc(newRootDocHandle, { id: EntityId.random(), title: 'title ' });
       await db.setSpaceRoot(newRootDocHandle.url!);
@@ -123,9 +125,9 @@ describe('DatabaseImpl', () => {
 
     test('linked objects are loaded on update only if they were loaded before', async () => {
       const stack = Obj.make(TestSchema.Expando, {
-        notLoadedDocument: Ref.make(createTextObject('text1')),
-        loadedDocument: Ref.make(createTextObject('text2')),
-        partiallyLoadedDocument: Ref.make(createTextObject('text3')),
+        notLoadedDocument: Ref.make(Obj.make(TestSchema.Expando, { content: 'text1' })),
+        loadedDocument: Ref.make(Obj.make(TestSchema.Expando, { content: 'text2' })),
+        partiallyLoadedDocument: Ref.make(Obj.make(TestSchema.Expando, { content: 'text3' })),
       });
 
       const partiallyLoadedDocumentId = stack.partiallyLoadedDocument.target?.id;
@@ -152,9 +154,9 @@ describe('DatabaseImpl', () => {
 
     test('linked objects can be remapped', async () => {
       const stack = Obj.make(TestSchema.Expando, {
-        text1: Ref.make(createTextObject('text1')),
-        text2: Ref.make(createTextObject('text2')),
-        text3: Ref.make(createTextObject('text3')),
+        text1: Ref.make(Obj.make(TestSchema.Expando, { content: 'text1' })),
+        text2: Ref.make(Obj.make(TestSchema.Expando, { content: 'text2' })),
+        text3: Ref.make(Obj.make(TestSchema.Expando, { content: 'text3' })),
       });
       const ids = [stack.text1.target?.id, stack.text2.target?.id, stack.text3.target?.id];
       const contents = [stack.text1.target?.content, stack.text2.target?.content, stack.text3.target?.content];
@@ -208,7 +210,7 @@ describe('DatabaseImpl', () => {
     });
 
     test('pending links are loaded', async () => {
-      const obj = createTextObject('Hello, world');
+      const obj = Obj.make(TestSchema.Expando, { content: 'Hello, world' });
       const db = await createClientDbInSpaceWithObject(obj);
       const oldRootDocHandle = getDocHandles(db).spaceRootHandle;
       const newRootDocHandle = await createTestRootDoc(db._repo);
@@ -229,8 +231,8 @@ describe('DatabaseImpl', () => {
 
     test('multiple object update', async () => {
       const linksToRemove = range(5).map(() => Obj.make(TestSchema.Expando, {}));
-      const loadedLinks = range(4).map(() => createTextObject('test'));
-      const partiallyLoadedLinks = range(3).map(() => createTextObject('test2'));
+      const loadedLinks = range(4).map(() => Obj.make(TestSchema.Expando, { content: 'test' }));
+      const partiallyLoadedLinks = range(3).map(() => Obj.make(TestSchema.Expando, { content: 'test2' }));
       const objectsToAdd = range(2).map(() => Obj.make(TestSchema.Expando, {}));
       const rootObject = Obj.make(TestSchema.Expando, {});
       Obj.update(rootObject, (rootObject: any) => {
@@ -406,8 +408,6 @@ const createClientDbInSpaceWithObject = async (
   const peer2 = await testBuilder.createPeer({ storagePath: tmpPath });
   return peer2.openDatabase(spaceKey, db1.rootUrl!);
 };
-
-const createTextObject = (content: string = '') => Obj.make(TestSchema.Expando, { content });
 
 interface DocumentHandles {
   spaceRootHandle: DocHandleProxy<DatabaseDirectory>;

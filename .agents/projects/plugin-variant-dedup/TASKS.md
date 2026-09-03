@@ -179,7 +179,7 @@ the task graph owns it (echo-query `prebuild-lezer` is the template).
 - [x] Stale glob: `.moon/tasks/tag-composer-plugin.yml` still lists
       `src/capabilities/overrides.*.ts` as an input. Harmless (matches nothing) but misleading now
       that the override mechanism is deleted
-- [x] Re-merge `origin/main` (`eaf9c7e3fa`, 3 commits). `plugin-claude-agents` (#12741) arrived
+- [x] Re-merge `origin/main` (`eaf9c7e3fa`, 3 commits). `plugin-claude` (#12741) arrived
       with a capabilities barrel and no tag, as predicted, and got the plugin-lingo treatment:
       tag + dual-condition React guard, barrels generated (3 modules, 0 stubs), and the
       `capabilities.{node,workerd}.mjs` bundles confirmed present so the declared conditions have

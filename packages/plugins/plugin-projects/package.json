@@ -141,7 +141,6 @@
     "src"
   ],
   "dependencies": {
-    "@codemirror/state": "catalog:",
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-graph": "workspace:*",
@@ -164,11 +163,13 @@
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-tasks": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-masonry": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-search": "workspace:*",
     "@dxos/react-ui-tabs": "workspace:*",
+    "@dxos/react-ui-task": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
@@ -183,8 +184,8 @@
     "@dxos/plugin-github": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-ui-attention": "workspace:*",
     "@dxos/schema": "workspace:*",
+    "@effect/atom-react": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "react": "catalog:",
@@ -192,6 +193,7 @@
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:^",
+    "@effect/atom-react": "catalog:",
     "react": "catalog:"
   },
   "publishConfig": {

@@ -11,7 +11,7 @@ runtime:
       agents: true
     disableP2pReplication: true
     log:
-      filter: 'echo-edge-replicator:debug,info'
+      filter: 'echo-edge-subduction-replicator:debug,info'
   services:
     # signaling:
     #   - server: wss://kube.dxos.org/.well-known/dx/signal

@@ -8,7 +8,7 @@ import path from 'node:path';
 import { ResolverFactory } from 'oxc-resolver';
 // import sourcemaps from 'rollup-plugin-sourcemaps';
 import { visualizer } from 'rollup-plugin-visualizer';
-import { type ConfigEnv, type PluginOption, defineConfig, searchForWorkspaceRoot } from 'vite';
+import { type ConfigEnv, type PluginOption, type Rollup, defineConfig, searchForWorkspaceRoot } from 'vite';
 // import devtoolsJson from 'vite-plugin-devtools-json';
 import inspect from 'vite-plugin-inspect';
 import { VitePWA } from 'vite-plugin-pwa';
@@ -19,7 +19,7 @@ import { bootLoaderPlugin, importMapPlugin } from '@dxos/app-framework/vite-plug
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
 import { isNonNullable } from '@dxos/util';
-import { IconsPlugin } from '@dxos/vite-plugin-icons';
+import { IconsPlugin, iconSymbolPattern } from '@dxos/vite-plugin-icons';
 import importSource from '@dxos/vite-plugin-import-source';
 import { DxosLogPlugin } from '@dxos/vite-plugin-log';
 import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
@@ -48,6 +48,7 @@ const isReducedPluginSet = pluginSetFile !== 'src/plugin-defs.tsx';
 const rootDir = searchForWorkspaceRoot(process.cwd());
 const phosphorIconsCore = path.join(rootDir, '/node_modules/@phosphor-icons/core/assets');
 const dxosIcons = path.join(rootDir, '/packages/ui/brand/assets/icons');
+const extendedIcons = path.join(rootDir, '/packages/ui/ui-icons/assets');
 
 const dirname = import.meta.dirname;
 
@@ -228,6 +229,7 @@ export default defineConfig((env) => ({
         './src/main.tsx',
         './src/workers/dedicated-worker.ts',
         './src/workers/coordinator-worker.ts',
+        './src/workers/observability-worker.ts',
         `./${pluginSetFile}`,
       ],
     },
@@ -416,7 +418,12 @@ export default defineConfig((env) => ({
       name: 'rss-proxy',
       configureServer(server) {
         server.middlewares.use('/api/rss', async (req, res) => {
-          const url = new URL(req.url!, `http://${req.headers.host}`);
+          if (!req.url) {
+            res.statusCode = 400;
+            res.end('Missing request URL');
+            return;
+          }
+          const url = new URL(req.url, `http://${req.headers.host}`);
           const feedUrl = url.searchParams.get('url');
           if (!feedUrl) {
             res.statusCode = 400;
@@ -634,14 +641,14 @@ export default defineConfig((env) => ({
     }),
 
     IconsPlugin({
-      // The leading negative lookahead restricts the `dx` set to the `regular` weight only (custom
-      // brand SVGs have no weight variants); the `ph` set retains all Phosphor weights.
-      symbolPattern:
-        '(?!dx--[a-z]+[a-z-]*--(?:bold|duotone|fill|light|thin))(ph|dx)--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
+      // Built rather than written out: `ph` carries every weight while `dx` and `px` are regular-only.
+      symbolPattern: iconSymbolPattern({ sets: ['ph', 'dx', 'px'], regularOnly: ['dx', 'px'] }),
       assetPath: (iconSet, name, variant) => {
         switch (iconSet) {
           case 'dx':
             return `${dxosIcons}/${name}.svg`;
+          case 'px':
+            return `${extendedIcons}/${name}.svg`;
           default:
             return `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`;
         }
@@ -652,9 +659,13 @@ export default defineConfig((env) => ({
         path.join(rootDir, '/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}'),
         path.join(rootDir, '/{packages,tools}/**/dx.config.{ts,tsx,js,jsx}'),
       ],
-      // Serves /phosphor/ for the runtime icon resolver in @dxos/react-ui; assets are copied
-      // into the build output and cached at runtime by sw.ts (excluded from the precache).
-      assets: [{ route: '/phosphor', dir: phosphorIconsCore }],
+      // Keeps every `PxIcons` entry in the sprite so the app paints without a round trip.
+      scanPaths: [path.join(rootDir, '/packages/ui/ui-icons/src/index.ts')],
+      // Serves both catalogs so `@dxos/react-ui`'s resolver can fetch a glyph the scanner never saw.
+      assets: [
+        { route: '/phosphor', dir: phosphorIconsCore },
+        { route: '/px-icons', dir: extendedIcons },
+      ],
       // verbose: true,
     }),
 
@@ -670,9 +681,9 @@ export default defineConfig((env) => ({
  * Generate nicer chunk names.
  * Default makes most chunks have names like index-[hash].js.
  */
-function chunkFileNames(chunkInfo: any) {
+function chunkFileNames(chunkInfo: Rollup.PreRenderedChunk) {
   if (chunkInfo.facadeModuleId && chunkInfo.facadeModuleId.match(/index\.[^/]+$/gm)) {
-    let segments: any[] = chunkInfo.facadeModuleId.split('/').reverse().slice(1);
+    let segments: string[] = chunkInfo.facadeModuleId.split('/').reverse().slice(1);
     const nodeModulesIdx = segments.indexOf('node_modules');
     if (nodeModulesIdx !== -1) {
       segments = segments.slice(0, nodeModulesIdx);

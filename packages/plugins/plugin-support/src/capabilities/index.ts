@@ -32,8 +32,8 @@ export const HelpState = Capability.lazyModule(
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactRoot = AppCapability.reactRoot(() => import('./react-root'), {
-  /** Maps the plugin's configured tour steps to the body's props. */
-  props: (options: { helpSteps?: Tour.Step[] }) => options.helpSteps,
+  /** Maps the plugin's configured tour-step loader to the body's props. */
+  props: (options: { helpSteps?: () => Promise<Tour.Step[]> }) => options.helpSteps,
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: [

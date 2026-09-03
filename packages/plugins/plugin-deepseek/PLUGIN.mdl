@@ -5,11 +5,14 @@ version: 0.1.0
 ---
 
 A **headless** Composer plugin that makes [DeepSeek](https://platform.deepseek.com)
-connectable. It has no React/UI surfaces and contributes one thing: a
-**Connector** entry (`source: "deepseek.com"`) with an API-key credential form,
-so the user connects DeepSeek through the generic `plugin-connector` UI. On
-submit the key is stored as an `AccessToken` (source `deepseek.com`) plus a
-`Connection` in ECHO, resolvable later via `CredentialsService`.
+connectable and runnable. It has no React/UI surfaces and contributes two things:
+
+1. A **Connector** entry (`source: "deepseek.com"`) with an API-key credential form, so the user
+   connects DeepSeek through the generic `plugin-connector` UI. On submit the key is stored as an
+   `AccessToken` (source `deepseek.com`) plus a `Connection` in ECHO.
+2. A **Skill** (`org.dxos.skill.deepseek`, `agentCanEnable: true`) that runs the DeepSeek harness
+   — DeepSeek's own coding agent — inside a `plugin-sandbox` container, with that credential bound
+   to the container by reference.
 
 ## Extensions
 
@@ -18,6 +21,7 @@ submit the key is stored as an `AccessToken` (source `deepseek.com`) plus a
 | `feat` | `org.dxos.mdl.feat@1.0` |
 | `test` | `org.dxos.mdl.test@1.0` |
 | `flow` | `org.dxos.mdl.flow@1.0` |
+| `op`   | `org.dxos.mdl.op@1.1`   |
 
 ## Connector
 
@@ -40,6 +44,61 @@ feat DeepSeekConnector
       { kind: "complete", accessToken, connection }.
 ```
 
+## Harness skill
+
+```mdl
+feat DeepSeekSkill
+  desc: >
+    Contributes an AppCapabilities.SkillDefinition. The skill's tools are the two operations
+    below; `agentCanEnable: true`, so the agent turns the skill on mid-task rather than the user
+    enabling it up front. The harness itself is not bundled — it is installed into the sandbox
+    on provision, so nothing DeepSeek-specific runs in the browser.
+  key: org.dxos.skill.deepseek
+```
+
+```mdl
+op installHarness
+  key: org.dxos.operation.deepseek.installHarness
+  desc: >
+    Creates a sandbox via op:createSandbox, binds the space's deepseek.com AccessToken to it as
+    the DEEPSEEK_API_KEY credential (by REFERENCE — the sandbox resolves it per exec, so the key
+    never enters an operation result or a transcript), then installs the harness CLI via op:exec.
+  input:
+    name?: string
+    baseImage?: string
+    harnessPackage?: string     # defaults to the plugin's pinned npm package
+  output:
+    sandboxId: string           # ECHO object URI of the sandbox
+    installOutput: string
+  errors:
+    - MissingCredentialError    # no deepseek.com AccessToken in the space
+    - HarnessInstallError       # the install command exited non-zero
+  effects: [echo:read, echo:write, sandbox:create, sandbox:exec]
+```
+
+```mdl
+op runHarness
+  key: org.dxos.operation.deepseek.runHarness
+  desc: >
+    Runs the harness on a prompt in a provisioned sandbox via op:exec. The prompt is the final
+    positional argument and is shell-quoted; model and API host travel as environment
+    (DEEPSEEK_MODEL, DEEPSEEK_BASE_URL) rather than as CLI flags this plugin would have to guess.
+  input:
+    sandbox: Ref<Sandbox>
+    prompt: string
+    model?: string
+    args?: string[]
+    harnessBin?: string
+    cwd?: string
+    timeout?: number
+  output:
+    stdout: string
+    stderr: string
+    exitCode: number
+    success: boolean
+  effects: [sandbox:exec]
+```
+
 ## Acceptance
 
 ```mdl
@@ -57,6 +116,20 @@ test T-2: Empty token rejected
   given: the DeepSeek ConnectorEntry
   when: credentialForm.onSubmit runs with { token: "  " }
   then: it throws (no AccessToken / Connection created)
+```
+
+```mdl
+test T-3: Install fails cleanly with no credential
+  given: a space with no deepseek.com AccessToken
+  when: op:installHarness runs
+  then: it fails with MissingCredentialError (no sandbox is created)
+```
+
+```mdl
+test T-4: The prompt is shell-quoted
+  given: a prompt containing shell metacharacters
+  when: the run command is built
+  then: the prompt is a single quoted argument, with embedded quotes escaped
 ```
 
 ## QA
@@ -123,12 +196,45 @@ flow QA-1: Connect DeepSeek with an API key
       expect: the row leaves the navtree, its plank closes, and a "Connection deleted" toast appears
       note: >
         NO `invoke` — the connection is created by a UI gesture in step 6, which has no operation to
-        `capture` from, so there is no `$connection` for `space.removeObjects` to name. The delete
-        action in the connection's own panel routes through that operation anyway.
+        `capture` from, so there is no captured connection value for `space.removeObjects` to name.
+        The delete action in the connection's own panel routes through that operation anyway.
+```
+
+```mdl
+flow QA-2: Run the harness in a sandbox
+  desc: >
+    The skill end to end — provision a sandbox against a connected DeepSeek account and run the
+    harness on a trivial prompt.
+  actors: agent
+  status: unverified
+  given:
+    - QA-1 has run, so a deepseek.com credential exists in the space
+    - plugin-deepseek and plugin-sandbox are both enabled
+    - the sandbox service is reachable
+  test:
+    - name: Install the harness
+      do: Ask the assistant to set up the DeepSeek harness.
+      invoke: [op:installHarness] { name: "QA Harness" }
+      capture: installed
+      expect: a sandbox exists with the DeepSeek credential bound and the harness CLI installed
+      assert: return !!$installed.sandboxId
+    - name: Run a prompt
+      do: Ask the assistant to have DeepSeek print the files in the working directory.
+      invoke: [op:runHarness] { sandbox: { "/": $installed.sandboxId }, prompt: "list the files here" }
+      expect: the harness runs and its output comes back
+      assert: return $result.exitCode === 0
+  after:
+    - name: Delete the sandbox
+      do: Right-click "QA Harness" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { refs: [{ "/": $installed.sandboxId }], target: $given.space }
 ```
 
 ## Out of scope (v1)
 
-- Any DeepSeek API client / model provider; this version only stores the credential.
+- Any in-browser DeepSeek API client / model provider; the harness runs in the sandbox.
 - OAuth (DeepSeek uses a static API key).
 - Multi-account configuration.
+- Streaming harness output; a run returns once, when the command exits.
+- Pinning the harness CLI's distribution. The npm package and binary names are constants with
+  per-call overrides (`harnessPackage`, `harnessBin`) precisely because DeepSeek's CLI release
+  channel is not something this plugin can guarantee.

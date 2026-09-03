@@ -5,7 +5,7 @@
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols/proto';
+import { getBufService } from '@dxos/protocols/buf-service';
 import { type TestService } from '@dxos/protocols/proto/example/testing/rpc';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 
@@ -38,10 +38,10 @@ export class TestExtension implements TeleportExtension {
         contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"',
       }),
       requested: {
-        TestService: schema.getService('example.testing.rpc.TestService'),
+        TestService: getBufService<TestService>('example.testing.rpc.TestService'),
       },
       exposed: {
-        TestService: schema.getService('example.testing.rpc.TestService'),
+        TestService: getBufService<TestService>('example.testing.rpc.TestService'),
       },
       handlers: {
         TestService: {

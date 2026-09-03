@@ -37,7 +37,7 @@ export const ChatStatusIndicator = ({ classNames, preset, processing, error, ...
       <Spinner duration={period} state={!init ? 'flash' : error ? 'error' : processing ? 'spin' : 'pulse'} {...props} />
       {error && (
         <Tooltip.Trigger asChild content={error.message}>
-          <div className='absolute inset-0' />
+          <div className='dx-fullscreen' />
         </Tooltip.Trigger>
       )}
     </div>

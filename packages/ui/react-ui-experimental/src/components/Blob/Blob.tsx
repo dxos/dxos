@@ -207,7 +207,7 @@ export const Blob = ({
     enableTransparency,
   ]);
 
-  return <div ref={containerRef} className='dx-expander relative' />;
+  return <div ref={containerRef} className='dx-expand relative' />;
 };
 
 const parseHexColor = (hex: string) => {

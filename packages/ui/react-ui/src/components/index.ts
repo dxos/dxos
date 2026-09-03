@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+export * from './AttentionGlyph';
 export * from './Avatars';
 export * from './Breadcrumb';
 export * from './Button';
@@ -17,11 +18,13 @@ export * from './ErrorFallback';
 export * from './Focus';
 export * from './Icon';
 export * from './Image';
+export * from './Editable';
 export * from './Input';
 export * from './Link';
 export * from './Main';
 export * from './MediaPlayer';
 export * from './Menu';
+export * from './MenuButton';
 export * from './Banner';
 export * from './Panel';
 export * from './Popover';
@@ -29,6 +32,7 @@ export * from './Progress';
 export * from './ScrollArea';
 export * from './ScrollContainer';
 export * from './Select';
+export * from './Show';
 export * from './Separator';
 export * from './Skeleton';
 export * from './Slider';

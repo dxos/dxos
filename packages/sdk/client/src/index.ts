@@ -3,7 +3,18 @@
 //
 
 export { type ClientServices, type ClientServicesProvider, type ShellRuntime } from '@dxos/client-protocol';
-export { Config, ConfigService, Defaults, Dynamics, Envs, Local, Remote, Storage } from '@dxos/config';
+export {
+  Config,
+  ConfigService,
+  Defaults,
+  Dynamics,
+  Envs,
+  Local,
+  Remote,
+  Storage,
+  fromConfig,
+  layerMemory,
+} from '@dxos/config';
 export { PublicKey, type PublicKeyLike } from '@dxos/keys';
 export {
   AlreadyJoinedError,

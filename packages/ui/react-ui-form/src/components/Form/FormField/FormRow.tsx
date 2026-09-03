@@ -67,8 +67,10 @@ export const FormFieldLabel = ({
   // label's `textContent` exactly `label`, so fields stay locatable by their exact label text
   // (`getByLabelText('Name')`), which the DOM-text-based query would otherwise miss as `Name *`.
   // The `fieldLabelText` slot is applied last so a variant/caller size/color (e.g. `text-lg`) wins over
+  // The control-height row comes from `Input.Label` itself; the read-only/standalone `span` is not
+  // one, so it repeats the geometry to keep the row the same height either way.
   const labelClassNames = mx(
-    'text-sm text-description',
+    'flex items-center min-h-(--dx-control) text-sm text-description',
     required && "after:content-['*'] after:ms-0.5 after:text-warning-text",
     styles.fieldLabelText({ class: labelClassName }),
   );

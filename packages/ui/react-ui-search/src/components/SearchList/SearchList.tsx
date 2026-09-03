@@ -29,7 +29,15 @@ import React, {
   useRef,
 } from 'react';
 
-import { type Density, type Elevation, Icon, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import {
+  type Density,
+  type Elevation,
+  Icon,
+  ScrollArea,
+  type ScrollAreaRootProps,
+  type ThemedClassName,
+  useTranslation,
+} from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Picker, usePickerInputContext, usePickerItemContext } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
@@ -144,14 +152,14 @@ type SearchListContentProps = {};
 
 /**
  * Optional styling wrapper that groups `SearchList.Input` and `SearchList.Viewport` into a single
- * `dx-expander` container. Layout-neutral: it does NOT participate in any column/grid placement.
+ * `dx-expand` container. Layout-neutral: it does NOT participate in any column/grid placement.
  *
  * When hosting `SearchList` inside a `Column.Root` (e.g. `Dialog.Body`), the parent propagator
  * handles column placement for SearchList's children automatically.
  */
 const SearchListContent = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   return (
-    <div {...composableProps(props, { role: 'none', classNames: 'dx-expander' })} ref={forwardedRef}>
+    <div {...composableProps(props, { role: 'none', classNames: 'dx-expand' })} ref={forwardedRef}>
       {children}
     </div>
   );
@@ -209,14 +217,29 @@ const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
 SearchListInput.displayName = 'SearchList.Input';
 
 //
-// Viewport — scroll surface; carries `role='listbox'`.
+// Viewport — scroll surface; carries `role='listbox'`. Forwards ScrollArea knobs.
+//
+// The defaults reserve the scroll strip on both sides, which a menu-style list docked to the
+// popover edge does not want: `padding={false}` makes the rows flush, matching `Listbox`.
 //
 
-type SearchListViewportProps = {};
+type SearchListViewportProps = Pick<ScrollAreaRootProps, 'thin' | 'padding' | 'centered'>;
 
-const SearchListViewport = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
+const SearchListViewport = composable<HTMLDivElement, SearchListViewportProps>((props, forwardedRef) => {
+  const {
+    thin = true,
+    padding = true,
+    centered = true,
+    children,
+    ...rest
+  } = props as PropsWithChildren<SearchListViewportProps & Record<string, unknown>>;
   return (
-    <ScrollArea.Root {...composableProps(props)} role='listbox' centered padding thin ref={forwardedRef}>
+    <ScrollArea.Root
+      {...composableProps<HTMLDivElement>(rest)}
+      {...{ thin, padding, centered }}
+      role='listbox'
+      ref={forwardedRef}
+    >
       <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
     </ScrollArea.Root>
   );

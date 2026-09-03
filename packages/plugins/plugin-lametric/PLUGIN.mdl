@@ -25,6 +25,8 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `component` | `org.dxos.mdl.component@1.0`  |
+| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `step`      | `org.dxos.mdl.step@1.0`       |
 
 ## Types
 
@@ -180,6 +182,51 @@ test T-6: The request is what the device expects
   given: a stand-in HTTP device and a configured local transport
   then: it receives POST /api/v2/widget/update/com.lametric.diy.devwidget/<widget> with a Basic
     `dev:<api key>` credential and the frames as its body
+```
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+This plugin has no `op` extension and ships no registered operations — the driver is a settings
+config plus a background push loop, not something a user object-model action drives. It is
+dev-only in `getDefaults` (`isDev`), so OFF for a normal user; enabling it is a Settings action,
+same caveat as plugin-chess's own enable step.
+
+```mdl
+flow QA-1: Configure a local device and see the display take over
+  desc: The one user-visible surface — entering transport settings and watching the driver push.
+    No object is created, invoked, or read back through ECHO; the "device" itself is external
+    hardware or a stand-in HTTP server, neither of which the debug port can drive.
+  actors: human
+  covers: [F-1.3, F-2.1, F-2.4]
+  status: blocked
+  given:
+    - an identity exists
+    - plugin-lametric is enabled — it is OFF by default (isDev-only default). Enabling is a UI
+      action (Settings -> plugin registry); no operation enables it programmatically.
+    - a LaMetric TIME device is reachable on the LAN, with its address, API key and widget id known
+  test:
+    - name: Enter the device address and API key
+      do: Open Settings -> LaMetric and fill in address, port, scheme, and the `dev` Basic API key.
+      expect: PushStatus moves from idle toward pushed once the widget id is discovered
+      note: |
+        NO `invoke` — this plugin declares no operations at all (no `## Operations` section, no
+        `key:` anywhere in source); settings are a plain form bound to TransportConfig.
+      blocked: |
+        Requires physical LaMetric hardware (or a stand-in HTTP server standing in for one) on a
+        reachable LAN, and only works from the Tauri shell — the web view cannot reach either the
+        device or LaMetric's cloud (F-2.2). No such fixture exists in this repo's QA harness.
+    - name: Watch the device cycle through statistics
+      do: With no task running, look at the device (or VirtualLaMetric in storybook).
+      expect: frames show the space's object, feed, type and plugin counts, at most four, each with
+        an explicit `index`
+      note: NO `invoke` — this is an observation of hardware/story output, not an ECHO effect.
+  after:
+    - name: Clear the device settings
+      do: Open Settings -> LaMetric and clear the address/API key fields.
+      expect: PushStatus returns to idle and no further requests are sent
 ```
 
 ---

@@ -12,7 +12,7 @@ import { Message } from '@dxos/types';
 import * as AiSession from './AiSession';
 import * as SessionLink from './SessionLink';
 
-// Monotonic timestamps so chronological sorting in SessionLoader is deterministic.
+// Monotonic timestamps so chronological sorting in SessionStore is deterministic.
 let clock = 0;
 const makeMessage = (text: string, sender: 'user' | 'assistant' = 'user') =>
   Message.make({ created: new Date(clock++).toISOString(), sender, blocks: [{ _tag: 'text', text }] });
@@ -230,6 +230,23 @@ describe('AiSession.Session rewind', () => {
 
       const history = yield* Effect.promise(() => session.getHistory());
       expect(history.map((message) => message.id)).toEqual([first.id, answer.id, retry.id]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+});
+
+describe('AiSession.sessionAnnotations', () => {
+  const TestLayer = TestDatabaseLayer({ types: [Feed.Feed, Message.Message, SessionLink.SessionLink] });
+
+  it.effect('names the conversation and the space it runs in', () =>
+    Effect.gen(function* () {
+      const { db } = yield* Database.Service;
+      const feed = db.add(Feed.make());
+
+      const annotations = AiSession.sessionAnnotations(feed);
+
+      expect(annotations.spaceId).toEqual(db.spaceId);
+      expect(annotations['dxos.ai.session_id']).toContain(db.spaceId);
+      expect(annotations['dxos.ai.session_id']).toContain(feed.id);
     }).pipe(Effect.provide(TestLayer)),
   );
 });

@@ -7,6 +7,7 @@
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import type * as Stream from 'effect/Stream';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import type { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
@@ -34,6 +35,9 @@ export interface Service {
 
 export class AgentService extends Context.Service<AgentService, Service>()('@dxos/functions-runtime/AgentService') {}
 
+/** Re-exported so callers importing this module as a namespace avoid `AgentService.AgentService.key`. */
+export const key = AgentService.key;
+
 /**
  * Handle to an agent session.
  */
@@ -57,6 +61,12 @@ export interface Session {
    * Submit a turn: a plain user prompt, or pre-built content blocks (e.g. synthetic context + prompt).
    */
   submitPrompt: (prompt: string | ContentBlock.Any[]) => Effect.Effect<void>;
+
+  /**
+   * True while the agent is working on a turn (running, or waiting on a tool call or alarm); false
+   * when it is idle awaiting input, or terminal.
+   */
+  readonly running: Atom.Atom<boolean>;
 
   /**
    * Wait until agent has completed its work.

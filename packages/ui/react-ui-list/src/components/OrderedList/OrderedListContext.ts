@@ -22,6 +22,8 @@ export type OrderedListContextValue<T extends ListItemRecord> = {
   reorder: ReorderListController<T>;
   disclosure: UseListDisclosureReturn;
   navigation: UseListNavigationReturn;
+  /** Mirrors the mode given to `useListNavigation`, so a row knows which aria grammar it is in. */
+  navigationMode: 'list' | 'listbox';
   readonly?: boolean;
   active: ReorderActive<T>;
   /**

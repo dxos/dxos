@@ -46,6 +46,9 @@
       "path": "tools/beast/tsconfig.json"
     },
     {
+      "path": "packages/core/echo/blob/tsconfig.json"
+    },
+    {
       "path": "packages/ui/brand/tsconfig.json"
     },
     {
@@ -268,9 +271,6 @@
       "path": "packages/common/invariant/tsconfig.json"
     },
     {
-      "path": "packages/common/keyboard/tsconfig.json"
-    },
-    {
       "path": "packages/core/halo/keyring/tsconfig.json"
     },
     {
@@ -382,7 +382,7 @@
       "path": "packages/plugins/plugin-chess-com/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-claude-agents/tsconfig.json"
+      "path": "packages/plugins/plugin-claude/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-client/tsconfig.json"
@@ -550,6 +550,9 @@
       "path": "packages/plugins/plugin-pwa/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-qa/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-registry/tsconfig.json"
     },
     {
@@ -557,6 +560,9 @@
     },
     {
       "path": "packages/plugins/plugin-routine/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-s3/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-sample/tsconfig.json"
@@ -692,6 +698,9 @@
     },
     {
       "path": "packages/ui/react-primitives/react-error-boundary/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-primitives/react-focus/tsconfig.json"
     },
     {
       "path": "packages/ui/react-primitives/react-hooks/tsconfig.json"
@@ -929,6 +938,12 @@
     },
     {
       "path": "packages/ui/ui-editor/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/ui-icons/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/ui-template/tsconfig.json"
     },
     {
       "path": "packages/ui/ui-theme/tsconfig.json"

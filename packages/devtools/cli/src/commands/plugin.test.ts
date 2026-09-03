@@ -81,7 +81,7 @@ describe('plugin enable / disable', () => {
         expect(runDx(['plugin', 'disable', MARKDOWN], { home }).status).toBe(0);
         expect(listPlugins(home).find((row) => row.id === MARKDOWN)?.enabled).toBe(false);
 
-        const contents = fs.readFileSync(pluginsFile(home), 'utf8');
+        const contents = fs.readFileSync(path.join(home, '.config', 'dx', 'plugins', 'default.yml'), 'utf8');
         expect(contents).not.toContain(MARKDOWN);
         // Core is host policy, not a user choice — persisting it would outlive a host that stops
         // pinning the plugin.
@@ -103,8 +103,8 @@ describe('plugin enable / disable', () => {
     'an empty file means nothing optional is enabled, not "use the defaults"',
     ({ expect }) => {
       withIsolatedHome((home) => {
-        fs.mkdirSync(path.dirname(pluginsFile(home)), { recursive: true });
-        fs.writeFileSync(pluginsFile(home), '[]\n');
+        fs.mkdirSync(path.dirname(path.join(home, '.config', 'dx', 'plugins', 'default.yml')), { recursive: true });
+        fs.writeFileSync(path.join(home, '.config', 'dx', 'plugins', 'default.yml'), '[]\n');
 
         const enabled = listPlugins(home)
           .filter((row) => row.enabled)
@@ -142,5 +142,3 @@ const listPlugins = (home: string, args: string[] = []): PluginRow[] => {
   }
   return JSON.parse(stdout);
 };
-
-const pluginsFile = (home: string) => path.join(home, '.config', 'dx', 'plugins', 'default.yml');

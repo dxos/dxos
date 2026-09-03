@@ -19,8 +19,14 @@ This file is the shared, harness-agnostic entrypoint for coding agents.
     the primary checkout instead of the assigned worktree (a known harness
     mis-instantiation; say so once — it affects only Desktop UI pairing, never
     data safety). Never run `git worktree add` to "fix" it.
-  - `main` → STOP, write nothing, tell the user. Never create a worktree or
-    branch to escape — the harness owns those.
+  - `main` → write nothing here. Research (reads, greps, subagents) is fine and
+    is the normal reason a session starts on `main`. The moment the work turns
+    to editing, **call the harness's `EnterWorktree` tool yourself and carry on**
+    — do NOT stop to ask, and do NOT offer "start a new session" or "you make a
+    worktree" as options. That tool is the sanctioned promotion path and is not
+    the `git worktree add` / `git checkout -b` banned under Non-negotiables:
+    those are raw git commands that desync the harness's own record. Ask only if
+    `EnterWorktree` itself fails.
 - **Cloud sandbox sessions differ.** If `CLAUDE_CODE_REMOTE` is set you are in the Claude Code
   cloud sandbox. `.claude/settings.json` hooks fire there as they do locally, so `/mode` and the
   branch/worktree guards behave normally. What is missing is everything outside the clone:
@@ -32,6 +38,10 @@ This file is the shared, harness-agnostic entrypoint for coding agents.
   from Chromium → `cloud-sandbox` skill.
 - First reply: confirm these instructions and follow the reporting rule below.
 - If unsure how to implement something, ask rather than guess.
+- **The only setup question worth asking is whether to register a project.** Not
+  every session earns a `TASKS.md`/`DESIGN.md` and a registry entry. When work
+  begins, ask that one question (numbered, alongside the plan) and decide
+  everything else — worktree, branch, commits — yourself.
 
 ## Responding to the user
 
@@ -52,6 +62,11 @@ a large skill loads mid-session (see `.claude/README.md` §A).
   short flat numbered list; `normal` (the default) sets no budget but keeps
   length proportionate — length is earned by content, never by restating. Set it
   with `/mode terse` / `/mode normal`.
+- **`/mode focus [task]` pins the work as well as the length.** It is `terse`
+  plus one pinned task — with no task on the line, the previous instruction is
+  the pin. While pinned, work on nothing else: no adjacent fixes, no CI or PR
+  polling, and an off-task request gets one line naming the conflict plus a
+  numbered choice. `/mode terse` or `/mode normal` clears the pin.
 - These govern form only. They never override correctness, required safety
   steps, showing test/command output, or reporting a failure honestly.
 
@@ -83,8 +98,11 @@ Treat the user as an expensive, intermittent resource — minimize round-trips.
   - Do NOT run `git worktree add`, `git checkout -b`/`-B`, `git switch -c`/`-C`,
     or `git branch -m`/`-M` (the `guard-branch.sh` hook denies these).
   - Do NOT create a new branch or a side worktree, even if a skill or tool
-    suggests it. This overrides `superpowers:using-git-worktrees` and the
-    `EnterWorktree`/`ExitWorktree` tools — the workspace already exists.
+    suggests it. This overrides `superpowers:using-git-worktrees` — when the
+    harness already assigned a workspace, it exists and you use it.
+  - **The one exception is `EnterWorktree` on a session sitting on `main`.**
+    There the harness assigned nothing, so the tool is how you get a workspace,
+    not how you escape one. Call it without asking (see Start of session).
   - Work only in the assigned directory; if you need a different branch, ask the
     user rather than switching.
 - **Test after every step.** Never claim work is done without running the
@@ -147,6 +165,14 @@ A remote-cache warning from moon is harmless — builds work, they just don't sh
 cache. Worth fixing anyway: `tools/moon-cache/install-certs.sh --op` installs the certificates
 once per machine, for every worktree.
 
+**Run every long task in the background.** A repo-wide build, `pnpm install`, a full `:test` sweep,
+a repo-wide `oxfmt`, a storybook or dev server — anything expected to run past ~30s — goes in the
+background (`run_in_background: true` on the Claude harness), and you keep working while it runs.
+A long task held in the foreground freezes the session: the user cannot redirect you, and killing
+the run is their only way to regain control — which also abandons whatever the task was verifying.
+To wait on a condition, background an `until <check>; do sleep 2; done`; never a foreground `sleep`.
+The foreground is for short commands whose result decides your next step.
+
 ## Code style
 
 Universal rules. Deeper conventions live in skills — see the pointers below.
@@ -195,8 +221,9 @@ Deeper conventions:
 - Commit hygiene → see "Commit nothing silently" in Non-negotiables.
 - Creating or landing a PR is a procedure — use the `submit-pr` and `land`
   skills. Always surface the Composer preview URL next to the PR link.
-- Consumer-relevant changes need a `.changeset/*.md` before opening the PR —
-  see [`agents/instructions/changesets.md`](agents/instructions/changesets.md)
+- Consumer-relevant changes need a `.changeset/*.md`: written when opening the
+  PR and rewritten before landing, as a summary of the whole PR — see
+  [`agents/instructions/changesets.md`](agents/instructions/changesets.md)
   for when to add one, which package to name, and bump levels.
 
 ## Handing an agent a credential

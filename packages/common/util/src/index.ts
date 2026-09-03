@@ -45,6 +45,7 @@ export * from './reducers';
 export * from './remove-undefined-keys';
 export * from './retry';
 export * from './safe-await';
+export * from './safe-fetch';
 export * from './safe-instanceof';
 export * from './safe-parse';
 export * from './safe-stringify';

@@ -8,9 +8,11 @@ import React, { Fragment, useCallback, useEffect, useMemo, useRef, useState } fr
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { useAtomCapability, useAtomCapabilityState, useCapabilities } from '@dxos/app-framework/ui';
+import { EdgeServiceName } from '@dxos/config';
 import { log } from '@dxos/log';
 import { linkEntities } from '@dxos/pipeline-transcription';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
+import { useEdgeServiceEndpoint } from '@dxos/react-client';
 import { useAudioTrack, useTranscriber } from '@dxos/react-ui-transcription';
 import { type ContentBlock } from '@dxos/types';
 import { PendingTextStreamer, cancelPendingText, editorPendingTextSink, pendingTextState } from '@dxos/ui-editor';
@@ -34,6 +36,7 @@ const TranscriptionDriver = () => {
   // Injected entity resolver (full-text/vector/…); the driver stays decoupled from the database.
   const [lookup] = useCapabilities(TranscriptionCapabilities.EntityLookup);
   const settings = useAtomCapability(TranscriptionCapabilities.Settings);
+  const endpoint = useEdgeServiceEndpoint(EdgeServiceName.Transcription);
 
   const [, setStatus] = useAtomCapabilityState(TranscriptionCapabilities.PipelineStatus);
 
@@ -87,7 +90,10 @@ const TranscriptionDriver = () => {
   // Keep the track (and thus the transcriber) alive across the whole active session — including the
   // drain — so the transcriber can flush its buffered audio before teardown. Released at idle. The
   // mic indicator therefore lingers for the brief drain after stop.
-  const track = useAudioTrack(active, audioConstraints);
+  // Gate the mic on the endpoint: `useAudioTrack` calls `getUserMedia` as soon as its flag is
+  // true, so without this the permission prompt and recording indicator appear before `open()`
+  // rejects for a transcription service that was never configured.
+  const track = useAudioTrack(active && !!endpoint, audioConstraints);
 
   // Refs so `handleSegments` stays stable (changing it would recreate the transcriber).
   const sessionIdRef = useRef(sessionId);
@@ -169,8 +175,9 @@ const TranscriptionDriver = () => {
         1,
         Math.round((settings?.transcribeAfterMs ?? 4000) / RECORDER_INTERVAL_MS),
       ),
+      endpoint,
     }),
-    [settings?.transcribeAfterMs],
+    [settings?.transcribeAfterMs, endpoint],
   );
 
   // Stable identity: a fresh object would change useTranscriber's memo deps every render, recreating

@@ -4,7 +4,9 @@ tags:
   - composer-plugin
   - ts-vite-build
   - ts-test
+  - ts-test-storybook
   - pack
+  - storybook
 tasks:
   # Fail when the ./plugin export pulls in React. The node/workerd plugin variant must stay
   # loadable outside a DOM, and neither `Capability.lazy` nor `OperationHandlerSet.lazy` stops a

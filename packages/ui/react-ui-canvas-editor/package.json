@@ -47,6 +47,7 @@
     "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/react-focus": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-canvas": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
@@ -56,8 +57,7 @@
     "@effect/atom-react": "catalog:",
     "bind-event-listener": "catalog:",
     "d3": "catalog:",
-    "lodash.defaultsdeep": "catalog:",
-    "react-hotkeys-hook": "catalog:"
+    "lodash.defaultsdeep": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",

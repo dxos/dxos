@@ -34,6 +34,9 @@
       "path": "../../common/keys"
     },
     {
+      "path": "../../common/log"
+    },
+    {
       "path": "../../common/util"
     },
     {
@@ -101,6 +104,9 @@
     },
     {
       "path": "../plugin-github"
+    },
+    {
+      "path": "../plugin-markdown"
     },
     {
       "path": "../plugin-space"

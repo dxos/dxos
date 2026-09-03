@@ -3,7 +3,7 @@
 //
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import { keySymbols } from '@dxos/keyboard';
+import { keySymbols } from '@dxos/react-focus';
 import { type TFunction, toLocalizedString } from '@dxos/react-ui';
 import { type MenuActionProperties, type MenuItemChrome } from '@dxos/ui-types';
 

@@ -9,8 +9,10 @@ import * as Match from 'effect/Match';
 import { DXOS_VERSION, Remote } from '@dxos/client';
 import { Config, Defaults, Envs, Local, Storage, getEnvString } from '@dxos/config';
 import { type IdbLogStore } from '@dxos/log-store-idb';
-import { Observability, ObservabilityExtension, ObservabilityProvider } from '@dxos/observability';
-import { getHostPlatform } from '@dxos/util';
+import * as Observability from '@dxos/observability/Observability';
+import * as ObservabilityExtension from '@dxos/observability/ObservabilityExtension';
+import * as ObservabilityProvider from '@dxos/observability/ObservabilityProvider';
+import { getHostPlatform, isNonNullable } from '@dxos/util';
 
 import { APP_DOMAIN, FEEDBACK_LOGS_PATH, LOG_STORE_MAX_BYTES } from './constants';
 
@@ -79,12 +81,15 @@ const feedbackLogsEndpoint = (config: Config, isTauri: boolean): string | undefi
     ? (getEnvString(config, 'DX_FEEDBACK_LOGS_ENDPOINT') ?? `https://${APP_DOMAIN}${FEEDBACK_LOGS_PATH}`)
     : undefined;
 
+const composerBuildVersion = (config: Config): string | undefined => config.get('runtime.app.build.version');
+
 /** Initialize observability extensions and data providers for Composer. */
 export const initializeObservability = async (
   config: Config,
   isTauri: boolean,
   logStore?: IdbLogStore,
   observabilityDisabled = false,
+  observabilityWorker?: ObservabilityExtension.Otel.OtelWorkerPort,
 ) =>
   Function.pipe(
     Observability.make(),
@@ -96,6 +101,8 @@ export const initializeObservability = async (
         environment: getEnvString(config, 'DX_ENVIRONMENT') ?? 'unknown',
         config,
         logs: true,
+        observabilityWorker,
+        additionalDestinations: [ObservabilityExtension.PostHog.otelDestination(config)].filter(isNonNullable),
         metrics: true,
         traces: true,
       }),
@@ -103,7 +110,7 @@ export const initializeObservability = async (
     Observability.addExtension(
       ObservabilityExtension.PostHog.extensions({
         config,
-        release: DXOS_VERSION,
+        release: composerBuildVersion(config),
         environment: getEnvString(config, 'DX_ENVIRONMENT') ?? 'unknown',
         logStore,
         feedbackLogMaxSize: LOG_STORE_MAX_BYTES,
@@ -116,7 +123,7 @@ export const initializeObservability = async (
     // Registered here rather than in plugin-observability because this runs in the dedicated
     // worker too, and the plugin's capability only runs in the tab — so the worker's own event
     // loop would otherwise never be measured.
-    Observability.addDataProvider(ObservabilityProvider.Client.eventLoopLagProvider()),
+    Observability.addDataProvider(ObservabilityProvider.EventLoopLag.eventLoopLagProvider()),
     Observability.addDataProvider(platformProvider(isTauri)),
     Observability.initialize,
     Effect.runPromise,

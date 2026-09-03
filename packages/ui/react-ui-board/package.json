@@ -12,7 +12,11 @@
   "author": "DXOS.org",
   "type": "module",
   "imports": {
-    "#translations": "./src/translations.ts"
+    "#translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "default": "./dist/lib/translations.mjs"
+    }
   },
   "exports": {
     ".": {

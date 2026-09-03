@@ -9,7 +9,7 @@ import { describe, expect, test } from 'vitest';
 import { registryLayer } from '@dxos/echo-client';
 import { DXN } from '@dxos/keys';
 
-import { FunctionNotFoundError } from '../errors';
+import { FunctionNotFoundError, NoHandlerError } from '../errors';
 import * as Operation from '../Operation';
 import * as Template from './Template';
 
@@ -47,13 +47,14 @@ describe('Template', () => {
 
     test('InputKind accepts all documented kinds', () => {
       const decode = Schema.decodeSync(Template.InputKind);
-      for (const kind of ['value', 'operation']) {
-        expect(decode(kind as any)).toBe(kind);
+      const kinds: readonly Template.InputKind[] = ['value', 'operation'];
+      for (const kind of kinds) {
+        expect(decode(kind)).toBe(kind);
       }
     });
 
     test('InputKind rejects unknown kinds', () => {
-      expect(() => Schema.decodeSync(Template.InputKind)('nonsense' as any)).toThrow();
+      expect(() => Schema.decodeUnknownSync(Template.InputKind)('nonsense')).toThrow();
     });
   });
 
@@ -97,21 +98,21 @@ describe('Template', () => {
     );
 
     // Handler map: full DXN key → invocable function.
-    const handlersByKey: Record<string, (input: any) => Effect.Effect<any, any, any>> = {
-      [GREET_KEY]: (input) => greet.handler(input),
+    const handlersByKey: Record<string, (input: unknown) => Effect.Effect<unknown, unknown, unknown>> = {
+      [GREET_KEY]: () => greet.handler(undefined),
     };
 
     const stubInvoker = Effect.provideService(Operation.Service, {
-      invoke: (op: any, input: any) => {
+      invoke<I, O>(op: Operation.Definition<I, O>, ...args: [input?: I, options?: Operation.InvokeOptions]) {
         const key = String(op.meta.key);
         const handler = handlersByKey[key];
-        return handler ? handler(input) : Effect.die(`no handler for key: ${key}`);
+        // The map is keyed by string, so the per-operation O is recovered here via the call's own
+        // generic rather than tracked through the map's (necessarily erased) value type.
+        return (handler ? handler(args[0]) : Effect.fail(new NoHandlerError(key))) as Effect.Effect<O, NoHandlerError>;
       },
       schedule: () => Effect.succeed(undefined),
       invokePromise: () => Promise.resolve({}),
-      // Operation.OperationService.invoke is a complex overloaded type; a partial test stub
-      // cannot express all overload variants without the cast.
-    } as unknown as Operation.OperationService);
+    } satisfies Operation.OperationService);
 
     test('resolves a value-kind input from its default', async () => {
       const template = Template.make({

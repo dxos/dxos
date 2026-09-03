@@ -16,7 +16,7 @@ import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
-import { Message, Outline, Task, TaskSet } from '@dxos/types';
+import { Message, Outline, Task } from '@dxos/types';
 
 import { Agent, Chat } from '../../../types';
 import { PlanReminder } from './definitions';
@@ -30,7 +30,6 @@ describe('PlanReminder', () => {
     Effect.fnUntraced(
       function* (_) {
         const conversation = yield* setupChatWithChecklist([false]);
-
         const exit = yield* Effect.exit(Operation.invoke(PlanReminder, {}).pipe(Effect.provide(conversation)));
 
         expect(Exit.isFailure(exit)).toBe(true);
@@ -45,7 +44,6 @@ describe('PlanReminder', () => {
     Effect.fnUntraced(
       function* (_) {
         const conversation = yield* setupChatWithChecklist([false]);
-
         const exit = yield* Effect.exit(Operation.invoke(PlanReminder, {}).pipe(Effect.provide(conversation)));
 
         expect(Exit.isSuccess(exit)).toBe(true);
@@ -60,7 +58,6 @@ describe('PlanReminder', () => {
     Effect.fnUntraced(
       function* (_) {
         const conversation = yield* setupChatWithChecklist([true]);
-
         const exit = yield* Effect.exit(Operation.invoke(PlanReminder, {}).pipe(Effect.provide(conversation)));
 
         // The script is empty, so reaching the model at all would fail as exhausted.
@@ -78,14 +75,13 @@ describe('PlanReminder', () => {
   );
 });
 
-/** Creates a chat bound to its feed, carrying a working task set with the given item states. */
+/** Creates a chat bound to its feed, carrying a checklist with the given item states. */
 const setupChatWithChecklist = Effect.fnUntraced(function* (states: readonly boolean[]) {
   const feed = yield* Database.add(Feed.make());
   const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
-  const taskSet = yield* Chat.ensureTaskSet(chat);
   const { db } = yield* Database.Service;
   states.forEach((done, index) => {
-    TaskSet.addTask(db, taskSet, `Task ${index}`, { status: done ? 'done' : 'todo' });
+    Chat.addTask(db, chat, `Task ${index}`, { status: done ? 'done' : 'todo' });
   });
   yield* Database.flush();
 
@@ -99,7 +95,6 @@ const setupChatWithChecklist = Effect.fnUntraced(function* (states: readonly boo
 const types = [
   Agent.Agent,
   Outline.Outline,
-  TaskSet.TaskSet,
   Task.Task,
   Text.Text,
   Chat.Chat,

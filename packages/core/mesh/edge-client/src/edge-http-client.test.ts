@@ -188,8 +188,8 @@ describe('EdgeHttpClient auth refresh', () => {
       signalAuthStarted = resolve;
     });
     let authCallCount = 0;
-    const fetchMock = vi.fn(async (input: any, _init?: RequestInit) => {
-      const url = String(input instanceof URL ? input : (input.url ?? input));
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) => {
+      const url = String(input instanceof URL ? input : typeof input === 'string' ? input : (input.url ?? input));
       if (url.endsWith('/auth')) {
         if (authCallCount++ === 0) {
           signalAuthStarted();

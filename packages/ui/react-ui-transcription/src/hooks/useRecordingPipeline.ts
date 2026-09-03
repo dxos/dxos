@@ -31,7 +31,10 @@ const DEFAULT_TRANSCRIBE_CONFIG: TranscribeConfig = {
 };
 
 export type RecordingPipelineOptions = {
-  /** Override the transcriber chunk configuration. */
+  /**
+   * Transcriber configuration. Must carry `endpoint` (there is no built-in one); a transcriber
+   * without it rejects on `open()` with `TranscriptionEndpointNotConfiguredError`.
+   */
   config?: Partial<TranscribeConfig>;
   /** Re-segment ASR output into complete sentences before the pipeline (merges mid-sentence cuts). */
   segmentSentences?: boolean;

@@ -73,7 +73,7 @@ const DefaultStory = ({
           onClick={() => controller.current?.scrollToIndex(messages.length - 1, 'end')}
         />
       </Toolbar.Root>
-      <div ref={bodyRef} className='grow min-h-0'>
+      <div ref={bodyRef} className='dx-grow'>
         <MessageWindow
           messages={messages}
           renderer={definition.renderer}

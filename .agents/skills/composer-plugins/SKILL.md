@@ -187,7 +187,7 @@ Phase 1, before the PR. The skeleton should include:
 
 Build and lint the skeleton before adding features.
 Add capabilities incrementally as needed (operations, skills, settings, etc.).
-Register the plugin with `composer-app`.
+Register the plugin with `composer-app`: `FooPlugin.make()` in `getPlugins`, and its key in the `isDev` block of `getDefaults` unless the plugin hits a permission-gated API on activation (rule 5 under **Activation waves**).
 
 Once the plugin contributes a navtree section, apply both rules under **App graph** below — gate the section on a non-empty query, and default the create-object `targetNodeId` to the node that lists the objects.
 
@@ -531,7 +531,7 @@ Modules come from **makers** in `AppCapability` (loader-based) or `Capability.la
 the app is interactive, and is pullable earlier as a dependency. That is the right default for
 almost everything; the exceptions are listed above and are baked into the makers.
 
-Four rules, each learned from a shipped regression:
+Five rules, each learned from a shipped regression:
 
 1. **Use the maker.** A module that builds its spec by hand (`Capability.lazyModule({ provides:
 [Capabilities.ReactContext] })`) bypasses the maker's gate and silently inherits the idle
@@ -549,6 +549,12 @@ Four rules, each learned from a shipped regression:
 4. **Cross-plugin contributions ride the CONSUMING plugin's start event** — a skill rides the
    assistant's, a markdown extension rides markdown's — so the contribution costs nothing until its
    host is in use.
+5. **Permission-gated APIs wait for a user action.** A prompt raised from `activate` has no
+   context to justify it, so the user Blocks it and the block sticks for the whole origin. Covers
+   `getUserMedia`, `getDisplayMedia`, notifications, geolocation, clipboard reads,
+   `bluetooth`/`usb`/`serial`/`hid`/`midi`, `storage.persist()`, and any `fetch` or `WebSocket` to
+   localhost or a LAN address, which raises Chrome's local network prompt with no permission API in
+   the code. Such a plugin also stays out of `getDefaults` in every environment.
 
 A plugin's own `<Plugin>Events.Start` fires on demand: the module loader fires it when one of the
 plugin's modules contributes a `ReactSurface`. An unvisited feature never starts.
@@ -688,7 +694,8 @@ See: `plugin-chess/moon.yml`
 - Avoid default exports in `src/components/`. The only default exports are in container `index.ts` files (for `React.lazy`).
 - Container-to-container imports use the default import: `import X from '../X';`.
 - Use `Panel.Root` with `role` prop in container article/section components.
-- All ECHO interfaces must be reactive. Use `useQuery`, `useObject`, atoms, etc.
+- All ECHO interfaces must be reactive. Use `useQuery`, `useObject`, atoms, etc. — patterns and
+  anti-patterns in the [reactivity](../reactivity/SKILL.md) skill.
 - Never hand-roll native `<input>`/`<textarea>`/`<select>` or invent color tokens (`bg-input`, `text-primary`). Edit objects with `Form` + schema and use `@dxos/react-ui` primitives / real `@dxos/react-ui-theme` tokens. See the **composer-ui** skill.
 
 ## Build & Test

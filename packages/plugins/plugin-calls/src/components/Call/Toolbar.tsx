@@ -32,6 +32,8 @@ export type ToolbarProps = ThemedClassName<{
   autoHideControls?: boolean;
   isInRoom?: boolean;
   onJoin?: () => void;
+  /** Calls service unconfigured: the join control renders disabled rather than doing nothing. */
+  joinDisabled?: boolean;
   onLeave?: () => void;
 }>;
 
@@ -43,6 +45,7 @@ export const Toolbar = ({
   autoHideControls = true,
   isInRoom,
   onJoin,
+  joinDisabled,
   onLeave,
 }: ToolbarProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -171,6 +174,7 @@ export const Toolbar = ({
             variant='primary'
             icon='ph--phone-incoming--regular'
             label={t('join-call.button')}
+            disabled={joinDisabled}
             onClick={onJoin}
           />
         )}

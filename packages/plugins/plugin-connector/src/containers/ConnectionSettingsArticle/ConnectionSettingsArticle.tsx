@@ -41,6 +41,7 @@ export const ConnectionSettingsArticle = (_props: ConnectionSettingsArticleProps
     if (!space) {
       return;
     }
+
     void invokePromise(SpaceOperation.OpenObjectForm, {
       target: space.db,
       typename: Type.getTypename(Connection.Connection),
@@ -53,6 +54,7 @@ export const ConnectionSettingsArticle = (_props: ConnectionSettingsArticleProps
       if (!db) {
         return;
       }
+
       void invokePromise(LayoutOperation.Open, {
         subject: [connectionDeckSubject(GraphPath.getSpacePath(db.spaceId), connection.id)],
         navigation: 'immediate',

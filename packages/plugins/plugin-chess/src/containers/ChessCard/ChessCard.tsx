@@ -20,7 +20,12 @@ export const ChessCard = ({ variant }: ChessCardProps) => {
 
   return (
     <Card.Body>
-      <Card.Section classNames='aspect-square'>
+      {/* `aspect-square` is a preference, not a guarantee: the board's size container takes no
+          height from content, so the section supplies one. The `max-h` bounds it by the popover's
+          height budget (minus header chrome) so a tight anchor SHRINKS the board — the board draws
+          at min(width, height) — instead of the card clipping its bottom. Outside a popover the
+          variable is absent and the fallback leaves the square unconstrained. */}
+      <Card.Section classNames='aspect-square min-h-0 max-h-[calc(min(var(--radix-popper-available-height,800px),var(--spacing-card-max-height))-3rem)]'>
         {/* `self-stretch`: the section centers its rows, so the row would sit at its content height —
             zero here, since the board sizes itself from the container rather than from its content. */}
         <Card.Row fullWidth classNames='self-stretch'>

@@ -5,13 +5,15 @@
 import { type Extension } from '@codemirror/state';
 import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
+import { useCapabilities } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 import { SchemaEx } from '@dxos/effect';
 import { URI } from '@dxos/keys';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { useQuery } from '@dxos/react-client/echo';
-import { Panel, ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Panel, Show, ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
 import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Outline as OutlineType, Task, TaskSet } from '@dxos/types';
@@ -30,13 +32,6 @@ export type OutlineArticleProps = AppSurface.ObjectArticleProps<OutlineType.Outl
    * toolbar, and a second one inside its section reads as a nested editor.
    */
   toolbar?: boolean;
-  /**
-   * Where a click on a promoted item's link goes when the embedder owns a task surface of its own
-   * (a project shows the task on its Tasks tab). Unset, the outline swaps itself for the task form.
-   */
-  onSelectTask?: (task: Task.Task) => void;
-  /** Editor extensions contributed by the host (e.g. plugin-github's `#123` decoration). */
-  extensions?: Extension[];
 };
 
 export const OutlineArticle = ({
@@ -45,8 +40,6 @@ export const OutlineArticle = ({
   subject: outline,
   taskSet,
   toolbar = true,
-  onSelectTask,
-  extensions,
 }: OutlineArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const db = Obj.getDatabase(outline);
@@ -77,16 +70,20 @@ export const OutlineArticle = ({
   );
 
   const handleSelectLink = useCallback((url: string) => setSelected(URI.make(url)), []);
-
-  // The link resolves asynchronously, so the hand-off waits for the target rather than the click,
-  // and clears the selection so the outline stays put instead of swapping to the task form.
-  useEffect(() => {
-    if (task && onSelectTask) {
-      setSelected(undefined);
-      onSelectTask(task);
-    }
-  }, [task, onSelectTask]);
   const handleBack = useCallback(() => setSelected(undefined), []);
+
+  // Editor extensions other plugins contribute (e.g. plugin-github's `#123` decoration), read here
+  // rather than handed down as a prop: this is the component that builds the editor, which is the
+  // same contract `MarkdownArticle` honours for markdown documents.
+  const extensionProviders = useCapabilities(MarkdownCapabilities.ExtensionProvider);
+  const extensions = useMemo<Extension[]>(
+    () =>
+      (extensionProviders ?? [])
+        .flat()
+        .map((provider) => (typeof provider === 'function' ? provider({}) : provider))
+        .filter((extension): extension is Extension => !!extension),
+    [extensionProviders],
+  );
 
   // Reactive: on a cold load (or a story that seeds during client init) the content ref's target
   // is not yet in memory, and a `.target` read would leave the editor permanently unmounted.
@@ -95,7 +92,9 @@ export const OutlineArticle = ({
   const outlineRef = useRef<OutlineController>(null);
   const handleConvertCurrent = useCallback(() => outlineRef.current?.convertToTask(), []);
 
-  const tasks = useQuery(db, taskSet ? Filter.type(Task.Task) : Filter.nothing());
+  // Membership is the ECHO parent edge; transitive `childOf` also catches legacy sub-tasks still
+  // parented to their parent task.
+  const tasks = useQuery(db, taskSet ? Filter.and(Filter.type(Task.Task), Filter.childOf(taskSet)) : Filter.nothing());
   // `useQuery` re-emits only when result membership changes, never on a member's property change,
   // so renames are observed by subscribing to each task; the bump rebuilds the resolver, whose new
   // identity re-runs the editor's label sync.
@@ -109,12 +108,9 @@ export const OutlineArticle = ({
   const [convertible, setConvertible] = useState(true);
 
   const resolveLinkLabel = useMemo(() => {
-    const members = new Set(taskSet?.tasks.map((ref) => ref.target?.id));
-    const labels = new Map(
-      tasks.filter((task) => members.has(task.id)).map((task) => [Obj.getURI(task).toString(), task.title]),
-    );
+    const labels = new Map(tasks.map((task) => [Obj.getURI(task).toString(), task.title]));
     return (url: string) => labels.get(url);
-  }, [taskSet, tasks, tick]);
+  }, [tasks, tick]);
 
   const taskActions = useMenuBuilder(
     (): ActionGraphProps =>
@@ -150,9 +146,7 @@ export const OutlineArticle = ({
     return builder.build();
   }, [t, handleConvertCurrent, taskSet, convertible]);
 
-  // `!onSelectTask`: with an embedder taking the task, the form must not paint for the frame
-  // between the target resolving and the effect above clearing the selection.
-  if (task && !onSelectTask) {
+  if (task) {
     return (
       <Menu.Root {...taskActions} attendableId={attendableId}>
         <Panel.Root role={role}>
@@ -169,36 +163,36 @@ export const OutlineArticle = ({
     );
   }
 
-  if (!text) {
-    return null;
-  }
-
   return (
-    <Outline.Root
-      ref={outlineRef}
-      id={text.id}
-      text={text}
-      onConvertToTask={taskSet ? handleConvertToTask : undefined}
-      onConvertibleChange={setConvertible}
-      onSelectLink={handleSelectLink}
-      resolveLinkLabel={resolveLinkLabel}
-      extensions={extensions}
-    >
-      <Menu.Root {...outlineActions} attendableId={attendableId}>
-        <Panel.Root role={role}>
-          {toolbar && (
-            <Panel.Toolbar>
-              <Menu.Toolbar classNames='dx-document'>
-                <Menu.Items />
-              </Menu.Toolbar>
-            </Panel.Toolbar>
-          )}
-          <Panel.Content asChild>
-            <Outline.Content classNames='dx-document' />
-          </Panel.Content>
-        </Panel.Root>
-      </Menu.Root>
-    </Outline.Root>
+    <Show when={text}>
+      {(text) => (
+        <Outline.Root
+          ref={outlineRef}
+          id={text.id}
+          text={text}
+          onConvertToTask={taskSet ? handleConvertToTask : undefined}
+          onConvertibleChange={setConvertible}
+          onSelectLink={handleSelectLink}
+          resolveLinkLabel={resolveLinkLabel}
+          extensions={extensions}
+        >
+          <Menu.Root {...outlineActions} attendableId={attendableId}>
+            <Panel.Root role={role}>
+              <Show when={toolbar}>
+                <Panel.Toolbar>
+                  <Menu.Toolbar classNames='dx-document'>
+                    <Menu.Items />
+                  </Menu.Toolbar>
+                </Panel.Toolbar>
+              </Show>
+              <Panel.Content asChild>
+                <Outline.Content classNames='dx-document' />
+              </Panel.Content>
+            </Panel.Root>
+          </Menu.Root>
+        </Outline.Root>
+      )}
+    </Show>
   );
 };
 

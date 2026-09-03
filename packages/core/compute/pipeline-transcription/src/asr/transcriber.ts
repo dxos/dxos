@@ -5,8 +5,8 @@
 import { WaveFile } from 'wavefile';
 
 import { DeferredTask, Trigger, synchronized } from '@dxos/async';
-import { EDGE_SERVICE_DEFAULTS, EdgeServiceName } from '@dxos/config';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
+import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { type ContentBlock } from '@dxos/types';
@@ -63,11 +63,20 @@ export type TranscribeConfig = {
   prefixBufferChunksAmount: number;
 
   /**
-   * Override the transcription endpoint base URL.
-   * Defaults to the DXOS calls service.
+   * Transcription endpoint base URL, normally `<edge>/calls` (the worker that serves `/transcribe`).
+   * Required for the built-in HTTP transport; only optional when a `transcribe` fn is provided.
    */
   endpoint?: string;
 };
+
+/**
+ * Raised when a transcriber is built without a transport — no `transcribe` fn and no endpoint.
+ * Typed so a caller can tell an unconfigured service from a transcription that failed in flight.
+ */
+export class TranscriptionEndpointNotConfiguredError extends BaseError.extend(
+  'TranscriptionEndpointNotConfiguredError',
+  'Transcription endpoint is not configured (runtime.services.edge.url).',
+) {}
 
 /**
  * Function that converts a base64-encoded WAV payload into Whisper segments.
@@ -125,6 +134,11 @@ export class Transcriber extends Resource {
   }
 
   protected override async _open(ctx: Context): Promise<void> {
+    // Fail before any audio is captured: a missing transport discovered mid-drain would discard
+    // the user's buffered speech.
+    if (!this._transcribeFn && !this._config.endpoint) {
+      throw new TranscriptionEndpointNotConfiguredError();
+    }
     log.info('opening');
     this._recorder.setOnChunk((chunk) => this._saveAudioChunk(chunk));
     await this._recorder.start();
@@ -254,7 +268,10 @@ export class Transcriber extends Resource {
       segments = await this._transcribeFn(audio);
     } else {
       // TODO(burdon): Create separate endpoint?
-      const endpoint = this._config.endpoint ?? EDGE_SERVICE_DEFAULTS[EdgeServiceName.Transcription];
+      const endpoint = this._config.endpoint;
+      if (!endpoint) {
+        throw new TranscriptionEndpointNotConfiguredError();
+      }
       this._transcribeAbort = new AbortController();
       let response: Response;
       try {
