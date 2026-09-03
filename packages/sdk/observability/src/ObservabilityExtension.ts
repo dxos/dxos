@@ -165,9 +165,24 @@ export type Ai = {
  * names, the argument sanitizer and the exception fan-out belong to the backend, not to the caller,
  * which is also why the payloads are richer than {@link Attributes} allows.
  */
+/**
+ * What every event in one MCP session carries. Learned at `initialize` and stamped on the calls that
+ * follow, because the backend groups sessions and attributes a harness from these and not from the
+ * handshake alone.
+ */
+export type McpSession = {
+  /** Groups the session's events; one server process is one session over a stdio transport. */
+  sessionId: string;
+  clientName?: string;
+  clientVersion?: string;
+  protocolVersion?: string;
+};
+
 export type Mcp = {
-  captureInitialize(client: { name?: string; version?: string }): void;
-  captureToolCall(call: { toolName: string; parameters?: unknown; durationMs: number; isError: boolean }): void;
+  captureInitialize(session: McpSession): void;
+  captureToolCall(
+    call: McpSession & { toolName: string; parameters?: unknown; durationMs: number; isError: boolean },
+  ): void;
 };
 
 /**

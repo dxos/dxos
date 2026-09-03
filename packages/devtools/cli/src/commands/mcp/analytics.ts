@@ -7,6 +7,7 @@ import * as Layer from 'effect/Layer';
 import * as Sink from 'effect/Sink';
 import * as EffectStdio from 'effect/Stdio';
 import * as Stream from 'effect/Stream';
+import { randomUUID } from 'node:crypto';
 
 import type * as ObservabilityExtension from '@dxos/observability/ObservabilityExtension';
 
@@ -47,6 +48,7 @@ type RpcMessage = {
   params?: {
     name?: string;
     arguments?: Record<string, unknown>;
+    protocolVersion?: string;
     clientInfo?: { name?: string; version?: string };
   };
 };
@@ -63,6 +65,10 @@ type PendingRequest = {
  */
 export const makeCorrelator = (capture: ObservabilityExtension.Mcp) => {
   const pending = new Map<string | number, PendingRequest>();
+  // One server process is one session, and the handshake is where the client names itself. Held so
+  // the calls that follow carry it too: the backend attributes a harness per event, not per session,
+  // and reads an unnamed one as `Other`.
+  const session: ObservabilityExtension.McpSession = { sessionId: randomUUID() };
 
   const observeRequest = (line: string): void => {
     const message = parseRpc(line);
@@ -88,14 +94,15 @@ export const makeCorrelator = (capture: ObservabilityExtension.Mcp) => {
     pending.delete(message.id);
 
     if (request.method === 'initialize') {
-      capture.captureInitialize({
-        name: request.params?.clientInfo?.name,
-        version: request.params?.clientInfo?.version,
-      });
+      session.clientName = request.params?.clientInfo?.name;
+      session.clientVersion = request.params?.clientInfo?.version;
+      session.protocolVersion = request.params?.protocolVersion;
+      capture.captureInitialize(session);
       return;
     }
 
     capture.captureToolCall({
+      ...session,
       toolName: request.params?.name ?? 'unknown',
       parameters: request.params?.arguments,
       durationMs: Date.now() - request.startedAt,

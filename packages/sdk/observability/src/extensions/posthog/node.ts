@@ -24,7 +24,7 @@ const DEFAULT_HOST: Host = 'https://eu.i.posthog.com';
  * last set and stamps it on every capture.
  */
 export const extensions: (options: ExtensionsOptions) => Effect.Effect<ObservabilityExtension.Extension> = Effect.fn(
-  function* ({ config, apiKey: _apiKey, host: _host, release, environment, distinctId: initialDistinctId }) {
+  function* ({ config, apiKey: _apiKey, host: _host, release, environment, distinctId: initialDistinctId, mcpServer }) {
     const apiKey =
       _apiKey ??
       process.env.DX_POSTHOG_API_KEY ??
@@ -49,6 +49,12 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
     /** An event with nobody to attribute it to is dropped rather than sent under a made-up id. */
     const attribution = (): string | undefined => (enabled ? distinctId : undefined);
     const properties = (attributes?: ObservabilityExtension.EventAttributes) => ({ ...superProperties, ...attributes });
+
+    // The vendor's own property names, so its MCP dashboards read them without a mapping.
+    const mcpProperties = () => ({
+      ...superProperties,
+      ...(mcpServer ? { $mcp_server_name: mcpServer.name, $mcp_server_version: mcpServer.version } : {}),
+    });
 
     return {
       close: () => Effect.promise(() => client.shutdown()),
@@ -102,16 +108,35 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
         {
           kind: 'mcp',
           isAvailable: () => Effect.succeed(true),
-          captureInitialize: ({ name, version }) => {
+          captureInitialize: ({ clientName, clientVersion, sessionId, protocolVersion }) => {
             const id = attribution();
             if (id) {
-              client.captureInitialize({ clientName: name, clientVersion: version, distinctId: id });
+              client.captureInitialize({
+                clientName,
+                clientVersion,
+                sessionId,
+                protocolVersion,
+                distinctId: id,
+                properties: mcpProperties(),
+              });
             }
           },
-          captureToolCall: (call) => {
+          captureToolCall: ({ clientName, clientVersion, sessionId, protocolVersion, ...call }) => {
             const id = attribution();
             if (id) {
-              client.captureToolCall({ ...call, distinctId: id });
+              client.captureToolCall({
+                ...call,
+                sessionId,
+                protocolVersion,
+                distinctId: id,
+                // The payload takes a client name only on the handshake, so the calls carry it as
+                // the property that event would have produced — which is what attributes a harness.
+                properties: {
+                  ...mcpProperties(),
+                  ...(clientName ? { $mcp_client_name: clientName } : {}),
+                  ...(clientVersion ? { $mcp_client_version: clientVersion } : {}),
+                },
+              });
             }
           },
         },

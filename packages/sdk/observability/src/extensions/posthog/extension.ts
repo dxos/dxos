@@ -55,6 +55,12 @@ export type ExtensionsOptions = {
   host?: Host;
   /** Node only: attribution for events captured before `identify`, since there is no ambient person. */
   distinctId?: string;
+  /**
+   * Node only: which MCP server this host is, stamped on every `$mcp_*` event. Both the CLI and the
+   * hosted worker project the same tool surface, so the advertised server name cannot tell them
+   * apart and the host has to say.
+   */
+  mcpServer?: { name: string; version: string };
 };
 
 /** Same-origin route of the web deployment, which proxies the upload to object storage. */

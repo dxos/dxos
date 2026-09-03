@@ -49,7 +49,15 @@ vi.mock('@posthog/mcp', () => ({
 }));
 
 const make = (distinctId: string | undefined): Promise<ObservabilityExtension.Extension> =>
-  EffectEx.runPromise(extensions({ config: new Config({}), apiKey: TOKEN, release: '1.2.3', distinctId }));
+  EffectEx.runPromise(
+    extensions({
+      config: new Config({}),
+      apiKey: TOKEN,
+      release: '1.2.3',
+      distinctId,
+      mcpServer: { name: 'dxos-cli', version: '1.2.3' },
+    }),
+  );
 
 const api = <K extends ObservabilityExtension.ExtensionApi['kind']>(
   extension: ObservabilityExtension.Extension,
@@ -114,13 +122,18 @@ describe('posthog node extension', () => {
     const extension = await make(DID);
     const mcp = api(extension, 'mcp');
 
-    mcp.captureInitialize({ name: 'claude-code', version: '2.1.0' });
-    mcp.captureToolCall({ toolName: 'whoami', durationMs: 12, isError: false });
+    const session = { sessionId: 'session-1', clientName: 'claude-code', clientVersion: '2.1.0' };
+    mcp.captureInitialize(session);
+    mcp.captureToolCall({ ...session, toolName: 'whoami', durationMs: 12, isError: false });
 
-    expect(mcpCaptured).to.deep.equal([
-      { event: '$mcp_initialize', clientName: 'claude-code', clientVersion: '2.1.0', distinctId: DID },
-      { event: '$mcp_tool_call', toolName: 'whoami', durationMs: 12, isError: false, distinctId: DID },
-    ]);
+    expect(mcpCaptured[0]).to.include({ event: '$mcp_initialize', clientName: 'claude-code', sessionId: 'session-1' });
+    // The harness is attributed per event, so a call has to name the client the handshake named.
+    expect(mcpCaptured[1]).to.include({ event: '$mcp_tool_call', toolName: 'whoami', sessionId: 'session-1' });
+    expect(mcpCaptured[1].properties).to.include({
+      $mcp_client_name: 'claude-code',
+      $mcp_server_name: 'dxos-cli',
+      $mcp_server_version: '1.2.3',
+    });
   });
 
   test('stubs itself when no project token is configured', async () => {

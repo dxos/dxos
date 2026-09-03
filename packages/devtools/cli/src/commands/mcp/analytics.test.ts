@@ -33,12 +33,12 @@ describe('MCP analytics', () => {
         jsonrpc: '2.0',
         id: 1,
         method: 'initialize',
-        params: { clientInfo: { name: 'claude-code', version: '2.1.0' } },
+        params: { protocolVersion: '2025-06-18', clientInfo: { name: 'claude-code', version: '2.1.0' } },
       }),
     );
     correlator.observeResponse(JSON.stringify({ jsonrpc: '2.0', id: 1, result: { serverInfo: {} } }));
 
-    expect(calls.initialize).to.deep.equal([{ name: 'claude-code', version: '2.1.0' }]);
+    expect(calls.initialize[0]).to.include({ clientName: 'claude-code', clientVersion: '2.1.0' });
     expect(calls.toolCall).to.be.empty;
   });
 
@@ -70,6 +70,35 @@ describe('MCP analytics', () => {
     for (const call of calls.toolCall) {
       expect(call).to.have.property('durationMs').that.is.a('number');
     }
+  });
+
+  // The harness is attributed per event: a call that does not name the client reads as `Other`.
+  test('carries the handshake onto every later call', ({ expect }) => {
+    const { calls, capture } = recordingCapture();
+    const correlator = makeCorrelator(capture);
+
+    correlator.observeRequest(
+      JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'initialize',
+        params: { protocolVersion: '2025-06-18', clientInfo: { name: 'claude-code', version: '2.1.0' } },
+      }),
+    );
+    correlator.observeResponse(JSON.stringify({ jsonrpc: '2.0', id: 1, result: { serverInfo: {} } }));
+    correlator.observeRequest(
+      JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'tools/call', params: { name: 'whoami' } }),
+    );
+    correlator.observeResponse(JSON.stringify({ jsonrpc: '2.0', id: 2, result: { content: [] } }));
+
+    expect(calls.toolCall[0]).to.include({
+      toolName: 'whoami',
+      clientName: 'claude-code',
+      clientVersion: '2.1.0',
+      protocolVersion: '2025-06-18',
+    });
+    // One process is one session, so the handshake and the call it precedes share an id.
+    expect(calls.toolCall[0]).to.have.property('sessionId', (calls.initialize[0] as { sessionId: string }).sessionId);
   });
 
   test('captures a protocol-level failure as an errored call', ({ expect }) => {

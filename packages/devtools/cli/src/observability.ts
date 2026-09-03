@@ -106,6 +106,7 @@ export const initializeObservability = async ({ config, namespace, distinctId }:
         release: DXOS_VERSION,
         environment: ENVIRONMENT,
         distinctId,
+        mcpServer: { name: 'dxos-cli', version: DXOS_VERSION },
       }),
     ),
     Observability.addDataProvider(platformProvider),
