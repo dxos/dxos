@@ -82,7 +82,7 @@ export const Stepper = composable<HTMLDivElement, StepperProps>(
   ) => {
     const { tx } = useThemeContext();
     const count = stepCount(steps);
-    const { shown } = useHandover(active, options.duration);
+    const { shown, handover } = useHandover(active, options.duration);
 
     return (
       <Steps.Root
@@ -95,6 +95,7 @@ export const Stepper = composable<HTMLDivElement, StepperProps>(
           steps={steps}
           count={count}
           fraction={indeterminate ? 0 : fraction}
+          handover={handover}
           indeterminate={indeterminate}
           error={error}
           selected={selected}
@@ -125,12 +126,16 @@ const machineStep = (shown: number | undefined, count: number): number =>
   shown === undefined ? 0 : Math.min(Math.max(shown, 0) + PHANTOM, count + PHANTOM);
 
 type StepperItemsProps = Required<Pick<StepperProps, 'steps' | 'fraction' | 'options'>> &
-  Pick<StepperProps, 'indeterminate' | 'error' | 'selected' | 'onSelect'> & { count: number };
+  Pick<StepperProps, 'indeterminate' | 'error' | 'selected' | 'onSelect'> & {
+    count: number;
+    handover: boolean;
+  };
 
 const StepperItems = ({
   steps,
   count,
   fraction,
+  handover,
   indeterminate,
   error,
   selected,
@@ -145,7 +150,7 @@ const StepperItems = ({
       {Array.from({ length: count }, (_, index) => {
         const step = stepAt(steps, index);
         const { current, completed } = api.getItemState({ index: index + PHANTOM });
-        const state = stepState(current, completed, error);
+        const state = stepState(current, completed, handover, error);
         const last = index === count - 1;
 
         return (
@@ -166,10 +171,13 @@ const StepperItems = ({
               <Steps.Separator className={tx('stepper.connector', {})} style={{ height: options.thickness }}>
                 <div
                   className={tx('stepper.fill', { state: error ? 'error' : undefined })}
-                  // Ease between updates so an incremental advance glides rather than jumps.
                   style={{
-                    width: `${connectorFraction(completed, current, fraction) * 100}%`,
-                    transition: `width ${options.duration}ms linear`,
+                    width: `${connectorFraction(completed, current, handover, fraction) * 100}%`,
+                    // Only the line leaving the stage in flight eases, so an incremental advance
+                    // glides rather than jumps. Every other line is already at its end or at
+                    // nothing, and a run that is reset or wound back has to land there at once — a
+                    // line sliding back to zero reads as progress in reverse.
+                    transition: current ? `width ${options.duration}ms linear` : 'none',
                   }}
                 />
               </Steps.Separator>
@@ -261,35 +269,53 @@ export const stepAt = (steps: number | Step[] | undefined, index: number): Step 
  * it lands immediately — a reset that eased into place would read as progress.
  */
 const useHandover = (active: number | undefined, duration: number) => {
-  const [shown, setShown] = useState(active);
+  const [held, setHeld] = useState(active);
+
+  // Derived rather than stored, so a retreat lands in the render that reports it. Waiting for an
+  // effect to catch up leaves one painted frame with the run still drawn where it was — and since
+  // the stage being left reads as complete in that frame, its line is drawn full, which is the
+  // whole of what a reset is meant to clear.
+  const advancing = active !== undefined && held !== undefined && active > held;
+  const shown = advancing ? held : active;
+
   useEffect(() => {
-    if (active === undefined || shown === undefined || active <= shown) {
-      setShown(active);
+    if (!advancing) {
+      setHeld(active);
       return;
     }
 
-    const timer = setTimeout(() => setShown(active), duration);
+    const timer = setTimeout(() => setHeld(active), duration);
     return () => clearTimeout(timer);
-  }, [active, shown, duration]);
+  }, [active, advancing, duration]);
 
-  return { shown };
+  return { shown, handover: advancing };
 };
 
-/** How a stage is drawn, given what the machine says about it and whether the run failed. */
-const stepState = (current: boolean, completed: boolean, error: boolean | undefined): StepState => {
+/** How a stage is drawn, given what the machine says about it and where the run is. */
+const stepState = (current: boolean, completed: boolean, handover: boolean, error: boolean | undefined): StepState => {
   if (completed) {
     return 'complete';
   }
   if (!current) {
     return 'pending';
   }
+  // Mid-handover the stage is finished and the next has not started, so nothing is in flight: the
+  // stage ahead stays uncoloured until its line has arrived.
+  if (handover) {
+    return 'complete';
+  }
   return error ? 'error' : 'active';
 };
 
 /** How much of the line leaving a stage is drawn. */
-const connectorFraction = (completed: boolean, current: boolean, fraction: number): number => {
+const connectorFraction = (completed: boolean, current: boolean, handover: boolean, fraction: number): number => {
   if (completed) {
     return 1;
   }
-  return current ? fraction : 0;
+  if (!current) {
+    return 0;
+  }
+  // The run has already reported the next stage and is counting it: the line being waited on is the
+  // one this stage is leaving, so it holds full rather than snapping back to the new count.
+  return handover ? 1 : fraction;
 };
