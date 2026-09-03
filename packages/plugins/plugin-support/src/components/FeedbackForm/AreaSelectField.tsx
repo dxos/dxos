@@ -15,8 +15,9 @@ import type { FeedbackPluginOption } from './types';
  * Mirrors the built-in {@link SelectField} (see `packages/ui/react-ui-form/src/components/Form/fields/SelectField.tsx`)
  * but renders the plugin name as the visible label with the id as a dim trailer — the plain
  * SelectField only supports string-keyed options without rich labels. Selection value remains
- * the plugin id so the form payload stays a simple `string`. A "(none)" sentinel clears the
- * selection because Radix Select cannot bind to `undefined`.
+ * the plugin id so the form payload stays a simple `string`. The sentinel option doubles as the
+ * field's placeholder — Radix Select cannot bind to `undefined`, so the unselected trigger shows
+ * the sentinel, and re-selecting it clears the choice.
  */
 export type AreaSelectFieldProps = FormFieldRendererProps<string | undefined> & {
   plugins: ReadonlyArray<FeedbackPluginOption>;
@@ -64,7 +65,7 @@ export const AreaSelectField = ({
             <Select.Content>
               <Select.Viewport>
                 <Select.Option value={CLEAR_VALUE}>
-                  <span className='text-description italic'>(none)</span>
+                  <span className='text-description italic'>{placeholder ?? '(none)'}</span>
                 </Select.Option>
                 {plugins.map((plugin) => (
                   <Select.Option key={plugin.id} value={plugin.id} classNames='flex'>
