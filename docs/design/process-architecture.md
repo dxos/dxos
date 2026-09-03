@@ -11,8 +11,6 @@ This runs in two places. The **client** (browser or CLI) runs triggers while the
 Durable Objects) runs triggers marked `remote` while the space is active. Both read the same objects from the same
 space. The document describes what is built, what is wrong with it, and a proposal to close the gap.
 
-![Schematic](./diagrams/process-architecture.drawio.svg)
-
 ## Goals
 
 One mechanism to schedule a process, such that:
@@ -123,33 +121,7 @@ Against the goals:
 
 ### Schematic
 
-```mermaid
-flowchart LR
-  subgraph Space
-    T[Trigger]
-    JF[(Job feed<br/>Job · Ack · Failed · Cancelled)]
-    TF[(Trace feed)]
-  end
-
-  subgraph Client
-    TD[TriggerDispatcher] -->|append Job| JF
-    XC[Executor] -->|claim· run· settle| JF
-    XC --> PM[ProcessManager] --> P[Process]
-    XC --> WC[(working set: memory + IDB)]
-  end
-
-  subgraph EDGE
-    DO[TriggersDispatcher DO] -->|append Job| JF
-    XE[Executor] -->|claim· run· settle| JF
-    XE --> FI[FunctionInvoker] --> OS[operation-service]
-    XE --> WE[(working set: DO SQLite)]
-  end
-
-  T -->|!remote| TD
-  T -->|remote| DO
-  P --> TF
-  OS --> TF
-```
+![Schematic](./diagrams/process-architecture.drawio.svg)
 
 The scheduler no longer invokes. It **appends a `Job`** to a per-space feed and returns. An **executor** in the same
 runtime claims pending Jobs from the feed in bounded batches, runs them through the existing invocation path, and
