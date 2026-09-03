@@ -91,33 +91,62 @@ export const mapToKeyValues = (spec: MappingSpec, values: any) => {
   return config;
 };
 
+/** A plain object in a config tree, narrowed by predicate so `$unknown` stays reachable. */
+type ConfigNode = { $unknown?: unknown } & Record<string, unknown>;
+
+const isPlainNode = (value: unknown): value is ConfigNode =>
+  value !== null && typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype;
+
 /**
- * Removes the protobuf-es message markers (`$typeName`, `$unknown`) from a config tree.
+ * Removes the protobuf-es `$typeName` marker from a config tree.
  *
  * `defaultsDeep` copies `$typeName` onto plain objects that came from another source, and
  * protobuf-es then treats those objects as already-constructed messages and skips normalising
  * their plain descendants -- producing a `Config.values` that `toBinary` cannot encode.
  */
-export const stripMessageMarkers = <T>(value: T): T => {
+export const stripTypeNames = <T>(value: T): T => {
   if (Array.isArray(value)) {
-    return value.map((item) => stripMessageMarkers(item)) as T;
+    return value.map((item) => stripTypeNames(item)) as T;
   }
 
   // Bytes, timestamps and other non-plain leaves are values, not message subtrees.
-  if (value === null || typeof value !== 'object' || Object.getPrototypeOf(value) !== Object.prototype) {
+  if (!isPlainNode(value)) {
     return value;
   }
 
-  const result: Record<string, any> = {};
+  const result: Record<string, unknown> = {};
   for (const [key, item] of Object.entries(value)) {
-    if (key === '$typeName' || key === '$unknown') {
+    if (key === '$typeName') {
       continue;
     }
 
-    result[key] = stripMessageMarkers(item);
+    // `$unknown` holds raw wire records, which are values rather than a message subtree.
+    result[key] = key === '$unknown' ? item : stripTypeNames(item);
   }
 
   return result as T;
+};
+
+/**
+ * Copies `$unknown` records from a merged config tree onto the message `create` built from it.
+ *
+ * `MessageInitShape` excludes `$unknown`, so normalising a tree whose `$typeName` markers were
+ * stripped drops the wire fields a source decoded but this build's schema does not know.
+ */
+export const restoreUnknownFields = (target: unknown, source: unknown): void => {
+  if (!isPlainNode(target) || !isPlainNode(source)) {
+    return;
+  }
+
+  if (source.$unknown !== undefined) {
+    target.$unknown = source.$unknown;
+  }
+
+  for (const [key, value] of Object.entries(source)) {
+    if (key !== '$unknown') {
+      restoreUnknownFields(target[key], value);
+    }
+  }
 };
 
 /**
@@ -169,9 +198,9 @@ export class Config {
    * @constructor
    */
   constructor(config: ConfigInit = {}, ...objects: ConfigInit[]) {
-    this._config = validateConfig(
-      defaultsDeep(stripMessageMarkers(config), ...objects.map(stripMessageMarkers), { version: 1 }),
-    );
+    const merged = defaultsDeep(stripTypeNames(config), ...objects.map(stripTypeNames), { version: 1 });
+    this._config = validateConfig(merged);
+    restoreUnknownFields(this._config, merged);
   }
 
   /**
