@@ -4,6 +4,8 @@
 
 import { AssistantTestLayerWithTriggers } from '@dxos/agent-runtime/testing';
 import { AiContext } from '@dxos/assistant';
+import * as Agent from '@dxos/assistant/Agent';
+import * as Chat from '@dxos/assistant/Chat';
 import { SpaceProperties } from '@dxos/client-protocol';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -22,7 +24,6 @@ import { DelegationSkillHandlers } from '../skills/delegation/operations';
 import { MemoryHandlers } from '../skills/memory/operations';
 import { PlanningHandlers } from '../skills/planning/operations';
 import { SkillManagerHandlers } from '../skills/skill-manager/operations';
-import { Agent, Chat } from '../types';
 import { Memory } from '../types/Memory';
 
 /**

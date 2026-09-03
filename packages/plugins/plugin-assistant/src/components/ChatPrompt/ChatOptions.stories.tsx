@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import React, { useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Chat } from '@dxos/assistant-toolkit';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
+import * as Chat from '@dxos/assistant/Chat';
 import { Feed, Filter, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ChessPlugin } from '@dxos/plugin-chess/testing';

@@ -14,7 +14,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useAtomCapabilityState, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Chat } from '@dxos/assistant-toolkit';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Process from '@dxos/compute/Process';
 import { Annotation, Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
