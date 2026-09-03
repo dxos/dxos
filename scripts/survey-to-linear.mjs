@@ -397,6 +397,20 @@ const posthogLinks = ({ response, projectId, surveyId, uiHost }) => {
 };
 
 /**
+ * Link to the support ticket the submission anchored. PostHog attaches the submitter's replay,
+ * events, and errors to the ticket, so it is the first thing a triager should open.
+ */
+const supportTicketLinks = ({ response, projectId, uiHost }) => {
+  const ticketId = response.properties.support_ticket_id;
+  if (!ticketId || !projectId) {
+    return [];
+  }
+  const url = `${uiHost}/project/${projectId}/support/tickets/${ticketId}`;
+  // Explicit link rather than a bare URL: Linear's autolinker can swallow the following line.
+  return [`PostHog ticket: [${url}](${url})`];
+};
+
+/**
  * How to pull the debug-log dump. R2 object reads go through the S3 API, which requires SigV4 —
  * hence `--aws-sigv4` rather than a bearer token. The 1Password item holds a Cloudflare API token,
  * not an S3 key pair, so the pair is derived: access key id = the token's id, secret access key =
@@ -431,6 +445,7 @@ const issueDescription = (response, { parsed, projectId, surveyId, uiHost, crede
     `Submitted: ${response.timestamp}`,
     response.distinctId && `PostHog person: \`${response.distinctId}\``,
     ...posthogLinks({ response, projectId, surveyId, uiHost }),
+    ...supportTicketLinks({ response, projectId, uiHost }),
     hasLogs && `Debug logs: \`${bucket}/${logKey}\``,
     logKey === 'failed' && 'Debug logs: upload failed',
     !logKey && 'Debug logs: not included',
@@ -479,8 +494,10 @@ const fireRoutine = async ({ token, routineId, text }) => {
  * Context handed to the run. The routine's own saved prompt does the work; this only has to say
  * which issue to work in and where the evidence is, so the run does not have to rediscover either.
  */
-const routineText = ({ issue, parsed, response, bucket, logKey }) => {
+const routineText = ({ issue, parsed, response, bucket, logKey, projectId, uiHost }) => {
   const hasLogs = Boolean(logKey) && logKey !== 'failed';
+  const ticketId = response.properties.support_ticket_id;
+  const ticketUrl = ticketId && projectId ? `${uiHost}/project/${projectId}/support/tickets/${ticketId}` : undefined;
   const header = [
     `Linear issue ${issue.identifier} (${issue.url}) was just filed from a Composer feedback-panel survey response.`,
     `Title: ${parsed.title}`,
@@ -493,6 +510,7 @@ const routineText = ({ issue, parsed, response, bucket, logKey }) => {
       ? `Debug logs: R2 object ${bucket}/${logKey} — the issue body carries the curl that fetches it.`
       : 'Debug logs: none attached (the submitter opted out, or the upload failed).',
     `PostHog survey response uuid: ${response.uuid}`,
+    ticketUrl && `PostHog support ticket: ${ticketUrl} — it carries the submitter's replay, events, and errors.`,
   ]
     .filter(Boolean)
     .join('\n');
@@ -736,7 +754,15 @@ const main = async () => {
         const run = await fireRoutine({
           token: routineToken,
           routineId,
-          text: routineText({ issue: issueCreate.issue, parsed, response, bucket, logKey }),
+          text: routineText({
+            issue: issueCreate.issue,
+            parsed,
+            response,
+            bucket,
+            logKey,
+            projectId,
+            uiHost: posthogHost,
+          }),
         });
         outcome.routineRun = run;
         if (!options.json) {

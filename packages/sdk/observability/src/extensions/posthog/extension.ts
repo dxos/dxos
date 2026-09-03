@@ -19,6 +19,7 @@ import {
   toAiSpanProperties,
   toAiTraceProperties,
 } from './llm-analytics';
+import { supportTicketMessage } from './support-ticket';
 
 export type ExtensionsOptions = {
   config: Config;
@@ -209,6 +210,25 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
                       }
                     }
 
+                    // The ticket anchors the report's telemetry (replay, events, errors attach to it);
+                    // a failure here must not lose the survey response the Discord and Linear pipelines read.
+                    let supportTicketId: string | undefined;
+                    if (posthog.conversations.isAvailable()) {
+                      try {
+                        const response = await posthog.conversations.sendMessage(
+                          supportTicketMessage(form.message, debugLogDumpKey),
+                          undefined,
+                          // Each report is its own ticket even if the person already has a conversation.
+                          true,
+                        );
+                        supportTicketId = response?.ticket_id;
+                      } catch (err) {
+                        log.warn('support ticket creation failed; filing the survey response without one', { err });
+                      }
+                    } else {
+                      log.info('PostHog conversations unavailable; filing the survey response without a ticket');
+                    }
+
                     // https://posthog.com/docs/surveys/implementing-custom-surveys
                     const question = survey.questions[0];
                     const result = posthog.capture('survey sent', {
@@ -218,6 +238,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
                       // Survey destinations (Slack/webhook notifications) filter on `$survey_completed = true`, so responses without it are dropped.
                       $survey_completed: true,
                       debug_log_dump_key: debugLogDumpKey,
+                      support_ticket_id: supportTicketId,
                     });
                     resolve(result?.uuid);
                   } catch (err) {
