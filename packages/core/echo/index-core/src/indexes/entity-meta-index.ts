@@ -189,8 +189,9 @@ const buildQueueWindow = (sql: SqlClient.SqlClient, window: QueueWindow | undefi
   // past every position — are outside it; an unbounded one ends at the feed's end and includes them.
   const scope = window.before === undefined ? sql`(${positioned} OR queuePosition IS NULL)` : positioned;
   // Nulls are the newest blocks, so they lead a newest-first scan. SQLite would sort them last in
-  // `DESC`, hence the explicit null-rank key.
-  return sql` AND ${scope} ORDER BY (queuePosition IS NULL) DESC, queuePosition DESC${limit}`;
+  // `DESC`, hence the explicit null-rank key. `objectId DESC` totalises the order so a `LIMIT` over
+  // blocks that tie on position — every unpositioned one does — takes a stable subset.
+  return sql` AND ${scope} ORDER BY (queuePosition IS NULL) DESC, queuePosition DESC, objectId DESC${limit}`;
 };
 
 export class EntityMetaIndex implements Index {

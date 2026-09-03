@@ -39,8 +39,14 @@ export const advanceWindow = (state: FeedWindowState, { startIndex, loaded }: Fe
     return state.armed ? state : { ...state, armed: true };
   }
 
-  if (startIndex !== 0 || !state.armed || loaded < state.size) {
+  if (startIndex !== 0 || !state.armed) {
     return state;
+  }
+
+  // A short read is the feed's start, and disarming there costs the reader nothing while keeping
+  // later arrivals from lifting `loaded` to the limit and growing the window without a new gesture.
+  if (loaded < state.size) {
+    return { ...state, armed: false };
   }
 
   return { size: state.size + WINDOW_STEP, armed: false };

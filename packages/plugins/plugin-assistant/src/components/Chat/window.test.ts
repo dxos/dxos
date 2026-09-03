@@ -20,8 +20,15 @@ describe('feed window', () => {
   });
 
   test('stops at the feed start, where the read comes back short', ({ expect }) => {
-    const window = initialWindow(10);
-    expect(advanceWindow(window, { startIndex: 0, loaded: 7 })).toEqual(window);
+    const stopped = advanceWindow(initialWindow(10), { startIndex: 0, loaded: 7 });
+    expect(stopped).toEqual({ size: 10, armed: false });
+  });
+
+  test('a short page spends the gesture, so later arrivals cannot grow the window', ({ expect }) => {
+    // The feed's start came back short; messages that arrive afterwards lift `loaded` to the limit
+    // while the reader has never left the oldest row, and must not be read as a new gesture.
+    const stopped = advanceWindow(initialWindow(10), { startIndex: 0, loaded: 7 });
+    expect(advanceWindow(stopped, { startIndex: 0, loaded: 10 })).toEqual(stopped);
   });
 
   test('one page per gesture, even if the reader stays on the first row', ({ expect }) => {
