@@ -100,11 +100,40 @@ not what a migration replaces.
 ¹ Consumer files outside the component's own directory, `dist`/`out` excluded; blank where not
 measured. ² Counted as `DropdownMenu.` references.
 
-Ark components with no counterpart here, for reference: `accordion`, `collapsible` (used by
-`react-list`, see §3), `combobox`, `listbox` (both hand-built in `react-ui-list`), `drawer`,
-`tabs` (used by `react-ui-tabs`), `tags-input`, `file-upload`, `number-input`, `pin-input`,
-`rating-group`, `segment-group`, `switch`, `tour`, `floating-panel`, `hover-card`,
-`navigation-menu`, `pagination`, `color-picker`, `signature-pad`, `qr-code`, `timer`.
+Ark components with no counterpart in `react-ui`, for reference:
+
+| Ark component     | in the repo today                                   | note                                          |
+| ----------------- | --------------------------------------------------- | --------------------------------------------- |
+| `accordion`       | `react-ui-list` — already on Ark                    | migrated on merit (APG keymap), see `TREE.md` |
+| `collapsible`     | `react-list` on `@radix-ui/react-collapsible` (§3)  | leaf swap, Phase 2                            |
+| `tabs`            | `react-ui-tabs` on `@radix-ui/react-tabs` (§3)      | leaf swap, Phase 2                            |
+| `combobox`        | hand-built in `react-ui-list`                       | candidate, not obligation (+87.9 KB raw)      |
+| `listbox`         | hand-built in `react-ui-list`                       | candidate, not obligation (+22.5 KB raw)      |
+| `drawer`          | none — `Main`'s sidebars are Radix dialogs          | the missing mobile bottom sheet, Phase 4      |
+| `tree-view`       | `react-ui-list` `Tree` — already on Ark             | the reason Ark is in the app                  |
+| `hover-card`      | none                                                |                                               |
+| `navigation-menu` | none                                                |                                               |
+| `floating-panel`  | none                                                |                                               |
+| `tour`            | none                                                |                                               |
+| `tags-input`      | none                                                |                                               |
+| `file-upload`     | none                                                |                                               |
+| `number-input`    | none (`Input` has no numeric variant)               |                                               |
+| `pin-input`       | `Input.PinInput` hand-built                         |                                               |
+| `password-input`  | none                                                |                                               |
+| `switch`          | `Input.Switch` hand-built                           |                                               |
+| `rating-group`    | none                                                |                                               |
+| `segment-group`   | none                                                |                                               |
+| `pagination`      | none                                                |                                               |
+| `color-picker`    | none                                                |                                               |
+| `signature-pad`   | none                                                |                                               |
+| `qr-code`         | none                                                |                                               |
+| `timer`           | none                                                |                                               |
+| `marquee`         | none (`TextCrawl` is a different thing)             |                                               |
+| `image-cropper`   | none                                                |                                               |
+| `json-tree-view`  | none (devtools has its own `ObjectsTree` on `Tree`) |                                               |
+| `toc`             | none                                                |                                               |
+| `angle-slider`    | none                                                |                                               |
+| `cascade-select`  | none                                                |                                               |
 
 ---
 
@@ -116,7 +145,7 @@ Ark components with no counterpart here, for reference: `accordion`, `collapsibl
 | ---------------------------------------------- | --------------------------------------------------------------------------: | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `@radix-ui/react-context` `createContextScope` | 85 imports; 19 `createContextScope` calls in 10 files; 116 `__scope*` props | `createContext` from `@ark-ui/react/utils`                | **No scope concept.** Ark's answer to "which Popover does this Trigger belong to" is the machine: `Foo.RootProvider value={useFoo(...)}` plus `useFooContext()`. The `__scopeDropdownMenu` (42), `__scopeTooltip` (31), `__scopePopover` (28) and `__scopeSyntax` (12) props exist only because our forks re-implement Radix's internal scoping; they disappear with the forks. The `composite-components` skill's pattern needs updating either way.  |
 | `@radix-ui/react-primitive` `Primitive.div` …  |                              270 uses (`div` 53, `span` 16, `button` 13, …) | `ark.div` … from `@ark-ui/react/factory`                  | Drop-in. Both accept `asChild`; `ark.*` also takes `asChild` on every anatomy part.                                                                                                                                                                                                                                                                                                                                                                    |
-| `@radix-ui/react-slot` `Slot`, `asChild`       |                                             33 imports; 422 `asChild` sites | `asChild` on `ark.*` and every part                       | Behaviourally equivalent for the child-merging case. Ark has no exported standalone `Slot` component — the one direct `<Slot>` use in the tree needs an `ark.div asChild`.                                                                                                                                                                                                                                                                             |
+| `@radix-ui/react-slot` `Slot`, `asChild`       |                                             33 imports; 422 `asChild` sites | `asChild` on `ark.*` and every part                       | Same merge order and same className/style/handler rules, two differences — no `Slottable`, and an explicit `undefined` on the child no longer clears a slot prop. §2.6 has the full comparison and where our `slottable()`/`composable()` layer absorbs it.                                                                                                                                                                                            |
 | `@radix-ui/react-compose-refs`                 |                                             17 imports (+ ~12 packages, §3) | **not public** — Ark's `composeRefs` is internal          | Own it. Ten lines, and React 19's ref-cleanup semantics are worth controlling ourselves.                                                                                                                                                                                                                                                                                                                                                               |
 | `@radix-ui/react-use-controllable-state`       |                                             20 imports (+ ~14 packages, §3) | **not public** — Ark's `useControllableState` is internal | Own it. Same shape; ~30 lines.                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | `@radix-ui/react-id` `useId`                   |                                                                           3 | `React.useId`                                             | Drop-in.                                                                                                                                                                                                                                                                                                                                                                                                                                               |
@@ -158,8 +187,8 @@ independent of whether any behavioural component ever moves. It is Phase 1 for t
 
 ### 2.3 CSS variables
 
-Radix namespaces per component; Zag sets one generic set on the positioner. 95 occurrences across 12
-source files today, of which 20 are the aliasing blocks in
+Radix namespaces per component; Zag sets one generic set on the positioner.
+95 occurrences across 12 source files today, of which 20 are the aliasing blocks in
 [`Tooltip.tsx:577`](../src/components/Tooltip/Tooltip.tsx),
 [`Popover.tsx:489`](../src/components/Popover/Popover.tsx) and
 [`DropdownMenu.tsx:281`](../src/components/Menu/DropdownMenu.tsx) that re-map `--radix-popper-*` onto
@@ -209,6 +238,68 @@ adapter is needed.
   (WKWebView) that matters, and `drawer` is the component that has no Radix answer at all.
 
 ---
+
+### 2.6 Slots and `asChild`
+
+Both libraries answer the same question — "render my behaviour onto the element you give me instead
+of the one I would create" — with an `asChild` prop that clones the single child and merges the
+part's props into it. The mechanics differ in three places that matter to us, and our own
+`slottable()`/`composable()` layer is where they get absorbed.
+
+**What each does**, read from the installed sources
+(`@radix-ui/react-slot@1.0.1` `Slot.tsx`; `@ark-ui/react@5.39.1` `factory.ts` over
+`@zag-js/core` `merge-props`):
+
+| concern         | Radix `Slot`                                                                    | Ark `ark.*` / every part (`asChild`)                                                                         |
+| --------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| what it clones  | the single valid element child                                                  | the single valid element child (a `React.lazy` element is unwrapped); otherwise renders `null`               |
+| `className`     | `[slot, child].join(' ')`                                                       | `clsx(slot, child)` — same order, trimmed; neither de-duplicates                                             |
+| `style`         | `{ ...slot, ...child }`                                                         | same; also accepts string styles and merges them                                                             |
+| `on*` handlers  | both exist → `child(...)` then `slot(...)`; slot-only → slot's                  | `callAll(child, slot)` — identical order                                                                     |
+| other props     | child overrides, **including an explicit `undefined`**                          | child overrides **only when defined**; an `undefined` child prop keeps the slot's value                      |
+| `ref`           | `composeRefs(forwarded, child.ref)`                                             | `useComposedRefs(forwarded, childRef)`; reads React 19's `props.ref` or the legacy `element.ref`             |
+| `Slottable`     | marks which child is the merge target so siblings render alongside it           | **none** — `asChild` demands exactly one element child                                                       |
+| where it lives  | a standalone `<Slot>` you compose, plus `Primitive.<tag>` which takes `asChild` | `ark.<tag>` factory (`withAsChild`, `memo(forwardRef)`), and every anatomy part takes `asChild` the same way |
+| part attributes | none                                                                            | `data-scope`/`data-part` ride the merge onto the child, so it stays addressable as the part                  |
+
+**What we have on top.** 422 `asChild` sites, almost all on _our_ namespaces — `Panel` 277,
+`Dialog` 34, `Focus` 31, `Menu` 26, `Popover` 22, `Mosaic` 19, `DropdownMenu` 19, `Toolbar` 17,
+`Tooltip` 14 — and only 11 directly on a Radix primitive (`ToolbarPrimitive` 8,
+`ToggleGroupPrimitive` 3). Those namespaces are built with two factories in
+[`react-ui/src/util/slots.ts`](../src/util/slots.ts): `slottable()` (20 files) for parts that accept
+`asChild`, `composable()` (51 files) for leaves, over `SlottableProps`/`ComposableProps` from
+`@dxos/ui-types`. `composableProps()` reconciles the `className` a slot merge injects with our
+`classNames` prop, and a dev-only `COMPOSABLE` marker paints `dx-slot-warning` on an `asChild`
+child that is not composable — the case where a slot's props are silently dropped. Radix's
+`Slottable` is used twice: `Tooltip` and `ScrollArea` (thumbs rendered beside the slotted child).
+
+**What the migration changes.**
+
+- **The factories move, the call sites don't.** `slottable()`'s `asChild ? Slot : Primitive.div`
+  becomes `ark.div` (which takes `asChild` itself), and `composable()` renders `ark.<tag>`. That is
+  the whole swap for the 422 sites; it lands in Phase 1 with the rest of the scaffolding, and it is
+  what lets `@radix-ui/react-slot` and `react-primitive` leave every sibling package.
+- **`Slottable` has no Ark equivalent.** `Tooltip` and `ScrollArea` restructure so the sibling
+  content is rendered by the part rather than passed through the slot — or keep a 40-line local
+  `Slot`+`Slottable` (Radix's is that small). Decide per component in its own phase (Tooltip in 3,
+  ScrollArea in 2); do not carry a global shim.
+- **The `undefined`-override difference** is the one semantic change. A consumer that clears a
+  slot prop by passing `prop={undefined}` on the child keeps the slot's value under Ark. No known
+  site relies on it; grep `={undefined}` under an `asChild` child during Phase 1 and treat any hit
+  as a bug in the consumer either way.
+- **Handler order is the same in both**, and in neither does a child's `stopPropagation` prevent
+  the slot's own handler — both are called. Our row-and-inner-control pattern relies on React's
+  event propagation between _elements_, not on merge order, so it is unaffected; the focus-follows
+  guard in `Tree` is the precedent for what does need code.
+- **`memo` on every Ark part.** An `asChild` child element with a new identity per render bypasses
+  it, exactly as with Radix; nothing to do, but not a performance win to advertise.
+- **`data-part` on consumer elements** is new: under `asChild` the consumer's element becomes the
+  part for CSS purposes. Harmless with `tx()` (className-driven), and it is what would make a
+  stylesheet-level skin possible later.
+
+The dev diagnostic, `composableProps()` and the `SlottableProps`/`ComposableProps` types are ours
+and survive unchanged; the `composite-components` skill's example (`asChild ? Slot : Primitive.div`)
+is the only documentation that needs its line rewritten.
 
 ## 3. Radix modules used outside `react-ui`
 
