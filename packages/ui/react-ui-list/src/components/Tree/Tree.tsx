@@ -200,6 +200,12 @@ export type TreeProps<T extends { id: string } = any> = {
    * cells with `col-[name]` — one grid per row, nothing nested.
    */
   gridTemplateColumns?: string;
+  /**
+   * Render a disclosure toggle in the template's first track. Off for a tree that is a flat list
+   * — one whose model never has a branch — so the template starts with the consumer's own first
+   * cell rather than holding a square for a chevron no row will ever show.
+   */
+  toggle?: boolean;
   draggable?: boolean;
   selectionMode?: 'single' | 'multiple';
   renderColumns?: ColumnRenderer<T>;
@@ -267,6 +273,7 @@ export const Tree = <T extends { id: string } = any>({
   ariaLabel,
   classNames,
   gridTemplateColumns = '[tree-row-start] var(--dx-control) minmax(0, 1fr) min-content [tree-row-end]',
+  toggle = true,
   draggable = false,
   selectionMode = 'single',
   renderColumns,
@@ -520,6 +527,7 @@ export const Tree = <T extends { id: string } = any>({
       treeId,
       focusNode,
       draggable,
+      toggle,
       renderColumns,
       renderIcon,
       renderHeading,
@@ -539,6 +547,7 @@ export const Tree = <T extends { id: string } = any>({
       treeId,
       focusNode,
       draggable,
+      toggle,
       renderColumns,
       renderIcon,
       renderHeading,
@@ -596,12 +605,17 @@ export const Tree = <T extends { id: string } = any>({
 /** Renders a section-group label spanning the full tree row. Used when a node has `disposition === 'group'`. */
 const TreeSectionHeader = ({ label }: { label: Label }) => {
   const { t } = useTranslation();
+  const { toggle } = useTreeRender();
   return (
     // `presentation`: a heading is not a permitted child of `role=tree`, and the label is
     // decorative — the group's items remain individually labeled.
     <div
       role='presentation'
-      className='col-[tree-row] ps-(--dx-control) pt-3 pb-0.5 text-xs uppercase tracking-widest text-subdued hover:text-description select-none'
+      className={mx(
+        'col-[tree-row] pt-3 pb-0.5 text-xs uppercase tracking-widest text-subdued hover:text-description select-none',
+        // Cleared past the toggle track so the label starts where the rows' first cell does.
+        toggle && 'ps-(--dx-control)',
+      )}
     >
       {toLocalizedString(label, t)}
     </div>
@@ -765,6 +779,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
   const {
     treeId,
     draggable: treeDraggable,
+    toggle,
     renderColumns: Columns,
     renderHeading: RenderHeading,
     blockInstruction,
@@ -993,15 +1008,16 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
         className='indent relative grid grid-cols-subgrid grid-rows-[var(--dx-control)] col-[tree-row]'
         style={paddingIndentation(level)}
       >
-        {branch ? (
-          <TreeView.BranchTrigger asChild>
-            {/* zag stamps data-state=open on the trigger, which the ghost button styles as an
-                open menu trigger (bg-input-bg) — the chevron must stay transparent. */}
-            <TreeItemToggle isBranch open={open} classNames='data-[state=open]:bg-transparent' />
-          </TreeView.BranchTrigger>
-        ) : (
-          <TreeItemToggle isBranch={false} />
-        )}
+        {toggle &&
+          (branch ? (
+            <TreeView.BranchTrigger asChild>
+              {/* zag stamps data-state=open on the trigger, which the ghost button styles as an
+                  open menu trigger (bg-input-bg) — the chevron must stay transparent. */}
+              <TreeItemToggle isBranch open={open} classNames='data-[state=open]:bg-transparent' />
+            </TreeView.BranchTrigger>
+          ) : (
+            <TreeItemToggle isBranch={false} />
+          ))}
         {RenderHeading ? (
           <RenderHeading item={item} path={path} props={props} open={open} />
         ) : (

@@ -262,6 +262,9 @@ export const TaskTreeContent = ({
       gridTemplateColumns={gridTemplateColumns}
       classNames='w-full min-w-0'
       draggable={!!onTaskMove}
+      // A flat list is a tree of depth one: no branch will ever need disclosing, so the template
+      // carries no toggle track and the first cell is the gutter or the status control.
+      toggle={!!hierarchical}
       // Any task can gain a sub-task, so a childless peer is still a drop target — without this the
       // hitbox offers no make-child zone on one, and so no drop indicator either.
       leavesAcceptChildren

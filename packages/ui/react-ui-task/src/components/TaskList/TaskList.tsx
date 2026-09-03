@@ -280,8 +280,8 @@ const TaskListRoot = ({
   // for a handle that no longer exists only pushed every title one square right.
   const showGutter = showOrdinals || !!onTaskCheck;
   const gridTemplateColumns = useMemo(
-    () => buildGridTemplate({ showGutter, showEstimates, hasActions: !!getTaskActions }),
-    [showGutter, showEstimates, getTaskActions],
+    () => buildGridTemplate({ toggle: hierarchical, showGutter, showEstimates, hasActions: !!getTaskActions }),
+    [hierarchical, showGutter, showEstimates, getTaskActions],
   );
 
   return (
@@ -356,28 +356,42 @@ const MAX_ORDINAL = 99;
  * there and no track is held empty. Cells flow into the tracks in DOM order; the names are for the
  * pane and the description, which place themselves.
  */
+type GridTrack = readonly [name: string | undefined, size: string];
+
 const buildGridTemplate = ({
+  toggle,
   showGutter,
   showEstimates,
   hasActions,
 }: {
+  /** A hierarchical list has branches to disclose; a flat one holds no square for a chevron. */
+  toggle: boolean;
   showGutter: boolean;
   showEstimates: boolean;
   hasActions: boolean;
-}): string =>
-  [
-    '[tree-row-start] var(--dx-control)',
-    showGutter && '[gutter] var(--dx-control)',
-    '[status] var(--dx-control)',
-    '[title] minmax(0, 1fr)',
-    '[chips] min-content',
-    showEstimates && '[estimate] var(--dx-control)',
-    '[priority] var(--dx-control)',
-    hasActions && '[actions] var(--dx-control)',
-    '[tree-row-end]',
-  ]
-    .filter(Boolean)
+}): string => {
+  const candidates: (GridTrack | false)[] = [
+    toggle && [undefined, 'var(--dx-control)'],
+    showGutter && ['gutter', 'var(--dx-control)'],
+    ['status', 'var(--dx-control)'],
+    ['title', 'minmax(0, 1fr)'],
+    ['chips', 'min-content'],
+    showEstimates && ['estimate', 'var(--dx-control)'],
+    ['priority', 'var(--dx-control)'],
+    hasActions && ['actions', 'var(--dx-control)'],
+  ];
+  const tracks = candidates.filter((track): track is GridTrack => !!track);
+  // A line carries all its names in one bracket: `[tree-row-start] [status]` with no track between
+  // is invalid and silently drops the whole declaration, which is what happens the moment the
+  // toggle track is omitted — so the first track's name joins the row's own.
+  return tracks
+    .map(([name, size], index) => {
+      const names = [index === 0 && 'tree-row-start', name].filter(Boolean).join(' ');
+      return `${names ? `[${names}] ` : ''}${size}`;
+    })
+    .concat('[tree-row-end]')
     .join(' ');
+};
 
 type TaskListContentProps = ComposableProps;
 

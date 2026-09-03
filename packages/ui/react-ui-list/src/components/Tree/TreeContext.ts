@@ -110,6 +110,8 @@ export type TreeRenderContextValue<T extends { id: string } = any> = {
   /** Stamped into every row's drag payload so a monitor can reject another tree's drags. */
   treeId: string;
   draggable: boolean;
+  /** Whether rows render a disclosure toggle in the template's first track. */
+  toggle: boolean;
   renderColumns?: ColumnRenderer<T>;
   renderIcon?: IconRenderer<T>;
   renderHeading?: HeadingRenderer<T>;
