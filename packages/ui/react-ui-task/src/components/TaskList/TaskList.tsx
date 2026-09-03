@@ -69,8 +69,14 @@ type TaskListContextValue = {
   hierarchical: boolean;
   /** Paint the tree's drop bands on every row (development affordance). */
   debug: boolean;
-  /** Whether the leading gutter is rendered at all — it holds the ordinal and the drag handle. */
+  /** Whether the leading gutter is rendered at all — it holds the ordinal or the checkbox. */
   showGutter: boolean;
+  /**
+   * The row's column template, built once from the options so the tree's rows and the edit pane
+   * lay out on the same named tracks (`gutter`, `status`, `title`, `chips`, `estimate`, `priority`,
+   * `actions`).
+   */
+  gridTemplateColumns: string;
   selected?: string;
   /** Ids of the checked rows — the set an action acts on, distinct from the current row. */
   checked: ReadonlySet<string>;
@@ -269,9 +275,19 @@ const TaskListRoot = ({
   const [draggingTask, setDraggingTask] = useState<Task.Task>();
   const dragging = useMemo(() => (draggingTask ? subtreeIds(tasks, draggingTask) : EMPTY_IDS), [tasks, draggingTask]);
 
+  // The checkbox shares the ordinal's gutter, so a checkable list reserves the track even when it
+  // shows no numbers. A movable one does not: the whole row is the drag source, and a track held
+  // for a handle that no longer exists only pushed every title one square right.
+  const showGutter = showOrdinals || !!onTaskCheck;
+  const gridTemplateColumns = useMemo(
+    () => buildGridTemplate({ toggle: hierarchical, showGutter, showEstimates, hasActions: !!getTaskActions }),
+    [hierarchical, showGutter, showEstimates, getTaskActions],
+  );
+
   return (
     <TaskListProvider
       tasks={tasks}
+      gridTemplateColumns={gridTemplateColumns}
       // Not gated on `!hierarchical` any more: the tree expresses a status group as a `group` node,
       // so grouping and hierarchy are a choice rather than mutually exclusive capabilities.
       groupByStatus={groupByStatus}
@@ -281,9 +297,7 @@ const TaskListRoot = ({
       showEstimates={showEstimates}
       hierarchical={hierarchical}
       debug={debug}
-      // The checkbox and the handle share the ordinal's gutter, so a checkable or movable list
-      // reserves the track even when it shows no numbers.
-      showGutter={showOrdinals || !!onTaskMove || !!onTaskCheck}
+      showGutter={showGutter}
       isCollapsed={isCollapsed}
       selected={selected}
       checked={checked}
@@ -329,29 +343,55 @@ TaskListViewport.displayName = 'TaskList.Viewport';
 // Content — the rows, grouped by status when the root says so.
 //
 
-/**
- * The rows and the create row are separate grids (the create row sits outside the scrolling
- * viewport), so their leading gutters — ordinal, then status — are declared once here: only
- * matching templates keep the `+` under the status control and the input under the titles.
- * Tailwind scans for whole class names, hence four literals rather than a composed prefix. The
- * status gutter is `1.5rem` because that is the width of the `density='sm'` icon button it holds;
- * a narrower track makes the button overflow it and align left instead of centring.
- */
 /** Ordinals stop at 99: the gutter is sized for two digits. */
 const MAX_ORDINAL = 99;
 
 /**
- * The edit pane's columns, matching the rows' leading gutters. The row's disclosure toggle is
- * cleared with padding rather than a spare column: a column of its own picks up the grid's
- * `gap-x-1`, which put every pane cell 4px right of the row cell it is meant to sit under.
+ * One column template per list, built from its options and shared by the tree's rows and the edit
+ * pane (the create row sits outside the scrolling viewport, in a grid of its own), so the pane's
+ * icon sits under the rows' status controls and its field starts where their titles do.
+ *
+ * Every fixed track is one control — the rail-item square each cell's `IconBlock` holds — and a
+ * track exists only when its option is on, so a cell is never rendered into a track that is not
+ * there and no track is held empty. Cells flow into the tracks in DOM order; the names are for the
+ * pane and the description, which place themselves.
  */
-const GRID_COLS = {
-  content: 'grid-cols-[1.5rem_1fr_min-content_2rem]',
-  contentWithOrdinals: 'grid-cols-[2rem_1.5rem_1fr_min-content_2rem]',
-};
+type GridTrack = readonly [name: string | undefined, size: string];
 
-/** The disclosure toggle's own width (`w-6`), which the pane reserves but does not fill. */
-const TOGGLE_GUTTER = 'ps-6';
+const buildGridTemplate = ({
+  toggle,
+  showGutter,
+  showEstimates,
+  hasActions,
+}: {
+  /** A hierarchical list has branches to disclose; a flat one holds no square for a chevron. */
+  toggle: boolean;
+  showGutter: boolean;
+  showEstimates: boolean;
+  hasActions: boolean;
+}): string => {
+  const candidates: (GridTrack | false)[] = [
+    toggle && [undefined, 'var(--dx-control)'],
+    showGutter && ['gutter', 'var(--dx-control)'],
+    ['status', 'var(--dx-control)'],
+    ['title', 'minmax(0, 1fr)'],
+    ['chips', 'min-content'],
+    showEstimates && ['estimate', 'var(--dx-control)'],
+    ['priority', 'var(--dx-control)'],
+    hasActions && ['actions', 'var(--dx-control)'],
+  ];
+  const tracks = candidates.filter((track): track is GridTrack => !!track);
+  // A line carries all its names in one bracket: `[tree-row-start] [status]` with no track between
+  // is invalid and silently drops the whole declaration, which is what happens the moment the
+  // toggle track is omitted — so the first track's name joins the row's own.
+  return tracks
+    .map(([name, size], index) => {
+      const names = [index === 0 && 'tree-row-start', name].filter(Boolean).join(' ');
+      return `${names ? `[${names}] ` : ''}${size}`;
+    })
+    .concat('[tree-row-end]')
+    .join(' ');
+};
 
 type TaskListContentProps = ComposableProps;
 
@@ -369,6 +409,7 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
     showOrdinals,
     showDescription,
     showGutter,
+    gridTemplateColumns,
     isCollapsed,
     onCollapseToggle,
     onTaskCheck,
@@ -408,6 +449,7 @@ const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
       tasks={tasks}
       collapsed={collapsed}
       showGutter={showGutter}
+      gridTemplateColumns={gridTemplateColumns}
       ordinals={showOrdinals ? ordinals : EMPTY_ORDINALS}
       selected={selected}
       checked={checked}
@@ -469,9 +511,10 @@ const TaskEstimateControl = ({ task }: { task: Task.Task }) => {
         <IconBlock>
           <Button
             variant='ghost'
-            density='sm'
             data-testid='taskList.item.estimate'
-            classNames={mx('w-6 px-0 text-xs tabular-nums', estimateTextStyle(estimate))}
+            // `w-8` fills the block: the label's hit target is the same square as the icon
+            // controls on either side of it.
+            classNames={mx('w-8 px-0 text-xs tabular-nums', estimateTextStyle(estimate))}
             // The row is the selection target; opening the menu must not also select it.
             onClick={(event: MouseEvent) => event.stopPropagation()}
           >
@@ -577,17 +620,17 @@ const TaskTreeTrailing = ({ item }: { item: TaskNode }) => {
 
   return (
     <>
-      {/* Variable-width chips share one cell — an artifact tag has no fixed size, so it cannot own a
-          column. Everything after it does, which is what makes those controls line up down the
-          list rather than sitting wherever the tags happened to end. */}
-      <div className='flex h-8 items-center justify-end gap-1'>
+      {/* Direct children of the row's subgrid, flowing into the `chips`, `estimate`, `priority` and
+          `actions` tracks in this order — `buildGridTemplate` declares a track only when its option
+          is on, and the matching cell is omitted on the same condition, so the two never drift.
+          Variable-width chips share one cell — an artifact tag has no fixed size, so it cannot own
+          a column; every control after it is one rail-item square and needs no wrapper. */}
+      <div className='col-[chips] flex h-(--dx-control) items-center justify-end'>
         <TaskListItemArtifacts task={task} />
         {current.assignee && <TaskListAssignee assignee={current.assignee} />}
       </div>
-      <div className='flex h-8 items-center justify-center'>{showEstimates && <TaskEstimateControl task={task} />}</div>
-      <div className='flex h-8 items-center justify-center'>
-        <TaskPriorityIcon task={task} />
-      </div>
+      {showEstimates && <TaskEstimateControl task={task} />}
+      <TaskPriorityIcon task={task} />
       <TaskListItemActions task={task} />
     </>
   );
@@ -755,7 +798,7 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
     forwardedRef,
   ) => {
     const { t } = useTranslation(translationKey);
-    const { tasks, selected, onTaskCreate, onTaskUpdate, onTaskSelect, showGutter } =
+    const { tasks, selected, onTaskCreate, onTaskUpdate, onTaskSelect, gridTemplateColumns } =
       useTaskListContext('TaskList.Edit');
     const { className, ...rest } = composableProps(props);
 
@@ -861,8 +904,6 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
     // On the list's template the pane has the rows' columns: the ordinal gutter it leaves empty, the
     // status column takes the icon, and the title column takes the field — which is what puts the
     // caret where the rows' titles start. Off it, the pane keeps a template of its own.
-    const titleColumn = grid && showGutter ? 'col-start-3' : 'col-start-2';
-
     return (
       // One grid, not a row of grids: the title and the description line up column for column, and
       // the toolbar can sit on the title line while coming LAST in the DOM — so Tab runs title →
@@ -870,21 +911,19 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
       <div
         {...rest}
         data-testid='taskList.edit'
-        className={mx(
-          'grid gap-x-1 w-full min-w-0 shrink-0',
-          grid
-            ? [showGutter ? GRID_COLS.contentWithOrdinals : GRID_COLS.content, TOGGLE_GUTTER]
-            : 'grid-cols-[1.5rem_1fr_min-content]',
-          className,
-        )}
+        className={mx('grid w-full min-w-0 shrink-0', !grid && 'grid-cols-[2rem_1fr_min-content]', className)}
+        // On the list's own template the pane's cells name their tracks, so the icon sits under the
+        // rows' status controls and the field under their titles whatever the list's options are;
+        // the toggle and gutter tracks stay empty.
+        style={grid ? { gridTemplateColumns } : undefined}
         ref={forwardedRef}
       >
         <span
           className={mx(
-            'flex items-center justify-center h-8',
-            // Placed explicitly: with ordinals the pane leaves column 1 empty, and implicit
-            // placement would drop the icon into that gutter.
-            grid && (showGutter ? 'col-start-2' : 'col-start-1'),
+            'flex items-center justify-center h-(--dx-control)',
+            // Placed explicitly: with a gutter the pane leaves that track empty, and implicit
+            // placement would drop the icon into it.
+            grid ? 'col-[status]' : 'col-start-1',
           )}
         >
           <Icon icon={current ? 'ph--pencil-simple--regular' : 'ph--plus--regular'} classNames='text-subdued' />
@@ -892,7 +931,7 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
         <Input.Root>
           <Input.TextInput
             variant='subdued'
-            classNames={mx('px-0', grid && [titleColumn, 'col-end-[-2]'])}
+            classNames={mx('px-0', grid && 'col-start-[title] -col-end-2')}
             data-testid='taskList.edit.title'
             placeholder={current ? t('task-title.placeholder') : placeholder}
             value={draft}
@@ -907,7 +946,7 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
             // Placed explicitly, never by flow: the toolbar is absent until something is typed, so a
             // description left to auto-place would take the cell it vacates and fall into the icon
             // column — a field one word wide.
-            className={mx('flex min-w-0 -col-end-2', grid ? titleColumn : 'col-start-2')}
+            className={mx('flex min-w-0 -col-end-2', grid ? 'col-start-[title]' : 'col-start-2')}
           >
             {/* A description is markdown, so it is edited as markdown. `editing` is held open —
                 the pane IS the editor, so there is nothing to click into — and the key remounts
