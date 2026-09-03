@@ -18,9 +18,9 @@ const VersionedV2 = Type.makeObject(DXN.make('com.example.type.versioned', '0.2.
 const V1_URI = DXN.make('com.example.type.versioned', '0.1.0');
 
 /**
- * Locks in the contract documented on `Obj.getType` / `Entity.getType`: an object whose stored
- * type reference does not resolve reports `undefined` rather than throwing, so callers can probe
- * an object of an unknown type.
+ * An object whose stored type reference does not resolve stays fully usable: `Obj.getType` reports
+ * `undefined` (the contract documented there and on `Entity.getType`) and writes skip validation
+ * instead of failing, since there is no schema to validate against.
  *
  * The registry indexes a type under its exact `dxn:<typename>:<version>`, so an object written
  * before a type's version bump becomes unresolvable — which is what these tests reproduce by
@@ -70,24 +70,38 @@ describe('object whose type is absent from the registry', () => {
     expect(Obj.getTypeURI(object)).toEqual(V1_URI);
   });
 
-  test('reads succeed and only writes fail, naming the unresolved type', async () => {
+  test('reads and writes both succeed', async () => {
     const { object } = await setup();
 
     expect(object.name).toEqual('Alice');
-    expect(() =>
-      Obj.update(object, (object) => {
-        object.name = 'Bob';
-      }),
-    ).toThrow(`Schema not found in schema registry: ${V1_URI}`);
+    Obj.update(object, (object) => {
+      object.name = 'Bob';
+    });
+    expect(object.name).toEqual('Bob');
   });
 
-  test('re-registering the type resolves it again without touching the object', async () => {
+  test('writes skip validation rather than failing on the unresolved schema', async () => {
+    const { object } = await setup();
+
+    // There is no schema to validate against, so a value the schema would reject is written as-is.
+    Obj.update(object, (object) => {
+      (object as any).name = 42;
+    });
+    expect((object as any).name).toEqual(42);
+  });
+
+  test('re-registering the type restores validation', async () => {
     const { db, object } = await setup();
     expect(Obj.getType(object)).toBeUndefined();
 
     db.graph.registry.add([VersionedV1]);
 
     expect(Obj.getType(object)).toBe(VersionedV1);
+    expect(() =>
+      Obj.update(object, (object) => {
+        (object as any).name = 42;
+      }),
+    ).toThrow();
     Obj.update(object, (object) => {
       object.name = 'Bob';
     });
