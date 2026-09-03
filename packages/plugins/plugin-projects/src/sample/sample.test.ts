@@ -35,7 +35,9 @@ describe('Tidepool sample space', () => {
     expect(countOf('type.task:')).toBe(17);
   });
 
-  test('files every sub-task under a parent, at two levels', async ({ expect }) => {
+  // Same budget as above: this also boots a client and builds the whole space, which a shared CI
+  // runner with coverage instrumentation does not finish inside the 15s default.
+  test('files every sub-task under a parent, at two levels', { timeout: 120_000 }, async ({ expect }) => {
     const { json } = await EffectEx.runPromise(buildArchive(TidepoolSpace()));
     const objects: Array<{ '@type'?: string; 'id': string; 'title'?: string; 'parentTask'?: unknown }> =
       JSON.parse(json).objects;

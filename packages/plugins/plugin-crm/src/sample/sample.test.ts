@@ -33,7 +33,9 @@ describe('Northwind Sales sample space', () => {
     expect(countOf('type.view')).toBe(5);
   });
 
-  test('backs every pipeline column with a stage-filtered view', async ({ expect }) => {
+  // Same budget as above: this also boots a client and builds the whole space, which a shared CI
+  // runner with coverage instrumentation does not finish inside the 15s default.
+  test('backs every pipeline column with a stage-filtered view', { timeout: 120_000 }, async ({ expect }) => {
     const { json } = await EffectEx.runPromise(buildArchive(PipelineSpace()));
     const objects: Array<{ '@type'?: string; 'columns'?: Array<{ name: string; order: string[] }> }> =
       JSON.parse(json).objects;

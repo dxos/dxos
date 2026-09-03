@@ -25,6 +25,10 @@ import { DebugNodes, DebugOperation } from '#types';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const sampleSpacesAtom = yield* Capability.atom(AppCapabilities.SampleSpace);
+    // Extension bodies run under `Effect.runSync`, where loading the demand-gated sample modules is
+    // an async step the builder swallows as an empty result — so pull them in here instead, with the
+    // atom above re-running the extension once they land.
+    yield* Effect.ignore(Plugin.activate(ActivationEvents.SampleSpacesRequested));
 
     const extensions = yield* Effect.all([
       // Top-level Debug node (sibling of DevTools under SYSTEM); only present when a space is active.
@@ -102,8 +106,6 @@ export default Capability.makeModule(
             // cold app this runs while the list is still empty, and an early return that never
             // touched the atom would register no dependency and never re-run once they activate.
             get(sampleSpacesAtom);
-            // Nothing else fires this, so these actions are what pull the sample modules in.
-            yield* Effect.ignore(Plugin.activate(ActivationEvents.SampleSpacesRequested));
             const samples = yield* Capability.getAll(AppCapabilities.SampleSpace);
 
             return samples.map((sample) =>
