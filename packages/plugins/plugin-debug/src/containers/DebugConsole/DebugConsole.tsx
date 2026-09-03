@@ -65,7 +65,7 @@ export const DebugConsole = ({ onClose, fit }: DebugConsoleProps) => {
         />
       </Panel.Content>
       <Panel.Statusbar asChild>
-        <Toolbar.Root>
+        <Toolbar.Root classNames='bg-transparent'>
           <IconButton
             variant='ghost'
             iconOnly

@@ -44,8 +44,8 @@ export const DebugPanel = ({ contextId = DEBUG_PANEL_CONTEXT, onClose }: DebugPa
       onValueChange={handleTabChange}
     >
       <Panel.Root>
-        <Panel.Toolbar size='sm'>
-          <Toolbar.Root density='sm' classNames='p-0.5'>
+        <Panel.Toolbar size='sm' asChild>
+          <Toolbar.Root density='sm'>
             <Tabs.Tablist classNames='w-auto p-0 gap-0.5'>
               <Tabs.Button value='console' density='sm'>
                 {t('console.tab.label')}

@@ -67,7 +67,13 @@ export const DebugPanelStatus = ({ controller = getDebugPortController() }: Debu
         document.body,
       )}
       <Popover.Portal>
-        <Popover.Content side='top' align='center' onInteractOutside={handleDismiss} onEscapeKeyDown={handleDismiss}>
+        <Popover.Content
+          classNames='bg-base-surface border-b-0 rounded-b-none'
+          side='top'
+          align='center'
+          onInteractOutside={handleDismiss}
+          onEscapeKeyDown={handleDismiss}
+        >
           {/* Definite size: the log table needs room to breathe and the terminal fits itself to
               whatever it is given, so neither child can size the panel. */}
           <Popover.Viewport classNames='h-[24rem] w-[64rem] max-w-[calc(100vw-4rem)]'>
