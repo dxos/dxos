@@ -221,7 +221,7 @@ in the remote slot, which is exactly inverted. Recorded as D1a in DESIGN.md.
 - [x] `RemoteProcessManager.Manager.processTreeAtom` is `Atom.Writable` for that reason.
 - [x] `EdgeProcessManager` gained a real `processTree` (from `Control.list`) and `control`; the D3
       "no process tree endpoint yet" TODO is gone. New builders: `fromEdgeProcessClient(client,
-    spaceId)` and `forSpace(client, spaceId)`; `EdgeProcessControl.processManagerFrom*` deleted in
+  spaceId)` and `forSpace(client, spaceId)`; `EdgeProcessControl.processManagerFrom*` deleted in
       favour of `EdgeProcessControl.fromClient` returning a `Control`.
 - [x] `AssistantTestLayer` reordered so its noop remote manager sits below `AgentService` in the
       provideMerge chain.
