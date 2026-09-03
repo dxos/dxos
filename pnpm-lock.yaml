@@ -351,6 +351,9 @@ catalogs:
     '@playwright/test':
       specifier: 1.57.0
       version: 1.57.0
+    '@posthog/mcp':
+      specifier: ^0.12.0
+      version: 0.12.0
     '@radix-ui/primitive':
       specifier: 1.1.1
       version: 1.1.1
@@ -1353,6 +1356,9 @@ catalogs:
     posthog-js:
       specifier: ^1.422.5
       version: 1.422.5
+    posthog-node:
+      specifier: ^5.51.4
+      version: 5.51.6
     prettier:
       specifier: ^3.6.2
       version: 3.6.2
@@ -6781,6 +6787,9 @@ importers:
       '@dxos/mcp-server':
         specifier: workspace:*
         version: link:../../core/compute/mcp-server
+      '@dxos/observability':
+        specifier: workspace:*
+        version: link:../../sdk/observability
       '@dxos/plugin-assistant':
         specifier: workspace:*
         version: link:../../plugins/plugin-assistant
@@ -13058,6 +13067,9 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
+      '@dxos/cli-util':
+        specifier: workspace:*
+        version: link:../../devtools/cli-util
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -18802,6 +18814,9 @@ importers:
       '@opentelemetry/semantic-conventions':
         specifier: 'catalog:'
         version: 1.43.0
+      '@posthog/mcp':
+        specifier: 'catalog:'
+        version: 0.12.0(@modelcontextprotocol/sdk@1.27.1(@cfworker/json-schema@4.1.1))(posthog-node@5.51.6(rxjs@7.8.2))
       js-yaml:
         specifier: 'catalog:'
         version: 4.1.1
@@ -18811,6 +18826,9 @@ importers:
       posthog-js:
         specifier: 'catalog:'
         version: 1.422.5(@types/react@19.2.17)(react@19.2.7)
+      posthog-node:
+        specifier: 'catalog:'
+        version: 5.51.6(rxjs@7.8.2)
       uuid:
         specifier: 'catalog:'
         version: 9.0.1
@@ -28952,8 +28970,27 @@ packages:
   '@posthog/core@1.49.2':
     resolution: {integrity: sha512-AXHDo/4nisUg7OPG1TQNgREK7n+chBQXLQyttp7bDTDsDg2k9lV06TmnpvuNbwJs53q9mP9hjezKEZu4fYadfg==}
 
+  '@posthog/core@1.50.3':
+    resolution: {integrity: sha512-mSDH1EiFmdYh92ITLzVD5od7L91cH1/rhLm85kyUttV39TxXivT5PRxUIEFDatzlkYbWGtrPEPygzc4N93XvrQ==}
+
+  '@posthog/mcp@0.12.0':
+    resolution: {integrity: sha512-OZX+WAEKHs6P9AAarL9RIaGmepUuT/eC30A+ZCHxbMlUXF3DlULn8KLB3rmIyzvxPRvqRPSnFfEdE4owi49Fxw==}
+    engines: {node: ^20.20.0 || >=22.22.0}
+    peerDependencies:
+      '@modelcontextprotocol/sdk': '>=1.26.0'
+      '@modelcontextprotocol/server': '>=2.0.0'
+      posthog-node: ^5.0.0
+    peerDependenciesMeta:
+      '@modelcontextprotocol/sdk':
+        optional: true
+      '@modelcontextprotocol/server':
+        optional: true
+
   '@posthog/types@1.407.1':
     resolution: {integrity: sha512-WhbkXPC2rgylXqmxHqv70ffI3k+KxyR6s7DBIfr5NvIqHkxp6v0pk31D/jbz0DNVbzwkLjyll2pxr4FNbJiYzg==}
+
+  '@posthog/types@1.408.1':
+    resolution: {integrity: sha512-zcQ3rdAbWDWegL/TA3OiC+Wc8qquNtFj2Q2RPc3QuJas3D6FYsNhR9xYmZgLWEm+GDN/zhGlOHijG3nPMEiCbw==}
 
   '@protobufjs/aspromise@1.1.2':
     resolution: {integrity: sha512-j+gKExEuLmKwvz3OgROXtrJ2UG2x8Ch2YZUxahh+s1F2HZ+wAceUNLkvy6zKCPVRkU++ZWQrdxsUeQXmcg4uoQ==}
@@ -39838,6 +39875,15 @@ packages:
       '@types/react':
         optional: true
       react:
+        optional: true
+
+  posthog-node@5.51.6:
+    resolution: {integrity: sha512-r+Ge3p0OnOcOWeTnvKZmAtDwECeIoyNTyxBxuZc8wM6RHCQ9j2Xrhogrf39HSq1Y2gIOpWLqIDRmWDcu7xmqcA==}
+    engines: {node: ^20.20.0 || >=22.22.0}
+    peerDependencies:
+      rxjs: ^7.0.0
+    peerDependenciesMeta:
+      rxjs:
         optional: true
 
   potpack@1.0.2:
@@ -50791,7 +50837,20 @@ snapshots:
     dependencies:
       '@posthog/types': 1.407.1
 
+  '@posthog/core@1.50.3':
+    dependencies:
+      '@posthog/types': 1.408.1
+
+  '@posthog/mcp@0.12.0(@modelcontextprotocol/sdk@1.27.1(@cfworker/json-schema@4.1.1))(posthog-node@5.51.6(rxjs@7.8.2))':
+    dependencies:
+      '@posthog/core': 1.49.2
+      posthog-node: 5.51.6(rxjs@7.8.2)
+    optionalDependencies:
+      '@modelcontextprotocol/sdk': 1.27.1(@cfworker/json-schema@4.1.1)
+
   '@posthog/types@1.407.1': {}
+
+  '@posthog/types@1.408.1': {}
 
   '@protobufjs/aspromise@1.1.2': {}
 
@@ -63620,6 +63679,12 @@ snapshots:
       react: 19.2.7
     transitivePeerDependencies:
       - preact-render-to-string
+
+  posthog-node@5.51.6(rxjs@7.8.2):
+    dependencies:
+      '@posthog/core': 1.50.3
+    optionalDependencies:
+      rxjs: 7.8.2
 
   potpack@1.0.2: {}
 
