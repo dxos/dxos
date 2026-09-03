@@ -45,6 +45,11 @@ type ProcessNode = {
 /** Synthetic root; the tree renders its children, never the root itself. */
 const ROOT_ID = 'processes';
 
+/**
+ * The agent's running processes as a tree, one row per process with its status glyph and metrics
+ * in trailing columns. The forest is rebuilt on every metrics tick, so open state lives outside the
+ * model and is re-seeded — a collapse must survive the next tick. Renders through `Tree`.
+ */
 export const ProcessTree = React.memo(
   composable<HTMLDivElement, ProcessTreeProps>(
     ({ processes, depth = DEFAULT_DEPTH, onProcessSelect, onProcessTerminate, ...props }, forwardedRef) => {
@@ -93,7 +98,7 @@ export const ProcessTree = React.memo(
             <Tree<ProcessNode>
               id={ROOT_ID}
               model={model}
-              gridTemplateColumns='[tree-row-start] minmax(0, 1fr) min-content min-content [tree-row-end]'
+              gridTemplateColumns='[tree-row-start] var(--dx-control) minmax(0, 1fr) min-content min-content [tree-row-end]'
               renderIcon={renderIcon}
               renderColumns={renderColumns}
               onOpenChange={handleOpenChange}
