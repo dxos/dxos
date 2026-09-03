@@ -60,7 +60,16 @@ export const estimateTextStyle = textStyleFor(Task.EstimateOptions);
 /** A priority's glyph, from the same table that gives it a title and a hue. */
 const PRIORITY_ICONS = new Map(Task.PriorityOptions.map(({ id, icon }) => [id, icon]));
 
-/** Guards a table edited to drop a row; every `Priority`, `none` included, has one today. */
-const FALLBACK_PRIORITY_ICON = 'ph--dot--regular';
+/**
+ * The glyph for a field with no value set, whatever the field.
+ *
+ * A dot rather than a dash or an empty cell: every trailing control renders on every row so setting
+ * a value never depends on discovering a hover affordance, which means an unset one still has to
+ * occupy its column and read as a control. One glyph across priority, estimate and anything added
+ * later is what keeps a column of unset rows reading as one column.
+ */
+export const UNSET_ICON = 'ph--dot--regular';
 
-export const priorityIcon = (priority: Task.Priority): string => PRIORITY_ICONS.get(priority) ?? FALLBACK_PRIORITY_ICON;
+export const priorityIcon = (priority: Task.Priority): string =>
+  // Guards a table edited to drop a row; every `Priority`, `none` included, has an icon today.
+  PRIORITY_ICONS.get(priority) ?? UNSET_ICON;

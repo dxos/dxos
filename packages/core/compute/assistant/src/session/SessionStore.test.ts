@@ -11,7 +11,7 @@ import { Message } from '@dxos/types';
 
 import * as Alarm from './Alarm';
 import * as SessionLink from './SessionLink';
-import { SessionStore, isConsumed, isQueued } from './SessionStore';
+import { SessionStore, isConsumed, isInFlight, isQueued } from './SessionStore';
 
 // Monotonic timestamps so chronological sorting in SessionStore is deterministic.
 let clock = 0;
@@ -185,6 +185,40 @@ describe('SessionStore', () => {
 
         const { pendingMessages } = yield* store.loadPending(feed);
         expect(pendingMessages.map((msg) => msg.id)).toEqual([entry.id]);
+      }).pipe(Effect.provide(TestLayer)),
+    );
+
+    // The whole point of a mark separate from the ack: it changes what the queue view shows without
+    // changing what a rehydrated process redelivers.
+    it.effect('marking an entry in-flight leaves it pending, so an interrupted turn redelivers it', () =>
+      Effect.gen(function* () {
+        const { db } = yield* Database.Service;
+        const feed = db.add(Feed.make());
+        const store = new SessionStore();
+
+        const entry = yield* store.enqueueMessage(feed, makeMessage('prompt'));
+        yield* store.markInFlight(feed, entry);
+
+        expect(isInFlight(entry)).toBe(true);
+        expect(isConsumed(entry)).toBe(false);
+
+        const { pendingMessages } = yield* store.loadPending(feed);
+        expect(pendingMessages.map((msg) => msg.id)).toEqual([entry.id]);
+      }).pipe(Effect.provide(TestLayer)),
+    );
+
+    it.effect('acking an in-flight entry retires it from the pending set', () =>
+      Effect.gen(function* () {
+        const { db } = yield* Database.Service;
+        const feed = db.add(Feed.make());
+        const store = new SessionStore();
+
+        const entry = yield* store.enqueueMessage(feed, makeMessage('prompt'));
+        yield* store.markInFlight(feed, entry);
+        yield* store.ack(feed, entry);
+
+        const { pendingMessages } = yield* store.loadPending(feed);
+        expect(pendingMessages).toEqual([]);
       }).pipe(Effect.provide(TestLayer)),
     );
 

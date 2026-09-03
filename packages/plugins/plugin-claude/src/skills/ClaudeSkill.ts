@@ -108,6 +108,11 @@ export const make = (): Skill.Skill =>
           pass \`order: first\` to read the opening of a long session instead.
         - The transcript returns only user and agent prose. Tool calls, thinking signals and status
           events are omitted, so a quiet transcript on a running session is normal.
+        - Managed agents compact their own context, so a session never dies of a full context window.
+          Treat "running out of context", "approaching the context limit" or a similar warning in the
+          transcript as narration, not a fault: do not restart the session, start a fresh one, or
+          re-send the work on that basis alone. Only a real blocker — \`requires_action\`,
+          \`budget_reached\`, or an error — warrants intervention.
 
         ## Choosing configuration
         - Default the model to claude-opus-5 unless the user names another.

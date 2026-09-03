@@ -213,8 +213,9 @@ Deeper conventions:
 - Commit hygiene → see "Commit nothing silently" in Non-negotiables.
 - Creating or landing a PR is a procedure — use the `submit-pr` and `land`
   skills. Always surface the Composer preview URL next to the PR link.
-- Consumer-relevant changes need a `.changeset/*.md` before opening the PR —
-  see [`agents/instructions/changesets.md`](agents/instructions/changesets.md)
+- Consumer-relevant changes need a `.changeset/*.md`: written when opening the
+  PR and rewritten before landing, as a summary of the whole PR — see
+  [`agents/instructions/changesets.md`](agents/instructions/changesets.md)
   for when to add one, which package to name, and bump levels.
 
 ## Handing an agent a credential

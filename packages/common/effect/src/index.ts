@@ -5,12 +5,13 @@
 export * from './atom-kvs';
 export * as DynamicRuntime from './dynamic-runtime';
 export * as EffectEx from './EffectEx';
-export { type Configuration as OtelConfiguration, layerOtel } from './otel';
+export { type Configuration as OtelConfiguration, layerOtel, makeGlobalTracer, makeTracer } from './otel';
 export * as Performance from './Performance';
 export * as RuntimeProvider from './RuntimeProvider';
 export * as GlobalValue from './internal/GlobalValue';
 export * as SchemaAST from './internal/schema-ast';
 export * as SchemaEx from './SchemaEx';
+export * as SpanAttributes from './SpanAttributes';
 
 // Re-export core types at the top level so TypeScript can name them in declaration files.
 // These are the branded string types that appear in public APIs (View fields, JSON schemas).

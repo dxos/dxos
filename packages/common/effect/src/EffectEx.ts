@@ -5,7 +5,7 @@
 // @import-as-namespace
 
 export { asyncTaskTaggingLayer } from './internal/async-task-tagging';
-export { contextFromScope } from './internal/context';
+export { contextFromScope, contextWithoutParentSpan } from './internal/context';
 export {
   causeToError,
   runAndForwardErrors,
