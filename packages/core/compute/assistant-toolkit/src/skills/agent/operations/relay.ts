@@ -90,7 +90,9 @@ const qualifyEvent = (chat: Chat.Chat, event: unknown) =>
               You are a qualifying agent that determines if the event is relevant to the agent.
               Respond with true if the event is relevant to the agent, false otherwise.
               If you are not sure, return true.
+
               The qualified events will be forwarded to the larger agent that will process them.
+
               <agent id="${agent ? Obj.getURI(agent) : 'unknown'}" name="${agent?.name ?? ''}">
                 <instructions>
                 ${instructionsText}

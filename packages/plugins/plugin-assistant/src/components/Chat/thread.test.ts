@@ -5,7 +5,7 @@
 import * as Array from 'effect/Array';
 import { describe, test } from 'vitest';
 
-import { Alarm, ConsumedAnnotation, QueuedAnnotation } from '@dxos/assistant';
+import { Alarm, ConsumedAnnotation, InFlightAnnotation, QueuedAnnotation } from '@dxos/assistant';
 import { Annotation, Feed, Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
@@ -115,6 +115,24 @@ describe('queue projection', () => {
     // Exactly once in the thread, and no longer waiting.
     expect(text(messages)).toEqual(['do the thing']);
     expect(pending).toEqual([]);
+  });
+
+  // Regression: the entry stayed in the queue until the ack, which lands only after the turn — so the
+  // prompt was rendered in the queue and the thread at once for the whole turn.
+  test('an entry the running turn took up leaves the queue as soon as the thread shows it', ({ expect }) => {
+    const entry = inFlight(queued(message('do the thing')));
+    const turn = message('do the thing');
+    const { messages, queued: pending } = projectThread({ feedMessages: [entry, turn] });
+    expect(text(messages)).toEqual(['do the thing']);
+    expect(pending).toEqual([]);
+  });
+
+  test('an in-flight entry does not take the rest of the queue with it', ({ expect }) => {
+    const running = inFlight(queued(positioned(message('running'), 1)));
+    const waiting = queued(positioned(message('waiting'), 2));
+    const turn = positioned(message('running'), 3);
+    const { queued: pending } = projectThread({ feedMessages: [running, waiting, turn] });
+    expect(text(pending)).toEqual(['waiting']);
   });
 
   test('queued messages are ordered by append order', ({ expect }) => {
@@ -268,6 +286,11 @@ const positioned = (message: Message.Message, position: number) => {
 const queued = (message: Message.Message) => {
   Obj.update(message, (message) => Annotation.set(message, QueuedAnnotation, true));
   return message;
+};
+
+const inFlight = <T extends Obj.Unknown>(item: T): T => {
+  Obj.update(item, (item) => Annotation.set(item, InFlightAnnotation, true));
+  return item;
 };
 
 const consumed = <T extends Obj.Unknown>(item: T): T => {

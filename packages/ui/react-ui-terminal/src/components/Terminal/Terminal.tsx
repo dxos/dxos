@@ -10,7 +10,7 @@ import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import type * as Layer from 'effect/Layer';
 import type * as Command from 'effect/unstable/cli/Command';
-import React, { type MutableRefObject, useEffect, useRef } from 'react';
+import React, { type Ref, useEffect, useImperativeHandle, useRef } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
@@ -25,6 +25,8 @@ export type TerminalApi = {
 };
 
 export type TerminalProps<Name extends string, Input, ContextInput, E, R> = ThemedClassName<{
+  /** Publishes the {@link TerminalApi} while mounted. */
+  ref?: Ref<TerminalApi>;
   /**
    * Root of an Effect CLI command tree; typically built with `Command.withSubcommands`.
    */
@@ -48,8 +50,6 @@ export type TerminalProps<Name extends string, Input, ContextInput, E, R> = Them
    * terminal fits itself to the container, whose trailing partial cells read as a gap.
    */
   dimensions?: { cols: number; rows: number };
-  /** Receives the live {@link TerminalApi} while mounted; a plain ref so writes never re-run the terminal effect. */
-  apiRef?: MutableRefObject<TerminalApi | null>;
 }>;
 
 /**
@@ -59,6 +59,7 @@ export type TerminalProps<Name extends string, Input, ContextInput, E, R> = Them
  * client, for instance) persists across commands the way it does in a long-lived shell.
  */
 export const Terminal = <Name extends string, Input, ContextInput, E, R>({
+  ref,
   classNames,
   command,
   layer,
@@ -68,13 +69,20 @@ export const Terminal = <Name extends string, Input, ContextInput, E, R>({
   banner,
   fontSize = 13,
   dimensions,
-  apiRef,
 }: TerminalProps<Name, Input, ContextInput, E, R>) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  // Latest ref carried through the effect without joining its deps: a host re-rendering with a new
-  // ref object must not tear the terminal down.
-  const apiRefRef = useRef(apiRef);
-  apiRefRef.current = apiRef;
+
+  // The instance is reached through a ref rather than published from the effect, so a host taking a
+  // new ref object on re-render re-reads it without the terminal being torn down and rebuilt.
+  const xtermRef = useRef<Xterm | null>(null);
+  useImperativeHandle(
+    ref,
+    () => ({
+      clear: () => xtermRef.current?.clear(),
+      focus: () => xtermRef.current?.focus(),
+    }),
+    [],
+  );
 
   useEffect(() => {
     const container = containerRef.current;
@@ -120,13 +128,7 @@ export const Terminal = <Name extends string, Input, ContextInput, E, R>({
     themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'style'] });
 
     xterm.focus();
-
-    if (apiRefRef.current) {
-      apiRefRef.current.current = {
-        clear: () => xterm.clear(),
-        focus: () => xterm.focus(),
-      };
-    }
+    xtermRef.current = xterm;
 
     const bridge = new XtermBridge(xterm);
     const shell = runShell(bridge, { command, name, version, prompt, banner }).pipe(
@@ -139,9 +141,7 @@ export const Terminal = <Name extends string, Input, ContextInput, E, R>({
     observer.observe(container);
 
     return () => {
-      if (apiRefRef.current) {
-        apiRefRef.current.current = null;
-      }
+      xtermRef.current = null;
       cancelAnimationFrame(frame);
       themeObserver.disconnect();
       observer.disconnect();
@@ -162,8 +162,8 @@ export const Terminal = <Name extends string, Input, ContextInput, E, R>({
 
   return (
     <div
+      className={mx('p-1 overflow-hidden', dimensions ? 'w-max h-max' : 'grow dx-fill', classNames)}
       ref={containerRef}
-      className={mx('overflow-hidden bg-base-surface', dimensions ? 'w-max h-max' : 'grow dx-fill', classNames)}
     />
   );
 };

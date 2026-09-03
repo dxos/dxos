@@ -102,6 +102,52 @@ export const addTask = (
 };
 
 /**
+ * Appends existing tasks to the checklist. Ownership is deliberately untouched — the task keeps the
+ * parent it arrived with (contrast {@link addTask}, which parents what the chat creates), so a task
+ * borrowed from a project's set stays in that set. Refs already on the checklist are skipped.
+ * Returns the refs actually appended.
+ */
+export const assignTasks = (chat: Chat, tasks: readonly Ref.Ref<Task.Task>[]): Ref.Ref<Task.Task>[] => {
+  const added: Ref.Ref<Task.Task>[] = [];
+  Obj.update(chat, (chat) => {
+    // Matched on entity id rather than target, so an unloaded ref still de-duplicates.
+    const present = new Set(chat.tasks.map((ref) => Task.refEntityId(ref)).filter((id) => id !== undefined));
+    for (const ref of tasks) {
+      const id = Task.refEntityId(ref);
+      if (id === undefined || present.has(id)) {
+        continue;
+      }
+      present.add(id);
+      added.push(ref);
+    }
+    chat.tasks = [...chat.tasks, ...added];
+  });
+  return added;
+};
+
+/**
+ * Takes tasks off the checklist without destroying them — the inverse of {@link assignTasks}, and
+ * distinct from {@link deleteTask}, which also removes the members the chat owns. Returns the refs
+ * actually removed.
+ */
+export const unassignTasks = (chat: Chat, tasks: readonly Ref.Ref<Task.Task>[]): Ref.Ref<Task.Task>[] => {
+  const ids = new Set(tasks.map((ref) => Task.refEntityId(ref)).filter((id) => id !== undefined));
+  const removed = chat.tasks.filter((ref) => {
+    const id = Task.refEntityId(ref);
+    return id !== undefined && ids.has(id);
+  });
+  if (removed.length > 0) {
+    Obj.update(chat, (chat) => {
+      chat.tasks = chat.tasks.filter((ref) => {
+        const id = Task.refEntityId(ref);
+        return id === undefined || !ids.has(id);
+      });
+    });
+  }
+  return [...removed];
+};
+
+/**
  * Remove a task and its sub-tasks from `tasks`, the chat's checklist loaded in full (see
  * {@link loadTasks}) — an unloaded child is invisible to the walk and would be left orphaned in
  * the array. Returns everything dropped from the checklist.
@@ -186,6 +232,7 @@ export const loadTasks = (chat: Chat): Effect.Effect<Task.Task[], never, Databas
     const tasks = yield* Effect.forEach(chat.tasks, (task) =>
       Database.load(task).pipe(Effect.orElseSucceed(() => undefined)),
     );
+
     return Task.dedupeById(tasks);
   });
 
@@ -207,7 +254,8 @@ export const formatChecklist = (chat: Chat): Effect.Effect<string, never, Databa
     if (tasks.length === 0) {
       return 'No checklist found.';
     }
-    return renderNumberedChecklist(tasks);
+
+    return formatTasks(tasks);
   });
 
 /**
@@ -215,7 +263,7 @@ export const formatChecklist = (chat: Chat): Effect.Effect<string, never, Databa
  * their own indented line — appended to the title, models paste them back through title-keyed
  * upserts and duplicate the task.
  */
-export const renderNumberedChecklist = (tasks: readonly Task.Task[]): string => {
+const formatTasks = (tasks: readonly Task.Task[]): string => {
   const ordinals = new Map(tasks.map((task, index) => [task.id, index + 1]));
   return tasks
     .map((task, index) => {
@@ -224,6 +272,7 @@ export const renderNumberedChecklist = (tasks: readonly Task.Task[]): string => 
       if (task.status && task.status !== 'todo' && task.status !== 'done') {
         notes.push(task.status);
       }
+
       const deps = (task.dependsOn ?? [])
         .map((ref) => ref.target)
         .filter((target) => target !== undefined)
@@ -231,6 +280,7 @@ export const renderNumberedChecklist = (tasks: readonly Task.Task[]): string => 
       if (deps.length > 0) {
         notes.push(`depends on ${deps.join(', ')}`);
       }
+
       return notes.length > 0 ? `${line}\n   (${notes.join('; ')})` : line;
     })
     .join('\n');

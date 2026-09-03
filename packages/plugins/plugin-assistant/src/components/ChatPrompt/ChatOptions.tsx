@@ -30,8 +30,8 @@ const styles = {
 };
 
 export type ChatOptionsProps = AssistantPreset.ChatPresetProps & {
-  chat?: ChatModule.Chat;
   db: Database.Database;
+  chat?: ChatModule.Chat;
   context: AiContext.Binder;
   registry?: Registry.Registry;
 };
@@ -39,7 +39,7 @@ export type ChatOptionsProps = AssistantPreset.ChatPresetProps & {
 /**
  * Manages the runtime context for the chat.
  */
-export const ChatOptions = ({ chat, db, context, registry, presets, preset, onPresetChange }: ChatOptionsProps) => {
+export const ChatOptions = ({ db, chat, context, registry, presets, preset, onPresetChange }: ChatOptionsProps) => {
   const { t } = useTranslation(meta.profile.key);
 
   return (

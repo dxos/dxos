@@ -250,12 +250,16 @@ export const Tasks: Story = {
     });
     await expect(canvasElement.textContent ?? '').toContain('Gather the requirements');
 
-    // Disclosed on mount, and the toggle reports it. Asserted on `hidden` rather than `data-state`:
-    // the machine only stamps that once it has run a transition, so a region open from the first
-    // render carries no state attribute at all.
+    // Collapsed on mount, and the toggle reports it. Asserted on `hidden` rather than `data-state`:
+    // the machine only stamps that once it has run a transition, so the region carries no state
+    // attribute until the reader opens it.
     const region = () => canvasElement.querySelector<HTMLElement>('[data-scope="collapsible"][data-part="content"]')!;
     const toggle = () => canvasElement.querySelector<HTMLElement>('[data-testid="assistant.toggle-tasks"]')!;
-    await expect(region()).not.toHaveAttribute('hidden');
+    await expect(region()).toHaveAttribute('hidden');
+    await expect(toggle()).toHaveAttribute('aria-pressed', 'false');
+
+    await userEvent.click(toggle());
+    await waitFor(() => void expect(region()).not.toHaveAttribute('hidden'), { timeout: 10_000 });
     await expect(toggle()).toHaveAttribute('aria-pressed', 'true');
 
     // Closing hides the region rather than unmounting it — the list keeps its subscriptions, so
@@ -264,10 +268,6 @@ export const Tasks: Story = {
     await waitFor(() => void expect(region()).toHaveAttribute('hidden'), { timeout: 10_000 });
     await expect(toggle()).toHaveAttribute('aria-pressed', 'false');
     await expect(region().textContent ?? '').toContain('Gather the requirements');
-
-    await userEvent.click(toggle());
-    await waitFor(() => void expect(region()).not.toHaveAttribute('hidden'), { timeout: 10_000 });
-    await expect(toggle()).toHaveAttribute('aria-pressed', 'true');
   },
 };
 

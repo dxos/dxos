@@ -136,6 +136,11 @@
       "types": "./dist/types/src/echo/Query.d.ts",
       "import": "./dist/lib/echo/Query.mjs"
     },
+    "./SampleSpace": {
+      "source": "./src/sample/SampleSpace.ts",
+      "types": "./dist/types/src/sample/SampleSpace.d.ts",
+      "import": "./dist/lib/sample/SampleSpace.mjs"
+    },
     "./SettingsOperation": {
       "source": "./src/operations/SettingsOperation.ts",
       "types": "./dist/types/src/operations/SettingsOperation.d.ts",

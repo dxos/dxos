@@ -51,7 +51,6 @@ describe('GetContext', () => {
         yield* Database.flush();
 
         const context = yield* Operation.invoke(AgentSkillOperations.GetContext, {}).pipe(Effect.provide(conversation));
-
         expect(context.checklist).toContain('Buy eggs');
       },
       Effect.provide(OperationTestLayer),

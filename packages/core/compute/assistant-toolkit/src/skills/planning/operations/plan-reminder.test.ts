@@ -31,7 +31,6 @@ describe('PlanReminder', () => {
     Effect.fnUntraced(
       function* (_) {
         const conversation = yield* setupChatWithChecklist([false]);
-
         const exit = yield* Effect.exit(Operation.invoke(PlanReminder, {}).pipe(Effect.provide(conversation)));
 
         expect(Exit.isFailure(exit)).toBe(true);
@@ -46,7 +45,6 @@ describe('PlanReminder', () => {
     Effect.fnUntraced(
       function* (_) {
         const conversation = yield* setupChatWithChecklist([false]);
-
         const exit = yield* Effect.exit(Operation.invoke(PlanReminder, {}).pipe(Effect.provide(conversation)));
 
         expect(Exit.isSuccess(exit)).toBe(true);
@@ -61,7 +59,6 @@ describe('PlanReminder', () => {
     Effect.fnUntraced(
       function* (_) {
         const conversation = yield* setupChatWithChecklist([true]);
-
         const exit = yield* Effect.exit(Operation.invoke(PlanReminder, {}).pipe(Effect.provide(conversation)));
 
         // The script is empty, so reaching the model at all would fail as exhausted.

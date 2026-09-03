@@ -37,6 +37,11 @@ export interface ObjectsTreeProps {
   canOpen?: (entity: Entity.Snapshot) => boolean;
 }
 
+/**
+ * The object graph as a tree: every row is an entity, its children the objects and relations
+ * reachable from it, walked one level ahead of what is open so an unbounded graph is never queried
+ * whole. Renders through `Tree`, so disclosure, roving focus and the APG keymap are the machine's.
+ */
 export const ObjectsTree = ({ db, root, onSelect, onOpen, canOpen }: ObjectsTreeProps) => {
   const [model, setModel] = useState(() => new ObjectsTreeModel(db, root ?? null, onSelect ?? (() => {})));
   useEffect(() => {
@@ -76,7 +81,7 @@ export const ObjectsTree = ({ db, root, onSelect, onOpen, canOpen }: ObjectsTree
             // `min-content` column is sized from the widest role across the whole subgrid, so
             // expanding a node whose child carries a role widened that track and visibly shifted
             // every row's action button.
-            gridTemplateColumns='[tree-row-start] minmax(0, 1fr) min-content [tree-row-end]'
+            gridTemplateColumns='[tree-row-start] var(--dx-control) minmax(0, 1fr) min-content [tree-row-end]'
             classNames='w-full min-w-0'
             renderIcon={ObjectsTreeIcon}
             renderColumns={ObjectsTreeColumns}

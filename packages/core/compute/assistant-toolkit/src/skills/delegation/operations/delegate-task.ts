@@ -37,7 +37,7 @@ const handler: Operation.WithHandler<typeof DelegateTask> = DelegateTask.pipe(
 
       return trim`
         Delegated "${task.title}" as a queued agent task (id: ${task.id}).
-        Current checklist:
+
         <checklist>
           ${yield* Chat.formatChecklist(chat)}
         </checklist>
