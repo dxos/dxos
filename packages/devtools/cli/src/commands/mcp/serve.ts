@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as McpProtocol from 'effect/unstable/ai/McpProtocol';
 import * as Command from 'effect/unstable/cli/Command';
 import * as Options from 'effect/unstable/cli/Flag';
@@ -95,9 +96,11 @@ export const serve = Command.make(
     // stdout carries the protocol, so progress goes to the log (stderr).
     log.info('serving MCP over stdio', { spaces: server.host.spaceIds.length });
 
-    const observability = yield* Capability.get(ObservabilityCapabilities.Observability);
-    const reporting = yield* observability.isAvailable('mcp');
-    const stdio = reporting ? McpServer.stdio.pipe(Layer.provide(analyticsStdio(observability.mcp))) : McpServer.stdio;
+    // Optional: the observability plugin is disableable, and a profile that turned it off still
+    // serves — it just reports nothing.
+    const observability = Option.getOrUndefined(yield* Capability.getOption(ObservabilityCapabilities.Observability));
+    const capture = observability && (yield* observability.isAvailable('mcp')) ? observability.mcp : undefined;
+    const stdio = capture ? McpServer.stdio.pipe(Layer.provide(analyticsStdio(capture))) : McpServer.stdio;
 
     const staticToolkits = McpServer.toolkit(SpaceToolkit).pipe(
       Layer.provide(SpaceToolkit.toLayer(spaceHandlers(server))),

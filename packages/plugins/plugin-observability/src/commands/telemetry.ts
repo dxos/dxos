@@ -10,9 +10,8 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { CommandConfig } from '@dxos/cli-util';
 import * as Observability from '@dxos/observability/Observability';
-import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 
-import { observabilityNamespace } from '../observability';
+import { ObservabilityCapabilities, ObservabilityOperation } from '#types';
 
 const DESCRIPTION =
   'When enabled, basic usage data is used to improve the product. This may include performance ' +
@@ -20,8 +19,8 @@ const DESCRIPTION =
   'public key, is included with this data and no private data ever leaves your devices.';
 
 const readEnabled = Effect.fn(function* () {
-  const { profile } = yield* CommandConfig;
-  return !(yield* Effect.promise(() => Observability.isObservabilityDisabled(observabilityNamespace(profile))));
+  const namespace = yield* Capability.get(ObservabilityCapabilities.Namespace);
+  return !(yield* Effect.promise(() => Observability.isObservabilityDisabled(namespace)));
 });
 
 const report = Effect.fn(function* (enabled: boolean) {

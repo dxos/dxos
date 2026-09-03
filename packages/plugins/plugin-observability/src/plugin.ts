@@ -9,6 +9,7 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 
 import {
   ClientReady,
+  Commands,
   InvocationListener,
   Namespace,
   Observability,
@@ -25,6 +26,7 @@ import { ObservabilityCapabilities, ObservabilityOptions } from '#types';
 
 export const ObservabilityPlugin = Plugin.define<ObservabilityOptions.ObservabilityPluginOptions>(meta).pipe(
   Plugin.addModule(ClientReady),
+  Plugin.addModule(Commands),
   Plugin.addModule(InvocationListener),
   Plugin.addModule(Namespace),
   Plugin.addModule(Observability),

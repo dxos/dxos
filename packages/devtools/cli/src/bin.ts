@@ -26,21 +26,7 @@ import { LogLevel, levels, log } from '@dxos/log';
 import * as Observability from '@dxos/observability/Observability';
 import { isRecordEnabled, loadPlugins, makeInstalledPlugins } from '@dxos/plugin-registry';
 
-import {
-  admin,
-  chat,
-  commandConfigLayer,
-  debug,
-  dx,
-  fn,
-  hub,
-  mailbox,
-  mcp,
-  reflect,
-  repl,
-  reset,
-  telemetry,
-} from './commands';
+import { admin, chat, commandConfigLayer, debug, dx, fn, hub, mailbox, mcp, reflect, repl, reset } from './commands';
 import { getCore, getDefaults, getPlugins } from './commands/plugin-defs';
 import { setDispatcher } from './dispatcher';
 import {
@@ -174,7 +160,6 @@ const program = Effect.gen(function* () {
       debug,
       hub,
       reflect,
-      telemetry,
     ],
     // Installs come first, and the builtin they claim is dropped rather than left as an
     // unreachable duplicate: both the manager's lookup and the CLI's plugin loader take the first

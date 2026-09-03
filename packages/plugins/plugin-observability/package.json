@@ -29,6 +29,15 @@
       "types": "./dist/types/src/containers/index.d.ts",
       "default": "./dist/lib/containers.mjs"
     },
+    "#commands": {
+      "source": {
+        "node": "./src/capabilities/commands.node.ts",
+        "default": "./src/capabilities/commands.ts"
+      },
+      "types": "./dist/types/src/capabilities/commands.d.ts",
+      "node": "./dist/lib/commands.node.mjs",
+      "default": "./dist/lib/commands.mjs"
+    },
     "#meta": {
       "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
@@ -144,6 +153,7 @@
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
+    "@dxos/cli-util": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/config": "workspace:*",

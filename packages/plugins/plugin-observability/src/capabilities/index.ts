@@ -69,6 +69,8 @@ export const PrivacyBanner = Capability.lazyModule(
   },
   () => import('#privacy-banner'),
 );
+// `#commands` resolves per condition: only a host with a CLI has anywhere to put them.
+export const Commands = AppCapability.commands(() => import('#commands'));
 export const Namespace = Capability.inlineModule(
   'namespace',
   {

@@ -13,4 +13,3 @@ export * from './mailbox';
 export * from './mcp';
 export * from './repl';
 export * from './reset';
-export * from './telemetry';
