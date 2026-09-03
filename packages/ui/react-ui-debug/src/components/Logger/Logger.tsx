@@ -422,7 +422,7 @@ const LoggerContent = composable<HTMLDivElement>(({ children, ...props }, forwar
   }, [rows]);
 
   return (
-    <ScrollArea.Root {...composableProps(props)} orientation='vertical' thin ref={forwardedRef}>
+    <ScrollArea.Root {...composableProps(props)} thin ref={forwardedRef}>
       <ScrollArea.Viewport ref={viewportRef} classNames='text-xs'>
         {children}
       </ScrollArea.Viewport>

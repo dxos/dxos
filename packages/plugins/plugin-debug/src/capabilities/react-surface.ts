@@ -14,7 +14,7 @@ import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Space, isSpace } from '@dxos/react-client/echo';
 import { Position } from '@dxos/util';
 
-import { DebugPortStatus, DebugStatus, LoggerPanel, LogStatus, StatsPanel, Wireframe } from '#containers';
+import { DebugPanelStatus, DebugStatus, LoggerPanel, StatsPanel, Wireframe } from '#containers';
 import { meta } from '#meta';
 import { DebugNodes, DebugSurface } from '#types';
 
@@ -104,14 +104,9 @@ export default Capability.makeModule(
         component: LoggerPanel,
       }),
       Surface.create({
-        id: 'logStatus',
+        id: 'debugPanelStatus',
         filter: Surface.makeFilter(AppSurface.StatusIndicator),
-        component: LogStatus,
-      }),
-      Surface.create({
-        id: 'debugPortStatus',
-        filter: Surface.makeFilter(AppSurface.StatusIndicator),
-        component: DebugPortStatus,
+        component: DebugPanelStatus,
       }),
       Surface.create({
         id: 'statsPanel',

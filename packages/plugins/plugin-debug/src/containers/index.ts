@@ -4,20 +4,20 @@
 
 import { type ComponentType, lazy } from 'react';
 
-import { type DebugPortStatusProps } from './DebugPortStatus';
+import { type DebugPanelStatusProps } from './DebugPanelStatus';
 
 export const DebugObjectPanel: ComponentType<any> = lazy(() => import('./DebugObjectPanel'));
 export const DebugSettings: ComponentType<any> = lazy(() => import('./DebugSettings'));
 export const DebugSpaceObjectsPanel: ComponentType<any> = lazy(() => import('./DebugSpaceObjectsPanel'));
-export const DebugPortStatus: ComponentType<DebugPortStatusProps> = lazy(() =>
-  import('./DebugPortStatus').then((module) => ({ default: module.DebugPortStatus })),
+export const DebugPanel: ComponentType<any> = lazy(() =>
+  import('./DebugPanel').then((module) => ({ default: module.DebugPanel })),
+);
+export const DebugPanelStatus: ComponentType<DebugPanelStatusProps> = lazy(() =>
+  import('./DebugPanelStatus').then((module) => ({ default: module.DebugPanelStatus })),
 );
 export const DebugStatus: ComponentType<any> = lazy(() => import('./DebugStatus'));
 export const LoggerPanel: ComponentType<any> = lazy(() =>
   import('./LoggerPanel').then((module) => ({ default: module.LoggerPanel })),
-);
-export const LogStatus: ComponentType<any> = lazy(() =>
-  import('./LogStatus').then((module) => ({ default: module.LogStatus })),
 );
 export const SpaceGenerator: ComponentType<any> = lazy(() => import('./SpaceGenerator'));
 export const Wireframe: ComponentType<any> = lazy(() => import('./Wireframe'));

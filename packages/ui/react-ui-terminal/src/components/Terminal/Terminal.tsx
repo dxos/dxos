@@ -25,6 +25,8 @@ export type TerminalApi = {
 };
 
 export type TerminalProps<Name extends string, Input, ContextInput, E, R> = ThemedClassName<{
+  /** Receives the live {@link TerminalApi} while mounted; a plain ref so writes never re-run the terminal effect. */
+  apiRef?: MutableRefObject<TerminalApi | null>;
   /**
    * Root of an Effect CLI command tree; typically built with `Command.withSubcommands`.
    */
@@ -48,8 +50,6 @@ export type TerminalProps<Name extends string, Input, ContextInput, E, R> = Them
    * terminal fits itself to the container, whose trailing partial cells read as a gap.
    */
   dimensions?: { cols: number; rows: number };
-  /** Receives the live {@link TerminalApi} while mounted; a plain ref so writes never re-run the terminal effect. */
-  apiRef?: MutableRefObject<TerminalApi | null>;
 }>;
 
 /**

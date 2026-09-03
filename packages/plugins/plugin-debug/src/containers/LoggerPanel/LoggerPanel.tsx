@@ -7,7 +7,6 @@ import React from 'react';
 import { Panel } from '@dxos/react-ui';
 import { Logger } from '@dxos/react-ui-debug';
 
-/** The log viewer, shared by the R0 log companion and the status-bar popover. */
 export const LoggerPanel = () => (
   <Logger.Root>
     <Panel.Root>
