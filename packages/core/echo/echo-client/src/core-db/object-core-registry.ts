@@ -103,7 +103,9 @@ export class ObjectCoreRegistry {
   }
 
   #pin(core: ObjectCore): void {
-    this.#pinned.set(core, Date.now());
+    // Monotonic: a wall-clock jump forward larger than the TTL would otherwise unpin a core touched
+    // moments ago, dropping an object mid-load.
+    this.#pinned.set(core, performance.now());
     this.#armSweep();
   }
 
@@ -124,7 +126,7 @@ export class ObjectCoreRegistry {
    * for, which is what the load-in-progress guarantee needs.
    */
   #sweep(): void {
-    const expiry = Date.now() - PIN_TTL;
+    const expiry = performance.now() - PIN_TTL;
     for (const [core, touched] of this.#pinned) {
       if (touched <= expiry) {
         this.#pinned.delete(core);

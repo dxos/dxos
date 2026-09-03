@@ -57,6 +57,25 @@ describe('ObjectCoreRegistry', () => {
     expect(vi.getTimerCount()).to.eq(0);
   });
 
+  test('a wall-clock jump does not unpin a core touched moments ago', () => {
+    const registry = new ObjectCoreRegistry();
+    const first = new ObjectCore();
+    registry.set(first.id, first);
+    const second = new ObjectCore();
+    vi.advanceTimersByTime(PIN_TTL - 10);
+    registry.set(second.id, second);
+
+    // An NTP correction moves the wall clock without advancing elapsed time. `second` was touched
+    // 10ms ago, so the sweep the first core's TTL arms must keep it: expiry reads a monotonic clock,
+    // against which the jump is invisible.
+    const wallClock = Date.now;
+    vi.spyOn(Date, 'now').mockImplementation(() => wallClock.call(Date) + 60 * 60 * 1000);
+    vi.advanceTimersByTime(10);
+
+    // A pin remains, so the sweep re-armed rather than draining `second` along with `first`.
+    expect(vi.getTimerCount()).to.eq(1);
+  });
+
   test('clear drops the index and disarms the sweep', () => {
     const registry = new ObjectCoreRegistry();
     const core = new ObjectCore();
