@@ -20,6 +20,11 @@ use oauth::OAuthServerState;
 #[cfg(desktop)]
 use window_state::WindowState;
 
+/// Set when the web process died while the main window was not visible; the reload runs on the
+/// window's next focus instead of into a hidden, throttled window.
+#[cfg(target_os = "macos")]
+static RELOAD_ON_FOCUS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
 /// Port the desktop webview loads the app from: the Vite dev server in development, and in release the
 /// asset-server port this build's release channel owns.
 #[cfg(desktop)]
@@ -186,6 +191,24 @@ pub fn run() {
     #[cfg(desktop)]
     let builder = builder.manage(OAuthServerState::new());
 
+    // WebKit still kills the WebContent process under memory pressure, and Tauri's default reaction
+    // is an immediate reload. A reload into a hidden window boots throttled, and whatever goes wrong
+    // waits for the user behind a dialog. Reload now if the window is visible; otherwise on the next
+    // focus (see the `Focused` handler on the main window).
+    #[cfg(target_os = "macos")]
+    let builder = builder.on_web_content_process_terminate(|webview| {
+        let window = webview.window();
+        let visible = window.is_visible().unwrap_or(true) && !window.is_minimized().unwrap_or(false);
+        if visible {
+            if let Err(error) = webview.reload() {
+                log::error!("reload after web process termination failed: {error}");
+            }
+        } else {
+            log::warn!("web process terminated while the window was hidden; reloading on next focus");
+            RELOAD_ON_FOCUS.store(true, std::sync::atomic::Ordering::SeqCst);
+        }
+    });
+
     builder
         .setup(move |app| {
             // Initialize logging in debug mode.
@@ -261,6 +284,19 @@ pub fn run() {
                 }
                 window_state::setup_window_state_tracking(&main_window);
 
+                #[cfg(target_os = "macos")]
+                {
+                    let window = main_window.clone();
+                    main_window.on_window_event(move |event| {
+                        if matches!(event, tauri::WindowEvent::Focused(true))
+                            && RELOAD_ON_FOCUS.swap(false, std::sync::atomic::Ordering::SeqCst)
+                        {
+                            if let Err(error) = window.reload() {
+                                log::error!("deferred reload after web process termination failed: {error}");
+                            }
+                        }
+                    });
+                }
             }
 
             // Mobile: create window using Tauri's default asset protocol.

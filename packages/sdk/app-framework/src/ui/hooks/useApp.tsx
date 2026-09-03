@@ -194,6 +194,10 @@ export const useApp = ({
         PubSub.take(queue).pipe(
           Effect.tap(({ event, state, module, error: error$ }) =>
             Effect.sync(() => {
+              // Any activation message is progress; the stall deadline below counts from the last one.
+              if (!readyRef.current) {
+                deadlineProgressAtMs = deadlineElapsedMs;
+              }
               // Event-level Startup activated (no `module` field) fires once,
               // after every module triggered by Startup has finished. Module
               // activations now also carry their parent event id (so the trace
@@ -290,18 +294,21 @@ export const useApp = ({
       return yield* Fiber.join(listener);
     }).pipe(Effect.scoped, Effect.runFork);
 
-    // Startup deadline in observed execution time, not wall clock: each fire credits at most two
-    // slices, so time the process did not run (a suspended hidden webview, App Nap, system sleep)
-    // never counts against an otherwise healthy boot.
+    // Stall deadline: `timeout` of observed execution time with no activation progress, not
+    // `timeout` since mount. A boot that is slow but still activating modules (a reload after the
+    // web process was killed, a cold store) is never aborted; only one that has stopped. Each fire
+    // credits at most two slices, so time the process did not run (a suspended hidden webview, App
+    // Nap, system sleep) counts neither as progress nor as stall.
     const DEADLINE_SLICE_MS = 1_000;
     let deadlineElapsedMs = 0;
+    let deadlineProgressAtMs = 0;
     let deadlineLastTickAt = performance.now();
     const timeoutId = setInterval(() => {
       const now = performance.now();
       const sinceLastMs = now - deadlineLastTickAt;
       deadlineLastTickAt = now;
       deadlineElapsedMs += Math.min(sinceLastMs, 2 * DEADLINE_SLICE_MS);
-      if (deadlineElapsedMs < timeout) {
+      if (deadlineElapsedMs - deadlineProgressAtMs < timeout) {
         return;
       }
       clearInterval(timeoutId);
@@ -310,6 +317,8 @@ export const useApp = ({
       }
 
       log.warn('startup timeout diagnostic', {
+        executedMs: Math.round(deadlineElapsedMs),
+        stalledForMs: Math.round(deadlineElapsedMs - deadlineProgressAtMs),
         eventsFired: manager.getEventsFired(),
         activeModules: manager.getActive(),
         pendingReset: manager.getPendingReset(),
