@@ -9,7 +9,7 @@ import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { openAndClose } from '@dxos/test-utils';
 
-import { createServiceContext, performInvitation } from '../testing';
+import { createServiceContext, performInvitation } from '../testing/index.ts';
 
 describe('services/ServiceContext', () => {
   test('new space is synchronized on device invitations', async () => {

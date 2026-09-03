@@ -20,12 +20,12 @@ import { mx } from '@dxos/ui-theme';
 
 import { translations } from '#translations';
 
-import { useEventHandlerAdapter } from '../../hooks';
-import { TestColumn, TestItem } from '../../testing';
-import { Focus } from '../Focus';
-import { Board } from './Board';
-import { type BoardModel } from './BoardContext';
-import { DefaultBoardColumn } from './Column';
+import { useEventHandlerAdapter } from '../../hooks/index.ts';
+import { TestColumn, TestItem } from '../../testing/index.ts';
+import { Focus } from '../Focus/index.ts';
+import { Board } from './Board.tsx';
+import { type BoardModel } from './BoardContext.ts';
+import { DefaultBoardColumn } from './Column.tsx';
 
 random.seed(999);
 

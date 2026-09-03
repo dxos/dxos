@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type ControlProps, type GlobeController } from '../components';
+import { type ControlProps, type GlobeController } from '../components/index.ts';
 
 const ZOOM_FACTOR = 0.1;
 

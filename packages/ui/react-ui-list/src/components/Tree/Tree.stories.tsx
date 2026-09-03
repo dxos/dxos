@@ -14,11 +14,11 @@ import { Icon } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
-import { Path } from '../../util';
-import { type TestItem, createTree, updateState } from './testing';
-import { Tree } from './Tree';
-import { type TreeData } from './tree-data';
-import { type TreeModel } from './TreeContext';
+import { Path } from '../../util/index.ts';
+import { type TestItem, createTree, updateState } from './testing.ts';
+import { type TreeData } from './tree-data.ts';
+import { Tree } from './Tree.tsx';
+import { type TreeModel } from './TreeContext.ts';
 
 random.seed(1234);
 

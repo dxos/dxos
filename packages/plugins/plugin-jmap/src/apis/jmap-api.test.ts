@@ -11,7 +11,7 @@ import { afterEach, beforeEach, vi } from 'vitest';
 import { Jmap, JmapMail } from '#apis';
 import { JmapCredentials } from '#services';
 
-import { JmapApiError } from '../errors';
+import { JmapApiError } from '../errors.ts';
 
 const HOST = 'api.fastmail.com';
 const ACCOUNT_ID = 'u9999';

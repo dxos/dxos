@@ -6,7 +6,7 @@ import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Database, Ref } from '@dxos/echo';
 import { Actor, Person } from '@dxos/types';
 
-import { type OrgKey, type OrgMap } from './organizations';
+import { type OrgKey, type OrgMap } from './organizations.ts';
 
 //
 // People

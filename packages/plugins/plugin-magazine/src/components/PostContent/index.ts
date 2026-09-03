@@ -2,5 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './dedupe-images';
-export * from './PostContent';
+export * from './dedupe-images.ts';
+export * from './PostContent.tsx';

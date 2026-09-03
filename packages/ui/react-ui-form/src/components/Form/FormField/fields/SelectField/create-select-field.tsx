@@ -9,8 +9,8 @@ import { Select } from '@dxos/react-ui';
 
 import { type FormFieldRenderer, type FormFieldRendererProps } from '#types';
 
-import { FormRow } from '../../FormRow';
-import { type SelectFieldOption } from './SelectField';
+import { FormRow } from '../../FormRow.tsx';
+import { type SelectFieldOption } from './SelectField.tsx';
 
 // Kept out of `SelectField.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on every edit.

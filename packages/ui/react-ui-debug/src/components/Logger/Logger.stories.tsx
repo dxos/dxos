@@ -13,7 +13,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { Logger } from './Logger';
+import { Logger } from './Logger.tsx';
 
 random.seed(123);
 

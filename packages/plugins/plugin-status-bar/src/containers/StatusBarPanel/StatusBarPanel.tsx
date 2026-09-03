@@ -7,7 +7,7 @@ import React from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import * as DeckRole from '@dxos/plugin-deck/DeckRole';
 
-import StatusBarActionsDefault from '../StatusBarActions';
+import StatusBarActionsDefault from '../StatusBarActions/index.ts';
 
 export type StatusBarPanelProps = {};
 

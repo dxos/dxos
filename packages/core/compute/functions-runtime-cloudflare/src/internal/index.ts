@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './service-container';
+export * from './service-container.ts';

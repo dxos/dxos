@@ -6,7 +6,7 @@ import React, { Fragment } from 'react';
 
 import { type TelemetryEvent } from '@dxos/pipeline-transcription';
 
-import { type PipelinePhase } from '../../types';
+import { type PipelinePhase } from '../../types.ts';
 
 export type PipelineStatusProps = {
   /** Live lifecycle phase published by the transcription driver. */

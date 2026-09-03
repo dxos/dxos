@@ -4,7 +4,7 @@
 
 import { arrayToBuffer } from '@dxos/util';
 
-import type { Codec } from './codec';
+import type { Codec } from './codec.ts';
 
 /**
  * Protobuf codec returns instances of Uint8Arrays, but some storages expect to receive Buffers.

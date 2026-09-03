@@ -20,10 +20,10 @@ import { type QueryRequest, type QueryResponse, type QueryResult } from '@dxos/p
 import { type QueryService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
-import { type AutomergeHost } from '../automerge';
-import { QueryExecutor } from '../query';
-import { type InvalidationHint, mergeHints } from './invalidation-hint';
-import type { SpaceStateManager } from './space-state-manager';
+import { type AutomergeHost } from '../automerge/index.ts';
+import { QueryExecutor } from '../query/index.ts';
+import { type InvalidationHint, mergeHints } from './invalidation-hint.ts';
+import type { SpaceStateManager } from './space-state-manager.ts';
 
 export type QueryServiceProps = {
   indexEngine: IndexEngine;

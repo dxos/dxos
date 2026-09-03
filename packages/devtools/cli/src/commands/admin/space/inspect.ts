@@ -10,7 +10,7 @@ import * as Command from 'effect/unstable/cli/Command';
 import { CommandConfig } from '@dxos/cli-util';
 import { type InspectSpaceResponse, type LegacyInspectSpaceResponse } from '@dxos/protocols';
 
-import { adminRequest, formatAdminError, readIdentityDid } from '../util';
+import { adminRequest, formatAdminError, readIdentityDid } from '../util.ts';
 
 const printSection = function* (title: string, lines: string[]) {
   yield* Console.log(`\n  ${title}`);

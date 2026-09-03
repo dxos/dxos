@@ -4,10 +4,10 @@
 
 import * as Schema from 'effect/Schema';
 
-import { IconAnnotation, LabelAnnotation } from '../Annotation';
-import { EntityKind, KindId, SchemaKindId, StaticTypeSchemaSlot } from '../common/types';
-import { EchoTypeKindSchema, TypeMetaSchemaDXN } from '../Entity';
-import { JsonSchemaType } from '../JsonSchema';
+import { IconAnnotation, LabelAnnotation } from '../Annotation/index.ts';
+import { EntityKind, KindId, SchemaKindId, StaticTypeSchemaSlot } from '../common/types/index.ts';
+import { EchoTypeKindSchema, TypeMetaSchemaDXN } from '../Entity/index.ts';
+import { JsonSchemaType } from '../JsonSchema/index.ts';
 
 /**
  * Raw struct backing {@link TypeSchema}. Exposed only so `TypeSchema`

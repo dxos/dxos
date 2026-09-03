@@ -19,7 +19,7 @@ import { BaseError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { Unit, trim } from '@dxos/util';
 
-import { httpPlugin } from '../bundler/plugins/http-plugin-esbuild';
+import { httpPlugin } from '../bundler/plugins/http-plugin-esbuild.ts';
 
 type BundleOptions = {
   entryPoint: string;

@@ -30,13 +30,13 @@ import { isNonNullable } from '@dxos/util';
 import { meta } from '#meta';
 import { SpaceCapabilities, SpaceOperation } from '#types';
 
-import { resolveCollectionObjectPath } from '../../../util';
+import { resolveCollectionObjectPath } from '../../../util/index.ts';
 import {
   COLLECTIONS_SECTION_TYPE,
   COPY_LINK_LABEL,
   CREATE_OBJECT_IN_COLLECTION_LABEL,
   EXPOSE_OBJECT_LABEL,
-} from './shared';
+} from './shared.ts';
 
 //
 // Extension Factory

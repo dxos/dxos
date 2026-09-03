@@ -4,7 +4,7 @@
 
 import type { Plugin } from 'vite';
 
-import * as ShellMiddleware from './shell-middleware';
+import * as ShellMiddleware from './shell-middleware.ts';
 
 export type ComputerShellPluginOptions = Omit<ShellMiddleware.MakeOptions, 'root'> & {
   /** Defaults to the directory the vite process was started in. */

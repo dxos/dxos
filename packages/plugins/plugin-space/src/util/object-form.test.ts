@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
 import { DXN, Obj, type Ref, Type } from '@dxos/echo';
 
-import { makeObjectFormHandle } from './object-form';
+import { makeObjectFormHandle } from './object-form.ts';
 
 class TestObject extends Type.makeObject<TestObject>(DXN.make('com.example.type.testObject', '0.1.0'))(
   Schema.Struct({ name: Schema.optional(Schema.String) }),

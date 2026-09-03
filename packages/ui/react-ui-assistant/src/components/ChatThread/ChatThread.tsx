@@ -23,11 +23,11 @@ import {
 } from '@dxos/react-ui-feed';
 import { type XmlWidgetRegistry } from '@dxos/ui-editor';
 
-import { assistantRegistry } from '../../registry';
-import { type CreateRendererOptions, createRenderer, estimateRow } from '../../renderer';
-import { translationKey } from '../../translations';
-import { type ChatThreadEvent, type ChatView } from '../../types';
-import { MessageChrome, MessageChromeProvider } from '../MessageChrome';
+import { assistantRegistry } from '../../registry.tsx';
+import { type CreateRendererOptions, createRenderer, estimateRow } from '../../renderer.ts';
+import { translationKey } from '../../translations.ts';
+import { type ChatThreadEvent, type ChatView } from '../../types.ts';
+import { MessageChrome, MessageChromeProvider } from '../MessageChrome/index.ts';
 
 //
 // Context

@@ -13,10 +13,10 @@ import { type SlottableProps } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
-import { useThemeContext } from '../../hooks';
-import { DensityProvider } from '../../primitives/DensityProvider';
-import { type ToolbarStyleProps } from '../../theme';
-import { composable, composableProps, slottable } from '../../util';
+import { useThemeContext } from '../../hooks/index.ts';
+import { DensityProvider } from '../../primitives/DensityProvider/index.ts';
+import { type ToolbarStyleProps } from '../../theme/index.ts';
+import { composable, composableProps, slottable } from '../../util/index.ts';
 import {
   Button,
   ButtonGroup,
@@ -27,11 +27,11 @@ import {
   Toggle,
   type ToggleGroupItemProps,
   type ToggleProps,
-} from '../Button';
-import { Icon } from '../Icon';
-import { Link, type LinkProps } from '../Link';
-import { DropdownMenu } from '../Menu';
-import { Separator, type SeparatorProps } from '../Separator';
+} from '../Button/index.ts';
+import { Icon } from '../Icon/index.ts';
+import { Link, type LinkProps } from '../Link/index.ts';
+import { DropdownMenu } from '../Menu/index.ts';
+import { Separator, type SeparatorProps } from '../Separator/index.ts';
 
 //
 // Root

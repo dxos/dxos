@@ -16,8 +16,8 @@ import {
   SpaceMode,
   getComposerUrls,
   setComposerUrls,
-} from '../../core';
-import { translationKey } from '../../translations';
+} from '../../core/index.ts';
+import { translationKey } from '../../translations.ts';
 
 export type OptionsProps = {};
 

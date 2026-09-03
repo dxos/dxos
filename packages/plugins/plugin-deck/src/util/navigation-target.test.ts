@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { EntityId } from '@dxos/keys';
 
-import { combineVerdicts, getCandidateEntityIds } from './navigation-target';
+import { combineVerdicts, getCandidateEntityIds } from './navigation-target.ts';
 
 const SEPARATOR = '+';
 

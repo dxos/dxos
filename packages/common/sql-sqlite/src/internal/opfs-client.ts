@@ -33,9 +33,9 @@ import {
   type SqliteSynchronous,
   applyOpfsPragmas,
   checkpointWal,
-} from './opfs-pragmas';
+} from './opfs-pragmas.ts';
 
-export type { SqliteJournalMode, SqliteSynchronous } from './opfs-pragmas';
+export type { SqliteJournalMode, SqliteSynchronous } from './opfs-pragmas.ts';
 
 /** Config for in-process OPFS SQLite (worker-only, no MessagePort). */
 export interface OpfsConfig extends WasmSqliteClient.SqliteClientMemoryConfig {

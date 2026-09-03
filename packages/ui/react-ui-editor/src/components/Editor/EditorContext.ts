@@ -8,8 +8,8 @@ import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { type XmlWidgetState } from '@dxos/ui-editor';
 
-import { type EditorToolbarState } from '../EditorToolbar/types';
-import { type EditorController } from './controller';
+import { type EditorToolbarState } from '../EditorToolbar/types.ts';
+import { type EditorController } from './controller.ts';
 
 // Kept out of `Editor.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so a context and its hook exported beside them force a full page reload on every edit.

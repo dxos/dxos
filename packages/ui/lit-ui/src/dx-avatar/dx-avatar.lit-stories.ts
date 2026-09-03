@@ -7,7 +7,7 @@ import './dx-avatar.pcss';
 
 import { html } from 'lit';
 
-import { type DxAvatarProps } from './dx-avatar';
+import { type DxAvatarProps } from './dx-avatar.ts';
 
 export default {
   title: 'dx-avatar',

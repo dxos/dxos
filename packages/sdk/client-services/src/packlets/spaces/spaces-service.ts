@@ -46,8 +46,7 @@ import { FeedService, SpacesService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 import { type Provider } from '@dxos/util';
 
-import { type IdentityManager } from '../identity';
-import { type SpaceManager } from '../space';
+import { type IdentityManager } from '../identity/index.ts';
 import {
   SpaceArchiveWriter,
   detectSpaceArchiveFormat,
@@ -55,9 +54,10 @@ import {
   objJsonToObjectStructure,
   readSerializedSpaceArchive,
   writeSerializedSpaceArchive,
-} from '../space-export';
-import { type DataSpace } from './data-space';
-import { type DataSpaceManager } from './data-space-manager';
+} from '../space-export/index.ts';
+import { type SpaceManager } from '../space/index.ts';
+import { type DataSpaceManager } from './data-space-manager.ts';
+import { type DataSpace } from './data-space.ts';
 
 export class SpacesServiceImpl implements SpacesService.Handlers {
   'constructor'(

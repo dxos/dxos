@@ -14,9 +14,9 @@ import {
 } from '@dxos/react-ui-canvas-editor';
 import { safeParseJson } from '@dxos/util';
 
-import { useComputeNodeState } from '../hooks';
-import { Box, TypeSelect } from './common';
-import { type ConstantShape } from './constant-def';
+import { useComputeNodeState } from '../hooks/index.ts';
+import { Box, TypeSelect } from './common/index.ts';
+import { type ConstantShape } from './constant-def.tsx';
 
 //
 // Component

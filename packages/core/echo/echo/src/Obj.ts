@@ -18,15 +18,15 @@ import { EID, EntityId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { assumeType, deepMapValues } from '@dxos/util';
 
-import type * as Database from './Database';
-import * as Entity from './Entity';
-import * as Error from './Error';
-import * as internal from './internal';
-import { getProxyTarget, isProxy } from './internal/common/proxy/proxy-utils';
-import * as objInternal from './internal/Obj';
-import * as Ref from './Ref';
-import type * as Tag from './Tag';
-import * as Type from './Type';
+import type * as Database from './Database.ts';
+import * as Entity from './Entity.ts';
+import * as Error from './Error.ts';
+import { getProxyTarget, isProxy } from './internal/common/proxy/proxy-utils.ts';
+import * as internal from './internal/index.ts';
+import * as objInternal from './internal/Obj/index.ts';
+import * as Ref from './Ref.ts';
+import type * as Tag from './Tag.ts';
+import * as Type from './Type.ts';
 
 /**
  * Base type for all ECHO objects.
@@ -522,7 +522,7 @@ export const snapshotOf: {
   return check(args[1]);
 }) as any;
 
-export type { GetURIOptions } from './internal';
+export type { GetURIOptions } from './internal/index.ts';
 
 // TODO(dmaretskyi): Allow returning undefined.
 /**

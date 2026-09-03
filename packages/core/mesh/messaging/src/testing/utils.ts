@@ -6,8 +6,8 @@ import { type Event, asyncTimeout } from '@dxos/async';
 import { type Any } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 
-import { type Message, type PeerInfo, type SignalMethods } from '../signal-methods';
-import { PAYLOAD_1 } from './test-messages';
+import { type Message, type PeerInfo, type SignalMethods } from '../signal-methods.ts';
+import { PAYLOAD_1 } from './test-messages.ts';
 
 export const expectPeerAvailable = (client: SignalMethods, expectedTopic: PublicKey, peer: PeerInfo) =>
   asyncTimeout(

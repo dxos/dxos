@@ -14,15 +14,15 @@ import { LogLevel, log } from '@dxos/log';
 import { isNode, isNonNullable } from '@dxos/util';
 
 import buildSecrets from '../../cli-observability-secrets.json';
-import * as ObservabilityExtension from '../../ObservabilityExtension';
-import { getOtelLogLevel, isObservabilityDisabled, storeObservabilityDisabled } from '../../storage';
-import { stubExtension } from '../stub';
-import { type OtelMetrics } from './metrics';
-import { type OtelDestination } from './otel';
-import type * as OtelLogSink from './OtelLogSink';
-import type * as OtelMetricsSink from './OtelMetricsSink';
-import type * as OtelSpanSink from './OtelSpanSink';
-import { RemoteMetricsForwarder } from './remote-metrics';
+import * as ObservabilityExtension from '../../ObservabilityExtension.ts';
+import { getOtelLogLevel, isObservabilityDisabled, storeObservabilityDisabled } from '../../storage/index.ts';
+import { stubExtension } from '../stub.ts';
+import { type OtelMetrics } from './metrics.ts';
+import { type OtelDestination } from './otel.ts';
+import type * as OtelLogSink from './OtelLogSink.ts';
+import type * as OtelMetricsSink from './OtelMetricsSink.ts';
+import type * as OtelSpanSink from './OtelSpanSink.ts';
+import { RemoteMetricsForwarder } from './remote-metrics.ts';
 
 export type OtelWorkerMessage = OtelLogSink.Message | OtelMetricsSink.Message | OtelSpanSink.Message;
 
@@ -68,9 +68,9 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
     metrics: metricsEnabled = false,
     traces: tracesEnabled = false,
   }) {
-    const { OtelLogs } = yield* Effect.promise(() => import('./logs'));
-    const { OtelMetrics } = yield* Effect.promise(() => import('./metrics'));
-    const { OtelTraces } = yield* Effect.promise(() => import('./traces'));
+    const { OtelLogs } = yield* Effect.promise(() => import('./logs.ts'));
+    const { OtelMetrics } = yield* Effect.promise(() => import('./metrics.ts'));
+    const { OtelTraces } = yield* Effect.promise(() => import('./traces.ts'));
 
     const cachedDisabled = yield* Effect.promise(() => isObservabilityDisabled(serviceName));
     const disabled = cachedDisabled || isObservabilityDisabledSync(serviceName);

@@ -13,10 +13,10 @@ import { ATTR_TYPE } from '@dxos/echo/internal';
 import type { EntityId, SpaceId } from '@dxos/keys';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/fts';
-import { chunkArray } from '../utils';
-import { type EntityMeta, buildTypeDxnCondition } from './entity-meta-index';
-import type { Index, IndexerObject } from './interface';
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/fts/index.ts';
+import { chunkArray } from '../utils.ts';
+import { type EntityMeta, buildTypeDxnCondition } from './entity-meta-index.ts';
+import type { Index, IndexerObject } from './interface.ts';
 
 // SQLite bound-variable limit (SQLITE_LIMIT_VARIABLE_NUMBER) is 999 in most builds.
 // Use 500 as a safe chunk size for IN (...) clauses.

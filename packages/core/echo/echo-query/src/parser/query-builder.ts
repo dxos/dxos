@@ -8,7 +8,7 @@ import { Filter, type Tag } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type URI } from '@dxos/keys';
 
-import { QueryDSL } from './gen';
+import { QueryDSL } from './gen/index.ts';
 
 // TODO(burdon): Return Query AST.
 export type BuildResult = { filter?: Filter.Any; name?: string };

@@ -4,10 +4,10 @@
 
 import React, { Fragment, forwardRef } from 'react';
 
-import { type ThemedClassName } from '../../util';
-import { IconButton, type IconButtonProps } from '../Button';
-import { Icon } from '../Icon';
-import { DropdownMenu } from '../Menu';
+import { type ThemedClassName } from '../../util/index.ts';
+import { IconButton, type IconButtonProps } from '../Button/index.ts';
+import { Icon } from '../Icon/index.ts';
+import { DropdownMenu } from '../Menu/index.ts';
 
 /**
  * One entry in a {@link MenuButton}'s menu.

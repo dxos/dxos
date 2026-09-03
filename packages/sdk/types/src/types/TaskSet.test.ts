@@ -8,9 +8,9 @@ import * as Effect from 'effect/Effect';
 import { Database, Obj, Ref, Type } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 
-import * as Milestone from './Milestone';
-import * as Task from './Task';
-import * as TaskSet from './TaskSet';
+import * as Milestone from './Milestone.ts';
+import * as Task from './Task.ts';
+import * as TaskSet from './TaskSet.ts';
 
 /**
  * Membership is all a set owns: filing a task or milestone, answering which set lists one, and

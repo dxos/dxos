@@ -4,10 +4,10 @@
 
 import { getDebugName } from '@dxos/util';
 
-import { type LogConfig, type LogFilter, type LogLevel } from './config';
-import { type CallMetadata } from './meta';
-import { getRelativeFilename } from './processors/common';
-import { gatherLogInfoFromScope } from './scope';
+import { type LogConfig, type LogFilter, type LogLevel } from './config.ts';
+import { type CallMetadata } from './meta.ts';
+import { getRelativeFilename } from './processors/common.ts';
+import { gatherLogInfoFromScope } from './scope.ts';
 
 /**
  * Optional object passed to the logging API.

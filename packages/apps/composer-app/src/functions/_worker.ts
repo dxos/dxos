@@ -5,8 +5,8 @@
 // Import from the focused leaf modules rather than the `../util` barrel: the barrel re-exports
 // modules (config/halo/storage) that pull Automerge's wasm into this Cloudflare Worker bundle, which
 // esbuild cannot load.
-import { FEEDBACK_LOGS_PATH, LOG_STORE_MAX_BYTES } from '../util/constants';
-import { corsHeaders, isAllowedOrigin, nativeOrigins } from '../util/cors';
+import { FEEDBACK_LOGS_PATH, LOG_STORE_MAX_BYTES } from '../util/constants.ts';
+import { corsHeaders, isAllowedOrigin, nativeOrigins } from '../util/cors.ts';
 
 type Env = {
   ASSETS: Fetcher;

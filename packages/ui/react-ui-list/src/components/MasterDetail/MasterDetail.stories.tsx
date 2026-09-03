@@ -9,7 +9,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { Panel, ScrollArea } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { MasterDetail } from './MasterDetail';
+import { MasterDetail } from './MasterDetail.tsx';
 
 type Row = { id: string; label: string; icon: string };
 

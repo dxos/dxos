@@ -9,7 +9,7 @@ import { parseId } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
 import { useSpace, useSpaces } from '@dxos/react-client/echo';
 
-import { SpaceList } from './SpaceList';
+import { SpaceList } from './SpaceList.tsx';
 
 export const Main = () => {
   const { spaceProp } = useParams();

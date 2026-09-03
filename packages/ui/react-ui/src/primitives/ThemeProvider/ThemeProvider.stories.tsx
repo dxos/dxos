@@ -5,9 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { useThemeContext } from '../../hooks';
-import { withLayout, withTheme } from '../../testing';
-import { ThemeProvider } from './ThemeProvider';
+import { useThemeContext } from '../../hooks/index.ts';
+import { withLayout, withTheme } from '../../testing/index.ts';
+import { ThemeProvider } from './ThemeProvider.tsx';
 
 const meta = {
   title: 'ui/react-ui-core/primitives/ThemeProvider',

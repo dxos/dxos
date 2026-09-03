@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
 import * as Worker from '@dxos/worker-framework/Worker';
 
-import { STORAGE_LOCK_KEY } from '../../lock-key';
+import { STORAGE_LOCK_KEY } from '../../lock-key.ts';
 
 export type RunDedicatedWorkerOptions = {
   /** Called with the worker config before the runtime starts. Use to e.g. initialize observability in the worker. */

@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { PublicKey } from '@dxos/keys';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 
-import { MetadataStore } from './metadata-store';
+import { MetadataStore } from './metadata-store.ts';
 
 describe('MetadataStore', () => {
   describe('deleted spaces', () => {

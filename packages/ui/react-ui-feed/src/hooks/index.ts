@@ -2,6 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './useDecorations';
-export * from './useFeedNavigation';
-export * from './useItemSelection';
+export * from './useDecorations.tsx';
+export * from './useFeedNavigation.ts';
+export * from './useItemSelection.tsx';

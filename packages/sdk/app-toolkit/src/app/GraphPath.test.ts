@@ -9,7 +9,7 @@ import * as AppGraph from '@dxos/app-graph/AppGraph';
 import { Key } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 
-import * as GraphPath from './GraphPath';
+import * as GraphPath from './GraphPath.ts';
 
 describe('GraphPath', () => {
   describe('getWorkspaceFromPath', () => {

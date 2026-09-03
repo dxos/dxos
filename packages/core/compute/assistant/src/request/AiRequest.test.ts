@@ -20,7 +20,7 @@ import { registryLayerNoop } from '@dxos/echo/testing';
 import { makeTracer } from '@dxos/effect';
 import { ContentBlock, type Message } from '@dxos/types';
 
-import * as AiRequest from './AiRequest';
+import * as AiRequest from './AiRequest.ts';
 
 const { text, toolCall, scriptedLanguageModelLayer } = ScriptedLanguageModel;
 

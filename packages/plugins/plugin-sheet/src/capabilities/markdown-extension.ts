@@ -10,7 +10,7 @@ import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilitie
 
 import { SheetCapabilities } from '#types';
 
-import { computeGraphFacet } from '../extensions';
+import { computeGraphFacet } from '../extensions/index.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

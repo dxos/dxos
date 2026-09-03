@@ -17,10 +17,10 @@ import { ButtonGroup, Clipboard, IconButton } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { IdentityListItem } from '../components';
-import { IdentityPanel, JoinPanel, SpacePanel } from '../panels';
-import { translations } from '../translations';
-import { SpaceListItem } from './SpaceListItem';
+import { IdentityListItem } from '../components/index.ts';
+import { IdentityPanel, JoinPanel, SpacePanel } from '../panels/index.ts';
+import { translations } from '../translations.ts';
+import { SpaceListItem } from './SpaceListItem.tsx';
 
 export type PanelType = Space | 'identity' | 'devices' | 'join';
 

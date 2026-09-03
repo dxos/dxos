@@ -11,10 +11,10 @@ import seedrandom from 'seedrandom';
 
 import { log } from '@dxos/log';
 
-import { type ResourceUsageStats, analyzeResourceUsage } from '../analysys/resource-usage';
-import { SchedulerEnvImpl } from '../env';
-import { buildBrowserBundle } from './browser/browser-bundle';
-import { type GlobalOptions, type ReplicantsSummary, type TestPlan, type TestProps } from './spec';
+import { type ResourceUsageStats, analyzeResourceUsage } from '../analysys/resource-usage.ts';
+import { SchedulerEnvImpl } from '../env/index.ts';
+import { buildBrowserBundle } from './browser/browser-bundle.ts';
+import { type GlobalOptions, type ReplicantsSummary, type TestPlan, type TestProps } from './spec.ts';
 
 const SUMMARY_FILENAME = 'test.json';
 

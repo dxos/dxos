@@ -5,9 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { IconButton } from '../components/Button';
-import { Input } from '../components/Input';
-import { withLayoutVariants, withTheme } from '../testing';
+import { IconButton } from '../components/Button/index.ts';
+import { Input } from '../components/Input/index.ts';
+import { withLayoutVariants, withTheme } from '../testing/index.ts';
 
 /**
  * The three control sizes side by side, across control types — a density change must read the same

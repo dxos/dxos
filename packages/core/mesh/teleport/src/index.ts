@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './muxing';
-export * from './teleport';
-export * from './testing';
-export * from './rpc-extension';
+export * from './muxing/index.ts';
+export * from './teleport.ts';
+export * from './testing/index.ts';
+export * from './rpc-extension.ts';

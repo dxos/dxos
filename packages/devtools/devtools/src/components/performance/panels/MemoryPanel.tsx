@@ -7,8 +7,8 @@ import React from 'react';
 import { mx } from '@dxos/ui-theme';
 import { Unit } from '@dxos/util';
 
-import { type MemoryInfo } from '../../../hooks';
-import { type CustomPanelProps, Panel } from '../Panel';
+import { type MemoryInfo } from '../../../hooks/index.ts';
+import { type CustomPanelProps, Panel } from '../Panel.tsx';
 
 const MEM_WARNING = 40 / 100;
 

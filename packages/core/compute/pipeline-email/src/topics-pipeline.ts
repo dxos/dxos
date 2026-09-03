@@ -4,9 +4,9 @@
 
 import { type Message } from '@dxos/types';
 
-import { type Summarizer, type TopicDraft, type TopicOptions, clusterThreads } from './corpus';
-import { buildThreads } from './internal/threads';
-import { type TagResult } from './stages/tag';
+import { type Summarizer, type TopicDraft, type TopicOptions, clusterThreads } from './corpus/index.ts';
+import { buildThreads } from './internal/threads.ts';
+import { type TagResult } from './stages/tag.ts';
 
 // The topics pipeline (productized from the research harness): tag each message, then cluster its
 // threads into `Topic` objects with LLM summaries. Pure orchestration — the LLM-bearing steps (`tag`,

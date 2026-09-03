@@ -7,11 +7,17 @@ import { describe, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
-import { createEchoSchema } from '../../testing';
-import * as Type from '../../Type';
-import { EntityKind } from '../common/types';
-import { EchoObjectSchema } from '../Entity';
-import { LabelAnnotation, TypenameSchema, VersionSchema, getLabelWithSchema, getTypeAnnotation } from './annotations';
+import { createEchoSchema } from '../../testing/index.ts';
+import * as Type from '../../Type.ts';
+import { EntityKind } from '../common/types/index.ts';
+import { EchoObjectSchema } from '../Entity/index.ts';
+import {
+  LabelAnnotation,
+  TypenameSchema,
+  VersionSchema,
+  getLabelWithSchema,
+  getTypeAnnotation,
+} from './annotations.ts';
 
 // TODO(dmaretskyi): Use one of the testing schemas.
 const TestObject = Schema.Struct({

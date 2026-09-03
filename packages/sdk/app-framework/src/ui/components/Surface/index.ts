@@ -2,18 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Role } from '../../../common';
-import { SurfaceContext } from './context';
-import { SurfaceComponent, useIsSurfaceAvailable } from './SurfaceComponent';
-import { isSurfaceDebugEnabled, setSurfaceDebug } from './SurfaceDebug';
-import { type SurfaceMetric, surfaceMetrics, useSurfaceMetrics } from './SurfaceMetrics';
+import { Role } from '../../../common/index.ts';
+import { SurfaceContext } from './context.ts';
+import { SurfaceComponent, useIsSurfaceAvailable } from './SurfaceComponent.tsx';
+import { isSurfaceDebugEnabled, setSurfaceDebug } from './SurfaceDebug.tsx';
+import { type SurfaceMetric, surfaceMetrics, useSurfaceMetrics } from './SurfaceMetrics.ts';
 import {
   SurfaceProfilerProvider,
   useSurfaceProfilerCallback,
   useSurfaceProfilerClear,
   useSurfaceProfilerEntries,
   useSurfaceProfilerStats,
-} from './SurfaceProfilerContext';
+} from './SurfaceProfilerContext.tsx';
 import {
   type Binding as SurfaceBindingType,
   type ComponentProps as SurfaceComponentPropsType,
@@ -24,7 +24,7 @@ import {
   createWeb as createWebSurface,
   isFilter as isFilterFn,
   makeFilter as makeFilterFn,
-} from './types';
+} from './types.ts';
 
 export namespace Surface {
   export type Definition = SurfaceDefinition;
@@ -61,7 +61,7 @@ export namespace Surface {
   export const clearMetrics = () => surfaceMetrics.clear();
 }
 
-export type { SurfaceProfilerEntry, SurfaceProfilerStats } from './SurfaceProfilerContext';
-export type { SurfaceMetric } from './SurfaceMetrics';
-export { SurfaceManager } from './SurfaceManager';
-export { SurfaceManagerProvider, useSurfaceManager } from './SurfaceManagerContext';
+export type { SurfaceProfilerEntry, SurfaceProfilerStats } from './SurfaceProfilerContext.tsx';
+export type { SurfaceMetric } from './SurfaceMetrics.ts';
+export { SurfaceManager } from './SurfaceManager.ts';
+export { SurfaceManagerProvider, useSurfaceManager } from './SurfaceManagerContext.ts';

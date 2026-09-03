@@ -9,7 +9,7 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EID } from '@dxos/keys';
 import { Person } from '@dxos/types';
 
-import { buildContactIndex } from './contact-index';
+import { buildContactIndex } from './contact-index.ts';
 
 /**
  * The list-level lookup: one Person query for the whole list, reduced to an email→contact map. Tested

@@ -11,8 +11,8 @@ import { useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
 
-import { translationKey } from '../../translations';
-import { IdentityListItem } from './IdentityListItem';
+import { translationKey } from '../../translations.ts';
+import { IdentityListItem } from './IdentityListItem.tsx';
 
 // TODO(burdon): Consolidate into single component?
 

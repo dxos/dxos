@@ -4,7 +4,7 @@
 
 import { type TraceContextData } from '@dxos/context';
 
-import type { RemoteSpan, StartSpanOptions, TracingBackend } from './tracing-types';
+import type { RemoteSpan, StartSpanOptions, TracingBackend } from './tracing-types.ts';
 
 export const BUFFERED_PREFIX = 'buffered-';
 

@@ -8,7 +8,7 @@ import { useCallback, useMemo } from 'react';
 import { Annotation, Obj } from '@dxos/echo';
 import { type Space, useObject } from '@dxos/react-client/echo';
 
-import { AppAnnotation } from '../../echo';
+import { AppAnnotation } from '../../echo/index.ts';
 
 export type HomeVisibility = {
   /** Whether the named section is visible; defaults to `true` when unset. */

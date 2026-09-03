@@ -11,8 +11,12 @@ import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { Format } from '@dxos/echo/Format';
 import * as ConnectorAnnotations from '@dxos/plugin-connector/ConnectorAnnotations';
 
-import { EdgarAdditionalFactsAnnotation, EdgarAsOfConceptsAnnotation, EdgarFieldAnnotation } from '../annotations';
-import { IBKR_CONNECTOR_ID, IBKR_FEED_KIND } from '../constants';
+import {
+  EdgarAdditionalFactsAnnotation,
+  EdgarAsOfConceptsAnnotation,
+  EdgarFieldAnnotation,
+} from '../annotations/index.ts';
+import { IBKR_CONNECTOR_ID, IBKR_FEED_KIND } from '../constants.ts';
 
 /** An open position parsed from a Flex report. */
 export const Position = Schema.Struct({

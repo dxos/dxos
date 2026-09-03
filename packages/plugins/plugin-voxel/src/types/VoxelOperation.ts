@@ -9,8 +9,8 @@ import * as Schema from 'effect/Schema';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref } from '@dxos/echo';
 
-import { MODEL_TYPES } from '../models';
-import * as Voxel from './Voxel';
+import { MODEL_TYPES } from '../models/index.ts';
+import * as Voxel from './Voxel.ts';
 
 const VoxelCoord = Schema.Struct({
   x: Schema.Number.annotate({ description: 'X coordinate.' }),

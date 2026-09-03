@@ -2,6 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './useAddRow';
-export * from './useProjectionModel';
-export * from './useTableModel';
+export * from './useAddRow.ts';
+export * from './useProjectionModel.ts';
+export * from './useTableModel.ts';

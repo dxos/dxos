@@ -11,6 +11,6 @@ export {
 
 export { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
-export { hostInvitation } from './host';
+export { hostInvitation } from './host.ts';
 
-export { InvitationsProxy } from './invitations-proxy';
+export { InvitationsProxy } from './invitations-proxy.ts';

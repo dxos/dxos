@@ -24,8 +24,8 @@ import { Milestone, Person, Task, TaskSet } from '@dxos/types';
 import { translations } from '#translations';
 import { TasksCapabilities } from '#types';
 
-import * as TasksPlugin from '../../TasksPlugin';
-import { TaskSetArticle } from './TaskSetArticle';
+import * as TasksPlugin from '../../TasksPlugin.ts';
+import { TaskSetArticle } from './TaskSetArticle.tsx';
 
 /**
  * Stands in for plugin-projects' `delegate-to-chat` contribution — plugin-tasks cannot depend on it

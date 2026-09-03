@@ -19,7 +19,7 @@ import { TranscriptionPlugin } from '#plugin';
 import { TestItem } from '#testing';
 import { translations } from '#translations';
 
-import { TranscriptionArticle } from './TranscriptionArticle';
+import { TranscriptionArticle } from './TranscriptionArticle.tsx';
 
 const DefaultStory = () => {
   const [space] = useSpaces();

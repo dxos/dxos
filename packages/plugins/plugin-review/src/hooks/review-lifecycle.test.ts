@@ -11,7 +11,7 @@ import {
   type LifecycleInputs,
   applyViewModeSelection,
   deriveBinding,
-} from './review-lifecycle';
+} from './review-lifecycle.ts';
 
 const EDITING = ReviewCapabilities.defaultReviewRenderPolicy('editing');
 const SUGGESTING = ReviewCapabilities.defaultReviewRenderPolicy('suggesting');

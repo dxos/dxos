@@ -10,7 +10,7 @@ import { withTheme } from '@dxos/react-ui/testing';
 
 import { Terra } from '#types';
 
-import { TerraForm } from './TerraForm';
+import { TerraForm } from './TerraForm.tsx';
 
 const DefaultStory = () => {
   const terra = useMemo(() => Terra.make({ config: { seed: 'terra-1', resolution: 128 } }), []);

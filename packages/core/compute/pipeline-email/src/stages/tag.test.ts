@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { applyBulkTag, classifyBulk, parseTagResult } from './tag';
+import { applyBulkTag, classifyBulk, parseTagResult } from './tag.ts';
 
 describe('parseTagResult', () => {
   test('parses tags (lowercased) and spam flag', ({ expect }) => {

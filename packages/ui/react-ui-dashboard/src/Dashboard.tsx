@@ -22,7 +22,7 @@ import {
 import { mx } from '@dxos/ui-theme';
 import { type UnitFormat } from '@dxos/util';
 
-import { type ActivityDatum, buildCalendar } from './util';
+import { type ActivityDatum, buildCalendar } from './util.ts';
 
 const DASHBOARD_NAME = 'Dashboard';
 

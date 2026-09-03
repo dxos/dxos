@@ -15,7 +15,7 @@ import { expect } from 'vitest';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import * as ChatCompletionsAdapter from './ChatCompletionsAdapter';
+import * as ChatCompletionsAdapter from './ChatCompletionsAdapter.ts';
 
 type ProviderConfig = {
   name: string;

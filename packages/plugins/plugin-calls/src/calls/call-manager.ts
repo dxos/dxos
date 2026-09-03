@@ -16,9 +16,9 @@ import { invariant } from '@dxos/invariant';
 import { type Tracks } from '@dxos/protocols/proto/dxos/edge/calls';
 import { isNonNullable } from '@dxos/util';
 
-import { type CallState, CallSwarmSynchronizer } from './call-swarm-synchronizer';
-import { MediaManager, type MediaState } from './media-manager';
-import { type ActivityState, type EncodedTrackName, TrackNameCodec, type UserState } from './types';
+import { type CallState, CallSwarmSynchronizer } from './call-swarm-synchronizer.ts';
+import { MediaManager, type MediaState } from './media-manager.ts';
+import { type ActivityState, type EncodedTrackName, TrackNameCodec, type UserState } from './types.ts';
 
 export type GlobalState = {
   call: CallState;

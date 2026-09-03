@@ -17,7 +17,7 @@ import {
   readYAMLSpecFile,
   runPlan,
   runReplicant,
-} from './plan';
+} from './plan/index.ts';
 import {
   AutomergeTestPlan,
   EdgeSync,
@@ -27,7 +27,7 @@ import {
   ReplicationTestPlan,
   StorageTestPlan,
   TransportTestPlan,
-} from './spec';
+} from './spec/index.ts';
 
 const plans: { [key: string]: () => TestPlan<any, any> } = {
   edgeSync: () => new EdgeSync(),

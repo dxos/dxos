@@ -5,4 +5,4 @@
 export * from '@dxos/client';
 export { useMulticastObservable } from '@dxos/react-hooks';
 
-export * from './client';
+export * from './client/index.ts';

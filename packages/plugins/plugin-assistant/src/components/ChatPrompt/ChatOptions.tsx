@@ -22,7 +22,7 @@ import { useActiveSkills, useContextObjects, useFilteredTypes, useSkillHandlers,
 import { meta } from '#meta';
 import { Assistant, AssistantCapabilities, AssistantPreset } from '#types';
 
-import { resolveProvider } from '../../processor';
+import { resolveProvider } from '../../processor/index.ts';
 
 const styles = {
   panel: 'w-[calc(100dvw-.5rem)] sm:w-max max-w-document-width',

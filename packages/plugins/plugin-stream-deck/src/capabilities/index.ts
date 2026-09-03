@@ -10,7 +10,7 @@ import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 
 import { StreamDeckCapabilities } from '#types';
 
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'));
 
 export const BridgeDriver = Capability.lazyModule(
   'BridgeDriver',
@@ -20,9 +20,9 @@ export const BridgeDriver = Capability.lazyModule(
     provides: [StreamDeckCapabilities.BridgeStatus],
     activatesOn: ClientEvents.SpacesReady,
   },
-  () => import('./bridge-driver'),
+  () => import('./bridge-driver.ts'),
 );
 
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.tsx'), {
   roles: ['org.dxos.role.deckCompanion.streamDeck', 'org.dxos.role.statusIndicator'],
 });

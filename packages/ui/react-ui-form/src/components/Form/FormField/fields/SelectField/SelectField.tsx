@@ -9,7 +9,7 @@ import { getStyles } from '@dxos/ui-theme';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { FormRow } from '../../FormRow';
+import { FormRow } from '../../FormRow.tsx';
 
 export type SelectFieldOptions = FormFieldRendererProps & {
   options?: Array<{ value: string | number; label?: string; secondaryLabel?: string; icon?: string; iconHue?: string }>;

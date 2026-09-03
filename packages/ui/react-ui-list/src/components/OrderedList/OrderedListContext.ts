@@ -9,7 +9,7 @@ import {
   type ReorderListController,
   type UseListDisclosureReturn,
   type UseListNavigationReturn,
-} from '../../hooks';
+} from '../../hooks/index.ts';
 
 // Kept out of `OrderedListRoot.tsx`: react-refresh only fast-refreshes a module whose exports are
 // all components, so a context exported beside them forces a full page reload on every edit.

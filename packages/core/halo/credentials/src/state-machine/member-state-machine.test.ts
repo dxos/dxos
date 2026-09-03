@@ -9,8 +9,8 @@ import { PublicKey } from '@dxos/keys';
 import { SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { range } from '@dxos/util';
 
-import { createAdmissionCredentials, createCredentialSignerWithKey } from '../credentials';
-import { MemberStateMachine } from './member-state-machine';
+import { createAdmissionCredentials, createCredentialSignerWithKey } from '../credentials/index.ts';
+import { MemberStateMachine } from './member-state-machine.ts';
 
 const keyring = new Keyring();
 

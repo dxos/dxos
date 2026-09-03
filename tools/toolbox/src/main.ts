@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Toolbox } from './toolbox';
+import { Toolbox } from './toolbox.ts';
 
 /**
  * Hook runs on `pnpm i` (see root `package.json` script `postinstall`).

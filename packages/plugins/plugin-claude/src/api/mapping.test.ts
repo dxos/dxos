@@ -6,8 +6,8 @@ import { describe, test } from 'vitest';
 
 import { ClaudeManagedAgent } from '#types';
 
-import { toAgentConfig, toTranscript } from './mapping';
-import { type SessionEvent } from './types';
+import { toAgentConfig, toTranscript } from './mapping.ts';
+import { type SessionEvent } from './types.ts';
 
 describe('toAgentConfig', () => {
   test('defaults the model and toolset, omitting empty collections', ({ expect }) => {

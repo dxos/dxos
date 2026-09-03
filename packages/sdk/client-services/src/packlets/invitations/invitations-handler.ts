@@ -30,12 +30,12 @@ import { type ExtensionContext, type TeleportExtension, type TeleportProps } fro
 import { trace as _trace } from '@dxos/tracing';
 import { ComplexSet } from '@dxos/util';
 
-import { type EdgeInvitationConfig, EdgeInvitationHandler } from './edge-invitation-handler';
-import { InvitationGuestExtension } from './invitation-guest-extenstion';
-import { InvitationHostExtension, MAX_OTP_ATTEMPTS, isAuthenticationRequired } from './invitation-host-extension';
-import { type InvitationProtocol } from './invitation-protocol';
-import { createGuardedInvitationState } from './invitation-state';
-import { InvitationTopology } from './invitation-topology';
+import { type EdgeInvitationConfig, EdgeInvitationHandler } from './edge-invitation-handler.ts';
+import { InvitationGuestExtension } from './invitation-guest-extenstion.ts';
+import { InvitationHostExtension, MAX_OTP_ATTEMPTS, isAuthenticationRequired } from './invitation-host-extension.ts';
+import { type InvitationProtocol } from './invitation-protocol.ts';
+import { createGuardedInvitationState } from './invitation-state.ts';
+import { InvitationTopology } from './invitation-topology.ts';
 
 const metrics = _trace.metrics;
 

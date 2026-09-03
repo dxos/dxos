@@ -9,8 +9,8 @@ import { type Context } from '@dxos/context';
 import { type PublicKey } from '@dxos/keys';
 import { isNode, range } from '@dxos/util';
 
-import { Client } from '../client';
-import { TestBuilder } from './test-builder';
+import { Client } from '../client/index.ts';
+import { TestBuilder } from './test-builder.ts';
 
 type Options = {
   timeout?: number;

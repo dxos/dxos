@@ -13,9 +13,9 @@ import {
 } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { useListDisclosure, useListNavigation, useReorderAutoScroll, useReorderList } from '../../hooks';
-import { listTheme } from '../List.theme';
-import { type ListItemRecord, OrderedListProvider, useOrderedListContext } from './OrderedListContext';
+import { useListDisclosure, useListNavigation, useReorderAutoScroll, useReorderList } from '../../hooks/index.ts';
+import { listTheme } from '../List.theme.ts';
+import { type ListItemRecord, OrderedListProvider, useOrderedListContext } from './OrderedListContext.ts';
 
 const styles = listTheme.styles();
 

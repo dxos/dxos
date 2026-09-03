@@ -5,9 +5,9 @@
 import { mountDevtoolsHooks } from '@dxos/client/devtools';
 import { SpaceState } from '@dxos/client/echo';
 
-import { bootRecoveryClient, destroyRecoveryClient, isRecoveryClientBooted } from './boot-client';
-import { getDxos } from './dxos-globals';
-import { type SqlStorageDiagnosticsResult, runSqlStorageDiagnostics } from './sql-storage-diagnostics';
+import { bootRecoveryClient, destroyRecoveryClient, isRecoveryClientBooted } from './boot-client.ts';
+import { getDxos } from './dxos-globals.ts';
+import { type SqlStorageDiagnosticsResult, runSqlStorageDiagnostics } from './sql-storage-diagnostics.ts';
 
 export type RecoverySpaceSummary = {
   id: string;

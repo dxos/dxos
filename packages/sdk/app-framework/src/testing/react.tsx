@@ -8,15 +8,15 @@ import React, { type FC, Fragment, type PropsWithChildren, type ReactNode, useMe
 
 import { ContextProtocolProvider } from '@dxos/web-context-react';
 
-import { Capabilities } from '../common';
-import * as Role from '../common/Role';
-import { PluginManagerContext } from '../context';
-import { topologicalSort } from '../helpers';
-import { PluginManagerProvider } from '../ui/components/PluginManager/PluginManagerProvider';
-import { SurfaceComponent } from '../ui/components/Surface/SurfaceComponent';
-import { SurfaceManager } from '../ui/components/Surface/SurfaceManager';
-import { SurfaceManagerProvider } from '../ui/components/Surface/SurfaceManagerContext';
-import { type TestHarness } from './harness';
+import { Capabilities } from '../common/index.ts';
+import * as Role from '../common/Role.ts';
+import { PluginManagerContext } from '../context.ts';
+import { topologicalSort } from '../helpers.ts';
+import { PluginManagerProvider } from '../ui/components/PluginManager/PluginManagerProvider.ts';
+import { SurfaceComponent } from '../ui/components/Surface/SurfaceComponent.tsx';
+import { SurfaceManager } from '../ui/components/Surface/SurfaceManager.ts';
+import { SurfaceManagerProvider } from '../ui/components/Surface/SurfaceManagerContext.ts';
+import { type TestHarness } from './harness.ts';
 
 export type HarnessRenderOptions = Omit<RenderOptions, 'wrapper'> & {
   /** Additional providers to wrap around the harness tree (applied innermost first). */

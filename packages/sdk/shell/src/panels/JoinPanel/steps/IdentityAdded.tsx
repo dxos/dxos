@@ -10,9 +10,9 @@ import { Avatar, useId, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 import { hexToFallback } from '@dxos/util';
 
-import { Action, ActionBar, InputLabel } from '../../../components';
-import { translationKey } from '../../../translations';
-import { type JoinPanelMode, type JoinStepProps } from '../JoinPanelProps';
+import { Action, ActionBar, InputLabel } from '../../../components/index.ts';
+import { translationKey } from '../../../translations.ts';
+import { type JoinPanelMode, type JoinStepProps } from '../JoinPanelProps.ts';
 
 export interface IdentityAddedProps extends JoinStepProps {
   mode?: JoinPanelMode;

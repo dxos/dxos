@@ -17,8 +17,8 @@ import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 import { Database, type Ref } from '@dxos/echo';
 import { type AccessToken, Connection } from '@dxos/link';
 
-import { SLACK_API_BASE } from '../constants';
-import { SlackApiError } from '../errors';
+import { SLACK_API_BASE } from '../constants.ts';
+import { SlackApiError } from '../errors.ts';
 
 /** Slack bearer token (`xoxp-...` or `xoxb-...`). */
 type SlackCredentialsValue = {

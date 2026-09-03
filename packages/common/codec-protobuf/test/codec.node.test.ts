@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import * as pb from 'protobufjs';
 import { describe, expect, test } from 'vitest';
 
-import { Schema, anySubstitutions } from '../src';
+import { Schema, anySubstitutions } from '../src/index.ts';
 
 describe('extending protobuf', () => {
   test('extends proto with another file', async () => {

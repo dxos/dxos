@@ -4,7 +4,7 @@
 
 import { isNode } from '@dxos/util';
 
-import { type Config, getEnvString } from './config';
+import { type Config, getEnvString } from './config.ts';
 
 /**
  * Resolves the telemetry tag used as the `X-DXOS-Client-Tag` header on edge

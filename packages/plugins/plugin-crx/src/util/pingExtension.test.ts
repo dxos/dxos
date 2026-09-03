@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Proxy } from '@dxos/crx-protocol';
 
-import { isExtensionAvailable, pingExtension } from './pingExtension';
+import { isExtensionAvailable, pingExtension } from './pingExtension.ts';
 
 const setAvailable = (available: boolean) => {
   if (available) {

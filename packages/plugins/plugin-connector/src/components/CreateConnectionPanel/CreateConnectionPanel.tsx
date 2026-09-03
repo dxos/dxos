@@ -15,7 +15,7 @@ import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 
 import { meta } from '#meta';
 
-import { Connector, type ConnectorEntry } from '../../types/ConnectorSpec';
+import { Connector, type ConnectorEntry } from '../../types/ConnectorSpec.ts';
 
 export type CreateConnectionPanelProps = SpaceCapabilities.CreateObjectCustomPanelProps & {
   /** Optional override, primarily for stories and tests. Defaults to the `Connector` capability. */

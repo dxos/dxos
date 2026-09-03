@@ -19,14 +19,14 @@ import pluginSpec from '../../PLUGIN.mdl?raw';
 export const ChannelBackend = Capability.lazyModule(
   'BlueskyChannelBackend',
   { provides: [ThreadCapabilities.ChannelBackend], activatesOn: ThreadEvents.Start },
-  () => import('./channel-backend'),
+  () => import('./channel-backend.ts'),
 );
 export const Connector = Capability.lazyModule(
   'BlueskyConnector',
   { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
-  () => import('./connector'),
+  () => import('./connector.ts'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });
 export const PluginAsset = AppCapability.pluginAsset({
@@ -35,5 +35,5 @@ export const PluginAsset = AppCapability.pluginAsset({
   content: pluginSpec,
   mimeType: 'application/x-mdl',
 });
-export const Schema = AppCapability.schema(() => import('./schema'));
+export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const Translations = AppCapability.translations(translations);

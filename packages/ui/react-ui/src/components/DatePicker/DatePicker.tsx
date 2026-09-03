@@ -16,13 +16,13 @@ import React, {
 
 import { translationKey } from '#translations';
 
-import { useThemeContext } from '../../hooks';
-import { useTranslation } from '../../primitives';
-import { type ThemedClassName } from '../../util';
-import { Calendar, type DateRange } from '../Calendar';
-import { Icon } from '../Icon';
-import { Popover } from '../Popover';
-import { DatePickerProvider, useDatePickerContext } from './DatePickerContext';
+import { useThemeContext } from '../../hooks/index.ts';
+import { useTranslation } from '../../primitives/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
+import { Calendar, type DateRange } from '../Calendar/index.ts';
+import { Icon } from '../Icon/index.ts';
+import { Popover } from '../Popover/index.ts';
+import { DatePickerProvider, useDatePickerContext } from './DatePickerContext.ts';
 
 //
 // Public API.

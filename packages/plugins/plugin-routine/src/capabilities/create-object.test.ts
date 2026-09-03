@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { defaultTemplates } from '../templates';
+import { defaultTemplates } from '../templates/index.ts';
 
 // The full create-object path is exercised by the app e2e (the UI plugin variant can't boot in the headless
 // node harness); this asserts the Blank template the flow depends on.

@@ -4,8 +4,8 @@
 
 import { type Shortcut } from '@dxos/plugin-space/dashboard';
 
-import { deviceColors, hueColor } from './palette';
-import { escapeXml, wrapText } from './text';
+import { deviceColors, hueColor } from './palette.ts';
+import { escapeXml, wrapText } from './text.ts';
 
 /** Inline icon geometry, resolved from the app's sprite by `resolveIcon`. */
 export type IconMarkup = {

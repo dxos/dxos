@@ -15,7 +15,7 @@ import { RpcMessageSchema } from '@dxos/protocols/buf/dxos/rpc_pb';
 import { type Request, type Response, type RpcMessage } from '@dxos/protocols/proto/dxos/rpc';
 import { exponentialBackoffInterval } from '@dxos/util';
 
-import { decodeRpcError } from './errors';
+import { decodeRpcError } from './errors.ts';
 
 const DEFAULT_TIMEOUT = 30_000;
 const BYE_SEND_TIMEOUT = 2_000;

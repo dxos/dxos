@@ -14,8 +14,8 @@ import { OAuthProvider } from '@dxos/protocols';
 import { BlueskyOperation } from '#operations';
 import { BlueskyTargetOptions } from '#types';
 
-import { BLUESKY_PROVIDER_ID, BLUESKY_SOURCE } from '../constants';
-import { BlueskyApi } from '../services';
+import { BLUESKY_PROVIDER_ID, BLUESKY_SOURCE } from '../constants.ts';
+import { BlueskyApi } from '../services/index.ts';
 
 /**
  * OAuth scopes for Bluesky.

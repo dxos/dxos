@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 
 import { FileSystemCapabilities, FileSystemOperation } from '#types';
 
-import { loadWorkspace, openDirectoryPicker } from '../util';
+import { loadWorkspace, openDirectoryPicker } from '../util.ts';
 
 export default FileSystemOperation.OpenDirectory.pipe(
   Operation.withHandler(

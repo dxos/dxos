@@ -8,8 +8,8 @@ import { Context } from '@dxos/context';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { type PluginView } from '@dxos/protocols';
 
-import type * as Plugin from './plugin';
-import * as Registry from './registry';
+import type * as Plugin from './plugin.ts';
+import * as Registry from './registry.ts';
 
 /**
  * Maps a wire-format `PluginView` (from `@dxos/protocols`) to a runtime `Plugin.Meta`: the nested

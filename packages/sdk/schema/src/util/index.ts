@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './deprecated';
-export * from './formatting';
-export * from './schema';
-export * from './validate';
+export * from './deprecated.ts';
+export * from './formatting.ts';
+export * from './schema.ts';
+export * from './validate.ts';

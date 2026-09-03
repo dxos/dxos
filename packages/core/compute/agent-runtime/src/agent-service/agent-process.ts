@@ -43,8 +43,8 @@ import { log } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { type DelegationStrategy } from './delegation-strategy';
-import { type MakeTurnProducer, makeAiSessionTurnProducer } from './turn-producer';
+import { type DelegationStrategy } from './delegation-strategy.ts';
+import { type MakeTurnProducer, makeAiSessionTurnProducer } from './turn-producer.ts';
 
 interface AgentProcessOptions {
   // TODO(burdon): Instructions?

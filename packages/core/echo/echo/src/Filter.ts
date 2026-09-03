@@ -14,13 +14,13 @@ import { SchemaAST } from '@dxos/effect';
 import { assertArgument } from '@dxos/invariant';
 import { EID, EntityId, type URI } from '@dxos/keys';
 
-import type * as Entity from './Entity';
-import type * as Feed from './Feed';
-import * as internal from './internal';
-import type * as Obj from './Obj';
-import * as Ref from './Ref';
+import type * as Entity from './Entity.ts';
+import type * as Feed from './Feed.ts';
+import * as internal from './internal/index.ts';
+import type * as Obj from './Obj.ts';
+import * as Ref from './Ref.ts';
 // eslint-disable-next-line @dxos/rules/import-as-namespace
-import type * as Type$ from './Type';
+import type * as Type$ from './Type.ts';
 
 export const FilterTypeId = '~@dxos/echo/Filter' as const;
 export type FilterTypeId = typeof FilterTypeId;

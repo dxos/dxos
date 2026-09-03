@@ -7,7 +7,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
 
-import { Selection, ViewState } from '../../types';
+import { Selection, ViewState } from '../../types/index.ts';
 
 // Kept out of `ViewStateProvider.tsx`: react-refresh only fast-refreshes a module whose exports are
 // all components, so the context and hooks exported beside it force a full page reload on every edit.

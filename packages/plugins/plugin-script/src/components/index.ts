@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './NotebookStack';
-export * from './QueryEditor';
-export * from './ScriptToolbar';
-export * from './TestPanel';
-export * from './TypescriptEditor';
+export * from './NotebookStack/index.ts';
+export * from './QueryEditor/index.ts';
+export * from './ScriptToolbar/index.ts';
+export * from './TestPanel/index.ts';
+export * from './TypescriptEditor/index.ts';

@@ -9,10 +9,10 @@ import { SchemaAST } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
-import { createEchoSchema } from '../../../testing';
-import * as Type from '../../../Type';
-import { PropertyMeta, getPropertyMetaAnnotation, getTypeAnnotation } from '../../Annotation';
-import { EchoObjectSchema } from '../../Entity';
+import { createEchoSchema } from '../../../testing/index.ts';
+import * as Type from '../../../Type.ts';
+import { PropertyMeta, getPropertyMetaAnnotation, getTypeAnnotation } from '../../Annotation/index.ts';
+import { EchoObjectSchema } from '../../Entity/index.ts';
 
 // Test-local: introspect a Type.Type entity's properties via its rebuilt Effect
 // Schema, filter the implicit `id` field, and unwrap `T | undefined` optionality.

@@ -9,7 +9,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { GithubComponent } from './GithubComponent';
+import { GithubComponent } from './GithubComponent.tsx';
 
 const DefaultStory = () => (
   <GithubComponent.Root>

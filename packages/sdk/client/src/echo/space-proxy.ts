@@ -61,9 +61,9 @@ import { SpacesService } from '@dxos/protocols/rpc';
 import { Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 
-import { RPC_TIMEOUT } from '../common';
-import { InvitationsProxy } from '../invitations';
-import { createDeviceLocalBranchStore } from './branch-store';
+import { RPC_TIMEOUT } from '../common.ts';
+import { InvitationsProxy } from '../invitations/index.ts';
+import { createDeviceLocalBranchStore } from './branch-store.ts';
 
 const EPOCH_CREATION_TIMEOUT = 60_000;
 

@@ -2,6 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export { useEditorPreview } from './EditorPreviewContext';
+export { useEditorPreview } from './EditorPreviewContext.ts';
 
-export * from './EditorPreviewProvider';
+export * from './EditorPreviewProvider.tsx';

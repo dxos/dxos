@@ -25,7 +25,7 @@ import {
   streamFromObservable,
   toAccess,
   toShareOptions,
-} from './util';
+} from './util.ts';
 
 const toState = (state: SpaceState): HaloSpace.State => {
   switch (state) {

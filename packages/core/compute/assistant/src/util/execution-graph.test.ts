@@ -10,7 +10,7 @@ import { EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type ContentBlock, Message } from '@dxos/types';
 
-import { ExecutionGraph } from './execution-graph';
+import { ExecutionGraph } from './execution-graph.ts';
 
 const SKIP_BLOCKS: ContentBlock.Any['_tag'][] = [];
 

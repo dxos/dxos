@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { SyncEpisodeTracker } from './sync-episodes';
+import { SyncEpisodeTracker } from './sync-episodes.ts';
 
 describe('SyncEpisodeTracker', () => {
   test('records the duration of a completed episode', () => {

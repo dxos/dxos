@@ -12,9 +12,16 @@
 import { layout as dagreLayout, graphlib } from '@dagrejs/dagre';
 import ELK from 'elkjs/lib/elk.bundled.js';
 
-import type * as Scene from './scene';
-import { type Direction, type UmlModel, parse, relationRanks } from './uml';
-import { type Cell, GRID, type CompileOptions as GridCompileOptions, type Rect, emit, measureCell } from './uml-grid';
+import type * as Scene from './scene.ts';
+import {
+  type Cell,
+  GRID,
+  type CompileOptions as GridCompileOptions,
+  type Rect,
+  emit,
+  measureCell,
+} from './uml-grid.ts';
+import { type Direction, type UmlModel, parse, relationRanks } from './uml.ts';
 
 export type Engine = 'dagre' | 'elk';
 

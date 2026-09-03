@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { type ShapeComponentProps } from '../components';
-import { type EllipseShape } from '../types';
+import { type ShapeComponentProps } from '../components/index.ts';
+import { type EllipseShape } from '../types/index.ts';
 
 export const EllipseComponent = ({ shape }: ShapeComponentProps<EllipseShape>) => {
   return (

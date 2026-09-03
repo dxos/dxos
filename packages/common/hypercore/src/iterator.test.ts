@@ -9,8 +9,8 @@ import { latch } from '@dxos/async';
 import { createKeyPair } from '@dxos/crypto';
 import { log } from '@dxos/log';
 
-import { HypercoreFactory } from './hypercore-factory';
-import { createAsyncIterator, createReadable } from './iterator';
+import { HypercoreFactory } from './hypercore-factory.ts';
+import { createAsyncIterator, createReadable } from './iterator.ts';
 
 describe('AsyncIterator', () => {
   test('iterates a feed until stopped', async () => {

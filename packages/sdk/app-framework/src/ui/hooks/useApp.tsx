@@ -15,12 +15,12 @@ import { ErrorBoundary, ErrorFallback, type FallbackProps } from '@dxos/react-er
 import { useAsyncEffect, useDefaultValue } from '@dxos/react-hooks';
 import { ContextProtocolProvider } from '@dxos/web-context-react';
 
-import { ActivationEvents, Capabilities } from '../../common';
-import { PluginManagerContext } from '../../context';
-import { type ActivationEvent, type Plugin, PluginManager } from '../../core';
-import { setupDevtools } from '../../devtools';
-import { App, PluginManagerProvider, SurfaceManager, SurfaceManagerProvider } from '../components';
-import { bootLoader } from '../components/App/loader';
+import { ActivationEvents, Capabilities } from '../../common/index.ts';
+import { PluginManagerContext } from '../../context.ts';
+import { type ActivationEvent, type Plugin, PluginManager } from '../../core/index.ts';
+import { setupDevtools } from '../../devtools.ts';
+import { bootLoader } from '../components/App/loader.ts';
+import { App, PluginManagerProvider, SurfaceManager, SurfaceManagerProvider } from '../components/index.ts';
 
 const ENABLED_KEY = 'org.dxos.app-framework.enabled';
 

@@ -4,7 +4,7 @@
 
 import { useAtomCapability } from '@dxos/app-framework/ui';
 
-import { AppCapabilities } from '../../app-framework';
+import { AppCapabilities } from '../../app-framework/index.ts';
 
 /**
  * Hook to get the current layout state.

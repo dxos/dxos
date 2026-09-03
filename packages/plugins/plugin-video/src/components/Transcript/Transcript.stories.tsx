@@ -13,7 +13,7 @@ import { Text } from '@dxos/schema';
 
 import { translations } from '#translations';
 
-import { Transcript } from './Transcript';
+import { Transcript } from './Transcript.tsx';
 
 // Inline format: `[m:ss](url?t=s) >> Speaker text` — timestamp → gutter, `>>` → speaker widget, text inline.
 const SAMPLE_TRANSCRIPT = [

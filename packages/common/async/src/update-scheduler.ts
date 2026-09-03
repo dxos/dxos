@@ -4,8 +4,8 @@
 
 import { type Context } from '@dxos/context';
 
-import { scheduleMicroTask } from './task-scheduling';
-import { Trigger } from './trigger';
+import { scheduleMicroTask } from './task-scheduling.ts';
+import { Trigger } from './trigger.ts';
 
 export type UpdateSchedulerOptions = {
   /**

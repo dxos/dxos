@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import { MessageTrace } from '@dxos/protocols/proto/dxos/rpc';
 
-import { type RpcPort } from './rpc';
+import { type RpcPort } from './rpc.ts';
 
 export class PortTracer {
   readonly message = new Event<MessageTrace>();

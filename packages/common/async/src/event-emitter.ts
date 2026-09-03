@@ -4,7 +4,7 @@
 
 import { type EventEmitter } from 'node:events';
 
-import { asyncTimeout } from './timeout';
+import { asyncTimeout } from './timeout.ts';
 
 /**
  * Adds the listener and returns a function to remove it.

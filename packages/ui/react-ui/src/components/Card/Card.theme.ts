@@ -5,7 +5,7 @@
 import { mx } from '@dxos/ui-theme';
 import { type ComponentFunction, type Density, type Theme } from '@dxos/ui-types';
 
-import { withColumn } from '../Column/withColumn';
+import { withColumn } from '../Column/withColumn.ts';
 
 export type CardStyleProps = {
   border?: boolean;

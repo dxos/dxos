@@ -6,11 +6,11 @@ import { invariant } from '@dxos/invariant';
 import { type EntityId, PublicKey, SpaceId, type URI } from '@dxos/keys';
 import { visitValues } from '@dxos/util';
 
-import { type RawString } from './automerge';
-import type { ForeignKey } from './foreign-key';
-import { type EncodedReference, isEncodedReference } from './reference';
-import { type SpaceDocVersion } from './space-doc-version';
-import { createIdFromSpaceKey } from './space-id';
+import { type RawString } from './automerge.ts';
+import type { ForeignKey } from './foreign-key.ts';
+import { type EncodedReference, isEncodedReference } from './reference.ts';
+import { type SpaceDocVersion } from './space-doc-version.ts';
+import { createIdFromSpaceKey } from './space-id.ts';
 
 export type SpaceState = {
   // Url of the root automerge document.

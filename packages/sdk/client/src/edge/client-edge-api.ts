@@ -13,7 +13,7 @@ import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { QueryReactivity } from '@dxos/protocols/proto/dxos/echo/query';
 
-import { type Client } from '../client';
+import { type Client } from '../client/index.ts';
 
 /**
  * API for EDGE client functionality.

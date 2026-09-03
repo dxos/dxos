@@ -21,14 +21,14 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { testId } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/ui-theme';
 
-import { type ActionHandler } from '../../actions';
-import { DragMonitor, type EditingState, EditorContext, type EditorContextType } from '../../hooks';
-import { defaultShapes } from '../../shapes';
-import { type CanvasBoard, CanvasGraphModel } from '../../types';
-import { Canvas, ShapeLayout, ShapeRegistry } from '../Canvas';
-import { type TestId } from '../defs';
-import { UI } from '../UI';
-import { defaultEditorOptions } from './editor-options';
+import { type ActionHandler } from '../../actions/index.ts';
+import { DragMonitor, type EditingState, EditorContext, type EditorContextType } from '../../hooks/index.ts';
+import { defaultShapes } from '../../shapes/index.ts';
+import { type CanvasBoard, CanvasGraphModel } from '../../types/index.ts';
+import { Canvas, ShapeLayout, ShapeRegistry } from '../Canvas/index.ts';
+import { type TestId } from '../defs.ts';
+import { UI } from '../UI/index.ts';
+import { defaultEditorOptions } from './editor-options.ts';
 
 interface EditorController {
   action?: ActionHandler;

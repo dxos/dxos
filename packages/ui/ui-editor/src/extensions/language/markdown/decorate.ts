@@ -9,13 +9,13 @@ import { type SyntaxNodeRef } from '@lezer/common';
 
 import { invariant } from '@dxos/invariant';
 
-import { type HeadingLevel, markdownTheme } from '../../../styles';
-import { type RenderCallback } from '../../../types';
-import { wrapWithCatch } from '../../../util';
-import { adjustChanges } from './changes';
-import { image } from './image';
-import { bulletListIndentationWidth, formattingStyles, orderedListIndentationWidth } from './styles';
-import { table } from './table';
+import { type HeadingLevel, markdownTheme } from '../../../styles/index.ts';
+import { type RenderCallback } from '../../../types/index.ts';
+import { wrapWithCatch } from '../../../util/index.ts';
+import { adjustChanges } from './changes.ts';
+import { image } from './image.ts';
+import { bulletListIndentationWidth, formattingStyles, orderedListIndentationWidth } from './styles.ts';
+import { table } from './table.ts';
 
 /** The anchor every link form renders as, so a bare address is styled like a bracketed one. */
 const linkMark = (url: string, withButton = false) =>

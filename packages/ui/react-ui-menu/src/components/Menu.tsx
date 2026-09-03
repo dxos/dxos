@@ -18,9 +18,9 @@ import {
   type MenuItem,
   type MenuItemsMap,
   isSeparator,
-} from '../types';
-import { executeMenuAction } from '../util';
-import { ActionLabel } from './ActionLabel';
+} from '../types.ts';
+import { executeMenuAction } from '../util.ts';
+import { ActionLabel } from './ActionLabel.tsx';
 import {
   MenuContextProvider,
   MenuDropdownContext,
@@ -29,8 +29,8 @@ import {
   useMenuItems,
   useMenuScope,
   useMenuScoped,
-} from './MenuContext';
-import { ToolbarMenu, ToolbarMenuItems } from './ToolbarMenu';
+} from './MenuContext.ts';
+import { ToolbarMenu, ToolbarMenuItems } from './ToolbarMenu.tsx';
 
 //
 // MenuProvider (internal) — the context provider used by Menu.Root.
@@ -254,4 +254,4 @@ export type {
   ToolbarMenuDropdownMenuActionGroup,
   ToolbarMenuProps,
   ToolbarMenuToggleGroupActionGroup,
-} from './ToolbarMenu';
+} from './ToolbarMenu.tsx';

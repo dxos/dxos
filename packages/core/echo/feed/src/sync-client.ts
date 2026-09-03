@@ -13,8 +13,8 @@ import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
 import type { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { SyncRpcTimeoutError } from './errors';
-import type { FeedStore } from './feed-store';
+import { SyncRpcTimeoutError } from './errors.ts';
+import type { FeedStore } from './feed-store.ts';
 
 /** Default timeout for feed sync RPCs awaiting an edge response. */
 export const DEFAULT_SYNC_RPC_TIMEOUT_MS = 30_000;

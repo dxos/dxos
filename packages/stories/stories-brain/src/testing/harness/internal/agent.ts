@@ -20,12 +20,12 @@ import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
 import * as SpaceOperationHandlerSet from '@dxos/plugin-space/SpaceOperationHandlerSet';
 import { Message } from '@dxos/types';
 
-import { type ModelVariant } from '../models';
-import { HybridOperationHandlerSet, HybridSkill } from '../skills/hybrid-skill';
-import { RagOperationHandlerSet, RagSkill } from '../skills/rag-skill';
-import { factStoreLayer } from './fact-store';
-import { subjectIndexLayer } from './subject-index';
-import { vectorStoreLayer } from './vector';
+import { type ModelVariant } from '../models.ts';
+import { HybridOperationHandlerSet, HybridSkill } from '../skills/hybrid-skill.ts';
+import { RagOperationHandlerSet, RagSkill } from '../skills/rag-skill.ts';
+import { factStoreLayer } from './fact-store.ts';
+import { subjectIndexLayer } from './subject-index.ts';
+import { vectorStoreLayer } from './vector.ts';
 
 /**
  * The skill configuration under test (each arm adds a retrieval layer on top of the source arm):

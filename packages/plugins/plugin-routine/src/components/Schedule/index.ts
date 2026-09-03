@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './cron';
-export * from './types';
+export * from './cron.ts';
+export * from './types.ts';
 
-export * from './days';
-export * from './describe-schedule';
-export * from './Schedule';
+export * from './days.ts';
+export * from './describe-schedule.ts';
+export * from './Schedule.tsx';

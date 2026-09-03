@@ -13,7 +13,7 @@ import { Device, DeviceKind, EdgeStatus } from '@dxos/protocols/proto/dxos/clien
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type DevicesService } from '@dxos/protocols/rpc';
 
-import { type IdentityManager } from '../identity';
+import { type IdentityManager } from '../identity/index.ts';
 
 export class DevicesServiceImpl implements DevicesService.Handlers {
   'constructor'(

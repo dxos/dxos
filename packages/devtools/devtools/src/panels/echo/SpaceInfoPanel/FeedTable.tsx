@@ -9,8 +9,8 @@ import { type PublicKey } from '@dxos/keys';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 
-import { useDevtoolsDispatch, useDevtoolsState } from '../../../hooks';
-import { createTextBitbar } from '../../../util';
+import { useDevtoolsDispatch, useDevtoolsState } from '../../../hooks/index.ts';
+import { createTextBitbar } from '../../../util/index.ts';
 
 type FeedInfo = {
   feedKey: PublicKey;

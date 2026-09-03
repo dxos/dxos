@@ -7,8 +7,8 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, expect, test } from 'vitest';
 
-import * as GraphNode from './GraphNode';
-import * as GraphNodeMatcher from './GraphNodeMatcher';
+import * as GraphNode from './GraphNode.ts';
+import * as GraphNodeMatcher from './GraphNodeMatcher.ts';
 
 describe('GraphNodeMatcher', () => {
   describe('whenRoot', () => {

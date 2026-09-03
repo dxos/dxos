@@ -6,7 +6,7 @@ import { insertNewlineContinueMarkup, markdown, markdownLanguage } from '@codemi
 import { EditorSelection, EditorState } from '@codemirror/state';
 import { describe, test } from 'vitest';
 
-import { createBasicExtensions } from './factories';
+import { createBasicExtensions } from './factories.ts';
 
 describe('createBasicExtensions readOnly', () => {
   test('drops user-initiated edits when readOnly is true', ({ expect }) => {

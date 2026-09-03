@@ -5,11 +5,11 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withLayout, withTheme } from '../../testing';
-import { IconButton } from '../Button';
-import { Toolbar } from '../Toolbar';
-import { Main } from './Main';
-import { useSidebars } from './MainContext';
+import { withLayout, withTheme } from '../../testing/index.ts';
+import { IconButton } from '../Button/index.ts';
+import { Toolbar } from '../Toolbar/index.ts';
+import { Main } from './Main.tsx';
+import { useSidebars } from './MainContext.ts';
 
 type StoryMainArgs = {};
 

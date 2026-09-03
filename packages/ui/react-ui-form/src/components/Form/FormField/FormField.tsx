@@ -15,10 +15,10 @@ import { IconButton, IconButtonProps, useTranslation } from '@dxos/react-ui';
 import { translationKey } from '#translations';
 import { type FieldContext, type FormFieldRenderer, type FormFieldRendererProps } from '#types';
 
-import { AutofillAnnotation, OptionsLookupAnnotation } from '../../../annotations';
-import { useFormFieldState } from '../../../hooks';
-import { getRefProps } from '../../../util';
-import { FormFieldSet } from '../FormFieldSet';
+import { AutofillAnnotation, OptionsLookupAnnotation } from '../../../annotations.ts';
+import { useFormFieldState } from '../../../hooks/index.ts';
+import { getRefProps } from '../../../util/index.ts';
+import { FormFieldSet } from '../FormFieldSet/index.ts';
 import {
   ArrayField,
   AsyncSelectField,
@@ -35,7 +35,7 @@ import {
   SelectField,
   TextAreaField,
   TextField,
-} from './fields';
+} from './fields/index.ts';
 
 export type FormFieldProps = {
   /**

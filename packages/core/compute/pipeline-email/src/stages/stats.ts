@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Stage } from '@dxos/pipeline';
 import { Message } from '@dxos/types';
 
-import { EmailPipelineCtx } from './context';
+import { EmailPipelineCtx } from './context.ts';
 
 /** Pure-JS running tallies (senders, recipients, spam); pass message through. */
 export const statsStage: Stage.Stage<Message.Message, Message.Message, never, EmailPipelineCtx> = Stage.map(

@@ -13,7 +13,7 @@ import { DXN } from '@dxos/keys';
 
 import { Scene } from '#model';
 
-import * as Drawing from './Drawing';
+import * as Drawing from './Drawing.ts';
 
 export const Create = Operation.make({
   meta: {

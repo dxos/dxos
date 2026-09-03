@@ -9,9 +9,9 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
-import { type TestBuilder } from '../testing';
-import { FullyConnectedTopology, StarTopology } from '../topology';
-import { exchangeMessages, joinSwarm, leaveSwarm, openAndCloseAfterTest } from './utils';
+import { type TestBuilder } from '../testing/index.ts';
+import { FullyConnectedTopology, StarTopology } from '../topology/index.ts';
+import { exchangeMessages, joinSwarm, leaveSwarm, openAndCloseAfterTest } from './utils.ts';
 
 // TODO(burdon): Use PublicKey throughout (remove conversion to strings, from buffers, etc.)
 

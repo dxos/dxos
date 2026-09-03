@@ -23,10 +23,10 @@ import { Organization, Person } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { useProjectionModel, useTableModel } from '../../hooks';
-import { type TableFeatures, TablePresentation, type TableRow } from '../../model';
-import { Table } from '../../types';
-import { Table as TableComponent } from './Table';
+import { useProjectionModel, useTableModel } from '../../hooks/index.ts';
+import { type TableFeatures, TablePresentation, type TableRow } from '../../model/index.ts';
+import { Table } from '../../types/index.ts';
+import { Table as TableComponent } from './Table.tsx';
 
 random.seed(1);
 const generator: ValueGenerator = random as any;

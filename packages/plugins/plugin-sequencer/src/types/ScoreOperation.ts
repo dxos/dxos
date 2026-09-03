@@ -10,7 +10,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-import * as Score from './Score';
+import * as Score from './Score.ts';
 
 /**
  * Read a Score and return its lead-sheet text representation. The lead sheet is

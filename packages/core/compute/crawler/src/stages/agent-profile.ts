@@ -6,11 +6,11 @@ import * as Effect from 'effect/Effect';
 
 import { type Stage } from '@dxos/pipeline';
 
-import * as AgentRegistry from '../AgentRegistry';
-import { type StateError } from '../errors';
-import { tapStage } from '../Stage';
-import type * as StateStore from '../StateStore';
-import type * as Type from '../types';
+import * as AgentRegistry from '../AgentRegistry.ts';
+import { type StateError } from '../errors.ts';
+import { tapStage } from '../Stage.ts';
+import type * as StateStore from '../StateStore.ts';
+import type * as Type from '../types.ts';
 
 /**
  * Per-message stage: fold each authored message into the agent registry, accumulating message

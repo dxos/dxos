@@ -7,8 +7,8 @@ import React, { type PropsWithChildren, type Ref, forwardRef, useEffect, useImpe
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { ChatStatusProvider, useChatStatusContext } from './ChatStatusContext';
-import { formatElapsed } from './format';
+import { ChatStatusProvider, useChatStatusContext } from './ChatStatusContext.ts';
+import { formatElapsed } from './format.ts';
 
 const TICK_MS = 1_000;
 

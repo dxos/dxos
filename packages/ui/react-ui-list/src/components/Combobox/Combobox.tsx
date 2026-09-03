@@ -42,8 +42,8 @@ import {
 } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { listTheme } from '../List.theme';
-import { Picker, type PickerInputProps, type PickerItemProps } from '../Picker';
+import { listTheme } from '../List.theme.ts';
+import { Picker, type PickerInputProps, type PickerItemProps } from '../Picker/index.ts';
 
 const styles = listTheme.styles();
 

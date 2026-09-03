@@ -9,9 +9,9 @@ import { describe, test } from 'vitest';
 
 import { trim } from '@dxos/util';
 
-import { decorationSetToArray } from '../../../util';
-import { extendedMarkdown } from './extended-markdown';
-import { StubWidget } from './stub';
+import { decorationSetToArray } from '../../../util/index.ts';
+import { extendedMarkdown } from './extended-markdown.ts';
+import { StubWidget } from './stub.ts';
 import {
   type XmlWidgetDef,
   type XmlWidgetProps,
@@ -24,7 +24,7 @@ import {
   xmlTagResetEffect,
   xmlTags,
   xmlTagUpdateEffect,
-} from './xml-tags';
+} from './xml-tags.ts';
 
 //
 // Harness.

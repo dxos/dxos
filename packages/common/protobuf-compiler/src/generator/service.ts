@@ -8,11 +8,11 @@ import pb from 'protobufjs';
 
 import { invariant } from '@dxos/invariant';
 
-import { normalizeFullyQualifiedName } from '../namespaces';
-import { type SubstitutionsMap } from '../parser';
-import { type GeneratorContext } from './context';
-import { attachDocComment } from './doc-comment';
-import { getTypeReference, types } from './types';
+import { normalizeFullyQualifiedName } from '../namespaces.ts';
+import { type SubstitutionsMap } from '../parser/index.ts';
+import { type GeneratorContext } from './context.ts';
+import { attachDocComment } from './doc-comment.ts';
+import { getTypeReference, types } from './types.ts';
 
 const f = ts.factory;
 

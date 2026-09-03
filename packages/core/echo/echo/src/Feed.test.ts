@@ -4,9 +4,9 @@
 
 import { describe, test } from 'vitest';
 
-import * as Feed from './Feed';
-import * as Obj from './Obj';
-import { TestSchema } from './testing';
+import * as Feed from './Feed.ts';
+import * as Obj from './Obj.ts';
+import { TestSchema } from './testing/index.ts';
 
 describe('Feed', () => {
   describe('getParent / setParent', () => {

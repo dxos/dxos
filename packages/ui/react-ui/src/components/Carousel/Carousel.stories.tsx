@@ -7,8 +7,8 @@ import React from 'react';
 
 import { translations } from '#translations';
 
-import { withLayout, withTheme } from '../../testing';
-import { Carousel, type CarouselTransition } from './Carousel';
+import { withLayout, withTheme } from '../../testing/index.ts';
+import { Carousel, type CarouselTransition } from './Carousel.tsx';
 
 // Stable placeholder images so the story renders without network fixtures.
 const IMAGES = Array.from({ length: 5 }).map((_, index) => `https://placehold.co/640x360?text=Slide+${index + 1}`);

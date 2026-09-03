@@ -8,7 +8,7 @@ import type { Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import type { SpaceSyncState } from '@dxos/echo-client';
 
-import { JsonView } from '../../../components';
+import { JsonView } from '../../../components/index.ts';
 
 interface SyncStateInfoProps {
   space: Space;

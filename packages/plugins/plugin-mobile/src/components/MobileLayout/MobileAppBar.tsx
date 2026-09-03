@@ -13,7 +13,7 @@ import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import { useMobileLayout } from './MobileLayoutContext';
+import { useMobileLayout } from './MobileLayoutContext.ts';
 
 const APP_BAR_NAME = 'MobileLayout.AppBar';
 

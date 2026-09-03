@@ -2,5 +2,5 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './FormFieldSet';
-export * from './FormFieldSetContainer';
+export * from './FormFieldSet.tsx';
+export * from './FormFieldSetContainer.tsx';

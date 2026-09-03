@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import * as NiUri from './ni-uri';
+import * as NiUri from './ni-uri.ts';
 
 describe('ni-uri', () => {
   test('encode produces an RFC 6920 ni: URI', async ({ expect }) => {

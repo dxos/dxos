@@ -13,8 +13,8 @@ import { FeedbackForm, type FeedbackSubmitHandler } from '#components';
 import { meta } from '#meta';
 import { SupportOperation } from '#types';
 
-import { GITHUB_NEW_ISSUE_URL } from '../../constants';
-import { useScreenshotAttachment } from './useScreenshotAttachment';
+import { GITHUB_NEW_ISSUE_URL } from '../../constants.ts';
+import { useScreenshotAttachment } from './useScreenshotAttachment.ts';
 
 const CUSTOM_LABEL = 'Composer';
 

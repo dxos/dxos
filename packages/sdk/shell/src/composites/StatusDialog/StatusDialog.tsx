@@ -6,8 +6,8 @@ import React from 'react';
 
 import { AlertDialog, useId, useTranslation } from '@dxos/react-ui';
 
-import { StatusPanel } from '../../panels';
-import { translationKey } from '../../translations';
+import { StatusPanel } from '../../panels/index.ts';
+import { translationKey } from '../../translations.ts';
 
 export const StatusDialog = () => {
   const { t } = useTranslation(translationKey);

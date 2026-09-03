@@ -20,7 +20,7 @@ import { type Topology } from 'topojson-specification';
 
 import { mx } from '@dxos/ui-theme';
 
-import { GlobeContextProvider, type GlobeContextProviderProps, useGlobeContext } from '../../hooks';
+import { GlobeContextProvider, type GlobeContextProviderProps, useGlobeContext } from '../../hooks/index.ts';
 import {
   type Features,
   type StyleSet,
@@ -29,8 +29,8 @@ import {
   positionToRotation,
   renderLayers,
   timer,
-} from '../../util';
-import { ActionControls, type ControlProps, ZoomControls, controlPositions } from '../Toolbar';
+} from '../../util/index.ts';
+import { ActionControls, type ControlProps, ZoomControls, controlPositions } from '../Toolbar/index.ts';
 
 /**
  * https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute

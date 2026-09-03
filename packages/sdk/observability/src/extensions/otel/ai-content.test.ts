@@ -8,7 +8,7 @@ import { describe, expect, test } from 'vitest';
 
 import { SpanAttributes } from '@dxos/effect';
 
-import { AiContentStrippingSpanProcessor, withoutAiContent } from './ai-content';
+import { AiContentStrippingSpanProcessor, withoutAiContent } from './ai-content.ts';
 
 const attributes = {
   'gen_ai.request.model': 'claude',

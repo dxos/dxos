@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { decodeStringArray, defineState } from '../state';
+import { decodeStringArray, defineState } from '../state/index.ts';
 
 /**
  * Default list of URL patterns (chrome `match` form) the extension will scan

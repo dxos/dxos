@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export { InstrumentCard as default } from './InstrumentCard';
+export { InstrumentCard as default } from './InstrumentCard.tsx';

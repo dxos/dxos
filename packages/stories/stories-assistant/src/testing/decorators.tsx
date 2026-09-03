@@ -70,8 +70,8 @@ import { type StoryDecoratorsProps, createStoryDecorators } from '@dxos/storyboo
 import { Outline, Task, TaskSet } from '@dxos/types';
 import { Merge, isNonNullable } from '@dxos/util';
 
-import { moduleSurfaces } from '../modules';
-import { CalculatorHandlers, CalculatorSkill } from './calculator';
+import { moduleSurfaces } from '../modules/index.ts';
+import { CalculatorHandlers, CalculatorSkill } from './calculator.ts';
 
 /** Shared CSF parameters for the assistant story groups (fullscreen canvas + plugin translations). */
 export const storyParameters = {

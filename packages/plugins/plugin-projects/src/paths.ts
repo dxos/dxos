@@ -6,7 +6,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as Project from '@dxos/compute/Project';
 import { Type } from '@dxos/echo';
 
-import { CHATS_SEGMENT } from './capabilities/app-graph-builder';
+import { CHATS_SEGMENT } from './capabilities/app-graph-builder.ts';
 
 const PROJECT_TYPENAME = Type.getTypename(Project.Project)!;
 

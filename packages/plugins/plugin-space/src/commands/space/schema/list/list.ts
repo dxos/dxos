@@ -12,7 +12,7 @@ import { CommandConfig, Common, getSpace, printList, spaceIdWithDefault } from '
 import { type Key, Type } from '@dxos/echo';
 import { getTypeAnnotation } from '@dxos/echo/Annotation';
 
-import { createTypenameFilter, mapSchemas, printSchemas } from './util';
+import { createTypenameFilter, mapSchemas, printSchemas } from './util.ts';
 
 export const handler = Effect.fn(function* ({
   spaceId,

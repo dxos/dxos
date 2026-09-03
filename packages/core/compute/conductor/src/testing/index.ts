@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export { TestRuntime } from './test-runtime';
+export { TestRuntime } from './test-runtime.ts';

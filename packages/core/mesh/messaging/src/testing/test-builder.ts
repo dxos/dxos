@@ -4,9 +4,9 @@
 
 import { type Context } from '@dxos/context';
 
-import { MemorySignalManager, MemorySignalManagerContext, type SignalManager } from '../signal-manager';
-import { type Message } from '../signal-methods';
-import { TestPeer } from './test-peer';
+import { MemorySignalManager, MemorySignalManagerContext, type SignalManager } from '../signal-manager/index.ts';
+import { type Message } from '../signal-methods.ts';
+import { TestPeer } from './test-peer.ts';
 
 export type TestBuilderOptions = {
   signalManagerFactory?: (peer: TestPeer) => Promise<SignalManager>;

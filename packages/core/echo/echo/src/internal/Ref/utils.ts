@@ -4,7 +4,7 @@
 
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 
-import type { Ref } from './ref';
+import type { Ref } from './ref.ts';
 
 /**
  * Internal helper for loading ref targets in atoms.

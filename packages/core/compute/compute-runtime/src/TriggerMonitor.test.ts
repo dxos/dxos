@@ -24,12 +24,12 @@ import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { invariant } from '@dxos/invariant';
 import { Person } from '@dxos/types';
 
-import * as ProcessManager from './ProcessManager';
-import * as RemoteTriggerManager from './RemoteTriggerManager';
-import { credentialsLayerConfig } from './services/credentials';
-import * as TriggerMonitor from './TriggerMonitor';
-import { TriggerDispatcher } from './triggers/trigger-dispatcher';
-import { TriggerStateStore } from './triggers/trigger-state-store';
+import * as ProcessManager from './ProcessManager.ts';
+import * as RemoteTriggerManager from './RemoteTriggerManager.ts';
+import { credentialsLayerConfig } from './services/credentials.ts';
+import * as TriggerMonitor from './TriggerMonitor.ts';
+import { TriggerDispatcher } from './triggers/trigger-dispatcher.ts';
+import { TriggerStateStore } from './triggers/trigger-state-store.ts';
 
 /**
  * Environment providing the {@link TriggerMonitorLayer}'s dependencies

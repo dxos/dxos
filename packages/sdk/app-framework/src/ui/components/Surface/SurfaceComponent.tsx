@@ -26,16 +26,16 @@ import { ErrorBoundary } from '@dxos/react-error-boundary';
 import { useDefaultValue } from '@dxos/react-hooks';
 import { Position } from '@dxos/util';
 
-import { ActivationEvents, Capabilities, Role } from '../../../common';
-import { type PluginManager } from '../../../core';
-import { useOptionalPluginManager, usePluginManager } from '../PluginManager';
-import { SurfaceContext } from './context';
-import { DebugSurface, isSurfaceDebugEnabled, isSurfaceWrapperEnabled } from './SurfaceDebug';
-import { type SurfaceManager } from './SurfaceManager';
-import { useSurfaceManager } from './SurfaceManagerContext';
-import { nextDataChurn, surfaceMetrics } from './SurfaceMetrics';
-import { useSurfaceProfilerCallback } from './SurfaceProfilerContext';
-import { type Definition, type Props, type TypedProps, type WebComponentDefinition } from './types';
+import { ActivationEvents, Capabilities, Role } from '../../../common/index.ts';
+import { type PluginManager } from '../../../core/index.ts';
+import { useOptionalPluginManager, usePluginManager } from '../PluginManager/index.ts';
+import { SurfaceContext } from './context.ts';
+import { DebugSurface, isSurfaceDebugEnabled, isSurfaceWrapperEnabled } from './SurfaceDebug.tsx';
+import { type SurfaceManager } from './SurfaceManager.ts';
+import { useSurfaceManager } from './SurfaceManagerContext.ts';
+import { nextDataChurn, surfaceMetrics } from './SurfaceMetrics.ts';
+import { useSurfaceProfilerCallback } from './SurfaceProfilerContext.tsx';
+import { type Definition, type Props, type TypedProps, type WebComponentDefinition } from './types.ts';
 
 const DEBUG = import.meta.env?.VITE_DEBUG;
 

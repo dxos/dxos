@@ -11,7 +11,7 @@ import { type Space } from '@dxos/client/echo';
 import type * as Operation from '@dxos/compute/Operation';
 import { type Key } from '@dxos/echo';
 
-import { getNextVersion, loadFunctionObject } from './echo';
+import { getNextVersion, loadFunctionObject } from './echo.ts';
 
 export const parseOptions = Effect.fn(function* (options: {
   name: Option.Option<string>;

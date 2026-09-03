@@ -10,7 +10,7 @@ import { trim } from '@dxos/util';
 
 import { type Scene, Uml, UmlEngine, UmlGrid, UmlRules, UmlSearch } from '#model';
 
-import { SceneSvg } from './SceneSvg';
+import { SceneSvg } from './SceneSvg.tsx';
 
 const CLASS_DIAGRAM = trim`
   classDiagram

@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { normalizePredicate } from './normalize-predicate';
+import { normalizePredicate } from './normalize-predicate.ts';
 
 describe('normalizePredicate', () => {
   test('collapses case, whitespace, and inflection of the head verb', ({ expect }) => {

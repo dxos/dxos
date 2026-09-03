@@ -23,11 +23,11 @@ import { Person } from '@dxos/types';
 import { Jmap, JmapMail } from '#apis';
 import { JmapMailApi } from '#services';
 
-import { JMAP_DOMAIN } from '../../../constants';
-import { type JmapApiError } from '../../../errors';
-import { type AttachmentMetadata, decodeBody, mapToMessage } from '../mapper';
-import { findOrCreateJmapTag } from '../tags';
-import { JMAP_KEYWORD_TAGS, JMAP_ROLE_TAGS } from './system-tags';
+import { JMAP_DOMAIN } from '../../../constants.ts';
+import { type JmapApiError } from '../../../errors.ts';
+import { type AttachmentMetadata, decodeBody, mapToMessage } from '../mapper.ts';
+import { findOrCreateJmapTag } from '../tags.ts';
+import { JMAP_KEYWORD_TAGS, JMAP_ROLE_TAGS } from './system-tags.ts';
 
 /** The resolved delta for one run — either a fresh capture (no delta) or a fetched `Email/changes` chunk. */
 type DeltaPlan = {

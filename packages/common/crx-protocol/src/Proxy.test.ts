@@ -6,7 +6,7 @@ import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { Proxy } from './index';
+import { Proxy } from './index.ts';
 
 describe('Proxy schema', () => {
   test('decodes a render request with optional fields', ({ expect }) => {

@@ -9,7 +9,7 @@ import { describe } from 'vitest';
 
 import { Identity, Space } from '@dxos/halo';
 
-import { TestNetwork, TestNetworkLive, awaitTerminal, currentOf, makeClientLayer, pollUntil } from './testing';
+import { TestNetwork, TestNetworkLive, awaitTerminal, currentOf, makeClientLayer, pollUntil } from './testing.ts';
 
 describe('Invitations', () => {
   it.effect(

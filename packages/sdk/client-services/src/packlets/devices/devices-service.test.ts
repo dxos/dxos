@@ -12,9 +12,9 @@ import { log } from '@dxos/log';
 import { subscribeStream } from '@dxos/protocols';
 import { type Device } from '@dxos/protocols/proto/dxos/client/services';
 
-import { type ServiceContext } from '../services';
-import { createServiceContext } from '../testing';
-import { DevicesServiceImpl } from './devices-service';
+import { type ServiceContext } from '../services/index.ts';
+import { createServiceContext } from '../testing/index.ts';
+import { DevicesServiceImpl } from './devices-service.ts';
 
 describe('DevicesService', () => {
   let serviceContext: ServiceContext;

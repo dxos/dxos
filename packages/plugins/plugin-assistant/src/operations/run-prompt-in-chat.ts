@@ -12,7 +12,7 @@ import * as Operation from '@dxos/compute/Operation';
 
 import { AssistantCapabilities, AssistantOperation } from '#types';
 
-import { defaultPreset } from '../processor';
+import { defaultPreset } from '../processor/index.ts';
 
 const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInChat> =
   AssistantOperation.RunPromptInChat.pipe(

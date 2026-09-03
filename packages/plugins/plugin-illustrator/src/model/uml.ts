@@ -9,8 +9,8 @@
 // dialect owns placement; see `dialect.ts` for the contract.
 //
 
-import * as Layout from './layout';
-import type * as Scene from './scene';
+import * as Layout from './layout.ts';
+import type * as Scene from './scene.ts';
 
 export type Direction = 'TB' | 'BT' | 'LR' | 'RL';
 

@@ -4,6 +4,6 @@
 
 // NOTE: Not exporting fixtures as they depend on esm-only packages.
 
-export * from './invitations-test-manager';
-export * from './scoped-shell-manager';
-export * from './shell-manager';
+export * from './invitations-test-manager.ts';
+export * from './scoped-shell-manager.ts';
+export * from './shell-manager.ts';

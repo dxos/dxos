@@ -25,7 +25,7 @@ import {
 import { type Credential, DeviceType, IdentityRecovery } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { ComplexSet } from '@dxos/util';
 
-import { makeFlow, streamFromClientObservable, toShareOptions } from './util';
+import { makeFlow, streamFromClientObservable, toShareOptions } from './util.ts';
 
 const toInfo = (identity: ClientIdentity): HaloIdentity.Info => ({
   did: IdentityDid.make(identity.did),

@@ -23,9 +23,9 @@ import { SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type InvitationsService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
-import { type IMetadataStore, IMetadataStoreService, hasInvitationExpired } from '../metadata';
-import type { InvitationProtocol } from './invitation-protocol';
-import { type InvitationsHandler, InvitationsHandlerService, createAdmissionKeypair } from './invitations-handler';
+import { type IMetadataStore, IMetadataStoreService, hasInvitationExpired } from '../metadata/index.ts';
+import type { InvitationProtocol } from './invitation-protocol.ts';
+import { type InvitationsHandler, InvitationsHandlerService, createAdmissionKeypair } from './invitations-handler.ts';
 
 /**
  * Effect service tag for {@link InvitationsManager}.

@@ -10,8 +10,8 @@ import { type SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devto
 import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type DevtoolsHost } from '@dxos/protocols/rpc';
 
-import { type ServiceContext } from '../services';
-import { type Space } from '../space';
+import { type ServiceContext } from '../services/index.ts';
+import { type Space } from '../space/index.ts';
 
 export const subscribeToSpaces = (
   context: ServiceContext,

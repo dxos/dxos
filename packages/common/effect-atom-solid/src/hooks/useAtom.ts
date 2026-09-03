@@ -6,8 +6,8 @@ import type * as AsyncResult from 'effect/unstable/reactivity/AsyncResult';
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 import { type Accessor, createSignal, onCleanup } from 'solid-js';
 
-import { useRegistry } from '../registry';
-import { type SetAtomFn, createSetAtom } from './useAtomSet';
+import { useRegistry } from '../registry.ts';
+import { type SetAtomFn, createSetAtom } from './useAtomSet.ts';
 
 /**
  * Hook to both read and write an atom

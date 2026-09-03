@@ -10,7 +10,7 @@ import { random } from '@dxos/random';
 import { IconButton, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { ProgressMeter, type ProgressMeterProps } from './ProgressMeter';
+import { ProgressMeter, type ProgressMeterProps } from './ProgressMeter.tsx';
 
 const TICK_MS = 200;
 /** Items in a counted phase; the bar (or the line leaving a stage) fills as they are worked through. */

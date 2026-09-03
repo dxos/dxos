@@ -11,14 +11,14 @@ import { ElevationProvider, type ThemedClassName } from '@dxos/react-ui';
 import { type ActionGraphProps, Menu, type MenuAction, MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
 import { type EditorViewMode } from '@dxos/ui-editor/types';
 
-import { addBlocks } from './blocks';
-import { addFormatting } from './formatting';
-import { addHeadings } from './headings';
-import { addImageUpload } from './image';
-import { addLists } from './lists';
-import { addSearch } from './search';
-import { type EditorToolbarState } from './types';
-import { type ViewModeItem, addViewMode } from './view-mode';
+import { addBlocks } from './blocks.ts';
+import { addFormatting } from './formatting.ts';
+import { addHeadings } from './headings.ts';
+import { addImageUpload } from './image.ts';
+import { addLists } from './lists.ts';
+import { addSearch } from './search.ts';
+import { type EditorToolbarState } from './types.ts';
+import { type ViewModeItem, addViewMode } from './view-mode.ts';
 
 // TODO(burdon): Enable toolbar variants (e.g., markdown, code).
 

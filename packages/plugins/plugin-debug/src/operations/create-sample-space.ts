@@ -14,7 +14,7 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { DebugOperation } from '#types';
 
-import { SampleSpaceApplyError, SampleSpaceNotFoundError } from '../errors';
+import { SampleSpaceApplyError, SampleSpaceNotFoundError } from '../errors.ts';
 
 const summarize = ({ id, label, description }: AppCapabilities.SampleSpace) => ({ id, label, description });
 

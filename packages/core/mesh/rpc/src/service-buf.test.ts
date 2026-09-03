@@ -14,8 +14,8 @@ import {
   type TestStreamService,
 } from '@dxos/protocols/proto/example/testing/rpc';
 
-import { type ProtoRpcPeer, createProtoRpcPeer } from './service';
-import { createLinkedPorts } from './testing';
+import { type ProtoRpcPeer, createProtoRpcPeer } from './service.ts';
+import { createLinkedPorts } from './testing.ts';
 
 // `#8`: a `DescService`-backed descriptor must be interchangeable with the protobuf.js one on a live
 // port, in either direction, because a released peer on one side will meet a rebuilt peer on the

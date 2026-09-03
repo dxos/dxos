@@ -8,7 +8,7 @@ import { Obj, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Organization, Person } from '@dxos/types';
 
-import { makeDatabaseLookup } from './lookup';
+import { makeDatabaseLookup } from './lookup.ts';
 
 describe('makeDatabaseLookup', () => {
   let builder: EchoTestBuilder;

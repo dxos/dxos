@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { BaseError } from '@dxos/errors';
 import { DXN } from '@dxos/keys';
 
-import * as LayoutOperation from './LayoutOperation';
+import * as LayoutOperation from './LayoutOperation.ts';
 
 describe('notify override', () => {
   test('round-trips through a thrown error', ({ expect }) => {

@@ -12,7 +12,7 @@ import { type EdgeHttpClient } from '@dxos/edge-client';
 import { type AccessToken } from '@dxos/link';
 import { type EdgeEnvelope, type InitiateOAuthFlowResponse, type OAuthFlowResult } from '@dxos/protocols';
 
-import { type OAuthPreset } from './util';
+import { type OAuthPreset } from './util.ts';
 
 // TODO(wittjosiah): Migrate the CLI `connector add` OAuth path off the hard-coded
 //   `OAUTH_PRESETS` list onto the registered `Connector` capabilities (which already

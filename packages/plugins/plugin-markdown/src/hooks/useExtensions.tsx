@@ -44,9 +44,9 @@ import { isTruthy, safeUrl } from '@dxos/util';
 
 import { Markdown } from '#types';
 
-import { parseEmbedLabel } from '../components/PreviewComponent/parse-embed-label';
-import { PreviewComponent, type PreviewComponentProps } from '../components/PreviewComponent/PreviewComponent';
-import { setFallbackName } from '../util';
+import { parseEmbedLabel } from '../components/PreviewComponent/parse-embed-label.ts';
+import { PreviewComponent, type PreviewComponentProps } from '../components/PreviewComponent/PreviewComponent.tsx';
+import { setFallbackName } from '../util.tsx';
 
 export type DocumentType = Markdown.Document | Text.Text | { id: string; text: string };
 

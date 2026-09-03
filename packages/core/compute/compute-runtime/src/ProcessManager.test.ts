@@ -38,13 +38,13 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Organization } from '@dxos/types';
 
-import { ProcessStore } from './process-store';
-import * as ProcessManager from './ProcessManager';
-import * as ProcessMonitor from './ProcessMonitor';
-import * as RemoteOperationInvoker from './RemoteOperationInvoker';
-import * as RemoteProcessManager from './RemoteProcessManager';
-import * as RemoteTraceMonitor from './RemoteTraceMonitor';
-import { TestDatabaseLayer } from './testing';
+import { ProcessStore } from './process-store.ts';
+import * as ProcessManager from './ProcessManager.ts';
+import * as ProcessMonitor from './ProcessMonitor.ts';
+import * as RemoteOperationInvoker from './RemoteOperationInvoker.ts';
+import * as RemoteProcessManager from './RemoteProcessManager.ts';
+import * as RemoteTraceMonitor from './RemoteTraceMonitor.ts';
+import { TestDatabaseLayer } from './testing/index.ts';
 
 //
 // Test services (for unit tests without full ECHO stack).

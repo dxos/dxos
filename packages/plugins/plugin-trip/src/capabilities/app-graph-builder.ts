@@ -22,7 +22,7 @@ import { Event } from '@dxos/types';
 import { meta } from '#meta';
 import { Segment, Trip, TripOperation } from '#types';
 
-import { getPlanningWindowDays } from '../operations/extractor/config';
+import { getPlanningWindowDays } from '../operations/extractor/config.ts';
 
 /**
  * Resolves the inclusive event window [from, to] for a calendar node: the user's committed

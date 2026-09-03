@@ -7,11 +7,11 @@ import React from 'react';
 
 import { random } from '@dxos/random';
 
-import { withTheme } from '../../testing';
-import { Button } from '../Button';
-import { Input } from '../Input';
-import { ScrollArea } from '../ScrollArea';
-import { Dialog, type DialogContentProps } from './Dialog';
+import { withTheme } from '../../testing/index.ts';
+import { Button } from '../Button/index.ts';
+import { Input } from '../Input/index.ts';
+import { ScrollArea } from '../ScrollArea/index.ts';
+import { Dialog, type DialogContentProps } from './Dialog.tsx';
 
 type StoryArgs = Pick<DialogContentProps, 'size'> &
   Partial<{

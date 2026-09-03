@@ -8,7 +8,7 @@ import { raise } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { type URI } from '@dxos/keys';
 
-import { GraphExecutor } from '../compiler';
+import { GraphExecutor } from '../compiler/index.ts';
 import {
   type ComputeGraphModel,
   type ComputeNode,
@@ -19,8 +19,8 @@ import {
   type ValueBag,
   type ValueRecord,
   layerNoop as computeNodeContextLayerNoop,
-} from '../types';
-import { WorkflowLoader } from '../workflow';
+} from '../types/index.ts';
+import { WorkflowLoader } from '../workflow/index.ts';
 
 export class TestRuntime {
   // TODO(burdon): Index by DXN; ComputeGraph instances.

@@ -2,4 +2,4 @@
 // Copyright 2024 DXOS.org
 //
 
-export { AutomergePanel as default } from './AutomergePanel';
+export { AutomergePanel as default } from './AutomergePanel.tsx';

@@ -12,8 +12,8 @@ import { EffectEx } from '@dxos/effect';
 import { TagIndex } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
-import { Builder } from '../testing/builder';
-import * as Mailbox from './Mailbox';
+import { Builder } from '../testing/builder.ts';
+import * as Mailbox from './Mailbox.ts';
 
 describe('Mailbox tags', () => {
   let builder: EchoTestBuilder;

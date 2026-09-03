@@ -5,7 +5,7 @@
 import { Primitive } from '@radix-ui/react-primitive';
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
-import { INPUT_NAME, type InputScopedProps, useInputContext } from './InputContext';
+import { INPUT_NAME, type InputScopedProps, useInputContext } from './InputContext.ts';
 
 type TextInputProps = Omit<ComponentPropsWithRef<typeof Primitive.input>, 'id'>;
 

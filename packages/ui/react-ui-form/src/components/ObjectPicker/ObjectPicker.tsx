@@ -12,7 +12,7 @@ import { useSearchListResults } from '@dxos/react-ui-search';
 import { translationKey } from '#translations';
 import { type CreateOptions, type RefOption } from '#types';
 
-import { Form } from '../Form';
+import { Form } from '../Form/index.ts';
 
 export type ObjectPickerContentProps = ThemedClassName<
   CreateOptions & {

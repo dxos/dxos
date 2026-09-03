@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { DiKey } from './di-key';
+import { DiKey } from './di-key.ts';
 
 export class DiContainer {
   #entries = new Map<DiKey<any>, any>();

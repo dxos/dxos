@@ -18,7 +18,7 @@ import { useEmailComposerExtensions, useSendEmail } from '#hooks';
 import { meta } from '#meta';
 import { InboxCapabilities, Mailbox } from '#types';
 
-import { REPLY_REGEXP } from '../../util';
+import { REPLY_REGEXP } from '../../util/index.ts';
 
 export type EditMessageArticleProps = AppSurface.ObjectArticleProps<Message.Message>;
 

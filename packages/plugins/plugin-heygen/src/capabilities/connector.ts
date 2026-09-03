@@ -10,7 +10,7 @@ import { Format, Obj, Ref } from '@dxos/echo';
 import { AccessToken, Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
-import { HEYGEN_CONNECTOR_ID, HEYGEN_SOURCE } from '../constants';
+import { HEYGEN_CONNECTOR_ID, HEYGEN_SOURCE } from '../constants.ts';
 
 const HeyGenTokenForm = Schema.Struct({
   token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotate({

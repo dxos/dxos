@@ -12,9 +12,9 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability$ from '@dxos/app-framework/Capability';
 import { type Type } from '@dxos/echo';
 
-import { type Translations } from '../app';
-import * as AppActivationEvents from './AppActivationEvents';
-import * as AppCapabilities from './AppCapabilities';
+import { type Translations } from '../app/index.ts';
+import * as AppActivationEvents from './AppActivationEvents.ts';
+import * as AppCapabilities from './AppCapabilities.ts';
 
 /**
  * Type of a maker built by {@link Capability$.moduleMaker}, spelled out explicitly (rather than

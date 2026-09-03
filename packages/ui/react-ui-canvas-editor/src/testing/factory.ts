@@ -5,9 +5,9 @@
 import { type Dimension } from '@dxos/react-ui-canvas';
 import { range } from '@dxos/util';
 
-import { type PointTransform } from '../layout';
-import { createRectangle } from '../shapes';
-import { CanvasGraphModel } from '../types';
+import { type PointTransform } from '../layout/index.ts';
+import { createRectangle } from '../shapes/index.ts';
+import { CanvasGraphModel } from '../types/index.ts';
 
 export const itemSize: Dimension = { width: 128, height: 64 };
 

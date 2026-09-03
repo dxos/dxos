@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { mdlBlockLanguage } from './syntax';
+import { mdlBlockLanguage } from './syntax.ts';
 
 // Parse text and return node names with their matched text, depth-first.
 const parseNodes = (text: string): { name: string; text: string }[] => {

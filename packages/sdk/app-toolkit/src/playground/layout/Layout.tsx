@@ -9,7 +9,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
 
-import { PlaygroundRoles } from '../roles';
+import { PlaygroundRoles } from '../roles.ts';
 
 export const Layout = () => {
   return (

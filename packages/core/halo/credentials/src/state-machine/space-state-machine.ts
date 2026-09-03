@@ -11,11 +11,11 @@ import { type Credential, MembershipPolicy, SpaceMember } from '@dxos/protocols/
 import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type AsyncCallback, Callback, ComplexMap, ComplexSet } from '@dxos/util';
 
-import { getCredentialAssertion, verifyCredential } from '../credentials';
-import { type CredentialProcessor } from '../processor/credential-processor';
-import { type FeedInfo, FeedStateMachine } from './feed-state-machine';
-import { InvitationStateMachine } from './invitation-state-machine';
-import { type MemberInfo, MemberStateMachine } from './member-state-machine';
+import { getCredentialAssertion, verifyCredential } from '../credentials/index.ts';
+import { type CredentialProcessor } from '../processor/credential-processor.ts';
+import { type FeedInfo, FeedStateMachine } from './feed-state-machine.ts';
+import { InvitationStateMachine } from './invitation-state-machine.ts';
+import { type MemberInfo, MemberStateMachine } from './member-state-machine.ts';
 
 export interface SpaceState {
   readonly members: ReadonlyMap<PublicKey, MemberInfo>;

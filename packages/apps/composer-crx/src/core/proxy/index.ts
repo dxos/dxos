@@ -2,6 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './handler';
-export * from './render';
-export * from './types';
+export * from './handler.ts';
+export * from './render.ts';
+export * from './types.ts';

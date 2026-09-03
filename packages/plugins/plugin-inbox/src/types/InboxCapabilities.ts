@@ -12,7 +12,7 @@ import { meta } from '#meta';
 
 // Inline import to avoid `Settings` namespace alias colliding with the
 // `Settings` capability export below.
-export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings').Settings>>()(
+export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings.ts').Settings>>()(
   `${meta.profile.key}.capability.settings`,
 );
 
@@ -42,7 +42,7 @@ export type MailboxAction = {
    * closure (not held as a value property) so the contributed capability value stays plain data —
    * embedding an Effect `Operation.Definition` directly makes the capability atom read recurse.
    */
-  createInvocation: (mailbox: import('./Mailbox').Mailbox) => {
+  createInvocation: (mailbox: import('./Mailbox.ts').Mailbox) => {
     operation: import('@dxos/compute').Operation.Definition.Any;
     input: unknown;
   };
@@ -115,7 +115,7 @@ export type MailboxProcessor = {
    */
   id: string;
   /** Cost class: what the `tiers` filter selects on, and how a run is reported. */
-  tier: import('./InboxOperation').MailboxTier;
+  tier: import('./InboxOperation.ts').MailboxTier;
   /**
    * Ids this processor must run after. Unknown ids are ignored rather than failing the run — naming a
    * processor whose plugin is not installed is the normal case for an optional dependency.
@@ -134,7 +134,7 @@ export type MailboxProcessor = {
    * `Operation.Definition` on the capability value makes the capability atom read recurse.
    */
   createInvocations: (
-    mailbox: import('./Mailbox').Mailbox,
+    mailbox: import('./Mailbox.ts').Mailbox,
     options: MailboxProcessorOptions,
   ) =>
     | {
@@ -172,8 +172,8 @@ export type ReplyGenerator = {
    * makes the capability atom read recurse.
    */
   getOperation: () => import('@dxos/compute').Operation.Definition<
-    import('./ReplyGeneration').Input,
-    import('./ReplyGeneration').Output
+    import('./ReplyGeneration.ts').Input,
+    import('./ReplyGeneration.ts').Output
   >;
 };
 
@@ -195,8 +195,8 @@ export type MailSendOperation = {
    * makes the capability atom read recurse.
    */
   getOperation: () => import('@dxos/compute').Operation.Definition<
-    import('./MailSend').Input,
-    import('./MailSend').Output
+    import('./MailSend.ts').Input,
+    import('./MailSend.ts').Output
   >;
 };
 

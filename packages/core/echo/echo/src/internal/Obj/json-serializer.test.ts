@@ -7,20 +7,20 @@ import { describe, expect, test } from 'vitest';
 
 import { DXN, EID } from '@dxos/keys';
 
-import * as Obj from '../../Obj';
-import * as Relation from '../../Relation';
-import { TestSchema } from '../../testing';
-import * as Type from '../../Type';
-import { getTypename, getTypeURI } from '../Annotation';
-import { getMetaChecked } from '../common/api';
-import { makeDecodedEntityLive } from '../common/proxy';
-import { type AnyEntity, ATTR_TYPE, EntityKind, KindId, TypeId, getSchema } from '../common/types';
-import { MetaId } from '../common/types/model-symbols';
-import { RelationSourceId, RelationTargetId, getObjectEchoUri } from '../Entity';
-import * as JsonSchema from '../JsonSchema';
-import { Ref, type RefResolver, StaticRefResolver } from '../Ref';
-import { createObject } from './create-object';
-import { objectFromJSON, objectToJSON } from './json-serializer';
+import * as Obj from '../../Obj.ts';
+import * as Relation from '../../Relation.ts';
+import { TestSchema } from '../../testing/index.ts';
+import * as Type from '../../Type.ts';
+import { getTypename, getTypeURI } from '../Annotation/index.ts';
+import { getMetaChecked } from '../common/api/index.ts';
+import { makeDecodedEntityLive } from '../common/proxy/index.ts';
+import { type AnyEntity, ATTR_TYPE, EntityKind, KindId, TypeId, getSchema } from '../common/types/index.ts';
+import { MetaId } from '../common/types/model-symbols.ts';
+import { RelationSourceId, RelationTargetId, getObjectEchoUri } from '../Entity/index.ts';
+import * as JsonSchema from '../JsonSchema/index.ts';
+import { Ref, type RefResolver, StaticRefResolver } from '../Ref/index.ts';
+import { createObject } from './create-object.ts';
+import { objectFromJSON, objectToJSON } from './json-serializer.ts';
 
 /**
  * Decode JSON and rewrap as a live reactive proxy — mirrors the feed hydration path

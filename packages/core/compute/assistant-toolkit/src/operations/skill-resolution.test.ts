@@ -14,7 +14,7 @@ import { Database, Feed, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { Text } from '@dxos/schema';
 
-import { WebSearchSkill } from '../skills';
+import { WebSearchSkill } from '../skills/index.ts';
 
 // Regression coverage for the CRM-instructions failure: skills live only in the registry
 // (referenced via `Ref.fromURI(Skill.registryURI(key))`), never forked into the space DB.

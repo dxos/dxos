@@ -6,7 +6,7 @@ import { defaultResource, resourceFromAttributes } from '@opentelemetry/resource
 import { type Server, createServer } from 'node:http';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
-import { OtelMetrics } from '../../src/extensions/otel/metrics';
+import { OtelMetrics } from '../../src/extensions/otel/metrics.ts';
 
 // Smoke test for the metrics export path. Tagged `manual` so it never runs in CI.
 //

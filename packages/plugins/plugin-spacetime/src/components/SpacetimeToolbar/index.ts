@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './SpacetimeToolbar';
+export * from './SpacetimeToolbar.tsx';
 
-export type { EditorActions } from './actions';
-export type { SelectionMode } from './selection';
-export type { SpacetimeTool } from './tools';
+export type { EditorActions } from './actions.ts';
+export type { SelectionMode } from './selection.ts';
+export type { SpacetimeTool } from './tools.tsx';

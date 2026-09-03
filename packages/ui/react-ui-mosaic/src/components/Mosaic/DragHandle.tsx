@@ -7,7 +7,7 @@ import React, { type ReactNode, forwardRef } from 'react';
 
 import { Button, IconButton, type IconButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
-import { useMosaicTileContext } from './MosaicTileContext';
+import { useMosaicTileContext } from './MosaicTileContext.ts';
 
 const MOSAIC_DRAG_HANDLE_NAME = 'Mosaic.DragHandle';
 

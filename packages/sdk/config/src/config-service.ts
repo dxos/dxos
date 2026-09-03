@@ -12,9 +12,9 @@ import { dirname } from 'node:path';
 import { DEFAULT_HUB_URL, DX_CONFIG, DX_DATA, getProfileConfigPath, getProfilePath } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
 
-import { Config } from './config';
-import { EDGE_URLS } from './edge-services';
-import { type ConfigInit } from './types';
+import { Config } from './config.ts';
+import { EDGE_URLS } from './edge-services.ts';
+import { type ConfigInit } from './types.ts';
 
 export const memoryConfig = new Config({
   runtime: {

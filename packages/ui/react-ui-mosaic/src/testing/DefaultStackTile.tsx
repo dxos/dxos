@@ -9,7 +9,7 @@ import { Card, IconButton } from '@dxos/react-ui';
 import { Menu, createMenuAction } from '@dxos/react-ui-menu';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
-import { Focus, Mosaic, type MosaicStackTileComponent } from '../components';
+import { Focus, Mosaic, type MosaicStackTileComponent } from '../components/index.ts';
 
 export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
   const dragHandleRef = useRef<HTMLButtonElement>(null);

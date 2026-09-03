@@ -4,8 +4,8 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { type ClimateConfig, classify } from './biomes';
-import { colorFor, oceanColor } from './palette';
+import { type ClimateConfig, classify } from './biomes.ts';
+import { colorFor, oceanColor } from './palette.ts';
 
 const climate: ClimateConfig = {
   waterLevel: 0.44,

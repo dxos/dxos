@@ -14,7 +14,7 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { STALLED_TIMEOUT } from '#hooks';
 import { translations } from '#translations';
 
-import { SyncStatusIndicator } from './SyncStatus';
+import { SyncStatusIndicator } from './SyncStatus.tsx';
 
 const createEdgeStatus = (props: Partial<EdgeStatus> = {}): EdgeStatus => ({
   state: EdgeStatus.ConnectionState.CONNECTED,

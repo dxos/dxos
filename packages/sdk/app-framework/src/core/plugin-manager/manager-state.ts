@@ -12,8 +12,8 @@ import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { log } from '@dxos/log';
 
-import * as ActivationEvent from '../activation-event';
-import type * as Plugin from '../plugin';
+import * as ActivationEvent from '../activation-event.ts';
+import type * as Plugin from '../plugin.ts';
 import {
   type ActivationMessage,
   type PluginFailure,
@@ -21,7 +21,7 @@ import {
   type PluginFailureReason,
   type PluginInitializationError,
   PluginTimeoutError,
-} from './manager-types';
+} from './manager-types.ts';
 
 /**
  * The plugin manager's shared substrate, owned by no single unit: the observable state, the

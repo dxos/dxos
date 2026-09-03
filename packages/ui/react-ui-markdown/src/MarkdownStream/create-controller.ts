@@ -16,7 +16,7 @@ import {
   xmlTagUpdateEffect,
 } from '@dxos/ui-editor';
 
-import { type DocumentRange, type MarkdownStreamController } from './MarkdownStream';
+import { type DocumentRange, type MarkdownStreamController } from './MarkdownStream.tsx';
 
 // Kept out of `MarkdownStream.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on

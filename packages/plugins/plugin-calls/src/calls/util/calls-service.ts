@@ -13,9 +13,9 @@ import {
   type SessionResponse,
   type TrackObject,
   type TracksResponse,
-} from '../types';
-import { HistoryCache } from './history-cache';
-import { BulkRequestDispatcher, FIFOScheduler } from './task-scheduling';
+} from '../types.ts';
+import { HistoryCache } from './history-cache.ts';
+import { BulkRequestDispatcher, FIFOScheduler } from './task-scheduling.ts';
 
 const NETWORK_TIMEOUT = 5_000;
 

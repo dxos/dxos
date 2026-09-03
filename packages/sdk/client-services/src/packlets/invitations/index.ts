@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './device-invitation-protocol';
-export type * from './invitation-protocol';
-export * from './invitations-handler';
-export * from './invitations-service';
-export * from './space-invitation-protocol';
-export * from './invitations-manager';
+export * from './device-invitation-protocol.ts';
+export type * from './invitation-protocol.ts';
+export * from './invitations-handler.ts';
+export * from './invitations-service.ts';
+export * from './space-invitation-protocol.ts';
+export * from './invitations-manager.ts';

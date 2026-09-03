@@ -14,8 +14,8 @@ import { log } from '@dxos/log';
 import { Text } from '@dxos/schema';
 import Handlebars from '@dxos/vendor-kbn-handlebars';
 
-import { FunctionNotFoundError } from '../errors';
-import * as Operation from '../Operation';
+import { FunctionNotFoundError } from '../errors.ts';
+import * as Operation from '../Operation.ts';
 
 /**
  * Template input kind determines how template variables are resolved.

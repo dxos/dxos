@@ -9,7 +9,7 @@ import { invariant } from '@dxos/invariant';
 
 import { SpaceOperation } from '#types';
 
-import { resolveIdentitySpec } from './helpers';
+import { resolveIdentitySpec } from './helpers.ts';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.MergeDuplicates> = SpaceOperation.MergeDuplicates.pipe(
   Operation.withHandler(

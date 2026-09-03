@@ -10,12 +10,12 @@ import * as Semaphore from 'effect/Semaphore';
 
 import { log } from '@dxos/log';
 
-import * as ActivationEvent from '../activation-event';
-import * as Plugin from '../plugin';
-import type * as PluginRegistry from '../registry';
-import { type ActivationScheduler } from './activation-scheduler';
-import { type ManagerState } from './manager-state';
-import { type PluginFailurePhase, PluginTimeoutError } from './manager-types';
+import * as ActivationEvent from '../activation-event.ts';
+import * as Plugin from '../plugin.ts';
+import type * as PluginRegistry from '../registry.ts';
+import { type ActivationScheduler } from './activation-scheduler.ts';
+import { type ManagerState } from './manager-state.ts';
+import { type PluginFailurePhase, PluginTimeoutError } from './manager-types.ts';
 
 /** Host configuration passed through from `ManagerOptions`. */
 export type PluginCatalogOptions = {

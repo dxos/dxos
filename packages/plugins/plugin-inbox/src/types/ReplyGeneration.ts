@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Ref } from '@dxos/echo';
 
-import * as Mailbox from './Mailbox';
+import * as Mailbox from './Mailbox.ts';
 
 /**
  * The provider-agnostic reply-drafting contract. Whoever generates replies takes this input and returns

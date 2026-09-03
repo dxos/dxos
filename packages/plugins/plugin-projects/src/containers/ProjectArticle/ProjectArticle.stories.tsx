@@ -33,7 +33,7 @@ import { Milestone, Outline, Repo, Task, TaskSet } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { ProjectArticle } from './ProjectArticle';
+import { ProjectArticle } from './ProjectArticle.tsx';
 
 const PROJECT_NAME = 'Project 1';
 const TASK_TITLE = 'Ship the tasks section';

@@ -16,7 +16,7 @@ import { Organization, Person } from '@dxos/types';
 import { CrmOperationHandlerSet } from '#operations';
 import { CrmOperation } from '#types';
 
-import { gravatarUrl, organizationImageCandidates, personImageCandidates } from './image-candidates';
+import { gravatarUrl, organizationImageCandidates, personImageCandidates } from './image-candidates.ts';
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: CrmOperationHandlerSet,

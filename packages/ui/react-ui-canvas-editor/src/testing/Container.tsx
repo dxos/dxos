@@ -6,7 +6,7 @@ import React from 'react';
 
 import { AttendableContainer, type AttendableContainerProps } from '@dxos/react-ui-attention';
 
-import { KeyboardContainer } from '../components/KeyboardContainer';
+import { KeyboardContainer } from '../components/KeyboardContainer.tsx';
 
 /**
  * Test container.

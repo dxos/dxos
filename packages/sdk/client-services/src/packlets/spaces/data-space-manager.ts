@@ -67,9 +67,9 @@ import { type Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 import { ComplexMap, deferFunction, forEachAsync } from '@dxos/util';
 
-import { type Identity, IdentityProviderService, createAuthProvider } from '../identity';
-import { type InvitationsManager, InvitationsManagerService } from '../invitations';
-import { type IMetadataStore, IMetadataStoreService } from '../metadata';
+import { type Identity, IdentityProviderService, createAuthProvider } from '../identity/index.ts';
+import { type InvitationsManager, InvitationsManagerService } from '../invitations/index.ts';
+import { type IMetadataStore, IMetadataStoreService } from '../metadata/index.ts';
 import {
   AuthStatus,
   CredentialServerExtension,
@@ -78,10 +78,10 @@ import {
   SpaceManagerService,
   type SpaceProtocol,
   type SpaceProtocolSession,
-} from '../space';
-import { openCredentialsDocument } from './credentials-document-store';
-import { DataSpace } from './data-space';
-import { spaceGenesis } from './genesis';
+} from '../space/index.ts';
+import { openCredentialsDocument } from './credentials-document-store.ts';
+import { DataSpace } from './data-space.ts';
+import { spaceGenesis } from './genesis.ts';
 
 const PRESENCE_ANNOUNCE_INTERVAL = 10_000;
 const PRESENCE_OFFLINE_TIMEOUT = 20_000;

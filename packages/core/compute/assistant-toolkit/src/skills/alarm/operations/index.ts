@@ -5,11 +5,11 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { GetCurrentDate, SetAlarm } from './definitions';
+import { GetCurrentDate, SetAlarm } from './definitions.ts';
 
-export * as AlarmOperations from './definitions';
+export * as AlarmOperations from './definitions.ts';
 
 export const AlarmHandlers = OperationHandlerSet.lazy([
-  SetAlarm.pipe(Operation.lazyHandler(() => import('./set-alarm'))),
-  GetCurrentDate.pipe(Operation.lazyHandler(() => import('./get-current-date'))),
+  SetAlarm.pipe(Operation.lazyHandler(() => import('./set-alarm.ts'))),
+  GetCurrentDate.pipe(Operation.lazyHandler(() => import('./get-current-date.ts'))),
 ]);

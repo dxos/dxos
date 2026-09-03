@@ -13,16 +13,16 @@ import * as Ref from 'effect/Ref';
 import { Performance } from '@dxos/effect';
 import { log } from '@dxos/log';
 
-import { ActivationEvents } from '../../common';
-import * as ActivationEvent from '../activation-event';
-import * as Capability from '../capability';
-import type * as CapabilityManager from '../capability-manager';
-import { DependencyCycleError, DuplicateProviderError, MissingProviderError } from '../errors';
-import type * as Plugin from '../plugin';
-import * as ActivationGraph from './activation-graph';
-import { hostYieldsToPaint, whenIdle } from './idle';
-import { type ManagerState } from './manager-state';
-import { type ModuleLoader, together } from './module-loader';
+import { ActivationEvents } from '../../common/index.ts';
+import * as ActivationEvent from '../activation-event.ts';
+import type * as CapabilityManager from '../capability-manager.ts';
+import * as Capability from '../capability.ts';
+import { DependencyCycleError, DuplicateProviderError, MissingProviderError } from '../errors.ts';
+import type * as Plugin from '../plugin.ts';
+import * as ActivationGraph from './activation-graph.ts';
+import { hostYieldsToPaint, whenIdle } from './idle.ts';
+import { type ManagerState } from './manager-state.ts';
+import { type ModuleLoader, together } from './module-loader.ts';
 
 /**
  * The activation lifecycle engine: owns {@link start} / {@link activate} /

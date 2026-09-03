@@ -11,7 +11,7 @@ import { Stage } from '@dxos/pipeline';
 import { ContentBlock, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { EmailPipelineCtx, type Summary } from './context';
+import { EmailPipelineCtx, type Summary } from './context.ts';
 
 const SUMMARIZE_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 

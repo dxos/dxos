@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { LogEntry, type LogEntryInit, LogLevel } from './index';
-import { serializeToJsonl } from './jsonl';
+import { LogEntry, type LogEntryInit, LogLevel } from './index.ts';
+import { serializeToJsonl } from './jsonl.ts';
 
 const createEntry = (overrides: Partial<LogEntryInit> = {}): LogEntry =>
   new LogEntry({

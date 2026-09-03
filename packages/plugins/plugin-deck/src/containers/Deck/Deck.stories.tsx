@@ -45,7 +45,7 @@ import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 import { DeckCapabilities, DeckSchema, Settings } from '#types';
 
-import { Deck } from './Deck';
+import { Deck } from './Deck.tsx';
 
 type StoryItem = { id: string; title: string; icon: string };
 

@@ -14,8 +14,8 @@ import { Task } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { type TaskPlacement } from './hierarchy';
-import { TaskList } from './TaskList';
+import { type TaskPlacement } from './hierarchy.ts';
+import { TaskList } from './TaskList.tsx';
 
 random.seed(1);
 

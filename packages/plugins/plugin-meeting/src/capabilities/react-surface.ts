@@ -14,7 +14,7 @@ import { Channel } from '@dxos/types';
 import { MeetingArticle } from '#containers';
 import { Meeting } from '#types';
 
-import { MeetingCompanion } from './MeetingCompanion';
+import { MeetingCompanion } from './MeetingCompanion.tsx';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

@@ -24,8 +24,8 @@ import {
   uniqueSenders,
   writeResponses,
   writeResults,
-} from '../testing/harness';
-import { SENDER_HYBRID_THRESHOLD, SENDER_LABEL_MODEL } from './defs';
+} from '../testing/harness/index.ts';
+import { SENDER_HYBRID_THRESHOLD, SENDER_LABEL_MODEL } from './defs.ts';
 
 // Sender-type triage eval (REPORT §5): does classify-sender reliably split PERSON from ORG mail? It
 // gates all downstream LLM spend (draft only to people, label — not summarize — org mail), so it needs

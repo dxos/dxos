@@ -28,7 +28,7 @@ import { Message, Organization, Outline, Person } from '@dxos/types';
 import { AssistantPlugin } from '#plugin';
 import { translations } from '#translations';
 
-import { AgentArticle } from './AgentArticle';
+import { AgentArticle } from './AgentArticle.tsx';
 
 random.seed(1);
 

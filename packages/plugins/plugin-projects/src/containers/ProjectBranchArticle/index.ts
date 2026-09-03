@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './ProjectBranchArticle';
+export * from './ProjectBranchArticle.tsx';

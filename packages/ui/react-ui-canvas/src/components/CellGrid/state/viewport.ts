@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import type { Cell, CellCoord, Headers, Viewport } from './types';
+import type { Cell, CellCoord, Headers, Viewport } from './types.ts';
 
 export const cellKey = (col: number, row: number): string => `${col},${row}`;
 

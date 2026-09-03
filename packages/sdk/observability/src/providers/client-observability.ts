@@ -20,10 +20,10 @@ import {
   SpaceState,
 } from '@dxos/protocols/proto/dxos/client/services';
 
-import * as Observability from '../Observability';
-import { type CrossRealmMemory, measureCrossRealmMemory, readHeap, supportsCrossRealmMemory } from './memory';
-import { SyncEpisodeTracker } from './sync-episodes';
-import { subscribeSyncSummary } from './sync-state';
+import * as Observability from '../Observability.ts';
+import { type CrossRealmMemory, measureCrossRealmMemory, readHeap, supportsCrossRealmMemory } from './memory.ts';
+import { SyncEpisodeTracker } from './sync-episodes.ts';
+import { subscribeSyncSummary } from './sync-state.ts';
 
 const SPACE_METRICS_MIN_INTERVAL = 1000 * 60 * 10; // 10 minutes
 const NETWORK_METRICS_MIN_INTERVAL = 1000 * 60 * 10; // 10 minutes

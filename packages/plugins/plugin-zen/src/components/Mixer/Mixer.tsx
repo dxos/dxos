@@ -13,8 +13,8 @@ import { useCountdown } from '#hooks';
 import { meta } from '#meta';
 import { Dream, Sequence } from '#types';
 
-import { MixerEngine } from '../../generator';
-import { Sound } from '../Sound';
+import { MixerEngine } from '../../generator/index.ts';
+import { Sound } from '../Sound/index.ts';
 
 //
 // Mixer

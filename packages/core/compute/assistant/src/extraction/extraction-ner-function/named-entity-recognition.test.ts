@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 import { type ContentBlock, type Message } from '@dxos/types';
 import { createTestData } from '@dxos/types/testing';
 
-import { combineNerTokens, createTokenGroups, extractFullEntities, getNer } from './named-entity-recognition';
+import { combineNerTokens, createTokenGroups, extractFullEntities, getNer } from './named-entity-recognition.ts';
 
 // TODO(mykola): This should not run on CI.
 describe.skip('NamedEntityRecognition', () => {

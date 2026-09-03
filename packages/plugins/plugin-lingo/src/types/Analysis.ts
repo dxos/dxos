@@ -10,7 +10,7 @@ import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
 import { Segment, sourceHash } from '@dxos/nlp';
 
-import * as Language from './Language';
+import * as Language from './Language.ts';
 
 /**
  * A cached structural analysis of one object's text: nested paragraph / sentence / clause /

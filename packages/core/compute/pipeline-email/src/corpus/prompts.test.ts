@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { DEFAULT_EMAIL_PROMPTS, mergePrompts } from './prompts';
+import { DEFAULT_EMAIL_PROMPTS, mergePrompts } from './prompts.ts';
 
 describe('prompts', () => {
   test('defaults cover every prompt slot', ({ expect }) => {

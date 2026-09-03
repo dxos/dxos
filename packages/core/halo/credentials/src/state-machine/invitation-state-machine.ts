@@ -7,7 +7,7 @@ import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type AsyncCallback, Callback, ComplexMap, ComplexSet } from '@dxos/util';
 
-import { getCredentialAssertion } from '../credentials';
+import { getCredentialAssertion } from '../credentials/index.ts';
 
 export interface DelegateInvitationCredential {
   credentialId: PublicKey;

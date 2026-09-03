@@ -16,7 +16,7 @@ import {
   diffCollectionStateForPeer,
   subsetRemoteToLocal,
   withoutEmptyHeads,
-} from './collection-synchronizer';
+} from './collection-synchronizer.ts';
 
 describe('CollectionSynchronizer', () => {
   test('sync two peers', async ({ expect }) => {

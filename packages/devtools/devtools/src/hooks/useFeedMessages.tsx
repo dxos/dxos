@@ -8,7 +8,7 @@ import { type PublicKey } from '@dxos/keys';
 import { type SubscribeToFeedBlocksResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 
-import { useDevtoolsState } from './useDevtoolsContext';
+import { useDevtoolsState } from './useDevtoolsContext.tsx';
 
 export const useFeedMessages = ({ feedKey, maxBlocks = 100 }: { feedKey?: PublicKey; maxBlocks?: number }) => {
   const devtoolsHost = useDevtools();

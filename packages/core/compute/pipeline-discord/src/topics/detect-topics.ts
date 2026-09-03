@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { MessageStore } from '../stores';
+import { MessageStore } from '../stores/index.ts';
 
 /** A detected topic segment: the pure, storage-agnostic result of {@link detectTopics}. */
 export type TopicSegment = {

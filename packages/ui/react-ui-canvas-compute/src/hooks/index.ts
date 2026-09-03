@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './compute-context';
-export * from './useComputeGraphController';
-export * from './useComputeNodeState';
-export * from './useGraphMonitor';
+export * from './compute-context.ts';
+export * from './useComputeGraphController.ts';
+export * from './useComputeNodeState.ts';
+export * from './useGraphMonitor.ts';

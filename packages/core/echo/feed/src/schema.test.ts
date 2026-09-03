@@ -13,8 +13,8 @@ import { test } from 'vitest';
 
 import { SqlMigrations, SqlTransaction } from '@dxos/sql-sqlite';
 
-import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations';
 import init from './migrations/0001_init.sql?raw';
+import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/index.ts';
 
 const TestLayer = SqlTransaction.layer.pipe(Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })));
 

@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './PdfCanvas';
+export * from './PdfCanvas.tsx';

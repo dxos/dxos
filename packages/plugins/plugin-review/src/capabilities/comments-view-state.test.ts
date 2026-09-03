@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 
 import { ViewState, createDefaultBackends } from '@dxos/react-ui-attention';
 
-import { commentsViewAspect } from './comments-view-state';
+import { commentsViewAspect } from './comments-view-state.ts';
 
 describe('commentsViewAspect', () => {
   test('declares a memory-backed aspect with resolved threads hidden by default', ({ expect }) => {

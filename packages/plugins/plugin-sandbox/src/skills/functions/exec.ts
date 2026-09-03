@@ -10,8 +10,8 @@ import { Database } from '@dxos/echo';
 
 import { SandboxOperation } from '#types';
 
-import { mergeExecEnv } from '../../services/sandbox-env';
-import { createSandboxClient } from '../../services/sandbox-url';
+import { mergeExecEnv } from '../../services/sandbox-env.ts';
+import { createSandboxClient } from '../../services/sandbox-url.ts';
 
 export default SandboxOperation.Exec.pipe(
   Operation.withHandler(

@@ -2,6 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './storage';
-export * from './profile-archive';
-export * from './profile-archive-sqlite';
+export * from './storage.ts';
+export * from './profile-archive.ts';
+export * from './profile-archive-sqlite.ts';

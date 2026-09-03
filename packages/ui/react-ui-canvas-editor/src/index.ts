@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-export type * from './actions';
-export * from './components';
-export * from './hooks';
-export * from './layout';
-export * from './shapes';
-export * from './types';
+export type * from './actions/index.ts';
+export * from './components/index.ts';
+export * from './hooks/index.ts';
+export * from './layout/index.ts';
+export * from './shapes/index.ts';
+export * from './types/index.ts';

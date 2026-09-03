@@ -4,7 +4,7 @@
 
 import * as Context from 'effect/Context';
 
-import type * as ProcessManager from './ProcessManager';
+import type * as ProcessManager from './ProcessManager.ts';
 
 /**
  * Service tag for the {@link Manager}.

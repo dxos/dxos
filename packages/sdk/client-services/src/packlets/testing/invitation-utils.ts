@@ -9,7 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { ClientServicesHost, type ServiceContext } from '../services';
+import { ClientServicesHost, type ServiceContext } from '../services/index.ts';
 
 /**
  * Strip secrets from invitation before giving it to the peer.

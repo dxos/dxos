@@ -11,7 +11,7 @@ import { CommandConfig } from '@dxos/cli-util';
 import { print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 
-import { printIdentity } from '../util';
+import { printIdentity } from '../util.ts';
 
 export const handler = Effect.fn(function* ({ displayName }: { displayName: string }) {
   const { json } = yield* CommandConfig;

@@ -11,8 +11,8 @@ import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import * as ConnectorAnnotations from '@dxos/plugin-connector/ConnectorAnnotations';
 
-import * as StudioCapabilities from './StudioCapabilities';
-import * as Variant from './Variant';
+import * as StudioCapabilities from './StudioCapabilities.ts';
+import * as Variant from './Variant.ts';
 
 /**
  * Resolve the connector(s) whose credential this artifact's provider needs, from the artifact's

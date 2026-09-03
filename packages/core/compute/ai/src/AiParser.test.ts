@@ -10,7 +10,7 @@ import * as Response from 'effect/unstable/ai/Response';
 
 import { type ContentBlock } from '@dxos/types';
 
-import * as AiParser from './AiParser';
+import * as AiParser from './AiParser.ts';
 
 describe('parser', () => {
   describe('accumulation', () => {

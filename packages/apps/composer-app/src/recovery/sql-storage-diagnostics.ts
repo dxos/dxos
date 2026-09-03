@@ -12,7 +12,7 @@ import type { EchoMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import * as OpfsPool from '@dxos/sql-sqlite/OpfsPool';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 
-import { exportOpfsSqlite } from './opfs-export';
+import { exportOpfsSqlite } from './opfs-export.ts';
 
 const EchoMetadataCodec = schema.getCodecForType('dxos.echo.metadata.EchoMetadata');
 

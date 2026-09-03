@@ -28,10 +28,10 @@ import { Branch } from '@dxos/versioning';
 
 import { ReviewCapabilities } from '#types';
 
-import { versionDiff } from '../extensions';
-import { authorHue, hueColour } from '../util';
-import { type VersionedEditor } from './useVersionedEditor';
-import { type useVersioning } from './useVersioning';
+import { versionDiff } from '../extensions/index.ts';
+import { authorHue, hueColour } from '../util/index.ts';
+import { type VersionedEditor } from './useVersionedEditor.ts';
+import { type useVersioning } from './useVersioning.ts';
 
 export type ReviewExtensionsProps = {
   object: Markdown.Document | Text.Text;

@@ -15,8 +15,8 @@ import { type Pipeline } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import { PipelineColumn } from './PipelineColumn';
-import { PIPELINE_ROOT, PipelineRootContext, usePipeline } from './PipelineContext';
+import { PipelineColumn } from './PipelineColumn.tsx';
+import { PIPELINE_ROOT, PipelineRootContext, usePipeline } from './PipelineContext.tsx';
 
 type ItemProps = {
   item: Obj.Unknown;

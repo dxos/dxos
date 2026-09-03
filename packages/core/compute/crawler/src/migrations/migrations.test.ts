@@ -12,10 +12,10 @@ import { describe, expect, test } from 'vitest';
 import { SqlMigrations, SqlTransaction } from '@dxos/sql-sqlite';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
 
-import { MIGRATIONS as AGENT_REGISTRY, MIGRATIONS_TABLE as AGENT_REGISTRY_TABLE } from './agent-registry';
 import agentRegistryInit from './agent-registry/0001_init.sql?raw';
-import { MIGRATIONS as STATE_STORE, MIGRATIONS_TABLE as STATE_STORE_TABLE } from './state-store';
+import { MIGRATIONS as AGENT_REGISTRY, MIGRATIONS_TABLE as AGENT_REGISTRY_TABLE } from './agent-registry/index.ts';
 import stateStoreInit from './state-store/0001_init.sql?raw';
+import { MIGRATIONS as STATE_STORE, MIGRATIONS_TABLE as STATE_STORE_TABLE } from './state-store/index.ts';
 
 const STORES = [
   { name: 'agent-registry', init: agentRegistryInit, manifest: AGENT_REGISTRY, table: AGENT_REGISTRY_TABLE },

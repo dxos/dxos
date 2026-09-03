@@ -10,8 +10,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ContentBlock } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { assistantRegistry } from './registry';
-import { translations } from './translations';
+import { assistantRegistry } from './registry.tsx';
+import { translations } from './translations.ts';
 
 // Shared across stories: the store is the thread's, not an item's — a widget's state has to survive
 // the item unmounting as the reader scrolls past it.

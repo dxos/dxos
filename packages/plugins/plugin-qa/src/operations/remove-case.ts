@@ -9,7 +9,7 @@ import { Database, Obj } from '@dxos/echo';
 
 import { QaOperation } from '#types';
 
-import { loadCases } from './util';
+import { loadCases } from './util.ts';
 
 /**
  * Removes the case from the plan's ordering only. The TestCase object survives, because results in

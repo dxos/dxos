@@ -8,8 +8,8 @@ import { describe, test } from 'vitest';
 import { Annotation } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
 
-import { Place } from './Place';
-import * as Segment from './Segment';
+import { Place } from './Place.ts';
+import * as Segment from './Segment.ts';
 
 describe('Segment schemas', () => {
   test('transport variants extend the shared TransportFields', ({ expect }) => {

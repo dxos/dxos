@@ -4,7 +4,7 @@
 
 import * as Command from 'effect/unstable/cli/Command';
 
-import { list } from './list';
+import { list } from './list/index.ts';
 
 export const schema = Command.make('schema').pipe(
   Command.withDescription('Manage space schemas.'),

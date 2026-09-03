@@ -5,8 +5,8 @@
 import { createContext } from '@radix-ui/react-context';
 import { type MutableRefObject } from 'react';
 
-import { type GridConstraints, type GridMode, type GridPosition, type Layout } from './engine';
-import { type GridCellSize } from './geometry';
+import { type GridConstraints, type GridMode, type GridPosition, type Layout } from './engine.ts';
+import { type GridCellSize } from './geometry.ts';
 
 // Kept out of `Board.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so a context and its hook exported beside them force a full page reload on every edit.

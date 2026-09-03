@@ -19,11 +19,11 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { ThemeProvider, defaultTx } from '@dxos/react-ui';
 import { getHostPlatform, isTauri } from '@dxos/util';
 
-import { joinWaitlist, login } from '../../credentials';
-import { useForceDarkTheme } from '../../hooks';
-import { OnboardingOperation } from '../../operations';
-import { translations } from '../../translations';
-import { Welcome, type WelcomeError, WelcomeState, passkeyError } from './Welcome';
+import { joinWaitlist, login } from '../../credentials/index.ts';
+import { useForceDarkTheme } from '../../hooks/index.ts';
+import { OnboardingOperation } from '../../operations/index.ts';
+import { translations } from '../../translations.ts';
+import { Welcome, type WelcomeError, WelcomeState, passkeyError } from './Welcome/index.ts';
 
 const hostPlatform = isTauri() ? getHostPlatform() : undefined;
 

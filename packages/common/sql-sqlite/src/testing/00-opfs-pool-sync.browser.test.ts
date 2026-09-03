@@ -9,7 +9,7 @@ import * as WaSqlite from '@dxos/wa-sqlite';
 // @ts-expect-error - No type declarations for this module.
 import SQLiteESMFactory from '@dxos/wa-sqlite/dist/wa-sqlite.mjs';
 
-import * as OpfsPool from '../OpfsPool';
+import * as OpfsPool from '../OpfsPool.ts';
 
 const wasmUrl = new URL('@dxos/wa-sqlite/dist/wa-sqlite.wasm', import.meta.url).href;
 

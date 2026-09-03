@@ -26,15 +26,15 @@ import React, {
   useRef,
 } from 'react';
 
-import { useElevationContext, useSafeCollisionPadding, useThemeContext } from '../../hooks';
-import { type ThemedClassName } from '../../util';
+import { useElevationContext, useSafeCollisionPadding, useThemeContext } from '../../hooks/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
 import {
   DROPDOWN_MENU_NAME,
   DropdownMenuProvider,
   type DropdownMenuScopedProps,
   useDropdownMenuContext,
   useMenuScope,
-} from './DropdownMenuContext';
+} from './DropdownMenuContext.ts';
 
 type Direction = 'ltr' | 'rtl';
 
@@ -632,7 +632,7 @@ export const DropdownMenu = {
 
 // Type-only re-export (erased, so it does not affect the refresh boundary): keeps the inferred
 // types of downstream composites nameable across package boundaries.
-export type { DropdownMenuScopedProps } from './DropdownMenuContext';
+export type { DropdownMenuScopedProps } from './DropdownMenuContext.ts';
 
 export type {
   DropdownMenuArrowProps,

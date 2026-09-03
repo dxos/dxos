@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './components';
-export * from './hooks';
-export * from './types';
+export * from './components/index.ts';
+export * from './hooks/index.ts';
+export * from './types.ts';
 export {
   createGapSeparator,
   createLineSeparator,
@@ -12,7 +12,7 @@ export {
   createMenuItemGroup,
   executeMenuAction,
   fallbackIcon,
-} from './util';
-export { type ActionGroupBuilder, type ActionGroupBuilderFn, MenuBuilder } from './builder';
-export { TOOLBAR_DISPOSITION, isToolbarAction } from './toolbar';
-export { applyPresentation } from './presentation';
+} from './util.ts';
+export { type ActionGroupBuilder, type ActionGroupBuilderFn, MenuBuilder } from './builder.ts';
+export { TOOLBAR_DISPOSITION, isToolbarAction } from './toolbar.ts';
+export { applyPresentation } from './presentation.ts';

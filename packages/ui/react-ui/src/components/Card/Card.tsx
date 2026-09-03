@@ -22,15 +22,19 @@ import { type Density, type SlottableProps } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
-import { useThemeContext } from '../../hooks';
-import { composable, composableProps, slottable } from '../../util';
-import { type ThemedClassName } from '../../util';
-import { Button, IconButton } from '../Button';
-import { Column, type ColumnRootProps } from '../Column';
-import { Icon } from '../Icon';
-import { Image, type ImageProps } from '../Image';
-import { DropdownMenu } from '../Menu';
-import { type ToolbarActionIconButtonProps, type ToolbarDragHandleProps, type ToolbarMenuProps } from '../Toolbar';
+import { useThemeContext } from '../../hooks/index.ts';
+import { composable, composableProps, slottable } from '../../util/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
+import { Button, IconButton } from '../Button/index.ts';
+import { Column, type ColumnRootProps } from '../Column/index.ts';
+import { Icon } from '../Icon/index.ts';
+import { Image, type ImageProps } from '../Image/index.ts';
+import { DropdownMenu } from '../Menu/index.ts';
+import {
+  type ToolbarActionIconButtonProps,
+  type ToolbarDragHandleProps,
+  type ToolbarMenuProps,
+} from '../Toolbar/index.ts';
 
 //
 // Root

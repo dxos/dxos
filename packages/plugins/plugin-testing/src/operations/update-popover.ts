@@ -9,7 +9,7 @@ import * as Operation from '@dxos/compute/Operation';
 
 import { StorybookCapabilities } from '#types';
 
-import { updateState } from './update-state';
+import { updateState } from './update-state.ts';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.UpdatePopover> = LayoutOperation.UpdatePopover.pipe(
   Operation.withHandler(

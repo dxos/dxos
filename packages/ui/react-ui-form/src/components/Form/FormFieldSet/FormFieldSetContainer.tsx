@@ -9,9 +9,9 @@ import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { useFormContext } from '../../../hooks';
-import { formTheme } from '../Form.theme';
-import { FormFieldHeader, type FormFieldPresentation } from '../FormField';
+import { useFormContext } from '../../../hooks/index.ts';
+import { formTheme } from '../Form.theme.ts';
+import { FormFieldHeader, type FormFieldPresentation } from '../FormField/index.ts';
 
 const FORM_FIELDSET_CONTAINER_NAME = 'Form.FieldSetContainer';
 

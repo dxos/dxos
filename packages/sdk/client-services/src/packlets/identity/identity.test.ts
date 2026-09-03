@@ -22,10 +22,10 @@ import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 
-import { MetadataStore } from '../metadata';
-import { valueEncoding } from '../pipeline';
-import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SpaceProtocol } from '../space';
-import { Identity } from './identity';
+import { MetadataStore } from '../metadata/index.ts';
+import { valueEncoding } from '../pipeline/index.ts';
+import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, Space, SpaceProtocol } from '../space/index.ts';
+import { Identity } from './identity.ts';
 
 const createStores = () => {
   const storage = createStorage({ type: StorageType.RAM });

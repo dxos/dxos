@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import * as Ansi from './Ansi';
+import * as Ansi from './Ansi.ts';
 
 /**
  * Minimal stand-in for `@effect/printer/Doc` (and `AnsiDoc`'s renderer).

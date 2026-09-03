@@ -11,7 +11,7 @@ import { Message } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { ChatQueue } from './ChatQueue';
+import { ChatQueue } from './ChatQueue.tsx';
 
 const makeQueued = (text: string, index: number) =>
   Message.make({

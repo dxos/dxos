@@ -19,9 +19,9 @@ import {
   type InvitationListProps,
   SpaceMemberList,
   type SpaceMemberListProps,
-} from '../../components';
-import { translationKey } from '../../translations';
-import { type SpacePanelStepProps } from './SpacePanelProps';
+} from '../../components/index.ts';
+import { translationKey } from '../../translations.ts';
+import { type SpacePanelStepProps } from './SpacePanelProps.ts';
 
 export type SpaceManagerImplProps = SpacePanelStepProps & {
   target?: string;

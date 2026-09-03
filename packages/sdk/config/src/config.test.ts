@@ -8,7 +8,7 @@ import { expect, test } from 'vitest';
 
 import { ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
 
-import { Config, mapFromKeyValues, mapToKeyValues } from './config';
+import { Config, mapFromKeyValues, mapToKeyValues } from './config.ts';
 // @ts-ignore
 import defaults from './testing/defaults.js';
 // @ts-ignore

@@ -9,8 +9,8 @@ import * as Project from '@dxos/compute/Project';
 import { Database, Ref } from '@dxos/echo';
 import { Repo } from '@dxos/types';
 
-import { type DocsResult } from './docs';
-import { type TasksResult } from './tasks';
+import { type DocsResult } from './docs.ts';
+import { type TasksResult } from './tasks.ts';
 
 //
 // The repository and the project that ties everything else together.

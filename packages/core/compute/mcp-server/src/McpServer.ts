@@ -22,15 +22,15 @@ import { makeRegistry } from '@dxos/echo-client';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-export { ToolFailure, type ToolFailureCode, failure } from './internal/failure';
-import { ToolFailure, failure } from './internal/failure';
-import * as iconInternal from './internal/icon';
-import * as identityInternal from './internal/identity';
-import * as inputInternal from './internal/input';
-import * as snapshotInternal from './internal/snapshot';
-import * as spaceInternal from './internal/space';
-import * as viewInternal from './internal/view';
-import * as wireInternal from './internal/wire';
+export { ToolFailure, type ToolFailureCode, failure } from './internal/failure.ts';
+import { ToolFailure, failure } from './internal/failure.ts';
+import * as iconInternal from './internal/icon.ts';
+import * as identityInternal from './internal/identity.ts';
+import * as inputInternal from './internal/input.ts';
+import * as snapshotInternal from './internal/snapshot.ts';
+import * as spaceInternal from './internal/space.ts';
+import * as viewInternal from './internal/view.ts';
+import * as wireInternal from './internal/wire.ts';
 
 //
 // Host contract.

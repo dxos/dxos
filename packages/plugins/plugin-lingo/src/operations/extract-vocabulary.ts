@@ -19,7 +19,7 @@ import { trim } from '@dxos/util';
 
 import { Language, LingoOperation } from '#types';
 
-import { addWord, lastText, normalizeTerm, parseJsonArray } from '../util';
+import { addWord, lastText, normalizeTerm, parseJsonArray } from '../util/index.ts';
 
 const DEFAULT_LIMIT = 25;
 

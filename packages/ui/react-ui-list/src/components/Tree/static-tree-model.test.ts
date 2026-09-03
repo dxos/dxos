@@ -5,7 +5,7 @@
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, expect, test } from 'vitest';
 
-import { createStaticTreeModel } from './static-tree-model';
+import { createStaticTreeModel } from './static-tree-model.ts';
 
 type Node = { id: string; name?: string; items?: Node[] };
 

@@ -20,7 +20,7 @@ import { BookmarksPlugin } from '#plugin';
 import { translations } from '#translations';
 import { Bookmark } from '#types';
 
-import { BookmarkArticle } from './BookmarkArticle';
+import { BookmarkArticle } from './BookmarkArticle.tsx';
 
 const DefaultStory = () => {
   const [space] = useSpaces();

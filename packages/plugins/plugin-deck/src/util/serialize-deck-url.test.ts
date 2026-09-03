@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import type * as PathResolution from '@dxos/app-graph/PathResolution';
 
-import { serializeDeckToUrl } from './serialize-deck-url';
+import { serializeDeckToUrl } from './serialize-deck-url.ts';
 
 const WORKSPACE_A = 'workspaceA';
 const WORKSPACE_B = 'workspaceB';

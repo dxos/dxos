@@ -9,8 +9,8 @@
 // Plugs into the dialects via the `Router` contract (`uml-grid.ts`).
 //
 
-import type * as Scene from './scene';
-import { GRID, type Rect, type RoutedRelation, type Router } from './uml-grid';
+import type * as Scene from './scene.ts';
+import { GRID, type Rect, type RoutedRelation, type Router } from './uml-grid.ts';
 
 /** Clearance kept between a route and any node border, in steps. */
 const CLEARANCE = 1;

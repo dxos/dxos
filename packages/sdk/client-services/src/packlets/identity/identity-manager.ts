@@ -35,11 +35,11 @@ import { Timeframe } from '@dxos/timeframe';
 import { trace as Trace } from '@dxos/tracing';
 import { deferFunction, isNode, isTauri } from '@dxos/util';
 
-import { type IMetadataStore, IMetadataStoreService } from '../metadata';
-import { type SpaceManager, SpaceManagerService, type SwarmIdentity } from '../space';
-import { openCredentialsDocument } from '../spaces/credentials-document-store';
-import { createAuthProvider } from './authenticator';
-import { Identity } from './identity';
+import { type IMetadataStore, IMetadataStoreService } from '../metadata/index.ts';
+import { type SpaceManager, SpaceManagerService, type SwarmIdentity } from '../space/index.ts';
+import { openCredentialsDocument } from '../spaces/credentials-document-store.ts';
+import { createAuthProvider } from './authenticator.ts';
+import { Identity } from './identity.ts';
 
 const DEVICE_PRESENCE_ANNOUNCE_INTERVAL = 10_000;
 const DEVICE_PRESENCE_OFFLINE_TIMEOUT = 20_000;

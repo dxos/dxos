@@ -4,8 +4,8 @@
 
 import { type RefObject } from 'react';
 
-import { type SVGContext } from '../../hooks';
-import { type IdAccessor, defaultIdAccessor } from '../types';
+import { type SVGContext } from '../../hooks/index.ts';
+import { type IdAccessor, defaultIdAccessor } from '../types.ts';
 
 export type RendererOptions<T = any> = {
   idAccessor: IdAccessor;

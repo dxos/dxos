@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Commit } from './Timeline';
+import { type Commit } from './Timeline.tsx';
 
 const NODE = '●';
 const MERGE_NODE = '◆';

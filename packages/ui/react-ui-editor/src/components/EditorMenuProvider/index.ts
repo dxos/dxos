@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './menu';
-export * from './menu-presets';
-export * from './popover';
+export * from './menu.ts';
+export * from './menu-presets.ts';
+export * from './popover.ts';
 
-export * from './EditorMenuProvider';
-export * from './useEditorMenu';
+export * from './EditorMenuProvider.tsx';
+export * from './useEditorMenu.ts';

@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type Pattern, computePatternReplacements } from './replace-patterns-extension';
+import { type Pattern, computePatternReplacements } from './replace-patterns-extension.ts';
 
 // Gmail-style angle-bracket mailto: `<[rich@example.com](mailto:rich@example.com)\>`.
 const ANGLED_MAILTO_PATTERN: Pattern = {

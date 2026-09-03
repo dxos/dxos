@@ -9,7 +9,7 @@ import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
 import { EffectEx } from '@dxos/effect';
 
-import { handler } from './keys';
+import { handler } from './keys.ts';
 
 describe('halo keys', () => {
   it('should show HALO keys', () =>

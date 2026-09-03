@@ -8,12 +8,12 @@ import { SchemaAST } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN, type EntityId } from '@dxos/keys';
 
-import type * as Type from '../../Type';
-import { type TypeAnnotation, TypeAnnotationId } from '../Annotation/annotations';
-import { makeTypeJsonSchemaAnnotation } from '../Annotation/util';
-import { EntityKind } from '../common/types';
-import { toJsonSchema } from '../JsonSchema';
-import { type EchoTypeOptions, type EchoTypeSchema, makeEchoTypeSchema } from './entity';
+import type * as Type from '../../Type.ts';
+import { type TypeAnnotation, TypeAnnotationId } from '../Annotation/annotations.ts';
+import { makeTypeJsonSchemaAnnotation } from '../Annotation/util.ts';
+import { EntityKind } from '../common/types/index.ts';
+import { toJsonSchema } from '../JsonSchema/index.ts';
+import { type EchoTypeOptions, type EchoTypeSchema, makeEchoTypeSchema } from './entity.ts';
 
 /**
  * Object schema type with kind marker.

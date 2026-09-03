@@ -15,7 +15,7 @@ import {
   rejectIfNoFit,
   resizeToFit,
   resolveCollisions,
-} from './engine';
+} from './engine.ts';
 
 describe('overlaps', () => {
   test('overlapping rectangles', ({ expect }) => {

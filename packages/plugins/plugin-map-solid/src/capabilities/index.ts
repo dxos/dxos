@@ -9,7 +9,7 @@ import { meta } from '#meta';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
-export const Surface = AppCapability.surface(() => import('./surface'), {
+export const Surface = AppCapability.surface(() => import('./surface.tsx'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.section'],
 });
 export const PluginAsset = AppCapability.pluginAsset({

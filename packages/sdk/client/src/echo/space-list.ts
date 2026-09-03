@@ -29,9 +29,9 @@ import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type SpacesService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
-import { RPC_TIMEOUT } from '../common';
-import { InvitationsProxy } from '../invitations';
-import { SpaceProxy } from './space-proxy';
+import { RPC_TIMEOUT } from '../common.ts';
+import { InvitationsProxy } from '../invitations/index.ts';
+import { SpaceProxy } from './space-proxy.ts';
 
 export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   private _ctx!: Context;

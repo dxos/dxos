@@ -9,8 +9,8 @@ import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Text } from '@dxos/schema';
 
-import { Journal, JournalEntry, addBullet, getOrCreateEntry, make, makeEntry } from './Journal';
-import { getDateString } from './TasksUtil';
+import { Journal, JournalEntry, addBullet, getOrCreateEntry, make, makeEntry } from './Journal.ts';
+import { getDateString } from './TasksUtil.ts';
 
 describe('Journal', () => {
   let builder: EchoTestBuilder;

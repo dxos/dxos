@@ -23,7 +23,7 @@ import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
 
-import { handlebars, xmlDecorator } from './extensions';
+import { handlebars, xmlDecorator } from './extensions/index.ts';
 
 export type TemplateEditorProps = {
   id: string;

@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { MulticastObservable } from '@dxos/async';
 
-import { fromObservable } from './atoms';
+import { fromObservable } from './atoms.ts';
 
 describe('fromObservable', () => {
   test('same observable yields the same atom', ({ expect }) => {

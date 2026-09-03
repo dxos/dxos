@@ -11,12 +11,12 @@ import { TextMessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { openAndClose } from '@dxos/test-utils';
 
-import { createEphemeralEdgeIdentity, createTestHaloEdgeIdentity } from './auth';
-import { protocol } from './defs';
-import { EdgeClient } from './edge-client';
-import { type EdgeIdentity } from './edge-identity';
-import { EdgeConnectionClosedError, EdgeIdentityChangedError } from './errors';
-import { createTestEdgeWsServer } from './testing';
+import { createEphemeralEdgeIdentity, createTestHaloEdgeIdentity } from './auth.ts';
+import { protocol } from './defs.ts';
+import { EdgeClient } from './edge-client.ts';
+import { type EdgeIdentity } from './edge-identity.ts';
+import { EdgeConnectionClosedError, EdgeIdentityChangedError } from './errors.ts';
+import { createTestEdgeWsServer } from './testing/index.ts';
 
 describe('EdgeClient', () => {
   let wsServerPort = 8001;

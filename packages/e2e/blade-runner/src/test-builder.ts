@@ -17,8 +17,8 @@ import {
 import { type Runtime_Services_Signal } from '@dxos/protocols/buf/dxos/config_pb';
 import { ComplexMap } from '@dxos/util';
 
-import { type TraceEvent } from './analysys';
-import { type SignalServerRunner, runSignal } from './run-test-signal';
+import { type TraceEvent } from './analysys/index.ts';
+import { type SignalServerRunner, runSignal } from './run-test-signal.ts';
 
 export class TestBuilder {
   private readonly _peers = new ComplexMap<PublicKey, TestPeer>(PublicKey.hash);

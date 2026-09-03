@@ -19,9 +19,9 @@ export const DashboardDriver = Capability.lazyModule(
     provides: [LaMetricCapabilities.PushStatus],
     activatesOn: ClientEvents.SpacesReady,
   },
-  () => import('./dashboard-driver'),
+  () => import('./dashboard-driver.ts'),
 );
 
-export const LaMetricSettings = AppCapability.settings(() => import('./settings'), {
+export const LaMetricSettings = AppCapability.settings(() => import('./settings.ts'), {
   provides: [LaMetricCapabilities.SettingsAtom],
 });

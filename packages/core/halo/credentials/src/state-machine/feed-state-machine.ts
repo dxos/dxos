@@ -7,7 +7,7 @@ import { PublicKey } from '@dxos/keys';
 import { type AdmittedFeed, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type AsyncCallback, Callback, ComplexMap } from '@dxos/util';
 
-import { getCredentialAssertion } from '../credentials';
+import { getCredentialAssertion } from '../credentials/index.ts';
 
 export interface FeedInfo {
   key: PublicKey;

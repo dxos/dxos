@@ -5,8 +5,8 @@
 import { Context, TRACE_SPAN_ATTRIBUTE } from '@dxos/context';
 import { type MaybePromise } from '@dxos/util';
 
-import { TRACE_PROCESSOR, sanitizeClassName } from './trace-processor';
-import type { RemoteSpan } from './tracing-types';
+import { TRACE_PROCESSOR, sanitizeClassName } from './trace-processor.ts';
+import type { RemoteSpan } from './tracing-types.ts';
 
 /** localStorage key that switches the browser OTEL sampler from 30% to 100%. */
 export const TRACE_ALL_KEY = 'dxos.debug.traceAll';

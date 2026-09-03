@@ -7,7 +7,7 @@ import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { ContextAdd, ContextRemove } from './operations/definitions';
+import { ContextAdd, ContextRemove } from './operations/definitions.ts';
 
 const SKILL_KEY = 'org.dxos.skill.chatContext';
 

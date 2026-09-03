@@ -8,7 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 
 import { TerraCapabilities } from '#types';
 
-import { PlanetCache } from '../engine';
+import { PlanetCache } from '../engine/index.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

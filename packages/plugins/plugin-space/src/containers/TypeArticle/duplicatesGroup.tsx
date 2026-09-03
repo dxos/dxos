@@ -12,7 +12,7 @@ import { type ActionGroupBuilderFn } from '@dxos/react-ui-menu';
 import { meta } from '#meta';
 import { SpaceCapabilities, SpaceOperation } from '#types';
 
-import { type UseDuplicatesResult, buildMergePreview } from './useDuplicates';
+import { type UseDuplicatesResult, buildMergePreview } from './useDuplicates.ts';
 
 export type UseDuplicatesGroupOptions = {
   /** URI of the type under review; scopes the staged preview to this article. */

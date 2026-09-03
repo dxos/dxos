@@ -13,7 +13,7 @@ import {
   DxAvatar as NaturalDxAvatar,
   DxTagPickerItem as NaturalDxTagPickerItem,
   DxIcon as NaturalIcon,
-} from './index';
+} from './index.ts';
 
 export const DxAnchor = createComponent({
   tagName: 'dx-anchor',

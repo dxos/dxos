@@ -10,8 +10,8 @@ import {
 } from '@dxos/client-services';
 import { mountDevtoolsHooks } from '@dxos/client/devtools';
 
-import { destroyRecoveryClient } from './boot-client';
-import { importOpfsSqlite } from './opfs-export';
+import { destroyRecoveryClient } from './boot-client.ts';
+import { importOpfsSqlite } from './opfs-export.ts';
 
 type PickedFile = {
   bytes: Uint8Array;

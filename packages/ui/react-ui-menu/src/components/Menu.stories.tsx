@@ -13,11 +13,11 @@ import { withRegistry } from '@dxos/storybook-utils';
 
 import { translations } from '#translations';
 
-import { Menu, useMenu } from '../components';
-import { type ActionGraphProps, useMenuActions } from '../hooks';
-import { createActions } from '../testing';
-import { type MenuItem } from '../types';
-import { createMenuAction } from '../util';
+import { Menu, useMenu } from '../components/index.ts';
+import { type ActionGraphProps, useMenuActions } from '../hooks/index.ts';
+import { createActions } from '../testing/index.ts';
+import { type MenuItem } from '../types.ts';
+import { createMenuAction } from '../util.ts';
 
 const STORY_NAME = 'StoryMenuItems';
 

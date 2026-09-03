@@ -24,7 +24,7 @@ import { Organization, Person } from '@dxos/types';
 import { SearchContextProvider } from '#hooks';
 import { translations } from '#translations';
 
-import { SearchDialog } from './SearchDialog';
+import { SearchDialog } from './SearchDialog.tsx';
 
 random.seed(0);
 

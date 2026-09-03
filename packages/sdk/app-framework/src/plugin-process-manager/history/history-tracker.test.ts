@@ -25,10 +25,10 @@ import {
   halveComputeHandler,
   toStringHandler,
   waitUntil,
-} from '../testing';
-import * as HistoryTracker from './history-tracker';
-import * as UndoMapping from './undo-mapping';
-import * as UndoRegistry from './undo-registry';
+} from '../testing.ts';
+import * as HistoryTracker from './history-tracker.ts';
+import * as UndoMapping from './undo-mapping.ts';
+import * as UndoRegistry from './undo-registry.ts';
 
 describe('HistoryTracker', () => {
   it.effect('tracks undoable operations', () =>

@@ -9,7 +9,7 @@ import { invariant } from '@dxos/invariant';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 
-import * as Blog from './Blog';
+import * as Blog from './Blog.ts';
 
 describe('Blog schema', () => {
   test('makePost creates outline + a body document, both owned by it, and defaults to draft status', () => {

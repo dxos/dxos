@@ -9,16 +9,16 @@ import { type Quad } from 'n3';
 
 import { type SqlTransaction } from '@dxos/sql-sqlite';
 
-import { SemanticIndexError } from '../errors';
-import { insertQuadsMemory, makeMemorySource } from '../internal/source/memory-source';
-import { insertQuads, makeSqliteSource } from '../internal/source/sqlite-source';
-import { makeEngine, selectTriples } from '../internal/sparql/engine';
-import { factToTriples, triplesToFacts } from '../internal/sparql/mapping';
-import { queryMemory } from '../internal/sparql/query-memory';
-import { querySqlite } from '../internal/sparql/query-sqlite';
-import { migrate } from '../internal/sqlite/schema';
-import { type Fact } from '../types';
-import { FactStore, type FactStoreApi } from './fact-store';
+import { SemanticIndexError } from '../errors.ts';
+import { insertQuadsMemory, makeMemorySource } from '../internal/source/memory-source.ts';
+import { insertQuads, makeSqliteSource } from '../internal/source/sqlite-source.ts';
+import { makeEngine, selectTriples } from '../internal/sparql/engine.ts';
+import { factToTriples, triplesToFacts } from '../internal/sparql/mapping.ts';
+import { queryMemory } from '../internal/sparql/query-memory.ts';
+import { querySqlite } from '../internal/sparql/query-sqlite.ts';
+import { migrate } from '../internal/sqlite/schema.ts';
+import { type Fact } from '../types/index.ts';
+import { FactStore, type FactStoreApi } from './fact-store.ts';
 
 //
 // Live implementations of {@link FactStore}. Kept separate from the tag so operation definitions

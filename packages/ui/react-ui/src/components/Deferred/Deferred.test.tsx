@@ -6,7 +6,7 @@ import { act, cleanup, render, screen } from '@testing-library/react';
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { Deferred } from './Deferred';
+import { Deferred } from './Deferred.tsx';
 
 describe('Deferred', () => {
   beforeEach(() => vi.useFakeTimers({ shouldAdvanceTime: true }));

@@ -8,8 +8,8 @@ import { DEFAULT_OUTPUT } from '@dxos/conductor';
 import { Icon } from '@dxos/react-ui';
 import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
 
-import { useComputeNodeState } from '../hooks';
-import { type AudioShape } from './audio-def';
+import { useComputeNodeState } from '../hooks/index.ts';
+import { type AudioShape } from './audio-def.ts';
 
 export const AudioComponent = ({ shape }: ShapeComponentProps<AudioShape>) => {
   const { runtime } = useComputeNodeState(shape);

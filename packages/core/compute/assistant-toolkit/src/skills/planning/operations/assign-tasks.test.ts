@@ -17,9 +17,9 @@ import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { Outline, Task } from '@dxos/types';
 
-import PlanningSkill from '../skill';
-import { AssignTasks } from './definitions';
-import { PlanningHandlers } from './index';
+import PlanningSkill from '../skill.ts';
+import { AssignTasks } from './definitions.ts';
+import { PlanningHandlers } from './index.ts';
 
 EntityId.dangerouslyDisableRandomness();
 

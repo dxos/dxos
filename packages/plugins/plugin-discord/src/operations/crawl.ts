@@ -14,7 +14,7 @@ import { DiscordPipeline, QuestionStore } from '@dxos/pipeline-discord';
 
 import { DiscordOperation } from '#types';
 
-import { discordSourceLayerFromConnection, getCrawlRuntime } from '../services';
+import { discordSourceLayerFromConnection, getCrawlRuntime } from '../services/index.ts';
 
 /**
  * Runs the crawl on the session crawl runtime (which owns the SQLite-backed stores) so state

@@ -12,8 +12,8 @@ import { type ChatThreadController } from '@dxos/react-ui-assistant';
 import { type MessageRange } from '@dxos/react-ui-feed';
 import { type Message } from '@dxos/types';
 
-import { type AiChatProcessor } from '../../processor';
-import { type ChatEvent } from './events';
+import { type AiChatProcessor } from '../../processor/index.ts';
+import { type ChatEvent } from './events.ts';
 
 /**
  * Wall-clock timestamps for the most-recent (or in-flight) request, lifted out of

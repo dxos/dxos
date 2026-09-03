@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { type MetricData, type MetricObserver, RemoteMetrics } from './metrics';
+import { type MetricData, type MetricObserver, RemoteMetrics } from './metrics.ts';
 
 type Recorded = { name: string; value?: number | string; data?: MetricData };
 

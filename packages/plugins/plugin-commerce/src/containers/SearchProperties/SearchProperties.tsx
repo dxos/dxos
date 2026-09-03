@@ -14,7 +14,7 @@ import { Form } from '@dxos/react-ui-form';
 import { meta } from '#meta';
 import { Provider, Search, SearchOperation } from '#types';
 
-import { buildUnionFormSchema } from '../../util';
+import { buildUnionFormSchema } from '../../util/index.ts';
 
 export type SearchPropertiesProps = {
   search: Search.Search;

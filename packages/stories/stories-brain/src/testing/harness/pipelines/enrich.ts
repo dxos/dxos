@@ -8,9 +8,9 @@ import { type AiService } from '@dxos/ai';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { asStringArray, generateText, parseJsonObject } from '../llm';
-import { type ModelVariant } from '../models';
-import { type SummarizeOptions, type SummaryKind, summaryKindFor } from './summarize';
+import { asStringArray, generateText, parseJsonObject } from '../llm.ts';
+import { type ModelVariant } from '../models.ts';
+import { type SummarizeOptions, type SummaryKind, summaryKindFor } from './summarize.ts';
 
 // Single per-message LLM pass (REPORT §5): the per-message enrichment stages — tag, summarize, and
 // salient-fact extraction — were three separate model calls that each re-read the message. Fold them

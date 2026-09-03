@@ -17,11 +17,11 @@ import { type FunctionComponent } from 'react';
 
 import { log } from '@dxos/log';
 
-import { type Range } from '../../../types';
-import { decorationSetToArray, escapeRegExpSource } from '../../../util';
-import { crawlerLineEffect } from '../../streaming/scrolling';
-import { StubWidget, type XmlWidgetNotifier } from './stub';
-import { nodeToJson } from './xml-util';
+import { type Range } from '../../../types/index.ts';
+import { decorationSetToArray, escapeRegExpSource } from '../../../util/index.ts';
+import { crawlerLineEffect } from '../../streaming/scrolling/index.ts';
+import { StubWidget, type XmlWidgetNotifier } from './stub.ts';
+import { nodeToJson } from './xml-util.ts';
 
 /**
  * StateEffect for navigating to previous bookmark.

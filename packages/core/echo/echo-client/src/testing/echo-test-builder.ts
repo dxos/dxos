@@ -28,9 +28,9 @@ import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { range } from '@dxos/util';
 
-import { EchoClient } from '../client';
-import { type BranchStore } from '../core-db';
-import { type EchoDatabase } from '../proxy-db';
+import { EchoClient } from '../client/index.ts';
+import { type BranchStore } from '../core-db/index.ts';
+import { type EchoDatabase } from '../proxy-db/index.ts';
 
 type OpenDatabaseOptions = {
   client?: EchoClient;

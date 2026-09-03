@@ -7,7 +7,7 @@ import { log } from '@dxos/log';
 import { buf } from '@dxos/protocols/buf';
 import { type Message, MessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 
-import { protocol } from './defs';
+import { protocol } from './defs.ts';
 
 /**
  * 0000 0001 - message contains a part of segmented message chunk sequence.

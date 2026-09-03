@@ -13,4 +13,4 @@
 // Import this only where the in-process host is the point: the recovery page, tests, and
 // testing harnesses.
 
-export { LocalClientServices, type LocalClientServicesParams, fromHost } from './local-client-services';
+export { LocalClientServices, type LocalClientServicesParams, fromHost } from './local-client-services.ts';

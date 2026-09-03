@@ -22,8 +22,8 @@ import * as GraphNode from '@dxos/graph/GraphNode';
 import { type Dimension } from '@dxos/react-ui-canvas';
 import { getDeep } from '@dxos/util';
 
-import { CanvasGraphModel, type Polygon } from '../types';
-import { type Intersection } from './util';
+import { CanvasGraphModel, type Polygon } from '../types/index.ts';
+import { type Intersection } from './util.ts';
 
 // TODO(burdon): Custom UML layout heuristics:
 //  - Layout longest chain on horizontal.

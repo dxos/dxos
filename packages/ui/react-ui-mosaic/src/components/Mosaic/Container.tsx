@@ -32,13 +32,13 @@ import {
 } from '@dxos/react-ui-dnd';
 import { isTruthy } from '@dxos/util';
 
-import { useFocus } from '../Focus';
+import { useFocus } from '../Focus/index.ts';
 import {
   MOSAIC_CONTAINER_NAME,
   MosaicContainerContextProvider,
   type MosaicContainerContextValue,
   type MosaicContainerState,
-} from './MosaicContainerContext';
+} from './MosaicContainerContext.ts';
 
 //
 // Container

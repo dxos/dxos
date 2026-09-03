@@ -8,8 +8,8 @@ import { Feed, Filter, Obj, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TagIndex } from '@dxos/schema';
 
-import { Result } from './Result';
-import * as Search from './Search';
+import { Result } from './Result.ts';
+import * as Search from './Search.ts';
 
 describe('Search type', () => {
   test('make + instanceOf with defaults', ({ expect }) => {

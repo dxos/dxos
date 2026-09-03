@@ -8,8 +8,8 @@ import { subtleCrypto } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { isNode, trim } from '@dxos/util';
 
-import { httpPlugin } from './plugins/http-plugin-esbuild';
-import { PluginR2VendoredPackages } from './plugins/r2-vendored-packages';
+import { httpPlugin } from './plugins/http-plugin-esbuild.ts';
+import { PluginR2VendoredPackages } from './plugins/r2-vendored-packages.ts';
 
 export type Import = {
   moduleUrl: string;

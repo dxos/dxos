@@ -13,7 +13,7 @@ import {
   type CredentialsDocument,
   isCredentialsDocument,
   orderCredentials,
-} from './credentials-document';
+} from './credentials-document.ts';
 
 describe('credentials document', () => {
   test('orders by issuance date, breaking ties on id', () => {

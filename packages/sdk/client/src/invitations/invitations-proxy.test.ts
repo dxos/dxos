@@ -8,7 +8,7 @@ import { Stream } from '@dxos/async';
 import type { ClientServices } from '@dxos/client-protocol';
 import { Invitation, QueryInvitationsResponse } from '@dxos/protocols/proto/dxos/client/services';
 
-import { InvitationsProxy } from './invitations-proxy';
+import { InvitationsProxy } from './invitations-proxy.ts';
 
 type InvitationsService = NonNullable<ClientServices['InvitationsService']>;
 

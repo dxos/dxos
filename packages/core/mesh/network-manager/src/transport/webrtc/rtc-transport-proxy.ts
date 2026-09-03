@@ -16,7 +16,7 @@ import { type BridgeEvent, type BridgeService, ConnectionState } from '@dxos/pro
 import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { arrayToBuffer } from '@dxos/util';
 
-import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from '../transport';
+import { type Transport, type TransportFactory, type TransportOptions, type TransportStats } from '../transport.ts';
 
 const RPC_TIMEOUT = 10_000;
 const CLOSE_RPC_TIMEOUT = 3000;

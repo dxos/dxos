@@ -4,7 +4,7 @@
 
 import { createContext } from '@radix-ui/react-context';
 
-import { type UseListSelectionReturn } from '../../hooks';
+import { type UseListSelectionReturn } from '../../hooks/index.ts';
 
 //
 // Contexts — plain Radix contexts (un-scoped). Scoped composition (nested Listboxes,

@@ -9,7 +9,7 @@ import { type QuickJSRuntime, type QuickJSWASMModule, createQuickJS } from '@dxo
 
 import envCode from '#query-lite?raw';
 
-import { unwrapResult } from './quickjs';
+import { unwrapResult } from './quickjs.ts';
 
 /**
  * Evaluates queries written in JavaScript using QuickJS.

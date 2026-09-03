@@ -10,8 +10,8 @@ import { Database } from '@dxos/echo';
 import { type EnvironmentVariableCredential } from '#api';
 import { type ClaudeAgentOperation } from '#types';
 
-import { ANTHROPIC_SOURCE } from './constants';
-import { CredentialResolutionError, MissingCredentialError } from './errors';
+import { ANTHROPIC_SOURCE } from './constants.ts';
+import { CredentialResolutionError, MissingCredentialError } from './errors.ts';
 
 /**
  * Resolves the Anthropic API key from the space's connected credentials, as a typed failure when

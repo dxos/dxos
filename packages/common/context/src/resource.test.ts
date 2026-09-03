@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { LifecycleState, Resource } from './resource';
+import { LifecycleState, Resource } from './resource.ts';
 
 class TestResource extends Resource {
   get lifecycleState() {

@@ -14,7 +14,7 @@ import { type ComplexMap } from '@dxos/util';
 
 import { meta } from '#meta';
 
-export * as Settings from './Settings';
+export * as Settings from './Settings.ts';
 
 export const SPACE_DIRECTORY_HANDLE = `${meta.profile.key}.directory`;
 

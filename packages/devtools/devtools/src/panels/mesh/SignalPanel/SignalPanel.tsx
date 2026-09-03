@@ -6,8 +6,8 @@ import React from 'react';
 
 import { Panel } from '@dxos/react-ui';
 
-import { SignalMessageTable } from './SignalMessageTable';
-import { SignalStatusTable } from './SignalStatusTable';
+import { SignalMessageTable } from './SignalMessageTable.tsx';
+import { SignalStatusTable } from './SignalStatusTable.tsx';
 
 export const SignalPanel = () => {
   return (

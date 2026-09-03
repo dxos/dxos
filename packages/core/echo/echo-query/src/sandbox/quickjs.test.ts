@@ -6,7 +6,7 @@ import { expect, test } from 'vitest';
 
 import { createQuickJS } from '@dxos/vendor-quickjs';
 
-import { unwrapResult } from './quickjs';
+import { unwrapResult } from './quickjs.ts';
 
 test('works', async () => {
   const QuickJS = await createQuickJS();

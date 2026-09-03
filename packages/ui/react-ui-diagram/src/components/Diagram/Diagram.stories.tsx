@@ -11,9 +11,9 @@ import { useTextEditor } from '@dxos/react-ui-editor';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { EditorView, createBasicExtensions, createMermaidExtensions, createThemeExtensions } from '@dxos/ui-editor';
 
-import { CLASS_DIAGRAM, FLOWCHART, NESTED_FLOWCHART, projectMermaid } from '../../testing';
-import { type Overlay, type Point, type Projection } from '../../types';
-import { Diagram, type DiagramBackgroundProps } from './Diagram';
+import { CLASS_DIAGRAM, FLOWCHART, NESTED_FLOWCHART, projectMermaid } from '../../testing/index.ts';
+import { type Overlay, type Point, type Projection } from '../../types/index.ts';
+import { Diagram, type DiagramBackgroundProps } from './Diagram.tsx';
 
 /**
  * Source pane. The DSL is the source of truth, so this is the authoritative editor and the diagram

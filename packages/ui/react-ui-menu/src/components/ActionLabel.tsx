@@ -12,7 +12,7 @@ import { type MenuActionProperties, type MenuItemChrome } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
-import { getShortcut } from '../util';
+import { getShortcut } from '../util.ts';
 
 type Action = AppGraphNode.Action<MenuActionProperties> | AppGraphNode.ActionGroup<MenuItemChrome>;
 

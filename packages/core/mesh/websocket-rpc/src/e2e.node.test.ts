@@ -8,8 +8,8 @@ import { getBufService } from '@dxos/protocols/buf-service';
 import { type TestService } from '@dxos/protocols/proto/example/testing/rpc';
 import { type ServiceTypesOf, createServiceBundle } from '@dxos/rpc';
 
-import { WebsocketRpcClient } from './client';
-import { WebsocketRpcServer } from './server';
+import { WebsocketRpcClient } from './client.ts';
+import { WebsocketRpcServer } from './server.ts';
 
 const services = createServiceBundle({
   TestService: getBufService<TestService>('example.testing.rpc.TestService'),

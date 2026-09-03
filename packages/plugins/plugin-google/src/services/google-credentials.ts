@@ -11,7 +11,7 @@ import { Database, type Ref } from '@dxos/echo';
 import { type AccessToken, Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 
-import { GOOGLE_INTEGRATION_SOURCE } from '../constants';
+import { GOOGLE_INTEGRATION_SOURCE } from '../constants.ts';
 
 /**
  * Reads a credential through {@link Credential.CredentialsService}, which resolves a server-custodied

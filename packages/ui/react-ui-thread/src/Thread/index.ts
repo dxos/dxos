@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export { Thread } from './Thread';
+export { Thread } from './Thread.tsx';
 export type {
   ThreadContentProps,
   ThreadHeaderProps,
@@ -10,4 +10,4 @@ export type {
   ThreadRootProps,
   ThreadStatusProps,
   ThreadTextboxProps,
-} from './Thread';
+} from './Thread.tsx';

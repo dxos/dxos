@@ -11,8 +11,8 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { humanize } from '@dxos/util';
 
-import { PublicKeySelector } from '../components';
-import { useDevtoolsDispatch, useDevtoolsState, useSpacesInfo } from '../hooks';
+import { PublicKeySelector } from '../components/index.ts';
+import { useDevtoolsDispatch, useDevtoolsState, useSpacesInfo } from '../hooks/index.ts';
 
 export const SpaceSelector = () => {
   const spaces = useSpaces({ all: true });

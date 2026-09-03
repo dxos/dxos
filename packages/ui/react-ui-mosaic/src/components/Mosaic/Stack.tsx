@@ -22,11 +22,11 @@ import { type Axis, type ThemedClassName, composable, composableProps } from '@d
 import { type GetId } from '@dxos/react-ui-dnd';
 import { mx } from '@dxos/ui-theme';
 
-import { type VirtualizerPaginationController, useVirtualizerPagination, useVisibleItems } from '../../hooks';
-import { useMosaicContainerContext } from './MosaicContainerContext';
-import { MosaicPlaceholder, type MosaicPlaceholderProps } from './Placeholder';
-import { styles } from './styles';
-import { type MosaicTileProps } from './Tile';
+import { type VirtualizerPaginationController, useVirtualizerPagination, useVisibleItems } from '../../hooks/index.ts';
+import { useMosaicContainerContext } from './MosaicContainerContext.ts';
+import { MosaicPlaceholder, type MosaicPlaceholderProps } from './Placeholder.tsx';
+import { styles } from './styles.ts';
+import { type MosaicTileProps } from './Tile.tsx';
 
 //
 // Mosaic Drag-and-drop

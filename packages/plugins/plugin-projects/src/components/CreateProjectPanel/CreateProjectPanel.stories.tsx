@@ -12,8 +12,8 @@ import { translations as reactUiTranslations } from '@dxos/react-ui/translations
 
 import { translations } from '#translations';
 
-import { defaultTemplates, scaffoldProject } from '../../templates';
-import { CreateProjectPanel } from './CreateProjectPanel';
+import { defaultTemplates, scaffoldProject } from '../../templates/index.ts';
+import { CreateProjectPanel } from './CreateProjectPanel.tsx';
 
 const meta: Meta<typeof CreateProjectPanel> = {
   title: 'plugins/plugin-projects/components/CreateProjectPanel',

@@ -8,8 +8,8 @@ import { type TestStreamService } from '@dxos/protocols/proto/example/testing/rp
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { PortMuxer } from '@dxos/rpc-tunnel';
 
-import { Channels } from './channels';
-import { TestClient } from './test-client';
+import { Channels } from './channels.ts';
+import { TestClient } from './test-client.ts';
 
 const clientOne = new TestClient();
 const clientTwo = new TestClient({ value: 10050 });

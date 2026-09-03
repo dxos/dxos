@@ -8,8 +8,8 @@ import { PublicKey } from '@dxos/keys';
 import { type TypedMessage } from '@dxos/protocols/proto';
 import { type Chain, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { getCredentialProofPayload } from './signing';
-import { SIGNATURE_TYPE_ED25519, verifyChain } from './verifier';
+import { getCredentialProofPayload } from './signing.ts';
+import { SIGNATURE_TYPE_ED25519, verifyChain } from './verifier.ts';
 
 export type CreateCredentialSignerProps = {
   subject: PublicKey;

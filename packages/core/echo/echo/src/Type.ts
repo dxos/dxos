@@ -12,11 +12,11 @@ import { type EncodedReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, EID, type EntityId, type URI } from '@dxos/keys';
 
-import type * as Database from './Database';
-import type * as EntityModule from './Entity';
-import * as internal from './internal';
-import * as typeInternal from './internal/Type';
-import type * as RelationModule from './Relation';
+import type * as Database from './Database.ts';
+import type * as EntityModule from './Entity.ts';
+import * as internal from './internal/index.ts';
+import * as typeInternal from './internal/Type/index.ts';
+import type * as RelationModule from './Relation.ts';
 
 //
 // Internal types (not exported)

@@ -33,7 +33,7 @@ import {
   textToImageShape,
   threadShape,
   triggerShape,
-} from './shapes';
+} from './shapes/index.ts';
 
 /**
  * Order used by toolbar.

@@ -16,7 +16,7 @@ import {
 } from '@dxos/echo/internal';
 import { DXN } from '@dxos/keys';
 
-import { EchoTestBuilder } from '../testing';
+import { EchoTestBuilder } from '../testing/index.ts';
 
 class TestEmpty extends Type.makeObject<TestEmpty>(DXN.make('com.example.type.empty', '0.1.0'))(Schema.Struct({})) {}
 

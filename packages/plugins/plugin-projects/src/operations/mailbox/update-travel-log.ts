@@ -11,7 +11,7 @@ import { Message } from '@dxos/types';
 
 import { ProjectMailboxOperation } from '#types';
 
-import { findOrCreateDocumentArtifact, messagesAscending, setDocumentContent } from './helpers';
+import { findOrCreateDocumentArtifact, messagesAscending, setDocumentContent } from './helpers.ts';
 
 /** The artifact the pipeline owns; regenerated wholesale each run. */
 export const TRAVEL_LOG_NAME = 'Travel Bookings';

@@ -9,8 +9,8 @@ export namespace SpaceSyncState {
   export type PeerState = DataService.SpaceSyncState.PeerState;
 }
 
-export * from './automerge';
-export * from './client';
+export * from './automerge/index.ts';
+export * from './client/index.ts';
 export {
   type AddCoreOptions,
   type AtomicReplaceObjectProps,
@@ -25,7 +25,7 @@ export {
   type ObjectCoreOptions,
   type SpaceDocumentHeads,
   objectIsUpdated,
-} from './core-db';
+} from './core-db/index.ts';
 export {
   type CloneOptions,
   EchoReactiveHandler,
@@ -60,12 +60,12 @@ export {
   mergeBranch,
   switchBranch,
   syncBranch,
-} from './echo-handler';
-export * from './hypergraph';
-export * from './proxy-db';
-export * from './query';
-export * from './registry';
-export * from './serialized-space';
-export * from './serializer';
-export * from './text';
-export * from './util';
+} from './echo-handler/index.ts';
+export * from './hypergraph.ts';
+export * from './proxy-db/index.ts';
+export * from './query/index.ts';
+export * from './registry/index.ts';
+export * from './serialized-space.ts';
+export * from './serializer.ts';
+export * from './text.ts';
+export * from './util/index.ts';

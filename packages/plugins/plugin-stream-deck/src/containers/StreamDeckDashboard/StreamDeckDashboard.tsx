@@ -17,7 +17,7 @@ import * as Protocol from '#protocol';
 import { useFrame } from '#render';
 import { StreamDeckCapabilities } from '#types';
 
-import { useFavorites } from './useFavorites';
+import { useFavorites } from './useFavorites.ts';
 
 export type StreamDeckDashboardProps = AppSurface.SpaceArticleProps;
 

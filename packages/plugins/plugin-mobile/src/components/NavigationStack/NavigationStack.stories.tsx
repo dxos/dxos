@@ -8,7 +8,7 @@ import { expect, waitFor, within } from 'storybook/test';
 
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { NavigationStack, type NavigationStackProps } from './NavigationStack';
+import { NavigationStack, type NavigationStackProps } from './NavigationStack.tsx';
 
 const ITEMS = ['root', 'settings', 'general'];
 

@@ -14,7 +14,7 @@ import { type FallbackProps, ErrorBoundary as NaturalErrorBoundary } from 'react
 
 import { addEventListener, combine } from '@dxos/async';
 
-import { ErrorFallback } from './ErrorFallback';
+import { ErrorFallback } from './ErrorFallback.tsx';
 
 export type { FallbackProps };
 

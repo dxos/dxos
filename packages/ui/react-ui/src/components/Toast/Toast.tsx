@@ -8,12 +8,12 @@ import { useTranslation } from 'react-i18next';
 
 import { translationKey } from '#translations';
 
-import { useThemeContext } from '../../hooks';
-import { DensityProvider, ElevationProvider } from '../../primitives';
-import { type ThemedClassName } from '../../util';
-import { IconButton } from '../Button';
-import { Column } from '../Column';
-import { Icon } from '../Icon';
+import { useThemeContext } from '../../hooks/index.ts';
+import { DensityProvider, ElevationProvider } from '../../primitives/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
+import { IconButton } from '../Button/index.ts';
+import { Column } from '../Column/index.ts';
+import { Icon } from '../Icon/index.ts';
 
 //
 // Provider

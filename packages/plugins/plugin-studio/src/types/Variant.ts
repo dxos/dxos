@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
-import * as Generation from './Generation';
+import * as Generation from './Generation.ts';
 
 /**
  * One produced output of an {@link Artifact} — an interchangeable alternative of the primary

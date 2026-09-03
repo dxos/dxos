@@ -12,7 +12,7 @@ import { Entity } from '@dxos/echo';
 import { meta } from '#meta';
 import { SpaceOperation } from '#types';
 
-import { SpaceOperationConfig } from '../operations/helpers';
+import { SpaceOperationConfig } from '../operations/helpers.ts';
 
 type UndoMappingsOptions = {
   createInvitationUrl: (invitationCode: string) => string;

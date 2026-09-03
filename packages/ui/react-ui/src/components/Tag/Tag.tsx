@@ -8,8 +8,8 @@ import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { type ChromaticPalette, type MessageValence, type NeutralPalette } from '@dxos/ui-types';
 
-import { useThemeContext } from '../../hooks';
-import { type ThemedClassName } from '../../util';
+import { useThemeContext } from '../../hooks/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
 
 export type TagProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.span>> & {
   asChild?: boolean;

@@ -4,9 +4,9 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { randomInt } from './random';
-import { createBucketReducer, numericalValues, reduceGroupBy, reduceSeries, reduceSet } from './reducers';
-import { Tracer } from './tracer';
+import { randomInt } from './random.ts';
+import { createBucketReducer, numericalValues, reduceGroupBy, reduceSeries, reduceSet } from './reducers.ts';
+import { Tracer } from './tracer.ts';
 
 const sleep = (ms: number) => {
   return new Promise<void>((resolve) => {

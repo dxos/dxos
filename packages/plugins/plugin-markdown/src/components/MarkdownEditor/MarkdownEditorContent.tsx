@@ -37,7 +37,7 @@ import { isTruthy } from '@dxos/util';
 
 import { meta } from '#meta';
 
-import { type MarkdownEditorToolbarProps } from './MarkdownEditorToolbar';
+import { type MarkdownEditorToolbarProps } from './MarkdownEditorToolbar.tsx';
 
 export type MarkdownEditorContentProps = ThemedClassName<{
   id: string;

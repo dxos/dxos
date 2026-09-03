@@ -12,10 +12,10 @@ import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
 
-import { type BranchStore } from '../core-db';
-import { HypergraphImpl } from '../hypergraph';
-import { DatabaseImpl } from '../proxy-db';
-import { IndexQuerySourceProvider, type LoadObjectProps, type ObjectUpdate } from './index-query-source-provider';
+import { type BranchStore } from '../core-db/index.ts';
+import { HypergraphImpl } from '../hypergraph.ts';
+import { DatabaseImpl } from '../proxy-db/index.ts';
+import { IndexQuerySourceProvider, type LoadObjectProps, type ObjectUpdate } from './index-query-source-provider.ts';
 
 export type EchoClientProps = {};
 

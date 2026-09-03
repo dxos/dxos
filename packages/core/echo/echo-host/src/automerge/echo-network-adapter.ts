@@ -24,14 +24,14 @@ import {
   type ReplicatorConnectionMessage,
   type ShouldAdvertiseProps,
   type ShouldSyncCollectionProps,
-} from './echo-replicator';
-import { PeerNotFoundError } from './errors';
+} from './echo-replicator.ts';
+import { PeerNotFoundError } from './errors.ts';
 import {
   type CollectionQueryMessage,
   type CollectionStateMessage,
   isCollectionQueryMessage,
   isCollectionStateMessage,
-} from './network-protocol';
+} from './network-protocol.ts';
 
 export interface NetworkDataMonitor {
   recordPeerConnected(peerId: string): void;

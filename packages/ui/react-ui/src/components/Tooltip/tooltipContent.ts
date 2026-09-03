@@ -5,7 +5,7 @@
 import { mx, surfaceShadow, surfaceZIndex } from '@dxos/ui-theme';
 import { type ComponentFunction } from '@dxos/ui-types';
 
-import { type TooltipStyleProps } from './Tooltip.theme';
+import { type TooltipStyleProps } from './Tooltip.theme.ts';
 
 export const tooltipContent: ComponentFunction<TooltipStyleProps> = ({ elevation }, ...etc) =>
   mx(

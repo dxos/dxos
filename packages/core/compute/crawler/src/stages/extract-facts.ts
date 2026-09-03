@@ -8,11 +8,11 @@ import { type AiService } from '@dxos/ai';
 import { type Stage } from '@dxos/pipeline';
 import { FactPipeline, type FactStore } from '@dxos/pipeline-rdf';
 
-import * as AgentRegistry from '../AgentRegistry';
-import { type StateError } from '../errors';
-import { tapStage } from '../Stage';
-import type * as StateStore from '../StateStore';
-import type * as Type from '../types';
+import * as AgentRegistry from '../AgentRegistry.ts';
+import { type StateError } from '../errors.ts';
+import { tapStage } from '../Stage.ts';
+import type * as StateStore from '../StateStore.ts';
+import type * as Type from '../types.ts';
 
 export type ExtractFactsOptions = {
   /** Source namespace used to build each message's fact `source` DXN (default 'discord'). */

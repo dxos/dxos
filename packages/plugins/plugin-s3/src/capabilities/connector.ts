@@ -12,7 +12,7 @@ import { AccessToken, Connection } from '@dxos/link';
 import { ConnectionTestError } from '@dxos/plugin-connector';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
-import { S3_CONNECTOR_ID, S3_SOURCE } from '../constants';
+import { S3_CONNECTOR_ID, S3_SOURCE } from '../constants.ts';
 
 // Every field is `NonEmptyString`, not `String`: the dialog closes before `onSubmit` runs, so a
 // failure raised there lands after unmount and is never shown. Rejecting empty in the schema keeps

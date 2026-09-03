@@ -14,7 +14,7 @@ import { ContentBlock, Message, Person } from '@dxos/types';
 
 import { type GoogleMail } from '#apis';
 
-import { GMAIL_SOURCE } from '../../constants';
+import { GMAIL_SOURCE } from '../../constants.ts';
 
 /**
  * Recursively searches a message's MIME part tree for the first part matching `mimeType`, depth-first

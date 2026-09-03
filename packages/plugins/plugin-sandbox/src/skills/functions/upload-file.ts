@@ -13,7 +13,7 @@ import { type File } from '@dxos/types';
 
 import { SandboxOperation } from '#types';
 
-import { createSandboxClient } from '../../services/sandbox-url';
+import { createSandboxClient } from '../../services/sandbox-url.ts';
 
 export default SandboxOperation.UploadFile.pipe(
   Operation.withHandler(

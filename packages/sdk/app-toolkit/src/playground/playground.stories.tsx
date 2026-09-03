@@ -10,10 +10,10 @@ import {} from '@dxos/app-framework';
 import { useApp } from '@dxos/app-framework/ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { DebugPlugin } from './debug';
-import { GeneratorPlugin, createNumberPlugin } from './generator';
-import { LayoutPlugin } from './layout';
-import { LoggerPlugin } from './logger';
+import { DebugPlugin } from './debug/index.ts';
+import { GeneratorPlugin, createNumberPlugin } from './generator/index.ts';
+import { LayoutPlugin } from './layout/index.ts';
+import { LoggerPlugin } from './logger/index.ts';
 
 const plugins = [
   // prettier-ignore

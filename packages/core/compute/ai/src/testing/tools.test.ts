@@ -11,11 +11,11 @@ import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { log } from '@dxos/log';
 
-import { callTool } from '../tools/call';
-import { ToolId } from '../tools/tool';
-import { ToolExecutionService } from '../tools/tool-execution-service';
-import { ToolResolverService } from '../tools/tool-resolver-service';
-import { CalculatorLayer, CalculatorTool, CalculatorToolkit, calculatorHandler } from './calculator';
+import { callTool } from '../tools/call.ts';
+import { ToolExecutionService } from '../tools/tool-execution-service.ts';
+import { ToolResolverService } from '../tools/tool-resolver-service.ts';
+import { ToolId } from '../tools/tool.ts';
+import { CalculatorLayer, CalculatorTool, CalculatorToolkit, calculatorHandler } from './calculator.ts';
 
 const TestToolResolverService = Layer.sync(ToolResolverService, () => ({
   resolve: (_id: ToolId) => Effect.succeed(CalculatorTool),

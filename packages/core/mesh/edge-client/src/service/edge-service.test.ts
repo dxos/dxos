@@ -8,8 +8,8 @@ import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 
-import { EdgeServiceClient, EdgeServiceError } from './edge-service';
-import * as Image from './Image';
+import { EdgeServiceClient, EdgeServiceError } from './edge-service.ts';
+import * as Image from './Image.ts';
 
 const Echo = Schema.Struct({ value: Schema.String });
 

@@ -9,7 +9,7 @@ import type * as Fiber from 'effect/Fiber';
 import type * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Option from 'effect/Option';
 
-import { runAndForwardErrors, unwrapExit } from './internal/errors';
+import { runAndForwardErrors, unwrapExit } from './internal/errors.ts';
 
 /**
  * Helper type to construct a union of tag identifiers from an array of tags.

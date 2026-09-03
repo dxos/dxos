@@ -12,9 +12,9 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { Select, type SelectRootProps } from '@dxos/react-ui';
 import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
 
-import { FunctionBody, getHeight } from './common';
-import { type TriggerShape } from './trigger-def';
-import { createTriggerSpec, getOutputSchema } from './trigger-spec';
+import { FunctionBody, getHeight } from './common/index.ts';
+import { type TriggerShape } from './trigger-def.ts';
+import { createTriggerSpec, getOutputSchema } from './trigger-spec.ts';
 
 export type TriggerComponentProps = ShapeComponentProps<TriggerShape>;
 

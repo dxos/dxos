@@ -19,12 +19,12 @@ import { type DropdownMenuItemGroupProperties, type ToggleGroupMenuItemGroupProp
 
 import { translationKey } from '#translations';
 
-import { type MenuAction, type MenuItem, type MenuItemGroup, isMenuGroup, isSeparator } from '../types';
-import { executeMenuAction } from '../util';
-import { actionLabel } from './action-label';
-import { ActionLabel } from './ActionLabel';
-import { DropdownMenu } from './DropdownMenu';
-import { type MenuScopedProps, useMenuItems, useMenuScoped } from './MenuContext';
+import { type MenuAction, type MenuItem, type MenuItemGroup, isMenuGroup, isSeparator } from '../types.ts';
+import { executeMenuAction } from '../util.ts';
+import { actionLabel } from './action-label.ts';
+import { ActionLabel } from './ActionLabel.tsx';
+import { DropdownMenu } from './DropdownMenu.tsx';
+import { type MenuScopedProps, useMenuItems, useMenuScoped } from './MenuContext.ts';
 
 export type ToolbarMenuDropdownMenuActionGroup = DropdownMenuItemGroupProperties;
 

@@ -8,7 +8,7 @@ import React, { useMemo, useState } from 'react';
 import { PublicKey } from '@dxos/keys';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { type PropertiesSchema, PropertiesTable, PropertySchemaFormat } from './PropertiesTable';
+import { type PropertiesSchema, PropertiesTable, PropertySchemaFormat } from './PropertiesTable.tsx';
 
 const DefaultStory = () => {
   const schema = useMemo<PropertiesSchema>(

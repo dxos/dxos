@@ -9,8 +9,8 @@ import { DXN, Text as EchoText, Obj, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Text } from '@dxos/schema';
 
-import * as Branch from './Branch';
-import * as History from './History';
+import * as Branch from './Branch.ts';
+import * as History from './History.ts';
 
 /** Minimal versioned host: a document-like object holding a root Text and a history. */
 const TestDoc = Type.makeObject(DXN.make('org.dxos.test.versioning.Doc', '0.1.0'))(

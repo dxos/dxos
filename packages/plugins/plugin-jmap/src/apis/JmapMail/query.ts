@@ -6,8 +6,8 @@ import { subDays, subMonths, subWeeks, subYears } from 'date-fns';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 
-import { type Filter, type FilterCondition, type FilterOperator } from '../Jmap';
-import { type Mailbox } from './types';
+import { type Filter, type FilterCondition, type FilterOperator } from '../Jmap/index.ts';
+import { type Mailbox } from './types.ts';
 
 /** Context for {@link parseMailQuery}: a clock (for relative dates) and a label/folder resolver. */
 export type ParseContext = {

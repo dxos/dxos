@@ -585,6 +585,9 @@ catalogs:
     '@tldraw/utils':
       specifier: ^3.0.0
       version: 3.0.0
+    '@ts-morph/common':
+      specifier: ~0.17.0
+      version: 0.17.0
     '@types/argparse':
       specifier: ^2.0.0
       version: 2.0.10
@@ -3830,6 +3833,9 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../node-std
+      '@ts-morph/common':
+        specifier: 'catalog:'
+        version: 0.17.0
       argparse:
         specifier: 'catalog:'
         version: 2.0.1
@@ -36017,9 +36023,6 @@ packages:
   fastify@5.8.5:
     resolution: {integrity: sha512-Yqptv59pQzPgQUSIm87hMqHJmdkb1+GPxdE6vW6FRyVE9G86mt7rOghitiU4JHRaTyDUk9pfeKmDeu70lAwM4Q==}
 
-  fastq@1.15.0:
-    resolution: {integrity: sha512-wBrocU2LCXXa+lWBt8RoIRD89Fi8OdABODa/kEnyeyjS5aZO5/GNvI5sEINADqP/h8M29UHTHUb53sUu5Ihqdw==}
-
   fastq@1.20.1:
     resolution: {integrity: sha512-GGToxJ/w1x32s/D2EKND7kTil4n8OVk/9mycTc4VDza13lOvpUZTGX3mFSCtV9ksdGBVzvsyAVLM6mHFThxXxw==}
 
@@ -50027,7 +50030,7 @@ snapshots:
   '@nodelib/fs.walk@1.2.8':
     dependencies:
       '@nodelib/fs.scandir': 2.1.5
-      fastq: 1.15.0
+      fastq: 1.20.1
 
   '@observablehq/plot@0.6.11':
     dependencies:
@@ -58855,10 +58858,6 @@ snapshots:
       secure-json-parse: 4.1.0
       semver: 7.8.5
       toad-cache: 3.7.1
-
-  fastq@1.15.0:
-    dependencies:
-      reusify: 1.0.4
 
   fastq@1.20.1:
     dependencies:

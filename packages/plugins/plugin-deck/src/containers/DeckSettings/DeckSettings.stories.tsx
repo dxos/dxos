@@ -12,7 +12,7 @@ import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 import { Settings } from '#types';
 
-import { DeckSettings } from './DeckSettings';
+import { DeckSettings } from './DeckSettings.tsx';
 
 type StoryArgs = {
   settings: Settings.Settings;

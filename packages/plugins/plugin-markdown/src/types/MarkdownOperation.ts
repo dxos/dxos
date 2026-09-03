@@ -11,7 +11,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-import * as Markdown from './Markdown';
+import * as Markdown from './Markdown.ts';
 
 // The edit descriptions feed the markdown skill's LLM tool definition (and its memoized
 // fixtures), so the schema stays local and context-tuned; the apply logic is shared via `Text.apply`.

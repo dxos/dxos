@@ -15,7 +15,7 @@ import { trim } from '@dxos/util';
 import { applyCommands } from '#model';
 import { Tldraw } from '#types';
 
-import { CanvasComponent } from './Canvas';
+import { CanvasComponent } from './Canvas.tsx';
 
 const FLOWCHART = trim`
   flowchart TB

@@ -19,8 +19,8 @@ import { Text } from '@dxos/schema';
 import { Cell } from '@dxos/storybook-testing';
 import { trim } from '@dxos/util';
 
-import { StoryRole } from '../modules';
-import { ModuleContainer, addToRootCollection, createDecorators, storyParameters } from '../testing';
+import { StoryRole } from '../modules/index.ts';
+import { ModuleContainer, addToRootCollection, createDecorators, storyParameters } from '../testing/index.ts';
 
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Documents',

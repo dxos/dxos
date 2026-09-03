@@ -17,7 +17,7 @@ import { EdgeHttpClient } from '@dxos/edge-client';
 import { SpaceId } from '@dxos/keys';
 import { EdgeCallFailedError } from '@dxos/protocols';
 
-import * as EdgeTriggerManager from './EdgeTriggerManager';
+import * as EdgeTriggerManager from './EdgeTriggerManager.ts';
 
 const SPACE_ID = SpaceId.random();
 

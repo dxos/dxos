@@ -20,7 +20,7 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { meta } from '#meta';
 import { Book } from '#types';
 
-import { getBooksPath } from '../paths';
+import { getBooksPath } from '../paths.ts';
 
 /** The companion segment/variant for the notes editor — shared with its surface binding. */
 export const NOTES_COMPANION_VARIANT = 'notes';

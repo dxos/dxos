@@ -10,7 +10,7 @@ import { Database, Obj, Ref } from '@dxos/echo';
 
 import { TrelloOperation } from '#types';
 
-import { findKanbanForBoard, makeEmptyKanbanForBoard } from './sync';
+import { findKanbanForBoard, makeEmptyKanbanForBoard } from './sync.ts';
 
 /**
  * Eagerly materializes an empty local Kanban for a remote Trello board so an

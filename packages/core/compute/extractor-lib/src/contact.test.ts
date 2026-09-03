@@ -12,9 +12,9 @@ import { EffectEx } from '@dxos/effect';
 import { overlayIdentityIndex } from '@dxos/extractor';
 import { Organization, Person } from '@dxos/types';
 
-import { buildContactFromActor, buildContactGraph, buildOrganizationFromActor } from './contact';
-import { identitySpecs } from './identity';
-import { getIdentityIndex } from './resolver';
+import { buildContactFromActor, buildContactGraph, buildOrganizationFromActor } from './contact.ts';
+import { identitySpecs } from './identity.ts';
+import { getIdentityIndex } from './resolver.ts';
 
 describe('buildContactFromActor', () => {
   let builder: EchoTestBuilder;

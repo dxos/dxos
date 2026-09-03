@@ -4,7 +4,7 @@
 
 import { Message } from '@dxos/types';
 
-import { deriveThreadId } from '../internal/threading';
+import { deriveThreadId } from '../internal/threading.ts';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 

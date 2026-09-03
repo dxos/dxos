@@ -27,8 +27,8 @@ import {
 } from '#components';
 import { InboxCapabilities, InboxOperation, Mailbox, Settings } from '#types';
 
-import { getMailboxAttachmentPath, getMailboxMessagePath } from '../../paths';
-import { dedupeSupersededDrafts, orderThreadItems } from '../../util';
+import { getMailboxAttachmentPath, getMailboxMessagePath } from '../../paths.ts';
+import { dedupeSupersededDrafts, orderThreadItems } from '../../util/index.ts';
 
 /** Used when the inbox Settings capability isn't installed, so the image toggle is still readable. */
 const FALLBACK_SETTINGS_ATOM = Atom.make<Settings.Settings>({ loadRemoteImages: false });

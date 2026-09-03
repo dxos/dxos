@@ -9,7 +9,7 @@ import { describe, expect, test } from 'vitest';
 import { Tag } from '@dxos/echo';
 import { getHashHue } from '@dxos/ui-theme';
 
-import { buildQueryDecorations, query } from './query-extension';
+import { buildQueryDecorations, query } from './query-extension.ts';
 
 const tag = Tag.make({ label: 'important' });
 const tags: Tag.Map = { [tag.id]: tag };

@@ -9,7 +9,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { WATCH_READY_SENTINEL } from './watch-protocol';
+import { WATCH_READY_SENTINEL } from './watch-protocol.ts';
 
 /**
  * Covers both reload strategies against a stub server, because the mechanism under test is the

@@ -6,10 +6,10 @@ import { describe, test } from 'vitest';
 
 import { Position } from '@dxos/util';
 
-import * as Role from '../../../common/Role';
-import { useIsSurfaceAvailable } from './SurfaceComponent';
-import { indexByRole } from './SurfaceManager';
-import { type Filter, create, isFilter, makeFilter } from './types';
+import * as Role from '../../../common/Role.ts';
+import { useIsSurfaceAvailable } from './SurfaceComponent.tsx';
+import { indexByRole } from './SurfaceManager.ts';
+import { type Filter, create, isFilter, makeFilter } from './types.ts';
 
 // Widened to `string` so it reaches the runtime check: `DXN.Path` rejects a malformed literal at the
 // authoring site, and these cases exercise the computed ids it deliberately lets through.

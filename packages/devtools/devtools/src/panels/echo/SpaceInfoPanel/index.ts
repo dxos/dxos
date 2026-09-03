@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { SpaceInfoPanel } from './SpaceInfoPanel';
+import { SpaceInfoPanel } from './SpaceInfoPanel.tsx';
 
-export * from './DatabaseStatsInfo';
-export * from './SyncStateInfo';
+export * from './DatabaseStatsInfo.tsx';
+export * from './SyncStateInfo.tsx';
 
 export default SpaceInfoPanel;

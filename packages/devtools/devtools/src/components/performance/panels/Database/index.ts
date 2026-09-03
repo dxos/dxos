@@ -2,6 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './DatabasePanel';
-export * from './ReplicatorPanel';
-export * from './ReplicatorMessagesPanel';
+export * from './DatabasePanel.tsx';
+export * from './ReplicatorPanel.tsx';
+export * from './ReplicatorMessagesPanel.tsx';

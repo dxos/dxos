@@ -9,7 +9,7 @@ import { createRoot } from 'react-dom/client';
 
 import { log } from '@dxos/log';
 
-import { Options, Root } from './components';
+import { Options, Root } from './components/index.ts';
 
 const OptionsApp = () => {
   return (

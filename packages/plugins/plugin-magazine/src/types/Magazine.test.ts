@@ -13,8 +13,8 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { StateMap, TagIndex, Text } from '@dxos/schema';
 
-import * as Magazine from './Magazine';
-import * as Subscription from './Subscription';
+import * as Magazine from './Magazine.ts';
+import * as Subscription from './Subscription.ts';
 
 EntityId.dangerouslyDisableRandomness();
 

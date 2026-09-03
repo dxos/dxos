@@ -7,7 +7,7 @@ import * as Context from 'effect/Context';
 import { type Event } from '@dxos/async';
 import { type Lifecycle } from '@dxos/context';
 
-import { type SignalMethods, type SignalStatus } from '../signal-methods';
+import { type SignalMethods, type SignalStatus } from '../signal-methods.ts';
 
 /**
  * Manages a collection of signaling clients.

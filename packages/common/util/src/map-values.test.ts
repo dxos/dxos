@@ -4,7 +4,7 @@
 
 import { test } from 'vitest';
 
-import { deepMapValues, deepMapValuesAsync } from './map-values';
+import { deepMapValues, deepMapValuesAsync } from './map-values.ts';
 
 test('deepMapValues', ({ expect }) => {
   const obj = {

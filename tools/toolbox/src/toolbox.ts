@@ -15,8 +15,8 @@ import { dirname, join, relative } from 'path';
 import sortPackageJson from 'sort-package-json';
 import YAML from 'yaml';
 
-import { loadJson, saveJson, sortJson } from './util';
-import { type PackageJson, type Project, ProjectGraph } from './util/project-graph';
+import { loadJson, saveJson, sortJson } from './util/index.ts';
+import { type PackageJson, type Project, ProjectGraph } from './util/project-graph.ts';
 
 const pick = <T extends object>(obj: T, keys: (keyof T)[]): Partial<T> =>
   keys.reduce((result, key) => (key in obj ? { ...result, [key]: obj[key] } : result), {} as Partial<T>);

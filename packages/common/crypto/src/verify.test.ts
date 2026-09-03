@@ -9,8 +9,8 @@ import { describe, expect, test } from 'vitest';
 
 import { PublicKey } from '@dxos/keys';
 
-import { createKeyPair, sign } from './keys';
-import { verifySignature } from './verify';
+import { createKeyPair, sign } from './keys.ts';
+import { verifySignature } from './verify.ts';
 
 describe('verify', () => {
   test('keypair conversion', async () => {

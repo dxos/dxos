@@ -12,8 +12,8 @@ import { assertState } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { type Identity } from '../identity';
-import { DataSpaceManager, DataSpaceManagerService } from '../spaces';
+import { type Identity } from '../identity/index.ts';
+import { DataSpaceManager, DataSpaceManagerService } from '../spaces/index.ts';
 
 /**
  * Replicates cross-device space membership and deletion credentials from the halo space.

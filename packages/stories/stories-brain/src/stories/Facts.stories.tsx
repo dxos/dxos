@@ -14,10 +14,10 @@ import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { useSpaces } from '@dxos/react-client/echo';
 import { ModuleContainer, type ModuleLayout, createStoryDecorators } from '@dxos/storybook-testing';
 
-import { FactsStoryContext } from '../modules';
-import { StoryRole } from '../modules';
-import { CrawlerStoresPlugin } from '../testing';
-import { StoryModulesPlugin } from '../testing/modules';
+import { FactsStoryContext } from '../modules/index.ts';
+import { StoryRole } from '../modules/index.ts';
+import { CrawlerStoresPlugin } from '../testing/index.ts';
+import { StoryModulesPlugin } from '../testing/modules.tsx';
 
 /**
  * The columns of the Facts story, driven through `ModuleContainer`. The crawl/query/questions modules

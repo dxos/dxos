@@ -7,8 +7,8 @@ import { checkoutVersion } from '@dxos/echo-client';
 import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
 
-import { merge3 } from '../diff';
-import * as Versioning from './types';
+import { merge3 } from '../diff.ts';
+import * as Versioning from './types.ts';
 
 /** Any ECHO object that carries a versioning history (e.g. a markdown document). */
 export type VersionedObject = Obj.Unknown & { history?: Versioning.History | undefined };

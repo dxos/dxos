@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './parser';
+export * from './parser/index.ts';
 
 // NOTE: `./sandbox` (QuerySandbox) is intentionally NOT re-exported here. It runtime-imports the
 // vendored QuickJS wasm runtime (`@dxos/vendor-quickjs`), which every barrel consumer would then

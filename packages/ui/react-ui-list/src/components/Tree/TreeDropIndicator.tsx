@@ -5,7 +5,7 @@
 import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import React, { type CSSProperties, type HTMLAttributes } from 'react';
 
-import { DEFAULT_INDENTATION } from './helpers';
+import { DEFAULT_INDENTATION } from './helpers.ts';
 
 // Tree-item instruction indicator. Atlaskit's `react-drop-indicator` ships `box`/`list-item`
 // renderers but no `tree-item` one, so this stays a small Tailwind port (theme-aware via

@@ -9,7 +9,7 @@ import { expect, within } from 'storybook/test';
 import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Combobox } from './Combobox';
+import { Combobox } from './Combobox.tsx';
 
 random.seed(1234);
 

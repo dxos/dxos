@@ -16,7 +16,7 @@ import {
   Translations,
 } from '#capabilities';
 
-import { meta } from './meta';
+import { meta } from './meta.ts';
 
 export const IbkrPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),

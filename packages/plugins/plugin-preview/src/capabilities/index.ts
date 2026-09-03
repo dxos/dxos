@@ -7,16 +7,16 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { translations } from '#translations';
 
-import { PreviewEvents } from '../events';
+import { PreviewEvents } from '../events.ts';
 
 // Browser-only: the module mounts the popover itself, so its body is React all the way down.
 export const PreviewPopover = Capability.lazyModule(
   'PreviewPopover',
   { provides: [], activatesOn: PreviewEvents.Start, environments: [] },
-  () => import('./preview-popover'),
+  () => import('./preview-popover.ts'),
 );
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.cardContent', 'org.dxos.role.article'],
 });
-export const Schema = AppCapability.schema(() => import('./schema'));
+export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const Translations = AppCapability.translations(translations);

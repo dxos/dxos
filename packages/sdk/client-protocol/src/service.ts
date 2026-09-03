@@ -66,7 +66,7 @@ import type {
 } from '@dxos/protocols/rpc';
 import { type ServiceBundle } from '@dxos/rpc';
 
-import { type ClientServicesRpc } from './service-rpc';
+import { type ClientServicesRpc } from './service-rpc.ts';
 
 //
 // NOTE: Should contain client/proxy dependencies only.

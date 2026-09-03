@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Vec3 } from '../engine';
-import { angleBetween, bearingOfTangent, geodesicTangent, slerp } from './geo';
+import { type Vec3 } from '../engine/index.ts';
+import { angleBetween, bearingOfTangent, geodesicTangent, slerp } from './geo.ts';
 
 /** Stable fallback point used only when a definition is missing geo data it needs — never throw. */
 export const FALLBACK_UNIT: Vec3 = [0, 1, 0];

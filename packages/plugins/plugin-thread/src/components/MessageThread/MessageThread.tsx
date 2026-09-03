@@ -14,7 +14,7 @@ import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-
 
 import { meta } from '#meta';
 
-import { getMessageMetadata } from '../../util';
+import { getMessageMetadata } from '../../util.ts';
 
 export type MessageThreadProps = ThemedClassName<{
   /** Stable id used for the underlying thread root and message metadata. */

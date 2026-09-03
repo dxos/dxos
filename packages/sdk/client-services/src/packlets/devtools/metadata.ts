@@ -9,7 +9,7 @@ import { Context } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
 import { type SubscribeToMetadataResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 
-import { type ServiceContext } from '../services';
+import { type ServiceContext } from '../services/index.ts';
 
 export const subscribeToMetadata = ({
   context,

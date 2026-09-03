@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Effectable from 'effect/Effectable';
 import * as Option from 'effect/Option';
 
-import type * as QueryResult from '../../QueryResult';
+import type * as QueryResult from '../../QueryResult.ts';
 
 /**
  * Wraps an effect that produces a {@link QueryResult.QueryResult} into a

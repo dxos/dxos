@@ -14,9 +14,9 @@ import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { findObject } from '../assertions';
-import { judge } from '../judge';
-import { createEvalRunner } from '../runner';
+import { findObject } from '../assertions.ts';
+import { judge } from '../judge.ts';
+import { createEvalRunner } from '../runner.ts';
 
 // Ported from the gated `CRM Mailbox` scenario (../testing/crm-mailbox.test.ts).
 // Grades the DB effect directly instead of the agent's self-reported `completedCriteria`. Existence

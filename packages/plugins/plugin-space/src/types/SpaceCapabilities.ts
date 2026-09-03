@@ -20,8 +20,8 @@ import { type ComplexMap, type Position } from '@dxos/util';
 import { type SpaceDashboard } from '#dashboard';
 import { meta } from '#meta';
 
-import * as Settings from './Settings';
-import * as SpaceSchema from './SpaceSchema';
+import * as Settings from './Settings.ts';
+import * as SpaceSchema from './SpaceSchema.ts';
 
 export const SettingsAtom = Capability.makeSingleton<Atom.Writable<Settings.Settings>>()(
   `${meta.profile.key}.capability.settings`,

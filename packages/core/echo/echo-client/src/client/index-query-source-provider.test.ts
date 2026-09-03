@@ -24,8 +24,8 @@ import {
 } from '@dxos/protocols/proto/dxos/echo/query';
 import { QueryService } from '@dxos/protocols/rpc';
 
-import { type ObjectUpdate } from './index-query-source-provider';
-import { IndexQuerySource } from './index-query-source-provider';
+import { type ObjectUpdate } from './index-query-source-provider.ts';
+import { IndexQuerySource } from './index-query-source-provider.ts';
 
 // Mock graph - only used for queue items which are not tested here.
 const mockGraph = {} as Hypergraph.Hypergraph;

@@ -16,7 +16,7 @@ import { log } from '@dxos/log';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
-import { SVG } from '../components';
+import { SVG } from '../components/index.ts';
 import {
   GraphForceProjector,
   type GraphForceProjectorOptions,
@@ -26,9 +26,9 @@ import {
   createGraphDrag,
   createMarkers,
   linkerRenderer,
-} from '../graph';
-import { useGrid, useSvgContext, useZoom } from '../hooks';
-import { TestGraphModel, type TestNode, convertTreeToGraph, createTree } from '../testing';
+} from '../graph/index.ts';
+import { useGrid, useSvgContext, useZoom } from '../hooks/index.ts';
+import { TestGraphModel, type TestNode, convertTreeToGraph, createTree } from '../testing/index.ts';
 
 type ComponentProps = PropsWithChildren<{
   graph: () => GraphModel.Data<TestNode, GraphEdge.Any>;

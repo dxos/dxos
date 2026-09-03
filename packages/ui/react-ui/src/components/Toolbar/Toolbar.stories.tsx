@@ -5,11 +5,11 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '../../testing';
-import { Toggle } from '../Button';
-import { Icon } from '../Icon';
-import { Select } from '../Select';
-import { Toolbar } from './Toolbar';
+import { withTheme } from '../../testing/index.ts';
+import { Toggle } from '../Button/index.ts';
+import { Icon } from '../Icon/index.ts';
+import { Select } from '../Select/index.ts';
+import { Toolbar } from './Toolbar.tsx';
 
 type StorybookToolbarProps = {};
 

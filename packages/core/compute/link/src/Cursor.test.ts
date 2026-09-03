@@ -11,8 +11,8 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Expando } from '@dxos/schema';
 
-import * as AccessToken from './AccessToken';
-import * as Cursor from './Cursor';
+import * as AccessToken from './AccessToken.ts';
+import * as Cursor from './Cursor.ts';
 
 describe('Cursor.layer', () => {
   let builder: EchoTestBuilder;

@@ -4,5 +4,5 @@
 
 export * from '@dxos/web-context';
 
-export * from './consumer';
-export * from './provider';
+export * from './consumer.ts';
+export * from './provider.tsx';

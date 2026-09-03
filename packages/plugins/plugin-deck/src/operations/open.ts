@@ -26,9 +26,9 @@ import {
   resolveLevelOpen,
   resolveSeededPlanks,
   updatePlankNames,
-} from '../layout';
-import { computeActiveUpdates, openableChildren, openCompanionPlank, resolveDeckSpec } from '../util';
-import { updateActiveDeck } from './helpers';
+} from '../layout.ts';
+import { computeActiveUpdates, openableChildren, openCompanionPlank, resolveDeckSpec } from '../util/index.ts';
+import { updateActiveDeck } from './helpers.ts';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperation.Open.pipe(
   Operation.withHandler(

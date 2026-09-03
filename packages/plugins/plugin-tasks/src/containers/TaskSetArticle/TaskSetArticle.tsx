@@ -19,7 +19,7 @@ import { Task, TaskSet } from '@dxos/types';
 import { meta } from '#meta';
 import { TaskOperation, TasksCapabilities } from '#types';
 
-import { useTaskActions } from '../../hooks';
+import { useTaskActions } from '../../hooks/index.ts';
 
 export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet>;
 

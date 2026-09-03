@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { DXN } from '@dxos/keys';
 
-import * as Operation from '../Operation';
+import * as Operation from '../Operation.ts';
 
 export const Fibonacci = Operation.make({
   meta: {

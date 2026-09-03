@@ -9,9 +9,9 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { FactViewer } from '@dxos/react-ui-rdf';
 import { mx } from '@dxos/ui-theme';
 
-import { EntityList } from '../EntityList';
-import { PredicateList } from '../PredicateList';
-import { entitiesFromFacts, predicatesFromFacts } from '../types';
+import { EntityList } from '../EntityList/index.ts';
+import { PredicateList } from '../PredicateList/index.ts';
+import { entitiesFromFacts, predicatesFromFacts } from '../types.ts';
 
 export type FactPanelProps = ThemedClassName<{
   facts: RDF.Fact[];

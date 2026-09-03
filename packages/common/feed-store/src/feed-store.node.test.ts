@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { random } from '@dxos/random';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 
-import { type TestItem, TestItemBuilder } from './testing';
+import { type TestItem, TestItemBuilder } from './testing/index.ts';
 
 describe('FeedStore', () => {
   test('reopens a feed and reads data from storage', async () => {

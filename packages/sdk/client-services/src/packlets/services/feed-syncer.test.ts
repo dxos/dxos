@@ -23,7 +23,7 @@ import { SqlTransaction } from '@dxos/sql-sqlite';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
 import { bufferToArray } from '@dxos/util';
 
-import { FeedSyncer } from './feed-syncer';
+import { FeedSyncer } from './feed-syncer.ts';
 
 type ProtocolMessage = FeedProtocol.ProtocolMessage;
 

@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { createUrl } from './google-api';
+import { createUrl } from './google-api.ts';
 
 describe('google-api', () => {
   test('createUrl', ({ expect }) => {

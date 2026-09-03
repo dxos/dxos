@@ -19,8 +19,8 @@ import { log } from '@dxos/log';
 import { Message, Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { RunInstructions } from '../operations';
-import { DelegationSkill } from '../skills';
+import { RunInstructions } from '../operations/index.ts';
+import { DelegationSkill } from '../skills/index.ts';
 
 /**
  * Normalizes an LLM-reported artifact reference (bare entity id or full ECHO URI) to a

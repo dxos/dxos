@@ -6,10 +6,10 @@ import { type Obj } from '@dxos/echo';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 
-import { ObjectCore } from '../core-db';
-import { initEchoReactiveObjectRootProxy } from './echo-handler';
-import { getObjectCore, isEchoObject } from './echo-object-utils';
-import { symbolInternals } from './echo-proxy-target';
+import { ObjectCore } from '../core-db/index.ts';
+import { initEchoReactiveObjectRootProxy } from './echo-handler.ts';
+import { getObjectCore, isEchoObject } from './echo-object-utils.ts';
+import { symbolInternals } from './echo-proxy-target.ts';
 
 export type CloneOptions<T extends Obj.Unknown> = {
   /**

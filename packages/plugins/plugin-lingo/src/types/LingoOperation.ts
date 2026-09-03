@@ -11,10 +11,10 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Obj, Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
-import * as Analysis from './Analysis';
-import * as Language from './Language';
-import * as Vocabulary from './Vocabulary';
-import * as Word from './Word';
+import * as Analysis from './Analysis.ts';
+import * as Language from './Language.ts';
+import * as Vocabulary from './Vocabulary.ts';
+import * as Word from './Word.ts';
 
 /** One candidate produced by {@link ExtractVocabulary}, before it is written to a deck. */
 export const Candidate = Schema.Struct({

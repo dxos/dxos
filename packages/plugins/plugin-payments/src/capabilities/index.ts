@@ -8,11 +8,11 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { translations } from '#translations';
 import { PaymentsCapabilities } from '#types';
 
-export const Settings = AppCapability.settings(() => import('./settings'), {
+export const Settings = AppCapability.settings(() => import('./settings.ts'), {
   activatesOn: ActivationEvents.Idle,
   provides: [PaymentsCapabilities.Settings],
 });
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.article'],
 });
 export const Translations = AppCapability.translations(translations);

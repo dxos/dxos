@@ -6,8 +6,8 @@ import { useContext } from 'react';
 
 import { log } from '@dxos/log';
 
-import { ThemeContext, type ThemeContextValue } from '../primitives';
-import { defaultTx } from '../theme';
+import { ThemeContext, type ThemeContextValue } from '../primitives/index.ts';
+import { defaultTx } from '../theme/index.ts';
 
 // Failing soft (rather than throwing) keeps error-reporting surfaces renderable:
 // the fatal dialog itself consumes this hook, and a missing provider — including

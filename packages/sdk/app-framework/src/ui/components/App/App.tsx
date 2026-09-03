@@ -4,10 +4,16 @@
 
 import React, { type PropsWithChildren, Suspense, useEffect, useLayoutEffect, useMemo } from 'react';
 
-import { Capabilities } from '../../../common';
-import { topologicalSort } from '../../../helpers';
-import { LoadingState, type StartupProgress, type UseAppOptions, useCapabilities, useLoading } from '../../hooks';
-import { bootLoader } from './loader';
+import { Capabilities } from '../../../common/index.ts';
+import { topologicalSort } from '../../../helpers.ts';
+import {
+  LoadingState,
+  type StartupProgress,
+  type UseAppOptions,
+  useCapabilities,
+  useLoading,
+} from '../../hooks/index.ts';
+import { bootLoader } from './loader.ts';
 
 const FIRST_INTERACTIVE_MARK = 'app-framework:first-interactive';
 

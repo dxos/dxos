@@ -16,7 +16,7 @@ import React, {
 
 import { useForwardedRef, useIsFocused } from '@dxos/react-hooks';
 
-import { INPUT_NAME, type InputScopedProps, useInputContext } from './InputContext';
+import { INPUT_NAME, type InputScopedProps, useInputContext } from './InputContext.ts';
 
 type PinInputProps = Omit<ComponentPropsWithRef<'input'>, 'type' | 'maxLength'> & {
   /** Class name applied to each segment div. */

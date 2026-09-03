@@ -7,9 +7,9 @@ import { describe, expect, test } from 'vitest';
 import { createKeyPair } from '@dxos/crypto';
 import { random } from '@dxos/random';
 
-import { HypercoreFactory } from './hypercore-factory';
-import { createDataItem } from './testing';
-import { py } from './util';
+import { HypercoreFactory } from './hypercore-factory.ts';
+import { createDataItem } from './testing.ts';
+import { py } from './util.ts';
 
 describe('HypercoreFactory', () => {
   test('appends to, and read from, multiple feeds', async () => {

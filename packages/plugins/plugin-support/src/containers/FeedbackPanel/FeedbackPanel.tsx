@@ -16,10 +16,10 @@ import { Form } from '@dxos/react-ui-form';
 import { FeedbackForm, type FeedbackPluginOption } from '#components';
 import { SupportCapabilities } from '#types';
 
-import { DiscordAction } from './DiscordAction';
-import { DownloadLogsAction } from './DownloadLogsAction';
-import { FeedbackSubmitAction } from './FeedbackSubmitAction';
-import { GitHubAction } from './GitHubAction';
+import { DiscordAction } from './DiscordAction.tsx';
+import { DownloadLogsAction } from './DownloadLogsAction.tsx';
+import { FeedbackSubmitAction } from './FeedbackSubmitAction.tsx';
+import { GitHubAction } from './GitHubAction.tsx';
 
 /** Renders the feedback form, disabling the PostHog/Discord submit paths when the survey is unavailable. */
 export const FeedbackPanel = () => {

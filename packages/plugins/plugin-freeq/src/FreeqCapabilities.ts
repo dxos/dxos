@@ -6,7 +6,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 
 import { meta } from '#meta';
 
-import { type ConnectionManager as ConnectionManagerService } from './services';
+import { type ConnectionManager as ConnectionManagerService } from './services/index.ts';
 
 /** The shared, ref-counted freeq connection manager. */
 export const ConnectionManager = Capability.makeSingleton<ConnectionManagerService>()(

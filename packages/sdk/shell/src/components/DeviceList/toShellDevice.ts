@@ -4,7 +4,7 @@
 
 import { type Device as ClientDevice, Device, DeviceKind, DeviceType } from '@dxos/react-client/halo';
 
-import { type ShellDevice } from './DeviceListProps';
+import { type ShellDevice } from './DeviceListProps.ts';
 
 const KINDS: Record<DeviceType, ShellDevice['kind']> = {
   [DeviceType.UNKNOWN]: 'unknown',

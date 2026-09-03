@@ -10,9 +10,9 @@ import { QueryPlanner } from '@dxos/echo-host/query';
 import { TestSchema } from '@dxos/echo/testing';
 import { DXN } from '@dxos/keys';
 
-import { DatabaseImpl } from '../proxy-db';
-import { EchoTestBuilder } from '../testing';
-import { type WorkingSetDataProvider, WorkingSetQueryExecutor } from './working-set-executor';
+import { DatabaseImpl } from '../proxy-db/index.ts';
+import { EchoTestBuilder } from '../testing/index.ts';
+import { type WorkingSetDataProvider, WorkingSetQueryExecutor } from './working-set-executor.ts';
 
 /** Ref at a nested path — unreachable by `reference`'s top-level key type. */
 class Wrapper extends Type.makeObject<Wrapper>(DXN.make('com.example.type.wrapper', '0.1.0'))(

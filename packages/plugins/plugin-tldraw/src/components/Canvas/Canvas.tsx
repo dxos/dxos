@@ -20,8 +20,8 @@ import { composable, composableProps } from '@dxos/react-ui';
 import { useStoreAdapter } from '#hooks';
 import { Settings } from '#types';
 
-import { handleSnap } from '../actions';
-import { CustomMenu, CustomStylePanel, DefaultToolbarContent, DottedGrid, MeshGrid } from '../custom';
+import { handleSnap } from '../actions.ts';
+import { CustomMenu, CustomStylePanel, DefaultToolbarContent, DottedGrid, MeshGrid } from '../custom/index.ts';
 
 const threadToolId = 'thread';
 

@@ -2,5 +2,5 @@
 // Copyright 2023 DXOS.org
 //
 
-export { NavTreeContainer, NODE_TYPE } from './NavTreeContainer';
-export { NavTreeContainer as default } from './NavTreeContainer';
+export { NavTreeContainer, NODE_TYPE } from './NavTreeContainer.tsx';
+export { NavTreeContainer as default } from './NavTreeContainer.tsx';

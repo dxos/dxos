@@ -12,8 +12,8 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { EID, EntityId } from '@dxos/keys';
 import { Organization } from '@dxos/types';
 
-import { OperationTestLayer } from '../../../testing';
-import { ContextAdd, ContextRemove } from './definitions';
+import { OperationTestLayer } from '../../../testing/index.ts';
+import { ContextAdd, ContextRemove } from './definitions.ts';
 
 EntityId.dangerouslyDisableRandomness();
 

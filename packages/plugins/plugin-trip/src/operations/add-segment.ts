@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 
 import { Segment, Trip, TripOperation } from '#types';
 
-import { type Place } from '../types/Place';
+import { type Place } from '../types/Place.ts';
 
 type DetailsInput = {
   kind: Segment.Kind;

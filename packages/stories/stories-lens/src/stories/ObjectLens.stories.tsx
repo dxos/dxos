@@ -13,9 +13,9 @@ import { useClientStory, withClientProvider, withMultiClientProvider } from '@dx
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Task } from '@dxos/types';
 
-import { CanonicalTaskPanel, LensedGtdPanel, RawInspector } from '../components';
-import { makeDemoTask } from '../gtd';
-import { control, selectOption, selectValue, typeInto } from '../testing';
+import { CanonicalTaskPanel, LensedGtdPanel, RawInspector } from '../components.tsx';
+import { makeDemoTask } from '../gtd.ts';
+import { control, selectOption, selectValue, typeInto } from '../testing.ts';
 
 //
 // One object, viewed through two interfaces.

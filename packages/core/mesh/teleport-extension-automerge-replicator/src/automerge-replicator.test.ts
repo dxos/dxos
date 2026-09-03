@@ -8,7 +8,7 @@ import { Trigger } from '@dxos/async';
 import { type PeerInfo, type SyncMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/automerge';
 import { TestBuilder, type TestConnection, TestPeer } from '@dxos/teleport/testing';
 
-import { AutomergeReplicator, type AutomergeReplicatorCallbacks } from './automerge-replicator';
+import { AutomergeReplicator, type AutomergeReplicatorCallbacks } from './automerge-replicator.ts';
 
 describe('AutomergeReplicator', () => {
   test('Two peers discover each other', async () => {

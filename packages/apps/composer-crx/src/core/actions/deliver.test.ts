@@ -10,9 +10,9 @@ import { describe, test, vi } from 'vitest';
 // stand-in suffices (same pattern as `invoke.test.ts`).
 vi.mock('webextension-polyfill', () => ({ default: {} }));
 
-import { decodeDeliverPayload, deliverPickedSnapshot } from './deliver';
-import { type InvokeBridgeApi } from './invoke';
-import { type Snapshot } from './types';
+import { decodeDeliverPayload, deliverPickedSnapshot } from './deliver.ts';
+import { type InvokeBridgeApi } from './invoke.ts';
+import { type Snapshot } from './types.ts';
 
 const snapshot: Snapshot = {
   source: { url: 'https://example.com/a', title: 'Example', clippedAt: '2026-06-11T00:00:00.000Z' },

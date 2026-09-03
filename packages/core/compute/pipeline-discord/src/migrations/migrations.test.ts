@@ -12,12 +12,15 @@ import { EffectEx } from '@dxos/effect';
 import { SqlMigrations, SqlTransaction } from '@dxos/sql-sqlite';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
 
-import { MIGRATIONS as EXTRACTED_QUESTION, MIGRATIONS_TABLE as EXTRACTED_QUESTION_TABLE } from './extracted-question';
 import extractedQuestionInit from './extracted-question/0001_init.sql?raw';
-import { MIGRATIONS as MESSAGE, MIGRATIONS_TABLE as MESSAGE_TABLE } from './message';
+import {
+  MIGRATIONS as EXTRACTED_QUESTION,
+  MIGRATIONS_TABLE as EXTRACTED_QUESTION_TABLE,
+} from './extracted-question/index.ts';
 import messageInit from './message/0001_init.sql?raw';
-import { MIGRATIONS as QUESTION, MIGRATIONS_TABLE as QUESTION_TABLE } from './question';
+import { MIGRATIONS as MESSAGE, MIGRATIONS_TABLE as MESSAGE_TABLE } from './message/index.ts';
 import questionInit from './question/0001_init.sql?raw';
+import { MIGRATIONS as QUESTION, MIGRATIONS_TABLE as QUESTION_TABLE } from './question/index.ts';
 
 const STORES = [
   { name: 'message', init: messageInit, manifest: MESSAGE, table: MESSAGE_TABLE },

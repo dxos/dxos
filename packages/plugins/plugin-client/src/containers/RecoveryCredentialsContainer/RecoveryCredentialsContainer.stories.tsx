@@ -17,7 +17,7 @@ import { ClientPlugin } from '#plugin';
 import { initializeIdentity } from '#testing';
 import { translations } from '#translations';
 
-import { RecoveryCredentialsContainer } from './RecoveryCredentialsContainer';
+import { RecoveryCredentialsContainer } from './RecoveryCredentialsContainer.tsx';
 
 type SeedCredential = { label: string; kind: IdentityRecovery.Kind; algorithm: string };
 

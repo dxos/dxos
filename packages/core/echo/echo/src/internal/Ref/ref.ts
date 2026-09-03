@@ -20,17 +20,22 @@ import { SchemaAST } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, type URI } from '@dxos/keys';
 
-import * as Database from '../../Database';
-import type * as Type from '../../Type';
+import * as Database from '../../Database.ts';
+import type * as Type from '../../Type.ts';
 import {
   ReferenceAnnotationId,
   getSchemaURI,
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
-} from '../Annotation/annotations';
-import { type AnyEntity, type AnyProperties, type UnknownTypeSchema, getStaticTypeSchema } from '../common/types';
-import { type JsonSchemaType } from '../JsonSchema';
-import * as RefAtoms from './atoms';
+} from '../Annotation/annotations.ts';
+import {
+  type AnyEntity,
+  type AnyProperties,
+  type UnknownTypeSchema,
+  getStaticTypeSchema,
+} from '../common/types/index.ts';
+import { type JsonSchemaType } from '../JsonSchema/index.ts';
+import * as RefAtoms from './atoms.ts';
 
 /**
  * The `$id` and `$ref` fields for an ECHO reference schema.

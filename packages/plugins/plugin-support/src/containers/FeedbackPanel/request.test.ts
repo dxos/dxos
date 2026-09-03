@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { type SupportOperation } from '#types';
 
-import { formatRequestMessage } from './request';
+import { formatRequestMessage } from './request.ts';
 
 const values: SupportOperation.SupportRequest = {
   type: 'bug',

@@ -11,7 +11,7 @@ import { Database, Obj, type Ref } from '@dxos/echo';
 import { Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { AssignTasks } from './definitions';
+import { AssignTasks } from './definitions.ts';
 
 /**
  * Keeps only references that resolve to a task. `Ref.Ref(Task.Task)` decodes on ref shape alone —

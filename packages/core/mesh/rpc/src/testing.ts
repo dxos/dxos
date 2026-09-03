@@ -4,7 +4,7 @@
 
 import { isNode } from '@dxos/util';
 
-import { type RpcPort } from './rpc';
+import { type RpcPort } from './rpc.ts';
 
 export type CreateLinkedPortsOptions = {
   delay?: number;

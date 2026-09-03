@@ -9,7 +9,7 @@ import { readFile } from 'node:fs/promises';
 import { join, relative, sep } from 'node:path';
 import { promisify } from 'node:util';
 
-import type { PackageDetail } from '../types';
+import type { PackageDetail } from '../types.ts';
 
 // stderr-only — stdout is reserved for the MCP JSON-RPC stream.
 const warn = (msg: string, err?: unknown): void => {

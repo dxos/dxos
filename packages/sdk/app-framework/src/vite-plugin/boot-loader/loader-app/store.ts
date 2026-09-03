@@ -4,7 +4,7 @@
 
 import { type Accessor, createSignal } from 'solid-js';
 
-import { type StatusPayload } from './types';
+import { type StatusPayload } from './types.ts';
 
 //
 // Creep tuning. The ring auto-creeps toward a moving ceiling so a long

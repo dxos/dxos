@@ -11,9 +11,9 @@ import { mx } from '@dxos/ui-theme';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { useFormContext } from '../../../hooks';
-import { type FormVariant, formTheme } from '../Form.theme';
-import { type FormFieldPresentation, presentationFor } from './presentation';
+import { useFormContext } from '../../../hooks/index.ts';
+import { type FormVariant, formTheme } from '../Form.theme.ts';
+import { type FormFieldPresentation, presentationFor } from './presentation.tsx';
 
 //
 // FormFieldLabel

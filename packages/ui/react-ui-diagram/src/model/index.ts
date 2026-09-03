@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './layout';
+export * from './layout.ts';

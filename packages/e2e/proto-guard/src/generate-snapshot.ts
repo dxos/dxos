@@ -10,9 +10,9 @@ import { TestSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
 import { SpacesService } from '@dxos/protocols/rpc';
 
-import { SpacesDumper } from './space-json-dump';
-import { Todo } from './types';
-import { createConfig } from './util';
+import { SpacesDumper } from './space-json-dump.ts';
+import { Todo } from './types.ts';
+import { createConfig } from './util.ts';
 
 export const generateSnapshot = async (snapshotDir: string, dumpPath: string) => {
   const config = createConfig({ dataRoot: snapshotDir });

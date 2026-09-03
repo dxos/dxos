@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { EditorSelectionStateSchema } from './selection';
+import { EditorSelectionStateSchema } from './selection.ts';
 
 describe('EditorSelectionStateSchema', () => {
   test('encode/decode preserves the legacy serialized shape', ({ expect }) => {

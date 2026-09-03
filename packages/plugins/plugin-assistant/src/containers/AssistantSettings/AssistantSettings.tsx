@@ -15,8 +15,8 @@ import { Form, type FormFieldMap, createSelectField } from '@dxos/react-ui-form'
 import { meta } from '#meta';
 import { Assistant, AssistantCapabilities, Ollama } from '#types';
 
-import { presetsForProvider, resolveProvider } from '../../processor';
-import { OllamaModels } from './OllamaModels';
+import { presetsForProvider, resolveProvider } from '../../processor/index.ts';
+import { OllamaModels } from './OllamaModels.tsx';
 
 export type AssistantSettingsProps = AppSurface.SettingsProps<Assistant.Settings>;
 

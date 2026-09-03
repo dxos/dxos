@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Annotation, Collection, Database, Obj, Ref } from '@dxos/echo';
 
-import * as AppAnnotation from '../echo/AppAnnotation';
+import * as AppAnnotation from '../echo/AppAnnotation.ts';
 
 /**
  * Seeds a root collection and `SpaceProperties` with the `RootCollectionAnnotation` before running
@@ -33,4 +33,4 @@ export const WithProperties = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.
     effect,
   );
 
-export * from './SampleSpaceBuilder';
+export * from './SampleSpaceBuilder.ts';

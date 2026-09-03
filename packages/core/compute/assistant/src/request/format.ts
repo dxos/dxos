@@ -17,9 +17,9 @@ import { log } from '@dxos/log';
 import { type ContentBlock, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { AiAssistantError } from '../util';
-import type * as AiRequest from './AiRequest';
-import { ArtifactDiffResolver } from './artifact-diff';
+import { AiAssistantError } from '../util/index.ts';
+import type * as AiRequest from './AiRequest.ts';
+import { ArtifactDiffResolver } from './artifact-diff.ts';
 
 /**
  * Formats the system prompt.

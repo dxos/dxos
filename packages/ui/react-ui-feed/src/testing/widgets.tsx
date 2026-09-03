@@ -9,7 +9,7 @@ import { TogglePanel } from '@dxos/react-ui-components';
 import { type XmlWidgetProps, type XmlWidgetRegistry, getXmlTextChild } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
-import { useWidgetState } from '../components';
+import { useWidgetState } from '../components/index.ts';
 
 /**
  * Widgets for the block kinds an assistant turn contains.

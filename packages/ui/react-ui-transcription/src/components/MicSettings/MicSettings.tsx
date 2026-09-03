@@ -6,8 +6,8 @@ import React from 'react';
 
 import { MenuButton, type MenuButtonItem, useTranslation } from '@dxos/react-ui';
 
-import { type AudioInputDevice } from '../../capture';
-import { translationKey } from '../../translations';
+import { type AudioInputDevice } from '../../capture/index.ts';
+import { translationKey } from '../../translations.ts';
 
 /** Recording trigger mode: toggle on/off, or hold-to-record (push-to-talk). */
 export type RecordMode = 'toggle' | 'hold';

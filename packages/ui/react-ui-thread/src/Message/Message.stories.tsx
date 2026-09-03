@@ -12,9 +12,9 @@ import { Message as MessageType } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { createMessages, getStoryMetadata } from '../testing';
-import { Thread } from '../Thread';
-import { Message } from './Message';
+import { createMessages, getStoryMetadata } from '../testing.ts';
+import { Thread } from '../Thread/index.ts';
+import { Message } from './Message.tsx';
 
 type StoryArgs = { editable: boolean };
 

@@ -14,10 +14,10 @@ import { Obj } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { type LogConfig, type LogEntry, LogLevel, log } from '@dxos/log';
 
-import { ActivationEvents, Capabilities } from '../common';
-import { ActivationEvent, Capability, Plugin, PluginManager } from '../core';
-import { makeDynamicTraceSink } from './process-manager-capability';
-import { ProcessManagerPlugin } from './ProcessManagerPlugin';
+import { ActivationEvents, Capabilities } from '../common/index.ts';
+import { ActivationEvent, Capability, Plugin, PluginManager } from '../core/index.ts';
+import { makeDynamicTraceSink } from './process-manager-capability.ts';
+import { ProcessManagerPlugin } from './ProcessManagerPlugin.ts';
 
 const LateEvent = ActivationEvent.make('org.dxos.test.lateLayerSpec');
 

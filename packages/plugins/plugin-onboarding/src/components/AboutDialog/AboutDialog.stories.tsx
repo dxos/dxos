@@ -12,8 +12,8 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { Dialog } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../../translations';
-import { AboutDialog } from './AboutDialog';
+import { translations } from '../../translations.ts';
+import { AboutDialog } from './AboutDialog.tsx';
 
 type ConfigInput = {
   build?: { version?: string; timestamp?: string; commitHash?: string };

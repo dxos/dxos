@@ -10,7 +10,7 @@ import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import { usePluginManager } from '@dxos/app-framework/ui';
 import { composable } from '@dxos/react-ui';
 
-import { BaseRegistryArticle } from '../BaseRegistryArticle';
+import { BaseRegistryArticle } from '../BaseRegistryArticle/index.ts';
 
 const sortByPluginMeta = (a: Plugin.Plugin, b: Plugin.Plugin) =>
   (a.meta.profile.name ?? a.meta.profile.key).localeCompare(b.meta.profile.name ?? b.meta.profile.key);

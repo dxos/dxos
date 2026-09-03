@@ -28,9 +28,9 @@ import type * as Trace from '@dxos/compute/Trace';
 import { Performance, SpanAttributes } from '@dxos/effect';
 import { log } from '@dxos/log';
 
-import type { PersistedEvent, PersistedEventInput } from './process-store';
-import type * as ProcessManager from './ProcessManager';
-import { EphemeralTraceBuffer } from './trace-buffer';
+import type { PersistedEvent, PersistedEventInput } from './process-store.ts';
+import type * as ProcessManager from './ProcessManager.ts';
+import { EphemeralTraceBuffer } from './trace-buffer.ts';
 
 /**
  * Output queue uses Option to signal completion: Some(value) for data, None for end-of-stream.

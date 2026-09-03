@@ -4,7 +4,7 @@
 
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
-import { INPUT_NAME, type InputScopedProps, useInputContext } from './InputContext';
+import { INPUT_NAME, type InputScopedProps, useInputContext } from './InputContext.ts';
 
 type TextAreaProps = Omit<ComponentPropsWithRef<'textarea'>, 'id'>;
 

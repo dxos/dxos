@@ -9,8 +9,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { VideoObject as VideoObjectComponent } from '../Media';
-import { ResponsivePanel } from './ResponsivePanel';
+import { VideoObject as VideoObjectComponent } from '../Media/index.ts';
+import { ResponsivePanel } from './ResponsivePanel.tsx';
 
 const meta = {
   title: 'plugins/plugin-calls/components/ResponsivePanel',

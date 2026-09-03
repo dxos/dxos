@@ -11,7 +11,7 @@ import * as ObservabilityOperation from '@dxos/plugin-observability/Observabilit
 
 import { Account } from '#types';
 
-import { ShareIdentity } from './definitions';
+import { ShareIdentity } from './definitions.ts';
 
 const handler: Operation.WithHandler<typeof ShareIdentity> = ShareIdentity.pipe(
   Operation.withHandler(

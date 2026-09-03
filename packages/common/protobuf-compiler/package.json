@@ -27,6 +27,7 @@
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/node-std": "workspace:*",
+    "@ts-morph/common": "catalog:",
     "argparse": "catalog:",
     "chalk": "catalog:",
     "glob": "catalog:",

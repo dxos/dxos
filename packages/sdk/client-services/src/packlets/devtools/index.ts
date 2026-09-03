@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './devtools';
-export * from './feeds';
-export * from './network';
-export * from './spaces';
+export * from './devtools.ts';
+export * from './feeds.ts';
+export * from './network.ts';
+export * from './spaces.ts';

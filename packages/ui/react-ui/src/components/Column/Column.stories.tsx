@@ -5,9 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Input, ScrollArea } from '../../components';
-import { withLayout, withTheme } from '../../testing';
-import { Column } from './Column';
+import { Input, ScrollArea } from '../../components/index.ts';
+import { withLayout, withTheme } from '../../testing/index.ts';
+import { Column } from './Column.tsx';
 
 const List = () => {
   return (

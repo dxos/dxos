@@ -8,7 +8,7 @@ import { Filter, Order, Query } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-import { QuerySandbox } from './query-sandbox';
+import { QuerySandbox } from './query-sandbox.ts';
 
 describe('QuerySandbox', () => {
   const sandbox = new QuerySandbox();

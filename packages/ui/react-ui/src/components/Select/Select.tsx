@@ -5,10 +5,10 @@
 import * as SelectPrimitive from '@radix-ui/react-select';
 import React, { forwardRef } from 'react';
 
-import { useElevationContext, useSafeCollisionPadding, useThemeContext } from '../../hooks';
-import { type ThemedClassName } from '../../util';
-import { Button, type ButtonProps } from '../Button';
-import { Icon } from '../Icon';
+import { useElevationContext, useSafeCollisionPadding, useThemeContext } from '../../hooks/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
+import { Button, type ButtonProps } from '../Button/index.ts';
+import { Icon } from '../Icon/index.ts';
 
 type SelectRootProps = SelectPrimitive.SelectProps;
 

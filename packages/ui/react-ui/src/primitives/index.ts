@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './DensityProvider';
-export * from './ElevationProvider';
-export * from './ThemeProvider';
+export * from './DensityProvider/index.ts';
+export * from './ElevationProvider/index.ts';
+export * from './ThemeProvider/index.ts';
 
-export * from './Container';
-export * from './Flex';
-export * from './Grid';
-export * from './layout';
+export * from './Container/index.ts';
+export * from './Flex/index.ts';
+export * from './Grid/index.ts';
+export * from './layout.ts';

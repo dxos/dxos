@@ -8,8 +8,8 @@ import React from 'react';
 import { Invitation } from '@dxos/react-client/invitations';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { inviteWithState } from '../../testing/fixtures';
-import { InvitationList } from './InvitationList';
+import { inviteWithState } from '../../testing/fixtures/index.ts';
+import { InvitationList } from './InvitationList.tsx';
 
 const meta = {
   title: 'sdk/shell/InvitationList',

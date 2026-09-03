@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: esm-imports-migration
+    status: active
+    user: dmytro
+    host: cloud-sandbox
+    created: 2026-09-01
+    summary: 'Repo-wide codemod converting relative TS/TSX imports/exports/dynamic-imports to explicit filesystem-accurate extensions (./foo.ts, ./dir/index.tsx), matching tsconfig.base.json rewriteRelativeImportExtensions.'
+    tasks: .agents/projects/esm-imports-migration/TASKS.md
+    design: .agents/projects/esm-imports-migration/DESIGN.md
+    prs: [12893]
+    resume: "scripts/migrate-esm-imports.ts rewrote 7118 files repo-wide, idempotent, 0 unresolved. PR #12893 open; user said 'keep spinning until ci passes', then 'make green'. Fixed FIVE real regressions the migration exposed: (1) protobuf-compiler substitutions-parser.ts (ts-morph vendored TS rejects .ts-extensioned imports). (2) .config/knip.ts (traversal misses extensioned dynamic import()). (3) composer-app vite.config.ts (DX_PLUGIN_SET alias matched only the bare specifier). (4) THREE oxlint rules (dxos-subpath-exports, import-as-namespace, dxos-package-imports) had a resolveModule() that always appended an extension, breaking already-extensioned specifiers -- fixed with an early-return. (5) A FOURTH instance of the exact same bug, in packages/sdk/app-framework/src/plugin-cli/ts-util.ts resolveRelativeModule(), used by dx-plugin gen: an already-extensioned barrel re-export (export * from './x/index.ts', exactly what this migration produces) silently dropped that capability from every generated per-env barrel. plugin-space NavigationHandler and plugin-connector Coordinator both hit it (also plugin-client, plugin-file-system) -- either alone crashes the CLI plugin manager at startup for EVERY command. THIS was the real, deterministic cause of Check/test shard=1 staying red on every commit (two earlier flaky-test theories, echo-host and a client-e2e spaces.test.ts race, were both dead ends -- documented and abandoned in PR comments). Verified: cli:test 23 failing -> 0; full-repo :build/:lint/:check-module-structure/:test-types clean. Merged main TWICE (moved ~20 commits during this PR) -- each merge took theirs on every conflict (real upstream logic vs. this branch's extension-only edits) then re-ran the codemod; also dropped this session's own plugin-assistant queue-while-processing implementation in favor of the superset landed by main's agent-feed-messages project (same UX, feed-backed, tested -- see that entry). Check/check and Model Fixture are green. NEXT: watch PR #12893 for shard=1 on this push (main may still move again) and for review."
   - name: sample-spaces
     status: active
     user: burdon

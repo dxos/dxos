@@ -9,8 +9,8 @@ import { describe, expect, test } from 'vitest';
 import { type Codec } from '@dxos/codec-protobuf';
 import { createKeyPair } from '@dxos/crypto';
 
-import { createCodecEncoding } from './crypto';
-import { HypercoreFactory } from './hypercore-factory';
+import { createCodecEncoding } from './crypto.ts';
+import { HypercoreFactory } from './hypercore-factory.ts';
 
 type TestItem = {
   key: string;

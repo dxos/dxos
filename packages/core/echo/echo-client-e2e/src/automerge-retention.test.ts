@@ -9,7 +9,7 @@ import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 
-import { type Checkpoint, aliveCount, capture, makePayload, report } from './testing/retention';
+import { type Checkpoint, aliveCount, capture, makePayload, report } from './testing/retention.ts';
 
 /**
  * The automerge-backed counterpart to `feed-retention.test.ts`: does a space release its objects

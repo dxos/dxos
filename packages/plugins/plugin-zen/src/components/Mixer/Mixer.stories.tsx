@@ -13,7 +13,7 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useMixerEngine } from '#hooks';
 import { Dream, Sequence } from '#types';
 
-import { Mixer } from './Mixer';
+import { Mixer } from './Mixer.tsx';
 
 const DefaultStory = () => {
   const { engine, playing, outputNode } = useMixerEngine();

@@ -11,7 +11,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { EffectEx } from '@dxos/effect';
 import { LogLevel, log } from '@dxos/log';
 
-import { LoggingServiceImpl } from './logging-service';
+import { LoggingServiceImpl } from './logging-service.ts';
 
 describe('LoggingService', () => {
   let loggingService: LoggingServiceImpl;

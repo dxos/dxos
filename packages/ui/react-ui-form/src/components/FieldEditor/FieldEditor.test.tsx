@@ -8,9 +8,9 @@ import { afterEach, describe, expect, test } from 'vitest';
 
 import { ProjectionModel } from '@dxos/schema';
 
-import { FIELD_EDITOR_DEBUG_SYMBOL } from '../../testing';
-import * as stories from './FieldEditor.stories';
-import { type FieldEditorDebugObjects } from './FieldEditor.stories';
+import { FIELD_EDITOR_DEBUG_SYMBOL } from '../../testing/index.ts';
+import * as stories from './FieldEditor.stories.tsx';
+import { type FieldEditorDebugObjects } from './FieldEditor.stories.tsx';
 
 const { Default } = composeStories(stories);
 

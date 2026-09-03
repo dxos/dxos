@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 
 import { Blog } from '#types';
 
-import { AddPublication } from './definitions';
+import { AddPublication } from './definitions.ts';
 
 const handler: Operation.WithHandler<typeof AddPublication> = AddPublication.pipe(
   Operation.withHandler(

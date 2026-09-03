@@ -6,7 +6,7 @@ import { useCallback } from 'react';
 
 import { trim } from '@dxos/util';
 
-import { type AiChatProcessor } from '../processor';
+import { type AiChatProcessor } from '../processor/index.ts';
 
 /**
  * Returns an async callback that logs the chat's current context, system prompt,

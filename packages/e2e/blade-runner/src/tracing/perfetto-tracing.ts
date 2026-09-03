@@ -7,7 +7,7 @@ import fs from 'node:fs';
 import { log } from '@dxos/log';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 
-import { PerfettoEvents } from './perfetto-events';
+import { PerfettoEvents } from './perfetto-events.ts';
 
 export const PERFETTO_EVENTS = new PerfettoEvents();
 

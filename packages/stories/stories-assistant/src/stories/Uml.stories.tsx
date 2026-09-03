@@ -14,8 +14,14 @@ import { type Space } from '@dxos/react-client/echo';
 import { Cell } from '@dxos/storybook-testing';
 import { trim } from '@dxos/util';
 
-import { StoryRole } from '../modules';
-import { ModuleContainer, addToRootCollection, createDecorators, storyParameters, submitPrompt } from '../testing';
+import { StoryRole } from '../modules/index.ts';
+import {
+  ModuleContainer,
+  addToRootCollection,
+  createDecorators,
+  storyParameters,
+  submitPrompt,
+} from '../testing/index.ts';
 
 type StoryArgs = {
   /** Name of the seeded document. */

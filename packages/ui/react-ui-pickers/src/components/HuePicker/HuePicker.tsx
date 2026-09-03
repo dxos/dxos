@@ -8,7 +8,7 @@ import { type ButtonProps, type IconProps, type ThemedClassName, useTranslation 
 import { getSize, osTranslations } from '@dxos/ui-theme';
 import { hues } from '@dxos/ui-types';
 
-import { PickerButton, type PickerButtonProps } from '../PickerButton';
+import { PickerButton, type PickerButtonProps } from '../PickerButton/index.ts';
 
 export type HuePickerProps = {
   disabled?: boolean;

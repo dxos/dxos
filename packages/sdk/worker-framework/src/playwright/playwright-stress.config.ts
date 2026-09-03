@@ -7,7 +7,7 @@ import { resolve } from 'node:path';
 
 import { e2ePreset } from '@dxos/test-utils/playwright';
 
-import { HARNESS_PORT } from './stress-harness-server';
+import { HARNESS_PORT } from './stress-harness-server.ts';
 
 const preset = e2ePreset(import.meta.dirname);
 

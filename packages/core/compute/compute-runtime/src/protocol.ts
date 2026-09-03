@@ -24,13 +24,13 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { EdgeFunctionEnv, ErrorCodec, type FunctionProtocol, type TraceProtocol } from '@dxos/protocols';
 
-import { FunctionsAiHttpClient } from './functions-ai-http-client';
+import { FunctionsAiHttpClient } from './functions-ai-http-client.ts';
 import {
   accessTokenResolverFromService,
   configuredCredentialsLayer,
   createS3Host,
   credentialsLayerFromDatabase,
-} from './services';
+} from './services/index.ts';
 
 /**
  * Services provided to invoked function handlers in the EDGE runtime.

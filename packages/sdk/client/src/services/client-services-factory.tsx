@@ -8,8 +8,8 @@ import { raise } from '@dxos/debug';
 import { Runtime_Client_ServicesMode } from '@dxos/protocols/buf/dxos/config_pb';
 import * as Coordinator from '@dxos/worker-framework/Coordinator';
 
-import { DedicatedWorkerClientServices, type DedicatedWorkerClientServicesOptions } from './dedicated';
-import { type LocalClientServicesParams } from './local-client-services';
+import { DedicatedWorkerClientServices, type DedicatedWorkerClientServicesOptions } from './dedicated/index.ts';
+import { type LocalClientServicesParams } from './local-client-services.ts';
 
 export type CreateClientServicesOptions = {
   /** Factory for creating a dedicated worker. Required for {@link Runtime_Client_ServicesMode.DEDICATED_WORKER}. */
@@ -65,7 +65,7 @@ export const createClientServices = async (
       const effectiveSqlitePath = sqlitePath ?? (dataRoot ? `${dataRoot}/sqlite.db` : undefined);
       // Loaded on demand: the in-process host drags the full service/storage stack (sqlite,
       // echo-host), which must stay out of the static graph of worker-mode apps.
-      const { fromHost } = await import('./local-client-services');
+      const { fromHost } = await import('./local-client-services.ts');
       return fromHost(config, { createOpfsWorker, sqlitePath: effectiveSqlitePath });
     }
 

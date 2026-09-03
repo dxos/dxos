@@ -13,7 +13,7 @@ import {
   type ProcessEnvironment,
   environmentIcon,
   toggleProcessEnvironment,
-} from './trace-filter';
+} from './trace-filter.ts';
 
 export type TraceToolbarProps = {
   /** Process environments currently shown. */

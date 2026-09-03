@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { StackTrace } from './stack-trace';
+import { StackTrace } from './stack-trace.ts';
 
 describe('StackTrace', () => {
   test('skips the Error line and the capture frame', ({ expect }) => {

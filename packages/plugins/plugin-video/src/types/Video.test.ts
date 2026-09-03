@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { Obj } from '@dxos/echo';
 
-import * as Video from './Video';
+import * as Video from './Video.ts';
 
 describe('Video', () => {
   test('make sets name and url, leaving transcript unset', ({ expect }) => {

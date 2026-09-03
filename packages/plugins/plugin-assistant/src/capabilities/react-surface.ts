@@ -36,7 +36,7 @@ import {
   SpaceHomeSuggestionsSurface,
   TracePanelSurface,
   TriggerStatusSurface,
-} from './AssistantSurfaces';
+} from './AssistantSurfaces.tsx';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

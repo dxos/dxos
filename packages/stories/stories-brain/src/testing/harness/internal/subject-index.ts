@@ -10,7 +10,7 @@ import { messageSource } from '@dxos/pipeline-email';
 import { type RDF } from '@dxos/pipeline-rdf';
 import { Message } from '@dxos/types';
 
-import { slugify } from './fact-store';
+import { slugify } from './fact-store.ts';
 
 export type SubjectMessage = {
   readonly source: string;

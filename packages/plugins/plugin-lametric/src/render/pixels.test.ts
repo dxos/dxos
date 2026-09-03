@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { HEIGHT, VISIBLE_CHARACTERS, WIDTH, overflows, textWidth, toPixels } from './pixels';
+import { HEIGHT, VISIBLE_CHARACTERS, WIDTH, overflows, textWidth, toPixels } from './pixels.ts';
 
 const lit = (pixels: boolean[][]) => pixels.flat().filter(Boolean).length;
 

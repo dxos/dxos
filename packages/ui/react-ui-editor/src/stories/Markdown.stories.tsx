@@ -9,7 +9,7 @@ import React from 'react';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { decorateMarkdown, image, join, linkTooltip, table } from '@dxos/ui-editor';
 
-import { EditorStory, content, defaultExtensions, headings, renderLinkTooltip, text } from './components';
+import { EditorStory, content, defaultExtensions, headings, renderLinkTooltip, text } from './components/index.ts';
 
 const meta = {
   title: 'ui/react-ui-editor/Markdown',

@@ -10,7 +10,7 @@ import * as HttpClient from 'effect/unstable/http/HttpClient';
 import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 
-import { applyCorsProxy } from './cors';
+import { applyCorsProxy } from './cors.ts';
 
 export class BookHiveFetchError extends Data.TaggedError('BookHiveFetchError')<{
   message: string;

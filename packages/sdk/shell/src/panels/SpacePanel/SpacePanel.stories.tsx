@@ -10,13 +10,13 @@ import { HaloSpaceMember, SpaceMember } from '@dxos/react-client/echo';
 import { Invitation } from '@dxos/react-client/invitations';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { InvitationList, InvitationListItemImpl, SpaceMemberListImpl } from '../../components';
-import { InvitationManager, type InvitationManagerProps } from '../../steps';
-import { StorybookDialog } from '../../story-components';
-import { inviteWithState } from '../../testing/fixtures';
-import { SpaceManagerImpl } from './SpaceManager';
-import { SpacePanelImpl } from './SpacePanel';
-import { type SpacePanelImplProps } from './SpacePanelProps';
+import { InvitationList, InvitationListItemImpl, SpaceMemberListImpl } from '../../components/index.ts';
+import { InvitationManager, type InvitationManagerProps } from '../../steps/index.ts';
+import { StorybookDialog } from '../../story-components/index.ts';
+import { inviteWithState } from '../../testing/fixtures/index.ts';
+import { SpaceManagerImpl } from './SpaceManager.tsx';
+import { SpacePanelImpl } from './SpacePanel.tsx';
+import { type SpacePanelImplProps } from './SpacePanelProps.ts';
 
 const noopProps: SpacePanelImplProps = {
   titleId: 'storybookSpacePanel__title',

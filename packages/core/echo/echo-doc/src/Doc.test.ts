@@ -9,8 +9,8 @@ import { Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 
-import * as Doc from './Doc';
-import { applyEdits } from './edits';
+import * as Doc from './Doc.ts';
+import { applyEdits } from './edits.ts';
 
 // `Doc.createAccessor` resolves an accessor for either backend: a database-attached object (its core
 // is the space document) or an in-memory `Obj.make` object (a local core is materialized on demand).

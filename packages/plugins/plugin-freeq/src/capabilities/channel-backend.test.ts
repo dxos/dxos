@@ -9,9 +9,9 @@ import { describe, test } from 'vitest';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 
-import { type IncomingMessage } from '../services';
-import { makeFreeqChannel } from '../types';
-import { makeFreeqChannelBackend, toMessage } from './channel-backend';
+import { type IncomingMessage } from '../services/index.ts';
+import { makeFreeqChannel } from '../types.ts';
+import { makeFreeqChannelBackend, toMessage } from './channel-backend.ts';
 
 describe('freeq channel backend', () => {
   test('toMessage maps an incoming IRC message to a chat message', ({ expect }) => {

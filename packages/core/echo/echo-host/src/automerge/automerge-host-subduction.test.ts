@@ -21,9 +21,9 @@ import { PublicKey } from '@dxos/keys';
 import { TestBuilder as TeleportBuilder, TestPeer as TeleportPeer } from '@dxos/teleport/testing';
 import { range } from '@dxos/util';
 
-import { TestReplicationNetwork, createTestSqliteRuntime } from '../testing';
-import { AutomergeHost } from './automerge-host';
-import { MeshEchoReplicator } from './mesh-echo-replicator';
+import { TestReplicationNetwork, createTestSqliteRuntime } from '../testing/index.ts';
+import { AutomergeHost } from './automerge-host.ts';
+import { MeshEchoReplicator } from './mesh-echo-replicator.ts';
 
 // TODO(mykola): subduction wasm/network tests are flaky on CI runners
 // (limited concurrency, signal-server timing). Re-enable once the suite

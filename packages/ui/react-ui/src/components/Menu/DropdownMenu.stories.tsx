@@ -5,9 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useRef, useState } from 'react';
 
-import { withTheme } from '../../testing';
-import { Button } from '../Button';
-import { DropdownMenu } from './DropdownMenu';
+import { withTheme } from '../../testing/index.ts';
+import { Button } from '../Button/index.ts';
+import { DropdownMenu } from './DropdownMenu.tsx';
 
 const DefaultStory = () => {
   return (

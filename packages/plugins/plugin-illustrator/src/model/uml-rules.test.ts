@@ -6,10 +6,10 @@ import { describe, test } from 'vitest';
 
 import { trim } from '@dxos/util';
 
-import type * as Scene from './scene';
-import { parse } from './uml';
-import { measureCell } from './uml-grid';
-import { compile, inheritanceTreeRule, linearChainRule } from './uml-rules';
+import type * as Scene from './scene.ts';
+import { measureCell } from './uml-grid.ts';
+import { compile, inheritanceTreeRule, linearChainRule } from './uml-rules.ts';
+import { parse } from './uml.ts';
 
 const SOURCE = trim`
   classDiagram

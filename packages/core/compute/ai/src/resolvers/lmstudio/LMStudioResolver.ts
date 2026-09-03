@@ -12,11 +12,11 @@ import type * as HttpClient from 'effect/unstable/http/HttpClient';
 
 import { DXN } from '@dxos/keys';
 
-import * as AiModelResolver from '../../AiModelResolver';
-import { type AiModelNotAvailableError } from '../../errors';
-import * as Model from '../../Model';
-import * as Provider from '../../Provider';
-import * as ChatCompletionsAdapter from '../ChatCompletionsAdapter';
+import * as AiModelResolver from '../../AiModelResolver.ts';
+import { type AiModelNotAvailableError } from '../../errors.ts';
+import * as Model from '../../Model.ts';
+import * as Provider from '../../Provider.ts';
+import * as ChatCompletionsAdapter from '../ChatCompletionsAdapter.ts';
 
 /**
  * LM Studio resolver using the OpenAI-compatible Chat Completions API.

@@ -9,8 +9,8 @@ import { log } from '@dxos/log';
 import { type Chain, type Credential, type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { ComplexMap } from '@dxos/util';
 
-import { getCredentialAssertion, isValidAuthorizedDeviceCredential } from '../credentials';
-import { type CredentialProcessor } from './credential-processor';
+import { getCredentialAssertion, isValidAuthorizedDeviceCredential } from '../credentials/index.ts';
+import { type CredentialProcessor } from './credential-processor.ts';
 
 export type DeviceStateMachineProps = {
   identityKey: PublicKey;

@@ -9,15 +9,15 @@ import type * as Schema from 'effect/Schema';
 import { SchemaAST } from '@dxos/effect';
 import { DXN, type URI } from '@dxos/keys';
 
-import type * as Entity from './Entity';
-import type * as internal from './internal';
-import { ReferenceAnnotationId } from './internal/Annotation';
-import * as refInternal from './internal/Ref';
-import type * as JsonSchema from './JsonSchema';
-import type * as Obj from './Obj';
-import type * as Relation from './Relation';
+import type * as Entity from './Entity.ts';
+import { ReferenceAnnotationId } from './internal/Annotation/index.ts';
+import type * as internal from './internal/index.ts';
+import * as refInternal from './internal/Ref/index.ts';
+import type * as JsonSchema from './JsonSchema.ts';
+import type * as Obj from './Obj.ts';
+import type * as Relation from './Relation.ts';
 // eslint-disable-next-line @dxos/rules/import-as-namespace
-import type * as Type$ from './Type';
+import type * as Type$ from './Type.ts';
 
 /**
  * Instance type for a reference.

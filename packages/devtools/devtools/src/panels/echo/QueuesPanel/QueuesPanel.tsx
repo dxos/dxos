@@ -10,7 +10,7 @@ import { JsonHighlighter, createElement } from '@dxos/react-ui-syntax-highlighte
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { mx } from '@dxos/ui-theme';
 
-import { Searchbar } from '../../../components';
+import { Searchbar } from '../../../components/index.ts';
 // import { DataSpaceSelector } from '../../../containers';
 // import { useDevtoolsState } from '../../../hooks';
 

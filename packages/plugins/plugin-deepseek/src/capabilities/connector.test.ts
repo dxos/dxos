@@ -7,8 +7,8 @@ import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 
-import { DEEPSEEK_CONNECTOR_ID, DEEPSEEK_SOURCE } from '../constants';
-import { createDeepSeekConnectorEntry } from './connector';
+import { DEEPSEEK_CONNECTOR_ID, DEEPSEEK_SOURCE } from '../constants.ts';
+import { createDeepSeekConnectorEntry } from './connector.ts';
 
 describe('deepseek connector', () => {
   const connector = { id: DEEPSEEK_CONNECTOR_ID, label: 'DeepSeek' };

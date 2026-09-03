@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { ComputerShellError } from './errors';
+import { ComputerShellError } from './errors.ts';
 
 /**
  * Route the dev-server middleware answers on. Same-origin, so the browser reaches it without CORS

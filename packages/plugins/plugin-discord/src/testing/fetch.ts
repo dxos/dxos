@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import { Obj } from '@dxos/echo';
 import { ContentBlock, Message } from '@dxos/types';
 
-import { DEFAULT_DAYS, DISCORD_SOURCE, snowflakeForTimestamp } from '../constants';
+import { DEFAULT_DAYS, DISCORD_SOURCE, snowflakeForTimestamp } from '../constants.ts';
 
 const MAX_DAYS = 365 * 3;
 const MESSAGE_PAGE_LIMIT = 100;

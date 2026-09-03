@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { isInChangeContext } from './change-context';
-import { createArrayMethodError } from './errors';
-import { batchEvents } from './event-batch';
-import { getEchoRoot } from './ownership';
-import { getProxyTarget, isProxy } from './proxy-utils';
-import { EventId } from './symbols';
+import { isInChangeContext } from './change-context.ts';
+import { createArrayMethodError } from './errors.ts';
+import { batchEvents } from './event-batch.ts';
+import { getEchoRoot } from './ownership.ts';
+import { getProxyTarget, isProxy } from './proxy-utils.ts';
+import { EventId } from './symbols.ts';
 
 /**
  * Check if array mutation is allowed (inside a change context).

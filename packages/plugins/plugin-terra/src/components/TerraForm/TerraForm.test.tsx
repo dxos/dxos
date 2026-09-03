@@ -10,7 +10,7 @@ import { ThemeProvider } from '@dxos/react-ui';
 
 import { Terra } from '#types';
 
-import { TerraForm } from './TerraForm';
+import { TerraForm } from './TerraForm.tsx';
 
 // `Form.Row`'s label/status chrome and the `Slider` primitive read theme tokens via `useThemeContext`.
 const Wrapper = ({ children }: PropsWithChildren) => <ThemeProvider>{children}</ThemeProvider>;

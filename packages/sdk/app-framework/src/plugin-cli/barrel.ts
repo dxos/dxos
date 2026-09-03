@@ -4,7 +4,7 @@
 
 import path from 'node:path';
 
-import { type MakerDefaults, makerDefaults } from './maker-defaults';
+import { type MakerDefaults, makerDefaults } from './maker-defaults.ts';
 import {
   type ExportConst,
   calleeText,
@@ -15,7 +15,7 @@ import {
   topLevelExportConsts,
   topLevelExportDeclarations,
   ts,
-} from './ts-util';
+} from './ts-util.ts';
 
 export type BarrelMember = {
   name: string;

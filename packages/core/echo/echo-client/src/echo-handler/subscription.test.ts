@@ -12,8 +12,8 @@ import { Trigger } from '@dxos/async';
 import { Annotation, Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 
-import { EchoTestBuilder } from '../testing';
-import { createSubscription } from './subscription';
+import { EchoTestBuilder } from '../testing/index.ts';
+import { createSubscription } from './subscription.ts';
 
 describe('create subscription', () => {
   let builder: EchoTestBuilder;

@@ -4,7 +4,7 @@
 
 import { type ThemeMode } from '@dxos/react-ui';
 
-import { type StyleSet } from './render';
+import { type StyleSet } from './render.ts';
 
 /**
  * Default style set for the Globe, theme-aware. Originated in plugin-map's

@@ -13,9 +13,9 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
 
-import { AutomergeHost } from '../automerge';
-import { createTestSqliteRuntime } from '../testing';
-import { DocumentsSynchronizer } from './documents-synchronizer';
+import { AutomergeHost } from '../automerge/index.ts';
+import { createTestSqliteRuntime } from '../testing/index.ts';
+import { DocumentsSynchronizer } from './documents-synchronizer.ts';
 
 describe('DocumentsSynchronizer', () => {
   test('two synchronizers receive updates for shared document', async () => {

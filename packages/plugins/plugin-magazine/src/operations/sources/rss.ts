@@ -10,9 +10,9 @@ import { normalizeText } from '@dxos/markdown';
 
 import { Subscription } from '#types';
 
-import { decodeEntities } from '../../util/text';
-import { type FeedFetcher, FeedFetchError, type FetchResult } from './feed-fetcher';
-import { getText } from './http';
+import { decodeEntities } from '../../util/text.ts';
+import { type FeedFetcher, FeedFetchError, type FetchResult } from './feed-fetcher.ts';
+import { getText } from './http.ts';
 
 /**
  * Unwrap `<![CDATA[ ... ]]>` sections, returning the inner content.

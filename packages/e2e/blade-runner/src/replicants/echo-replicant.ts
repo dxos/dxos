@@ -19,8 +19,8 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 
-import { type ReplicantEnv, ReplicantRegistry } from '../env';
-import { DEFAULT_REDIS_OPTIONS, createRedisReadableStream, createRedisWritableStream } from '../redis';
+import { type ReplicantEnv, ReplicantRegistry } from '../env/index.ts';
+import { DEFAULT_REDIS_OPTIONS, createRedisReadableStream, createRedisWritableStream } from '../redis/index.ts';
 
 export class Text extends Type.makeObject<Text>(DXN.make('org.dxos.type.bladeRunner.text', '0.1.0'))(
   Schema.Struct({

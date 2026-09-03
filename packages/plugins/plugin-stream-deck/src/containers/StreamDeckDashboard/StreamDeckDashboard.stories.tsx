@@ -19,7 +19,7 @@ import { withLayout } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { StreamDeckDashboard } from './StreamDeckDashboard';
+import { StreamDeckDashboard } from './StreamDeckDashboard.tsx';
 
 /** Story-local type so the keys exercise real label and icon annotations. */
 class StoryItem extends Type.makeObject<StoryItem>(DXN.make('org.dxos.type.test.streamDeckStoryItem', '0.1.0'))(

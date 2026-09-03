@@ -13,8 +13,8 @@ import { ComplexMap } from '@dxos/util';
 
 import { TcpTransportFactory } from '#tcp-transport';
 
-import { SwarmNetworkManager } from '../network-manager';
-import { FullyConnectedTopology } from '../topology';
+import { SwarmNetworkManager } from '../network-manager.ts';
+import { FullyConnectedTopology } from '../topology/index.ts';
 import {
   MemoryTransportFactory,
   RtcTransportProxyFactory,
@@ -22,8 +22,8 @@ import {
   type TransportFactory,
   TransportKind,
   createRtcTransportFactory,
-} from '../transport';
-import { type TestTeleportExtensionFactory, TestWireProtocol } from './test-wire-protocol';
+} from '../transport/index.ts';
+import { type TestTeleportExtensionFactory, TestWireProtocol } from './test-wire-protocol.ts';
 
 export type TestBuilderOptions = {
   transport?: TransportKind;

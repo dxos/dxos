@@ -29,10 +29,10 @@ import { EID, EntityId, type SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ComplexMap, defer, getDeep, setDeep, throwUnhandledError } from '@dxos/util';
 
-import { type DocHandleProxy } from '../automerge';
-import * as Doc from '../automerge/Doc';
-import { docChangeSemaphore } from './doc-semaphore';
-import { type DecodedAutomergePrimaryValue, type GetObjectCoreByIdOptions, TargetKey } from './types';
+import * as Doc from '../automerge/Doc.ts';
+import { type DocHandleProxy } from '../automerge/index.ts';
+import { docChangeSemaphore } from './doc-semaphore.ts';
+import { type DecodedAutomergePrimaryValue, type GetObjectCoreByIdOptions, TargetKey } from './types.ts';
 
 /**
  * Minimal interface that ObjectCore requires from the containing database.

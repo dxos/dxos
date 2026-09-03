@@ -18,7 +18,7 @@ import {
   xmlTags,
 } from '@dxos/ui-editor';
 
-import { highlights, highlightTheme } from './highlight';
+import { highlights, highlightTheme } from './highlight.ts';
 
 export type ItemExtensionOptions = {
   registry?: XmlWidgetRegistry;

@@ -34,15 +34,15 @@ import { useCidResolver, useEmailComposerExtensions, useMessageTags, useSendEmai
 import { meta } from '#meta';
 import { InboxCapabilities, Mailbox, SystemTags } from '#types';
 
-import { parseAddressList } from '../../operations/correspondents/correspondence';
-import { createDraftMessage, formatAge, getMessageProps } from '../../util';
-import { EditMessage } from '../EditMessage';
-import { MarkdownViewer } from '../MarkdownViewer';
-import { type ViewMode, viewModeGroup } from '../ViewMode';
-import { keyOf } from './key-of';
-import { ExtractorMenuItem } from './useExtractorActions';
-import { useMessageExtractedObjects } from './useMessageExtractedObjects';
-import { useMessageActions } from './useToolbar';
+import { parseAddressList } from '../../operations/correspondents/correspondence.ts';
+import { createDraftMessage, formatAge, getMessageProps } from '../../util/index.ts';
+import { EditMessage } from '../EditMessage/index.ts';
+import { MarkdownViewer } from '../MarkdownViewer/index.ts';
+import { type ViewMode, viewModeGroup } from '../ViewMode/index.ts';
+import { keyOf } from './key-of.ts';
+import { ExtractorMenuItem } from './useExtractorActions.tsx';
+import { useMessageExtractedObjects } from './useMessageExtractedObjects.ts';
+import { useMessageActions } from './useToolbar.tsx';
 
 //
 // Types

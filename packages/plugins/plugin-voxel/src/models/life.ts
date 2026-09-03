@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as Voxel from '../types/Voxel';
+import type * as Voxel from '../types/Voxel.ts';
 
 /** Well-known Game of Life seed patterns (coordinates relative to origin). */
 type Pattern = { name: string; cells: [number, number][] };

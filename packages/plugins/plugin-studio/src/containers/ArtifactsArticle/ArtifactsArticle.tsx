@@ -17,7 +17,7 @@ import { ArtifactCard } from '#components';
 import { meta } from '#meta';
 import { Artifact } from '#types';
 
-import { getKindIcon } from '../../constants';
+import { getKindIcon } from '../../constants.ts';
 
 type Kind = 'image' | 'video';
 

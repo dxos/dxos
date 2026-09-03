@@ -16,7 +16,7 @@ import { Form } from '@dxos/react-ui-form';
 import { meta } from '#meta';
 import { Settings } from '#types';
 
-import { WelcomeDismissedAnnotation } from '../../annotations';
+import { WelcomeDismissedAnnotation } from '../../annotations.ts';
 
 export type SupportSettingsProps = AppSurface.SettingsData;
 

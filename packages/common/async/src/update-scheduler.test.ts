@@ -6,8 +6,8 @@ import { describe, test } from 'vitest';
 
 import { Context } from '@dxos/context';
 
-import { sleep } from './timeout';
-import { UpdateScheduler } from './update-scheduler';
+import { sleep } from './timeout.ts';
+import { UpdateScheduler } from './update-scheduler.ts';
 
 describe('update-scheduler', () => {
   test('schedules updates', async ({ expect }) => {

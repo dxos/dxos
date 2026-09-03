@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './MarkdownEditor';
-export * from './RichTextEditor';
-export * from './components';
-export * from './gtd';
-export * from './rich-text';
+export * from './MarkdownEditor.tsx';
+export * from './RichTextEditor.tsx';
+export * from './components.tsx';
+export * from './gtd.ts';
+export * from './rich-text.ts';

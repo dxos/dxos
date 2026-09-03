@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import * as Operation from '../Operation';
-import { Sleep } from './definitions';
+import * as Operation from '../Operation.ts';
+import { Sleep } from './definitions.ts';
 
 export default Sleep.pipe(
   Operation.withHandler(

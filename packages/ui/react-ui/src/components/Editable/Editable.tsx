@@ -29,16 +29,16 @@ import React, {
   useRef,
 } from 'react';
 
-import { useThemeContext } from '../../hooks';
-import { type ThemedClassName } from '../../util';
-import { Icon } from '../Icon';
+import { useThemeContext } from '../../hooks/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
+import { Icon } from '../Icon/index.ts';
 import {
   type EditableActivation,
   type EditableBlurBehavior,
   type UseEditableOptions,
   type UseEditableReturn,
   useEditable,
-} from './useEditable';
+} from './useEditable.ts';
 
 const EDITABLE_NAME = 'Editable.Root';
 const EDITABLE_PREVIEW_NAME = 'Editable.Preview';
@@ -212,6 +212,6 @@ export const Editable = {
 };
 
 export { useEditableContext };
-export * from './useEditable';
+export * from './useEditable.ts';
 
 export type { EditableActivation, EditableBlurBehavior, EditableInputProps, EditablePreviewProps, EditableRootProps };

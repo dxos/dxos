@@ -20,7 +20,7 @@ import {
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
-import { inboxMarkdown } from '../../extensions';
+import { inboxMarkdown } from '../../extensions/index.ts';
 
 const inlinePreviewRegistry: XmlWidgetRegistry = {
   'link-preview': {

@@ -5,7 +5,7 @@
 import { random } from '@dxos/random';
 import { type ContentBlock } from '@dxos/types';
 
-import { createAnswer, textStream } from './stream';
+import { createAnswer, textStream } from './stream.ts';
 
 export type TurnOptions = {
   chunkDelay?: number;

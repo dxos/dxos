@@ -4,7 +4,7 @@
 
 import React, { Fragment, type ReactNode } from 'react';
 
-import { computeMatchSpans } from '../../util';
+import { computeMatchSpans } from '../../util/index.ts';
 
 export type HighlightedProps = { text: string; query: string };
 

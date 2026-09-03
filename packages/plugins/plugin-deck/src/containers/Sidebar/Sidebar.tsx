@@ -11,7 +11,7 @@ import { type Label, Main } from '@dxos/react-ui';
 import { useBreakpoints, useDeckState } from '#hooks';
 import { meta } from '#meta';
 
-import { layoutAppliesTopbar } from '../../util';
+import { layoutAppliesTopbar } from '../../util/index.ts';
 
 const label = ['sidebar.title', { ns: meta.profile.key }] satisfies Label;
 

@@ -12,8 +12,8 @@ import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
 import { GoogleMail } from '#apis';
 import { GoogleOperation } from '#types';
 
-import { GmailSendMessageInvalidError } from '../../../errors';
-import { GoogleCredentials } from '../../../services/google-credentials';
+import { GmailSendMessageInvalidError } from '../../../errors.ts';
+import { GoogleCredentials } from '../../../services/google-credentials.ts';
 
 const handler = GoogleOperation.GmailSend.pipe(
   Operation.withHandler(({ userId = 'me', message, connection: connectionRef }) =>

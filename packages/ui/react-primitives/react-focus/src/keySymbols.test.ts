@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { SEQUENCE_SYMBOL, keySymbols } from './keySymbols';
+import { SEQUENCE_SYMBOL, keySymbols } from './keySymbols.ts';
 
 describe('keySymbols', () => {
   test('splits a chord into one cap per key', () => {

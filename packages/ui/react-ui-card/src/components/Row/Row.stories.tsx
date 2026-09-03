@@ -22,7 +22,7 @@ import { type Actor, Person } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { Row } from './Row';
+import { Row } from './Row.tsx';
 
 const KNOWN_ACTOR: Actor.Actor = {
   name: 'Alice Avery',

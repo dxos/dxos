@@ -8,12 +8,12 @@ import React from 'react';
 import { Invitation } from '@dxos/react-client/invitations';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { ConfirmReset } from '../../steps';
-import { StorybookDialog } from '../../story-components';
-import { translations } from '../../translations';
-import { JoinPanelImpl } from './JoinPanel';
-import { type JoinPanelImplProps } from './JoinPanelProps';
-import { IdentityInputImpl } from './steps';
+import { ConfirmReset } from '../../steps/index.ts';
+import { StorybookDialog } from '../../story-components/index.ts';
+import { translations } from '../../translations.ts';
+import { JoinPanelImpl } from './JoinPanel.tsx';
+import { type JoinPanelImplProps } from './JoinPanelProps.ts';
+import { IdentityInputImpl } from './steps/index.ts';
 
 const DefaultStory = (props: JoinPanelImplProps) => {
   return (

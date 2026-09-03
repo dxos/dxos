@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Progress, useTranslation } from '@dxos/react-ui';
 
-import { translationKey } from '../../translations';
+import { translationKey } from '../../translations.ts';
 
 export const StatusPanel = ({ titleId }: { titleId?: string }) => {
   const { t } = useTranslation(translationKey);

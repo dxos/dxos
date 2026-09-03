@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Clipboard, Dialog, type DialogContentProps, useId } from '@dxos/react-ui';
 
-import { IdentityPanel, type IdentityPanelProps } from '../../panels';
+import { IdentityPanel, type IdentityPanelProps } from '../../panels/index.ts';
 
 export interface IdentityDialogProps
   extends Omit<DialogContentProps, 'children'>, Omit<IdentityPanelProps, 'doneActionParent'> {

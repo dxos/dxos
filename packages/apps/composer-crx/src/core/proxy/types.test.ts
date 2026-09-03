@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type RenderAck, type RenderRequest, decodeRenderAck, decodeRenderRequest } from './types';
+import { type RenderAck, type RenderRequest, decodeRenderAck, decodeRenderRequest } from './types.ts';
 
 describe('proxy types', () => {
   test('decodeRenderRequest round-trips a minimal request', ({ expect }) => {

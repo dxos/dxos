@@ -23,8 +23,8 @@ import {
   type SubscribeMessagesParams,
   type SwarmEvent,
   type UnsubscribeCallback,
-} from '../signal-methods';
-import { type SignalManager } from './signal-manager';
+} from '../signal-methods.ts';
+import { type SignalManager } from './signal-manager.ts';
 
 /**
  * A single message subscription registered on a {@link MemorySignalManager} (DX-1125). Point-to-point

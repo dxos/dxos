@@ -17,8 +17,8 @@ import type { Peer } from '@dxos/protocols/proto/dxos/edge/messenger';
 import { openAndClose } from '@dxos/test-utils';
 import { compositeKey } from '@dxos/util';
 
-import type { AutomergeReplicatorConnection, AutomergeReplicatorContext } from '../automerge';
-import { EchoEdgeSubductionReplicator } from './echo-edge-subduction-replicator';
+import type { AutomergeReplicatorConnection, AutomergeReplicatorContext } from '../automerge/index.ts';
+import { EchoEdgeSubductionReplicator } from './echo-edge-subduction-replicator.ts';
 
 // TODO(mykola): subduction wasm/network tests are flaky on CI runners
 // (limited concurrency, signal-server timing). Re-enable once the suite

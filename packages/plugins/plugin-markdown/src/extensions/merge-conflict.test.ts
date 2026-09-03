@@ -5,7 +5,7 @@
 import { EditorState } from '@codemirror/state';
 import { describe, test } from 'vitest';
 
-import { conflictResolution, findConflicts } from './merge-conflict';
+import { conflictResolution, findConflicts } from './merge-conflict.ts';
 
 const CONFLICT = ['intro', '<<<<<<< branch', 'Moo', '=======', 'Bar', '>>>>>>> current', 'outro', ''].join('\n');
 

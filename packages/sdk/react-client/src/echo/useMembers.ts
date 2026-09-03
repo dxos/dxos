@@ -7,7 +7,7 @@ import { PublicKey, type PublicKeyLike } from '@dxos/client';
 import { HaloSpaceMember, type SpaceMember } from '@dxos/client/echo';
 import { useMulticastObservable } from '@dxos/react-hooks';
 
-import { useSpaces } from './useSpaces';
+import { useSpaces } from './useSpaces.ts';
 
 export const useMembers = (spaceKey: PublicKeyLike | undefined): SpaceMember[] => {
   // TODO(dmaretskyi): useSpace hook for spaces that are not ready.

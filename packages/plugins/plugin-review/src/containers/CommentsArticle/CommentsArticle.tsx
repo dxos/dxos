@@ -32,8 +32,8 @@ import { type SuggestionGroup, useStatus } from '#hooks';
 import { meta } from '#meta';
 import { CommentCapabilities, CommentOperation, ReviewCapabilities } from '#types';
 
-import { commentsViewAspect } from '../../capabilities/comments-view-state';
-import { currentObjectId, getMessageMetadata } from '../../util';
+import { commentsViewAspect } from '../../capabilities/comments-view-state.ts';
+import { currentObjectId, getMessageMetadata } from '../../util/index.ts';
 
 /**
  * Per-thread wrapper supplying the space-derived agent activity indicator, so `CommentThread` itself

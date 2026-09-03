@@ -15,8 +15,8 @@ import { userEvent } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { runCommand, waitForTerminal } from '../../testing';
-import { Terminal } from './Terminal';
+import { runCommand, waitForTerminal } from '../../testing.ts';
+import { Terminal } from './Terminal.tsx';
 
 const BOLD = '\x1b[1m';
 const DIM = '\x1b[2m';

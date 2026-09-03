@@ -19,7 +19,7 @@ import pluginSpec from '../../PLUGIN.mdl?raw';
 export const DrawingVariant = Capability.lazyModule(
   'drawing-variant',
   { provides: [IllustratorCapabilities.VariantProvider], activatesOn: IllustratorEvents.Start, environments: [] },
-  () => import('./drawing-variant'),
+  () => import('./drawing-variant.ts'),
 );
 
 export const PluginAsset = AppCapability.pluginAsset({
@@ -28,7 +28,7 @@ export const PluginAsset = AppCapability.pluginAsset({
   content: pluginSpec,
   mimeType: 'application/x-mdl',
 });
-export const TldrawSettings = AppCapability.settings(() => import('./settings'), {
+export const TldrawSettings = AppCapability.settings(() => import('./settings.ts'), {
   activatesOn: ActivationEvents.Idle,
   provides: [TldrawCapabilities.Settings],
 });

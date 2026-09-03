@@ -2,5 +2,5 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './IdentityPanel';
-export type * from './IdentityPanelProps';
+export * from './IdentityPanel.tsx';
+export type * from './IdentityPanelProps.ts';

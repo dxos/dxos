@@ -4,7 +4,7 @@
 
 import { type Credential, type Proof } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { canonicalStringify } from '../credentials/signing';
+import { canonicalStringify } from '../credentials/signing.ts';
 
 export const getPresentationProofPayload = (credentials: Credential[], proof: Proof): Uint8Array => {
   const copy = {

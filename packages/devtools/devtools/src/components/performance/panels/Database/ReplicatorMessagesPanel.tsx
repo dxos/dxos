@@ -6,9 +6,9 @@ import React from 'react';
 
 import { type EchoDataStats } from '@dxos/echo-host';
 
-import { type DatabaseInfo } from '../../../../hooks';
-import { type CustomPanelProps, Panel } from '../../Panel';
-import { Table, Unit } from '../Table';
+import { type DatabaseInfo } from '../../../../hooks/index.ts';
+import { type CustomPanelProps, Panel } from '../../Panel.tsx';
+import { Table, Unit } from '../Table.tsx';
 
 type CountsByMessage = EchoDataStats['replicator']['countByMessage'];
 

@@ -2,4 +2,4 @@
 // Copyright 2024 DXOS.org
 //
 
-export { CallDebugPanel as default } from './CallDebugPanel';
+export { CallDebugPanel as default } from './CallDebugPanel.tsx';

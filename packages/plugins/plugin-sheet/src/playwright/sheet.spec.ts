@@ -7,7 +7,7 @@ import { type Page, expect, test } from '@playwright/test';
 import { random } from '@dxos/random';
 import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 
-import { SheetManager } from './sheet-manager';
+import { SheetManager } from './sheet-manager.ts';
 
 test.describe('plugin-sheet', () => {
   let page: Page;

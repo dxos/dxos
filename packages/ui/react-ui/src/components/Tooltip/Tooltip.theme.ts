@@ -5,7 +5,7 @@
 import { mx } from '@dxos/ui-theme';
 import { type ComponentFunction, type Elevation, type Theme } from '@dxos/ui-types';
 
-import { tooltipContent } from './tooltipContent';
+import { tooltipContent } from './tooltipContent.ts';
 
 export type TooltipStyleProps = Partial<{
   elevation: Elevation;

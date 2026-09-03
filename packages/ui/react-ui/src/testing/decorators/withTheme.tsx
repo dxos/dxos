@@ -8,9 +8,9 @@ import { I18nProvider } from 'react-aria-components';
 
 import { type ThemeMode } from '@dxos/ui-types';
 
-import { Tooltip } from '../../components';
-import { type ThemeContextValue, ThemeProvider } from '../../primitives';
-import { defaultTx } from '../../theme';
+import { Tooltip } from '../../components/index.ts';
+import { type ThemeContextValue, ThemeProvider } from '../../primitives/index.ts';
+import { defaultTx } from '../../theme/index.ts';
 
 /**
  * Adds theme decorator.

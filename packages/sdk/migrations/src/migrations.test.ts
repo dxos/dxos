@@ -11,8 +11,8 @@ import { TestBuilder } from '@dxos/client/testing';
 import { Annotation, Filter, Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 
-import { MigrationVersionAnnotation } from './annotations';
-import { Migrations } from './migrations';
+import { MigrationVersionAnnotation } from './annotations.ts';
+import { Migrations } from './migrations.ts';
 
 Migrations.define('test', [
   {

@@ -25,7 +25,7 @@ import { ATPROTO_OAUTH_SCOPES, OAuthProvider } from '@dxos/protocols';
 
 import { ClientOperation } from '#operations';
 
-import { printIdentity, waitForState } from '../../halo/util';
+import { printIdentity, waitForState } from '../../halo/util.ts';
 import {
   ATMOSPHERE_INPUT_PROMPT,
   ATMOSPHERE_METHOD,
@@ -33,7 +33,7 @@ import {
   METHOD_ALIASES,
   hubClient,
   methodOption,
-} from '../util';
+} from '../util.ts';
 
 type LoginMethod = 'email' | 'passkey' | typeof ATMOSPHERE_METHOD | 'device-invitation' | 'recovery-code';
 

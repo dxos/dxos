@@ -15,8 +15,8 @@ import { EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Position } from '@dxos/util';
 
-import * as Graph from './AppGraph';
-import * as GraphBuilder from './AppGraphBuilder';
+import * as Graph from './AppGraph.ts';
+import * as GraphBuilder from './AppGraphBuilder.ts';
 
 /**
  * A single `(prefix, id?)` pair as parsed by `@dxos/app-toolkit`'s `UrlPath.parse`. Kept as a

@@ -4,7 +4,7 @@
 
 import { afterEach, describe, test, vi } from 'vitest';
 
-import { getObject, headObject, probeAccess } from './s3-client';
+import { getObject, headObject, probeAccess } from './s3-client.ts';
 
 const URI = { host: 'bucket.account.r2.cloudflarestorage.com', key: 'SPACE/hash' };
 const CREDENTIALS = { accessKeyId: 'AKIA', secretAccessKey: 'secret' };

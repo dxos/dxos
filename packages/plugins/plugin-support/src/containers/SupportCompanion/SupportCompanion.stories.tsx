@@ -14,7 +14,7 @@ import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 import { Support } from '#types';
 
-import { SupportCompanion } from './SupportCompanion';
+import { SupportCompanion } from './SupportCompanion.tsx';
 
 // Minimal plugin that registers Support.Ticket and carries a few screenshot URLs
 // in its meta so the resolver can map the ticket's typename back to a plugin

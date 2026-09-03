@@ -4,14 +4,14 @@
 
 import { Collection, Feed, Type, View } from '@dxos/echo';
 
-import * as StateMap from '../StateMap';
-import * as TagIndex from '../TagIndex';
-import * as Expando from './Expando';
-import * as Text from './Text';
-import * as ViewModel from './ViewModel';
+import * as StateMap from '../StateMap.ts';
+import * as TagIndex from '../TagIndex.ts';
+import * as Expando from './Expando.ts';
+import * as Text from './Text.ts';
+import * as ViewModel from './ViewModel.ts';
 
 export { Expando, Text, ViewModel };
-export { APIKey } from './APIKey';
+export { APIKey } from './APIKey.ts';
 
 export const DataTypes: Type.AnyEntity[] = [
   Collection.Collection,

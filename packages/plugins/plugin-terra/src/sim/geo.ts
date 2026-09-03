@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Vec3, add, cross, dot, normalize, scale, sub } from '../engine';
+import { type Vec3, add, cross, dot, normalize, scale, sub } from '../engine/index.ts';
 
 /** A position on the planet; `lat`/`lng` in degrees, `height` as a fraction of radius above sea level. */
 export type GeoPoint = { lat: number; lng: number; height: number };

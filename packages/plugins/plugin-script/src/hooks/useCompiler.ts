@@ -8,7 +8,7 @@ import { useAsyncEffect } from '@dxos/react-ui';
 
 import { ScriptCapabilities, ScriptEvents } from '#types';
 
-import type { Compiler } from '../compiler';
+import type { Compiler } from '../compiler/index.ts';
 
 /**
  * Asynchronously sets up the compiler and returns it.

@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 
 import { JsonSchema } from '@dxos/echo';
 
-import { makeCompleteJobParameters, makeCompleteJobTool } from './complete-job-tool';
+import { makeCompleteJobParameters, makeCompleteJobTool } from './complete-job-tool.ts';
 
 /**
  * Anthropic rejects tool schemas containing an empty (`{}`) or typeless subschema, and a

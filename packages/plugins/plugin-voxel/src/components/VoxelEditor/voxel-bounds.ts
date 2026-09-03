@@ -6,7 +6,7 @@
 
 import { Voxel } from '#types';
 
-import { type VoxelBounds } from './VoxelEditor';
+import { type VoxelBounds } from './VoxelEditor.tsx';
 
 // Kept out of `VoxelEditor.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on

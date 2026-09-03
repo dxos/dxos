@@ -16,8 +16,8 @@ import {
   selectVariants,
   trackProgress,
   writeResults,
-} from '../testing/harness';
-import { DEFAULT_HTML_VS_TEXT_N } from './defs';
+} from '../testing/harness/index.ts';
+import { DEFAULT_HTML_VS_TEXT_N } from './defs.ts';
 
 // Small by design: HTML bodies are large, so a handful of messages already shows the difference.
 const N = LIMIT ?? DEFAULT_HTML_VS_TEXT_N;

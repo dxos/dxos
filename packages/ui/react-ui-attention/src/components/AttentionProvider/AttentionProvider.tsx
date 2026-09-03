@@ -19,8 +19,8 @@ import { useDefaultValue } from '@dxos/react-hooks';
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
-import { ATTENDABLE_SELECTOR, AttentionManager, getAttendables } from '../../types/Attention';
-import { AttentionContextProvider, useAttentionAttributes } from './attention-context';
+import { ATTENDABLE_SELECTOR, AttentionManager, getAttendables } from '../../types/Attention.ts';
+import { AttentionContextProvider, useAttentionAttributes } from './attention-context.ts';
 
 type RootAttentionProviderProps = PropsWithChildren<{
   attention?: AttentionManager;

@@ -9,7 +9,7 @@ import { ErrorBoundary, type ThemeMode, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui';
 import { translations as logPanelTranslations } from '@dxos/react-ui-debug/translations';
 
-import { Devtools } from './Devtools';
+import { Devtools } from './Devtools.tsx';
 
 // TODO(burdon): Factor out. See copy paste in testbench-app.
 const useThemeWatcher = () => {

@@ -17,9 +17,9 @@ import { Button, Card, Input, Panel, ScrollArea, Select, Toolbar } from '@dxos/r
 import { Dnd } from '@dxos/react-ui-dnd';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Focus } from '../Focus';
-import { Mosaic } from './Mosaic';
-import { type MosaicTileProps } from './Tile';
+import { Focus } from '../Focus/index.ts';
+import { Mosaic } from './Mosaic.ts';
+import { type MosaicTileProps } from './Tile.tsx';
 
 const PAGE_SIZE = 50;
 const MAX_WINDOW_SIZE = PAGE_SIZE * 10;

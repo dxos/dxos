@@ -18,7 +18,7 @@ import { type ActionExecutor, type ActionGraphProps, graphActions } from '@dxos/
 
 import { meta } from '#meta';
 
-import { useMobileStack } from './useMobileStack';
+import { useMobileStack } from './useMobileStack.ts';
 
 export type MobileAppBar = {
   /** Title of the visible panel. */

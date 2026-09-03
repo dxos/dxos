@@ -18,7 +18,7 @@ import { EffectEx } from '@dxos/effect';
 
 import { Artifact, GenerationService, StudioCapabilities, Variant } from '#types';
 
-import generateHandler from './generate';
+import generateHandler from './generate.ts';
 
 const IDEOGRAM_SOURCE = 'ideogram.ai';
 

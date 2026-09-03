@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './trip-extractor';
+export * from './trip-extractor.ts';

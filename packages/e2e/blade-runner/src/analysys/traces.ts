@@ -4,7 +4,7 @@
 
 import fs from 'node:fs';
 
-import { type Event as PerfettoEvent } from '../tracing';
+import { type Event as PerfettoEvent } from '../tracing/index.ts';
 
 type Trace = {
   name: string;

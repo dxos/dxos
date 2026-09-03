@@ -9,10 +9,10 @@ import { Button, Icon, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { getSize, mx } from '@dxos/ui-theme';
 
-import { translationKey } from '../../translations';
-import { DeviceListItem } from './DeviceListItem';
-import { type AgentFormProps, type DeviceListProps } from './DeviceListProps';
-import { toShellDevice } from './toShellDevice';
+import { translationKey } from '../../translations.ts';
+import { DeviceListItem } from './DeviceListItem.tsx';
+import { type AgentFormProps, type DeviceListProps } from './DeviceListProps.ts';
+import { toShellDevice } from './toShellDevice.ts';
 
 export const DeviceList = ({
   devices,

@@ -14,8 +14,8 @@ import { HaloServicesLayer } from '@dxos/plugin-client';
 import { meta } from '#meta';
 import { type BeaconState } from '#types';
 
-import { BeaconService } from '../beacon-service';
-import { BroadcastChannelTransport } from '../transport/broadcast-channel-transport';
+import { BeaconService } from '../beacon-service.ts';
+import { BroadcastChannelTransport } from '../transport/broadcast-channel-transport.ts';
 
 export namespace BeaconCapabilities {
   export const State = Capability.makeSingleton<Atom.Atom<BeaconState>>()(`${meta.profile.key}.capability.state`);

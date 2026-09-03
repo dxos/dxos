@@ -10,8 +10,8 @@
 import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { List } from './List';
-import { ListItem, ListItemCollapsibleContent, ListItemHeading, ListItemOpenTrigger } from './ListItem';
+import { List } from './List.tsx';
+import { ListItem, ListItemCollapsibleContent, ListItemHeading, ListItemOpenTrigger } from './ListItem.tsx';
 
 type Item = { id: string; label: string };
 

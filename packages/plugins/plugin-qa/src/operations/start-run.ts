@@ -9,7 +9,7 @@ import { Database, Feed, Ref } from '@dxos/echo';
 
 import { QaOperation, TestRun } from '#types';
 
-import { loadCases, loadFeed } from './util';
+import { loadCases, loadFeed } from './util.ts';
 
 /**
  * Captures the case keys the run covers onto the run itself. Everything afterwards — the rollup and

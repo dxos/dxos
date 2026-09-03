@@ -6,7 +6,7 @@ import { type CSSProperties } from 'react';
 
 import { type Size } from '@dxos/ui-types';
 
-import { mx } from '../util';
+import { mx } from '../util/index.ts';
 
 // NOTE: Class names must be fully-specified string literals so Tailwind's static scanner can detect them.
 const sizeMap: Record<string, { w: string; h: string }> = {

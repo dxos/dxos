@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './ideogram-client';
-export * from './ideogram-mapping';
-export * from './ideogram-request';
-export * from './ideogram-service';
+export * from './ideogram-client.ts';
+export * from './ideogram-mapping.ts';
+export * from './ideogram-request.ts';
+export * from './ideogram-service.ts';

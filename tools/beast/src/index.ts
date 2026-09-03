@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './main';
-export * from './mermaid';
-export * from './nx';
-export * from './ts';
-export * from './types';
-export * from './util';
+export * from './main.ts';
+export * from './mermaid/index.ts';
+export * from './nx/index.ts';
+export * from './ts/index.ts';
+export * from './types.ts';
+export * from './util.ts';

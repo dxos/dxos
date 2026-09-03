@@ -42,7 +42,7 @@
 //
 // Lines starting with `#` and blank lines are ignored.
 
-import type { Note } from '../types/Note';
+import type { Note } from '../types/Note.ts';
 
 export type LeadSheetOptions = {
   /** Beats per bar (defaults to 4 for 4/4). */

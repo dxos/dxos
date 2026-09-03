@@ -10,7 +10,7 @@ import { Feed, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Task } from '@dxos/types';
 
-import { TaskSlashCommands } from './task-commands';
+import { TaskSlashCommands } from './task-commands.ts';
 
 describe('task slash commands', () => {
   let builder: EchoTestBuilder;

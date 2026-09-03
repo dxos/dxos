@@ -9,9 +9,9 @@ import { Filter, Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
 
-import { Client } from '../../client';
-import { TestBuilder } from '../../testing';
-import { LEADER_LOCK_KEY } from './dedicated-worker-client-services';
+import { Client } from '../../client/index.ts';
+import { TestBuilder } from '../../testing/index.ts';
+import { LEADER_LOCK_KEY } from './dedicated-worker-client-services.ts';
 
 describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
   // First connect pays the one-time dynamic load of the RTC stack (lazy so it stays out of

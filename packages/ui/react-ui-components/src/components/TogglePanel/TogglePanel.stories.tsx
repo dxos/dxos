@@ -15,7 +15,7 @@ import { MarkdownView } from '@dxos/react-ui-markdown';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
-import { TogglePanel, type TogglePanelRootProps } from './TogglePanel';
+import { TogglePanel, type TogglePanelRootProps } from './TogglePanel.tsx';
 
 class Generator {
   private readonly _current: Atom.Writable<string>;

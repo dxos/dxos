@@ -13,7 +13,7 @@ import { Focus, Mosaic, useBoard } from '@dxos/react-ui-mosaic';
 
 import { meta } from '#meta';
 
-import { type KanbanCardProps, useKanbanBoard } from './context';
+import { type KanbanCardProps, useKanbanBoard } from './context.ts';
 
 export { type KanbanCardProps };
 

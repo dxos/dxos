@@ -7,10 +7,10 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event, Trigger, asyncTimeout, sleep } from '@dxos/async';
 
-import * as Client from './Client';
-import { LOCK_OR_RPC_WAIT_TIMEOUT } from './internal/locks';
-import * as Worker from './Worker';
-import * as WorkerProtocol from './WorkerProtocol';
+import * as Client from './Client.ts';
+import { LOCK_OR_RPC_WAIT_TIMEOUT } from './internal/locks.ts';
+import * as Worker from './Worker.ts';
+import * as WorkerProtocol from './WorkerProtocol.ts';
 
 /**
  * In-process coordinator hub emulating the SharedWorker: broadcasts leadership/heartbeat/request

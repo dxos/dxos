@@ -8,9 +8,9 @@ import * as Option from 'effect/Option';
 import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 
-import * as Plugin from './plugin';
-import * as PluginAssetCache from './plugin-asset-cache';
-import * as PluginManifest from './plugin-manifest';
+import * as PluginAssetCache from './plugin-asset-cache.ts';
+import * as PluginManifest from './plugin-manifest.ts';
+import * as Plugin from './plugin.ts';
 
 const DEFAULT_KEY = 'org.dxos.composer.remote-plugins';
 

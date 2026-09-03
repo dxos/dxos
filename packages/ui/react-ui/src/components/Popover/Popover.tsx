@@ -36,9 +36,9 @@ import { RemoveScroll } from 'react-remove-scroll';
 
 import { DX_POPOVER_CONTENT_ATTR } from '@dxos/ui-types';
 
-import { useElevationContext, useSafeCollisionPadding, useThemeContext } from '../../hooks';
-import { type ThemedClassName } from '../../util';
-import { ColumnContext } from '../Column/ColumnContext';
+import { useElevationContext, useSafeCollisionPadding, useThemeContext } from '../../hooks/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
+import { ColumnContext } from '../Column/ColumnContext.ts';
 import {
   POPOVER_NAME,
   PopoverProvider,
@@ -46,7 +46,7 @@ import {
   createPopoverContext,
   usePopoverContext,
   usePopperScope,
-} from './PopoverContext';
+} from './PopoverContext.ts';
 
 //
 // Context
@@ -602,7 +602,7 @@ export const Popover = {
 
 // Type-only re-export (erased, so it does not affect the refresh boundary): keeps the inferred
 // types of downstream composites nameable across package boundaries.
-export type { PopoverScopedProps } from './PopoverContext';
+export type { PopoverScopedProps } from './PopoverContext.ts';
 
 export type {
   PopoverAnchorProps,

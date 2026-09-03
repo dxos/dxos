@@ -9,9 +9,9 @@ import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { openAndClose } from '@dxos/test-utils';
 
-import { createTestSqliteRuntime } from '../testing';
-import { AutomergeHost } from './automerge-host';
-import { DocumentLeaseRegistry } from './document-lease';
+import { createTestSqliteRuntime } from '../testing/index.ts';
+import { AutomergeHost } from './automerge-host.ts';
+import { DocumentLeaseRegistry } from './document-lease.ts';
 
 /**
  * The repo caches a document forever once anything faults it in, so residency is the host's to

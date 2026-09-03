@@ -10,7 +10,7 @@ import * as Options from 'effect/unstable/cli/Flag';
 
 import { type AdminCreateInvitationCodesResponse } from '@dxos/protocols';
 
-import { formatHubError, hubApiRequest } from '../util';
+import { formatHubError, hubApiRequest } from '../util.ts';
 
 export const create = Command.make(
   'create',

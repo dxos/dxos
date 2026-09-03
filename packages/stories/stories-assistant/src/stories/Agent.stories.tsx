@@ -14,8 +14,8 @@ import { EffectEx } from '@dxos/effect';
 import { type Space } from '@dxos/react-client/echo';
 import { ContentBlock, Message } from '@dxos/types';
 
-import { AgentModule, StoryRole } from '../modules';
-import { AgentClaudePlugin, ModuleContainer, createDecorators, storyParameters } from '../testing';
+import { AgentModule, StoryRole } from '../modules/index.ts';
+import { AgentClaudePlugin, ModuleContainer, createDecorators, storyParameters } from '../testing/index.ts';
 
 /**
  * The turn asks for one allowed tool call (Read), one that the M1 permission posture must refuse

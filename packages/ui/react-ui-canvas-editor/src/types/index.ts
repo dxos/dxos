@@ -2,6 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './model';
-export * as CanvasBoard from './schema';
-export * from './shapes';
+export * from './model.ts';
+export * as CanvasBoard from './schema.ts';
+export * from './shapes.ts';

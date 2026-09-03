@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './blob-manager';
+export * from './blob-manager.ts';

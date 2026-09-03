@@ -19,7 +19,7 @@ import { useAttentionAttributes } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 
-import { Pane } from '../Pane';
+import { Pane } from '../Pane/index.ts';
 
 type SurfaceProps = ComponentProps<typeof Surface.Surface>;
 

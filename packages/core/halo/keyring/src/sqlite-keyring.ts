@@ -19,8 +19,8 @@ import { type KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 import { ComplexMap, arrayToBuffer } from '@dxos/util';
 
-import { type KeyringApi, KeyringApiService } from './keyring';
-import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations';
+import { type KeyringApi, KeyringApiService } from './keyring.ts';
+import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/index.ts';
 
 // SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
 type SqlTransactionTag = SqlTransaction.SqlTransaction;

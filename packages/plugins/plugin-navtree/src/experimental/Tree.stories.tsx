@@ -10,8 +10,8 @@ import { Icon, IconButton, Panel, ScrollArea } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
-import { type ItemMap, Tree, type TreeNodeData, type TreeProps, visitor } from './Tree';
-import { visitNodes } from './visit-nodes';
+import { type ItemMap, Tree, type TreeNodeData, type TreeProps, visitor } from './Tree.tsx';
+import { visitNodes } from './visit-nodes.ts';
 
 random.seed(1234);
 

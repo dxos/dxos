@@ -14,8 +14,8 @@ import { EntityId } from '@dxos/keys';
 import { LogLevel } from '@dxos/log';
 import { type Commit, renderTimelineAscii } from '@dxos/react-ui-components';
 
-import { CommitSelector, buildExecutionGraph } from './execution-graph';
-import { collectTraceEvents, withMeta } from './testing';
+import { CommitSelector, buildExecutionGraph } from './execution-graph.ts';
+import { collectTraceEvents, withMeta } from './testing/index.ts';
 
 EntityId.dangerouslyDisableRandomness();
 

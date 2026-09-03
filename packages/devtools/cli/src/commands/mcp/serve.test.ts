@@ -10,7 +10,7 @@ import path from 'node:path';
 
 import { invariant } from '@dxos/invariant';
 
-import { dxBin } from '../../testing';
+import { dxBin } from '../../testing/index.ts';
 
 /**
  * Protocol-level test for `dx mcp serve`: drives a real MCP session over stdio against an isolated

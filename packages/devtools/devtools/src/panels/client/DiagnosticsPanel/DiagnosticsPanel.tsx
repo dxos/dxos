@@ -8,7 +8,7 @@ import { useClient } from '@dxos/react-client';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { Icon, Input, Panel, Toolbar, useFileDownload } from '@dxos/react-ui';
 
-import { JsonView, Tree } from '../../../components';
+import { JsonView, Tree } from '../../../components/index.ts';
 
 export const DiagnosticsPanel = () => {
   const client = useClient();

@@ -17,7 +17,7 @@ import { type EdgeHttpClient } from '@dxos/edge-client';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { createEdgeClient } from './edge-client';
+import { createEdgeClient } from './edge-client.ts';
 
 /**
  * EDGE implementation of {@link RemoteProcessManager.Service}.

@@ -8,7 +8,7 @@ import { type Space, SpaceState } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { Expando } from '@dxos/schema';
 
-import * as AppSpace from './AppSpace';
+import * as AppSpace from './AppSpace.ts';
 
 describe('space tags', () => {
   test('hasTag returns true when tag is present', ({ expect }) => {

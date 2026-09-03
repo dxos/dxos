@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './change-bar';
-export * from './comments';
-export * from './diff';
-export * from './suggest';
-export * from './suggestions-overlay';
-export * from './track-changes';
+export * from './change-bar.ts';
+export * from './comments.ts';
+export * from './diff.ts';
+export * from './suggest.ts';
+export * from './suggestions-overlay.ts';
+export * from './track-changes.ts';

@@ -16,8 +16,8 @@ import { type Client } from '@dxos/client';
 import { Database, Obj, type Ref } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 
-import { AtprotoRepoError, EdgeNotConfiguredError, MissingHandleError, PdsResolutionError } from '../errors';
-import { canonicalStringify } from '../hash';
+import { AtprotoRepoError, EdgeNotConfiguredError, MissingHandleError, PdsResolutionError } from '../errors.ts';
+import { canonicalStringify } from '../hash.ts';
 
 export type PutRecordParams = {
   collection: string;

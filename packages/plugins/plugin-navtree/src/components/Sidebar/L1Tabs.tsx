@@ -6,8 +6,8 @@ import React, { useMemo } from 'react';
 
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 
-import { l0ItemType } from '../../util';
-import { L1Panel, type L1PanelProps } from './L1Panel';
+import { l0ItemType } from '../../util.ts';
+import { L1Panel, type L1PanelProps } from './L1Panel.tsx';
 
 export type L1TabsProps = Pick<L1PanelProps, 'open' | 'onBack'> & {
   currentItemId: string;

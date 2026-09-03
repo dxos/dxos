@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { Message } from '@dxos/types';
 
-import { EMAIL_EXTRACTION_RULES, messageSource, messageToDocument } from './facts';
+import { EMAIL_EXTRACTION_RULES, messageSource, messageToDocument } from './facts.ts';
 
 describe('messageToDocument', () => {
   test('maps a Message onto an ExtractDocument', ({ expect }) => {

@@ -21,7 +21,7 @@ import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 
-import { getRoutinesPath } from '../paths';
+import { getRoutinesPath } from '../paths.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

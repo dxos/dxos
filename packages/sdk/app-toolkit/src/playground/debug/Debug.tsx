@@ -11,7 +11,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Surface, usePluginManager } from '@dxos/app-framework/ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
-import { PlaygroundRoles } from '../roles';
+import { PlaygroundRoles } from '../roles.ts';
 
 export const Debug = () => {
   const manager = usePluginManager();

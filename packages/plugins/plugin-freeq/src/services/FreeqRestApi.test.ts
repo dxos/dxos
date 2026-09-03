@@ -8,8 +8,8 @@ import * as HttpClient from 'effect/unstable/http/HttpClient';
 import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 import { describe, test } from 'vitest';
 
-import { FreeqConnectionError } from '../errors';
-import { FreeqRestApi } from './index';
+import { FreeqConnectionError } from '../errors.ts';
+import { FreeqRestApi } from './index.ts';
 
 const stubHttpClient = (body: unknown) =>
   Layer.succeed(

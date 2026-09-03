@@ -6,7 +6,7 @@ import type { ConsoleMessage, Page } from '@playwright/test';
 
 import { Trigger } from '@dxos/async';
 
-import { ScopedShellManager } from './scoped-shell-manager';
+import { ScopedShellManager } from './scoped-shell-manager.ts';
 
 // TODO(wittjosiah): Normalize data-testids between snake and camel case.
 

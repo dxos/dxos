@@ -12,7 +12,7 @@ import { EffectEx } from '@dxos/effect';
 import { URI } from '@dxos/keys';
 import { Position } from '@dxos/util';
 
-import * as NavigationResolver from './NavigationResolver';
+import * as NavigationResolver from './NavigationResolver.ts';
 
 const PAGES = [{ path: 'root/settings/test', label: 'Test settings', type: 'settings' }];
 

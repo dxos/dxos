@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../../translations';
-import { Options } from './Options';
+import { translations } from '../../translations.ts';
+import { Options } from './Options.tsx';
 
 const meta = {
   title: 'apps/composer-crx/Options',

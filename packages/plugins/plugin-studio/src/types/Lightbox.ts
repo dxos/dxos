@@ -10,7 +10,7 @@ import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { BoardLayout, defaultLayout } from '@dxos/react-ui-board/types';
 
-import * as Artifact from './Artifact';
+import * as Artifact from './Artifact.ts';
 
 /**
  * A spatial "lightbox" view over a set of {@link Artifact}s laid out on a board grid. Layout is a

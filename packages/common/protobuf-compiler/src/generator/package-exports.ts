@@ -5,7 +5,7 @@
 import { existsSync, mkdirSync, rmdirSync, writeFileSync } from 'fs';
 import { dirname, join, relative } from 'path';
 
-import { parseFullyQualifiedName } from '../namespaces';
+import { parseFullyQualifiedName } from '../namespaces.ts';
 
 export type GeneratePackageExportsProps = {
   /**

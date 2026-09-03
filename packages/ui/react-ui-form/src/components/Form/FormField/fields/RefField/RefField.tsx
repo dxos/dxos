@@ -17,12 +17,12 @@ import { ParentLabelAnnotationId } from '@dxos/schema';
 import { translationKey } from '#translations';
 import { type CreateOptions, type FormFieldRendererProps, type RefFieldDataProps } from '#types';
 
-import { omitHiddenFormFields, omitId } from '../../../../../util';
-import { ObjectPicker } from '../../../../ObjectPicker';
-import { filterTagCandidates } from '../../../meta-tags';
-import { FormFieldLabel } from '../../FormRow';
-import { presentationFor } from '../../presentation';
-import { findRefOption } from './find-ref-option';
+import { omitHiddenFormFields, omitId } from '../../../../../util/index.ts';
+import { ObjectPicker } from '../../../../ObjectPicker/index.ts';
+import { filterTagCandidates } from '../../../meta-tags.ts';
+import { FormFieldLabel } from '../../FormRow.tsx';
+import { presentationFor } from '../../presentation.tsx';
+import { findRefOption } from './find-ref-option.ts';
 
 // TODO(burdon): Factor out.
 

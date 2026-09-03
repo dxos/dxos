@@ -10,7 +10,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 
 import { meta } from '#meta';
 
-import * as SettingsModule from './Settings';
+import * as SettingsModule from './Settings.ts';
 
 export const Settings = Capability.makeSingleton<Atom.Writable<SettingsModule.Settings>>()(
   `${meta.profile.key}.capability.settings`,

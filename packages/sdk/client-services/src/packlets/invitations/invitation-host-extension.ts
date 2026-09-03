@@ -21,8 +21,8 @@ import {
 } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 
-import type { FlowLockHolder } from './invitation-state';
-import { stateToString, tryAcquireBeforeContextDisposed } from './utils';
+import type { FlowLockHolder } from './invitation-state.ts';
+import { stateToString, tryAcquireBeforeContextDisposed } from './utils.ts';
 
 /// Timeout for the options exchange.
 const OPTIONS_TIMEOUT = 10_000;

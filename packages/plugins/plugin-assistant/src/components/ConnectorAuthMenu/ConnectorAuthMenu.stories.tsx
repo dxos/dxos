@@ -28,7 +28,7 @@ import { Expando } from '@dxos/schema';
 
 import { translations } from '#translations';
 
-import { ConnectorAuthMenu } from './ConnectorAuthMenu';
+import { ConnectorAuthMenu } from './ConnectorAuthMenu.tsx';
 
 /** `connector-b` already has a Connection below, so it renders as a "reuse" entry; `connector-a` has
  * none, so it renders as a "Connect" entry — together they exercise both item kinds and the

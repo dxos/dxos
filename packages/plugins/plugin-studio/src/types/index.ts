@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as Artifact from './Artifact';
-export * as Generation from './Generation';
-export * as GenerationService from './GenerationService';
-export * as Lightbox from './Lightbox';
-export * as StudioCapabilities from './StudioCapabilities';
-export * as StudioEvents from './StudioEvents';
-export * as StudioOperation from './StudioOperation';
-export * as Variant from './Variant';
+export * as Artifact from './Artifact.ts';
+export * as Generation from './Generation.ts';
+export * as GenerationService from './GenerationService.ts';
+export * as Lightbox from './Lightbox.ts';
+export * as StudioCapabilities from './StudioCapabilities.ts';
+export * as StudioEvents from './StudioEvents.ts';
+export * as StudioOperation from './StudioOperation.ts';
+export * as Variant from './Variant.ts';

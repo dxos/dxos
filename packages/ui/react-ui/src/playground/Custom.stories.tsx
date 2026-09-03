@@ -5,8 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Button, type ButtonProps, IconButton, Tooltip } from '../components';
-import { withTheme } from '../testing';
+import { Button, type ButtonProps, IconButton, Tooltip } from '../components/index.ts';
+import { withTheme } from '../testing/index.ts';
 
 const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
   return (

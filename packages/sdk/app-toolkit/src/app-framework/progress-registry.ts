@@ -7,7 +7,7 @@ import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { Progress } from '@dxos/progress';
 
-import * as AppCapabilities from './AppCapabilities';
+import * as AppCapabilities from './AppCapabilities.ts';
 
 /**
  * Builds the {@link AppCapabilities.ProgressRegistry} capability value over an atom {@link Registry.AtomRegistry}. A

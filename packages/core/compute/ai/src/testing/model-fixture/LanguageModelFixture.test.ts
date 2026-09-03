@@ -18,10 +18,10 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { dbg } from '@dxos/log';
 
-import * as AiService from '../../AiService';
-import { AiServiceTestingPreset } from '../test-layers';
-import { TestingToolkit, testingLayer } from '../toolkit';
-import * as LanguageModelFixture from './LanguageModelFixture';
+import * as AiService from '../../AiService.ts';
+import { AiServiceTestingPreset } from '../test-layers.ts';
+import { TestingToolkit, testingLayer } from '../toolkit.ts';
+import * as LanguageModelFixture from './LanguageModelFixture.ts';
 
 // Workaround: @effect/ai-anthropic v0.26.0 declares AnthropicWebSearch with
 // parameters: EmptyParams, but the API now sends { query: "..." } in tool_use.input,

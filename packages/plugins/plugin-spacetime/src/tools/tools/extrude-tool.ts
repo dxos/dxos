@@ -7,10 +7,10 @@ import type { Manifold } from 'manifold-3d';
 
 import { Obj } from '@dxos/echo';
 
-import { applyExtrusion, serializeManifold, updateMeshFromManifold } from '../../engine';
-import { type Tool } from '../tool';
-import { type ToolContext } from '../tool-context';
-import { selectFace } from './select-tool';
+import { applyExtrusion, serializeManifold, updateMeshFromManifold } from '../../engine/index.ts';
+import { type ToolContext } from '../tool-context.ts';
+import { type Tool } from '../tool.ts';
+import { selectFace } from './select-tool.ts';
 
 /** Throttle interval for pointer move updates (ms). */
 const MOVE_THROTTLE_MS = 30;

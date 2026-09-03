@@ -14,7 +14,7 @@ import { Combobox, type ComboboxRootProps } from '@dxos/react-ui-list';
 import { useSearchListResults } from '@dxos/react-ui-search';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Grid, type GridContentProps, type GridEditing, type GridRootProps } from './Grid';
+import { Grid, type GridContentProps, type GridEditing, type GridRootProps } from './Grid.tsx';
 
 const storybookItems = random.helpers.uniqueArray(random.commerce.productName, 16);
 

@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { batchEvents } from './event-batch';
-import { EventId } from './symbols';
+import { batchEvents } from './event-batch.ts';
+import { EventId } from './symbols.ts';
 
 /**
  * Generic change context tracking.

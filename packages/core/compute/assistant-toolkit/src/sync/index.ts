@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './sync';
+export * from './sync.ts';

@@ -19,10 +19,10 @@ import { trim } from '@dxos/util';
 
 import { translations } from '#translations';
 
-import { TestLayout, TestPanel } from '../../../testing';
-import { omitId } from '../../../util';
-import { Form, type FormRootProps } from '../Form';
-import { parseLayout } from './parser';
+import { TestLayout, TestPanel } from '../../../testing/index.ts';
+import { omitId } from '../../../util/index.ts';
+import { Form, type FormRootProps } from '../Form.tsx';
+import { parseLayout } from './parser.ts';
 
 /**
  * Sample schema: a Flight booking carries airline, flight number, route, dates,

@@ -13,10 +13,10 @@ import { invariant } from '@dxos/invariant';
 
 import { meta } from '#meta';
 
-import type * as DeckSchema from './DeckSchema';
-import { type DeckState, type EphemeralDeckState, type StoredDeckState } from './DeckSchema';
+import type * as DeckSchema from './DeckSchema.ts';
+import { type DeckState, type EphemeralDeckState, type StoredDeckState } from './DeckSchema.ts';
 
-export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings').Settings>>()(
+export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings.ts').Settings>>()(
   `${meta.profile.key}.capability.settings`,
 );
 

@@ -9,7 +9,7 @@ import { Index } from 'usearch';
 
 import { Message } from '@dxos/types';
 
-import { embedBatch, embedText } from './embeddings';
+import { embedBatch, embedText } from './embeddings.ts';
 
 export type Snippet = {
   readonly text: string;

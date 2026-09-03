@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { type DataService } from '@dxos/protocols/rpc';
 import { retry } from '@dxos/util';
 
-import { type AutomergeHost, type DocumentLease } from '../automerge';
+import { type AutomergeHost, type DocumentLease } from '../automerge/index.ts';
 
 const MAX_UPDATE_FREQ = 10; // [updates/sec]
 

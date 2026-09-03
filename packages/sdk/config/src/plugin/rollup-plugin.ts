@@ -4,8 +4,8 @@
 
 import { type Plugin } from 'rollup';
 
-import { definitions } from './definitions';
-import { type ConfigPluginOpts } from './types';
+import { definitions } from './definitions.ts';
+import { type ConfigPluginOpts } from './types.ts';
 
 export const ConfigPlugin = (options: ConfigPluginOpts = {}): Plugin => {
   const contents = Object.entries(definitions({ ...options, mode: process.env.NODE_ENV }))

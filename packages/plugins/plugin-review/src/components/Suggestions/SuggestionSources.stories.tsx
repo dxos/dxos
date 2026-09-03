@@ -15,8 +15,8 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Branch } from '@dxos/versioning';
 
-import { STORY_AGENTS, seedAgentSuggestions } from '../../testing';
-import { SuggestionSources, type SuggestionSourcesProps } from './SuggestionSources';
+import { STORY_AGENTS, seedAgentSuggestions } from '../../testing/index.ts';
+import { SuggestionSources, type SuggestionSourcesProps } from './SuggestionSources.tsx';
 
 // A single, deliberately distinct author/content for the second document — neither this DID nor this
 // text overlaps `STORY_AGENTS`, so any trace of it (or of `STORY_AGENTS`' content) on the wrong side

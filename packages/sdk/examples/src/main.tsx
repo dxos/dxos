@@ -20,7 +20,7 @@ import { Text } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';
 import { type MaybePromise } from '@dxos/util';
 
-import TaskList from './examples/TaskList';
+import TaskList from './examples/TaskList.tsx';
 
 const root = createRoot(document.getElementById('root')!);
 

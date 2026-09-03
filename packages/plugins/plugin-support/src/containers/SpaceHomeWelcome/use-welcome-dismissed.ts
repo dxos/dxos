@@ -8,7 +8,7 @@ import { useCallback } from 'react';
 import { useSettingsSpaceProperties } from '@dxos/app-toolkit/ui';
 import { Annotation } from '@dxos/echo';
 
-import { WelcomeDismissedAnnotation } from '../../annotations';
+import { WelcomeDismissedAnnotation } from '../../annotations.ts';
 
 // Kept out of `SpaceHomeWelcome.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on

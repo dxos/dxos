@@ -7,8 +7,8 @@ import * as Fiber from 'effect/Fiber';
 import * as Tracer from 'effect/Tracer';
 import { describe, expect, test } from 'vitest';
 
-import * as SpanAttributes from './SpanAttributes';
-import { makeRecordingTracer } from './testing';
+import * as SpanAttributes from './SpanAttributes.ts';
+import { makeRecordingTracer } from './testing.ts';
 
 const SPACE = 'B7777777777777777777777777';
 

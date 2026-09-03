@@ -24,7 +24,7 @@ import { type Extension, keymap } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
 
-import { Editor } from '../Editor';
+import { Editor } from '../Editor/index.ts';
 
 type MessageField = 'to' | 'cc' | 'bcc' | 'subject';
 

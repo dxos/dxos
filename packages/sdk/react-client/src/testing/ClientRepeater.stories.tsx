@@ -10,9 +10,9 @@ import { Input } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { useClient } from '../client';
-import { useSpace } from '../echo';
-import { type ClientRepeatedComponentProps, ClientRepeater } from './ClientRepeater';
+import { useClient } from '../client/index.ts';
+import { useSpace } from '../echo/index.ts';
+import { type ClientRepeatedComponentProps, ClientRepeater } from './ClientRepeater.tsx';
 
 const meta = {
   title: 'sdk/react-client/ClientRepeater',

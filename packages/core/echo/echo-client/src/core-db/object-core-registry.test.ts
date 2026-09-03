@@ -4,8 +4,8 @@
 
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { ObjectCore } from './object-core';
-import { ObjectCoreRegistry, PIN_TTL } from './object-core-registry';
+import { ObjectCoreRegistry, PIN_TTL } from './object-core-registry.ts';
+import { ObjectCore } from './object-core.ts';
 
 describe('ObjectCoreRegistry', () => {
   beforeEach(() => {

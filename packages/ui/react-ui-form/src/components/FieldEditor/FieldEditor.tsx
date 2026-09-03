@@ -19,8 +19,8 @@ import {
 import { translationKey } from '#translations';
 import { type FormFieldMap } from '#types';
 
-import { getFormProperties } from '../../util';
-import { Form, type FormRootProps, SelectField, SelectOptionField } from '../Form';
+import { getFormProperties } from '../../util/index.ts';
+import { Form, type FormRootProps, SelectField, SelectOptionField } from '../Form/index.ts';
 
 export type FieldEditorProps = Pick<FormRootProps<any>, 'readonly'> & {
   projection: ProjectionModel;

@@ -26,8 +26,8 @@ import { TestContextService } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 import { deepMapValues } from '@dxos/util';
 
-import * as AiService from '../../AiService';
-import { withoutToolCallParsing } from '../../util';
+import * as AiService from '../../AiService.ts';
+import { withoutToolCallParsing } from '../../util/index.ts';
 
 // Can be performance-intensive
 const DISABLE_CLOSEST_MATCH_SEARCH = false;

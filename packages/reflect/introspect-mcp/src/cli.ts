@@ -5,7 +5,7 @@
 // TODO(burdon): Consider how to integrate with DXOS CLI.
 // Direct CLI entry — invoked by `pnpm -F @dxos/introspect-mcp start` via tsx.
 
-import { main } from './server';
+import { main } from './server/index.ts';
 
 main().catch((err) => {
   console.error(err);

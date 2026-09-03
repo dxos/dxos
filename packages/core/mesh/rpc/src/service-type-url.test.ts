@@ -10,9 +10,9 @@ import { schema } from '@dxos/protocols/proto';
 import { type RpcMessage } from '@dxos/protocols/proto/dxos/rpc';
 import { type TestService } from '@dxos/protocols/proto/example/testing/rpc';
 
-import { type RpcPort } from './rpc';
-import { type ProtoRpcPeer, createProtoRpcPeer } from './service';
-import { createLinkedPorts } from './testing';
+import { type RpcPort } from './rpc.ts';
+import { type ProtoRpcPeer, createProtoRpcPeer } from './service.ts';
+import { createLinkedPorts } from './testing.ts';
 
 // `ServiceHandler` writes protobuf.js's `fullName` into `Any.type_url`, which carries a leading dot;
 // buf's `DescService` reports the same type without one. These fixtures gate `#8` by proving a peer

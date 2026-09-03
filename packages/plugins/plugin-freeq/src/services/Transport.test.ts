@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { makeWebSocketTransport } from './Transport';
+import { makeWebSocketTransport } from './Transport.ts';
 
 describe('makeWebSocketTransport', () => {
   test('delivers a frame with no trailing terminator as a single line', ({ expect }) => {

@@ -5,7 +5,7 @@
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import type { Client } from '@dxos/client';
 
-import { type DiagnosticContext, type DiagnosticProvider, type DiagnosticRunResult } from './types';
+import { type DiagnosticContext, type DiagnosticProvider, type DiagnosticRunResult } from './types.ts';
 
 export type RunDiagnosticsOptions = {
   readonly client: Client;

@@ -9,7 +9,7 @@ import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
-import { Tabs, TabsRootProps } from './Tabs';
+import { Tabs, TabsRootProps } from './Tabs.tsx';
 
 random.seed(1234);
 

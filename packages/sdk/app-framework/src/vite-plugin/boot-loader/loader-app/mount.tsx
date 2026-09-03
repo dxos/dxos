@@ -5,10 +5,10 @@
 import { createEffect } from 'solid-js';
 import { render } from 'solid-js/web';
 
-import { createBridge } from './bridge';
-import { Loader } from './Loader';
-import { createLoaderStore } from './store';
-import { type BootLoaderConfig } from './types';
+import { createBridge } from './bridge.ts';
+import { Loader } from './Loader.tsx';
+import { createLoaderStore } from './store.ts';
+import { type BootLoaderConfig } from './types.ts';
 
 /** Fallback teardown if the outro's `transitionend` never fires (e.g. no opacity transition). */
 const OUTRO_FALLBACK_MS = 800;

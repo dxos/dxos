@@ -6,7 +6,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 import React from 'react';
 import { afterEach, describe, expect, test } from 'vitest';
 
-import { Switch } from './Switch';
+import { Switch } from './Switch.tsx';
 
 describe('Switch', () => {
   afterEach(cleanup);

@@ -13,7 +13,7 @@ import { Form, type FormUpdateMeta, omitId } from '@dxos/react-ui-form';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { Task } from '@dxos/types';
 
-import { GTD_LENS_ID, GtdLens, GtdTask } from './gtd';
+import { GTD_LENS_ID, GtdLens, GtdTask } from './gtd.ts';
 
 //
 // Two interfaces over one object, plus an inspector showing where the data actually lands.

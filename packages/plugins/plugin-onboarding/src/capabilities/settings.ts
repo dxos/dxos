@@ -9,7 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { createKvsStore } from '@dxos/effect';
 
-import { meta } from '../meta';
+import { meta } from '../meta.ts';
 
 // Empty schema — this plugin has no persisted settings. The contribution is
 // required so the settings plugin creates a nav node for this plugin's settings page.

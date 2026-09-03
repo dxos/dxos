@@ -32,8 +32,8 @@ import { type ExecutionGraph, buildExecutionGraph } from '#execution-graph';
 import { getTraceMessagesAtom, useTraceMessages } from '#hooks';
 import { AssistantCapabilities } from '#types';
 
-import { type ProcessEnvironment, filterProcesses, parseProcessEnvironments } from './trace-filter';
-import { TraceToolbar } from './TraceToolbar';
+import { type ProcessEnvironment, filterProcesses, parseProcessEnvironments } from './trace-filter.ts';
+import { TraceToolbar } from './TraceToolbar.tsx';
 
 export type TracePanelProps = AppSurface.SpaceArticleProps<Pick<ProcessTreeProps, 'onProcessTerminate'>>;
 

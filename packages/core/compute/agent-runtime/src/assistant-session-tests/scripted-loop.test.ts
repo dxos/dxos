@@ -18,7 +18,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { ContentBlock, type Message } from '@dxos/types';
 
-import { AssistantTestLayer } from '../testing';
+import { AssistantTestLayer } from '../testing/index.ts';
 
 const { text, toolCall, scriptedAiService } = ScriptedLanguageModel;
 

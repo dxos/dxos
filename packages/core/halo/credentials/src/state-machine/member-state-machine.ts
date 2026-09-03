@@ -8,14 +8,14 @@ import { log } from '@dxos/log';
 import { type Credential, type ProfileDocument, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { ComplexMap } from '@dxos/util';
 
-import { getCredentialAssertion } from '../credentials';
+import { getCredentialAssertion } from '../credentials/index.ts';
 import {
   type ChainVertex,
   CredentialGraph,
   type CredentialGraphStateHandler,
   type PathState,
   type StateScope,
-} from '../graph/credential-graph';
+} from '../graph/credential-graph.ts';
 
 export interface MemberInfo {
   key: PublicKey;

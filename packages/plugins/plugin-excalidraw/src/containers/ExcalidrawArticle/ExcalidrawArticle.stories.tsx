@@ -11,7 +11,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Excalidraw } from '#types';
 
-import { ExcalidrawArticle } from './ExcalidrawArticle';
+import { ExcalidrawArticle } from './ExcalidrawArticle.tsx';
 
 const DefaultStory = () => {
   const [{ drawing, canvas }] = useState(() => {

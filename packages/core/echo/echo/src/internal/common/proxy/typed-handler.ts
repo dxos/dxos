@@ -13,14 +13,14 @@ import { SchemaAST } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { getDeep, setDeep } from '@dxos/util';
 
-import { getSchemaURI } from '../../Annotation/annotations';
-import { isEntity } from '../../Entity/guard';
-import { toEffectSchema } from '../../JsonSchema/json-schema';
-import { ObjectDeletedId, ParentId, SchemaId, StaticTypeSchemaSlot, TypeEntityId, TypeId } from '../types';
-import { executeChange, isInChangeContext, queueNotification } from './change-context';
-import { defineHiddenProperty } from './define-hidden-property';
-import { createPropertyDeleteError } from './errors';
-import { batchEvents } from './event-batch';
+import { getSchemaURI } from '../../Annotation/annotations.ts';
+import { isEntity } from '../../Entity/guard.ts';
+import { toEffectSchema } from '../../JsonSchema/json-schema.ts';
+import { ObjectDeletedId, ParentId, SchemaId, StaticTypeSchemaSlot, TypeEntityId, TypeId } from '../types/index.ts';
+import { executeChange, isInChangeContext, queueNotification } from './change-context.ts';
+import { defineHiddenProperty } from './define-hidden-property.ts';
+import { createPropertyDeleteError } from './errors.ts';
+import { batchEvents } from './event-batch.ts';
 import {
   getEchoRoot,
   getOwner,
@@ -29,8 +29,8 @@ import {
   notifyOwnerChain,
   setOwnerRecursive,
   wouldCreateCycle,
-} from './ownership';
-import { type ReactiveHandler, objectData } from './proxy-types';
+} from './ownership.ts';
+import { type ReactiveHandler, objectData } from './proxy-types.ts';
 import {
   createProxy,
   isProxy,
@@ -39,13 +39,13 @@ import {
   normalizeSpliceRange,
   symbolIsProxy,
   symbolReactivePrototype,
-} from './proxy-utils';
-import { ReactiveArray } from './reactive-array';
-import { SchemaValidator, assertsWithDetail } from './schema-validator';
-import { ChangeId, EventId } from './symbols';
+} from './proxy-utils.ts';
+import { ReactiveArray } from './reactive-array.ts';
+import { SchemaValidator, assertsWithDetail } from './schema-validator.ts';
+import { ChangeId, EventId } from './symbols.ts';
 
 // Re-export for external consumers.
-export { getEchoRoot, setMetaOwner } from './ownership';
+export { getEchoRoot, setMetaOwner } from './ownership.ts';
 
 type ProxyTarget = {
   /**

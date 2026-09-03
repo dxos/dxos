@@ -6,9 +6,9 @@ import { cleanup, render, screen } from '@testing-library/react';
 import React, { type PropsWithChildren } from 'react';
 import { afterEach, describe, test } from 'vitest';
 
-import { ThemeProvider } from '../../primitives';
-import { defaultTx } from '../../theme';
-import { Toolbar } from './Toolbar';
+import { ThemeProvider } from '../../primitives/index.ts';
+import { defaultTx } from '../../theme/index.ts';
+import { Toolbar } from './Toolbar.tsx';
 
 /**
  * Radix applies `role="toolbar"` before spreading caller props, so any `role` key present in the

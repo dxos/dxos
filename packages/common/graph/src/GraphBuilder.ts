@@ -16,9 +16,9 @@ import { type CleanupFn } from '@dxos/async';
 import { log } from '@dxos/log';
 import { type MaybePromise, Position, type Specialize, getDebugName, isNonNullable } from '@dxos/util';
 
-import * as GraphEdge from './GraphEdge';
-import * as GraphModel from './GraphModel';
-import * as GraphNode from './GraphNode';
+import * as GraphEdge from './GraphEdge.ts';
+import * as GraphModel from './GraphModel.ts';
+import * as GraphNode from './GraphNode.ts';
 
 // Separates the components of the compound keys this module builds (a node id from a relation key, a
 // node id from a subscription kind). Control characters, so they cannot occur in an id or a relation.

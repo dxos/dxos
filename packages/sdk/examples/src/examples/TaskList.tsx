@@ -9,7 +9,7 @@ import { type SpaceId } from '@dxos/keys';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Input } from '@dxos/react-ui';
 
-import { TaskType } from '../types';
+import { TaskType } from '../types.ts';
 
 const TaskList = ({ id, spaceId }: { id: number; spaceId?: SpaceId }) => {
   const space = useSpace(spaceId);

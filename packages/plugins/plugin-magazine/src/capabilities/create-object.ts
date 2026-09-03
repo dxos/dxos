@@ -19,7 +19,7 @@ import {
   fetchRss,
   listStandardSitePublications,
   searchStandardSiteHandles,
-} from '../operations/sources';
+} from '../operations/sources/index.ts';
 
 const StandardSiteCreate = Schema.Struct({
   ...CreateSubscription.StandardSiteCreateBase.fields,

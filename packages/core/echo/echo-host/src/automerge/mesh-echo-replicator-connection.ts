@@ -12,7 +12,11 @@ import { log } from '@dxos/log';
 import type { AutomergeProtocolMessage } from '@dxos/protocols';
 import { AutomergeReplicator, type AutomergeReplicatorFactory } from '@dxos/teleport-extension-automerge-replicator';
 
-import type { AutomergeReplicatorConnection, ShouldAdvertiseProps, ShouldSyncCollectionProps } from './echo-replicator';
+import type {
+  AutomergeReplicatorConnection,
+  ShouldAdvertiseProps,
+  ShouldSyncCollectionProps,
+} from './echo-replicator.ts';
 
 const DEFAULT_FACTORY: AutomergeReplicatorFactory = (params) => new AutomergeReplicator(...params);
 

@@ -2,5 +2,5 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './comment-sync';
-export * from './version-diff';
+export * from './comment-sync.ts';
+export * from './version-diff.ts';

@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { Timeframe } from './timeframe';
+import { Timeframe } from './timeframe.ts';
 
 describe('spacetime', () => {
   test('constructors', () => {

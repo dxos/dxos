@@ -22,8 +22,8 @@ import { trim } from '@dxos/util';
 
 import { Booking, Segment, Trip, TripOperation } from '#types';
 
-import { getTripGapDays } from './config';
-import { AIRLINES } from './const';
+import { getTripGapDays } from './config.ts';
+import { AIRLINES } from './const.ts';
 
 /**
  * Template-driven extractor for travel-booking confirmation emails. A cheap/fast LLM parses the

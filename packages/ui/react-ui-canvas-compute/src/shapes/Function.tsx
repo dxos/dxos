@@ -17,9 +17,9 @@ import {
   type TextBoxProps,
 } from '@dxos/react-ui-canvas-editor';
 
-import { useComputeNodeState } from '../hooks';
-import { Box } from './common';
-import { type FunctionShape } from './function-def';
+import { useComputeNodeState } from '../hooks/index.ts';
+import { Box } from './common/index.ts';
+import { type FunctionShape } from './function-def.ts';
 
 //
 // Component

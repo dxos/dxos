@@ -6,7 +6,7 @@ import { describe, it, test } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
-import * as ScriptedLanguageModel from './ScriptedLanguageModel';
+import * as ScriptedLanguageModel from './ScriptedLanguageModel.ts';
 
 const { text, toolCall, promptIncludes, scriptedLanguageModelLayer, __testing } = ScriptedLanguageModel;
 

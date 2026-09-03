@@ -22,10 +22,23 @@ import { DEFAULT_PROFILE } from '@dxos/client-protocol';
 import { LogLevel, levels, log } from '@dxos/log';
 import { isRecordEnabled, loadPlugins, makeInstalledPlugins } from '@dxos/plugin-registry';
 
-import { admin, chat, commandConfigLayer, debug, dx, fn, hub, mailbox, mcp, reflect, repl, reset } from './commands';
-import { getCore, getDefaults, getPlugins } from './commands/plugin-defs';
-import { setDispatcher } from './dispatcher';
-import { installStderrFilter, registerSharedScope } from './util';
+import {
+  admin,
+  chat,
+  commandConfigLayer,
+  debug,
+  dx,
+  fn,
+  hub,
+  mailbox,
+  mcp,
+  reflect,
+  repl,
+  reset,
+} from './commands/index.ts';
+import { getCore, getDefaults, getPlugins } from './commands/plugin-defs.ts';
+import { setDispatcher } from './dispatcher.ts';
+import { installStderrFilter, registerSharedScope } from './util/index.ts';
 
 // Filter background `warnAfterTimeout` chatter out of stderr for the lifetime
 // of the process. The warnings come from eager space initialisation in
@@ -104,7 +117,7 @@ const program = Effect.gen(function* () {
   // Before `ConfigService.load` and the command tree: see `isWatchSupervisor`. `serve.ts` keeps an
   // equivalent branch so a miss here degrades to a slow start rather than an unknown flag.
   if (isWatchSupervisor(argv)) {
-    const { runWatchSupervisor } = yield* Effect.promise(() => import('./commands/mcp/watch'));
+    const { runWatchSupervisor } = yield* Effect.promise(() => import('./commands/mcp/watch.ts'));
     return yield* runWatchSupervisor();
   }
 

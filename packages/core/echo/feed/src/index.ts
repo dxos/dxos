@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './cypher';
-export * from './feed-store';
-export * from './errors';
-export * from './sync-server';
-export * from './sync-client';
-export * from './web-crypto-cypher';
+export * from './cypher.ts';
+export * from './feed-store.ts';
+export * from './errors.ts';
+export * from './sync-server.ts';
+export * from './sync-client.ts';
+export * from './web-crypto-cypher.ts';

@@ -11,9 +11,9 @@ import { EffectEx } from '@dxos/effect';
 import { subscribeStream } from '@dxos/protocols';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 
-import { type ServiceContext } from '../services';
-import { createServiceContext } from '../testing';
-import { NetworkServiceImpl } from './network-service';
+import { type ServiceContext } from '../services/index.ts';
+import { createServiceContext } from '../testing/index.ts';
+import { NetworkServiceImpl } from './network-service.ts';
 
 describe('NetworkService', () => {
   let serviceContext: ServiceContext;

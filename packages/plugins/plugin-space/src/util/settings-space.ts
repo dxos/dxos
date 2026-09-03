@@ -15,7 +15,7 @@ import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { isSpacesOrder, mergeSpacesOrder } from '../migrations/settings-space';
+import { isSpacesOrder, mergeSpacesOrder } from '../migrations/settings-space.ts';
 
 /**
  * Resolve the settings space, creating one only for legacy profiles that predate it.

@@ -7,7 +7,7 @@ import React, { captureOwnerStack, useEffect, useState } from 'react';
 import { mx } from '@dxos/ui-theme';
 import { safeStringify } from '@dxos/util';
 
-import { ErrorStack, parseCaptureOwnerStack } from '../components';
+import { ErrorStack, parseCaptureOwnerStack } from '../components/index.ts';
 
 export type LoadingProps = { data?: any };
 

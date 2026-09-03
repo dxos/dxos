@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Terminal';
+export * from './Terminal/index.ts';

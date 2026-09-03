@@ -13,7 +13,7 @@ import { trim } from '@dxos/util';
 
 import { BrainOperation } from '#types';
 
-import { factLine, toCompactFact } from './facts';
+import { factLine, toCompactFact } from './facts.ts';
 
 export default BrainOperation.SummarizeSubject.pipe(
   Operation.withHandler(

@@ -17,8 +17,8 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { omit, pick } from '@dxos/util';
 
-import { makeMultiSelectAnnotations, makeSingleSelectAnnotations } from '../util';
-import { PropertySchema, type PropertyType } from './format';
+import { makeMultiSelectAnnotations, makeSingleSelectAnnotations } from '../util/index.ts';
+import { PropertySchema, type PropertyType } from './format.ts';
 
 export const VIEW_FIELD_LIMIT = 32;
 

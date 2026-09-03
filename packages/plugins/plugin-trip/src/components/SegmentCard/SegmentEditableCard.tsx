@@ -11,7 +11,7 @@ import { Card, Icon, Input, useTranslation } from '@dxos/react-ui';
 import { meta } from '#meta';
 import { Segment } from '#types';
 
-import { type SegmentCardActionHandler } from './SegmentCard';
+import { type SegmentCardActionHandler } from './SegmentCard.tsx';
 
 /** ISO 8601 → `YYYY-MM-DDTHH:mm` in the user's local timezone (the value shape `<input type='datetime-local'>` expects). */
 const isoToLocalDateTime = (iso: string | undefined): string => {

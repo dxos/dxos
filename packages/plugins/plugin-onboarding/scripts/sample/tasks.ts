@@ -8,7 +8,7 @@ import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Database, Ref } from '@dxos/echo';
 import { Milestone, type Person, Task, TaskSet } from '@dxos/types';
 
-import { type PersonKey, type PersonMap } from './people';
+import { type PersonKey, type PersonMap } from './people.ts';
 
 //
 // Task set + tasks

@@ -9,7 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Domino } from '@dxos/ui';
 
-import { type XmlWidgetProps, type XmlWidgetState } from './xml-tags';
+import { type XmlWidgetProps, type XmlWidgetState } from './xml-tags.ts';
 
 export interface XmlWidgetNotifier {
   mounted(widget: XmlWidgetState): void;

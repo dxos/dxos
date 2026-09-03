@@ -8,7 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Obj } from '@dxos/echo';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 
-import { image } from '../extensions';
+import { image } from '../extensions/index.ts';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {

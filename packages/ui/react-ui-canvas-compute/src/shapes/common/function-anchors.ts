@@ -9,8 +9,8 @@ import { SchemaAST } from '@dxos/effect';
 import { type Polygon } from '@dxos/react-ui-canvas-editor';
 import { createAnchors, rowHeight } from '@dxos/react-ui-canvas-editor';
 
-import { footerHeight, headerHeight } from '../common';
-import { createAnchorId } from '../defs';
+import { footerHeight, headerHeight } from '../common/index.ts';
+import { createAnchorId } from '../defs.ts';
 
 // Kept out of `FunctionBody.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on every edit.

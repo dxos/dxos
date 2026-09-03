@@ -4,7 +4,7 @@
 
 import { invariant } from '@dxos/invariant';
 
-import { HANG_FOREVER_MS, type StressFleet, type StressTab } from './stress-fleet';
+import { HANG_FOREVER_MS, type StressFleet, type StressTab } from './stress-fleet.ts';
 
 /** Bounded worker hang, long enough to outlast the leader stale timeout (5s) it is meant to provoke. */
 const HANG_WORKER_MS = 8_000;

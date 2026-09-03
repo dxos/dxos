@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { diffTags } from './tag-diff';
+import { diffTags } from './tag-diff.ts';
 import {
   type ObservableChange,
   batchPushOps,
@@ -12,7 +12,7 @@ import {
   remoteFromBase,
   resolvePushOps,
   tagsFromIndex,
-} from './tag-push';
+} from './tag-push.ts';
 
 /** Structural stand-ins for pipeline changes — the observer reads only these fields. */
 const retag = (entityId: string, add: string[], remove: string[]): ObservableChange => ({

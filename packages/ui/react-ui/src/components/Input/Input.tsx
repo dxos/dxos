@@ -41,11 +41,11 @@ import { type Density, type Elevation, type Size } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
-import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
-import { type ThemedClassName } from '../../util';
-import { IconButton, IconButtonProps } from '../Button';
-import { Icon } from '../Icon';
-import { type InputTriggerHandler, InputTriggerProvider, useInputTriggerContext } from './InputTriggerContext';
+import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks/index.ts';
+import { type ThemedClassName } from '../../util/index.ts';
+import { IconButton, IconButtonProps } from '../Button/index.ts';
+import { Icon } from '../Icon/index.ts';
+import { type InputTriggerHandler, InputTriggerProvider, useInputTriggerContext } from './InputTriggerContext.ts';
 import {
   SegmentedDate,
   type SegmentedDateProps,
@@ -53,7 +53,7 @@ import {
   type SegmentedDateTimeProps,
   SegmentedTime,
   type SegmentedTimeProps,
-} from './SegmentedInput';
+} from './SegmentedInput.tsx';
 
 type InputVariant = 'default' | 'subdued';
 

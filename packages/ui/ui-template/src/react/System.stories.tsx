@@ -16,9 +16,9 @@ import { Task } from '@dxos/types';
 import { json } from '@dxos/ui-editor';
 import { trim } from '@dxos/util';
 
-import { templateLanguage } from '../codemirror';
-import { type Node } from '../model';
-import { parse } from '../parser';
+import { templateLanguage } from '../codemirror/index.ts';
+import { type Node } from '../model.ts';
+import { parse } from '../parser.ts';
 import {
   type ModuleDef,
   type ModuleInputs,
@@ -29,12 +29,12 @@ import {
   fromSlot,
   varDecls,
   viewModules,
-} from '../system';
-import { type MultiSelectSchema, connect, multiSelectMachine } from '../testing';
-import { AttentionProvider } from './attention';
-import { Template, createReactRenderer } from './renderer';
-import { Editor, OperationLog, Workbench } from './testing';
-import { useSystem } from './useSystem';
+} from '../system.ts';
+import { type MultiSelectSchema, connect, multiSelectMachine } from '../testing/index.ts';
+import { AttentionProvider } from './attention.tsx';
+import { Template, createReactRenderer } from './renderer.tsx';
+import { Editor, OperationLog, Workbench } from './testing/index.ts';
+import { useSystem } from './useSystem.ts';
 
 //
 // SPIKE. The system stories: one DefaultStory, per-story layout. Everything below a story's

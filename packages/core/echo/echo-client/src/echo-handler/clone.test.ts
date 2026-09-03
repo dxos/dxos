@@ -7,8 +7,8 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 
-import { EchoTestBuilder } from '../testing';
-import { clone } from './clone';
+import { EchoTestBuilder } from '../testing/index.ts';
+import { clone } from './clone.ts';
 
 describe('clone', () => {
   let builder: EchoTestBuilder;

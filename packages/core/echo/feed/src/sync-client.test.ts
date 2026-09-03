@@ -16,9 +16,9 @@ import { SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { SyncRpcTimeoutError } from './errors';
-import { FeedStore } from './feed-store';
-import { SyncClient } from './sync-client';
+import { SyncRpcTimeoutError } from './errors.ts';
+import { FeedStore } from './feed-store.ts';
+import { SyncClient } from './sync-client.ts';
 
 const WellKnownNamespaces = FeedProtocol.WellKnownNamespaces;
 

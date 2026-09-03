@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { structSubstitutions } from './struct';
+import { structSubstitutions } from './struct.ts';
 
 describe('structSubstitutions', () => {
   const dummyStruct = {

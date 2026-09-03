@@ -18,7 +18,7 @@ import {
   type ProfileDocument,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { type AuthenticatingInvitation, type CancellableInvitation } from './invitations';
+import { type AuthenticatingInvitation, type CancellableInvitation } from './invitations/index.ts';
 
 /**
  * Ways to re-admit a device to an existing identity. `external` presents a signature from a key

@@ -15,8 +15,8 @@ import {
   createCredential,
   createCredentialSignerWithKey,
   createDelegatedSpaceInvitationCredential,
-} from '../credentials';
-import { InvitationStateMachine } from './invitation-state-machine';
+} from '../credentials/index.ts';
+import { InvitationStateMachine } from './invitation-state-machine.ts';
 
 describe('InvitationStateMachine', () => {
   const keyring = new Keyring();

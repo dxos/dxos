@@ -4,7 +4,7 @@
 
 import { sleep } from '@dxos/async';
 
-import { type AgentHostingProviderClient } from './agent-hosting-provider';
+import { type AgentHostingProviderClient } from './agent-hosting-provider.ts';
 
 export class FakeAgentHostingProvider implements AgentHostingProviderClient {
   private _agents: Map<string, string> = new Map();

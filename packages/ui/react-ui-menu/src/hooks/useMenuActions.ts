@@ -11,7 +11,7 @@ import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as GraphNode from '@dxos/graph/GraphNode';
 
-import { type MenuItem, type MenuItemGroup, type MenuItemsAccessor } from '../types';
+import { type MenuItem, type MenuItemGroup, type MenuItemsAccessor } from '../types.ts';
 
 export type ActionGraphNodes = AppGraphNode.NodeArg<any>[];
 export type ActionGraphEdges = AppGraph.Edge[];

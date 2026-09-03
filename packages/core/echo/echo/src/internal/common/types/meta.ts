@@ -9,14 +9,14 @@ import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { type Comparator, intersection } from '@dxos/util';
 
-import type * as Tag from '../../../Tag';
-import { Dictionary } from '../../Annotation/dictionary';
+import type * as Tag from '../../../Tag.ts';
+import { Dictionary } from '../../Annotation/dictionary.ts';
 // `meta` is no longer re-exported from the `common/types` barrel (see ./index.ts), so importing the
 // Ref schema builder here no longer forms an eval-order cycle with `Annotation`/`Database`.
-import { type Ref, createEchoReferenceSchema } from '../../Ref/ref';
-import { type AnyProperties } from './base';
-import { MetaId } from './model-symbols';
-import { TagTypeDXN } from './well-known-types';
+import { type Ref, createEchoReferenceSchema } from '../../Ref/ref.ts';
+import { type AnyProperties } from './base.ts';
+import { MetaId } from './model-symbols.ts';
+import { TagTypeDXN } from './well-known-types.ts';
 
 /**
  * Property name for meta when object is serialized to JSON.

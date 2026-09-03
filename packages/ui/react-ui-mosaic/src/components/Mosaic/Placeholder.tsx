@@ -15,8 +15,8 @@ import { type Axis, type ThemedClassName } from '@dxos/react-ui';
 import { type DndLocation, type DndPlaceholderData, getSourceData } from '@dxos/react-ui-dnd';
 import { mx } from '@dxos/ui-theme';
 
-import { useMosaicContainerContext } from './MosaicContainerContext';
-import { useMosaicTileContext } from './MosaicTileContext';
+import { useMosaicContainerContext } from './MosaicContainerContext.ts';
+import { useMosaicTileContext } from './MosaicTileContext.ts';
 
 //
 // Placeholder

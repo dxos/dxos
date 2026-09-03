@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 import { describe, test } from 'vitest';
 
-import { useFormHandler } from './useFormHandler';
+import { useFormHandler } from './useFormHandler.ts';
 
 const schema = Schema.Struct({
   name: Schema.NonEmptyString,

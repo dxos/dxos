@@ -7,7 +7,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { SelectionModel } from '@dxos/graph';
 import { omit } from '@dxos/util';
 
-import type { CanvasBoard, CanvasGraphModel } from '../types';
+import type { CanvasBoard, CanvasGraphModel } from '../types/index.ts';
 
 export const useSelection = (graph?: CanvasGraphModel): [SelectionModel, CanvasBoard.Shape | undefined] => {
   const selection = useMemo(() => new SelectionModel(), []);

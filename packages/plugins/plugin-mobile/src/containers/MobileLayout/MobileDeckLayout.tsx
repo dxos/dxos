@@ -11,8 +11,8 @@ import { Dnd } from '@dxos/react-ui-dnd';
 
 import { DebugOverlay, MobileLayout } from '#components';
 
-import { MobileDrawer } from './MobileDrawer';
-import { MobileMain } from './MobileMain';
+import { MobileDrawer } from './MobileDrawer.tsx';
+import { MobileMain } from './MobileMain.tsx';
 
 const MOBILE_DECK_LAYOUT_NAME = 'MobileDeckLayout';
 

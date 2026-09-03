@@ -34,10 +34,10 @@ import {
   useFormContext,
   useFormHandler,
   useKeyHandler,
-} from '../../hooks';
-import { formTheme } from './Form.theme';
-import { FormFieldSet, type FormFieldSetProps as NaturalFormFieldSetProps } from './FormFieldSet';
-import { FormLayout, type FormLayoutProps as NaturalFormLayoutProps } from './FormLayout';
+} from '../../hooks/index.ts';
+import { formTheme } from './Form.theme.ts';
+import { FormFieldSet, type FormFieldSetProps as NaturalFormFieldSetProps } from './FormFieldSet/index.ts';
+import { FormLayout, type FormLayoutProps as NaturalFormLayoutProps } from './FormLayout/index.ts';
 
 //
 // Root

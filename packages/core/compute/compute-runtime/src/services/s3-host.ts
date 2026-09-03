@@ -13,7 +13,7 @@ import { type SpaceId } from '@dxos/keys';
 import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 
-import { credentialsLayerFromDatabase } from './credentials';
+import { credentialsLayerFromDatabase } from './credentials.ts';
 
 /** `Connection.connectorId` written by plugin-s3's connector; the marker for an S3 connection. */
 export const S3_CONNECTOR_ID = 'org.dxos.plugin.s3.connector';

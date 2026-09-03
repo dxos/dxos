@@ -9,8 +9,8 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
-import { ANTHROPIC_SOURCE } from '../constants';
-import * as ClaudeManagedAgent from './ClaudeManagedAgent';
+import { ANTHROPIC_SOURCE } from '../constants.ts';
+import * as ClaudeManagedAgent from './ClaudeManagedAgent.ts';
 
 /**
  * A run of a {@link ClaudeManagedAgent.ClaudeManagedAgent}: one Anthropic-hosted session and its

@@ -17,7 +17,7 @@ import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 import { Database, type Ref } from '@dxos/echo';
 import { type AccessToken, Connection } from '@dxos/link';
 
-import { GITHUB_API_BASE } from '../constants';
+import { GITHUB_API_BASE } from '../constants.ts';
 
 /** Stored as `AccessToken.token`; sent as `Authorization: Bearer <token>`. */
 type GitHubCredentialsValue = {

@@ -354,8 +354,12 @@ export default defineConfig((env) => ({
     // native node: polyfill layer handle subpaths like `node:util/types`.
     alias: [
       // Applies to `build` as much as `serve`: this alias is the whole mechanism by which a reduced
-      // set's module graph never reaches a plugin outside it.
-      ...(isReducedPluginSet ? [{ find: /^\.\/plugin-defs$/, replacement: path.resolve(dirname, pluginSetFile) }] : []),
+      // set's module graph never reaches a plugin outside it. `main.tsx` writes the specifier with
+      // its explicit `.tsx` extension (`rewriteRelativeImportExtensions`), so the pattern has to
+      // match both that and the bare form.
+      ...(isReducedPluginSet
+        ? [{ find: /^\.\/plugin-defs(?:\.tsx)?$/, replacement: path.resolve(dirname, pluginSetFile) }]
+        : []),
       { find: /^node-fetch$/, replacement: 'isomorphic-fetch' },
       { find: /^node:util$/, replacement: '@dxos/node-std/util' },
       { find: /^node:path$/, replacement: '@dxos/node-std/path' },

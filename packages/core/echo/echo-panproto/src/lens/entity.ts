@@ -6,9 +6,9 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 
-import { make } from './codec';
-import { hasCodec } from './codecs';
-import { type AnyLens, type Mapping } from './types';
+import { make } from './codec.ts';
+import { hasCodec } from './codecs.ts';
+import { type AnyLens, type Mapping } from './types.ts';
 
 //
 // A persisted lens is an ordinary ECHO object, not a new entity kind: `Type` earns its own kind

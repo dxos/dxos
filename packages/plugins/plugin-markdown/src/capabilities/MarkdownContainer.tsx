@@ -14,7 +14,7 @@ import { type EditorViewMode } from '@dxos/ui-editor/types';
 import { MarkdownArticle, type MarkdownArticleProps } from '#containers';
 import { Markdown, MarkdownCapabilities } from '#types';
 
-import { editorViewModeAspect } from './editor-view-state';
+import { editorViewModeAspect } from './editor-view-state.ts';
 
 export type MarkdownContainerProps = AppSurface.ObjectArticleProps<Markdown.Document | Text.Text, { id: string }>;
 

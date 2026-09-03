@@ -38,7 +38,7 @@ import { Message, Outline, Task } from '@dxos/types';
 import { AssistantPlugin } from '#plugin';
 import { translations } from '#translations';
 
-import { ChatArticle, ChatArticleProps } from './ChatArticle';
+import { ChatArticle, ChatArticleProps } from './ChatArticle.tsx';
 
 /**
  * Replaces the AI service the plugin would build with a scripted model, so a story can drive the real

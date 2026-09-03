@@ -11,7 +11,7 @@ import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
 import { BYOK_HEADER } from '@dxos/protocols';
 
-import * as Credential from './Credential';
+import * as Credential from './Credential.ts';
 
 /**
  * Wraps an `HttpClient` so outbound requests carry `X-BYOK: <apiKey>` whenever the active space

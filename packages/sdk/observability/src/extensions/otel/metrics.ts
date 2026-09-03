@@ -25,9 +25,9 @@ import { type CleanupFn } from '@dxos/async';
 import { log } from '@dxos/log';
 import { type MetricData, type MetricObserver, TRACE_PROCESSOR } from '@dxos/tracing';
 
-import { METRIC_EXPORT_INTERVAL } from './intervals';
-import { type OtelOptions, setDiagLogger, signalUrl } from './otel';
-import { metricDataToAttributes } from './remote-metrics';
+import { METRIC_EXPORT_INTERVAL } from './intervals.ts';
+import { type OtelOptions, setDiagLogger, signalUrl } from './otel.ts';
+import { metricDataToAttributes } from './remote-metrics.ts';
 
 const METER_NAME = 'dxos-observability';
 

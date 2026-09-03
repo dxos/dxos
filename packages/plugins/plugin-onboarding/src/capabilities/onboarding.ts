@@ -10,8 +10,8 @@ import { getEnvString } from '@dxos/config';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import { OnboardingManager } from '../onboarding-manager';
-import { OnboardingCapabilities } from './capabilities';
+import { OnboardingManager } from '../onboarding-manager.ts';
+import { OnboardingCapabilities } from './capabilities.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

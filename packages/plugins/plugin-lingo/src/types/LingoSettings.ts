@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
-import * as Language from './Language';
+import * as Language from './Language.ts';
 
 /** Codes offered by the settings select, sorted so the list reads the same as the reader's. */
 const LANGUAGE_CODES = [...Language.POPULAR].map(({ code }) => code).sort();

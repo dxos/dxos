@@ -8,8 +8,8 @@ import { describe, expect, test } from 'vitest';
 import { waitForCondition } from '@dxos/async';
 import { Config, SystemStatus } from '@dxos/client';
 
-import { createClient, createClientContextProvider } from '../testing/util';
-import { useConfig } from './useConfig';
+import { createClient, createClientContextProvider } from '../testing/util.tsx';
+import { useConfig } from './useConfig.ts';
 
 // TODO(burdon): Disabled in CI since flaky.
 describe.runIf(!process.env.CI)('Config hook', () => {

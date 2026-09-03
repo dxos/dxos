@@ -9,8 +9,8 @@ import { type RDF } from '@dxos/pipeline-rdf';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { generateText, parseJsonArray } from '../llm';
-import { type ModelVariant } from '../models';
+import { generateText, parseJsonArray } from '../llm.ts';
+import { type ModelVariant } from '../models.ts';
 
 /** How the sender's utterance addresses the recipient — mapped to a pipeline-rdf {@link Illocution}. */
 export type SpeechActKind = 'question' | 'request' | 'notification';

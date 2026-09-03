@@ -18,8 +18,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 import { TerraObject } from '#types';
 
-import { createGizmo } from './gizmo-layer';
-import { createObjectForm } from './object-forms';
+import { createGizmo } from './gizmo-layer.ts';
+import { createObjectForm } from './object-forms.ts';
 
 /** Every kind the gallery renders, left to right, in the same order `ObjectLayer` iterates. */
 const KINDS: readonly TerraObject.Kind[] = ['boat', 'plane', 'satellite', 'tank', 'rocket'];

@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { IrcProtocol } from './IrcProtocol';
+import { IrcProtocol } from './IrcProtocol.ts';
 
 describe('IrcProtocol', () => {
   test('parses a PRIVMSG with prefix and trailing param', ({ expect }) => {

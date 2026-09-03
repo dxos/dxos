@@ -17,7 +17,7 @@ import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { isBun } from '@dxos/util';
 
-import { CommandConfig } from '../services';
+import { CommandConfig } from '../services/index.ts';
 
 /** Matches the budget `Space.syncToEdge` gives its own wait, so neither half of a drain dominates. */
 const SPACE_READY_TIMEOUT = Duration.seconds(60);

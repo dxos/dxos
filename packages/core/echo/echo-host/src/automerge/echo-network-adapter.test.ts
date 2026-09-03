@@ -15,8 +15,8 @@ import {
   type AutomergeReplicatorCallbacks,
 } from '@dxos/teleport-extension-automerge-replicator';
 
-import { EchoNetworkAdapter } from './echo-network-adapter';
-import { MeshEchoReplicator } from './mesh-echo-replicator';
+import { EchoNetworkAdapter } from './echo-network-adapter.ts';
+import { MeshEchoReplicator } from './mesh-echo-replicator.ts';
 
 const PEER_ID = 'peerA' as PeerId;
 const ANOTHER_PEER_ID = 'peerB' as PeerId;

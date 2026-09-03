@@ -17,10 +17,10 @@ import {
 import { useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
-import { IdentityDialog } from '../IdentityDialog';
-import { JoinDialog } from '../JoinDialog';
-import { SpaceDialog } from '../SpaceDialog';
-import { StatusDialog } from '../StatusDialog';
+import { IdentityDialog } from '../IdentityDialog/index.ts';
+import { JoinDialog } from '../JoinDialog/index.ts';
+import { SpaceDialog } from '../SpaceDialog/index.ts';
+import { StatusDialog } from '../StatusDialog/index.ts';
 
 const blurActiveElement = () => (document.activeElement as HTMLElement | undefined)?.blur?.();
 

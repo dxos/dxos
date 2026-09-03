@@ -6,8 +6,8 @@ import Observable from 'zen-observable';
 import type { ObservableLike, Observer, Subscriber } from 'zen-observable/esm';
 import PushStream from 'zen-push';
 
-import { type Event } from './events';
-import { Trigger } from './trigger';
+import { type Event } from './events.ts';
+import { Trigger } from './trigger.ts';
 
 export { Observable, PushStream, type Subscriber };
 

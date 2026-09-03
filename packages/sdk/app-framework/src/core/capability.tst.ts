@@ -8,7 +8,7 @@
 import * as Effect from 'effect/Effect';
 import { describe, expect, it } from 'tstyche';
 
-import * as Capability from './capability';
+import * as Capability from './capability.ts';
 
 type Example = { example: string };
 

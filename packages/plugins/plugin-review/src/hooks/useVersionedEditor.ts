@@ -14,8 +14,8 @@ import { Branch } from '@dxos/versioning';
 
 import { ReviewCapabilities } from '#types';
 
-import { deriveBinding } from './review-lifecycle';
-import { type useVersioning } from './useVersioning';
+import { deriveBinding } from './review-lifecycle.ts';
+import { type useVersioning } from './useVersioning.ts';
 
 export type VersionedEditorProps = {
   object: Markdown.Document | Text.Text;

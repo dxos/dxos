@@ -5,9 +5,9 @@
 import path from 'node:path';
 import { beforeEach, describe, test } from 'vitest';
 
-import { LogLevel } from './config';
-import { shouldLog } from './context';
-import { type Log, createLog } from './log';
+import { LogLevel } from './config.ts';
+import { shouldLog } from './context.ts';
+import { type Log, createLog } from './log.ts';
 
 class LogError extends Error {
   constructor(

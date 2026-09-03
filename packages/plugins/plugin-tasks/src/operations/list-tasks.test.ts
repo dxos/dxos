@@ -10,10 +10,10 @@ import { TestDatabaseLayer, testStoragePath } from '@dxos/echo-client/testing';
 import { PublicKey, URI } from '@dxos/keys';
 import { Milestone, Task, TaskSet } from '@dxos/types';
 
-import createMilestone from './create-milestone';
-import createTask from './create-task';
-import listTasks from './list-tasks';
-import updateTask from './update-task';
+import createMilestone from './create-milestone.ts';
+import createTask from './create-task.ts';
+import listTasks from './list-tasks.ts';
+import updateTask from './update-task.ts';
 
 describe('list-tasks', () => {
   it.effect('filters by status and assignee, and excludes sub-tasks by default', () =>

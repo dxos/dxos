@@ -37,11 +37,11 @@ import { DXN, EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { ContentBlock, Message, Organization } from '@dxos/types';
 
-import { AssistantTestLayer, waitForMessage } from '../testing';
-import * as ResearchService from '../testing/ResearchService';
-import { AGENT_PROCESS_KEY } from './agent-process';
-import * as AgentService from './AgentService';
-import { type DelegationStrategy } from './delegation-strategy';
+import { AssistantTestLayer, waitForMessage } from '../testing/index.ts';
+import * as ResearchService from '../testing/ResearchService.ts';
+import { AGENT_PROCESS_KEY } from './agent-process.ts';
+import * as AgentService from './AgentService.ts';
+import { type DelegationStrategy } from './delegation-strategy.ts';
 
 EntityId.dangerouslyDisableRandomness();
 

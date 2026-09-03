@@ -10,7 +10,7 @@ import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder, createTmpPath } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 
-import { parseBenchCount } from './testing/bench-util';
+import { parseBenchCount } from './testing/bench-util.ts';
 
 // Same 5 operations as `sqlite.bench.ts`, run through the ECHO API instead of raw SQL, over the
 // two object storage kinds: automerge objects (`db.add`) and feed objects (`db.add(obj, { to:

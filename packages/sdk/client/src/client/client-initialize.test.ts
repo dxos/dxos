@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { TimeoutError } from '@dxos/async';
 
-import { Client } from './client';
+import { Client } from './client.ts';
 
 describe('Client.waitUntilInitialized', () => {
   test('resolves once initialize completes', async () => {

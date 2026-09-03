@@ -14,7 +14,7 @@ import type * as Prompt from 'effect/unstable/ai/Prompt';
 import * as Response from 'effect/unstable/ai/Response';
 import * as Telemetry from 'effect/unstable/ai/Telemetry';
 
-import * as AiService from '../AiService';
+import * as AiService from '../AiService.ts';
 
 //
 // A deterministic, offline `LanguageModel` whose output is scripted rather than generated.

@@ -4,5 +4,5 @@
 
 export * from '@dxos/client/devtools';
 
-export * from './useDevtools';
-export * from './useStream';
+export * from './useDevtools.ts';
+export * from './useStream.ts';

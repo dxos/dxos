@@ -20,7 +20,7 @@ import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { ModuleContainer } from './ModuleContainer';
+import { ModuleContainer } from './ModuleContainer.tsx';
 
 // Example module role tokens (role-only dispatch). A real storybook defines these alongside its
 // module surfaces; here they exercise the container in isolation from any plugin.

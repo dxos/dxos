@@ -13,7 +13,7 @@ import { Database } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { assertArgument } from '@dxos/invariant';
 
-import { consoleTraceWriter, noopTraceWriter } from './logger';
+import { consoleTraceWriter, noopTraceWriter } from './logger.ts';
 
 // TODO(burdon): Factor out.
 export type OneOf<T> = {

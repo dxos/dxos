@@ -10,8 +10,8 @@ import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
 import { Timeframe } from '@dxos/timeframe';
 
-import { AuthStatus, MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, SpaceProtocol } from './space-protocol';
-import { TestAgentBuilder, TestFeedBuilder } from './testing';
+import { AuthStatus, MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, SpaceProtocol } from './space-protocol.ts';
+import { TestAgentBuilder, TestFeedBuilder } from './testing/index.ts';
 
 describe('space/space-protocol', () => {
   // Flaky.

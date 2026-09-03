@@ -12,7 +12,7 @@ import { EffectEx } from '@dxos/effect';
 import { resolve } from '@dxos/extractor';
 import { Organization, Person } from '@dxos/types';
 
-import { Live, Mock } from './resolver';
+import { Live, Mock } from './resolver.ts';
 
 describe('resolver', () => {
   let builder: EchoTestBuilder;

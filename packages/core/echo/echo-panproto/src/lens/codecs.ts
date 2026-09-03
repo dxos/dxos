@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Codec } from './types';
+import { type Codec } from './types.ts';
 
 //
 // Value codecs referenced by name, mirroring the wire runner's `registerTextFormat`/`registerRefType`.

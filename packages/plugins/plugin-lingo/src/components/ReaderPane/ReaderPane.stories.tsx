@@ -19,8 +19,8 @@ import {
 import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 
-import { PAIRED_ANALYSIS, TEST_PASSAGE, TEST_PASSAGE_TRANSLATION, makeTestDeck } from '../../testing';
-import { ReaderPane } from './ReaderPane';
+import { PAIRED_ANALYSIS, TEST_PASSAGE, TEST_PASSAGE_TRANSLATION, makeTestDeck } from '../../testing.ts';
+import { ReaderPane } from './ReaderPane.tsx';
 
 /** The split view in miniature: two panes over one analysis, sharing a selection. */
 const ReaderPaneStory = ({ paired = false }: { paired?: boolean }) => {

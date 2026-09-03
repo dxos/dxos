@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { getArtifactPath, getArtifactsPath } from './paths';
+import { getArtifactPath, getArtifactsPath } from './paths.ts';
 
 const SPACE_ID = 'B000000000000000000000000000000000';
 

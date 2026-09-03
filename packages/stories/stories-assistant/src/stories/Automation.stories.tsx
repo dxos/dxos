@@ -16,8 +16,8 @@ import { meta as automationMeta } from '@dxos/plugin-routine';
 import { Text } from '@dxos/schema';
 import { Cell } from '@dxos/storybook-testing';
 
-import { StoryRole } from '../modules';
-import { ModuleContainer, addToRootCollection, createDecorators, storyParameters } from '../testing';
+import { StoryRole } from '../modules/index.ts';
+import { ModuleContainer, addToRootCollection, createDecorators, storyParameters } from '../testing/index.ts';
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Automation',
   render: ModuleContainer,

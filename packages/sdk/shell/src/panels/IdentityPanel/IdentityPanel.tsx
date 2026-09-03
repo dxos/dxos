@@ -16,17 +16,17 @@ import { Avatar, Clipboard, Input, Toolbar, useId, useTranslation } from '@dxos/
 import { EmojiPickerToolbarButton, HuePicker } from '@dxos/react-ui-pickers';
 import { hexToEmoji, hexToHue, keyToFallback } from '@dxos/util';
 
-import { CloseButton, Heading, Viewport } from '../../components';
-import { ConfirmReset, InvitationManager } from '../../steps';
-import { translationKey } from '../../translations';
-import { useIdentityMachine } from './identityMachine';
+import { CloseButton, Heading, Viewport } from '../../components/index.ts';
+import { ConfirmReset, InvitationManager } from '../../steps/index.ts';
+import { translationKey } from '../../translations.ts';
+import { useIdentityMachine } from './identityMachine.ts';
 import {
   type IdentityPanelHeadingProps,
   type IdentityPanelImplProps,
   type IdentityPanelProps,
-} from './IdentityPanelProps';
-import { IdentityActionChooser } from './steps';
-import { useAgentHandlers } from './useAgentHandlers';
+} from './IdentityPanelProps.ts';
+import { IdentityActionChooser } from './steps/index.ts';
+import { useAgentHandlers } from './useAgentHandlers.ts';
 
 const viewStyles = 'pt-1 pb-3 px-3';
 

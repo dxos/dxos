@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { proxyFetchLegacy } from '@dxos/edge-client/cors-proxy';
 
-import { Fetch } from './definitions';
+import { Fetch } from './definitions.ts';
 
 export default Fetch.pipe(
   Operation.withHandler(

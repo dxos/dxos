@@ -27,8 +27,8 @@ import {
 
 import { idEmoji, idHue } from '@dxos/util';
 
-import { airports, icons } from './data';
-import { type Range, getCount, multiple, toRange, uniqueArray } from './util';
+import { airports, icons } from './data.ts';
+import { type Range, getCount, multiple, toRange, uniqueArray } from './util.ts';
 
 export const random = {
   //
