@@ -329,3 +329,115 @@ Against the claim of one mechanism to schedule a process:
    at-least-once delivery of an occurrence.
 6. **Hydration is by-owner.** Only `AgentProcess` records are rehydrated after a reload; interrupted trigger runs are
    dropped locally (cooldown) and skipped on EDGE.
+
+## When a cron fires on EDGE
+
+The `remote: true` path, end to end. File references are in the `edge` repo unless noted.
+
+1. **Arm.** The `Trigger` replicates to EDGE. The db-service Indexer reports the changed object to
+   `FunctionsService.onObjectsChanged`, which routes to the space's `TriggersDispatcher` DO. `_handleCronTriggerStateChange`
+   sees an enabled `timer` spec and calls `DurableObjectCronScheduler.registerCron({ id, schedule })`, which stores one
+   next-run key and sets the DO alarm for the earliest pending run (`compute-service/src/triggers/trigger-dispatcher-object.ts`,
+   `edge-platform/src/cron-scheduler.ts`). Disabling or editing the trigger re-runs the same path and replaces or deletes
+   the key.
+2. **Stay armed.** The cron only fires while the space is active. The router's `SpaceActivityTracker` observes replication
+   traffic and calls `notifySpaceActive` (throttled to 10 s), which resets the scheduler's inactivity timeout. A DO that
+   sleeps through several occurrences fires **once** on wake and computes the next run from _now_.
+3. **Fire.** The DO alarm runs `alarm()`: `_runCronTasks()` takes the due cron ids, loads their `Trigger` objects
+   (`TriggerLoader.loadEnabledTriggersById('timer', ids)`), skips any without `remote: true`, mints a run generation, and
+   for each — sequentially, inside the alarm — calls `FunctionInvoker.invokeTrigger(space, trigger, { tick })` under an
+   abort signal registered for `cancelTriggerRun`. The same alarm then drains the subscription-change queue and the
+   continuation queue.
+4. **Invoke.** `invokeTrigger` builds the payload from `trigger.input` (`createInvocationPayload`, shared with the client)
+   and calls `invoke(trigger.function.uri)`. For a platform operation (`dxn:<key>`) that is
+   `operation-service.invokeOperation` over a service binding: the handler runs inline in that worker with a space DB
+   over the data-service bindings, a caller-minted `pid`, a trace sink that writes `OperationStart`/`OperationEnd` to the
+   space's trace feed, a 10-minute timeout and cooperative cancellation (`compute-service/src/invocation/function-invoker.ts`,
+   `operation-service/src/entrypoint.ts`). A `worker:` uri runs a deployed user worker instead; an `echo:` uri resolves a
+   `Function` or `ComputeGraph` object first. If the operation is `RunInstructions` (dxos repo,
+   `assistant-toolkit/src/operations/run-instructions.ts`) the whole `AiSession` runs inside this one invocation.
+5. **Settle.** The result is an `InvokeResult` (`success` | `error`). `_maybeScheduleContinuation` inspects it: a
+   `RunAgainError` enqueues a durable continuation tagged with the run's generation (drained one bounded batch per alarm,
+   dropped if `cancelTriggerRun` marked the generation); any other error is logged and **not retried**. Either way
+   `task.markCompleted()` advances the schedule. The client learns of the outcome through the trace feed (durable) and,
+   within 15 s, through `EdgeTriggerManager`'s poll of `GET /compute/triggers/:spaceId` (next run, cooldown, last result).
+
+## Proposed vs current (EDGE)
+
+| Schematic step                            | Current EDGE                                                                     | Delta                                                                             |
+| ----------------------------------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Scheduler subscribes to `Trigger` objects | Indexer → `onObjectsChanged` → DO registers/unregisters cron                     | matches                                                                           |
+| Trigger fires → writes a `Job`            | Trigger fires → invokes synchronously inside the DO alarm                        | **no Job**; two narrow DO queues (subscription changes, `runAgain` continuations) |
+| Process Manager subscribes to the queue   | none on EDGE; `FunctionInvoker` → `operation-service` RPC                        | **no Process Manager**                                                            |
+| Process invokes an Operation and exits    | one bounded invocation, trace envelopes, no durable process record               | partial                                                                           |
+| Agent Process runs until it terminates    | `RunInstructions` runs an `AiSession` inside one ≤ 10 min invocation             | **no long-lived agent**                                                           |
+| Job queue: prioritise / retry / audit     | no priority; no retry (skip-until-next); audit = trace feed + 15 s polled status | —                                                                                 |
+
+### Is a durable Job queue a good idea?
+
+Yes — but only if it is one specific thing. The generic "queue between trigger and process" the schematic implies
+would be a third durable layer on a platform that already has two (DO alarms/storage and `DurableObjectQueue`), and
+its main advertised benefits do not follow from being a queue.
+
+**What the current shape actually costs.** These are the concrete problems, each already visible in the code:
+
+- The alarm handler _is_ the executor. `_runCronTasks` awaits each invocation in turn inside `alarm()`, so N due
+  triggers × up to 10 min each run within one alarm's wall-clock, CPU and subrequest budgets. The continuation queue
+  (DX-1123) exists precisely because looping `runAgain` in-process exhausted those limits; the same pressure applies
+  to a batch of ordinary due triggers.
+- A failed occurrence is gone. There is no record of it other than an errored span and a `log.warn`; the client's
+  `Trigger.State.lastResult` shows only the most recent outcome, polled.
+- Trigger kinds are not on one path. `feed`, `webhook` and `email` invoke from the entrypoint, not the DO, so they get no
+  continuation, no generation-based cancel and no `getTriggerStatuses` visibility.
+- "What is running" is unanswerable. `EdgeProcessManager.processTree` is empty; `traceMeta.trigger` on the client-side
+  process and the `trigger:` tag on swarm-broadcast progress are the only run→trigger links.
+- Nothing crosses runtimes. A trigger runs where `remote` says, and a device that is closed or an EDGE space that is
+  inactive simply does not run it.
+
+**What a Job record buys, and what it does not.**
+
+| Claimed benefit         | Follows from a durable Job?                                                                                                                                                                                                                                                                         |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Audit                   | Yes, if the record is readable by the client — i.e. lives in the space, not in DO storage.                                                                                                                                                                                                          |
+| Retry                   | Only for idempotent operations. `Operation.idempotent` exists in the dxos runtime (`Process.fromOperation` refuses to redeliver otherwise) and EDGE does not check it. Blind retry of a mail-send or object-create is worse than the current drop. Retry must be opt-in per operation, default off. |
+| Prioritisation          | Mostly no. Contention is not inside one space's DO (a handful of jobs) but at `operation-service`, the LLM providers and the data-service — none of which a per-space queue can see. Priority across spaces is a different, global component.                                                       |
+| Bounded alarms          | Yes: the alarm becomes "claim one batch, dispatch, re-arm", which is what the continuation queue already does for one case.                                                                                                                                                                         |
+| One path for all kinds  | Yes, if feed/webhook/email append a Job instead of invoking inline. Webhooks must still answer synchronously, so they record the Job and execute it inline rather than deferring.                                                                                                                   |
+| Cross-runtime execution | Only if the Job is claimable from both sides, which needs a claim protocol ECHO does not give for free (no compare-and-set).                                                                                                                                                                        |
+
+**Where it should live.** Three candidates:
+
+1. **DO storage (`DurableObjectQueue`).** Cheapest; it is the continuation queue generalised to every firing. Solves
+   bounded alarms and one-path-for-all-kinds. Solves nothing observable: still needs an endpoint and a poll, still
+   invisible to a second device, still no client-side correlation.
+2. **An ECHO object per firing.** Visible and queryable, but wrong shape: a per-second cron mints an object per tick
+   into an Automerge document that never shrinks; every write replicates, wakes the Indexer, and lands in
+   `onObjectsChanged` — where it would match any subscription trigger that is not carefully excluded (a feedback loop);
+   and two runtimes claiming the same object have no atomic claim.
+3. **A per-space `Feed` of Job records.** This is the shape the codebase already converged on twice: the trace feed
+   (`FeedTraceSink`, `OperationStart`/`OperationEnd`) and the agent's queue (`SessionStore` — append to enqueue, append
+   an ack annotation to consume, "the queue is a projection over unacked items"). Feeds are append-only, replicate,
+   are queryable with a cursor, and already reach EDGE (`onQueueItemsInserted`) and the client. A Job feed gives audit
+   and cross-device visibility by construction, makes reclaim-after-crash a scan for in-flight-without-ack, and lets
+   `runAgain` become "append the next Job" — retiring the continuation queue and its compaction keys. Costs:
+   retention/compaction policy for the feed, and the same subscription-trigger exclusion as option 2.
+
+**Recommendation.** Adopt option 3 with a narrow contract:
+
+- `Job` = `{ trigger, event, generation, requestedAt }` appended by whichever dispatcher owns the trigger (still chosen
+  by `remote`); `InFlight` / `Ack` / `Failed` are annotations appended by the executor, mirroring `SessionStore`.
+  The other runtime only observes.
+- The DO alarm and the client tick stay the wake mechanism; they append and then drain, so nothing gets slower and
+  the alarm body becomes bounded.
+- Retry only where `Operation.idempotent` is set; otherwise a failed Job is marked `Failed` and left as the audit record
+  the schematic asks for.
+- Priority is out of scope for this queue. Record it (a `priority` field is cheap) but do not build a scheduler around
+  it until there is a global executor to enforce it.
+- The Job is the durable ancestor of a process, not a replacement for one. On the client the `ProcessManager` record
+  stays where it is (device-local KV) and links to the Job by id; on EDGE the Job _is_ the only durable record until an
+  EDGE process manager exists. That is the honest state of the schematic's "Process Manager subscribes to the Job
+  queue": on EDGE there is nothing to subscribe yet, and the Job feed is the first half of building it.
+
+What the queue does not solve, and should not be sold as solving: a long-lived agent on EDGE. That needs an
+`AgentProcess` host with alarms and hibernation — a Durable Object per conversation, or an EDGE `ProcessManager`
+backed by DO storage — and is independent of how firings are recorded.
