@@ -382,6 +382,7 @@ export const Hierarchical: Story = {
 export const DeepHierarchy: Story = {
   args: {
     seed: () => seedDeepHierarchy(3, 3),
+    draggable: true,
     hierarchical: true,
     showOrdinals: true,
     showEstimates: true,
