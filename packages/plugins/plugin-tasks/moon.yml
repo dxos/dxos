@@ -15,7 +15,7 @@ tasks:
   check-module-structure:
     # Handler set registered by the headless host.
     command: >-
-      pnpm exec dx-trace-imports
+      bun $workspaceRoot/tools/dx-trace-imports/cli.js
       --export ./TasksOperationHandlerSet
       --to "@dxos/react-ui"
       --to react
