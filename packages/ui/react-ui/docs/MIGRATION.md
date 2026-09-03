@@ -230,10 +230,16 @@ adapter is needed.
   top level pulled ~60 Ark + ~61 Zag modules into the boot graph when tried for hotkeys
   (`react-focus` project notes). Always import the subpath: `@ark-ui/react/tree-view`, never
   `@ark-ui/react`.
-- **The shared runtime is already paid for.** The Tree bought the ~24.5 KB raw Zag core; marginal
-  cost per further component is single-digit KB gzip (`Tabs` 12.7 → `Tabs`+`TreeView` 25.6 KB gzip,
-  i.e. `TreeView` marginal 12.9 KB). Do not re-argue wider adoption as a bundle saving; it is not one,
-  and it is not a cost either.
+- **The shared runtime is already paid for — in the bundle, not in the boot graph.** The Tree bought
+  the ~24.5 KB raw Zag core; marginal cost per further component is single-digit KB gzip (`Tabs` 12.7
+  → `Tabs`+`TreeView` 25.6 KB gzip, i.e. `TreeView` marginal 12.9 KB). Do not re-argue wider adoption
+  as a bundle saving; it is not one, and it is not a cost either.
+- **But the boot graph pays again for each package that is boot-reachable.** The Tree's core sits in
+  `react-ui-list`, which plugins load lazily — its landed eager cost was 1,652 bytes (Appendix A).
+  `react-ui` is in the entry closure, so Phase 0 pulled the core _and_ its four machines into it:
+  **+95.8 KB against 0.11 MB of remaining headroom** on a 4.35 MB budget. Every later phase that puts
+  a machine into `react-ui` spends from that, and the budget will need re-baselining before Phase 3
+  regardless of the net figure. Read `check-boot-budget.mjs` before assuming a swap is free.
 - **Touch.** Zag handles `pointerType`/touch in 17 machines; Radix in 6 packages. Under Tauri mobile
   (WKWebView) that matters, and `drawer` is the component that has no Radix answer at all.
 
@@ -300,6 +306,84 @@ child that is not composable — the case where a slot's props are silently drop
 The dev diagnostic, `composableProps()` and the `SlottableProps`/`ComposableProps` types are ours
 and survive unchanged; the `composite-components` skill's example (`asChild ? Slot : Primitive.div`)
 is the only documentation that needs its line rewritten.
+
+---
+
+### 2.7 Theming
+
+The migration does not touch the theme layer, and that is worth stating rather than assuming: Ark
+ships no CSS at all, and every part takes `className`, so a `*.theme.ts` is portable across the swap
+by construction. What _does_ move is where a variant reads its state from.
+
+#### What we do today
+
+Three layers, in resolution order:
+
+1. **A `*.theme.ts` per component** — 31 files, 1,678 lines in `react-ui`. Each exports
+   `ComponentFunction<StyleProps>`s ([`ui-types/src/theme.ts:8`](../../ui-types/src/theme.ts)): style
+   props in, a className string out, composed with `mx()` — tailwind-merge under a repo config
+   ([`ui-theme/src/util/mx.ts`](../../ui-theme/src/util/mx.ts)) — so the last writer of a conflicting
+   utility wins predictably.
+2. **A path tree** registered in [`defaultTheme.ts`](../src/theme/defaultTheme.ts) and resolved at
+   render through `tx('editable.preview', styleProps, classNames)` off `useThemeContext()`. `tx` is a
+   `ThemeFunction`, not a lookup: it is the indirection point where density, elevation and theme mode
+   would enter, and where a consumer's `classNames` is merged last.
+3. **A CSS layer** — 138 `.dx-*` classes across 14 files in
+   [`ui-theme/src/css/components`](../../ui-theme/src/css/components) — for what a utility string
+   cannot say once: surfaces, focus rings, input chrome.
+
+#### What Phase 0 changed
+
+Almost nothing, and the diff is the evidence: across the four components the theme files moved
+**+45 / −15 lines** against 1,678, and 32 of the 45 additions are a new `Stepper` part and its error
+palette, not the port. `Carousel` has no theme file at all and did not gain one.
+
+The one real change is a rule worth carrying into later phases:
+
+> **State the machine owns is read off the attribute it stamps; state we compute stays a style prop.**
+
+`Editable` is the worked example. `disabled` and `placeholder` left `EditableStyleProps` and became
+`data-[disabled]:` / `data-[placeholder-shown]:` selectors, because the machine is the authority on
+both and threading them back through React only creates a second source of truth. `Stepper`'s
+`failed` stayed a prop, because a run failing is ours to know and the machine has no notion of it.
+
+Two gotchas found doing it:
+
+- **Attribute variants outrank plain ones by specificity, not source order.** `data-[disabled]:` beats
+  `hover:` wherever they collide, so an override has to be written attribute-qualified —
+  `data-[disabled]:hover:bg-transparent`, not a later plain `hover:`. tailwind-merge will not resolve
+  this for you: the two are different variants and it keeps both.
+- **`hidden` needs `!important` to survive a `display` utility.** Ark hides the inactive part with the
+  `hidden` attribute rather than unmounting it; Tailwind v4's preflight declares
+  `[hidden]{display:none!important}`, which is what keeps a `flex` class from overriding it. Worth
+  knowing before anyone trims preflight.
+
+The `data-[…]` count across `react-ui` + `ui-theme` is now 41, up from the 11 recorded in §2.4 — Zag
+state names are the whole of the increase.
+
+#### The Ark-native alternative, and why we are not taking it
+
+Every Ark part carries `data-scope="<component>" data-part="<part>"`, and `createAnatomy(...).build()`
+returns a ready-made selector per part. That is a genuinely different model: skin from a stylesheet,
+address parts by attribute, thread no classNames at all. It is how Park UI and Panda dress Ark, and
+under `asChild` it reaches the consumer's own element too (§2.6).
+
+It is the more natural fit for Ark, and it is still the wrong trade here:
+
+- **`tx()` is not a class lookup.** It is the one place a style decision can consult more than the
+  DOM — style props, and the density/elevation/mode context that a `ThemeFunction` exists to carry. A
+  stylesheet selector sees only what the machine stamped, so every variant we compute would need an
+  attribute invented for it to hang on.
+- **Per-instance overrides regress.** `classNames` is merged last by tailwind-merge, which resolves
+  conflicts by knowing the utilities. Stylesheet rules resolve by specificity, so a consumer override
+  goes back to guessing at selector weight.
+- **It would be a second system, not a replacement.** The 14 non-Ark components and the whole `.dx-*`
+  layer are not moving, so adopting it buys one more way to style things rather than one fewer.
+
+**Where it is worth revisiting: parts we never render.** A `Positioner`, or portal-mounted content
+Ark builds itself, has no element of ours to take a `className` — there the attribute selector is the
+only handle. That lands in Phase 3 (floating), and is the one place this decision should be reopened
+rather than assumed.
 
 ## 3. Radix modules used outside `react-ui`
 
@@ -489,6 +573,26 @@ Bundle, esbuild `--bundle --minify --format=esm`, React external, gzip:
 Derived: shared core ≈ 7.1 KB gzip (Ark) vs ≈ 2.6 KB (Radix); marginal per component 6–13 KB (Ark)
 vs 4–11 KB (Radix). In-app, the Tree's landed cost was +82,205 bytes total JS (+0.12%), +1,652 in
 the eager boot graph.
+
+Phase 0, measured the same way (2026-09-03). The four machines together are 101,906 raw / 31,921 gzip
+standing alone, and 82,865 raw / 23,795 gzip marginal over a tree already holding `TreeView` +
+`Accordion` — the gap between those two is the shared core, and the landed **+95.8 KB** in the boot
+graph is the standalone figure, which is what says the core was not eager before (see §2.5):
+
+| entry                                    |     raw |   gzip |
+| ---------------------------------------- | ------: | -----: |
+| Ark `Steps`                              |  23,405 |  8,228 |
+| Ark `Editable`                           |  31,604 | 11,311 |
+| Ark `Splitter`                           |  50,658 | 17,686 |
+| Ark `Carousel`                           |  43,105 | 14,716 |
+| Ark `TreeView`+`Accordion` (pre-Phase 0) |  76,038 | 22,525 |
+| Ark, all six                             | 158,903 | 46,320 |
+
+A whole-estate replacement, on the same method: the 32 Radix packages in use dedupe to ≈233 KB raw /
+≈75 KB gzip, and Ark equivalents for the behavioural set add ≈263 KB raw / ≈74 KB gzip over what
+Phase 0 already ships. **Net ≈ +30 KB raw, ≈ −1 KB gzip** — on the wire it is a wash, because Zag's
+machines compress harder (3.6:1 vs 3.1:1) than they minify. Size is not an argument for or against
+this migration; the boot graph above is the only place it bites.
 
 Maintenance, 2026-09-02:
 
