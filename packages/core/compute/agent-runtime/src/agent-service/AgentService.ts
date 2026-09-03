@@ -40,8 +40,17 @@ import { type MakeTurnProducer } from './turn-producer';
 /** The RPC control surface declared by {@link AgentProcess}, recovered from the executable type. */
 type AgentRpcs = ReturnType<typeof AgentProcess> extends Process.Process<any, any, any, infer Rpcs> ? Rpcs : never;
 
-/** Live handle to a spawned {@link AgentProcess}, carrying its `HarnessControl` RPC surface. */
-type AgentHandle = ProcessManager.Handle<string | ContentBlock.Any[], void, AgentRpcs>;
+/**
+ * Live handle to a spawned {@link AgentProcess}, carrying its `HarnessControl` RPC surface.
+ *
+ * Derived from the definition rather than restated: `Process` exposes its input/output codecs, which
+ * puts `_Input` in an invariant position, so a hand-written `ContentBlock.Any[]` no longer relates to
+ * the `readonly` array the process's own schema yields.
+ */
+type AgentHandle =
+  ReturnType<typeof AgentProcess> extends Process.Process<infer Input, infer Output, any, infer Rpcs>
+    ? ProcessManager.Handle<Input, Output, Rpcs>
+    : never;
 
 // TERMINATING counts as terminal: the handle is already `#finished`, so adopting one would drop
 // every submitted input and leave the turn waiting for a process that will never run again.
