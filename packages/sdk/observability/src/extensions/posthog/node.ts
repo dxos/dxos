@@ -14,6 +14,16 @@ import { type ExtensionsOptions } from './extension';
 
 const DEFAULT_HOST = 'https://eu.i.posthog.com';
 
+/** Loopback is exempt: a developer pointing at a local collector has no certificate to present. */
+const isEncrypted = (host: string): boolean => {
+  try {
+    const { protocol, hostname } = new URL(host);
+    return protocol === 'https:' || (protocol === 'http:' && (hostname === 'localhost' || hostname === '127.0.0.1'));
+  } catch {
+    return false;
+  }
+};
+
 /**
  * PostHog for a node host, over `posthog-node`.
  *
@@ -32,8 +42,16 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
       return stubExtension;
     }
 
+    // Any host is allowed so a proxy on your own domain works, but not over plaintext: events carry
+    // the identity DID, and a mistyped host would put it on the wire in the clear.
+    const host = _host ?? DEFAULT_HOST;
+    if (!isEncrypted(host)) {
+      log.warn('PostHog host must be https', { host });
+      return stubExtension;
+    }
+
     const { PostHogMCP } = yield* Effect.promise(() => import('@posthog/mcp'));
-    const client = new PostHogMCP(apiKey, { host: _host ?? DEFAULT_HOST, enableExceptionAutocapture: true });
+    const client = new PostHogMCP(apiKey, { host, enableExceptionAutocapture: true });
 
     const superProperties: ObservabilityExtension.Attributes = {
       ...(release ? { release } : {}),

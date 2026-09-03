@@ -110,19 +110,33 @@ describe('posthog node extension', () => {
     });
   });
 
+  // Events carry the identity DID, so a host that would put it on the wire in the clear reports
+  // nothing rather than reporting insecurely.
+  test('stubs itself on a plaintext host, but not on loopback', async () => {
+    for (const host of ['http://posthog.example.com', 'not-a-url', '']) {
+      const extension = await make(DID, host);
+      expect(extension.apis, host).to.be.empty;
+    }
+    for (const host of ['https://o.composer.space', 'http://localhost:8000']) {
+      const extension = await make(DID, host);
+      expect(extension.apis, host).to.not.be.empty;
+    }
+  });
+
   test('stubs itself when no project token is configured', async () => {
     const extension = await EffectEx.runPromise(extensions({ config: new Config({}), distinctId: DID }));
     expect(extension.apis).to.be.empty;
   });
 });
 
-const make = (distinctId: string | undefined): Promise<ObservabilityExtension.Extension> =>
+const make = (distinctId: string | undefined, host?: string): Promise<ObservabilityExtension.Extension> =>
   EffectEx.runPromise(
     extensions({
       config: new Config({}),
       apiKey: TOKEN,
       release: '1.2.3',
       distinctId,
+      host,
       mcpServer: { name: 'dxos-cli', version: '1.2.3' },
     }),
   );
