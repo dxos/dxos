@@ -9,12 +9,8 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import * as CrmPlugin from '@dxos/plugin-crm/CrmPlugin';
-import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 import * as ProgressPlugin from '@dxos/plugin-progress/ProgressPlugin';
-import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -22,6 +18,8 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { DebugSpaceObjectsPanel, SpaceGenerator } from '#containers';
 import { translations } from '#translations';
+
+import * as DebugPlugin from '../DebugPlugin';
 
 /**
  * Picking a sample space and watching it land.
@@ -73,13 +71,10 @@ const meta = {
         }),
         // Contributes the operation handlers the generators invoke (e.g. `SpaceOperation.AddType`).
         SpacePlugin({}),
-        // The sample-space contributors. Their content loads only once the generator fires
-        // `SampleSpacesRequested`, which it does on mount. Both declare plugin dependencies that
-        // have to be present or they never activate — plugin-crm on inbox, plugin-projects on tasks.
-        InboxPlugin.make(),
-        TasksPlugin.make(),
-        CrmPlugin.make(),
-        ProjectsPlugin.make(),
+        // This plugin contributes the sample spaces, and the panel below is rendered directly
+        // rather than through a surface — so without the plugin in the list nothing ever activates
+        // the module that registers them and the picker stays empty.
+        DebugPlugin.make(),
       ],
     })),
   ],
