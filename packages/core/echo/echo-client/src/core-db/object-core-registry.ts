@@ -31,21 +31,31 @@ export type ObjectCoreRegistryParams = {
   onRelease?: (id: string) => void;
 };
 
+/**
+ * How long a touch keeps a core alive without another holder. Long enough to span a load that
+ * resolves across several turns, short enough that a bulk read is not resident for perceptible time.
+ */
+export const PIN_TTL = 100;
+
 export class ObjectCoreRegistry {
   readonly #cores = new Map<string, WeakRef<ObjectCore>>();
   readonly #onRelease?: (id: string) => void;
 
   /**
-   * Cores touched since the last drain, held strongly.
+   * Recently touched cores, held strongly, each against the time it was last touched.
    *
    * Loading an object and surfacing it span several turns — the query pipeline stores ids and reads
    * the core back once its document has arrived — and in between nothing else refers to the core, so
-   * a collection landing mid-flight would silently drop the object from the result. Every touch
-   * re-pins, so the window covers a load in progress and closes one macrotask after the last read;
-   * a caller who kept the object holds it from then on.
+   * a collection landing mid-flight would silently drop the object from the result. A touch only
+   * writes the timestamp; the sweep below decides when the window has closed, so a caller who kept
+   * the object holds it from then on.
    */
-  #pinned = new Set<ObjectCore>();
-  #drainTimer: ReturnType<typeof setTimeout> | undefined = undefined;
+  readonly #pinned = new Map<ObjectCore, number>();
+
+  // One sweep timer for the whole registry, armed only while something is pinned. Re-arming a timer
+  // per touch instead made timer install/clear the dominant cost of a bulk load — a single trace of
+  // one space opening showed 17k of its 18k timer installs coming from here, against 664 firings.
+  #sweepTimer: ReturnType<typeof setTimeout> | undefined = undefined;
 
   // Prunes the index as cores are collected. Lookup prunes too, so this only bounds ids that are
   // never looked up again — the common case for an object read once and moved past.
@@ -93,14 +103,36 @@ export class ObjectCoreRegistry {
   }
 
   #pin(core: ObjectCore): void {
-    this.#pinned.add(core);
-    // Re-armed on every touch and drained a macrotask later, so the window outlives a load that
-    // resolves across turns however long it takes.
-    clearTimeout(this.#drainTimer);
-    this.#drainTimer = setTimeout(() => {
-      this.#drainTimer = undefined;
-      this.#pinned = new Set();
-    });
+    this.#pinned.set(core, Date.now());
+    this.#armSweep();
+  }
+
+  #armSweep(): void {
+    if (this.#sweepTimer !== undefined) {
+      return;
+    }
+    this.#sweepTimer = setTimeout(() => {
+      this.#sweepTimer = undefined;
+      this.#sweep();
+    }, PIN_TTL);
+  }
+
+  /**
+   * Unpins cores untouched for {@link PIN_TTL}, re-arming while any pin remains.
+   *
+   * A pin therefore lasts between one and two intervals — never less than the window a touch asked
+   * for, which is what the load-in-progress guarantee needs.
+   */
+  #sweep(): void {
+    const expiry = Date.now() - PIN_TTL;
+    for (const [core, touched] of this.#pinned) {
+      if (touched <= expiry) {
+        this.#pinned.delete(core);
+      }
+    }
+    if (this.#pinned.size > 0) {
+      this.#armSweep();
+    }
   }
 
   /** Drops the entry without notifying `onRelease` — the caller is already evicting this id. */
@@ -139,9 +171,9 @@ export class ObjectCoreRegistry {
   }
 
   clear(): void {
-    clearTimeout(this.#drainTimer);
-    this.#drainTimer = undefined;
-    this.#pinned = new Set();
+    clearTimeout(this.#sweepTimer);
+    this.#sweepTimer = undefined;
+    this.#pinned.clear();
     for (const [, ref] of this.#cores) {
       const core = ref.deref();
       if (core !== undefined) {
