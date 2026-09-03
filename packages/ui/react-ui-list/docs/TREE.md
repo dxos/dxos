@@ -345,19 +345,21 @@ subscribed to the object. None of these were disagreements about behaviour. They
 already expressible: a node with `disposition: 'group'` renders as a section header and is spliced
 out of the collection's topology, so keyboard traversal never lands on it.
 
-**One row component, one grid per row.** Each row is its own grid: an `[indent]` track sized to
-its depth, then the consumer's `gridTemplateColumns`, and _every_ cell — the toggle, whatever the
+**One row component, one grid per row.** Each row is its own grid on the consumer's
+`gridTemplateColumns`, indented by padding to its depth, and _every_ cell — the toggle, whatever the
 heading renders, every column — is a direct child of it. Not a subgrid: a subgrid shares one set of
 tracks down the tree, and padding a subgrid only shrinks its first track, so nested rows could not
-indent their leading cells. Rows still line up because every track but the consumer's `1fr` is
-fixed — the indent is absorbed by the flexible one and the fixed trailing tracks stay anchored to
-the row's end. The tree's own grid is one track that rows, section headers and the end target span.
+indent their leading cells; a real grid's padding shifts every track. (Not an indent _track_ either:
+one ahead of `tree-row-start` is where an auto-placed toggle lands.) Rows still line up because
+every track but the consumer's `1fr` is fixed — the indent is absorbed by the flexible one and the
+fixed trailing tracks stay anchored to the row's end. The tree's own grid is one track that rows,
+section headers and the end target span.
 
 The consumer authors the whole template and names its tracks; the task list's is built from its
 options (the toggle track only for a hierarchical list — a flat one holds no square for a chevron):
 
 ```
-[indent] Npx [tree-row-start] [toggle]? [gutter]? status title(1fr) chips [estimate]? priority [actions]? [tree-row-end]
+[tree-row-start] [toggle]? [gutter]? status title(1fr) chips [estimate]? priority [actions]? [tree-row-end]
 ```
 
 Every fixed track is one control (`--dx-control`, the rail-item square each cell's `IconBlock`

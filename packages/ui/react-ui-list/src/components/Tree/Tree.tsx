@@ -1007,16 +1007,18 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
       onMouseEnter={handleItemHover}
       onContextMenu={handleContextMenu}
     >
-      {/* One grid per row: an indent track sized to the row's depth, then the consumer's template,
-          and the toggle, the heading's cells and the columns are all its direct children — so a
-          consumer names every track and nothing is nested. Rows line up down the tree because every
-          track but the consumer's `1fr` is fixed: the indent is absorbed by the flexible one, and
-          the fixed trailing tracks stay anchored to the row's end. The first grid row is one control
-          tall so every cell centres on the title line; a heading that adds a second line (a
-          description) places it with `row-start-2`. */}
+      {/* One grid per row, on the consumer's template, and the toggle, the heading's cells and the
+          columns are all its direct children — so a consumer names every track and nothing is
+          nested. The depth is padding on this grid, not a track: a real grid's padding shifts every
+          track (a subgrid's only shrinks its first), and a track would sit ahead of `tree-row-start`
+          where an auto-placed toggle lands instead. Rows line up down the tree because every track
+          but the consumer's `1fr` is fixed: the indent is absorbed by the flexible one, and the fixed
+          trailing tracks stay anchored to the row's end. The first grid row is one control tall so
+          every cell centres on the title line; a heading that adds a second line (a description)
+          places it with `row-start-2`. */}
       <div
         className='indent relative grid grid-rows-[var(--dx-control)]'
-        style={{ gridTemplateColumns: `[indent] ${indentTrack(level)} ${gridTemplateColumns}` }}
+        style={{ gridTemplateColumns, paddingInlineStart: indentTrack(level) }}
       >
         {toggle &&
           (branch ? (
