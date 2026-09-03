@@ -5,19 +5,12 @@
 import { type UseEditableReturn as EditableApi, useEditable as useMachine } from '@ark-ui/react/editable';
 import { type KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-/**
- * The inline-edit state machine — `@ark-ui/react`'s Editable (zag) — behind DXOS's own contract.
- *
- * `Editable` renders an `<input>`, but a markdown field wants a CodeMirror editor and a rendered
- * preview — and those live in packages that depend on this one, so they cannot be reached from
- * here. Both flavours therefore share the behaviour through this hook rather than the component:
- * one definition of what commits, what reverts, and what opens.
- *
- * The machine owns the pending text, which state the field is in, the activation gesture, `Enter` /
- * `Escape`, and what an interaction outside the field does with the edit. This adds the one thing it
- * has no notion of: a committed value distinct from the pending one, so `onValueChange` fires when
- * an edit lands rather than on every keystroke.
- */
+// The inline-edit state machine — `@ark-ui/react`'s Editable (zag) — behind DXOS's own contract.
+//
+// `Editable` renders an `<input>`, but a markdown field wants a CodeMirror editor and a rendered
+// preview — and those live in packages that depend on this one, so they cannot be reached from
+// here. Both flavours therefore share the behaviour through this hook rather than the component:
+// one definition of what commits, what reverts, and what opens.
 
 /** What turns the preview into an editor. `dblclick` suits rows whose single click already selects. */
 export type EditableActivation = 'click' | 'dblclick' | 'focus' | 'none';
@@ -75,6 +68,31 @@ export type UseEditableReturn = {
   api: EditableApi;
 };
 
+/**
+ * Inline edit: text that becomes editable in place, with a committed value distinct from the
+ * pending one.
+ *
+ * The machine owns the pending text, which state the field is in, the activation gesture, `Enter` /
+ * `Escape`, and what an interaction outside the field does with the edit. This owns the thing it has
+ * no notion of — the committed value — so `onValueChange` fires when an edit lands rather than on
+ * every keystroke.
+ *
+ * **The value.** Controlled with `value`, uncontrolled with `defaultValue`; `draft` is the pending
+ * text either way and only ever reaches `onValueChange` on a commit. A controlled host that does not
+ * echo a commit back is refusing it, and the field returns to the value the host still holds.
+ *
+ * **Who owns the edit state.** Left alone, the machine does: the field opens on `activation` and
+ * closes on `Enter`, `Escape`, or an interaction outside it. Passing `editing` takes that ownership,
+ * which is what a pane editor does — the pane IS the editor, so it is held open and never closes.
+ * The machine then treats a submit as a request to whoever holds the prop and announces only the
+ * state change, so `commit` and `revert` here act on it directly rather than waiting to be told.
+ * Either way an edit is delivered exactly once.
+ *
+ * **Commit and revert.** `commit` writes the pending text — or the text it is handed, for a caller
+ * that already holds it and must not race the draft. `revert` restores the last committed text and
+ * discards the rest, including on a field that was empty when it opened, which the machine alone
+ * would leave holding the discarded text.
+ */
 export const useEditable = ({
   value: valueProp,
   defaultValue = '',
