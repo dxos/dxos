@@ -25,7 +25,7 @@ const SPACE_READY_TIMEOUT = Duration.seconds(10);
 
 const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperation.Create.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ name, hue: hue_, icon: icon_, private: isPrivate, edgeReplication }) {
+    Effect.fnUntraced(function* ({ name, hue: hue_, icon: icon_, private: isPrivate, edgeReplication, template }) {
       const client = yield* Capability.get(ClientCapabilities.Client);
       const hue = hue_ ?? hues[Math.floor(Math.random() * hues.length)];
       const icon = icon_ ?? iconValues[Math.floor(Math.random() * iconValues.length)];
@@ -62,6 +62,18 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperat
           Annotation.set(properties, MigrationVersionAnnotation, Migrations.targetVersion);
         }
       });
+
+      // After the root collection exists: a template writes into the space the navtree can reach,
+      // and its failure must not discard a space that has already been created.
+      if (template) {
+        const templates = yield* Capability.getAll(SpaceCapabilities.SpaceTemplate);
+        const match = templates.find(({ id }) => id === template);
+        if (match) {
+          yield* Effect.tryPromise(() => match.apply({ client, space })).pipe(
+            Effect.catch((error) => Effect.sync(() => log.catch(error))),
+          );
+        }
+      }
 
       yield* Plugin.activate(SpaceEvents.SpaceCreated);
       const onCreateSpaceCallbacks = yield* Capability.getAll(SpaceCapabilities.OnCreateSpace);
