@@ -68,15 +68,58 @@ const seedFlat = (): Task.Task[] => [
  * ordinals into double digits, and put more than one task under each group heading, which a
  * seven-task list does not.
  */
+/** A value when `set`, `undefined` otherwise. */
+const when = <T,>(set: boolean, value: () => T): T | undefined => (set ? value() : undefined);
+
+/**
+ * Every optional field is left unset on some rows: each renders a control whether or not it holds a
+ * value, so a seed that fills them all leaves the unset half of the list — the dot, the blank
+ * description — with no story behind it.
+ *
+ * Which rows is a rule on the index rather than a coin flip: a flip can land the same way forty
+ * times, and a story that only sometimes covers the state it exists for is not coverage. The moduli
+ * differ per field so a row is rarely all-set or all-empty.
+ */
 const seedMany = (n = 40): Task.Task[] =>
-  Array.from({ length: n }, () =>
+  Array.from({ length: n }, (_, index) =>
     Task.make({
       title: random.lorem.sentence(random.number.int({ min: 5, max: 10 })),
-      description: random.number.int({ min: 0, max: 1 }) ? random.lorem.paragraphs(1) : undefined,
-      priority: random.helpers.arrayElement([...Task.Priority.literals]),
-      estimate: random.helpers.arrayElement([...Task.Estimate.literals]),
+      description: when(index % 2 === 0, () => random.lorem.paragraphs(1)),
+      priority: when(index % 3 !== 0, () => random.helpers.arrayElement([...Task.Priority.literals])),
+      estimate: when(index % 2 === 1, () => random.helpers.arrayElement([...Task.Estimate.literals])),
     }),
   );
+
+/**
+ * A full tree: every node down to `depth` has `children` sub-tasks, so the seed exercises what a
+ * two-level fixture cannot — indentation compounding past the second level, a branch under a
+ * branch under a branch, and enough rows at each depth to see the columns hold. Titles carry the
+ * path (`2.1.3`) so a row's depth can be read off it without counting pixels, and the leaf rows
+ * are listed depth-first so array order and tree order agree.
+ */
+const seedDeepHierarchy = (depth = 3, children = 3): Task.Task[] => {
+  const tasks: Task.Task[] = [];
+  const statuses: Task.Status[] = ['todo', 'started', 'done'];
+  const visit = (parent: Task.Task | undefined, path: number[]) => {
+    const task = Task.make({
+      title: `Task ${path.join('.')} — ${random.lorem.words(random.number.int({ min: 2, max: 5 }))}`,
+      status: statuses[(path.length + path[path.length - 1]) % statuses.length],
+      description: when(path[path.length - 1] === 2, () => random.lorem.sentence()),
+      estimate: when(path.length === depth, () => random.helpers.arrayElement([...Task.Estimate.literals])),
+      ...(parent && { parentTask: Ref.make(parent) }),
+    });
+    tasks.push(task);
+    if (path.length < depth) {
+      for (let index = 1; index <= children; index++) {
+        visit(task, [...path, index]);
+      }
+    }
+  };
+  for (let index = 1; index <= children; index++) {
+    visit(undefined, [index]);
+  }
+  return tasks;
+};
 
 /**
  * Two roots with sub-tasks two levels deep. Array order is sibling order only, so the seed
@@ -135,37 +178,37 @@ const seedDrag = (): Task.Task[] => {
 };
 
 const DefaultStory = ({
+  seed = seedFlat,
   readonly,
-  showGroupLabels,
-  groupByStatus,
+  draggable = false,
+  checkable = false,
   hierarchical,
+  groupByStatus,
+  showGroupLabels,
   showOrdinals,
   showDescription = true,
   showEstimates,
-  draggable = false,
-  checkable = false,
-  seed = seedFlat,
   debug,
   framed = true,
 }: {
-  readonly?: boolean;
-  /** Group tasks under status headers. */
-  groupByStatus?: boolean;
-  hierarchical?: boolean;
-  showGroupLabels?: boolean;
-  showOrdinals?: boolean;
-  showDescription?: boolean;
-  showEstimates?: boolean;
-  /** Wire `onTaskMove`, which is what turns rows into drag sources. Off unless a story asks. */
-  draggable?: boolean;
-  /** Wire `onTaskCheck`, which puts a checkbox in the gutter where the ordinal would sit. */
-  checkable?: boolean;
   /**
    * The tasks to start from. A factory rather than a named fixture, so a story can compose its own
    * (`() => seedMany(100)`) without a union to extend — and because `useState` reads its initial
    * value once, which is what made the booleans this replaces useless as live controls.
    */
   seed?: () => Task.Task[];
+  readonly?: boolean;
+  /** Wire `onTaskMove`, which is what turns rows into drag sources. Off unless a story asks. */
+  draggable?: boolean;
+  /** Wire `onTaskCheck`, which puts a checkbox in the gutter where the ordinal would sit. */
+  checkable?: boolean;
+  hierarchical?: boolean;
+  /** Group tasks under status headers. */
+  groupByStatus?: boolean;
+  showGroupLabels?: boolean;
+  showOrdinals?: boolean;
+  showDescription?: boolean;
+  showEstimates?: boolean;
   /** Paint every row's drop bands, so the zones are visible without holding a drag. */
   debug?: boolean;
   /** Insets the pane in a card, as an article does. Off for the tests that measure the pane's own
@@ -314,8 +357,109 @@ export const WithOrdinals: Story = {
 /** The gutter's checkbox: the set an action acts on, in place of the ordinal that would sit there. */
 export const WithCheckboxes: Story = {
   args: {
-    showGroupLabels: false,
     checkable: true,
+    showGroupLabels: false,
+  },
+};
+
+export const WithDescriptions: Story = {
+  args: {
+    showGroupLabels: false,
+    showOrdinals: true,
+    showDescription: true,
+  },
+};
+
+export const Hierarchical: Story = {
+  args: {
+    seed: seedHierarchy,
+    hierarchical: true,
+    showDescription: true,
+  },
+};
+
+/** Three levels of three: indentation past the second level, and the columns holding at every depth. */
+export const DeepHierarchy: Story = {
+  args: {
+    seed: () => seedDeepHierarchy(3, 3),
+    draggable: true,
+    hierarchical: true,
+    showOrdinals: true,
+    showEstimates: true,
+    showDescription: true,
+  },
+};
+
+/** Rows are drag sources: `onTaskMove` is wired, so the tree publishes each row to pragmatic-dnd. */
+export const HierarchicalDraggable: Story = {
+  args: {
+    seed: seedHierarchy,
+    hierarchical: true,
+    draggable: true,
+    showDescription: true,
+  },
+};
+
+/** The drop bands painted on every row, so the zones can be seen without holding a drag. */
+export const DragDebug: Story = {
+  args: {
+    seed: seedHierarchy,
+    hierarchical: true,
+    draggable: true,
+    showOrdinals: true,
+    showDescription: true,
+    debug: true,
+    framed: false,
+  },
+};
+
+/**
+ * The minimal `A > B, C` shape TREE.md reasons the six landing places about, with the bands painted.
+ * Small enough that every zone is reachable without scrolling, which is what makes it the fixture to
+ * check a hitbox change against.
+ */
+export const DropZones: Story = {
+  args: {
+    seed: seedDrag,
+    hierarchical: true,
+    draggable: true,
+    showDescription: false,
+    debug: true,
+    framed: false,
+  },
+};
+
+/**
+ * Status groups rendered through the tree: headers are `disposition: 'group'` nodes, spliced out of
+ * the collection's topology so the keyboard never lands on one.
+ */
+export const GroupedTree: Story = {
+  args: {
+    seed: seedHierarchy,
+    hierarchical: true,
+    groupByStatus: true,
+    showGroupLabels: true,
+    showOrdinals: true,
+  },
+};
+
+/**
+ * The status glyph spins for a task an agent has taken and started — and only then.
+ *
+ * Both halves matter: `started` alone is a person working, and an agent assignee alone is work that
+ * is queued. The seed carries one of each, so a rule that dropped either half fails here.
+ */
+export const TestAgentSpinner: Story = {
+  args: {
+    showGroupLabels: false,
+  },
+  play: async ({ canvasElement }) => {
+    const spinning = () =>
+      [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]')]
+        .filter((row) => row.querySelector('[data-testid="taskList.item.status"] .animate-spin'))
+        .map((row) => row.querySelector('span.truncate')?.textContent ?? '');
+
+    await waitFor(async () => expect(spinning()).toEqual(['Draft launch email']), { timeout: 10_000 });
   },
 };
 
@@ -324,7 +468,11 @@ export const WithCheckboxes: Story = {
  * independently of which row the reader is on, and leaves the task's status alone.
  */
 export const TestCheckboxSelection: Story = {
-  args: { showGroupLabels: false, checkable: true, showOrdinals: true },
+  args: {
+    checkable: true,
+    showGroupLabels: false,
+    showOrdinals: true,
+  },
   play: async ({ canvasElement }) => {
     const boxes = () =>
       Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item.checkbox"]'));
@@ -355,79 +503,11 @@ export const TestCheckboxSelection: Story = {
   },
 };
 
-export const WithDescriptions: Story = {
+export const TestEdit: Story = {
   args: {
     showGroupLabels: false,
     showOrdinals: true,
-    showDescription: true,
   },
-};
-
-export const Hierarchical: Story = {
-  args: {
-    seed: seedHierarchy,
-    hierarchical: true,
-    showOrdinals: true,
-    showDescription: true,
-  },
-};
-
-/** Rows are drag sources: `onTaskMove` is wired, so the tree publishes each row to pragmatic-dnd. */
-export const HierarchicalDraggable: Story = {
-  args: {
-    seed: seedHierarchy,
-    hierarchical: true,
-    draggable: true,
-    showOrdinals: true,
-    showDescription: true,
-  },
-};
-
-/** The drop bands painted on every row, so the zones can be seen without holding a drag. */
-export const DragDebug: Story = {
-  args: {
-    seed: seedHierarchy,
-    hierarchical: true,
-    draggable: true,
-    debug: true,
-    showOrdinals: true,
-    showDescription: true,
-    framed: false,
-  },
-};
-
-/**
- * The minimal `A > B, C` shape TREE.md reasons the six landing places about, with the bands painted.
- * Small enough that every zone is reachable without scrolling, which is what makes it the fixture to
- * check a hitbox change against.
- */
-export const DropZones: Story = {
-  args: {
-    seed: seedDrag,
-    hierarchical: true,
-    draggable: true,
-    debug: true,
-    showDescription: false,
-    framed: false,
-  },
-};
-
-/**
- * Status groups rendered through the tree: headers are `disposition: 'group'` nodes, spliced out of
- * the collection's topology so the keyboard never lands on one.
- */
-export const GroupedTree: Story = {
-  args: {
-    seed: seedHierarchy,
-    hierarchical: true,
-    groupByStatus: true,
-    showGroupLabels: true,
-    showOrdinals: true,
-  },
-};
-
-export const TestEdit: Story = {
-  args: { showGroupLabels: false, showOrdinals: true },
   // The pane is the detail half: it creates when nothing is selected and edits the selection
   // otherwise, which is the whole reason editing moved out of the row.
   play: async ({ canvasElement }) => {
@@ -576,7 +656,10 @@ export const TestEdit: Story = {
  * what is typed into it reaches `onTaskCreate` as part of the same draft as the title.
  */
 export const TestCreateWithDescription: Story = {
-  args: { showGroupLabels: false, showDescription: true },
+  args: {
+    showGroupLabels: false,
+    showDescription: true,
+  },
   play: async ({ canvasElement }) => {
     const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
     const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]')!;
@@ -617,7 +700,10 @@ export const TestCreateWithDescription: Story = {
  * field never calls back — so the mirror the create reads has to be cleared with the selection.
  */
 export const TestAbandonedDescriptionDoesNotLeak: Story = {
-  args: { showGroupLabels: false, showDescription: true },
+  args: {
+    showGroupLabels: false,
+    showDescription: true,
+  },
   play: async ({ canvasElement }) => {
     const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
     const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]')!;
@@ -657,7 +743,10 @@ export const TestAbandonedDescriptionDoesNotLeak: Story = {
  * which is what a host with no room for a markdown field (the chat strip) renders.
  */
 export const TestEditWithoutDescription: Story = {
-  args: { showGroupLabels: false, showDescription: false },
+  args: {
+    showGroupLabels: false,
+    showDescription: false,
+  },
   play: async ({ canvasElement }) => {
     const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
     const title = () => pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"]')!;
@@ -686,7 +775,10 @@ export const TestEditWithoutDescription: Story = {
  * screen: 1..N from the top, with no gaps and nothing out of sequence.
  */
 export const TestOrdinalsAreLinear: Story = {
-  args: { seed: seedMany, showOrdinals: true },
+  args: {
+    seed: seedMany,
+    showOrdinals: true,
+  },
   play: async ({ canvasElement }) => {
     const ordinals = () =>
       Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]')).map(
@@ -874,7 +966,9 @@ export const TestHierarchy: Story = {
 };
 
 export const Test: Story = {
-  args: { framed: false },
+  args: {
+    framed: false,
+  },
   // The status toggle and the add-`+` share one row grid; assert their icon gutters actually line
   // up, since only geometry (not the DOM) shows the misalignment.
   play: async ({ canvasElement }) => {

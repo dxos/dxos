@@ -38,9 +38,9 @@ export default UpdateTasks.pipe(
 
       return trim`
         You must update a task to 'done' when complete, and keep exactly one task in progress.
-        Current checklist:
+
         <checklist>
-          ${yield* Chat.formatChecklist(chat)}
+        ${yield* Chat.formatChecklist(chat)}
         </checklist>
       `;
     }),

@@ -11,6 +11,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
+import { Position } from '@dxos/util';
 
 import { ABOUT_DIALOG } from '../constants';
 import { meta } from '../meta';
@@ -33,6 +34,9 @@ export default Capability.makeModule(
               label: ['open-about.label', { ns: meta.profile.key }],
               icon: 'ph--info--regular',
               disposition: 'menu',
+              // The only entry with an explicit position: every other contributor ties at the
+              // default 0, so this alone is what keeps About at the end of the app menu.
+              position: Position.last,
             },
           }),
         ]),
