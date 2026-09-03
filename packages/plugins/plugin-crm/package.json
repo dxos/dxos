@@ -120,9 +120,6 @@
     "src",
     "PLUGIN.mdl"
   ],
-  "scripts": {
-    "build-sample": "vite-node ./scripts/build-sample-space.ts"
-  },
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-graph": "workspace:*",

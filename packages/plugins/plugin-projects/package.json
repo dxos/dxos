@@ -140,9 +140,6 @@
     "dx.config.ts",
     "src"
   ],
-  "scripts": {
-    "build-sample": "vite-node ./scripts/build-sample-space.ts"
-  },
   "dependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
