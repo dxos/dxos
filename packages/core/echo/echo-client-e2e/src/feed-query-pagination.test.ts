@@ -230,6 +230,95 @@ describe('Feed query pagination', () => {
     expect(after.map((obj) => (obj as TestSchema.Task).title).sort()).toEqual(['b', 'c']);
   });
 
+  test('tail read windows from the end of the feed', async ({ expect }) => {
+    const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task], assignQueuePositions: true });
+    const db = await peer.createDatabase();
+    const feed = db.add(Feed.make({ name: 'tail-feed' }));
+
+    await db.appendToFeed(
+      feed,
+      ['a', 'b', 'c', 'd', 'e'].map((title) => Obj.make(TestSchema.Task, { title })),
+    );
+    await db.flush();
+
+    const feedUri = Feed.getFeedUri(feed)!;
+    const titles = (results: readonly unknown[]) => results.map((obj) => (obj as TestSchema.Task).title);
+    const all = await db
+      .query(Query.select(Filter.type(TestSchema.Task)).orderBy(Order.natural()).from(Scope.feed(feedUri)))
+      .run();
+
+    // A plain cursor read keeps the range's first items; a tail read keeps its last.
+    const head = await db.query(Query.select(Filter.feedCursor()).limit(2).from(Scope.feed(feedUri))).run();
+    expect(titles(head)).toEqual(['a', 'b']);
+
+    const tail = await db.query(Query.select(Filter.feedTail()).limit(2).from(Scope.feed(feedUri))).run();
+    expect(titles(tail).sort()).toEqual(['d', 'e']);
+
+    // `end` pages backwards past the previous page's oldest item.
+    const earlier = await db
+      .query(
+        Query.select(Filter.feedTail({ end: Feed.getCursor(all[3])! }))
+          .limit(2)
+          .from(Scope.feed(feedUri)),
+      )
+      .run();
+    expect(titles(earlier).sort()).toEqual(['b', 'c']);
+
+    // A page short of its limit is the feed's start, which is how a reader knows to stop paging.
+    const exhausted = await db
+      .query(
+        Query.select(Filter.feedTail({ end: Feed.getCursor(all[1])! }))
+          .limit(2)
+          .from(Scope.feed(feedUri)),
+      )
+      .run();
+    expect(titles(exhausted)).toEqual(['a']);
+
+    // A tail read composes with a type select, which is what a windowed view of one type needs.
+    const typed = await db
+      .query(
+        Query.select(Filter.and(Filter.type(TestSchema.Task), Filter.feedTail()))
+          .limit(1)
+          .from(Scope.feed(feedUri)),
+      )
+      .run();
+    expect(titles(typed)).toEqual(['e']);
+
+    // Unlimited, a tail read is the whole range — the window is what the limit makes it.
+    const unlimited = await db.query(Query.select(Filter.feedTail()).from(Scope.feed(feedUri))).run();
+    expect(titles(unlimited).sort()).toEqual(['a', 'b', 'c', 'd', 'e']);
+  });
+
+  test('an unbounded tail read includes blocks with no position yet', async ({ expect }) => {
+    // No position authority here, so nothing this peer appends is ever positioned — the state a
+    // block is in between a local write and its acknowledgement, which a chat must keep showing.
+    const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
+    const db = await peer.createDatabase();
+    const feed = db.add(Feed.make({ name: 'unpositioned-feed' }));
+
+    await db.appendToFeed(
+      feed,
+      ['a', 'b'].map((title) => Obj.make(TestSchema.Task, { title })),
+    );
+    await db.flush();
+
+    const feedUri = Feed.getFeedUri(feed)!;
+    const titles = (results: readonly unknown[]) => results.map((obj) => (obj as TestSchema.Task).title).sort();
+
+    // A plain cursor read is over positioned blocks only, so it sees none of them.
+    const cursor = await db.query(Query.select(Filter.feedCursor()).from(Scope.feed(feedUri))).run();
+    expect(cursor).toHaveLength(0);
+
+    const tail = await db.query(Query.select(Filter.feedTail()).from(Scope.feed(feedUri))).run();
+    expect(titles(tail)).toEqual(['a', 'b']);
+
+    // Bounding above puts the window below the feed's end, where an unpositioned block is not.
+    const bounded = await db
+      .query(Query.select(Filter.feedTail({ end: Feed.Cursor.make('1000') })).from(Scope.feed(feedUri)))
+      .run();
+    expect(bounded).toHaveLength(0);
+  });
+
   test('cursor filter is rejected outside a feed scope', async ({ expect }) => {
     const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task], assignQueuePositions: true });
     const db = await peer.createDatabase();

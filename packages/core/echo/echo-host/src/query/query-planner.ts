@@ -1322,9 +1322,10 @@ const _splitFeedCursor = (
   };
 };
 
-const _feedCursorRange = (filter: QueryAST.FilterFeedCursor): { begin?: string; end?: string } => ({
+const _feedCursorRange = (filter: QueryAST.FilterFeedCursor): { begin?: string; end?: string; tail?: boolean } => ({
   ...(filter.begin !== undefined ? { begin: filter.begin } : {}),
   ...(filter.end !== undefined ? { end: filter.end } : {}),
+  ...(filter.tail ? { tail: true } : {}),
 });
 
 const _containsFeedCursor = (filter: QueryAST.Filter): boolean => {

@@ -51,6 +51,7 @@ import { ChatContextProvider, type ChatContextValue, type ChatRequestTiming, use
 import { type ChatEvent } from './events';
 import { SurfaceWidget } from './SurfaceWidget';
 import { projectAlarms, projectThread, resolveRewind } from './thread';
+import { advanceWindow, initialWindow } from './window';
 
 //
 // Root
@@ -107,10 +108,23 @@ const ChatRoot = ({
   const [controller, setController] = useState<ChatThreadController | null>(null);
   const [visibleRange, setVisibleRange] = useState<MessageRange | undefined>(undefined);
 
+  // The thread renders the feed's tail, so it reads the tail rather than every message ever
+  // appended: a long-running chat's history is unbounded and its cost would be paid on every open.
+  // The window grows as the reader walks back through it (see `advanceWindow`).
+  const [feedWindow, setFeedWindow] = useState(initialWindow);
   const feedMessages = useQuery(
     db,
-    feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
+    feed
+      ? Query.select(Filter.and(Filter.type(Message.Message), Filter.feedTail()))
+          .limit(feedWindow.size)
+          .from(feed)
+      : Query.select(Filter.nothing()),
   );
+  useEffect(() => {
+    setFeedWindow((current) =>
+      advanceWindow(current, { startIndex: visibleRange?.startIndex, loaded: feedMessages.length }),
+    );
+  }, [visibleRange?.startIndex, feedMessages.length]);
   const feedAlarms = useQuery(
     db,
     feed ? Query.select(Filter.type(Alarm.Alarm)).from(feed) : Query.select(Filter.nothing()),

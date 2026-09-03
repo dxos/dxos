@@ -2186,7 +2186,8 @@ const BEFORE_FIRST_POSITION = -1;
  * Every cursor range windows the scan, an empty one included — it bounds nothing but still asks for
  * a cursor read, which is over positioned blocks in position order. A reader that paged the
  * unpositioned blocks in first would stop at a page of items it cannot act on while positioned ones
- * waited behind them.
+ * waited behind them. A tail read is the exception: it wants the feed's newest blocks, which is
+ * where the unpositioned ones are, so it admits them unless `end` bounds the window below the end.
  *
  * A bound that is not a decimal position is treated as unsatisfiable rather than as absent:
  * resuming a corrupted checkpoint from the beginning would re-dispatch the whole feed.
@@ -2210,6 +2211,7 @@ const extractQueueWindow = (step: QueryPlan.SelectStep): QueueWindow | undefined
     after: range.begin ? parseCursor(range.begin, Number.MAX_SAFE_INTEGER) : BEFORE_FIRST_POSITION,
     ...(range.end ? { before: parseCursor(range.end, BEFORE_FIRST_POSITION) } : {}),
     ...(step.limit !== undefined ? { limit: step.limit } : {}),
+    ...(range.tail ? { tail: true } : {}),
   };
 };
 
