@@ -21,6 +21,7 @@ import {
   Harness,
   McpServerError,
   PartialBlock,
+  RequestPhase,
   ToolExecutionServices,
   createSystemPrompt,
   formatSystemPrompt,
@@ -231,6 +232,14 @@ export class AiChatProcessor {
    */
   public readonly mcpErrors = Atom.make<readonly Trace.PayloadType<typeof McpServerError>[]>([]);
 
+  /**
+   * Setup stage the in-flight request has reached, or `undefined` when there is nothing to report.
+   *
+   * Only meaningful while the reader is still waiting: the first streamed block clears it, since the
+   * reply itself is a better progress report than any phase label.
+   */
+  public readonly activity = Atom.make<Trace.PayloadType<typeof RequestPhase> | undefined>(undefined);
+
   constructor(
     private readonly _conversation: AiSession.Session,
     private readonly _runtime: Capabilities.ProcessManagerRuntime,
@@ -322,6 +331,9 @@ export class AiChatProcessor {
       this.#lastRequest = requestProp;
       this.#registry.set(this.error, Option.none());
       this.#registry.set(this.mcpErrors, []);
+      // Set locally: spawning or attaching the agent process happens before it can emit anything, and
+      // that resolve is itself part of the wait the reader is watching.
+      this.#registry.set(this.activity, { phase: 'starting' });
       this.#registry.set(this.active, true);
 
       const effect = Effect.gen({ self: this }, function* () {
@@ -375,6 +387,7 @@ export class AiChatProcessor {
     } finally {
       log.info('setting active to false');
       this.#registry.set(this.active, false);
+      this.#registry.set(this.activity, undefined);
       this.#requestFiber = undefined;
     }
   }
@@ -475,6 +488,7 @@ export class AiChatProcessor {
       log.warn('failed to observe agent turn', { error: err });
     } finally {
       this.#registry.set(this.active, false);
+      this.#registry.set(this.activity, undefined);
       this.#observeFiber = undefined;
     }
   }
@@ -509,6 +523,8 @@ export class AiChatProcessor {
           for (const event of message.events) {
             if (Trace.isOfType(PartialBlock, event)) {
               this.#handleEphemeralMessage(event.data);
+            } else if (Trace.isOfType(RequestPhase, event)) {
+              this.#registry.set(this.activity, event.data);
             } else if (Trace.isOfType(McpServerError, event)) {
               this.#handleMcpError(event.data);
             }
@@ -583,6 +599,10 @@ export class AiChatProcessor {
    * ephemeral delivery and feed replication.
    */
   #handleEphemeralMessage(event: Trace.PayloadType<typeof PartialBlock>) {
+    // The reply supersedes the phase line: once content is arriving the reader no longer needs to be
+    // told what the request is doing.
+    this.#registry.set(this.activity, undefined);
+
     const isPending = event.block.pending;
     const message = Obj.make(Message.Message, {
       id: event.messageId,
@@ -635,6 +655,7 @@ export class AiChatProcessor {
    */
   #discardStreaming() {
     this.#registry.set(this.#streaming, []);
+    this.#registry.set(this.activity, undefined);
     this.#finalizedIds.clear();
   }
 
@@ -642,6 +663,7 @@ export class AiChatProcessor {
    * Move remaining streaming messages to pending (called when agent completes).
    */
   #flushStreaming() {
+    this.#registry.set(this.activity, undefined);
     const remaining = this.#registry.get(this.#streaming);
     if (remaining.length > 0) {
       this.#registry.update(this.#pending, (pending) => [...pending, ...remaining]);
