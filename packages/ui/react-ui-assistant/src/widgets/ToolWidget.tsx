@@ -207,7 +207,7 @@ const ToolPanel = ({ entries, onChangeOpen }: ToolPanelProps) => {
   // still saying what it is doing, a lone call's name, and otherwise the count.
   const count = t('tool-run.label', { count: calls.length });
   const header = status
-    ? `${status.title} (${t('tool-run.suffix', { count: calls.length })})`
+    ? `${status.title} (${t('tool-run-suffix.label', { count: calls.length })})`
     : (single?.title ?? count);
   const icon = status?.icon ?? single?.icon ?? TOOL_ICON;
 
