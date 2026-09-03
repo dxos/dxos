@@ -8,6 +8,7 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as Operation from '@dxos/compute/Operation';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
@@ -37,7 +38,11 @@ const handler: Operation.WithHandler<typeof DebugOperation.CreateSampleSpace> = 
       }
 
       const client = yield* Capability.get(ClientCapabilities.Client);
-      const space = spaceId ? client.spaces.get().find((space) => space.id === spaceId) : client.spaces.default;
+      // `AppSpace.getDefaultSpace` rather than a `spaces.default` accessor: the designation lives on
+      // the settings space, with a fallback to the legacy personal space for unmigrated profiles.
+      const space = spaceId
+        ? client.spaces.get().find((space) => space.id === spaceId)
+        : AppSpace.getDefaultSpace(client);
       if (!space) {
         return yield* Effect.fail(new SpaceNotFoundError({ context: { spaceId } }));
       }
