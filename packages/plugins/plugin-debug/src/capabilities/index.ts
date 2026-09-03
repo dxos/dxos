@@ -53,6 +53,7 @@ export const MarkdownMenu = Capability.lazyModule(
   { provides: [MarkdownCapabilities.MenuExtension], activatesOn: DebugEvents.Start },
   () => import('./markdown-menu'),
 );
+export const SampleSpaces = AppCapability.sampleSpaces(() => import('./sample-spaces'));
 export const SpaceTemplates = Capability.lazyModule(
   'SpaceTemplates',
   { provides: [SpaceCapabilities.SpaceTemplate], activatesOn: DebugEvents.Start },

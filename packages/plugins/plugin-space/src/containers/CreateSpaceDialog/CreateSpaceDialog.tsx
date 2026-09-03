@@ -106,7 +106,8 @@ export const CreateSpaceDialog = () => {
                       {templates.map(({ id, label, description, icon }) => (
                         <Listbox.Item key={id} id={id}>
                           <Listbox.ItemContent
-                            icon={icon ?? 'ph--placeholder--regular'}
+                            // Templates carry a bare `iconValues` name, as space properties do.
+                            icon={icon ? `ph--${icon}--regular` : 'ph--placeholder--regular'}
                             title={label}
                             description={description}
                           />

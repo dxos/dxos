@@ -9,9 +9,10 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import { hues, iconValues } from '@dxos/ui-types';
 
-/** Colours the generated spaces so a shelf of samples is distinguishable at a glance. */
-const hues = ['indigo', 'teal', 'amber', 'rose'];
+/** Standard space icons, so a template's default is one the icon picker can also produce. */
+const templateIcons = ['briefcase', 'compass', 'campfire', 'planet'].filter((icon) => iconValues.includes(icon));
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -25,7 +26,7 @@ export default Capability.makeModule(
         id: sample.id,
         label: sample.label,
         description: sample.description,
-        icon: 'ph--dice-five--regular',
+        icon: templateIcons[index % templateIcons.length] ?? iconValues[index % iconValues.length],
         hue: hues[index % hues.length],
         apply: sample.apply,
       })),
