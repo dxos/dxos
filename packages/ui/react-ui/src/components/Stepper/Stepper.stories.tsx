@@ -294,7 +294,7 @@ export const TestFailure: Story = {
       return { backgroundColor, borderTopColor };
     };
     const errorSurface = swatch('bg-error-surface').backgroundColor;
-    const errorBorder = swatch('border-error-border').borderTopColor;
+    const separator = swatch('border-separator').borderTopColor;
     const primarySurface = swatch('bg-primary-surface').backgroundColor;
 
     const circles = () =>
@@ -311,16 +311,18 @@ export const TestFailure: Story = {
       true,
       false,
     ]);
-    await expect(circles()[3].borderTopColor).not.toEqual(errorBorder);
 
     canvas.getByTestId('stepper.fail').click();
 
-    // Every circle now reads as failed — the filled ones in the error surface, the one the run never
-    // reached as an outline in the same hue, so how far it got is still legible.
+    // Every stage the run started now reads as failed, so the progress behind the failure does not
+    // read as having gone fine.
     await waitFor(async () =>
       expect(circles().map((circle) => circle.backgroundColor === errorSurface)).toEqual([true, true, true, false]),
     );
-    await expect(circles()[3].borderTopColor).toEqual(errorBorder);
     await expect(circles().every((circle) => circle.backgroundColor !== primarySurface)).toEqual(true);
+
+    // The stage it never reached is untouched: it did not fail, and colouring it would claim the
+    // failure reached further than it did.
+    await expect(circles()[3].borderTopColor).toEqual(separator);
   },
 };

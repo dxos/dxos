@@ -9,4 +9,4 @@ Breaking: `Carousel.Root` no longer takes `transition` — the machine has one w
 
 `Escape` on an `Editable` that was empty when it opened now discards the typed text rather than keeping it.
 
-`Stepper` no longer eases its progress line back to nothing when a run is reset or wound back; only the line leaving the stage in flight animates, and everything else lands at once.
+`Stepper` no longer eases its progress line back to nothing when a run is reset or wound back; only the line leaving the stage in flight animates, and everything else lands at once. A run that fails now draws every stage it started in the error hue rather than only the stage it stopped on.

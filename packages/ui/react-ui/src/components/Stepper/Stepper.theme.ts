@@ -31,15 +31,15 @@ const stepFill: Record<StepState, string> = {
 };
 
 /**
- * The same drawing in the error hue. What failed is the run, not only the stage it stopped on, so a
- * plan half-drawn in the primary hue would read as half of it having gone fine. Stages the run never
- * reached stay outlines, so how far it got is still legible.
+ * The same drawing with the run's colour swapped for the error hue. What failed is the run, not only
+ * the stage it stopped on, so a plan half-drawn in the primary hue would read as half of it having
+ * gone fine. Only stages the run started change: one it never reached did not fail, and colouring it
+ * would claim the failure reached further than it did.
  */
 const failedStepFill: Record<StepState, string> = {
-  pending: 'bg-base-surface border-error-border',
+  ...stepFill,
   active: 'bg-error-surface border-transparent',
   complete: 'bg-error-surface border-transparent',
-  error: 'bg-error-surface border-transparent',
 };
 
 const root: ComponentFunction<StepperStyleProps> = (_props, ...etc) => mx('flex items-center w-full min-w-0', ...etc);
