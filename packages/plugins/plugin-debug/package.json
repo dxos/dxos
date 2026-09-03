@@ -195,11 +195,8 @@
     "react-resize-detector": "catalog:"
   },
   "devDependencies": {
-    "@dxos/plugin-crm": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-progress": "workspace:*",
-    "@dxos/plugin-projects": "workspace:*",
-    "@dxos/plugin-tasks": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",

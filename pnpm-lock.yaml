@@ -9762,18 +9762,9 @@ importers:
         specifier: 'catalog:'
         version: 11.0.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
     devDependencies:
-      '@dxos/plugin-crm':
-        specifier: workspace:*
-        version: link:../plugin-crm
       '@dxos/plugin-progress':
         specifier: workspace:*
         version: link:../plugin-progress
-      '@dxos/plugin-projects':
-        specifier: workspace:*
-        version: link:../plugin-projects
-      '@dxos/plugin-tasks':
-        specifier: workspace:*
-        version: link:../plugin-tasks
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing

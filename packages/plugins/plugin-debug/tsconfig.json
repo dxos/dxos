@@ -158,9 +158,6 @@
       "path": "../plugin-connector"
     },
     {
-      "path": "../plugin-crm"
-    },
-    {
       "path": "../plugin-google"
     },
     {
@@ -176,9 +173,6 @@
       "path": "../plugin-progress"
     },
     {
-      "path": "../plugin-projects"
-    },
-    {
       "path": "../plugin-sheet"
     },
     {
@@ -186,9 +180,6 @@
     },
     {
       "path": "../plugin-status-bar"
-    },
-    {
-      "path": "../plugin-tasks"
     },
     {
       "path": "../plugin-testing"
