@@ -14,11 +14,14 @@ import { type ExtensionsOptions } from './extension';
 
 const DEFAULT_HOST = 'https://eu.i.posthog.com';
 
+/** `URL` keeps the brackets on an IPv6 host, so the literal is matched as it parses. */
+const LOOPBACK = new Set(['localhost', '127.0.0.1', '[::1]']);
+
 /** Loopback is exempt: a developer pointing at a local collector has no certificate to present. */
 const isEncrypted = (host: string): boolean => {
   try {
     const { protocol, hostname } = new URL(host);
-    return protocol === 'https:' || (protocol === 'http:' && (hostname === 'localhost' || hostname === '127.0.0.1'));
+    return protocol === 'https:' || (protocol === 'http:' && LOOPBACK.has(hostname));
   } catch {
     return false;
   }

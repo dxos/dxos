@@ -117,7 +117,7 @@ describe('posthog node extension', () => {
       const extension = await make(DID, host);
       expect(extension.apis, host).to.be.empty;
     }
-    for (const host of ['https://o.composer.space', 'http://localhost:8000']) {
+    for (const host of ['https://o.composer.space', 'http://localhost:8000', 'http://[::1]:8000']) {
       const extension = await make(DID, host);
       expect(extension.apis, host).to.not.be.empty;
     }
