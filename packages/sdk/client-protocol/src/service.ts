@@ -7,7 +7,7 @@ import type { Stream } from '@dxos/async';
 import type { RequestOptions } from '@dxos/codec-protobuf';
 import { getBufService } from '@dxos/protocols/buf-service';
 import { Config } from '@dxos/protocols/buf/dxos/config_pb';
-import type { SignalResponse } from '@dxos/protocols/buf/dxos/devtools/host_pb';
+import type { SignalResponse, SubscribeToSpacesResponse } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import type {
   CreateEpochResponse,
   Device,
@@ -30,7 +30,6 @@ import type {
   SaveSpaceSnapshotResponse,
   SubscribeToFeedBlocksResponse,
   SubscribeToMetadataResponse,
-  SubscribeToSpacesResponse,
 } from '@dxos/protocols/proto/dxos/devtools/host';
 import type { IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import type {
