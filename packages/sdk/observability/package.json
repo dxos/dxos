@@ -15,28 +15,34 @@
   "imports": {
     "#storage": {
       "source": {
+        "workerd": "./src/storage/workerd.ts",
         "node": "./src/storage/node.ts",
         "default": "./src/storage/browser.ts"
       },
       "types": "./dist/types/src/storage/node.d.ts",
+      "workerd": "./dist/lib/storage.workerd.mjs",
       "node": "./dist/lib/storage.node.mjs",
       "default": "./dist/lib/storage.mjs"
     },
     "#otel-traces": {
       "source": {
+        "workerd": "./src/extensions/otel/traces-workerd.ts",
         "node": "./src/extensions/otel/traces.ts",
         "default": "./src/extensions/otel/traces-browser.ts"
       },
       "types": "./dist/types/src/extensions/otel/traces.d.ts",
+      "workerd": "./dist/lib/traces.workerd.mjs",
       "node": "./dist/lib/traces.node.mjs",
       "default": "./dist/lib/traces.mjs"
     },
     "#posthog-transport": {
       "source": {
+        "workerd": "./src/extensions/posthog/node-stub.ts",
         "node": "./src/extensions/posthog/node.ts",
         "default": "./src/extensions/posthog/node-stub.ts"
       },
       "types": "./dist/types/src/extensions/posthog/node.d.ts",
+      "workerd": "./dist/lib/posthog-transport.workerd.mjs",
       "node": "./dist/lib/posthog-transport.node.mjs",
       "default": "./dist/lib/posthog-transport.mjs"
     }
@@ -77,6 +83,10 @@
     "./OtelSpanSink": {
       "types": "./dist/types/src/extensions/otel/OtelSpanSink.d.ts",
       "import": "./dist/lib/extensions/otel/OtelSpanSink.mjs"
+    },
+    "./SpanProcessors": {
+      "types": "./dist/types/src/SpanProcessors.d.ts",
+      "import": "./dist/lib/SpanProcessors.mjs"
     },
     "./package.json": "./package.json"
   },

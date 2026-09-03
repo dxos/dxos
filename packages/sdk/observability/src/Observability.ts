@@ -16,16 +16,21 @@ import * as ObservabilityExtension from './ObservabilityExtension';
 
 export * from './storage';
 
+// Reaches the fanout directly rather than through the extensions barrel: the fanout is what every
+// host's provider consults at span end (EDGE puts it in the `otel-cf-workers` config), so the AI
+// sink attaches the same way whether or not this package owns the provider.
 const attachAiCapture = async (observability: Observability): Promise<CleanupFn> => {
   const { AiSpanProcessor, contentCaptureAllowed } = await import('./ai/AiObservability');
-  const { Otel } = await import('./extensions');
-  return Otel.addSpanProcessor(
+  const { addSpanProcessor } = await import('./extensions/otel/span-fanout');
+  return addSpanProcessor(
     new AiSpanProcessor({
       captureInference: (inference) => observability.ai.captureInference(inference),
       captureTurn: (turn) => observability.ai.captureTurn(turn),
       captureToolCall: (toolCall) => observability.ai.captureToolCall(toolCall),
       captureEnabled: () => observability.enabled,
-      allowContent: contentCaptureAllowed,
+      // Two consents: the user's, held here and synced with their settings, and the space's, which
+      // is the E2E boundary.
+      allowContent: (spaceId) => observability.aiContentCapture && contentCaptureAllowed(spaceId),
     }),
   );
 };
@@ -58,6 +63,12 @@ export interface Observability {
   alias(distinctId: string, previousId?: string): void;
   setTags(tags: ObservabilityExtension.Attributes, kind?: ObservabilityExtension.Kind): void;
   enabled: boolean;
+  /**
+   * Whether AI prompts, responses and tool names may be captured. Defaults on, matching the
+   * policy for spaces EDGE replicates in plaintext; a host that cannot ask the user turns it off.
+   */
+  aiContentCapture: boolean;
+  setAiContentCapture(enabled: boolean): void;
   errors: ObservabilityExtension.Errors;
   events: ObservabilityExtension.Events;
   feedback: ObservabilityExtension.Feedback;
@@ -70,6 +81,7 @@ export interface Observability {
 
 class ObservabilityImpl implements Observability {
   private _initialized = false;
+  private _aiContentCapture = true;
   private readonly _extensions: ObservabilityExtension.Extension[] = [];
   private readonly _dataProviders: DataProvider[] = [];
   private readonly _subscriptions = new SubscriptionList();
@@ -208,6 +220,14 @@ class ObservabilityImpl implements Observability {
 
   get enabled(): boolean {
     return this._extensions.every((extension) => extension.enabled);
+  }
+
+  get aiContentCapture(): boolean {
+    return this._aiContentCapture;
+  }
+
+  setAiContentCapture(enabled: boolean): void {
+    this._aiContentCapture = enabled;
   }
 
   get errors(): ObservabilityExtension.Errors {

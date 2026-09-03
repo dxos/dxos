@@ -56,12 +56,16 @@ import type * as ObservabilityExtension from '../ObservabilityExtension';
 /**
  * AI telemetry capture policy:
  *
- * | Observability toggle | Space                                 | Capture          |
- * |----------------------|---------------------------------------|------------------|
- * | off                  | any                                   | nothing          |
- * | on                   | EDGE has plaintext access (all today) | metadata+content |
- * | on                   | E2E-encrypted (future)                | metadata only    |
- * | on                   | not declared by the call site         | metadata only    |
+ * | Observability toggle | Content toggle | Space                                 | Capture          |
+ * |----------------------|----------------|---------------------------------------|------------------|
+ * | off                  | any            | any                                   | nothing          |
+ * | on                   | off            | any                                   | metadata only    |
+ * | on                   | on             | EDGE has plaintext access (all today) | metadata+content |
+ * | on                   | on             | E2E-encrypted (future)                | metadata only    |
+ * | on                   | on             | not declared by the call site         | metadata only    |
+ *
+ * The content toggle is the user's consent, held on the `Observability` facade
+ * (`aiContentCapture`) and synced with their settings; this predicate is the space's side.
  *
  * Metadata is model, provider, tokens, latency, and trace/session ids. Content adds the prompt,
  * the response, and tool names — including tool results, i.e. data the agent read from the space.

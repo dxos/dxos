@@ -13,3 +13,6 @@ import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
  * plugin-observability for `ObservabilityOperation`.
  */
 export const IdentityCreatedEvent = ActivationEvent.make('org.dxos.plugin.client.event.identityCreated');
+
+/** Mirrors `ClientEvents.SpacesReady`, cloned by identifier for the same reason. */
+export const SpacesReadyEvent = ActivationEvent.make('org.dxos.plugin.client.event.spacesReady');

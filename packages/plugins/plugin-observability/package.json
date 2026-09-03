@@ -43,15 +43,6 @@
       "types": "./dist/types/src/meta.d.ts",
       "default": "./dist/lib/meta.mjs"
     },
-    "#operation-handler": {
-      "source": {
-        "workerd": "./src/capabilities/operation-handler.workerd.ts",
-        "default": "./src/capabilities/operation-handler.ts"
-      },
-      "types": "./dist/types/src/capabilities/operation-handler.d.ts",
-      "workerd": "./dist/lib/operation-handler.workerd.mjs",
-      "default": "./dist/lib/operation-handler.mjs"
-    },
     "#privacy-banner": {
       "source": {
         "node": "./src/capabilities/privacy-banner.ts",
@@ -94,6 +85,11 @@
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
+    "./ObservabilityAnnotation": {
+      "source": "./src/types/ObservabilityAnnotation.ts",
+      "types": "./dist/types/src/types/ObservabilityAnnotation.d.ts",
+      "import": "./dist/lib/ObservabilityAnnotation.mjs"
+    },
     "./ObservabilityCapabilities": {
       "source": "./src/types/ObservabilityCapabilities.ts",
       "types": "./dist/types/src/types/ObservabilityCapabilities.d.ts",
@@ -128,6 +124,9 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
+      "ObservabilityAnnotation": [
+        "dist/types/src/types/ObservabilityAnnotation.d.ts"
+      ],
       "ObservabilityCapabilities": [
         "dist/types/src/types/ObservabilityCapabilities.d.ts"
       ],
@@ -157,6 +156,7 @@
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/config": "workspace:*",
+    "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",

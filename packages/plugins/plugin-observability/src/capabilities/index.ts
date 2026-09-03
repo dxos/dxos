@@ -74,7 +74,7 @@ export const Commands = AppCapability.commands(() => import('#commands'));
 export const Namespace = Capability.inlineModule(
   'namespace',
   {
-    environments: ['node'],
+    environments: ['node', 'workerd'],
     provides: [ObservabilityCapabilities.Namespace],
     props: (options: ObservabilityOptions.ObservabilityPluginOptions) => options.namespace,
   },
@@ -83,7 +83,7 @@ export const Namespace = Capability.inlineModule(
 export const Observability = Capability.inlineModule(
   'observability',
   {
-    environments: ['node'],
+    environments: ['node', 'workerd'],
     provides: [ObservabilityCapabilities.Observability],
     props: (options: ObservabilityOptions.ObservabilityPluginOptions) => options.observability,
   },
@@ -94,7 +94,7 @@ export const Observability = Capability.inlineModule(
       return [Capability.contribute(ObservabilityCapabilities.Observability, obs)];
     }),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('#operation-handler'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article'],
 });
@@ -102,6 +102,23 @@ export const ObservabilitySettings = AppCapability.settings(() => import('./sett
   provides: [ObservabilityCapabilities.Settings],
   environments: [],
 });
+export const SettingsSync = Capability.lazyModule(
+  'SettingsSync',
+  {
+    environments: [],
+    requires: [
+      Capabilities.AtomRegistry,
+      ObservabilityCapabilities.ClientCapability,
+      ObservabilityCapabilities.Namespace,
+      ObservabilityCapabilities.Observability,
+      ObservabilityCapabilities.Settings,
+    ],
+    provides: [],
+    // The settings space's properties are readable from this point (mirrored by identifier).
+    activatesOn: ObservabilityEvents.SpacesReadyEvent,
+  },
+  () => import('./settings-sync'),
+);
 export const ObservabilityState = Capability.lazyModule(
   'ObservabilityState',
   {

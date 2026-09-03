@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: unified-observability
+    status: active
+    user: jdw
+    host: jdw-mbp
+    created: 2026-09-03
+    summary: 'One Observability facade and extension contracts across Composer, dx and EDGE: @dxos/observability bundles on workerd, a Relay extension feeds tail-logger (the single EDGE egress) into PostHog, shared span processors attach to otel-cf-workers, telemetry preferences move to the settings space.'
+    tasks: .agents/projects/unified-observability/TASKS.md
+    design: .agents/projects/unified-observability/DESIGN.md
+    prs: []
+    resume: 'Phase 1 in dxos: workerd variants, Relay extension, SpanProcessors subpath, facade aiContentCapture; then Phase 2 plugin-observability settings-space preferences. EDGE phase needs a slot (all 5 held).'
   - name: sample-spaces
     status: active
     user: burdon
