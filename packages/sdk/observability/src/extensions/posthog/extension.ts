@@ -71,7 +71,7 @@ const uploadLogs = async (endpoint: string, body: string): Promise<string | unde
   }
 };
 
-/** Create a PostHog-backed observability extension for events, errors, and feedback. */
+/** Create a PostHog-backed observability extension for events, errors, and support tickets. */
 export const extensions: (options: ExtensionsOptions) => Effect.Effect<ObservabilityExtension.Extension> = Effect.fn(
   function* ({
     config,
@@ -87,7 +87,6 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
       return stubExtension;
     }
 
-    const feedbackSurveyId = config.get('runtime.app.env.DX_POSTHOG_FEEDBACK_SURVEY_ID');
     const apiKey = getEnvString(config, 'DX_POSTHOG_API_KEY');
     const api_host = getEnvString(config, 'DX_POSTHOG_API_HOST');
     if (!apiKey || !api_host) {
@@ -97,24 +96,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
 
     const { default: posthog } = yield* Effect.promise(() => import('posthog-js'));
     const { logProcessor } = yield* Effect.promise(() => import('./log-processor'));
-    let feedbackSurveyAvailable: boolean | null = null;
     let unregisterPosthogProcessors: (() => void) | undefined;
-
-    const checkFeedbackSurveyAvailable = (): Effect.Effect<boolean> =>
-      feedbackSurveyId
-        ? Effect.promise(() => {
-            if (feedbackSurveyAvailable !== null) {
-              return Promise.resolve(feedbackSurveyAvailable);
-            }
-            return new Promise<boolean>((resolve) => {
-              posthog.getSurveys((surveys) => {
-                const found = surveys.some((s) => s.id === feedbackSurveyId);
-                feedbackSurveyAvailable = found;
-                resolve(found);
-              });
-            });
-          })
-        : Effect.succeed(false);
 
     return {
       initialize: () =>
@@ -188,68 +170,41 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
           },
         },
         {
-          kind: 'feedback',
-          // TODO(wittjosiah): Support custom surveys.
-          captureUserFeedback: (form) => {
+          kind: 'support',
+          isAvailable: () => Effect.succeed(posthog.conversations.isAvailable()),
+          createSupportTicket: (form) => {
             return new Promise<string | undefined>((resolve, reject) => {
-              posthog.getSurveys((surveys) => {
-                void (async () => {
-                  try {
-                    const survey = surveys.find((survey) => survey.id === feedbackSurveyId);
-                    if (!survey || survey.questions.length === 0) {
-                      log.error('Missing feedback survey or survey has no questions', { feedbackSurveyId });
-                      resolve(undefined);
-                      return;
-                    }
-
-                    let debugLogDumpKey: string | null = null;
-                    if (form.includeLogs !== false && logStore !== undefined) {
-                      const ndjson = await logStore.export({ maxSize: feedbackLogMaxSize });
-                      if (ndjson.length > 0) {
-                        debugLogDumpKey = (await uploadLogs(feedbackLogsEndpoint, ndjson)) ?? 'failed';
-                      }
-                    }
-
-                    // The ticket anchors the report's telemetry (replay, events, errors attach to it);
-                    // a failure here must not lose the survey response the Discord and Linear pipelines read.
-                    let supportTicketId: string | undefined;
-                    if (posthog.conversations.isAvailable()) {
-                      try {
-                        const response = await posthog.conversations.sendMessage(
-                          supportTicketMessage(form.message, debugLogDumpKey),
-                          undefined,
-                          // Each report is its own ticket even if the person already has a conversation.
-                          true,
-                        );
-                        supportTicketId = response?.ticket_id;
-                      } catch (err) {
-                        log.warn('support ticket creation failed; filing the survey response without one', { err });
-                      }
-                    } else {
-                      log.info('PostHog conversations unavailable; filing the survey response without a ticket');
-                    }
-
-                    // https://posthog.com/docs/surveys/implementing-custom-surveys
-                    const question = survey.questions[0];
-                    const result = posthog.capture('survey sent', {
-                      $survey_id: survey.id,
-                      $survey_questions: [{ id: question.id, question: question.question }],
-                      [`$survey_response_${question.id}`]: form.message,
-                      // Survey destinations (Slack/webhook notifications) filter on `$survey_completed = true`, so responses without it are dropped.
-                      $survey_completed: true,
-                      debug_log_dump_key: debugLogDumpKey,
-                      support_ticket_id: supportTicketId,
-                    });
-                    resolve(result?.uuid);
-                  } catch (err) {
-                    log.error('Failed to capture user feedback', { err });
-                    reject(err);
+              void (async () => {
+                try {
+                  if (!posthog.conversations.isAvailable()) {
+                    log.warn('PostHog conversations unavailable; cannot file a support ticket');
+                    resolve(undefined);
+                    return;
                   }
-                })();
-              });
+
+                  let debugLogDumpKey: string | null = null;
+                  if (form.includeLogs !== false && logStore !== undefined) {
+                    const ndjson = await logStore.export({ maxSize: feedbackLogMaxSize });
+                    if (ndjson.length > 0) {
+                      debugLogDumpKey = (await uploadLogs(feedbackLogsEndpoint, ndjson)) ?? 'failed';
+                    }
+                  }
+
+                  // The ticket anchors the report's telemetry: replay, events, and errors attach to it.
+                  const response = await posthog.conversations.sendMessage(
+                    supportTicketMessage(form.message, debugLogDumpKey),
+                    undefined,
+                    // Each report is its own ticket even if the person already has a conversation.
+                    true,
+                  );
+                  resolve(response?.ticket_id);
+                } catch (err) {
+                  log.error('Failed to create support ticket', { err });
+                  reject(err);
+                }
+              })();
             });
           },
-          isAvailable: checkFeedbackSurveyAvailable,
         },
       ],
     };

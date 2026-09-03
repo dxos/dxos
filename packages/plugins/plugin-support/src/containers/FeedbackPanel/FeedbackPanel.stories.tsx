@@ -21,16 +21,16 @@ import { translations } from '#translations';
 import { FeedbackPanel } from './FeedbackPanel';
 
 // Minimal Observability stub — just enough surface to satisfy FeedbackPanel's
-// `isAvailable('feedback')` probe and a no-op `captureUserFeedback`. The full
+// `isAvailable('support')` probe and a no-op `createSupportTicket`. The full
 // interface is large; the cast keeps the story fixture readable.
 const makeObservability = ({ available = true }: { available?: boolean } = {}): Observability.Observability =>
   ({
     isAvailable: () => Effect.succeed(available),
-    feedback: {
-      captureUserFeedback: async (form: any) => {
+    support: {
+      createSupportTicket: async (form: any) => {
         // eslint-disable-next-line no-console
-        console.log('[story] captureUserFeedback', form);
-        return 'story-event-uuid';
+        console.log('[story] createSupportTicket', form);
+        return 'story-ticket-id';
       },
     },
   }) as unknown as Observability.Observability;
@@ -91,7 +91,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Feedback is available; submission paths log to the console. */
+/** Support is available; the submit path logs to the console. */
 export const Default: Story = {
   decorators: [
     withPluginManager({
@@ -130,7 +130,7 @@ export const WithDownloadLogs: Story = {
   ],
 };
 
-/** Observability reports feedback unavailable — submit buttons disabled. */
+/** Observability reports support unavailable — submit disabled. */
 export const FeedbackUnavailable: Story = {
   decorators: [
     withPluginManager({

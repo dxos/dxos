@@ -75,23 +75,23 @@ export const SupportRequest = Schema.Struct({
 
 export type SupportRequest = Schema.Schema.Type<typeof SupportRequest>;
 
-/** Legacy observability-backend input. Derived from {@link SupportRequest} by the FeedbackPanel. */
-export const UserFeedback = Schema.Struct({
+/** Support-ticket input, derived from {@link SupportRequest} by the FeedbackPanel. */
+export const SupportTicket = Schema.Struct({
   message: Schema.String,
   includeLogs: Schema.Boolean.pipe(Schema.optional),
 });
 
-export type UserFeedback = Schema.Schema.Type<typeof UserFeedback>;
+export type SupportTicket = Schema.Schema.Type<typeof SupportTicket>;
 
-export const CaptureUserFeedback = Operation.make({
+export const CreateSupportTicket = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.support.captureFeedback'),
-    name: 'Capture User Feedback',
-    description: 'Capture one-shot user feedback (sent to the observability backend).',
-    icon: 'ph--chat-text--regular',
+    key: DXN.make('org.dxos.operation.support.submitReport'),
+    name: 'Create Support Ticket',
+    description: 'File the report as a support ticket anchoring its telemetry.',
+    icon: 'ph--lifebuoy--regular',
   },
   services: [Capability.Service],
-  input: UserFeedback,
+  input: SupportTicket,
   output: Schema.UndefinedOr(Schema.String),
 });
 

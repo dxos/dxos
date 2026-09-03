@@ -32,7 +32,7 @@ const attachAiCapture = async (observability: Observability): Promise<CleanupFn>
 
 // TODO(wittjosiah): Figure out how to handle when telemetry is disabled.
 //   In theory the setting should be both persisted and synchronized.
-//   Initialize probably should still run for the cases where data is emitted manually (e.g., feedback).
+//   Initialize probably should still run for the cases where data is emitted manually (e.g., support tickets).
 
 /**
  * Provider of observability data.
@@ -60,7 +60,7 @@ export interface Observability {
   enabled: boolean;
   errors: ObservabilityExtension.Errors;
   events: ObservabilityExtension.Events;
-  feedback: ObservabilityExtension.Feedback;
+  support: ObservabilityExtension.Support;
   ai: ObservabilityExtension.Ai;
   /** True if at least one extension of the given kind reports as available. */
   isAvailable(kind: ObservabilityExtension.Kind): Effect.Effect<boolean>;
@@ -249,14 +249,14 @@ class ObservabilityImpl implements Observability {
     };
   }
 
-  get feedback(): ObservabilityExtension.Feedback {
+  get support(): ObservabilityExtension.Support {
     return {
-      captureUserFeedback: async (form) => {
-        let eventUuid: string | undefined;
-        for (const extension of this._getExtensions('feedback')) {
-          eventUuid = (await extension.captureUserFeedback(form)) ?? eventUuid;
+      createSupportTicket: async (form) => {
+        let ticketId: string | undefined;
+        for (const extension of this._getExtensions('support')) {
+          ticketId = (await extension.createSupportTicket(form)) ?? ticketId;
         }
-        return eventUuid;
+        return ticketId;
       },
     };
   }

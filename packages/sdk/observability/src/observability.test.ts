@@ -354,19 +354,19 @@ describe('Observability', () => {
       }),
     );
 
-    it.effect('feedback.captureUserFeedback delegates to feedback-kind extensions only', () =>
+    it.effect('support.createSupportTicket delegates to support-kind extensions only', () =>
       Effect.gen(function* () {
-        const captureUserFeedback = vi.fn();
-        const feedbackExt = createMockExtension({
-          apis: [{ kind: 'feedback', isAvailable: () => Effect.succeed(true), captureUserFeedback }],
+        const createSupportTicket = vi.fn();
+        const supportExt = createMockExtension({
+          apis: [{ kind: 'support', isAvailable: () => Effect.succeed(true), createSupportTicket }],
         });
         const obs = yield* Function.pipe(
           Observability.make(),
-          Observability.addExtension(Effect.succeed(feedbackExt)),
+          Observability.addExtension(Effect.succeed(supportExt)),
           Observability.initialize,
         );
-        void obs.feedback.captureUserFeedback({ message: 'great app' });
-        expect(captureUserFeedback).toHaveBeenCalledWith({ message: 'great app' });
+        void obs.support.createSupportTicket({ message: 'great app' });
+        expect(createSupportTicket).toHaveBeenCalledWith({ message: 'great app' });
       }),
     );
 

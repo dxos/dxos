@@ -47,17 +47,10 @@ export const translations = [
         'feedback-textarea.label': 'Feedback',
         'feedback-textarea.placeholder': 'Please enter your feedback, technical issue, or feature request.',
         'include-debug-logs.label': 'Include debug logs',
-        'send-feedback.label': 'Send Feedback',
+        'send-feedback.label': 'Submit report',
         'sending-feedback.label': 'Sending…',
-        'create-github-issue.label': 'Create GitHub Issue',
-        'github-issue-toast.label': 'GitHub issue draft opened',
-        'github-issue-toast.description': 'Finish the submission in the GitHub tab.',
-        'github-issue-toast-no-screenshot.description':
-          'Finish the submission in the GitHub tab. (Screenshot could not be attached.)',
-        'github-issue-popup-blocked-toast.label': "Couldn't open the GitHub tab",
-        'github-issue-popup-blocked-toast.description':
-          'Your browser blocked the popup. Allow popups for this site and click Create GitHub Issue again.',
-        'ask-for-help.label': 'Ask for Help on Discord',
+        'public-report.description':
+          'Your report will be posted publicly to our Discord help channel so the community can respond. Attached logs, screenshots, and diagnostics stay private — only our team can see them.',
         'discord-presence-team.label': '{{count}} team',
         'discord-presence-members.label': '{{count}} members',
         'discord-presence-online.label': 'Online:',

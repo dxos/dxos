@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { type SupportOperation } from '#types';
 
-import { formatRequestMessage } from './request';
+import { formatPublicMessage, formatRequestMessage } from './request';
 
 const values: SupportOperation.SupportRequest = {
   type: 'bug',
@@ -24,5 +24,20 @@ describe('formatRequestMessage', () => {
     const message = formatRequestMessage(values, 'https://images.dxos.org/abc.jpg');
     expect(message).toContain('![Screenshot](https://images.dxos.org/abc.jpg)');
     expect(message.indexOf('![Screenshot]')).toBeLessThan(message.indexOf('It broke.'));
+  });
+
+  test('carries the DID for the team identity lookup', () => {
+    const message = formatRequestMessage(values, undefined, 'did:dx:example');
+    expect(message).toContain('**DID:** did:dx:example');
+  });
+
+  test('omits the DID when the submitter has no identity', () => {
+    expect(formatRequestMessage(values)).not.toContain('**DID:**');
+  });
+});
+
+describe('formatPublicMessage', () => {
+  test('carries only what the user wrote', () => {
+    expect(formatPublicMessage(values)).toEqual('# Broken\n\nIt broke.');
   });
 });

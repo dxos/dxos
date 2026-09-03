@@ -1,19 +1,23 @@
 ---
 name: user-submissions
 description: >-
-  Triage a user submission from the Composer feedback form — a Linear issue
-  labelled "Composer Feedback Form" carrying an R2 debug-log path. Use when
-  working a DX-#### issue created from a user report, when an issue body names a
+  Triage a Composer support submission — a Linear issue or PostHog Support ticket
+  carrying an R2 debug-log key, escalated from a user report. Use when working a
+  DX-#### issue created from a user report, when an issue body names a
   `composer-feedback-logs-*` NDJSON bundle, or when asked to find the root cause
   of a reported bug from its attached logs.
 ---
 
 # Triaging user submissions
 
-A Composer feedback submission becomes a Linear issue with the label
-**Composer Feedback Form**. The user's prose is usually near-worthless — often a
-single word, often literally `test`. **The attached debug logs are the report.**
-The submission is a pointer to evidence, not a description of a bug.
+A Composer support submission is a PostHog Support ticket — the anchor its telemetry
+(session replay, events, errors, identity) attaches to — plus a public Discord help
+thread carrying only the user's text. A team member escalates (`/issue` in the thread
+sets the ticket on-hold, and the Edge discord-service files the Linear issue), which
+carries the ticket link, the replay link, the version, and the debug-log location.
+**The attached debug logs are the report.** The user's prose is often a single word,
+sometimes literally `test` — the ticket and its telemetry are the evidence, not the
+words.
 
 So never triage from the title. Two rules govern everything below:
 
@@ -182,6 +186,10 @@ Comment on the Linear issue with the root cause (or the instrumentation added),
 a link to the PR, and — when relevant — the workaround the user can use now
 (e.g. "reload the tab"). Keep the debug-log path in the comment so the next
 person can re-check the same evidence.
+
+Landing the issue closes the loop for the user automatically: the Edge service
+posts the resolution message into both the Discord thread and the ticket, tags
+the thread Solved, and resolves the ticket.
 
 ## Non-negotiables
 

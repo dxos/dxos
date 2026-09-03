@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import React, { useMemo, useState } from 'react';
 
-import { useAtomCapability, useCapability, usePluginManager } from '@dxos/app-framework/ui';
+import { useCapability, usePluginManager } from '@dxos/app-framework/ui';
 import { EffectEx } from '@dxos/effect';
 import * as ObservabilityCapabilities from '@dxos/plugin-observability/ObservabilityCapabilities';
 import { useConfig } from '@dxos/react-client';
@@ -14,18 +14,14 @@ import { Panel } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { FeedbackForm, type FeedbackPluginOption } from '#components';
-import { SupportCapabilities } from '#types';
 
-import { DiscordAction } from './DiscordAction';
 import { DownloadLogsAction } from './DownloadLogsAction';
-import { FeedbackSubmitAction } from './FeedbackSubmitAction';
-import { GitHubAction } from './GitHubAction';
+import { SupportSubmitAction } from './SupportSubmitAction';
 
-/** Renders the feedback form, disabling the PostHog/Discord submit paths when the survey is unavailable. */
+/** Renders the feedback form, disabling the submit when support tickets are unavailable. */
 export const FeedbackPanel = () => {
   const observability = useCapability(ObservabilityCapabilities.Observability);
-  const settings = useAtomCapability(SupportCapabilities.Settings);
-  const [feedbackAvailable, setFeedbackAvailable] = useState(false);
+  const [supportAvailable, setSupportAvailable] = useState(false);
   const config = useConfig();
   const manager = usePluginManager();
 
@@ -45,13 +41,13 @@ export const FeedbackPanel = () => {
 
   useAsyncEffect(
     async (controller) => {
-      const available = await observability.isAvailable('feedback').pipe(
+      const available = await observability.isAvailable('support').pipe(
         Effect.catch(() => Effect.succeed(false)),
         Effect.catchDefect(() => Effect.succeed(false)),
         EffectEx.runAndForwardErrors,
       );
       if (!controller.signal.aborted) {
-        setFeedbackAvailable(available);
+        setSupportAvailable(available);
       }
     },
     [observability],
@@ -65,11 +61,7 @@ export const FeedbackPanel = () => {
             <Form.Content>
               <Form.FieldSet />
               <DownloadLogsAction />
-              {/* GH only opens a prefilled URL — independent of PostHog feedback availability. */}
-              {/* PostHog + Discord both call `CaptureUserFeedback`, so they share the gate. */}
-              <FeedbackSubmitAction disabled={!feedbackAvailable} />
-              {settings?.enableGitHubIssues && <GitHubAction />}
-              <DiscordAction disabled={!feedbackAvailable} />
+              <SupportSubmitAction disabled={!supportAvailable} />
             </Form.Content>
           </Form.Viewport>
         </FeedbackForm.Root>

@@ -227,20 +227,20 @@ const FeedbackFormSubmitButton = ({ handler, icon, label, disabled }: SubmitButt
 FeedbackFormSubmitButton.displayName = `${FEEDBACK_FORM}.SubmitButton`;
 
 //
-// SubmitPosthog
+// Submit
 //
 
-export type FeedbackFormSubmitPosthogProps = {
+export type FeedbackFormSubmitProps = {
   onSubmit: FeedbackSubmitHandler;
   disabled?: boolean;
 };
 
-const FeedbackFormSubmitPosthog = ({ onSubmit, disabled }: FeedbackFormSubmitPosthogProps) => {
+const FeedbackFormSubmit = ({ onSubmit, disabled }: FeedbackFormSubmitProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { submitHandlerRef } = useFeedbackFormContext(`${FEEDBACK_FORM}.SubmitPosthog`);
+  const { submitHandlerRef } = useFeedbackFormContext(`${FEEDBACK_FORM}.Submit`);
 
-  // Primary action: default a keyboard (Enter) submit to PostHog until another button is clicked —
-  // but never while disabled (e.g. feedback survey unavailable).
+  // Keyboard (Enter) submits default to the single handler — but never while disabled
+  // (e.g. support tickets unavailable).
   useEffect(() => {
     if (disabled) {
       if (submitHandlerRef.current === onSubmit) {
@@ -261,63 +261,7 @@ const FeedbackFormSubmitPosthog = ({ onSubmit, disabled }: FeedbackFormSubmitPos
   );
 };
 
-FeedbackFormSubmitPosthog.displayName = `${FEEDBACK_FORM}.SubmitPosthog`;
-
-//
-// SubmitGitHub
-//
-
-export type FeedbackFormSubmitGitHubProps = {
-  onSubmit?: FeedbackSubmitHandler;
-  disabled?: boolean;
-};
-
-const FeedbackFormSubmitGitHub = ({ onSubmit, disabled }: FeedbackFormSubmitGitHubProps) => {
-  const { t } = useTranslation(meta.profile.key);
-
-  if (!onSubmit) {
-    return null;
-  }
-
-  return (
-    <FeedbackFormSubmitButton
-      handler={onSubmit}
-      icon='ph--github-logo--regular'
-      label={t('create-github-issue.label')}
-      disabled={disabled}
-    />
-  );
-};
-
-FeedbackFormSubmitGitHub.displayName = `${FEEDBACK_FORM}.SubmitGitHub`;
-
-//
-// SubmitDiscord
-//
-
-export type FeedbackFormSubmitDiscordProps = {
-  onSubmit?: FeedbackSubmitHandler;
-  disabled?: boolean;
-};
-
-const FeedbackFormSubmitDiscord = ({ onSubmit, disabled }: FeedbackFormSubmitDiscordProps) => {
-  const { t } = useTranslation(meta.profile.key);
-
-  if (!onSubmit) {
-    return null;
-  }
-
-  return (
-    <FeedbackFormSubmitButton
-      handler={onSubmit}
-      icon='ph--discord-logo--regular'
-      label={t('ask-for-help.label')}
-      disabled={disabled}
-    />
-  );
-};
-
-FeedbackFormSubmitDiscord.displayName = `${FEEDBACK_FORM}.SubmitDiscord`;
+FeedbackFormSubmit.displayName = `${FEEDBACK_FORM}.Submit`;
 
 //
 // DiscordPresence
@@ -361,8 +305,6 @@ FeedbackFormDiscordPresence.displayName = `${FEEDBACK_FORM}.DiscordPresence`;
 export const FeedbackForm = {
   Root: FeedbackFormRoot,
   DownloadLogs: FeedbackFormDownloadLogs,
-  SubmitPosthog: FeedbackFormSubmitPosthog,
-  SubmitGitHub: FeedbackFormSubmitGitHub,
-  SubmitDiscord: FeedbackFormSubmitDiscord,
+  Submit: FeedbackFormSubmit,
   DiscordPresence: FeedbackFormDiscordPresence,
 };

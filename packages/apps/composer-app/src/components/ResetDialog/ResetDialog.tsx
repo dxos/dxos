@@ -107,7 +107,7 @@ export const ResetDialog = ({
         return;
       }
 
-      // Collapse the richer SupportRequest into the legacy `{ message, includeLogs }`
+      // Collapse the richer SupportRequest into the `{ message, includeLogs }`
       // shape consumed by Observability. Triage metadata (type/severity/area/version)
       // is embedded as a Markdown trailer so it travels with the message.
       const trailer = [
@@ -121,7 +121,7 @@ export const ResetDialog = ({
       const message = [`# ${values.title}`, values.body, '---', trailer].filter(Boolean).join('\n\n');
 
       const observability = await observabilityProp;
-      void observability.feedback.captureUserFeedback({ message, includeLogs: values.includeLogs });
+      void observability.support.createSupportTicket({ message, includeLogs: values.includeLogs });
       setFeedbackOpen(false);
       setFeedbackSent(true);
     },
@@ -256,7 +256,7 @@ export const ResetDialog = ({
                           <Form.Viewport>
                             <Form.Content>
                               <Form.FieldSet />
-                              <FeedbackForm.SubmitPosthog onSubmit={handleSaveFeedback} />
+                              <FeedbackForm.Submit onSubmit={handleSaveFeedback} />
                             </Form.Content>
                           </Form.Viewport>
                         </FeedbackForm.Root>

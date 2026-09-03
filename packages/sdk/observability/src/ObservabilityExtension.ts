@@ -16,13 +16,13 @@ export * from './extensions';
  *
  * - errors: Error tracking (e.g., PostHog)
  * - events: Product usage event tracking (e.g., PostHog)
- * - feedback: User feedback submission (e.g., PostHog)
+ * - support: Support tickets anchoring user reports and telemetry (e.g., PostHog)
  * - ai: Model inferences, tool calls, and turns (e.g., PostHog LLM analytics, OTel gen_ai)
  * - logs: Structured logging (e.g., OTEL)
  * - metrics: Metric data (e.g., OTEL)
  * - traces: Distributed tracing (e.g., OTEL)
  */
-export type Kind = 'ai' | 'errors' | 'events' | 'feedback' | 'logs' | 'metrics' | 'traces';
+export type Kind = 'ai' | 'errors' | 'events' | 'support' | 'logs' | 'metrics' | 'traces';
 
 /**
  * Base for every extension API variant. All kinds implement availability the same way.
@@ -158,16 +158,16 @@ export type Ai = {
 };
 
 /**
- * Feedback extension API (kind-specific methods only).
+ * Support extension API (kind-specific methods only).
  */
-export type Feedback = {
-  captureUserFeedback(form: FeedbackForm): Promise<string | undefined>;
+export type Support = {
+  createSupportTicket(form: SupportTicketForm): Promise<string | undefined>;
 };
 
 export type ExtensionApi =
   | (ExtensionApiBase<'errors'> & Errors)
   | (ExtensionApiBase<'events'> & Events)
-  | (ExtensionApiBase<'feedback'> & Feedback)
+  | (ExtensionApiBase<'support'> & Support)
   | (ExtensionApiBase<'ai'> & Ai)
   // TODO(wittjosiah): Direct logs api?
   | ExtensionApiBase<'logs'>
@@ -176,10 +176,9 @@ export type ExtensionApi =
   | ExtensionApiBase<'traces'>;
 
 /**
- * Feedback form to be captured by the feedback extension.
+ * Report to be filed as a support ticket; the returned id anchors the report's telemetry.
  */
-// TODO(wittjosiah): Support more form fields (e.g., PostHog custom surveys).
-export type FeedbackForm = { message: string; includeLogs?: boolean };
+export type SupportTicketForm = { message: string; includeLogs?: boolean };
 
 /**
  * Attributes to be attached to observability events.
