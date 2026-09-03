@@ -13,12 +13,18 @@ const viewport: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
     'inset-start-[calc(env(safe-area-inset-left)+1rem)] inset-end-[calc(env(safe-area-inset-right)+1rem)]',
     'w-auto md:end-[calc(env(safe-area-inset-right)+4rem)] md:left-auto md:w-full md:max-w-sm',
     'rounded-md flex flex-col gap-2',
+    // Toasts are non-modal, so only a toast's own box may intercept — never the gaps between them.
+    'pointer-events-none',
     ...etc,
   );
 
 const root: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
   mx(
     'dx-popover-surface rounded-md p-1',
+    // Importance overrides the inline `pointer-events: none` Radix's dismissable layer writes onto
+    // every layer beneath an open modal menu or dialog, which leaves the toast painted on top yet
+    // transparent to hit-testing — passing clicks through to whatever it covers.
+    'pointer-events-auto!',
     surfaceShadow({ elevation: 'toast' }),
     'radix-state-open:animate-toast-slide-in-bottom md:radix-state-open:animate-toast-slide-in-right',
     'radix-state-closed:animate-toast-hide',
