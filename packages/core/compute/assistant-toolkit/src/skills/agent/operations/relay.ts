@@ -8,13 +8,14 @@ import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 import * as Prompt from 'effect/unstable/ai/Prompt';
 
 import { AiService } from '@dxos/ai';
+import * as Agent from '@dxos/assistant/Agent';
+import * as Chat from '@dxos/assistant/Chat';
 import { getSession } from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
-import { Agent, Chat } from '../../../types';
 import { Relay } from './definitions';
 
 /**
@@ -51,12 +52,9 @@ const handler: Operation.WithHandler<typeof Relay> = Relay.pipe(
           }
         }
 
-        const feed = yield* Database.load(chat.feed).pipe(
-          Effect.catchTag('EntityNotFoundError', () => Effect.die(new Error('Unable to load relay chat feed.'))),
-        );
-        // The durable session recovers steering from its spawn annotation; passing the ref here
-        // keeps the reuse identity honest (a repointed ref respawns the process).
-        const session = yield* getSession(feed, { instructions: chat.instructions });
+        // The durable session is bound to the chat, so it recovers its steering (and its queue)
+        // from the chat itself on every rehydration.
+        const session = yield* getSession(chat);
         const content = prompt ?? JSON.stringify(event);
         yield* session.submitPrompt([{ _tag: 'text', text: content, disposition: 'synthetic' }]);
       },

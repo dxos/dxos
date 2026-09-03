@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 
-import { type Chat } from '@dxos/assistant-toolkit';
+import type * as Chat from '@dxos/assistant/Chat';
 import { type Event } from '@dxos/async';
 import * as Project from '@dxos/compute/Project';
 import { type Database, Obj } from '@dxos/echo';

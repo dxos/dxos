@@ -7,7 +7,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import { useCallback, useMemo } from 'react';
 
 import { type AiContext } from '@dxos/assistant';
-import { Chat } from '@dxos/assistant-toolkit';
+import * as Chat from '@dxos/assistant/Chat';
 import { type Database, Obj } from '@dxos/echo';
 import { type URI } from '@dxos/keys';
 

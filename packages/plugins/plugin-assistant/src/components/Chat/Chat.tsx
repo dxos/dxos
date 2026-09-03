@@ -10,7 +10,8 @@ import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef,
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Alarm } from '@dxos/assistant';
-import { Chat as AssistantChat, resolveSlashCommand } from '@dxos/assistant-toolkit';
+import { resolveSlashCommand } from '@dxos/assistant-toolkit';
+import * as AssistantChat from '@dxos/assistant/Chat';
 import { Event } from '@dxos/async';
 import { type Database, Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
@@ -42,6 +43,7 @@ import { meta } from '#meta';
 import { TaskSlashCommands } from '../../commands';
 import { AiUsageQuotaError, type ProcessorRequestContext } from '../../processor';
 import {
+  ChatActivity,
   ChatStatus,
   ChatPrompt as NaturalChatPrompt,
   type ChatPromptProps as NaturalChatPromptProps,
@@ -792,6 +794,7 @@ export const Chat = {
   Content: ChatContent,
   Prompt: ChatPrompt,
   Queue: ChatQueue,
+  Activity: ChatActivity,
   Status: ChatStatus,
   Thread: ChatThread,
   Outline: ChatOutline,

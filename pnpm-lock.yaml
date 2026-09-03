@@ -4416,6 +4416,9 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../../sdk/app-toolkit
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../assistant
       '@dxos/assistant-toolkit':
         specifier: workspace:*
         version: link:../assistant-toolkit
@@ -5091,6 +5094,9 @@ importers:
 
   packages/core/compute/functions-testing:
     dependencies:
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../assistant
       '@dxos/assistant-toolkit':
         specifier: workspace:*
         version: link:../assistant-toolkit
@@ -15235,6 +15241,9 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../../core/compute/assistant
       '@dxos/assistant-toolkit':
         specifier: workspace:*
         version: link:../../core/compute/assistant-toolkit
@@ -19247,6 +19256,9 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../../core/compute/assistant
       '@dxos/assistant-toolkit':
         specifier: workspace:*
         version: link:../../core/compute/assistant-toolkit
@@ -19335,9 +19347,6 @@ importers:
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/compute/ai
-      '@dxos/assistant':
-        specifier: workspace:*
-        version: link:../../core/compute/assistant
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client
