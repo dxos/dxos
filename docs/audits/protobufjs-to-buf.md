@@ -243,6 +243,82 @@ an identically-valued `enum DifferentName` raises `TS2367`. So:
   `EdgePanel` cannot be fixed ahead of its type move, and it generalises to any nested enum
   elsewhere in the migration.
 
+## The cross-codec guard: what it proves, and the two divergences it found
+
+Built against the current tree rather than a released build, because both codecs are in the
+workspace right now. It walks the buf registry programmatically -- 258 messages, 517 generated
+cases -- synthesises a fully populated value per message, and asserts that the two decoders agree on
+the same bytes and the two encoders agree on the same value.
+
+**It is not a downgrade or compatibility guard, and must not be cited as one.** Both sides
+regenerate from the same `src/proto` tree, so a wire-incompatible edit to a `.proto` moves them
+together and passes here unnoticed -- which is precisely the failure a comparison against a
+_released_ build would catch. What this does give is continuous agreement between the two codecs on
+every CI run as declarations move, which the one-shot historical comparison never could. The two are
+complements, not substitutes.
+
+**It dies with protobuf.js.** The guard exists only while both codecs do; the teardown slice deletes
+it along with `@dxos/codec-protobuf`. Noted here so it is not later found and puzzled over.
+
+### Rejected: pinning a released version
+
+`@dxos/protocols@0.11.1` (published 2026-08-05) is the last stable release preceding the first
+buf-migration commit on main (`bdb02cd3a1`, 2026-08-24); the only thing published in between is a
+`1.0.0-next-<sha>` CI snapshot, and the codec did not move until `48eb05d613` (2026-08-26), so both
+readings of the cutoff select it. The derivation holds and is worth keeping.
+
+What killed it is a finding in its own right: **the pin cannot be loaded in-process.**
+`@dxos/protocols@0.11.1` pulls `@dxos/keys@0.11.1`, built against effect 3.x, which calls
+`Schema.filter`; under the workspace's `effect@4.0.0-rc.108` that throws at import time, before any
+test body runs. Aliasing it into the workspace also fails, because pnpm's `packages/**/*` glob links
+the workspace copy over the pin. It _does_ load in an isolated closure -- verified, `effect@3.21.4`,
+`dxos.echo.query.Heads` round-tripping to `0a04613162320a0463336434` -- which is the shape a real
+downgrade guard would need: a spawned process with its own dependency graph, because that is what a
+build in the field actually is.
+
+### Divergence 1: protobuf.js cannot re-encode its own decode output
+
+Its decoder materialises an _absent_ singular nested message with **unsubstituted** defaults, which
+its own encoder then rejects. On `Chain.credential`:
+
+```
+chain = {"credential":{"issuer":{"data":{}},
+                       "issuanceDate":{"seconds":"0","nanos":0},
+                       "subject":{"id":{"data":{}},"assertion":{"type_url":"","value":{}}}}}
+re-encode -> TypeError: value.getTime is not a function
+```
+
+`issuer` comes back as `{data:{}}` rather than a `PublicKey`, `issuanceDate` as `{seconds,nanos}`
+rather than a `Date`. Seventeen messages are affected, all of them ones that can contain an absent
+nested message. This is the legacy codec's own asymmetry and predates the migration; the compat
+layer does not have it -- `encodeCompat`/`decodeCompat` handled all 258 messages. That is
+reassuring, but it is not the headline: the headline is that protobuf.js's decoder and its encoder
+disagree, and the guard records each affected message with the _specific_ field and error rather
+than muting the message wholesale.
+
+### Divergence 2: `Timestamp` -> `Date` loses sub-millisecond precision
+
+The substitution target is a JS `Date`, which is millisecond-resolution, so a `nanos` value that is
+not a multiple of 1,000,000 cannot survive a round-trip (`nanos: 102` returns as `0`). The guard
+deliberately generates only millisecond-representable timestamps, so **it does not exercise this
+case** -- otherwise every message carrying a timestamp would fail for this one reason and mask
+everything else. Recorded here because the guard no longer says it.
+
+**Checked against signed data, and it is not reachable.** Two independent reasons:
+
+1. Every timestamp on a signed credential is set from `new Date()` --
+   `credential-factory.ts:58` (`issuanceDate`), `credential-factory.ts:66` and
+   `presentations/presentation.ts:29` (`creationDate`). A JS `Date` cannot hold sub-millisecond
+   precision, so `nanos` is always a multiple of 1,000,000 by construction.
+2. The signature is not computed over protobuf bytes at all. `getCredentialProofPayload` returns
+   `canonicalStringify(copy)`, and the replacer has no `Date` branch, so a date reaches the payload
+   through `JSON.stringify` -> `Date.prototype.toJSON()` -> an ISO-8601 string truncated to
+   milliseconds. The `nanos` field never enters a signature even in principle, and a re-encode that
+   changes `nanos` cannot change a signature.
+
+So the byte difference is real but confined to the wire, where it is the ordinary proto3-default
+omission and readable in both directions.
+
 ## `#2`: split by fate before converting, and most of it dies at teardown
 
 `#2`'s nominal file list spans four places. Judged per file rather than per directory, almost none
