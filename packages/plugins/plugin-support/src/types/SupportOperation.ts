@@ -51,7 +51,7 @@ export const SupportRequest = Schema.Struct({
   ),
   area: Schema.String.annotate({
     title: 'Area',
-    description: 'The plugin or area this relates to (optional).',
+    description: 'The plugin or area this relates to.',
   }).pipe(Schema.optional),
   type: IssueType.pipe(Schema.optional),
   severity: Severity.pipe(Schema.optional),
