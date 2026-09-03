@@ -92,6 +92,35 @@ export const mapToKeyValues = (spec: MappingSpec, values: any) => {
 };
 
 /**
+ * Removes the protobuf-es message markers (`$typeName`, `$unknown`) from a config tree.
+ *
+ * `defaultsDeep` copies `$typeName` onto plain objects that came from another source, and
+ * protobuf-es then treats those objects as already-constructed messages and skips normalising
+ * their plain descendants -- producing a `Config.values` that `toBinary` cannot encode.
+ */
+export const stripMessageMarkers = <T>(value: T): T => {
+  if (Array.isArray(value)) {
+    return value.map((item) => stripMessageMarkers(item)) as T;
+  }
+
+  // Bytes, timestamps and other non-plain leaves are values, not message subtrees.
+  if (value === null || typeof value !== 'object' || Object.getPrototypeOf(value) !== Object.prototype) {
+    return value;
+  }
+
+  const result: Record<string, any> = {};
+  for (const [key, item] of Object.entries(value)) {
+    if (key === '$typeName' || key === '$unknown') {
+      continue;
+    }
+
+    result[key] = stripMessageMarkers(item);
+  }
+
+  return result as T;
+};
+
+/**
  * Validates a config object and normalises it into a buf message.
  * Field types are checked by the compiler through `ConfigInit`, which is why this no longer runs the
  * protobuf.js `verify` pass; loaders that read untrusted YAML validate as they parse.
@@ -140,7 +169,9 @@ export class Config {
    * @constructor
    */
   constructor(config: ConfigInit = {}, ...objects: ConfigInit[]) {
-    this._config = validateConfig(defaultsDeep(config, ...objects, { version: 1 }));
+    this._config = validateConfig(
+      defaultsDeep(stripMessageMarkers(config), ...objects.map(stripMessageMarkers), { version: 1 }),
+    );
   }
 
   /**

@@ -2,13 +2,15 @@
 // Copyright 2021 DXOS.org
 //
 
-import { createRegistry, fromJson, toJson } from '@bufbuild/protobuf';
+import { createRegistry, fromJson, toBinary, toJson } from '@bufbuild/protobuf';
 import { StructSchema, anyPack } from '@bufbuild/protobuf/wkt';
 import { expect, test } from 'vitest';
 
 import { ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
 
 import { Config, mapFromKeyValues, mapToKeyValues } from './config';
+import { EDGE_URLS } from './edge-services';
+import { configPreset } from './preset';
 // @ts-ignore
 import defaults from './testing/defaults.js';
 // @ts-ignore
@@ -154,4 +156,34 @@ test.skip('mapToKeyValuesping', () => {
     TEST_CLIENT_ID: 123,
     TEST_CLIENT_TAG: 'testing',
   });
+});
+
+test('message source produces an encodable config', () => {
+  const config = new Config(
+    {
+      runtime: {
+        client: {
+          storage: { persistent: true },
+        },
+      },
+    },
+    configPreset({ edge: 'preview' }).values,
+  );
+
+  expect(() => toBinary(ConfigSchema, config.values)).not.toThrow();
+  expect(config.get('runtime.client.storage.persistent')).to.eq(true);
+  expect(config.get('runtime.services.edge.url')).to.eq(EDGE_URLS.preview);
+});
+
+test('reversed source order produces an encodable config', () => {
+  const config = new Config(configPreset({ edge: 'preview' }).values, {
+    runtime: {
+      client: {
+        storage: { persistent: true },
+      },
+    },
+  });
+
+  expect(() => toBinary(ConfigSchema, config.values)).not.toThrow();
+  expect(config.get('runtime.client.storage.persistent')).to.eq(true);
 });
