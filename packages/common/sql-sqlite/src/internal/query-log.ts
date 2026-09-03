@@ -33,6 +33,11 @@ const summarizeLoggedParam = (value: unknown): unknown => {
   return value;
 };
 
+/**
+ * Reduce bound parameters to something safe to log: a blob or oversized string becomes a
+ * type-and-size marker rather than its contents, so one large parameter cannot crowd the rest of the
+ * context out of the record's fixed length budget.
+ */
 export const summarizeLoggedParams = (params: ReadonlyArray<unknown>): ReadonlyArray<unknown> =>
   params.map(summarizeLoggedParam);
 

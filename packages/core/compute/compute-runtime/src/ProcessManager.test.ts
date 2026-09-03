@@ -332,20 +332,6 @@ const ProcessWithRpcs = Process.make(
     }),
 );
 
-/**
- * Collect the log entries `body` emits, so a test can assert on the level a code path reports at
- * and not merely on the state it leaves behind.
- */
-const captureLogEntries = <A, E, R>(body: () => Effect.Effect<A, E, R>): Effect.Effect<LogEntry[], E, R> =>
-  Effect.suspend(() => {
-    const entries: LogEntry[] = [];
-    const processor: LogProcessor = (_config, entry) => {
-      entries.push(entry);
-    };
-    const remove = log.addProcessor(processor);
-    return body().pipe(Effect.ensuring(Effect.sync(remove)), Effect.as(entries));
-  });
-
 const TestLayer = Layer.mergeAll(ProcessManager.ProcessOperationInvoker.layer, ProcessMonitor.layer).pipe(
   Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
   Layer.provideMerge(RemoteProcessManager.layerNoop),
@@ -2317,3 +2303,17 @@ const spanNamesToRoot = (spans: Tracer.Span[], name: string): string[] => {
   }
   return names;
 };
+
+/**
+ * Collect the log entries `body` emits, so a test can assert on the level a code path reports at
+ * and not merely on the state it leaves behind.
+ */
+const captureLogEntries = <A, E, R>(body: () => Effect.Effect<A, E, R>): Effect.Effect<LogEntry[], E, R> =>
+  Effect.suspend(() => {
+    const entries: LogEntry[] = [];
+    const processor: LogProcessor = (_config, entry) => {
+      entries.push(entry);
+    };
+    const remove = log.addProcessor(processor);
+    return body().pipe(Effect.ensuring(Effect.sync(remove)), Effect.as(entries));
+  });

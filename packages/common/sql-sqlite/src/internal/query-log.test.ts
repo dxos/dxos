@@ -8,22 +8,6 @@ import { type LogEntry, LogLevel, type LogProcessor, log, serializeToJsonl } fro
 
 import { SLOW_QUERY_THRESHOLD_MS, logSqliteQuery } from './query-log';
 
-/** Captures entries the way the feedback log store does — through the JSONL serializer, which drops TRACE. */
-const capture = (fn: () => void): { entries: LogEntry[]; jsonl: string[] } => {
-  const entries: LogEntry[] = [];
-  const processor: LogProcessor = (_config, entry) => {
-    entries.push(entry);
-  };
-  const remove = log.addProcessor(processor);
-  try {
-    fn();
-  } finally {
-    remove();
-  }
-
-  return { entries, jsonl: entries.map((entry) => serializeToJsonl(entry)).filter((line) => line !== undefined) };
-};
-
 describe('logSqliteQuery', () => {
   test('a fast query is TRACE, so it never reaches an uploaded log bundle', ({ expect }) => {
     const { entries, jsonl } = capture(() =>
@@ -56,3 +40,19 @@ describe('logSqliteQuery', () => {
     expect(String(context.params)).toContain('(256 chars)');
   });
 });
+
+/** Captures entries the way the feedback log store does — through the JSONL serializer, which drops TRACE. */
+const capture = (fn: () => void): { entries: LogEntry[]; jsonl: string[] } => {
+  const entries: LogEntry[] = [];
+  const processor: LogProcessor = (_config, entry) => {
+    entries.push(entry);
+  };
+  const remove = log.addProcessor(processor);
+  try {
+    fn();
+  } finally {
+    remove();
+  }
+
+  return { entries, jsonl: entries.map((entry) => serializeToJsonl(entry)).filter((line) => line !== undefined) };
+};
