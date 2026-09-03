@@ -571,9 +571,10 @@ is supposed to be decoupled from.
 The plan is [packages/ui/react-ui/docs/MIGRATION.md](../../../packages/ui/react-ui/docs/MIGRATION.md)
 (commit `8a81160f5b`): a 42-row component inventory, the Radix→Ark primitive map with its gaps, the
 Radix modules every sibling package depends on, and six landable phases. This phase is the ledger for
-it; the reasoning stays in the doc. Phase 4's open item (the `react-ui-list` core — `Combobox`,
-`Listbox`) is deliberately **not** absorbed here; the doc lists them as candidates and leaves them to
-Phase 4.
+it; the reasoning stays in the doc. The `react-ui-list` core (`Combobox`, `Listbox`) is deliberately
+**not** absorbed here: that is this ledger's own Phase 4 (deferred wider adoption), which still holds
+the open evaluation, and the migration doc lists them only as candidates outside `react-ui` — the
+doc's Phase 4 is Dialog/Main, Toast and Select, a different thing.
 
 Findings that shaped the plan, so they are not re-derived:
 
