@@ -1,6 +1,6 @@
 # Unified observability — Tasks
 
-_Resume: verify dependents build (cli, composer-app), commit, open the dxos PR. Uncommitted: Phase 1 and 2 code. Last: observability and plugin-observability tests green._
+_Resume: land dxos/dxos#12939, then Phase 3 in an edge worktree pinned to its merge commit. Uncommitted: none. Last: PR opened, CI pending._
 
 ## Phase 1: `@dxos/observability` on workerd (dxos)
 
@@ -30,7 +30,7 @@ pieces EDGE plugs into `otel-cf-workers`.
       device, apply remote changes live.
 - [x] **Workerd `Observability` module** — `Observability` and `Namespace` modules split for
       workerd; delete `operation-handler.workerd.ts`.
-- [ ] **Changeset, build, lint, tests, PR.**
+- [x] **Changeset, build, lint, tests, PR.** — dxos/dxos#12939
 
 ## Phase 3: EDGE integration (edge repo, needs a slot)
 

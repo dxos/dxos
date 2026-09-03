@@ -14,8 +14,8 @@ projects:
     summary: 'One Observability facade and extension contracts across Composer, dx and EDGE: @dxos/observability bundles on workerd, a Relay extension feeds tail-logger (the single EDGE egress) into PostHog, shared span processors attach to otel-cf-workers, telemetry preferences move to the settings space.'
     tasks: .agents/projects/unified-observability/TASKS.md
     design: .agents/projects/unified-observability/DESIGN.md
-    prs: []
-    resume: 'Phase 1 in dxos: workerd variants, Relay extension, SpanProcessors subpath, facade aiContentCapture; then Phase 2 plugin-observability settings-space preferences. EDGE phase needs a slot (all 5 held).'
+    prs: [12939]
+    resume: 'dxos PR #12939 open (phases 1 and 2). Phase 3 is the EDGE PR: needs an edge worktree slot (all 5 held) and the dxos merge commit on pkg.pr.new. Then phase 1 in dxos: workerd variants, Relay extension, SpanProcessors subpath, facade aiContentCapture; then Phase 2 plugin-observability settings-space preferences. EDGE phase needs a slot (all 5 held).'
   - name: sample-spaces
     status: active
     user: burdon
