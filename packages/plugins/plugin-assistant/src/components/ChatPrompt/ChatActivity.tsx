@@ -49,7 +49,9 @@ export const ChatActivityView = ({ classNames, activity }: ChatActivityViewProps
   }
 
   return (
-    <NaturalChatStatus.Root defaultRunning={false} classNames={['py-1 gap-2 text-sm', classNames]}>
+    // `font-body` overrides the pill root's `font-mono`, which suits the status pill's token counts
+    // and elapsed clock but renders a sentence as debug output.
+    <NaturalChatStatus.Root defaultRunning={false} classNames={['py-1 gap-2 text-sm font-body', classNames]}>
       <NaturalChatStatus.Icon />
       <NaturalChatStatus.Text>
         <span data-testid='assistant.chat-activity'>{t(activityLabelKey(activity.phase))}</span>
