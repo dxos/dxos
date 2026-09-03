@@ -12,6 +12,9 @@ export default defineConfig({
     'ai/AiObservability': 'src/ai/AiObservability.ts',
     'Observability': 'src/Observability.ts',
     'ObservabilityExtension': 'src/ObservabilityExtension.ts',
+    // Standalone for the same reason as the AI sink: a host attaching these to its own provider
+    // should not pull the extensions in with them.
+    'SpanProcessors': 'src/SpanProcessors.ts',
     'providers/ObservabilityClientProvider': 'src/providers/ObservabilityClientProvider.ts',
     'providers/ObservabilityProvider': 'src/providers/ObservabilityProvider.ts',
     'extensions/otel/OtelLogSink': 'src/extensions/otel/OtelLogSink.ts',

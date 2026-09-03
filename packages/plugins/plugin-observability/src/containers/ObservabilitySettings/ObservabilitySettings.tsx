@@ -16,7 +16,7 @@ export type ObservabilitySettingsProps = AppSurface.SettingsData;
 
 /**
  * Edits are routed through {@link ObservabilityOperation.SetEnabled} rather than written to the atom
- * directly, so enabling/disabling observability takes effect on the running services.
+ * directly, so the toggle takes effect on the running services and reaches the settings space.
  */
 export const ObservabilitySettings = ({ subject }: ObservabilitySettingsProps) => {
   const { t } = useTranslation(meta.profile.key);

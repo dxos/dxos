@@ -2,14 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import {
-  ROOT_CONTEXT,
-  SpanStatusCode,
-  type Tracer,
-  context as otelContext,
-  propagation,
-  trace,
-} from '@opentelemetry/api';
+import { type Tracer, trace } from '@opentelemetry/api';
 import { W3CTraceContextPropagator } from '@opentelemetry/core';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
@@ -17,21 +10,16 @@ import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
 import { ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 
 import { log } from '@dxos/log';
-import { type RemoteSpan, type StartSpanOptions, TRACE_PROCESSOR } from '@dxos/tracing';
+import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import * as AiContent from './ai-content';
-import { type OtelOptions, signalUrl } from './otel';
+import { signalUrl } from './otel';
 import * as OtelSpanSink from './OtelSpanSink';
 import * as SpanFanout from './span-fanout';
 import { TagInjectorSpanProcessor } from './span-processors';
+import { type OtelTracesOptions, makeTracingBackend } from './traces-shared';
 
-export type OtelTracesOptions = OtelOptions & {
-  /**
-   * When set, ended spans are posted to the observability worker's `OtelSpanSink` instead of
-   * being batched and exported here. Sampling, IDs, and propagation stay in this realm.
-   */
-  spanSink?: OtelSpanSink.Handle;
-};
+export type { OtelTracesOptions };
 
 export class OtelTraces {
   private _tracer: Tracer;
@@ -99,40 +87,6 @@ export class OtelTraces {
   public start(): void {
     log('trace processor registered');
 
-    const tracer = this._tracer;
-
-    TRACE_PROCESSOR.tracingBackend = {
-      startSpan: (options: StartSpanOptions): RemoteSpan => {
-        log('begin otel trace', { options });
-        const parentCtx = options.parentContext
-          ? propagation.extract(ROOT_CONTEXT, {
-              traceparent: options.parentContext.traceparent,
-              tracestate: options.parentContext.tracestate ?? '',
-            })
-          : otelContext.active();
-
-        const span = tracer.startSpan(options.name, options, parentCtx);
-
-        const sc = span.spanContext();
-        const spanContext =
-          sc && sc.traceId && sc.spanId
-            ? {
-                traceparent: `00-${sc.traceId}-${sc.spanId}-${(sc.traceFlags ?? 0).toString(16).padStart(2, '0')}`,
-                tracestate: sc.traceState?.serialize(),
-              }
-            : undefined;
-
-        return {
-          end: (endTime?: number) => span.end(endTime),
-          setError: (err: unknown) => {
-            if (err instanceof Error) {
-              span.recordException(err);
-            }
-            span.setStatus({ code: SpanStatusCode.ERROR, message: err instanceof Error ? err.message : String(err) });
-          },
-          spanContext,
-        };
-      },
-    };
+    TRACE_PROCESSOR.tracingBackend = makeTracingBackend(this._tracer);
   }
 }
