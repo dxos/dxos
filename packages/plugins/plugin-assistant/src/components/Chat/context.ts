@@ -5,7 +5,7 @@
 import { createContext } from '@radix-ui/react-context';
 
 import { type Alarm } from '@dxos/assistant';
-import { type Chat as ChatModule } from '@dxos/assistant-toolkit';
+import type * as ChatModule from '@dxos/assistant/Chat';
 import { type Event } from '@dxos/async';
 import { type Database } from '@dxos/echo';
 import { type ChatThreadController } from '@dxos/react-ui-assistant';

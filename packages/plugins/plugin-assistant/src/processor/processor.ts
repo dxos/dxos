@@ -26,7 +26,7 @@ import {
   createSystemPrompt,
   formatSystemPrompt,
 } from '@dxos/assistant';
-import { type Chat } from '@dxos/assistant-toolkit';
+import type * as Chat from '@dxos/assistant/Chat';
 import { type ServiceNotAvailableError } from '@dxos/compute';
 import * as AgentService from '@dxos/compute/AgentService';
 import type * as Credential from '@dxos/compute/Credential';
@@ -304,8 +304,8 @@ export class AiChatProcessor {
   }
 
   /**
-   * Resolves the chat's steering instructions, if any. The session is feed-centric and cannot reach
-   * its chat, so the ref is resolved here and handed down.
+   * Resolves the chat's steering instructions, if any — the local `AiSession` used for system-prompt
+   * formatting is feed-centric, so the ref is resolved here and handed down.
    */
   #getInstructions(): Effect.Effect<Instructions.Instructions[], never, Database.Service> {
     return Effect.gen({ self: this }, function* () {
@@ -494,14 +494,21 @@ export class AiChatProcessor {
   }
 
   /**
-   * Resolves the agent session for this chat's feed, reusing the process a previous mount left
-   * running and spawning one only when there is none.
+   * Resolves the agent session for this chat, reusing the process a previous mount left running and
+   * spawning one only when there is none.
    */
-  #getSession(): Effect.Effect<AgentService.Session, never, AgentService.AgentService> {
-    return AgentService.getSession(this._feed, {
-      model: this._options.model,
-      provider: this._options.provider,
-      instructions: this._options.chat?.target?.instructions,
+  #getSession(): Effect.Effect<AgentService.Session, never, AgentService.AgentService | Database.Service> {
+    return Effect.gen({ self: this }, function* () {
+      const chat = this._options.chat?.target;
+      if (!chat) {
+        // The agent process is bound to a chat; a processor constructed without one has no
+        // conversation to run.
+        return yield* Effect.die(new Error('Chat processor requires a chat.'));
+      }
+      return yield* AgentService.getSession(chat, {
+        model: this._options.model,
+        provider: this._options.provider,
+      });
     });
   }
 
@@ -542,11 +549,7 @@ export class AiChatProcessor {
         // Same options as `request`: looked up bare, a differing model/provider/instructions reads as
         // a reconfiguration, which tears down the running process and spawns a replacement purely to
         // terminate it again.
-        const session = yield* AgentService.getSession(this._feed, {
-          model: this._options.model,
-          provider: this._options.provider,
-          instructions: this._options.chat?.target?.instructions,
-        });
+        const session = yield* this.#getSession();
         yield* session.terminate();
       }).pipe(Effect.provide(this._spaceLayer)),
     );

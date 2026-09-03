@@ -9,7 +9,6 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { getSession } from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
-import { Database } from '@dxos/echo';
 
 import { AssistantCapabilities, AssistantOperation } from '#types';
 
@@ -19,12 +18,10 @@ const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInChat> 
   AssistantOperation.RunPromptInChat.pipe(
     Operation.withHandler(
       Effect.fnUntraced(function* ({ chat, prompt }) {
-        const feed = yield* Database.load(chat.feed);
         const preset = yield* chatPreset;
-        const session = yield* getSession(feed, {
+        const session = yield* getSession(chat, {
           model: preset?.model,
           provider: preset?.provider,
-          instructions: chat.instructions,
         });
         yield* session.submitPrompt(prompt);
       }),

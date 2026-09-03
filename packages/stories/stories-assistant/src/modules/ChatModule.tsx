@@ -6,7 +6,7 @@ import React from 'react';
 
 import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
-import { Chat as ChatSchema } from '@dxos/assistant-toolkit';
+import * as ChatSchema from '@dxos/assistant/Chat';
 import { Filter } from '@dxos/echo';
 import * as Assistant from '@dxos/plugin-assistant/Assistant';
 import { Chat } from '@dxos/plugin-assistant/components';

@@ -9,7 +9,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { type Chat as ChatType } from '@dxos/assistant-toolkit';
+import type * as ChatType from '@dxos/assistant/Chat';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { ClientOperation } from '@dxos/plugin-client';

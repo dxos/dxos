@@ -51,6 +51,10 @@ const applySampleSpace = async (canvasElement: HTMLElement, label: string, expec
   // `getAllByText`: a sample space may name two objects the same (Tidepool's task set and its
   // project are both "Offline sync v2"), and `getByText` throws on more than one match.
   await waitFor(() => expect(canvas.getAllByText(expected).length).toBeGreaterThan(0), { timeout: 30_000 });
+  // The first object appears long before the world is finished, and the row disables itself for as
+  // long as the generator runs: returning here left writes in flight, and teardown closed the
+  // client's RPC endpoint under them.
+  await waitFor(() => expect(create).toBeEnabled(), { timeout: 30_000 });
 };
 
 const meta = {
