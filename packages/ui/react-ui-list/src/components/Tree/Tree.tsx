@@ -43,7 +43,7 @@ import {
 } from '@dxos/ui-theme';
 
 import { Path } from '../../util';
-import { DROP_INDENTATION, paddingIndentation } from './helpers';
+import { DROP_INDENTATION, indentTrack } from './helpers';
 import { type TreeData, isTreeDataFor } from './tree-data';
 import {
   type ColumnRenderer,
@@ -528,6 +528,7 @@ export const Tree = <T extends { id: string } = any>({
       focusNode,
       draggable,
       toggle,
+      gridTemplateColumns,
       renderColumns,
       renderIcon,
       renderHeading,
@@ -548,6 +549,7 @@ export const Tree = <T extends { id: string } = any>({
       focusNode,
       draggable,
       toggle,
+      gridTemplateColumns,
       renderColumns,
       renderIcon,
       renderHeading,
@@ -586,7 +588,11 @@ export const Tree = <T extends { id: string } = any>({
           // `outline-none`: the machine parks focus on the tree container (tabIndex=-1) when no
           // row holds it, which must not draw a focus ring around the whole tree.
           className={mx('grid outline-none', ...(Array.isArray(classNames) ? classNames : [classNames]))}
-          style={{ gridTemplateColumns }}
+          // One track: rows, section headers and the end target span it. The consumer's column
+          // template is applied per row, behind an indent track, rather than here — a subgrid would
+          // share one set of tracks down the tree, and padding a subgrid only shrinks its first
+          // track, so nested rows could not indent their leading cells.
+          style={{ gridTemplateColumns: '[tree-row-start] minmax(0, 1fr) [tree-row-end]' }}
           onPointerDownCapture={handlePointerDownCapture}
           onKeyDown={handleKeyDown}
         >
@@ -780,6 +786,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
     treeId,
     draggable: treeDraggable,
     toggle,
+    gridTemplateColumns,
     renderColumns: Columns,
     renderHeading: RenderHeading,
     blockInstruction,
@@ -972,7 +979,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
       data-instruction={instruction?.type}
       data-testid={props.testId}
       className={mx(
-        'grid grid-cols-subgrid col-[tree-row] mt-0.5 outline-none cursor-pointer select-none',
+        'col-[tree-row] mt-0.5 outline-none cursor-pointer select-none',
         // The row leaves the list for the duration of the drag: the pointer is carrying it, and a
         // copy left behind in place reads as a second row rather than as the one being moved. A
         // branch's children go with it, since the drag start collapses it.
@@ -1000,13 +1007,16 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
       onMouseEnter={handleItemHover}
       onContextMenu={handleContextMenu}
     >
-      {/* One grid per row: the toggle, the heading's cells and the columns are all direct children
-          of this subgrid, so a consumer's template names every track and nothing is nested. The
-          first row is one control tall so every cell centres on the title line; a heading that
-          adds a second line (a description) places it with `row-start-2`. */}
+      {/* One grid per row: an indent track sized to the row's depth, then the consumer's template,
+          and the toggle, the heading's cells and the columns are all its direct children — so a
+          consumer names every track and nothing is nested. Rows line up down the tree because every
+          track but the consumer's `1fr` is fixed: the indent is absorbed by the flexible one, and
+          the fixed trailing tracks stay anchored to the row's end. The first grid row is one control
+          tall so every cell centres on the title line; a heading that adds a second line (a
+          description) places it with `row-start-2`. */}
       <div
-        className='indent relative grid grid-cols-subgrid grid-rows-[var(--dx-control)] col-[tree-row]'
-        style={paddingIndentation(level)}
+        className='indent relative grid grid-rows-[var(--dx-control)]'
+        style={{ gridTemplateColumns: `[indent] ${indentTrack(level)} ${gridTemplateColumns}` }}
       >
         {toggle &&
           (branch ? (

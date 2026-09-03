@@ -112,6 +112,8 @@ export type TreeRenderContextValue<T extends { id: string } = any> = {
   draggable: boolean;
   /** Whether rows render a disclosure toggle in the template's first track. */
   toggle: boolean;
+  /** The consumer's column template; each row lays itself out on it behind an indent track. */
+  gridTemplateColumns: string;
   renderColumns?: ColumnRenderer<T>;
   renderIcon?: IconRenderer<T>;
   renderHeading?: HeadingRenderer<T>;
