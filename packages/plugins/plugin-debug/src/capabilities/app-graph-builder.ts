@@ -11,12 +11,13 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as Operation from '@dxos/compute/Operation';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { type Space } from '@dxos/react-client/echo';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
-import { DebugNodes } from '#types';
+import { DebugNodes, DebugOperation } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -79,6 +80,30 @@ export default Capability.makeModule(
               icon: 'ph--cube--regular',
               data: 'space-objects' as const,
               position: Position.last,
+            }),
+          ]),
+      }),
+
+      // Sample-space builder in the L0 app menu: seeding a space is the first thing a fresh profile
+      // needs, so it must be reachable without first opening the debug node under SYSTEM.
+      AppGraphBuilder.createExtension({
+        id: 'createSampleSpace',
+        match: GraphNodeMatcher.whenRoot,
+        actions: () =>
+          Effect.succeed([
+            AppGraphNode.makeAction({
+              id: 'createSampleSpace',
+              // No `id` argument: the operation lists the available sets rather than picking one,
+              // and the generator panel remains where a specific set is chosen.
+              data: Effect.fnUntraced(function* () {
+                yield* Operation.invoke(DebugOperation.CreateSampleSpace, {});
+              }),
+              properties: {
+                label: ['create-sample-space.label', { ns: meta.profile.key }],
+                icon: 'ph--dice-five--regular',
+                disposition: 'menu',
+                position: Position.last,
+              },
             }),
           ]),
       }),

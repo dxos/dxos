@@ -56,7 +56,7 @@ export const DebugConsole = ({ onClose, fit }: DebugConsoleProps) => {
     <Panel.Root>
       <Panel.Content>
         <Terminal
-          apiRef={apiRef}
+          ref={apiRef}
           command={cli.command}
           layer={cli.layer}
           name='debug'
