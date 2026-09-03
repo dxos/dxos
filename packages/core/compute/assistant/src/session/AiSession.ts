@@ -32,7 +32,7 @@ import { type ContentBlock, Message } from '@dxos/types';
 
 import { AiRequest, type GenerationObserver, formatSystemPrompt } from '../request';
 import { ToolExecutionServices } from '../tool-runtime';
-import { McpServerError } from '../util';
+import { McpServerError, emitRequestPhase } from '../util';
 import * as AiContext from './AiContext';
 import * as Harness from './Harness';
 import { SessionStore } from './SessionStore';
@@ -206,6 +206,7 @@ export class Session extends Resource {
         serializePrompt(params.prompt),
       );
 
+      yield* emitRequestPhase('loading-history');
       const history = yield* Effect.promise(() => this.getHistory());
       const skills = this.context.getSkills();
       const objects = this.context.getObjects();
@@ -245,6 +246,7 @@ export class Session extends Resource {
         yield* Effect.promise(() => this.context.sync());
         const currentSkills = this.context.getSkills();
         const mcps = yield* connectMcpServers(currentSkills, params.mcpServers);
+        yield* emitRequestPhase('building-toolkit');
         const toolkit = yield* createToolkit({
           toolkit: params.toolkit,
           skills: currentSkills,
@@ -320,8 +322,12 @@ const connectMcpServers = (
     apiKey,
   }));
   const allServers = [...skillServers, ...spaceServers];
+  if (allServers.length === 0) {
+    // Naming a phase that has nothing to do would misreport where the wait actually is.
+    return Effect.succeed([]);
+  }
 
-  return pipe(
+  const connect = pipe(
     allServers,
     Effect.forEach((options) =>
       McpToolkit.make(options).pipe(
@@ -371,6 +377,12 @@ const connectMcpServers = (
     ),
     Effect.map((results) => Array.filterMap(results, (result) => result)),
   );
+
+  return Effect.gen(function* () {
+    // Reported before the connections are opened, since opening them is the wait being reported.
+    yield* emitRequestPhase('connecting-mcp', { detail: String(allServers.length) });
+    return yield* connect;
+  });
 };
 
 /**

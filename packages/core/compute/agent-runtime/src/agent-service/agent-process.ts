@@ -24,6 +24,7 @@ import {
   type PendingState,
   SessionStore,
   SkillHooks,
+  emitRequestPhase,
   getOperationFromTool,
   makeToolExecutionService,
   makeToolResolverFromOperations,
@@ -287,6 +288,11 @@ export const AgentProcess = (options: AgentProcessOptions) =>
           onAlarm: Effect.fnUntraced(
             function* () {
               log('agent onAlarm fired', { backlog: toolResults.length });
+
+              // Earliest point the agent can report to a reader who is already waiting: draining the
+              // queue below reads the feed, which is itself part of the wait. An empty wake emits it
+              // too, but that path returns in milliseconds and the turn settling clears the line.
+              yield* emitRequestPhase('preparing');
 
               for (const pid of dropReportedToolResults(toolResults, (pid) => toolCallManager.isReported(pid))) {
                 log.info('skip tool result that was reported synchronously', { pid });
