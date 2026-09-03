@@ -90,52 +90,40 @@ export default Capability.makeModule(
       }),
 
       // Sample-space builder in the L0 app menu: seeding a space is the first thing a fresh profile
-      // needs, so it must be reachable without first opening the debug node under SYSTEM. A group
-      // rather than one action, because each set creates its own space and the choice is the point.
+      // needs, so it must be reachable without first opening the debug node under SYSTEM. One action
+      // per set rather than a submenu: `actionGroups` does not attach to the root node, and the
+      // dropdown has no nested rendering, so a group would be invisible either way.
       AppGraphBuilder.createExtension({
         id: 'createSampleSpace',
         match: GraphNodeMatcher.whenRoot,
-        actionGroups: (_matched, get) =>
+        actions: (_matched, get) =>
           Effect.gen(function* () {
             // Read the atom before any early return: the sample modules are demand-gated, so on a
             // cold app this runs while the list is still empty, and an early return that never
             // touched the atom would register no dependency and never re-run once they activate.
             get(sampleSpacesAtom);
-            // Ignored rather than propagated: a graph builder's error channel is `never`, and a
-            // failed activation just means nothing to list, which the empty case below already
-            // renders.
+            // Nothing else fires this, so these actions are what pull the sample modules in.
             yield* Effect.ignore(Plugin.activate(ActivationEvents.SampleSpacesRequested));
             const samples = yield* Capability.getAll(AppCapabilities.SampleSpace);
-            if (samples.length === 0) {
-              return [];
-            }
 
-            return [
-              AppGraphNode.makeActionGroup({
-                id: 'createSampleSpace',
+            return samples.map((sample) =>
+              AppGraphNode.makeAction({
+                id: `createSampleSpace/${sample.id}`,
+                data: Effect.fnUntraced(function* () {
+                  const { subject } = yield* Operation.invoke(DebugOperation.CreateSampleSpace, { id: sample.id });
+                  if (subject) {
+                    yield* Operation.invoke(LayoutOperation.Open, { subject });
+                  }
+                }),
                 properties: {
-                  label: ['create-sample-space.label', { ns: meta.profile.key }],
+                  // Prefixed because the row sits among unrelated app-level actions; `sample.label`
+                  // alone ("Northwind Sales") reads as an existing space rather than a builder.
+                  label: ['create-sample-space.label', { ns: meta.profile.key, label: sample.label }],
                   icon: 'ph--dice-five--regular',
                   disposition: 'menu',
                 },
-                actions: samples.map((sample) =>
-                  AppGraphNode.makeAction({
-                    id: `createSampleSpace/${sample.id}`,
-                    data: Effect.fnUntraced(function* () {
-                      const { subject } = yield* Operation.invoke(DebugOperation.CreateSampleSpace, { id: sample.id });
-                      if (subject) {
-                        yield* Operation.invoke(LayoutOperation.Open, { subject });
-                      }
-                    }),
-                    properties: {
-                      // The contributed label is already a plain display string, not an i18n key.
-                      label: sample.label,
-                      icon: 'ph--dice-five--regular',
-                    },
-                  }),
-                ),
               }),
-            ];
+            );
           }),
       }),
 
