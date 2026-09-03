@@ -17,12 +17,8 @@ import * as RpcSerialization from 'effect/unstable/rpc/RpcSerialization';
 import { type Client } from '@dxos/client';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { type RemoteProcessManager } from '@dxos/compute-runtime';
-import type * as Process from '@dxos/compute/Process';
 import { Context as DxosContext } from '@dxos/context';
 import type { EdgeProcessHttpClient } from '@dxos/edge-client/process';
-import { invariant } from '@dxos/invariant';
-import { SpaceId } from '@dxos/keys';
-import type { ProcessProtocol } from '@dxos/protocols';
 
 import { createEdgeProcessClient } from './edge-client';
 import { decodeEvent, decodeSnapshot, toSpawnRequest } from './process-snapshot';
