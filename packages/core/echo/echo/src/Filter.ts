@@ -428,38 +428,6 @@ export const feedCursor = (range: FeedCursorRange = {}): Any =>
     ...(range.end !== undefined ? { end: range.end } : {}),
   });
 
-/**
- * The same cursor range as {@link feedCursor}, but windowed from its end — so a `limit()` keeps the
- * newest items rather than the oldest. This is how a view that shows a feed's recent tail (a chat
- * thread, a log pane) pays for what it renders rather than for the whole feed.
- *
- * Unlike a plain cursor read, an unbounded-above tail read also returns the blocks the position
- * authority has not acknowledged yet: they are newer than every positioned block, so a tail that
- * excluded them would drop what was just written locally. Passing `end` bounds the window below
- * the feed's end and excludes them again, which is what paging backwards wants.
- *
- * The limit must be pushed into the scan for the window to be the tail, so combine this only with
- * filters the index can satisfy (a type or id select). A filter evaluated after the scan —
- * `childOf`, `hasParent`, `in(subquery)` — blocks the pushdown and leaves the limit taking the
- * result set's leading items.
- *
- * @example
- * ```ts
- * // The 50 most recent messages, including any not yet acknowledged.
- * db.query(Query.select(Filter.type(Message).and(Filter.feedTail())).limit(50).from(feed));
- *
- * // The 50 before those, for a "load earlier" step.
- * db.query(Query.select(Filter.type(Message).and(Filter.feedTail({ end: oldest }))).limit(50).from(feed));
- * ```
- */
-export const feedTail = (range: FeedCursorRange = {}): Any =>
-  new FilterClass({
-    type: 'feed-cursor',
-    tail: true,
-    ...(range.begin !== undefined ? { begin: range.begin } : {}),
-    ...(range.end !== undefined ? { end: range.end } : {}),
-  });
-
 export type ChildOfOptions = {
   /** Whether to match transitively (grandchildren, etc.). Defaults to true. */
   transitive?: boolean;

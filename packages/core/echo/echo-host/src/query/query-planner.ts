@@ -1092,8 +1092,19 @@ export class QueryPlanner {
     // select time would keep the wrong N; those need the FULL candidate set and only the OrderStep
     // may apply the limit. Ascending natural and rank (the FTS scan already returns by rank) stay
     // consistent with the scan, so keep optimizing those.
+    //
+    // A descending natural order over a FEED is the exception: the scan can be reversed, because a
+    // feed's natural order is its stored position. Windowing that scan from the end makes the last N
+    // of the feed the N the scan returns, so `orderBy(natural('desc')).limit(n)` on a feed costs the
+    // window rather than the whole feed — which is what a view of a feed's recent tail asks for.
+    let tailSelect = false;
     if (orderStepIndex !== -1) {
       const orderStep = processedSteps[orderStepIndex];
+      const isDescendingNatural =
+        orderStep._tag === 'OrderStep' &&
+        orderStep.order.length === 1 &&
+        orderStep.order[0].kind === 'natural' &&
+        orderStep.order[0].direction === 'desc';
       const scanOrderMismatch =
         orderStep._tag === 'OrderStep' &&
         orderStep.order.some(
@@ -1102,7 +1113,9 @@ export class QueryPlanner {
             order.kind === 'timestamp' ||
             (order.kind === 'natural' && order.direction === 'desc'),
         );
-      if (scanOrderMismatch) {
+      if (isDescendingNatural && selectStepIndex !== -1 && _selectsOnlyFeeds(processedSteps[selectStepIndex])) {
+        tailSelect = true;
+      } else if (scanOrderMismatch) {
         selectStepIndex = -1;
       }
     }
@@ -1130,6 +1143,8 @@ export class QueryPlanner {
       newSteps[selectStepIndex] = {
         ...selectStep,
         limit: limitValue + skipBetween(selectStepIndex),
+        // The window is taken from the feed's end, and an explicit cursor range keeps its own bounds.
+        ...(tailSelect ? { feedCursorRange: { ...selectStep.feedCursorRange, tail: true } } : {}),
       };
     }
 
@@ -1321,6 +1336,14 @@ const _splitFeedCursor = (
     rest: rest.length === 0 ? undefined : rest.length === 1 ? rest[0] : { type: 'and', filters: rest },
   };
 };
+
+/**
+ * Whether a step is a select whose every scope is a feed — the condition for reversing its scan,
+ * since only a feed block carries the position that makes the reversal meaningful. A select that
+ * also reaches a space's documents has no single order to reverse.
+ */
+const _selectsOnlyFeeds = (step: QueryPlan.Step | undefined): boolean =>
+  step?._tag === 'SelectStep' && step.scope.length > 0 && step.scope.every((scope) => scope._tag === 'feed');
 
 const _feedCursorRange = (filter: QueryAST.FilterFeedCursor): { begin?: string; end?: string; tail?: boolean } => ({
   ...(filter.begin !== undefined ? { begin: filter.begin } : {}),

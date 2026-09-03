@@ -588,7 +588,7 @@ describe('EntityMetaIndex', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it.effect('a tail read takes the window from the end of the range', () =>
+  it.effect('a reversed read takes the window from the end of the range', () =>
     Effect.gen(function* () {
       const index = new EntityMetaIndex();
       yield* index.migrate();
@@ -631,8 +631,8 @@ describe('EntityMetaIndex', () => {
       });
       expect(exhausted.map((row) => row.queuePosition)).toEqual([0]);
 
-      // An unpositioned block is newer than every positioned one, so it leads an unbounded tail —
-      // a chat must not lose the message it just wrote while the position authority catches up.
+      // An unpositioned block is newer than every positioned one, so it leads an unbounded reversed
+      // read — a chat must not lose the message it just wrote while the authority catches up.
       yield* index.update([item(null)]);
       const withUnpositioned = yield* index.queryAll({
         spaceIds: [],

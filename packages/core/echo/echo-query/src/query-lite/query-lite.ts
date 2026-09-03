@@ -417,16 +417,6 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  /** The same range as `feedCursor`, windowed from its end so a `limit()` keeps the newest items. */
-  static feedTail(range: Filter$.FeedCursorRange = {}): Filter$.Any {
-    return new FilterClass({
-      type: 'feed-cursor',
-      tail: true,
-      ...(range.begin !== undefined ? { begin: range.begin } : {}),
-      ...(range.end !== undefined ? { end: range.end } : {}),
-    });
-  }
-
   private static _timeRangeFilter(
     field: 'updatedAt' | 'createdAt',
     range: { after?: Date | number; before?: Date | number },
@@ -915,7 +905,7 @@ const prettyFilter = (filter: QueryAST.Filter): string => {
     case 'timestamp':
       return `Filter.${filter.field}.${filter.operator}(${filter.value})`;
     case 'feed-cursor':
-      return `Filter.${filter.tail ? 'feedTail' : 'feedCursor'}(${JSON.stringify({ begin: filter.begin, end: filter.end })})`;
+      return `Filter.feedCursor(${JSON.stringify({ begin: filter.begin, end: filter.end })})`;
     case 'has-parent':
       return `Filter.hasParent(${filter.value})`;
     case 'not':
