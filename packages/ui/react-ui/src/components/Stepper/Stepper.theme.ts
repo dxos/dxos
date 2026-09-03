@@ -10,6 +10,8 @@ export type StepState = 'pending' | 'active' | 'complete' | 'error';
 
 export type StepperStyleProps = {
   state?: StepState;
+  /** The run failed — the whole plan is drawn in the error hue, not only the stage it stopped on. */
+  failed?: boolean;
   /** A stage the caller has singled out. */
   selected?: boolean;
   /** The stage can be clicked. */
@@ -28,6 +30,18 @@ const stepFill: Record<StepState, string> = {
   error: 'bg-error-surface border-transparent',
 };
 
+/**
+ * The same drawing in the error hue. What failed is the run, not only the stage it stopped on, so a
+ * plan half-drawn in the primary hue would read as half of it having gone fine. Stages the run never
+ * reached stay outlines, so how far it got is still legible.
+ */
+const failedStepFill: Record<StepState, string> = {
+  pending: 'bg-base-surface border-error-border',
+  active: 'bg-error-surface border-transparent',
+  complete: 'bg-error-surface border-transparent',
+  error: 'bg-error-surface border-transparent',
+};
+
 const root: ComponentFunction<StepperStyleProps> = (_props, ...etc) => mx('flex items-center w-full min-w-0', ...etc);
 
 /**
@@ -37,13 +51,17 @@ const root: ComponentFunction<StepperStyleProps> = (_props, ...etc) => mx('flex 
 const item: ComponentFunction<StepperStyleProps> = ({ last }, ...etc) =>
   mx('flex items-center min-w-0', !last && 'grow', ...etc);
 
-const step: ComponentFunction<StepperStyleProps> = ({ state = 'pending', selected, interactive, spinning }, ...etc) =>
+const step: ComponentFunction<StepperStyleProps> = (
+  { state = 'pending', failed, selected, interactive, spinning },
+  ...etc
+) =>
   mx(
     'absolute border rounded-full transition-all duration-200',
     // Drawn inset while it spins, so the notch reads as a ring around it rather than a collar.
     spinning ? 'inset-[3px]' : 'inset-0',
     interactive && 'cursor-pointer',
-    selected ? 'bg-neutral-500 border-transparent' : stepFill[state],
+    // Selection is the reader's own marker, so it outranks the run's colours either way.
+    selected ? 'bg-neutral-500 border-transparent' : (failed ? failedStepFill : stepFill)[state],
     ...etc,
   );
 
@@ -57,8 +75,8 @@ const notch: ComponentFunction<StepperStyleProps> = (_props, ...etc) =>
 const connector: ComponentFunction<StepperStyleProps> = (_props, ...etc) =>
   mx('relative grow min-w-1 rounded-full bg-separator', ...etc);
 
-const fill: ComponentFunction<StepperStyleProps> = ({ state }, ...etc) =>
-  mx('absolute inset-y-0 start-0 rounded-full', state === 'error' ? 'bg-error-surface' : 'bg-primary-surface', ...etc);
+const fill: ComponentFunction<StepperStyleProps> = ({ failed }, ...etc) =>
+  mx('absolute inset-y-0 start-0 rounded-full', failed ? 'bg-error-surface' : 'bg-primary-surface', ...etc);
 
 export const stepperTheme: Theme<StepperStyleProps> = {
   root,

@@ -259,3 +259,68 @@ export const TestHandover: Story = {
     await expect(Math.max(...resetting.map((frame) => Math.max(...frame)))).toEqual(0);
   },
 };
+
+/** Holds a plan part-way through so the failure can be applied to a run that has made progress. */
+const FailureStory = ({ stages = 4 }: StoryArgs) => {
+  const [failed, setFailed] = useState(false);
+
+  return (
+    <div className='flex flex-col gap-4 w-full'>
+      <Toolbar.Root>
+        <Toolbar.Button data-testid='stepper.fail' onClick={() => setFailed(true)}>
+          Fail
+        </Toolbar.Button>
+      </Toolbar.Root>
+      <Stepper steps={stages} active={2} fraction={0.5} error={failed} />
+    </div>
+  );
+};
+
+export const TestFailure: Story = {
+  render: FailureStory,
+  args: { stages: 4 },
+  // A run that failed is drawn in the error hue throughout: a plan half-drawn in the primary hue
+  // would read as half of it having gone fine.
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // Resolved from the theme rather than written down, so the test says "the error hue" and not a
+    // particular colour the theme is free to change.
+    const swatch = (classNames: string) => {
+      const probe = document.createElement('div');
+      probe.className = `border ${classNames}`;
+      canvasElement.append(probe);
+      const { backgroundColor, borderTopColor } = getComputedStyle(probe);
+      probe.remove();
+      return { backgroundColor, borderTopColor };
+    };
+    const errorSurface = swatch('bg-error-surface').backgroundColor;
+    const errorBorder = swatch('border-error-border').borderTopColor;
+    const primarySurface = swatch('bg-primary-surface').backgroundColor;
+
+    const circles = () =>
+      [...canvasElement.querySelectorAll('[data-scope="steps"][data-part="item"] [role="img"]')].map((circle) => {
+        const { backgroundColor, borderTopColor } = getComputedStyle(circle);
+        return { backgroundColor, borderTopColor };
+      });
+
+    await waitFor(async () => expect(circles()).toHaveLength(4));
+    // Stages the run reached are filled in the primary hue; the one ahead of it is an outline.
+    await expect(circles().map((circle) => circle.backgroundColor === primarySurface)).toEqual([
+      true,
+      true,
+      true,
+      false,
+    ]);
+    await expect(circles()[3].borderTopColor).not.toEqual(errorBorder);
+
+    canvas.getByTestId('stepper.fail').click();
+
+    // Every circle now reads as failed — the filled ones in the error surface, the one the run never
+    // reached as an outline in the same hue, so how far it got is still legible.
+    await waitFor(async () =>
+      expect(circles().map((circle) => circle.backgroundColor === errorSurface)).toEqual([true, true, true, false]),
+    );
+    await expect(circles()[3].borderTopColor).toEqual(errorBorder);
+    await expect(circles().every((circle) => circle.backgroundColor !== primarySurface)).toEqual(true);
+  },
+};

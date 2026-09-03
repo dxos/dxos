@@ -160,6 +160,7 @@ const StepperItems = ({
               index={index}
               step={step}
               state={state}
+              failed={error}
               selected={selected === index}
               indeterminate={indeterminate}
               options={options}
@@ -170,7 +171,7 @@ const StepperItems = ({
               // it, fractional while it is the one in flight, empty ahead of it.
               <Steps.Separator className={tx('stepper.connector', {})} style={{ height: options.thickness }}>
                 <div
-                  className={tx('stepper.fill', { state: error ? 'error' : undefined })}
+                  className={tx('stepper.fill', { failed: error })}
                   style={{
                     width: `${connectorFraction(completed, current, handover, fraction) * 100}%`,
                     // Only the line leaving the stage in flight eases, so an incremental advance
@@ -193,6 +194,8 @@ type CircleProps = {
   index: number;
   step: Step;
   state: StepState;
+  /** The run failed, whichever stage this one is. */
+  failed?: boolean;
   selected?: boolean;
   indeterminate?: boolean;
   options: StepOptions;
@@ -200,7 +203,7 @@ type CircleProps = {
 };
 
 /** One stage: a circle, ringed by a spinning notch while it runs uncounted. */
-const Circle = ({ index, step, state, selected, indeterminate, options, onClick }: CircleProps) => {
+const Circle = ({ index, step, state, failed, selected, indeterminate, options, onClick }: CircleProps) => {
   const { tx } = useThemeContext();
   // A circle carries no text, and an anonymous plan supplies no label, so the position is the only
   // name the control can be given.
@@ -217,12 +220,12 @@ const Circle = ({ index, step, state, selected, indeterminate, options, onClick 
           type='button'
           aria-label={label}
           aria-pressed={!!selected}
-          className={tx('stepper.step', { state, selected, interactive: true, spinning })}
+          className={tx('stepper.step', { state, failed, selected, interactive: true, spinning })}
           onClick={onClick}
         />
       ) : (
         // A bare div maps to `generic`, where ARIA discards the label.
-        <div role='img' aria-label={label} className={tx('stepper.step', { state, selected, spinning })} />
+        <div role='img' aria-label={label} className={tx('stepper.step', { state, failed, selected, spinning })} />
       )}
       {spinning && <Notch className={tx('stepper.notch', { state })} />}
     </div>
