@@ -1,4 +1,5 @@
 ---
+'@dxos/agent-runtime': patch
 '@dxos/assistant': patch
 '@dxos/plugin-assistant': patch
 ---
@@ -12,3 +13,7 @@ rather than re-looking it up by registry key — which is what silently no-oped.
 registry skill also now shadows the registry entry in the picker (it carries the user's edits, the
 same precedence `Skill.resolveAnnotatedSkills` already applies), and toggling it off clears either
 form from the conversation.
+
+`AgentService.createSession` likewise binds a skill that is already in a database as-is, instead of
+resolving its key through the registry — which threw outright on a space-authored skill and would
+have substituted the pristine registry copy for a fork.
