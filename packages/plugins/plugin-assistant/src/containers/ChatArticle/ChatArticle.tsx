@@ -142,10 +142,10 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                   {...chatProps}
                   outline
                   attendableId={attendableId}
+                  companionTo={companionTo}
                   customActions={customActions}
                   nodeId={actionNodeId}
                   preset={preset?.id}
-                  companionTo={companionTo}
                 />
               </div>
             </ChatComponent.Content>

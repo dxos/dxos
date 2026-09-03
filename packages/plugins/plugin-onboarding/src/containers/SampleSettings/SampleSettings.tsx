@@ -13,7 +13,7 @@ import { Form } from '@dxos/react-ui-form';
 import { meta } from '../../meta';
 import { OnboardingOperation } from '../../operations';
 
-export const ExemplarSettings = () => {
+export const SampleSettings = () => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const [busy, setBusy] = useState(false);
@@ -24,8 +24,8 @@ export const ExemplarSettings = () => {
     }
     setBusy(true);
     try {
-      await invokePromise(OnboardingOperation.ImportExemplarSpace, { force: true });
-      log.info('exemplar space recreated');
+      await invokePromise(OnboardingOperation.ImportSampleSpace, { force: true });
+      log.info('sample space recreated');
     } catch (err) {
       log.catch(err);
     } finally {
@@ -39,13 +39,13 @@ export const ExemplarSettings = () => {
         <Form.Content>
           <Form.Section title={t('settings.section.title')}>
             <Form.Row
-              label={t('settings.recreate-exemplar.label')}
-              description={t('settings.recreate-exemplar.description')}
+              label={t('settings.recreate-sample.label')}
+              description={t('settings.recreate-sample.description')}
             >
               <IconButton
                 icon='ph--potted-plant--regular'
                 iconOnly
-                label={t('settings.recreate-exemplar.label')}
+                label={t('settings.recreate-sample.label')}
                 disabled={busy}
                 onClick={handleRecreate}
               />
@@ -57,4 +57,4 @@ export const ExemplarSettings = () => {
   );
 };
 
-ExemplarSettings.displayName = 'ExemplarSettings';
+SampleSettings.displayName = 'SampleSettings';

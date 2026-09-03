@@ -13,11 +13,11 @@ import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { DebugPortStatus } from './DebugPortStatus';
+import { DebugPanelStatus } from './DebugPanelStatus';
 
 /**
  * Stand-in for the page-wide controller: the real one long-polls a loopback server and evaluates
- * whatever it returns, which a story must never do. The popover console needs an app context, so
+ * whatever it returns, which a story must never do. The popover panel needs an app context, so
  * the story exercises only the indicator.
  */
 const createFakeController = (initial: Partial<DebugPortStatusType> = {}): DebugPortController => {
@@ -46,11 +46,11 @@ const createFakeController = (initial: Partial<DebugPortStatusType> = {}): Debug
 };
 
 const meta = {
-  title: 'plugins/plugin-debug/DebugPortStatus',
-  component: DebugPortStatus,
+  title: 'plugins/plugin-debug/containers/DebugPanelStatus',
+  component: DebugPanelStatus,
   decorators: [withTheme()],
   parameters: { translations },
-} satisfies Meta<typeof DebugPortStatus>;
+} satisfies Meta<typeof DebugPanelStatus>;
 
 export default meta;
 

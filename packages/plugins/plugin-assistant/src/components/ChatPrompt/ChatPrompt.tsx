@@ -210,8 +210,8 @@ export const ChatPrompt = ({
       {db && settings && (
         <div className='flex items-center overflow-hidden p-1.5'>
           <ChatOptions
-            chat={chat}
             db={db}
+            chat={chat}
             registry={processor.registry}
             context={processor.context}
             preset={preset}
@@ -227,8 +227,8 @@ export const ChatPrompt = ({
             classNames='col-span-2'
             attendableId={attendableId}
             customActions={customActions}
-            // `active`, not `streaming`: a turn parked in a tool call streams nothing, and the
-            // reader still needs a way to stop it.
+            // `active`, not `streaming`: a turn parked in a tool call streams nothing,
+            // and the reader still needs a way to stop it.
             processing={active}
             canSend={canSend}
             tasksVisible={tasksVisible}
