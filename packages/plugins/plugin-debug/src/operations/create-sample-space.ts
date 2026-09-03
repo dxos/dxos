@@ -45,7 +45,12 @@ const handler: Operation.WithHandler<typeof DebugOperation.CreateSampleSpace> = 
       yield* Effect.tryPromise({
         try: () => sample.apply({ client, space }),
         catch: (cause) => new SampleSpaceApplyError({ context: { id: sample.id }, cause }),
-      });
+      }).pipe(
+        // The space is created before it can be filled, so a failed apply would otherwise leave a
+        // half-populated space in the profile. Cleanup is ignored rather than propagated: a failure
+        // to delete must not replace the error that explains what actually went wrong.
+        Effect.tapError(() => Effect.ignore(Operation.invoke(SpaceOperation.Delete, { space }))),
+      );
 
       return { applied: summarize(sample), spaceId: space.id, subject, available };
     }),
