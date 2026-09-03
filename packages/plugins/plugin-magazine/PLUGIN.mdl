@@ -26,7 +26,9 @@ The following extension dialects are used in this document.
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
 | `test`      | `org.dxos.mdl.test@1.0`        |
 | `component` | `org.dxos.mdl.component@1.0`   |
-| `op`        | `org.dxos.mdl.op@1.0`          |
+| `op`        | `org.dxos.mdl.op@1.1`          |
+| `flow`      | `org.dxos.mdl.flow@1.0`        |
+| `step`      | `org.dxos.mdl.step@1.0`        |
 | `service`   | `org.dxos.mdl.service@1.0`     |
 
 ## Types
@@ -164,7 +166,7 @@ component PostArticle
     Independent article surface for a single Post. Registered as a React
     surface matching `object(Article, Subscription.Post)` so it can render
     in any article/companion context — the complementary sidebar in
-    'simple' mode, a sibling plank in 'multi' mode, or the deck companion
+    'mobile' mode, a sibling plank in 'multi' mode, or the deck companion
     in the default 'deck' mode.
 
     Panel-based layout with a toolbar; the "Open original" link lives in
@@ -210,10 +212,11 @@ service MagazineSkill
 
 ```mdl
 op SyncFeed
+  key: org.dxos.operation.magazine.syncFeed
   desc: Existing operation. Pulls new Posts from a Feed's source URL.
   input:
-    feedId: DXN
-  output: number                   # number of Posts added
+    feed: Ref<Feed>
+  output: void
   effects: [http, echo:write]
   note: Documented here for context; unchanged by this revision.
 ```
@@ -243,6 +246,7 @@ op ListCandidatePosts
 
 ```mdl
 op FetchArticleContent
+  key: org.dxos.operation.magazine.fetchArticleContent
   desc: >
     Fetches post.link over HTTP and returns extracted plain text plus any
     image URLs found (og:image and <img> tags). Pure read — does not mutate
@@ -276,15 +280,17 @@ op AddPostToMagazine
 
 ```mdl
 op CurateMagazine
+  key: org.dxos.operation.magazine.curate
   desc: >
     Deterministic one-shot curation invoked by the Curate button. For each
     uncurated candidate Post, derives a snippet and hero image from the Post's
     existing `description` (no HTTP) and appends the enriched Post ref to
     `magazine.posts`. Skips Posts with empty descriptions.
   input:
-    magazineId: DXN
+    magazine: Ref<Magazine>
   output:
-    added: number
+    synced: number                 # number of feeds successfully synced
+    curated: number                # number of posts added to the magazine
   effects: [echo:write]
   note: >
     Exists alongside the skill. The deterministic path gives the button
@@ -391,7 +397,7 @@ feat F-6: Post Article Detail (master-detail via layout dispatch)
           companion = linkedSegment('post')
           path = getObjectPathFromObject(post)
   req F-6.4:
-    when: useShowItem is invoked in 'simple' layout mode
+    when: useShowItem is invoked in 'mobile' layout mode
     then: the complementary sidebar opens on linkedSegment('post')
   req F-6.5:
     when: useShowItem is invoked in 'multi' layout mode
@@ -528,6 +534,79 @@ test T-10: Tile metadata
     - snippet rendered with 3-line clamp
     - metadata row shows feed name, author, and a formatted date
     - tags row is NOT rendered (tags is empty)
+```
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+plugin-magazine is dev-only in `getDefaults` (`isDev`), so OFF by default for a normal user.
+
+```mdl
+flow QA-1: Create a Magazine, add a feed, curate deterministically
+  desc: The button-path round-trip — create a Magazine, attach a Feed, sync it, and run the
+    deterministic CurateMagazine op the Curate button drives.
+  actors: human
+  covers: [F-1.1, F-3.3, F-3.4, F-5.1]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - plugin-magazine is enabled — it is OFF by default (isDev-only default). Enabling is a UI
+      action (Settings -> plugin registry).
+    - feed: an existing Feed (RSS or ATproto) in the space, with description-bearing Posts available
+    - no Magazine named "QA Magazine" exists — ABORT rather than deleting one this flow did not create
+    - magazine: the Magazine "QA Magazine" this flow creates — no create op exists (human-only
+      step), so the runner binds this once that step completes
+  test:
+    - name: Create the Magazine
+      do: In the navtree, click + on a collection and choose Magazine. Name it "QA Magazine" and
+        add the existing Feed to magazine.feeds.
+      expect: a Magazine named "QA Magazine" appears under the collection, with feeds containing
+        one Ref and posts empty
+      note: |
+        NO `invoke` — no create operation exists for Magazine (`Magazine.make()` is a UI/schema
+        factory, not a registered op).
+    - name: Sync the feed
+      do: (the Curate button's first phase — no separate gesture)
+      invoke: [op:SyncFeed] { feed: $given.feed }
+      expect: new Posts (if any) are pulled into the feed's backing Queue
+    - name: Curate
+      do: Click the Curate button on the MagazineArticle toolbar.
+      invoke: [op:CurateMagazine] { magazine: $given.magazine }
+      capture: curated
+      expect: the button shows a spinner then returns to idle; new tiles render in the Masonry
+        grid, newest-first
+      assert: return $curated.curated >= 0 && $curated.synced >= 0;
+  after:
+    - name: Delete the Magazine
+      do: Right-click "QA Magazine" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$given.magazine], target: $given.collection }
+      expect: the row leaves the navtree
+```
+
+```mdl
+flow QA-2: Open a curated tile and confirm read state
+  desc: The master-detail path — clicking a tile opens PostArticle and marks the post read.
+  actors: human
+  covers: [F-5.5, F-5.6, F-6.3]
+  status: unverified
+  given:
+    - an identity exists
+    - a Magazine with at least one curated Post whose readAt is unset (run QA-1 first)
+  test:
+    - name: Click a tile
+      do: Click an unread tile in the Masonry grid.
+      expect: PostArticle opens (complementary drawer, sibling plank, or companion, depending on
+        layout mode) showing title, hero image, snippet, and an "Open original" toolbar link
+      note: |
+        NO `invoke` — opening is `useShowItem` (plugin-deck), a layout-dispatch UI action, not a
+        registered magazine op.
+    - name: Confirm the tile dims
+      do: Close the reader and look at the grid.
+      expect: the opened tile now renders dimmed, and its Post.readAt holds an ISO timestamp
 ```
 
 ---

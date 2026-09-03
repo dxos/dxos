@@ -7,6 +7,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 
+import { translations } from '#translations';
+
 import { BeaconCapabilities } from './beacon-service';
 
 export const BeaconServiceModule = Capability.lazyModule(
@@ -24,3 +26,4 @@ export const BeaconServiceModule = Capability.lazyModule(
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.statusIndicator'],
 });
+export const Translations = AppCapability.translations(translations);

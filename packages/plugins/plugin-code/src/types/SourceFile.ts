@@ -14,7 +14,8 @@ import { meta } from '#meta';
 export class SourceFile extends Type.makeObject<SourceFile>(DXN.make('org.dxos.type.sourceFile', '0.1.0'))(
   Schema.Struct({
     path: Schema.String,
-    content: Ref.Ref(Text.Text),
+    /** Owned body: `SetParent` cascades it with the file. */
+    content: Ref.Ref(Text.Text).pipe(Annotation.SetParent.set(true)),
     mode: Schema.optional(Schema.Number),
   }).pipe(
     Annotation.LabelAnnotation.set(['path']),
@@ -26,11 +27,9 @@ export const isSourceFile = (object: unknown): object is SourceFile =>
   Schema.is(Type.getSchema(SourceFile) as Schema.Schema<SourceFile>)(object);
 
 export const make = ({ path, content = '', mode }: { path: string; content?: string; mode?: number }) => {
-  const file = Obj.make(SourceFile, {
+  return Obj.make(SourceFile, {
     path,
     content: Ref.make(Text.make({ content })),
     ...(mode !== undefined ? { mode } : {}),
   });
-  Obj.setParent(file.content.target!, file);
-  return file;
 };

@@ -12,7 +12,7 @@ import { EdgeHttpClient } from './edge-http-client';
 import { type EdgeIdentity } from './edge-identity';
 
 // TODO(burdon): Factor out config.
-const DEV_SERVER = 'https://edge.dxos.workers.dev';
+const DEV_SERVER = 'https://dev.dxos.network';
 
 describe.skipIf(process.env.CI)('EdgeHttpClient', () => {
   it.skip('should get status', async ({ expect }) => {
@@ -188,8 +188,8 @@ describe('EdgeHttpClient auth refresh', () => {
       signalAuthStarted = resolve;
     });
     let authCallCount = 0;
-    const fetchMock = vi.fn(async (input: any, _init?: RequestInit) => {
-      const url = String(input instanceof URL ? input : (input.url ?? input));
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) => {
+      const url = String(input instanceof URL ? input : typeof input === 'string' ? input : (input.url ?? input));
       if (url.endsWith('/auth')) {
         if (authCallCount++ === 0) {
           signalAuthStarted();

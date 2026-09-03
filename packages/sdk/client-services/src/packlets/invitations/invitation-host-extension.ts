@@ -9,7 +9,7 @@ import { InvariantViolation, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { InvalidInvitationExtensionRoleError } from '@dxos/protocols';
-import { schema } from '@dxos/protocols/proto';
+import { getBufService } from '@dxos/protocols/buf-service';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
@@ -85,10 +85,10 @@ export class InvitationHostExtension
   ) {
     super({
       requested: {
-        InvitationHostService: schema.getService('dxos.halo.invitations.InvitationHostService'),
+        InvitationHostService: getBufService<InvitationHostService>('dxos.halo.invitations.InvitationHostService'),
       },
       exposed: {
-        InvitationHostService: schema.getService('dxos.halo.invitations.InvitationHostService'),
+        InvitationHostService: getBufService<InvitationHostService>('dxos.halo.invitations.InvitationHostService'),
       },
     });
   }

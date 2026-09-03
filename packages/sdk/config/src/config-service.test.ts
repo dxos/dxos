@@ -12,6 +12,7 @@ import { DEFAULT_HUB_URL } from '@dxos/client-protocol';
 import { EffectEx } from '@dxos/effect';
 
 import { ConfigService } from './config-service';
+import { EDGE_URLS } from './edge-services';
 
 const HUB_SERVICE_URL = 'runtime.services.hub.url';
 const HUB_ENV_URL = 'runtime.app.env.DX_HUB_URL';
@@ -28,6 +29,7 @@ describe('ConfigService.load', () => {
   test('falls back to the built-in hub for a profile that configures none', async ({ expect }) => {
     restoreEnv = withEnv({ DX_HUB_URL: undefined });
     const config = await load('version: 1\n');
+    // Profiles created before the endpoints moved into the file have no `hub` key.
     expect(config.get(HUB_SERVICE_URL)).toEqual(DEFAULT_HUB_URL);
     expect(config.get(HUB_ENV_URL)).toBeUndefined();
   });
@@ -46,26 +48,33 @@ describe('ConfigService.load', () => {
     expect(config.get(HUB_ENV_URL)).toEqual('https://hub.env/');
   });
 
-  test('applies the profile defaults to a freshly created config file', async ({ expect }) => {
-    restoreEnv = withEnv({ DX_HUB_URL: undefined });
-    const { config, contents } = await EffectEx.runPromise(
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = `${yield* fs.makeTempDirectoryScoped()}/missing/config.yml`;
-        const config = yield* ConfigService.load({ config: Option.some(path), profile: 'test' });
-        return { config, contents: yield* fs.readFileString(path) };
-      }).pipe(Effect.provide(NodeServices.layer), Effect.scoped),
-    );
+  test('writes the endpoints into a freshly created config file', async ({ expect }) => {
+    restoreEnv = withEnv({ DX_HUB_URL: undefined, DX_LOCAL_DEV: undefined });
+    const { config, contents } = await createMissing('endpoints');
 
     expect(config.get(HUB_SERVICE_URL)).toEqual(DEFAULT_HUB_URL);
-    // The defaults track the code, so they are not baked into the file that was just written.
-    expect(contents).not.toContain('hub');
+    expect(config.get(EDGE_URL)).toEqual('https://dxos.network/');
+
+    // Stated in the file the user owns, not substituted from code on every load.
+    expect(contents).toContain('hub');
+    expect(contents).toContain('edge');
+    expect(contents).toContain('ipfs');
+  });
+
+  test('keeps features and storage out of the created file so they track the code', async ({ expect }) => {
+    restoreEnv = withEnv({ DX_HUB_URL: undefined, DX_LOCAL_DEV: undefined });
+    const { config, contents } = await createMissing('code-defaults');
+
+    expect(contents).not.toContain('edgeFeatures');
+    expect(contents).not.toContain('storage');
+    expect(config.values.runtime?.client?.storage?.persistent).toBe(true);
+    expect(config.values.runtime?.client?.edgeFeatures?.subductionReplicator).toBe(true);
   });
 
   test('bootstraps against production when a config file is missing', async ({ expect }) => {
     restoreEnv = withEnv({ DX_LOCAL_DEV: undefined });
     const { config } = await createMissing('production');
-    expect(config.get(EDGE_URL)).toEqual('https://dxos.network/');
+    expect(config.get(EDGE_URL)).toEqual(`${EDGE_URLS.production}/`);
   });
 
   test('bootstraps against the main/staging edge under DX_LOCAL_DEV, matching Composer local dev', async ({
@@ -73,13 +82,13 @@ describe('ConfigService.load', () => {
   }) => {
     restoreEnv = withEnv({ DX_LOCAL_DEV: '1' });
     const { config } = await createMissing('local-dev');
-    expect(config.get(EDGE_URL)).toEqual('https://preview.dxos.network');
+    expect(config.get(EDGE_URL)).toEqual(EDGE_URLS.preview);
   });
 
   test('DX_LOCAL_DEV=0 opts back out to production', async ({ expect }) => {
     restoreEnv = withEnv({ DX_LOCAL_DEV: '0' });
     const { config } = await createMissing('opt-out');
-    expect(config.get(EDGE_URL)).toEqual('https://dxos.network/');
+    expect(config.get(EDGE_URL)).toEqual(`${EDGE_URLS.production}/`);
   });
 });
 

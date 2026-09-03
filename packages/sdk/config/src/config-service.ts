@@ -13,6 +13,7 @@ import { DEFAULT_HUB_URL, DX_CONFIG, DX_DATA, getProfileConfigPath, getProfilePa
 import { invariant } from '@dxos/invariant';
 
 import { Config } from './config';
+import { EDGE_URLS } from './edge-services';
 import { type ConfigInit } from './types';
 
 export const memoryConfig = new Config({
@@ -28,26 +29,22 @@ export const memoryConfig = new Config({
   },
 });
 
-export const defaultConfig = new Config({
+/**
+ * Endpoints the CLI writes into a profile when it creates one, kept out of
+ * {@link profileBuiltinDefaults} so the user can see and change what their CLI talks to.
+ */
+export const defaultProfileEndpoints = new Config({
   runtime: {
-    client: {
-      edgeFeatures: {
-        subductionReplicator: true,
-        feedReplicator: true,
-        signaling: true,
-        agents: true,
-      },
-      storage: {
-        persistent: true,
-      },
-    },
     services: {
+      hub: {
+        url: DEFAULT_HUB_URL,
+      },
       edge: {
-        url: 'https://dxos.network/',
+        url: `${EDGE_URLS.production}/`,
       },
       iceProviders: [
         {
-          urls: 'https://dxos.network/ice',
+          urls: `${EDGE_URLS.production}/ice`,
         },
       ],
       ipfs: {
@@ -60,15 +57,11 @@ export const defaultConfig = new Config({
 
 /** Aligns a fresh monorepo CLI profile with the backend Composer's local dev server talks to. */
 export const localDevConfig = new Config(
-  { runtime: { services: { edge: { url: 'https://preview.dxos.network' } } } },
-  defaultConfig.values,
+  { runtime: { services: { edge: { url: EDGE_URLS.preview } } } },
+  defaultProfileEndpoints.values,
 );
 
 export class ConfigService extends Context.Service<ConfigService, Config>()('ConfigService') {
-  static layerMemory = Layer.effect(ConfigService, Effect.succeed(memoryConfig));
-
-  static fromConfig = (config: Config) => Layer.succeed(ConfigService, config);
-
   static load = (args: { config: Option.Option<string>; profile: string }) => {
     const defaultConfigPath = getProfileConfigPath(DX_CONFIG, args.profile);
     return Effect.gen(function* () {
@@ -79,9 +72,7 @@ export class ConfigService extends Context.Service<ConfigService, Config>()('Con
       const configPath = Option.getOrElse(args.config, () => defaultConfigPath);
       const configContent = yield* fs.readFileString(configPath);
       const configValues = Yaml.parse(configContent);
-      return ConfigService.of(
-        new Config(processEnvDefaults(), configValues, profileBuiltinDefaults(args.profile).values),
-      );
+      return withProfileDefaults(configValues, args.profile);
     }).pipe(
       // If the config file doesn't exist, create it. v4 folds v3's `SystemError` and `BadArgument`
       // into one `PlatformError` tag; only the former was ever recovered here.
@@ -90,24 +81,32 @@ export class ConfigService extends Context.Service<ConfigService, Config>()('Con
           ? Effect.fail(error)
           : Effect.gen(function* () {
               const Yaml = yield* Effect.promise(() => import('yaml'));
-              // `DX_LOCAL_DEV` is set only by the monorepo's `bin/dx` wrapper, never by the
-              // published binary, so this never redirects a real user's first run to staging.
+              // First run materializes only the endpoints — features and storage keep coming from
+              // profileBuiltinDefaults so they track the code, while what the CLI talks to is stated
+              // in the file the user owns.
               const useLocalDev = process.env.DX_LOCAL_DEV !== undefined && process.env.DX_LOCAL_DEV !== '0';
-              const configValues = (useLocalDev ? localDevConfig : defaultConfig).values;
+              const configValues = (useLocalDev ? localDevConfig : defaultProfileEndpoints).values;
               const fs = yield* FileSystem.FileSystem;
               const pathToCreate = Option.getOrElse(args.config, () => defaultConfigPath);
               yield* fs.makeDirectory(dirname(pathToCreate), { recursive: true });
               yield* fs.writeFileString(pathToCreate, Yaml.stringify(configValues));
-              // Profile defaults stay out of the written file so they keep tracking the code
-              // rather than freezing into every profile ever created.
-              return ConfigService.of(
-                new Config(processEnvDefaults(), configValues, profileBuiltinDefaults(args.profile).values),
-              );
+              return withProfileDefaults(configValues, args.profile);
             }),
       ),
     );
   };
 }
+
+export const layerMemory = Layer.effect(ConfigService, Effect.succeed(memoryConfig));
+
+export const fromConfig = (config: Config) => Layer.succeed(ConfigService, config);
+
+/**
+ * Both load branches (existing file, first-run write) must layer env, file, and builtins in the same
+ * order, or a freshly created profile would come up without storage or the hub.
+ */
+const withProfileDefaults = (configValues: ConfigInit, profile: string) =>
+  ConfigService.of(new Config(processEnvDefaults(), configValues, profileBuiltinDefaults(profile).values));
 
 /**
  * `DX_*` process env projected onto `runtime.app.env`, mirroring what the bundler config plugin does
@@ -133,9 +132,8 @@ const profileBuiltinDefaults = (profile: string) => {
 
   return new Config({
     runtime: {
-      // Set here rather than in the file written for a new profile, and under the service key
-      // rather than `runtime.app.env`: the latter outranks it in the resolver, so a built-in there
-      // would shadow a hub URL the profile configures for itself.
+      // Kept as a load-time default, not written per profile: profiles created before the endpoints
+      // moved into the file have no `hub` key, and without this every `dx hub` command breaks on upgrade.
       services: {
         hub: {
           url: DEFAULT_HUB_URL,

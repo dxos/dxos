@@ -43,7 +43,6 @@ export const handleImport = ({ scene, hue, importGLBRef, setSelectedObjectId }: 
       Obj.update(scene, (scene) => {
         scene.objects.push(Ref.make(object));
       });
-      Obj.setParent(object, scene);
       const objId = (object as any).id as string | undefined;
       if (objId) {
         setSelectedObjectId(objId);
@@ -64,6 +63,6 @@ export const handleExport = ({
   const solid = solidsRef.current.get(selectedObjectId);
   if (solid) {
     const buffer = exportSTL(solid);
-    downloadFile(buffer, 'object.stl');
+    void downloadFile(buffer, 'object.stl');
   }
 };

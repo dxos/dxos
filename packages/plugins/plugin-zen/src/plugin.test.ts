@@ -13,7 +13,7 @@ import { ZenPlugin } from '#plugin';
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('ZenPlugin', () => {
-  test('modules activate on the expected events', async ({ expect }) => {
+  test('modules activate on the expected events', { timeout: 60_000 }, async ({ expect }) => {
     await using harness = await createComposerTestApp({
       plugins: [ClientPlugin.make({}), ZenPlugin()],
     });

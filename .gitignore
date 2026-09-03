@@ -6,6 +6,8 @@
 
 # Response-verbosity toggle state — per-user runtime, not repo policy.
 .claude/.mode
+# The focus pin that rides alongside it — a task, so even less repo policy.
+.claude/.focus
 # Transitional: pre-rename state file, deleted on first mode.sh run.
 .claude/.response-mode
 
@@ -66,6 +68,10 @@ build/Release
 # Dependency directories
 node_modules/
 jspm_packages/
+
+# pnpm store, when it resolves inside the checkout instead of a global cache dir (observed on Depot
+# CI's sandbox — see .oxfmtrc.json's ignorePatterns for why this also needs to be there).
+.pnpm-store/
 
 # Optional npm cache directory
 .npm
@@ -251,3 +257,10 @@ node_modules
 # "dummy-non-existing-folder" rather than skipping. Generated output, never sources.
 dummy-non-existing-folder/
 tools/vscode/vscode-mdl/dist
+
+# Generated headless capability barrels (dx-plugin prebuild, produced by plugin prebuild tasks).
+**/src/capabilities/gen/
+
+# Stryker mutation testing (evaluation).
+.stryker-tmp/
+reports/mutation/

@@ -3,7 +3,6 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import {
   AppGraphBuilder,
@@ -13,21 +12,24 @@ import {
   Schema,
   SkillDefinition,
   SubjectContext,
+  TaskAction,
   Templates,
+  Translations,
 } from '#capabilities';
 import { meta } from '#meta';
-import { translations } from '#translations';
 
 export const ProjectsPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(Schema),
-  Plugin.addModule(CreateObject),
-  Plugin.addModule(Templates),
   Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(CreateObject),
   Plugin.addModule(OperationHandler),
-  Plugin.addModule(SkillDefinition),
   Plugin.addModule(ReactSurface),
+  Plugin.addModule(Schema),
+  Plugin.addModule(SkillDefinition),
   Plugin.addModule(SubjectContext),
-  Plugin.addModule(AppCapability.translations(translations)),
+  // Injects `Assign to agent` into plugin-tasks' task rows.
+  Plugin.addModule(TaskAction),
+  Plugin.addModule(Templates),
+  Plugin.addModule(Translations),
   Plugin.make,
 );
 

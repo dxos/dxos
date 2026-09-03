@@ -8,7 +8,7 @@ export * from './Chat';
 export * from './ConnectorAuthMenu';
 export { TracePanel } from '../containers/TracePanel/TracePanel';
 export * from './ProcessTree';
-export * from './TaskList';
 export * from './Toolbox';
 
 export { ChatPrompt, type ChatPromptProps } from './ChatPrompt/ChatPrompt';
+export { ChatQueue as ChatQueueList, type ChatQueueProps as ChatQueueListProps } from './ChatQueue/ChatQueue';

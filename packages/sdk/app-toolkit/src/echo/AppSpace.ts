@@ -29,8 +29,15 @@ import * as AppAnnotation from './AppAnnotation';
  */
 export const SETTINGS_SPACE_TAG = 'org.dxos.space.settings';
 
-/** Space tag for the bundled exemplar/sample space. */
-export const EXEMPLAR_SPACE_TAG = 'org.dxos.space.exemplar';
+/**
+ * Space tag for the bundled sample space.
+ *
+ * The value still reads `exemplar` because it is already persisted in the space metadata of every
+ * profile that has onboarded: changing it would make the import's idempotency check miss the
+ * existing space (importing a second copy) and flip `isVisibleSpace` for those spaces. Renaming it
+ * needs a tag migration, not an edit here.
+ */
+export const SAMPLE_SPACE_TAG = 'org.dxos.space.exemplar';
 
 /** Name given to the first space created for a profile. The user is free to rename it. */
 export const DEFAULT_SPACE_NAME = 'My Space';
@@ -41,41 +48,50 @@ type SpaceResolver = { spaces: { get(): Space[]; get(id: string): Space | undefi
 /** Check if a space has a specific tag. */
 export const hasTag = (space: Space, tag: string): boolean => space.tags.includes(tag);
 
-/** Check if a space is the exemplar/sample space. */
-export const isExemplarSpace = (space: Space): boolean => hasTag(space, EXEMPLAR_SPACE_TAG);
+/** Check if a space is the bundled sample space. */
+export const isSampleSpace = (space: Space): boolean => hasTag(space, SAMPLE_SPACE_TAG);
 
 /** Check if a space is the settings space. */
 export const isSettingsSpace = (space: Space): boolean => hasTag(space, SETTINGS_SPACE_TAG);
 
 /**
- * Find the settings space.
+ * All settings-tagged spaces, ordered by id — code-unit comparison, never locale collation, since
+ * duplicate healing deletes every space but the first and the order must be identical on every device.
+ */
+export const getSettingsSpaces = (client: { spaces: { get(): Space[] } }): Space[] =>
+  client.spaces
+    .get()
+    .filter((space) => isSettingsSpace(space))
+    .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+
+/**
+ * Find the settings space to read app configuration from.
  *
- * Profiles that hit the duplicate-creation race carry two tagged spaces; the one holding the
- * default-space designation is canonical, so it wins over list order.
+ * On a profile carrying duplicates this is a device-local read heuristic while healing converges;
+ * deletion decisions must instead use the {@link getSettingsSpaces} order, which is a pure function
+ * of replicated state.
  */
 export const getSettingsSpace = (client: { spaces: { get(): Space[] } }): Space | undefined => {
-  const tagged = client.spaces.get().filter((space) => isSettingsSpace(space));
+  const tagged = getSettingsSpaces(client);
   if (tagged.length <= 1) {
     return tagged[0];
   }
 
-  // Properties are unreadable until the space is ready, so an unopened duplicate cannot be judged
-  // and the first tagged space stands in until one proves canonical.
-  return (
-    tagged.find((space) => space.state.get() === SpaceState.SPACE_READY && getDefaultSpaceId(space) !== undefined) ??
-    tagged[0]
-  );
+  // Properties are unreadable until a space is ready, so among the readable duplicates the
+  // designation-holder wins — and any readable one beats waiting on an unopened one.
+  const ready = tagged.filter((space) => space.state.get() === SpaceState.SPACE_READY);
+  return ready.find((space) => getDefaultSpaceId(space) !== undefined) ?? ready[0] ?? tagged[0];
 };
 
 /**
  * Whether a space belongs in the user-facing space lists (navtree, settings, create-object target).
  *
  * Tags mark spaces the app manages on the user's behalf — the settings space, filesystem mirrors —
- * so anything tagged is internal, except the exemplar space and the legacy personal-space tag that
+ * so anything tagged is internal, except the sample space and the legacy personal-space tag that
  * pre-migration profiles still carry.
  */
 export const isVisibleSpace = (space: Space): boolean =>
-  space.tags.length === 0 || isExemplarSpace(space) || isLegacyDefaultSpace(space);
+  space.tags.length === 0 || isSampleSpace(space) || isLegacyDefaultSpace(space);
 
 //
 // Default space designation.

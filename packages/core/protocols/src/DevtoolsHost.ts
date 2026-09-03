@@ -7,8 +7,9 @@ import * as Rpc from 'effect/unstable/rpc/Rpc';
 import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
 import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
+import { SignedMessageSchema } from './buf/proto/gen/dxos/halo/signed_pb.ts';
 import { SignalState } from './proto/gen/dxos/mesh/signal.ts';
-import { protoMessage, serviceError } from './service-rpc.ts';
+import { bufMessage, protoMessage, serviceError } from './service-rpc.ts';
 import { mutableArray, protoTimestamp, publicKey } from './service-schemas.ts';
 
 //
@@ -83,7 +84,7 @@ export interface SubscribeToCredentialMessagesRequest extends Schema.Schema.Type
 > {}
 
 export const SubscribeToCredentialMessagesResponse = Schema.Struct({
-  messages: Schema.optional(mutableArray(protoMessage('dxos.halo.signed.SignedMessage'))),
+  messages: Schema.optional(mutableArray(bufMessage(SignedMessageSchema))),
 });
 export interface SubscribeToCredentialMessagesResponse extends Schema.Schema.Type<
   typeof SubscribeToCredentialMessagesResponse

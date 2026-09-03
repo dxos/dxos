@@ -10,6 +10,7 @@ import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framewo
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useIdentity, useMembers } from '@dxos/halo-react';
+import { log } from '@dxos/log';
 import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
 import { getSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
@@ -69,7 +70,13 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
     if (!callProvider || !id) {
       return;
     }
-    await callProvider.join(id);
+    try {
+      await callProvider.join(id);
+    } catch (err) {
+      // The menu action fires this without awaiting, so a failed join (e.g. the transport rejects
+      // the room) must be reported here rather than surface as an unhandled rejection.
+      log.catch(err);
+    }
   }, [callProvider, id]);
 
   const menuActions = useMenuBuilder(() => {

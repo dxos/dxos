@@ -6,7 +6,7 @@ import { Transform, pipeline } from 'node:stream';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, latch } from '@dxos/async';
-import { schema } from '@dxos/protocols/proto';
+import { getBufService } from '@dxos/protocols/buf-service';
 import { type TestService } from '@dxos/protocols/proto/example/testing/rpc';
 import { createProtoRpcPeer } from '@dxos/rpc';
 
@@ -39,10 +39,10 @@ const setupPeers = () => {
 const createRpc = (port: RpcPort, handler: TestService['testCall']) =>
   createProtoRpcPeer({
     requested: {
-      TestService: schema.getService('example.testing.rpc.TestService'),
+      TestService: getBufService<TestService>('example.testing.rpc.TestService'),
     },
     exposed: {
-      TestService: schema.getService('example.testing.rpc.TestService'),
+      TestService: getBufService<TestService>('example.testing.rpc.TestService'),
     },
     handlers: {
       TestService: {
@@ -59,20 +59,25 @@ describe('Muxer', () => {
 
     const [wait, inc] = latch({ count: 2, timeout: 500 });
 
+    const clients: Array<ReturnType<typeof createRpc>> = [];
     for (const peer of [peer1, peer2]) {
-      const client = createRpc(
-        await peer.createPort('example.extension/rpc', {
-          contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"',
-        }),
-        async ({ data }) => ({ data }),
+      clients.push(
+        createRpc(
+          await peer.createPort('example.extension/rpc', {
+            contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"',
+          }),
+          async ({ data }) => ({ data }),
+        ),
       );
+    }
 
-      setTimeout(async () => {
+    await Promise.all(
+      clients.map(async (client) => {
         await client.open();
         expect(await client.rpc.TestService.testCall({ data: 'test' })).to.deep.eq({ data: 'test' });
         inc();
-      });
-    }
+      }),
+    );
 
     await wait();
   });
@@ -90,36 +95,35 @@ describe('Muxer', () => {
 
     const [wait, inc] = latch({ count: 4, timeout: 500 });
 
+    const clients: Array<{ client: ReturnType<typeof createRpc>; expected: string }> = [];
     for (const peer of [peer1, peer2]) {
-      {
-        const client = createRpc(
+      clients.push({
+        client: createRpc(
           await peer.createPort('example.extension/rpc1', {
             contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"',
           }),
           async ({ data }) => ({ data: data + '-rpc1' }),
-        );
-
-        setTimeout(async () => {
-          await client.open();
-          expect(await client.rpc.TestService.testCall({ data: 'test' })).to.deep.eq({ data: 'test-rpc1' });
-          inc();
-        });
-      }
-      {
-        const client = createRpc(
+        ),
+        expected: 'test-rpc1',
+      });
+      clients.push({
+        client: createRpc(
           await peer.createPort('example.extension/rpc2', {
             contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"',
           }),
           async ({ data }) => ({ data: data + '-rpc2' }),
-        );
-
-        setTimeout(async () => {
-          await client.open();
-          expect(await client.rpc.TestService.testCall({ data: 'test' })).to.deep.eq({ data: 'test-rpc2' });
-          inc();
-        });
-      }
+        ),
+        expected: 'test-rpc2',
+      });
     }
+
+    await Promise.all(
+      clients.map(async ({ client, expected }) => {
+        await client.open();
+        expect(await client.rpc.TestService.testCall({ data: 'test' })).to.deep.eq({ data: expected });
+        inc();
+      }),
+    );
 
     await wait();
   });

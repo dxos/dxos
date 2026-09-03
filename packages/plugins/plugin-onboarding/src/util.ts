@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Client } from '@dxos/client';
+import { type Credential } from '@dxos/client/halo';
 import { invariant } from '@dxos/invariant';
 import { InvalidRecoveryTokenError } from '@dxos/protocols';
-import { type Client } from '@dxos/react-client';
-import { type Credential } from '@dxos/react-client/halo';
 
 /**
  * Whether a failed recovery was EDGE refusing the token itself — walks the wrapper chain because

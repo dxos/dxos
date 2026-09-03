@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
@@ -55,6 +55,7 @@ export default Capability.makeModule(
 
     const actionExtensions = yield* createProjectActionExtension();
     const chatExtensions = yield* createProjectChatsExtension();
+    const chatChildrenExtensions = yield* createProjectChatsChildrenExtension();
     const artifactsExtensions = yield* createProjectArtifactsExtension();
     const artifactsActionExtensions = yield* createProjectArtifactsActionExtension();
     const mailboxExtensions = yield* createMailboxProjectExtension();
@@ -62,6 +63,7 @@ export default Capability.makeModule(
       ...sectionExtensions,
       ...actionExtensions,
       ...chatExtensions,
+      ...chatChildrenExtensions,
       ...artifactsExtensions,
       ...artifactsActionExtensions,
       ...mailboxExtensions,
@@ -78,7 +80,7 @@ export default Capability.makeModule(
  * (e.g. plugin-brain's mailbox Analyze action).
  */
 export const createMailboxProjectExtension = () =>
-  GraphBuilder.createExtension({
+  AppGraphBuilder.createExtension({
     id: 'mailboxProjectActions',
     match: (node) =>
       node.properties.systemTag === 'inbox' && Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none(),
@@ -89,7 +91,7 @@ export const createMailboxProjectExtension = () =>
       }
 
       return Effect.succeed([
-        Node.makeAction({
+        AppGraphNode.makeAction({
           id: 'setupProject',
           data: () =>
             Effect.gen(function* () {
@@ -111,21 +113,77 @@ export const createMailboxProjectExtension = () =>
     },
   });
 
+/** Node `type` of a project's virtual Chats branch; the child extension below matches on it. */
+export const CHATS_SECTION_TYPE = 'org.dxos.plugin.projects.chats-section';
+
+/** Path segment of the Chats branch. */
+export const CHATS_SEGMENT = 'chats';
+
 /**
- * A project's chats as its navtree children. Ownership is the ECHO parent edge (no `Project` schema
- * field) — the same edge every companion chat now uses — so what is project-specific here is only
- * the DISPLAY: project chats surface in the navtree, other companions stay in their subject's
- * companion panel. The enumeration is a hierarchy query rather than a ref-array read; the
- * `TypeSection` extension that emits Project nodes leaves them childless.
+ * Data carried by the Chats branch node. Wrapped so no Project-matching extension claims it, and
+ * tagged because the Artifacts branch wraps a project the same way — without the tag a surface
+ * matching on the shape alone renders whichever branch it saw first for both.
+ */
+export type ChatsBranch = { branch: 'chats'; project: Project.Project };
+
+export const isChatsBranch = (data: unknown): data is ChatsBranch =>
+  typeof data === 'object' &&
+  data !== null &&
+  (data as ChatsBranch).branch === 'chats' &&
+  Obj.instanceOf(Project.Project, (data as ChatsBranch).project);
+
+/**
+ * A virtual "Chats" branch under each project's navtree row, mirroring the Artifacts branch beside
+ * it — a project accumulates conversations, and flat under the project row they crowded out
+ * everything else it owns.
+ *
+ * Virtual for the same reason Artifacts is: the branch stands for no ECHO object, so it carries the
+ * project as wrapped `data` and {@link createProjectChatsChildrenExtension} matches on that.
+ */
+export const createProjectChatsExtension = () =>
+  AppGraphBuilder.createExtension({
+    id: 'projectChats',
+    match: (node) =>
+      Obj.instanceOf(Project.Project, node.data)
+        ? Option.some({ project: node.data, space: node.properties.space })
+        : Option.none(),
+    connector: ({ project, space }) =>
+      Effect.succeed([
+        AppGraphNode.make({
+          id: CHATS_SEGMENT,
+          type: CHATS_SECTION_TYPE,
+          data: { branch: 'chats', project } satisfies ChatsBranch,
+          properties: {
+            label: ['chats.label', { ns: meta.profile.key }],
+            icon: 'ph--sparkle--regular',
+            iconHue: 'amber',
+            role: 'branch',
+            // Selecting the branch opens its objects as cards (see `ProjectChatsArticle`), the way
+            // a database type node does; expanding it still lists them in the tree.
+            selectable: true,
+            draggable: false,
+            droppable: false,
+            space,
+            testId: 'projectsPlugin.chatsSection',
+          },
+        }),
+      ]),
+  });
+
+/**
+ * The Chats branch's children. Ownership is the ECHO parent edge (no `Project` schema field) — the
+ * same edge every companion chat uses — so what is project-specific is only the DISPLAY: project
+ * chats surface in the navtree, other companions stay in their subject's companion panel.
  *
  * The `chat` url key is shared with plugin-assistant's Chats section on purpose — one key spanning
  * several connectors is how plugin-space addresses objects wherever they sit — so the path resolves
  * through whichever project currently parents the chat.
  */
-export const createProjectChatsExtension = () =>
-  GraphBuilder.createExtension({
-    id: 'projectChats',
-    match: (node) => (Obj.instanceOf(Project.Project, node.data) ? Option.some(node.data) : Option.none()),
+export const createProjectChatsChildrenExtension = () =>
+  AppGraphBuilder.createExtension({
+    id: 'projectChatsChildren',
+    match: (node) =>
+      node.type === CHATS_SECTION_TYPE && isChatsBranch(node.data) ? Option.some(node.data.project) : Option.none(),
     connector: (project, get) => {
       const db = Obj.getDatabase(project);
       if (!db) {
@@ -149,12 +207,12 @@ export const createProjectChatsExtension = () =>
  * the toolbar grows, and a shared `toolbar` disposition here would double up with it.
  */
 export const createProjectActionExtension = () =>
-  GraphBuilder.createExtension({
+  AppGraphBuilder.createExtension({
     id: 'projectActions',
     match: (node) => (Obj.instanceOf(Project.Project, node.data) ? Option.some(node.data) : Option.none()),
     actions: (project) =>
       Effect.succeed([
-        Node.makeAction({
+        AppGraphNode.makeAction({
           id: AssistantOperation.CreateChat.meta.key,
           data: () =>
             Effect.gen(function* () {
@@ -172,7 +230,7 @@ export const createProjectActionExtension = () =>
             }),
           properties: {
             label: ['create-chat.label', { ns: meta.profile.key }],
-            icon: 'ph--chat-text--regular',
+            icon: 'ph--sparkle--regular',
             disposition: 'list-item-primary',
             testId: 'projectsPlugin.createChat',
           },
@@ -186,11 +244,14 @@ export const ARTIFACTS_SECTION_TYPE = 'org.dxos.plugin.projects.artifacts-sectio
 /** Path segment (and node id) of that branch under its project. */
 export const ARTIFACTS_SEGMENT = 'artifacts';
 
-/** Data carried by the Artifacts branch node. Wrapped so no Project-matching extension claims it. */
-export type ArtifactsBranch = { project: Project.Project };
+/** Data carried by the Artifacts branch node; tagged for the reason {@link ChatsBranch} is. */
+export type ArtifactsBranch = { branch: 'artifacts'; project: Project.Project };
 
-const isArtifactsBranch = (data: unknown): data is ArtifactsBranch =>
-  typeof data === 'object' && data !== null && Obj.instanceOf(Project.Project, (data as ArtifactsBranch).project);
+export const isArtifactsBranch = (data: unknown): data is ArtifactsBranch =>
+  typeof data === 'object' &&
+  data !== null &&
+  (data as ArtifactsBranch).branch === 'artifacts' &&
+  Obj.instanceOf(Project.Project, (data as ArtifactsBranch).project);
 
 /**
  * A virtual "Artifacts" branch under each project's navtree row, mirroring the Artifacts section of
@@ -202,7 +263,7 @@ const isArtifactsBranch = (data: unknown): data is ArtifactsBranch =>
  * graph merges them, but chats are ECHO children while artifacts hang off the ref array.
  */
 export const createProjectArtifactsExtension = () =>
-  GraphBuilder.createExtension({
+  AppGraphBuilder.createExtension({
     id: 'projectArtifacts',
     match: (node) =>
       Obj.instanceOf(Project.Project, node.data)
@@ -212,19 +273,20 @@ export const createProjectArtifactsExtension = () =>
       Effect.succeed([
         // Built inline rather than via `AppNode.makeSection`: that helper takes a typed `Space`, which
         // would pull @dxos/client into this plugin's dependencies for a value it only passes through.
-        Node.make({
+        AppGraphNode.make({
           id: ARTIFACTS_SEGMENT,
           type: ARTIFACTS_SECTION_TYPE,
           // Wrapped, not the bare project: every Project-matching extension here (chats, actions,
           // and this one) keys off `Obj.instanceOf(Project)`, so a branch carrying the project as its
           // own data matched them all — it grew its own Artifacts child, forever. The wrapper is
           // matched only by {@link createProjectArtifactsActionExtension}.
-          data: { project } satisfies ArtifactsBranch,
+          data: { branch: 'artifacts', project } satisfies ArtifactsBranch,
           properties: {
             label: ['artifacts.label', { ns: meta.profile.key }],
             icon: 'ph--cube--regular',
-            iconHue: 'amber',
+            iconHue: 'indigo',
             role: 'branch',
+            selectable: true,
             draggable: false,
             droppable: false,
             space,
@@ -242,7 +304,7 @@ export const createProjectArtifactsExtension = () =>
  * link is written here rather than left to the dialog's own placement.
  */
 export const createProjectArtifactsActionExtension = () =>
-  GraphBuilder.createExtension({
+  AppGraphBuilder.createExtension({
     id: 'projectArtifactsActions',
     match: (node) =>
       node.type === ARTIFACTS_SECTION_TYPE && isArtifactsBranch(node.data)
@@ -277,7 +339,7 @@ export const createProjectArtifactsActionExtension = () =>
     },
     actions: ({ project, nodeId }) =>
       Effect.succeed([
-        Node.makeAction({
+        AppGraphNode.makeAction({
           id: SpaceOperation.OpenObjectForm.meta.key,
           data: () =>
             Effect.gen(function* () {
@@ -300,7 +362,7 @@ export const createProjectArtifactsActionExtension = () =>
               });
             }),
           properties: {
-            label: ['add-artifact.label', { ns: meta.profile.key }],
+            label: ['create-artifact.label', { ns: meta.profile.key }],
             icon: 'ph--plus--regular',
             disposition: 'list-item-primary',
             testId: 'projectsPlugin.addArtifact',

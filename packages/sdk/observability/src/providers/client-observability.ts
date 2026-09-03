@@ -6,15 +6,21 @@ import * as Effect from 'effect/Effect';
 
 import { Event, scheduleTaskInterval } from '@dxos/async';
 import { type Client, type ClientServices } from '@dxos/client';
-import { type Space, SpaceState } from '@dxos/client/echo';
-import { DeviceKind } from '@dxos/client/halo';
+import { type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ConnectionState, type NetworkStatus, Platform } from '@dxos/protocols/proto/dxos/client/services';
+// Value imports come straight from protocols: reaching them through the `@dxos/client` barrels
+// puts echo-client (and wa-sqlite, automerge-repo with it) in the app's eager boot graph.
+import {
+  ConnectionState,
+  DeviceKind,
+  type NetworkStatus,
+  Platform,
+  SpaceState,
+} from '@dxos/protocols/proto/dxos/client/services';
 
-import { type DataProvider } from '../observability';
-import { EventLoopLagTracker, LAG_SAMPLE_INTERVAL_MS, LAG_WINDOW_MS } from './event-loop-lag';
+import * as Observability from '../Observability';
 import { type CrossRealmMemory, measureCrossRealmMemory, readHeap, supportsCrossRealmMemory } from './memory';
 import { SyncEpisodeTracker } from './sync-episodes';
 import { subscribeSyncSummary } from './sync-state';
@@ -37,7 +43,7 @@ const SECONDS = { unit: 's' } as const;
 //  - Identifier can be synced via HALO to allow for correlation of events bewteen devices.
 //  - Identifier should also be stored outside of HALO such that it is available immediately on startup.
 /** Subscribes to identity and device changes and sets observability tags accordingly. */
-export const identityProvider = (clientServices: Partial<ClientServices>): DataProvider =>
+export const identityProvider = (clientServices: Partial<ClientServices>): Observability.DataProvider =>
   Effect.fn(function* (observability) {
     // TODO(wittjosiah): RPC subscribe returns void; cleanup requires upstream API change.
     clientServices.IdentityService!.queryIdentity().subscribe((idqr) => {
@@ -67,8 +73,34 @@ export const identityProvider = (clientServices: Partial<ClientServices>): DataP
     });
   });
 
+/**
+ * What {@link identityManagerProvider} reads: the host-side identity manager, in a realm that has no
+ * client proxy to subscribe through.
+ */
+export type IdentitySource = {
+  readonly identity: { readonly did: string } | undefined;
+  readonly stateUpdate: { on(listener: () => void): unknown };
+};
+
+/**
+ * Tags every span and log of a realm with the identity, read from the services host itself. For the
+ * dedicated worker, whose tracer and tags are its own: the tab's {@link identityProvider} only tags
+ * the tab. Tags only — the tab already identifies the user with the analytics backend.
+ */
+export const identityManagerProvider = (identityManager: IdentitySource): Observability.DataProvider =>
+  Effect.fn(function* (observability) {
+    const apply = () => {
+      const did = identityManager.identity?.did;
+      if (did) {
+        observability.setTags({ did });
+      }
+    };
+    identityManager.stateUpdate.on(apply);
+    apply();
+  });
+
 /** Periodically publishes network connection and buffer metrics. */
-export const networkMetricsProvider = (clientServices: Partial<ClientServices>): DataProvider =>
+export const networkMetricsProvider = (clientServices: Partial<ClientServices>): Observability.DataProvider =>
   Effect.fn(function* (observability) {
     const ctx = new Context();
     let lastNetworkStatus: NetworkStatus | undefined;
@@ -128,7 +160,7 @@ export const networkMetricsProvider = (clientServices: Partial<ClientServices>):
   });
 
 /** Periodically publishes platform and heap memory metrics. */
-export const runtimeMetricsProvider = (clientServices: Partial<ClientServices>): DataProvider =>
+export const runtimeMetricsProvider = (clientServices: Partial<ClientServices>): Observability.DataProvider =>
   Effect.fn(function* (observability) {
     const ctx = new Context();
     log('runtimeMetricsProvider: requesting platform from SystemService');
@@ -205,7 +237,7 @@ export const runtimeMetricsProvider = (clientServices: Partial<ClientServices>):
   });
 
 /** Periodically publishes space membership, object count, and pipeline progress metrics. */
-export const spacesMetricsProvider = (client: Client): DataProvider =>
+export const spacesMetricsProvider = (client: Client): Observability.DataProvider =>
   Effect.fn(function* (observability) {
     const ctx = new Context();
     // Pipeline subscriptions only; the gauges below read the live space list at collection time.
@@ -283,7 +315,7 @@ export const spacesMetricsProvider = (client: Client): DataProvider =>
   });
 
 /** Publishes the document backlog folded across every space. */
-export const documentsMetricsProvider = (client: Client): DataProvider =>
+export const documentsMetricsProvider = (client: Client): Observability.DataProvider =>
   Effect.fn(function* (observability) {
     const ctx = new Context();
     const { summary } = subscribeSyncSummary(client, ctx);
@@ -319,49 +351,12 @@ export const documentsMetricsProvider = (client: Client): DataProvider =>
   });
 
 /**
- * Publishes how long this realm's event loop was blocked.
- *
- * Reports peak lag per export window, tagged only by the `dxos.process.type` resource attribute —
- * so the same provider distinguishes the tab from the shared and dedicated workers without any
- * per-realm wiring.
- */
-export const eventLoopLagProvider = (): DataProvider =>
-  Effect.fn(function* (observability) {
-    const ctx = new Context();
-    const lag = new EventLoopLagTracker(LAG_SAMPLE_INTERVAL_MS);
-
-    scheduleTaskInterval(ctx, async () => lag.sample(Date.now()), LAG_SAMPLE_INTERVAL_MS);
-
-    // Belt to the tracker's braces. The clamp inside `sample` is what actually guarantees a frozen
-    // tab is not reported as lag — checking visibility when the probe fires cannot, since a frozen
-    // timer does not fire until the tab is visible again. This listener additionally drops the
-    // reference timestamp the moment visibility changes, so a gap under the clamp is discarded too.
-    const doc = (globalThis as { document?: EventTarget & { visibilityState?: string } }).document;
-    if (doc) {
-      const onVisibilityChange = () => lag.suspend();
-      doc.addEventListener('visibilitychange', onVisibilityChange);
-      ctx.onDispose(() => doc.removeEventListener('visibilitychange', onVisibilityChange));
-    }
-    // Window rotation is driven here rather than by the read, so the gauge callback stays a plain
-    // idempotent getter — see EventLoopLagTracker.
-    scheduleTaskInterval(ctx, async () => lag.rotate(), LAG_WINDOW_MS);
-
-    ctx.onDispose(
-      observability.metrics.observe('dxos.client.runtime.eventLoop.lag', () => lag.peakMs / 1_000, undefined, SECONDS),
-    );
-
-    return async () => {
-      await ctx.dispose();
-    };
-  });
-
-/**
  * Publishes how long a client takes to sync, and how long it has been stuck.
  *
  * Both are needed. `episode.duration` records only when a backlog clears, so a client that never
  * finishes syncing contributes nothing to it — `stalled.duration` is what makes that client visible.
  */
-export const syncMetricsProvider = (client: Client): DataProvider =>
+export const syncMetricsProvider = (client: Client): Observability.DataProvider =>
   Effect.fn(function* (observability) {
     const ctx = new Context();
     const episodes = new SyncEpisodeTracker();

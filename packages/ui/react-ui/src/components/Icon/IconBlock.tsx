@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type ComponentPropsWithRef, type PropsWithChildren, forwardRef } from 'react';
+import React, { type PropsWithChildren } from 'react';
 
 import { useThemeContext } from '../../hooks';
-import { type ThemedClassName } from '../../util';
+import { composable, composableProps } from '../../util';
 import { IconBlockStyleProps } from './Icon.theme';
 
-export type IconBlockProps = ThemedClassName<ComponentPropsWithRef<'div'> & PropsWithChildren<IconBlockStyleProps>>;
+export type IconBlockProps = PropsWithChildren<IconBlockStyleProps>;
 
 /**
  * Static layout slot sized to `--dx-rail-item` (the same square that an `IconButton iconOnly`
@@ -19,16 +19,14 @@ export type IconBlockProps = ThemedClassName<ComponentPropsWithRef<'div'> & Prop
  * `aria-hidden={false}` when the slot's contents convey meaning that isn't already labelled
  * elsewhere in the row.
  */
-export const IconBlock = forwardRef<HTMLDivElement, IconBlockProps>(
-  ({ classNames, children, compact, square, ...props }, forwardedRef) => {
+export const IconBlock = composable<HTMLDivElement, IconBlockProps>(
+  ({ children, compact, square, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
+    const { className, ...rest } = composableProps(props);
     return (
-      <div
-        aria-hidden='true'
-        {...props}
-        className={tx('icon.block', { compact, square }, classNames)}
-        ref={forwardedRef}
-      >
+      // The default precedes the spread so a caller's `aria-hidden={false}` actually wins, as the
+      // doc comment promises; after the spread it silently overrode every explicit value.
+      <div aria-hidden='true' {...rest} className={tx('icon.block', { compact, square }, className)} ref={forwardedRef}>
         {children}
       </div>
     );

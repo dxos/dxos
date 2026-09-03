@@ -127,17 +127,17 @@ const config = new Config({
     client: {
       edgeFeatures: {
         agents: true,
-        echoReplicator: true,
         feedReplicator: true,
+        subductionReplicator: true,
         signaling: true,
       },
     },
     services: {
       edge: {
-        url: 'https://edge-preview.dxos.workers.dev/',
+        url: 'https://preview.dxos.network/',
         // url: 'ws://localhost:8787',
       },
-      iceProviders: [{ urls: 'https://edge-production.dxos.workers.dev/ice' }],
+      iceProviders: [{ urls: 'https://dxos.network/ice' }],
     },
   },
 });

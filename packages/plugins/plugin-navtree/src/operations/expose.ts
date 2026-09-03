@@ -6,12 +6,12 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as Graph from '@dxos/app-graph/Graph';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
-import { Attention } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention/types';
 
 import { NavTreeCapabilities } from '#types';
 
@@ -24,7 +24,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Expose> = LayoutOper
       const prefixes = Attention.expandAttendableId(subject);
 
       for (const qualifiedId of prefixes) {
-        Graph.expandSync(graph, qualifiedId, 'child');
+        AppGraph.expandSync(graph, qualifiedId, 'child');
 
         const treePath = prefixes.slice(0, prefixes.indexOf(qualifiedId) + 1);
         const state = getItem(treePath);
@@ -33,7 +33,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Expose> = LayoutOper
         }
       }
 
-      if (Option.isNone(Graph.getNode(graph, subject))) {
+      if (Option.isNone(AppGraph.getNode(graph, subject))) {
         log('Node not found after expansion', { subject });
       }
     }),

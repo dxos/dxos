@@ -15,11 +15,13 @@
   "imports": {
     "#capabilities": {
       "source": {
-        "workerd": "./src/capabilities/workerd.ts",
+        "workerd": "./src/capabilities/gen/workerd.ts",
+        "node": "./src/capabilities/gen/node.ts",
         "default": "./src/capabilities/index.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
       "workerd": "./dist/lib/capabilities.workerd.mjs",
+      "node": "./dist/lib/capabilities.node.mjs",
       "default": "./dist/lib/capabilities.mjs"
     },
     "#components": {
@@ -43,12 +45,8 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": {
-        "workerd": "./src/plugin.workerd.ts",
-        "default": "./src/plugin.tsx"
-      },
+      "source": "./src/plugin.tsx",
       "types": "./dist/types/src/plugin.d.ts",
-      "workerd": "./dist/lib/plugin.workerd.mjs",
       "default": "./dist/lib/plugin.mjs"
     },
     "#skills": {
@@ -89,11 +87,6 @@
       "types": "./dist/types/src/types/ProjectCapabilities.d.ts",
       "import": "./dist/lib/ProjectCapabilities.mjs"
     },
-    "./ProjectMcpOperation": {
-      "source": "./src/types/ProjectMcpOperation.ts",
-      "types": "./dist/types/src/types/ProjectMcpOperation.d.ts",
-      "import": "./dist/lib/ProjectMcpOperation.mjs"
-    },
     "./ProjectOperation": {
       "source": "./src/types/ProjectOperation.ts",
       "types": "./dist/types/src/types/ProjectOperation.d.ts",
@@ -114,10 +107,15 @@
       "types": "./dist/types/src/operations/ProjectOperationHandlerSet.d.ts",
       "import": "./dist/lib/ProjectOperationHandlerSet.mjs"
     },
-    "./CodeProjectSkill": {
-      "source": "./src/skills/CodeProjectSkill.ts",
-      "types": "./dist/types/src/skills/CodeProjectSkill.d.ts",
-      "import": "./dist/lib/CodeProjectSkill.mjs"
+    "./ProjectSkill": {
+      "source": "./src/skills/project/ProjectSkill.ts",
+      "types": "./dist/types/src/skills/project/ProjectSkill.d.ts",
+      "import": "./dist/lib/ProjectSkill.mjs"
+    },
+    "./ProjectMailboxOperation": {
+      "source": "./src/types/ProjectMailboxOperation.ts",
+      "types": "./dist/types/src/types/ProjectMailboxOperation.d.ts",
+      "import": "./dist/lib/ProjectMailboxOperation.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -153,6 +151,7 @@
     "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/extractor-lib": "workspace:*",
+    "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/link": "workspace:*",
@@ -164,21 +163,29 @@
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-tasks": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-masonry": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-search": "workspace:*",
+    "@dxos/react-ui-tabs": "workspace:*",
+    "@dxos/react-ui-task": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/agent-runtime": "workspace:*",
     "@dxos/app-graph": "workspace:*",
+    "@dxos/assistant": "workspace:*",
+    "@dxos/compute-runtime": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-github": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/schema": "workspace:*",
+    "@effect/atom-react": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "react": "catalog:",
@@ -186,6 +193,7 @@
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:^",
+    "@effect/atom-react": "catalog:",
     "react": "catalog:"
   },
   "publishConfig": {

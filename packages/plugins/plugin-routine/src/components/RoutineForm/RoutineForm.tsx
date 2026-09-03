@@ -341,7 +341,6 @@ const applyActionKind = (
         routine.spec = { kind: 'instructions', instructions: previousInstructions };
       } else {
         const instructions = Instructions.make({});
-        Obj.setParent(instructions, routine);
         routine.spec = { kind: 'instructions', instructions: Ref.make(instructions) };
       }
     }

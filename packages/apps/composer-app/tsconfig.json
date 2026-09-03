@@ -127,7 +127,7 @@
       "path": "../../plugins/plugin-chess-com"
     },
     {
-      "path": "../../plugins/plugin-claude-agents"
+      "path": "../../plugins/plugin-claude"
     },
     {
       "path": "../../plugins/plugin-client"
@@ -158,6 +158,9 @@
     },
     {
       "path": "../../plugins/plugin-deck"
+    },
+    {
+      "path": "../../plugins/plugin-deepseek"
     },
     {
       "path": "../../plugins/plugin-devtools"
@@ -253,6 +256,9 @@
       "path": "../../plugins/plugin-mermaid"
     },
     {
+      "path": "../../plugins/plugin-mobile"
+    },
+    {
       "path": "../../plugins/plugin-native"
     },
     {
@@ -289,6 +295,9 @@
       "path": "../../plugins/plugin-pwa"
     },
     {
+      "path": "../../plugins/plugin-qa"
+    },
+    {
       "path": "../../plugins/plugin-registry"
     },
     {
@@ -296,6 +305,9 @@
     },
     {
       "path": "../../plugins/plugin-routine"
+    },
+    {
+      "path": "../../plugins/plugin-s3"
     },
     {
       "path": "../../plugins/plugin-sample"
@@ -320,9 +332,6 @@
     },
     {
       "path": "../../plugins/plugin-sidekick"
-    },
-    {
-      "path": "../../plugins/plugin-simple-layout"
     },
     {
       "path": "../../plugins/plugin-slack"

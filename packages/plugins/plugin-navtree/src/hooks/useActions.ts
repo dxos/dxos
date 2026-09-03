@@ -4,8 +4,8 @@
 
 import { useMemo } from 'react';
 
-import * as Graph from '@dxos/app-graph/Graph';
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useActions as useGraphActions } from '@dxos/plugin-graph/hooks';
 import { applyPresentation } from '@dxos/react-ui-menu';
@@ -22,30 +22,30 @@ const LIST_ITEM_DISPOSITIONS = ['list-item-primary', 'list-item'];
  * | 'list-item-primary']` chrome override, if any, so an action multi-targeting the toolbar
  * and the nav-tree can render appropriately in each.
  */
-export const getListActions = ({ actions, groupedActions }: NavTreeNode.FlattenedActions): Node.Action[] =>
+export const getListActions = ({ actions, groupedActions }: NavTreeNode.FlattenedActions): AppGraphNode.Action[] =>
   actions
-    .flatMap((action) => (Node.isAction(action) ? [action] : (groupedActions[action.id] ?? [])))
-    .filter((action) => Node.hasDisposition(action, LIST_ITEM_DISPOSITIONS))
+    .flatMap((action) => (AppGraphNode.isAction(action) ? [action] : (groupedActions[action.id] ?? [])))
+    .filter((action) => AppGraphNode.hasDisposition(action, LIST_ITEM_DISPOSITIONS))
     .map((action) => {
-      const surface = LIST_ITEM_DISPOSITIONS.find((disposition) => Node.hasDisposition(action, disposition));
+      const surface = LIST_ITEM_DISPOSITIONS.find((disposition) => AppGraphNode.hasDisposition(action, disposition));
       return surface ? applyPresentation(action, surface) : action;
     });
 
 /** Returns flattened actions and grouped sub-actions for a given graph node. */
-export const useActions = (node: Node.Node): NavTreeNode.FlattenedActions => {
+export const useActions = (node: AppGraphNode.Node): NavTreeNode.FlattenedActions => {
   const { graph } = useAppGraph();
   const actions = useGraphActions(graph, node.id);
 
   return useMemo(() => {
     return actions.reduce(
       (acc: NavTreeNode.FlattenedActions, arg) => {
-        if (Node.hasDisposition(arg, 'item')) {
+        if (AppGraphNode.hasDisposition(arg, 'item')) {
           return acc;
         }
 
         acc.actions.push(arg);
-        if (!Node.isAction(arg)) {
-          const actionGroup = Graph.getActions(graph, arg.id);
+        if (!AppGraphNode.isAction(arg)) {
+          const actionGroup = AppGraph.getActions(graph, arg.id);
           acc.groupedActions[arg.id] = actionGroup;
         }
         return acc;

@@ -103,6 +103,11 @@ const snapshot = (name: string): void => {
 
 let completed = 0;
 
+// Vitest's 10s hook default timed out on a suite whose heap is large enough to be worth snapshotting
+// — repeated collection plus `writeHeapSnapshot` of a multi-GB heap is minutes of work on a loaded
+// runner, and the timeout failed the file no matter what its assertions said.
+const SNAPSHOT_TIMEOUT = 300_000;
+
 // After each test: settle, then record `heapUsed`. Growth across a multi-test suite in one process
 // is the monotonicity signal — vitest 4 dropped the config-level `repeats` knob, so amplification
 // comes from the suite's own test count rather than a rerun loop. The baseline snapshot is taken
@@ -115,9 +120,9 @@ afterEach(async () => {
   if (completed === 1) {
     snapshot('before.heapsnapshot');
   }
-});
+}, SNAPSHOT_TIMEOUT);
 
 afterAll(async () => {
   await settle();
   snapshot('after.heapsnapshot');
-});
+}, SNAPSHOT_TIMEOUT);

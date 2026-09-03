@@ -12,19 +12,37 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { DisableDependentsAlert } from '#components';
-import {
-  LOAD_PLUGIN_DIALOG,
-  LoadPluginDialog,
-  PluginArticle,
-  PublicRegistryArticle,
-  RegistrySettingsContainer,
-} from '#containers';
-import { DISABLE_DEPENDENTS_DIALOG, meta } from '#meta';
+import { LoadPluginDialog, PluginArticle, PublicRegistryArticle, RegistrySettingsContainer } from '#containers';
+import { meta } from '#meta';
+import { LOAD_PLUGIN_DIALOG, type RegistryPluginOptions } from '#types';
 
+import { DISABLE_DEPENDENTS_DIALOG } from '../constants';
 import { RegistryCategoryArticle } from './RegistryCategoryArticle';
 
-export default Capability.makeModule(() =>
-  Effect.succeed(
+export default Capability.makeModule(({ externalPlugins = true }: RegistryPluginOptions = {}) => {
+  const externalPluginSurfaces = externalPlugins
+    ? [
+        Surface.create({
+          id: 'registry',
+          filter: AppSurface.literal(AppSurface.Article, 'registry'),
+          component: PublicRegistryArticle,
+          props: () => ({ id: 'registry' }),
+        }),
+        Surface.create({
+          id: LOAD_PLUGIN_DIALOG,
+          filter: AppSurface.component(AppSurface.Dialog, LOAD_PLUGIN_DIALOG),
+          component: LoadPluginDialog,
+        }),
+        Surface.create({
+          id: 'pluginSettings',
+          filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
+          component: RegistrySettingsContainer,
+          props: ({ data: { subject } }) => ({ subject }),
+        }),
+      ]
+    : [];
+
+  return Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'bundled',
@@ -51,21 +69,10 @@ export default Capability.makeModule(() =>
         props: () => ({ category: 'labs' }),
       }),
       Surface.create({
-        id: 'registry',
-        filter: AppSurface.literal(AppSurface.Article, 'registry'),
-        component: PublicRegistryArticle,
-        props: () => ({ id: 'registry' }),
-      }),
-      Surface.create({
         id: 'pluginDetails',
         filter: AppSurface.subject(AppSurface.Article, Plugin.isPlugin),
         component: PluginArticle,
         props: ({ data: { subject } }) => ({ subject }),
-      }),
-      Surface.create({
-        id: LOAD_PLUGIN_DIALOG,
-        filter: AppSurface.component(AppSurface.Dialog, LOAD_PLUGIN_DIALOG),
-        component: LoadPluginDialog,
       }),
       Surface.create({
         id: DISABLE_DEPENDENTS_DIALOG,
@@ -76,12 +83,7 @@ export default Capability.makeModule(() =>
         component: DisableDependentsAlert,
         props: ({ data: { props } }) => ({ ...props }),
       }),
-      Surface.create({
-        id: 'pluginSettings',
-        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
-        component: RegistrySettingsContainer,
-        props: ({ data: { subject } }) => ({ subject }),
-      }),
+      ...externalPluginSurfaces,
     ]),
-  ),
-);
+  );
+});

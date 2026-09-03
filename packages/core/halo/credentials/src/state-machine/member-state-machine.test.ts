@@ -23,7 +23,7 @@ describe('MemberStateMachine', () => {
   });
 
   test('compatibility with old credentials (no parent references)', async () => {
-    const stateMachine = createStateMachine();
+    const stateMachine = new MemberStateMachine(spaceKey);
     const [A, B, C, D, E] = await createPeers(5);
     await admit(stateMachine, spaceKey, A, []);
     await admit(stateMachine, A, B, []);
@@ -37,7 +37,7 @@ describe('MemberStateMachine', () => {
   });
 
   test('first member is the owner if no explicit credential', async () => {
-    const stateMachine = createStateMachine();
+    const stateMachine = new MemberStateMachine(spaceKey);
     const [A, B] = await createPeers(2);
     await admit(stateMachine, spaceKey, A, [], SpaceMember.Role.ADMIN);
     await admit(stateMachine, spaceKey, B, [], SpaceMember.Role.ADMIN);
@@ -45,7 +45,7 @@ describe('MemberStateMachine', () => {
   });
 
   test('owner removal forbidden', async () => {
-    const stateMachine = createStateMachine();
+    const stateMachine = new MemberStateMachine(spaceKey);
     const [A, B] = await createPeers(2);
     const spaceCreated = await createSpace(stateMachine, A);
     const aAdmitB = await admit(stateMachine, A, B, [spaceCreated]);
@@ -54,7 +54,7 @@ describe('MemberStateMachine', () => {
   });
 
   test('implicit owner removal forbidden', async () => {
-    const stateMachine = createStateMachine();
+    const stateMachine = new MemberStateMachine(spaceKey);
     const [A, B] = await createPeers(2);
     await admit(stateMachine, spaceKey, A, [], SpaceMember.Role.ADMIN);
     const admitB = await admit(stateMachine, spaceKey, B, [], SpaceMember.Role.ADMIN);
@@ -63,7 +63,7 @@ describe('MemberStateMachine', () => {
   });
 
   test('non-member credential ignored', async () => {
-    const stateMachine = createStateMachine();
+    const stateMachine = new MemberStateMachine(spaceKey);
     const [A, B, C] = await createPeers(3);
     const spaceCreated = await createSpace(stateMachine, A);
     await admit(stateMachine, B, C, [spaceCreated]);
@@ -75,7 +75,7 @@ describe('MemberStateMachine', () => {
   });
 
   test('non-admin admission ignored', async () => {
-    const stateMachine = createStateMachine();
+    const stateMachine = new MemberStateMachine(spaceKey);
     const [A, B, C] = await createPeers(3);
     const spaceCreated = await createSpace(stateMachine, A);
     const aAdmitB = await admit(stateMachine, A, B, [spaceCreated], SpaceMember.Role.EDITOR);
@@ -88,7 +88,7 @@ describe('MemberStateMachine', () => {
   });
 
   test('own role update forbidden', async () => {
-    const stateMachine = createStateMachine();
+    const stateMachine = new MemberStateMachine(spaceKey);
     const [A, B] = await createPeers(2);
     const spaceCreated = await createSpace(stateMachine, A);
     const aAdmitB = await admit(stateMachine, A, B, [spaceCreated], SpaceMember.Role.ADMIN);
@@ -108,7 +108,7 @@ describe('MemberStateMachine', () => {
         +-------+  +-------+  +-------+
    */
   test('leaf fork is merged', async () => {
-    const stateMachine = createStateMachine();
+    const stateMachine = new MemberStateMachine(spaceKey);
     const actors = await createPeers(4);
     const spaceCreated = await createSpace(stateMachine, actors[0]);
     for (const guest of actors.slice(1)) {
@@ -130,7 +130,7 @@ describe('MemberStateMachine', () => {
                +---------+
    */
   test('middle fork is merged', async () => {
-    const stateMachine = createStateMachine();
+    const stateMachine = new MemberStateMachine(spaceKey);
     const actors = await createPeers(5);
     const [A, B, C, D, E] = actors;
     const spaceCreated = await createSpace(stateMachine, A);
@@ -159,7 +159,7 @@ describe('MemberStateMachine', () => {
           +----------+
    */
   test('D is removed because invite was concurrent with C removal, but E is a member', async () => {
-    const stateMachine = createStateMachine();
+    const stateMachine = new MemberStateMachine(spaceKey);
     const [A, B, C, D, E] = await createPeers(5);
     const spaceCreated = await createSpace(stateMachine, A);
     const aAdmitB = await admit(stateMachine, A, B, [spaceCreated]);
@@ -193,7 +193,7 @@ describe('MemberStateMachine', () => {
           +----------+
    */
   test('E was invited in 2 branches one of which was discarded - E is a member', async () => {
-    const stateMachine = createStateMachine();
+    const stateMachine = new MemberStateMachine(spaceKey);
     const [A, B, C, D, E] = await createPeers(5);
     const spaceCreated = await createSpace(stateMachine, A);
     const aAdmitB = await admit(stateMachine, A, B, [spaceCreated]);
@@ -229,7 +229,7 @@ describe('MemberStateMachine', () => {
           +----------+   +---------+
    */
   test('D invite was discarded, but F joined', async () => {
-    const stateMachine = createStateMachine();
+    const stateMachine = new MemberStateMachine(spaceKey);
     const [A, B, C, D, E, F] = await createPeers(6);
     const spaceCreated = await createSpace(stateMachine, A);
     const aAdmitB = await admit(stateMachine, A, B, [spaceCreated]);
@@ -265,7 +265,7 @@ describe('MemberStateMachine', () => {
                                             +----------+
    */
   test('E and D are not members because C was removed in a parallel longer branch', async () => {
-    const stateMachine = createStateMachine();
+    const stateMachine = new MemberStateMachine(spaceKey);
     const [A, B, C, D, E, F, G, H] = await createPeers(8);
     const spaceCreated = await createSpace(stateMachine, A);
     const aAdmitB = await admit(stateMachine, A, B, [spaceCreated]);
@@ -310,7 +310,7 @@ describe('MemberStateMachine', () => {
         +----------+
    */
   test('F is not a member in subbranch, but becomes a member when branch with C removal is discovered', async () => {
-    const stateMachine = createStateMachine();
+    const stateMachine = new MemberStateMachine(spaceKey);
     const [A, B, C, D, E, F, G, H, I] = await createPeers(9);
     const spaceCreated = await createSpace(stateMachine, A);
     const aAdmitB = await admit(stateMachine, A, B, [spaceCreated]);
@@ -363,7 +363,7 @@ describe('MemberStateMachine', () => {
         +----------+
    */
   test('F is a member because concurrent branch gets removed by a longer branch', async () => {
-    const stateMachine = createStateMachine();
+    const stateMachine = new MemberStateMachine(spaceKey);
     const [A, B, C, D, E, F, G, H] = await createPeers(8);
     const spaceCreated = await createSpace(stateMachine, A);
     const aAdmitB = await admit(stateMachine, A, B, [spaceCreated]);
@@ -401,7 +401,7 @@ describe('MemberStateMachine', () => {
                     +----------+
    */
   test('D is removed because C was removed in a longer branch', async () => {
-    const stateMachine = createStateMachine();
+    const stateMachine = new MemberStateMachine(spaceKey);
     const [A, B, C, D, E] = await createPeers(5);
     const spaceCreated = await createSpace(stateMachine, A);
     const aAdmitB = await admit(stateMachine, A, B, [spaceCreated]);
@@ -433,7 +433,7 @@ describe('MemberStateMachine', () => {
            +----------+  +---------+
    */
   test('D is removed because D auth was authorized by a credential revoked in a concurrent branch', async () => {
-    const stateMachine = createStateMachine();
+    const stateMachine = new MemberStateMachine(spaceKey);
     const [A, B, C, D] = await createPeers(4);
     const spaceCreated = await createSpace(stateMachine, A);
     const aAdmitB = await admit(stateMachine, A, B, [spaceCreated]);
@@ -490,7 +490,7 @@ describe('MemberStateMachine', () => {
     };
     const branches = [addLeftBranch, addRightBranch];
     for (const firstBranch of [0, 1]) {
-      const stateMachine = createStateMachine();
+      const stateMachine = new MemberStateMachine(spaceKey);
       const spaceCreated = await createSpace(stateMachine, A);
       const connectorParent1 = await branches[firstBranch](stateMachine, spaceCreated);
       const connectorParent2 = await branches[1 - firstBranch](stateMachine, spaceCreated);
@@ -527,14 +527,14 @@ describe('MemberStateMachine', () => {
     role?: SpaceMember.Role,
   ): Promise<PublicKey> => {
     const signer = createCredentialSignerWithKey(keyring, host);
-    const feedMessage = await createAdmissionCredentials(
+    const feedMessage = await createAdmissionCredentials({
       signer,
-      guest,
+      identityKey: guest,
       spaceKey,
       genesisFeedKey,
-      role ?? SpaceMember.Role.ADMIN,
-      parents,
-    );
+      role: role ?? SpaceMember.Role.ADMIN,
+      membershipChainHeads: parents,
+    });
     const credential = feedMessage[0].credential!.credential;
     await stateMachine.process(credential);
     return feedMessage[0].credential!.credential.id!;
@@ -547,22 +547,20 @@ describe('MemberStateMachine', () => {
     parents?: PublicKey[],
   ): Promise<PublicKey> => {
     const signer = createCredentialSignerWithKey(keyring, remover);
-    const feedMessage = await createAdmissionCredentials(
+    const feedMessage = await createAdmissionCredentials({
       signer,
-      removed,
+      identityKey: removed,
       spaceKey,
       genesisFeedKey,
-      SpaceMember.Role.REMOVED,
-      parents,
-    );
+      role: SpaceMember.Role.REMOVED,
+      membershipChainHeads: parents,
+    });
     const credential = feedMessage[0].credential!.credential;
     await stateMachine.process(credential);
     return feedMessage[0].credential!.credential.id!;
   };
 
   const createPeers = (count: number) => Promise.all(range(count).map(() => keyring.createKey()));
-
-  const createStateMachine = () => new MemberStateMachine(spaceKey);
 
   const expectOwnerAndAdmins = (stateMachine: MemberStateMachine, ownerAndAdmins: PublicKey[]) => {
     expectRoles(stateMachine, [

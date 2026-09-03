@@ -21,6 +21,8 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.0`         |
+| `op@1.1`    | `org.dxos.mdl.op@1.1`         |
+| `flow`      | `org.dxos.mdl.flow@1.0`       |
 
 ## Types
 
@@ -147,6 +149,7 @@ component DeckSettings
 
 ```mdl
 op Open
+  key: org.dxos.operation.appToolkit.open
   desc: |
     Opens one or more subjects (item IDs or navigation paths) in the deck.
     `disposition` places them (see F-7): 'solo' — the default — navigates, so the deck becomes just
@@ -181,6 +184,7 @@ op Open
 
 ```mdl
 op Close
+  key: org.dxos.operation.appToolkit.close
   desc: |
     Removes one or more subjects from the active deck.
     Computes which plank (if any) should receive attention after removal and
@@ -194,6 +198,7 @@ op Close
 
 ```mdl
 op UpdateSidebar
+  key: org.dxos.operation.appToolkit.updateSidebar
   desc: Update the sidebar visibility state (closed / collapsed / expanded).
   input:
     state?: closed | collapsed | expanded
@@ -204,6 +209,7 @@ op UpdateSidebar
 
 ```mdl
 op UpdateComplementary
+  key: org.dxos.operation.appToolkit.updateComplementary
   desc: Update the complementary-sidebar visibility state and optional panel selection.
   input:
     state?: closed | collapsed | expanded
@@ -215,6 +221,7 @@ op UpdateComplementary
 
 ```mdl
 op UpdateDialog
+  key: org.dxos.operation.appToolkit.updateDialog
   desc: |
     Show or hide the global dialog overlay. Accepts a surface component identifier
     or a boolean state flag. Propagates to EphemeralDeckState.
@@ -232,6 +239,7 @@ op UpdateDialog
 
 ```mdl
 op UpdatePopover
+  key: org.dxos.operation.appToolkit.updatePopover
   desc: |
     Show or hide the global popover. Accepts anchor, content reference, or
     an explicit subject reference.
@@ -249,6 +257,7 @@ op UpdatePopover
 
 ```mdl
 op UpdateCompanion
+  key: org.dxos.operation.appToolkit.updateCompanion
   desc: Update the companion-pane open state and active variant.
   input:
     open?: boolean
@@ -260,6 +269,7 @@ op UpdateCompanion
 
 ```mdl
 op AdjustPlank
+  key: org.dxos.operation.deck.adjust
   desc: |
     Apply a PartAdjustment to a specific plank (close, fullscreen, move, companion). 'fullscreen'
     toggles EphemeralDeckState.fullscreen for the given plank rather than mutating active.
@@ -274,6 +284,7 @@ op AdjustPlank
 
 ```mdl
 op UpdatePlankSize
+  key: org.dxos.operation.deck.updatePlankSize
   desc: Persist the width of a plank in rem.
   input:
     id: string
@@ -297,6 +308,7 @@ op UpdateTilingSize
 
 ```mdl
 op AddToast
+  key: org.dxos.operation.appToolkit.addToast
   desc: Push a toast notification into the ephemeral queue.
   input:
     title?: string
@@ -309,6 +321,7 @@ op AddToast
 
 ```mdl
 op ScrollIntoView
+  key: org.dxos.operation.appToolkit.scrollIntoView
   desc: Schedule a subject to be scrolled into view when its plank mounts.
   input:
     subject: string
@@ -319,6 +332,7 @@ op ScrollIntoView
 
 ```mdl
 op SwitchWorkspace
+  key: org.dxos.operation.appToolkit.switchWorkspace
   desc: Switch the active workspace deck, persisting the previous workspace ID.
   input:
     subject: string               # workspace ID to switch to
@@ -329,6 +343,7 @@ op SwitchWorkspace
 
 ```mdl
 op RevertWorkspace
+  key: org.dxos.operation.appToolkit.revertWorkspace
   desc: Revert to the previously active workspace.
   input: void
   output: void
@@ -740,6 +755,90 @@ test T-15: Breadcrumb click goes back
   then:
     - Close is dispatched for [B, C]
     - the active stack becomes [A] and plank A renders
+```
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+plugin-deck is core layout infrastructure — it ships with every profile and is never toggled off.
+
+```mdl
+flow QA-1: Open, resize, and close a second plank
+  desc: The core deck round-trip — open a document beside an existing plank, resize the tiling split, close it.
+  actors: agent
+  covers: [F-1.1, F-1.6, F-3.1, T-1]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - doc1: a Markdown document named "QA Deck Doc 1" already exists and is open as the sole plank
+  test:
+    - name: Create a second document
+      do: In the navtree, click + on a collection and choose Markdown. Name it "QA Deck Doc 2".
+      invoke: org.dxos.operation.markdown.createDraft { name: "QA Deck Doc 2", content: "# QA Deck Doc 2\n" }
+      capture: created
+      expect: a Document named "QA Deck Doc 2" now exists
+      assert: return !!$created.object
+    - name: Place it in the collection
+      do: (the navtree create action places it for you)
+      invoke: org.dxos.operation.space.addObject { object: $created.object, target: $given.collection }
+      expect: "QA Deck Doc 2" appears as a row under the collection
+    - name: Open it beside the first plank
+      do: Click "QA Deck Doc 2" in the navtree while holding Shift.
+      invoke: [op:Open] { subject: ["root/$given.space.id/content/collections/$created.object.id"], modifiers: { shift: true }, pivotId: $given.doc1.id }
+      capture: opened
+      expect: the deck now shows two planks, tiling side by side, "QA Deck Doc 2" alongside the first
+      assert: return $opened.length > 0
+      note: |
+        No explicit `disposition` — the step exercises Shift forwarding (F-1.6, F-1.8): `open.ts`
+        reads `input.modifiers?.shift` and forces an add regardless of disposition, so leaving
+        disposition at its `solo` default and setting `modifiers: { shift: true }` is what actually
+        tests the shift-forces-add rule, not a hard-coded `disposition: "add"`.
+    - name: Resize the tiling split
+      do: Drag the hairline divider between the two planks.
+      invoke: [op:UpdateTilingSize] { size: 40 }
+      expect: the split persists at the new ratio and survives a reload
+  after:
+    - name: Close the second plank
+      do: Click the close control on "QA Deck Doc 2"'s plank.
+      invoke: [op:Close] { subject: [$created.object.id] }
+      expect: the deck returns to a single plank (fullbleed), "QA Deck Doc 2"'s plank is gone
+    - name: Delete the second document
+      do: Right-click "QA Deck Doc 2" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.collection }
+      expect: the row leaves the navtree
+```
+
+```mdl
+flow QA-2: Sidebar and companion toggles
+  desc: The chrome operations outside the deck itself — sidebar visibility and the companion pane.
+  actors: agent
+  covers: [F-3.1, F-3.2]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+  test:
+    - name: Collapse the sidebar
+      do: Click the sidebar toggle in the top-left corner.
+      invoke: [op:UpdateSidebar] { state: "collapsed" }
+      expect: the navtree sidebar collapses to its icon rail
+    - name: Expand the sidebar again
+      do: Click the sidebar toggle again.
+      invoke: [op:UpdateSidebar] { state: "expanded" }
+      expect: the navtree sidebar is fully visible again
+    - name: Open the companion pane
+      do: Click the companion toggle for the attended plank.
+      invoke: [op:UpdateCompanion] { open: true }
+      expect: a companion pane opens beside the attended plank
+  after:
+    - name: Close the companion pane
+      do: Click the companion toggle again.
+      invoke: [op:UpdateCompanion] { open: false }
+      expect: the companion pane closes
 ```
 
 ---

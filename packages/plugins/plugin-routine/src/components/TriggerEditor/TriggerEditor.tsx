@@ -208,7 +208,6 @@ export const applyTriggerValues = (
     });
   } else {
     const created = Trigger.make({ spec, enabled, remote });
-    Obj.setParent(created, routine);
     Obj.update(routine, (routine) => {
       routine.triggers.push(Ref.make(created));
     });

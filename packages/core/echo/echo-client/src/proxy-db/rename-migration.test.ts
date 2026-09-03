@@ -7,6 +7,7 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Filter, Migration, Obj, Ref, Type } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
 import { getObjectCore } from '../echo-handler';
@@ -171,7 +172,11 @@ describe('rename migration', () => {
   });
 });
 
-const documentHeads = (object: Obj.Unknown) => A.getHeads(getObjectCore(object).docHandle!.doc());
+const documentHeads = (object: Obj.Unknown) => {
+  const { docHandle } = getObjectCore(object);
+  invariant(docHandle, 'Object has no docHandle.');
+  return A.getHeads(docHandle.doc());
+};
 
 const makeTrigger = () =>
   Obj.make(Trigger, {

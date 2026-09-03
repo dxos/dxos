@@ -4,6 +4,10 @@
 
 import './suppress-storybook-deprecation-warnings';
 
+import { installSelfHeal } from './self-heal';
+
+installSelfHeal();
+
 // Suppress Lit dev mode warning (https://lit.dev/msg/dev-mode).
 // Pre-populating this set prevents Lit from issuing the warning on load.
 (globalThis as any).litIssuedWarnings ??= new Set();
@@ -15,7 +19,12 @@ import './cubes.css';
 import { withThemeByClassName } from '@storybook/addon-themes';
 import { type Preview } from '@storybook/react-vite';
 
+import { StorybookErrorFallback } from '@dxos/storybook-addon-logger/StorybookErrorFallback';
+
 import { docsTheme } from './theme';
+
+// Restores the "Download logs" action on a crashed story.
+globalThis.__STORY_ERROR_FALLBACK__ = StorybookErrorFallback;
 
 /**
  * Configure Storybook rendering.

@@ -5,11 +5,14 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
-import { expect, waitFor, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
+import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
@@ -19,8 +22,31 @@ import { translations as reactUiTranslations } from '@dxos/react-ui/translations
 import { Milestone, Person, Task, TaskSet } from '@dxos/types';
 
 import { translations } from '#translations';
+import { TasksCapabilities } from '#types';
 
+import * as TasksPlugin from '../../TasksPlugin';
 import { TaskSetArticle } from './TaskSetArticle';
+
+/**
+ * Stands in for plugin-projects' `delegate-to-chat` contribution — plugin-tasks cannot depend on it
+ * (the dependency runs the other way), and what the article gates the checkbox on is that SOME
+ * plugin contributed an action, not which one.
+ */
+const StoryTaskActionPlugin = Plugin.define(
+  Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.tasks.story.taskAction'), name: 'Story Task Action' }),
+).pipe(
+  Plugin.addModule({
+    id: 'task-action',
+    provides: [TasksCapabilities.TaskAction],
+    activate: () =>
+      Effect.succeed([
+        Capability.contributeAll(TasksCapabilities.TaskAction, [
+          { id: 'story-action', label: 'Story action', icon: 'ph--sparkle--regular', createInvocations: () => [] },
+        ]),
+      ]),
+  }),
+  Plugin.make,
+);
 
 /** Kept so a play function can mutate the source objects and assert the article follows. */
 let seeded: { space: Space; taskSet: TaskSet.TaskSet; roasting: Milestone.Milestone } | undefined;
@@ -43,14 +69,14 @@ const seedTaskSet = (space: Space) => {
     },
     {
       title: 'Finalize roast curve',
-      status: 'in-progress',
+      status: 'started',
       priority: 'high',
       assignee: { contact: Ref.make(kai) },
       milestone: Ref.make(roasting),
     },
     {
       title: 'Draft launch email',
-      status: 'in-progress',
+      status: 'started',
       assignee: { role: 'assistant', name: 'Scout' },
       milestone: Ref.make(launch),
     },
@@ -61,19 +87,23 @@ const seedTaskSet = (space: Space) => {
       assignee: { email: 'riley@example.com' },
       milestone: Ref.make(launch),
     },
-    { title: 'Schedule cuppings', status: 'todo' },
-    { title: 'Print run v1', status: 'cancelled' },
+    {
+      title: 'Schedule cuppings',
+      status: 'todo',
+    },
+    {
+      title: 'Print run v1',
+      status: 'cancelled',
+    },
   ];
-  // Membership and order are the set's arrays; the parent edge rides along for cascade.
+
   for (const props of seed) {
     const task = space.db.add(Task.make(props));
-    Obj.setParent(task, set);
     Obj.update(set, (set) => {
       set.tasks = [...set.tasks, Ref.make(task)];
     });
   }
   for (const milestone of [roasting, launch]) {
-    Obj.setParent(milestone, set);
     Obj.update(set, (set) => {
       set.milestones = [...set.milestones, Ref.make(milestone)];
     });
@@ -91,7 +121,7 @@ const DefaultStory = () => {
   }
 
   return (
-    <div className='dx-container w-full h-full'>
+    <div className='dx-expand'>
       <TaskSetArticle role='article' subject={taskSet} attendableId='story' />
     </div>
   );
@@ -120,6 +150,10 @@ const meta = {
             }),
         }),
         StorybookPlugin.make({}),
+        // The plugin itself, so its OperationHandler module contributes the task verbs —
+        // without it every invoke (move included) dies with NoHandlerError.
+        TasksPlugin.make(),
+        StoryTaskActionPlugin(),
       ],
     }),
   ],
@@ -137,9 +171,49 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /**
- * The set resolves into one flat list and stays live afterwards. Membership is the `tasks` array,
- * so each mutation below is the one that would go stale if the view were cached. Milestones are
- * seeded but deliberately not rendered yet (see TASKS.md) — the list is every task in the set.
+ * The gutter's checkbox is selection, not a status write: it marks which rows a contributed action
+ * will act on, and it is offered only because a plugin contributed one (`StoryTaskActionPlugin`).
+ *
+ * The set lives in `react-ui-attention` view state under the task set's own id, so the article
+ * neither owns it nor holds a copy — which is what lets an embedding toolbar read the same set.
+ */
+export const Checkboxes: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.findByText('Source green coffee', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+
+    const boxes = () =>
+      Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item.checkbox"]'));
+    await waitFor(() => expect(boxes().length).toBeGreaterThan(1), { timeout: 10_000 });
+
+    await userEvent.click(boxes()[0]);
+    await waitFor(() => expect(boxes()[0]).toHaveAttribute('data-state', 'checked'), { timeout: 10_000 });
+
+    // A set, not a single selection.
+    await userEvent.click(boxes()[1]);
+    await waitFor(() => expect(boxes()[1]).toHaveAttribute('data-state', 'checked'), { timeout: 10_000 });
+    await expect(boxes()[0]).toHaveAttribute('data-state', 'checked');
+
+    // Selection only: the row's status control is untouched, which is what completes a task.
+    const context = seeded;
+    if (!context) {
+      throw new Error('The story did not seed a task set.');
+    }
+    await expect(TaskSet.resolveTasks(context.taskSet).map((task) => task.status)).toEqual([
+      'done',
+      'started',
+      'started',
+      'todo',
+      'todo',
+      'cancelled',
+    ]);
+  },
+};
+
+/**
+ * The set resolves into one flat list and stays live afterwards — each mutation below is the one
+ * that would go stale if the view were cached. Milestones are seeded but deliberately not rendered
+ * yet (see TASKS.md).
  */
 export const Behavior: Story = {
   play: async ({ canvasElement }) => {
@@ -158,11 +232,11 @@ export const Behavior: Story = {
     }
     const { space, taskSet, roasting } = context;
 
-    // Updates — membership: a task appended to the array joins the list.
+    // Updates — membership: appending to the array parents the task to the set, joining it to the
+    // `childOf` query.
     const added = space.db.add(
       Task.make({ title: 'Order sample bags', status: 'todo', milestone: Ref.make(roasting) }),
     );
-    Obj.setParent(added, taskSet);
     Obj.update(taskSet, (taskSet) => {
       taskSet.tasks = [...taskSet.tasks, Ref.make(added)];
     });
@@ -175,10 +249,27 @@ export const Behavior: Story = {
     });
     await expect(canvas.findByText('Order sample bags (v2)', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
 
-    // Updates — removal: dropping the ref takes the row with it.
-    Obj.update(taskSet, (taskSet) => {
-      taskSet.tasks = taskSet.tasks.filter((ref) => ref.target?.id !== added.id);
+    const cuppings = TaskSet.resolveTasks(taskSet).find((task) => task.title === 'Schedule cuppings')!;
+    const label = TaskSet.resolveTasks(taskSet).find((task) => task.title === 'Design label')!;
+    Obj.update(cuppings, (cuppings) => {
+      cuppings.parentTask = Ref.make(label);
     });
+    await flushRender();
+    // `treeitem`, not `option`: the list renders through `Tree` now, and `aria-level` sits on the
+    // branch wrapper the row is nested in (see react-ui-list/docs/TREE.md §10).
+    await expect(canvas.getByText('Schedule cuppings').closest('[role="treeitem"]')).toHaveAttribute('aria-level', '2');
+
+    // Updates — removal: an array splice alone does not unlist a task (membership is the parent
+    // edge) — deleting it does.
+    TaskSet.deleteTask(space.db, taskSet, added);
     await waitFor(() => expect(canvas.queryByText('Order sample bags (v2)')).toBeNull(), { timeout: 10_000 });
   },
 };
+
+/** Frames enough for React to flush a subscription, far short of an index round trip. */
+const flushRender = (): Promise<void> =>
+  new Promise((resolve) => {
+    let remaining = 3;
+    const tick = () => (remaining-- > 0 ? requestAnimationFrame(tick) : resolve());
+    tick();
+  });

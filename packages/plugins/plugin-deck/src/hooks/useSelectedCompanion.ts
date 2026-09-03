@@ -4,14 +4,14 @@
 
 import { useMemo } from 'react';
 
-import type * as Node from '@dxos/app-graph/Node';
-import { Attention } from '@dxos/react-ui-attention';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import { Attention } from '@dxos/react-ui-attention/types';
 
 /**
  * Resolves which companion to show based on variant preference.
  * Falls back to first available if preferred variant not found.
  */
-export const useSelectedCompanion = (companions: Node.Node[], preferredVariant?: string) => {
+export const useSelectedCompanion = (companions: AppGraphNode.Node[], preferredVariant?: string) => {
   return useMemo(() => {
     if (companions.length === 0) {
       return { companionId: undefined, variant: undefined };

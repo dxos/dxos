@@ -19,6 +19,9 @@
   ],
   "references": [
     {
+      "path": "../../common/graph"
+    },
+    {
       "path": "../../common/log"
     },
     {

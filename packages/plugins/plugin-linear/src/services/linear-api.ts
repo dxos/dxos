@@ -122,30 +122,30 @@ const PageInfoSchema = Schema.Struct({
  */
 export class LinearCredentials extends Context.Service<LinearCredentials, LinearCredentialsValue>()(
   '@dxos/plugin-linear/LinearCredentials',
-) {
-  static fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
-    Layer.effect(
-      LinearCredentials,
-      Effect.gen(function* () {
-        const connection = yield* Database.load(connectionRef);
-        const accessToken = yield* Database.load(connection.accessToken);
-        return { token: accessToken.token };
-      }),
-    );
+) {}
 
-  /**
-   * Loads the access token directly and returns its `token` value. Used by callers that only have
-   * an external-sync cursor's `spec.source` — the cursor no longer relates to `Connection`.
-   */
-  static fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>) =>
-    Layer.effect(
-      LinearCredentials,
-      Effect.gen(function* () {
-        const accessToken = yield* Database.load(accessTokenRef);
-        return { token: accessToken.token };
-      }),
-    );
-}
+export const fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
+  Layer.effect(
+    LinearCredentials,
+    Effect.gen(function* () {
+      const connection = yield* Database.load(connectionRef);
+      const accessToken = yield* Database.load(connection.accessToken);
+      return { token: accessToken.token };
+    }),
+  );
+
+/**
+ * Loads the access token directly and returns its `token` value. Used by callers that only have
+ * an external-sync cursor's `spec.source` — the cursor no longer relates to `Connection`.
+ */
+export const fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>) =>
+  Layer.effect(
+    LinearCredentials,
+    Effect.gen(function* () {
+      const accessToken = yield* Database.load(accessTokenRef);
+      return { token: accessToken.token };
+    }),
+  );
 
 //
 // Request pipeline
@@ -446,10 +446,10 @@ export const fetchTeamIssues = (teamId: string, options: { since?: string } = {}
  * mapping is intentionally lossy and one-way — we don't push status back, so
  * round-trip ambiguity isn't an issue in pull-only mode.
  */
-export const stateTypeToTaskStatus = (type: StateType): 'todo' | 'in-progress' | 'done' => {
+export const stateTypeToTaskStatus = (type: StateType): 'todo' | 'started' | 'done' => {
   switch (type) {
     case 'started':
-      return 'in-progress';
+      return 'started';
     case 'completed':
     case 'canceled':
       return 'done';
@@ -478,6 +478,59 @@ export const priorityNumberToTaskPriority = (
       return 'medium';
     case 4:
       return 'low';
+    default:
+      return undefined;
+  }
+};
+
+/**
+ * Linear estimates are story points on a per-team scale (commonly Fibonacci:
+ * 1, 2, 3, 5, 8). `Task.estimate` is a t-shirt size, because a size is what a
+ * reader can agree on without knowing the team's scale.
+ *
+ * The buckets are the Fibonacci points each size is usually written as, with
+ * anything larger folding into `xl` — an 800-point issue is not a new size, it
+ * is the same "very large". Returns undefined for 0 or absent, so the field
+ * stays empty rather than reading as a deliberate `xs`.
+ */
+export const estimatePointsToTaskEstimate = (points: number | undefined): Task.Estimate | undefined => {
+  if (points === undefined || points <= 0) {
+    return undefined;
+  }
+  if (points <= 1) {
+    return 'xs';
+  }
+  if (points <= 2) {
+    return 's';
+  }
+  if (points <= 3) {
+    return 'm';
+  }
+  if (points <= 5) {
+    return 'l';
+  }
+  return 'xl';
+};
+
+/**
+ * Reverse of {@link estimatePointsToTaskEstimate}. Each size pushes the
+ * representative point value of its bucket, so a round-trip is stable: a size
+ * that came from 5 goes back as 5, and one that came from 13 goes back as 8.
+ * That last case is lossy by construction — the size does not carry which
+ * large number it was — and is why a local edit is what triggers the push.
+ */
+export const taskEstimateToEstimatePoints = (estimate: Task.Estimate | undefined): number | undefined => {
+  switch (estimate) {
+    case 'xs':
+      return 1;
+    case 's':
+      return 2;
+    case 'm':
+      return 3;
+    case 'l':
+      return 5;
+    case 'xl':
+      return 8;
     default:
       return undefined;
   }
@@ -514,7 +567,7 @@ export const taskPriorityToPriorityNumber = (
  * push we pick a single canonical Linear state-type per Task status:
  *
  * - `todo`        → `unstarted`
- * - `in-progress` → `started`
+ * - `started` → `started`
  * - `done`        → `completed`
  * - `failed`      → `canceled` (Linear has no failure category)
  * - `cancelled`   → `canceled`
@@ -524,7 +577,7 @@ export const taskPriorityToPriorityNumber = (
  */
 export const taskStatusToStateType = (status: NonNullable<Task.Task['status']>): StateType => {
   switch (status) {
-    case 'in-progress':
+    case 'started':
       return 'started';
     case 'done':
       return 'completed';

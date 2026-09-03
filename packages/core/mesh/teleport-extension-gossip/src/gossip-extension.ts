@@ -5,7 +5,7 @@
 import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols/proto';
+import { getBufService } from '@dxos/protocols/buf-service';
 import { type GossipMessage, type GossipService } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { type ExtensionContext, type TeleportExtension } from '@dxos/teleport';
@@ -38,10 +38,10 @@ export class GossipExtension implements TeleportExtension {
 
     this._rpc = createProtoRpcPeer<ServiceBundle, ServiceBundle>({
       requested: {
-        GossipService: schema.getService('dxos.mesh.teleport.gossip.GossipService'),
+        GossipService: getBufService<GossipService>('dxos.mesh.teleport.gossip.GossipService'),
       },
       exposed: {
-        GossipService: schema.getService('dxos.mesh.teleport.gossip.GossipService'),
+        GossipService: getBufService<GossipService>('dxos.mesh.teleport.gossip.GossipService'),
       },
       handlers: {
         GossipService: {

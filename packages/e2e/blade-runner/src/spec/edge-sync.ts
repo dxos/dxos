@@ -75,11 +75,11 @@ export class EdgeSync implements TestPlan<EdgeTestSpec, EdgeSyncResult> {
           services: {
             agentHosting: {
               type: 'AGENTHOSTING_API',
-              // server: 'https://edge.dxos.workers.dev/v1alpha1/',
+              // server: 'https://dev.dxos.network/v1alpha1/',
               server: 'http://localhost:8787/v1alpha1/',
             },
             edge: {
-              // url: 'https://edge.dxos.workers.dev',
+              // url: 'https://dev.dxos.network',
               url: 'http://localhost:8787',
             },
           },

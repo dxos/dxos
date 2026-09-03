@@ -201,7 +201,7 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
         <Panel.Content>
           <div className='grid h-full grid-rows-[auto_1fr] gap-3 overflow-hidden'>
             <ObjectForm object={subject} type={Blog.Publication} showTags={false} />
-            <div className='dx-container'>
+            <div className='dx-expand'>
               {mode === 'gallery' ? (
                 <Masonry.Root Tile={PostTile}>
                   <Masonry.Content>

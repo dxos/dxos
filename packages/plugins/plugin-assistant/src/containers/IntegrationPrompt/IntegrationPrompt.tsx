@@ -15,6 +15,10 @@ import { meta } from '#meta';
 export type IntegrationPromptProps = {
   /** Service the agent needs access to, e.g. `gmail.com`. */
   service?: string;
+  /** Permissions the credential must grant, e.g. `['Contents: read and write']`. */
+  scopes?: string[];
+  /** One sentence on why the agent needs the service. */
+  reason?: string;
 };
 
 /**
@@ -23,7 +27,7 @@ export type IntegrationPromptProps = {
  * the shared connector-auth menu, so the user can grant access inline instead of the agent failing
  * silently.
  */
-export const IntegrationPrompt = ({ service }: IntegrationPromptProps) => {
+export const IntegrationPrompt = ({ service, scopes, reason }: IntegrationPromptProps) => {
   const { t } = useTranslation(meta.profile.key);
   const space = useActiveSpace();
   const connectors = useCapabilities(ConnectorSpec.Connector).flat();
@@ -43,12 +47,24 @@ export const IntegrationPrompt = ({ service }: IntegrationPromptProps) => {
         <Flex column classNames='min-w-0'>
           <p className='text-sm font-medium truncate'>{t('integration-prompt.title', { service: label })}</p>
           <p className='text-sm text-subdued'>
+            {/* With no connector matched, nothing can satisfy the request, so the unavailable
+                message outranks the agent's reason. */}
             {connectorIds.length > 0
-              ? t('integration-prompt.description', { service: label })
+              ? (reason ?? t('integration-prompt.description', { service: label }))
               : t('integration-prompt.unavailable', { service: label })}
           </p>
         </Flex>
       </Flex>
+      {scopes && scopes.length > 0 && (
+        <div>
+          <p className='text-sm text-subdued'>{t('integration-prompt.scopes')}</p>
+          <ul className='text-sm text-subdued list-disc list-inside'>
+            {scopes.map((scope) => (
+              <li key={scope}>{scope}</li>
+            ))}
+          </ul>
+        </div>
+      )}
       {connectorIds.length > 0 && (
         <Flex justify='end'>
           <ConnectorAuthMenu connectorIds={connectorIds} db={space?.db} />

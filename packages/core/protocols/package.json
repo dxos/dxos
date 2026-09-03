@@ -42,6 +42,14 @@
       "browser": "./dist/src/buf/shape-compat.js",
       "import": "./dist/src/buf/shape-compat.js"
     },
+    "./buf-service": {
+      "browser": "./dist/src/buf/service.js",
+      "import": "./dist/src/buf/service.js"
+    },
+    "./buf-registry": {
+      "browser": "./dist/src/buf/registry.js",
+      "import": "./dist/src/buf/registry.js"
+    },
     "./buf/*": {
       "browser": "./dist/src/buf/proto/gen/*.js",
       "import": "./dist/src/buf/proto/gen/*.js"
@@ -61,7 +69,8 @@
     "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/timeframe": "workspace:*"
+    "@dxos/timeframe": "workspace:*",
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@bufbuild/buf": "catalog:",

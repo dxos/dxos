@@ -184,7 +184,6 @@ const SettingsDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: (
  */
 const Rail = ({ side }: { side: 'l0' | 'r0' }) => (
   <div
-    role='none'
     className={mx(
       'shrink-0 grid grid-rows-[1fr_min-content] place-items-center py-2 w-(--dx-rail-size)',
       side === 'l0' ? 'dx-l0-surface' : 'dx-r0-surface',

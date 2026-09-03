@@ -8,9 +8,10 @@ import * as Skill from '@dxos/compute/Skill';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
-import { translations as assistantTranslations } from '@dxos/react-ui-assistant';
+import { translations as assistantTranslations } from '@dxos/react-ui-assistant/translations';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
+import { translations as taskTranslations } from '@dxos/react-ui-task/translations';
 
 import { meta } from '#meta';
 
@@ -18,6 +19,7 @@ export const translations: Resource[] = [
   ...assistantTranslations,
   ...componentsTranslations,
   ...formTranslations,
+  ...taskTranslations,
   {
     'en-US': {
       [Type.getTypename(Skill.Skill)]: {
@@ -83,6 +85,7 @@ export const translations: Resource[] = [
       },
       // TODO(burdon): Reconcile with react-ui-chat.
       [meta.profile.key]: {
+        'delete-task.label': 'Delete task',
         'templates.label': 'Templates',
         'open-ambient-chat.label': 'Open Assistant',
         'assistant-chat.label': 'Assistant',
@@ -122,6 +125,7 @@ export const translations: Resource[] = [
         'no-results.message': 'No results',
 
         'cancel.button': 'Cancel',
+        'cancel-queued.button': 'Remove from queue',
         'save.button': 'Save',
         'new-thread.button': 'New Chat',
         'rename-thread.button': 'Rename Chat',
@@ -139,25 +143,23 @@ export const translations: Resource[] = [
         'integration-prompt.title': 'Connect {{service}}',
         'integration-prompt.description': 'This action needs access to {{service}}. Connect it to continue.',
         'integration-prompt.unavailable': 'No connector is available for {{service}}.',
+        'integration-prompt.scopes': 'Permissions needed:',
+
+        'plugin-prompt.title': 'Enable {{plugin}}',
+        'plugin-prompt.description': 'This action needs the {{plugin}} plugin. Enable it to continue.',
+        'plugin-prompt.enabled': '{{plugin}} is enabled.',
+        'plugin-prompt.unavailable': '{{plugin}} is not installed on this device.',
+        'plugin-prompt.failed': 'Could not enable {{plugin}}. Try again from the plugin registry.',
+        'plugin-prompt.button': 'Enable',
 
         'search.placeholder': 'Search...',
         'prompt.placeholder': 'Enter question or command...',
         'context-objects.button': 'Add to context',
         'context-settings.button': 'Chat settings',
-        'microphone.button': 'Click to speak',
-        'microphone-denied.label': 'Microphone blocked — allow access in system settings',
-        'recording.placeholder': 'Recording…',
-        'stop-recording.label': 'Stop recording',
-        'hold-to-record.label': 'Hold to record',
-        'start-recording.label': 'Start recording',
-        'recording-options.label': 'Recording options',
-        'record-mode.label': 'Record mode',
-        'record-mode.toggle.label': 'Toggle',
-        'record-mode.hold.label': 'Hold (push-to-talk)',
-        'audio-device.label': 'Microphone',
-        'audio-device.default.label': 'System default',
-        'settings.entity-extraction.label': 'Entity extraction',
+        'send.label': 'Send',
         'cancel-processing.button': 'Stop processing',
+        'show-tasks.button': 'Show tasks',
+        'hide-tasks.button': 'Hide tasks',
 
         'options.skills.title': 'Skills',
         'options.mcp.title': 'MCP',

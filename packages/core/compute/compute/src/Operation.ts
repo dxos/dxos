@@ -91,7 +91,7 @@ export interface Definition<I, O, S = any> extends Pipeable.Pipeable, Definition
    * Effect services required by this operation.
    * These services will be automatically provided to the handler at invocation time.
    */
-  readonly services: readonly Context.Key<any, any>[];
+  readonly services: readonly Context.Key<S, unknown>[];
 }
 
 /**
@@ -910,7 +910,7 @@ const _migration = Migration.define({
     name: from.name,
     description: from.description,
     updated: from.updated,
-    source: from.source as any,
+    source: from.source,
     inputSchema: from.inputSchema,
     outputSchema: from.outputSchema,
     services: from.services,

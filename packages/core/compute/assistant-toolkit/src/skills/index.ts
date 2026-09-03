@@ -3,7 +3,6 @@
 //
 
 export * from './agent';
-export * from './agent-wizard';
 export * from './alarm';
 export * from './automation';
 export * from './skill-manager';
@@ -12,5 +11,4 @@ export * from './chat-context';
 export * from './delegation';
 export * from './memory';
 export * from './planning';
-export * from './project';
 export * from './websearch';

@@ -25,7 +25,7 @@ export const useGraphModel = (
       return;
     }
 
-    const newModel = new SpaceGraphModel(registry);
+    const newModel = new SpaceGraphModel({ registry });
     void newModel.open(db);
     setModel(newModel);
 

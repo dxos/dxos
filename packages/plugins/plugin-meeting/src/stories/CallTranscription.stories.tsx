@@ -116,7 +116,7 @@ const CallTranscriptionView = ({ meeting, transcript }: CallTranscriptionViewPro
   }, [callManager, roomId]);
 
   return (
-    <div className='dx-container flex flex-col gap-2'>
+    <div className='dx-expand flex flex-col gap-2'>
       <Toolbar.Root>
         <IconButton
           icon='ph--phone-call--regular'
@@ -124,18 +124,18 @@ const CallTranscriptionView = ({ meeting, transcript }: CallTranscriptionViewPro
           disabled={!callManager}
           onClick={handleStartCall}
         />
-        {/* TODO(burdon): Replace with MicButton. */}
+        {/* TODO(burdon): Replace with SystemIconButton.Mic. */}
         <IconButton
           icon={recording ? 'ph--stop--regular' : 'ph--microphone--regular'}
           label={recording ? 'Stop transcription' : 'Start transcription'}
           onClick={toggleRecording}
         />
       </Toolbar.Root>
-      <div className='grid grid-cols-2 gap-2 grow min-h-0'>
-        <div className='dx-expander'>
+      <div className='grid grid-cols-2 gap-2 dx-grow'>
+        <div className='dx-expand'>
           <Surface.Surface type={AppSurface.Article} data={{ subject: { roomId }, attendableId: roomId }} limit={1} />
         </div>
-        <div className='dx-expander'>
+        <div className='dx-expand'>
           <Surface.Surface
             type={AppSurface.Article}
             data={{ subject: meeting, attendableId: Obj.getURI(meeting) }}
@@ -161,8 +161,8 @@ const meta = {
           config: new Config({
             runtime: {
               services: {
-                edge: { url: 'https://edge.dxos.workers.dev/' },
-                iceProviders: [{ urls: 'https://edge.dxos.workers.dev/ice' }],
+                edge: { url: 'https://dev.dxos.network/' },
+                iceProviders: [{ urls: 'https://dxos.network/ice' }],
               },
             },
           }),

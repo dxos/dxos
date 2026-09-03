@@ -11,7 +11,7 @@ export const editorClassNames = (role?: string) =>
     'dx-attention-surface data-[toolbar=disabled]:pt-2 dx-focus-ring-inset',
     role === 'org.dxos.role.section'
       ? '[&_.cm-scroller]:overflow-hidden [&_.cm-scroller]:min-h-24'
-      : 'dx-container overflow-hidden',
+      : 'dx-expand overflow-hidden',
   );
 
 export const documentSlots: ThemeExtensionsOptions['slots'] = {
@@ -27,7 +27,7 @@ export const documentSlots: ThemeExtensionsOptions['slots'] = {
       // NOTE: Use inline-size, not full size containment — `container-type: size` on the
       // editor content breaks CodeMirror's viewport measurement, leaving blank gaps during
       // scroll until a click forces a re-measure.
-      'dx-inline-size-container',
+      'dx-container-type-inline-size',
       // Wider margin for web (vs. mobile).
       'pointer-fine:max-w-[min(50rem,100%-4rem)] pointer-coarse:max-w-[min(50rem,100%-2rem)]',
       'mx-auto! w-full py-3!',

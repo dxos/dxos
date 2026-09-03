@@ -19,20 +19,15 @@ import {
   type CompleteOAuthRegistrationResponse,
   type CreateAgentRequestBody,
   type CreateAgentResponseBody,
-  type CreateSpaceRequest,
-  type CreateSpaceResponseBody,
   EDGE_CLIENT_TAG_HEADER,
   type EdgeStatus,
   type ExecuteWorkflowResponseBody,
-  type ExportBundleRequest,
-  type ExportBundleResponse,
   type FeedProtocol,
   type GetAccessTokenRequest,
   type GetAccessTokenResponseBody,
   type GetAgentStatusResponseBody,
   type GetNotarizationResponseBody,
   type GetPluginsResponseBody,
-  type ImportBundleRequest,
   type InitiateOAuthFlowRequest,
   type InitiateOAuthFlowResponse,
   type JoinSpaceRequest,
@@ -90,9 +85,8 @@ export type GetCronTriggersResponse = {
  * trigger's ECHO object id so a client can correlate it with the replicated
  * `Trigger` object in its local database.
  *
- * TODO(edge): The backing endpoint (`GET /triggers/{spaceId}`, see
- * {@link EdgeHttpClient.getSpaceTriggers}) is a proposal and is not yet
- * implemented server-side.
+ * Served by compute-service at `GET /compute/triggers/{spaceId}` (see
+ * {@link EdgeHttpClient.getSpaceTriggers}).
  */
 export type EdgeTriggerStatus = {
   /** ECHO object id of the trigger. */
@@ -114,9 +108,9 @@ export type EdgeTriggerStatus = {
 };
 
 /**
- * Response of the proposed `GET /triggers/{spaceId}` endpoint: the full list of
- * triggers registered on a space's EDGE dispatcher, with runtime status. Polled
- * by the remote trigger monitor to surface edge trigger state.
+ * Response of `GET /compute/triggers/{spaceId}`: the full list of triggers registered on a space's
+ * EDGE dispatcher, with runtime status. Polled by the remote trigger monitor to surface edge
+ * trigger state.
  */
 export type GetSpaceTriggersResponse = {
   /** Whether the space's edge dispatcher is active. */
@@ -221,6 +215,24 @@ export class EdgeHttpClient extends BaseHttpClient {
     return this._call(ctx, new URL('/db/identity/recover', this.baseUrl), { ...args, body, method: 'POST' });
   }
 
+  /**
+   * Names the space's root document, which edge cannot derive, and returns the root in force —
+   * not necessarily the one offered, since the record is write-once.
+   */
+  public async recordSpaceRoot(
+    ctx: Context,
+    spaceId: SpaceId,
+    body: { rootDocumentUrl: string },
+    args?: EdgeHttpCallArgs,
+  ): Promise<{ rootDocumentUrl: string }> {
+    return this._call(ctx, new URL(`/db/spaces/${spaceId}/root`, this.baseUrl), {
+      ...args,
+      body,
+      method: 'POST',
+      auth: true,
+    });
+  }
+
   //
   // Invitations (space join)
   //
@@ -269,14 +281,6 @@ export class EdgeHttpClient extends BaseHttpClient {
     args?: EdgeHttpCallArgs,
   ): Promise<GetAccessTokenResponseBody> {
     return this._call(ctx, new URL('/oauth/token', this.baseUrl), { ...args, body, method: 'POST', auth: true });
-  }
-
-  //
-  // Spaces
-  //
-
-  async createSpace(ctx: Context, body: CreateSpaceRequest, args?: EdgeHttpCallArgs): Promise<CreateSpaceResponseBody> {
-    return this._call(ctx, new URL('/db/spaces/create', this.baseUrl), { ...args, body, method: 'POST', auth: true });
   }
 
   //
@@ -519,7 +523,7 @@ export class EdgeHttpClient extends BaseHttpClient {
     spaceId: SpaceId,
     args?: EdgeHttpCallArgs,
   ): Promise<TriggersDispatcherStatus> {
-    return this._call<TriggersDispatcherStatus>(ctx, new URL(`/triggers/${spaceId}/status`, this.baseUrl), {
+    return this._call<TriggersDispatcherStatus>(ctx, new URL(`/compute/triggers/${spaceId}/status`, this.baseUrl), {
       ...args,
       method: 'GET',
       auth: true,
@@ -555,7 +559,7 @@ export class EdgeHttpClient extends BaseHttpClient {
     spaceId: SpaceId,
     args?: EdgeHttpCallArgs,
   ): Promise<GetSpaceTriggersResponse> {
-    return this._call<GetSpaceTriggersResponse>(ctx, new URL(`/triggers/${spaceId}`, this.baseUrl), {
+    return this._call<GetSpaceTriggersResponse>(ctx, new URL(`/compute/triggers/${spaceId}`, this.baseUrl), {
       ...args,
       method: 'GET',
       auth: true,
@@ -603,38 +607,6 @@ export class EdgeHttpClient extends BaseHttpClient {
       method: 'POST',
       auth: true,
       ...args,
-    });
-  }
-
-  //
-  // Import/Export
-  //
-
-  public async importBundle(
-    ctx: Context,
-    spaceId: SpaceId,
-    body: ImportBundleRequest,
-    args?: EdgeHttpCallArgs,
-  ): Promise<void> {
-    return this._call(ctx, new URL(`/db/spaces/${spaceId}/import`, this.baseUrl), {
-      ...args,
-      body,
-      method: 'PUT',
-      auth: true,
-    });
-  }
-
-  public async exportBundle(
-    ctx: Context,
-    spaceId: SpaceId,
-    body: ExportBundleRequest,
-    args?: EdgeHttpCallArgs,
-  ): Promise<ExportBundleResponse> {
-    return this._call(ctx, new URL(`/db/spaces/${spaceId}/export`, this.baseUrl), {
-      ...args,
-      body,
-      method: 'POST',
-      auth: true,
     });
   }
 

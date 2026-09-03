@@ -139,14 +139,14 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
             },
           });
         }
-        const credentials = await createAdmissionCredentials(
-          identity.getIdentityCredentialSigner(),
-          request.memberKey,
-          space.key,
-          space.genesisFeedKey,
-          request.newRole,
-          space.spaceState.membershipChainHeads,
-        );
+        const credentials = await createAdmissionCredentials({
+          signer: identity.getIdentityCredentialSigner(),
+          identityKey: request.memberKey,
+          spaceKey: space.key,
+          genesisFeedKey: space.genesisFeedKey,
+          role: request.newRole,
+          membershipChainHeads: space.spaceState.membershipChainHeads,
+        });
         invariant(credentials[0].credential);
         const spaceMemberCredential = credentials[0].credential.credential;
         invariant(getCredentialAssertion(spaceMemberCredential)['@type'] === 'dxos.halo.credentials.SpaceMember');
@@ -444,7 +444,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     const databaseRoot = space.databaseRoot;
     assertState(databaseRoot, 'Space database root is not ready');
 
-    databaseRoot.handle.change((doc: DatabaseDirectory) => {
+    databaseRoot.change((doc: DatabaseDirectory) => {
       if (!doc.objects) {
         doc.objects = {};
       }
@@ -521,7 +521,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
         targetDataTimeframe: undefined,
         totalDataTimeframe: undefined,
 
-        spaceRootUrl: space.databaseRoot?.url,
+        directoryUrl: space.databaseRoot?.url,
       },
       members: await Promise.all(
         Array.from(space.inner.spaceState.members.values()).map(async (member) => {

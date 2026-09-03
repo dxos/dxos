@@ -31,6 +31,7 @@ import {
   GOOGLE_CONTACTS_CONNECTOR_ID,
   GOOGLE_INTEGRATION_SOURCE,
 } from '../constants';
+import { GMAIL_OAUTH_SCOPES, GOOGLE_CALENDAR_OAUTH_SCOPES, GOOGLE_CONTACTS_OAUTH_SCOPES } from '../scopes';
 
 const GoogleUserInfo = Schema.Struct({
   email: Schema.optional(Schema.String),
@@ -130,13 +131,7 @@ export default Capability.makeModule(
         label: 'Gmail',
         oauth: {
           provider: OAuthProvider.GOOGLE,
-          scopes: [
-            'https://www.googleapis.com/auth/gmail.readonly',
-            'https://www.googleapis.com/auth/gmail.send',
-            // `gmail.modify` is required to move messages to the trash (delete).
-            'https://www.googleapis.com/auth/gmail.modify',
-            'https://www.googleapis.com/auth/userinfo.email',
-          ],
+          scopes: [...GMAIL_OAUTH_SCOPES],
         },
         sync: {
           operation: GoogleOperation.GoogleMailSync,
@@ -159,13 +154,7 @@ export default Capability.makeModule(
         label: 'Google Calendar',
         oauth: {
           provider: OAuthProvider.GOOGLE,
-          scopes: [
-            // `calendar.readonly` is required to list the user's calendars (GetGoogleCalendars);
-            // `calendar.events` adds read/write on events so draft events can be created remotely.
-            'https://www.googleapis.com/auth/calendar.readonly',
-            'https://www.googleapis.com/auth/calendar.events',
-            'https://www.googleapis.com/auth/userinfo.email',
-          ],
+          scopes: [...GOOGLE_CALENDAR_OAUTH_SCOPES],
         },
         sync: {
           operation: GoogleOperation.GoogleCalendarSync,
@@ -183,10 +172,7 @@ export default Capability.makeModule(
         label: 'Google Contacts',
         oauth: {
           provider: OAuthProvider.GOOGLE,
-          scopes: [
-            'https://www.googleapis.com/auth/contacts.readonly',
-            'https://www.googleapis.com/auth/userinfo.email',
-          ],
+          scopes: [...GOOGLE_CONTACTS_OAUTH_SCOPES],
         },
         sync: {
           // Targetless: no `targetTypename`, since synced `Person` objects land directly in the space

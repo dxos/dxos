@@ -239,6 +239,7 @@ export class EdgeIdentityRecoveryManager {
       deviceKey,
       controlFeedKey,
       dataFeedKey: await this._keyring.createKey(),
+      haloSpaceRootUrl: response.haloSpaceRootUrl,
     });
   }
 

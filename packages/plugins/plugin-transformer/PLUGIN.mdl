@@ -21,6 +21,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.0`         |
+| `flow`      | `org.dxos.mdl.flow@1.0`       |
 
 ## Types
 
@@ -254,6 +255,50 @@ test T-5: Concurrent transcription calls are dropped
   given: isTranscribing is true
   when: a second audio chunk arrives
   then: the chunk is discarded and no second pipeline call is made
+```
+
+---
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Load the Whisper model and transcribe from the microphone
+  desc: |
+    plugin-transformer has no user-visible surface at all: it is not wired into
+    `plugin-defs.tsx` (searched — no import, no `.make()` call anywhere under
+    `packages/apps/composer-app/src`), it contributes no ECHO type and no navtree entry, and it
+    registers no `Operation.make` (there is no `operations/` module under `src/`) — `Voice` is a
+    plain React component + hooks (`usePipeline`, `useAudioStream`) meant to be composed
+    directly into a host app, not something Composer currently mounts. The flow below is honest
+    about that: every step is blocked at the level of "there is no running application surface
+    to drive it from".
+  actors: human
+  covers: [F-1.1, F-2.1, F-3.1, T-1, T-3, T-4]
+  status: blocked
+  given:
+    - the Voice component is mounted somewhere reachable in a running app, with active = true
+      and model = 'Xenova/whisper-base' — NOT currently true of Composer
+  test:
+    - name: Load the model
+      do: Observe the DebugInfo panel after mounting Voice.
+      expect: gpuInfo reports the adapter (or a WASM/CPU fallback message), isLoading transitions
+        to false, and isLoaded becomes true
+      blocked: |
+        No host application in this repo mounts `Voice` — plugin-transformer is not in
+        `composer-app`'s plugin registry (`plugin-defs.tsx`, `plugin-defs.production.tsx`, or
+        `plugin-defs.mobile.tsx`) under any name. There is nothing running to load a model into.
+    - name: Grant microphone access
+      do: Accept the browser's microphone permission prompt.
+      expect: AudioStreamState.stream becomes a non-null MediaStream and the audio-level meter moves
+      blocked: same as above — no reachable UI to grant permission to.
+    - name: Speak and observe the transcript
+      do: Speak a short sentence into the microphone.
+      expect: the transcription text in the DebugInfo panel updates with the recognised words
+      blocked: same as above — depends on the two prior steps.
+  after: []
 ```
 
 ---

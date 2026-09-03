@@ -8,6 +8,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
+import { invariant } from '@dxos/invariant';
+
 import { dxBin } from '../../testing';
 
 /**
@@ -19,7 +21,7 @@ import { dxBin } from '../../testing';
  */
 
 /** The skill both halves of the prompt round trip name. */
-const SKILL = 'codeProject';
+const SKILL = 'project';
 
 /**
  * Every skill the CLI's registry opts in as an MCP prompt. Asserted exactly: a skill that stops
@@ -159,6 +161,13 @@ describe('dx mcp serve', () => {
     responses = await runSession([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], 90_000);
   }, 120_000);
 
+  /** `responses` is populated in `beforeAll` from a fixed, known set of request ids. */
+  const getResult = (id: number) => {
+    const response = responses.get(id);
+    invariant(response, `no response for request ${id}`);
+    return response.result;
+  };
+
   test('serves a fixed tool surface, whatever the registry holds', ({ expect }) => {
     const initialize = responses.get(1)!.result;
     expect(initialize.serverInfo.name).to.equal('DXOS Spaces');
@@ -183,7 +192,7 @@ describe('dx mcp serve', () => {
   });
 
   test('queryOperations reaches the registry, and keys returns the schema to write against', ({ expect }) => {
-    const { operations } = JSON.parse(responses.get(9)!.result.content[0].text);
+    const { operations } = JSON.parse(getResult(9).content[0].text);
     const keys: string[] = operations.map((operation: { key: string }) => operation.key);
     // The registry the CLI assembles carries the project/task verbs and plugin-space's object CRUD.
     // Full keys, not suffixes: several packages now have a bare `create` verb.
@@ -201,7 +210,7 @@ describe('dx mcp serve', () => {
     expect(row).to.not.have.property('schema');
     expect(row.skills).to.include(SKILL);
 
-    const detail = JSON.parse(responses.get(10)!.result.content[0].text).operations[0];
+    const detail = JSON.parse(getResult(10).content[0].text).operations[0];
     expect(detail.key).to.equal('org.dxos.operation.space.addObject');
     expect(detail.schema.input.type).to.equal('object');
     expect(detail.hints.mutation).to.be.a('string');
@@ -209,7 +218,7 @@ describe('dx mcp serve', () => {
 
   // A model recovers from a tool result; a wrong key has to name the tool that lists the right ones.
   test('invokeOperation reports an unknown key as a tool failure naming queryOperations', ({ expect }) => {
-    const failure = responses.get(11)!.result;
+    const failure = getResult(11);
     expect(failure.isError).to.be.true;
     expect(failure.content[0].text).to.include('queryOperations');
   });
@@ -219,7 +228,7 @@ describe('dx mcp serve', () => {
   test('serves the same skill through loadSkill and prompts/get', ({ expect }) => {
     const loaded = JSON.parse(responses.get(4)!.result.content[0].text);
     expect(loaded.skills[0].name).to.equal(SKILL);
-    expect(loaded.skills[0].key).to.equal('org.dxos.plugin.projects.skill.codeProject');
+    expect(loaded.skills[0].key).to.equal('org.dxos.skill.project');
     expect(loaded.instructions).to.be.a('string').and.to.have.length.greaterThan(0);
 
     const messages: { role: string; content: { type: string; text: string } }[] = responses.get(5)!.result.messages;
@@ -240,7 +249,7 @@ describe('dx mcp serve', () => {
   // Nothing infers a space: the session's first one has no relationship to the task, so a verb that
   // acts on a space and was told none is refused rather than run somewhere arbitrary.
   test('a space-addressed operation invoked without a space is refused, not defaulted', ({ expect }) => {
-    const failure = responses.get(13)!.result;
+    const failure = getResult(13);
     expect(failure.isError).to.be.true;
     expect(failure.content[0].text).to.include('spaceId');
   });
@@ -255,7 +264,7 @@ describe('dx mcp serve', () => {
 
     // This profile has no identity and so no spaces: an operation declaring no database must still
     // answer, which is what makes the space resolution conditional rather than unconditional.
-    const result = responses.get(7)!.result;
+    const result = getResult(7);
     expect(result.isError, JSON.stringify(result.content)).to.not.be.true;
     const { plugins } = JSON.parse(result.content[0].text);
     expect(plugins.map((plugin: { id: string }) => plugin.id)).to.include('org.dxos.plugin.registry');
@@ -284,7 +293,7 @@ describe('dx mcp serve', () => {
   // Discovery has to be reachable without having called queryOperations first, or a model that
   // wants the workflow before the verbs has nowhere to start.
   test('loadSkill with no argument lists the skills', ({ expect }) => {
-    const listing = JSON.parse(responses.get(12)!.result.content[0].text);
+    const listing = JSON.parse(getResult(12).content[0].text);
     expect(listing.skills.map((entry: { name: string }) => entry.name)).to.include(SKILL);
     expect(listing.instructions).to.be.undefined;
   });

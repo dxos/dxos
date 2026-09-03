@@ -7,11 +7,10 @@ import { useEffect, useMemo } from 'react';
 import { getUserFunctionIdInMetadata } from '@dxos/compute-runtime';
 import * as Operation from '@dxos/compute/Operation';
 import * as Script from '@dxos/compute/Script';
-import { Obj, Query, Ref } from '@dxos/echo';
+import { type Database, Obj, Query, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import { type Client, useClient } from '@dxos/react-client';
-import { type Space, getSpace } from '@dxos/react-client/echo';
 import { type TFunction } from '@dxos/react-ui';
 import { type ActionGraphProps, createMenuAction } from '@dxos/react-ui-menu';
 import { messageValence } from '@dxos/ui-theme';
@@ -35,7 +34,7 @@ export type CreateDeployOptions = {
   state: ScriptToolbarStateStore;
   script: Script.Script;
   fn: Operation.PersistentOperation;
-  space?: Space;
+  db?: Database.Database;
   existingFunctionId?: string;
   client: Client;
   t: TFunction;
@@ -44,7 +43,7 @@ export type CreateDeployOptions = {
 export const createDeploy = ({
   state,
   script,
-  space,
+  db,
   fn,
   client,
   existingFunctionId,
@@ -63,14 +62,14 @@ export const createDeploy = ({
   const deployAction = createMenuAction<DeployActionProperties>(
     'deploy',
     async () => {
-      if (!script.source || !space) {
+      if (!script.source || !db) {
         return;
       }
 
       state.set('error', undefined);
       state.set('deploying', true);
 
-      const result = await deployScript({ script, client, space, fn, existingFunctionId });
+      const result = await deployScript({ script, client, db, fn, existingFunctionId });
 
       if (!result.success) {
         log.catch(result.error);
@@ -114,7 +113,7 @@ export const createDeploy = ({
 };
 
 export const useDeployState = ({ state, script }: { state: ScriptToolbarStateStore; script: Script.Script }) => {
-  const { space, client, fn, existingFunctionId } = useDeployDeps({ script });
+  const { db, client, fn, existingFunctionId } = useDeployDeps({ script });
   useEffect(() => {
     if (!existingFunctionId) {
       return;
@@ -128,7 +127,7 @@ export const useDeployState = ({ state, script }: { state: ScriptToolbarStateSto
         edgeUrl: client.config.values.runtime?.services?.edge?.url ?? '',
       }),
     );
-  }, [existingFunctionId, space, fn, script, client.config.values.runtime?.services?.edge?.url, state]);
+  }, [existingFunctionId, db, fn, script, client.config.values.runtime?.services?.edge?.url, state]);
 
   useEffect(() => {
     state.set('deployed', isScriptDeployed({ script, fn }));
@@ -137,8 +136,8 @@ export const useDeployState = ({ state, script }: { state: ScriptToolbarStateSto
 
 export const useDeployDeps = ({ script }: { script: Script.Script }) => {
   const client = useClient();
-  const space = getSpace(script);
-  const [fn] = useQuery(space?.db, Query.type(Operation.PersistentOperation, { source: Ref.make(script) }));
+  const db = Obj.getDatabase(script);
+  const [fn] = useQuery(db, Query.type(Operation.PersistentOperation, { source: Ref.make(script) }));
   const existingFunctionId = useMemo(() => fn && getUserFunctionIdInMetadata(Obj.getMeta(fn)), [fn]);
-  return { client, space, fn, existingFunctionId };
+  return { client, db, fn, existingFunctionId };
 };

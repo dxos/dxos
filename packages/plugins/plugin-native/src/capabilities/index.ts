@@ -9,7 +9,12 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 
+import { meta } from '#meta';
+import { translations } from '#translations';
 import { NativeCapabilities, NativeEvents } from '#types';
+
+// eslint-disable-next-line import/no-relative-packages
+import pluginSpec from '../../PLUGIN.mdl?raw';
 
 export const NativeSettings = AppCapability.settings(() => import('./settings'), {
   activatesOn: ActivationEvents.Idle,
@@ -28,6 +33,12 @@ export const Ollama = Capability.lazyModule(
   },
   () => import('./ollama'),
 );
+export const PluginAsset = AppCapability.pluginAsset({
+  pluginId: meta.profile.key,
+  path: 'PLUGIN.mdl',
+  content: pluginSpec,
+  mimeType: 'application/x-mdl',
+});
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article'],
 });
@@ -36,6 +47,7 @@ export const SpotlightListener = Capability.lazyModule(
   { requires: [Capabilities.OperationInvoker], provides: [], activatesOn: NativeEvents.Start },
   () => import('./spotlight-listener'),
 );
+export const Translations = AppCapability.translations(translations);
 export const Updater = Capability.lazyModule(
   'Updater',
   {

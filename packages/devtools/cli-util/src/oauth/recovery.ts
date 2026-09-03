@@ -8,7 +8,7 @@ import { getEdgeUrlWithProtocol } from '@dxos/edge-client';
 import { BaseError } from '@dxos/errors';
 import { EntityId, SpaceId } from '@dxos/keys';
 
-import { OAUTH_TIMEOUT_MS, startOAuthCallbackServer } from './server';
+import { CALLBACK_TIMEOUT_MS, startLocalCallbackServer } from '../callback/server';
 
 /** A gate OAuth flow (recovery or registration) failed to initiate or complete. */
 export class OAuthFlowError extends BaseError.extend('OAuthFlowError', 'OAuth flow failed.') {}
@@ -40,7 +40,7 @@ type InitiateEnvelope = { success: boolean; data?: { authUrl?: string }; error?:
  * (random values satisfy request validation).
  */
 const performOAuthRoundTrip = Effect.fn(function* (params: RecoveryOAuthParams, purpose: 'recovery' | 'register') {
-  const server = yield* startOAuthCallbackServer(RECOVERY_CALLBACK_PATH).pipe(
+  const server = yield* startLocalCallbackServer(RECOVERY_CALLBACK_PATH).pipe(
     Effect.mapError(OAuthFlowError.wrap({ ifTypeDiffers: true })),
   );
   return yield* Effect.gen(function* () {
@@ -78,7 +78,7 @@ const performOAuthRoundTrip = Effect.fn(function* (params: RecoveryOAuthParams, 
 
     yield* server.open(envelope.data.authUrl).pipe(Effect.mapError(OAuthFlowError.wrap({ ifTypeDiffers: true })));
     return yield* server
-      .waitForResult(OAUTH_TIMEOUT_MS)
+      .waitForResult(CALLBACK_TIMEOUT_MS)
       .pipe(Effect.mapError(OAuthFlowError.wrap({ ifTypeDiffers: true })));
   }).pipe(Effect.ensuring(server.stop()));
 });

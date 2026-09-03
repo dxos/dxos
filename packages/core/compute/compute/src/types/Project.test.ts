@@ -2,11 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { DXN, Obj, Ref, Type, URI } from '@dxos/echo';
-import { Outline, TaskSet } from '@dxos/types';
+import { Database, DXN, Filter, Obj, Ref, Type, URI } from '@dxos/echo';
+import { TestDatabaseLayer } from '@dxos/echo-client/testing';
+import { EffectEx } from '@dxos/effect';
+import { invariant } from '@dxos/invariant';
+import { Outline, Task, TaskSet } from '@dxos/types';
 
 import * as Instructions from './Instructions';
 import * as Project from './Project';
@@ -19,7 +23,7 @@ const TestObject = Type.makeObject(DXN.make('org.dxos.type.testObject', '0.1.0')
 describe('Project', () => {
   test('typename, version, and defaults', ({ expect }) => {
     expect(Type.getTypename(Project.Project)).toBe('org.dxos.type.project');
-    expect(Type.getVersion(Project.Project)).toBe('0.5.0');
+    expect(Type.getVersion(Project.Project)).toBe('0.6.0');
     const project = Project.make({ name: 'test' });
     expect(Obj.instanceOf(Project.Project, project)).toBe(true);
     expect(project.artifacts).toEqual([]);
@@ -37,19 +41,21 @@ describe('Project', () => {
   test('a project owns a task set from the start, parented for cascade', ({ expect }) => {
     const project = Project.make({ name: 'test' });
     const taskSet = project.taskSet?.target;
-    expect(taskSet).toBeDefined();
+    invariant(taskSet);
     expect(TaskSet.instanceOf(taskSet)).toBe(true);
-    expect(Obj.getParent(taskSet!)?.id).toBe(project.id);
+    expect(Obj.getParent(taskSet)?.id).toBe(project.id);
   });
 
   test('a project owns an outline from the start, parented for cascade', ({ expect }) => {
     const project = Project.make({ name: 'test' });
     const outline = project.outline?.target;
-    expect(outline).toBeDefined();
-    expect(Obj.instanceOf(Outline.Outline, outline!)).toBe(true);
-    expect(Obj.getParent(outline!)?.id).toBe(project.id);
+    invariant(outline);
+    expect(Obj.instanceOf(Outline.Outline, outline)).toBe(true);
+    expect(Obj.getParent(outline)?.id).toBe(project.id);
     // The outline's text is its own object; it cascades through the outline, not the project.
-    expect(Obj.getParent(outline!.content.target!)?.id).toBe(outline!.id);
+    const content = outline.content.target;
+    invariant(content);
+    expect(Obj.getParent(content)?.id).toBe(outline.id);
   });
 
   test('an explicitly supplied outline is kept', ({ expect }) => {
@@ -79,6 +85,33 @@ describe('Project', () => {
     // Instructions text reaches the prompt via Chat.instructions, not a binding.
     expect(bindings.objects.map((ref) => ref.uri)).toEqual([Ref.make(doc).uri]);
   });
+
+  // In the database, not just in memory: the parent edge above is only a claim about cascade until
+  // a real `Database.remove` walks it.
+  test('removing a project takes its routine and task set with it', ({ expect }) =>
+    EffectEx.runPromise(
+      Effect.gen(function* () {
+        const project = yield* Database.add(Project.make({ name: 'test' }));
+        const routine = Routine.make({ name: 'Starter', triggers: [] });
+        Project.addRoutine(project, routine);
+        yield* Database.flush();
+
+        expect(yield* Database.query(Filter.type(Routine.Routine)).run).toHaveLength(1);
+        expect(yield* Database.query(Filter.type(TaskSet.TaskSet)).run).toHaveLength(1);
+
+        yield* Database.remove(project);
+        yield* Database.flush();
+
+        expect(yield* Database.query(Filter.type(Routine.Routine)).run).toEqual([]);
+        expect(yield* Database.query(Filter.type(TaskSet.TaskSet)).run).toEqual([]);
+      }).pipe(
+        Effect.provide(
+          TestDatabaseLayer({
+            types: [Project.Project, Routine.Routine, Outline.Outline, Task.Task, TaskSet.TaskSet],
+          }),
+        ),
+      ),
+    ));
 
   test('contextBindings returns empty bindings when instructions is unresolved', ({ expect }) => {
     const project = Project.make({ name: 'test' });

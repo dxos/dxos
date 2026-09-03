@@ -13,9 +13,9 @@ import { AppSurface, NotFoundArticle } from '@dxos/app-toolkit/ui';
 import { DeckSettings } from '#containers';
 import { meta } from '#meta';
 
-export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contribute(Capabilities.ReactSurface, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    return Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'pluginSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
@@ -27,6 +27,6 @@ export default Capability.makeModule(() =>
         filter: Surface.makeFilter(AppSurface.Article, (data) => data.attendableId === NotFound.NOT_FOUND_PATH),
         component: NotFoundArticle,
       }),
-    ]),
-  ),
+    ]);
+  }),
 );

@@ -60,7 +60,7 @@ const handler: Operation.WithHandler<typeof Relay> = Relay.pipe(
         const content = prompt ?? JSON.stringify(event);
         yield* session.submitPrompt([{ _tag: 'text', text: content, disposition: 'synthetic' }]);
       },
-      Effect.provide(AiService.model('com.anthropic.model.claude-sonnet-4-6.default')),
+      Effect.provide(AiService.model('com.anthropic.model.claude-sonnet-5.default')),
     ),
   ),
   Operation.opaqueHandler,
@@ -92,7 +92,9 @@ const qualifyEvent = (chat: Chat.Chat, event: unknown) =>
               You are a qualifying agent that determines if the event is relevant to the agent.
               Respond with true if the event is relevant to the agent, false otherwise.
               If you are not sure, return true.
+
               The qualified events will be forwarded to the larger agent that will process them.
+
               <agent id="${agent ? Obj.getURI(agent) : 'unknown'}" name="${agent?.name ?? ''}">
                 <instructions>
                 ${instructionsText}

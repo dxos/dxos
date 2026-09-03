@@ -15,11 +15,10 @@ import { Text } from '@dxos/schema';
 import { Employer, Organization, Outline, Person, Task, TaskSet } from '@dxos/types';
 
 import { AgentHandlers } from '../operations';
-import { AgentWizardHandlers } from '../skills/agent-wizard/operations';
 import { AgentSkillHandlers } from '../skills/agent/operations';
 import { AlarmHandlers } from '../skills/alarm/operations';
 import { ChatContextHandlers } from '../skills/chat-context/operations';
-import { DelegationHandlers } from '../skills/delegation/operations';
+import { DelegationSkillHandlers } from '../skills/delegation/operations';
 import { MemoryHandlers } from '../skills/memory/operations';
 import { PlanningHandlers } from '../skills/planning/operations';
 import { SkillManagerHandlers } from '../skills/skill-manager/operations';
@@ -35,10 +34,9 @@ export const OperationTestLayer = AssistantTestLayerWithTriggers({
   operationHandlers: OperationHandlerSet.merge(
     AgentHandlers,
     AgentSkillHandlers,
-    AgentWizardHandlers,
     AlarmHandlers,
     ChatContextHandlers,
-    DelegationHandlers,
+    DelegationSkillHandlers,
     MemoryHandlers,
     PlanningHandlers,
     SkillManagerHandlers,

@@ -2,25 +2,25 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Graph from '@dxos/app-graph/Graph';
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { isNonNullable } from '@dxos/util';
 
 import { NavTreeNode } from '#types';
 
 export const getParent = (
-  graph: Graph.ReadableGraph,
+  graph: AppGraph.ReadableGraph,
   node: NavTreeNode.NavTreeItemGraphNode,
   path: string[],
 ): NavTreeNode.NavTreeItemGraphNode | undefined => {
   const parentId = path[path.length - 2];
-  return Graph.getConnections(graph, node.id, Node.childRelation('inbound')).find(
-    (n: Node.Node) => n.id === parentId,
+  return AppGraph.getConnections(graph, node.id, AppGraphNode.childRelation('inbound')).find(
+    (n: AppGraphNode.Node) => n.id === parentId,
   ) as NavTreeNode.NavTreeItemGraphNode | undefined;
 };
 
 export const getPersistenceParent = (
-  graph: Graph.ReadableGraph,
+  graph: AppGraph.ReadableGraph,
   node: NavTreeNode.NavTreeItemGraphNode,
   path: string[],
   persistenceClass: string,
@@ -34,7 +34,7 @@ export const getPersistenceParent = (
 };
 
 export const resolveMigrationOperation = (
-  graph: Graph.ReadableGraph,
+  graph: AppGraph.ReadableGraph,
   activeNode: NavTreeNode.NavTreeItemGraphNode,
   destinationPath: string[],
   destinationRelatedNode?: NavTreeNode.NavTreeItemGraphNode,
@@ -63,10 +63,10 @@ export const resolveMigrationOperation = (
 };
 
 // TODO(wittjosiah): Move into node implementation?
-export const sortActions = (actions: Node.Action[]): Node.Action[] =>
+export const sortActions = (actions: AppGraphNode.Action[]): AppGraphNode.Action[] =>
   actions.sort((a, b) => {
-    const aPrimary = Node.hasDisposition(a, 'list-item-primary');
-    const bPrimary = Node.hasDisposition(b, 'list-item-primary');
+    const aPrimary = AppGraphNode.hasDisposition(a, 'list-item-primary');
+    const bPrimary = AppGraphNode.hasDisposition(b, 'list-item-primary');
     if (aPrimary === bPrimary) {
       return 0;
     }
@@ -75,12 +75,12 @@ export const sortActions = (actions: Node.Action[]): Node.Action[] =>
   });
 
 export const getChildren = (
-  graph: Graph.ReadableGraph,
+  graph: AppGraph.ReadableGraph,
   node: NavTreeNode.NavTreeItemGraphNode,
   path: readonly string[] = [],
 ): NavTreeNode.NavTreeItemGraphNode[] => {
-  return Graph.getConnections(graph, node.id, 'child')
-    .map((n: Node.Node) => {
+  return AppGraph.getConnections(graph, node.id, 'child')
+    .map((n: AppGraphNode.Node) => {
       // Break cycles.
       const nextPath = [...path, node.id];
       return nextPath.includes(n.id) ? undefined : (n as NavTreeNode.NavTreeItemGraphNode);
@@ -91,19 +91,19 @@ export const getChildren = (
 /**
  * Determines whether a node should be visible based on its disposition.
  */
-export const filterItems = (node: Node.Node, disposition?: string) => {
-  if (!disposition && Node.hasDisposition(node, 'hidden')) {
+export const filterItems = (node: AppGraphNode.Node, disposition?: string) => {
+  if (!disposition && AppGraphNode.hasDisposition(node, 'hidden')) {
     return false;
   } else if (!disposition) {
-    const action = Node.isAction(node);
-    return !action || Node.hasDisposition(node, 'item');
+    const action = AppGraphNode.isAction(node);
+    return !action || AppGraphNode.hasDisposition(node, 'item');
   } else {
-    return Node.hasDisposition(node, disposition);
+    return AppGraphNode.hasDisposition(node, disposition);
   }
 };
 
-export const l0ItemType = (item: Node.Node) => {
-  if (Node.isActionLike(item)) {
+export const l0ItemType = (item: AppGraphNode.Node) => {
+  if (AppGraphNode.isActionLike(item)) {
     return 'action';
   } else {
     return 'tab';

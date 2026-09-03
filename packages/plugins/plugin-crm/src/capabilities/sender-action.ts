@@ -5,6 +5,8 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import { EdgeServiceName, getEdgeServiceEndpoint } from '@dxos/config';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as InboxCapabilities from '@dxos/plugin-inbox/InboxCapabilities';
 
 import { CrmOperation } from '#types';
@@ -22,6 +24,11 @@ import { CrmOperation } from '#types';
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    // The operation takes the endpoint as input and has no other source that reaches the app, so
+    // resolve it here where the client config is available.
+    const client = yield* ClientCapabilities.Client;
+    const imageServiceUrl = getEdgeServiceEndpoint(client.config, EdgeServiceName.Image);
+
     return Capability.contributeAll(InboxCapabilities.SenderAction, [
       {
         id: 'research-sender',
@@ -37,7 +44,7 @@ export default Capability.makeModule(
 
           return [
             { operation: CrmOperation.ResearchPerson, input: { subject: contact } },
-            { operation: CrmOperation.EnrichImages, input: { limit: 4 } },
+            { operation: CrmOperation.EnrichImages, input: { limit: 4, imageServiceUrl } },
           ];
         },
       },

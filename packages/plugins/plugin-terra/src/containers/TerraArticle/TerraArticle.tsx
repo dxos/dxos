@@ -294,7 +294,6 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
 
   const handleAddRandomObject = useCallback(() => {
     const definition = Terra.makeRandomObject(terra, performance.now());
-    Obj.setParent(definition, terra);
     Obj.update(terra, (terra) => {
       terra.objects.push(Ref.make(definition));
     });
@@ -347,7 +346,7 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
   return (
     <Menu.Root {...menuActions} attendableId={attendableId}>
       <Panel.Root role={role}>
-        <Panel.Toolbar asChild classNames='dx-container'>
+        <Panel.Toolbar asChild classNames='dx-expand'>
           <Menu.Toolbar>
             <Menu.Items />
             <div className='grow' />
@@ -380,7 +379,7 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
                 the simulation the map draws, and `display: none` would collapse the canvas to 0x0. */}
             <canvas
               ref={canvasRef}
-              className={`dx-container absolute inset-0 outline-none ${view === 'map' ? 'invisible' : ''}`}
+              className={`dx-expand absolute inset-0 outline-none ${view === 'map' ? 'invisible' : ''}`}
               style={{ touchAction: 'none' }}
             />
             {view === 'map' && (

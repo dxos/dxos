@@ -52,6 +52,9 @@ export type CreatePipelineProps = {
 @trackLeaks('open', 'close')
 export class Space extends Resource {
   public readonly onCredentialProcessed = new Callback<AsyncCallback<Credential>>();
+
+  /** Multi-subscriber counterpart to {@link onCredentialProcessed}, which holds a single handler. */
+  public readonly credentialProcessed = new Event<Credential>();
   public readonly stateUpdate = new Event();
   public readonly protocol: SpaceProtocol;
 
@@ -93,6 +96,7 @@ export class Space extends Resource {
 
     this._controlPipeline.onCredentialProcessed.set(async (credential) => {
       await this.onCredentialProcessed.callIfSet(credential);
+      this.credentialProcessed.emit(credential);
       log('onCredentialProcessed', { credential });
       this.stateUpdate.emit();
     });
@@ -137,6 +141,11 @@ export class Space extends Resource {
 
   get spaceState() {
     return this._controlPipeline.spaceState;
+  }
+
+  /** @see ControlPipeline.processDocumentCredential */
+  async processDocumentCredential(credential: Credential): Promise<boolean> {
+    return this._controlPipeline.processDocumentCredential(credential);
   }
 
   /**

@@ -6,7 +6,10 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { DEFAULT_INTROSPECT_MCP_URL, ToolsExplorer } from './ToolsExplorer';
+import { ToolsExplorer } from './ToolsExplorer';
+
+// Local introspect-mcp dev server (`moon run introspect-mcp:serve`).
+const LOCAL_INTROSPECT_MCP_URL = 'http://localhost:39476/mcp';
 
 const meta: Meta<typeof ToolsExplorer> = {
   title: 'ui/react-ui-introspect/ToolsExplorer',
@@ -23,6 +26,6 @@ type Story = StoryObj<typeof ToolsExplorer>;
 
 export const Default: Story = {
   args: {
-    serverUrl: DEFAULT_INTROSPECT_MCP_URL,
+    serverUrl: LOCAL_INTROSPECT_MCP_URL,
   },
 };

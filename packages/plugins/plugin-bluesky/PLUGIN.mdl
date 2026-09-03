@@ -35,7 +35,8 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `component` | `org.dxos.mdl.component@1.0`  |
-| `op`        | `org.dxos.mdl.op@1.0`         |
+| `op`        | `org.dxos.mdl.op@1.1`         |
+| `flow`      | `org.dxos.mdl.flow@1.0`       |
 
 ## Types
 
@@ -103,17 +104,18 @@ type SyncTarget
 
 ```mdl
 op GetBlueskyTargets
+  key: org.dxos.operation.bluesky.getTargets
   desc: >
     Discovers the available sync targets for the authenticated Bluesky
     integration: the three built-in self-targets (my posts, my liked posts,
     my bookmarks) plus one entry per saved feed generator pulled from the
     user's atproto preferences. Read-only; no ECHO objects are created.
   input:
-    integration: Ref<Integration>
+    connection: Ref<Connection>
   output: GetSyncTargetsOutput
   effects: [http]
   errors:
-    IntegrationDatabaseMissing: integration ref has no resolvable ECHO database
+    IntegrationDatabaseMissing: connection ref has no resolvable ECHO database
     MissingBlueskyHandle: access token has no account (handle/DID) set
     PdsResolutionFailed: could not resolve the user's atproto PDS endpoint
   note: >
@@ -124,6 +126,7 @@ op GetBlueskyTargets
 
 ```mdl
 op SyncBlueskyTargets
+  key: org.dxos.operation.bluesky.syncTargets
   desc: >
     Pull-syncs posts for all currently-selected targets in a Bluesky
     Integration. For each selected target, walks XRPC pages from newest
@@ -132,18 +135,17 @@ op SyncBlueskyTargets
     Subscription.Feed ECHO object and pins it to target.object. Appended
     posts become Subscription.Post ECHO objects stored in the feed's queue.
   input:
-    integration: Ref<Integration>
+    connection: Ref<Connection>
   output:
     appended: number    # total posts appended across all selected targets
-    failed: number      # targets that produced an error this run
   effects: [http, echo:read, echo:write]
   errors:
-    IntegrationDatabaseMissing: integration ref has no resolvable ECHO database
+    IntegrationDatabaseMissing: connection ref has no resolvable ECHO database
     MissingBlueskyHandle: access token has no account (handle/DID) set
     PdsResolutionFailed: could not resolve the user's atproto PDS endpoint
   note: >
     Per-target failures are collected; a single failing target does not abort
-    the run. Errors are recorded on target.lastError and counted in `failed`.
+    the run. Errors are recorded on target.lastError.
     The page budget for self-targets defaults to 5 pages; custom feed
     generators default to 1 page per sync to avoid runaway pagination on
     algorithmic feeds. Both are capped at 20 pages regardless of options.
@@ -318,9 +320,8 @@ test T-8: Per-target failure is non-fatal
   given: an integration with two selected targets; the first target's XRPC call returns 500
   when: SyncBlueskyTargets is invoked
   then:
-    - failed === 1
+    - the failing target's target.lastError is set
     - second target synced successfully
-    - target.lastError set for the failing target
 ```
 
 ```mdl
@@ -336,6 +337,63 @@ test T-10: Hard page cap respected
   given: a target with target.options.maxPages = 100
   when: SyncBlueskyTargets is invoked
   then: at most 20 pages are fetched (MAX_PAGES_HARD_CAP)
+```
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+`plugin-bluesky` is `experimental` — it is registered but not enabled by default in any
+environment; a tester enables it via the plugin registry first. Both operations below take a
+`connection` (a `Ref<Connection>` to an OAuth-authenticated Bluesky account, resolved through
+`plugin-connector`), not the `integration` shown in the `op` blocks' `input:` above — the blocks
+predate `plugin-connector`'s `Connection`-based rework; `invoke` below uses the real runtime
+field name (Execution Rule 6).
+
+```mdl
+flow QA-1: Connect a Bluesky account and sync posts
+  desc: The core round-trip — OAuth-authenticate, discover targets, pull posts into a local feed.
+  actors: human
+  covers: [F-1.1, F-1.2, F-1.3, F-3.1, F-3.2, F-4.1, F-4.2, F-4.4, F-4.5, T-1, T-2, T-5]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-bluesky is enabled — it defaults OFF everywhere; enable it via the plugin registry
+    - a real Bluesky (bsky.app) account and its handle are available — OAuth and XRPC are live
+      external-service dependencies the debug port cannot fabricate
+    - no Bluesky connection for that handle already exists in the space — ABORT rather than
+      reusing or deleting one this flow did not create
+  test:
+    - name: Authenticate
+      do: Open the Bluesky integration setup dialog, enter the handle (e.g. "user.bsky.social"),
+        and submit. Complete the redirect-based OAuth flow (no popup — bsky.social nullifies
+        window.opener).
+      capture: connection
+      expect: a Connection now exists with accessToken.account equal to the entered handle and
+        accessToken.source === "bsky.app"
+      note: NO `invoke` — this is a real OAuth redirect round-trip, not an operation.
+    - name: Discover targets
+      do: (no separate gesture — the setup UI calls this once the connection exists, to populate
+        the target picker)
+      invoke: org.dxos.operation.bluesky.getTargets { connection: $connection }
+      capture: targets
+      expect: three self-targets ("my posts", "my liked posts", "my bookmarks") are returned, plus
+        one entry per saved feed generator
+      assert: return $targets.targets.filter((t) => t.id?.startsWith('self:')).length === 3;
+    - name: Select and sync "my posts"
+      do: Select "my posts" in the target picker and click Sync.
+      invoke: org.dxos.operation.bluesky.syncTargets { connection: $connection }
+      expect: a Subscription.Feed appears for the target, containing at least one Subscription.Post
+        if the account has posted; target.lastSyncAt is set
+      assert: return $result.appended >= 0;
+  after:
+    - name: Remove the connection and its synced feed
+      do: Open the Bluesky integration settings and disconnect the account, then delete the synced
+        feed object from the navtree.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$connection], target: $given.space.db }
+      expect: the connection and its feed no longer appear in the space
 ```
 
 ---

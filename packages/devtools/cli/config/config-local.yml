@@ -12,12 +12,13 @@ runtime:
       dataRoot: /tmp/dx/run
 
   services:
-    # Staging rather than localhost: hub-service is a separate worker that is not part of the
-    # local edge dev setup, so account flows against a local edge still talk to the deployed hub.
+    # Deployed: hub-service is not part of the local edge dev setup.
     hub:
-      url: https://hub-staging.dxos.workers.dev/
+      url: https://dev.dxos.network/hub/
+      authUrl: https://account.dev.composer.space
     edge:
       url: http://localhost:8787/
+    # Production even though `edge` is localhost: a local edge has no TURN token to mint with.
     iceProviders:
       - urls: https://dxos.network/ice
     sandbox:

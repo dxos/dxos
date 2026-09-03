@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import React, {
   Children,
   type KeyboardEvent,
@@ -17,6 +16,7 @@ import React, {
   useState,
 } from 'react';
 
+import { useFocusGroup } from '@dxos/react-focus';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
@@ -342,7 +342,7 @@ const CarouselSlide = ({
       className={mx(
         transition === 'slide'
           ? 'relative shrink-0 basis-full h-full dx-base-surface'
-          : 'absolute inset-0 w-full h-full dx-base-surface',
+          : 'dx-fullscreen dx-fill dx-base-surface',
         classNames,
       )}
     >
@@ -350,7 +350,7 @@ const CarouselSlide = ({
         src={src}
         kind={kind}
         alt={alt}
-        classNames='w-full h-full'
+        classNames='dx-fill'
         controls={controls}
         // In `slide` mode every slide is mounted; only auto-play the active one to avoid off-screen playback.
         autoPlay={autoPlay && active === index}
@@ -424,7 +424,7 @@ export type CarouselIndicatorsProps = ThemedClassName<{}>;
 const CarouselIndicators = ({ classNames }: CarouselIndicatorsProps) => {
   const { t } = useTranslation(translationKey);
   const { count, index, setIndex } = useCarousel();
-  const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'horizontal', memorizeCurrent: true });
+  const { ref: focusGroupRef, ...focusGroupProps } = useFocusGroup({ axis: 'horizontal', memorizeCurrent: true });
   if (count <= 1) {
     return null;
   }
@@ -432,17 +432,20 @@ const CarouselIndicators = ({ classNames }: CarouselIndicatorsProps) => {
   return (
     <div className='col-start-2 overflow-hidden'>
       <div
-        {...arrowNavigationAttrs}
+        {...focusGroupProps}
         className={mx('flex items-center justify-center', classNames)}
         role='tablist'
         aria-label={t('carousel-indicators.label')}
+        ref={focusGroupRef}
       >
         {Array.from({ length: count }).map((_, i) => (
           <IconButton
             key={i}
             role='tab'
             aria-selected={i === index}
-            classNames={mx(i === index ? 'text-primary-500' : 'text-description')}
+            // `dx-focus-ring-none`: focusing a dot selects its slide (`onFocus` below), so the fill
+            // already tracks focus — the ring on top of it is noise rather than the only indicator.
+            classNames={mx('dx-focus-ring-none', i === index ? 'text-primary-500' : 'text-description')}
             variant='ghost'
             density='sm'
             size={3}

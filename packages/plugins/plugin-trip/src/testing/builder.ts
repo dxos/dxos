@@ -116,7 +116,9 @@ export class TripBuilder {
       Segment.make({
         details: {
           _tag: 'flight',
-          provider: airline,
+          // Only the provider's own fields: `airline.code` is the caller's shorthand for building
+          // the flight number and confirmation code above, and `Provider` rejects it outright.
+          provider: { name: airline.name },
           number: flightNumber,
           serviceClass: opts.cabin ?? 'economy',
           origin: opts.from,

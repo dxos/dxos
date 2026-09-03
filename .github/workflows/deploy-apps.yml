@@ -256,7 +256,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          lfs: true
+          filter: blob:none
           # On production, the bumped release commit; otherwise the triggering commit.
           ref: ${{ needs.release.outputs.sha || github.sha }}
 
@@ -277,7 +277,7 @@ jobs:
           IPFS_API_SECRET: ${{ secrets.IPFS_API_SECRET }}
 
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.depot/actions/setup
         with:
           remote-cache: 'false'
 
@@ -296,6 +296,26 @@ jobs:
         run: .github/workflows/scripts/bundle-env.mjs "$DEPLOY_ENV" composer
         env:
           NODE_ENV: production
+
+      - name: Upload source maps to PostHog
+        if: env.POSTHOG_CLI_API_KEY != ''
+        continue-on-error: true
+        working-directory: packages/apps/composer-app
+        env:
+          # Not DX_POSTHOG_API_HOST, which this job also exports: that is the app's ingestion proxy and
+          # serves no authenticated API.
+          POSTHOG_CLI_HOST: https://eu.posthog.com
+          POSTHOG_CLI_PROJECT_ID: ${{ env.COMPOSER_APP_POSTHOG_PROJECT_ID }}
+          RELEASE_VERSION: ${{ needs.version.outputs.version }}
+        run: >-
+          pnpm dlx @posthog/cli@0.16.0 sourcemap process
+          --directory out/composer
+          --release-name composer
+          --release-version "$RELEASE_VERSION"
+
+      - name: Warn that source maps were skipped
+        if: env.POSTHOG_CLI_API_KEY == ''
+        run: echo "::warning::POSTHOG_CLI_API_KEY is unset - skipped the source map upload, so this build's stack traces will not symbolicate."
 
       - name: Upload Composer bundle
         uses: actions/upload-artifact@v4
@@ -330,12 +350,12 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          lfs: true
+          filter: blob:none
           ref: ${{ needs.release.outputs.sha || github.sha }}
 
       # Needed before "Check app targets this environment" — apps.mjs imports json5 from node_modules.
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.depot/actions/setup
         with:
           remote-cache: 'false'
 
@@ -460,6 +480,10 @@ jobs:
   # preview channel get the same daily build the web deploy does. iOS ships on `dev` alone for now (see the
   # `ios` input). CrabNebula channel is derived from the environment inside the reusable workflow. On
   # production it builds the bumped release commit.
+  #
+  # TODO(wittjosiah): this job (and deploy-tauri.yaml, which it calls) keeps this workflow on GitHub Actions rather
+  # than Depot CI — deploy-tauri.yaml's build_tauri/build_tauri_ios jobs need depot-macos-latest, and
+  # Depot CI's own orchestrator has no macOS sandboxes yet. Revisit once Depot CI supports macOS runners.
   tauri:
     needs: [plan, release, version, build-bundle]
     if: ${{ !cancelled() && needs.release.result != 'failure' && needs.build-bundle.result == 'success' && needs.plan.outputs.tauri == 'true' }}

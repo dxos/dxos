@@ -14,8 +14,7 @@ import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { EffectEx } from '@dxos/effect';
 import { useNode } from '@dxos/plugin-graph/hooks';
 
-import { getPluginPath, getPluginSpecPath } from '#meta';
-
+import { getPluginPath, getPluginSpecPath } from '../paths';
 import { useDisableConfirmation } from './useDisableConfirmation';
 
 export type PluginActionsProps = {

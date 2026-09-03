@@ -20,22 +20,12 @@ import { useSelection } from '@dxos/react-ui-attention';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { TagIndex } from '@dxos/schema';
 import { type ContentBlock, Message } from '@dxos/types';
+import { downloadBlob } from '@dxos/util';
 
 import { exportFeedMessages, importMessages, resetMailbox } from '../testing';
 
 /** Stable fallback so the starred-ids atom stays unconditional while the tag index resolves. */
 const NO_STARRED_IDS = Atom.make<readonly EntityId[]>(() => []);
-
-// `SystemIconButton.Download` fixes its own glyph, which would make the message save visually
-// identical to the feed export beside it; this drives a distinct button instead.
-const downloadBlob = (blob: Blob, filename: string): void => {
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = filename;
-  anchor.click();
-  URL.revokeObjectURL(url);
-};
 
 /** The message's raw email HTML, or undefined for a markdown/plaintext-only body. */
 const getMessageHtml = (message: Message.Message): string | undefined =>
@@ -129,7 +119,10 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
     setBusy(true);
     try {
       const serialized = await exportFeedMessages(feed, space.db);
-      downloadBlob(new Blob([JSON.stringify(serialized, null, 2)], { type: 'application/json' }), archiveFilename());
+      void downloadBlob(
+        new Blob([JSON.stringify(serialized, null, 2)], { type: 'application/json' }),
+        archiveFilename(),
+      );
       setStatus({ action: 'downloaded all', count: serialized.length });
     } catch (error) {
       log.warn('feed export failed', { error });
@@ -150,7 +143,7 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
     const blob = selectedHtml
       ? new Blob([selectedHtml], { type: 'text/html' })
       : new Blob([JSON.stringify(Obj.toJSON(selected), null, 2)], { type: 'application/json' });
-    downloadBlob(blob, `${getFixtureName(selected)}.${selectedHtml ? 'html' : 'json'}`);
+    void downloadBlob(blob, `${getFixtureName(selected)}.${selectedHtml ? 'html' : 'json'}`);
     setStatus({ action: selectedHtml ? 'saved message html' : 'saved message json', count: 1 });
   }, [selected, selectedHtml]);
 
@@ -221,6 +214,8 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
             disabled={!feed || busy || messages.length === 0}
             onClick={() => void handleDownloadAll()}
           />
+          {/* Not `SystemIconButton.Download`: it fixes its own glyph, which would make this visually
+              identical to the feed export beside it. */}
           <IconButton
             iconOnly
             icon='ph--envelope-simple--regular'

@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 
 import { MenuBuilder } from './builder';
 import { MenuSeparatorType } from './types';
@@ -256,8 +256,8 @@ describe('MenuBuilder', () => {
     const actionNode = graph.nodes.find((node) => node.id === 'bold');
     const groupNode = graph.nodes.find((node) => node.id === 'headings');
 
-    expect(rootNode!.type).toBe(Node.ActionGroupType);
-    expect(actionNode!.type).toBe(Node.ActionType);
-    expect(groupNode!.type).toBe(Node.ActionGroupType);
+    expect(rootNode!.type).toBe(AppGraphNode.ActionGroupType);
+    expect(actionNode!.type).toBe(AppGraphNode.ActionType);
+    expect(groupNode!.type).toBe(AppGraphNode.ActionGroupType);
   });
 });

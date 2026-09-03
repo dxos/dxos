@@ -31,32 +31,16 @@ describe('operation serialization', () => {
 
   // A remote host derives the MCP hints (readOnly/destructive) from the registry record, so the
   // mutation marker must survive serialization.
-  test('mutation annotations survive serialize', async ({ expect }) => {
+  test('every handler declares a mutation class, and it survives serialize', async ({ expect }) => {
     const handlers = await TasksOperationHandlerSet.handlers.getHandlers();
-    const annotated = Object.fromEntries(
-      handlers
-        .map((handler): [string | undefined, Operation.Mutation | undefined] => [
-          String(handler.meta.key).split('.').at(-1),
-          Operation.getMutation(Operation.serialize(handler)),
-        ])
-        .filter(([, mutation]) => mutation !== undefined),
+    const classified = Object.fromEntries(
+      handlers.map((handler) => [String(handler.meta.key), Operation.getMutation(Operation.serialize(handler))]),
     );
 
-    expect(annotated).toEqual({
-      assign: 'write',
-      complete: 'write',
-      create: 'write',
-      createMilestone: 'write',
-      delete: 'destructive',
-      deleteMilestone: 'destructive',
-      getOutline: 'none',
-      list: 'none',
-      listMilestone: 'none',
-      move: 'write',
-      moveMilestone: 'write',
-      update: 'write',
-      updateMilestone: 'write',
-      updateOutline: 'write',
-    });
+    expect(Object.entries(classified).filter(([, mutation]) => mutation === undefined)).toEqual([]);
+    expect(classified['dxn:org.dxos.operation.tasks.delete']).toBe('destructive');
+    expect(classified['dxn:org.dxos.operation.tasks.getOutline']).toBe('none');
+    expect(classified['dxn:org.dxos.operation.tasks.updateOutline']).toBe('write');
+    expect(classified['dxn:org.dxos.operation.tasks.convert']).toBe('write');
   });
 });

@@ -201,7 +201,7 @@ export function make(input: Type.AnyObj, props: any): OfShape<any> {
     }
   }
 
-  return internal.makeObject(
+  const obj = internal.makeObject(
     schema,
     filterUndefined,
     {
@@ -210,6 +210,9 @@ export function make(input: Type.AnyObj, props: any): OfShape<any> {
     },
     input,
   );
+
+  internal.propagateParentAnnotations(obj);
+  return obj;
 }
 
 /**
@@ -382,6 +385,7 @@ export type Mutable<T> = internal.Mutable<T>;
  */
 export const update = <T extends Unknown>(obj: T, callback: internal.ChangeCallback<T>): T => {
   internal.change(obj, callback);
+  internal.propagateParentAnnotations(obj);
   return obj;
 };
 

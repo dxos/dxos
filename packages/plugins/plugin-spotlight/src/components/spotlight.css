@@ -1,0 +1,14 @@
+/*
+ * Copyright 2026 DXOS.org
+ */
+
+/* The native panel already owns the frame, so the dialog inside it must contribute none. */
+/* Unlayered, so these win over `dx-components` without competing on specificity. */
+[data-spotlight] .dx-dialog__content {
+  inline-size: 100%;
+  max-inline-size: none;
+  block-size: 100%;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}

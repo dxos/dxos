@@ -9,7 +9,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
-import type * as Graph from '@dxos/app-graph/Graph';
+import type * as AppGraph from '@dxos/app-graph/AppGraph';
 import { Database, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { normalizeText } from '@dxos/markdown';
@@ -121,7 +121,7 @@ type ConversationStackContextValue = {
   /** Ids of the expanded messages; every other message renders as a collapsed summary. */
   expanded: ReadonlySet<string>;
   /** App graph for contributed (`disposition: 'toolbar'`) actions (container-resolved). */
-  graph?: Graph.ReadableGraph;
+  graph?: AppGraph.ReadableGraph;
   /** Process-manager runtime for draft send / composer AI (container-resolved). */
   runtime?: Capabilities.ProcessManagerRuntime;
   /** Send operation per installed mail provider, keyed by connector id (container-resolved). */
@@ -287,12 +287,12 @@ const ConversationStackContent = composable<HTMLDivElement, ConversationStackCon
 
       const scrollIntoView = () => tile.scrollIntoView({ block: 'end', behavior: 'smooth' });
       scrollIntoView();
-      // Focus the reply's body editor (`.dx-expander` distinguishes it from the recipient editors,
+      // Focus the reply's body editor (`.dx-expand` distinguishes it from the recipient editors,
       // which are CodeMirror too). The composer mounts asynchronously — watch the tile until the
       // editor appears, bounded by the same settle window as the scroll re-pinning below;
       // `preventScroll` keeps the focus from cutting the smooth scroll short.
       const focusBody = () => {
-        const content = tile.querySelector<HTMLElement>('.dx-expander .cm-content');
+        const content = tile.querySelector<HTMLElement>('.dx-expand .cm-content');
         if (content) {
           content.focus({ preventScroll: true });
           focusObserver.disconnect();

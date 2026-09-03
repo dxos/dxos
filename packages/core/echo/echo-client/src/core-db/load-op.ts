@@ -33,7 +33,12 @@ export interface LoadOp {
   /** Highest ceiling currently pursued; only ever escalated, never lowered. */
   maxCeiling: RefSource;
   state: LoadOpState;
-  result: AnyProperties | null;
+  /**
+   * The materialized entity, held weakly — held strongly, this table would be the reason every
+   * entity a query ever touched stays resident, since an op outlives the read that created it.
+   */
+  get result(): AnyProperties | null;
+  set result(value: AnyProperties | null);
   /** Direct strong-dep URIs of {@link result}; empty unless `state === 'ready'`. */
   strongDeps: URI.URI[];
   /** Fires on any state / result / strongDeps change. */
@@ -79,6 +84,16 @@ export class LoadOpTable {
     const existing = this.#ops.get(uri);
     if (existing) {
       existing.refcount++;
+      // `ready` with no result means the entity was collected since; without a re-probe this op
+      // would answer every future resolution of the URI with `undefined`.
+      if (existing.state === 'ready' && existing.result == null) {
+        const probed = this._routeBackend(uri)?.probe(uri);
+        if (probed) {
+          this.#set(existing, 'ready', probed);
+        } else if (source !== 'working-set') {
+          this.#startLoad(existing, existing.maxCeiling);
+        }
+      }
       if (isHigherCeiling(source, existing.maxCeiling)) {
         existing.maxCeiling = source;
         if (existing.state !== 'ready') {
@@ -88,11 +103,17 @@ export class LoadOpTable {
       return existing;
     }
 
+    let resultRef: WeakRef<AnyProperties> | null = null;
     const op: LoadOp = {
       uri,
       maxCeiling: source,
       state: 'pending',
-      result: null,
+      get result() {
+        return resultRef?.deref() ?? null;
+      },
+      set result(value: AnyProperties | null) {
+        resultRef = value == null ? null : new WeakRef(value);
+      },
       strongDeps: [],
       changed: new Event<void>(),
       refcount: 1,

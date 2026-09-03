@@ -38,6 +38,11 @@
       "types": "./dist/types/src/session/AiSession.d.ts",
       "import": "./dist/lib/session/AiSession.mjs"
     },
+    "./Alarm": {
+      "source": "./src/session/Alarm.ts",
+      "types": "./dist/types/src/session/Alarm.d.ts",
+      "import": "./dist/lib/session/Alarm.mjs"
+    },
     "./ExecutionGraph": {
       "source": "./src/util/execution-graph.ts",
       "types": "./dist/types/src/util/execution-graph.d.ts",
@@ -91,6 +96,7 @@
     "lodash.defaultsdeep": "catalog:"
   },
   "devDependencies": {
+    "@opentelemetry/sdk-trace-base": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:",
     "effect": "catalog:"
   },

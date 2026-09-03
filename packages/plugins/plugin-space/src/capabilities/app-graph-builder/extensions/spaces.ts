@@ -5,11 +5,10 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as CreateAtom from '@dxos/app-graph/CreateAtom';
-import * as Graph from '@dxos/app-graph/Graph';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
-import * as Node from '@dxos/app-graph/Node';
-import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
@@ -18,6 +17,8 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj } from '@dxos/echo';
+import * as GraphNode from '@dxos/graph/GraphNode';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { Migrations } from '@dxos/migrations';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { SpacesService } from '@dxos/protocols/rpc';
@@ -59,7 +60,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
   const appGraphAtom = yield* Capability.atom(AppCapabilities.AppGraph);
 
   return yield* Effect.all([
-    GraphBuilder.createExtension({
+    AppGraphBuilder.createExtension({
       id: 'spaceHome',
       position: Position.first,
       url: { key: 'home', kind: 'singleton', path: [] },
@@ -79,17 +80,17 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               droppable: false,
               space,
             },
-          } satisfies Node.NodeArg<typeof SpaceSchema.SPACE_HOME_NODE_TYPE>,
+          } satisfies AppGraphNode.NodeArg<typeof SpaceSchema.SPACE_HOME_NODE_TYPE>,
         ]),
     }),
 
-    GraphBuilder.createExtension({
+    AppGraphBuilder.createExtension({
       id: 'primaryActions',
       position: Position.first,
-      match: NodeMatcher.whenRoot,
+      match: GraphNodeMatcher.whenRoot,
       actions: () =>
         Effect.succeed([
-          Node.makeAction({
+          AppGraphNode.makeAction({
             id: SpaceOperation.OpenCreateSpace.meta.key,
             data: () => Operation.invoke(SpaceOperation.OpenCreateSpace),
             properties: {
@@ -99,7 +100,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               disposition: 'menu',
             },
           }),
-          Node.makeAction({
+          AppGraphNode.makeAction({
             id: SpaceOperation.Join.meta.key,
             data: () => Operation.invoke(SpaceOperation.Join, {}),
             properties: {
@@ -109,7 +110,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               disposition: 'menu',
             },
           }),
-          Node.makeAction({
+          AppGraphNode.makeAction({
             id: SpaceOperation.OpenImportSpace.meta.key,
             data: () => Operation.invoke(SpaceOperation.OpenImportSpace),
             properties: {
@@ -118,7 +119,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               testId: 'spacePlugin.importSpace',
             },
           }),
-          Node.makeAction({
+          AppGraphNode.makeAction({
             id: `${SpaceOperation.ExportSpace.meta.key}.binary`,
             data: Effect.fnUntraced(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);
@@ -136,7 +137,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               testId: 'spacePlugin.exportSpaceBinary',
             },
           }),
-          Node.makeAction({
+          AppGraphNode.makeAction({
             id: `${SpaceOperation.ExportSpace.meta.key}.json`,
             data: Effect.fnUntraced(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);
@@ -154,7 +155,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               testId: 'spacePlugin.exportSpaceJson',
             },
           }),
-          Node.makeAction({
+          AppGraphNode.makeAction({
             id: SpaceOperation.OpenMembers.meta.key,
             data: Effect.fnUntraced(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);
@@ -173,7 +174,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               },
             },
           }),
-          Node.makeAction({
+          AppGraphNode.makeAction({
             id: SpaceOperation.OpenSettings.meta.key,
             data: Effect.fnUntraced(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);
@@ -194,9 +195,9 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
         ]),
     }),
 
-    GraphBuilder.createExtension({
+    AppGraphBuilder.createExtension({
       id: 'spaces',
-      match: NodeMatcher.whenRoot,
+      match: GraphNodeMatcher.whenRoot,
       connector: (_node, get) => {
         // This reactive connector can recompute once during the teardown window (e.g. when stories
         // swap plugin managers) after the Client capability has been removed; the hoisted atom
@@ -286,7 +287,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
     // group is always present when the space plugin is active. A more specific plugin (e.g. a
     // future plugin-communications) should own this once one exists.
     // TODO(wittjosiah): Move to a dedicated communications plugin when one exists.
-    GraphBuilder.createExtension({
+    AppGraphBuilder.createExtension({
       id: GraphPath.GroupSegments.communications,
       match: AppNodeMatcher.whenSpace,
       connector: (space) =>
@@ -295,13 +296,14 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             id: GraphPath.GroupSegments.communications,
             type: GraphPath.GroupTypes.communications,
             label: ['nav-tree-group-comm.label', { ns: meta.profile.key }],
+            icon: 'ph--chats--regular',
             space,
             position: 100,
           }),
         ]),
     }),
 
-    GraphBuilder.createExtension({
+    AppGraphBuilder.createExtension({
       id: 'actions',
       match: AppNodeMatcher.whenSpace,
       actions: (space, get) => {
@@ -345,7 +347,7 @@ const constructSpaceNode = ({
   space: Space;
   navigable?: boolean;
   namesCache?: Record<string, string>;
-  graph?: Graph.ExpandableGraph;
+  graph?: AppGraph.ExpandableGraph;
   spacesOrder?: Obj.Any;
 }) => {
   const hasPendingMigration = checkPendingMigration(space);
@@ -355,9 +357,9 @@ const constructSpaceNode = ({
     onRearrange = spaceRearrangeCache.get(space.id);
     if (!onRearrange) {
       onRearrange = (nextOrder: Space[]) => {
-        Graph.sortEdges(
+        AppGraph.sortEdges(
           graph,
-          Node.RootId,
+          GraphNode.RootId,
           'outbound',
           nextOrder.map(({ id }) => id),
         );
@@ -370,7 +372,7 @@ const constructSpaceNode = ({
     }
   }
 
-  return Node.make({
+  return AppGraphNode.make({
     id: space.id,
     type: SpaceSchema.SPACE_TYPE,
     cacheable: AppNode.CACHEABLE_PROPS,
@@ -409,13 +411,13 @@ const constructSpaceActions = ({ space, migrating }: { space: Space; migrating?:
     return cached.actions;
   }
 
-  const actions: Node.NodeArg<Node.ActionData<Operation.Service>>[] = [];
+  const actions: AppGraphNode.NodeArg<AppGraphNode.ActionData<Operation.Service>>[] = [];
 
   if (hasPendingMigration) {
     actions.push(
-      Node.make({
+      AppGraphNode.make({
         id: SpaceOperation.Migrate.meta.key,
-        type: Node.ActionGroupType,
+        type: AppGraphNode.ActionGroupType,
         data: () => Operation.invoke(SpaceOperation.Migrate, { space }),
         properties: {
           label: MIGRATE_SPACE_LABEL,
@@ -429,7 +431,7 @@ const constructSpaceActions = ({ space, migrating }: { space: Space; migrating?:
 
   if (state === SpaceState.SPACE_READY && !hasPendingMigration) {
     actions.push(
-      Node.makeAction({
+      AppGraphNode.makeAction({
         id: SpaceOperation.OpenObjectForm.meta.key,
         data: () => Operation.invoke(SpaceOperation.OpenObjectForm, { target: space.db }),
         properties: {
@@ -439,9 +441,9 @@ const constructSpaceActions = ({ space, migrating }: { space: Space; migrating?:
           testId: 'spacePlugin.createObject',
         },
       }),
-      Node.makeAction({
+      AppGraphNode.makeAction({
         id: SpaceOperation.Rename.meta.key,
-        data: (params?: Node.InvokeProps) =>
+        data: (params?: AppGraphNode.InvokeProps) =>
           Operation.invoke(SpaceOperation.Rename, { space, caller: `${params?.caller}:${params?.parent?.id}` }),
         properties: {
           label: RENAME_SPACE_LABEL,

@@ -3,6 +3,7 @@
 //
 
 // This is based upon `@radix-ui/react-popover` fetched Oct 25, 2024 at https://github.com/radix-ui/primitives at commit 374c7d7.
+// The upstream source lives at https://github.com/radix-ui/primitives/tree/main/packages/react/popover.
 
 import { composeEventHandlers } from '@radix-ui/primitive';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
@@ -32,6 +33,8 @@ import React, {
   useState,
 } from 'react';
 import { RemoveScroll } from 'react-remove-scroll';
+
+import { DX_POPOVER_CONTENT_ATTR } from '@dxos/ui-types';
 
 import { useElevationContext, useSafeCollisionPadding, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
@@ -470,6 +473,7 @@ const PopoverContentImpl = forwardRef<PopoverContentImplElement, PopoverContentI
         >
           <PopperPrimitive.Content
             data-state={getState(context.open)}
+            {...{ [DX_POPOVER_CONTENT_ATTR]: '' }}
             role='dialog'
             id={context.contentId}
             {...popperScope}

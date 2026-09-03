@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { EditorSelection } from '@codemirror/state';
+import { EditorSelection, type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { composeRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
@@ -19,8 +19,14 @@ import React, {
 } from 'react';
 
 import { Doc } from '@dxos/echo-doc';
-import { DX_ANCHOR_ACTIVATE, DxAnchorActivate, useThemeContext, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import {
+  DX_ANCHOR_ACTIVATE,
+  DxAnchorActivate,
+  composable,
+  composableProps,
+  useThemeContext,
+  useTranslation,
+} from '@dxos/react-ui';
 import {
   type EditorMenuGroup,
   EditorMenuProvider,
@@ -94,12 +100,14 @@ type OutlineContextValue = {
   scrollable: boolean;
   showSelected: boolean;
   readonly?: boolean;
+  autoFocus?: boolean;
   /** Reports whether the caret's item can still be promoted (an item that is already a link cannot). */
   onConvertibleChange?: (convertible: boolean) => void;
-  autoFocus?: boolean;
   onConvertToTask?: (text: string) => Promise<OutlineLink | undefined>;
   onSelectLink?: (url: string) => void;
   resolveLinkLabel?: (url: string) => string | undefined;
+  /** Editor extensions contributed by the host (e.g. a plugin's reference decoration). */
+  extensions?: Extension[];
   /** Mutable ref populated by Content so Root can expose the view via the controller. */
   viewRef: RefObject<EditorView | null | undefined>;
 };
@@ -130,6 +138,11 @@ type OutlineRootProps = PropsWithChildren<
     onSelectLink?: (url: string) => void;
     /** Current label of a link's target; the document text is reconciled against it. */
     resolveLinkLabel?: (url: string) => string | undefined;
+    /**
+     * Editor extensions the host contributes. The outline owns its own core (outliner, markdown,
+     * links); a host adds what only it knows about — e.g. plugin-github decorating `#123`.
+     */
+    extensions?: Extension[];
   } & Pick<UseTextEditorProps, 'autoFocus'>
 >;
 
@@ -147,6 +160,7 @@ const OutlineRoot = forwardRef<OutlineController, OutlineRootProps>(
       onConvertibleChange,
       onSelectLink,
       resolveLinkLabel,
+      extensions,
     },
     forwardedRef,
   ) => {
@@ -178,6 +192,7 @@ const OutlineRoot = forwardRef<OutlineController, OutlineRootProps>(
         onConvertToTask={onConvertToTask}
         onSelectLink={onSelectLink}
         resolveLinkLabel={resolveLinkLabel}
+        extensions={extensions}
         viewRef={viewRef}
       >
         {children}
@@ -208,6 +223,7 @@ const OutlineContent = composable<HTMLDivElement, OutlineContentProps>((props, f
     onConvertToTask,
     onSelectLink,
     resolveLinkLabel,
+    extensions,
     viewRef,
   } = useOutlineContext(OUTLINE_CONTENT_NAME);
   const { t } = useTranslation(meta.profile.key);
@@ -226,12 +242,9 @@ const OutlineContent = composable<HTMLDivElement, OutlineContentProps>((props, f
         createThemeExtensions({
           themeMode,
           slots: {
-            scroller: { className: scrollable ? '' : '!overflow-hidden' },
+            scroller: { className: scrollable ? '' : 'overflow-hidden!' },
           },
         }),
-        // `showSelected` is NOT forwarded: `outliner` has never had such an option (its props were
-        // typed `{}`, which accepted the argument and dropped it), and the selection highlight is drawn
-        // unconditionally by its dnd extension. Threading it here would only re-hide that.
         outliner({ readonly }),
         EditorView.updateListener.of((update) => {
           if (update.selectionSet || update.docChanged) {
@@ -250,9 +263,11 @@ const OutlineContent = composable<HTMLDivElement, OutlineContentProps>((props, f
           },
         }),
         hashtag(),
+        // Last, so a host's decoration sees the document the outline's own extensions produced.
+        extensions ?? [],
       ],
     }),
-    [id, text, autoFocus, themeMode, readonly],
+    [id, text, autoFocus, themeMode, readonly, extensions],
   );
 
   // Publish view to Root so the controller can access it.

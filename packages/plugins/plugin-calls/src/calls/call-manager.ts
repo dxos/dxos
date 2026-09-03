@@ -250,11 +250,13 @@ export class CallManager extends Resource {
   // TODO(mykola): Reconcile with _swarmSynchronizer.state.joined.
   @synchronized
   async join(): Promise<void> {
+    const callsServiceUrl = getEdgeServiceEndpoint(this._client.config, EdgeServiceName.Calls);
+    invariant(callsServiceUrl, 'The calls service is not configured (runtime.services.edge.url).');
     this._swarmSynchronizer.setJoined(true);
     await this._swarmSynchronizer.join();
     await this._mediaManager.join({
       iceServers: this._client.config.get('runtime.services.ice'),
-      apiBase: `${getEdgeServiceEndpoint(this._client.config, EdgeServiceName.Calls)}/api/calls`,
+      apiBase: `${callsServiceUrl}/rtc`,
     });
   }
 

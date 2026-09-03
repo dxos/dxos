@@ -4,7 +4,6 @@
 
 // @import-as-namespace
 
-import { type Context as ReactContext, createContext } from 'react';
 import { type Step as BaseStep } from 'react-joyride';
 
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
@@ -23,13 +22,3 @@ export type ContextType = {
   start: () => void;
   stop: () => void;
 };
-
-/** React context provided by `WelcomeTour`; access via the `useTour` hook. */
-export const Context: ReactContext<ContextType> = createContext<ContextType>({
-  running: false,
-  steps: [],
-  setSteps: () => {},
-  setIndex: () => {},
-  start: () => {},
-  stop: () => {},
-});

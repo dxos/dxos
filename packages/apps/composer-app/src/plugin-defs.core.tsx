@@ -9,13 +9,14 @@ import type * as Plugin from '@dxos/app-framework/Plugin';
 import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { type Client, type ClientServicesProvider, type Config } from '@dxos/client';
 import { type IdbLogStore } from '@dxos/log-store-idb';
-import { type Observability } from '@dxos/observability';
+import type * as Observability from '@dxos/observability/Observability';
 import * as AtprotoPlugin from '@dxos/plugin-atproto/AtprotoPlugin';
 import * as AttentionPlugin from '@dxos/plugin-attention/AttentionPlugin';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as ConnectorPlugin from '@dxos/plugin-connector/ConnectorPlugin';
 import * as DeckPlugin from '@dxos/plugin-deck/DeckPlugin';
 import * as GraphPlugin from '@dxos/plugin-graph/GraphPlugin';
+import * as MobilePlugin from '@dxos/plugin-mobile/MobilePlugin';
 import * as NativePlugin from '@dxos/plugin-native/NativePlugin';
 import * as NavTreePlugin from '@dxos/plugin-navtree/NavTreePlugin';
 import * as ObservabilityPlugin from '@dxos/plugin-observability/ObservabilityPlugin';
@@ -27,7 +28,6 @@ import * as RegistryPlugin from '@dxos/plugin-registry/RegistryPlugin';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as SearchPlugin from '@dxos/plugin-search/SearchPlugin';
 import * as SettingsPlugin from '@dxos/plugin-settings/SettingsPlugin';
-import * as SimpleLayoutPlugin from '@dxos/plugin-simple-layout/SimpleLayoutPlugin';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
 import * as SpotlightPlugin from '@dxos/plugin-spotlight/SpotlightPlugin';
 import * as StatusBarPlugin from '@dxos/plugin-status-bar/StatusBarPlugin';
@@ -35,7 +35,7 @@ import * as SupportPlugin from '@dxos/plugin-support/SupportPlugin';
 import * as ThemePlugin from '@dxos/plugin-theme/ThemePlugin';
 import { isTruthy } from '@dxos/util';
 
-import { downloadLogs, steps } from './util';
+import { downloadLogs } from './util';
 
 const APP_LINK_ORIGIN = new URL('https://' + NativePasskey.APP_DOMAIN).origin;
 
@@ -52,11 +52,7 @@ export type State = {
 export type PluginConfig = State & {
   /** Raises a fatal client-initialization failure to the entry point (see `onFatalError` in main.tsx). */
   onFatalError?: (error: unknown) => void;
-  /**
-   * Whether this build exposes the plugin registry — the catalog, its settings surface and the dev
-   * plugin loader. Defaults to true; the curated set (`plugin-defs.production.tsx`) turns it off.
-   */
-  isExtensible?: boolean;
+  externalPlugins?: boolean;
   isDev?: boolean;
   isLocal?: boolean;
   isPwa?: boolean;
@@ -67,8 +63,9 @@ export type PluginConfig = State & {
 };
 
 /**
- * Infrastructure plugins shared by every plugin set (`plugin-defs.tsx` and
- * `plugin-defs.production.tsx`) — options here are the single source of truth.
+ * Infrastructure plugins shared by every plugin set (`plugin-defs.tsx`,
+ * `plugin-defs.production.tsx` and `plugin-defs.mobile.tsx`) — options here are the single source of
+ * truth.
  *
  * **Every `system`-tagged plugin belongs in this list, and every plugin in this list is
  * `tags: ['system']`** (force-enabled, never a user-facing toggle). The two must agree, in both
@@ -87,14 +84,20 @@ export const getCorePlugins = ({
   observability,
   logStore,
   onFatalError,
-  isExtensible = true,
+  externalPlugins = true,
   isLocal,
   isPwa,
   isTauri,
   isPopover,
   isMobile,
 }: PluginConfig): Plugin.Plugin[] => {
-  const layoutPlugin = isPopover ? SpotlightPlugin.make() : isMobile ? SimpleLayoutPlugin.make({}) : DeckPlugin.make();
+  // Mobile is two plugins, not one: headless Deck (state/ops, no root/surfaces) plus Mobile (root +
+  // surfaces) rendering over it — one state machine, plugin-mobile is only ever the renderer.
+  const layoutPlugins: Plugin.Plugin[] = isPopover
+    ? [SpotlightPlugin.make()]
+    : isMobile
+      ? [DeckPlugin.make({ platform: 'mobile' }), MobilePlugin.make()]
+      : [DeckPlugin.make({ platform: 'desktop' })];
   const origin = isTauri ? APP_LINK_ORIGIN : window.location.origin;
   return [
     AtprotoPlugin.make(),
@@ -137,20 +140,20 @@ export const getCorePlugins = ({
     // targets. Without it a plugin like Inbox contributes connectors nobody ever asks for.
     ConnectorPlugin.make(),
     GraphPlugin.make(),
-    layoutPlugin,
+    ...layoutPlugins,
     NavTreePlugin.make(),
     ObservabilityPlugin.make({
       namespace: appKey,
       observability: () => observability,
       downloadLogs: () => downloadLogs(logStore),
     }),
-    OnboardingPlugin.make({ generateExemplarSpace: !isLocal }),
+    OnboardingPlugin.make({ generateSampleSpace: !isLocal }),
     isTauri && !isMobile && !isPopover && NativePlugin.make(),
     PreviewPlugin.make(),
     ProcessManagerPlugin(),
     ProgressPlugin.make(),
     !isTauri && isPwa && PwaPlugin.make(),
-    isExtensible && RegistryPlugin.make(),
+    RegistryPlugin.make({ externalPlugins }),
     RoutinePlugin.make(),
     SearchPlugin.make(),
     SettingsPlugin.make(),
@@ -161,7 +164,7 @@ export const getCorePlugins = ({
       invitationUrlHandler: false,
     }),
     StatusBarPlugin.make(),
-    SupportPlugin.make({ helpSteps: steps }),
+    SupportPlugin.make({ helpSteps: () => import('./util/help').then(({ steps }) => steps) }),
     ThemePlugin.make({
       appName: 'Composer',
       platform: isMobile ? 'mobile' : 'desktop',

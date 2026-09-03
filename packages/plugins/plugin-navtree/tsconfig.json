@@ -25,7 +25,7 @@
       "path": "../../common/debug"
     },
     {
-      "path": "../../common/keyboard"
+      "path": "../../common/graph"
     },
     {
       "path": "../../common/keys"
@@ -56,6 +56,9 @@
     },
     {
       "path": "../../ui/lit-ui"
+    },
+    {
+      "path": "../../ui/react-primitives/react-focus"
     },
     {
       "path": "../../ui/react-ui"

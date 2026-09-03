@@ -2,24 +2,25 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { forwardRef, useCallback, useEffect, useRef } from 'react';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import React, { forwardRef, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { Provider } from '@dxos/ai';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { type Chat as ChatType } from '@dxos/assistant-toolkit';
-import { getSpace } from '@dxos/client/echo';
-import { type Obj } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { ClientOperation } from '@dxos/plugin-client';
 import { useRegistry } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { type ChatView } from '@dxos/react-ui-assistant';
+import { graphActions, isToolbarAction } from '@dxos/react-ui-menu';
 import { Merge } from '@dxos/util';
 
 import { Chat as ChatComponent, type ChatRootProps } from '#components';
-import { useChatProcessor, useChatServices, usePresets, useSelectionContext } from '#hooks';
+import { useChatProcessor, useChatServices, usePlatform, usePresets, useSelectionContext } from '#hooks';
 import { AssistantCapabilities } from '#types';
 
 export type ChatArticleProps = Merge<
@@ -32,17 +33,19 @@ export type ChatArticleProps = Merge<
 export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
   ({ role, attendableId, subject: chat, companionTo, debug, onEvent, onSubmit }, forwardedRef) => {
     const registry = useRegistry();
+    // The marker rail is a hover/precision target pinned to the thread's left edge, and the status
+    // pill floats over the last turn — on a phone the rail has nowhere to live outside the text and
+    // the pill covers the reply it reports on. Neither has a toggle to orphan; both are passive.
+    const mobile = usePlatform() === 'mobile';
     const settings = useAtomCapability(AssistantCapabilities.Settings);
     const atomRegistry = useCapability(Capabilities.AtomRegistry);
     const stateAtom = useCapability(AssistantCapabilities.State);
-    // Transient (pre-submit) chats have no database; fall back to the companion's space.
-    const space = getSpace(chat) ?? getSpace(companionTo);
-    const runtime = useChatServices({ id: space?.id });
+    // Transient (pre-submit) chats have no database; fall back to the companion's.
+    const db = Obj.getDatabase(chat) ?? (companionTo && Obj.getDatabase(companionTo));
+    const runtime = useChatServices({ id: db?.spaceId });
 
     const { preset, ...chatProps } = usePresets(settings);
-    // The provider is configured in settings; the chat surfaces it as a read-only online indicator.
-    const online = preset?.provider === Provider.edge.id;
-    const processor = useChatProcessor({ space, chat, preset, runtime, registry, settings });
+    const processor = useChatProcessor({ db, chat, preset, runtime, registry, settings });
     const getContext = useSelectionContext(companionTo);
 
     // Subscribe to the view type via `useObject` so the thread re-renders when ChatOptions changes it;
@@ -54,6 +57,15 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     const handleViewUsage = useCallback(() => {
       void invokePromise(ClientOperation.OpenUsage, undefined);
     }, [invokePromise]);
+
+    // Toolbar actions other plugins filed on this chat's node — the microphone among them. Read the
+    // way `MarkdownArticle` reads its own, so a contributor reaches the prompt without plugin-assistant
+    // importing it (or knowing it exists).
+    const { graph } = useAppGraph();
+    const customActions = useMemo(
+      () => Atom.make((get) => graphActions(graph, get, attendableId, { filter: isToolbarAction })),
+      [graph, attendableId],
+    );
 
     // Reset the one-shot guard when the target conversation changes, so a pending prompt for a new
     // `attendableId` is still auto-submitted within the same mount.
@@ -87,7 +99,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     return (
       <ChatComponent.Root
         chat={chat}
-        db={space?.db}
+        db={db}
         processor={processor}
         debug={debug}
         getContext={getContext}
@@ -100,14 +112,14 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
           </Panel.Toolbar>
           <Panel.Content asChild>
             <ChatComponent.Content>
-              <div className='dx-container relative'>
+              <div className='dx-expand relative'>
                 {/* Thread outline. */}
-                <ChatComponent.Outline classNames='absolute left-0 top-1/2 -translate-y-1/2 z-10' />
+                {!mobile && <ChatComponent.Outline classNames='absolute left-0 top-1/2 -translate-y-1/2 z-10' />}
                 {/* Main thread. */}
                 <ChatComponent.Thread viewType={viewType} tailLines={4} onViewUsage={handleViewUsage} />
                 {/* Floating thread status. */}
-                {viewType !== 'summary' && (
-                  <div className='absolute bottom-2 left-0 right-0'>
+                {!mobile && viewType !== 'summary' && (
+                  <div data-testid='assistant.chat-status' className='absolute bottom-2 left-0 right-0'>
                     <div className='dx-document px-4'>
                       <ChatComponent.Status classNames='px-3 rounded-sm bg-group-surface' />
                     </div>
@@ -115,15 +127,16 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                 )}
               </div>
               <div className='dx-document flex flex-col px-4 pb-4'>
-                <div className='px-4'>
-                  <ChatComponent.TaskList classNames='border border-separator border-b-0 rounded-sm rounded-b-none text-description' />
-                </div>
+                {/* Queued prompts the agent has not taken up yet, stacked right above the composer. */}
+                <ChatComponent.Queue classNames='shrink-0 items-end pb-1' />
+                {/* Composer and checklist in one: `Chat.Prompt` owns the disclosure between them. */}
                 <ChatComponent.Prompt
                   {...chatProps}
                   outline
-                  online={online}
-                  preset={preset?.id}
+                  attendableId={attendableId}
                   companionTo={companionTo}
+                  customActions={customActions}
+                  preset={preset?.id}
                 />
               </div>
             </ChatComponent.Content>

@@ -1,15 +1,35 @@
 layer: library
 language: typescript
 tags:
+  - composer-plugin
   - ts-vite-build
   - ts-test
 tasks:
-  build-exemplar:
-    script: pnpm run --silent build-exemplar
+  check-module-structure:
+    command: >-
+      pnpm exec dx-trace-imports
+      --export ./OnboardingPlugin
+      --to "{react,react-dom}"
+      --conditions workerd,worker
+      --conditions node
+      --fail-on present
+    deps:
+      - dx-trace-imports:build
+      - build
+    inputs:
+      - tsconfig.json
+      - '@group(production)'
+      - /pnpm-lock.yaml
+    options:
+      timeout: 60
+  build-sample:
+    script: pnpm run --silent build-sample
     deps:
       - ^:build
     inputs:
-      - scripts/build-exemplar-space.ts
-      - src/content/exemplar/ABOUT.md
+      - scripts/build-sample-space.ts
+      - scripts/sample/*.ts
+      - src/content/sample/README.md
+      - src/content/sample/ABOUT.md
     outputs:
-      - src/content/exemplar/space.dx.json
+      - src/content/sample/space.dx.json

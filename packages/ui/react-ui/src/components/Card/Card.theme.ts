@@ -22,10 +22,12 @@ const subgrid = 'col-span-3 grid grid-cols-subgrid gap-x-1 items-center';
 // column gap is set here — the axes are separate tailwind-merge groups, so they compose.
 const root: ComponentFunction<CardStyleProps> = ({ border, fullWidth }, ...etc) =>
   mx(
-    'dx-card dx-card-surface dx-card-min-width dx-card-max-width min-h-(--dx-rail-item) p-1 gap-x-1',
+    'dx-card dx-card-surface min-h-(--dx-rail-item) p-1 gap-x-1',
+    // fullWidth tracks the container in both directions: the min floor would overflow containers
+    // narrower than --spacing-card-min-width (phones).
+    fullWidth ? 'w-full min-w-0' : 'dx-card-min-width dx-card-max-width',
     'group/card relative shrink-0 overflow-hidden',
     border && 'border-2 border-separator rounded-md dx-focus-ring-group-y-indicator',
-    fullWidth && 'max-w-none!',
     ...etc,
   );
 
@@ -67,7 +69,7 @@ const actionLabel: ComponentFunction<CardStyleProps> = (_, ...etc) =>
 // Holds the label and its annotation in one grid cell: `action` puts every child in column 2,
 // so siblings would otherwise stack onto separate rows.
 const actionContent: ComponentFunction<CardStyleProps> = (_, ...etc) =>
-  mx('dx-card__action-content min-w-0 flex-1 flex items-baseline gap-2 overflow-hidden', ...etc);
+  mx('dx-card__action-content flex-1 flex items-baseline gap-2 overflow-hidden', ...etc);
 
 // Never shrinks: the label truncates around it, so a long subject cannot squeeze the annotation out.
 const actionAnnotation: ComponentFunction<CardStyleProps> = (_, ...etc) =>

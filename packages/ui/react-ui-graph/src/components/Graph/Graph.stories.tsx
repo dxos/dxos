@@ -9,7 +9,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { select } from 'd3';
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type Graph, type GraphModel, type SelectionMode, SelectionModel } from '@dxos/graph';
+import { type SelectionMode, SelectionModel } from '@dxos/graph';
+import type * as GraphModel from '@dxos/graph/GraphModel';
 import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
 import { JsonHighlighter, Syntax } from '@dxos/react-ui-syntax-highlighter';
@@ -53,7 +54,7 @@ type StoryArgs = GraphProps & {
   debug?: boolean;
   grid?: boolean | SVGGridProps;
   inspect?: boolean;
-  graph: () => Graph.Any;
+  graph: () => GraphModel.AnyData;
   selectionMode?: SelectionMode;
   projectorType?: ProjectorType;
   projectorOptions?:
@@ -79,9 +80,9 @@ const DefaultStory = ({
 
   // Models.
   const selection = useMemo(() => new SelectionModel({ mode: selectionMode }), [selectionMode]);
-  const [model, setModel] = useState<GraphModel.ReactiveGraphModel | undefined>(() => {
+  const [model, setModel] = useState<GraphModel.GraphModel | undefined>(() => {
     const graph = _graph?.();
-    return graph ? new TestGraphModel(registry, graph) : undefined;
+    return graph ? new TestGraphModel({ registry, graph }) : undefined;
   });
 
   // Projector.
@@ -160,7 +161,7 @@ const DefaultStory = ({
 
   const handleRegenerate = useCallback(() => {
     const graph = _graph?.();
-    setModel(graph ? new TestGraphModel(registry, graph) : undefined);
+    setModel(graph ? new TestGraphModel({ registry, graph }) : undefined);
   }, [_graph, registry]);
 
   const handleClear = useCallback(() => {
@@ -205,7 +206,7 @@ const DefaultStory = ({
 
   return (
     <Popover.Root open={!!popover} onOpenChange={(state) => !state && setPopover(undefined)}>
-      <div className={mx('h-full w-full grid divide-x divide-separator', debug && 'grid-cols-[1fr_30rem]')}>
+      <div className={mx('dx-fill grid divide-x divide-separator', debug && 'grid-cols-[1fr_30rem]')}>
         <SVG.Root ref={context}>
           <SVG.Markers />
           {grid && <SVG.Grid {...(typeof grid === 'boolean' ? { axis: grid } : grid)} />}
@@ -282,7 +283,7 @@ const Debug = ({
   onDelete,
   onPing,
 }: {
-  model?: GraphModel.ReactiveGraphModel;
+  model?: GraphModel.GraphModel;
   selection: SelectionModel;
   projector: ProjectorType;
   onToggleProjector: () => void;

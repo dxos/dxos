@@ -7,8 +7,8 @@
 
 import React from 'react';
 
-import { getParentId } from '@dxos/app-graph';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { parentId } from '@dxos/graph/GraphNode';
 import { useNode } from '@dxos/plugin-graph/hooks';
 import { type Event, type Message } from '@dxos/types';
 
@@ -24,7 +24,7 @@ export type MessageArticleSurfaceProps = {
 /** Resolves the mailbox that scopes a message's conversation from the graph. */
 export const MessageArticleSurface = ({ role, subject, attendableId }: MessageArticleSurfaceProps) => {
   const { graph } = useAppGraph();
-  const parent = useNode(graph, getParentId(attendableId));
+  const parent = useNode(graph, parentId(attendableId));
   // A message lives under its mailbox view; every mailbox view carries the mailbox as its node
   // `data`, so use that (not `properties.mailbox`, which only some views set) to scope the
   // conversation lookup in MessageArticle.
@@ -45,7 +45,7 @@ export const EventArticleSurface = ({ role, subject, attendableId }: EventArticl
   // In companion mode attendableId is the calendar node itself; in primary mode
   // (navigated directly) attendableId is the event node and its parent is the calendar.
   const atNode = useNode(graph, attendableId);
-  const parentNode = useNode(graph, getParentId(attendableId));
+  const parentNode = useNode(graph, parentId(attendableId));
   const calendar = Calendar.instanceOf(atNode?.data)
     ? atNode.data
     : Calendar.instanceOf(parentNode?.data)

@@ -120,7 +120,7 @@ const findByForeignId = <T>(type: Type.AnyEntity, id: string | number) =>
 const issueStateToTaskStatus = (state: string): 'todo' | 'done' => (state === 'closed' ? 'done' : 'todo');
 
 /**
- * Reverse of {@link issueStateToTaskStatus}. `'in-progress'` is collapsed to
+ * Reverse of {@link issueStateToTaskStatus}. `'started'` is collapsed to
  * `open` since GitHub has no equivalent state. Returns undefined when the
  * status is unrecognised so the caller can skip the push instead of failing.
  */
@@ -129,7 +129,7 @@ const taskStatusToIssueState = (status: string | undefined): 'open' | 'closed' |
     case 'done':
       return 'closed';
     case 'todo':
-    case 'in-progress':
+    case 'started':
       return 'open';
     default:
       return undefined;
@@ -148,15 +148,15 @@ const sinceFromOptions = (options: GitHubOperation.SyncOptions | undefined): str
 const dueOnToTargetDate = (dueOn: string | null | undefined): string | undefined => dueOn?.slice(0, 10) ?? undefined;
 
 /**
- * Move a task into `container`. Membership and order are the `TaskSet.tasks` array; the ECHO parent
- * edge is set alongside only so deletion cascades, so both are written together. Idempotent —
- * sync runs repeatedly and must never append a second ref for a task already in the set.
+ * Move a task into `container`. Idempotent — sync runs repeatedly and must never append a second
+ * ref for a task already in the set.
  */
 export const setTaskContainer = Effect.fn('setTaskContainer')(function* (task: Task.Task, container: TaskSet.TaskSet) {
   if (container.tasks.some(Ref.hasEntityId(task.id))) {
     return;
   }
-  // The reverse-ref index, not `Obj.getParent`: the array states membership, the parent edge does not.
+  // The reverse-ref index, not `Obj.getParent`: legacy sets may hold refs to tasks whose parent
+  // edge has not yet been healed to the set, and every holder must drop its stale entry.
   const previous = yield* Database.query(
     Query.select(Filter.id(task.id)).referencedBy(TaskSet.TaskSet, 'tasks'),
   ).run.pipe(Effect.orElseSucceed(() => []));
@@ -171,7 +171,6 @@ export const setTaskContainer = Effect.fn('setTaskContainer')(function* (task: T
   Obj.update(container, (container) => {
     container.tasks = [...container.tasks, Ref.make(task)];
   });
-  Obj.setParent(task, container);
 });
 
 //
@@ -514,7 +513,7 @@ export const pushRepoUpdates: <E, R>(
       const localDescription = local.description ?? '';
       const localStatus = local.status;
       const desiredStatusForSnapshot: 'todo' | 'done' | undefined =
-        localStatus === 'done' ? 'done' : localStatus === 'todo' || localStatus === 'in-progress' ? 'todo' : undefined;
+        localStatus === 'done' ? 'done' : localStatus === 'todo' || localStatus === 'started' ? 'todo' : undefined;
 
       const input: GitHubApi.IssueUpdateInput = {};
       let diverged = false;
@@ -738,10 +737,7 @@ const syncRepoBinding = Effect.fn('syncRepoBinding')(function* (binding: Cursor.
         },
         pushed: pushResult,
       };
-    }).pipe(
-      Effect.provide(Database.layer(db)),
-      Effect.provide(GitHubApi.GitHubCredentials.fromAccessToken(binding.spec.source)),
-    ),
+    }).pipe(Effect.provide(Database.layer(db)), Effect.provide(GitHubApi.fromAccessToken(binding.spec.source))),
   );
 
   // Write sync state onto the binding.

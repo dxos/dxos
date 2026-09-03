@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Attention, ViewState, createDefaultBackends } from '@dxos/react-ui-attention';
+import { Attention, ViewState, createDefaultBackends } from '@dxos/react-ui-attention/types';
 
 import { AttentionCapabilities } from '#types';
 

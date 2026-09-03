@@ -25,7 +25,7 @@
       "path": "../../common/effect"
     },
     {
-      "path": "../../common/keyboard"
+      "path": "../../common/graph"
     },
     {
       "path": "../../common/keys"
@@ -65,6 +65,9 @@
     },
     {
       "path": "../../ui/brand"
+    },
+    {
+      "path": "../../ui/react-primitives/react-focus"
     },
     {
       "path": "../../ui/react-primitives/react-hooks"

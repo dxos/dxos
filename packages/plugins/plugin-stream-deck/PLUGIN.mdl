@@ -23,6 +23,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `component` | `org.dxos.mdl.component@1.0`  |
+| `flow`      | `org.dxos.mdl.flow@1.0`       |
 
 ## Types
 
@@ -200,6 +201,85 @@ test T-5: A press reaches Composer with its slot
 test T-6: An incompatible device plugin does not loop
   given: a device plugin announcing a different protocol version
   then: the bridge reports `incompatible` and makes no further connection attempts
+```
+
+---
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: A favorite appears on the virtual deck
+  desc: |
+    The part of the round-trip observable without Stream Deck hardware: tag an object as a
+    favorite and confirm it renders on `VirtualStreamDeck`, the on-screen replica that is sent
+    the identical frame as the device (F-3.4). This plugin declares no operations of its own —
+    favoriting goes through `space.addTag`, owned by `plugin-space`.
+  actors: both
+  covers: [F-1.1, F-1.3, F-3.1, F-3.4, T-1]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-stream-deck is enabled — it is `isDev`-gated both for availability and in defaults
+      (`plugin-defs.tsx`: `isDev && StreamDeckPlugin.make()`), so it is OFF outside dev builds
+    - document: a Document named "QA Favorite" already exists in the space, with no `favorite`
+      tag on it — ABORT rather than tagging or deleting one this flow did not create
+    - favoriteTag: a keyless Tag object labelled "favorite" (query for one before creating
+      another, per `SpaceOperation.AddTag`'s own guidance)
+  test:
+    - name: Tag the document as a favorite
+      do: Right-click "QA Favorite" in the navtree and choose "Add to favorites" (or apply the
+        `favorite` tag from the tag picker).
+      invoke: org.dxos.operation.space.addTag { tag: $given.favoriteTag, object: $given.document }
+      capture: tagged
+      expect: "QA Favorite" carries a keyless tag labelled "favorite"
+      assert: return $tagged.object.tags?.some((t) => t.label === 'favorite' && !t.key);
+      note: |
+        MUST be keyless — F-1.2 says a keyed provider tag also labelled "favorite" belongs to
+        that provider and is ignored, so this step's assert is the one place that distinction is
+        falsifiable.
+    - name: Open the deck dashboard
+      do: Open the space's Stream Deck companion panel (StreamDeckDashboard).
+      expect: VirtualStreamDeck shows a key labelled "QA Favorite" with its document icon
+      note: |
+        NO invoke — VirtualStreamDeck is a read-only render of the same model the bridge sends
+        (F-3.4); there is no operation to invoke, only a surface to observe.
+    - name: Press the key on the virtual deck
+      do: Click the "QA Favorite" key in VirtualStreamDeck.
+      expect: "QA Favorite" opens and its window comes forward (F-1.5)
+  after:
+    - name: Remove the favorite tag
+      do: Right-click "QA Favorite" and remove the "favorite" tag.
+      invoke: org.dxos.operation.space.removeTag { tag: $given.favoriteTag, object: $given.document }
+      expect: the key no longer appears on VirtualStreamDeck
+```
+
+```mdl
+flow QA-2: Real hardware round-trip
+  desc: The device-attached path — a real Stream Deck key press reaching Composer.
+  actors: human
+  covers: [F-4.1, F-4.5, T-5]
+  status: blocked
+  given:
+    - the `@dxos/composer-stream-deck` Elgato plugin is installed and a physical Stream Deck is
+      attached
+    - Composer is running with plugin-stream-deck enabled and has at least one favorite placed
+  test:
+    - name: Press a physical key
+      do: Press the key showing a favorite on the physical device.
+      expect: Composer receives the keyDown for that slot and opens the object that key was
+        showing (T-5)
+      blocked: |
+        Requires physical Stream Deck hardware and the separate Elgato-hosted process holding the
+        HID device (F-4.1) — neither the debug port nor this repo's dev tooling can simulate a
+        HID key press. Per Execution Rule 9, the flow's status is `blocked`, not `failing`.
+  after:
+    - name: No teardown
+      do: No ECHO state is created by a key press; nothing to undo.
+      expect: the deck returns to its idle page with the favorite still bound
 ```
 
 ---

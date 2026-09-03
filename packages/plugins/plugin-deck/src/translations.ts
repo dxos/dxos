@@ -31,7 +31,6 @@ export const translations = [
         'error-fallback.copy.label': 'Copy',
         'plank-heading-fallback.label': 'Untitled',
         'breadcrumbs.label': 'Navigation history',
-        'actions-menu.label': 'Options',
         'pending.heading': 'Loading…',
         'insert-plank.label': 'Open',
         'resize.label': 'Drag to resize',

@@ -7,6 +7,7 @@ import { describe, test } from 'vitest';
 import {
   MAX_SEEDED_PLANKS,
   addSubjectsToActiveDeck,
+  pushSubjectsToStack,
   resolveLevelOpen,
   resolveSeededPlanks,
   updatePlankNames,
@@ -165,5 +166,27 @@ describe('resolveLevelOpen', () => {
     expect(open({ level: 'draft' })).toBeUndefined();
     expect(open({ spec: undefined })).toBeUndefined();
     expect(open({ spec: { levels: [] } })).toBeUndefined();
+  });
+});
+
+describe('pushSubjectsToStack', () => {
+  test('pushes a new subject onto the top of the stack', ({ expect }) => {
+    expect(pushSubjectsToStack(['a', 'b'], ['c'])).toEqual(['a', 'b', 'c']);
+  });
+
+  test('moves an already-open subject to the top instead of duplicating it', ({ expect }) => {
+    expect(pushSubjectsToStack(['a', 'b', 'c'], ['b'])).toEqual(['a', 'c', 'b']);
+  });
+
+  test('pushes multiple subjects in order, last on top', ({ expect }) => {
+    expect(pushSubjectsToStack(['a'], ['b', 'c'])).toEqual(['a', 'b', 'c']);
+  });
+
+  test('is a no-op re-push when the subject is already on top', ({ expect }) => {
+    expect(pushSubjectsToStack(['a', 'b'], ['b'])).toEqual(['a', 'b']);
+  });
+
+  test('pushes onto an empty stack', ({ expect }) => {
+    expect(pushSubjectsToStack([], ['a'])).toEqual(['a']);
   });
 });

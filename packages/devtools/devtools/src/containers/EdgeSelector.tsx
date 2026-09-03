@@ -5,17 +5,17 @@
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, { useMemo } from 'react';
 
-import { SaveConfig, Storage } from '@dxos/config';
+import { EDGE_URLS, SaveConfig, Storage } from '@dxos/config';
 import { useConfig } from '@dxos/react-client';
 
 import { Select } from '../components';
 import { getTarget } from './VaultSelector';
 
 const edgeServers = [
-  { value: 'https://edge.dxos.workers.dev', label: 'Dev' },
-  { value: 'https://main.dxos.network', label: 'Main' },
-  { value: 'https://labs.dxos.network', label: 'Labs' },
-  { value: 'https://dxos.network', label: 'Production' },
+  { value: EDGE_URLS.local, label: 'Local' },
+  { value: EDGE_URLS.dev, label: 'Dev' },
+  { value: EDGE_URLS.preview, label: 'Preview' },
+  { value: EDGE_URLS.production, label: 'Production' },
 ];
 
 export const EdgeSelector = () => {

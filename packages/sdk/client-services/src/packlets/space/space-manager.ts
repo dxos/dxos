@@ -13,7 +13,7 @@ import { type DelegateInvitationCredential, type MemberInfo, getCredentialAssert
 import { failUndefined } from '@dxos/debug';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { type FeedStore, FeedStoreService } from '@dxos/feed-store';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type SwarmNetworkManager, SwarmNetworkManagerService } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
@@ -109,7 +109,8 @@ export class SpaceManager {
     const genesisFeed = await this._feedStore.openFeed(metadata.genesisFeedKey ?? failUndefined());
 
     const spaceKey = metadata.key;
-    const spaceId = await createIdFromSpaceKey(spaceKey);
+    // The carried id is primary; derive only for a space recorded before the field existed.
+    const spaceId = metadata.spaceId ? SpaceId.make(metadata.spaceId) : await createIdFromSpaceKey(spaceKey);
     const protocol = new SpaceProtocol({
       topic: spaceKey,
       swarmIdentity,

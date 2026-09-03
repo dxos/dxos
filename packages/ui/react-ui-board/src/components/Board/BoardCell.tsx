@@ -294,7 +294,7 @@ export const BoardCell = ({
         </Card.Header>
         {/* Body spans all of the card's column tracks (it has gutter columns) so content — e.g. a
             poster image — fills the full tile width, not just the first gutter track. */}
-        {children && <div className='relative col-[1/-1] min-h-0 overflow-hidden'>{children}</div>}
+        {children && <div className='relative col-[1/-1] overflow-hidden'>{children}</div>}
       </Card.Root>
 
       {/* Resize handle: a sibling (not clipped by the card's overflow/rounding) straddling the
@@ -337,7 +337,7 @@ export const BoardCell = ({
               <Card.DragHandle />
               {title}
             </Card.Header>
-            {children && <div className='relative col-[1/-1] min-h-0 overflow-hidden'>{children}</div>}
+            {children && <div className='relative col-[1/-1] overflow-hidden'>{children}</div>}
           </Card.Root>,
           preview.container,
         )}

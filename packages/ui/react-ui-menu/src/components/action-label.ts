@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Node from '@dxos/app-graph/Node';
-import { keySymbols } from '@dxos/keyboard';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import { keySymbols } from '@dxos/react-focus';
 import { type TFunction, toLocalizedString } from '@dxos/react-ui';
 import { type MenuActionProperties, type MenuItemChrome } from '@dxos/ui-types';
 
 import { getShortcut } from '../util';
 
-type Action = Node.Action<MenuActionProperties> | Node.ActionGroup<MenuItemChrome>;
+type Action = AppGraphNode.Action<MenuActionProperties> | AppGraphNode.ActionGroup<MenuItemChrome>;
 
 // Kept out of `ActionLabel.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so a value exported beside them forces a full page reload on every edit.

@@ -112,7 +112,6 @@ export class ChatProcessor {
 
     const feed = space.db.add(Feed.make());
     const chat = Chat.make({ feed: Ref.make(feed) });
-    Obj.setParent(feed, chat);
     space.db.add(chat);
 
     const runtime = await EffectEx.runAndForwardErrors(
