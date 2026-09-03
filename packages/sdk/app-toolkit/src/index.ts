@@ -9,4 +9,5 @@ export * from './app-graph';
 export * from './echo';
 export * from './errors';
 export * from './operations';
+export * from './sample';
 export * from './types';

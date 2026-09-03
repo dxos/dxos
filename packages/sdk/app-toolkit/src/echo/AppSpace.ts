@@ -29,8 +29,15 @@ import * as AppAnnotation from './AppAnnotation';
  */
 export const SETTINGS_SPACE_TAG = 'org.dxos.space.settings';
 
-/** Space tag for the bundled exemplar/sample space. */
-export const EXEMPLAR_SPACE_TAG = 'org.dxos.space.exemplar';
+/**
+ * Space tag for the bundled sample space.
+ *
+ * The value still reads `exemplar` because it is already persisted in the space metadata of every
+ * profile that has onboarded: changing it would make the import's idempotency check miss the
+ * existing space (importing a second copy) and flip `isVisibleSpace` for those spaces. Renaming it
+ * needs a tag migration, not an edit here.
+ */
+export const SAMPLE_SPACE_TAG = 'org.dxos.space.exemplar';
 
 /** Name given to the first space created for a profile. The user is free to rename it. */
 export const DEFAULT_SPACE_NAME = 'My Space';
@@ -41,8 +48,8 @@ type SpaceResolver = { spaces: { get(): Space[]; get(id: string): Space | undefi
 /** Check if a space has a specific tag. */
 export const hasTag = (space: Space, tag: string): boolean => space.tags.includes(tag);
 
-/** Check if a space is the exemplar/sample space. */
-export const isExemplarSpace = (space: Space): boolean => hasTag(space, EXEMPLAR_SPACE_TAG);
+/** Check if a space is the bundled sample space. */
+export const isSampleSpace = (space: Space): boolean => hasTag(space, SAMPLE_SPACE_TAG);
 
 /** Check if a space is the settings space. */
 export const isSettingsSpace = (space: Space): boolean => hasTag(space, SETTINGS_SPACE_TAG);
@@ -80,11 +87,11 @@ export const getSettingsSpace = (client: { spaces: { get(): Space[] } }): Space 
  * Whether a space belongs in the user-facing space lists (navtree, settings, create-object target).
  *
  * Tags mark spaces the app manages on the user's behalf — the settings space, filesystem mirrors —
- * so anything tagged is internal, except the exemplar space and the legacy personal-space tag that
+ * so anything tagged is internal, except the sample space and the legacy personal-space tag that
  * pre-migration profiles still carry.
  */
 export const isVisibleSpace = (space: Space): boolean =>
-  space.tags.length === 0 || isExemplarSpace(space) || isLegacyDefaultSpace(space);
+  space.tags.length === 0 || isSampleSpace(space) || isLegacyDefaultSpace(space);
 
 //
 // Default space designation.

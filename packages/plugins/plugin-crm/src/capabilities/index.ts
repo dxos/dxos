@@ -71,4 +71,5 @@ export const SkillDefinition = AppCapability.skillDefinition(() => import('./ski
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
 });
+
 export const Translations = AppCapability.translations(translations);
