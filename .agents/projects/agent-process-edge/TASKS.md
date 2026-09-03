@@ -221,7 +221,7 @@ in the remote slot, which is exactly inverted. Recorded as D1a in DESIGN.md.
 - [x] `RemoteProcessManager.Manager.processTreeAtom` is `Atom.Writable` for that reason.
 - [x] `EdgeProcessManager` gained a real `processTree` (from `Control.list`) and `control`; the D3
       "no process tree endpoint yet" TODO is gone. New builders: `fromEdgeProcessClient(client,
-  spaceId)` and `forSpace(client, spaceId)`; `EdgeProcessControl.processManagerFrom*` deleted in
+spaceId)` and `forSpace(client, spaceId)`; `EdgeProcessControl.processManagerFrom*` deleted in
       favour of `EdgeProcessControl.fromClient` returning a `Control`.
 - [x] `AssistantTestLayer` reordered so its noop remote manager sits below `AgentService` in the
       provideMerge chain.
@@ -234,12 +234,17 @@ in the remote slot, which is exactly inverted. Recorded as D1a in DESIGN.md.
       `exports` map it needs a `renamed` export state in every wrangler config provisioning the
       namespace — `identity-service/wrangler.jsonc:21` declined exactly this rename for that reason —
       and the live namespace holds every space's trigger and process state. 77 references.
-- [ ] **Composer cannot yet ask for an edge agent.** `plugin-routine`'s `RemoteProcessManagerSpec` is
-      application-affinity and builds `EdgeProcessManager.fromClient(client)` with no space, so it
-      carries no `control` — processes are per-space. `AgentServiceSpec` is application-affinity too,
-      while `getSession` derives the space from the feed. Resolving it means either a space-affinity
-      remote manager (and an `AgentService` that can reach it), or making `control` space-parameterised
-      (`control?: (spaceId) => Control`). Not guessed at here — it changes plugin layer affinity.
+- [x] **Composer can ask for an edge agent** (dmaretskyi's answer: "have a single EdgeProcessManager
+      for all spaces -- parametrize space id on process creation"). Every `RemoteProcessManager.Control`
+      verb now takes the space it addresses, so nothing is space-scoped: `plugin-routine` keeps one
+      application-affinity manager and it carries `control`. `AgentService` builds a space-bound
+      `RemoteProcessManagerAdapter` per space (memoized, over the manager's own tree atom) from the
+      space on the session's feed. `RemoteProcessHandle` takes its space as an option rather than
+      reading `info.environment.space`, which is optional — and the host now always records the space
+      that routed a spawn, so `ProcessInfo` is self-describing either way.
+      One limitation, documented in code: `hydrate()` has no space list, so its edge half covers only
+      spaces already opened this run. Not a gap in practice — `getSession` reattaches to a process
+      still running for its feed, which is the path opening a chat takes.
 
 ## Boot budget (do not re-investigate)
 

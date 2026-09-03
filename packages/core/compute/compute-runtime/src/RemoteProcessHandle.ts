@@ -34,6 +34,13 @@ export interface Options<_Input, _Output, _Rpcs extends Rpc.Any> {
   readonly control: RemoteProcessManager.Control;
 
   /**
+   * Space every {@link RemoteProcessManager.Control} call is addressed within. Supplied rather than
+   * read off {@link info}, whose `environment.space` is optional — a handle must be able to address
+   * its process regardless of what the host chose to record.
+   */
+  readonly space: string;
+
+  /**
    * Local definition of the remote process, when the caller has it. Supplies the input/output
    * codecs (so values cross the wire encoded by the process's own schema) and the RPC group. Absent
    * for handles produced by `list`, which are metadata views: their inputs, outputs and RPC surface
@@ -152,7 +159,7 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
       // closed — the same shape `ProcessManager` uses for its loopback clients.
       this.#rpc = Effect.runSync(
         this.#control
-          .makeRpcClient<_Rpcs>(this.pid, this.#requireDefinition().rpcs)
+          .makeRpcClient<_Rpcs>(this.#options.space, this.pid, this.#requireDefinition().rpcs)
           .pipe(Effect.provideService(Scope.Scope, Effect.runSync(Scope.make()))),
       );
     }
@@ -162,7 +169,7 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
   submitInput(input: _Input): Effect.Effect<void> {
     return Effect.gen({ self: this }, function* () {
       const encoded = yield* Schema.encodeEffect(this.#requireDefinition().input)(input).pipe(Effect.orDie);
-      yield* this.#control.submitInput(this.pid, encoded);
+      yield* this.#control.submitInput(this.#options.space, this.pid, encoded);
     });
   }
 
@@ -189,7 +196,7 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
 
   terminate(): Effect.Effect<void> {
     return this.#control
-      .terminate(this.pid)
+      .terminate(this.#options.space, this.pid)
       .pipe(Effect.andThen(this.#refresh), Effect.andThen(this.#onLifecycleChange), Effect.asVoid);
   }
 
@@ -255,7 +262,9 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
   /** Cursor just past the last event the host holds, for a subscription that wants only new events. */
   get #endCursor(): Effect.Effect<number> {
     // A read at or beyond the end returns an empty page carrying the current end cursor.
-    return this.#control.readEvents(this.pid, Number.MAX_SAFE_INTEGER).pipe(Effect.map((page) => page.cursor));
+    return this.#control
+      .readEvents(this.#options.space, this.pid, Number.MAX_SAFE_INTEGER)
+      .pipe(Effect.map((page) => page.cursor));
   }
 
   #readEventsFromEnd(): Stream.Stream<ProcessProtocol.ProcessEvent> {
@@ -275,7 +284,7 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
   ): Stream.Stream<ProcessProtocol.ProcessEvent> {
     return Stream.paginate(start, (cursor: number) =>
       Effect.gen({ self: this }, function* () {
-        const page = yield* this.#control.readEvents(this.pid, cursor);
+        const page = yield* this.#control.readEvents(this.#options.space, this.pid, cursor);
         yield* this.#setInfo(page.info);
         if (page.truncated) {
           // The host dropped events before `cursor` from its bounded ring, so this page does not
@@ -303,7 +312,7 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
   #awaitState(predicate: (state: Process.State, info: ProcessProtocol.ProcessInfo) => boolean): Effect.Effect<void> {
     return Effect.gen({ self: this }, function* () {
       while (true) {
-        const info = yield* this.#control.status(this.pid);
+        const info = yield* this.#control.status(this.#options.space, this.pid);
         yield* this.#setInfo(info);
         const state = toState(info.state);
         if (state === Process.State.FAILED) {
@@ -318,7 +327,7 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
   }
 
   get #refresh(): Effect.Effect<void> {
-    return this.#control.status(this.pid).pipe(Effect.flatMap((info) => this.#setInfo(info)));
+    return this.#control.status(this.#options.space, this.pid).pipe(Effect.flatMap((info) => this.#setInfo(info)));
   }
 
   #setInfo(info: ProcessProtocol.ProcessInfo): Effect.Effect<void> {

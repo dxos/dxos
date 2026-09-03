@@ -132,29 +132,43 @@ export const layer = (
       const remote = yield* RemoteProcessManager.Service;
       const registry = yield* AtomRegistry.AtomRegistry;
 
-      // An agent asked for on EDGE is spawned and driven through the remote host's control surface,
-      // presented as the same manager verbs. Built once per stack: the adapter caches the process
-      // tree atom, so a second instance would give this service a different view from the monitor's.
-      const remoteManager = remote.control
-        ? new RemoteProcessManagerAdapter.RemoteProcessManagerAdapter(remote.control, registry, remote.processTreeAtom)
-        : undefined;
+      // One remote manager serves every space, so the space-bound façade over its control surface is
+      // built per space and memoized — a second instance for the same space would hold a separate
+      // handle set, and `getSession`'s remount path relies on finding the running process again.
+      const remoteManagers = new Map<string, ProcessManager.Manager>();
+      const remoteManagerFor = (space: string): ProcessManager.Manager => {
+        const existing = remoteManagers.get(space);
+        if (existing) {
+          return existing;
+        }
+        const control = remote.control;
+        if (!control) {
+          throw new Error('Agent requested on edge, but RemoteProcessManager offers no process control.');
+        }
+        const manager = new RemoteProcessManagerAdapter.RemoteProcessManagerAdapter(
+          control,
+          space,
+          registry,
+          // The manager's own atom, so an edge spawn lands in the remote half of the aggregate
+          // `ProcessMonitor` rather than in a private atom nothing reads.
+          remote.processTreeAtom,
+        );
+        remoteManagers.set(space, manager);
+        return manager;
+      };
 
       /**
-       * The manager for a requested location. `edge` without a remote host that offers control is a
-       * defect rather than a silent fall back to local: the caller asked for a conversation that
-       * outlives the client, and running it locally would not deliver that.
+       * The manager for a requested location. `edge` needs the space, since one remote manager spans
+       * them, and a session with no space cannot name where its agent would run.
        */
-      const managerFor = (location: AgentLocation | undefined): ProcessManager.Manager => {
+      const managerFor = (location: AgentLocation | undefined, space: string | undefined): ProcessManager.Manager => {
         if (location !== 'edge') {
           return processManager;
         }
-        if (!remoteManager) {
-          throw new Error(
-            'Agent requested on edge, but RemoteProcessManager offers no process control. ' +
-              'Provide EdgeProcessManager.forSpace(client, spaceId).',
-          );
+        if (!space) {
+          throw new Error('Agent requested on edge, but its conversation has no space.');
         }
-        return remoteManager;
+        return remoteManagerFor(space);
       };
       // The agent's model and steering instructions are bound to its process at spawn time, so the
       // cache tracks what each session was created with. Requesting a different model or a repointed
@@ -189,7 +203,11 @@ export const layer = (
         const executable = makeExecutable();
         // Both runtimes: an edge-hosted agent kept running while the client was closed, which is the
         // whole point of hosting it there, and is exactly what a local-only hydrate would strand.
-        const managers: ProcessManager.Manager[] = [processManager, ...(remoteManager ? [remoteManager] : [])];
+        // Local, plus every space a session has already been opened on this run. A fresh client has
+        // no remote managers yet and this cannot enumerate spaces (one manager spans them all), but
+        // an edge agent does not need the pre-warm: `getSession` reattaches to a process still
+        // running for its feed, which is the path opening a chat takes anyway.
+        const managers: ProcessManager.Manager[] = [processManager, ...remoteManagers.values()];
         for (const manager of managers) {
           const agents = yield* manager.list({ key: AGENT_PROCESS_KEY });
           log('agent hydrate', { count: agents.length });
@@ -212,7 +230,6 @@ export const layer = (
             const provider = options?.provider ?? opts?.provider;
             const instructions = options?.instructions?.uri;
             const location: AgentLocation = options?.location ?? 'local';
-            const manager = managerFor(options?.location);
             const cached = sessionCache.get(feed.id);
             if (cached) {
               if (
@@ -238,6 +255,7 @@ export const layer = (
             const target = Obj.getURI(feed);
             const parsedEchoUri = EID.tryParse(target);
             const spaceId = parsedEchoUri ? EID.getSpaceId(parsedEchoUri) : undefined;
+            const manager = managerFor(options?.location, spaceId);
             const executable = makeExecutable(model, provider);
 
             // Reuse a still-running process for this feed only when there was no cached session

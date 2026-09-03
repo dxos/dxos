@@ -14,6 +14,7 @@ import { describe, test } from 'vitest';
 import * as Process from '@dxos/compute/Process';
 import { Annotation } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
+import { SpaceId } from '@dxos/keys';
 import type { ProcessProtocol } from '@dxos/protocols';
 
 import * as ProcessManager from './ProcessManager';
@@ -218,7 +219,12 @@ const adapterLayer = (
     ProcessManager.Service,
     Effect.gen(function* () {
       const registry = yield* Registry.AtomRegistry;
-      return new RemoteProcessManagerAdapter.RemoteProcessManagerAdapter(control, registry, processTreeAtom);
+      return new RemoteProcessManagerAdapter.RemoteProcessManagerAdapter(
+        control,
+        TEST_SPACE,
+        registry,
+        processTreeAtom,
+      );
     }),
   );
 
@@ -256,6 +262,9 @@ const annotations = (value: unknown): Annotation.Dictionary =>
   Schema.decodeUnknownSync(Annotation.Dictionary)({ 'example.com/test': value });
 
 const TEST_KEY = 'dxos.org/process/echo-test';
+// A real id: the adapter passes the space through untouched, but `Process.Info` decodes it as a
+// branded `SpaceId`.
+const TEST_SPACE = SpaceId.random();
 
 /** Input/output codecs are the only part of the definition the remote path uses. */
 const EchoProcess = Process.make(
@@ -321,7 +330,7 @@ const makeFakeHost = (
         }
         return info();
       }),
-    submitInput: (_pid, input) =>
+    submitInput: (_space, _pid, input) =>
       Effect.sync(() => {
         inputs.push(input);
         events.push({ _tag: 'output', seq: seq++, data: `echo:${String(input)}` });
@@ -334,7 +343,7 @@ const makeFakeHost = (
         state = 'TERMINATED';
         terminated = true;
       }),
-    readEvents: (_pid, cursor) =>
+    readEvents: (_space, _pid, cursor) =>
       Effect.sync(() => ({ events: events.slice(cursor), cursor: events.length, truncated: false, info: info() })),
     makeRpcClient: () => Effect.die('not used'),
   };

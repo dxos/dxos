@@ -41,11 +41,16 @@ import type * as RemoteProcessManager from './RemoteProcessManager';
  */
 export class RemoteProcessManagerAdapter implements ProcessManager.Manager {
   readonly #control: RemoteProcessManager.Control;
+  readonly #space: string;
   readonly #registry: Registry.AtomRegistry;
   readonly #processTreeAtom: Atom.Writable<readonly Process.Info[]>;
   readonly #monitor: Process.Monitor;
 
   /**
+   * Bound to one `space`, because the `ProcessManager.Manager` verbs it implements carry no space
+   * while every `Control` verb does. The `Control` itself stays space-free, so one
+   * {@link RemoteProcessManager.Manager} serves every space a client has open.
+   *
    * `processTreeAtom` lets the caller supply the atom to publish into — pass the owning
    * {@link RemoteProcessManager.Manager}'s, so a spawn through this façade is visible in the same
    * atom the aggregate `ProcessMonitor` reads. Omitted, the adapter owns a private one and its
@@ -53,10 +58,12 @@ export class RemoteProcessManagerAdapter implements ProcessManager.Manager {
    */
   constructor(
     control: RemoteProcessManager.Control,
+    space: string,
     registry: Registry.AtomRegistry,
     processTreeAtom?: Atom.Writable<readonly Process.Info[]>,
   ) {
     this.#control = control;
+    this.#space = space;
     this.#registry = registry;
     if (processTreeAtom) {
       this.#processTreeAtom = processTreeAtom;
@@ -100,7 +107,7 @@ export class RemoteProcessManagerAdapter implements ProcessManager.Manager {
       // Rejected here, where the caller's stack still names the annotation.
       assertJsonSafe(annotations);
 
-      const info = yield* this.#control.spawn({
+      const info = yield* this.#control.spawn(this.#space, {
         key: definition.key,
         ...(options?.name !== undefined ? { name: options.name } : {}),
         ...(options?.parentProcessId !== undefined ? { parentPid: options.parentProcessId } : {}),
@@ -111,7 +118,7 @@ export class RemoteProcessManagerAdapter implements ProcessManager.Manager {
       // The process now exists on the host, so a later failure here would strand it: a caller that
       // retries would spawn a second one and never hold the first.
       const handle = yield* this.#makeHandle<I, O, Rpcs>(info, definition).pipe(
-        Effect.onError(() => this.#control.terminate(toProcessId(info.pid)).pipe(Effect.ignore)),
+        Effect.onError(() => this.#control.terminate(this.#space, toProcessId(info.pid)).pipe(Effect.ignore)),
       );
       // The aggregate `Process.Monitor` reads the tree atom rather than calling this manager, so the
       // atom has to be current by the time spawn returns. Failing to read it back does not
@@ -124,12 +131,12 @@ export class RemoteProcessManagerAdapter implements ProcessManager.Manager {
   attach<I, O, Rpcs extends Rpc.Any = never>(id: Process.ID): Effect.Effect<ProcessManager.Handle<I, O, Rpcs>> {
     // No definition is available by id alone, so the returned handle is a metadata view until the
     // caller re-attaches it to one via `Handle.hydrate`'s local counterpart (`spawn`'s definition).
-    return this.#control.status(id).pipe(Effect.flatMap((info) => this.#makeHandle<I, O, Rpcs>(info)));
+    return this.#control.status(this.#space, id).pipe(Effect.flatMap((info) => this.#makeHandle<I, O, Rpcs>(info)));
   }
 
   list(options?: ProcessManager.ListOptions): Effect.Effect<readonly ProcessManager.Handle.Any[]> {
     return this.#control
-      .list({
+      .list(this.#space, {
         ...(options?.key !== undefined ? { key: options.key } : {}),
         ...(options?.target !== undefined ? { target: options.target } : {}),
         ...(options?.state !== undefined ? { state: options.state } : {}),
@@ -173,6 +180,7 @@ export class RemoteProcessManagerAdapter implements ProcessManager.Manager {
     return RemoteProcessHandle.RemoteProcessHandle.make<I, O, Rpcs>({
       info,
       control: this.#control,
+      space: this.#space,
       ...(definition !== undefined ? { definition } : {}),
       registry: this.#registry,
       onLifecycleChange: this.#refreshProcessTree.pipe(Effect.ignore, Effect.asVoid),
@@ -180,7 +188,7 @@ export class RemoteProcessManagerAdapter implements ProcessManager.Manager {
   }
 
   get #refreshProcessTree(): Effect.Effect<readonly Process.Info[]> {
-    return this.#control.list().pipe(
+    return this.#control.list(this.#space).pipe(
       Effect.map((processes) => processes.map(toInfo)),
       Effect.tap((tree) => Effect.sync(() => this.#registry.update(this.#processTreeAtom, () => tree))),
     );

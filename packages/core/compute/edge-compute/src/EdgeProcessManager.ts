@@ -11,7 +11,6 @@ import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { type Client } from '@dxos/client';
 import { RemoteProcessManager } from '@dxos/compute-runtime';
-import { RemoteProcessInfo } from '@dxos/compute-runtime/remote-process';
 import type * as Process from '@dxos/compute/Process';
 import { Context as DxosContext } from '@dxos/context';
 import { type EdgeHttpClient } from '@dxos/edge-client';
@@ -26,13 +25,14 @@ import * as EdgeProcessControl from './EdgeProcessControl';
  * EDGE implementation of {@link RemoteProcessManager.Service} — the client's view of processes
  * running on EDGE, which is where a hosted process belongs in the aggregate `ProcessMonitor` tree.
  *
- * Three capabilities, each present only when it can be served:
- * - `processTree`, read from the space's process index via {@link RemoteProcessManager.Control.list}.
- *   Needs a space, since processes are per-space.
- * - `control`, the full spawn/status/input/terminate surface (`EdgeProcessControl`). Also per-space.
- * - `cancel`, which force-cancels the current run of an edge trigger (its in-flight execution and
- *   `runAgain` continuation chain) via {@link EdgeHttpClient.cancelTriggerRun}. Space-free: the
- *   target carries its own.
+ * One manager serves every space: `control`'s verbs each take the space they address, so nothing
+ * here is space-scoped and a stack needs no instance per space.
+ *
+ * `processTree` is the atom rather than a live read, because the index is per-space and this manager
+ * spans them — a `RemoteProcessManagerAdapter` bound to a space publishes into it (that is what the
+ * aggregate `ProcessMonitor` renders as the remote half). `cancel` force-cancels the current run of
+ * an edge trigger (its in-flight execution and `runAgain` continuation chain) via
+ * {@link EdgeHttpClient.cancelTriggerRun}.
  *
  * A manager built without a client (the {@link layer} stub) has none of them: an empty tree, no
  * control, no cancel.
@@ -44,16 +44,8 @@ const makeManager = (
 ): RemoteProcessManager.Manager => {
   const processTreeAtom = Atom.make<readonly Process.Info[]>([]);
   registry.mount(processTreeAtom);
-  // Pull-based: the index is only read when something asks, and the atom carries the last answer for
-  // the UI. A push feed would need a transport the cursor protocol does not provide (DESIGN D7).
-  const processTree = control
-    ? control.list().pipe(
-        Effect.map((processes) => processes.map(RemoteProcessInfo.toInfo)),
-        Effect.tap((tree) => Effect.sync(() => registry.update(processTreeAtom, () => tree))),
-      )
-    : Effect.sync(() => registry.get(processTreeAtom));
   return {
-    processTree,
+    processTree: Effect.sync(() => registry.get(processTreeAtom)),
     processTreeAtom,
     ...(control ? { control } : {}),
     ...(getEdgeClient
@@ -107,11 +99,10 @@ export const fromEdgeClient = (
  */
 export const fromEdgeProcessClient = (
   edgeClient: EdgeProcessHttpClient,
-  spaceId: SpaceId,
 ): Layer.Layer<RemoteProcessManager.Service, never, Registry.AtomRegistry> =>
   make(
     () => edgeClient,
-    EdgeProcessControl.make(() => edgeClient, spaceId),
+    EdgeProcessControl.make(() => edgeClient),
   );
 
 /**
@@ -121,18 +112,6 @@ export const fromEdgeProcessClient = (
 export const fromClient = (client: Client): Layer.Layer<RemoteProcessManager.Service, never, Registry.AtomRegistry> => {
   let cached: EdgeHttpClient | undefined;
   return make(() => (cached ??= createEdgeClient(client)));
-};
-
-/**
- * The full surface for one space, from a `Client`: a live process tree, process control, and trigger
- * cancel. This is what an app provides so an agent can be spawned on EDGE.
- */
-export const forSpace = (
-  client: Client,
-  spaceId: SpaceId,
-): Layer.Layer<RemoteProcessManager.Service, never, Registry.AtomRegistry> => {
-  let cached: EdgeHttpClient | undefined;
-  return make(() => (cached ??= createEdgeClient(client)), EdgeProcessControl.fromClient(client, spaceId));
 };
 
 /**
