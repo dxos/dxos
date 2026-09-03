@@ -411,6 +411,55 @@ the pinned version into a gitignored fixture directory and spawn it to decode by
 codec wrote. Assert shape and round-trip, not byte identity -- protobuf.js writes `nanos: 0` where
 buf omits the proto3 default, which is wire-compatible and expected.
 
+## `#9c` `EchoMetadata` is blocked on a scope decision, not in progress
+
+The metadata _codec_ has already moved -- both stores are on `compatCodec`, so the bytes are buf
+today. What `#9c` moves is the **type the store exposes**, and that is where it stops.
+
+**Containment breaks through `invitations`.** `EchoMetadata.invitations` is
+`repeated dxos.client.services.Invitation` (`metadata.proto:35`) -- a **concrete message field, not
+an `Any`**, so `preserveAny` does not apply and moving `EchoMetadata` makes the field a buf
+`Invitation[]` by construction. Not a prediction; the build says so:
+
+```
+metadata-store.ts(231,36): error TS2345: Argument of type
+  '.../buf/proto/gen/dxos/client/invitation_pb").Invitation' is not assignable to parameter of type
+  '.../proto/gen/dxos/client/services").Invitation'
+```
+
+`dxos.client.services.Invitation` has **55 importers across 7 packages** (client-services 23,
+client 8, client-protocol 7, client-e2e 6, halo 2, shell 1, observability 1) and is itself a
+`protoMessage` carrier on `InvitationsService`. That is a milestone-sized slice.
+
+**A per-field carve-out is not available.** `EchoMetadata` is one generated type; its `invitations`
+field _is_ `Invitation[]` from the buf module. Leaving that one field on the protobuf.js type would
+need a structural alias, and a half-migrated message is worse than an unmigrated one because it
+looks finished. `SpaceMetadata` and `IdentityRecord` cannot be split off either -- both are children
+of `EchoMetadata`, so the container's type determines theirs.
+
+Note for scoping: the raw importer count for `@dxos/protocols/proto/dxos/echo/metadata` is 29, but
+**21 of those import only `EdgeReplicationSetting`**, a top-level enum that moves independently and
+already has. The message-type surface is 8 files in `packages/sdk/client-services` -- true of the
+imports, and _not_ a description of what moving `EchoMetadata` costs, which is the containment
+above.
+
+### Where the proto does draw a line
+
+`EchoMetadata` and `LargeSpaceMetadata` are **two independent persisted records with separate
+codecs** in the store. `LargeSpaceMetadata` -> `ControlPipelineSnapshot` ->
+`{PublicKey feed_key, Credential credential}` + `TimeframeVector` references **neither `Invitation`
+nor anything else out of scope**, beyond the sanctioned two-site `Credential` boundary decode at
+`control-pipeline.ts:148` and `:165`. Consumer surface: three files. That record can move on its own
+whenever the scope decision lands.
+
+### An `Invitation` move obliges a guard re-run
+
+`invitations` appears in **four entries of the cross-codec ledger** (`['invitations']` twice,
+`['metadata.invitations', 'metadata.spaces']`, and `['invitations', 'spaces']`). Changing
+`Invitation`'s type reshapes those, so that slice carries a guard re-run with the 42 count and the
+staleness check reconfirmed. Visible here so it is priced before anyone commits to it, rather than
+discovered inside it.
+
 ## `#8` is the last milestone-sized thread, and it is not a rider
 
 Everything above landed behind an interface that hides which codec carried a value, which is why it
