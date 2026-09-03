@@ -73,7 +73,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
   }) {
     const { OtelLogs } = yield* Effect.promise(() => import('./logs'));
     const { OtelMetrics } = yield* Effect.promise(() => import('./metrics'));
-    const { OtelTraces } = yield* Effect.promise(() => import('./traces'));
+    const { OtelTraces } = yield* Effect.promise(() => import('#otel-traces'));
 
     const cachedDisabled = yield* Effect.promise(() => isObservabilityDisabled(namespace));
     const disabled = cachedDisabled || isObservabilityDisabledSync(namespace);

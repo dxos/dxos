@@ -92,7 +92,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
     ...nodeOptions
   }) {
     if (isNode()) {
-      const { extensions: nodeExtensions } = yield* Effect.promise(() => import('./node'));
+      const { extensions: nodeExtensions } = yield* Effect.promise(() => import('#posthog-transport'));
       return yield* nodeExtensions({ config, release, environment, ...nodeOptions });
     }
     if (typeof window === 'undefined') {
