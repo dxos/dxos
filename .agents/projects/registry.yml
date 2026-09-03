@@ -15,7 +15,7 @@ projects:
     tasks: .agents/projects/unified-observability/TASKS.md
     design: .agents/projects/unified-observability/DESIGN.md
     prs: [12939]
-    resume: 'dxos PR #12939 open (phases 1 and 2). Phase 3 is the EDGE PR: needs an edge worktree slot (all 5 held) and the dxos merge commit on pkg.pr.new. Then phase 1 in dxos: workerd variants, Relay extension, SpanProcessors subpath, facade aiContentCapture; then Phase 2 plugin-observability settings-space preferences. EDGE phase needs a slot (all 5 held).'
+    resume: 'Phase 3, the EDGE PR: needs an edge worktree slot (all 5 held) and the merge commit of dxos/dxos#12939 on pkg.pr.new. Decision pending on landing dxos/dxos#12609 (generic settings sync) first, which would replace the plugin-specific SettingsSync module with an atom reactor.'
   - name: sample-spaces
     status: active
     user: burdon

@@ -14,7 +14,7 @@ export type ExtensionsOptions = {
    * Where each envelope goes. On EDGE this is a diagnostics channel the tail worker reads; the
    * extension never batches or retries, since the relay on the other side owns delivery.
    */
-  publish: (envelope: Envelope) => void;
+  publish: (envelope: Envelope) => void | Promise<void>;
   /** Release identifier, e.g. `edge@2026-09-03`. */
   release?: string;
   /** Deployment environment, e.g. `production` or `staging`. */
@@ -48,13 +48,16 @@ export const extensions = (options: ExtensionsOptions): Effect.Effect<Observabil
         return;
       }
       try {
-        publish({
+        const result = publish({
           v: VERSION,
           timestamp: now(),
           ...(distinctId ? { distinctId } : {}),
           tags: { ...tags },
           ...payload,
         });
+        if (result instanceof Promise) {
+          result.catch((err) => log.catch(err));
+        }
       } catch (err) {
         log.catch(err);
       }

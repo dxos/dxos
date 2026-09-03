@@ -50,8 +50,11 @@ export default Capability.makeModule(
     });
 
     yield* sync();
+    // One at a time, in order: each run reads the space at its start, so a run that waited
+    // applies the newest value, and an older `true` cannot land after a newer `false`.
+    let queue = Promise.resolve();
     const unsubscribe = Obj.subscribe(settingsSpace.properties, () => {
-      EffectEx.runPromise(sync()).catch((err) => log.catch(err));
+      queue = queue.then(() => EffectEx.runPromise(sync())).catch((err) => log.catch(err));
     });
     yield* Effect.addFinalizer(() => Effect.sync(unsubscribe));
 

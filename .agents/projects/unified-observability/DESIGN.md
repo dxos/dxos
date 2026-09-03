@@ -49,8 +49,10 @@ choice applies before the space is readable at boot, and the first device with t
 its local value in.
 
 **AI content capture is not a separate consent.** Content goes out when telemetry is on and the
-space is one EDGE already sees in plaintext (`contentCaptureAllowed(spaceId)`); an E2E space
-reports metadata only. A space EDGE can read is one EDGE may observe, under the same opt-in.
+space is one EDGE already sees in plaintext. A space EDGE can read is one EDGE may observe, under
+the same opt-in. `contentCaptureAllowed(spaceId)` is where an E2E space will be excluded once
+one exists; today every space replicates through EDGE in plaintext and the predicate returns true
+for all of them, so metadata-only for E2E is the planned boundary, not an enforced one.
 
 **EDGE gates AI capture on the user's opt-in, read from the settings space.** The `Observability`
 on a worker is per isolate and serves every user, so the gate is per invocation, not per instance.

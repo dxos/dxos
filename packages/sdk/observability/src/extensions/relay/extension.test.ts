@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 
@@ -14,7 +14,9 @@ const setup = async (overrides: Partial<Parameters<typeof extensions>[0]> = {}) 
   const published: Envelope[] = [];
   const extension = await EffectEx.runPromise(
     extensions({
-      publish: (envelope) => published.push(envelope),
+      publish: (envelope) => {
+        published.push(envelope);
+      },
       release: 'edge@1',
       environment: 'test',
       now: () => 1_000,
@@ -123,9 +125,46 @@ describe('Relay extension', () => {
     expect(() => api('events').captureEvent('op')).not.toThrow();
   });
 
-  test('isEnvelope rejects other channel traffic', () => {
+  test('a relay whose promise rejects does not surface an unhandled rejection', async () => {
+    const { api } = await setup({ publish: () => Promise.reject(new Error('channel closed')) });
+    const unhandled = vi.fn();
+    process.on('unhandledRejection', unhandled);
+    try {
+      api('events').captureEvent('op');
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(unhandled).not.toHaveBeenCalled();
+    } finally {
+      process.off('unhandledRejection', unhandled);
+    }
+  });
+
+  test('isEnvelope rejects other channel traffic and malformed records', () => {
     expect(isEnvelope({ v: 1, timestamp: 1, tags: {}, kind: 'nope' })).toBe(false);
-    expect(isEnvelope({ v: 2, timestamp: 1, tags: {}, kind: 'event' })).toBe(false);
+    expect(isEnvelope({ v: 2, timestamp: 1, tags: {}, kind: 'event', event: 'op' })).toBe(false);
     expect(isEnvelope('{"kind":"event"}')).toBe(false);
+    // Right kind, wrong shape: no event name, and a tag that is not a string.
+    expect(isEnvelope({ v: 1, timestamp: 1, tags: {}, kind: 'event' })).toBe(false);
+    expect(isEnvelope({ v: 1, timestamp: 1, tags: { release: 1 }, kind: 'event', event: 'op' })).toBe(false);
+    expect(isEnvelope({ v: 1, timestamp: 1, tags: {}, kind: 'exception', error: { name: 'E' } })).toBe(false);
+    expect(isEnvelope({ v: 1, timestamp: 1, distinctId: 7, tags: {}, kind: 'event', event: 'op' })).toBe(false);
+  });
+
+  test('every envelope the extension publishes passes its own schema', async () => {
+    const { published, extension, api } = await setup({ distinctId: 'install-1' });
+    extension.identify!('did:one', { plan: 'pro' });
+    extension.alias!('did:two');
+    api('events').captureEvent('op', { nested: { deep: true } });
+    api('errors').captureException(new Error('boom'));
+    const base = { traceId: 't', spanId: 's', spanName: 'n', latency: 1 };
+    api('ai').captureInference({ ...base, streaming: true, content: { input: [{ role: 'user' }], truncated: false } });
+    api('ai').captureTurn({ ...base, content: { output: 'x' } });
+    api('ai').captureToolCall(base);
+    api('mcp').captureInitialize({ sessionId: 'session', clientName: 'c' });
+    api('mcp').captureToolCall({ sessionId: 'session', toolName: 'tool', durationMs: 3, isError: false });
+
+    expect(published).toHaveLength(9);
+    for (const envelope of published) {
+      expect(isEnvelope(envelope)).toBe(true);
+    }
   });
 });
