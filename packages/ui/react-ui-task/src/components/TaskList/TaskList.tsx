@@ -333,21 +333,20 @@ TaskListViewport.displayName = 'TaskList.Viewport';
  * The rows and the create row are separate grids (the create row sits outside the scrolling
  * viewport), so their leading gutters — ordinal, then status — are declared once here: only
  * matching templates keep the `+` under the status control and the input under the titles.
- * Tailwind scans for whole class names, hence four literals rather than a composed prefix. The
- * status gutter is `1.5rem` because that is the width of the `density='sm'` icon button it holds;
- * a narrower track makes the button overflow it and align left instead of centring.
+ * Tailwind scans for whole class names, hence four literals rather than a composed prefix. Every
+ * leading gutter is `2rem` — `--dx-rail-item`, the square each cell's `IconBlock` holds — and the
+ * grids declare no column gap, so the cells tile and the pane's cells sit exactly under the rows'.
  */
 /** Ordinals stop at 99: the gutter is sized for two digits. */
 const MAX_ORDINAL = 99;
 
 /**
  * The edit pane's columns, matching the rows' leading gutters. The row's disclosure toggle is
- * cleared with padding rather than a spare column: a column of its own picks up the grid's
- * `gap-x-1`, which put every pane cell 4px right of the row cell it is meant to sit under.
+ * cleared with padding rather than a spare column, so the pane's template stays the rows' template.
  */
 const GRID_COLS = {
-  content: 'grid-cols-[1.5rem_1fr_min-content_2rem]',
-  contentWithOrdinals: 'grid-cols-[2rem_1.5rem_1fr_min-content_2rem]',
+  content: 'grid-cols-[2rem_1fr_min-content_2rem]',
+  contentWithOrdinals: 'grid-cols-[2rem_2rem_1fr_min-content_2rem]',
 };
 
 /** The disclosure toggle's own width (`w-6`), which the pane reserves but does not fill. */
@@ -469,9 +468,10 @@ const TaskEstimateControl = ({ task }: { task: Task.Task }) => {
         <IconBlock>
           <Button
             variant='ghost'
-            density='sm'
             data-testid='taskList.item.estimate'
-            classNames={mx('w-6 px-0 text-xs tabular-nums', estimateTextStyle(estimate))}
+            // `w-8` fills the block: the label's hit target is the same square as the icon
+            // controls on either side of it.
+            classNames={mx('w-8 px-0 text-xs tabular-nums', estimateTextStyle(estimate))}
             // The row is the selection target; opening the menu must not also select it.
             onClick={(event: MouseEvent) => event.stopPropagation()}
           >
@@ -580,7 +580,8 @@ const TaskTreeTrailing = ({ item }: { item: TaskNode }) => {
       {/* Variable-width chips share one cell — an artifact tag has no fixed size, so it cannot own a
           column. Everything after it does, which is what makes those controls line up down the
           list rather than sitting wherever the tags happened to end. */}
-      <div className='flex h-8 items-center justify-end gap-1'>
+      {/* No gap: each trailing cell is a rail-item square, so they tile like the leading ones. */}
+      <div className='flex h-8 items-center justify-end'>
         <TaskListItemArtifacts task={task} />
         {current.assignee && <TaskListAssignee assignee={current.assignee} />}
       </div>
@@ -871,10 +872,10 @@ const TaskListEdit = composable<HTMLDivElement, TaskListEditProps>(
         {...rest}
         data-testid='taskList.edit'
         className={mx(
-          'grid gap-x-1 w-full min-w-0 shrink-0',
+          'grid w-full min-w-0 shrink-0',
           grid
             ? [showGutter ? GRID_COLS.contentWithOrdinals : GRID_COLS.content, TOGGLE_GUTTER]
-            : 'grid-cols-[1.5rem_1fr_min-content]',
+            : 'grid-cols-[2rem_1fr_min-content]',
           className,
         )}
         ref={forwardedRef}

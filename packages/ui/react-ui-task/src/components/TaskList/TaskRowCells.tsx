@@ -62,21 +62,23 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
   return (
     <Menu.Root>
       <Menu.Trigger asChild>
-        <IconButton
-          data-testid='taskList.item.status'
-          classNames={mx('shrink-0', classNames)}
-          // The hue goes on the icon, not the button: the row dims icons through `--icons-color`,
-          // which the `Icon` root reads, so a colour set on the button is overridden at rest and
-          // only reappears once selection invalidates the variable.
-          iconClassNames={iconClassNames}
-          variant='ghost'
-          density='sm'
-          icon={icon}
-          iconOnly
-          label={t('task-status.label')}
-          // The row is the selection target; opening the menu must not also select it.
-          onClick={(event) => event.stopPropagation()}
-        />
+        {/* The block, not the button, is the trigger: the same `IconBlock > IconButton` shape as
+            the priority cell, so every control in the row is one rail-item square. */}
+        <IconBlock square classNames={classNames}>
+          <IconButton
+            data-testid='taskList.item.status'
+            // The hue goes on the icon, not the button: the row dims icons through `--icons-color`,
+            // which the `Icon` root reads, so a colour set on the button is overridden at rest and
+            // only reappears once selection invalidates the variable.
+            iconClassNames={iconClassNames}
+            variant='ghost'
+            icon={icon}
+            iconOnly
+            label={t('task-status.label')}
+            // The row is the selection target; opening the menu must not also select it.
+            onClick={(event) => event.stopPropagation()}
+          />
+        </IconBlock>
       </Menu.Trigger>
       {/* Sourced from the schema's own option table, so the picker offers exactly what the field
           accepts and carries the same hue the form's select paints it with. */}
@@ -107,9 +109,13 @@ export const TaskOrdinal = ({ task, ordinal, classNames }: TaskOrdinalProps) => 
   const status = task.status ?? 'todo';
   const hue = status === 'done' ? 'green' : status === 'failed' || status === 'cancelled' ? 'rose' : 'neutral';
   return (
-    <Tag hue={hue} classNames={mx('tabular-nums', classNames)}>
-      {ordinal}
-    </Tag>
+    // The same square every other cell in the row occupies, so the badge centres under the pane's
+    // column rather than hugging the track's start.
+    <IconBlock square aria-hidden={false} classNames={classNames}>
+      <Tag hue={hue} classNames='tabular-nums'>
+        {ordinal}
+      </Tag>
+    </IconBlock>
   );
 };
 

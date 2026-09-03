@@ -329,7 +329,10 @@ const TaskTreeHeading = ({
     // to clear the ordinal and the status control, or it reads as belonging to the row above.
     <div
       className={mx(
-        'grid min-w-0 grow items-center gap-x-1',
+        // No column gap: every leading cell is one rail-item square, so the cells tile edge to edge
+        // and the title starts exactly one square per cell in — the same geometry the trailing
+        // controls and `TaskList.Edit` lay out on.
+        'grid min-w-0 grow items-center',
         // The title band is one control tall whether or not a description follows. Left to size
         // itself, a described row's tracks exactly fill the row and the title sits flush to its
         // top, while an undescribed row has slack to centre in — so the two titles disagreed by a
@@ -337,19 +340,16 @@ const TaskTreeHeading = ({
         'grid-rows-[var(--dx-control)_auto]',
         // Fixed tracks, not `auto`: `TaskList.Edit` lays its own pane out on the same widths, and an
         // intrinsic ordinal (12px for one digit, wider for two) put the pane's `+` 20px right of the
-        // rows' status controls. `2rem` is the gutter's two-digit width, `1.5rem` the status
-        // button's — the same pair `GRID_COLS` declares.
-        showGutter ? 'grid-cols-[2rem_1.5rem_minmax(0,1fr)]' : 'grid-cols-[1.5rem_minmax(0,1fr)]',
+        // rows' status controls. `2rem` is `--dx-rail-item`, the square each cell holds — the same
+        // tracks `GRID_COLS` declares.
+        showGutter ? 'grid-cols-[2rem_2rem_minmax(0,1fr)]' : 'grid-cols-[2rem_minmax(0,1fr)]',
       )}
     >
-      {/* `justify-self-start` on the ordinal: the gutter track is two digits wide so the pane's
-          columns line up with it, but the badge is its own size within it rather than stretched.
-          The checkbox needs nothing — its `IconBlock` is the track's own square. */}
       {showGutter &&
         (onTaskCheck ? (
           <TaskCheckbox task={task} checked={!!checked?.has(task.id)} onCheckedChange={onTaskCheck} />
         ) : ordinal !== undefined ? (
-          <TaskOrdinal task={task} ordinal={ordinal} classNames='justify-self-start' />
+          <TaskOrdinal task={task} ordinal={ordinal} />
         ) : (
           // Holds the gutter track so a numberless row's title still lines up with its neighbours.
           <span />
