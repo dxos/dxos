@@ -18,7 +18,6 @@ import { Annotation } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { SpaceId } from '@dxos/keys';
 
-import type * as ProcessManager from './ProcessManager';
 import * as RemoteProcessManager from './RemoteProcessManager';
 
 describe('RemoteProcessManager control verbs', () => {
@@ -174,7 +173,7 @@ describe('RemoteProcessManager control verbs', () => {
 
   test('a spawn publishes into the remote manager tree the monitor reads', async ({ expect }) => {
     const host = makeFakeHost();
-    // The adapter writes the atom belonging to `RemoteProcessManager.Service`, which is the remote
+    // The verbs write the atom belonging to `RemoteProcessManager.Service`, which is the remote
     // half of the aggregate `ProcessMonitor` — a private atom would leave a hosted process invisible
     // there. The merge itself is covered by the edge e2e, which has a real local manager too.
     const tree = await runWithMonitor(
