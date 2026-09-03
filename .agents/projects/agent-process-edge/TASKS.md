@@ -228,6 +228,12 @@ in the remote slot, which is exactly inverted. Recorded as D1a in DESIGN.md.
 - [x] All three edge suites rewired: a genuine local `ProcessManager.layer()` over
       `KeyValueStore.layerMemory` in the local slot, EDGE in the remote slot, nothing noop'd; the
       agent suite asks for `location: 'edge'`.
+- [ ] **Rename `TriggersDispatcher` -> `Scheduler`** (dmaretskyi, review of dxos/edge#971; his second
+      comment supersedes the first, which said `ProcessManager`). Intent recorded as a TODO on the
+      class; the rename itself is a DO migration, not a refactor. Under this repo's declarative
+      `exports` map it needs a `renamed` export state in every wrangler config provisioning the
+      namespace — `identity-service/wrangler.jsonc:21` declined exactly this rename for that reason —
+      and the live namespace holds every space's trigger and process state. 77 references.
 - [ ] **Composer cannot yet ask for an edge agent.** `plugin-routine`'s `RemoteProcessManagerSpec` is
       application-affinity and builds `EdgeProcessManager.fromClient(client)` with no space, so it
       carries no `control` — processes are per-space. `AgentServiceSpec` is application-affinity too,
