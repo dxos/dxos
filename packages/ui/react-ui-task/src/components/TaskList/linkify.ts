@@ -43,6 +43,20 @@ const trimUrl = (url: string): string => {
 };
 
 /**
+ * Whether the candidate is a URL a browser can actually navigate to. The pattern is deliberately
+ * loose, so it also matches shapes that are not addresses at all — `https://?next` has a scheme and
+ * no host — and rendering one as a link gives the reader something that goes nowhere.
+ */
+const isNavigable = (candidate: string): boolean => {
+  try {
+    const url = new URL(candidate);
+    return (url.protocol === 'http:' || url.protocol === 'https:') && url.hostname.length > 0;
+  } catch {
+    return false;
+  }
+};
+
+/**
  * Split plain text into text and link runs.
  *
  * A task's title is a string, not markdown, so a URL pasted into it has no syntax that would make
@@ -58,7 +72,9 @@ export const linkifyText = (text: string): TextRun[] => {
   for (const match of text.matchAll(URL_PATTERN)) {
     const start = match.index;
     const url = trimUrl(match[0]);
-    if (url.length === 0) {
+    // Left in the surrounding text run rather than dropped: the next slice starts where the last
+    // accepted URL ended, so a rejected candidate is still shown as the text it is.
+    if (url.length === 0 || !isNavigable(url)) {
       continue;
     }
     if (start > index) {

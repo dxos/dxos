@@ -64,6 +64,18 @@ describe('linkifyText', () => {
     expect(linkifyText('run javascript:alert(1)')).to.deep.eq([{ text: 'run javascript:alert(1)' }]);
   });
 
+  test('a scheme with no host is not a link', ({ expect }) => {
+    expect(linkifyText('go to https://?next now')).to.deep.eq([{ text: 'go to https://?next now' }]);
+  });
+
+  test('a rejected candidate between two links stays text', ({ expect }) => {
+    expect(linkifyText('https://a.com https://?x https://b.com')).to.deep.eq([
+      { text: 'https://a.com', href: 'https://a.com' },
+      { text: ' https://?x ' },
+      { text: 'https://b.com', href: 'https://b.com' },
+    ]);
+  });
+
   test('a schemeless host is not a link', ({ expect }) => {
     expect(linkifyText('deploy to dxos.org today')).to.deep.eq([{ text: 'deploy to dxos.org today' }]);
   });
