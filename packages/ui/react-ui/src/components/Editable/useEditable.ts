@@ -94,6 +94,24 @@ export const useEditable = ({
   const committed = useRef(value);
   committed.current = value;
   const apiRef = useRef<EditableApi | null>(null);
+  const onValueChangeRef = useRef(onValueChange);
+  onValueChangeRef.current = onValueChange;
+
+  /**
+   * The one way an edit lands, whether the machine announced it or a caller asked for it directly.
+   *
+   * Idempotent on the text it already holds, so the two routes can both run in a tick without
+   * writing twice: `committed` is advanced here rather than waiting for the render that reads the
+   * prop back.
+   */
+  const deliver = useCallback((next: string) => {
+    if (next === committed.current) {
+      return;
+    }
+    committed.current = next;
+    setValueState(next);
+    onValueChangeRef.current?.(next);
+  }, []);
 
   const api = useMachine({
     defaultValue: value,
@@ -106,13 +124,7 @@ export const useEditable = ({
     disabled,
     edit: editingProp,
     onEditChange: ({ edit }) => onEditingChange?.(edit),
-    onValueCommit: ({ value: next }) => {
-      if (next === committed.current) {
-        return;
-      }
-      setValueState(next);
-      onValueChange?.(next);
-    },
+    onValueCommit: ({ value: next }) => deliver(next),
     // The machine's own revert keeps whatever it holds when the text it opened with was empty, so
     // `Escape` on a field showing its placeholder would keep the discarded text instead. Restored
     // inside the machine's own transition rather than left to the reconciling effect below, which
@@ -132,15 +144,29 @@ export const useEditable = ({
 
   const setDraft = useCallback((draft: string) => api.setValue(draft), [api]);
 
+  /**
+   * Commits, and delivers the edit rather than trusting the machine to announce it.
+   *
+   * A field whose editing state is controlled never leaves edit on its own, so the machine treats
+   * `SUBMIT` as a request to the host and reports only the state change — `onValueCommit` never
+   * runs. A pane held open that way is the whole point of driving `editing` from outside, and its
+   * text would never be written.
+   */
   const commit = useCallback(
     (next?: string) => {
-      if (next !== undefined) {
-        api.setValue(next);
-      }
+      const text = next ?? api.value;
+      api.setValue(text);
       api.submit();
+      deliver(text);
     },
-    [api],
+    [api, deliver],
   );
+
+  /** Reverts for the same reason `commit` delivers: a controlled field never reaches the machine's own cancel. */
+  const revert = useCallback(() => {
+    api.setValue(committed.current);
+    api.cancel();
+  }, [api]);
 
   // A gesture the machine only takes from a pointer needs the same door for a keyboard reader. Its
   // own keyboard answer is `focus` activation, which is wrong for a field a single click opens —
@@ -180,7 +206,7 @@ export const useEditable = ({
     setDraft,
     edit: api.edit,
     commit,
-    revert: api.cancel,
+    revert,
     previewProps,
     activationProps,
     api,
