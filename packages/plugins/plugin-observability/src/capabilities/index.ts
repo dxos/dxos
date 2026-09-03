@@ -64,6 +64,7 @@ export const PrivacyNotice = Capability.lazyModule(
 export const PrivacyBanner = Capability.lazyModule(
   'PrivacyBanner',
   {
+    // `#privacy-banner` resolves per condition: only a host without a layout prints the notice.
     environments: ['node'],
     requires: [ObservabilityCapabilities.Namespace],
     provides: [],
@@ -71,7 +72,7 @@ export const PrivacyBanner = Capability.lazyModule(
     // joined one, so the notice reaches the person whose data collection is starting.
     activatesOn: ObservabilityEvents.IdentityCreatedEvent,
   },
-  () => import('./privacy-banner'),
+  () => import('#privacy-banner'),
 );
 export const Namespace = Capability.inlineModule(
   'namespace',

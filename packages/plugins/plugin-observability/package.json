@@ -43,6 +43,15 @@
       "workerd": "./dist/lib/operation-handler.headless.mjs",
       "default": "./dist/lib/operation-handler.mjs"
     },
+    "#privacy-banner": {
+      "source": {
+        "node": "./src/capabilities/privacy-banner.ts",
+        "default": "./src/capabilities/privacy-banner.noop.ts"
+      },
+      "types": "./dist/types/src/capabilities/privacy-banner.d.ts",
+      "node": "./dist/lib/privacy-banner.mjs",
+      "default": "./dist/lib/privacy-banner.noop.mjs"
+    },
     "#operations": {
       "source": "./src/operations/index.ts",
       "types": "./dist/types/src/operations/index.d.ts",
