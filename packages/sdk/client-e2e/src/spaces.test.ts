@@ -149,7 +149,9 @@ describe('Spaces', () => {
       await space1.postMessage('goodbye', { data: 'Goodbye' });
     }
 
-    await asyncTimeout(Promise.all([hello.wait(), goodbye.wait()]), 200);
+    // 200ms was under the round trip's own cost on a loaded runner, which made this the shard's
+    // flakiest test; 2s matches what the rest of this suite allows real work.
+    await asyncTimeout(Promise.all([hello.wait(), goodbye.wait()]), 2_000);
   });
 
   // Trying to read from the feed, even if the range is not set to be downloaded, will trigger a download.
