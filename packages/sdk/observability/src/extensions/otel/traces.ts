@@ -12,14 +12,17 @@ import {
 } from '@opentelemetry/api';
 import { W3CTraceContextPropagator } from '@opentelemetry/core';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
-import { BasicTracerProvider, BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
+import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
+import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
 import { ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 
 import { log } from '@dxos/log';
 import { type RemoteSpan, type StartSpanOptions, TRACE_PROCESSOR } from '@dxos/tracing';
 
+import * as AiContent from './ai-content';
 import { type OtelOptions, signalUrl } from './otel';
 import * as OtelSpanSink from './OtelSpanSink';
+import * as SpanFanout from './span-fanout';
 import { TagInjectorSpanProcessor } from './span-processors';
 
 export type OtelTracesOptions = OtelOptions & {
@@ -32,36 +35,44 @@ export type OtelTracesOptions = OtelOptions & {
 
 export class OtelTraces {
   private _tracer: Tracer;
-  private readonly _tracerProvider: BasicTracerProvider;
+  private readonly _tracerProvider: NodeTracerProvider;
 
   constructor(private readonly options: OtelTracesOptions) {
-    propagation.setGlobalPropagator(new W3CTraceContextPropagator());
-
-    this._tracerProvider = new BasicTracerProvider({
+    this._tracerProvider = new NodeTracerProvider({
       resource: this.options.resource,
       spanProcessors: [
         new TagInjectorSpanProcessor(this.options.getTags),
+        new SpanFanout.FanoutSpanProcessor(),
         ...(options.spanSink
           ? [new OtelSpanSink.PortSpanProcessor(options.spanSink.post)]
           : this.options.destinations.map(
               (destination) =>
-                new BatchSpanProcessor(
-                  new OTLPTraceExporter({
-                    url: signalUrl(destination, 'traces'),
-                    headers: destination.headers,
-                    concurrencyLimit: 10,
-                  }),
+                new AiContent.AiContentStrippingSpanProcessor(
+                  new BatchSpanProcessor(
+                    new OTLPTraceExporter({
+                      url: signalUrl(destination, 'traces'),
+                      headers: destination.headers,
+                      concurrencyLimit: 10,
+                    }),
+                  ),
                 ),
             )),
       ],
     });
 
-    trace.setGlobalTracerProvider(this._tracerProvider);
+    // Registers the provider, the propagator, and an async-hooks context manager. Without the
+    // last, `context.active()` is always the root, so the Effect tracer's context hook is inert and
+    // a log emitted inside a span cannot find it; async hooks carry it across awaits, which node
+    // code does constantly and the browser's stack manager could not follow.
+    this._tracerProvider.register({ propagator: new W3CTraceContextPropagator() });
     this._tracer = trace.getTracer(
       'dxos-observability',
       this.options.resource.attributes[ATTR_SERVICE_VERSION]?.toString(),
     );
   }
+
+  /** Same surface as the browser tracer; this one exports every span, so there is nothing to promote. */
+  public promote(_traceId: string): void {}
 
   /**
    * Forcibly flush the BatchSpanProcessor. Call before process exit to avoid

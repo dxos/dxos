@@ -16,7 +16,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type AiSession } from '@dxos/assistant';
-import { Chat as ChatSchema } from '@dxos/assistant-toolkit';
+import * as ChatSchema from '@dxos/assistant/Chat';
 import { CommandConfig, Common, withTypes } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { Filter } from '@dxos/echo';

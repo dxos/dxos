@@ -12,6 +12,12 @@ export type TreeItemToggleProps = Omit<IconButtonProps, 'icon' | 'size' | 'label
   hidden?: boolean;
 };
 
+/**
+ * A row's disclosure control: one control square holding the chevron, rotated when `open`. A leaf
+ * renders it invisible rather than not at all, so leaves and branches share one row geometry;
+ * `hidden` removes it for a tree that shows no disclosure. Not a tab stop — the row is the
+ * focusable, and the machine toggles the branch from its keymap.
+ */
 export const TreeItemToggle = memo(
   composable<HTMLButtonElement, TreeItemToggleProps>(
     ({ classNames, open, isBranch, hidden, ...props }, forwardedRef) => {
@@ -25,8 +31,9 @@ export const TreeItemToggle = memo(
           classNames={[
             // One control tall, not `h-full`: a row with a description is taller than its title
             // line, and stretching the toggle centred the chevron against the whole row instead of
-            // against the title it discloses.
-            'h-(--dx-control) w-6 px-0',
+            // against the title it discloses. One control wide too — the same rail-item square as
+            // every other cell in a row, so a grid laid out beside it tiles with no gap.
+            'h-(--dx-control) w-(--dx-control) px-0',
             '[&_svg]:transition-transform [&_svg]:duration-200',
             open ? '[&_svg]:rotate-90' : '[&_svg]:rotate-0',
             hidden ? 'hidden' : !isBranch && 'invisible',

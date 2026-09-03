@@ -9,6 +9,8 @@ import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { LanguageModelFixture } from '@dxos/ai/testing';
 import { AiContext } from '@dxos/assistant';
+import * as Agent from '@dxos/assistant/Agent';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -16,7 +18,6 @@ import { DXN, EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { Message, Outline, Task } from '@dxos/types';
 
-import { Agent, Chat } from '../../../types';
 import PlanningSkill from '../skill';
 import { PlanningHandlers } from './index';
 
@@ -100,10 +101,12 @@ describe('AssignTasks skill', { tags: ['model-fixture'] }, () => {
   );
 });
 
-/** A session whose feed carries a Chat bound as context — how `Chat.getFromContext` finds it. */
+/** A session and the chat it runs on — the one `Harness.getChat` resolves for the conversation. */
 const setupChat = Effect.fnUntraced(function* () {
   const agent = yield* AgentService.createSession({ skills: [PlanningSkill.make()] });
-  const chat = yield* Database.add(Chat.make({ feed: Ref.make(agent.feed) }));
+  // The session's own chat, not a second one on the same feed: the harness resolves the
+  // conversation's chat, so a chat created beside it would be invisible to the planning tools.
+  const chat = yield* Database.resolve(Obj.getURI(agent.chat), Chat.Chat);
   yield* Database.flush();
   yield* agent.addContext([Ref.make(chat)]);
   return { agent, chat };

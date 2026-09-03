@@ -7,7 +7,6 @@ import React from 'react';
 import { Icon, IconBlock, IconButton, Input, Tag, useTranslation } from '@dxos/react-ui';
 import { Menu, createMenuAction } from '@dxos/react-ui-menu';
 import { Task } from '@dxos/types';
-import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
@@ -27,7 +26,10 @@ export type TaskStatusControlProps = {
   task: Task.Task;
   /** Absent for a readonly list, which renders the glyph without the control. */
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
-  /** Whether the assignee is an agent actively working the task; its glyph spins. */
+  /**
+   * Overrides whether the glyph spins. Defaults to {@link Task.isAgentWorking} — a host passes this
+   * only when it knows something the task does not, e.g. that the session behind it has stopped.
+   */
   active?: boolean;
   classNames?: string;
 };
@@ -36,9 +38,11 @@ export type TaskStatusControlProps = {
 export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: TaskStatusControlProps) => {
   const { t } = useTranslation(translationKey);
   const status = task.status ?? 'todo';
-  // A started agent task is actively being worked by a sub-agent (started is stamped at spawn), so
-  // it spins; a human-started task keeps the static glyph.
-  const { icon, classNames: iconClassNames } = active
+  // Derived from the task rather than wired down from the list: a task an agent has taken and
+  // started is being worked right now whoever renders it, and the row is the only place that says
+  // so. A human-started task keeps the static glyph.
+  const working = active ?? Task.isAgentWorking(task);
+  const { icon, classNames: iconClassNames } = working
     ? { icon: 'ph--spinner--regular', classNames: 'text-info-text animate-spin' }
     : { icon: STATUS_ICONS[status].icon, classNames: statusTextStyle(status) };
 
@@ -57,21 +61,23 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
   return (
     <Menu.Root>
       <Menu.Trigger asChild>
-        <IconButton
-          data-testid='taskList.item.status'
-          classNames={mx('shrink-0', classNames)}
-          // The hue goes on the icon, not the button: the row dims icons through `--icons-color`,
-          // which the `Icon` root reads, so a colour set on the button is overridden at rest and
-          // only reappears once selection invalidates the variable.
-          iconClassNames={iconClassNames}
-          variant='ghost'
-          density='sm'
-          icon={icon}
-          iconOnly
-          label={t('task-status.label')}
-          // The row is the selection target; opening the menu must not also select it.
-          onClick={(event) => event.stopPropagation()}
-        />
+        {/* The block, not the button, is the trigger: the same `IconBlock > IconButton` shape as
+            the priority cell, so every control in the row is one rail-item square. */}
+        <IconBlock square classNames={classNames}>
+          <IconButton
+            data-testid='taskList.item.status'
+            // The hue goes on the icon, not the button: the row dims icons through `--icons-color`,
+            // which the `Icon` root reads, so a colour set on the button is overridden at rest and
+            // only reappears once selection invalidates the variable.
+            iconClassNames={iconClassNames}
+            variant='ghost'
+            icon={icon}
+            iconOnly
+            label={t('task-status.label')}
+            // The row is the selection target; opening the menu must not also select it.
+            onClick={(event) => event.stopPropagation()}
+          />
+        </IconBlock>
       </Menu.Trigger>
       {/* Sourced from the schema's own option table, so the picker offers exactly what the field
           accepts and carries the same hue the form's select paints it with. */}
@@ -102,9 +108,13 @@ export const TaskOrdinal = ({ task, ordinal, classNames }: TaskOrdinalProps) => 
   const status = task.status ?? 'todo';
   const hue = status === 'done' ? 'green' : status === 'failed' || status === 'cancelled' ? 'rose' : 'neutral';
   return (
-    <Tag hue={hue} classNames={mx('tabular-nums', classNames)}>
-      {ordinal}
-    </Tag>
+    // The same square every other cell in the row occupies, so the badge centres under the pane's
+    // column rather than hugging the track's start.
+    <IconBlock square aria-hidden={false} classNames={classNames}>
+      <Tag hue={hue} classNames='tabular-nums'>
+        {ordinal}
+      </Tag>
+    </IconBlock>
   );
 };
 
@@ -125,17 +135,20 @@ export type TaskCheckboxProps = {
 export const TaskCheckbox = ({ task, checked, onCheckedChange, classNames }: TaskCheckboxProps) => {
   const { t } = useTranslation(translationKey);
   return (
-    <Input.Root>
-      <Input.Checkbox
-        checked={checked}
-        data-testid='taskList.item.checkbox'
-        aria-label={t('task-check.label')}
-        classNames={classNames}
-        onCheckedChange={() => onCheckedChange(task)}
-        // The row is the selection target; checking it must not also make it the current row.
-        onClick={(event) => event.stopPropagation()}
-      />
-    </Input.Root>
+    // `IconBlock square` so the box is centred in the same square an `IconButton iconOnly` occupies;
+    // bare, the 1rem box hugged the start of a 2rem track beside 2rem controls.
+    <IconBlock square aria-hidden={false} classNames={classNames}>
+      <Input.Root>
+        <Input.Checkbox
+          checked={checked}
+          data-testid='taskList.item.checkbox'
+          aria-label={t('task-check.label')}
+          onCheckedChange={() => onCheckedChange(task)}
+          // The row is the selection target; checking it must not also make it the current row.
+          onClick={(event) => event.stopPropagation()}
+        />
+      </Input.Root>
+    </IconBlock>
   );
 };
 

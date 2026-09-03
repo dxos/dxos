@@ -357,12 +357,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     throwIfCustomClass(path[path.length - 1], value);
     const rootObjectSchema = getSchema(target);
     if (rootObjectSchema == null) {
-      const typeRef = target[symbolInternals].getType();
-      if (typeRef) {
-        // The object has schema, but we can't access it to validate the value being set.
-        throw new Error(`Schema not found in schema registry: ${EncodedReference.toURI(typeRef)}`);
-      }
-
+      // An untyped object, or a typed one whose schema does not resolve in this runtime (written
+      // before a type's version bump, or replicated from a peer that has a type this one lacks):
+      // writes pass through unvalidated, since refusing them would make the object unusable
+      // wherever its schema happens to be absent.
       return value;
     }
 

@@ -5,7 +5,7 @@
 import React, { useCallback, useState } from 'react';
 
 import { useAtomCapability } from '@dxos/app-framework/ui';
-import { type Chat as ChatTypes } from '@dxos/assistant-toolkit';
+import type * as ChatTypes from '@dxos/assistant/Chat';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useRegistry } from '@dxos/react-client/echo';
@@ -62,6 +62,8 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
           <Chat.Thread viewType={(chatViewType as ChatView | undefined) ?? settings.chatView} />
         </NaturalChatDialog.Content>
         <NaturalChatDialog.Footer classNames='p-1.5'>
+          {/* What the request is doing before the first token arrives. */}
+          <Chat.Activity />
           {/* Queued prompts the agent has not taken up yet, stacked right above the composer. */}
           <Chat.Queue classNames='pb-1' />
           <Chat.Prompt {...chatProps} preset={preset?.id} expandable />

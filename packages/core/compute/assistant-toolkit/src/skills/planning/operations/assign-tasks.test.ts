@@ -7,6 +7,8 @@ import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { AiContext } from '@dxos/assistant';
+import * as Agent from '@dxos/assistant/Agent';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
@@ -15,7 +17,6 @@ import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { Outline, Task } from '@dxos/types';
 
-import { Agent, Chat } from '../../../types';
 import PlanningSkill from '../skill';
 import { AssignTasks } from './definitions';
 import { PlanningHandlers } from './index';
@@ -126,7 +127,7 @@ describe('AssignTasks', () => {
   );
 });
 
-/** A chat bound as the conversation's context, which is how the handler reaches it. */
+/** The chat on the conversation's feed, which is how `Harness.getChat` reaches it. */
 const setupChat = Effect.fnUntraced(function* () {
   const feed = yield* Database.add(Feed.make());
   const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
