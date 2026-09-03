@@ -14,17 +14,15 @@ const instanceContexts = ((globalThis as any)[symbol] ??= new WeakMap<
   }
 >());
 
+/** Map key for a null-prototype instance, shared through `globalThis` like the contexts it keys. */
+const NULL_PROTOTYPE = ((globalThis as any)[Symbol.for('dxos.null-prototype')] ??= Object.freeze({}));
+
 /**
  * Returns a unique instance id for a given object.
  * Ids are generated as incrementing numbers.
  * Ids are only unique within the scope of a given prototype.
  * Instances of different classes may have the same id.
  */
-/**
- * Stands in as the map key for a null-prototype instance, which a WeakMap cannot key on. Shared
- * through `globalThis` like the contexts it keys, so duplicate copies of this module agree.
- */
-const NULL_PROTOTYPE = ((globalThis as any)[Symbol.for('dxos.null-prototype')] ??= Object.freeze({}));
 
 export const getPrototypeSpecificInstanceId = (instance: any): number => {
   const prototype = Object.getPrototypeOf(instance) ?? NULL_PROTOTYPE;

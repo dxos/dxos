@@ -14,15 +14,6 @@ import type * as ObservabilityExtension from '@dxos/observability/ObservabilityE
 
 import { analyticsStdio, makeCorrelator } from './analytics';
 
-const recordingCapture = () => {
-  const calls: { initialize: unknown[]; toolCall: unknown[] } = { initialize: [], toolCall: [] };
-  const capture: ObservabilityExtension.Mcp = {
-    captureInitialize: (client) => calls.initialize.push(client),
-    captureToolCall: (call) => calls.toolCall.push(call),
-  };
-  return { calls, capture };
-};
-
 describe('MCP analytics', () => {
   test('captures initialize with the client name and version', ({ expect }) => {
     const { calls, capture } = recordingCapture();
@@ -162,3 +153,12 @@ describe('MCP analytics', () => {
     expect(calls.toolCall).to.be.empty;
   });
 });
+
+const recordingCapture = () => {
+  const calls: { initialize: unknown[]; toolCall: unknown[] } = { initialize: [], toolCall: [] };
+  const capture: ObservabilityExtension.Mcp = {
+    captureInitialize: (client) => calls.initialize.push(client),
+    captureToolCall: (call) => calls.toolCall.push(call),
+  };
+  return { calls, capture };
+};

@@ -128,11 +128,8 @@ const make = (distinctId: string | undefined, host?: string): Promise<Observabil
   EffectEx.runPromise(
     extensions({
       config: new Config({}),
-      apiKey: TOKEN,
       release: '1.2.3',
-      distinctId,
-      host,
-      mcpServer: { name: 'dxos-cli', version: '1.2.3' },
+      node: { apiKey: TOKEN, distinctId, host, mcpServer: { name: 'dxos-cli', version: '1.2.3' } },
     }),
   );
 

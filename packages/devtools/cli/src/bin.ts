@@ -138,7 +138,7 @@ const program = Effect.gen(function* () {
 
   const namespace = observabilityNamespace(profile);
   const installationId = yield* Effect.promise(() => Observability.getInstallationId(namespace));
-  const observability = initializeObservability({ config, namespace, distinctId: installationId });
+  const observabilityInstance = yield* initializeObservability({ config, namespace, distinctId: installationId });
 
   const { command, layer: pluginLayer } = yield* createCliApp({
     rootCommand: dx,
@@ -166,7 +166,7 @@ const program = Effect.gen(function* () {
     // match by key, so `add --dev` only overrides a builtin if its plugin precedes that builtin.
     plugins: [
       ...installed,
-      ...getPlugins({ config, namespace, observability: () => observability }).filter(
+      ...getPlugins({ config, namespace, observability: () => Promise.resolve(observabilityInstance) }).filter(
         (plugin) => !overridden.has(plugin.meta.profile.key),
       ),
     ],
@@ -183,8 +183,8 @@ const program = Effect.gen(function* () {
   const manager = yield* Capability.get(Capabilities.PluginManager).pipe(Effect.provide(layer));
   yield* manager.activate(ActivationEvents.Idle);
 
-  const observabilityInstance = yield* Effect.promise(() => observability);
-  identifySession(observabilityInstance, yield* ClientService.pipe(Effect.provide(layer)), installationId);
+  const client = yield* ClientService.pipe(Effect.provide(layer));
+  yield* Effect.promise(() => identifySession(observabilityInstance, client, namespace, installationId));
 
   // Register in-process dispatcher so `repl` can reuse the already-built
   // command tree and plugin layer instead of spawning a child `dx` process

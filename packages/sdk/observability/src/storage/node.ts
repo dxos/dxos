@@ -70,6 +70,30 @@ export const storeObservabilityDisabled = async (configDir: string, value: boole
 };
 
 /**
+ * The identity this installation has already been aliased to, so the transition from the
+ * installation id is recorded once rather than on every run.
+ *
+ * @param configDir - Filesystem path to the directory containing the `observability.yml` state file.
+ */
+export const getAliasedDid = async (configDir: string): Promise<string | undefined> => {
+  try {
+    return (await getObservabilityState(configDir)).aliasedDid;
+  } catch (err) {
+    log.catch('Failed to read the aliased identity', err);
+    return undefined;
+  }
+};
+
+/**
+ * @param configDir - Filesystem path to the directory containing the `observability.yml` state file.
+ */
+export const storeAliasedDid = async (configDir: string, did: string) => {
+  const observabilityState = await getObservabilityState(configDir);
+  observabilityState.aliasedDid = did;
+  await writeFile(join(configDir, 'observability.yml'), yaml.dump(observabilityState), 'utf-8');
+};
+
+/**
  * @param configDir - Filesystem path to the directory containing the `observability.yml` state file.
  */
 export const getObservabilityGroup = async (configDir: string): Promise<string | undefined> => {
@@ -110,6 +134,7 @@ export type PersistentObservabilityState = {
   installationId: string;
   disabled: boolean;
   group?: string;
+  aliasedDid?: string;
 };
 
 // create initial state and write to file, using environment variables to override defaults.

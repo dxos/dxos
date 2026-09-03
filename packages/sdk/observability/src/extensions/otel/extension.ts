@@ -214,13 +214,10 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
         yield* Effect.promise(() => storeObservabilityDisabled(namespace, false));
         yield* Ref.update(enabledRef, () => true);
       }),
+      // Ordered so nothing is captured after this point: the processor does not consult
+      // `enabledRef`, and the store is awaited before a shutdown that may throw.
       disable: Effect.fn(function* () {
-        // Intake stops first, so nothing is captured while the rest of this runs. The opt-out is
-        // persisted before the shutdown that can throw, or a failed shutdown would leave the user
-        // believing they opted out when nothing was recorded.
         yield* Ref.update(enabledRef, () => false);
-        // Detached before the store is awaited: the processor does not consult `enabledRef`, so a
-        // line logged during that write would still reach the queue that the shutdown below drains.
         if (logs) {
           const index = log.runtimeConfig.processors.indexOf(logs.logProcessor);
           if (index >= 0) {
@@ -228,9 +225,8 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
           }
         }
         yield* Effect.promise(() => storeObservabilityDisabled(namespace, true));
-        // `close` drains on the way out by design, so revoking consent still ships what is already
-        // queued. Discarding it needs a non-flushing shutdown on the three wrappers, which have none.
-        // TODO(wittjosiah): Shut the exporters down before their providers so the drain has nowhere to go.
+        // TODO(wittjosiah): `close` drains by design, so revoking still ships what is queued;
+        //   discarding it means shutting each exporter down before its provider.
         yield* extension.close!();
       }),
       close: () =>

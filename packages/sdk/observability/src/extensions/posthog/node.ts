@@ -34,7 +34,8 @@ const isEncrypted = (host: string): boolean => {
  * canonical `$mcp_*` events this extension answers `kind: 'mcp'` with.
  */
 export const extensions: (options: ExtensionsOptions) => Effect.Effect<ObservabilityExtension.Extension> = Effect.fn(
-  function* ({ config, apiKey: _apiKey, host: _host, release, environment, distinctId: initialDistinctId, mcpServer }) {
+  function* ({ config, release, environment, node }) {
+    const { apiKey: _apiKey, host: _host, distinctId: initialDistinctId, mcpServer } = node ?? {};
     const apiKey =
       _apiKey ??
       process.env.DX_POSTHOG_API_KEY ??

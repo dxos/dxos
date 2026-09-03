@@ -25,17 +25,18 @@ const ENVIRONMENT = process.env.DX_ENVIRONMENT ?? (globalThis.DX_CLI_BUNDLED ? '
 
 export const observabilityNamespace = (profile: string): string => getProfilePath(DX_CONFIG, profile);
 
-const reporting = (): boolean => !process.env.CI && !process.env.VITEST;
+/** A test run and CI report nowhere whatever they are running, including the released binary. */
+const isTestOrCi = (): boolean => Boolean(process.env.CI || process.env.VITEST);
 
 export const projectToken = (): string | undefined => {
-  if (!reporting()) {
+  if (isTestOrCi()) {
     return undefined;
   }
   return process.env.DX_POSTHOG_API_KEY || (globalThis.DX_CLI_BUNDLED ? globalThis.DX_CLI_POSTHOG_TOKEN : undefined);
 };
 
 export const otelEndpoint = (): string | undefined =>
-  reporting() && globalThis.DX_CLI_BUNDLED ? OTEL_ENDPOINT : undefined;
+  !isTestOrCi() && globalThis.DX_CLI_BUNDLED ? OTEL_ENDPOINT : undefined;
 
 type CommandNode = {
   readonly name: string;
@@ -63,9 +64,9 @@ export type InitializeOptions = {
   readonly distinctId: string | undefined;
 };
 
-export const initializeObservability = async ({ config, namespace, distinctId }: InitializeOptions) => {
-  const disabled = await Observability.isObservabilityDisabled(namespace);
-  return Function.pipe(
+export const initializeObservability = Effect.fn(function* ({ config, namespace, distinctId }: InitializeOptions) {
+  const disabled = yield* Effect.promise(() => Observability.isObservabilityDisabled(namespace));
+  return yield* Function.pipe(
     Observability.make(),
     Observability.addExtension(
       ObservabilityExtension.Otel.extensions({
@@ -83,35 +84,44 @@ export const initializeObservability = async ({ config, namespace, distinctId }:
     Observability.addExtension(
       ObservabilityExtension.PostHog.extensions({
         config,
-        apiKey: disabled ? undefined : projectToken(),
-        host: POSTHOG_HOST,
         release: DXOS_VERSION,
         environment: ENVIRONMENT,
-        distinctId,
-        mcpServer: { name: 'dxos-cli', version: DXOS_VERSION },
+        node: {
+          apiKey: disabled ? undefined : projectToken(),
+          host: POSTHOG_HOST,
+          distinctId,
+          mcpServer: { name: 'dxos-cli', version: DXOS_VERSION },
+        },
       }),
     ),
     Observability.addDataProvider(platformProvider),
     Observability.initialize,
-    Effect.runPromise,
   );
-};
+});
 
 const platformProvider: Observability.DataProvider = Effect.fn(function* (observability) {
   observability.setTags({ appPlatform: 'cli', osPlatform: getHostPlatform(), cliVersion: DXOS_VERSION });
 });
 
-export const identifySession = (
+/**
+ * Binds the session to the identity, aliasing from the installation id the once so the events sent
+ * before the identity existed reach the same person. The transition is recorded, or every later run
+ * would alias again.
+ */
+export const identifySession = async (
   observability: Observability.Observability,
   client: Client,
+  namespace: string,
   installationId: string | undefined,
-): void => {
+): Promise<void> => {
   const did = client.halo.identity.get()?.did;
   if (!did) {
     return;
   }
-  if (installationId && installationId !== did) {
+  const transitioning = installationId !== undefined && installationId !== did;
+  if (transitioning && (await Observability.getAliasedDid(namespace)) !== did) {
     observability.alias(did, installationId);
+    await Observability.storeAliasedDid(namespace, did);
   } else {
     observability.identify(did);
   }

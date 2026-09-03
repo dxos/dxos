@@ -32,6 +32,11 @@ export const isObservabilityDisabled = async (namespace: string): Promise<boolea
 /** Undefined in the browser: posthog-js mints and persists its own anonymous id. */
 export const getInstallationId = async (_namespace: string): Promise<string | undefined> => undefined;
 
+/** No installation id in the browser, so nothing is ever aliased from one. */
+export const getAliasedDid = async (_namespace: string): Promise<string | undefined> => undefined;
+
+export const storeAliasedDid = async (_namespace: string, _did: string): Promise<void> => {};
+
 /**
  * @param namespace - localForage key prefix used to scope the observability state in browser storage.
  */
