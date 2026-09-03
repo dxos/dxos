@@ -127,7 +127,7 @@ describe('AssignTasks', () => {
   );
 });
 
-/** A chat bound as the conversation's context, which is how the handler reaches it. */
+/** The chat on the conversation's feed, which is how `Harness.getChat` reaches it. */
 const setupChat = Effect.fnUntraced(function* () {
   const feed = yield* Database.add(Feed.make());
   const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
