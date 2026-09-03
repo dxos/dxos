@@ -7,11 +7,11 @@ import * as Effect from 'effect/Effect';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Ref } from '@dxos/echo';
 
-import { Docs } from './docs';
-import { ProjectPhase } from './project';
-import { Tasks } from './tasks';
-import { People, Team } from './team';
-import { REFERENCE } from './util';
+import { Docs } from './docs.ts';
+import { ProjectPhase } from './project.ts';
+import { Tasks } from './tasks.ts';
+import { People, Team } from './team.ts';
+import { REFERENCE } from './util.ts';
 
 const phases = {
   team: Team,

@@ -10,9 +10,9 @@ import { Tabs } from '@dxos/react-ui-tabs';
 
 import { meta } from '#meta';
 
-import { DebugConsole } from '../DebugConsole';
-import { LoggerPanel } from '../LoggerPanel';
-import { DEBUG_PANEL_CONTEXT, type DebugPanelTab, debugPanelAspect } from './view-state';
+import { DebugConsole } from '../DebugConsole/index.ts';
+import { LoggerPanel } from '../LoggerPanel/index.ts';
+import { DEBUG_PANEL_CONTEXT, type DebugPanelTab, debugPanelAspect } from './view-state.ts';
 
 export type DebugPanelProps = {
   /** Overridable so a second host (or a story) gets its own tab and pin rather than the rail's. */

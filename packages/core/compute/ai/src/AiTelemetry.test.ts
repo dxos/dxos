@@ -14,9 +14,9 @@ import * as Telemetry from 'effect/unstable/ai/Telemetry';
 import { makeTracer } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
-import * as AiModelResolver from './AiModelResolver';
-import * as AiService from './AiService';
-import * as AiTelemetry from './AiTelemetry';
+import * as AiModelResolver from './AiModelResolver.ts';
+import * as AiService from './AiService.ts';
+import * as AiTelemetry from './AiTelemetry.ts';
 
 const makeStub = (inputTokens: Record<string, number>) =>
   LanguageModel.make({

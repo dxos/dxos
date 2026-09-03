@@ -12,7 +12,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { ChatActivityView, type ChatActivityViewProps } from './ChatActivity';
+import { ChatActivityView, type ChatActivityViewProps } from './ChatActivity.tsx';
 
 const meta = {
   title: 'plugins/plugin-assistant/components/ChatActivity',

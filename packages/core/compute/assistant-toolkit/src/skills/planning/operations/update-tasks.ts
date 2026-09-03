@@ -11,7 +11,7 @@ import { Database } from '@dxos/echo';
 import { Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { UpdateTasks } from './definitions';
+import { UpdateTasks } from './definitions.ts';
 
 /**
  * Upserts tasks onto the conversation's checklist, matched by title: an existing task's status is

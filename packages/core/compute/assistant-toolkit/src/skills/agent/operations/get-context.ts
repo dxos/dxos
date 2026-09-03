@@ -11,7 +11,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Filter } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
-import { GetContext } from './definitions';
+import { GetContext } from './definitions.ts';
 
 export default GetContext.pipe(
   Operation.withHandler(

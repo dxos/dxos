@@ -9,8 +9,8 @@ import { type Config, getEnvString } from '@dxos/config';
 import { log } from '@dxos/log';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 
-import * as ObservabilityExtension from '../../ObservabilityExtension';
-import { stubExtension } from '../stub';
+import * as ObservabilityExtension from '../../ObservabilityExtension.ts';
+import { stubExtension } from '../stub.ts';
 import {
   AI_GENERATION_EVENT,
   AI_SPAN_EVENT,
@@ -18,7 +18,7 @@ import {
   toAiGenerationProperties,
   toAiSpanProperties,
   toAiTraceProperties,
-} from './llm-analytics';
+} from './llm-analytics.ts';
 
 export type ExtensionsOptions = {
   config: Config;
@@ -95,7 +95,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
     }
 
     const { default: posthog } = yield* Effect.promise(() => import('posthog-js'));
-    const { logProcessor } = yield* Effect.promise(() => import('./log-processor'));
+    const { logProcessor } = yield* Effect.promise(() => import('./log-processor.ts'));
     let feedbackSurveyAvailable: boolean | null = null;
     let unregisterPosthogProcessors: (() => void) | undefined;
 

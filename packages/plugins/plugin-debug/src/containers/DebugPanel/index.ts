@@ -2,5 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './DebugPanel';
-export * from './view-state';
+export * from './DebugPanel.tsx';
+export * from './view-state.ts';

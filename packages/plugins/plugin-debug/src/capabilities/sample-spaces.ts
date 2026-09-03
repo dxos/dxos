@@ -5,7 +5,7 @@
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 
-import { PipelineSpace, TidepoolSpace } from '../sample';
+import { PipelineSpace, TidepoolSpace } from '../sample/index.ts';
 
 /**
  * The sample spaces this plugin offers. Loaded only once something asks for the list — the content

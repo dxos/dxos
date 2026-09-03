@@ -11,7 +11,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { DebugPanel, type DebugPanelProps } from './DebugPanel';
+import { DebugPanel, type DebugPanelProps } from './DebugPanel.tsx';
 
 /**
  * Sized by the story, matching the viewport the status bar gives it; the tab and pin come from

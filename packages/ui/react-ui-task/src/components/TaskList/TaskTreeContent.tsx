@@ -20,10 +20,16 @@ import {
   resolveOutdent,
   resolveReparent,
   resolveTaskPlacement,
-} from './hierarchy';
-import { TaskDescription } from './TaskDescription';
-import { TaskCheckbox, TaskOrdinal, TaskStatusControl } from './TaskRowCells';
-import { TASK_TREE_ROOT_ID, type TaskNode, buildTaskForest, buildTaskPaths, createTaskTreeModel } from './tree-model';
+} from './hierarchy.ts';
+import { TaskDescription } from './TaskDescription.tsx';
+import { TaskCheckbox, TaskOrdinal, TaskStatusControl } from './TaskRowCells.tsx';
+import {
+  TASK_TREE_ROOT_ID,
+  type TaskNode,
+  buildTaskForest,
+  buildTaskPaths,
+  createTaskTreeModel,
+} from './tree-model.ts';
 
 /**
  * The hierarchical list rendered as a `Tree`, so the machine owns disclosure, roving focus and the

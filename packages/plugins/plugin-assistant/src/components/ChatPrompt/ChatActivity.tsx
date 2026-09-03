@@ -12,7 +12,7 @@ import { ChatStatus as NaturalChatStatus } from '@dxos/react-ui-chat';
 
 import { meta } from '#meta';
 
-import { useChatContext } from '../Chat/context';
+import { useChatContext } from '../Chat/context.ts';
 
 const CHAT_ACTIVITY_NAME = 'Chat.Activity';
 

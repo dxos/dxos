@@ -9,7 +9,7 @@ import { expect } from 'vitest';
 
 import { makeRecordingTracer } from '@dxos/effect/testing';
 
-import * as Database from './Database';
+import * as Database from './Database.ts';
 
 describe('Database.withSpaceId', () => {
   it.effect('stamps the space on the span it opens', () =>

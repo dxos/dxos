@@ -2,5 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as Agent from './Agent';
-export * as Chat from './Chat';
+export * as Agent from './Agent.ts';
+export * as Chat from './Chat.ts';

@@ -9,7 +9,7 @@ import { Database, Filter, JsonSchema, Query, Ref, View } from '@dxos/echo';
 import { ViewModel } from '@dxos/schema';
 import { Organization, Pipeline } from '@dxos/types';
 
-import { type AccountMap } from './accounts';
+import { type AccountMap } from './accounts.ts';
 
 //
 // The pipeline board.

@@ -12,7 +12,7 @@ import { useViewState } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 
-import { DEBUG_PANEL_CONTEXT, DebugPanel, debugPanelAspect } from '../DebugPanel';
+import { DEBUG_PANEL_CONTEXT, DebugPanel, debugPanelAspect } from '../DebugPanel/index.ts';
 
 export type DebugPanelStatusProps = {
   /** Injectable for stories/tests; defaults to the page-wide controller. */

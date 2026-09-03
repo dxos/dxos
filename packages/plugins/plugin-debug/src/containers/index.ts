@@ -4,23 +4,23 @@
 
 import { type ComponentType, lazy } from 'react';
 
-import { type DebugPanelStatusProps } from './DebugPanelStatus';
+import { type DebugPanelStatusProps } from './DebugPanelStatus/index.ts';
 
-export const DebugObjectPanel: ComponentType<any> = lazy(() => import('./DebugObjectPanel'));
-export const DebugSettings: ComponentType<any> = lazy(() => import('./DebugSettings'));
-export const DebugSpaceObjectsPanel: ComponentType<any> = lazy(() => import('./DebugSpaceObjectsPanel'));
+export const DebugObjectPanel: ComponentType<any> = lazy(() => import('./DebugObjectPanel/index.ts'));
+export const DebugSettings: ComponentType<any> = lazy(() => import('./DebugSettings/index.ts'));
+export const DebugSpaceObjectsPanel: ComponentType<any> = lazy(() => import('./DebugSpaceObjectsPanel/index.ts'));
 export const DebugPanel: ComponentType<any> = lazy(() =>
-  import('./DebugPanel').then((module) => ({ default: module.DebugPanel })),
+  import('./DebugPanel/index.ts').then((module) => ({ default: module.DebugPanel })),
 );
 export const DebugPanelStatus: ComponentType<DebugPanelStatusProps> = lazy(() =>
-  import('./DebugPanelStatus').then((module) => ({ default: module.DebugPanelStatus })),
+  import('./DebugPanelStatus/index.ts').then((module) => ({ default: module.DebugPanelStatus })),
 );
-export const DebugStatus: ComponentType<any> = lazy(() => import('./DebugStatus'));
+export const DebugStatus: ComponentType<any> = lazy(() => import('./DebugStatus/index.ts'));
 export const LoggerPanel: ComponentType<any> = lazy(() =>
-  import('./LoggerPanel').then((module) => ({ default: module.LoggerPanel })),
+  import('./LoggerPanel/index.ts').then((module) => ({ default: module.LoggerPanel })),
 );
-export const SpaceGenerator: ComponentType<any> = lazy(() => import('./SpaceGenerator'));
-export const Wireframe: ComponentType<any> = lazy(() => import('./Wireframe'));
+export const SpaceGenerator: ComponentType<any> = lazy(() => import('./SpaceGenerator/index.ts'));
+export const Wireframe: ComponentType<any> = lazy(() => import('./Wireframe/index.ts'));
 export const StatsPanel: ComponentType<any> = lazy(() =>
-  import('./StatsPanel').then((module) => ({ default: module.StatsPanel })),
+  import('./StatsPanel/index.ts').then((module) => ({ default: module.StatsPanel })),
 );

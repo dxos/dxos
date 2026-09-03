@@ -15,8 +15,8 @@ import { Table } from '@dxos/react-ui-table/types';
 import { ViewModel } from '@dxos/schema';
 import { Person } from '@dxos/types';
 
-import { type PersonKey, type PersonMap } from './people';
-import { daysAgo, daysFromNow } from './util';
+import { type PersonKey, type PersonMap } from './people.ts';
+import { daysAgo, daysFromNow } from './util.ts';
 
 //
 // RoastLog — exemplar-specific schema defined entirely in this build script.

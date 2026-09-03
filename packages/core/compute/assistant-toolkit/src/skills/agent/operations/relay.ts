@@ -16,7 +16,7 @@ import { Database, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
-import { Relay } from './definitions';
+import { Relay } from './definitions.ts';
 
 /**
  * The relay pattern (plugin-projects PLAN.md phase C): one trigger per subscribed feed runs this
