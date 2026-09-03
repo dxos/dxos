@@ -642,9 +642,9 @@ const ChatPrompt = ({ classNames, defaultTasksVisible = false, ...props }: ChatP
   // shown pointing at nothing — `ChatActions` renders it only when `tasksVisible` is defined.
   const hasTasks = chat?.tasks != null;
 
-  // Disclosed by default: a chat carrying a checklist should show it without being asked, and the
-  // toggle is how the reader gets the room back once they have read it. Per mount rather than
-  // persisted — it is a glance, not a preference.
+  // Collapsed by default: the checklist is the assistant's working state, not the reader's, so the
+  // prompt keeps the room and the toggle is how they ask for it. Per mount rather than persisted —
+  // it is a glance, not a preference.
   const [tasksVisible, setTasksVisible] = useState(chat?.tasks?.length ? defaultTasksVisible : false);
   useEffect(() => {
     return event.on((ev) => {
