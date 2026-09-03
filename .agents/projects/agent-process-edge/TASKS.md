@@ -216,8 +216,8 @@ in the remote slot, which is exactly inverted. Recorded as D1a in DESIGN.md.
 - [x] `AgentService.layer` requires `ProcessManager.Service` + `RemoteProcessManager.Service` +
       `AtomRegistry` and routes on `location`; `hydrate` now covers both runtimes, since an
       edge-hosted agent that kept running while the client was closed is the whole point.
-- [x] `RemoteProcessManagerAdapter.layer` (which provided `ProcessManagerService`) deleted; the class
-      stays, and takes the tree atom to publish into so the aggregate monitor sees remote spawns.
+- [x] `RemoteProcessManagerAdapter.layer` (which provided `ProcessManagerService`) deleted; later the
+      whole module went with it (D1b below).
 - [x] `RemoteProcessManager.Manager.processTreeAtom` is `Atom.Writable` for that reason.
 - [x] `EdgeProcessManager` gained a real `processTree` (from `Control.list`) and `control`; the D3
       "no process tree endpoint yet" TODO is gone. New builders: `fromEdgeProcessClient(client,
@@ -239,7 +239,8 @@ spaceId)` and `forSpace(client, spaceId)`; `EdgeProcessControl.processManagerFro
       verb now takes the space it addresses, so nothing is space-scoped: `plugin-routine` keeps one
       application-affinity manager and it carries `control`. `AgentService` builds a space-bound
       `RemoteProcessManagerAdapter` per space (memoized, over the manager's own tree atom) from the
-      space on the session's feed. `RemoteProcessHandle` takes its space as an option rather than
+      space on the session's feed (superseded by D1b: the verbs moved onto the remote manager and take
+      the space per call). `RemoteProcessHandle` takes its space as an option rather than
       reading `info.environment.space`, which is optional — and the host now always records the space
       that routed a spawn, so `ProcessInfo` is self-describing either way.
       One limitation, documented in code: `hydrate()` has no space list, so its edge half covers only
@@ -279,3 +280,22 @@ Consequences for the rest of this project:
       `alarmDueAt` out of the store (D5).
 - [ ] Rename the `TriggersDispatcher` DO class to match its process-manager role (D4) — a binding
       migration, not a refactor.
+
+## Phase 7 — D1b: no `ProcessManager.Manager` façade over the remote surface
+
+dmaretskyi, review of dxos/dxos#12765: "kill this module -- consuming code should be aware of remote
+vs local process manager" / "unifying remote vs local is done a layer above -- for example in
+AgentService, or Operation.Service".
+
+- [x] `RemoteProcessManagerAdapter` deleted; its verbs are `RemoteProcessManager.Manager`'s own
+      (`spawn`, `list`, `attach`, `refreshProcessTree`), each taking the `spaceId` it addresses.
+- [x] `RemoteProcessManager.makeControlVerbs(control, registry, atom)` implements them once for every
+      transport; `EdgeProcessManager` spreads it beside `control`, so a manager without a control
+      lacks all of them.
+- [x] `AgentService` picks the verbs for the requested location itself and no longer holds a manager
+      per space — just the set of spaces an edge session was opened on, for `hydrate`.
+- [x] `AgentService.layer` no longer requires `AtomRegistry` (the atom belongs to the remote manager).
+- [x] `RemoteProcessManagerAdapter.test.ts` -> `RemoteProcessManagerVerbs.test.ts`, driving the remote
+      manager rather than a `ProcessManager.Service` injection. 12/12.
+- [ ] `Operation.Service` is the other place the review names as a unifying layer; nothing there
+      dispatches on local vs remote yet, so it is untouched.

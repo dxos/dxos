@@ -51,9 +51,8 @@ produce the local/remote split a UI renders. Binding EDGE to the local tag there
 agents as local and left the remote half permanently empty — with `RemoteProcessManager.layerNoop` in
 the stack, the noop sat in the slot where the real edge manager belonged.
 
-What survives from D1 is the valuable half: `ProcessManager.Manager` stays the only control
-vocabulary, and `RemoteProcessManagerAdapter` still presents a remote `Control` in those verbs. What
-changes is who holds it:
+What survives from D1 is the valuable half: `ProcessManager.Handle` stays the control vocabulary for
+a single process, local or remote. What changes is who holds the manager verbs:
 
 - `ProcessManager.Service` — local execution, always `ProcessManagerImpl`. Never a remote manager.
 - `RemoteProcessManager.Service` — processes on EDGE. Carries `control?: Control` (the full surface)
@@ -62,9 +61,23 @@ changes is who holds it:
 - `AgentService.layer` requires both and routes on `GetSessionOptions.location` (`'local' | 'edge'`).
   Asking for `'edge'` where the remote manager offers no control is a defect, not a silent fall back
   to local: the caller wanted a conversation that outlives the client.
-- The adapter publishes into the remote manager's _own_ tree atom (passed to its constructor), so a
-  spawn through it appears in the aggregate monitor's remote half rather than in a private atom
-  nothing reads.
+- A remote spawn publishes into the remote manager's _own_ tree atom, so it appears in the aggregate
+  monitor's remote half rather than in a private atom nothing reads.
+
+**Decision D1b — no `ProcessManager.Manager` façade over the remote surface.** The intermediate
+`RemoteProcessManagerAdapter` implemented `ProcessManager.Manager` so a caller could drive EDGE
+through the local verbs. That is the same conflation D1a corrected, one level down: a remote process
+is not a local one, and a space-bound instance per space contradicted "one manager serves them all".
+
+- The manager verbs (`spawn`, `list`, `attach`, `refreshProcessTree`) belong to
+  `RemoteProcessManager.Manager`, each taking the `spaceId` it addresses.
+  `RemoteProcessManager.makeControlVerbs` implements them once over a `Control`, so every transport
+  shares one implementation and a manager built without a control simply lacks them — a caller that
+  needs to spawn remotely fails where it asks.
+- Only `Process.key` identifies a remote process; a definition is optional and supplies the
+  input/output codecs and the RPC group the returned handle is typed by.
+- Unifying local and remote is a consumer's job, done a layer above: `AgentService` picks the verbs
+  for the location a session asked for.
 
 **Decision D2 — triggers keep their own interface.** `RemoteTriggerManager` stays as-is on the
 client. What changes is the server: the DO that dispatches triggers _is also_ the process manager
