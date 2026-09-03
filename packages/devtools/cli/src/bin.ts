@@ -21,7 +21,7 @@ import { createCliApp } from '@dxos/app-framework/cli';
 import * as AppMigrations from '@dxos/app-toolkit/AppMigrations';
 import { unrefTimeout } from '@dxos/async';
 import { ClientService, ConfigService, DXOS_VERSION, fromConfig } from '@dxos/client';
-import { DEFAULT_PROFILE } from '@dxos/client-protocol';
+import { DEFAULT_PROFILE, DXEnv } from '@dxos/client-protocol';
 import { LogLevel, levels, log } from '@dxos/log';
 import * as Observability from '@dxos/observability/Observability';
 import { isRecordEnabled, loadPlugins, makeInstalledPlugins } from '@dxos/plugin-registry';
@@ -138,7 +138,9 @@ const program = Effect.gen(function* () {
     return yield* runWatchSupervisor();
   }
 
-  const profile = readRootFlag('profile', 'p') ?? DEFAULT_PROFILE;
+  // The same resolution `commandConfigLayer` uses, so the profile the client opens is the profile
+  // whose telemetry consent is read.
+  const profile = readRootFlag('profile', 'p') ?? DXEnv.get(DXEnv.PROFILE, DEFAULT_PROFILE);
   const configPath = readRootFlag('config', 'c');
   const config = yield* ConfigService.load({ config: Option.fromNullishOr(configPath), profile });
 
