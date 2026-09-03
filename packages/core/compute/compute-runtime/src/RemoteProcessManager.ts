@@ -77,7 +77,12 @@ export interface Control {
  */
 export interface Manager {
   readonly processTree: Effect.Effect<readonly Process.Info[]>;
-  readonly processTreeAtom: Atom.Atom<readonly Process.Info[]>;
+  /**
+   * Writable so a `RemoteProcessManagerAdapter` built over {@link control} publishes into the same
+   * atom the aggregate `ProcessMonitor` reads — otherwise a spawn through that façade is invisible
+   * in the process tree.
+   */
+  readonly processTreeAtom: Atom.Writable<readonly Process.Info[]>;
 
   /**
    * Cancels the current run of a remote (edge) trigger — its in-flight execution and `runAgain`

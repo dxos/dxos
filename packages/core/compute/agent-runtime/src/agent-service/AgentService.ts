@@ -9,11 +9,14 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { AiContext } from '@dxos/assistant';
-import { ProcessManager } from '@dxos/compute-runtime';
+import { ProcessManager, RemoteProcessManager } from '@dxos/compute-runtime';
+import { RemoteProcessManagerAdapter } from '@dxos/compute-runtime/remote-process';
 import {
   AgentService,
+  type AgentLocation,
   type GetSessionOptions,
   type Service,
   type Session,
@@ -115,11 +118,44 @@ export interface AgentServiceOptions {
   getMcpServers?: () => McpServer.McpServer[];
 }
 
-export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, never, ProcessManager.Service> =>
+export const layer = (
+  opts?: AgentServiceOptions,
+): Layer.Layer<
+  AgentService,
+  never,
+  ProcessManager.Service | RemoteProcessManager.Service | AtomRegistry.AtomRegistry
+> =>
   Layer.effect(
     AgentService,
     Effect.gen(function* () {
       const processManager = yield* ProcessManager.Service;
+      const remote = yield* RemoteProcessManager.Service;
+      const registry = yield* AtomRegistry.AtomRegistry;
+
+      // An agent asked for on EDGE is spawned and driven through the remote host's control surface,
+      // presented as the same manager verbs. Built once per stack: the adapter caches the process
+      // tree atom, so a second instance would give this service a different view from the monitor's.
+      const remoteManager = remote.control
+        ? new RemoteProcessManagerAdapter.RemoteProcessManagerAdapter(remote.control, registry, remote.processTreeAtom)
+        : undefined;
+
+      /**
+       * The manager for a requested location. `edge` without a remote host that offers control is a
+       * defect rather than a silent fall back to local: the caller asked for a conversation that
+       * outlives the client, and running it locally would not deliver that.
+       */
+      const managerFor = (location: AgentLocation | undefined): ProcessManager.Manager => {
+        if (location !== 'edge') {
+          return processManager;
+        }
+        if (!remoteManager) {
+          throw new Error(
+            'Agent requested on edge, but RemoteProcessManager offers no process control. ' +
+              'Provide EdgeProcessManager.forSpace(client, spaceId).',
+          );
+        }
+        return remoteManager;
+      };
       // The agent's model and steering instructions are bound to its process at spawn time, so the
       // cache tracks what each session was created with. Requesting a different model or a repointed
       // instructions ref for the same feed tears down the old process and spawns a fresh one (see below).
@@ -129,6 +165,7 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
           model: DXN.DXN | undefined;
           provider: DXN.DXN | undefined;
           instructions: string | undefined;
+          location: AgentLocation;
           handle: AgentHandle;
           session: Session;
         }
@@ -150,16 +187,21 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
         sessionCache.clear();
 
         const executable = makeExecutable();
-        const agents = yield* processManager.list({ key: AGENT_PROCESS_KEY });
-        log('agent hydrate', { count: agents.length });
-        for (const agent of agents) {
-          yield* agent
-            .hydrate(executable)
-            .pipe(
-              Effect.catchCause((cause) =>
-                Effect.sync(() => log.warn('agent hydrate skipped', { pid: agent.pid, cause: Cause.pretty(cause) })),
-              ),
-            );
+        // Both runtimes: an edge-hosted agent kept running while the client was closed, which is the
+        // whole point of hosting it there, and is exactly what a local-only hydrate would strand.
+        const managers: ProcessManager.Manager[] = [processManager, ...(remoteManager ? [remoteManager] : [])];
+        for (const manager of managers) {
+          const agents = yield* manager.list({ key: AGENT_PROCESS_KEY });
+          log('agent hydrate', { count: agents.length });
+          for (const agent of agents) {
+            yield* agent
+              .hydrate(executable)
+              .pipe(
+                Effect.catchCause((cause) =>
+                  Effect.sync(() => log.warn('agent hydrate skipped', { pid: agent.pid, cause: Cause.pretty(cause) })),
+                ),
+              );
+          }
         }
       });
 
@@ -169,23 +211,25 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
             const model = options?.model ?? opts?.model;
             const provider = options?.provider ?? opts?.provider;
             const instructions = options?.instructions?.uri;
+            const location: AgentLocation = options?.location ?? 'local';
+            const manager = managerFor(options?.location);
             const cached = sessionCache.get(feed.id);
             if (cached) {
               if (
                 cached.model === model &&
                 cached.provider === provider &&
                 cached.instructions === instructions &&
+                cached.location === location &&
                 !isTerminalProcess(cached.handle.status.state)
               ) {
                 return cached.session;
               }
 
               if (!isTerminalProcess(cached.handle.status.state)) {
-                // Model, provider, or steering instructions changed (e.g. the user toggled
-                // online/offline, or the chat's instructions ref was repointed): terminate the
-                // existing process so the conversation continues on a fresh process bound to the new
-                // configuration. Conversation history is preserved via the feed, which the new
-                // process replays.
+                // Model, provider, steering instructions or location changed (e.g. the user toggled
+                // online/offline, or moved the chat to the cloud): terminate the existing process so
+                // the conversation continues on a fresh process bound to the new configuration.
+                // Conversation history is preserved via the feed, which the new process replays.
                 yield* cached.handle.terminate();
               }
               sessionCache.delete(feed.id);
@@ -199,7 +243,7 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
             // Reuse a still-running process for this feed only when there was no cached session
             // (e.g. after the UI remounted). After a model change we always spawn a fresh process,
             // since the process key does not encode the model.
-            const processes = yield* processManager.list({ target, key: executable.key });
+            const processes = yield* manager.list({ target, key: executable.key });
             let activeProcess = processes.find((process) => !isTerminalProcess(process.status.state));
 
             // Spawn annotations are immutable, so a running process found via the remount path may
@@ -219,7 +263,7 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
               yield* activeProcess.hydrate(executable);
               handle = activeProcess;
             } else {
-              handle = yield* processManager.spawn(executable, {
+              handle = yield* manager.spawn(executable, {
                 name: 'Agent',
                 target,
                 // Stamp the host marker so the harness control surface is discoverable by annotation
@@ -244,7 +288,7 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
               sessionCache.delete(feed.id);
             };
             const session = makeSession(handle, feed, releaseSession);
-            sessionCache.set(feed.id, { model, provider, instructions, handle, session });
+            sessionCache.set(feed.id, { model, provider, instructions, location, handle, session });
             return session;
           }),
         hydrate: hydrateAgents,

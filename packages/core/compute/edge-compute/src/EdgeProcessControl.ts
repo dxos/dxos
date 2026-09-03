@@ -5,12 +5,10 @@
 // @import-as-namespace
 
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 import type * as Scope from 'effect/Scope';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import * as HttpClient from 'effect/unstable/http/HttpClient';
 import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import type * as Rpc from 'effect/unstable/rpc/Rpc';
 import * as RpcClient from 'effect/unstable/rpc/RpcClient';
 import type * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
@@ -18,8 +16,7 @@ import * as RpcSerialization from 'effect/unstable/rpc/RpcSerialization';
 
 import { type Client } from '@dxos/client';
 import { createEdgeIdentity } from '@dxos/client/edge';
-import { type ProcessManager, type RemoteProcessManager } from '@dxos/compute-runtime';
-import { RemoteProcessManagerAdapter } from '@dxos/compute-runtime/remote-process';
+import { type RemoteProcessManager } from '@dxos/compute-runtime';
 import type * as Process from '@dxos/compute/Process';
 import { Context as DxosContext } from '@dxos/context';
 import type { EdgeProcessHttpClient } from '@dxos/edge-client/process';
@@ -95,33 +92,18 @@ export const make = (getEdgeClient: () => EdgeProcessHttpClient, spaceId: SpaceI
     }).pipe(Effect.provide(FetchHttpClient.layer), Effect.provide(RpcSerialization.layerNdjson), Effect.orDie),
 });
 /**
- * Space-scoped process control: presents the EDGE process host as a local
- * {@link ProcessManager.Manager}, so a stack written for the in-process manager — notably
- * `AgentService.layer` — runs against EDGE by swapping this layer in. Processes are per-space, which
- * is why this is scoped where the monitor above is not.
- */
-export const processManagerFromEdgeClient = (
-  edgeClient: EdgeProcessHttpClient,
-  spaceId: SpaceId,
-): Layer.Layer<ProcessManager.Service, never, Registry.AtomRegistry> =>
-  RemoteProcessManagerAdapter.layer(make(() => edgeClient, spaceId));
-
-/**
  * Build from a `Client`, deferring edge-client creation until first use (identity may be absent at
- * boot).
+ * boot). Consumed by `EdgeProcessManager.forSpace`, which is what a stack provides — this returns
+ * the `Control` surface, not a manager: `RemoteProcessManager.Service` is the tag that means
+ * "processes on EDGE".
  */
-export const processManagerFromClient = (
-  client: Client,
-  spaceId: SpaceId,
-): Layer.Layer<ProcessManager.Service, never, Registry.AtomRegistry> => {
+export const fromClient = (client: Client, spaceId: SpaceId): RemoteProcessManager.Control => {
   let cached: EdgeProcessHttpClient | undefined;
-  return RemoteProcessManagerAdapter.layer(
-    make(() => {
-      cached ??= createEdgeProcessClient(client);
-      // Re-applied on every access: the cached client would otherwise keep presenting a header
-      // minted for a previous identity.
-      cached.setIdentity(createEdgeIdentity(client));
-      return cached;
-    }, spaceId),
-  );
+  return make(() => {
+    cached ??= createEdgeProcessClient(client);
+    // Re-applied on every access: the cached client would otherwise keep presenting a header
+    // minted for a previous identity.
+    cached.setIdentity(createEdgeIdentity(client));
+    return cached;
+  }, spaceId);
 };

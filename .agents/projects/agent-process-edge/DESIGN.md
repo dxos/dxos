@@ -15,17 +15,17 @@ Two repos:
 `@dxos/compute` already owns the process model (`Process.Process`, `Process.State`,
 `Process.Monitor`) and `@dxos/compute-runtime` owns two managers:
 
-| Interface                      | Shape today                                                                        | Backed by                                        |
-| ------------------------------ | ---------------------------------------------------------------------------------- | ------------------------------------------------ |
-| `ProcessManager.Manager`       | full control: `spawn`, `attach`, `list`, handles with inputs/outputs/RPC/terminate | `ProcessManagerImpl` (in-process, KV-persisted)  |
-| `RemoteProcessManager.Manager` | read-only `processTree` + `cancel(trigger)`                                        | `EdgeProcessManager` (HTTP, no process tree yet) |
-| `RemoteTriggerManager.Manager` | `triggers` atom + `invokeTrigger`                                                  | `EdgeTriggerManager` (HTTP poll)                 |
+| Interface                      | Shape today                                                                        | Backed by                                       |
+| ------------------------------ | ---------------------------------------------------------------------------------- | ----------------------------------------------- |
+| `ProcessManager.Manager`       | full control: `spawn`, `attach`, `list`, handles with inputs/outputs/RPC/terminate | `ProcessManagerImpl` (in-process, KV-persisted) |
+| `RemoteProcessManager.Manager` | `processTree` + `cancel(trigger)` + `control?` (full surface, per D1a)             | `EdgeProcessManager` (HTTP)                     |
+| `RemoteTriggerManager.Manager` | `triggers` atom + `invokeTrigger`                                                  | `EdgeTriggerManager` (HTTP poll)                |
 
 So the remote surface exists but is a _monitor_, not a _controller_: it can cancel a trigger run and
 (in principle) read a tree. Nothing can spawn a process on EDGE or talk to one.
 
-**Decision D1 — the remote surface grows into `ProcessManager.Manager`, it does not get a parallel
-API.** `AgentService.layer` (in `@dxos/agent-runtime`) is written against
+**Decision D1 (SUPERSEDED by D1a — kept for the reasoning it still contributes).** The remote
+surface grows into `ProcessManager.Manager`, it does not get a parallel API. `AgentService.layer` (in `@dxos/agent-runtime`) is written against
 `ProcessManager.Manager` and nothing else: it spawns `AgentProcess`, `list`s by key/target,
 `hydrate`s, and drives `submitInput` / `runUntilSettled` / `subscribeEphemeral` / `terminate`
 through a `ProcessManager.Handle`. If EDGE is exposed as _another implementation of that same
@@ -42,6 +42,29 @@ Concretely:
   itself as **both** `RemoteProcessManager.Service` (monitor, as today) and, via
   `EdgeProcessManager.processManagerLayer`, `ProcessManager.Service` — which is what
   `AgentService.layer` is then provided with.
+
+**Decision D1a — the two tags mean local and remote, and `AgentService` chooses.** D1's reading of
+"another implementation of the same interface" went one step too far: it bound the EDGE-backed
+manager to `ProcessManager.Service` itself. That tag means _local execution_, and
+`ProcessMonitor.layer` merges `ProcessManagerService`'s tree with `RemoteProcessManager.Service`'s to
+produce the local/remote split a UI renders. Binding EDGE to the local tag therefore reported cloud
+agents as local and left the remote half permanently empty — with `RemoteProcessManager.layerNoop` in
+the stack, the noop sat in the slot where the real edge manager belonged.
+
+What survives from D1 is the valuable half: `ProcessManager.Manager` stays the only control
+vocabulary, and `RemoteProcessManagerAdapter` still presents a remote `Control` in those verbs. What
+changes is who holds it:
+
+- `ProcessManager.Service` — local execution, always `ProcessManagerImpl`. Never a remote manager.
+- `RemoteProcessManager.Service` — processes on EDGE. Carries `control?: Control` (the full surface)
+  and a `processTree` backed by the space's process index, closing D3's "no process tree yet" TODO
+  now that `GET /processes/:spaceId` exists.
+- `AgentService.layer` requires both and routes on `GetSessionOptions.location` (`'local' | 'edge'`).
+  Asking for `'edge'` where the remote manager offers no control is a defect, not a silent fall back
+  to local: the caller wanted a conversation that outlives the client.
+- The adapter publishes into the remote manager's _own_ tree atom (passed to its constructor), so a
+  spawn through it appears in the aggregate monitor's remote half rather than in a private atom
+  nothing reads.
 
 **Decision D2 — triggers keep their own interface.** `RemoteTriggerManager` stays as-is on the
 client. What changes is the server: the DO that dispatches triggers _is also_ the process manager

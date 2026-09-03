@@ -206,6 +206,35 @@ Three client defects it found, all fixed in #12765 and none reachable from the r
 - [ ] Both suites green in edge CI; no raised teardown budgets (the suite terminates
       what it spawns); `pnpm format`, lint clean in both repos.
 
+## Phase 6 — D1a: local and remote tags mean what they say (review correction)
+
+The PR author's correction: "process manager is local execution, remote process manager talks to
+edge" — the stacks had EDGE bound to `ProcessManager.Service` with `RemoteProcessManager.layerNoop`
+in the remote slot, which is exactly inverted. Recorded as D1a in DESIGN.md.
+
+- [x] `GetSessionOptions.location?: 'local' | 'edge'` (`@dxos/compute/AgentService`).
+- [x] `AgentService.layer` requires `ProcessManager.Service` + `RemoteProcessManager.Service` +
+      `AtomRegistry` and routes on `location`; `hydrate` now covers both runtimes, since an
+      edge-hosted agent that kept running while the client was closed is the whole point.
+- [x] `RemoteProcessManagerAdapter.layer` (which provided `ProcessManagerService`) deleted; the class
+      stays, and takes the tree atom to publish into so the aggregate monitor sees remote spawns.
+- [x] `RemoteProcessManager.Manager.processTreeAtom` is `Atom.Writable` for that reason.
+- [x] `EdgeProcessManager` gained a real `processTree` (from `Control.list`) and `control`; the D3
+      "no process tree endpoint yet" TODO is gone. New builders: `fromEdgeProcessClient(client,
+    spaceId)` and `forSpace(client, spaceId)`; `EdgeProcessControl.processManagerFrom*` deleted in
+      favour of `EdgeProcessControl.fromClient` returning a `Control`.
+- [x] `AssistantTestLayer` reordered so its noop remote manager sits below `AgentService` in the
+      provideMerge chain.
+- [x] All three edge suites rewired: a genuine local `ProcessManager.layer()` over
+      `KeyValueStore.layerMemory` in the local slot, EDGE in the remote slot, nothing noop'd; the
+      agent suite asks for `location: 'edge'`.
+- [ ] **Composer cannot yet ask for an edge agent.** `plugin-routine`'s `RemoteProcessManagerSpec` is
+      application-affinity and builds `EdgeProcessManager.fromClient(client)` with no space, so it
+      carries no `control` — processes are per-space. `AgentServiceSpec` is application-affinity too,
+      while `getSession` derives the space from the feed. Resolving it means either a space-affinity
+      remote manager (and an `AgentService` that can reach it), or making `control` space-parameterised
+      (`control?: (spaceId) => Control`). Not guessed at here — it changes plugin layer affinity.
+
 ## Boot budget (do not re-investigate)
 
 `composer-app:check-boot-budget` is red on this branch and **on `main`** — dxos/dxos#12759, an

@@ -7,6 +7,7 @@ import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
@@ -134,8 +135,8 @@ describe('RemoteProcessManagerAdapter', () => {
       Effect.gen(function* () {
         const manager = yield* ProcessManager.Service;
         yield* manager.startup();
-        const monitor = yield* Process.ProcessMonitorService;
-        return yield* monitor.processTree;
+        const remote = yield* RemoteProcessManager.Service;
+        return yield* remote.processTree;
       }),
       host,
     );
@@ -149,8 +150,8 @@ describe('RemoteProcessManagerAdapter', () => {
         const manager = yield* ProcessManager.Service;
         const handle = yield* manager.spawn(EchoProcess);
         yield* handle.terminate();
-        const monitor = yield* Process.ProcessMonitorService;
-        return yield* monitor.processTree;
+        const remote = yield* RemoteProcessManager.Service;
+        return yield* remote.processTree;
       }),
       host,
     );
@@ -172,17 +173,18 @@ describe('RemoteProcessManagerAdapter', () => {
     }
   });
 
-  test('ProcessMonitor reports the remote processes through the official API', async ({ expect }) => {
+  test('a spawn publishes into the remote manager tree the monitor reads', async ({ expect }) => {
     const host = makeFakeHost();
-    // The shape an EDGE e2e drives: the aggregate `Process.ProcessMonitorService` over this adapter
-    // in the manager slot, so a caller reads remote processes through `Process.Monitor` rather than
-    // through the transport.
+    // The adapter writes the atom belonging to `RemoteProcessManager.Service`, which is the remote
+    // half of the aggregate `ProcessMonitor` — a private atom would leave a hosted process invisible
+    // there. The merge itself is covered by the edge e2e, which has a real local manager too.
     const tree = await runWithMonitor(
       Effect.gen(function* () {
         const manager = yield* ProcessManager.Service;
         yield* manager.spawn(EchoProcess, { name: 'test' });
-        const monitor = yield* Process.ProcessMonitorService;
-        return yield* monitor.processTree;
+        const remote = yield* RemoteProcessManager.Service;
+        const registry = yield* Registry.AtomRegistry;
+        return registry.get(remote.processTreeAtom);
       }),
       host,
     );
@@ -204,17 +206,45 @@ describe('RemoteProcessManagerAdapter', () => {
 });
 
 /**
- * The layer stack an EDGE e2e assembles: one adapter instance shared by `ProcessManager.Service` and
- * the aggregate monitor, so both read the same process tree.
+ * Binds the adapter under `ProcessManager.Service` so the tests can drive it through the
+ * `ProcessManager.Manager` verbs it implements. A test injection only: in a real stack the adapter
+ * belongs to `RemoteProcessManager.Service` (see the class doc), and the tag means local execution.
+ */
+const adapterLayer = (
+  control: RemoteProcessManager.Control,
+  processTreeAtom?: Atom.Writable<readonly Process.Info[]>,
+) =>
+  Layer.effect(
+    ProcessManager.Service,
+    Effect.gen(function* () {
+      const registry = yield* Registry.AtomRegistry;
+      return new RemoteProcessManagerAdapter.RemoteProcessManagerAdapter(control, registry, processTreeAtom);
+    }),
+  );
+
+/**
+ * The stack a real client assembles around the adapter: it publishes into the *remote* manager's
+ * process-tree atom, which is the half of the aggregate monitor where hosted processes belong.
  */
 const monitorStack = (control: RemoteProcessManager.Control) => {
-  const registry = Layer.succeed(Registry.AtomRegistry, Registry.make());
-  const manager = RemoteProcessManagerAdapter.layer(control).pipe(Layer.provide(registry));
+  const registryInstance = Registry.make();
+  const registry = Layer.succeed(Registry.AtomRegistry, registryInstance);
+  const remoteAtom = Atom.make<readonly Process.Info[]>([]);
+  registryInstance.mount(remoteAtom);
+  // The EDGE manager as a client sees it: a tree atom plus the control surface the adapter drives.
+  const remote = Layer.succeed(RemoteProcessManager.Service, {
+    processTree: Effect.sync(() => registryInstance.get(remoteAtom)),
+    processTreeAtom: remoteAtom,
+    control,
+  });
+  const manager = adapterLayer(control, remoteAtom).pipe(Layer.provide(registry));
   return Layer.mergeAll(
     manager,
+    remote,
+    registry,
     ProcessMonitor.layer.pipe(
       Layer.provide(manager),
-      Layer.provide(RemoteProcessManager.layerNoop.pipe(Layer.provide(registry))),
+      Layer.provide(remote),
       Layer.provide(RemoteTraceMonitor.layerNoop),
       Layer.provide(registry),
     ),
@@ -315,7 +345,11 @@ const run = <A>(effect: Effect.Effect<A, never, ProcessManager.Service>, control
 
 /** Runs against the aggregate monitor as well as the manager, over one shared adapter. */
 const runWithMonitor = <A>(
-  effect: Effect.Effect<A, never, ProcessManager.Service | Process.ProcessMonitorService>,
+  effect: Effect.Effect<
+    A,
+    never,
+    ProcessManager.Service | RemoteProcessManager.Service | Process.ProcessMonitorService | Registry.AtomRegistry
+  >,
   control: RemoteProcessManager.Control,
 ) => EffectEx.runPromise(effect.pipe(Effect.provide(monitorStack(control))));
 
@@ -325,6 +359,6 @@ const runExit = <A>(effect: Effect.Effect<A, never, ProcessManager.Service>, con
 
 const provide = <A>(effect: Effect.Effect<A, never, ProcessManager.Service>, control: RemoteProcessManager.Control) =>
   effect.pipe(
-    Effect.provide(RemoteProcessManagerAdapter.layer(control)),
+    Effect.provide(adapterLayer(control)),
     Effect.provide(Layer.succeed(Registry.AtomRegistry, Registry.make())),
   );

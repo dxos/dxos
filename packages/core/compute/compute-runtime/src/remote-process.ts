@@ -8,4 +8,5 @@
  */
 
 export * as RemoteProcessHandle from './RemoteProcessHandle';
+export * as RemoteProcessInfo from './remote-process-info';
 export * as RemoteProcessManagerAdapter from './RemoteProcessManagerAdapter';

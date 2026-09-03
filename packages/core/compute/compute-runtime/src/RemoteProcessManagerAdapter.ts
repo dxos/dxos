@@ -5,10 +5,9 @@
 // @import-as-namespace
 
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import type * as Rpc from 'effect/unstable/rpc/Rpc';
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -18,7 +17,6 @@ import { Annotation } from '@dxos/echo';
 import { log } from '@dxos/log';
 import type { ProcessProtocol } from '@dxos/protocols';
 
-import { ProcessManagerService } from './process-manager-service';
 import type * as ProcessManager from './ProcessManager';
 import { toInfo, toProcessId } from './remote-process-info';
 import * as RemoteProcessHandle from './RemoteProcessHandle';
@@ -28,10 +26,14 @@ import type * as RemoteProcessManager from './RemoteProcessManager';
  * Presents a remote runtime's {@link RemoteProcessManager.Control} surface as a local
  * {@link ProcessManager.Manager}.
  *
- * This is what lets code written against the in-process manager run against EDGE unchanged — most
- * importantly `AgentService.layer` in `@dxos/agent-runtime`, which spawns and drives `AgentProcess`
- * purely through this interface. Transport-agnostic: it needs only a `Control`, whose EDGE
- * implementation lives in `@dxos/edge-compute`.
+ * Lets code written against the in-process manager verbs drive a remote host — `AgentService`
+ * spawns `AgentProcess` through it when a session asks for `location: 'edge'`. Transport-agnostic:
+ * it needs only a `Control`, whose EDGE implementation lives in `@dxos/edge-compute`.
+ *
+ * This is a façade, NOT a stand-in for `ProcessManager.Service`: that tag means local
+ * execution, and binding a remote manager to it would report edge processes as local in the
+ * aggregate `ProcessMonitor` tree. Remote processes belong to {@link RemoteProcessManager.Service},
+ * whose `control` this adapts.
  *
  * A remote host cannot be handed a process definition, so {@link spawn} sends the definition's `key`
  * and the host resolves it against the processes it hosts; a key the host does not know fails the
@@ -43,11 +45,25 @@ export class RemoteProcessManagerAdapter implements ProcessManager.Manager {
   readonly #processTreeAtom: Atom.Writable<readonly Process.Info[]>;
   readonly #monitor: Process.Monitor;
 
-  constructor(control: RemoteProcessManager.Control, registry: Registry.AtomRegistry) {
+  /**
+   * `processTreeAtom` lets the caller supply the atom to publish into — pass the owning
+   * {@link RemoteProcessManager.Manager}'s, so a spawn through this façade is visible in the same
+   * atom the aggregate `ProcessMonitor` reads. Omitted, the adapter owns a private one and its
+   * spawns are invisible to that monitor.
+   */
+  constructor(
+    control: RemoteProcessManager.Control,
+    registry: Registry.AtomRegistry,
+    processTreeAtom?: Atom.Writable<readonly Process.Info[]>,
+  ) {
     this.#control = control;
     this.#registry = registry;
-    this.#processTreeAtom = Atom.make<readonly Process.Info[]>([]);
-    this.#registry.mount(this.#processTreeAtom);
+    if (processTreeAtom) {
+      this.#processTreeAtom = processTreeAtom;
+    } else {
+      this.#processTreeAtom = Atom.make<readonly Process.Info[]>([]);
+      this.#registry.mount(this.#processTreeAtom);
+    }
     this.#monitor = {
       processTree: this.#refreshProcessTree,
       processTreeAtom: this.#processTreeAtom,
@@ -170,21 +186,6 @@ export class RemoteProcessManagerAdapter implements ProcessManager.Manager {
     );
   }
 }
-
-/**
- * Provides {@link ProcessManagerService} backed by a remote runtime, so a stack assembled for the
- * in-process manager runs against EDGE by swapping this layer in.
- */
-export const layer = (
-  control: RemoteProcessManager.Control,
-): Layer.Layer<ProcessManagerService, never, Registry.AtomRegistry> =>
-  Layer.effect(
-    ProcessManagerService,
-    Effect.gen(function* () {
-      const registry = yield* Registry.AtomRegistry;
-      return new RemoteProcessManagerAdapter(control, registry);
-    }),
-  );
 
 /**
  * Fails when an annotation is not already a JSON value: the wire protocol carries them as JSON, and a

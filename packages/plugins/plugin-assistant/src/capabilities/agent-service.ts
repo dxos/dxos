@@ -4,11 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { AgentService as AgentServiceRuntime } from '@dxos/agent-runtime';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { ProcessManager } from '@dxos/compute-runtime';
+import { ProcessManager, RemoteProcessManager } from '@dxos/compute-runtime';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
@@ -24,7 +25,14 @@ import { AssistantCapabilities } from '#types';
 const AgentServiceSpec = LayerSpec.make(
   {
     affinity: 'application',
-    requires: [ProcessManager.ProcessManagerService, Capability.Service],
+    // `RemoteProcessManager` is what a session asking for `location: 'edge'` is spawned on; absent
+    // an edge deployment the routine plugin provides its no-op and only local agents can run.
+    requires: [
+      ProcessManager.ProcessManagerService,
+      RemoteProcessManager.Service,
+      AtomRegistry.AtomRegistry,
+      Capability.Service,
+    ],
     provides: [AgentService.AgentService],
   },
   () =>
