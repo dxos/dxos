@@ -7,6 +7,8 @@ import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { AiContext } from '@dxos/assistant';
+import * as Agent from '@dxos/assistant/Agent';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
@@ -16,10 +18,9 @@ import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { Outline, Task } from '@dxos/types';
 
-import { Agent, Chat } from '../../../types/index.ts';
-import PlanningSkill from '../skill.ts';
-import { UpdateTasks } from './definitions.ts';
-import { PlanningHandlers } from './index.ts';
+import PlanningSkill from '../skill';
+import { UpdateTasks } from './definitions';
+import { PlanningHandlers } from './index';
 
 EntityId.dangerouslyDisableRandomness();
 

@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-// @import-as-namespace
+// Standalone entrypoint, not a barrel namespace: this is loaded by the log-writer worker, and
+// hoisting it onto the root barrel would put it in the graph of everyone importing the package.
 
 import {
   type Attributes,
@@ -12,7 +13,6 @@ import {
   type SpanContext,
   type SpanKind,
   type SpanStatus,
-  TraceFlags,
 } from '@opentelemetry/api';
 import { TraceState, hrTimeDuration } from '@opentelemetry/core';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
@@ -25,7 +25,9 @@ import {
   type SpanProcessor,
 } from '@opentelemetry/sdk-trace-base';
 
-import { type OtelDestination, signalUrl } from './otel.ts';
+import * as AiContent from './ai-content';
+import { type OtelDestination, signalUrl } from './otel';
+import * as TailSampling from './tail-sampling';
 
 export type Init = {
   type: 'otel-traces-init';
@@ -109,9 +111,6 @@ export class PortSpanProcessor implements SpanProcessor {
   onStart(_span: SdkSpan, _parentContext: Context): void {}
 
   onEnd(span: ReadableSpan): void {
-    if ((span.spanContext().traceFlags & TraceFlags.SAMPLED) === 0) {
-      return;
-    }
     this._post(serializeReadableSpan(span));
   }
 
@@ -122,13 +121,17 @@ export class PortSpanProcessor implements SpanProcessor {
 
 export type Options = {
   exporter?: SpanExporter;
+  /** Overrides the default tail-sampling rules; pass `{ ratio: 1 }` to export everything. */
+  sampling?: TailSampling.Options;
 };
 
 export class Sink {
   readonly #resource: Resource;
   readonly #processors: BatchSpanProcessor[];
+  readonly #sampler: TailSampling.TailSampler;
 
   constructor(init: Init, options: Options = {}) {
+    this.#sampler = new TailSampling.TailSampler(options.sampling);
     this.#resource = defaultResource().merge(resourceFromAttributes(init.resourceAttributes));
     this.#processors = init.destinations.map(
       (destination) =>
@@ -143,7 +146,22 @@ export class Sink {
     );
   }
 
+  /** Keeps the rest of a trace something outside the span stream vouched for, e.g. a warning log. */
+  promote(traceId: string): void {
+    this.#sampler.promote(traceId);
+  }
+
   append(record: Span): void {
+    if (
+      !this.#sampler.keep({
+        traceId: record.traceId,
+        status: record.status,
+        attributes: record.attributes,
+        durationMs: TailSampling.hrTimeToMs(hrTimeDuration(record.startTime, record.endTime)),
+      })
+    ) {
+      return;
+    }
     const span = this.#materialize(record);
     for (const processor of this.#processors) {
       processor.onEnd(span);
@@ -177,7 +195,7 @@ export class Sink {
       startTime: record.startTime,
       endTime: record.endTime,
       status: record.status,
-      attributes: record.attributes,
+      attributes: AiContent.withoutAiContent(record.attributes),
       links,
       events: record.events.map((event) => ({
         name: event.name,

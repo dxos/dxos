@@ -5,14 +5,14 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
+import * as Agent from '@dxos/assistant/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import * as Routine from '@dxos/compute/Routine';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { getFeedRef } from '@dxos/schema';
 
-import { Agent } from '../../../types/index.ts';
-import { Relay, SyncAutomation } from './definitions.ts';
+import { Relay, SyncAutomation } from './definitions';
 
 export default SyncAutomation.pipe(
   Operation.withHandler(

@@ -9,24 +9,22 @@ import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { LanguageModelFixture } from '@dxos/ai/testing';
 import { AiContext } from '@dxos/assistant';
+import * as Agent from '@dxos/assistant/Agent';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Skill from '@dxos/compute/Skill';
-import { Database, Feed, Filter, Ref } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { Message, Outline, Task } from '@dxos/types';
 
-import { Agent, Chat } from '../../types/index.ts';
-import { PlanningHandlers } from './operations/index.ts';
-import PlanningSkill from './skill.ts';
+import { PlanningHandlers } from './operations';
+import PlanningSkill from './skill';
 
 EntityId.dangerouslyDisableRandomness();
 
-// Recorded model fixtures use sonnet to keep regeneration cost down.
-const FIXTURE_MODEL = DXN.make('com.anthropic.model.claude-sonnet-5.default');
-
 const TestLayer = AssistantTestLayer({
-  model: FIXTURE_MODEL,
+  model: DXN.make('com.anthropic.model.claude-sonnet-5.default'),
   operationHandlers: PlanningHandlers,
   skills: [PlanningSkill.make()],
   types: [
@@ -112,14 +110,15 @@ describe('Planning skill', { tags: ['model-fixture'] }, () => {
 });
 
 /**
- * A session whose feed carries a Chat holding a seeded checklist. The Chat has to be bound as
- * context (not merely created) because both the hook and update-tasks reach it through
- * `Chat.getFromContext`. Seeding the items rather than having the model author them keeps the two
- * cases differing only in the prompt.
+ * A session whose chat holds a seeded checklist — the chat the process runs on, which both the hook
+ * and update-tasks reach through `Harness.getChat`. Seeding the items rather than having the model
+ * author them keeps the two cases differing only in the prompt.
  */
 const setupChatWithChecklist = Effect.fnUntraced(function* () {
   const agent = yield* AgentService.createSession({ skills: [PlanningSkill.make()] });
-  const chat = yield* Database.add(Chat.make({ feed: Ref.make(agent.feed) }));
+  // The checklist goes on the session's own chat — the one the harness resolves for the
+  // conversation. A second chat on the same feed would be invisible to the planning tools.
+  const chat = yield* Database.resolve(Obj.getURI(agent.chat), Chat.Chat);
   const { db } = yield* Database.Service;
   for (const title of TASKS) {
     Chat.addTask(db, chat, title, { status: 'todo' });

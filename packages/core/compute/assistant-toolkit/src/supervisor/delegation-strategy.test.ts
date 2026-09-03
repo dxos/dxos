@@ -8,6 +8,8 @@ import * as Effect from 'effect/Effect';
 import { AssistantTestLayer, collectEphemeral, messageTextIncludes, waitForMessage } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AiContext } from '@dxos/assistant';
+import * as Agent from '@dxos/assistant/Agent';
+import * as Chat from '@dxos/assistant/Chat';
 import { getSession } from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
@@ -18,11 +20,10 @@ import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { Message, Outline, Task } from '@dxos/types';
 
-import { AgentHandlers } from '../operations/index.ts';
-import { DelegateTask } from '../skills/delegation/operations/definitions.ts';
-import { DelegationSkill, DelegationSkillHandlers } from '../skills/index.ts';
-import { Agent, Chat } from '../types/index.ts';
-import { makeDelegationStrategy } from './delegation-strategy.ts';
+import { AgentHandlers } from '../operations';
+import { DelegationSkill, DelegationSkillHandlers } from '../skills';
+import { DelegateTask } from '../skills/delegation/operations/definitions';
+import { makeDelegationStrategy } from './delegation-strategy';
 
 const { text, toolCall, promptIncludes, scriptedAiService } = ScriptedLanguageModel;
 
@@ -136,7 +137,7 @@ describe('makeDelegationStrategy', () => {
         yield* Database.flush();
         const feed = yield* Database.load(chat.feed);
 
-        const session = yield* getSession(feed);
+        const session = yield* getSession(chat);
         const ephemeral = yield* collectEphemeral(session);
 
         yield* session.submitPrompt('Delegate a task to a sub-agent to compute 10 factorial.');
@@ -190,7 +191,7 @@ describe('makeDelegationStrategy', () => {
         yield* Database.flush();
         const feed = yield* Database.load(chat.feed);
 
-        const session = yield* getSession(feed);
+        const session = yield* getSession(chat);
         yield* session.submitPrompt('Delegate a task to a sub-agent to compute 10 factorial.');
         yield* session.waitForCompletion();
 

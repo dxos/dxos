@@ -5,16 +5,16 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { RegisterOAuthRecovery } from './definitions.ts';
-import { RedeemOAuthRecovery } from './definitions.ts';
-import { ImportExemplarSpace } from './definitions.ts';
-import { CompleteOAuthRegistration } from './definitions.ts';
+import { RegisterOAuthRecovery } from './definitions';
+import { RedeemOAuthRecovery } from './definitions';
+import { ImportSampleSpace } from './definitions';
+import { CompleteOAuthRegistration } from './definitions';
 
-export * as OnboardingOperation from './definitions.ts';
+export * as OnboardingOperation from './definitions';
 
 export const OnboardingOperationHandlerSet = OperationHandlerSet.lazy([
-  CompleteOAuthRegistration.pipe(Operation.lazyHandler(() => import('./complete-oauth-registration.ts'))),
-  ImportExemplarSpace.pipe(Operation.lazyHandler(() => import('./import-exemplar-space.ts'))),
-  RedeemOAuthRecovery.pipe(Operation.lazyHandler(() => import('./redeem-oauth-recovery.ts'))),
-  RegisterOAuthRecovery.pipe(Operation.lazyHandler(() => import('./register-oauth-recovery.ts'))),
+  CompleteOAuthRegistration.pipe(Operation.lazyHandler(() => import('./complete-oauth-registration'))),
+  ImportSampleSpace.pipe(Operation.lazyHandler(() => import('./import-sample-space'))),
+  RedeemOAuthRecovery.pipe(Operation.lazyHandler(() => import('./redeem-oauth-recovery'))),
+  RegisterOAuthRecovery.pipe(Operation.lazyHandler(() => import('./register-oauth-recovery'))),
 ]);

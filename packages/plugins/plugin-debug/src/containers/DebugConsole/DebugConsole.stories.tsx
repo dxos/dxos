@@ -12,9 +12,9 @@ import { translations } from '#translations';
 import { DebugConsole } from './DebugConsole.tsx';
 
 const meta = {
-  title: 'plugins/plugin-debug/DebugConsole',
+  title: 'plugins/plugin-debug/containers/DebugConsole',
   component: DebugConsole,
-  decorators: [withPluginManager(), withTheme(), withLayout({ layout: 'fullscreen' })],
+  decorators: [withPluginManager(), withTheme(), withLayout({ layout: 'centered' })],
   parameters: { translations },
 } satisfies Meta<typeof DebugConsole>;
 
@@ -22,8 +22,8 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
-
-export const WithClose: Story = {
-  args: { onClose: () => {} },
+export const Default: Story = {
+  args: {
+    onClose: () => {},
+  },
 };

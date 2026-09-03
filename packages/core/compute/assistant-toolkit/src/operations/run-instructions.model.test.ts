@@ -10,6 +10,7 @@ import * as Schema from 'effect/Schema';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { AiContext } from '@dxos/assistant';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -19,9 +20,8 @@ import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { Message, Outline } from '@dxos/types';
 
-import * as Chat from '../types/Chat.ts';
-import { RunInstructions } from './definitions.ts';
-import defaultAgentPrompt from './run-instructions.ts';
+import { RunInstructions } from './definitions';
+import defaultAgentPrompt from './run-instructions';
 
 EntityId.dangerouslyDisableRandomness();
 

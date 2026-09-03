@@ -4,13 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
+import { Harness } from '@dxos/assistant';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 import { Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { Chat } from '../../../types/index.ts';
-import { UpdateTasks } from './definitions.ts';
+import { UpdateTasks } from './definitions';
 
 /**
  * Upserts tasks onto the conversation's checklist, matched by title: an existing task's status is
@@ -19,7 +20,7 @@ import { UpdateTasks } from './definitions.ts';
 export default UpdateTasks.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ tasks }) {
-      const chat = yield* Chat.getFromContext;
+      const chat = yield* Harness.getChat;
       const { db } = yield* Database.Service;
 
       // Mutable copy: a payload naming the same new title twice must upsert its own creation.
@@ -38,9 +39,9 @@ export default UpdateTasks.pipe(
 
       return trim`
         You must update a task to 'done' when complete, and keep exactly one task in progress.
-        Current checklist:
+
         <checklist>
-          ${yield* Chat.formatChecklist(chat)}
+        ${yield* Chat.formatChecklist(chat)}
         </checklist>
       `;
     }),

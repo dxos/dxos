@@ -10,7 +10,7 @@ import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
-import { Chat } from '@dxos/assistant-toolkit';
+import * as Chat from '@dxos/assistant/Chat';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 

@@ -8,9 +8,11 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { PropsWithChildren, useCallback, useMemo } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { invariant } from '@dxos/invariant';
+import { corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Panel, useThemeContext } from '@dxos/react-ui';
@@ -169,6 +171,10 @@ const meta = {
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
+    // The article reads `MarkdownCapabilities.ExtensionProvider` for its editor's contributed
+    // extensions, which needs a plugin manager; nothing here contributes any, which is the point —
+    // the outline builds the same editor with an empty list.
+    withPluginManager({ plugins: corePlugins() }),
     withClientProvider({
       createIdentity: true,
       createSpace: true,

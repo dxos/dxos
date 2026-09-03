@@ -15,7 +15,7 @@ import {
   PlanningSkill,
   WebSearchSkill,
 } from '@dxos/assistant-toolkit';
-import { Chat as AssistantChat } from '@dxos/assistant-toolkit';
+import * as AssistantChat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';

@@ -63,10 +63,11 @@ const fireFlush = (result: Promise<void>): void => {
 };
 
 const createMessageHandler = (): ((event: MessageEvent<ObservabilityWorkerMessage>) => void) => {
+  let spanSink: OtelSpanSink.Sink | undefined;
   const logs = lazySink<OtelLogSink.Init, string | Control>(
     (init) =>
       import('@dxos/observability/OtelLogSink').then(({ Sink }) => {
-        const sink = new Sink(init);
+        const sink = new Sink(init, { onTraceFlagged: (traceId) => spanSink?.promote(traceId) });
         return (message) => (typeof message === 'string' ? sink.append(message) : sink.handleMessage(message));
       }),
     (message) => typeof message === 'string',
@@ -92,6 +93,7 @@ const createMessageHandler = (): ((event: MessageEvent<ObservabilityWorkerMessag
     (init) =>
       import('@dxos/observability/OtelSpanSink').then(({ Sink }) => {
         const sink = new Sink(init);
+        spanSink = sink;
         return (message) => (message.type === 'otel-span' ? sink.append(message) : fireFlush(sink.flush()));
       }),
     (message) => message.type === 'otel-span',

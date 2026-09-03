@@ -18,9 +18,10 @@ export default Capability.makeModule(
         label: 'Assign to agent',
         icon: 'ph--sparkle--regular',
         // Applies to every task: a conversation about it is always meaningful, so there is nothing
-        // to gate on and the list is never empty.
+        // to gate on and the list is never empty. The operation takes a list, and the row passes a
+        // one-element one, so the row action and the toolbar's checked-set action share one write path.
         createInvocations: (task) => [
-          { operation: ProjectOperation.DelegateTaskToChat, input: { task: Ref.make(task) } },
+          { operation: ProjectOperation.DelegateTaskToChat, input: { tasks: [Ref.make(task)] } },
         ],
       },
     ]);

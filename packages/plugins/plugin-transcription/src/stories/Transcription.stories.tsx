@@ -24,9 +24,9 @@ import { createStoryDecorators } from '#testing';
 
 import { renderByline } from '../util/index.ts';
 
-// The story names its transcription worker explicitly; the app reads it from
-// `runtime.services.edgeServices` and there is no built-in endpoint to fall back on.
-const TRANSCRIPTION_ENDPOINT = 'https://calls.dxos.network';
+// The story names its transcription endpoint explicitly; the app derives it from
+// `runtime.services.edge.url`, which a story has no client to read.
+const TRANSCRIPTION_ENDPOINT = 'https://dxos.network/calls';
 
 // Small chunk threshold so the transcriber emits every few seconds while the file plays (streaming),
 // instead of only flushing the whole buffer on stop.

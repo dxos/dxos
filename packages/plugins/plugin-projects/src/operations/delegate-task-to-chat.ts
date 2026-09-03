@@ -10,16 +10,17 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
 import { AiContext } from '@dxos/assistant';
-import { Chat } from '@dxos/assistant-toolkit';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Obj, Ref } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { Task } from '@dxos/types';
-import { trim } from '@dxos/util';
+import { concat } from '@dxos/util';
 
 import { ProjectOperation } from '#types';
 
@@ -35,23 +36,41 @@ const DELEGATION_SKILL_KEYS = ['org.dxos.skill.planning', 'org.dxos.skill.markdo
 const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat> =
   ProjectOperation.DelegateTaskToChat.pipe(
     Operation.withHandler(
-      Effect.fnUntraced(function* ({ task: taskRef }) {
-        const task = yield* Database.load(taskRef);
+      Effect.fnUntraced(function* ({ tasks: taskRefs }) {
+        // A chat delegating nothing has no subject; the schema cannot say so (see the operation's
+        // input), so the invariant is where an empty list stops.
+        invariant(taskRefs.length > 0, 'Expected at least one task to delegate.');
+        const tasks = yield* Effect.forEach(taskRefs, (taskRef) => Database.load(taskRef));
         const { db } = yield* Database.Service;
 
-        // The chat is filed under the task's project, so it lands in that project's navtree rather
-        // than loose in the space. Walked from the task rather than taken as input: the row the
-        // action runs from knows the task and nothing else.
-        const project = findProject(task);
+        // The chat is filed under the tasks' project, so it lands in that project's navtree rather
+        // than loose in the space. Walked from the tasks rather than taken as input: the list the
+        // action runs from knows the tasks and nothing else.
+        //
+        // One chat can only be filed under one project, and its opening prompt tells the agent to
+        // file what it makes into THAT project — so a list spanning two is rejected rather than
+        // silently filed under whichever came first. The UI cannot produce one (a checked set comes
+        // from a single list), but the operation is a skill verb an agent calls with any refs.
+        // A task with no project rides along: nothing about it contradicts the chosen one.
+        const projects = new Map(
+          tasks.flatMap((task) => {
+            const project = findProject(task);
+            return project ? [[project.id, project] as const] : [];
+          }),
+        );
+        invariant(projects.size <= 1, 'Expected every delegated task to belong to the same project.');
+        const [project] = projects.values();
 
         const { object: chat } = yield* Operation.invoke(AssistantOperation.CreateChat, {
-          name: task.title,
+          // Named after the task only when it is about exactly one: a chat holding three would be
+          // claiming to be about whichever happened to be first.
+          ...(tasks.length === 1 && { name: tasks[0].title }),
         });
 
-        // The task moves into the chat's checklist. `Chat.tasks` carries `SetParent`, so this also
-        // moves the task's ECHO parent from its task set to the chat.
+        // The tasks join the chat's checklist in the order they were given, which is the order the
+        // list showed them — the reader's reading order is the agent's working order.
         Obj.update(chat, (chat) => {
-          chat.tasks = [...chat.tasks, Ref.make(task)];
+          chat.tasks = [...chat.tasks, ...tasks.map((task) => Ref.make(task))];
         });
 
         // Parent edge before the add, as the project's own create-chat action does: it files the
@@ -71,10 +90,16 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
 
         // `started` on delegation, not on completion: the row shows work is underway from the moment
         // the session has it.
-        Task.setStatus(task, 'started', { actor: reviewer });
-        if (reviewer) {
+        for (const task of tasks) {
+          Task.setStatus(task, 'started', { actor: reviewer });
           Obj.update(task, (task) => {
-            task.reviewers = [reviewer];
+            // The chat's agent holds the work now, so the row says so rather than keeping whoever
+            // had it before. A bare role, as the delegation skill writes: `delegation-strategy`
+            // matches on the role, and a chat session has no name of its own to give.
+            task.assignee = { role: 'assistant' };
+            if (reviewer) {
+              task.reviewers = [reviewer];
+            }
           });
         }
 
@@ -139,14 +164,14 @@ const resolvePath = Effect.fnUntraced(function* (chat: Chat.Chat) {
 });
 
 /**
- * References the checklist rather than restating the task: the task is already bound to the chat,
- * and a copy in the prompt is one the reader can edit into disagreeing with the original.
+ * References the tasklist rather than restating the tasks: they are already bound to the chat, and
+ * a copy in the prompt is one the reader can edit into disagreeing with the original.
  */
-const OPENING_PROMPT = trim`
-  Work the task on your checklist. Read it first, then do it.
-
-  File anything you create into this project's artifacts, and mark the task done when it is
-  finished — the checklist is what reports your progress.
+const OPENING_PROMPT = concat`
+  You have been assigned tasks to work on in this session.
+  Read all tasks, then work on them sequentially.
+  This may require you to read, update, or create artifacts associated with the project.
+  Update the tasklist as you work on each task, and mark tasks ready for review as you complete them.
 `;
 
 /** The delegating identity as an actor, for the reviewer field. */

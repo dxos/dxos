@@ -16,6 +16,7 @@ import {
   type XmlWidgetDef,
   type XmlWidgetProps,
   type XmlWidgetState,
+  getXmlTextChild,
   navigateNextEffect,
   navigatePreviousEffect,
   xmlTagContextEffect,
@@ -700,3 +701,70 @@ describe('xmlTags widget context', () => {
     view.destroy();
   });
 });
+
+//
+// Widget content.
+//
+// A streaming tag's widget id is keyed on its opening position alone — its end moves on every chunk —
+// so the id cannot tell CodeMirror that the tag's content changed. Once the tag closes, the run keeps
+// growing in place (the assistant re-renders a whole message as one `<toolkit>` payload per turn), and
+// an id-only `eq` left the reader looking at the widget built from the first chunk until the view was
+// rebuilt from scratch — the "reload the chat and everything is there" symptom.
+//
+
+describe('xmlTags widget content', () => {
+  const registry: Record<string, XmlWidgetDef> = {
+    toolkit: { block: true, streaming: true, Component: () => null },
+  };
+
+  test('a closed streaming tag whose content grows in place replaces its widget', async ({ expect }) => {
+    const view = createView(toolkit('one'), { registry });
+    await rebuild(view);
+
+    const before = stubWidget(view, 'cm-xml-0');
+    expect(getXmlTextChild(before.props.children ?? [])).toBe('one');
+
+    view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: toolkit('one two') } });
+    forceParsing(view, view.state.doc.length, 5_000);
+    view.dispatch({ effects: xmlTagRebuildEffect.of(null) });
+    await flush();
+
+    const after = stubWidget(view, 'cm-xml-0');
+    expect(getXmlTextChild(after.props.children ?? [])).toBe('one two');
+    // The id is unchanged, so only the signature can tell CodeMirror to adopt the rebuilt props.
+    expect(after.eq(before)).toBe(false);
+    view.destroy();
+  });
+
+  test('an unchanged tag keeps its widget so the portal is not remounted', async ({ expect }) => {
+    const view = createView(`${toolkit('one')}\n\ntail`, { registry });
+    await rebuild(view);
+
+    const before = stubWidget(view, 'cm-xml-0');
+    view.dispatch({ changes: { from: view.state.doc.length, insert: ' more' } });
+    forceParsing(view, view.state.doc.length, 5_000);
+    view.dispatch({ effects: xmlTagRebuildEffect.of(null) });
+    await flush();
+
+    expect(stubWidget(view, 'cm-xml-0').eq(before)).toBe(true);
+    view.destroy();
+  });
+
+  // `ab` and `bA` are the shortest djb2 collision: the +1 on the first character is worth +33 after the
+  // shift, which the -33 on the second cancels. A hashed signature would call these two documents equal.
+  test('content that collides under a 32-bit hash still replaces the widget', async ({ expect }) => {
+    const view = createView(toolkit('ab'), { registry });
+    await rebuild(view);
+
+    const before = stubWidget(view, 'cm-xml-0');
+    view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: toolkit('bA') } });
+    forceParsing(view, view.state.doc.length, 5_000);
+    view.dispatch({ effects: xmlTagRebuildEffect.of(null) });
+    await flush();
+
+    expect(stubWidget(view, 'cm-xml-0').eq(before)).toBe(false);
+    view.destroy();
+  });
+});
+
+const toolkit = (payload: string) => `<toolkit>${payload}</toolkit>`;

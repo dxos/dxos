@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { Chat } from '@dxos/assistant-toolkit';
+import * as Chat from '@dxos/assistant/Chat';
 import { AgentService } from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
@@ -36,26 +36,29 @@ import { trim } from '@dxos/util';
  * navigation path to the result.
  */
 /**
- * Opens a conversation about one task: a new chat, filed in the space, carrying the task in its
- * `tasks` checklist so the agent starts with the work already in front of it.
+ * Opens one conversation about a list of tasks: a new chat, filed in the space, carrying them in its
+ * `tasks` checklist in the order given, so the agent starts with the work already in front of it.
  *
- * NOTE: `Chat.tasks` is a `SetParent` field, so the task's ECHO parent moves from its task set to the
- * chat — the task follows the chat's lifecycle from here on.
+ * One chat for the whole list rather than one per task: a reader delegating three tasks is handing
+ * over a body of work, and three parallel sessions could not see each other's results.
+ *
+ * The checklist is a plain ref array, so a delegated task keeps the task set it came from — the chat
+ * works on it, it does not take it.
  */
 export const DelegateTaskToChat = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.projects.delegateTaskToChat'),
-    name: 'Delegate Task To Chat',
-    description: 'Creates a chat for a task and places the task in its checklist.',
+    name: 'Delegate Tasks To Chat',
+    description: 'Creates a chat for one or more tasks and places them in its checklist.',
     icon: 'ph--chat-text--regular',
   },
-  // `AgentService` because the operation runs the chat's first turn: a message written to the feed
-  // is a message nobody read.
   // `AgentService` because the operation runs the chat's first turn: a message written to the
   // feed is a message nobody read.
   services: [Capability.Service, Database.Service, AgentService],
   input: Schema.Struct({
-    task: Ref.Ref(Task.Task),
+    // A plain array rather than `Schema.NonEmptyArray`, which serializes to `prefixItems` — a
+    // keyword the persisted-operation JSON schema does not carry. The handler rejects an empty list.
+    tasks: Schema.Array(Ref.Ref(Task.Task)),
   }),
   output: Schema.Struct({
     chat: Type.getSchema(Chat.Chat),

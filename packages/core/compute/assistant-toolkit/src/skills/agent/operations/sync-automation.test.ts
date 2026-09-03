@@ -5,6 +5,7 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
+import * as Agent from '@dxos/assistant/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import * as Routine from '@dxos/compute/Routine';
 import * as Trigger from '@dxos/compute/Trigger';
@@ -13,10 +14,9 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 
-import { OperationTestLayer } from '../../../testing/index.ts';
-import { Agent } from '../../../types/index.ts';
-import AgentSkillDef from '../skill.ts';
-import { Relay, SyncAutomation } from './definitions.ts';
+import { OperationTestLayer } from '../../../testing';
+import AgentSkillDef from '../skill';
+import { Relay, SyncAutomation } from './definitions';
 
 EntityId.dangerouslyDisableRandomness();
 

@@ -13,7 +13,7 @@ import * as localForage from 'localforage';
 import { type Config } from '@dxos/config';
 import { log } from '@dxos/log';
 
-import { type DataProvider } from '../observability.ts';
+import * as Observability from '../Observability';
 
 const IP_DATA_CACHE_TIMEOUT = 6 * 60 * 60 * 1000; // 6 hours
 
@@ -78,7 +78,7 @@ const getIPData = Effect.fn(function* (config: Config) {
 
 /** Fetches IP geolocation data and sets city/region/country tags on the observability instance. */
 export const provider =
-  (config: Config): DataProvider =>
+  (config: Config): Observability.DataProvider =>
   (observability) =>
     Effect.gen(function* () {
       const ipData = yield* getIPData(config);

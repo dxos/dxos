@@ -8,6 +8,7 @@ import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { type Context } from '@dxos/context';
 import { ATTR_TYPE } from '@dxos/echo/internal';
+import { SpanAttributes } from '@dxos/effect';
 import type { EntityId, SpaceId } from '@dxos/keys';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
@@ -270,7 +271,7 @@ export class IndexEngine {
           return recordIds.length;
         }),
       );
-    }).pipe(Effect.withSpan('IndexEngine.deleteObjects'));
+    }).pipe(Effect.withSpan('IndexEngine.deleteObjects'), SpanAttributes.annotateSpace(opts.spaceId));
   }
 
   update(
@@ -324,6 +325,7 @@ export class IndexEngine {
       // stale heads and silently skip documents changed in between.
       Effect.ensuring(Effect.sync(() => dataSource.endPass?.())),
       Effect.withSpan('IndexEngine.update'),
+      SpanAttributes.annotateSpace(opts.spaceId),
     );
   }
 
@@ -383,6 +385,6 @@ export class IndexEngine {
           return { updated: objects.length, done: false, objects };
         }),
       );
-    }).pipe(Effect.withSpan('IndexEngine.#update'));
+    }).pipe(Effect.withSpan('IndexEngine.#update'), SpanAttributes.annotateSpace(opts.spaceId));
   }
 }

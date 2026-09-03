@@ -42,9 +42,9 @@ import {
   mx,
 } from '@dxos/ui-theme';
 
-import { Path } from '../../util/index.ts';
-import { DROP_INDENTATION, paddingIndentation } from './helpers.ts';
-import { type TreeData } from './tree-data.ts';
+import { Path } from '../../util';
+import { DROP_INDENTATION, indentTrack } from './helpers';
+import { type TreeData, isTreeDataFor } from './tree-data';
 import {
   type ColumnRenderer,
   type HeadingRenderer,
@@ -55,10 +55,10 @@ import {
   type TreeRenderContextValue,
   TreeRenderProvider,
   useTreeRender,
-} from './TreeContext.ts';
-import { TreeDropDebug } from './TreeDropDebug.tsx';
-import { TreeDropIndicator } from './TreeDropIndicator.tsx';
-import { TreeItemToggle } from './TreeItemToggle.tsx';
+} from './TreeContext';
+import { TreeDropDebug } from './TreeDropDebug';
+import { TreeDropIndicator } from './TreeDropIndicator';
+import { TreeItemToggle } from './TreeItemToggle';
 
 const hoverableDescriptionIcons =
   '[--icons-color:inherit] hover-hover:[--icons-color:var(--description-text)] hover-hover:hover:[--icons-color:inherit] focus-within:[--icons-color:inherit]';
@@ -193,7 +193,19 @@ export type TreeProps<T extends { id: string } = any> = {
    */
   ariaLabel?: string;
   classNames?: string | (string | undefined)[];
+  /**
+   * The row's whole column template, `[tree-row-start] … [tree-row-end]`. The first track is the
+   * disclosure toggle, one control wide; the heading and every column a `renderColumns` returns
+   * flow into the tracks after it in DOM order, so a consumer names its own tracks here and places
+   * cells with `col-[name]` — one grid per row, nothing nested.
+   */
   gridTemplateColumns?: string;
+  /**
+   * Render a disclosure toggle in the template's first track. Off for a tree that is a flat list
+   * — one whose model never has a branch — so the template starts with the consumer's own first
+   * cell rather than holding a square for a chevron no row will ever show.
+   */
+  toggle?: boolean;
   draggable?: boolean;
   selectionMode?: 'single' | 'multiple';
   renderColumns?: ColumnRenderer<T>;
@@ -253,6 +265,14 @@ export type TreeProps<T extends { id: string } = any> = {
   onKeyDown?: (event: React.KeyboardEvent<HTMLDivElement>) => void;
 };
 
+/**
+ * A tree over a `TreeModel`, rendered on the Ark TreeView machine: it owns disclosure, the roving
+ * tabstop, selection and the APG keymap, and lays every row out as one grid on the consumer's
+ * `gridTemplateColumns`. The template's first track is the disclosure toggle (`toggle={false}`
+ * drops it for a flat list); the heading and each `renderColumns` cell flow into the tracks after
+ * it, and a row indents by padding its own grid so nested rows shift as a block while the fixed
+ * trailing tracks stay aligned. Rows are drag sources and drop targets when `draggable` is set.
+ */
 export const Tree = <T extends { id: string } = any>({
   model,
   rootId,
@@ -260,7 +280,8 @@ export const Tree = <T extends { id: string } = any>({
   id,
   ariaLabel,
   classNames,
-  gridTemplateColumns = '[tree-row-start] minmax(0, 1fr) min-content [tree-row-end]',
+  gridTemplateColumns = '[tree-row-start] var(--dx-control) minmax(0, 1fr) min-content [tree-row-end]',
+  toggle = true,
   draggable = false,
   selectionMode = 'single',
   renderColumns,
@@ -280,6 +301,9 @@ export const Tree = <T extends { id: string } = any>({
   onKeyDown,
 }: TreeProps<T>) => {
   const treePath = useMemo(() => (path ? [...path, id] : [id]), [id, path]);
+  // Every tree sharing a path root is one drag scope, which is what a monitor claims: the navtree
+  // mounts a `Tree` per workspace tab, and a scope per tab would leave its own drops unclaimed.
+  const treeId = treePath[0];
   const walkAtom = useMemo(() => createTreeWalkAtom(model, rootId, treePath), [model, rootId, treePath]);
   const { root, expanded, selected, byValue } = useAtomValue(walkAtom);
 
@@ -447,6 +471,16 @@ export const Tree = <T extends { id: string } = any>({
       if (!selectionFollowsFocus || !focusedValue || selected.includes(focusedValue)) {
         return;
       }
+      // Only the row's own focus selects — the arrows, or a click on the row. Focus landing on a
+      // control inside it (a delete button, a status menu, a checkbox) bubbles the same event, and
+      // following it selected the row the reader was about to act on: a delete briefly swapped the
+      // edit pane onto the doomed task before it vanished. The row is the element carrying
+      // `data-object-id` (the item, or a branch's control — a branch's `treeitem` is its
+      // display-contents wrapper, which never holds focus itself).
+      const active = document.activeElement;
+      if (active && active !== document.body && active.closest('[data-object-id]') !== active) {
+        return;
+      }
       const entry = byValue.get(focusedValue);
       if (entry) {
         onSelectNode(entry, { option: false, shift: false });
@@ -508,9 +542,11 @@ export const Tree = <T extends { id: string } = any>({
 
   const renderContext = useMemo<TreeRenderContextValue<T>>(
     () => ({
-      treeId: id,
+      treeId,
       focusNode,
       draggable,
+      toggle,
+      gridTemplateColumns,
       renderColumns,
       renderIcon,
       renderHeading,
@@ -527,9 +563,11 @@ export const Tree = <T extends { id: string } = any>({
       mountedRef,
     }),
     [
-      id,
+      treeId,
       focusNode,
       draggable,
+      toggle,
+      gridTemplateColumns,
       renderColumns,
       renderIcon,
       renderHeading,
@@ -568,7 +606,11 @@ export const Tree = <T extends { id: string } = any>({
           // `outline-none`: the machine parks focus on the tree container (tabIndex=-1) when no
           // row holds it, which must not draw a focus ring around the whole tree.
           className={mx('grid outline-none', ...(Array.isArray(classNames) ? classNames : [classNames]))}
-          style={{ gridTemplateColumns }}
+          // One track: rows, section headers and the end target span it. The consumer's column
+          // template is applied per row, behind an indent track, rather than here — a subgrid would
+          // share one set of tracks down the tree, and padding a subgrid only shrinks its first
+          // track, so nested rows could not indent their leading cells.
+          style={{ gridTemplateColumns: '[tree-row-start] minmax(0, 1fr) [tree-row-end]' }}
           onPointerDownCapture={handlePointerDownCapture}
           onKeyDown={handleKeyDown}
         >
@@ -576,7 +618,7 @@ export const Tree = <T extends { id: string } = any>({
             <TreeNodeRow key={node.value} node={node} />
           ))}
           {dropAtEnd && draggable && (
-            <TreeEndDropTarget data={{ treeId: id, id: root.id, path: root.path, item: root.item }} />
+            <TreeEndDropTarget data={{ treeId, id: root.id, path: root.path, item: root.item }} />
           )}
         </TreeView.Tree>
       </TreeRenderProvider>
@@ -587,12 +629,17 @@ export const Tree = <T extends { id: string } = any>({
 /** Renders a section-group label spanning the full tree row. Used when a node has `disposition === 'group'`. */
 const TreeSectionHeader = ({ label }: { label: Label }) => {
   const { t } = useTranslation();
+  const { toggle } = useTreeRender();
   return (
     // `presentation`: a heading is not a permitted child of `role=tree`, and the label is
     // decorative — the group's items remain individually labeled.
     <div
       role='presentation'
-      className='col-[tree-row] pl-7 pt-3 pb-0.5 text-xs uppercase tracking-widest text-subdued hover:text-description select-none'
+      className={mx(
+        'col-[tree-row] pt-3 pb-0.5 text-xs uppercase tracking-widest text-subdued hover:text-description select-none',
+        // Cleared past the toggle track so the label starts where the rows' first cell does.
+        toggle && 'ps-(--dx-control)',
+      )}
     >
       {toLocalizedString(label, t)}
     </div>
@@ -733,6 +780,7 @@ const TreeEndDropTarget = ({ data }: { data: TreeData }) => {
     return dropTargetForElements({
       element,
       getData: () => ({ ...data, atEnd: true }),
+      canDrop: ({ source }) => isTreeDataFor(source.data, data.treeId),
       onDragEnter: () => setOver(true),
       onDragLeave: () => setOver(false),
       onDrop: () => setOver(false),
@@ -755,6 +803,8 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
   const {
     treeId,
     draggable: treeDraggable,
+    toggle,
+    gridTemplateColumns,
     renderColumns: Columns,
     renderHeading: RenderHeading,
     blockInstruction,
@@ -849,7 +899,13 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
         }),
       canDrop: ({ source }) => {
         const permitted = canDrop ?? (() => true);
-        return source.element !== element && permitted({ source: source.data as TreeData, target: data });
+        // A target scopes the sources it accepts for the same reason a monitor scopes the drags it
+        // claims: a foreign row landing here is read by the claiming monitor as its own node type.
+        return (
+          source.element !== element &&
+          isTreeDataFor(source.data, treeId) &&
+          permitted({ source: source.data as TreeData, target: data })
+        );
       },
       getIsSticky: () => true,
       onDrag: ({ self, source }) => {
@@ -897,6 +953,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
     isItemDroppable,
     item,
     id,
+    treeId,
     mode,
     level,
     branch,
@@ -940,7 +997,7 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
       data-instruction={instruction?.type}
       data-testid={props.testId}
       className={mx(
-        'grid grid-cols-subgrid col-[tree-row] mt-0.5 outline-none cursor-pointer select-none',
+        'col-[tree-row] mt-0.5 outline-none cursor-pointer select-none',
         // The row leaves the list for the duration of the drag: the pointer is carrying it, and a
         // copy left behind in place reads as a second row rather than as the one being moved. A
         // branch's children go with it, since the drag start collapses it.
@@ -968,11 +1025,21 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
       onMouseEnter={handleItemHover}
       onContextMenu={handleContextMenu}
     >
-      <div className='indent relative grid grid-cols-subgrid col-[tree-row]' style={paddingIndentation(level)}>
-        {/* `items-start`: a row with a description is taller than one control, and centring put the
-            disclosure chevron beside the description rather than beside the title it discloses. */}
-        <div role='none' className='flex items-start'>
-          {branch ? (
+      {/* One grid per row, on the consumer's template, and the toggle, the heading's cells and the
+          columns are all its direct children — so a consumer names every track and nothing is
+          nested. The depth is padding on this grid, not a track: a real grid's padding shifts every
+          track (a subgrid's only shrinks its first), and a track would sit ahead of `tree-row-start`
+          where an auto-placed toggle lands instead. Rows line up down the tree because every track
+          but the consumer's `1fr` is fixed: the indent is absorbed by the flexible one, and the fixed
+          trailing tracks stay anchored to the row's end. The first grid row is one control tall so
+          every cell centres on the title line; a heading that adds a second line (a description)
+          places it with `row-start-2`. */}
+      <div
+        className='indent relative grid grid-rows-[var(--dx-control)]'
+        style={{ gridTemplateColumns, paddingInlineStart: indentTrack(level) }}
+      >
+        {toggle &&
+          (branch ? (
             <TreeView.BranchTrigger asChild>
               {/* zag stamps data-state=open on the trigger, which the ghost button styles as an
                   open menu trigger (bg-input-bg) — the chevron must stay transparent. */}
@@ -980,13 +1047,12 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
             </TreeView.BranchTrigger>
           ) : (
             <TreeItemToggle isBranch={false} />
-          )}
-          {RenderHeading ? (
-            <RenderHeading item={item} path={path} props={props} open={open} />
-          ) : (
-            <TreeNodeHeading item={item} path={path} props={props} />
-          )}
-        </div>
+          ))}
+        {RenderHeading ? (
+          <RenderHeading item={item} path={path} props={props} open={open} />
+        ) : (
+          <TreeNodeHeading item={item} path={path} props={props} />
+        )}
         {Columns && <Columns item={item} path={path} open={open} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />}
         {instruction && <TreeDropIndicator instruction={instruction} gap={2} />}
         {debug && (
@@ -1023,7 +1089,7 @@ const TreeNodeHeading = <T extends { id: string }>({
       <div
         data-testid='treeItem.heading'
         className={mx(
-          'grow shrink flex items-center min-w-0 gap-2 ps-0.5 min-h-(--dx-control) cursor-pointer select-none',
+          'flex items-center min-w-0 gap-2 ps-0.5 min-h-(--dx-control) cursor-pointer select-none',
           props.disabled && 'cursor-default',
           props.headingClassName,
         )}

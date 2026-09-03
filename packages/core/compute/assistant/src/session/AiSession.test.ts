@@ -233,3 +233,20 @@ describe('AiSession.Session rewind', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 });
+
+describe('AiSession.sessionAnnotations', () => {
+  const TestLayer = TestDatabaseLayer({ types: [Feed.Feed, Message.Message, SessionLink.SessionLink] });
+
+  it.effect('names the conversation and the space it runs in', () =>
+    Effect.gen(function* () {
+      const { db } = yield* Database.Service;
+      const feed = db.add(Feed.make());
+
+      const annotations = AiSession.sessionAnnotations(feed);
+
+      expect(annotations.spaceId).toEqual(db.spaceId);
+      expect(annotations['dxos.ai.session_id']).toContain(db.spaceId);
+      expect(annotations['dxos.ai.session_id']).toContain(feed.id);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+});

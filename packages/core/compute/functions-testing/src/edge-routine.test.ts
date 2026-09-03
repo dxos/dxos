@@ -4,7 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { Chat, RunInstructions } from '@dxos/assistant-toolkit';
+import { RunInstructions } from '@dxos/assistant-toolkit';
+import * as Chat from '@dxos/assistant/Chat';
 import { Client } from '@dxos/client';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';

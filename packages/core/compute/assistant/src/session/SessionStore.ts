@@ -34,11 +34,29 @@ export const ConsumedAnnotation: Annotation.Annotation<boolean> = Annotation.mak
   schema: Schema.Boolean,
 });
 
+/**
+ * Marks a queued item as taken up by the turn currently running.
+ *
+ * Distinct from {@link ConsumedAnnotation}, which cannot serve this purpose: the ack lands only after
+ * the turn, so between the agent dequeuing an entry and finishing with it the entry is still pending
+ * — and the turn has meanwhile appended its own user message built from the entry's blocks, leaving
+ * the same content rendered in both the queue and the thread. An in-flight entry stays in the pending
+ * set, so a process that dies mid-turn still redelivers it; it is only held out of the queue view,
+ * which the thread now speaks for.
+ */
+export const InFlightAnnotation: Annotation.Annotation<boolean> = Annotation.make({
+  id: 'org.dxos.annotation.inFlight',
+  schema: Schema.Boolean,
+});
+
 export const isQueued = (item: Obj.Unknown | Obj.Snapshot): boolean =>
   Option.getOrElse(Annotation.get(item, QueuedAnnotation), () => false);
 
 export const isConsumed = (item: Obj.Unknown | Obj.Snapshot): boolean =>
   Option.getOrElse(Annotation.get(item, ConsumedAnnotation), () => false);
+
+export const isInFlight = (item: Obj.Unknown | Obj.Snapshot): boolean =>
+  Option.getOrElse(Annotation.get(item, InFlightAnnotation), () => false);
 
 /**
  * The pending (queued, un-acked) portion of a session's feed state.
@@ -174,6 +192,17 @@ export class SessionStore {
    * Call it AFTER the work the item drove: the pending set is what a rehydrated process reads, so an
    * item marked early is an item silently dropped when that process dies mid-turn.
    */
+  /**
+   * Marks a queued item as taken up by the running turn, taking it out of the queue view without
+   * taking it out of the pending set (see {@link InFlightAnnotation}).
+   *
+   * Call it when the item is dequeued, BEFORE the work it drives — the opposite of {@link ack}.
+   */
+  markInFlight(feed: Feed.Feed, item: Message.Message | Alarm.Alarm): Effect.Effect<void, never, Database.Service> {
+    Obj.update(item, (item) => Annotation.set(item, InFlightAnnotation, true));
+    return Feed.append(feed, [item]).pipe(Effect.asVoid);
+  }
+
   ack(feed: Feed.Feed, item: Message.Message | Alarm.Alarm): Effect.Effect<void, never, Database.Service> {
     Obj.update(item, (item) => Annotation.set(item, ConsumedAnnotation, true));
     return Feed.append(feed, [item]).pipe(Effect.asVoid);

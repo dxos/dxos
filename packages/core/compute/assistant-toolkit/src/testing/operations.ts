@@ -4,6 +4,8 @@
 
 import { AssistantTestLayerWithTriggers } from '@dxos/agent-runtime/testing';
 import { AiContext } from '@dxos/assistant';
+import * as Agent from '@dxos/assistant/Agent';
+import * as Chat from '@dxos/assistant/Chat';
 import { SpaceProperties } from '@dxos/client-protocol';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -14,16 +16,15 @@ import { Collection, Feed, Tag } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { Employer, Organization, Outline, Person, Task, TaskSet } from '@dxos/types';
 
-import { AgentHandlers } from '../operations/index.ts';
-import { AgentSkillHandlers } from '../skills/agent/operations/index.ts';
-import { AlarmHandlers } from '../skills/alarm/operations/index.ts';
-import { ChatContextHandlers } from '../skills/chat-context/operations/index.ts';
-import { DelegationSkillHandlers } from '../skills/delegation/operations/index.ts';
-import { MemoryHandlers } from '../skills/memory/operations/index.ts';
-import { PlanningHandlers } from '../skills/planning/operations/index.ts';
-import { SkillManagerHandlers } from '../skills/skill-manager/operations/index.ts';
-import { Agent, Chat } from '../types/index.ts';
-import { Memory } from '../types/Memory.ts';
+import { AgentHandlers } from '../operations';
+import { AgentSkillHandlers } from '../skills/agent/operations';
+import { AlarmHandlers } from '../skills/alarm/operations';
+import { ChatContextHandlers } from '../skills/chat-context/operations';
+import { DelegationSkillHandlers } from '../skills/delegation/operations';
+import { MemoryHandlers } from '../skills/memory/operations';
+import { PlanningHandlers } from '../skills/planning/operations';
+import { SkillManagerHandlers } from '../skills/skill-manager/operations';
+import { Memory } from '../types/Memory';
 
 /**
  * Shared layer for operation tests: every handler in the package plus the types those handlers

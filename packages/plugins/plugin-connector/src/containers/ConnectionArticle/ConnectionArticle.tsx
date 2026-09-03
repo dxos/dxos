@@ -14,7 +14,7 @@ import { Connection, Cursor } from '@dxos/link';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { ConnectionView } from '#components';
-import { useConnector, useReauthenticate, useSyncConnection, useSyncTargetsChecklist, useTestConnection } from '#hooks';
+import { useConnector, useReauthenticate, useSyncConnection, useSyncTargets, useTestConnection } from '#hooks';
 
 import * as Binding from '../../Binding.ts';
 import { connectionsDeckSubject } from '../../constants.ts';
@@ -40,7 +40,7 @@ export const ConnectionArticle = ({ subject, role }: ConnectionArticleProps) => 
   );
   const { invokePromise } = useOperationInvoker();
 
-  const { available: syncTargetsAvailable, loading, openChecklist } = useSyncTargetsChecklist(subject);
+  const { available: syncTargetsAvailable, loading, openTargets } = useSyncTargets(subject);
   const { available: syncAvailable, syncing, sync } = useSyncConnection(subject);
   const { status: testStatus, error: testError, testing, retest } = useTestConnection(subject);
   const { available: canReauthenticate, reauthenticating, reauthenticate } = useReauthenticate(subject);
@@ -122,7 +122,7 @@ export const ConnectionArticle = ({ subject, role }: ConnectionArticleProps) => 
       canReauthenticate={canReauthenticate}
       reauthenticating={reauthenticating}
       onSync={() => void sync()}
-      onChangeTargets={openChecklist}
+      onChangeTargets={openTargets}
       onReauthenticate={reauthenticate}
       onTestConnection={retest}
       onDelete={handleDelete}

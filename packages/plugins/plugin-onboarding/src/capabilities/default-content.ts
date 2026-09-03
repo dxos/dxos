@@ -19,9 +19,9 @@ import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceEvents from '@dxos/plugin-space/SpaceEvents';
 
 // Raw import keeps the welcome copy in a standalone Markdown file that renders in editors and diffs cleanly.
-import README_CONTENT from '../content/readme.md?raw';
-import { OnboardingOperation } from '../operations/index.ts';
-import { type OnboardingOptions } from './capabilities.ts';
+import README_CONTENT from '../content/README.md?raw';
+import { OnboardingOperation } from '../operations';
+import { type OnboardingOptions } from './capabilities';
 
 const DEFAULT_SPACE_ICON = 'house-line';
 const DEFAULT_SPACE_ICON_HUE = 'violet';
@@ -29,7 +29,7 @@ const DEFAULT_SPACE_ICON_HUE = 'violet';
 export const README_DOCUMENT_NAME = 'README';
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* ({ generateExemplarSpace }: OnboardingOptions) {
+  Effect.fnUntraced(function* ({ generateSampleSpace }: OnboardingOptions) {
     const { Annotation, Obj, Ref } = yield* Effect.tryPromise(() => import('@dxos/echo'));
     const { ClientCapabilities } = yield* Effect.tryPromise(() => import('@dxos/plugin-client'));
     const { Markdown } = yield* Effect.tryPromise(() => import('@dxos/plugin-markdown'));
@@ -48,7 +48,7 @@ export default Capability.makeModule(
     });
 
     // Run plugin OnCreateSpace callbacks against the default space so capabilities that
-    // depend on a fresh space (e.g. skills) wire themselves up. The exemplar space
+    // depend on a fresh space (e.g. skills) wire themselves up. The sample space
     // gets the same callbacks via the regular SpaceCreated event on import.
     yield* Plugin.activate(SpaceEvents.SpaceCreated);
     const rootCollection = Option.getOrUndefined(
@@ -69,16 +69,16 @@ export default Capability.makeModule(
       });
     }
 
-    if (generateExemplarSpace) {
-      yield* Effect.promise(() => operationInvoker.invokePromise(OnboardingOperation.ImportExemplarSpace, {}));
+    if (generateSampleSpace) {
+      yield* Effect.promise(() => operationInvoker.invokePromise(OnboardingOperation.ImportSampleSpace, {}));
 
-      // Eagerly expand the graph so the exemplar space's content is visible in the navtree
+      // Eagerly expand the graph so the sample space's content is visible in the navtree
       // as soon as the user opens it, without waiting for a lazy expansion pass.
-      const exemplarSpace = client.spaces.get().find((space) => space.tags.includes(AppSpace.EXEMPLAR_SPACE_TAG));
+      const sampleSpace = client.spaces.get().find((space) => space.tags.includes(AppSpace.SAMPLE_SPACE_TAG));
       AppGraph.expandSync(graph, GraphNode.RootId, 'child');
       AppGraph.expandSync(graph, defaultSpace.id, 'child');
-      if (exemplarSpace) {
-        AppGraph.expandSync(graph, exemplarSpace.id, 'child');
+      if (sampleSpace) {
+        AppGraph.expandSync(graph, sampleSpace.id, 'child');
       }
     } else {
       AppGraph.expandSync(graph, GraphNode.RootId, 'child');

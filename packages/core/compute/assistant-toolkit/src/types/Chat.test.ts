@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
 import { Annotation, Database, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -14,8 +15,6 @@ import { EntityId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import { Text } from '@dxos/schema';
 import { Message, Outline, Task, TaskSet } from '@dxos/types';
-
-import { Chat } from '../types/index.ts';
 
 EntityId.dangerouslyDisableRandomness();
 

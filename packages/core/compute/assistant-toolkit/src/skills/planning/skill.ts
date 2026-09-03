@@ -8,7 +8,7 @@ import * as Template from '@dxos/compute/Template';
 import { Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-import { PlanReminder, UpdateTasks } from './operations/definitions.ts';
+import { AssignTasks, PlanReminder, UpdateTasks } from './operations/definitions';
 
 const SKILL_KEY = 'org.dxos.skill.planning';
 
@@ -18,7 +18,7 @@ const make = () =>
     name: 'Planning',
     description: 'Plans and tracks complex tasks using artifacts.',
     agentCanEnable: true,
-    tools: Skill.toolDefinitions({ operations: [UpdateTasks] }),
+    tools: Skill.toolDefinitions({ operations: [UpdateTasks, AssignTasks] }),
     instructions: Template.make({
       source: trim`
         {{! Planning }}
@@ -31,6 +31,9 @@ const make = () =>
         task started at a time, and mark a task done as soon as it completes.
         Do only what the user asked: if they name a specific task or subset, complete exactly
         that and stop — never start unrequested tasks on your own.
+        A task that already exists elsewhere is put on (or taken off) this conversation's
+        checklist with assign-tasks, which changes membership only — it never creates, edits or
+        deletes a task.
       `,
     }),
     // At the end of every request, remind the agent to keep working while its plan has open tasks.

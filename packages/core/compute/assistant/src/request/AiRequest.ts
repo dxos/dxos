@@ -9,6 +9,7 @@ import * as Effect from 'effect/Effect';
 import { pipe } from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Result from 'effect/Result';
+import * as Schedule from 'effect/Schedule';
 import * as Semaphore from 'effect/Semaphore';
 import * as Stream from 'effect/Stream';
 import * as AiError from 'effect/unstable/ai/AiError';
@@ -35,10 +36,10 @@ import { Database, Obj, Registry } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
 
-import { getOperationFromTool } from '../tool-runtime/services.ts';
-import { type AiAssistantError, CompleteBlock, PartialBlock } from '../util/index.ts';
-import { formatSystemPrompt, formatUserPrompt } from './format.ts';
-import { GenerationObserver } from './observer.ts';
+import { getOperationFromTool } from '../tool-runtime/services';
+import { type AiAssistantError, CompleteBlock, PartialBlock, emitRequestPhase } from '../util';
+import { formatSystemPrompt, formatUserPrompt } from './format';
+import { GenerationObserver } from './observer';
 
 export type RunError = AiError.AiError | PromptPreprocessingError | AiToolNotFoundError | AiAssistantError;
 
@@ -57,6 +58,30 @@ const isToolNotFound = (error: unknown): error is ToolNotFoundError =>
  * error is raised, so a persistent fault still surfaces.
  */
 const MAX_UNRESOLVED_TOOL_TURNS = 2;
+
+/**
+ * An {@link AiError.AiError} the provider raised while authenticating the request.
+ * Narrowed with a guard rather than a cast: the retry predicate reads the reason's `kind`.
+ */
+type AuthenticationError = AiError.AiError & { readonly reason: AiError.AuthenticationError };
+
+const isAuthenticationError = (error: unknown): error is AuthenticationError =>
+  AiError.isAiError(error) && error.reason._tag === 'AuthenticationError';
+
+/**
+ * Whether the provider rejected the request for permissions that have not yet propagated to the
+ * key. Unlike the other authentication kinds (a missing, expired, or invalid key, which need a
+ * credential change and never recover on their own), this one clears by itself, so it is the only
+ * one worth re-issuing — `AuthenticationError.isRetryable` is `false` for all of them.
+ */
+const isInsufficientPermissions = (error: unknown): boolean =>
+  isAuthenticationError(error) && error.reason.kind === 'InsufficientPermissions';
+
+/** Attempts spent re-issuing a request rejected for insufficient permissions, beyond the first. */
+const INSUFFICIENT_PERMISSIONS_RETRIES = 10;
+
+/** Spaced rather than exponential: a propagation delay is bounded, and ten backed-off waits are not. */
+const INSUFFICIENT_PERMISSIONS_RETRY_DELAY = '2 seconds';
 
 export type RunRequirements =
   | LanguageModel.LanguageModel
@@ -248,6 +273,9 @@ export class Request {
           }),
         );
         if (tokenCount > this._options.summarizationThreshold) {
+          // A summarization pass is itself a model round-trip, so it can dominate the wait before
+          // the turn the reader asked for even starts.
+          yield* emitRequestPhase('summarizing');
           const summary = yield* AiSummarizer.summarize([...this._history]);
           yield* this._submitMessage(summary);
         }
@@ -300,6 +328,7 @@ export class Request {
         history: this._history.length,
       });
 
+      yield* emitRequestPhase('encoding-prompt');
       const prompt = yield* AiPreprocessor.preprocessPrompt([...this._history, ...this._pending], {
         system,
         cacheControl: 'ephemeral',
@@ -313,9 +342,25 @@ export class Request {
 
       // v4 overloads `streamText` on the presence of `toolkit`, so the two cases branch explicitly
       // rather than passing a possibly-undefined key.
-      const stream = toolkit
-        ? LanguageModel.streamText({ prompt, toolkit, disableToolCallResolution: true })
-        : LanguageModel.streamText({ prompt, disableToolCallResolution: true });
+      const openStream = () =>
+        toolkit
+          ? LanguageModel.streamText({ prompt, toolkit, disableToolCallResolution: true })
+          : LanguageModel.streamText({ prompt, disableToolCallResolution: true });
+
+      // Counts attempts at the provider rather than turns: the retry below re-runs the whole
+      // collect, so `Stream.unwrap` re-evaluates this on each attempt and the reader sees the
+      // request being re-issued instead of an unexplained stall.
+      let attempt = 0;
+      const stream = Stream.unwrap(
+        Effect.gen(function* () {
+          yield* emitRequestPhase('contacting-provider', { attempt: ++attempt });
+          return openStream();
+        }),
+      );
+
+      // Set once any block of this attempt has been submitted, after which the request cannot be
+      // re-issued: the messages are already in `_pending` and a second attempt would duplicate them.
+      let emitted = false;
 
       const messages = yield* stream.pipe(
         withoutToolCallParsing,
@@ -350,6 +395,7 @@ export class Request {
                 const id = currentMessageId;
                 currentMessageId = null;
                 log('emit complete message', { id, type: block._tag });
+                emitted = true;
                 const message = Obj.make(Message.Message, {
                   id,
                   created: new Date().toISOString(),
@@ -363,6 +409,19 @@ export class Request {
         ),
         Stream.filterMap((value) => (Option.isSome(value) ? Result.succeed(value.value) : Result.failVoid)),
         Stream.runCollect,
+        Effect.retry({
+          schedule: Schedule.spaced(INSUFFICIENT_PERMISSIONS_RETRY_DELAY).pipe(
+            Schedule.jittered,
+            Schedule.upTo({ times: INSUFFICIENT_PERMISSIONS_RETRIES }),
+          ),
+          while: (error) => {
+            if (emitted || !isInsufficientPermissions(error)) {
+              return false;
+            }
+            log.warn('insufficient permissions; retrying request', { error });
+            return true;
+          },
+        }),
       );
       log('messages', { messages });
 

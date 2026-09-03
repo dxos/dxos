@@ -543,6 +543,15 @@ export const subTasks = (tasks: readonly Task[], task: Task): Task[] => {
 };
 
 /**
+ * Whether an agent is working this task right now: assigned to one, and started.
+ *
+ * `started` is stamped when the session takes the task, not when it produces anything, so the pair
+ * is what says "underway" — an agent-assigned task still in `todo` is queued, and a started task
+ * assigned to a person is someone else's, not a running process.
+ */
+export const isAgentWorking = (task: Task): boolean => task.assignee?.role === 'assistant' && task.status === 'started';
+
+/**
  * Whether every `dependsOn` of `task` is `done`, resolved within `tasks` — a dangling dependency
  * ref reads as satisfied, not as a permanent block.
  */

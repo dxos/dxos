@@ -14,6 +14,6 @@ export const DEFAULT_INDENTATION = 8;
  */
 export const DROP_INDENTATION = 24;
 
-export const paddingIndentation = (level: number, indentation = DEFAULT_INDENTATION) => ({
-  paddingInlineStart: `${(level - 1) * indentation}px`,
-});
+/** The row's depth as a length, applied as padding on the row's own grid so every track shifts with it. */
+export const indentTrack = (level: number, indentation = DEFAULT_INDENTATION): string =>
+  `${(level - 1) * indentation}px`;

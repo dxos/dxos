@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 
-import { type Chat } from '@dxos/assistant-toolkit';
+import type * as Chat from '@dxos/assistant/Chat';
 import { type Event } from '@dxos/async';
 import * as Project from '@dxos/compute/Project';
 import { type Database, Obj } from '@dxos/echo';
@@ -200,8 +200,8 @@ export const ChatPrompt = ({
       {db && settings && (
         <div className='flex items-center overflow-hidden p-1.5'>
           <ChatOptions
-            chat={chat}
             db={db}
+            chat={chat}
             registry={processor.registry}
             context={processor.context}
             preset={preset}
@@ -217,8 +217,8 @@ export const ChatPrompt = ({
             classNames='col-span-2'
             attendableId={attendableId}
             customActions={customActions}
-            // `active`, not `streaming`: a turn parked in a tool call streams nothing, and the
-            // reader still needs a way to stop it.
+            // `active`, not `streaming`: a turn parked in a tool call streams nothing,
+            // and the reader still needs a way to stop it.
             processing={active}
             canSend={canSend}
             tasksVisible={tasksVisible}

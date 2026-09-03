@@ -15,9 +15,9 @@ import { MemoryTransportFactory } from '@dxos/network-manager';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 
-import * as Otel from '../../src/extensions/otel/index.ts';
-import { type Observability, addExtension, initialize, make } from '../../src/observability.ts';
-import { identityProvider } from '../../src/providers/client-observability.ts';
+import * as Otel from '../../src/extensions/otel';
+import * as Observability from '../../src/Observability';
+import { identityProvider } from '../../src/providers/client-observability';
 
 // Dev-only: this suite is permanently skipped in CI. It boots two Clients against
 // the real edge-main worker and emits spans to a real SigNoz ingestion endpoint.
@@ -58,10 +58,10 @@ const createEdgeConfig = () =>
 // Initialize observability once per process. OtelTraces mutates process-global state
 // (`trace.setGlobalTracerProvider` and `TRACE_PROCESSOR.tracingBackend`), so running
 // this more than once in a single Node test would overwrite the first setup.
-const initTracing = (config: Config): Promise<Observability> =>
+const initTracing = (config: Config): Promise<Observability.Observability> =>
   Function.pipe(
-    make(),
-    addExtension(
+    Observability.make(),
+    Observability.addExtension(
       Otel.extensions({
         serviceName: 'composer',
         serviceVersion: DXOS_VERSION,
@@ -70,7 +70,7 @@ const initTracing = (config: Config): Promise<Observability> =>
         traces: true,
       }),
     ),
-    initialize,
+    Observability.initialize,
     EffectEx.runAndForwardErrors,
   );
 
@@ -110,8 +110,8 @@ describe.skip('tracing invitation e2e (dev-only)', { timeout: 300_000, retry: 0,
       await guest.halo.createIdentity({ displayName: 'tracing-e2e-guest' });
 
       // Subscribe identity stream → stamp `did` (+ `deviceKey`/`deviceProfile`) on every span.
-      await EffectEx.runAndForwardErrors(observability.addDataProvider(identityProvider(host.services.services)));
-      await EffectEx.runAndForwardErrors(observability.addDataProvider(identityProvider(guest.services.services)));
+      await EffectEx.runAndForwardErrors(Observability.addDataProvider(identityProvider(host.services.services)));
+      await EffectEx.runAndForwardErrors(Observability.addDataProvider(identityProvider(guest.services.services)));
 
       // Create edge agent on host so the space can be admitted by edge when a
       // DELEGATED invitation arrives.
@@ -157,7 +157,7 @@ describe.skip('tracing invitation e2e (dev-only)', { timeout: 300_000, retry: 0,
       await sleep(8_000);
     } finally {
       // BatchSpanProcessor defers export by 5s; flush explicitly before teardown.
-      await EffectEx.runAndForwardErrors(observability.flush());
+      await EffectEx.runAndForwardErrors(Observability.flush());
 
       // `Client.destroy()` can block on in-flight edge replication; cap it so the
       // test doesn't hang if the worker is still finishing a sync round.
@@ -167,7 +167,7 @@ describe.skip('tracing invitation e2e (dev-only)', { timeout: 300_000, retry: 0,
           sleep(15_000).then(() => log.warn(`${label}.destroy() timed out; leaking`)),
         ]);
       await Promise.all([destroyWithTimeout(host, 'host'), destroyWithTimeout(guest, 'guest')]);
-      await EffectEx.runAndForwardErrors(observability.close());
+      await EffectEx.runAndForwardErrors(Observability.close());
     }
 
     console.log(`### done — SigNoz filter: ctx.tag = '${clientTag}'`);

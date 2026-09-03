@@ -4,12 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
+import { Harness } from '@dxos/assistant';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-import { Chat } from '../../../types/index.ts';
-import { DelegateTask } from './definitions.ts';
+import { DelegateTask } from './definitions';
 
 /**
  * Delegation is the promotion moment: the unit of work becomes a durable `Task` on the
@@ -23,7 +24,7 @@ const handler: Operation.WithHandler<typeof DelegateTask> = DelegateTask.pipe(
         return yield* Effect.fail(new Error('Provide a non-empty task title.'));
       }
 
-      const chat = yield* Chat.getFromContext;
+      const chat = yield* Harness.getChat;
       const { db } = yield* Database.Service;
 
       // Queued (`todo`) rather than `started`: the reconcile loop spawns the sub-agent and marks
@@ -36,7 +37,7 @@ const handler: Operation.WithHandler<typeof DelegateTask> = DelegateTask.pipe(
 
       return trim`
         Delegated "${task.title}" as a queued agent task (id: ${task.id}).
-        Current checklist:
+
         <checklist>
           ${yield* Chat.formatChecklist(chat)}
         </checklist>

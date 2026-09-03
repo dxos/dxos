@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { LanguageModelFixture, ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AiContext } from '@dxos/assistant';
-import { Chat } from '@dxos/assistant-toolkit';
+import * as Chat from '@dxos/assistant/Chat';
 import { getSession } from '@dxos/compute/AgentService';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
@@ -112,7 +112,7 @@ describe('Project conversation', () => {
             { parts: [text('Filed the document into the project.')] },
           );
 
-          const session = yield* getSession(feed, { instructions: chat.instructions });
+          const session = yield* getSession(chat);
           yield* session.submitPrompt('File the trip notes into the project.');
           yield* session.waitForCompletion();
 
@@ -143,9 +143,9 @@ describe('Project conversation', () => {
         'a prompt alone drives the model to file the document',
         Effect.fnUntraced(
           function* ({ expect }) {
-            const { project, feed, doc } = yield* seedProjectChat();
+            const { project, chat, feed, doc } = yield* seedProjectChat();
 
-            const session = yield* getSession(feed);
+            const session = yield* getSession(chat);
             yield* session.submitPrompt(
               'A document with trip notes is bound into this chat, alongside the project. ' +
                 "File that document into the project's artifacts, then confirm in one sentence.",

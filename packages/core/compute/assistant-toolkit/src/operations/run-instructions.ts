@@ -16,6 +16,7 @@ import {
   makeToolExecutionService,
   makeToolResolverFromOperations,
 } from '@dxos/assistant';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Template from '@dxos/compute/Template';
 import * as Trace from '@dxos/compute/Trace';
@@ -26,10 +27,9 @@ import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
-import { PromptError } from '../errors.ts';
-import * as Chat from '../types/Chat.ts';
-import { makeCompleteJobParameters, makeCompleteJobTool } from './complete-job-tool.ts';
-import { RunInstructions } from './definitions.ts';
+import { PromptError } from '../errors';
+import { makeCompleteJobParameters, makeCompleteJobTool } from './complete-job-tool';
+import { RunInstructions } from './definitions';
 
 const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claude-opus-5.default');
 

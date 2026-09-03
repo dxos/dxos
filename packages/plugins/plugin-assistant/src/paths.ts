@@ -3,7 +3,7 @@
 //
 
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { Chat } from '@dxos/assistant-toolkit';
+import * as Chat from '@dxos/assistant/Chat';
 
 const { getSectionPath: getChatsPath, getObjectPath: getChatPath } = GraphPath.createTypeSectionPaths(Chat.Chat, {
   groupId: GraphPath.GroupSegments.ai,

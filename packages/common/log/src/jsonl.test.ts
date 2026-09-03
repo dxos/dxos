@@ -105,6 +105,14 @@ describe('serializeToJsonl', () => {
     expect(record.i).toBe('tab:http://localhost:5173:abc123');
   });
 
+  test('carries the trace context the caller captured', ({ expect }) => {
+    const trace = { traceId: '0af7651916cd43dd8448eb211c80319c', spanId: 'b7ad6b7169203331' };
+    const record = parseLine(serializeToJsonl(createEntry(), { trace }));
+    expect(record.r).toBe(trace.traceId);
+    expect(record.s).toBe(trace.spanId);
+    expect(parseLine(serializeToJsonl(createEntry()))).not.toHaveProperty('r');
+  });
+
   test('omits `i` when env is not provided', ({ expect }) => {
     const record = parseLine(serializeToJsonl(createEntry({ message: 'm' })));
     expect(record.i).toBeUndefined();

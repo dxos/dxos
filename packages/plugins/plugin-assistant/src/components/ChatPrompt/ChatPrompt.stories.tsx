@@ -5,15 +5,15 @@
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { expect, within } from 'storybook/test';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useAtomCapability } from '@dxos/app-framework/ui';
 import { Alarm, SessionStore } from '@dxos/assistant';
-import { Chat as ChatType } from '@dxos/assistant-toolkit';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
+import * as ChatType from '@dxos/assistant/Chat';
 import { Database, Feed, Filter, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -29,7 +29,7 @@ import { AssistantPlugin } from '#plugin';
 import { translations } from '#translations';
 import { AssistantCapabilities } from '#types';
 
-import { Chat, type ChatEvent } from '../Chat/index.ts';
+import { Chat } from '../Chat';
 
 type StoryArgs = {
   /** Seed the chat's checklist, so the tasks toggle has something to show. */
@@ -67,15 +67,6 @@ const DefaultStory = ({ tasksVisible: initialTasksVisible, running }: StoryArgs)
     }
   }, [running, processor, atomRegistry]);
 
-  // Held here, as `ChatArticle` holds it: the prompt only reports the toggle, since the checklist it
-  // shows and hides is its sibling, not its child.
-  const [tasksVisible, setTasksVisible] = useState(initialTasksVisible);
-  const handleEvent = useCallback((event: ChatEvent) => {
-    if (event.type === 'toggle-tasks') {
-      setTasksVisible((visible) => !visible);
-    }
-  }, []);
-
   if (!chat || !db || !processor) {
     return <Loading />;
   }
@@ -83,21 +74,15 @@ const DefaultStory = ({ tasksVisible: initialTasksVisible, running }: StoryArgs)
   return (
     <div className='flex justify-center p-4'>
       <div className='w-full max-w-document-width'>
-        <Chat.Root chat={chat} db={db} processor={processor} onEvent={handleEvent}>
+        <Chat.Root chat={chat} db={db} processor={processor}>
           {/* Mounted here as every prompt host must: queued prompts are held out of the thread, so
               without this part they are submitted and then invisible. */}
           <Chat.Status classNames='px-3 rounded-sm bg-group-surface' />
           <Chat.Queue classNames='pb-1' />
-          {tasksVisible && <Chat.TaskList classNames='border border-separator border-b-0 rounded-t-sm' />}
           {/* `attendableId` is the graph node contributed actions are filed under; the story's chat
-              has no node, so the row shows only its own controls unless a plugin renders one. */}
-          <Chat.Prompt
-            {...chatProps}
-            outline
-            preset={preset?.id}
-            tasksVisible={tasksVisible}
-            classNames={[tasksVisible && 'rounded-t-none']}
-          />
+              has no node, so the row shows only its own controls unless a plugin renders one. The
+              checklist is the prompt's own disclosed region now, not a sibling the story places. */}
+          <Chat.Prompt {...chatProps} outline preset={preset?.id} defaultTasksVisible={initialTasksVisible} />
         </Chat.Root>
       </div>
     </div>

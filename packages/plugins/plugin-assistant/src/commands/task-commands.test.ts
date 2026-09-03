@@ -4,7 +4,8 @@
 
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Chat, type OperationInvoke, type SlashCommandResult, resolveSlashCommand } from '@dxos/assistant-toolkit';
+import { type OperationInvoke, type SlashCommandResult, resolveSlashCommand } from '@dxos/assistant-toolkit';
+import * as Chat from '@dxos/assistant/Chat';
 import { Feed, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Task } from '@dxos/types';

@@ -488,24 +488,44 @@ in `react-ui-attention`'s view state (`useSelection('multi', contextId)` and
 `useSelectionActions().toggle`, over `Selection.toggle`), so the rows and the toolbar read and write
 one set and neither owns it.
 
-- [ ] **Render the checkbox in the gutter cell**, where `TaskOrdinal` sits, not beside the status
+- [x] **Render the checkbox in the gutter cell**, where `TaskOrdinal` sits, not beside the status
       control: the two would read as two ways to complete a task, and the row keeps one geometry so
-      the trailing columns do not move.
-- [ ] **Move `TaskList` off its own `selected` string.** It holds a single id with `onTaskSelect`,
-      and `Tree` runs `selectionMode='single'`; checkbox selection is a set. Decide whether the
-      current row (the roving tabstop's highlight) stays distinct from the checked set — a row can
-      be current _and_ checked — or whether `selected` becomes a view of the multi-selection.
-- [ ] **Key the view state per list.** `contextId` has to be the attendable the list belongs to, or
-      two task lists on one deck share a selection.
-- [ ] **`ProjectArticle` configures the embedded `TaskSetArticle` for checkboxes**, and contributes
-      the toolbar action beside `create-chat`/`add-artifact` in `useToolbarActions`, enabled only
-      when the checked set is non-empty.
-- [ ] **Delegate, not delete** (confirmed 2026-09-01): `AssistantOperation.CreateChat` +
+      the trailing columns do not move. `TaskCheckbox` in `TaskRowCells.tsx`; `TaskTreeHeading`
+      renders it INSTEAD of the ordinal, and `showGutter` now also reserves the track for it.
+- [x] **`TaskList` keeps its own `selected` string; the checked set is a second, independent one.**
+      Settled 2026-09-02: the current row is where the reader is (the roving tabstop's highlight,
+      what `Edit` follows), and the checked set is what an action acts on. A row is routinely both,
+      and collapsing them would mean arrowing down a list silently changed what a toolbar button
+      would do. `Tree` keeps `selectionMode='single'`; the checkbox is a `checked`/`onTaskCheck`
+      pair the host owns, and the row's click handler never sees it (the box stops propagation).
+- [x] **Key the view state per list.** `contextId` is the TASK SET's object id, not the attendable:
+      the attendable is the plank, so a project's embedded list and a task-set plank beside it would
+      share a set. `useCheckedTasks` in both `TaskSetArticle` and `ProjectArticle` keys off it.
+- [x] **The checkbox is offered when a `TasksCapabilities.TaskAction` exists**, rather than
+      configured by the host through Surface data — which Phase 15 was removing at the same time.
+      With nothing contributed to act on the set, the box is an affordance that does nothing.
+- [x] **`ProjectArticle` contributes the toolbar action** beside `create-chat` in
+      `useToolbarActions`, disabled (present, not absent) while the checked set is empty, and
+      clearing the set once the chat is open.
+- [x] **Delegate, not delete** (confirmed 2026-09-01): `AssistantOperation.CreateChat` +
       `Chat.linkCompanion`, the path `create-chat` already uses.
-- [ ] **Decide what delegation does to membership.** `Chat.addTask` parents a task it creates to the
-      chat and `Chat.deleteTask` destroys only what the chat owns, so a delegated task keeping its
-      task set is the shape those primitives already assume.
-- [ ] Story coverage: a checkbox list, and the toolbar action over a checked set.
+- [x] **Delegation leaves membership alone.** Settled 2026-09-02, and it is what the code already
+      did: `Chat.tasks` is a plain ref array, so a delegated task keeps the task set it came from —
+      the chat works on it, it does not take it. `Chat.deleteTask` destroys only what the chat owns,
+      so nothing the chat did not create is at risk. The operation's own docstring claimed the
+      opposite (`SetParent`); corrected, and the test that already asserted the parent survives is
+      now the record.
+- [x] **`DelegateTaskToChat` takes an ordered list**, guarded non-empty by the handler rather than by
+      `Schema.NonEmptyArray` — that serializes to `prefixItems`, which the persisted-operation JSON
+      schema does not carry (`serialize.test.ts` is what caught it). The row's own menu action passes
+      a one-element one — one write path for both. Order is the list's VISIBLE row order (the
+      `flattenVisibleTasks(buildTaskForest(...))` walk), not tick order: `Selection.toggle` appends,
+      so the toolbar re-orders at the point of use. N tasks produce ONE chat; it is named after the
+      task only when there is exactly one, since a chat holding three cannot be about the first.
+- [x] Story coverage: `TaskList.WithCheckboxes`/`TestCheckboxSelection` (the cell and that checking
+      is not a status write), `TaskSetArticle.Checkboxes` (offered off the capability, keyed per
+      set), and `ProjectArticle.DelegateCheckedTasks` (disabled → check two rows out of order →
+      one chat holding both in row order → cleared).
 
 ## Phase 14: Dragging a task jumps — settle the write as one sync operation
 
@@ -527,14 +547,87 @@ the file already flags: `// TODO(burdon): Should not pass callbacks!`. Surface d
 subject; it is not a props channel, and a callback there couples the host to the implementation it
 is supposed to be decoupled from.
 
-- [ ] **Collect the editor extensions in `plugin-tasks`, where the surface is implemented**, not in
-      `ProjectArticle`. The host currently reads `MarkdownCapabilities.ExtensionProvider` and hands
-      the result down; the component that builds the editor should read the capability itself, which
-      is the same thing `MarkdownArticle` does for markdown documents.
-- [ ] **Remove `handleSelectTask` and the `onSelectTask` data property.** It only switches the
-      host's tab to `tasks`, so the effect belongs to whatever owns that tab state — an operation or
-      the layout, not a function smuggled through Surface data.
-- [ ] Leave `subject`, `attendableId` and `taskSet` on the Surface: those identify what is being
+- [x] **Collect the editor extensions in `plugin-tasks`, where the surface is implemented**, not in
+      `ProjectArticle`. `OutlineArticle` reads `MarkdownCapabilities.ExtensionProvider` itself, as
+      `MarkdownArticle` does for markdown documents; the `extensions` prop and the host's
+      `outlineExtensions` are gone. The standalone outline article gains them as a side effect —
+      it never had them, and there was no reason for the embedded case alone to decorate links.
+- [x] **Removed `handleSelectTask` and the `onSelectTask` data property**, and the `onSelectTask`
+      prop on `OutlineArticle` with it. **Behaviour change:** following a promoted item's link
+      inside the project's Overview now swaps that section for the task's form (the outline's own
+      standalone behaviour) and Back returns, where the callback used to switch the host's tab to
+      Tasks. `ProjectArticle.TaskLink` asserts the new path.
+- [ ] **Follow-up: re-route the promoted link to the Tasks tab through something the host owns.**
+      The tab is `ProjectArticle`'s state, so the outline has to reach it through an operation or
+      the layout rather than a function handed down as Surface data. Tracked 2026-09-02.
+- [x] `subject`, `attendableId` and `taskSet` stay on the Surface: those identify what is being
       rendered, which is what `data` is for.
-- [ ] Check the other `Surface.Surface` in the file (the tasks section) for the same pattern before
-      calling this done.
+- [x] The tasks section's Surface was already clean — `{ subject: taskSet, attendableId }`, no
+      callbacks. Phase 13's checkbox is gated on a contributed capability rather than on a data
+      property for the same reason.
+
+## Phase 16: Migrate `@dxos/react-ui` from Radix to Ark — planned
+
+The plan is [packages/ui/react-ui/docs/MIGRATION.md](../../../packages/ui/react-ui/docs/MIGRATION.md)
+(commit `8a81160f5b`): a 42-row component inventory, the Radix→Ark primitive map with its gaps, the
+Radix modules every sibling package depends on, and six landable phases. This phase is the ledger for
+it; the reasoning stays in the doc. The `react-ui-list` core (`Combobox`, `Listbox`) is deliberately
+**not** absorbed here: that is this ledger's own Phase 4 (deferred wider adoption), which still holds
+the open evaluation, and the migration doc lists them only as candidates outside `react-ui` — the
+doc's Phase 4 is Dialog/Main, Toast and Select, a different thing.
+
+Findings that shaped the plan, so they are not re-derived:
+
+- Of ~230 `@radix-ui` imports under `packages/ui`, ~207 are scaffolding (`react-context`,
+  `react-primitive`, `react-slot`, `react-compose-refs`, `react-use-controllable-state`) that 28
+  sibling packages and 28 plugin/app/sdk files share. Ark publicly exports only `createContext`,
+  `mergeProps`, `ariaAttr`, `dataAttr` and the `ark` factory — `composeRefs` and
+  `useControllableState` are internal — so the scaffolding has to be owned in-repo, and that is
+  independent of any behavioural port.
+- Only 12 of 42 `react-ui` components wrap a Radix behavioural primitive; `Popover` (701 LOC),
+  `Tooltip` (942) and `Menu` (896) are forks that compose `popper`/`dismissable-layer`/
+  `focus-scope`/`presence`/`portal` directly. They are the expensive ones and the largest deletion.
+- `Calendar` and `DatePicker` are built on `react-aria-components`, not by hand, and RAC also backs
+  `Input`'s date/time fields and `react-ui-form`'s `DateField`. Consolidating it is a decision, not a
+  port. The four genuinely hand-built components with Ark machines are Carousel, Editable, Splitter,
+  Stepper.
+- Ark exposes `Positioner` and has no `Viewport`; Radix hides the positioner and exposes
+  `Select.Viewport`. Our `Popover.Viewport`/`Tooltip.Viewport` are ours (arrow-clipping rationale in
+  `Popover.theme.ts`) and survive. 95 `--radix-*` variable sites across 12 files map onto one generic
+  Zag set (`--reference-width`, `--available-height`, …); 20 of them are aliasing blocks that delete.
+- `Select` is the one API leak: Ark's takes a required `collection: ListCollection<T>` — 44 consumer
+  files.
+- Maintenance, 2026-09-02: both projects are one maintainer (Radix 95% single-committer, Ark 56%);
+  Radix had a 296-day release gap ending 2026-06-06, Ark's worst is 56 days; Radix has ~68× the
+  downloads.
+
+- [ ] **Phase 0 — port Carousel, Editable, Splitter, Stepper to Ark.** In flight as background task
+      `task_2d437290` on its own worktree from `main` (started 2026-09-02). ~2,264 LOC; consumers
+      4 / 13 / 8 / 3; adds `@ark-ui/react` to `react-ui` (catalog). Lands as
+      `react-ui: rebuild Carousel, Editable, Splitter and Stepper on Ark UI`.
+- [ ] **Phase 1 — own the scaffolding.** `composeRefs`, `useControllableState`, unscoped
+      `createContext` in `react-primitives`; `Primitive.*` (270 sites) → `ark.*`. Sweep the 28
+      sibling packages and 28 plugin/app/sdk files; re-point the plugins that import
+      `@radix-ui/react-tooltip`/`-toolbar`/`-toggle-group`/`-toggle`/`-toast` directly at
+      `@dxos/react-ui` (layering violations regardless). Update the `composite-components` skill for
+      the no-scope context. Worth doing even if nothing after it happens.
+- [ ] **Phase 2 — leaves.** Slider, Progress, Clipboard, Avatars, ScrollArea, Button toggles,
+      `Input.Checkbox`, `react-list` Collapsible, `react-ui-tabs`, hand-rolled Separator. Namespace
+      API holds for all of them.
+- [ ] **Phase 3 — the forks.** Tooltip → Popover → Menu. Add `Positioner`, keep our `Viewport`,
+      `Arrow` → `Arrow`+`ArrowTip` (`fill-separator` → `--arrow-background`), rename the five
+      variables, delete the three aliasing blocks, collapse DropdownMenu + ContextMenu onto one
+      `menu` machine, retire the 116 `__scope*` props. Removes ten Radix packages plus `aria-hidden`
+      and `react-remove-scroll`.
+- [ ] **Phase 4 — Dialog + Main, Toast, Select.** Evaluate `drawer` for `Main`'s sidebars (also the
+      missing mobile bottom sheet); Toast is a model change (`createToaster` store); decide whether
+      `Select.Option` keeps a children-driven layer that builds the collection so most of the 44
+      consumers change one import.
+- [ ] **Phase 5 — decisions.** RAC (keep for the date/time cluster vs consolidate onto Ark; default
+      keep); Toolbar (no Ark toolbar — focus group from `@dxos/react-focus` + `toggle-group`); Focus
+      (keep as the seam).
+- [ ] **Phase 6 — remove `@radix-ui/*`** from catalog and lockfile; `pnpm knip` is the gate.
+- [ ] **Separate, not this phase: touch drag in the Tree.** `pragmatic-drag-and-drop` is native
+      HTML5 DnD, which does not fire from touch in iPhone WKWebView, so Tree reordering is
+      desktop-only under Tauri mobile. Library-independent; verify on device first. Tracked
+      2026-09-02, unowned.

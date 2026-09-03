@@ -39,6 +39,7 @@ export const make = ({
   const clientLayer = ChatCompletionsAdapter.clientLayer({
     baseUrl: endpoint,
     apiFormat: 'openai',
+    provider: 'lmstudio',
     transformClient,
   }).pipe(Layer.provide(FetchHttpClient.layer));
 

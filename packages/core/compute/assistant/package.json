@@ -23,6 +23,11 @@
       "types": "./dist/types/src/extraction/index.d.ts",
       "import": "./dist/lib/extraction.mjs"
     },
+    "./Agent": {
+      "source": "./src/types/Agent.ts",
+      "types": "./dist/types/src/types/Agent.d.ts",
+      "import": "./dist/lib/types/Agent.mjs"
+    },
     "./AiContext": {
       "source": "./src/session/AiContext.ts",
       "types": "./dist/types/src/session/AiContext.d.ts",
@@ -42,6 +47,11 @@
       "source": "./src/session/Alarm.ts",
       "types": "./dist/types/src/session/Alarm.d.ts",
       "import": "./dist/lib/session/Alarm.mjs"
+    },
+    "./Chat": {
+      "source": "./src/types/Chat.ts",
+      "types": "./dist/types/src/types/Chat.d.ts",
+      "import": "./dist/lib/types/Chat.mjs"
     },
     "./ExecutionGraph": {
       "source": "./src/util/execution-graph.ts",
@@ -96,6 +106,7 @@
     "lodash.defaultsdeep": "catalog:"
   },
   "devDependencies": {
+    "@opentelemetry/sdk-trace-base": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:",
     "effect": "catalog:"
   },

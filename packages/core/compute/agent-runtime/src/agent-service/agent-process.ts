@@ -24,13 +24,14 @@ import {
   type PendingState,
   SessionStore,
   SkillHooks,
+  emitRequestPhase,
   getOperationFromTool,
   makeToolExecutionService,
   makeToolResolverFromOperations,
 } from '@dxos/assistant';
+import * as Chat from '@dxos/assistant/Chat';
 import { ProcessManager } from '@dxos/compute-runtime';
 import * as Credential from '@dxos/compute/Credential';
-import * as Instructions from '@dxos/compute/Instructions';
 import * as McpServer from '@dxos/compute/McpServer';
 import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
@@ -115,22 +116,20 @@ export const AgentProcess = (options: AgentProcessOptions) =>
     },
     (ctx) =>
       Effect.gen(function* () {
-        const feedDxn = Annotation.getDictionary(ctx.params.annotations, Process.TargetAnnotation).pipe(
+        const chatDxn = Annotation.getDictionary(ctx.params.annotations, Process.TargetAnnotation).pipe(
           Option.getOrUndefined,
         );
-        if (feedDxn == null) {
-          return yield* Effect.die(new Error('Agent executable requires spawn options.target set to a queue DXN.'));
+        if (chatDxn == null) {
+          return yield* Effect.die(new Error('Agent executable requires spawn options.target set to a Chat DXN.'));
         }
-        const feed = yield* Database.resolve(feedDxn, Feed.Feed).pipe(Effect.orDie);
-        // Steering instructions travel as a spawn annotation (the session is feed-centric and cannot
-        // reach its Chat); a broken ref degrades to an unsteered session rather than failing the process.
-        const instructionsDxn = Annotation.getDictionary(ctx.params.annotations, Process.InstructionsAnnotation).pipe(
-          Option.getOrUndefined,
-        );
-        const instructions = instructionsDxn
-          ? yield* Database.resolve(instructionsDxn, Instructions.Instructions).pipe(
-              Effect.orElseSucceed(() => undefined),
-            )
+        // The process is bound to the chat, not to its feed: the queue, the steering instructions
+        // and the checklist are all read from the chat, and a rehydrated process recovers them by
+        // re-reading it rather than from spawn annotations.
+        const chat = yield* Database.resolve(chatDxn, Chat.Chat).pipe(Effect.orDie);
+        const feed = yield* Database.load(chat.feed).pipe(Effect.orDie);
+        // A broken instructions ref degrades to an unsteered session rather than failing the process.
+        const instructions = chat.instructions
+          ? yield* Database.load(chat.instructions).pipe(Effect.orElseSucceed(() => undefined))
           : undefined;
         const runtime = yield* Effect.context<Database.Service>();
         const makeTurnProducer = options.makeTurnProducer ?? makeAiSessionTurnProducer;
@@ -155,24 +154,22 @@ export const AgentProcess = (options: AgentProcessOptions) =>
 
         // Schedules the process alarm from durable state: immediately when work is queued, at the
         // earliest pending alarm otherwise, not at all when idle.
-        const reconcileAlarmWith = (state: PendingState): void => {
+        const reconcileAlarmWith = (state: PendingState): Effect.Effect<void> => {
           const delay = computeAlarmDelay({
             hasPendingWork: toolResults.length > 0 || state.pendingMessages.length > 0,
             wakeAt: state.pendingAlarms[0]?.wakeAt ?? null,
             now: now(),
           });
-          if (delay != null) {
-            ctx.setAlarm(delay);
-          }
+          return delay != null ? ctx.setAlarm(delay) : Effect.void;
         };
-        const reconcileAlarm = Effect.map(sessionStore.loadPending(feed), reconcileAlarmWith);
+        const reconcileAlarm = Effect.flatMap(sessionStore.loadPending(feed), reconcileAlarmWith);
 
         // Hydration: the work is durable (queued prompts and alarms on the feed, undelivered tool
         // results in KV) but the process alarm is not, and a rehydrated process is not handed its
         // pending input events again — so it must re-arm from that durable state here or sit idle
         // with work waiting. What was already pending is also what `onSpawn` decides the fate of.
         const startupPending = yield* sessionStore.loadPending(feed);
-        reconcileAlarmWith(startupPending);
+        yield* reconcileAlarmWith(startupPending);
 
         // Optional supervisor behaviour: when a strategy is provided, the agent reconciles
         // outstanding work into linked child processes after each turn and folds their results back
@@ -236,7 +233,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
             const after = yield* sessionStore.loadPending(feed);
             if (pendingWork(after)) {
               log('agent work enqueued by end-request hook, continuing');
-              reconcileAlarmWith(after);
+              yield* reconcileAlarmWith(after);
               return;
             }
 
@@ -276,19 +273,24 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 feed,
                 Message.make({ sender: { role: 'user' }, blocks: [...content] }),
               );
-              ctx.setAlarm(0);
+              yield* ctx.setAlarm(0);
             }),
           }),
           onInput: Effect.fnUntraced(function* (prompt: string | readonly ContentBlock.Any[]) {
             log('agent onInput received', { backlog: toolResults.length });
             const content = typeof prompt === 'string' ? [ContentBlock.Text.make({ text: prompt })] : [...prompt];
             yield* sessionStore.enqueueMessage(feed, Message.make({ sender: { role: 'user' }, blocks: content }));
-            ctx.setAlarm(0);
+            yield* ctx.setAlarm(0);
             log('agent onInput enqueued to feed');
           }),
           onAlarm: Effect.fnUntraced(
             function* () {
               log('agent onAlarm fired', { backlog: toolResults.length });
+
+              // Earliest point the agent can report to a reader who is already waiting: draining the
+              // queue below reads the feed, which is itself part of the wait. An empty wake emits it
+              // too, but that path returns in milliseconds and the turn settling clears the line.
+              yield* emitRequestPhase('preparing');
 
               for (const pid of dropReportedToolResults(toolResults, (pid) => toolCallManager.isReported(pid))) {
                 log.info('skip tool result that was reported synchronously', { pid });
@@ -320,10 +322,17 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   ];
                 } else {
                   log('agent onAlarm empty queue', {});
-                  reconcileAlarmWith(state);
+                  yield* reconcileAlarmWith(state);
                   yield* maybeCompleteWith(state);
                   return;
                 }
+              }
+
+              // The turn appends its own user message built from `prompt`, so the queue entry that
+              // supplied it must leave the queue view now or the same content shows in both places
+              // until the late ack below.
+              if (dequeued !== undefined) {
+                yield* sessionStore.markInFlight(feed, dequeued);
               }
 
               log('begin request', { prompt });
@@ -359,7 +368,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               // children are linked, so their exits wake `onChildEvent` below.
               if (Option.isSome(strategy)) {
                 const activeIds = new Set(delegations.map((delegation) => delegation.id));
-                const pending = yield* strategy.value.reconcile(feed, activeIds);
+                const pending = yield* strategy.value.reconcile(chat, activeIds);
                 for (const delegation of pending) {
                   const pid = yield* delegation.spawn;
                   delegations.push({ pid, id: delegation.id });
@@ -371,7 +380,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               }
 
               // Reconcile so a pending alarm (or remaining queue work) is rescheduled.
-              reconcileAlarmWith(after);
+              yield* reconcileAlarmWith(after);
               yield* maybeCompleteWith(after);
             },
             Effect.orDie,
@@ -402,12 +411,12 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 const fiber = yield* operationInvoker.attachFiber(event.pid).pipe(Effect.orDie);
                 const exit = yield* fiber.await;
                 if (Option.isSome(strategy)) {
-                  yield* strategy.value.onComplete(feed, delegation.id, exit);
+                  yield* strategy.value.onComplete(chat, delegation.id, exit);
                   // Re-reconcile: work that was waiting on this delegation (e.g. a dependent task)
                   // spawns now rather than on the next conversational turn — this is what lets a
                   // batch of delegated tasks drain without further prompting.
                   const activeIds = new Set(delegations.map((delegation) => delegation.id));
-                  const pending = yield* strategy.value.reconcile(feed, activeIds);
+                  const pending = yield* strategy.value.reconcile(chat, activeIds);
                   for (const next of pending) {
                     const pid = yield* next.spawn;
                     delegations.push({ pid, id: next.id });
@@ -457,7 +466,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 toolResults.push(result);
                 log('agent onChildEvent persisted tool result', { depth: toolResults.length, childPid: event.pid });
                 yield* ToolResultsCell.set(toolResults);
-                ctx.setAlarm(0);
+                yield* ctx.setAlarm(0);
                 log('agent onChildEvent alarm scheduled', { depth: toolResults.length });
               } else {
                 log.verbose('childEvent ignored non-tool call and not a delegation', { pid: event.pid });

@@ -6,16 +6,17 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { AiContext } from '@dxos/assistant';
+import * as Agent from '@dxos/assistant/Agent';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 
-import { OperationTestLayer } from '../../../testing/index.ts';
-import { Agent, Chat } from '../../../types/index.ts';
-import AgentSkillDef from '../skill.ts';
-import * as AgentSkillOperations from './definitions.ts';
+import { OperationTestLayer } from '../../../testing';
+import AgentSkillDef from '../skill';
+import * as AgentSkillOperations from './definitions';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -50,7 +51,6 @@ describe('GetContext', () => {
         yield* Database.flush();
 
         const context = yield* Operation.invoke(AgentSkillOperations.GetContext, {}).pipe(Effect.provide(conversation));
-
         expect(context.checklist).toContain('Buy eggs');
       },
       Effect.provide(OperationTestLayer),

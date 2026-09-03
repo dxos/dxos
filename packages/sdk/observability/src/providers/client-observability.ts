@@ -20,11 +20,10 @@ import {
   SpaceState,
 } from '@dxos/protocols/proto/dxos/client/services';
 
-import { type DataProvider } from '../observability.ts';
-import { EventLoopLagTracker, LAG_SAMPLE_INTERVAL_MS, LAG_WINDOW_MS } from './event-loop-lag.ts';
-import { type CrossRealmMemory, measureCrossRealmMemory, readHeap, supportsCrossRealmMemory } from './memory.ts';
-import { SyncEpisodeTracker } from './sync-episodes.ts';
-import { subscribeSyncSummary } from './sync-state.ts';
+import * as Observability from '../Observability';
+import { type CrossRealmMemory, measureCrossRealmMemory, readHeap, supportsCrossRealmMemory } from './memory';
+import { SyncEpisodeTracker } from './sync-episodes';
+import { subscribeSyncSummary } from './sync-state';
 
 const SPACE_METRICS_MIN_INTERVAL = 1000 * 60 * 10; // 10 minutes
 const NETWORK_METRICS_MIN_INTERVAL = 1000 * 60 * 10; // 10 minutes
@@ -44,7 +43,7 @@ const SECONDS = { unit: 's' } as const;
 //  - Identifier can be synced via HALO to allow for correlation of events bewteen devices.
 //  - Identifier should also be stored outside of HALO such that it is available immediately on startup.
 /** Subscribes to identity and device changes and sets observability tags accordingly. */
-export const identityProvider = (clientServices: Partial<ClientServices>): DataProvider =>
+export const identityProvider = (clientServices: Partial<ClientServices>): Observability.DataProvider =>
   Effect.fn(function* (observability) {
     // TODO(wittjosiah): RPC subscribe returns void; cleanup requires upstream API change.
     clientServices.IdentityService!.queryIdentity().subscribe((idqr) => {
@@ -74,8 +73,34 @@ export const identityProvider = (clientServices: Partial<ClientServices>): DataP
     });
   });
 
+/**
+ * What {@link identityManagerProvider} reads: the host-side identity manager, in a realm that has no
+ * client proxy to subscribe through.
+ */
+export type IdentitySource = {
+  readonly identity: { readonly did: string } | undefined;
+  readonly stateUpdate: { on(listener: () => void): unknown };
+};
+
+/**
+ * Tags every span and log of a realm with the identity, read from the services host itself. For the
+ * dedicated worker, whose tracer and tags are its own: the tab's {@link identityProvider} only tags
+ * the tab. Tags only — the tab already identifies the user with the analytics backend.
+ */
+export const identityManagerProvider = (identityManager: IdentitySource): Observability.DataProvider =>
+  Effect.fn(function* (observability) {
+    const apply = () => {
+      const did = identityManager.identity?.did;
+      if (did) {
+        observability.setTags({ did });
+      }
+    };
+    identityManager.stateUpdate.on(apply);
+    apply();
+  });
+
 /** Periodically publishes network connection and buffer metrics. */
-export const networkMetricsProvider = (clientServices: Partial<ClientServices>): DataProvider =>
+export const networkMetricsProvider = (clientServices: Partial<ClientServices>): Observability.DataProvider =>
   Effect.fn(function* (observability) {
     const ctx = new Context();
     let lastNetworkStatus: NetworkStatus | undefined;
@@ -135,7 +160,7 @@ export const networkMetricsProvider = (clientServices: Partial<ClientServices>):
   });
 
 /** Periodically publishes platform and heap memory metrics. */
-export const runtimeMetricsProvider = (clientServices: Partial<ClientServices>): DataProvider =>
+export const runtimeMetricsProvider = (clientServices: Partial<ClientServices>): Observability.DataProvider =>
   Effect.fn(function* (observability) {
     const ctx = new Context();
     log('runtimeMetricsProvider: requesting platform from SystemService');
@@ -212,7 +237,7 @@ export const runtimeMetricsProvider = (clientServices: Partial<ClientServices>):
   });
 
 /** Periodically publishes space membership, object count, and pipeline progress metrics. */
-export const spacesMetricsProvider = (client: Client): DataProvider =>
+export const spacesMetricsProvider = (client: Client): Observability.DataProvider =>
   Effect.fn(function* (observability) {
     const ctx = new Context();
     // Pipeline subscriptions only; the gauges below read the live space list at collection time.
@@ -290,7 +315,7 @@ export const spacesMetricsProvider = (client: Client): DataProvider =>
   });
 
 /** Publishes the document backlog folded across every space. */
-export const documentsMetricsProvider = (client: Client): DataProvider =>
+export const documentsMetricsProvider = (client: Client): Observability.DataProvider =>
   Effect.fn(function* (observability) {
     const ctx = new Context();
     const { summary } = subscribeSyncSummary(client, ctx);
@@ -326,107 +351,12 @@ export const documentsMetricsProvider = (client: Client): DataProvider =>
   });
 
 /**
- * Publishes how long this realm's event loop was blocked.
- *
- * Reports peak lag per export window, tagged only by the `dxos.process.type` resource attribute —
- * so the same provider distinguishes the tab from the shared and dedicated workers without any
- * per-realm wiring.
- */
-export const eventLoopLagProvider = (): DataProvider =>
-  Effect.fn(function* (observability) {
-    const ctx = new Context();
-    const lag = new EventLoopLagTracker(LAG_SAMPLE_INTERVAL_MS);
-
-    scheduleTaskInterval(ctx, async () => lag.sample(Date.now()), LAG_SAMPLE_INTERVAL_MS);
-
-    // Belt to the tracker's braces. The clamp inside `sample` is what actually guarantees a frozen
-    // tab is not reported as lag — checking visibility when the probe fires cannot, since a frozen
-    // timer does not fire until the tab is visible again. This listener additionally drops the
-    // reference timestamp the moment visibility changes, so a gap under the clamp is discarded too.
-    const doc = (globalThis as { document?: EventTarget & { visibilityState?: string } }).document;
-    if (doc) {
-      const onVisibilityChange = () => lag.suspend();
-      doc.addEventListener('visibilitychange', onVisibilityChange);
-      ctx.onDispose(() => doc.removeEventListener('visibilitychange', onVisibilityChange));
-    }
-
-    // #region DEBUG
-    // [DEBUG H-suspend] Dual-clock suspension probe, shipped temporarily to confirm the
-    // native-app freeze diagnosis in the wild — WKWebView's WebContent process suspended while
-    // the window sits hidden — before the fix lands. Remove together with the Rust host
-    // heartbeat in composer-app's src-tauri/lib.rs. Runs in every realm (tab + workers); logs
-    // only on a wake after a ≥15s execution gap and on visibility transitions, so steady state
-    // is silent. Reading a gap line in a downloaded bundle:
-    //   - wallDeltaMs ≈ monoDeltaMs → the realm did not run while both clocks did ⇒ process
-    //     suspension (a 2026-08-29 dev soak showed multi-hour WebContent freezes this way,
-    //     with the Rust host heartbeat clean throughout).
-    //   - wallDeltaMs >> monoDeltaMs → the machine slept; not an app fault.
-    const DEBUG_PROBE_INTERVAL_MS = 5_000;
-    const DEBUG_GAP_MS = 15_000;
-    let debugLastWall = Date.now();
-    let debugLastMono = performance.now();
-    scheduleTaskInterval(
-      ctx,
-      async () => {
-        const wall = Date.now();
-        const mono = performance.now();
-        const wallDeltaMs = Math.round(wall - debugLastWall);
-        const monoDeltaMs = Math.round(mono - debugLastMono);
-        debugLastWall = wall;
-        debugLastMono = mono;
-        if (wallDeltaMs > DEBUG_GAP_MS || monoDeltaMs > DEBUG_GAP_MS) {
-          log.info('[DEBUG H-suspend] js wake after gap', {
-            wallDeltaMs,
-            monoDeltaMs,
-            // Portion of the gap the monotonic clock did not tick — the asleep share.
-            sleptMs: wallDeltaMs - monoDeltaMs,
-            visibility: doc?.visibilityState ?? 'no-document',
-            hasFocus: (doc as { hasFocus?: () => boolean } | undefined)?.hasFocus?.() ?? null,
-          });
-        }
-      },
-      DEBUG_PROBE_INTERVAL_MS,
-    );
-    if (doc) {
-      // The production listener above only drops the lag reference; this one records the
-      // transition itself, so the bundle shows whether WebKit ever marked the page hidden.
-      const onDebugVisibility = () =>
-        log.info('[DEBUG H-suspend] visibilitychange', { visibility: doc.visibilityState });
-      doc.addEventListener('visibilitychange', onDebugVisibility);
-      ctx.onDispose(() => doc.removeEventListener('visibilitychange', onDebugVisibility));
-      // Page lifecycle freeze/resume — Chromium-only events today, registered anyway so a WebKit
-      // release that adds them shows up rather than silently discriminating nothing.
-      const onDebugFreeze = () => log.info('[DEBUG H-suspend] page freeze');
-      const onDebugResume = () => log.info('[DEBUG H-suspend] page resume');
-      doc.addEventListener('freeze', onDebugFreeze);
-      doc.addEventListener('resume', onDebugResume);
-      ctx.onDispose(() => {
-        doc.removeEventListener('freeze', onDebugFreeze);
-        doc.removeEventListener('resume', onDebugResume);
-      });
-    }
-    // #endregion DEBUG
-
-    // Window rotation is driven here rather than by the read, so the gauge callback stays a plain
-    // idempotent getter — see EventLoopLagTracker.
-    scheduleTaskInterval(ctx, async () => lag.rotate(), LAG_WINDOW_MS);
-
-    ctx.onDispose(
-      observability.metrics.observe('dxos.client.runtime.eventLoop.lag', () => lag.peakMs / 1_000, undefined, SECONDS),
-    );
-
-    return async () => {
-      await ctx.dispose();
-    };
-  });
-
-/**
  * Publishes how long a client takes to sync, and how long it has been stuck.
  *
  * Both are needed. `episode.duration` records only when a backlog clears, so a client that never
  * finishes syncing contributes nothing to it — `stalled.duration` is what makes that client visible.
  */
-export const syncMetricsProvider = (client: Client): DataProvider =>
+export const syncMetricsProvider = (client: Client): Observability.DataProvider =>
   Effect.fn(function* (observability) {
     const ctx = new Context();
     const episodes = new SyncEpisodeTracker();

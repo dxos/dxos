@@ -170,6 +170,7 @@ export default Capability.makeModule(
       // TODO(wittjosiah): Try to remove and prefer layer?
       //  Perhaps move to using layer has source of truth and add a getter capability for the client.
       Capability.contribute(ClientCapabilities.Client, client),
+      Capability.contribute(ClientCapabilities.InitializeTimeout, initializeTimeout),
       Capability.contribute(Capabilities.Layer, clientServiceLayer),
       // HALO service instances for imperative consumers (so plugins read identity/spaces
       // through @dxos/halo instead of the client directly).

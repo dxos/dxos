@@ -5,11 +5,14 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
-import { expect, waitFor, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
+import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
@@ -19,9 +22,31 @@ import { translations as reactUiTranslations } from '@dxos/react-ui/translations
 import { Milestone, Person, Task, TaskSet } from '@dxos/types';
 
 import { translations } from '#translations';
+import { TasksCapabilities } from '#types';
 
 import * as TasksPlugin from '../../TasksPlugin.ts';
 import { TaskSetArticle } from './TaskSetArticle.tsx';
+
+/**
+ * Stands in for plugin-projects' `delegate-to-chat` contribution — plugin-tasks cannot depend on it
+ * (the dependency runs the other way), and what the article gates the checkbox on is that SOME
+ * plugin contributed an action, not which one.
+ */
+const StoryTaskActionPlugin = Plugin.define(
+  Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.tasks.story.taskAction'), name: 'Story Task Action' }),
+).pipe(
+  Plugin.addModule({
+    id: 'task-action',
+    provides: [TasksCapabilities.TaskAction],
+    activate: () =>
+      Effect.succeed([
+        Capability.contributeAll(TasksCapabilities.TaskAction, [
+          { id: 'story-action', label: 'Story action', icon: 'ph--sparkle--regular', createInvocations: () => [] },
+        ]),
+      ]),
+  }),
+  Plugin.make,
+);
 
 /** Kept so a play function can mutate the source objects and assert the article follows. */
 let seeded: { space: Space; taskSet: TaskSet.TaskSet; roasting: Milestone.Milestone } | undefined;
@@ -128,6 +153,7 @@ const meta = {
         // The plugin itself, so its OperationHandler module contributes the task verbs —
         // without it every invoke (move included) dies with NoHandlerError.
         TasksPlugin.make(),
+        StoryTaskActionPlugin(),
       ],
     }),
   ],
@@ -143,6 +169,46 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+/**
+ * The gutter's checkbox is selection, not a status write: it marks which rows a contributed action
+ * will act on, and it is offered only because a plugin contributed one (`StoryTaskActionPlugin`).
+ *
+ * The set lives in `react-ui-attention` view state under the task set's own id, so the article
+ * neither owns it nor holds a copy — which is what lets an embedding toolbar read the same set.
+ */
+export const Checkboxes: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.findByText('Source green coffee', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+
+    const boxes = () =>
+      Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item.checkbox"]'));
+    await waitFor(() => expect(boxes().length).toBeGreaterThan(1), { timeout: 10_000 });
+
+    await userEvent.click(boxes()[0]);
+    await waitFor(() => expect(boxes()[0]).toHaveAttribute('data-state', 'checked'), { timeout: 10_000 });
+
+    // A set, not a single selection.
+    await userEvent.click(boxes()[1]);
+    await waitFor(() => expect(boxes()[1]).toHaveAttribute('data-state', 'checked'), { timeout: 10_000 });
+    await expect(boxes()[0]).toHaveAttribute('data-state', 'checked');
+
+    // Selection only: the row's status control is untouched, which is what completes a task.
+    const context = seeded;
+    if (!context) {
+      throw new Error('The story did not seed a task set.');
+    }
+    await expect(TaskSet.resolveTasks(context.taskSet).map((task) => task.status)).toEqual([
+      'done',
+      'started',
+      'started',
+      'todo',
+      'todo',
+      'cancelled',
+    ]);
+  },
+};
 
 /**
  * The set resolves into one flat list and stays live afterwards — each mutation below is the one

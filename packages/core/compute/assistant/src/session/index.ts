@@ -13,11 +13,13 @@ export * as Alarm from './Alarm.ts';
 export * as SessionLink from './SessionLink.ts';
 export {
   ConsumedAnnotation,
+  InFlightAnnotation,
   type PendingState,
   QueuedAnnotation,
   type SessionState,
   SessionStore,
   type SetAlarmProps,
   isConsumed,
+  isInFlight,
   isQueued,
 } from './SessionStore.ts';

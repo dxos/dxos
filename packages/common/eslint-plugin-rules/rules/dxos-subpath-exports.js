@@ -213,15 +213,28 @@ const findPackage = (fromFile, cache) => {
   return null;
 };
 
-/** The `source` condition of an exports entry, which is what resolves to in-repo TypeScript. */
-const sourceOf = (entry) => {
+/**
+ * The in-repo TypeScript an exports entry resolves to. Usually the `source` condition, but a
+ * `dist-runtime` package has none (the toolbox strips it, since consumers must use the built
+ * output), so recover it from `types` the way the toolbox does — without this the rule silently
+ * skips every such package, and its barrel could drift from the subpaths consumers are rewritten to.
+ */
+const sourceOf = (entry, pkgDir) => {
   if (typeof entry === 'string') {
     return entry;
   }
-  if (entry && typeof entry === 'object' && typeof entry.source === 'string') {
+  if (!entry || typeof entry !== 'object') {
+    return null;
+  }
+  if (typeof entry.source === 'string') {
     return entry.source;
   }
-  return null;
+  if (typeof entry.types !== 'string') {
+    return null;
+  }
+  const base = entry.types.replace('./dist/types/src', './src').replace(/\.d\.ts$/, '');
+  const ext = pkgDir ? ['.ts', '.tsx'].find((candidate) => fs.existsSync(path.join(pkgDir, base + candidate))) : '.ts';
+  return ext ? base + ext : null;
 };
 
 /**
@@ -294,7 +307,7 @@ export default {
         }
 
         // Only the package's own root barrel carries this contract.
-        const rootSource = sourceOf(exportsMap['.']);
+        const rootSource = sourceOf(exportsMap['.'], pkg.dir);
         if (!rootSource || path.resolve(pkg.dir, rootSource) !== path.resolve(filename)) {
           return;
         }
@@ -305,7 +318,7 @@ export default {
           if (!name || !isNamespaceName(name) || name.includes('/')) {
             continue;
           }
-          const source = sourceOf(entry);
+          const source = sourceOf(entry, pkg.dir);
           declared.set(name, { key, target: source ? path.resolve(pkg.dir, source) : null });
         }
         // A package with no per-namespace subpaths has not opted in; its barrel is still the

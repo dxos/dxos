@@ -24,7 +24,9 @@ export const IconBlock = composable<HTMLDivElement, IconBlockProps>(
     const { tx } = useThemeContext();
     const { className, ...rest } = composableProps(props);
     return (
-      <div {...rest} aria-hidden='true' className={tx('icon.block', { compact, square }, className)} ref={forwardedRef}>
+      // The default precedes the spread so a caller's `aria-hidden={false}` actually wins, as the
+      // doc comment promises; after the spread it silently overrode every explicit value.
+      <div aria-hidden='true' {...rest} className={tx('icon.block', { compact, square }, className)} ref={forwardedRef}>
         {children}
       </div>
     );

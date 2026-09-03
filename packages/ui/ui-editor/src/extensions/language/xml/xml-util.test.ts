@@ -8,10 +8,10 @@ import { describe, test } from 'vitest';
 
 import { trim } from '@dxos/util';
 
-import { extendedMarkdown } from './extended-markdown.ts';
+import { extendedMarkdown } from './extended-markdown';
 import TEXT from './testing/text.md?raw';
-import { type XmlWidgetRegistry, xmlTags } from './xml-tags.ts';
-import { type Tag, nodeToJson } from './xml-util.ts';
+import { type XmlWidgetRegistry, getXmlInnerText, getXmlTextChild, xmlTags } from './xml-tags';
+import { type Tag, nodeToJson } from './xml-util';
 
 type ParsedElement = Tag & {
   /** Element spans the entire document (opening through closing tag). */
@@ -135,6 +135,32 @@ describe('nodeToJson', () => {
     expect(elements).toHaveLength(1);
     expect(elements[0]._tag).toBe('reasoning');
     expect(elements[0].children).toEqual(['The user sent `<foo>`, which appears to be an XML-like tag.']);
+  });
+
+  // Same fault as the entity-reference case above, for a nested ELEMENT rather than an entity: the
+  // parser splits contents into alternating text and element children, so `getXmlTextChild` returns
+  // the prefix and drops the rest. The reader saw a heading and an opening fence, then nothing.
+  test('should read the whole text of a tag holding a nested element', ({ expect }) => {
+    const xml = trim`
+      <synthetic>
+      Completed the checklist:
+      <checklist>
+      1. [ ] Review new messages.
+      </checklist>
+      done.
+      </synthetic>
+    `;
+
+    const registry = { synthetic: { block: true } };
+    const [element] = parseElements(xml, registry);
+    const children = element.children ?? [];
+
+    // The split is what the fault is made of: text, then the element, then text.
+    expect(children).toHaveLength(3);
+    expect(getXmlTextChild(children)).toBe('Completed the checklist:\n');
+
+    // The nested tag contributes its text but not its markup.
+    expect(getXmlInnerText(children)).toBe('Completed the checklist:\n1. [ ] Review new messages.\ndone.');
   });
 
   test('should decode numeric character references', ({ expect }) => {

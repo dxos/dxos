@@ -14,7 +14,7 @@ import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as TypeSection from '@dxos/app-toolkit/TypeSection';
-import { Chat } from '@dxos/assistant-toolkit';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import { EID, Filter, Obj, Query, Type } from '@dxos/echo';

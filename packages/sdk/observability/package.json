@@ -17,17 +17,25 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./AiObservability": {
+      "types": "./dist/types/src/ai/AiObservability.d.ts",
+      "import": "./dist/lib/ai/AiObservability.mjs"
+    },
     "./Observability": {
-      "types": "./dist/types/src/observability.d.ts",
-      "import": "./dist/lib/observability.mjs"
+      "types": "./dist/types/src/Observability.d.ts",
+      "import": "./dist/lib/Observability.mjs"
+    },
+    "./ObservabilityClientProvider": {
+      "types": "./dist/types/src/providers/ObservabilityClientProvider.d.ts",
+      "import": "./dist/lib/providers/ObservabilityClientProvider.mjs"
     },
     "./ObservabilityExtension": {
-      "types": "./dist/types/src/observability-extension.d.ts",
-      "import": "./dist/lib/observability-extension.mjs"
+      "types": "./dist/types/src/ObservabilityExtension.d.ts",
+      "import": "./dist/lib/ObservabilityExtension.mjs"
     },
     "./ObservabilityProvider": {
-      "types": "./dist/types/src/providers/index.d.ts",
-      "import": "./dist/lib/providers.mjs"
+      "types": "./dist/types/src/providers/ObservabilityProvider.d.ts",
+      "import": "./dist/lib/providers/ObservabilityProvider.mjs"
     },
     "./OtelLogSink": {
       "types": "./dist/types/src/extensions/otel/OtelLogSink.d.ts",
@@ -58,6 +66,7 @@
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/log-store-idb": "workspace:*",
@@ -77,6 +86,7 @@
     "@opentelemetry/sdk-logs": "catalog:",
     "@opentelemetry/sdk-metrics": "catalog:",
     "@opentelemetry/sdk-trace-base": "catalog:",
+    "@opentelemetry/sdk-trace-node": "catalog:",
     "@opentelemetry/sdk-trace-web": "catalog:",
     "@opentelemetry/semantic-conventions": "catalog:",
     "js-yaml": "catalog:",
@@ -86,8 +96,8 @@
     "zone.js": "catalog:"
   },
   "devDependencies": {
+    "@dxos/ai": "workspace:*",
     "@dxos/client-services": "workspace:*",
-    "@dxos/effect": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@types/js-yaml": "catalog:"
   },

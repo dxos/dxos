@@ -5,14 +5,13 @@
 import * as Schema from 'effect/Schema';
 
 import { AiService, OpaqueToolkit } from '@dxos/ai';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Ref, Registry } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { Text } from '@dxos/schema';
-
-import * as Chat from '../types/Chat.ts';
 
 export const RunInstructions = Operation.make({
   meta: {
