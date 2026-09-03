@@ -193,6 +193,12 @@ export type TreeProps<T extends { id: string } = any> = {
    */
   ariaLabel?: string;
   classNames?: string | (string | undefined)[];
+  /**
+   * The row's whole column template, `[tree-row-start] … [tree-row-end]`. The first track is the
+   * disclosure toggle, one control wide; the heading and every column a `renderColumns` returns
+   * flow into the tracks after it in DOM order, so a consumer names its own tracks here and places
+   * cells with `col-[name]` — one grid per row, nothing nested.
+   */
   gridTemplateColumns?: string;
   draggable?: boolean;
   selectionMode?: 'single' | 'multiple';
@@ -260,7 +266,7 @@ export const Tree = <T extends { id: string } = any>({
   id,
   ariaLabel,
   classNames,
-  gridTemplateColumns = '[tree-row-start] minmax(0, 1fr) min-content [tree-row-end]',
+  gridTemplateColumns = '[tree-row-start] var(--dx-control) minmax(0, 1fr) min-content [tree-row-end]',
   draggable = false,
   selectionMode = 'single',
   renderColumns,
@@ -595,7 +601,7 @@ const TreeSectionHeader = ({ label }: { label: Label }) => {
     // decorative — the group's items remain individually labeled.
     <div
       role='presentation'
-      className='col-[tree-row] pl-7 pt-3 pb-0.5 text-xs uppercase tracking-widest text-subdued hover:text-description select-none'
+      className='col-[tree-row] ps-(--dx-control) pt-3 pb-0.5 text-xs uppercase tracking-widest text-subdued hover:text-description select-none'
     >
       {toLocalizedString(label, t)}
     </div>
@@ -979,25 +985,28 @@ const TreeNodeRowContent: FC<TreeNodeRowProps> = memo(({ node }) => {
       onMouseEnter={handleItemHover}
       onContextMenu={handleContextMenu}
     >
-      <div className='indent relative grid grid-cols-subgrid col-[tree-row]' style={paddingIndentation(level)}>
-        {/* `items-start`: a row with a description is taller than one control, and centring put the
-            disclosure chevron beside the description rather than beside the title it discloses. */}
-        <div role='none' className='flex items-start'>
-          {branch ? (
-            <TreeView.BranchTrigger asChild>
-              {/* zag stamps data-state=open on the trigger, which the ghost button styles as an
-                  open menu trigger (bg-input-bg) — the chevron must stay transparent. */}
-              <TreeItemToggle isBranch open={open} classNames='data-[state=open]:bg-transparent' />
-            </TreeView.BranchTrigger>
-          ) : (
-            <TreeItemToggle isBranch={false} />
-          )}
-          {RenderHeading ? (
-            <RenderHeading item={item} path={path} props={props} open={open} />
-          ) : (
-            <TreeNodeHeading item={item} path={path} props={props} />
-          )}
-        </div>
+      {/* One grid per row: the toggle, the heading's cells and the columns are all direct children
+          of this subgrid, so a consumer's template names every track and nothing is nested. The
+          first row is one control tall so every cell centres on the title line; a heading that
+          adds a second line (a description) places it with `row-start-2`. */}
+      <div
+        className='indent relative grid grid-cols-subgrid grid-rows-[var(--dx-control)] col-[tree-row]'
+        style={paddingIndentation(level)}
+      >
+        {branch ? (
+          <TreeView.BranchTrigger asChild>
+            {/* zag stamps data-state=open on the trigger, which the ghost button styles as an
+                open menu trigger (bg-input-bg) — the chevron must stay transparent. */}
+            <TreeItemToggle isBranch open={open} classNames='data-[state=open]:bg-transparent' />
+          </TreeView.BranchTrigger>
+        ) : (
+          <TreeItemToggle isBranch={false} />
+        )}
+        {RenderHeading ? (
+          <RenderHeading item={item} path={path} props={props} open={open} />
+        ) : (
+          <TreeNodeHeading item={item} path={path} props={props} />
+        )}
         {Columns && <Columns item={item} path={path} open={open} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />}
         {instruction && <TreeDropIndicator instruction={instruction} gap={2} />}
         {debug && (
@@ -1034,7 +1043,7 @@ const TreeNodeHeading = <T extends { id: string }>({
       <div
         data-testid='treeItem.heading'
         className={mx(
-          'grow shrink flex items-center min-w-0 gap-2 ps-0.5 min-h-(--dx-control) cursor-pointer select-none',
+          'flex items-center min-w-0 gap-2 ps-0.5 min-h-(--dx-control) cursor-pointer select-none',
           props.disabled && 'cursor-default',
           props.headingClassName,
         )}

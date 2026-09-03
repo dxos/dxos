@@ -7,7 +7,6 @@ import React from 'react';
 import { Icon, IconBlock, IconButton, Input, Tag, useTranslation } from '@dxos/react-ui';
 import { Menu, createMenuAction } from '@dxos/react-ui-menu';
 import { Task } from '@dxos/types';
-import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 

@@ -76,7 +76,7 @@ export const ObjectsTree = ({ db, root, onSelect, onOpen, canOpen }: ObjectsTree
             // `min-content` column is sized from the widest role across the whole subgrid, so
             // expanding a node whose child carries a role widened that track and visibly shifted
             // every row's action button.
-            gridTemplateColumns='[tree-row-start] minmax(0, 1fr) min-content [tree-row-end]'
+            gridTemplateColumns='[tree-row-start] var(--dx-control) minmax(0, 1fr) min-content [tree-row-end]'
             classNames='w-full min-w-0'
             renderIcon={ObjectsTreeIcon}
             renderColumns={ObjectsTreeColumns}

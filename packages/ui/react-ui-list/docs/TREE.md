@@ -345,20 +345,30 @@ subscribed to the object. None of these were disagreements about behaviour. They
 already expressible: a node with `disposition: 'group'` renders as a section header and is spliced
 out of the collection's topology, so keyboard traversal never lands on it.
 
-**One row component**, whose anatomy is:
+**One row component, one grid per row.** The row is `grid-cols-subgrid` over the tree's own
+`gridTemplateColumns`, and _every_ cell — the toggle, whatever the heading renders, every column —
+is a direct child of that subgrid. The consumer authors the whole template and names its tracks; the
+task list's is built from its options:
 
 ```
-[toggle] [ main line (+ optional second line) ] [estimate] [priority] [actions]
+[tree-row-start] toggle [gutter]? status title(1fr) chips [estimate]? priority [actions]? [tree-row-end]
 ```
 
-The row is `grid-cols-subgrid` over the tree's own `gridTemplateColumns`, so every trailing control
-owns a **column** rather than sharing one flex cell. Sharing a cell is what made the trailing icons
-ragged: their position depended on the width of whatever tag preceded them, and anchoring the cell
-to the trailing edge only hid it for rows whose content happened to be similar.
+Every fixed track is one control (`--dx-control`, the rail-item square each cell's `IconBlock`
+holds), there is no column gap, and a track exists only when its option is on — so a cell is never
+rendered into a track that is not there, and no track is held empty. Cells flow into the tracks in
+DOM order; the names are for the pane and the description, which place themselves with `col-[name]`.
+The edit pane lays out on the same template string, so its icon sits under the status column and its
+field under the titles by construction rather than by a second hand-kept list of widths.
 
-The second line is a property of the row, not of the task: the title band is pinned to one control
-height so a described row and a bare one put their titles on the same baseline, and the description
-starts in the title's own column rather than the row's.
+Owning a column is what keeps the trailing icons aligned down the list: sharing a flex cell made
+their position depend on the width of whatever tag preceded them. The toggle used to sit in a flex
+wrapper with a second, nested grid for the heading's cells — three layout systems for one row, and
+two templates to keep in sync; that nesting is gone.
+
+The second line is a property of the row, not of the task: the row's first grid row is pinned to
+one control height so a described row and a bare one put their titles on the same baseline, and the
+description places itself on `row-start-2` spanning `title` to the row's end.
 
 ### What this costs, accepted deliberately
 

@@ -93,7 +93,7 @@ export const ProcessTree = React.memo(
             <Tree<ProcessNode>
               id={ROOT_ID}
               model={model}
-              gridTemplateColumns='[tree-row-start] minmax(0, 1fr) min-content min-content [tree-row-end]'
+              gridTemplateColumns='[tree-row-start] var(--dx-control) minmax(0, 1fr) min-content min-content [tree-row-end]'
               renderIcon={renderIcon}
               renderColumns={renderColumns}
               onOpenChange={handleOpenChange}

@@ -11,7 +11,6 @@ import { useObject } from '@dxos/echo-react';
 import { useTranslation } from '@dxos/react-ui';
 import { type ColumnRenderer, type HeadingRenderer, Tree, isTreeDataFor } from '@dxos/react-ui-list';
 import { Task } from '@dxos/types';
-import { mx } from '@dxos/ui-theme';
 
 import {
   type TaskDropIntent,
@@ -25,13 +24,6 @@ import {
 import { TaskDescription } from './TaskDescription';
 import { TaskCheckbox, TaskOrdinal, TaskStatusControl } from './TaskRowCells';
 import { TASK_TREE_ROOT_ID, type TaskNode, buildTaskForest, buildTaskPaths, createTaskTreeModel } from './tree-model';
-
-/** Columns after the title: assignee, tags and the contributed actions live here. */
-/**
- * `[title][chips][estimate][priority][actions]`. Each trailing control owns a column so it lines up
- * down the list; only the chips share one, because an artifact tag has no fixed width.
- */
-const GRID_TEMPLATE = '[tree-row-start] minmax(0, 1fr) min-content min-content min-content min-content [tree-row-end]';
 
 /**
  * The hierarchical list rendered as a `Tree`, so the machine owns disclosure, roving focus and the
@@ -66,6 +58,8 @@ export type TaskTreeContentProps = {
   onTaskSelect?: (task: Task.Task | undefined) => void;
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
   onTaskMove?: (task: Task.Task, placement: TaskPlacement) => void;
+  /** The list's column template — the tree's rows and the edit pane lay out on the same tracks. */
+  gridTemplateColumns: string;
   renderTrailing?: ColumnRenderer<TaskNode>;
 };
 
@@ -79,6 +73,7 @@ export const TaskTreeContent = ({
   ordinals,
   selected,
   checked,
+  gridTemplateColumns,
   renderTrailing,
   translationKey,
   showDescription = false,
@@ -264,7 +259,7 @@ export const TaskTreeContent = ({
       id={TASK_TREE_ROOT_ID}
       ariaLabel={t('task-list.label')}
       model={model}
-      gridTemplateColumns={GRID_TEMPLATE}
+      gridTemplateColumns={gridTemplateColumns}
       classNames='w-full min-w-0'
       draggable={!!onTaskMove}
       // Any task can gain a sub-task, so a childless peer is still a drop target — without this the
@@ -325,40 +320,29 @@ const TaskTreeHeading = ({
   const description = showDescription ? current.description?.trim() || undefined : undefined;
 
   return (
-    // A grid rather than a flex row so the description can start in the title's own column: it has
-    // to clear the ordinal and the status control, or it reads as belonging to the row above.
-    <div
-      className={mx(
-        // No column gap: every leading cell is one rail-item square, so the cells tile edge to edge
-        // and the title starts exactly one square per cell in — the same geometry the trailing
-        // controls and `TaskList.Edit` lay out on.
-        'grid min-w-0 grow items-center',
-        // The title band is one control tall whether or not a description follows. Left to size
-        // itself, a described row's tracks exactly fill the row and the title sits flush to its
-        // top, while an undescribed row has slack to centre in — so the two titles disagreed by a
-        // few pixels down the list.
-        'grid-rows-[var(--dx-control)_auto]',
-        // Fixed tracks, not `auto`: `TaskList.Edit` lays its own pane out on the same widths, and an
-        // intrinsic ordinal (12px for one digit, wider for two) put the pane's `+` 20px right of the
-        // rows' status controls. `2rem` is `--dx-rail-item`, the square each cell holds — the same
-        // tracks `GRID_COLS` declares.
-        showGutter ? 'grid-cols-[2rem_2rem_minmax(0,1fr)]' : 'grid-cols-[2rem_minmax(0,1fr)]',
-      )}
-    >
+    // Cells, not a container: they are direct children of the tree row's subgrid and take the
+    // tracks the list's template names, so the row is one grid and the pane lays out on the same
+    // tracks by name rather than by re-declaring their widths.
+    <>
       {showGutter &&
         (onTaskCheck ? (
-          <TaskCheckbox task={task} checked={!!checked?.has(task.id)} onCheckedChange={onTaskCheck} />
+          <TaskCheckbox
+            task={task}
+            checked={!!checked?.has(task.id)}
+            classNames='col-[gutter]'
+            onCheckedChange={onTaskCheck}
+          />
         ) : ordinal !== undefined ? (
-          <TaskOrdinal task={task} ordinal={ordinal} />
+          <TaskOrdinal task={task} ordinal={ordinal} classNames='col-[gutter]' />
         ) : (
           // Holds the gutter track so a numberless row's title still lines up with its neighbours.
-          <span />
+          <span className='col-[gutter]' />
         ))}
-      <TaskStatusControl task={task} onTaskUpdate={onTaskUpdate} />
-      <span className='min-w-0 truncate'>{current.title}</span>
-      {description && (
-        <TaskDescription content={description} classNames={mx(showGutter ? 'col-start-3' : 'col-start-2', 'pb-1')} />
-      )}
-    </div>
+      <TaskStatusControl task={task} classNames='col-[status]' onTaskUpdate={onTaskUpdate} />
+      <span className='col-[title] self-center min-w-0 truncate'>{current.title}</span>
+      {/* The row's second line, spanning from the title to the row's end: it has to clear the
+          ordinal and the status control, or it reads as belonging to the row above. */}
+      {description && <TaskDescription content={description} classNames='col-[title/tree-row-end] row-start-2 pb-1' />}
+    </>
   );
 };
