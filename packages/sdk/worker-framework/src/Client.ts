@@ -179,6 +179,9 @@ export class Connection extends Resource {
   #lastConnectError: unknown;
   #lastLeaderError: unknown;
   #leaderPhase: LeaderPhase = 'idle';
+  // Whether this tab is inside the leader lock's callback, which is exactly when it is the leader.
+  // Deriving this from the phase instead drops whichever phase a later change forgets to list.
+  #holdsLeaderLock = false;
   #connectPhase: ConnectPhase = 'idle';
   #peerLeaderHeartbeat = 0;
   #portTimeoutCount = 0;
@@ -256,7 +259,7 @@ export class Connection extends Resource {
     return {
       workerLeaderPhase: this.#leaderPhase,
       workerConnectPhase: this.#connectPhase,
-      workerIsLeader: this.#leaderPhase === 'lock-held' || this.#leaderPhase === 'opening-session',
+      workerIsLeader: this.#holdsLeaderLock,
       workerLeaderFailures: this.#leaderFailureCount,
       workerStealCount: this.#stealCount,
       workerPortTimeouts: this.#portTimeoutCount,
@@ -285,40 +288,50 @@ export class Connection extends Resource {
         await requestExclusiveLock(this.#leaderLockKey, this._ctx.signal, async () => {
           log('worker-connection: leader lock acquired (this tab is leader)', { clientId: this.#clientId });
           this.#leaderPhase = 'lock-held';
-          invariant(this.#coordinator);
-          invariant(!this.#leaderSession);
-
-          const sendHeartbeat = () =>
-            this.#coordinator?.sendMessage({ type: 'leader-heartbeat', leaderId: this.#clientId });
-          sendHeartbeat();
-          const heartbeat = setInterval(sendHeartbeat, this.#leaderHeartbeatInterval);
-
-          this.#leaderSession = new LeaderSession(this.#createWorker, this.#coordinator, this.#config, this.#clientId);
-          const done = new Trigger();
-          this.#leaderDone = done;
-          // Removed in the `finally` below: election re-enters on every steal/failure, so a
-          // permanent registration would grow the connection's dispose list for the tab's lifetime.
-          const removeDoneDisposer = this._ctx.onDispose(() => done.wake());
-          this.#leaderSession.onClose.on((error) => {
-            log('worker-connection: leader session closed', { hasError: !!error });
-            this.#leaderSession = undefined;
-            if (error) {
-              done.throw(error);
-            } else {
-              done.wake();
-            }
-          });
+          this.#holdsLeaderLock = true;
           try {
-            this.#leaderPhase = 'opening-session';
-            await waitWithLockOrRpcTimeout(this.#leaderSession.open(), 'opening worker leader session');
-            this.#leaderPhase = 'session-open';
-            this.#leaderFailureCount = 0;
-            this.#lastLeaderError = undefined;
-            await done.wait();
+            invariant(this.#coordinator);
+            invariant(!this.#leaderSession);
+
+            const sendHeartbeat = () =>
+              this.#coordinator?.sendMessage({ type: 'leader-heartbeat', leaderId: this.#clientId });
+            sendHeartbeat();
+            const heartbeat = setInterval(sendHeartbeat, this.#leaderHeartbeatInterval);
+
+            this.#leaderSession = new LeaderSession(
+              this.#createWorker,
+              this.#coordinator,
+              this.#config,
+              this.#clientId,
+            );
+            const done = new Trigger();
+            this.#leaderDone = done;
+            // Removed in the `finally` below: election re-enters on every steal/failure, so a
+            // permanent registration would grow the connection's dispose list for the tab's lifetime.
+            const removeDoneDisposer = this._ctx.onDispose(() => done.wake());
+            this.#leaderSession.onClose.on((error) => {
+              log('worker-connection: leader session closed', { hasError: !!error });
+              this.#leaderSession = undefined;
+              if (error) {
+                done.throw(error);
+              } else {
+                done.wake();
+              }
+            });
+            try {
+              this.#leaderPhase = 'opening-session';
+              await waitWithLockOrRpcTimeout(this.#leaderSession.open(), 'opening worker leader session');
+              this.#leaderPhase = 'session-open';
+              this.#leaderFailureCount = 0;
+              this.#lastLeaderError = undefined;
+              await done.wait();
+            } finally {
+              removeDoneDisposer();
+              clearInterval(heartbeat);
+              this.#leaderDone = undefined;
+            }
           } finally {
-            removeDoneDisposer();
-            clearInterval(heartbeat);
-            this.#leaderDone = undefined;
+            this.#holdsLeaderLock = false;
           }
         });
         this.#electionActive = false;

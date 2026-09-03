@@ -353,6 +353,35 @@ describe('Connection multi-client', () => {
     expect(diagnostics.workerMsSinceLeaderHeartbeat).toBeUndefined();
   }, 30_000);
 
+  test('a leader whose session opened reports itself as the leader when the connection stalls', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+
+    const connection = new Client.Connection({
+      createWorker: createWorkerFactory(keys.storageLockKey),
+      createCoordinator: () => hub.connect(),
+      leaderLockKey: keys.leaderLockKey,
+      leaderTimeouts: { heartbeatInterval: 50, staleTimeout: 1_000, portTimeout: 200, retryBackoff: 10 },
+      // Never resolving leaves the leader holding its lock with the session open, which is the
+      // state `workerIsLeader` exists to name — and the one an enumerated phase list dropped.
+      onConnect: () => new Promise<{ close: () => Promise<void> }>(() => {}),
+    });
+    onTestFinished(async () => {
+      await connection.close();
+    });
+
+    const error = await connection.open().then(
+      () => {
+        throw new Error('open() must not resolve: onConnect never settles in this test.');
+      },
+      (err) => err,
+    );
+
+    const diagnostics = diagnosticsOf(error);
+    expect(diagnostics.workerIsLeader).toBe(true);
+    expect(diagnostics.workerLeaderPhase).toBe('session-open');
+  }, 30_000);
+
   test('a tab with a broken coordinator link stops stealing instead of restarting the leader forever', async () => {
     const hub = createHub();
     const keys = uniqueKeys();

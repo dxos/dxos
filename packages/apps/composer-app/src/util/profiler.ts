@@ -141,7 +141,12 @@ export const startupProfiler = (): Profiler => {
   return {
     snapshot: collect,
     dump: () => {
-      if (performance.getEntriesByName('startup:ready').length === 0) {
+      // A manual dump after a failed boot must not invent a `ready` mark: that would add a second
+      // `startup:total` spanning main:start to dump time and bury the abort's real duration.
+      if (
+        performance.getEntriesByName('startup:ready').length === 0 &&
+        performance.getEntriesByName('startup:aborted').length === 0
+      ) {
         startupMark('ready');
         startupMeasure('total', 'main:start', 'ready');
       }

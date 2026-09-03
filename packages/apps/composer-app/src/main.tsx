@@ -396,6 +396,12 @@ const main = async () => {
     STARTUP_ACTIVATED_EVENT,
     () => {
       startupActivated = true;
+      // The scheduler carries on with independent modules after one fails, so activation can still
+      // arrive once the boot is recorded as failed. Counting it in both buckets would inflate the
+      // success rate this event exists to measure.
+      if (startupFailureReported) {
+        return;
+      }
       captureStartup('composer.startup', 'ready');
     },
     { once: true },
