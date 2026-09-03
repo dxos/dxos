@@ -217,8 +217,8 @@ export const ChatPrompt = ({
             classNames='col-span-2'
             attendableId={attendableId}
             customActions={customActions}
-            // `active`, not `streaming`: a turn parked in a tool call streams nothing, and the
-            // reader still needs a way to stop it.
+            // `active`, not `streaming`: a turn parked in a tool call streams nothing,
+            // and the reader still needs a way to stop it.
             processing={active}
             canSend={canSend}
             tasksVisible={tasksVisible}

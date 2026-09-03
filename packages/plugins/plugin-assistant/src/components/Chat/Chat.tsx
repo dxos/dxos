@@ -638,6 +638,10 @@ type ChatPromptProps = Omit<NaturalChatPromptProps, 'chat' | 'db' | 'processor' 
 const ChatPrompt = ({ classNames, defaultTasksVisible = false, ...props }: ChatPromptProps) => {
   const { chat, db, processor, event } = useChatContext(CHAT_PROMPT_NAME);
 
+  // A chat with no checklist at all has nothing to disclose, so the toggle is withheld rather than
+  // shown pointing at nothing — `ChatActions` renders it only when `tasksVisible` is defined.
+  const hasTasks = chat?.tasks != null;
+
   // Disclosed by default: a chat carrying a checklist should show it without being asked, and the
   // toggle is how the reader gets the room back once they have read it. Per mount rather than
   // persisted — it is a glance, not a preference.
@@ -659,12 +663,11 @@ const ChatPrompt = ({ classNames, defaultTasksVisible = false, ...props }: ChatP
       lazyMount={false}
     >
       {/* The height the machine measures is what the ramp animates against, so the region clips. */}
-      {chat?.tasks != null && (
+      {hasTasks && (
         <Collapsible.Content className='overflow-hidden data-[state=closed]:animate-slide-up data-[state=open]:animate-slide-down'>
           <ChatTaskList classNames='shrink-0 max-h-[calc(4*2rem+1px)] border border-separator border-b-0 rounded-t-sm text-description' />
         </Collapsible.Content>
       )}
-      <div>[{chat?.tasks?.length}]</div>
       <NaturalChatPrompt
         {...props}
         // Square where the checklist meets it, so the two read as one shell rather than two cards.
@@ -673,7 +676,7 @@ const ChatPrompt = ({ classNames, defaultTasksVisible = false, ...props }: ChatP
         chat={chat}
         processor={processor}
         event={event}
-        tasksVisible={tasksVisible}
+        tasksVisible={hasTasks ? tasksVisible : undefined}
       />
     </Collapsible.Root>
   );
