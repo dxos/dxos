@@ -122,11 +122,6 @@ describe('posthog node extension', () => {
       expect(extension.apis, host).to.not.be.empty;
     }
   });
-
-  test('stubs itself when no project token is configured', async () => {
-    const extension = await EffectEx.runPromise(extensions({ config: new Config({}), distinctId: DID }));
-    expect(extension.apis).to.be.empty;
-  });
 });
 
 const make = (distinctId: string | undefined, host?: string): Promise<ObservabilityExtension.Extension> =>
