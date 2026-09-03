@@ -5,7 +5,7 @@
 
 Sample spaces are now built from a shared mechanism rather than one hand-written script per space.
 
-`@dxos/app-toolkit/SampleSpace` is an Effect builder whose unit is a *phase*: a named piece of
+`@dxos/app-toolkit/SampleSpace` is an Effect builder whose unit is a _phase_: a named piece of
 content that declares the schemas it needs, so a space's type registration is derived from its phase
 list instead of a hand-maintained array that drifts. It supplies the services sample content keeps
 re-implementing — a fixed reference clock (so a rebuild produces the same timestamps), deferred feed
