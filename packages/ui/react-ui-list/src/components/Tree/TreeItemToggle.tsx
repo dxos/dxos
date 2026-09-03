@@ -12,6 +12,12 @@ export type TreeItemToggleProps = Omit<IconButtonProps, 'icon' | 'size' | 'label
   hidden?: boolean;
 };
 
+/**
+ * A row's disclosure control: one control square holding the chevron, rotated when `open`. A leaf
+ * renders it invisible rather than not at all, so leaves and branches share one row geometry;
+ * `hidden` removes it for a tree that shows no disclosure. Not a tab stop — the row is the
+ * focusable, and the machine toggles the branch from its keymap.
+ */
 export const TreeItemToggle = memo(
   composable<HTMLButtonElement, TreeItemToggleProps>(
     ({ classNames, open, isBranch, hidden, ...props }, forwardedRef) => {

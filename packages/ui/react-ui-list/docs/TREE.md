@@ -358,7 +358,7 @@ section headers and the end target span.
 The consumer authors the whole template and names its tracks; the task list's is built from its
 options (the toggle track only for a hierarchical list — a flat one holds no square for a chevron):
 
-```
+```text
 [tree-row-start] [toggle]? [gutter]? status title(1fr) chips [estimate]? priority [actions]? [tree-row-end]
 ```
 

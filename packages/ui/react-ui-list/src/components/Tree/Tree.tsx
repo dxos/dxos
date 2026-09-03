@@ -265,6 +265,14 @@ export type TreeProps<T extends { id: string } = any> = {
   onKeyDown?: (event: React.KeyboardEvent<HTMLDivElement>) => void;
 };
 
+/**
+ * A tree over a `TreeModel`, rendered on the Ark TreeView machine: it owns disclosure, the roving
+ * tabstop, selection and the APG keymap, and lays every row out as one grid on the consumer's
+ * `gridTemplateColumns`. The template's first track is the disclosure toggle (`toggle={false}`
+ * drops it for a flat list); the heading and each `renderColumns` cell flow into the tracks after
+ * it, and a row indents by padding its own grid so nested rows shift as a block while the fixed
+ * trailing tracks stay aligned. Rows are drag sources and drop targets when `draggable` is set.
+ */
 export const Tree = <T extends { id: string } = any>({
   model,
   rootId,

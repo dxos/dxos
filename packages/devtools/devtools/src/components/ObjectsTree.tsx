@@ -37,6 +37,11 @@ export interface ObjectsTreeProps {
   canOpen?: (entity: Entity.Snapshot) => boolean;
 }
 
+/**
+ * The object graph as a tree: every row is an entity, its children the objects and relations
+ * reachable from it, walked one level ahead of what is open so an unbounded graph is never queried
+ * whole. Renders through `Tree`, so disclosure, roving focus and the APG keymap are the machine's.
+ */
 export const ObjectsTree = ({ db, root, onSelect, onOpen, canOpen }: ObjectsTreeProps) => {
   const [model, setModel] = useState(() => new ObjectsTreeModel(db, root ?? null, onSelect ?? (() => {})));
   useEffect(() => {
