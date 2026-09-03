@@ -43,6 +43,7 @@ import { meta } from '#meta';
 import { TaskSlashCommands } from '../../commands';
 import { AiUsageQuotaError, type ProcessorRequestContext } from '../../processor';
 import {
+  ChatActivity,
   ChatStatus,
   ChatPrompt as NaturalChatPrompt,
   type ChatPromptProps as NaturalChatPromptProps,
@@ -793,6 +794,7 @@ export const Chat = {
   Content: ChatContent,
   Prompt: ChatPrompt,
   Queue: ChatQueue,
+  Activity: ChatActivity,
   Status: ChatStatus,
   Thread: ChatThread,
   Outline: ChatOutline,

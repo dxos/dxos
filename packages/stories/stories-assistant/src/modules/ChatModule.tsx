@@ -64,6 +64,8 @@ const ChatModuleContainer = ({ space }: { space: Space }) => {
         <Panel.Content asChild>
           <Chat.Content>
             <Chat.Thread viewType={view} />
+            {/* What the request is doing before the first token arrives. */}
+            <Chat.Activity />
             <Chat.Queue />
             {/* TODO(dmaretskyi): Breaks layout. */}
             {/* <Chat.TaskList classNames='shrink-0 border border-separator border-b-0 rounded-t-sm text-description' /> */}

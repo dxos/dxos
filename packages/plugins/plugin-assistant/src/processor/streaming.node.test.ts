@@ -18,7 +18,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as PluginManager from '@dxos/app-framework/PluginManager';
-import { AiSession, PartialBlock } from '@dxos/assistant';
+import { AiSession, PartialBlock, RequestPhase, type RequestPhaseName } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import { ProcessManager } from '@dxos/compute-runtime';
 import * as AgentService from '@dxos/compute/AgentService';
@@ -242,11 +242,85 @@ describe('AiChatProcessor streaming', () => {
       TestHelpers.provideTestContext,
     ),
   );
+
+  it.effect(
+    'reports each setup phase while the reader waits, then clears once content streams in',
+    Effect.fn(
+      function* ({ expect }) {
+        const feed = yield* Database.add(Feed.make());
+        // The processor resolves its agent session from the chat it runs on.
+        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+        const runtime = yield* Effect.context<Database.Service>();
+        const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
+
+        const messageId = Obj.ID.random();
+        const batches = [
+          traceMessage([requestPhaseEvent('preparing')]),
+          traceMessage([requestPhaseEvent('connecting-mcp')]),
+          // A re-issued provider request: the attempt count is what distinguishes it from a stall.
+          traceMessage([requestPhaseEvent('contacting-provider', 3)]),
+          traceMessage([partialBlockEvent(messageId, 'Hello', true)]),
+        ];
+        const stubSession = yield* makeStubSession(chat, feed, batches);
+        const stubAgentService: AgentService.Service = {
+          getSession: () => Effect.succeed(stubSession),
+          hydrate: () => Effect.void,
+        };
+        const spaceLayer = yield* makeSpaceLayer(stubAgentService);
+
+        const observableRegistry = AtomRegistry.make();
+        const processorRuntime = yield* makeTestRuntime;
+        const processor = new AiChatProcessor(session, processorRuntime, feed, spaceLayer, {
+          chat: Ref.make(chat),
+          observableRegistry,
+        });
+
+        const snapshots: (string | undefined)[] = [];
+        const attempts: (number | undefined)[] = [];
+        const unsubscribe = observableRegistry.subscribe(
+          processor.activity,
+          (activity) => {
+            snapshots.push(activity?.phase);
+            attempts.push(activity?.attempt);
+          },
+          { immediate: true },
+        );
+        yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribe()));
+
+        yield* Effect.promise(() => processor.request({ message: 'Hello?' }));
+
+        const error = observableRegistry.get(processor.error);
+        expect(error._tag === 'Some' ? `${error.value.message}: ${error.value.cause}` : undefined).toBeUndefined();
+
+        // `starting` is set locally before the process resolves, so it precedes anything the agent
+        // itself can report; the agent's own phases follow in the order it entered them.
+        expect(snapshots).toEqual(
+          expect.arrayContaining(['starting', 'preparing', 'connecting-mcp', 'contacting-provider']),
+        );
+        expect(snapshots.indexOf('starting')).toBeLessThan(snapshots.indexOf('preparing'));
+        expect(snapshots.indexOf('connecting-mcp')).toBeLessThan(snapshots.indexOf('contacting-provider'));
+        expect(attempts[snapshots.indexOf('contacting-provider')]).toBe(3);
+
+        // The streamed block supersedes the phase line, and the settled request leaves nothing behind.
+        expect(snapshots.at(-1)).toBeUndefined();
+        expect(observableRegistry.get(processor.activity)).toBeUndefined();
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
 });
 
 //
 // Helpers.
 //
+
+/** Builds a trace event carrying a request setup phase (the payload the activity atom consumes). */
+const requestPhaseEvent = (phase: RequestPhaseName, attempt?: number): Trace.Event => ({
+  timestamp: 0,
+  type: RequestPhase.key,
+  data: { phase, ...(attempt !== undefined ? { attempt } : {}) },
+});
 
 /** Builds a trace event carrying an assistant text block (the payload `#handleEphemeralMessage` consumes). */
 const partialBlockEvent = (messageId: string, text: string, pending: boolean): Trace.Event => ({
