@@ -72,21 +72,6 @@ describe('otel extension', () => {
 
   // Without an explicit namespace the consent read falls back to `serviceName`, which in node is a
   // directory relative to the cwd.
-  const make = () =>
-    EffectEx.runPromise(
-      extensions({
-        serviceName: 'dx',
-        serviceVersion: '1.2.3',
-        environment: 'test',
-        namespace: namespaceDir,
-        config: new Config({}),
-        endpoint: 'http://127.0.0.1:1',
-        logs: true,
-        metrics: true,
-        traces: true,
-      }),
-    );
-
   test('builds an exporter for every signal it was asked for', async () => {
     await make();
 
@@ -105,4 +90,19 @@ describe('otel extension', () => {
     expect(OtelTraces).not.toHaveBeenCalled();
     expect(extension.enabled).to.be.false;
   });
+
+  const make = () =>
+    EffectEx.runPromise(
+      extensions({
+        serviceName: 'dx',
+        serviceVersion: '1.2.3',
+        environment: 'test',
+        namespace: namespaceDir,
+        config: new Config({}),
+        endpoint: 'http://127.0.0.1:1',
+        logs: true,
+        metrics: true,
+        traces: true,
+      }),
+    );
 });

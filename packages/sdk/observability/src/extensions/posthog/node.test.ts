@@ -48,30 +48,6 @@ vi.mock('@posthog/mcp', () => ({
   },
 }));
 
-const make = (distinctId: string | undefined): Promise<ObservabilityExtension.Extension> =>
-  EffectEx.runPromise(
-    extensions({
-      config: new Config({}),
-      apiKey: TOKEN,
-      release: '1.2.3',
-      distinctId,
-      mcpServer: { name: 'dxos-cli', version: '1.2.3' },
-    }),
-  );
-
-const api = <K extends ObservabilityExtension.ExtensionApi['kind']>(
-  extension: ObservabilityExtension.Extension,
-  kind: K,
-): Extract<ObservabilityExtension.ExtensionApi, { kind: K }> => {
-  const found = extension.apis.find(
-    (entry): entry is Extract<ObservabilityExtension.ExtensionApi, { kind: K }> => entry.kind === kind,
-  );
-  if (!found) {
-    throw new Error(`No ${kind} api on the extension.`);
-  }
-  return found;
-};
-
 describe('posthog node extension', () => {
   test('attributes events to the current distinct id, with the registered properties', async () => {
     captured.length = 0;
@@ -141,3 +117,27 @@ describe('posthog node extension', () => {
     expect(extension.apis).to.be.empty;
   });
 });
+
+const make = (distinctId: string | undefined): Promise<ObservabilityExtension.Extension> =>
+  EffectEx.runPromise(
+    extensions({
+      config: new Config({}),
+      apiKey: TOKEN,
+      release: '1.2.3',
+      distinctId,
+      mcpServer: { name: 'dxos-cli', version: '1.2.3' },
+    }),
+  );
+
+const api = <K extends ObservabilityExtension.ExtensionApi['kind']>(
+  extension: ObservabilityExtension.Extension,
+  kind: K,
+): Extract<ObservabilityExtension.ExtensionApi, { kind: K }> => {
+  const found = extension.apis.find(
+    (entry): entry is Extract<ObservabilityExtension.ExtensionApi, { kind: K }> => entry.kind === kind,
+  );
+  if (!found) {
+    throw new Error(`No ${kind} api on the extension.`);
+  }
+  return found;
+};

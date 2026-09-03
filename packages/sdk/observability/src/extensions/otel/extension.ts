@@ -220,9 +220,19 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
         yield* Effect.promise(() => storeObservabilityDisabled(namespace, false));
         yield* Ref.update(enabledRef, () => true);
       }),
+      // Closing rather than only flagging: a metric reader and a batch span processor export on
+      // their own schedules, so a flag alone leaves a revoked consent sending until the next start.
+      // Re-enabling needs a restart, which was already true of logs and traces.
       disable: Effect.fn(function* () {
         yield* Effect.promise(() => storeObservabilityDisabled(namespace, true));
         yield* Ref.update(enabledRef, () => false);
+        if (logs) {
+          const index = log.runtimeConfig.processors.indexOf(logs.logProcessor);
+          if (index >= 0) {
+            log.runtimeConfig.processors.splice(index, 1);
+          }
+        }
+        yield* extension.close!();
       }),
       close: () =>
         Effect.promise(async () => {

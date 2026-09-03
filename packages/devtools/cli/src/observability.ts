@@ -51,17 +51,29 @@ export const projectToken = (): string | undefined => {
 export const otelEndpoint = (): string | undefined =>
   reporting() && globalThis.DX_CLI_BUNDLED ? OTEL_ENDPOINT : undefined;
 
+/** The shape of effect's `Command` this walks; taking the whole type would drag its five generics in. */
+type CommandNode = {
+  readonly name: string;
+  readonly subcommands: ReadonlyArray<{ readonly commands: ReadonlyArray<CommandNode> }>;
+};
+
 /**
- * The subcommand path, with flags and their values dropped: a flag value is a file path, a space
- * name or a prompt, none of which belongs in an event.
+ * The subcommand path the argv selects, matched against the command tree.
+ *
+ * Allowing through whatever precedes the first flag would name the event after a positional — a
+ * file path for `fn deploy`, a payload for `fn invoke`, a space id for `admin space inspect` — so
+ * only tokens that are subcommands of the node reached so far are kept.
  */
-export const commandPath = (argv: readonly string[]): string => {
+export const commandPath = (root: CommandNode, argv: readonly string[]): string => {
   const path: string[] = [];
+  let node = root;
   for (const arg of argv) {
-    if (arg.startsWith('-')) {
+    const next = node.subcommands.flatMap((group) => group.commands).find((candidate) => candidate.name === arg);
+    if (!next) {
       break;
     }
-    path.push(arg);
+    path.push(next.name);
+    node = next;
   }
   return path.join(' ') || 'dx';
 };

@@ -44,7 +44,9 @@ const setEnabled = (state: boolean) =>
   Effect.fn(function* () {
     const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
     yield* Effect.promise(() => invokePromise(ObservabilityOperation.SetEnabled, { state }));
-    yield* report(state);
+    // Read back rather than echo the request: `DX_DISABLE_OBSERVABILITY` outranks the stored
+    // setting, so `enable` on a machine that sets it has not enabled anything.
+    yield* report(yield* readEnabled());
   });
 
 const status = Command.make(

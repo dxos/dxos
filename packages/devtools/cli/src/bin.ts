@@ -235,7 +235,7 @@ const program = Effect.gen(function* () {
     Effect.onExit((exit) =>
       Effect.sync(() =>
         observabilityInstance.events.captureEvent('cli.command', {
-          command: commandPath(argv),
+          command: commandPath(command, argv),
           ok: Exit.isSuccess(exit),
           durationMs: Date.now() - startedAt,
         }),
