@@ -10,5 +10,4 @@ import { ObservabilityOperation } from '#types';
 export const ObservabilityOperationHandlerSet = OperationHandlerSet.lazy([
   ObservabilityOperation.SendEvent.pipe(Operation.lazyHandler(() => import('./send-event'))),
   ObservabilityOperation.SetEnabled.pipe(Operation.lazyHandler(() => import('./set-enabled'))),
-  ObservabilityOperation.SetAiContentCapture.pipe(Operation.lazyHandler(() => import('./set-ai-content-capture'))),
 ]);

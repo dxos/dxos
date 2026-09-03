@@ -51,7 +51,6 @@ export const Default: Story = {
   args: {
     settings: {
       enabled: true,
-      aiContentCapture: true,
     },
   },
 };

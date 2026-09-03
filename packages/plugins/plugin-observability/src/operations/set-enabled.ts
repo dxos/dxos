@@ -10,7 +10,7 @@ import * as Operation from '@dxos/compute/Operation';
 
 import { ObservabilityCapabilities, ObservabilityOperation } from '#types';
 
-import { applyTelemetrySettings, readySettingsSpace, writeTelemetrySettings } from '../util';
+import { applyTelemetryEnabled, readySettingsSpace, writeTelemetryEnabled } from '../util';
 
 const handler: Operation.WithHandler<typeof ObservabilityOperation.SetEnabled> = ObservabilityOperation.SetEnabled.pipe(
   Operation.withHandler(
@@ -21,21 +21,21 @@ const handler: Operation.WithHandler<typeof ObservabilityOperation.SetEnabled> =
       const enabled = input.state;
 
       observability.events.captureEvent('observability.toggle', { enabled });
-      yield* applyTelemetrySettings(
+      yield* applyTelemetryEnabled(
         {
           observability,
           namespace,
           registry: capabilities.get(Capabilities.AtomRegistry),
           settingsAtom: capabilities.getAll(ObservabilityCapabilities.Settings)[0],
         },
-        { enabled },
+        enabled,
       );
 
       // The choice replicates to the user's other devices; a host without the space keeps it local.
       const [client] = capabilities.getAll(ObservabilityCapabilities.ClientCapability);
       const settingsSpace = client && readySettingsSpace(client);
       if (settingsSpace) {
-        writeTelemetrySettings(settingsSpace, { enabled });
+        writeTelemetryEnabled(settingsSpace, enabled);
       }
 
       return enabled;

@@ -43,28 +43,32 @@ the diagnostics-channel exporter on EDGE exactly as it wraps the OTLP exporter i
 platform-specific; EDGE supplies `channel('dxos:observability').publish` and tail-logger decodes
 the same envelope type.
 
-**Telemetry preferences live in the settings space.** Two annotations on the settings space
-properties: telemetry enabled, and AI content capture. They replicate across the user's devices.
-Local storage keeps a mirror so the preference applies before the space is readable at boot, and
-the first device with the space migrates its local value in. `contentCaptureAllowed(spaceId)`
-stays as the space-level predicate for future E2E spaces; the user-level consent is a facade flag
-the plugin sets from the annotation.
+**The telemetry opt-in lives in the settings space.** One annotation on the settings space
+properties, `enabled`, replicating across the user's devices. Local storage keeps a mirror so the
+choice applies before the space is readable at boot, and the first device with the space migrates
+its local value in.
 
-**EDGE reports metadata only for AI until the preference reaches it.** The invocation carries no
-user preference today. Fail closed: the Relay host sets `aiContentCapture` false. Follow-up: read
-the settings space server-side via `DataService.getSpaceTags` once the invoking identity is known,
-or carry the preference on the invocation.
+**AI content capture is not a separate consent.** Content goes out when telemetry is on and the
+space is one EDGE already sees in plaintext (`contentCaptureAllowed(spaceId)`); an E2E space
+reports metadata only. A space EDGE can read is one EDGE may observe, under the same opt-in.
+
+**EDGE gates AI capture on the user's opt-in, read from the settings space.** The `Observability`
+on a worker is per isolate and serves every user, so the gate is per invocation, not per instance.
+Until EDGE resolves the invoking identity's settings space (via `DataService.getSpaceTags` over
+the identity's spaces) the fanout stays out of the `otel-cf-workers` config: no AI records leave
+EDGE, and content stripping still runs in front of the trace exporter.
 
 ## Sequencing
 
 pkg.pr.new publishes only on push to `main`, so the dxos PR lands first and the EDGE PR pins the
 catalog to its merge commit.
 
-1. dxos: `@dxos/observability` bundles on workerd, Relay extension, `SpanProcessors` subpath,
-   facade `aiContentCapture`; plugin-observability settings-space preferences, workerd
-   `Observability` module, delete the workerd handler stub.
-2. edge: catalog bump; `otel-instrument.ts` adds fanout + content stripping; `edge-platform`
-   builds the per-isolate `Observability` from Relay; tail-logger consumes `dxos:observability`
-   into posthog-node; operation-service passes the observability to the plugin.
-3. Later: shared log flattening and severity mapping; OTLP logs from tail-logger; preference
-   propagation to EDGE.
+1. dxos: `@dxos/observability` bundles on workerd, Relay extension, `SpanProcessors` subpath;
+   plugin-observability settings-space opt-in, workerd `Observability` module, delete the workerd
+   handler stub.
+2. edge: catalog bump; `otel-instrument.ts` adds content stripping; `edge-platform` builds the
+   per-isolate `Observability` from Relay; tail-logger consumes `dxos:observability` into
+   posthog-node; operation-service passes the observability to the plugin.
+3. edge: per-invocation opt-in read from the settings space, then the fanout joins the
+   `otel-cf-workers` config and AI analytics flow from EDGE.
+4. Later: shared log flattening and severity mapping; OTLP logs from tail-logger.

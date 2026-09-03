@@ -25,20 +25,6 @@ export const SetEnabled = Operation.make({
   output: Schema.Boolean,
 });
 
-export const SetAiContentCapture = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.operation.observability.setAiContentCapture'),
-    name: 'Set AI Content Capture',
-    description: 'Toggle whether AI prompts and responses are included in telemetry.',
-    icon: 'ph--chat-text--regular',
-  },
-  services: [Capability.Service],
-  input: Schema.Struct({
-    state: Schema.Boolean,
-  }),
-  output: Schema.Boolean,
-});
-
 export const SendEvent = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.observability.sendEvent'),

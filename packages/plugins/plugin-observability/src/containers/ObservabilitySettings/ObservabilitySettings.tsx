@@ -15,8 +15,8 @@ import { ObservabilityOperation, Settings } from '#types';
 export type ObservabilitySettingsProps = AppSurface.SettingsData;
 
 /**
- * Edits are routed through the operations rather than written to the atom directly, so a toggle
- * takes effect on the running services and reaches the settings space.
+ * Edits are routed through {@link ObservabilityOperation.SetEnabled} rather than written to the atom
+ * directly, so the toggle takes effect on the running services and reaches the settings space.
  */
 export const ObservabilitySettings = ({ subject }: ObservabilitySettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -28,14 +28,9 @@ export const ObservabilitySettings = ({ subject }: ObservabilitySettingsProps) =
       schema={Settings.Settings}
       values={settings}
       variant='settings'
-      onValuesChanged={(values) => {
-        if (values.enabled !== undefined && values.enabled !== settings.enabled) {
-          void invokePromise(ObservabilityOperation.SetEnabled, { state: values.enabled });
-        }
-        if (values.aiContentCapture !== undefined && values.aiContentCapture !== settings.aiContentCapture) {
-          void invokePromise(ObservabilityOperation.SetAiContentCapture, { state: values.aiContentCapture });
-        }
-      }}
+      onValuesChanged={(values) =>
+        void invokePromise(ObservabilityOperation.SetEnabled, { state: { ...settings, ...values }.enabled })
+      }
     >
       <Form.Viewport scroll>
         <Form.Content>

@@ -15,31 +15,19 @@ import * as Observability from '@dxos/observability/Observability';
 
 import { ObservabilityAnnotation, type Settings } from '#types';
 
-export type TelemetrySettings = Partial<Settings.Settings>;
-
 /** The settings space once its properties are readable; one still opening counts as absent. */
 export const readySettingsSpace = (client: Client): Space | undefined => {
   const space = AppSpace.getSettingsSpace(client);
   return space?.state.get() === SpaceState.SPACE_READY ? space : undefined;
 };
 
-/** A field is `undefined` where no device has written it yet. */
-export const readTelemetrySettings = (space: Space): TelemetrySettings => ({
-  enabled: Annotation.get(space.properties, ObservabilityAnnotation.Enabled).pipe(Option.getOrUndefined),
-  aiContentCapture: Annotation.get(space.properties, ObservabilityAnnotation.AiContentCapture).pipe(
-    Option.getOrUndefined,
-  ),
-});
+/** `undefined` until a device has written it. */
+export const readTelemetryEnabled = (space: Space): boolean | undefined =>
+  Annotation.get(space.properties, ObservabilityAnnotation.Enabled).pipe(Option.getOrUndefined);
 
-/** Writes only the fields given, in one change. */
-export const writeTelemetrySettings = (space: Space, settings: TelemetrySettings): void => {
+export const writeTelemetryEnabled = (space: Space, enabled: boolean): void => {
   Obj.update(space.properties, (properties) => {
-    if (settings.enabled !== undefined) {
-      Annotation.set(properties, ObservabilityAnnotation.Enabled, settings.enabled);
-    }
-    if (settings.aiContentCapture !== undefined) {
-      Annotation.set(properties, ObservabilityAnnotation.AiContentCapture, settings.aiContentCapture);
-    }
+    Annotation.set(properties, ObservabilityAnnotation.Enabled, enabled);
   });
 };
 
@@ -53,30 +41,21 @@ export type ApplyContext = {
 };
 
 /**
- * Applies preferences to the running services, the local mirror and the settings atom. Writing
- * the settings space is the caller's decision: an operation writes it, the sync module is reacting
+ * Applies the opt-in to the running services, the local mirror and the settings atom. Writing the
+ * settings space is the caller's decision: the operation writes it, the sync module is reacting
  * to it.
  */
-export const applyTelemetrySettings = Effect.fn(function* (
+export const applyTelemetryEnabled = Effect.fn(function* (
   { observability, namespace, registry, settingsAtom }: ApplyContext,
-  settings: TelemetrySettings,
+  enabled: boolean,
 ) {
-  if (settings.enabled !== undefined) {
-    if (settings.enabled) {
-      yield* observability.enable();
-    } else {
-      yield* observability.disable();
-    }
-    yield* Effect.promise(() => Observability.storeObservabilityDisabled(namespace, !settings.enabled));
+  if (enabled) {
+    yield* observability.enable();
+  } else {
+    yield* observability.disable();
   }
-  if (settings.aiContentCapture !== undefined) {
-    observability.setAiContentCapture(settings.aiContentCapture);
-  }
+  yield* Effect.promise(() => Observability.storeObservabilityDisabled(namespace, !enabled));
   if (settingsAtom) {
-    const current = registry.get(settingsAtom);
-    registry.set(settingsAtom, {
-      enabled: settings.enabled ?? current.enabled,
-      aiContentCapture: settings.aiContentCapture ?? current.aiContentCapture,
-    });
+    registry.set(settingsAtom, { ...registry.get(settingsAtom), enabled });
   }
 });

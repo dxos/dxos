@@ -17,15 +17,12 @@ pieces EDGE plugs into `otel-cf-workers`.
       AI and MCP records to a host-supplied `publish`.
 - [x] **`@dxos/observability/SpanProcessors` subpath** — `AiContentStrippingSpanProcessor`,
       `FanoutSpanProcessor`/`addSpanProcessor`, `TagInjectorSpanProcessor`.
-- [x] **Facade `aiContentCapture`** — user-level consent flag consulted by `attachAiCapture`
-      alongside `contentCaptureAllowed(spaceId)`.
-- [x] **Tests** — Relay extension, facade flag, workerd traces variant.
+- [x] **Tests** — Relay extension, workerd traces variant.
 
 ## Phase 2: settings-space preferences (dxos, plugin-observability)
 
-- [x] **Annotations** — `enabled` and `aiContentCapture` on settings space properties.
-- [x] **Settings schema + UI** — second toggle for AI content capture.
-- [x] **Operations** — `SetEnabled` writes the annotation; new `SetAiContentCapture`.
+- [x] **Annotation** — `enabled` on the settings space properties.
+- [x] **Operation** — `SetEnabled` writes the annotation.
 - [x] **`SettingsSync` module** — on spaces ready: read annotations, seed from local on first
       device, apply remote changes live.
 - [x] **Workerd `Observability` module** — `Observability` and `Namespace` modules split for
@@ -35,9 +32,10 @@ pieces EDGE plugs into `otel-cf-workers`.
 ## Phase 3: EDGE integration (edge repo, needs a slot)
 
 - [ ] **Catalog bump** to the dxos merge commit.
-- [ ] **`otel-instrument.ts`** — `spanProcessors: [Fanout, AiContentStripping(Batch(channel))]`.
-- [ ] **`edge-platform/observability.ts`** — per-isolate `Observability` from Relay,
-      `aiContentCapture` false, exposed as a binding/service.
+- [ ] **`otel-instrument.ts`** — `AiContentStripping` in front of the channel exporter; the
+      fanout waits for the per-invocation opt-in (Phase 4).
+- [ ] **`edge-platform/observability.ts`** — per-isolate `Observability` from Relay, exposed as
+      a binding/service.
 - [ ] **tail-logger** — decode `dxos:observability` envelopes, forward with posthog-node
       (`DX_POSTHOG_API_KEY` secret).
 - [ ] **operation-service** — pass `observability` to `ObservabilityPlugin`.
@@ -46,7 +44,9 @@ pieces EDGE plugs into `otel-cf-workers`.
 
 ## Phase 4: follow-ups
 
-- [ ] Preference propagation to EDGE (settings space read or invocation attribute).
+- [ ] Per-invocation opt-in on EDGE: resolve the invoking identity's settings space
+      (`DataService.getSpaceTags`), read `enabled`, gate the AI sink on it, then add the fanout to
+      the `otel-cf-workers` config.
 - [ ] `dx` reads the settings-space preference.
 - [ ] Shared log flattening (`ctx_` vs `ctx.`) and severity mapping; OTLP logs from tail-logger.
 

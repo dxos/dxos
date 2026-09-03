@@ -28,17 +28,6 @@ const createMockExtension = (
 });
 
 describe('Observability', () => {
-  describe('aiContentCapture', () => {
-    it.effect('is on by default and follows the setter', () =>
-      Effect.gen(function* () {
-        const observability = yield* Observability.make();
-        expect(observability.aiContentCapture).toBe(true);
-        observability.setAiContentCapture(false);
-        expect(observability.aiContentCapture).toBe(false);
-      }),
-    );
-  });
-
   describe('lifecycle', () => {
     it.effect('initializes all extensions in order', () =>
       Effect.gen(function* () {

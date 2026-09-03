@@ -12,10 +12,6 @@ export const Settings = Schema.Struct({
     title: 'Enable telemetry',
     description: 'Send anonymous usage and performance data to help improve the product.',
   }),
-  aiContentCapture: Schema.Boolean.annotate({
-    title: 'Include AI conversations',
-    description: 'Send the prompts and responses of AI conversations along with their usage data.',
-  }),
   // TODO(wittjosiah): Separate settings for each observability feature.
   // metrics?: boolean;
   // telemetry?: boolean;

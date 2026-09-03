@@ -13,12 +13,12 @@ import { log } from '@dxos/log';
 
 import { ObservabilityCapabilities } from '#types';
 
-import { applyTelemetrySettings, readTelemetrySettings, writeTelemetrySettings } from '../util';
+import { applyTelemetryEnabled, readTelemetryEnabled, writeTelemetryEnabled } from '../util';
 
 /**
- * Keeps the telemetry preferences and the settings space agreeing. The first device to see an
- * unset space writes its local choice in; from then on the space is the source and every device
- * applies what it holds, including changes that arrive from another device while running.
+ * Keeps the telemetry opt-in and the settings space agreeing. The first device to see an unset
+ * space writes its local choice in; from then on the space is the source and every device applies
+ * what it holds, including a change that arrives from another device while running.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -30,29 +30,23 @@ export default Capability.makeModule(
 
     const settingsSpace = AppSpace.getSettingsSpace(client);
     if (!settingsSpace) {
-      log('no settings space; telemetry preferences stay local');
+      log('no settings space; the telemetry opt-in stays local');
       return [];
     }
     yield* Effect.promise(() => settingsSpace.waitUntilReady());
 
     const context = { observability, namespace, registry, settingsAtom };
     const sync = Effect.fnUntraced(function* () {
-      const remote = readTelemetrySettings(settingsSpace);
-      if (remote.enabled === undefined && remote.aiContentCapture === undefined) {
-        writeTelemetrySettings(settingsSpace, registry.get(settingsAtom));
+      const remote = readTelemetryEnabled(settingsSpace);
+      if (remote === undefined) {
+        writeTelemetryEnabled(settingsSpace, registry.get(settingsAtom).enabled);
         return;
       }
-
-      // Only what differs: re-enabling an already enabled backend is not free (PostHog rewrites
+      // Only on a difference: re-enabling an already enabled backend is not free (PostHog rewrites
       // its opt-in, the local mirror is rewritten).
-      const local = registry.get(settingsAtom);
-      yield* applyTelemetrySettings(context, {
-        enabled: remote.enabled !== undefined && remote.enabled !== local.enabled ? remote.enabled : undefined,
-        aiContentCapture:
-          remote.aiContentCapture !== undefined && remote.aiContentCapture !== local.aiContentCapture
-            ? remote.aiContentCapture
-            : undefined,
-      });
+      if (remote !== registry.get(settingsAtom).enabled) {
+        yield* applyTelemetryEnabled(context, remote);
+      }
     });
 
     yield* sync();

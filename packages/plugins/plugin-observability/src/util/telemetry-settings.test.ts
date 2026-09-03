@@ -9,23 +9,20 @@ import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
 
-import { readTelemetrySettings, readySettingsSpace, writeTelemetrySettings } from './telemetry-settings';
+import { readTelemetryEnabled, readySettingsSpace, writeTelemetryEnabled } from './telemetry-settings';
 
-describe('telemetry settings on the settings space', () => {
-  it.effect('reads back what was written and leaves the other field alone', () =>
+describe('telemetry opt-in on the settings space', () => {
+  it.effect('is unset until written, then reads back', () =>
     Effect.gen(function* () {
       const client = yield* ClientService;
       yield* Effect.tryPromise(() => client.halo.createIdentity());
       const { settingsSpace } = yield* AppSpace.setupIdentitySpaces(client);
 
-      expect(readTelemetrySettings(settingsSpace)).toEqual({ enabled: undefined, aiContentCapture: undefined });
+      expect(readTelemetryEnabled(settingsSpace)).toBeUndefined();
       expect(readySettingsSpace(client)?.id).toBe(settingsSpace.id);
 
-      writeTelemetrySettings(settingsSpace, { aiContentCapture: false });
-      expect(readTelemetrySettings(settingsSpace)).toEqual({ enabled: undefined, aiContentCapture: false });
-
-      writeTelemetrySettings(settingsSpace, { enabled: false });
-      expect(readTelemetrySettings(settingsSpace)).toEqual({ enabled: false, aiContentCapture: false });
+      writeTelemetryEnabled(settingsSpace, false);
+      expect(readTelemetryEnabled(settingsSpace)).toBe(false);
     }).pipe(Effect.provide(TestLayer)),
   );
 });
