@@ -45,6 +45,15 @@ export type UseEditableOptions = {
 /** Props for whatever draws the resting state, so every flavour opens the same ways. */
 export type EditablePreviewBinding = ReturnType<EditableApi['getPreviewProps']>;
 
+/**
+ * What the preview needs beyond the machine's own props. Empty when the machine already answers the
+ * keyboard on its own.
+ */
+export type EditableActivationBinding = {
+  role?: 'button';
+  onKeyDown?: (event: KeyboardEvent) => void;
+};
+
 export type UseEditableReturn = {
   value: string;
   /** The pending text; separate from `value` so `Escape` has something to revert to. */
@@ -57,6 +66,11 @@ export type UseEditableReturn = {
   commit: (next?: string) => void;
   revert: () => void;
   previewProps: EditablePreviewBinding;
+  /**
+   * The keyboard door, for a part that renders the machine's own preview and so already has the
+   * rest of {@link UseEditableReturn.previewProps} applied to it.
+   */
+  activationProps: EditableActivationBinding;
   /** The machine itself, for the parts that render Ark's own anatomy. */
   api: EditableApi;
 };
@@ -100,7 +114,9 @@ export const useEditable = ({
       onValueChange?.(next);
     },
     // The machine's own revert keeps whatever it holds when the text it opened with was empty, so
-    // `Escape` on a field showing its placeholder would keep the discarded text instead.
+    // `Escape` on a field showing its placeholder would keep the discarded text instead. Restored
+    // inside the machine's own transition rather than left to the reconciling effect below, which
+    // would catch it a render later — after the discarded text had been drawn once.
     onValueRevert: () => apiRef.current?.setValue(committed.current),
   });
   apiRef.current = api;
@@ -126,23 +142,34 @@ export const useEditable = ({
     [api],
   );
 
+  // A gesture the machine only takes from a pointer needs the same door for a keyboard reader. Its
+  // own keyboard answer is `focus` activation, which is wrong for a field a single click opens —
+  // tabbing across a list of them would put every row into edit on the way past.
+  const activationProps = useMemo<EditableActivationBinding>(() => {
+    if (activation !== 'click' && activation !== 'dblclick') {
+      return {};
+    }
+
+    return {
+      role: 'button',
+      onKeyDown: (event: KeyboardEvent) => {
+        if (!event.defaultPrevented && (event.key === 'Enter' || event.key === ' ')) {
+          event.preventDefault();
+          api.edit();
+        }
+      },
+    };
+  }, [activation, api]);
+
   const previewProps = useMemo<EditablePreviewBinding>(
     () => ({
       ...api.getPreviewProps(),
       // The machine names the preview "edit", which is what the gesture does rather than what the
       // field holds — in a list of rows that is every row with the same name.
       'aria-label': undefined,
-      // The affordance is a pointer one, so a keyboard reader needs the same door; the machine opens
-      // on focus alone, which a field that a single click already opens must not do.
-      'role': 'button',
-      'onKeyDown': (event: KeyboardEvent) => {
-        if (!event.defaultPrevented && (event.key === 'Enter' || event.key === ' ')) {
-          event.preventDefault();
-          api.edit();
-        }
-      },
+      ...activationProps,
     }),
-    [api],
+    [api, activationProps],
   );
 
   return {
@@ -155,6 +182,7 @@ export const useEditable = ({
     commit,
     revert: api.cancel,
     previewProps,
+    activationProps,
     api,
   };
 };

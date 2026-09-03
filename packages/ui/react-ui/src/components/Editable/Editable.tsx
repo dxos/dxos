@@ -20,16 +20,21 @@
 // unmounting it, so neither ever claims a row of its own.
 
 import { Editable as EditablePrimitive, useEditableContext } from '@ark-ui/react/editable';
+import { createContext } from '@radix-ui/react-context';
 import React, { type ComponentPropsWithRef, type PropsWithChildren, forwardRef, useEffect, useRef } from 'react';
 
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { Icon } from '../Icon';
-import { type UseEditableOptions, useEditable } from './useEditable';
+import { type EditableActivationBinding, type UseEditableOptions, useEditable } from './useEditable';
 
 const EDITABLE_NAME = 'Editable.Root';
 const EDITABLE_PREVIEW_NAME = 'Editable.Preview';
 const EDITABLE_INPUT_NAME = 'Editable.Input';
+
+// The keyboard door onto the preview. It depends on the activation gesture, which the root is given
+// and the machine the parts read does not expose.
+const [EditableActivationProvider, useEditableActivation] = createContext<EditableActivationBinding>(EDITABLE_NAME);
 
 //
 // Root — seeds the machine and renders the grid the two parts share.
@@ -40,11 +45,11 @@ type EditableRootProps = ThemedClassName<PropsWithChildren<UseEditableOptions>>;
 const EditableRoot = forwardRef<HTMLDivElement, EditableRootProps>(
   ({ children, classNames, ...options }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const { api } = useEditable(options);
+    const { api, activationProps } = useEditable(options);
 
     return (
       <EditablePrimitive.RootProvider value={api} className={tx('editable.root', {}, classNames)} ref={forwardedRef}>
-        {children}
+        <EditableActivationProvider {...activationProps}>{children}</EditableActivationProvider>
       </EditablePrimitive.RootProvider>
     );
   },
@@ -61,13 +66,19 @@ type EditablePreviewProps = ThemedClassName<Omit<ComponentPropsWithRef<'span'>, 
 const EditablePreview = forwardRef<HTMLSpanElement, EditablePreviewProps>(({ classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   const { valueText } = useEditableContext();
+  const { role, onKeyDown } = useEditableActivation(EDITABLE_PREVIEW_NAME);
 
   return (
     <EditablePrimitive.Preview
-      {...props}
-      // The machine names the preview "edit", which is what the gesture does rather than what the
-      // field holds — in a list of rows that is every row with the same name.
+      // Ahead of the spread so a caller can still name the preview: the machine names it "edit",
+      // which is what the gesture does rather than what the field holds — in a list of rows that is
+      // every row with the same name.
       aria-label={undefined}
+      // A gesture the machine only takes from a pointer; without this the preview is a tab stop that
+      // answers nothing.
+      role={role}
+      onKeyDown={onKeyDown}
+      {...props}
       data-testid='editable.preview'
       className={tx('editable.preview', {}, classNames)}
       ref={forwardedRef}

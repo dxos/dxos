@@ -11,6 +11,8 @@ import { Editable, type EditableActivation, type EditableBlurBehavior } from './
 
 type StoryArgs = {
   label?: string;
+  /** Names the preview, to prove a caller's own label survives the machine's. */
+  previewLabel?: string;
   initialValue?: string;
   placeholder?: string;
   activation?: EditableActivation;
@@ -20,6 +22,7 @@ type StoryArgs = {
 
 const DefaultStory = ({
   label = 'Title',
+  previewLabel,
   initialValue = 'Ship the spring release',
   placeholder = 'Untitled',
   activation,
@@ -44,7 +47,7 @@ const DefaultStory = ({
           blurBehavior={blurBehavior}
           disabled={disabled}
         >
-          <Editable.Preview />
+          <Editable.Preview aria-label={previewLabel} />
           <Editable.Input />
         </Editable.Root>
       </div>
@@ -159,8 +162,46 @@ export const TestRevertFromEmpty: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByTestId('editable.preview'));
+    // The machine focuses the input a frame later; typing before it lands sends the keystrokes
+    // nowhere and the assertions below would pass without the revert ever running.
+    const input = await canvas.findByTestId('editable.input');
+    await waitFor(async () => expect(input).toHaveFocus());
     await userEvent.keyboard('Discard me{Escape}');
     await waitFor(async () => expect(canvas.getByTestId('editable.preview')).toHaveTextContent('Untitled'));
     await expect(canvas.getByTestId('editable.commits')).toHaveTextContent('No commits yet');
+  },
+};
+
+export const TestKeyboard: Story = {
+  // The preview opens on a click, which a keyboard reader does not have. Without a door of its own
+  // it is a tab stop that answers nothing.
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const preview = canvas.getByTestId('editable.preview');
+    await expect(preview).toHaveAttribute('role', 'button');
+
+    preview.focus();
+    await expect(preview).toHaveFocus();
+    // Focus alone must not open it: tabbing across a list of these would put every row into edit on
+    // the way past.
+    await expect(canvas.getByTestId('editable.input')).not.toBeVisible();
+
+    await userEvent.keyboard('{Enter}');
+    const input = await canvas.findByTestId('editable.input');
+    await waitFor(async () => expect(input).toBeVisible());
+    await waitFor(async () => expect(input).toHaveFocus());
+
+    await userEvent.keyboard('{Control>}a{/Control}Renamed by keyboard{Enter}');
+    await waitFor(async () => expect(canvas.getByTestId('editable.preview')).toHaveTextContent('Renamed by keyboard'));
+  },
+};
+
+export const TestLabel: Story = {
+  args: { previewLabel: 'Document title' },
+  // The machine names every preview "edit", which says what the gesture does rather than what the
+  // field holds. A caller that names it has to win.
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByTestId('editable.preview')).toHaveAttribute('aria-label', 'Document title');
   },
 };
