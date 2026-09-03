@@ -25,6 +25,7 @@ import { SpaceId } from '@dxos/keys';
 import type { ProcessProtocol } from '@dxos/protocols';
 
 import { createEdgeProcessClient } from './edge-client';
+import { decodeEvent, decodeSnapshot, toSpawnRequest } from './process-snapshot';
 
 /**
  * EDGE implementation of {@link RemoteProcessManager.Control}: the seven compute-service process
@@ -36,45 +37,54 @@ import { createEdgeProcessClient } from './edge-client';
  * silently did nothing would leave the caller waiting on a process that does not exist.
  */
 export const make = (getEdgeClient: () => EdgeProcessHttpClient): RemoteProcessManager.Control => ({
-  spawn: (space: string, request: ProcessProtocol.SpawnProcessRequest) =>
-    Effect.tryPromise(() => getEdgeClient().spawnProcess(DxosContext.default(), requireSpaceId(space), request)).pipe(
-      Effect.map((response) => response.info),
+  spawn: ({ spaceId, ...request }: RemoteProcessManager.SpawnRequest) =>
+    Effect.tryPromise(() => getEdgeClient().spawnProcess(DxosContext.default(), spaceId, toSpawnRequest(request))).pipe(
+      Effect.map((response) => decodeSnapshot(response.info)),
       Effect.orDie,
     ),
 
-  list: (space: string, query?: ProcessProtocol.ListProcessesQuery) =>
-    Effect.tryPromise(() => getEdgeClient().listProcesses(DxosContext.default(), requireSpaceId(space), query)).pipe(
-      Effect.map((response) => response.processes),
+  list: ({ spaceId, ...query }: RemoteProcessManager.ListRequest) =>
+    Effect.tryPromise(() => getEdgeClient().listProcesses(DxosContext.default(), spaceId, query)).pipe(
+      Effect.map((response) => response.processes.map(decodeSnapshot)),
       Effect.orDie,
     ),
 
-  status: (space: string, pid: Process.ID) =>
-    Effect.tryPromise(() => getEdgeClient().getProcess(DxosContext.default(), requireSpaceId(space), pid)).pipe(
+  status: ({ spaceId, pid }: RemoteProcessManager.ProcessTarget) =>
+    Effect.tryPromise(() => getEdgeClient().getProcess(DxosContext.default(), spaceId, pid)).pipe(
+      Effect.map(decodeSnapshot),
       Effect.orDie,
     ),
 
-  submitInput: (space: string, pid: Process.ID, input: unknown) =>
-    Effect.tryPromise(() =>
-      getEdgeClient().submitProcessInput(DxosContext.default(), requireSpaceId(space), pid, { input }),
-    ).pipe(Effect.orDie),
-
-  terminate: (space: string, pid: Process.ID) =>
-    Effect.tryPromise(() => getEdgeClient().terminateProcess(DxosContext.default(), requireSpaceId(space), pid)).pipe(
+  submitInput: ({ spaceId, pid, input }: RemoteProcessManager.ProcessTarget & { readonly input: unknown }) =>
+    Effect.tryPromise(() => getEdgeClient().submitProcessInput(DxosContext.default(), spaceId, pid, { input })).pipe(
       Effect.orDie,
     ),
 
-  readEvents: (space: string, pid: Process.ID, cursor: number) =>
-    Effect.tryPromise(() =>
-      getEdgeClient().readProcessEvents(DxosContext.default(), requireSpaceId(space), pid, cursor),
-    ).pipe(Effect.orDie),
+  terminate: ({ spaceId, pid }: RemoteProcessManager.ProcessTarget) =>
+    Effect.tryPromise(() => getEdgeClient().terminateProcess(DxosContext.default(), spaceId, pid)).pipe(Effect.orDie),
 
-  makeRpcClient: <Rpcs extends Rpc.Any>(
-    space: string,
-    pid: Process.ID,
-    group: RpcGroup.RpcGroup<Rpcs>,
-  ): Effect.Effect<RpcClient.RpcClient<Rpcs>, never, Scope.Scope> =>
+  readEvents: ({ spaceId, pid, cursor }: RemoteProcessManager.ProcessTarget & { readonly cursor: number }) =>
+    Effect.tryPromise(() => getEdgeClient().readProcessEvents(DxosContext.default(), spaceId, pid, cursor)).pipe(
+      Effect.map((response): RemoteProcessManager.EventPage => ({
+        events: response.events.map(decodeEvent),
+        cursor: response.cursor,
+        truncated: response.truncated,
+        snapshot: decodeSnapshot(response.info),
+      })),
+      Effect.orDie,
+    ),
+
+  makeRpcClient: <Rpcs extends Rpc.Any>({
+    spaceId,
+    pid,
+    group,
+  }: RemoteProcessManager.ProcessTarget & { readonly group: RpcGroup.RpcGroup<Rpcs> }): Effect.Effect<
+    RpcClient.RpcClient<Rpcs>,
+    never,
+    Scope.Scope
+  > =>
     Effect.gen(function* () {
-      const url = getEdgeClient().processRpcUrl(requireSpaceId(space), pid).toString();
+      const url = getEdgeClient().processRpcUrl(spaceId, pid).toString();
       // The host serves the endpoint with an `RpcServer`, so the group's own schemas encode the
       // payloads rather than a hand-rolled envelope.
       const httpClient = (yield* HttpClient.HttpClient).pipe(
@@ -97,16 +107,6 @@ export const make = (getEdgeClient: () => EdgeProcessHttpClient): RemoteProcessM
       );
     }).pipe(Effect.provide(FetchHttpClient.layer), Effect.provide(RpcSerialization.layerNdjson), Effect.orDie),
 });
-/**
- * The interface carries spaces as plain strings (to stay free of `@dxos/keys` value imports), so the
- * transport is where one is validated — a malformed id would otherwise reach the host as a route
- * segment and come back as an opaque 404.
- */
-const requireSpaceId = (space: string): SpaceId => {
-  invariant(SpaceId.isValid(space), `Invalid space id: ${space}`);
-  return space;
-};
-
 /**
  * Build from a `Client`, deferring edge-client creation until first use (identity may be absent at
  * boot). Consumed by `EdgeProcessManager.forSpace`, which is what a stack provides — this returns

@@ -17,11 +17,11 @@ import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
 
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
+import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import type { ProcessProtocol } from '@dxos/protocols';
 
 import type * as ProcessManager from './ProcessManager';
-import { type DecodedInfo, decodeInfo, toError, toState, toStatus } from './remote-process-info';
+import { toError, toStatus } from './remote-process-info';
 import type * as RemoteProcessManager from './RemoteProcessManager';
 
 /** How long to wait before re-reading a process's event log after an empty page. */
@@ -29,7 +29,7 @@ const DEFAULT_POLL_INTERVAL = Duration.millis(250);
 
 export interface Options<_Input, _Output, _Rpcs extends Rpc.Any> {
   /** Snapshot the handle starts from — from a spawn, list or status response. */
-  readonly info: ProcessProtocol.ProcessInfo;
+  readonly info: RemoteProcessManager.Snapshot;
 
   readonly control: RemoteProcessManager.Control;
 
@@ -38,7 +38,7 @@ export interface Options<_Input, _Output, _Rpcs extends Rpc.Any> {
    * read off {@link info}, whose `environment.space` is optional — a handle must be able to address
    * its process regardless of what the host chose to record.
    */
-  readonly space: string;
+  readonly spaceId: SpaceId;
 
   /**
    * Local definition of the remote process, when the caller has it. Supplies the input/output
@@ -90,21 +90,20 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
   readonly #pollInterval: Duration.Duration;
   readonly #onLifecycleChange: Effect.Effect<void>;
   readonly #statusAtom: Atom.Writable<ProcessManager.Status>;
-  #info: ProcessProtocol.ProcessInfo;
-  #decoded: DecodedInfo;
+  #info: RemoteProcessManager.Snapshot;
   #rpc: RpcClient.RpcClient<_Rpcs> | undefined;
 
   /**
-   * Decoding the wire info can fail (it comes from another runtime), so construction is effectful
-   * and every getter below reads the already-decoded projection.
+   * Effectful for symmetry with the local handle's construction, though nothing here can fail any
+   * more: `Control` answers in domain types, so the transport has already decoded what arrived.
    */
   static make<I, O, R extends Rpc.Any>(options: Options<I, O, R>): Effect.Effect<RemoteProcessHandle<I, O, R>> {
-    return decodeInfo(options.info).pipe(Effect.map((decoded) => new RemoteProcessHandle(options, decoded)));
+    return Effect.sync(() => new RemoteProcessHandle(options));
   }
 
   readonly #options: Options<_Input, _Output, _Rpcs>;
 
-  private constructor(options: Options<_Input, _Output, _Rpcs>, decoded: DecodedInfo) {
+  private constructor(options: Options<_Input, _Output, _Rpcs>) {
     this.#options = options;
     this.#control = options.control;
     this.#definition = options.definition;
@@ -112,17 +111,21 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
     this.#pollInterval = options.pollInterval ?? DEFAULT_POLL_INTERVAL;
     this.#onLifecycleChange = options.onLifecycleChange ?? Effect.void;
     this.#info = options.info;
-    this.#decoded = decoded;
     this.#statusAtom = Atom.make(toStatus(options.info));
     this.#registry.mount(this.#statusAtom);
   }
 
+  /** Addresses this process for every {@link RemoteProcessManager.Control} call. */
+  get #target(): RemoteProcessManager.ProcessTarget {
+    return { spaceId: this.#options.spaceId, pid: this.pid };
+  }
+
   get pid(): Process.ID {
-    return this.#decoded.pid;
+    return this.#info.pid;
   }
 
   get parentId(): Process.ID | null {
-    return this.#decoded.parentId;
+    return this.#info.parentPid;
   }
 
   get key(): string {
@@ -130,11 +133,11 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
   }
 
   get params(): Process.Params {
-    return this.#decoded.params;
+    return this.#info.params;
   }
 
   get environment(): Process.Environment {
-    return this.#decoded.environment;
+    return this.#info.environment;
   }
 
   get alarmDueAt(): number | null {
@@ -159,7 +162,7 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
       // closed — the same shape `ProcessManager` uses for its loopback clients.
       this.#rpc = Effect.runSync(
         this.#control
-          .makeRpcClient<_Rpcs>(this.#options.space, this.pid, this.#requireDefinition().rpcs)
+          .makeRpcClient<_Rpcs>({ ...this.#target, group: this.#requireDefinition().rpcs })
           .pipe(Effect.provideService(Scope.Scope, Effect.runSync(Scope.make()))),
       );
     }
@@ -169,7 +172,7 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
   submitInput(input: _Input): Effect.Effect<void> {
     return Effect.gen({ self: this }, function* () {
       const encoded = yield* Schema.encodeEffect(this.#requireDefinition().input)(input).pipe(Effect.orDie);
-      yield* this.#control.submitInput(this.#options.space, this.pid, encoded);
+      yield* this.#control.submitInput({ ...this.#target, input: encoded });
     });
   }
 
@@ -190,13 +193,13 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
     // before streaming new ones, which is what lets a UI attach mid-turn and still render it.
     return this.#readEvents(0).pipe(
       Stream.filter((event) => event._tag === 'trace'),
-      Stream.map((event) => decodeTraceMessage(event.message)),
+      Stream.map((event) => event.message),
     );
   }
 
   terminate(): Effect.Effect<void> {
     return this.#control
-      .terminate(this.#options.space, this.pid)
+      .terminate(this.#target)
       .pipe(Effect.andThen(this.#refresh), Effect.andThen(this.#onLifecycleChange), Effect.asVoid);
   }
 
@@ -263,11 +266,11 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
   get #endCursor(): Effect.Effect<number> {
     // A read at or beyond the end returns an empty page carrying the current end cursor.
     return this.#control
-      .readEvents(this.#options.space, this.pid, Number.MAX_SAFE_INTEGER)
+      .readEvents({ ...this.#target, cursor: Number.MAX_SAFE_INTEGER })
       .pipe(Effect.map((page) => page.cursor));
   }
 
-  #readEventsFromEnd(): Stream.Stream<ProcessProtocol.ProcessEvent> {
+  #readEventsFromEnd(): Stream.Stream<RemoteProcessManager.Event> {
     return Stream.unwrap(this.#endCursor.pipe(Effect.map((cursor) => this.#readEvents(cursor))));
   }
 
@@ -281,21 +284,21 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
     isDone: (state: Process.State) => boolean = isTerminal,
     /** Fails the stream on FAILED or TERMINATED, which `runAndExit`'s contract requires. */
     failOnAbnormalExit = false,
-  ): Stream.Stream<ProcessProtocol.ProcessEvent> {
+  ): Stream.Stream<RemoteProcessManager.Event> {
     return Stream.paginate(start, (cursor: number) =>
       Effect.gen({ self: this }, function* () {
-        const page = yield* this.#control.readEvents(this.#options.space, this.pid, cursor);
-        yield* this.#setInfo(page.info);
+        const page = yield* this.#control.readEvents({ ...this.#target, cursor });
+        yield* this.#setInfo(page.snapshot);
         if (page.truncated) {
           // The host dropped events before `cursor` from its bounded ring, so this page does not
           // continue the previous one — the consumer's history has a hole in it.
-          log.warn('remote process event history truncated', { pid: page.info.pid, cursor });
+          log.warn('remote process event history truncated', { pid: page.snapshot.pid, cursor });
         }
         if (page.events.length === 0) {
-          const state = toState(page.info.state);
+          const state = page.snapshot.state;
           if (isDone(state)) {
             if (failOnAbnormalExit && state === Process.State.FAILED) {
-              return yield* Effect.die(toError(page.info.error));
+              return yield* Effect.die(toError(page.snapshot.error));
             }
             if (failOnAbnormalExit && state === Process.State.TERMINATED) {
               return yield* Effect.die(new Error(`Process '${this.pid}' was terminated`));
@@ -309,12 +312,14 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
     );
   }
 
-  #awaitState(predicate: (state: Process.State, info: ProcessProtocol.ProcessInfo) => boolean): Effect.Effect<void> {
+  #awaitState(
+    predicate: (state: Process.State, snapshot: RemoteProcessManager.Snapshot) => boolean,
+  ): Effect.Effect<void> {
     return Effect.gen({ self: this }, function* () {
       while (true) {
-        const info = yield* this.#control.status(this.#options.space, this.pid);
+        const info = yield* this.#control.status(this.#target);
         yield* this.#setInfo(info);
-        const state = toState(info.state);
+        const state = info.state;
         if (state === Process.State.FAILED) {
           return yield* Effect.die(toError(info.error));
         }
@@ -327,24 +332,13 @@ export class RemoteProcessHandle<_Input, _Output, _Rpcs extends Rpc.Any> impleme
   }
 
   get #refresh(): Effect.Effect<void> {
-    return this.#control.status(this.#options.space, this.pid).pipe(Effect.flatMap((info) => this.#setInfo(info)));
+    return this.#control.status(this.#target).pipe(Effect.flatMap((info) => this.#setInfo(info)));
   }
 
-  #setInfo(info: ProcessProtocol.ProcessInfo): Effect.Effect<void> {
-    return decodeInfo(info).pipe(
-      Effect.map((decoded) => {
-        this.#info = info;
-        this.#decoded = decoded;
-        this.#registry.update(this.#statusAtom, () => toStatus(info));
-      }),
-    );
+  #setInfo(info: RemoteProcessManager.Snapshot): Effect.Effect<void> {
+    return Effect.sync(() => {
+      this.#info = info;
+      this.#registry.update(this.#statusAtom, () => toStatus(info));
+    });
   }
 }
-
-/**
- * Rebuilds a {@link Trace.Message} from the JSON the host put on the wire. Routed through
- * `Trace.decodeTraceMessage` so there is one wire form for trace messages rather than a second one
- * for this transport.
- */
-const decodeTraceMessage = (message: unknown): Trace.Message =>
-  Trace.decodeTraceMessage(new TextEncoder().encode(JSON.stringify(message)));

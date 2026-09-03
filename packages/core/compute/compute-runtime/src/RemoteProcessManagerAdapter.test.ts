@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import * as Atom from 'effect/unstable/reactivity/Atom';
@@ -15,7 +16,6 @@ import * as Process from '@dxos/compute/Process';
 import { Annotation } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { SpaceId } from '@dxos/keys';
-import type { ProcessProtocol } from '@dxos/protocols';
 
 import * as ProcessManager from './ProcessManager';
 import * as ProcessMonitor from './ProcessMonitor';
@@ -87,7 +87,7 @@ describe('RemoteProcessManagerAdapter', () => {
   test('runUntilSettled polls until the host reports a settled state', async ({ expect }) => {
     // RUNNING is neither idle nor terminal, so the handle has to poll; the host settles on the third
     // read.
-    const host = makeFakeHost({ initialState: 'RUNNING', settleAfterStatusCalls: 3 });
+    const host = makeFakeHost({ initialState: Process.State.RUNNING, settleAfterStatusCalls: 3 });
     await run(
       Effect.gen(function* () {
         const manager = yield* ProcessManager.Service;
@@ -102,7 +102,7 @@ describe('RemoteProcessManagerAdapter', () => {
   });
 
   test('runAndExit fails when the host reports the process failed', async ({ expect }) => {
-    const host = makeFakeHost({ stateAfterInput: 'FAILED' });
+    const host = makeFakeHost({ stateAfterInput: Process.State.FAILED });
     const exit = await runExit(
       Effect.gen(function* () {
         const manager = yield* ProcessManager.Service;
@@ -116,7 +116,7 @@ describe('RemoteProcessManagerAdapter', () => {
   });
 
   test('runAndExit fails when the host reports the process terminated', async ({ expect }) => {
-    const host = makeFakeHost({ stateAfterInput: 'TERMINATED' });
+    const host = makeFakeHost({ stateAfterInput: Process.State.TERMINATED });
     const exit = await runExit(
       Effect.gen(function* () {
         const manager = yield* ProcessManager.Service;
@@ -265,6 +265,7 @@ const TEST_KEY = 'dxos.org/process/echo-test';
 // A real id: the adapter passes the space through untouched, but `Process.Info` decodes it as a
 // branded `SpaceId`.
 const TEST_SPACE = SpaceId.random();
+const TEST_PID = Schema.decodeUnknownSync(Process.ID)('pid-1');
 
 /** Input/output codecs are the only part of the definition the remote path uses. */
 const EchoProcess = Process.make(
@@ -283,24 +284,24 @@ const EchoProcess = Process.make(
  */
 const makeFakeHost = (
   options: {
-    readonly initialState?: ProcessProtocol.ProcessState;
+    readonly initialState?: Process.State;
     readonly settleAfterStatusCalls?: number;
     /** State the host moves to once an input has been submitted. */
-    readonly stateAfterInput?: ProcessProtocol.ProcessState;
+    readonly stateAfterInput?: Process.State;
     /** Host already has a process running, as it would after a client restart. */
     readonly existing?: boolean;
   } = {},
 ): RemoteProcessManager.Control & { readonly inputs: unknown[]; statusCalls: () => number } => {
   const inputs: unknown[] = [];
-  const events: ProcessProtocol.ProcessEvent[] = [];
-  let state: ProcessProtocol.ProcessState = options.initialState ?? 'IDLE';
+  const events: RemoteProcessManager.Event[] = [];
+  let state: Process.State = options.initialState ?? Process.State.IDLE;
   let statusCalls = 0;
   let seq = 0;
   let spawnedHere = false;
   let terminated = false;
 
-  const info = (): ProcessProtocol.ProcessInfo => ({
-    pid: 'pid-1',
+  const info = (): RemoteProcessManager.Snapshot => ({
+    pid: TEST_PID,
     parentPid: null,
     key: TEST_KEY,
     params: { name: 'test', annotations: {} },
@@ -309,6 +310,7 @@ const makeFakeHost = (
     alarmDueAt: null,
     error: null,
     startedAt: 0,
+    completedAt: Option.none(),
     metrics: { wallTime: 0, inputCount: inputs.length, outputCount: events.length },
   });
 
@@ -326,11 +328,11 @@ const makeFakeHost = (
         // Settles on the Nth read, so a predicate that returns too early — or a poll loop that never
         // runs — shows up as a wrong call count rather than passing anyway.
         if (options.settleAfterStatusCalls !== undefined && ++statusCalls >= options.settleAfterStatusCalls) {
-          state = 'IDLE';
+          state = Process.State.IDLE;
         }
         return info();
       }),
-    submitInput: (_space, _pid, input) =>
+    submitInput: ({ input }) =>
       Effect.sync(() => {
         inputs.push(input);
         events.push({ _tag: 'output', seq: seq++, data: `echo:${String(input)}` });
@@ -340,11 +342,11 @@ const makeFakeHost = (
       }),
     terminate: () =>
       Effect.sync(() => {
-        state = 'TERMINATED';
+        state = Process.State.TERMINATED;
         terminated = true;
       }),
-    readEvents: (_space, _pid, cursor) =>
-      Effect.sync(() => ({ events: events.slice(cursor), cursor: events.length, truncated: false, info: info() })),
+    readEvents: ({ cursor }) =>
+      Effect.sync(() => ({ events: events.slice(cursor), cursor: events.length, truncated: false, snapshot: info() })),
     makeRpcClient: () => Effect.die('not used'),
   };
 };

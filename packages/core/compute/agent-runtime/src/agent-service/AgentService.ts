@@ -27,7 +27,7 @@ import * as Process from '@dxos/compute/Process';
 import * as Skill from '@dxos/compute/Skill';
 import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { DXN, EID } from '@dxos/keys';
+import { DXN, EID, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { ContentBlock } from '@dxos/types';
 
@@ -135,8 +135,8 @@ export const layer = (
       // One remote manager serves every space, so the space-bound façade over its control surface is
       // built per space and memoized — a second instance for the same space would hold a separate
       // handle set, and `getSession`'s remount path relies on finding the running process again.
-      const remoteManagers = new Map<string, ProcessManager.Manager>();
-      const remoteManagerFor = (space: string): ProcessManager.Manager => {
+      const remoteManagers = new Map<SpaceId, ProcessManager.Manager>();
+      const remoteManagerFor = (space: SpaceId): ProcessManager.Manager => {
         const existing = remoteManagers.get(space);
         if (existing) {
           return existing;
@@ -161,7 +161,7 @@ export const layer = (
        * The manager for a requested location. `edge` needs the space, since one remote manager spans
        * them, and a session with no space cannot name where its agent would run.
        */
-      const managerFor = (location: AgentLocation | undefined, space: string | undefined): ProcessManager.Manager => {
+      const managerFor = (location: AgentLocation | undefined, space: SpaceId | undefined): ProcessManager.Manager => {
         if (location !== 'edge') {
           return processManager;
         }
