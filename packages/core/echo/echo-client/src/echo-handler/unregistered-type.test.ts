@@ -39,25 +39,15 @@ describe('object whose type is absent from the registry', () => {
     await builder.close();
   });
 
-  /** Adds an object of v0.1.0, then unregisters that version, leaving the stored ref dangling. */
-  const setup = async (types: Type.AnyEntity[] = [VersionedV1]) => {
-    const peer = await builder.createPeer({ types });
-    const db = await peer.createDatabase();
-    const object = db.add(Obj.make(VersionedV1, { name: 'Alice' }));
-    await db.flush();
-    expect(db.graph.registry.remove(VersionedV1.id)).toBe(true);
-    return { db, object };
-  };
-
   test('Obj.getType returns undefined when the type is not registered', async () => {
-    const { object } = await setup();
+    const { object } = await setup(builder);
 
     expect(Obj.getType(object)).toBeUndefined();
     expect(Entity.getType(object)).toBeUndefined();
   });
 
   test('Obj.getType returns undefined when only another version of the typename is registered', async () => {
-    const { db, object } = await setup([VersionedV1, VersionedV2]);
+    const { db, object } = await setup(builder, [VersionedV1, VersionedV2]);
 
     // The registry still holds this typename, but only at 0.2.0 — resolution is exact-version.
     expect(db.graph.registry.getByURI(DXN.make('com.example.type.versioned', '0.2.0'))).toBe(VersionedV2);
@@ -65,13 +55,13 @@ describe('object whose type is absent from the registry', () => {
   });
 
   test('the stored type URI survives, so the object stays identifiable', async () => {
-    const { object } = await setup();
+    const { object } = await setup(builder);
 
     expect(Obj.getTypeURI(object)).toEqual(V1_URI);
   });
 
   test('reads and writes both succeed', async () => {
-    const { object } = await setup();
+    const { object } = await setup(builder);
 
     expect(object.name).toEqual('Alice');
     Obj.update(object, (object) => {
@@ -81,7 +71,7 @@ describe('object whose type is absent from the registry', () => {
   });
 
   test('writes skip validation rather than failing on the unresolved schema', async () => {
-    const { object } = await setup();
+    const { object } = await setup(builder);
 
     // There is no schema to validate against, so a value the schema would reject is written as-is.
     Obj.update(object, (object) => {
@@ -91,7 +81,7 @@ describe('object whose type is absent from the registry', () => {
   });
 
   test('re-registering the type restores validation', async () => {
-    const { db, object } = await setup();
+    const { db, object } = await setup(builder);
     expect(Obj.getType(object)).toBeUndefined();
 
     db.graph.registry.add([VersionedV1]);
@@ -108,3 +98,13 @@ describe('object whose type is absent from the registry', () => {
     expect(object.name).toEqual('Bob');
   });
 });
+
+/** Adds an object of v0.1.0, then unregisters that version, leaving the stored ref dangling. */
+const setup = async (builder: EchoTestBuilder, types: Type.AnyEntity[] = [VersionedV1]) => {
+  const peer = await builder.createPeer({ types });
+  const db = await peer.createDatabase();
+  const object = db.add(Obj.make(VersionedV1, { name: 'Alice' }));
+  await db.flush();
+  expect(db.graph.registry.remove(VersionedV1.id)).toBe(true);
+  return { db, object };
+};
