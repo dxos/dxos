@@ -46,7 +46,7 @@ const createFakeController = (initial: Partial<DebugPortStatusType> = {}): Debug
 };
 
 const meta = {
-  title: 'plugins/plugin-debug/DebugPortStatus',
+  title: 'plugins/plugin-debug/containers/DebugPortStatus',
   component: DebugPortStatus,
   decorators: [withTheme()],
   parameters: { translations },

@@ -5,10 +5,11 @@
 import React from 'react';
 
 import { StatusBar } from '@dxos/plugin-status-bar/components';
-import { IconButton, Panel, Popover, useTranslation } from '@dxos/react-ui';
-import { Logger } from '@dxos/react-ui-debug';
+import { IconButton, Popover, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
+
+import { LoggerPanel } from '../LoggerPanel';
 
 /** Status-bar button that opens the log panel in a popover for a quick glance. */
 export const LogStatus = () => {
@@ -25,21 +26,7 @@ export const LogStatus = () => {
       <Popover.Portal>
         <Popover.Content side='top'>
           <Popover.Viewport classNames='w-[40rem] h-[24rem]'>
-            <Logger.Root>
-              <Panel.Root>
-                <Panel.Toolbar asChild>
-                  <Logger.Toolbar />
-                </Panel.Toolbar>
-                <Panel.Content asChild>
-                  <Logger.Content>
-                    <Logger.List />
-                  </Logger.Content>
-                </Panel.Content>
-                <Panel.Statusbar asChild>
-                  <Logger.Filter />
-                </Panel.Statusbar>
-              </Panel.Root>
-            </Logger.Root>
+            <LoggerPanel />
           </Popover.Viewport>
           <Popover.Arrow />
         </Popover.Content>

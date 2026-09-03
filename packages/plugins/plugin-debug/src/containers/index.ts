@@ -13,6 +13,9 @@ export const DebugPortStatus: ComponentType<DebugPortStatusProps> = lazy(() =>
   import('./DebugPortStatus').then((module) => ({ default: module.DebugPortStatus })),
 );
 export const DebugStatus: ComponentType<any> = lazy(() => import('./DebugStatus'));
+export const LoggerPanel: ComponentType<any> = lazy(() =>
+  import('./LoggerPanel').then((module) => ({ default: module.LoggerPanel })),
+);
 export const LogStatus: ComponentType<any> = lazy(() =>
   import('./LogStatus').then((module) => ({ default: module.LogStatus })),
 );

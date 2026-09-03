@@ -18,12 +18,10 @@ import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
-import { withLayout } from '@dxos/react-ui/testing';
+import { Loading, withLayout } from '@dxos/react-ui/testing';
 
+import { DebugSpaceObjectsPanel, SpaceGenerator } from '#containers';
 import { translations } from '#translations';
-
-import { DebugSpaceObjectsPanel } from '../containers/DebugSpaceObjectsPanel/DebugSpaceObjectsPanel';
-import { SpaceGenerator } from '../containers/SpaceGenerator/SpaceGenerator';
 
 /**
  * Picking a sample space and watching it land.
@@ -35,7 +33,7 @@ import { SpaceGenerator } from '../containers/SpaceGenerator/SpaceGenerator';
 const DefaultStory = () => {
   const [space] = useSpaces();
   if (!space) {
-    return <></>;
+    return <Loading />;
   }
 
   return (
@@ -58,7 +56,7 @@ const applySampleSpace = async (canvasElement: HTMLElement, label: string, expec
 };
 
 const meta = {
-  title: 'plugins/plugin-debug/SampleSpaces',
+  title: 'plugins/plugin-debug/stories/SampleSpaces',
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),

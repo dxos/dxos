@@ -47,7 +47,6 @@ export const DebugConsole = ({ onClose }: DebugConsoleProps) => {
     apiRef.current?.focus();
   }, []);
 
-  // No ScrollArea: xterm owns its own viewport and scrollback.
   return (
     <Panel.Root>
       <Panel.Toolbar size='sm'>
