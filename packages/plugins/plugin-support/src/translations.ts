@@ -47,7 +47,7 @@ export const translations = [
         'feedback-textarea.label': 'Feedback',
         'feedback-textarea.placeholder': 'Please enter your feedback, technical issue, or feature request.',
         'include-debug-logs.label': 'Include debug logs',
-        'send-feedback.label': 'Submit report',
+        'send-feedback.label': 'Submit report to Discord',
         'sending-feedback.label': 'Sending…',
         'public-report.description':
           'Your report will be posted publicly to our Discord help channel so the community can respond. Attached logs, screenshots, and diagnostics stay private — only our team can see them.',

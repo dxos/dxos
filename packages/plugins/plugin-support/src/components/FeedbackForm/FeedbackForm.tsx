@@ -49,8 +49,6 @@ export type FeedbackFormRootProps = PropsWithChildren<{
 }>;
 
 const baseDefaults: SupportOperation.SupportRequest = {
-  type: 'bug',
-  severity: 'Medium priority',
   title: '',
   body: '',
   image: false,

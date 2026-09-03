@@ -34,6 +34,12 @@ describe('formatRequestMessage', () => {
   test('omits the DID when the submitter has no identity', () => {
     expect(formatRequestMessage(values)).not.toContain('**DID:**');
   });
+
+  test('omits triage fields the submitter left unset', () => {
+    const message = formatRequestMessage({ title: 'Broken', body: 'It broke.' });
+    expect(message).not.toContain('**Type:**');
+    expect(message).not.toContain('**Severity:**');
+  });
 });
 
 describe('formatPublicMessage', () => {

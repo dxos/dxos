@@ -119,7 +119,7 @@ export const SupportSubmitAction = ({ disabled }: SupportSubmitActionProps) => {
 
   return (
     <>
-      <p className='text-xs text-description text-center px-2 py-1'>{t('public-report.notice')}</p>
+      <p className='text-xs text-description text-center px-2 py-1'>{t('public-report.description')}</p>
       <FeedbackForm.Submit onSubmit={handleSubmit} disabled={disabled} />
       <FeedbackForm.DiscordPresence discordPresence={discordPresence ?? undefined} />
     </>

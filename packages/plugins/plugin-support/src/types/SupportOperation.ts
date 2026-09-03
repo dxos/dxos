@@ -27,11 +27,10 @@ export const Severity = Schema.Literals(['High priority', 'Medium priority', 'Lo
 export type Severity = Schema.Schema.Type<typeof Severity>;
 
 /**
- * Form payload shared by all three FeedbackPanel submit actions (PostHog
- * feedback, Discord help thread, GitHub issue). `version` is a hidden form
- * field populated by the panel from runtime config and forwarded to the
- * backend for triage. `area` is a free-form plugin id; the panel
- * pre-populates options from the active plugin list.
+ * Form payload for the FeedbackPanel submit action. `version` is a hidden form field populated by
+ * the panel from runtime config and forwarded to the backend for triage. `area`, `type`, and
+ * `severity` are optional triage metadata — they ride on the private support ticket, not the public
+ * Discord post, so the form defaults them to unset rather than guessing.
  */
 export const SupportRequest = Schema.Struct({
   title: Schema.String.pipe(
@@ -54,18 +53,20 @@ export const SupportRequest = Schema.Struct({
     title: 'Area',
     description: 'The plugin or area this relates to (optional).',
   }).pipe(Schema.optional),
-  type: IssueType,
-  severity: Severity,
+  type: IssueType.pipe(Schema.optional),
+  severity: Severity.pipe(Schema.optional),
   image: Schema.Boolean.pipe(
     Schema.annotate({
       title: 'Attach screenshot',
-      description: 'Capture the current view and attach it to the report. Form fields are obscured for privacy.',
+      description:
+        'Capture the current view and attach it to the report. Sent to our team only — never posted publicly.',
     }),
     Schema.optional,
   ),
   includeLogs: Schema.Boolean.pipe(
     Schema.annotate({
       title: 'Include debug logs',
+      description: 'Attach the debug log bundle to the report. Sent to our team only — never posted publicly.',
     }),
     Schema.optional,
   ),

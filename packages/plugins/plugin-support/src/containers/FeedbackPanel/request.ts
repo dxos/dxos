@@ -16,8 +16,8 @@ export const formatRequestMessage = (
   did?: string,
 ): string => {
   const trailer = [
-    `**Type:** ${values.type}`,
-    `**Severity:** ${values.severity}`,
+    values.type && `**Type:** ${values.type}`,
+    values.severity && `**Severity:** ${values.severity}`,
     values.area && `**Area:** ${values.area}`,
     values.version && `**Version:** ${values.version}`,
     did && `**DID:** ${did}`,
