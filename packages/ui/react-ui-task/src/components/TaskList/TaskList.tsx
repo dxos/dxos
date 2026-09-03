@@ -69,7 +69,7 @@ type TaskListContextValue = {
   hierarchical: boolean;
   /** Paint the tree's drop bands on every row (development affordance). */
   debug: boolean;
-  /** Whether the leading gutter is rendered at all — it holds the ordinal and the drag handle. */
+  /** Whether the leading gutter is rendered at all — it holds the ordinal or the checkbox. */
   showGutter: boolean;
   selected?: string;
   /** Ids of the checked rows — the set an action acts on, distinct from the current row. */
@@ -281,9 +281,10 @@ const TaskListRoot = ({
       showEstimates={showEstimates}
       hierarchical={hierarchical}
       debug={debug}
-      // The checkbox and the handle share the ordinal's gutter, so a checkable or movable list
-      // reserves the track even when it shows no numbers.
-      showGutter={showOrdinals || !!onTaskMove || !!onTaskCheck}
+      // The checkbox shares the ordinal's gutter, so a checkable list reserves the track even when
+      // it shows no numbers. A movable one does not: the whole row is the drag source, and a track
+      // held for a handle that no longer exists only pushed every title one square right.
+      showGutter={showOrdinals || !!onTaskCheck}
       isCollapsed={isCollapsed}
       selected={selected}
       checked={checked}
