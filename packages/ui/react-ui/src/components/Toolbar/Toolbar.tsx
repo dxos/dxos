@@ -14,6 +14,7 @@ import { type SlottableProps } from '@dxos/ui-types';
 import { translationKey } from '#translations';
 
 import { useThemeContext } from '../../hooks';
+import { DensityProvider } from '../../primitives/DensityProvider';
 import { type ToolbarStyleProps } from '../../theme';
 import { composable, composableProps, slottable } from '../../util';
 import {
@@ -56,7 +57,12 @@ const ToolbarRoot = composable<HTMLDivElement, ToolbarRootProps>(
         className={tx('toolbar.root', { density, disabled, layoutManaged }, className)}
         ref={forwardedRef}
       >
-        {children}
+        {/* The class alone cannot resize the bar's controls: `Button` and `Input` stamp
+            `data-density` from context — `md` from the root provider unless something nearer says
+            otherwise — and that stamp sits ON the control, so it shadows the `--dx-control` the bar's
+            class set around it. The context is what those controls read, so the bar provides both:
+            the class for descendants that only read the variable, the context for those that stamp. */}
+        {density ? <DensityProvider density={density}>{children}</DensityProvider> : children}
       </ToolbarPrimitive.Root>
     );
   },

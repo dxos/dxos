@@ -1,59 +1,29 @@
-# GH Actions CI
+# GitHub Actions
 
-## Tools
+The build/test pipeline is not here. Check and the rest of it run on [Depot CI](https://depot.dev/docs/ci/overview) from [`.depot/`](../../.depot). GitHub Actions outages took the whole pipeline down with them, Depot is faster, and it reads the same workflow syntax, so migrating a workflow meant moving the file. Depot also takes a workflow straight from the CLI with your uncommitted changes patched in, so you can iterate on one without pushing. [`.depot/README.md`](../../.depot/README.md) covers the details.
 
-- Use `act` with local Docker Desktop to run GH Actions locally.
+What is left in this directory is everything that could not follow.
 
-```bash
-brew install docker-desktop
-brew install act
-```
+## What stayed, and why
 
-To run check or test jobs:
+Each of these carries the same explanation as a comment at the top of its own file. They are collected here so nobody retries a migration that has already been tried and reverted.
 
-```bash
-act -j check
-act -j test
-```
-
-To run e2e job:
-
-```bash
-./.github/workflows/scripts/test-act.sh check.yml e2e
-```
-
-## Trunk
-
-[Trunk](https://trunk.io) ingests JUnit from the **Check** workflow ([`check.yml`](check.yml)) for flaky-test detection and quarantine. The **`test`** and **`e2e`** jobs wrap their `moon` steps with `trunk-io/analytics-uploader@v1` (`org-slug: dxos`, `quarantine: true`, `TRUNK_TOKEN`). Uploaded XML feeds Trunk for flaky labeling and quarantine decisions.
-
-### Jobs and artifacts
-
-| Job | What runs | JUnit paths Trunk reads |
+| Workflow | Trigger | Why it is still on Actions |
 | :-- | :-- | :-- |
-| `test` | Every vitest flavour — unit, browser, storybook and workerd (`:test`, `:test-browser`, `:test-storybook`, `:test-workerd` via uploader; same workflow triggers as the rest of **Check**), sharded over 4 runners with `moon exec --job <0-3> --job-total 4` so cells are sized by work rather than by flavour. | `test-results/**/results.xml` |
-| `boot-budget` | `composer-app:check-boot-budget` — the static boot-graph budget over the production bundle, on its own runner (it builds `bundle`, which nothing else in the workflow does). On a same-repo PR it also measures the base commit, restoring its report from the remote cache since the task declares it as an output. The sticky `<!-- boot-budget -->` comment is posted by a separate `boot-budget-comment` job, which holds the only `pull-requests: write` grant and runs no PR-controlled code. Advisory, so only the budget itself gates. | — |
-| `boot-budget-comment` | Posts/updates/deletes the boot-graph sticky comment from `boot-budget`'s outputs. No checkout and no build — it exists so the write token is never in a job that runs branch code. | — |
-| `e2e` | Playwright e2e via uploader, 6 matrix cells: browser (`chromium` / `firefox` / `webkit` via `PLAYWRIGHT_BROWSER`) x shard (`composer` runs `composer-app:e2e` in a dedicated cell; `rest` runs an explicit target list computed by `moon query tasks "task=e2e && project!=composer-app"`, so a new suite joins the pool with no hand-maintained list — see DESIGN.md for why a glob or `moon exec --query` cannot express this). Job runs only for `main` / `changeset-release/*` refs, or `workflow_dispatch` with `e2e` (see [`check.yml`](check.yml)). | `test-results/playwright/report/*.xml` |
+| [`pr-build.yml`](pr-build.yml) | `pull_request` | Builds the composer-app bundle with no secrets and uploads it as an artifact. Paired with `pr-deploy.yml` and stuck for the same reason. |
+| [`pr-deploy.yml`](pr-deploy.yml) | `workflow_run` | Downloads `pr-build`'s artifact by `workflow_run.id` and deploys it as a Cloudflare Worker preview. Once `pr-build` ran on Depot, every attempt failed with `Unable to download artifact(s): Not Found`. A Depot-executed run's synthesized `workflow_run.id` does not resolve through GitHub's real artifact API. |
+| [`pkg-pr-new.yml`](pkg-pr-new.yml) | `push` to main, dispatch | pkg.pr.new's publish CLI verifies the calling run against GitHub's Actions run tracking. On Depot it answered `Check failed (404): There is no workflow defined for <id>` every time. |
+| [`publish-all.yml`](publish-all.yml) | `push` to main, dispatch | npm's OIDC trusted publisher accepts a fixed set of CI identities, and Depot's is not among them, so `id-token: write` provenance cannot be minted there. The filename is load-bearing, because OIDC is configured against `publish-all.yml`. |
+| [`deploy-apps.yml`](deploy-apps.yml) | `schedule`, dispatch | Calls `deploy-tauri.yaml`, whose builds need `depot-macos-latest`. Depot CI's own orchestrator has no macOS sandboxes yet. |
+| [`deploy-tauri.yaml`](deploy-tauri.yaml) | `workflow_call` | Same macOS constraint. Code signing and notarization run on `depot-macos-latest`. |
+| [`claude-mention.yml`](claude-mention.yml), [`claude-composer-triage.yml`](claude-composer-triage.yml), [`claude-composer-implement.yml`](claude-composer-implement.yml), [`opencode.yml`](opencode.yml) | `issues`, `issue_comment`, review events | Bots reacting to GitHub events, on `ubuntu-latest`. No step calls the shared setup action and none is part of the build/test pipeline, so the migration never applied to them. |
 
-**unit/browser/storybook/workerd** go through Trunk on typical PRs; **e2e** only when the `e2e` job runs (not on ordinary topic-branch PRs). Exact `moon` commands and `env` are in [`check.yml`](check.yml).
+The first four share one root cause. A third party checks GitHub's own run identity rather than the workflow's behaviour, and that is where Depot CI's compatibility ends. Check a workflow against that before proposing a migration.
 
-Why the matrix is shaped this way (two other sharding strategies were measured against it and rejected), what it intermittently fails on, how to attribute a red cell, and which fixes are already refuted are in the CI project's [`DESIGN.md`](../../.agents/projects/ci/DESIGN.md).
+## Depot runners are not Depot CI
 
-### Flaky label vs quarantine vs code tags
+Several workflows in this directory say `runs-on: depot-ubuntu-24.04-4` or `depot-macos-latest`. Those are [Depot's runner product](https://depot.dev/docs/github-actions/overview). Faster machines, still orchestrated by GitHub Actions, still a real Actions run with a real run id. Depot CI is the orchestrator, and that is what `.depot/workflows/` uses. A workflow can use the runners without the orchestrator, which is how the four blocked workflows above keep most of the speed.
 
-| | Where it is set | Effect on git / local default | Effect in CI |
-| :-- | :-- | :-- | :-- |
-| **Flaky** in Trunk | Trunk UI, or **automatically** via Trunk’s **pass-on-rerun** detection | None—Trunk metadata only | Tests still run; failures still fail the job unless quarantined |
-| **Quarantine** in Trunk | Trunk UI | None | Test still **runs**; its failure does **not** fail the job |
-| **Vitest `tags: ['flaky']`** | Code (per-suite/test option, declared in [`vitest.tags.ts`](../../vitest.tags.ts)) | Default `:test` task sets `VITEST_TAGS_FILTER='!flaky && …'` so gated suites **skip** locally | the **`test`** job sets `VITEST_TAGS_FILTER='!sync && !sync-e2e && !functions-e2e && !manual'`, so `flaky` tests **run** and Trunk keeps signal |
+## Composite actions
 
-**Pass-on-rerun:** Trunk marks a test as flaky when it observes a **fail then pass on retry** pattern (same CI job: a failing attempt followed by a passing retry). That is distinct from manually marking a test flaky in the Trunk UI.
-
-**Playwright e2e runs with `retries: 0`** (`e2ePreset`), so pass-on-rerun cannot fire for those suites — there is no retry for Trunk to observe. (Temporary exception: the three two-peer describes — composer's halo and collaboration, todomvc's `Basic test` — retry 2x, scoped to the tracked production-edge defect DX-1152 and removed when it lands; pass-on-rerun CAN fire there, which is desired visibility.) Retries were removed because they hid flakes behind a 3× time cost and made shard timings useless for sizing the suite (three `inbox.spec.ts` tests alone burned ~9 minutes of a shard failing three times each). A flaky e2e test is therefore expected to fail loudly once and then be marked `test.fixme` with a TODO until it is fixed; Trunk still detects flakiness across runs and quarantine still masks a known-bad test. This applies to Playwright only — the vitest jobs are unaffected.
-
-Other tags (`sync`, `sync-e2e`, `functions-e2e`, `manual`) are declared in [`vitest.tags.ts`](../../vitest.tags.ts) and opted in by overriding `VITEST_TAGS_FILTER` (or passing `--tagsFilter=<expr>` directly). They are not tied to Trunk.
-
-## Resources
-
-- https://nektosact.com/introduction.html
-- https://docs.trunk.io
+Two composite actions, `setup` and `affected`, live in [`.depot/actions/`](../../.depot/actions), and workflows in both directories call them by path. `.github/actions/` holds only the Cloudflare release helpers (`cn-channel`, `cn-config`, `cn-release`).

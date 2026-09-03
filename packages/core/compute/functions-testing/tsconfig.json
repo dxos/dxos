@@ -43,6 +43,9 @@
       "path": "../../protocols"
     },
     {
+      "path": "../assistant"
+    },
+    {
       "path": "../assistant-toolkit"
     },
     {

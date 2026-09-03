@@ -17,14 +17,25 @@ import type * as Trace from './Trace';
 import { Instructions } from './types';
 
 /**
+ * Structural view of the `Chat` object (`@dxos/assistant/Chat`): the durable conversation an agent
+ * runs on, carrying its message feed and the instructions steering it. Declared structurally
+ * because `@dxos/assistant` sits above this package.
+ */
+export interface Conversation extends Obj.Unknown {
+  readonly feed: Ref.Ref<Feed.Feed>;
+  readonly instructions?: Ref.Ref<Instructions.Instructions>;
+}
+
+/**
  * Service interface for the agent session manager.
  * Implementation lives in @dxos/functions-runtime.
  */
 export interface Service {
   /**
-   * Gets or creates a session for a feed.
+   * Gets or creates a session for a chat. The agent process is bound to the chat (its spawn
+   * target), reading the feed and the steering instructions from it.
    */
-  getSession: (feed: Feed.Feed, options?: GetSessionOptions) => Effect.Effect<Session>;
+  getSession: (chat: Conversation, options?: GetSessionOptions) => Effect.Effect<Session, never, Database.Service>;
 
   /**
    * Hydrates agent processes persisted by a previous session.
@@ -35,12 +46,20 @@ export interface Service {
 
 export class AgentService extends Context.Service<AgentService, Service>()('@dxos/functions-runtime/AgentService') {}
 
+/** Re-exported so callers importing this module as a namespace avoid `AgentService.AgentService.key`. */
+export const key = AgentService.key;
+
 /**
  * Handle to an agent session.
  */
 export interface Session {
   /**
-   * The feed that the session is associated with.
+   * The chat that the session is associated with.
+   */
+  readonly chat: Conversation;
+
+  /**
+   * The feed carrying the chat's messages.
    */
   readonly feed: Feed.Feed;
 
@@ -98,12 +117,6 @@ export interface GetSessionOptions {
   // the model into the agent process — the id alone does not identify a resolver.
   readonly provider?: DXN.DXN;
   readonly systemPrompt?: string;
-  /**
-   * Instructions steering the conversation (typically the Chat's `instructions` ref), persisted as a
-   * spawn annotation so a re-hydrated process recovers it. Read at spawn only: repointing requires a
-   * process restart (same staleness model as `model`/`provider`).
-   */
-  readonly instructions?: Ref.Ref<Instructions.Instructions>;
   /**
    * Where the agent runs. `local` executes it in this runtime; `edge` spawns it on the remote host
    * reached through `RemoteProcessManager.Service`, so the conversation continues with the client

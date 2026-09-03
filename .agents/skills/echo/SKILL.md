@@ -176,8 +176,11 @@ Schema.Struct({
 });
 ```
 
-Do NOT annotate a field whose targets may be parented elsewhere (e.g. `TaskSet.tasks`, where a
-sub-task's parent is its parent task) — every write to the holder would re-parent them to it.
+Do NOT annotate a field whose targets a different holder owns (a pinned or recently-used list
+referencing objects that live in their own collections) — every write to the holder would
+re-parent them to it. An app-level relationship among a container's members (e.g.
+`Task.parentTask`) is not ownership: the container's annotated array stays the one parent, and the
+relationship stays a plain ref field.
 The annotation updates the parent on write; it is not an invariant that the target's parent IS the
 holder — `Obj.setParent` can re-parent it afterwards, and an unresolved ref is skipped. Read the
 parent with `Obj.getParent`, never from the field. Removing a ref does not clear the target's

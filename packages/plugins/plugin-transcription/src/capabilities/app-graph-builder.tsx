@@ -10,22 +10,31 @@ import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as Chat from '@dxos/assistant/Chat';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 
 import { Mic } from '#components';
 import { meta } from '#meta';
 
-const whenMarkdownDocument = GraphNodeMatcher.whenAll(
+/**
+ * Where dictation is offered: anything with a text surface to dictate into. One matcher rather than
+ * one extension per host, so a new surface is a typename here — and the hosts stay unaware that
+ * transcription exists.
+ */
+const whenDictatable = GraphNodeMatcher.whenAll(
   AppNodeMatcher.whenEchoObjectMatches,
-  AppNodeMatcher.whenEchoTypeMatches(Markdown.Document),
+  GraphNodeMatcher.whenAny(
+    AppNodeMatcher.whenEchoTypeMatches(Markdown.Document),
+    AppNodeMatcher.whenEchoTypeMatches(Chat.Chat),
+  ),
 );
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* AppGraphBuilder.createExtension({
       id: 'transcriptionToolbar',
-      match: (node, get) => whenMarkdownDocument(node, get),
+      match: (node, get) => whenDictatable(node, get),
       // The control owns recording state, mode, device selection, and entity-extraction —
       // interactions the action model cannot express (press-and-hold, an embedded dropdown, a
       // live device list) — so it renders via the custom toolbar variant rather than a plain

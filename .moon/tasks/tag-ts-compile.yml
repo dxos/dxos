@@ -3,8 +3,12 @@ tasks:
   # Single-pass type-and-JS build via `dx-build` (used by workspace tools and a handful of
   # packages). The tag is named `ts-compile` for historical reasons; the task it contributes
   # is `build`, like every other build tag.
+  #
+  # Runs under bun, by absolute path rather than `pnpm exec` — pnpm's `.bin` shim hardcodes
+  # `exec node` and ignores the target's shebang, so it cannot select a runtime. See
+  # `tag-ts-build.yml` for the full note.
   build:
-    command: pnpm exec dx-build
+    command: bun $workspaceRoot/tools/dx-build/cli.js
     deps:
       - dx-build:build
       - ^:build

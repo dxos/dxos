@@ -8,7 +8,8 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Chat } from '@dxos/assistant-toolkit';
+import * as Chat from '@dxos/assistant/Chat';
+import { AgentService } from '@dxos/compute/AgentService';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref, Registry, Type } from '@dxos/echo';
@@ -119,6 +120,31 @@ export const EnsureCompanionChat = Operation.make({
     /** Whether the returned chat was already persisted in the space. */
     persisted: Schema.Boolean,
   }),
+});
+
+/**
+ * Runs `prompt` as a turn on an existing chat, for a caller starting one on the chat's behalf
+ * (delegation, a routine) rather than a reader typing it.
+ *
+ * The session is created with the model the chat's own UI would use — resolved from the assistant
+ * settings — because `AgentService` binds the model to the agent process at spawn and tears that
+ * process down when a later caller asks for a different one. A turn started on any other model
+ * therefore interrupts itself the moment the reader opens the chat.
+ */
+export const RunPromptInChat = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.assistant.runPromptInChat'),
+    name: 'Run Prompt in Chat',
+    icon: 'ph--chat-text--regular',
+    // An agent already runs inside a session; handing it one that starts another is a footgun.
+    skipRegistry: true,
+  },
+  services: [Capability.Service, Database.Service, AgentService],
+  input: Schema.Struct({
+    chat: Type.getSchema(Chat.Chat),
+    prompt: Schema.String,
+  }),
+  output: Schema.Void,
 });
 
 export const SkillForm = Schema.Struct({

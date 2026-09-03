@@ -295,6 +295,9 @@
       "path": "../../plugins/plugin-pwa"
     },
     {
+      "path": "../../plugins/plugin-qa"
+    },
+    {
       "path": "../../plugins/plugin-registry"
     },
     {

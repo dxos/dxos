@@ -3,7 +3,7 @@
 //
 
 import { type URI } from '@dxos/keys';
-import { type MessageRenderer } from '@dxos/react-ui-feed';
+import { type MessageRenderer, isPrompt } from '@dxos/react-ui-feed';
 import { type ContentBlock, type Message } from '@dxos/types';
 
 import { type ChatView } from './types';
@@ -18,7 +18,8 @@ export type CreateRendererOptions = {
  * prose emitted as an XML tag for the registry's widgets. The view type is a filter over blocks —
  * the model always carries everything, so switching views is a re-render, not a re-fetch.
  *
- * Consecutive tool blocks (`toolCall`/`toolResult`/`stats`) render as ONE `<toolkit>` tag carrying
+ * Consecutive tool blocks (`toolCall`/`toolResult`/`stats`) — along with the `status` and `reasoning`
+ * blocks that narrate them — render as ONE `<toolkit>` tag carrying
  * the run as JSON: the panel widget shows a run of calls as tabs, and the item is rebuilt from its
  * message alone — there is no side channel accumulating widget state (the old `MessageSyncer`
  * machinery this package retires).
@@ -35,6 +36,20 @@ export const createRenderer = (
     // Emitted after the run they interleave with, so the panel stays whole.
     let deferred: string[] = [];
 
+    // Status and reasoning that has not met a call yet: it joins the next run rather than opening a
+    // widget of its own, and is emitted on its own only if prose or the end of the message follows.
+    let narration: ContentBlock.Any[] = [];
+
+    const flushNarration = () => {
+      for (const block of narration) {
+        const rendered = blockToMarkdown(message, block, getObjectLabel);
+        if (rendered) {
+          segments.push(rendered);
+        }
+      }
+      narration = [];
+    };
+
     const flushTools = () => {
       if (tools.length) {
         segments.push(toolkitTag(tools));
@@ -44,11 +59,26 @@ export const createRenderer = (
         segments.push(...deferred);
         deferred = [];
       }
+      flushNarration();
     };
 
     for (const block of blocks) {
       if (block._tag === 'toolCall' || block._tag === 'toolResult') {
-        tools.push(block);
+        // Narration read as the preamble to this call, so it belongs inside the run's panel.
+        tools.push(...narration, block);
+        narration = [];
+        continue;
+      }
+
+      // The model narrates a run with status and reasoning between its calls; emitted as their own
+      // widgets they split one run into a panel per call. Buffered here, they either join the run
+      // or — if prose or the message ends first — render as they always did.
+      if (block._tag === 'status' || block._tag === 'reasoning') {
+        if (tools.length) {
+          tools.push(block);
+        } else {
+          narration.push(block);
+        }
         continue;
       }
 
@@ -62,11 +92,16 @@ export const createRenderer = (
         continue;
       }
 
-      flushTools();
+      // Rendered BEFORE the flush: a block that renders to nothing must not end the run. The
+      // runtime interleaves empty text blocks with tool calls, and flushing on one split a single
+      // run into a panel per call with nothing visible between them.
       const rendered = blockToMarkdown(message, block, getObjectLabel);
-      if (rendered) {
-        segments.push(rendered);
+      if (!rendered) {
+        continue;
       }
+
+      flushTools();
+      segments.push(rendered);
     }
     flushTools();
 
@@ -112,9 +147,15 @@ const blockToMarkdown = (
   switch (block._tag) {
     case 'text': {
       if (message.sender.role === 'user') {
-        // Synthetic context (a selection, an encoded event) is the chrome's: it renders as its own
-        // panel above the bubble, so the bubble frames only the reader's words.
-        return block.disposition === 'synthetic' ? undefined : tag('prompt', block.text, block);
+        if (block.disposition !== 'synthetic') {
+          return tag('prompt', block.text, block);
+        }
+        // Synthetic context riding ON a prompt is the chrome's: it renders as its own panel above
+        // the bubble, so the bubble frames only the reader's words. A message that is ONLY synthetic
+        // is not the reader speaking at all (a trigger, a continuation nudge), so it renders as its
+        // own panel row — emitted here, since a message the renderer maps to nothing is dropped as
+        // an empty row, which left the answer to it reading as unprompted.
+        return isPrompt(message) ? undefined : tag('synthetic', block.text, block);
       }
       return block.text.trim() || undefined;
     }

@@ -9,7 +9,6 @@ import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import {
-  EchoEdgeReplicatorLayer,
   EchoEdgeSubductionReplicatorLayer,
   EchoHostLayer,
   EchoHostService,
@@ -166,13 +165,7 @@ export const ServiceContextLayer = (
     syncNamespaces: [FeedProtocol.WellKnownNamespaces.data, FeedProtocol.WellKnownNamespaces.trace],
   }).pipe(
     Layer.provideMerge(core),
-    Layer.provideMerge(
-      options.edgeFeatures?.subductionReplicator
-        ? EchoEdgeSubductionReplicatorLayer()
-        : options.edgeFeatures?.echoReplicator
-          ? EchoEdgeReplicatorLayer()
-          : Layer.empty,
-    ),
+    Layer.provideMerge(options.edgeFeatures?.subductionReplicator ? EchoEdgeSubductionReplicatorLayer() : Layer.empty),
     Layer.provideMerge(
       Layer.mergeAll(
         Layer.succeed(EdgeConnectionService, edgeConnection),

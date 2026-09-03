@@ -29,9 +29,6 @@ import { translations } from '#translations';
 
 import { Home } from './Home';
 
-const makeRootChild = (id: string, disposition: string, label: string, icon: string) =>
-  AppGraphNode.make({ id, type: 'story-item', data: null, properties: { label, icon, disposition } });
-
 /**
  * A root with one node per disposition Home used to mix together (workspace, user-account, pin-end)
  * plus one ordinary `disposition: 'menu'` action — the shape needed to prove Home dropped two of the
@@ -46,9 +43,24 @@ const storyGraph = Capability.inlineModule(
       match: GraphNodeMatcher.whenRoot,
       connector: () =>
         Effect.succeed([
-          makeRootChild('story-workspace', 'workspace', 'My Space', 'ph--planet--regular'),
-          makeRootChild('story-account', 'user-account', 'User Profile', 'ph--user--regular'),
-          makeRootChild('story-settings', 'pin-end', 'Settings', 'ph--gear--regular'),
+          AppGraphNode.make({
+            id: 'story-workspace',
+            type: 'story-item',
+            data: null,
+            properties: { label: 'My Space', icon: 'ph--planet--regular', disposition: 'workspace' },
+          }),
+          AppGraphNode.make({
+            id: 'story-account',
+            type: 'story-item',
+            data: null,
+            properties: { label: 'User Profile', icon: 'ph--user--regular', disposition: 'user-account' },
+          }),
+          AppGraphNode.make({
+            id: 'story-settings',
+            type: 'story-item',
+            data: null,
+            properties: { label: 'Settings', icon: 'ph--gear--regular', disposition: 'pin-end' },
+          }),
         ]),
       actions: () =>
         Effect.succeed([

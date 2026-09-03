@@ -12,6 +12,7 @@ import {
   ReactSurface,
   Schema,
   Translations,
+  UndoMappings,
 } from '#capabilities';
 import { meta } from '#meta';
 
@@ -23,6 +24,7 @@ export const TasksPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(ReactSurface),
   Plugin.addModule(Schema),
   Plugin.addModule(Translations),
+  Plugin.addModule(UndoMappings),
   Plugin.make,
 );
 

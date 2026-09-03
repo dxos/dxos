@@ -389,7 +389,9 @@ Examples:
 
 ## CI
 
-See [CI docs](./.github/workflows/README.md).
+The build/test pipeline runs on Depot CI. See [`.depot/README.md`](./.depot/README.md), including how to
+run a workflow off uncommitted changes without pushing. What is still on GitHub Actions, and why, is in
+[`.github/workflows/README.md`](./.github/workflows/README.md).
 
 ## Trunk (flaky test quarantining / CI Autopilot)
 

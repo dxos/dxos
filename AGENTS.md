@@ -62,6 +62,11 @@ a large skill loads mid-session (see `.claude/README.md` §A).
   short flat numbered list; `normal` (the default) sets no budget but keeps
   length proportionate — length is earned by content, never by restating. Set it
   with `/mode terse` / `/mode normal`.
+- **`/mode focus [task]` pins the work as well as the length.** It is `terse`
+  plus one pinned task — with no task on the line, the previous instruction is
+  the pin. While pinned, work on nothing else: no adjacent fixes, no CI or PR
+  polling, and an off-task request gets one line naming the conflict plus a
+  numbered choice. `/mode terse` or `/mode normal` clears the pin.
 - These govern form only. They never override correctness, required safety
   steps, showing test/command output, or reporting a failure honestly.
 
@@ -175,6 +180,16 @@ is invisible there until something publishes it.
 - The `file:` overrides live in edge's root `package.json` and must not be committed there; edge's
   `CLAUDE.md` covers the undo.
 
+## Long-running tasks
+
+**Run every long task in the background.** A repo-wide build, `pnpm install`, a full `:test` sweep,
+a repo-wide `oxfmt`, a storybook or dev server — anything expected to run past ~30s — goes in the
+background (`run_in_background: true` on the Claude harness), and you keep working while it runs.
+A long task held in the foreground freezes the session: the user cannot redirect you, and killing
+the run is their only way to regain control — which also abandons whatever the task was verifying.
+To wait on a condition, background an `until <check>; do sleep 2; done`; never a foreground `sleep`.
+The foreground is for short commands whose result decides your next step.
+
 ## Code style
 
 Universal rules. Deeper conventions live in skills — see the pointers below.
@@ -223,8 +238,9 @@ Deeper conventions:
 - Commit hygiene → see "Commit nothing silently" in Non-negotiables.
 - Creating or landing a PR is a procedure — use the `submit-pr` and `land`
   skills. Always surface the Composer preview URL next to the PR link.
-- Consumer-relevant changes need a `.changeset/*.md` before opening the PR —
-  see [`agents/instructions/changesets.md`](agents/instructions/changesets.md)
+- Consumer-relevant changes need a `.changeset/*.md`: written when opening the
+  PR and rewritten before landing, as a summary of the whole PR — see
+  [`agents/instructions/changesets.md`](agents/instructions/changesets.md)
   for when to add one, which package to name, and bump levels.
 
 ## Handing an agent a credential

@@ -55,7 +55,7 @@ const DefaultStory = () => {
   }
 
   return (
-    <div className='dx-container grid grid-cols-2 divide-x divide-separator'>
+    <div className='dx-expand grid grid-cols-2 divide-x divide-separator'>
       <SpaceGenerator space={space} />
       <ObjectList space={space} />
     </div>

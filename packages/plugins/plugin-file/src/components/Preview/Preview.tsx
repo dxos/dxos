@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Keyboard, nestKeyboardContext } from '@dxos/keyboard';
+import { useHotkeys } from '@dxos/react-focus';
 import { Icon, Input, MediaPlayer, Toolbar, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 
@@ -72,38 +72,25 @@ const PreviewToolbar = composable<HTMLDivElement>(({ children, ...props }, forwa
   const searchRef = useRef<HTMLInputElement>(null);
   const { hasAttention } = useAttention(attendableId);
 
-  // Bound in the attended article's own keyboard context rather than globally, so the shortcut
-  // belongs to whichever plank the reader is in — the same mechanism `useArticleKeyboardNavigation`
-  // uses. Without an attendable id there is no context to scope to, so nothing is bound.
-  useEffect(() => {
-    if (!attendableId || !hasAttention || !paged) {
-      return;
-    }
-
-    const contextPath = nestKeyboardContext(attendableId);
-    const context = Keyboard.singleton.getContext(contextPath);
-    const previous = Keyboard.singleton.getCurrentContext();
-    Keyboard.singleton.setCurrentContext(contextPath);
-
-    context.bind({
-      shortcut: 'meta+f',
-      // Not `disableInput`: the point is to reach the field from anywhere in the article, including
-      // when focus is already inside it, where selecting the text is the useful outcome.
-      handler: () => {
-        searchRef.current?.focus();
-        searchRef.current?.select();
-        return true;
+  // Gated on the article having attention rather than bound globally, so the shortcut belongs to
+  // whichever plank the reader is in — the same mechanism `useArticleKeyboardNavigation` uses.
+  useHotkeys({
+    id: `${attendableId}:search`,
+    commands: [
+      {
+        hotkey: 'meta+f',
+        label: t('search-shortcut.label'),
+        enabled: () => !!attendableId && hasAttention && !!paged,
+        // Reachable from anywhere in the article, including when focus is already in the field,
+        // where selecting the text is the useful outcome.
+        options: { enableOnFormTags: true, enableOnContentEditable: true },
+        action: () => {
+          searchRef.current?.focus();
+          searchRef.current?.select();
+        },
       },
-      data: t('search-shortcut.label'),
-    });
-
-    return () => {
-      context.unbind('meta+f');
-      if (Keyboard.singleton.getCurrentContext() === contextPath) {
-        Keyboard.singleton.setCurrentContext(previous);
-      }
-    };
-  }, [attendableId, hasAttention, paged, t]);
+    ],
+  });
 
   const handleSearch = useCallback(
     (next: string) => {
@@ -270,9 +257,9 @@ const PreviewContent = composable<HTMLDivElement>((props, forwardedRef) => {
 
   if (type.startsWith('image/') || type.startsWith('video/') || type.startsWith('audio/')) {
     return (
-      <div {...composableProps(props, { classNames: 'grid h-full w-full min-h-0' })} ref={forwardedRef}>
+      <div {...composableProps(props, { classNames: 'grid dx-fill min-h-0' })} ref={forwardedRef}>
         <MediaPlayer
-          classNames='h-full w-full'
+          classNames='dx-fill'
           src={url}
           // `kind` is set explicitly for audio and video because the URL is a `data:`/`blob:`/
           // presigned one with no usable extension, which is all `detectMediaKind` has to go on.
@@ -285,8 +272,8 @@ const PreviewContent = composable<HTMLDivElement>((props, forwardedRef) => {
   }
 
   return (
-    <div {...composableProps(props, { classNames: 'grid place-items-center h-full w-full p-8' })} ref={forwardedRef}>
-      <div role='none' className='flex flex-col items-center gap-2 text-center'>
+    <div {...composableProps(props, { classNames: 'grid place-items-center dx-fill p-8' })} ref={forwardedRef}>
+      <div className='flex flex-col items-center gap-2 text-center'>
         <Icon icon='ph--file--regular' size={8} classNames='text-subdued' />
         {name && <span className='text-sm'>{name}</span>}
         <span className='text-xs text-subdued'>

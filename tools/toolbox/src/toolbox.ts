@@ -13,6 +13,7 @@ import { existsSync } from 'node:fs';
 import { inspect } from 'node:util';
 import { dirname, join, relative } from 'path';
 import sortPackageJson from 'sort-package-json';
+import YAML from 'yaml';
 
 import { loadJson, saveJson, sortJson } from './util';
 import { type PackageJson, type Project, ProjectGraph } from './util/project-graph';
@@ -33,6 +34,59 @@ const JS_EXTENSIONS = ['.js', '.jsx', '.ts', '.tsx', '.mjs', '.cjs', '.mts', '.c
  * instead, since moon tags (which `pkg-lint` uses to tell the two apart) aren't visible here.
  */
 const BUILD_TOOL_EXPORT = /^\.\/(vite|esbuild|rollup)-plugin$/;
+
+/**
+ * A package consumed from dist declares it by omitting `source`, which is what keeps node/bun and
+ * vite resolving it the same way (see `pkg-lint`'s `dist-runtime-tag` rule).
+ */
+const isDistRuntime = (projectPath: string): boolean => {
+  const moonPath = join(projectPath, 'moon.yml');
+  if (!existsSync(moonPath)) {
+    return false;
+  }
+
+  return YAML.parse(fs.readFileSync(moonPath, 'utf8'))?.tags?.includes('dist-runtime') ?? false;
+};
+
+/** Recovers the source a `types` target was emitted from, preferring the extension present on disk. */
+const sourceForTypes = (projectPath: string, types: string): string => {
+  const base = types.replace('./dist/types/src', './src').replace(/\.d\.ts$/, '');
+  return base + (['.ts', '.tsx'].find((ext) => existsSync(join(projectPath, base + ext))) ?? '.ts');
+};
+
+/** Maps a package's `vite.config.ts` entry sources to their entry names, which name the build output. */
+const readBuildEntries = (projectPath: string): Map<string, string> => {
+  const entries = new Map<string, string>();
+  const configPath = join(projectPath, 'vite.config.ts');
+  if (!existsSync(configPath)) {
+    return entries;
+  }
+
+  for (const [, name, source] of fs
+    .readFileSync(configPath, 'utf8')
+    .matchAll(/^\s*'?([\w$/-]+)'?:\s*'(src\/[^']+)',/gm)) {
+    entries.set(`./${source}`, name);
+  }
+
+  return entries;
+};
+
+/**
+ * Expands a source-only `imports` target into the `source`/`types`/`default` triple: a single target
+ * answers every condition with TypeScript source, which a consumer resolves out of `src/`.
+ */
+const expandSourceOnlyImport = (projectPath: string, source: string, buildEntries: Map<string, string>) => {
+  const entry = buildEntries.get(source);
+  if (!entry) {
+    return undefined;
+  }
+
+  return {
+    source,
+    types: source.replace(/^\.\/src\//, './dist/types/src/').replace(/\.tsx?$/, '.d.ts'),
+    default: `./dist/lib/${entry}.mjs`,
+  };
+};
 
 export type ToolboxConfig = {
   project?: {
@@ -658,9 +712,14 @@ export class Toolbox {
       }
 
       const packageJson = await loadJson<PackageJson>(join(project.path, 'package.json'));
+      const distRuntime = isDistRuntime(project.path);
 
       for (const [key, config] of Object.entries(packageJson.exports ?? {})) {
         if (typeof config !== 'object' || typeof config.types !== 'string') {
+          continue;
+        }
+        if (distRuntime) {
+          delete config.source;
           continue;
         }
         // Bundler-plugin entrypoints ship dist only: a `source` condition here lets an app's
@@ -670,9 +729,12 @@ export class Toolbox {
           delete config.source;
           continue;
         }
-        const src = config.types.replace('./dist/types/src', './src').replace('.d.ts', '.ts');
-        if (!existsSync(join(project.path, src))) {
+        // A conditional `source` routes per build condition, and `types` names only one branch.
+        const src = typeof config.source === 'object' ? config.source : sourceForTypes(project.path, config.types);
+        // An unverifiable target would replace a hand-written entry with a broken one.
+        if (typeof src === 'string' && !existsSync(join(project.path, src))) {
           console.log(`Missing src file for ${project.name}: ${src}`);
+          continue;
         }
         // Ensure 'source' is first in the exports map so it takes precedence over 'browser'
         // when oxc-resolver matches conditions in exports map order.
@@ -692,13 +754,29 @@ export class Toolbox {
         }
       }
 
-      for (const [key, config] of Object.entries(packageJson.imports ?? {})) {
+      const buildEntries = readBuildEntries(project.path);
+      const packageImports = typeof packageJson.imports === 'object' ? packageJson.imports : {};
+      for (const [key, config] of Object.entries(packageImports)) {
+        if (typeof config === 'string') {
+          if (!/^\.\/src\/.+\.tsx?$/.test(config)) {
+            continue;
+          }
+          const expanded = expandSourceOnlyImport(project.path, config, buildEntries);
+          if (expanded) {
+            packageImports[key] = expanded;
+          } else {
+            console.log(`No build entry for ${project.name} import "${key}": ${config}`);
+          }
+          continue;
+        }
         if (typeof config !== 'object' || typeof config.types !== 'string') {
           continue;
         }
-        const src = config.types.replace('./dist/types/src', './src').replace('.d.ts', '.ts');
-        if (!existsSync(join(project.path, src))) {
+        const src = typeof config.source === 'object' ? config.source : sourceForTypes(project.path, config.types);
+        // An unverifiable target would replace a hand-written entry with a broken one.
+        if (typeof src === 'string' && !existsSync(join(project.path, src))) {
           console.log(`Missing src file for ${project.name}: ${src}`);
+          continue;
         }
         // Ensure 'source' is first in the imports map.
         if (Object.keys(config)[0] !== 'source') {

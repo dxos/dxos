@@ -8,7 +8,7 @@ import path from 'node:path';
 import { ResolverFactory } from 'oxc-resolver';
 // import sourcemaps from 'rollup-plugin-sourcemaps';
 import { visualizer } from 'rollup-plugin-visualizer';
-import { type ConfigEnv, type PluginOption, defineConfig, searchForWorkspaceRoot } from 'vite';
+import { type ConfigEnv, type PluginOption, type Rollup, defineConfig, searchForWorkspaceRoot } from 'vite';
 // import devtoolsJson from 'vite-plugin-devtools-json';
 import inspect from 'vite-plugin-inspect';
 import { VitePWA } from 'vite-plugin-pwa';
@@ -229,6 +229,7 @@ export default defineConfig((env) => ({
         './src/main.tsx',
         './src/workers/dedicated-worker.ts',
         './src/workers/coordinator-worker.ts',
+        './src/workers/observability-worker.ts',
         `./${pluginSetFile}`,
       ],
     },
@@ -417,7 +418,12 @@ export default defineConfig((env) => ({
       name: 'rss-proxy',
       configureServer(server) {
         server.middlewares.use('/api/rss', async (req, res) => {
-          const url = new URL(req.url!, `http://${req.headers.host}`);
+          if (!req.url) {
+            res.statusCode = 400;
+            res.end('Missing request URL');
+            return;
+          }
+          const url = new URL(req.url, `http://${req.headers.host}`);
           const feedUrl = url.searchParams.get('url');
           if (!feedUrl) {
             res.statusCode = 400;
@@ -675,9 +681,9 @@ export default defineConfig((env) => ({
  * Generate nicer chunk names.
  * Default makes most chunks have names like index-[hash].js.
  */
-function chunkFileNames(chunkInfo: any) {
+function chunkFileNames(chunkInfo: Rollup.PreRenderedChunk) {
   if (chunkInfo.facadeModuleId && chunkInfo.facadeModuleId.match(/index\.[^/]+$/gm)) {
-    let segments: any[] = chunkInfo.facadeModuleId.split('/').reverse().slice(1);
+    let segments: string[] = chunkInfo.facadeModuleId.split('/').reverse().slice(1);
     const nodeModulesIdx = segments.indexOf('node_modules');
     if (nodeModulesIdx !== -1) {
       segments = segments.slice(0, nodeModulesIdx);

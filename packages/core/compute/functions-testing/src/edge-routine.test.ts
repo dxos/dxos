@@ -4,7 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { Chat, RunInstructions } from '@dxos/assistant-toolkit';
+import { RunInstructions } from '@dxos/assistant-toolkit';
+import * as Chat from '@dxos/assistant/Chat';
 import { Client } from '@dxos/client';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -14,6 +15,7 @@ import { configPreset } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { Feed, Obj, Ref, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
+import { type InvokeResult } from '@dxos/edge-compute';
 import { DXN } from '@dxos/keys';
 import { dbg, log } from '@dxos/log';
 import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
@@ -96,11 +98,17 @@ describe('Edge instructions', { tags: ['functions-e2e'] }, () => {
     log('trigger created and synced');
     log.break();
 
-    const runResult: any = await client.edge.http.forceRunCronTrigger(Context.default(), space.id, trigger.id);
+    // The HTTP client's response type is untyped JSON; the EDGE dispatcher's wire contract for a
+    // triggered invocation is `InvokeResult`.
+    const runResult = (await client.edge.http.forceRunCronTrigger(
+      Context.default(),
+      space.id,
+      trigger.id,
+    )) as InvokeResult;
     if (runResult._kind === 'error') {
       throw ErrorCodec.decode(runResult.error);
     }
     log('trigger ran', { runResult });
-    expect(runResult.result.count).toBe(3);
+    expect((runResult.result as { count: number }).count).toBe(3);
   });
 });

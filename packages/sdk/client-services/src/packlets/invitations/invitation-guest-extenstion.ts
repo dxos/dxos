@@ -7,7 +7,7 @@ import { Context, cancelWithContext } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { InvalidInvitationExtensionRoleError } from '@dxos/protocols';
-import { schema } from '@dxos/protocols/proto';
+import { getBufService } from '@dxos/protocols/buf-service';
 import { type Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type InvitationHostService, InvitationOptions } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
@@ -49,10 +49,10 @@ export class InvitationGuestExtension
   ) {
     super({
       requested: {
-        InvitationHostService: schema.getService('dxos.halo.invitations.InvitationHostService'),
+        InvitationHostService: getBufService<InvitationHostService>('dxos.halo.invitations.InvitationHostService'),
       },
       exposed: {
-        InvitationHostService: schema.getService('dxos.halo.invitations.InvitationHostService'),
+        InvitationHostService: getBufService<InvitationHostService>('dxos.halo.invitations.InvitationHostService'),
       },
     });
   }

@@ -36,7 +36,7 @@ export class HeaderCodec<Key> {
   private _decodeRecursive(obj: any): any {
     return this._recurse(obj, (value) => {
       if (isEncodedBytes(value)) {
-        return decodeBytes(value.__b);
+        return Buffer.from(value.__b, ENCODING);
       }
       if (isEncodedKey(value)) {
         return this._keyCodec.decode(value);
@@ -51,7 +51,7 @@ export class HeaderCodec<Key> {
   private _prepareForEncoding(obj: any): any {
     return this._recurse(obj, (value) => {
       if (value instanceof Uint8Array) {
-        return { __b: encodeBytes(value) };
+        return { __b: Buffer.from(value).toString(ENCODING) };
       }
       if (this._keyCodec.isKey(value)) {
         return this._keyCodec.encode(value);
@@ -92,6 +92,3 @@ const isEncodedDate = (obj: object): obj is EncodedTimestamp => '__t' in obj && 
 
 const encodeDate = (date: Date) => ({ __t: date.getTime() });
 const decodeDate = (timestamp: EncodedTimestamp) => new Date(timestamp.__t);
-
-const encodeBytes = (bytes: Uint8Array) => Buffer.from(bytes).toString(ENCODING);
-const decodeBytes = (bytes: string) => Buffer.from(bytes, ENCODING);

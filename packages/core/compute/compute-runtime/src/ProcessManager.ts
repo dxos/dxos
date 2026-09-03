@@ -5,7 +5,6 @@
 // @import-as-namespace
 
 import * as Cause from 'effect/Cause';
-import * as Clock from 'effect/Clock';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -33,6 +32,7 @@ import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation } from '@dxos/echo';
+import { EffectEx, SpanAttributes } from '@dxos/effect';
 import type { SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -494,8 +494,6 @@ export class ProcessManagerImpl implements Manager {
     options?: SpawnOptions,
   ): Effect.Effect<Handle<I, O, _Rpcs>> {
     return Effect.gen({ self: this }, function* () {
-      // Captured from the ambient runtime so alarms are driven by the same `Clock` (incl. `TestClock`).
-      const clock = yield* Clock.Clock;
       const id = this.#idGenerator();
       log('lifecycle: spawn', {
         pid: id,
@@ -504,6 +502,8 @@ export class ProcessManagerImpl implements Manager {
         name: options?.name,
       });
       const scope = yield* Scope.make();
+      const dispatchContext = yield* EffectEx.contextWithoutParentSpan();
+      const tracer = yield* Effect.tracer;
       const outputQueue = yield* Queue.unbounded<ProcessHandle.OutputItem<O>>();
 
       const storage = storageServiceLayer(this.#kvStore, `process/${id}/`);
@@ -553,9 +553,7 @@ export class ProcessManagerImpl implements Manager {
         submitOutput: (output: O) => {
           handleRef?.requestSubmitOutput(output);
         },
-        setAlarm: (timeout?: number) => {
-          handleRef?.requestAlarm(timeout);
-        },
+        setAlarm: (timeout?: number) => handleRef?.requestAlarm(timeout) ?? Effect.void,
       };
 
       // One controller per run, fired by {@link ProcessHandle.ProcessHandleImpl.terminate} — the
@@ -589,13 +587,14 @@ export class ProcessManagerImpl implements Manager {
           manager: this,
           handlerSet: this.#handlerSet,
           parentProcessId: id,
+          tracer,
         });
         builtinCtx = Context.add(builtinCtx, Operation.Service, childInvoker);
         builtinCtx = Context.add(builtinCtx, ProcessOperationInvoker.Service, childInvoker);
       }
 
       const builtinTagKeys = new Set([
-        StorageService.StorageService.key,
+        StorageService.key,
         Scope.Scope.key,
         Trace.TraceService.key,
         Operation.Service.key,
@@ -624,7 +623,7 @@ export class ProcessManagerImpl implements Manager {
             const parentHandle = this.#handles.get(handle.parentId);
             if (parentHandle) {
               log('lifecycle: notify parent', { parentPid: handle.parentId, childPid: handle.pid });
-              parentHandle.requestChildEvent({
+              yield* parentHandle.requestChildEvent({
                 _tag: 'exited',
                 pid: handle.pid,
                 result: cause ? Exit.failCause(cause) : Exit.succeed(undefined),
@@ -670,6 +669,7 @@ export class ProcessManagerImpl implements Manager {
         callbacks,
         scope,
         fullCtx,
+        dispatchContext,
         this.#registry,
         outputQueue,
         storage,
@@ -677,7 +677,6 @@ export class ProcessManagerImpl implements Manager {
         params,
         environment,
         this.#traceSink,
-        clock,
         rpcClient,
         onFinished,
         () => this.#refreshProcessTree(),
@@ -714,7 +713,7 @@ export class ProcessManagerImpl implements Manager {
       // while the public surface is the precise `Handle<I, O, _Rpcs>`. `RpcClient` is invariant, so
       // bridging the two requires a cast here (see design spec §4.4).
       return handle as unknown as Handle<I, O, _Rpcs>;
-    });
+    }).pipe(Effect.withSpan('ProcessManager.spawn', { attributes: { [SpanAttributes.PROCESS.key]: definition.key } }));
   }
 
   /**
@@ -725,12 +724,12 @@ export class ProcessManagerImpl implements Manager {
     definition: Process.Process<any, any, any, any>,
   ): Effect.Effect<ProcessHandle.ProcessHandleImpl<any, any, any>> {
     return Effect.gen({ self: this }, function* () {
-      // Captured from the ambient runtime so alarms are driven by the same `Clock` (incl. `TestClock`).
-      const clock = yield* Clock.Clock;
       const id = record.id;
       log('lifecycle: rehydrate', { pid: id, key: record.key });
 
       const scope = yield* Scope.make();
+      const dispatchContext = yield* EffectEx.contextWithoutParentSpan();
+      const tracer = yield* Effect.tracer;
       const outputQueue = yield* Queue.unbounded<ProcessHandle.OutputItem<any>>();
       const storage = storageServiceLayer(this.#kvStore, `process/${id}/`);
 
@@ -767,9 +766,7 @@ export class ProcessManagerImpl implements Manager {
         submitOutput: (output: any) => {
           handleRef?.requestSubmitOutput(output);
         },
-        setAlarm: (timeout?: number) => {
-          handleRef?.requestAlarm(timeout);
-        },
+        setAlarm: (timeout?: number) => handleRef?.requestAlarm(timeout) ?? Effect.void,
       };
 
       const cancellation = new AbortController();
@@ -799,13 +796,14 @@ export class ProcessManagerImpl implements Manager {
           manager: this,
           handlerSet: this.#handlerSet,
           parentProcessId: id,
+          tracer,
         });
         builtinCtx = Context.add(builtinCtx, Operation.Service, childInvoker);
         builtinCtx = Context.add(builtinCtx, ProcessOperationInvoker.Service, childInvoker);
       }
 
       const builtinTagKeys = new Set([
-        StorageService.StorageService.key,
+        StorageService.key,
         Scope.Scope.key,
         Trace.TraceService.key,
         Operation.Service.key,
@@ -833,7 +831,7 @@ export class ProcessManagerImpl implements Manager {
             const parentHandle = this.#handles.get(handle.parentId);
             if (parentHandle) {
               log('lifecycle: notify parent', { parentPid: handle.parentId, childPid: handle.pid });
-              parentHandle.requestChildEvent({
+              yield* parentHandle.requestChildEvent({
                 _tag: 'exited',
                 pid: handle.pid,
                 result: cause ? Exit.failCause(cause) : Exit.succeed(undefined),
@@ -863,6 +861,7 @@ export class ProcessManagerImpl implements Manager {
         callbacks,
         scope,
         fullCtx,
+        dispatchContext,
         this.#registry,
         outputQueue,
         storage,
@@ -870,7 +869,6 @@ export class ProcessManagerImpl implements Manager {
         params,
         environment,
         this.#traceSink,
-        clock,
         rpcClient,
         onFinished,
         () => this.#refreshProcessTree(),
@@ -888,7 +886,7 @@ export class ProcessManagerImpl implements Manager {
 
       // Re-arm a still-pending alarm.
       if (record.alarmDueAt !== null) {
-        handle.rearmAlarm(record.alarmDueAt);
+        yield* handle.rearmAlarm(record.alarmDueAt);
       }
 
       // Re-deliver events that never settled (interrupted by shutdown), in seq order.
@@ -903,7 +901,7 @@ export class ProcessManagerImpl implements Manager {
       }
 
       return handle;
-    });
+    }).pipe(Effect.withSpan('ProcessManager.rehydrate'));
   }
 
   #hydrateFromDefinition<I, O, Rpcs extends Rpc.Any = never>(
@@ -940,7 +938,45 @@ export class ProcessManagerImpl implements Manager {
       log('lifecycle: hydrate', { pid: id, key: record.key });
       const handle = yield* this.#rehydrate(record, definition);
       return handle as unknown as Handle<I, O, Rpcs>;
-    });
+    }).pipe(
+      Effect.withSpan('ProcessManager.hydrate', {
+        attributes: { [SpanAttributes.PROCESS.id]: id, [SpanAttributes.PROCESS.key]: definition.key },
+      }),
+    );
+  }
+
+  /**
+   * Terminates a persisted process that is not live by deleting its record (and those of its
+   * dormant descendants), so a caller can discard it without hydrating it first.
+   */
+  #discardRecord(id: Process.ID): Effect.Effect<void> {
+    return Effect.gen({ self: this }, function* () {
+      // Read before anything is torn down: `terminate` deletes records, and a live termination only
+      // walks children in `#handles` — a process hydrated between the listing and this call would
+      // otherwise leave its still-dormant descendants in storage to be rediscovered later.
+      log('lifecycle: discard record', { pid: id });
+      const persisted = yield* this.#store.listProcesses();
+      const doomed = new Set<Process.ID>([id]);
+      // Records carry no child index, so walk the flat list until it stops growing.
+      for (let added = true; added;) {
+        added = false;
+        for (const record of persisted) {
+          if (record.parentId !== null && doomed.has(record.parentId) && !doomed.has(record.id)) {
+            doomed.add(record.id);
+            added = true;
+          }
+        }
+      }
+
+      for (const pid of doomed) {
+        const child = this.#handles.get(pid);
+        if (child) {
+          yield* child.terminate();
+        } else {
+          yield* this.#store.deleteProcess(pid);
+        }
+      }
+    }).pipe(Effect.withSpan('ProcessManager.discardRecord'));
   }
 
   attach<I, O, Rpcs extends Rpc.Any = never>(id: Process.ID): Effect.Effect<Handle<I, O, Rpcs>> {
@@ -1004,8 +1040,10 @@ export class ProcessManagerImpl implements Manager {
           continue;
         }
         results.push(
-          new DormantHandle(record, (definition) =>
-            this.#hydrateFromDefinition<unknown, unknown, any>(record.id, definition),
+          new DormantHandle(
+            record,
+            (definition) => this.#hydrateFromDefinition<unknown, unknown, any>(record.id, definition),
+            () => this.#discardRecord(record.id),
           ),
         );
       }
@@ -1044,12 +1082,15 @@ class DormantHandle<I, O> implements Handle<I, O, any> {
   // (`RpcClient<any>`) so the dormant handle is assignable to `Handle.Any` (see design spec §4.4).
   readonly rpc: RpcClient.RpcClient<any> = EMPTY_RPC_CLIENT;
   readonly #rehydrate: (definition: Process.Process<I, O, any, any>) => Effect.Effect<Handle<I, O, any>>;
+  readonly #discard: () => Effect.Effect<void>;
 
   constructor(
     record: PersistedProcess,
     rehydrate: (definition: Process.Process<I, O, any, any>) => Effect.Effect<Handle<I, O, any>>,
+    discard: () => Effect.Effect<void>,
   ) {
     this.#rehydrate = rehydrate;
+    this.#discard = discard;
     this.pid = record.id;
     this.parentId = record.parentId;
     this.key = record.key;
@@ -1080,7 +1121,9 @@ class DormantHandle<I, O> implements Handle<I, O, any> {
 
   subscribeEphemeral = (): Stream.Stream<Trace.Message> => Stream.die(new Error('Process not hydrated'));
 
-  terminate = (): Effect.Effect<void> => Effect.die(new Error('Process not hydrated'));
+  // Terminating without hydrating is the point: a caller discarding a stale process (e.g. one whose
+  // immutable spawn annotations no longer match) must not have to boot it first just to kill it.
+  terminate = (): Effect.Effect<void> => this.#discard();
 
   runToCompletion = (): Effect.Effect<void> => Effect.die(new Error('Process not hydrated'));
 

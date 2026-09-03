@@ -429,15 +429,11 @@ flow QA-1: Create a Sidekick agent and view its dashboard
     - name: Create the agent
       do: In the navtree, click + on the space and choose Agent (or the sidekick creation
         affordance), name it "QA Sidekick", and select the Sidekick skill.
-      invoke: org.dxos.operation.assistantToolkit.createAgent { name: "QA Sidekick", instructions: "You are a personal sidekick agent.", skills: ["org.dxos.skill.sidekick"], subscriptions: [] }
-      capture: created
       expect: an Agent named "QA Sidekick" exists with the sidekick skill attached
-      assert: return $created.name === 'QA Sidekick' && $created.skills?.includes('org.dxos.skill.sidekick');
       note: |
-        `createAgent` is a generic assistant-toolkit operation, not one this plugin declares — no
-        `op` block exists in this document to reference by `[op:…]`. It stops short of F-1.3/F-1.4/
-        F-1.5 (chat, queue, journal, memory doc): those are wired by the running agent session on
-        first activation, not by this factory call, so this step only covers agent existence.
+        NO `invoke` — agent creation has no operation binding, so it is a UI action. It also stops
+        short of F-1.3/F-1.4/F-1.5 (chat, queue, journal, memory doc): those are wired by the
+        running agent session on first activation.
     - name: Place it and open the dashboard
       do: Place "QA Sidekick" in the space (if not already) and click it in the navtree.
       expect: the SidekickArticle surface renders — Day Ahead, Action Items, People, Your Profile,
@@ -450,7 +446,6 @@ flow QA-1: Create a Sidekick agent and view its dashboard
   after:
     - name: Delete the agent
       do: Right-click "QA Sidekick" in the navtree and choose Delete.
-      invoke: org.dxos.operation.space.removeObjects { objects: [$created], target: $given.space }
       expect: the row leaves the navtree and its plank closes
 ```
 

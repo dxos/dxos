@@ -9,8 +9,6 @@ import { Dialog, Icon, IconButton, type ThemedClassName, useControlledState } fr
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
 import { mx } from '@dxos/ui-theme';
 
-const preventDefault = (event: Event) => event.preventDefault();
-
 // TODO(burdon): Factor out.
 const Endcap = ({ children }: PropsWithChildren) => {
   return (
@@ -79,7 +77,7 @@ const ChatDialogRoot = ({
               'grid grid-rows-[var(--dx-rail-action)_1fr_min-content] p-0 overflow-hidden box-content pointer-events-auto',
             ]}
             onEscapeKeyDown={onEscape}
-            onInteractOutside={preventDefault}
+            onInteractOutside={(event) => event.preventDefault()}
           >
             {children}
           </Dialog.Content>

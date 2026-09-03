@@ -10,6 +10,7 @@ import * as Project from '@dxos/compute/Project';
 import { Type } from '@dxos/echo';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
+import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { meta } from '#meta';
@@ -20,7 +21,8 @@ const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 describe('ProjectsPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     await using harness = await createComposerTestApp({
-      plugins: [ClientPlugin.make({}), ProjectsPlugin()],
+      // Tasks is declared in `dependsOn`, so the manager refuses to resolve Projects without it.
+      plugins: [ClientPlugin.make({}), TasksPlugin.make(), ProjectsPlugin()],
     });
 
     // OperationHandler is a dependency-mode root, so it activates immediately too.
@@ -38,7 +40,8 @@ describe('ProjectsPlugin', () => {
 
   test('the project skill activates when the assistant starts', async ({ expect }) => {
     await using harness = await createComposerTestApp({
-      plugins: [ClientPlugin.make({}), ProjectsPlugin()],
+      // Tasks is declared in `dependsOn`, so the manager refuses to resolve Projects without it.
+      plugins: [ClientPlugin.make({}), TasksPlugin.make(), ProjectsPlugin()],
     });
 
     await harness.fire(AppActivationEvents.AssistantStart);
@@ -49,7 +52,8 @@ describe('ProjectsPlugin', () => {
   test('registers the project types with the client', async ({ expect }) => {
     // Without a registered `Project` type every project verb fails where it stores the object.
     await using harness = await createComposerTestApp({
-      plugins: [ClientPlugin.make({}), ProjectsPlugin()],
+      // Tasks is declared in `dependsOn`, so the manager refuses to resolve Projects without it.
+      plugins: [ClientPlugin.make({}), TasksPlugin.make(), ProjectsPlugin()],
     });
 
     const client = harness.get(ClientCapabilities.Client);

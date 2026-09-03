@@ -138,7 +138,7 @@ export const EpubReader = forwardRef<EpubReaderHandle, EpubReaderProps>(
       );
     }
 
-    return <div ref={containerRef} className='w-full h-full overflow-hidden' />;
+    return <div ref={containerRef} className='dx-fill overflow-hidden' />;
   },
 );
 

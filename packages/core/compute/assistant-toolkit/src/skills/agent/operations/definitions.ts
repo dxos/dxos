@@ -6,13 +6,13 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import { Harness } from '@dxos/assistant';
+import * as Agent from '@dxos/assistant/Agent';
+import * as Chat from '@dxos/assistant/Chat';
 import { AgentService } from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
 import * as TriggerEvent from '@dxos/compute/TriggerEvent';
-import { Database, Ref } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
-
-import { Chat } from '../../../types';
 
 export const Relay = Operation.make({
   meta: {
@@ -49,4 +49,36 @@ export const GetContext = Operation.make({
     checklist: Schema.String,
   }),
   services: [Harness.HarnessService, Database.Service],
+});
+
+export const SyncAutomation = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.assistantToolkit.syncTriggers'),
+    name: 'Sync automation',
+    description:
+      'Compiles the agent automation config (subscriptions, optional cron) into Routines that relay events onto the agent session. Recreates everything, so call with the FULL desired config after any change; enabled is copied from the agent onto every trigger.',
+    icon: 'ph--arrows-clockwise--regular',
+  },
+  input: Schema.Struct({
+    agent: Schema.suspend(() => Ref.Ref(Agent.Agent)).annotate({
+      description: 'The agent whose automation should be synced.',
+    }),
+    subscriptions: Schema.optional(
+      Schema.Array(Ref.Ref(Obj.Unknown)).annotate({
+        description: 'The objects to subscribe to (e.g. mailboxes); each compiles to a feed-triggered routine.',
+      }),
+    ),
+    cron: Schema.optional(
+      Schema.String.annotate({
+        description: 'Cron expression for a scheduled wake routine.',
+      }),
+    ),
+    qualify: Schema.optional(
+      Schema.Boolean.annotate({
+        description: 'Run the cheap-model relevance filter on subscription events (default true).',
+      }),
+    ),
+  }),
+  output: Schema.Void,
+  services: [Database.Service],
 });

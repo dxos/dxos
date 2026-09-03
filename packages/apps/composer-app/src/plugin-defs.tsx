@@ -56,6 +56,7 @@ import * as PaymentsPlugin from '@dxos/plugin-payments/PaymentsPlugin';
 import * as PipelinePlugin from '@dxos/plugin-pipeline/PipelinePlugin';
 import * as PresenterPlugin from '@dxos/plugin-presenter/PresenterPlugin';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
+import * as QaPlugin from '@dxos/plugin-qa/QaPlugin';
 import * as ReviewPlugin from '@dxos/plugin-review/ReviewPlugin';
 import * as S3Plugin from '@dxos/plugin-s3/S3Plugin';
 import * as SamplePlugin from '@dxos/plugin-sample/SamplePlugin';
@@ -150,6 +151,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       OsrmPlugin.meta.profile.key,
       PaymentsPlugin.meta.profile.key,
       PipelinePlugin.meta.profile.key,
+      QaPlugin.meta.profile.key,
       S3Plugin.meta.profile.key,
       SandboxPlugin.meta.profile.key,
       SequencerPlugin.meta.profile.key,
@@ -225,6 +227,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     PaymentsPlugin.make(),
     PipelinePlugin.make(),
     PresenterPlugin.make(),
+    QaPlugin.make(),
     ProjectsPlugin.make(),
     ReviewPlugin.make(),
     isLocal && SamplePlugin.make(),

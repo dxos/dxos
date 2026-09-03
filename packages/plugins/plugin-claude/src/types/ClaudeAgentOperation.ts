@@ -39,12 +39,6 @@ export const SessionCredential = Schema.Struct({
   as: Schema.NonEmptyString.annotate({
     description: 'Environment variable the agent reads the secret as, e.g. "GH_TOKEN".',
   }),
-  scope: Schema.optional(
-    Schema.NonEmptyArray(Schema.NonEmptyString).annotate({
-      description:
-        'Hosts the secret may be sent to, e.g. ["github.com"]. Omit to default to the token\'s own source; the platform refuses to substitute it anywhere else. An empty list is rejected rather than read as the default.',
-    }),
-  ),
 });
 export interface SessionCredential extends Schema.Schema.Type<typeof SessionCredential> {}
 

@@ -7,6 +7,7 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Filter, Migration, Obj, Ref, Type } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
 import { getObjectCore } from '../echo-handler';
@@ -143,11 +144,11 @@ describe('rename migration', () => {
     const trigger = db.add(makeTrigger());
     await db.flush();
 
-    const settled = documentHeads(trigger);
+    const settled = localChanges(trigger);
     await db.runMigrations([
       Migration.defineRename({ from: 'org.example.operation.foo', to: 'org.example.operation.foo' }),
     ]);
-    expect(documentHeads(trigger)).to.deep.eq(settled);
+    expect(localChanges(trigger)).to.deep.eq(settled);
 
     expect(trigger.runnable.uri).to.eq(FOO);
     expect(trigger.steps.map((step) => step.uri)).to.deep.eq([FOO, OTHER]);
@@ -160,18 +161,36 @@ describe('rename migration', () => {
     const trigger = db.add(makeTrigger());
     await db.flush();
 
-    const settled = documentHeads(trigger);
+    const settled = localChanges(trigger);
     await expect(
       // @ts-expect-error intentional type violation to exercise runtime validation.
       db.runMigrations([rename, { [Migration.TypeId]: Migration.TypeId, kind: 'other' }]),
     ).rejects.toThrow(/Unknown migration kind/);
 
-    expect(documentHeads(trigger)).to.deep.eq(settled);
+    expect(localChanges(trigger)).to.deep.eq(settled);
     expect(trigger.runnable.uri).to.eq(FOO);
   });
 });
 
-const documentHeads = (object: Obj.Unknown) => A.getHeads(getObjectCore(object).docHandle!.doc());
+/**
+ * Hashes of the changes this client has written to `object`'s document, in order.
+ *
+ * Not the document's heads: the host writes its own root change to the same document as it
+ * initialises its copy, and that change can arrive at any point — including between a baseline and
+ * the assertion that compares against it, which then reads a second head as a modification. What
+ * these assertions mean is that the migration, which writes through this client, added nothing.
+ */
+const localChanges = (object: Obj.Unknown): string[] => {
+  const { docHandle } = getObjectCore(object);
+  invariant(docHandle, 'Object has no docHandle.');
+  const doc = docHandle.doc();
+  const actor = A.getActorId(doc);
+  return A.getAllChanges(doc)
+    .map((change) => A.decodeChange(change))
+    .filter((change) => change.actor === actor)
+    .map((change) => change.hash)
+    .filter((hash) => hash !== undefined);
+};
 
 const makeTrigger = () =>
   Obj.make(Trigger, {

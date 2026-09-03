@@ -21,6 +21,8 @@ import { translations as projectsTranslations } from '@dxos/plugin-projects/tran
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { translations as routineTranslations } from '@dxos/plugin-routine/translations';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
+import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
+import { translations as tasksTranslations } from '@dxos/plugin-tasks/translations';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { TagIndex, Text } from '@dxos/schema';
@@ -37,6 +39,7 @@ export const storyParameters = {
     ...projectsTranslations,
     ...inboxTranslations,
     ...routineTranslations,
+    ...tasksTranslations,
     ...formTranslations,
     ...reactUiTranslations,
   ],
@@ -116,6 +119,8 @@ export const createDecorators = ({ mailboxName, messages, ai, plugins = [], type
       SpacePlugin({}),
       InboxPlugin(),
       ProjectsPlugin.make(),
+      // Declared in Projects' `dependsOn`, so the manager refuses to resolve it without Tasks.
+      TasksPlugin.make(),
       RoutinePlugin.make(),
       makeModuleSurfacesPlugin('org.dxos.plugin.projects.story.modules', moduleSurfaces),
       ...(ai

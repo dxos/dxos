@@ -38,14 +38,13 @@ export const getApiKey: Effect.Effect<string, MissingCredentialError, Credential
  * time and handed straight to the control plane, so it never passes through a message, a transcript
  * or an operation result — the reference is what the model sees and passes around.
  *
- * An omitted `scope` defaults to the token's own source, and a name repeated in one request keeps
- * its last entry, since names are unique within a vault.
+ * A name repeated in one request keeps its last entry, since names are unique within a vault.
  */
 export const toVaultCredentials = Effect.fn('toVaultCredentials')(function* (
   credentials: readonly ClaudeAgentOperation.SessionCredential[],
 ) {
   const deduped = [...new Map(credentials.map((credential) => [credential.as, credential])).values()];
-  return yield* Effect.forEach(deduped, ({ token, as, scope }) =>
+  return yield* Effect.forEach(deduped, ({ token, as }) =>
     Effect.gen(function* () {
       const tokenObj = yield* Database.load(token);
       // A server-custodied token stores a placeholder locally, so only the service can exchange it.
@@ -56,16 +55,15 @@ export const toVaultCredentials = Effect.fn('toVaultCredentials')(function* (
       if (secret.length === 0) {
         return yield* Effect.fail(new CredentialResolutionError({ context: { as } }));
       }
-      // Only an omitted scope defaults; the schema rejects an empty one, so no listed scope can be
-      // silently widened to a host the caller left out.
-      const hosts = scope === undefined ? [tokenObj.source] : [...scope];
       return {
         display_name: `${as} (${tokenObj.source})`,
         auth: {
           type: 'environment_variable' as const,
           secret_name: as,
           secret_value: secret,
-          networking: { type: 'limited' as const, allowed_hosts: hosts },
+          // Host-scoped substitution silently 401s sibling hosts (a github.com scope never matches
+          // api.github.com), so substitute anywhere; the secret itself still never enters the sandbox.
+          networking: { type: 'unrestricted' as const },
         },
       } satisfies EnvironmentVariableCredential;
     }),

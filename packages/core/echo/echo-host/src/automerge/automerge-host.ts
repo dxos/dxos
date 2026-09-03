@@ -43,7 +43,7 @@ import { log } from '@dxos/log';
 import { type DataService } from '@dxos/protocols/rpc';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 import { trace } from '@dxos/tracing';
-import { ComplexSet, bufferToArray, defaultMap, isNonNullable, range } from '@dxos/util';
+import { ComplexSet, bufferToArray, defaultMap } from '@dxos/util';
 
 // SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
 type SqlTransactionTag = SqlTransaction.SqlTransaction;
@@ -133,21 +133,6 @@ export type CreateDocOptions = {
 };
 
 /**
- * Maximum amount of documents to sync in a single bundle.
- */
-const BUNDLE_SIZE = 100;
-
-/**
- * Maximum amount of concurrent tasks to run when pushing or pulling bundles.
- */
-const BUNDLE_SYNC_CONCURRENCY = 2;
-
-/**
- * If the number of documents to sync is greater than this threshold, we will use bundles.
- */
-const BUNDLE_SYNC_THRESHOLD = 50;
-
-/**
  * Only announce documents that are known to require sync.
  */
 const OPTIMIZED_SHARE_POLICY = true;
@@ -206,8 +191,7 @@ const MIN_RESIDENT_DOCUMENTS = 256;
  * Runs Subduction as the document byte transport ({@link Repo.subductionAdapters}), while
  * the DXOS-specific {@link CollectionSynchronizer} rides on the same {@link EchoNetworkAdapter}
  * via `sync-request` / `sync-state` control messages that are intercepted at the adapter
- * level and never reach the Subduction sedimentree layer. Bundle sync remains available
- * for replicators that opt in.
+ * level and never reach the Subduction sedimentree layer.
  */
 export class AutomergeHost extends Resource {
   private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
@@ -1419,38 +1403,9 @@ export class AutomergeHost extends Resource {
       });
     }
 
-    const toReplicateWithoutBatching = [...different];
-    const bundleSyncEnabled = this._echoNetworkAdapter.bundleSyncEnabledForPeer(peerId);
-    if (bundleSyncEnabled && missingOnRemote.length >= BUNDLE_SYNC_THRESHOLD) {
-      log('pushing bundle', { amount: missingOnRemote.length });
-      const { syncInteractively } = await this._pushInBundles(ctx, peerId, missingOnRemote);
-      toReplicateWithoutBatching.push(...syncInteractively);
-    } else {
-      // Not a failure: bundling is skipped below `BUNDLE_SYNC_THRESHOLD` or without peer support.
-      log.verbose('pushing without bundle', {
-        collectionId,
-        peerId,
-        amount: missingOnRemote.length,
-        reason: bundleSyncEnabled ? 'below-threshold' : 'bundle-sync-unavailable',
-      });
-      toReplicateWithoutBatching.push(...missingOnRemote);
-    }
-    if (bundleSyncEnabled && missingOnLocal.length >= BUNDLE_SYNC_THRESHOLD) {
-      log('pulling bundle', { amount: missingOnLocal.length });
-      const { syncInteractively } = await this._pullInBundles(ctx, peerId, missingOnLocal);
-      toReplicateWithoutBatching.push(...syncInteractively);
-    } else {
-      // Not a failure: bundling is skipped below `BUNDLE_SYNC_THRESHOLD` or without peer support.
-      log.verbose('pulling without bundle', {
-        collectionId,
-        peerId,
-        amount: missingOnLocal.length,
-        reason: bundleSyncEnabled ? 'below-threshold' : 'bundle-sync-unavailable',
-      });
-      toReplicateWithoutBatching.push(...missingOnLocal);
-    }
+    const toReplicate = [...different, ...missingOnRemote, ...missingOnLocal];
 
-    if (toReplicateWithoutBatching.length === 0) {
+    if (toReplicate.length === 0) {
       return;
     }
 
@@ -1460,9 +1415,9 @@ export class AutomergeHost extends Resource {
     log('replicating documents after collection sync', {
       collectionId,
       peerId,
-      count: toReplicateWithoutBatching.length,
+      count: toReplicate.length,
       handleStates: Object.fromEntries(
-        toReplicateWithoutBatching.map((documentId) => [documentId, getHandleState(this._repo, documentId)]),
+        toReplicate.map((documentId) => [documentId, getHandleState(this._repo, documentId)]),
       ),
     });
 
@@ -1471,7 +1426,7 @@ export class AutomergeHost extends Resource {
     // sync this triggers automerge-repo's doc-synchronizer; under Subduction it registers a
     // query for the sedimentreeId. Either way, once bytes arrive `_afterSave` populates
     // `SqliteHeadsStore` so collection sync sees the updated heads on the next diff.
-    for (const documentId of toReplicateWithoutBatching) {
+    for (const documentId of toReplicate) {
       // `findWithProgress` resolves from the existing query for an already-`ready` document and
       // `_documentsToSync` feeds a share policy Subduction does not consult, so a diverged
       // document reaching here gets no retry from either — the diff simply repeats next pass.
@@ -1528,110 +1483,6 @@ export class AutomergeHost extends Resource {
       unsubscribe();
       release();
     }, REPLICATION_LEASE_TIMEOUT);
-  }
-
-  // TODO(mykola): Add retries of batches https://gist.github.com/mykola-vrmchk/fde270259e9209fcbf1331e5abbf12cf
-  private async _pushInBundles(
-    ctx: Context,
-    peerId: PeerId,
-    documentIds: DocumentId[],
-  ): Promise<{ syncInteractively: DocumentId[] }> {
-    const documentsToPush = [...documentIds];
-    const syncInteractively: DocumentId[] = [];
-
-    // Push bundles in parallel with BUNDLE_SYNC_CONCURRENCY max concurrent tasks.
-    while (documentsToPush.length > 0) {
-      await Promise.all(
-        range(BUNDLE_SYNC_CONCURRENCY).map(async () => {
-          const bundle = documentsToPush.splice(0, BUNDLE_SIZE);
-          if (bundle.length === 0) {
-            return;
-          }
-          await this._pushBundle(ctx, peerId, bundle).catch((err) => {
-            log.warn('failed to push bundle, replicating interactively', { peerId, bundle, err });
-            syncInteractively.push(...bundle);
-          });
-        }),
-      );
-    }
-
-    return { syncInteractively };
-  }
-
-  private async _pushBundle(ctx: Context, peerId: PeerId, documentIds: DocumentId[]): Promise<void> {
-    if (this._ctx.disposed) {
-      return;
-    }
-
-    const docs = documentIds.map((documentId) => {
-      if (getHandleState(this._repo, documentId) !== 'ready') {
-        log.warn('document not ready, skipping', { documentId });
-        return;
-      }
-      const handle = this._repo.getHandle(documentId);
-      const doc = handle?.doc();
-      if (!doc) {
-        log.warn('document not available, skipping', { documentId });
-        return;
-      }
-      return {
-        documentId,
-        data: save(doc),
-        heads: getHeads(doc),
-      };
-    });
-
-    await this._echoNetworkAdapter.pushBundle(ctx, peerId, docs.filter(isNonNullable));
-  }
-
-  private async _pullInBundles(
-    ctx: Context,
-    peerId: PeerId,
-    documentIds: DocumentId[],
-  ): Promise<{ syncInteractively: DocumentId[] }> {
-    const documentsToPull = [...documentIds];
-    const syncInteractively: DocumentId[] = [];
-    const docsToImport: Record<DocumentId, Uint8Array> = {};
-
-    // Pull bundles in parallel with BUNDLE_SYNC_CONCURRENCY max concurrent tasks.
-    while (documentsToPull.length > 0) {
-      await Promise.all(
-        range(BUNDLE_SYNC_CONCURRENCY).map(async () => {
-          const bundle = documentsToPull.splice(0, BUNDLE_SIZE);
-          if (bundle.length === 0) {
-            return;
-          }
-          const result = await this._pullBundle(ctx, peerId, bundle).catch((err) => {
-            log.warn('failed to pull bundle, replicating interactively', { peerId, bundle, err });
-            syncInteractively.push(...bundle);
-          });
-          if (result) {
-            Object.assign(docsToImport, result.docsToImport);
-          }
-        }),
-      );
-    }
-
-    for (const [documentId, data] of Object.entries(docsToImport)) {
-      this._repo.import(data, { docId: documentId as DocumentId });
-    }
-    await this._repo.flush(Object.keys(docsToImport) as DocumentId[]);
-
-    return { syncInteractively };
-  }
-
-  private async _pullBundle(
-    ctx: Context,
-    peerId: PeerId,
-    documentIds: DocumentId[],
-  ): Promise<{ docsToImport: Record<DocumentId, Uint8Array> } | undefined> {
-    if (this._ctx.disposed) {
-      return;
-    }
-    // NOTE: We are expecting that documents that are being pulled are not present locally, so we are pulling all changes.
-    const docHeads = Object.fromEntries(documentIds.map((documentId) => [documentId, []]));
-    const bundle = await this._echoNetworkAdapter.pullBundle(ctx, peerId, docHeads);
-    return { docsToImport: bundle };
   }
 
   private _onHeadsChanged(docHeads: [DocumentId, Heads][]): void {

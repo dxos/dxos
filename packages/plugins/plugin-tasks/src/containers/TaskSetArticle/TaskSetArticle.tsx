@@ -3,20 +3,23 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useCapabilities, useOperation, useOperationHandler } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj, Ref } from '@dxos/echo';
-import { useObject } from '@dxos/echo-react';
-import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
-import { useAttention } from '@dxos/react-ui-attention';
-import { TaskList, type TaskPatch, type TaskPlacement } from '@dxos/react-ui-task';
-import { type Task, TaskSet } from '@dxos/types';
+import { Filter, Obj, Ref } from '@dxos/echo';
+import { Panel, Switch, Toolbar, useTranslation } from '@dxos/react-ui';
+import { useAttention, useSelection, useSelectionActions } from '@dxos/react-ui-attention';
+import { createMenuAction } from '@dxos/react-ui-menu';
+import { TaskList, type TaskPlacement } from '@dxos/react-ui-task';
+import { Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
-import { TaskOperation } from '#types';
+import { TaskOperation, TasksCapabilities } from '#types';
+
+import { useTaskActions } from '../../hooks';
 
 export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet>;
 
@@ -25,106 +28,152 @@ export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet>
  * describe, and restructurable by dragging a row or with `Alt`+arrow. Milestone grouping is
  * deliberately not rendered yet (see TASKS.md). CRUD flows through the
  * {@link TaskOperation} verbs so the article and external agents share one write path: the verbs
- * are what keep the array, the refs and the lifecycle parent edges consistent.
+ * are what keep the array, the refs and `parentTask` consistent.
  */
 export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSetArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { hasAttention } = useAttention(attendableId);
   const spaceId = Obj.getDatabase(taskSet)?.spaceId;
-  const { invokePromise } = useOperationInvoker();
+  const tasks = useTasks(taskSet);
+  const { checked, onTaskCheck } = useCheckedTasks(taskSet);
 
-  const tasks = useSetTasks(taskSet);
-
-  const statusLabel = useCallback((status: Task.Status) => t(`task-status.${status}.label`), [t]);
-
-  const handleCreate = useCallback(
-    (title: string) => void invokePromise(TaskOperation.CreateTask, { taskSet: Ref.make(taskSet), title }, { spaceId }),
-    [invokePromise, taskSet, spaceId],
+  const handleCreate = useOperation(
+    TaskOperation.CreateTask,
+    (props: Task.Draft) => ({ taskSet: Ref.make(taskSet), ...props }),
+    { spaceId },
   );
 
-  const handleUpdate = useCallback(
-    (task: Task.Task, patch: TaskPatch) =>
-      void invokePromise(TaskOperation.UpdateTask, { task: Ref.make(task), ...patch }, { spaceId }),
-    [invokePromise, spaceId],
+  const handleUpdate = useOperation(
+    TaskOperation.UpdateTask,
+    (task: Task.Task, props: Task.Edit) => ({ task: Ref.make(task), ...props }),
+    { spaceId },
   );
 
-  // Deleting through the verb (not `db.remove`) is what sweeps the task and its sub-tasks out of
-  // the set's `tasks` array; the cascade alone would leave the refs behind.
-  const handleDelete = useCallback(
-    (task: Task.Task) => void invokePromise(TaskOperation.DeleteTask, { task: Ref.make(task) }, { spaceId }),
-    [invokePromise, spaceId],
+  const handleDelete = useOperation(TaskOperation.DeleteTask, (task: Task.Task) => ({ task: Ref.make(task) }), {
+    spaceId,
+  });
+
+  // Delete is one item among the contributed ones, so a row has a single trailing affordance
+  // whatever any plugin adds to it.
+  const contributed = useTaskActions();
+  const getTaskActions = useCallback(
+    (task: Task.Task) => [
+      ...contributed(task),
+      createMenuAction(`delete-${task.id}`, () => handleDelete(task), {
+        label: t('delete-task.label'),
+        icon: 'ph--x--regular',
+        testId: 'tasks.task.delete',
+      }),
+    ],
+    [contributed, handleDelete, t],
   );
 
-  // One verb per gesture: `MoveTask` re-parents and repositions together, so a drop cannot leave the
-  // task hanging at the end of its new parent while a second call lands.
+  // Run synchronously on the drop frame: `MoveTask` peeks its refs and only suspends when one is
+  // unloaded, so with the rows already in hand the write commits in the same tick the gesture ends.
+  // Going through the invoker instead re-rendered from the model before the write landed and again
+  // after it, which is the jump.
+  const move = useOperationHandler(
+    TaskOperation.MoveTask,
+    (task: Task.Task, { parentTask, before }: TaskPlacement) => ({
+      task: Ref.make(task),
+      taskSet: Ref.make(taskSet),
+      parentTask: parentTask ? Ref.make(parentTask) : null,
+      ...(before ? { before: Ref.make(before) } : {}),
+    }),
+  );
   const handleMove = useCallback(
-    (task: Task.Task, { parentTask, before }: TaskPlacement) =>
-      void invokePromise(
-        TaskOperation.MoveTask,
-        {
-          task: Ref.make(task),
-          parentTask: parentTask ? Ref.make(parentTask) : null,
-          ...(before ? { before: Ref.make(before) } : {}),
-        },
-        { spaceId },
-      ),
-    [invokePromise, spaceId],
+    (task: Task.Task, placement: TaskPlacement) => {
+      Effect.runSync(move(task, placement));
+    },
+    [move],
   );
-
-  const [selected, setSelected] = useState<string>();
-  const handleSelect = useCallback((task: Task.Task) => setSelected(task.id), []);
 
   const content = (
     <TaskList.Root
       tasks={tasks}
-      showDescriptions
       hierarchical
-      statusLabel={statusLabel}
+      selectable
+      showDescription
+      showEstimates
+      checked={checked}
+      getTaskActions={getTaskActions}
+      onTaskCheck={onTaskCheck}
       onTaskCreate={handleCreate}
       onTaskUpdate={handleUpdate}
-      onTaskDelete={handleDelete}
       onTaskMove={handleMove}
-      // Selection is local to the list today (it styles the row); opening the task is a separate
-      // affordance, so this only makes the row report which task the reader is looking at.
-      onTaskSelect={handleSelect}
-      selected={selected}
     >
-      <TaskList.Viewport classNames='dx-document'>
-        <TaskList.Content />
+      <TaskList.Viewport>
+        <TaskList.Content classNames='dx-document border' />
       </TaskList.Viewport>
-      <TaskList.Create classNames='dx-document' placeholder={t('task-create.placeholder')} />
+      <div className='p-2 pt-0'>
+        <TaskList.Edit
+          showDescription
+          classNames='dx-document bg-input-surface border border-separator rounded-md p-2'
+          placeholder={t('task-create.placeholder')}
+        />
+      </div>
     </TaskList.Root>
   );
 
-  // Embedded as a section (e.g. the ProjectArticle Tasks section): the host owns scroll and
-  // chrome, so render the bare list — a nested Panel/scroll root would collapse width.
-  if (role === AppSurface.Section.role) {
-    return content;
-  }
-
   return (
-    <Panel.Root role={role} classNames='dx-document'>
-      <Panel.Toolbar asChild>
-        <Toolbar.Root disabled={!hasAttention} />
-      </Panel.Toolbar>
-      <Panel.Content>{content}</Panel.Content>
-    </Panel.Root>
+    <Switch.Root
+      on={role}
+      fallback={
+        <Panel.Root role={role}>
+          <Panel.Toolbar asChild>
+            <Toolbar.Root disabled={!hasAttention} />
+          </Panel.Toolbar>
+          <Panel.Content>{content}</Panel.Content>
+        </Panel.Root>
+      }
+    >
+      {/* Embedded as a section (e.g., the ProjectArticle Tasks section): the host owns scroll and
+          chrome, so render the bare list — a nested Panel/scroll root would collapse width. */}
+      <Switch.Match when={AppSurface.Section.role}>{content}</Switch.Match>
+    </Switch.Root>
   );
 };
 
 TaskSetArticle.displayName = 'TaskSetArticle';
 
 /**
- * The set's tasks, subscribed to membership and order only (a property atom on `tasks`, not the
- * whole set). Refs resolve through `ref.atom`, which tracks loading without tracking mutations, so
- * a title or status edit re-renders just the row that owns it — `TaskList` rows subscribe
- * themselves.
+ * The checked rows, as the multi-selection `react-ui-attention` holds for this set.
+ *
+ * Keyed by the task set's object id, not by the attendable: two task lists on one deck would
+ * otherwise share a selection. The set lives in view state rather than in the article because the
+ * host's toolbar reads it too — neither the rows nor the toolbar owns it.
+ *
+ * Offered only when a plugin contributes a {@link TasksCapabilities.TaskAction}: the checkbox marks
+ * which rows an action will act on, so with nothing to act on it is an affordance that does nothing.
  */
-const useSetTasks = (taskSet: TaskSet.TaskSet): Task.Task[] => {
-  const [taskRefs] = useObject(taskSet, 'tasks');
-  const atom = useMemo(
-    () => Atom.make((get) => TaskSet.dedupeById((taskRefs ?? []).map((ref) => get(ref.atom)))),
-    [taskRefs],
-  );
+const useCheckedTasks = (taskSet: TaskSet.TaskSet) => {
+  const actions = useCapabilities(TasksCapabilities.TaskAction);
+  const ids = useSelection(taskSet.id, 'multi');
+  const { toggle } = useSelectionActions(taskSet.id);
+  const checked = useMemo(() => new Set(ids), [ids]);
+  const handleTaskCheck = useCallback((task: Task.Task) => toggle(task.id), [toggle]);
+
+  return actions.length > 0
+    ? { checked, onTaskCheck: handleTaskCheck }
+    : { checked: undefined, onTaskCheck: undefined };
+};
+
+/**
+ * The set's tasks via `childOf` — membership is the ECHO parent edge, and transitive tolerates
+ * legacy sub-tasks still parented to their parent task. The query re-emits on membership changes
+ * only, never on a member's edit — `TaskList` rows subscribe themselves.
+ */
+const useTasks = (taskSet: TaskSet.TaskSet): readonly Task.Task[] => {
+  const atom = useMemo(() => {
+    const query = Obj.getDatabase(taskSet)?.query(Filter.and(Filter.type(Task.Task), Filter.childOf(taskSet)));
+    return Atom.make((get): readonly Task.Task[] => {
+      const tasks: readonly Task.Task[] = query ? get(query.atom) : [];
+      // Subscribes each member's `parentTask` (the set's array does not carry hierarchy)
+      // and orders by the set's canonical array.
+      tasks.forEach((task) => get(Obj.atomProperty(task, 'parentTask')));
+      return Task.orderTasks(tasks, get(Obj.atomProperty(taskSet, 'tasks')) ?? []);
+    });
+  }, [taskSet]);
+
   return useAtomValue(atom);
 };

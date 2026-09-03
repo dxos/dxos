@@ -4,5 +4,5 @@
 
 export * as ClaudeAgentOperation from './ClaudeAgentOperation';
 export * as ClaudeAgentSession from './ClaudeAgentSession';
-export * as ClaudeAgentsEvents from './ClaudeAgentsEvents';
+export * as ClaudeEvents from './ClaudeEvents';
 export * as ClaudeManagedAgent from './ClaudeManagedAgent';

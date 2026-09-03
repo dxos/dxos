@@ -89,15 +89,15 @@
       "types": "./dist/types/src/types/ClaudeAgentSession.d.ts",
       "import": "./dist/lib/ClaudeAgentSession.mjs"
     },
-    "./ClaudeAgentsEvents": {
-      "source": "./src/types/ClaudeAgentsEvents.ts",
-      "types": "./dist/types/src/types/ClaudeAgentsEvents.d.ts",
-      "import": "./dist/lib/ClaudeAgentsEvents.mjs"
+    "./ClaudeEvents": {
+      "source": "./src/types/ClaudeEvents.ts",
+      "types": "./dist/types/src/types/ClaudeEvents.d.ts",
+      "import": "./dist/lib/ClaudeEvents.mjs"
     },
-    "./ClaudeAgentsSkill": {
-      "source": "./src/skills/ClaudeAgentsSkill.ts",
-      "types": "./dist/types/src/skills/ClaudeAgentsSkill.d.ts",
-      "import": "./dist/lib/ClaudeAgentsSkill.mjs"
+    "./ClaudeSkill": {
+      "source": "./src/skills/ClaudeSkill.ts",
+      "types": "./dist/types/src/skills/ClaudeSkill.d.ts",
+      "import": "./dist/lib/ClaudeSkill.mjs"
     },
     "./ClaudeManagedAgent": {
       "source": "./src/types/ClaudeManagedAgent.ts",
@@ -114,8 +114,8 @@
       "ClaudeAgentSession": [
         "dist/types/src/types/ClaudeAgentSession.d.ts"
       ],
-      "ClaudeAgentsEvents": [
-        "dist/types/src/types/ClaudeAgentsEvents.d.ts"
+      "ClaudeEvents": [
+        "dist/types/src/types/ClaudeEvents.d.ts"
       ],
       "ClaudeManagedAgent": [
         "dist/types/src/types/ClaudeManagedAgent.d.ts"
