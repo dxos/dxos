@@ -10,7 +10,8 @@ import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef,
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Alarm } from '@dxos/assistant';
-import { Chat as AssistantChat, resolveSlashCommand } from '@dxos/assistant-toolkit';
+import { resolveSlashCommand } from '@dxos/assistant-toolkit';
+import * as AssistantChat from '@dxos/assistant/Chat';
 import { Event } from '@dxos/async';
 import { type Database, Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
@@ -42,7 +43,9 @@ import { meta } from '#meta';
 import { TaskSlashCommands } from '../../commands';
 import { AiUsageQuotaError, type ProcessorRequestContext } from '../../processor';
 import {
+  ChatActivity,
   ChatStatus,
+  ChatStatusStack,
   ChatPrompt as NaturalChatPrompt,
   type ChatPromptProps as NaturalChatPromptProps,
 } from '../ChatPrompt';
@@ -635,13 +638,17 @@ type ChatPromptProps = Omit<NaturalChatPromptProps, 'chat' | 'db' | 'processor' 
  * trigger is not used: the toggle is a button inside the composer, which reports through the chat
  * event rather than being wrapped in a `Collapsible.Trigger` it cannot reach.
  */
-const ChatPrompt = ({ classNames, defaultTasksVisible = true, ...props }: ChatPromptProps) => {
+const ChatPrompt = ({ classNames, defaultTasksVisible = false, ...props }: ChatPromptProps) => {
   const { chat, db, processor, event } = useChatContext(CHAT_PROMPT_NAME);
 
-  // Disclosed by default: a chat carrying a checklist should show it without being asked, and the
-  // toggle is how the reader gets the room back once they have read it. Per mount rather than
-  // persisted — it is a glance, not a preference.
-  const [tasksVisible, setTasksVisible] = useState(defaultTasksVisible);
+  // A chat with no checklist at all has nothing to disclose, so the toggle is withheld rather than
+  // shown pointing at nothing — `ChatActions` renders it only when `tasksVisible` is defined.
+  const hasTasks = chat?.tasks != null;
+
+  // Collapsed by default: the checklist is the assistant's working state, not the reader's, so the
+  // prompt keeps the room and the toggle is how they ask for it. Per mount rather than persisted —
+  // it is a glance, not a preference.
+  const [tasksVisible, setTasksVisible] = useState(chat?.tasks?.length ? defaultTasksVisible : false);
   useEffect(() => {
     return event.on((ev) => {
       if (ev.type === 'toggle-tasks') {
@@ -659,18 +666,20 @@ const ChatPrompt = ({ classNames, defaultTasksVisible = true, ...props }: ChatPr
       lazyMount={false}
     >
       {/* The height the machine measures is what the ramp animates against, so the region clips. */}
-      <Collapsible.Content className='overflow-hidden data-[state=closed]:animate-slide-up data-[state=open]:animate-slide-down'>
-        <ChatTaskList classNames='shrink-0 max-h-[calc(4*2rem+1px)] border border-separator border-b-0 rounded-t-sm text-description' />
-      </Collapsible.Content>
+      {hasTasks && (
+        <Collapsible.Content className='overflow-hidden data-[state=closed]:animate-slide-up data-[state=open]:animate-slide-down'>
+          <ChatTaskList classNames='shrink-0 max-h-[calc(4*2rem+1px)] border border-separator border-b-0 rounded-t-sm text-description' />
+        </Collapsible.Content>
+      )}
       <NaturalChatPrompt
         {...props}
         // Square where the checklist meets it, so the two read as one shell rather than two cards.
         classNames={[tasksVisible && 'rounded-t-none', classNames]}
-        chat={chat}
         db={db}
+        chat={chat}
         processor={processor}
         event={event}
-        tasksVisible={tasksVisible}
+        tasksVisible={hasTasks ? tasksVisible : undefined}
       />
     </Collapsible.Root>
   );
@@ -786,7 +795,9 @@ export const Chat = {
   Content: ChatContent,
   Prompt: ChatPrompt,
   Queue: ChatQueue,
+  Activity: ChatActivity,
   Status: ChatStatus,
+  StatusStack: ChatStatusStack,
   Thread: ChatThread,
   Outline: ChatOutline,
 };

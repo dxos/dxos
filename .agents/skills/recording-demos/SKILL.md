@@ -50,6 +50,51 @@ Wait for `ready in`. In the cloud sandbox, first read the `cloud-sandbox` skill 
 needs a full dependency build (`moon run composer-app:build`), and Chromium needs the proxy flags
 that `driver.mjs` already applies.
 
+### Storybook, when the demo is a component
+
+```bash
+DX_STORIES=plugins/plugin-assistant,stories/stories-assistant moon run storybook-react:serve
+```
+
+`DX_STORIES` narrows which packages are crawled (see `.storybook/main.ts`); unset it and the whole
+monorepo is served from source, which is slower to boot and re-optimizes mid-session. The `serve`
+task builds the full package closure first, so budget the same 10+ minutes as an app.
+
+**Always record storybook demos in isolation mode.** Drive
+`/iframe.html?id=<story-id>&viewMode=story` — the story fills the 1280×800 frame, and the recording
+carries the component instead of a sidebar, a Controls table and a toolbar that mean nothing to the
+person watching. The manager is worth one establishing shot at most; it is never where the feature
+gets demonstrated.
+
+```bash
+C '{"op":"goto","url":"http://localhost:9009/iframe.html?id=plugins-plugin-assistant-components-chatactivity--sequence&viewMode=story"}'
+```
+
+The id is the CSF path: `title` lowercased with every `/` and space turned into `-`, then `--`, then
+the export name in kebab-case (`ConnectingMcp` → `connecting-mcp`). Read it off the manager's URL if
+in doubt.
+
+Four things about storybook that cost a cycle each:
+
+- **Warm the preview bundle before the first isolation load.** A cold `iframe.html` pays the whole
+  Vite dep-scan and holds a light-theme spinner for 15s+ — which lands in the recording. Load the
+  manager once, wait for the story to render, and only then drive `iframe.html`.
+- **`eval` runs in the manager, not the story.** `page.evaluate` sees the top document, so a story
+  selector resolves to nothing. Reach in explicitly:
+  `document.querySelector('#storybook-preview-iframe').contentDocument.querySelector(...)`. Same for
+  `click`/`text` — a Playwright locator does not cross into the iframe.
+- **HMR is your edit loop.** A source edit re-renders the live story in about 4s, so verify a fix by
+  re-reading the DOM rather than restarting anything.
+- **Remount by re-selecting, not reloading.** A story with a timer or an animation restarts when it
+  mounts; clicking another story and back is instant, whereas a reload re-bundles.
+- **Scope a selector that the thread also matches.** A chat's composer and every message already in
+  the thread are all `.cm-content`, so the bare selector's `.first()` types into the transcript —
+  silently, since the op still answers `ok`. Anchor on the container's testid
+  (`[data-testid="assistant.prompt"] .cm-content`) and read the value back before submitting.
+- **`clearCaption` before touching anything at the bottom of the page.** The banner is pinned there,
+  so it sits over a composer or a footer toolbar and swallows the click. Clear it, interact, caption
+  again.
+
 ## 2. Start the driver
 
 ```bash

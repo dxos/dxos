@@ -485,7 +485,7 @@ deletion guards (Phase 5) are separate planned follow-ups.**
       endpoint). Tracked as a follow-up.
 - [x] **Re-confirm NO MIGRATIONS** — carried forward from M5; no migrations written. Versions
       bumped: taskSet `0.3.0`, task `0.3.0`, milestone `0.1.0`, project `0.4.0`. The onboarding
-      exemplar fixture was regenerated (`pnpm run build-exemplar`) so it carries the new versions
+      exemplar fixture was regenerated (`pnpm run build-sample`) so it carries the new versions
       plus two milestones. **Re-confirm with the user before this lands if anything has deployed.**
 
 ### Phase 2 — project slimming

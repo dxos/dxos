@@ -4,12 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
+import { Harness } from '@dxos/assistant';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, type Ref } from '@dxos/echo';
 import { Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { Chat } from '../../../types';
 import { AssignTasks } from './definitions';
 
 /**
@@ -35,7 +36,7 @@ const resolveTasks = (
 export default AssignTasks.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ add, remove }) {
-      const chat = yield* Chat.getFromContext;
+      const chat = yield* Harness.getChat;
 
       const requested = add ?? [];
       const assignable = yield* resolveTasks(requested);
@@ -49,9 +50,9 @@ export default AssignTasks.pipe(
 
       const rejected = requested.length - assignable.length;
       return trim`
-        Assigned ${added.length} task(s), unassigned ${removed.length}.
-        ${rejected > 0 ? `Ignored ${rejected} reference(s) that do not resolve to a task.` : ''}
-        Current checklist:
+        Assigned ${added.length} task(s); unassigned ${removed.length};
+        ${rejected > 0 ? `ignored ${rejected} reference(s) that do not resolve to a task.` : ''}
+
         <checklist>
           ${yield* Chat.formatChecklist(chat)}
         </checklist>
