@@ -130,17 +130,20 @@ export type TaskCheckboxProps = {
 export const TaskCheckbox = ({ task, checked, onCheckedChange, classNames }: TaskCheckboxProps) => {
   const { t } = useTranslation(translationKey);
   return (
-    <Input.Root>
-      <Input.Checkbox
-        checked={checked}
-        data-testid='taskList.item.checkbox'
-        aria-label={t('task-check.label')}
-        classNames={classNames}
-        onCheckedChange={() => onCheckedChange(task)}
-        // The row is the selection target; checking it must not also make it the current row.
-        onClick={(event) => event.stopPropagation()}
-      />
-    </Input.Root>
+    // `IconBlock square` so the box is centred in the same square an `IconButton iconOnly` occupies;
+    // bare, the 1rem box hugged the start of a 2rem track beside 2rem controls.
+    <IconBlock square aria-hidden={false} classNames={classNames}>
+      <Input.Root>
+        <Input.Checkbox
+          checked={checked}
+          data-testid='taskList.item.checkbox'
+          aria-label={t('task-check.label')}
+          onCheckedChange={() => onCheckedChange(task)}
+          // The row is the selection target; checking it must not also make it the current row.
+          onClick={(event) => event.stopPropagation()}
+        />
+      </Input.Root>
+    </IconBlock>
   );
 };
 

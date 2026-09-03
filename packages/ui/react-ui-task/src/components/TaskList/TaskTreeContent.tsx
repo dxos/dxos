@@ -342,16 +342,12 @@ const TaskTreeHeading = ({
         showGutter ? 'grid-cols-[2rem_1.5rem_minmax(0,1fr)]' : 'grid-cols-[1.5rem_minmax(0,1fr)]',
       )}
     >
-      {/* `justify-self-start`: the gutter track is two digits wide so the pane's columns line up
-          with it, but the badge and the box are their own size within it rather than stretched. */}
+      {/* `justify-self-start` on the ordinal: the gutter track is two digits wide so the pane's
+          columns line up with it, but the badge is its own size within it rather than stretched.
+          The checkbox needs nothing — its `IconBlock` is the track's own square. */}
       {showGutter &&
         (onTaskCheck ? (
-          <TaskCheckbox
-            task={task}
-            checked={!!checked?.has(task.id)}
-            classNames='justify-self-start'
-            onCheckedChange={onTaskCheck}
-          />
+          <TaskCheckbox task={task} checked={!!checked?.has(task.id)} onCheckedChange={onTaskCheck} />
         ) : ordinal !== undefined ? (
           <TaskOrdinal task={task} ordinal={ordinal} classNames='justify-self-start' />
         ) : (
