@@ -11,15 +11,10 @@ import { type Actor, Event, type Organization, type Person } from '@dxos/types';
 
 import { type OrgKey, type OrgMap } from './organizations';
 import { type PersonKey, type PersonMap, personActor } from './people';
-import { actor } from './util';
-import { daysFromNow } from './util';
+import { actor, daysFromNow } from './util';
 
 //
-// Calendar
-//
-
-//
-// Calendar
+// Calendar.
 //
 
 const makeCalendar = (

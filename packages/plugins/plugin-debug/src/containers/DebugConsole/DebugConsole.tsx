@@ -79,7 +79,7 @@ export const DebugConsole = ({ onClose, fit }: DebugConsoleProps) => {
             label={t('console.copy.label')}
             onCopy={() => lastResultRef.current}
           />
-          <div role='none' className='grow' />
+          <Toolbar.Separator />
           {onClose && <SystemIconButton.Close variant='ghost' iconOnly onClick={onClose} />}
         </Toolbar.Root>
       </Panel.Statusbar>

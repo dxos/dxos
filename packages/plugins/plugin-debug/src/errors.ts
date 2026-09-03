@@ -12,3 +12,9 @@ export class SampleSpaceNotFoundError extends BaseError.extend(
 
 /** The requested space id resolves to no space on this client. */
 export class SpaceNotFoundError extends BaseError.extend('SpaceNotFoundError', 'No space with that id.') {}
+
+/** Applying a sample space failed part-way; the cause carries what the phase actually threw. */
+export class SampleSpaceApplyError extends BaseError.extend(
+  'SampleSpaceApplyError',
+  'Failed to apply the sample space.',
+) {}

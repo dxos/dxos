@@ -120,23 +120,24 @@ export const CreateSampleSpace = Operation.make({
     key: DXN.make('org.dxos.operation.debug.createSampleSpace'),
     name: 'Create Sample Space',
     description:
-      'Writes a themed sample data set into a space. Call without `id` to list what is available ' +
-      'without writing anything; the listing is the only way to learn the ids.',
+      'Creates a new space and fills it with a themed sample data set. Call without `id` to list ' +
+      'what is available without creating anything; the listing is the only way to learn the ids.',
     icon: 'ph--dice-five--regular',
   },
   // The contributing modules are demand-gated, so the handler fires the activation event itself.
   services: [Capability.Service, Plugin.Service],
   input: Schema.Struct({
     id: Schema.optional(Schema.String).annotate({
-      description: 'Sample space id. Omit to list the available sets without writing anything.',
-    }),
-    spaceId: Schema.optional(Schema.String).annotate({
-      description: 'Target space id. Defaults to the default space.',
+      description: 'Sample space id. Omit to list the available sets without creating anything.',
     }),
   }),
   output: Schema.Struct({
     applied: Schema.optional(SampleSpaceSummary).annotate({
       description: 'The set that was written; absent when listing.',
+    }),
+    spaceId: Schema.optional(Schema.String),
+    subject: Schema.optional(Schema.Array(Schema.String)).annotate({
+      description: 'Navigation path of the new space, for a follow-up open.',
     }),
     available: Schema.Array(SampleSpaceSummary),
   }),

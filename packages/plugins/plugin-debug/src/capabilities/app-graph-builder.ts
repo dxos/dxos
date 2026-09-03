@@ -4,13 +4,16 @@
 
 import * as Effect from 'effect/Effect';
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { type Space } from '@dxos/react-client/echo';
@@ -21,6 +24,8 @@ import { DebugNodes, DebugOperation } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    const sampleSpacesAtom = yield* Capability.atom(AppCapabilities.SampleSpace);
+
     const extensions = yield* Effect.all([
       // Top-level Debug node (sibling of DevTools under SYSTEM); only present when a space is active.
       AppGraphBuilder.createExtension({
@@ -85,27 +90,53 @@ export default Capability.makeModule(
       }),
 
       // Sample-space builder in the L0 app menu: seeding a space is the first thing a fresh profile
-      // needs, so it must be reachable without first opening the debug node under SYSTEM.
+      // needs, so it must be reachable without first opening the debug node under SYSTEM. A group
+      // rather than one action, because each set creates its own space and the choice is the point.
       AppGraphBuilder.createExtension({
         id: 'createSampleSpace',
         match: GraphNodeMatcher.whenRoot,
-        actions: () =>
-          Effect.succeed([
-            AppGraphNode.makeAction({
-              id: 'createSampleSpace',
-              // No `id` argument: the operation lists the available sets rather than picking one,
-              // and the generator panel remains where a specific set is chosen.
-              data: Effect.fnUntraced(function* () {
-                yield* Operation.invoke(DebugOperation.CreateSampleSpace, {});
+        actionGroups: (_matched, get) =>
+          Effect.gen(function* () {
+            // Read the atom before any early return: the sample modules are demand-gated, so on a
+            // cold app this runs while the list is still empty, and an early return that never
+            // touched the atom would register no dependency and never re-run once they activate.
+            get(sampleSpacesAtom);
+            // Ignored rather than propagated: a graph builder's error channel is `never`, and a
+            // failed activation just means nothing to list, which the empty case below already
+            // renders.
+            yield* Effect.ignore(Plugin.activate(ActivationEvents.SampleSpacesRequested));
+            const samples = yield* Capability.getAll(AppCapabilities.SampleSpace);
+            if (samples.length === 0) {
+              return [];
+            }
+
+            return [
+              AppGraphNode.makeActionGroup({
+                id: 'createSampleSpace',
+                properties: {
+                  label: ['create-sample-space.label', { ns: meta.profile.key }],
+                  icon: 'ph--dice-five--regular',
+                  disposition: 'menu',
+                },
+                actions: samples.map((sample) =>
+                  AppGraphNode.makeAction({
+                    id: `createSampleSpace/${sample.id}`,
+                    data: Effect.fnUntraced(function* () {
+                      const { subject } = yield* Operation.invoke(DebugOperation.CreateSampleSpace, { id: sample.id });
+                      if (subject) {
+                        yield* Operation.invoke(LayoutOperation.Open, { subject });
+                      }
+                    }),
+                    properties: {
+                      // The contributed label is already a plain display string, not an i18n key.
+                      label: sample.label,
+                      icon: 'ph--dice-five--regular',
+                    },
+                  }),
+                ),
               }),
-              properties: {
-                label: ['create-sample-space.label', { ns: meta.profile.key }],
-                icon: 'ph--dice-five--regular',
-                disposition: 'menu',
-                position: Position.last,
-              },
-            }),
-          ]),
+            ];
+          }),
       }),
 
       // Log panel deck companion.

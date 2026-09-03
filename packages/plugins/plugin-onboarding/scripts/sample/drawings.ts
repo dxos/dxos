@@ -162,7 +162,7 @@ const makeFloorPlanContent = (): Record<string, unknown> => {
 //   Row 1 (y=80,  h=80): 4 category headers, colored fill
 //   Row 2 (y=180, h=60): first tasting note per category
 //   Row 3 (y=260, h=60): second tasting note per category
-//   Column width: 190 px  →  total canvas: 760 × 340 px
+//   Column width: 180 px, gap 10 px  →  total canvas: 750 × 320 px
 const makeFlavorWheelContent = (): Record<string, unknown> => {
   const PAGE = 'page:flavor-wheel';
   const COL_W = 180;
@@ -179,7 +179,7 @@ const makeFlavorWheelContent = (): Record<string, unknown> => {
     fill: string,
   ) => tlGeo(id, PAGE, idx, x, y, w, h, text, color, fill);
 
-  const x = (col: number) => col * COL_W + Math.max(0, col - 1) * COL_GAP;
+  const x = (col: number) => col * (COL_W + COL_GAP);
 
   return makeTLCanvas(PAGE, 'Spring Blend Flavor Wheel', [
     // Row 0: title

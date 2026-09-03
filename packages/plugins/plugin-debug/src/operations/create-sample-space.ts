@@ -8,19 +8,19 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as Operation from '@dxos/compute/Operation';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { DebugOperation } from '#types';
 
-import { SampleSpaceNotFoundError, SpaceNotFoundError } from '../errors';
+import { SampleSpaceApplyError, SampleSpaceNotFoundError } from '../errors';
 
 const summarize = ({ id, label, description }: AppCapabilities.SampleSpace) => ({ id, label, description });
 
 const handler: Operation.WithHandler<typeof DebugOperation.CreateSampleSpace> = DebugOperation.CreateSampleSpace.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ id, spaceId }) {
+    Effect.fnUntraced(function* ({ id }) {
       // The same demand signal the generator panel fires on mount: nothing else activates these
       // modules, so without it the list is empty on a cold app.
       yield* Plugin.activate(ActivationEvents.SampleSpacesRequested);
@@ -33,28 +33,21 @@ const handler: Operation.WithHandler<typeof DebugOperation.CreateSampleSpace> = 
       const sample = samples.find((sample) => sample.id === id);
       if (!sample) {
         return yield* Effect.fail(
-          new SampleSpaceNotFoundError({ context: { id, available: available.map((s) => s.id) } }),
+          new SampleSpaceNotFoundError({ context: { id, available: available.map(({ id }) => id) } }),
         );
       }
 
+      // Delegated rather than `client.spaces.create`: the space operation is what waits for ready,
+      // installs the root collection annotation and runs the OnCreateSpace callbacks, and content
+      // written into a space missing that root collection is unreachable from the navtree.
+      const { space, subject } = yield* Operation.invoke(SpaceOperation.Create, { name: sample.label });
       const client = yield* Capability.get(ClientCapabilities.Client);
-      // `AppSpace.getDefaultSpace` rather than a `spaces.default` accessor: the designation lives on
-      // the settings space, with a fallback to the legacy personal space for unmigrated profiles.
-      const space = spaceId
-        ? client.spaces.get().find((space) => space.id === spaceId)
-        : AppSpace.getDefaultSpace(client);
-      if (!space) {
-        return yield* Effect.fail(new SpaceNotFoundError({ context: { spaceId } }));
-      }
-
       yield* Effect.tryPromise({
-        // `apply` registers the content's types on the client before writing, so the space needs no
-        // preparation here beyond being ready.
         try: () => sample.apply({ client, space }),
-        catch: (cause) => cause as Error,
+        catch: (cause) => new SampleSpaceApplyError({ context: { id: sample.id }, cause }),
       });
 
-      return { applied: summarize(sample), available };
+      return { applied: summarize(sample), spaceId: space.id, subject, available };
     }),
   ),
 );
