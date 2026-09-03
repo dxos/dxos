@@ -4,7 +4,7 @@
 
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { chain } from '@dxos/async';
+import { chain, waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { AlreadyJoinedError } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
@@ -41,7 +41,7 @@ describe('services/device', () => {
     expect(guest.identityManager.identity?.identityKey).to.deep.eq(identity1.identityKey);
   });
 
-  test('the joining device never mints a competing halo root', async () => {
+  test('the joining device adopts the halo root of the inviting device', { timeout: 90_000 }, async () => {
     const [host, guest] = await chain<ServiceContext>([closeAfterTest])(
       createPeers(2, undefined, { automergeCredentials: true }),
     );
@@ -52,13 +52,14 @@ describe('services/device', () => {
     expect(hostRefs?.spaceRootDocUrl).to.exist;
 
     await Promise.all(performInvitation({ host, guest, options: { kind: Invitation.Kind.DEVICE } }));
-
-    // Halo documents have no replication path between devices yet, so the named root cannot arrive.
-    // What matters is that the guest does not mint a competing root over the same space: two roots
-    // would leave the devices disagreeing about which document carries the credential chain.
     expect(guest.identityManager.identity?.haloSpaceId).to.equal(spaceId);
-    const guestRoot = guest.echoHost.getSpaceRootRefs(spaceId)?.spaceRootDocUrl;
-    expect(guestRoot === undefined || guestRoot === hostRefs!.spaceRootDocUrl).to.be.true;
+
+    // The root replicates over the device swarm rather than arriving with the invitation, so the
+    // budget has to outlast one full capped retry interval.
+    await waitForCondition({
+      condition: () => guest.echoHost.getSpaceRootRefs(spaceId)?.spaceRootDocUrl === hostRefs!.spaceRootDocUrl,
+      timeout: 60_000,
+    });
   });
 
   test('invitation when already joined', async () => {
