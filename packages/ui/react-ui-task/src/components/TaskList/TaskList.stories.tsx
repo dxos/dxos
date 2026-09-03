@@ -147,37 +147,37 @@ const seedDrag = (): Task.Task[] => {
 };
 
 const DefaultStory = ({
+  seed = seedFlat,
   readonly,
-  showGroupLabels,
-  groupByStatus,
+  draggable = false,
+  checkable = false,
   hierarchical,
+  groupByStatus,
+  showGroupLabels,
   showOrdinals,
   showDescription = true,
   showEstimates,
-  draggable = false,
-  checkable = false,
-  seed = seedFlat,
   debug,
   framed = true,
 }: {
-  readonly?: boolean;
-  /** Group tasks under status headers. */
-  groupByStatus?: boolean;
-  hierarchical?: boolean;
-  showGroupLabels?: boolean;
-  showOrdinals?: boolean;
-  showDescription?: boolean;
-  showEstimates?: boolean;
-  /** Wire `onTaskMove`, which is what turns rows into drag sources. Off unless a story asks. */
-  draggable?: boolean;
-  /** Wire `onTaskCheck`, which puts a checkbox in the gutter where the ordinal would sit. */
-  checkable?: boolean;
   /**
    * The tasks to start from. A factory rather than a named fixture, so a story can compose its own
    * (`() => seedMany(100)`) without a union to extend — and because `useState` reads its initial
    * value once, which is what made the booleans this replaces useless as live controls.
    */
   seed?: () => Task.Task[];
+  readonly?: boolean;
+  /** Wire `onTaskMove`, which is what turns rows into drag sources. Off unless a story asks. */
+  draggable?: boolean;
+  /** Wire `onTaskCheck`, which puts a checkbox in the gutter where the ordinal would sit. */
+  checkable?: boolean;
+  hierarchical?: boolean;
+  /** Group tasks under status headers. */
+  groupByStatus?: boolean;
+  showGroupLabels?: boolean;
+  showOrdinals?: boolean;
+  showDescription?: boolean;
+  showEstimates?: boolean;
   /** Paint every row's drop bands, so the zones are visible without holding a drag. */
   debug?: boolean;
   /** Insets the pane in a card, as an article does. Off for the tests that measure the pane's own
