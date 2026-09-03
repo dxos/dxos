@@ -45,11 +45,11 @@
     },
     "#operation-handler": {
       "source": {
-        "workerd": "./src/capabilities/operation-handler.headless.ts",
+        "workerd": "./src/capabilities/operation-handler.workerd.ts",
         "default": "./src/capabilities/operation-handler.ts"
       },
       "types": "./dist/types/src/capabilities/operation-handler.d.ts",
-      "workerd": "./dist/lib/operation-handler.headless.mjs",
+      "workerd": "./dist/lib/operation-handler.workerd.mjs",
       "default": "./dist/lib/operation-handler.mjs"
     },
     "#privacy-banner": {
