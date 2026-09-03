@@ -46,6 +46,13 @@ const seedFlat = (): Task.Task[] => [
     description:
       'Draft lives at https://github.com/dxos/dxos/pull/12752 and the preview is https://pr-12752-composer-dev.dxos.workers.dev; blocked on #12431.',
   }),
+  // A title carrying a bare address, which is how a task written by an agent or pasted into quick
+  // entry usually names a PR — the row has to link it, since a title is text rather than markdown.
+  Task.make({
+    title: 'Review https://github.com/dxos/dxos/pull/12924',
+    status: 'todo',
+    description: 'Check that the LFS pre-push hook is bypassed and that Windows `$workspaceRoot` is exercised.',
+  }),
   Task.make({
     title: 'Draft launch email',
     status: 'started',
@@ -460,6 +467,53 @@ export const TestAgentSpinner: Story = {
         .map((row) => row.querySelector('span.truncate')?.textContent ?? '');
 
     await waitFor(async () => expect(spinning()).toEqual(['Draft launch email']), { timeout: 10_000 });
+  },
+};
+
+/**
+ * A URL in a title is a link the reader can follow, and following it does not select the row.
+ *
+ * Both halves matter: a title is plain text, so nothing makes the address an anchor unless the row
+ * splits the string itself; and the row is the selection target, so an anchor that let the click
+ * through would swap the edit pane onto the task on the way out to the browser.
+ */
+export const TestTitleLinks: Story = {
+  args: {
+    showGroupLabels: false,
+    showOrdinals: true,
+  },
+  play: async ({ canvasElement }) => {
+    const rows = () => Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]'));
+    await waitFor(async () => expect(rows().length).toBeGreaterThan(1));
+
+    // Thrown rather than asserted, so `waitFor` retries until the row mounts and the element is
+    // narrowed for everything below it.
+    const link = await waitFor(() => {
+      const found = canvasElement.querySelector<HTMLAnchorElement>('span.truncate a[href^="https://"]');
+      if (!found) {
+        throw new Error('no title rendered a link');
+      }
+      return found;
+    });
+
+    // The address itself is the link text, and it opens away from the app rather than replacing it.
+    await expect(link.getAttribute('href')).toEqual('https://github.com/dxos/dxos/pull/12924');
+    await expect(link.textContent).toEqual('https://github.com/dxos/dxos/pull/12924');
+    await expect(link.getAttribute('target')).toEqual('_blank');
+    await expect(link.getAttribute('rel')).toContain('noopener');
+    // The words around the address stay text — the row linked the URL, not the title.
+    await expect(link.closest('span.truncate')?.textContent).toEqual('Review https://github.com/dxos/dxos/pull/12924');
+
+    // Navigation is suppressed for the click below; the assertion is about what the row did with
+    // it, and a new tab is not something the test runner should be left holding.
+    const suppress = (event: Event) => event.preventDefault();
+    document.addEventListener('click', suppress, true);
+    try {
+      await userEvent.click(link);
+      await expect(canvasElement.querySelectorAll('[aria-selected="true"]')).toHaveLength(0);
+    } finally {
+      document.removeEventListener('click', suppress, true);
+    }
   },
 };
 

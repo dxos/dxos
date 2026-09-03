@@ -23,6 +23,7 @@ import {
 } from './hierarchy';
 import { TaskDescription } from './TaskDescription';
 import { TaskCheckbox, TaskOrdinal, TaskStatusControl } from './TaskRowCells';
+import { TaskTitle } from './TaskTitle';
 import { TASK_TREE_ROOT_ID, type TaskNode, buildTaskForest, buildTaskPaths, createTaskTreeModel } from './tree-model';
 
 /**
@@ -342,7 +343,7 @@ const TaskTreeHeading = ({
           <span className='col-[gutter]' />
         ))}
       <TaskStatusControl task={task} classNames='col-[status]' onTaskUpdate={onTaskUpdate} />
-      <span className='col-[title] self-center min-w-0 truncate'>{current.title}</span>
+      <TaskTitle title={current.title} classNames='col-[title] self-center min-w-0 truncate' />
       {/* The row's second line, spanning from the title to the row's end: it has to clear the
           ordinal and the status control, or it reads as belonging to the row above. */}
       {description && <TaskDescription content={description} classNames='col-[title/tree-row-end] row-start-2 pb-1' />}

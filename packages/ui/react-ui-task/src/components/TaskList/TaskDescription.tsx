@@ -8,9 +8,18 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
 import { mx } from '@dxos/ui-theme';
 
+import { TaskLink } from './TaskLink';
+
 /** A description is a line in a row, not a document: no paragraph block, no heading scale. */
 export const DESCRIPTION_COMPONENTS = {
   p: ({ children }: PropsWithChildren) => <span>{children}</span>,
+  // The view's own anchor selects the row on the way to following the link, because the row is the
+  // selection target; `TaskLink` stops the click at the anchor.
+  a: ({ children, href }: PropsWithChildren<{ href?: string }>) => (
+    <TaskLink href={href} classNames='break-all'>
+      {children}
+    </TaskLink>
+  ),
 };
 
 export type TaskDescriptionProps = ThemedClassName<{ content: string }>;
