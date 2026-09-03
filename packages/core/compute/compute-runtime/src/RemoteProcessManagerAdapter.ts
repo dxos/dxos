@@ -94,6 +94,26 @@ export class RemoteProcessManagerAdapter implements ProcessManager.Manager {
     definition: Process.Process<I, O, any, Rpcs>,
     options?: ProcessManager.SpawnOptions,
   ): Effect.Effect<ProcessManager.Handle<I, O, Rpcs>> {
+    return this.#spawn(definition.key, options, definition);
+  }
+
+  /**
+   * Spawn by `Process.key` alone, without a local definition.
+   *
+   * Only the key crosses the wire — the host resolves it against the processes it hosts — so a
+   * definition is not what identifies a remote process. It supplies the input/output codecs and the
+   * RPC group, which is the only reason {@link spawn} takes one; without it the returned handle is a
+   * metadata and lifecycle view, and its typed surface throws until `Handle.hydrate` attaches one.
+   */
+  spawnByKey(key: string, options?: ProcessManager.SpawnOptions): Effect.Effect<ProcessManager.Handle.Any> {
+    return this.#spawn(key, options);
+  }
+
+  #spawn<I, O, Rpcs extends Rpc.Any = never>(
+    key: string,
+    options?: ProcessManager.SpawnOptions,
+    definition?: Process.Process<I, O, any, Rpcs>,
+  ): Effect.Effect<ProcessManager.Handle<I, O, Rpcs>> {
     return Effect.gen({ self: this }, function* () {
       const annotations = Annotation.buildDictionary((dictionary) => {
         if (options?.target !== undefined) {
@@ -108,7 +128,7 @@ export class RemoteProcessManagerAdapter implements ProcessManager.Manager {
       assertJsonSafe(annotations);
 
       const info = yield* this.#control.spawn(this.#space, {
-        key: definition.key,
+        key,
         ...(options?.name !== undefined ? { name: options.name } : {}),
         ...(options?.parentProcessId !== undefined ? { parentPid: options.parentProcessId } : {}),
         ...(options?.environment !== undefined ? { environment: options.environment } : {}),
