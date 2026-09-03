@@ -441,3 +441,180 @@ its main advertised benefits do not follow from being a queue.
 What the queue does not solve, and should not be sold as solving: a long-lived agent on EDGE. That needs an
 `AgentProcess` host with alarms and hibernation — a Durable Object per conversation, or an EDGE `ProcessManager`
 backed by DO storage — and is independent of how firings are recorded.
+
+## Proposed mechanism
+
+A per-space **Job feed** between "a trigger fired" and "something ran". The wake mechanisms (DO alarm on EDGE, tick
+and live queries on the client) are unchanged; what changes is that a firing becomes a durable record before it
+becomes an invocation, and its lifecycle is appended to that record rather than kept in dispatcher memory.
+
+### Goals and non-goals
+
+Goals: (1) one path for every trigger kind on both runtimes; (2) a durable, replicated record of every firing and
+its outcome; (3) a bounded executor loop on EDGE; (4) crash reclaim and opt-in retry; (5) `runAgain`, cancel and
+status expressed as feed records instead of three private mechanisms.
+
+Non-goals: priority scheduling (recorded, not enforced); a long-lived agent on EDGE; changing how a `Trigger` is
+routed (`remote` still decides the runtime).
+
+### Records
+
+One feed per space, discovered by kind exactly as the trace feed is (`FeedTraceSink.TRACE_FEED_KIND`):
+
+```ts
+export const JOB_FEED_KIND = 'dxos.org.feed.jobs';
+// getOrCreateJobFeed: Query.select(Filter.type(Feed.Feed, { kind: JOB_FEED_KIND })) ?? Database.add(Feed.make({ kind, name: 'Jobs', namespace: 'jobs' }))
+```
+
+The record is one ECHO type; lifecycle is carried by annotations on the same item, following `SessionStore` (an
+append by id is an upsert, so marking a Job adds no record to the log):
+
+```ts
+export class Job extends Type.makeObject<Job>(DXN.make('org.dxos.type.job', '0.1.0'))(
+  Schema.Struct({
+    trigger: Ref.Ref(Trigger.Trigger),
+    runnable: Ref.Ref(Runnable.Runnable), // resolved at enqueue time so the Job survives a trigger edit
+    event: TriggerEvent.TriggerEvent,
+    input: Schema.Any, // createInvocationPayload(trigger, event), computed once
+    runtime: Schema.Literals(['edge', 'local']),
+    generation: Schema.Number, // one activation of a trigger; continuations share it
+    attempt: Schema.Number, // 0 on first firing; retries append a new Job with attempt + 1
+    continues: Schema.optional(Ref.Ref(Job)), // set on a runAgain continuation
+    priority: Schema.optional(Schema.Number), // recorded, not enforced (see Assessment)
+    requestedAt: Schema.Number,
+  }),
+) {}
+
+// Lifecycle annotations (org.dxos.annotation.job.*), appended by the executor.
+export const InFlight = Annotation.make({
+  id: 'org.dxos.annotation.job.inFlight',
+  schema: Schema.Struct({ pid: Schema.String, startedAt: Schema.Number }),
+});
+export const Ack = Annotation.make({
+  id: 'org.dxos.annotation.job.ack',
+  schema: Schema.Struct({ completedAt: Schema.Number, output: Schema.optional(Schema.Any) }),
+});
+export const Failed = Annotation.make({
+  id: 'org.dxos.annotation.job.failed',
+  schema: Schema.Struct({ completedAt: Schema.Number, error: SerializedError, terminal: Schema.Boolean }),
+});
+export const Cancelled = Annotation.make({
+  id: 'org.dxos.annotation.job.cancelled',
+  schema: Schema.Struct({ at: Schema.Number }),
+});
+```
+
+Derived state, computed by one linear scan from a cursor (the `SessionStore.loadPending` shape):
+
+| Projection | Definition                                |
+| ---------- | ----------------------------------------- |
+| pending    | no `InFlight`, no `Cancelled`             |
+| running    | `InFlight` and neither `Ack` nor `Failed` |
+| stale      | running and `startedAt + timeout < now`   |
+| history    | `Ack` or `Failed`                         |
+
+Nothing is deleted or edited in place. Retention is a compaction policy on the feed (acked Jobs older than N days
+are dropped from the projection and eventually from storage), the same policy the trace feed needs and does not
+have yet.
+
+### Flow
+
+```mermaid
+sequenceDiagram
+  participant W as Wake (DO alarm / client tick / live query)
+  participant D as Dispatcher (TriggersDispatcher DO or TriggerDispatcher)
+  participant F as Job feed (space)
+  participant X as Executor (same runtime)
+  participant R as Runtime (operation-service RPC / ProcessManager)
+  W->>D: due
+  D->>F: append Job { trigger, event, input, runtime, generation }
+  D->>X: drain (bounded batch)
+  X->>F: scan from cursor: pending where runtime == mine
+  X->>F: append InFlight { pid }
+  X->>R: invoke (unchanged: FunctionInvoker / Process.fromOperation + spawn)
+  R-->>X: output | error | RunAgainError
+  alt success
+    X->>F: append Ack { output }
+  else runAgain
+    X->>F: append Ack; append Job { continues, same generation }
+  else failure, idempotent
+    X->>F: append Failed { terminal: false }; append Job { attempt + 1 }
+  else failure
+    X->>F: append Failed { terminal: true }
+  end
+```
+
+1. **Enqueue.** The dispatcher that owns the trigger (by `remote`) appends one `Job` per due trigger and returns. On
+   EDGE this is the whole cron alarm body; on the client it is the timer tick and the reactive feed/subscription
+   dispatch. `feed`, `webhook` and `email` handlers on EDGE append too; a webhook then executes its Job inline so the
+   HTTP response is still synchronous. `Trigger.Monitor.invokeTrigger` ("run now") appends a Job with a fresh
+   `generation` and, for a remote trigger, no longer needs `forceRunCronTrigger` — EDGE picks it up on its next drain,
+   which the client can provoke with the existing `notifySpaceActive`.
+2. **Claim.** The executor scans the feed from its cursor for `pending` Jobs whose `runtime` matches, takes a bounded
+   batch (`CONTINUATION_DEQUEUE_LIMIT` already exists for this), and appends `InFlight { pid }`. There is exactly one
+   executor per runtime per space — the DO on EDGE, the dispatcher fiber on the client — so a claim is a single-writer
+   append and needs no compare-and-set. The other runtime never claims; it only projects.
+3. **Execute.** Unchanged. EDGE: `FunctionInvoker.invokeTrigger` with the Job's precomputed `input`, the same
+   `operation-service` RPC, timeout and cancel signal; the caller-minted `pid` is the one written into `InFlight`, so
+   the trace feed's `OperationStart`/`OperationEnd` correlate by pid. Client: `Process.fromOperation` + `spawn` as
+   today, with the Job id added to the process record's annotations so the local process tree links back.
+4. **Settle.** Append `Ack` (with the output snapshot) or `Failed`. A `RunAgainError` is an `Ack` followed by a new
+   `Job` with `continues` and the same `generation`; the DO continuation queue, `continuationCompactionKey` and
+   `serializeContinuationEvent` are retired. Retry is a new `Job` with `attempt + 1`, appended only when the runnable
+   carries `Operation.idempotent` (the same annotation `Process.fromOperation` already honours locally) and
+   `attempt < maxAttempts` on the trigger; otherwise `Failed { terminal: true }` is the record the schematic asks for.
+5. **Reclaim.** A Job that is `stale` (in flight past the invocation timeout with no terminal annotation) is what a
+   killed isolate or a closed tab leaves behind. The next drain appends `Failed { terminal: false }` and applies the
+   retry rule. This replaces "the run reads as still running forever" and the client's dormant-record leak.
+6. **Cancel.** `cancelTriggerRun` becomes: append `Cancelled` to every pending or running Job of the generation, and
+   abort the in-flight signal as today. The claim step skips cancelled Jobs; a continuation of a cancelled generation is
+   never appended. The `_currentGeneration`/`_cancelledGeneration` maps in the DO go away.
+
+### Runtime placement
+
+| Piece         | EDGE                                                                                                    | Client                                                                      |
+| ------------- | ------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Enqueue       | `TriggersDispatcher.alarm()`, feed/webhook/email handlers                                               | `TriggerDispatcher.invokeScheduledTriggers`, `invokeTrigger`                |
+| Executor loop | same DO, `_processJobQueue({ limit })` replacing `_runCronTasks` bodies and `_processContinuationQueue` | dispatcher fiber, replacing `_drainRetries` and the in-memory `retry` state |
+| Cursor        | DO storage key                                                                                          | `Feed.CursorAnnotation` on the executor's own state object                  |
+| Feed access   | data-service / feed-space bindings (`onQueueItemsInserted` already flows this way)                      | `Database.Service` for the space                                            |
+| Invocation    | unchanged                                                                                               | unchanged                                                                   |
+
+The two dispatchers keep their wake logic and lose their private bookkeeping: `RuntimeTriggerState.retry`,
+`cooldownUntil` (cooldown becomes "no retry for N seconds", derived from the last `Failed` timestamp),
+`_continuationQueue`, and the generation maps.
+
+### Observation
+
+- `Trigger.State` is derived from the feed: `lastResult` = last terminal annotation for the trigger, `retryPending` =
+  a pending Job with `attempt > 0`, `nextExecution` stays runtime-reported. `EdgeTriggerManager`'s 15 s poll of
+  `getTriggerStatuses` becomes optional — the feed is already replicated.
+- `Process.Info[]` for EDGE is the `running` projection: `{ pid, key: runnable, state: RUNNING, startedAt, environment: { space } }`.
+  `EdgeProcessManager.processTree` stops being empty without a new endpoint.
+- The trace feed is unchanged and remains the fine-grained record; the Job feed is the coarse one. They correlate by
+  `pid`.
+
+### Phasing
+
+1. **Record only.** Both dispatchers append `Job` / `InFlight` / `Ack` / `Failed` around their existing invocation
+   paths. No behaviour change; the feed becomes the audit record and the EDGE process view fills in.
+2. **Executor on EDGE.** The DO alarm enqueues and drains; continuation queue and generation maps replaced; reclaim
+   and idempotent retry enabled.
+3. **Executor on the client.** Same for `TriggerDispatcher`; local process records carry the Job id.
+4. **Run now via the feed.** `invokeTrigger` appends; `forceRunCronTrigger` reduced to "drain now".
+5. **Compaction.** Retention policy for the Job feed (and, in the same change, the trace feed).
+
+Phase 1 is safe to land alone and already answers "why did my routine not run".
+
+### Open questions
+
+1. Subscription triggers must exclude the Job feed (and the trace feed) from what they observe, or a Job write
+   matches a query on `Obj.Unknown`. Today the trace feed already has this exposure; a feed `namespace` filter in
+   `TriggerLoader.matchSubscriptionTriggers` and the client's subscription source is the likely fix.
+2. `output` on `Ack` is a snapshot and can be large (an extraction result, a document). Either cap it, store a ref, or
+   leave output to the trace feed and keep `Ack` output-free.
+3. Idempotency is declared per operation, but a `RunInstructions` run is only as idempotent as the instructions.
+   Default off; consider an `Instructions.idempotent` field later.
+4. Whether `stale` reclaim on the client should retry at all: a closed tab is not a crash, and the local process
+   record may still hydrate. Proposal: reclaim only on EDGE in phases 1–3.
+5. Who compacts, and whether compaction is a Job itself (a system `timer` trigger per space).
