@@ -276,6 +276,44 @@ the workspace copy over the pin. It _does_ load in an isolated closure -- verifi
 downgrade guard would need: a spawned process with its own dependency graph, because that is what a
 build in the field actually is.
 
+### The clearest evidence in this migration that a green test run is not proof
+
+The guard reported **518/518 passing while silently skipping every repeated field.** Its field walk
+branched on `field.repeated`, which does not exist on buf's descriptors: buf models a repeated field
+as its own `fieldKind: 'list'` carrying a `listKind` discriminant, so every `list` field fell
+through the walk's `default` and was never populated.
+
+vitest ran the file green. The type error sat in a branch no generated case ever reached, so nothing
+executed it. Only `protocols:build` rejected it. Nothing about the test output distinguished a guard
+walking 258 messages properly from one walking them with every repeated field missing -- the case
+count was identical either way, because the cases are per message, not per field.
+
+Correcting the walk raised the ledger from **19 entries to 42**, with **zero new error classes**:
+the same single root cause reaching further, now through repeated members (`spaces`, `signatures`,
+`invitations`, `parents`, `credentials`, `contacts`). Nothing new was wrong; more of what was
+already wrong became visible.
+
+Two things follow, and they are the reason this is recorded here rather than left in a commit
+message. `moon build` belongs on every package a change touches, including the ones where the only
+change is a test file. And a coverage claim should be checked against what the generator actually
+emitted, not against the number of cases it produced -- 518 was true and meant less than it looked.
+
+### What the ledger is, and is not
+
+**42 recorded divergences.** Not a tolerance budget and not a list of things that are fine: a
+ledger of one root cause -- protobuf.js's decoder materialising an _absent_ singular message field
+with unsubstituted defaults, which its own encoder then rejects -- observed at 42 message/field
+sites. Each entry is keyed on the message **and the exact field paths**, so a listed message that
+starts diverging somewhere new goes red. A no-growth assertion pins the count, and a staleness check
+fails a listed message that stops diverging, since a stale entry would silence a future regression
+on a message that is currently clean. Entries are expected to disappear as messages move to buf.
+
+Headline figures, in the order they should be read: the guard went **483/517 -> 518/518** once the
+19 real divergences were separated from three generator artefacts, then **19 -> 42** once the
+repeated-field miss was corrected. `encodeCompat`/`decodeCompat` handling all 258 messages is
+recorded beside that, never instead of it -- the finding is that protobuf.js's decoder and its
+encoder disagree, not that the compat path is clean.
+
 ### Divergence 1: protobuf.js cannot re-encode its own decode output
 
 Its decoder materialises an _absent_ singular nested message with **unsubstituted** defaults, which
