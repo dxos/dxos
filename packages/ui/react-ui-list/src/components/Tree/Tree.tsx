@@ -463,6 +463,16 @@ export const Tree = <T extends { id: string } = any>({
       if (!selectionFollowsFocus || !focusedValue || selected.includes(focusedValue)) {
         return;
       }
+      // Only the row's own focus selects — the arrows, or a click on the row. Focus landing on a
+      // control inside it (a delete button, a status menu, a checkbox) bubbles the same event, and
+      // following it selected the row the reader was about to act on: a delete briefly swapped the
+      // edit pane onto the doomed task before it vanished. The row is the element carrying
+      // `data-object-id` (the item, or a branch's control — a branch's `treeitem` is its
+      // display-contents wrapper, which never holds focus itself).
+      const active = document.activeElement;
+      if (active && active !== document.body && active.closest('[data-object-id]') !== active) {
+        return;
+      }
       const entry = byValue.get(focusedValue);
       if (entry) {
         onSelectNode(entry, { option: false, shift: false });
