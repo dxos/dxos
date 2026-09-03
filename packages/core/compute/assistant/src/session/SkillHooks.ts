@@ -64,7 +64,9 @@ export const runHooks = <R>({
           yield* invoke(operation, { ...hook.input });
         }).pipe(
           Effect.catchCause((cause) =>
-            Effect.sync(() => log.warn('skill hook failed', { phase, skill: Skill.getKey(skill), cause })),
+            // Meta key rather than `Skill.getKey`: a space-authored skill has none, and an error
+            // report must not itself throw.
+            Effect.sync(() => log.warn('skill hook failed', { phase, skill: Obj.getMeta(skill).key, cause })),
           ),
         );
       }
