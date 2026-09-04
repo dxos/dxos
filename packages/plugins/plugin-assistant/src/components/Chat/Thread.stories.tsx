@@ -256,8 +256,9 @@ export const SyntheticTurn: Story = {
       },
       { timeout: 10_000 },
     );
-    // The nudge itself is rendered, as the collapsed panel the registry maps `<synthetic>` to.
-    await expect(canvasElement.querySelectorAll('[data-reasoning-text]').length).toBeGreaterThan(0);
+    // The nudge itself is rendered, as the collapsed panel the registry maps `<synthetic>` to —
+    // `SyntheticWidget`, which marks its prose `data-synthetic-text`, not reasoning's attribute.
+    await expect(canvasElement.querySelectorAll('[data-synthetic-text]').length).toBeGreaterThan(0);
     await expect(canvasElement.textContent ?? '').toContain('checklist still has unchecked items');
   },
 };
