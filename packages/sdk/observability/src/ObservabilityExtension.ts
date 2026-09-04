@@ -158,10 +158,16 @@ export type Ai = {
 };
 
 /**
- * Support extension API (kind-specific methods only).
+ * Support extension API (kind-specific methods only). The ticket itself is filed by a backend;
+ * the extension supplies what only the browser has: the log dump and the session context.
  */
 export type Support = {
-  createSupportTicket(form: SupportTicketForm): Promise<string | undefined>;
+  /** Uploads the buffered debug logs to long-lived storage; resolves with the key, or undefined when nothing went. */
+  uploadLogs(): Promise<string | undefined>;
+  /** The telemetry session to anchor the ticket to, if this extension has one. */
+  sessionContext(): SupportSessionContext | undefined;
+  /** Ships the buffered debug logs to the extension's log store, tagged with the ticket. */
+  flushLogs(ticketId: string): Promise<void>;
 };
 
 export type ExtensionApi =
@@ -176,9 +182,17 @@ export type ExtensionApi =
   | ExtensionApiBase<'traces'>;
 
 /**
- * Report to be filed as a support ticket; the returned id anchors the report's telemetry.
+ * What a browser knows about its own telemetry session, for a backend that files the ticket on
+ * its behalf. Shaped after what posthog-js's own widget sends.
  */
-export type SupportTicketForm = { message: string; includeLogs?: boolean };
+export type SupportSessionContext = {
+  distinctId: string;
+  /** Browser-minted id the widget API uses for access control on anonymous tickets. */
+  widgetSessionId: string;
+  sessionId?: string;
+  replayUrl?: string;
+  currentUrl?: string;
+};
 
 /**
  * Attributes to be attached to observability events.
@@ -188,15 +202,22 @@ export type Attributes = Record<string, string | number | boolean | undefined>;
 /**
  * Implementation of an observability extension API.
  */
+/** What an extension may reach back into once it is initialized. */
+export type ExtensionContext = {
+  /** Tag every signal, or only the signals of one kind, on every extension that emits them. */
+  setTags(tags: Attributes, kind?: Kind): void;
+};
+
 export type Extension = {
-  initialize?(): Effect.Effect<void, Error>;
+  initialize?(context: ExtensionContext): Effect.Effect<void, Error>;
   close?(): Effect.Effect<void>;
   enable?(): Effect.Effect<void>;
   disable?(): Effect.Effect<void>;
   flush?(): Effect.Effect<void>;
   identify?(distinctId: string, attributes?: Attributes, setOnceAttributes?: Attributes): void;
   alias?(distinctId: string, previousId?: string): void;
-  setTags?(tags: Record<string, string>): void;
+  /** `kind` narrows the tags to one signal kind; without it they apply to everything the extension emits. */
+  setTags?(tags: Record<string, string>, kind?: Kind): void;
   enabled: boolean;
   apis: ExtensionApi[];
 };

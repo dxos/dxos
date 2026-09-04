@@ -112,6 +112,7 @@ export const initializeObservability = async (
         config,
         release: composerBuildVersion(config),
         environment: getEnvString(config, 'DX_ENVIRONMENT') ?? 'unknown',
+        serviceName: 'composer',
         logStore,
         feedbackLogMaxSize: LOG_STORE_MAX_BYTES,
         feedbackLogsEndpoint: feedbackLogsEndpoint(config, isTauri),

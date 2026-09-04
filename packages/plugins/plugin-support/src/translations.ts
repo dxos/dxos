@@ -48,6 +48,7 @@ export const translations = [
         'feedback-textarea.placeholder': 'Please enter your feedback, technical issue, or feature request.',
         'include-debug-logs.label': 'Include debug logs',
         'send-feedback.label': 'Submit report to Discord',
+        'send-report.label': 'Submit report',
         'sending-feedback.label': 'Sending…',
         'public-report.description':
           'Your report will be posted publicly to our Discord help channel. Attached logs, screenshots, and diagnostics are only sent to the Composer team.',
@@ -59,6 +60,9 @@ export const translations = [
         'feedback-toast.description': 'We will review your feedback and get back to you as soon as possible.',
         'feedback-toast-no-screenshot.description':
           'We will review your feedback and get back to you as soon as possible. (Screenshot could not be attached.)',
+        'feedback-failed-toast.label': 'Report not sent',
+        'feedback-failed-toast.description':
+          'Support is unavailable right now. Your report is still in the form; please try again in a moment.',
         'discord-feedback-toast.label': 'Help thread started in Discord',
         'discord-feedback-toast.description': 'Your thread is now open in Discord.',
         // Welcome tour + keyboard shortcuts (absorbed from plugin-help).

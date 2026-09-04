@@ -8,7 +8,10 @@ import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
+import { type Config, EdgeServiceName, getEdgeServiceEndpoint, getEnvString } from '@dxos/config';
 import { Annotation, Database, DXN, Format, Ref, Type } from '@dxos/echo';
+import { log } from '@dxos/log';
+import type * as Observability from '@dxos/observability/Observability';
 
 import * as Support from './Support';
 
@@ -76,25 +79,89 @@ export const SupportRequest = Schema.Struct({
 
 export type SupportRequest = Schema.Schema.Type<typeof SupportRequest>;
 
-/** Support-ticket input, derived from {@link SupportRequest} by the FeedbackPanel. */
-export const SupportTicket = Schema.Struct({
-  message: Schema.String,
-  includeLogs: Schema.Boolean.pipe(Schema.optional),
+/** What filing a report produced: the PostHog ticket, and the public thread when one opened. */
+export const SupportReportResult = Schema.Struct({
+  ticketId: Schema.String,
+  threadUrl: Schema.optional(Schema.String),
 });
 
-export type SupportTicket = Schema.Schema.Type<typeof SupportTicket>;
+export type SupportReportResult = Schema.Schema.Type<typeof SupportReportResult>;
 
-export const CreateSupportTicket = Operation.make({
+/**
+ * Files a user report through the support service, which creates the PostHog ticket, notes where
+ * the logs went, and opens the public Discord thread. Distinct from {@link CreateTicket}, which
+ * creates an ECHO `Support.Ticket` in a space.
+ */
+export const SubmitReport = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.support.submitReport'),
-    name: 'Create Support Ticket',
-    description: 'File the report as a support ticket anchoring its telemetry.',
+    name: 'Submit Support Report',
+    description: 'Files a user report as a PostHog support ticket with a public Discord help thread.',
     icon: 'ph--lifebuoy--regular',
   },
   services: [Capability.Service],
-  input: SupportTicket,
-  output: Schema.UndefinedOr(Schema.String),
+  input: Schema.Struct({
+    report: SupportRequest,
+    /** The reporter's identity, for the team's account lookup; absent when there is none yet. */
+    did: Schema.optional(Schema.String),
+    /** Public URL of the captured screenshot, when the reporter attached one. */
+    screenshotUrl: Schema.optional(Schema.String),
+  }),
+  output: SupportReportResult,
 });
+
+/** The support service, reached through EDGE unless an explicit endpoint is configured. */
+export const supportEndpoint = (config: Config): string | undefined =>
+  getEnvString(config, 'DX_DISCORD_SERVICE_URL') ?? getEdgeServiceEndpoint(config, EdgeServiceName.Discord);
+
+export type SubmitSupportReportOptions = {
+  endpoint: string;
+  observability: Observability.Observability;
+  report: SupportRequest;
+  did?: string;
+  screenshotUrl?: string;
+};
+
+/**
+ * The submit, in order: upload the log dump (its key travels with the report), ask the support
+ * service to file everything, then ship the same dump to PostHog Logs tagged with the ticket. The
+ * last step is detached: the ticket and thread exist by then, and the dump can be large.
+ */
+export const submitSupportReport = async ({
+  endpoint,
+  observability,
+  report,
+  did,
+  screenshotUrl,
+}: SubmitSupportReportOptions): Promise<SupportReportResult> => {
+  const logKey = report.includeLogs !== false ? await observability.support.uploadLogs() : undefined;
+  const response = await fetch(`${endpoint}/feedback`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      title: report.title,
+      body: report.body,
+      type: report.type,
+      severity: report.severity,
+      area: report.area,
+      version: report.version,
+      did,
+      screenshotUrl,
+      logKey,
+      posthog: observability.support.sessionContext(),
+    }),
+  });
+  if (!response.ok) {
+    throw new Error(`support service returned ${response.status}`);
+  }
+  const result = Schema.decodeUnknownSync(SupportReportResult)(await response.json());
+  if (logKey) {
+    void observability.support
+      .flushLogs(result.ticketId)
+      .catch((err) => log.warn('support logs flush failed', { err }));
+  }
+  return result;
+};
 
 export const CreateTicket = Operation.make({
   meta: {

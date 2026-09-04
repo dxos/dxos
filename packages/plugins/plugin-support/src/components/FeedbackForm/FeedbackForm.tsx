@@ -3,15 +3,7 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, {
-  type PropsWithChildren,
-  type RefObject,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { type PropsWithChildren, useCallback, useMemo, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { IconButton, useTranslation } from '@dxos/react-ui';
@@ -26,24 +18,21 @@ import type { FeedbackPluginOption } from './types';
 
 const FEEDBACK_FORM = 'FeedbackForm';
 
-/**
- * A form submit handler. `Form.Root` exposes a single `onSave`; the active submit button records
- * its handler here (in click-capture, before submit fires) so the form routes to it.
- */
+/** The form's submit handler, given to `FeedbackForm.Root`; button clicks and Enter both reach it. */
 export type FeedbackSubmitHandler = (
   values: SupportOperation.SupportRequest,
   meta: FormUpdateMeta<SupportOperation.SupportRequest>,
 ) => void | Promise<void>;
 
 type FeedbackFormContextValue = {
-  submitHandlerRef: RefObject<FeedbackSubmitHandler | undefined>;
-  /** The handler currently in flight, or undefined when idle. */
-  pendingHandler: FeedbackSubmitHandler | undefined;
+  /** True while a submission is in flight. */
+  pending: boolean;
 };
 
 const [FeedbackFormProvider, useFeedbackFormContext] = createContext<FeedbackFormContextValue>(FEEDBACK_FORM);
 
 export type FeedbackFormRootProps = PropsWithChildren<{
+  onSubmit: FeedbackSubmitHandler;
   hidden?: { version?: string };
   plugins?: ReadonlyArray<FeedbackPluginOption>;
 }>;
@@ -61,16 +50,13 @@ const baseDefaults: SupportOperation.SupportRequest = {
 
 /**
  * Headless provider + `Form.Root` for support feedback. Compose `Form.Viewport` / `Form.Content` /
- * `Form.FieldSet` with `FeedbackForm.*` action parts; each action part takes its own callback so the
- * behaviour lives with the affordance.
+ * `Form.FieldSet` with the `FeedbackForm.*` parts; the submit handler lives on the root so the
+ * button and the Enter key share it.
  */
-const FeedbackFormRoot = ({ children, hidden, plugins }: FeedbackFormRootProps) => {
-  // The active submit button writes its handler here before `Form.Root` fires `onSave`.
-  const submitHandlerRef = useRef<FeedbackSubmitHandler | undefined>(undefined);
-
+const FeedbackFormRoot = ({ children, onSubmit, hidden, plugins }: FeedbackFormRootProps) => {
   // Submission is async (screenshot capture, PostHog/Discord round-trip); surface it so the form
   // cannot be double-submitted while it runs.
-  const [pendingHandler, setPendingHandler] = useState<FeedbackSubmitHandler | undefined>(undefined);
+  const [pending, setPending] = useState(false);
 
   // Override the `area` field with a richer plugin picker. The closure captures
   // the runtime plugin list so the schema itself stays static — much cleaner
@@ -102,23 +88,18 @@ const FeedbackFormRoot = ({ children, hidden, plugins }: FeedbackFormRootProps) 
         ...values,
         version: values.version ?? hidden?.version,
       };
-      const handler = submitHandlerRef.current;
-      if (!handler) {
-        return;
-      }
-
-      setPendingHandler(() => handler);
+      setPending(true);
       try {
-        await handler(submitted, formMeta);
+        await onSubmit(submitted, formMeta);
       } finally {
-        setPendingHandler(undefined);
+        setPending(false);
       }
     },
-    [hidden?.version],
+    [onSubmit, hidden?.version],
   );
 
   return (
-    <FeedbackFormProvider submitHandlerRef={submitHandlerRef} pendingHandler={pendingHandler}>
+    <FeedbackFormProvider pending={pending}>
       <Form.Root
         schema={SupportOperation.SupportRequest}
         defaultValues={defaultValues}
@@ -172,89 +153,30 @@ const FeedbackFormDownloadLogs = ({ onDownloadLogs }: FeedbackFormDownloadLogsPr
 FeedbackFormDownloadLogs.displayName = `${FEEDBACK_FORM}.DownloadLogs`;
 
 //
-// Submit capture
-//
-
-type SubmitCaptureProps = PropsWithChildren<{
-  handler: FeedbackSubmitHandler;
-}>;
-
-/**
- * Records the active submit handler in capture phase before `Form.Submit` fires.
- */
-const FeedbackFormSubmitCapture = ({ handler, children }: SubmitCaptureProps) => {
-  const { submitHandlerRef } = useFeedbackFormContext(`${FEEDBACK_FORM}.SubmitCapture`);
-
-  return <div onClickCapture={() => (submitHandlerRef.current = handler)}>{children}</div>;
-};
-
-FeedbackFormSubmitCapture.displayName = `${FEEDBACK_FORM}.SubmitCapture`;
-
-//
-// Submit button
-//
-
-type SubmitButtonProps = {
-  handler: FeedbackSubmitHandler;
-  icon: string;
-  label: string;
-  disabled?: boolean;
-};
-
-/**
- * A submit affordance that reflects the form's in-flight state: the active button shows a spinner
- * and the pending label, while every button is disabled until the submission settles.
- */
-const FeedbackFormSubmitButton = ({ handler, icon, label, disabled }: SubmitButtonProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { pendingHandler } = useFeedbackFormContext(`${FEEDBACK_FORM}.SubmitButton`);
-  const pending = pendingHandler === handler;
-
-  return (
-    <FeedbackFormSubmitCapture handler={handler}>
-      <Form.Submit
-        classNames={pending ? '[&_svg]:animate-spin' : undefined}
-        icon={pending ? 'ph--spinner-gap--regular' : icon}
-        label={pending ? t('sending-feedback.label') : label}
-        disabled={disabled || !!pendingHandler || undefined}
-      />
-    </FeedbackFormSubmitCapture>
-  );
-};
-
-FeedbackFormSubmitButton.displayName = `${FEEDBACK_FORM}.SubmitButton`;
-
-//
 // Submit
 //
 
 export type FeedbackFormSubmitProps = {
-  onSubmit: FeedbackSubmitHandler;
+  /** Where the report goes: a public Discord thread as well as the ticket, or the ticket alone. */
+  variant?: 'discord' | 'ticket';
   disabled?: boolean;
 };
 
-const FeedbackFormSubmit = ({ onSubmit, disabled }: FeedbackFormSubmitProps) => {
+/**
+ * The submit button, reflecting the form's in-flight state: a spinner and the pending label while
+ * the submission runs, disabled until it settles.
+ */
+const FeedbackFormSubmit = ({ variant = 'ticket', disabled }: FeedbackFormSubmitProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { submitHandlerRef } = useFeedbackFormContext(`${FEEDBACK_FORM}.Submit`);
-
-  // Keyboard (Enter) submits default to the single handler — but never while disabled
-  // (e.g. support tickets unavailable).
-  useEffect(() => {
-    if (disabled) {
-      if (submitHandlerRef.current === onSubmit) {
-        submitHandlerRef.current = undefined;
-      }
-      return;
-    }
-    submitHandlerRef.current ??= onSubmit;
-  }, [disabled, onSubmit, submitHandlerRef]);
+  const { pending } = useFeedbackFormContext(`${FEEDBACK_FORM}.Submit`);
+  const label = variant === 'discord' ? t('send-feedback.label') : t('send-report.label');
 
   return (
-    <FeedbackFormSubmitButton
-      handler={onSubmit}
-      icon='ph--paper-plane-tilt--regular'
-      label={t('send-feedback.label')}
-      disabled={disabled}
+    <Form.Submit
+      classNames={pending ? '[&_svg]:animate-spin' : undefined}
+      icon={pending ? 'ph--spinner-gap--regular' : 'ph--paper-plane-tilt--regular'}
+      label={pending ? t('sending-feedback.label') : label}
+      disabled={disabled || pending || undefined}
     />
   );
 };

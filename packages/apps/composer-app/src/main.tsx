@@ -29,6 +29,7 @@ import { IdbLogStore } from '@dxos/log-store-idb';
 import * as Observability from '@dxos/observability/Observability';
 import * as ObservabilityExtension from '@dxos/observability/ObservabilityExtension';
 import { translations as observabilityTranslations } from '@dxos/plugin-observability/translations';
+import * as SupportOperation from '@dxos/plugin-support/SupportOperation';
 import { ErrorBoundary, ErrorFallback } from '@dxos/react-error-boundary';
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui';
@@ -601,6 +602,7 @@ const main = async () => {
                 error={error}
                 logStore={logStore}
                 observability={observability}
+                supportEndpoint={SupportOperation.supportEndpoint(config)}
                 needRefresh={needRefresh}
                 onRefresh={needRefresh ? () => void updateServiceWorker(true) : undefined}
                 onReset={import.meta.env.DEV ? handleReset : undefined}

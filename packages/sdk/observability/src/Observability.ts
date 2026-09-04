@@ -81,9 +81,12 @@ class ObservabilityImpl implements Observability {
     const initializedExtensions: ObservabilityExtension.Extension[] = [];
 
     return Effect.gen({ self: this }, function* () {
+      const context: ObservabilityExtension.ExtensionContext = {
+        setTags: (tags, kind) => this.setTags(tags, kind),
+      };
       for (const extension of this._extensions) {
         if (extension.initialize) {
-          yield* extension.initialize();
+          yield* extension.initialize(context);
         }
         initializedExtensions.push(extension);
       }
@@ -201,7 +204,7 @@ class ObservabilityImpl implements Observability {
           .filter((entry): entry is [string, string | number | boolean] => entry[1] !== undefined)
           .map(([key, value]) => [key, value.toString()]),
       );
-      extension.setTags?.(processedTags);
+      extension.setTags?.(processedTags, kind);
     }
   }
 
@@ -251,12 +254,26 @@ class ObservabilityImpl implements Observability {
 
   get support(): ObservabilityExtension.Support {
     return {
-      createSupportTicket: async (form) => {
-        let ticketId: string | undefined;
+      uploadLogs: async () => {
+        let key: string | undefined;
         for (const extension of this._getExtensions('support')) {
-          ticketId = (await extension.createSupportTicket(form)) ?? ticketId;
+          key = (await extension.uploadLogs()) ?? key;
         }
-        return ticketId;
+        return key;
+      },
+      sessionContext: () => {
+        for (const extension of this._getExtensions('support')) {
+          const context = extension.sessionContext();
+          if (context) {
+            return context;
+          }
+        }
+        return undefined;
+      },
+      flushLogs: async (ticketId) => {
+        for (const extension of this._getExtensions('support')) {
+          await extension.flushLogs(ticketId);
+        }
       },
     };
   }

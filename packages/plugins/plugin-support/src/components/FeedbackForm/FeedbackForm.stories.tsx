@@ -21,12 +21,12 @@ type FeedbackFormStoryArgs = {
 };
 
 const FeedbackFormStory = ({ hidden, onSubmit, onDownloadLogs, discordPresence }: FeedbackFormStoryArgs) => (
-  <FeedbackForm.Root hidden={hidden}>
+  <FeedbackForm.Root hidden={hidden} onSubmit={onSubmit ?? (() => {})}>
     <Form.Viewport>
       <Form.Content>
         <Form.FieldSet />
         <FeedbackForm.DownloadLogs onDownloadLogs={onDownloadLogs} />
-        <FeedbackForm.Submit onSubmit={onSubmit ?? (() => {})} />
+        <FeedbackForm.Submit variant='discord' />
         <FeedbackForm.DiscordPresence discordPresence={discordPresence} />
       </Form.Content>
     </Form.Viewport>

@@ -20,31 +20,29 @@ import { translations } from '#translations';
 
 import { FeedbackPanel } from './FeedbackPanel';
 
-// Minimal Observability stub — just enough surface to satisfy FeedbackPanel's
-// `isAvailable('support')` probe and a no-op `createSupportTicket`. The full
+// Minimal Observability stub — just the support slice the submit path touches. The full
 // interface is large; the cast keeps the story fixture readable.
-const makeObservability = ({ available = true }: { available?: boolean } = {}): Observability.Observability =>
+const makeObservability = (): Observability.Observability =>
   ({
-    isAvailable: () => Effect.succeed(available),
+    isAvailable: () => Effect.succeed(true),
     support: {
-      createSupportTicket: async (form: any) => {
+      uploadLogs: async () => 'story/logs.ndjson',
+      sessionContext: () => undefined,
+      flushLogs: async (ticketId: string) => {
         // eslint-disable-next-line no-console
-        console.log('[story] createSupportTicket', form);
-        return 'story-ticket-id';
+        console.log('[story] flushLogs', ticketId);
       },
     },
   }) as unknown as Observability.Observability;
 
 /** Contributes a mock Observability capability to the story plugin manager. */
-const StoryObservabilityPlugin = ({ available = true }: { available?: boolean } = {}) =>
+const StoryObservabilityPlugin = () =>
   Plugin.define(Plugin.makeMeta({ key: DXN.make('org.dxos.story.observability'), name: 'Story Observability' })).pipe(
     Plugin.addModule({
       id: 'observability',
       provides: [ObservabilityCapabilities.Observability],
       activate: () =>
-        Effect.succeed([
-          Capability.contribute(ObservabilityCapabilities.Observability, makeObservability({ available })),
-        ]),
+        Effect.succeed([Capability.contribute(ObservabilityCapabilities.Observability, makeObservability())]),
     }),
     Plugin.make,
   );
@@ -125,25 +123,6 @@ export const WithDownloadLogs: Story = {
         }),
         StoryObservabilityPlugin()(),
         StoryLogDownloaderPlugin()(),
-      ],
-    }),
-  ],
-};
-
-/** Observability reports support unavailable — submit disabled. */
-export const FeedbackUnavailable: Story = {
-  decorators: [
-    withPluginManager({
-      plugins: [
-        ...corePlugins(),
-        ClientPlugin.make({
-          config: makeConfig(),
-          onClientInitialized: ({ client }) =>
-            Effect.gen(function* () {
-              yield* initializeIdentity(client);
-            }),
-        }),
-        StoryObservabilityPlugin({ available: false })(),
       ],
     }),
   ],

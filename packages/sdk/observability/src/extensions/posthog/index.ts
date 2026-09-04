@@ -5,4 +5,3 @@
 export * from './llm-analytics';
 export * from './extension';
 export * from './otel-destination';
-export * from './support-ticket';
