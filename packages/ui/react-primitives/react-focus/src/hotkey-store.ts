@@ -7,11 +7,27 @@
 // the active scope), and `check-module-structure` fails the build if those transitively import
 // React. The React layer lives in `./hotkeys`.
 
-import { type HotkeyStore, createHotkeyStore } from '@zag-js/hotkeys';
+import {
+  type CommandDefinition,
+  type HotkeyStore,
+  type HotkeyStoreOptions,
+  createHotkeyStore as createStore,
+  normalizeHotkey,
+} from '@zag-js/hotkeys';
 
-export { createHotkeyStore, formatHotkey, normalizeHotkey, parseHotkey } from '@zag-js/hotkeys';
+export { formatHotkey, normalizeHotkey, parseHotkey } from '@zag-js/hotkeys';
 
 export type { CommandDefinition, HotkeyCommand, HotkeyOptions, HotkeyStore, ParsedHotkey } from '@zag-js/hotkeys';
+
+/**
+ * A store that leaves conflict reporting to `registerHotkey`.
+ *
+ * Ark compares only the hotkey and the DOM target, so bindings that can never both be active — one
+ * `space.rename` per space, each scoped to its own — warn against each other, once per pair, on
+ * every graph sync. Scopes are what decide a collision here, and only `registerHotkey` knows them.
+ */
+export const createHotkeyStore = (options?: HotkeyStoreOptions): HotkeyStore =>
+  createStore({ ...options, conflictBehavior: 'allow' });
 
 /**
  * The one store every DXOS binding registers on.
@@ -81,6 +97,9 @@ export const GRAPH_ROOT_ID = 'root';
 /** Scope separator, matching the graph paths bindings are registered under. */
 const SEPARATOR = '/';
 
+/** The store's always-active scope, which is also what an unscoped command registers under. */
+export const WILDCARD_SCOPE = '*';
+
 /**
  * Nest an attendable segment under the graph root so a plank's scope also activates root-level
  * bindings. An empty or absent segment resolves to the graph root itself.
@@ -112,7 +131,7 @@ export const setHotkeyScope = (path?: string, store: HotkeyStore = hotkeyStore):
   const next = new Set(path ? scopeChain(path) : []);
   for (const scope of store.getActiveScopes()) {
     // The wildcard is the store's own always-active scope; it is not ours to retire.
-    if (scope !== '*' && !next.has(scope)) {
+    if (scope !== WILDCARD_SCOPE && !next.has(scope)) {
       store.removeScope(scope);
     }
   }
@@ -128,5 +147,53 @@ export const setHotkeyScope = (path?: string, store: HotkeyStore = hotkeyStore):
 export const getHotkeyScope = (store: HotkeyStore = hotkeyStore): string | undefined =>
   store
     .getActiveScopes()
-    .filter((scope: string) => scope !== '*')
+    .filter((scope: string) => scope !== WILDCARD_SCOPE)
     .sort((a: string, b: string) => b.length - a.length)[0];
+
+/**
+ * Whether two scopes can be active at the same moment.
+ *
+ * `setHotkeyScope` activates a whole chain, so an ancestor is live whenever its descendant is —
+ * `root` and `root/plank-1` collide. Siblings never are.
+ */
+const scopesIntersect = (left: string, right: string): boolean =>
+  left === WILDCARD_SCOPE ||
+  right === WILDCARD_SCOPE ||
+  left === right ||
+  left.startsWith(`${right}${SEPARATOR}`) ||
+  right.startsWith(`${left}${SEPARATOR}`);
+
+/** A command's scopes as the store stores them; Ark accepts a bare string and defaults to the wildcard. */
+const scopesOf = (scopes: string | readonly string[] | undefined): readonly string[] =>
+  typeof scopes === 'string' ? [scopes] : scopes?.length ? scopes : [WILDCARD_SCOPE];
+
+/**
+ * Register a command, warning only about a hotkey that can actually fire alongside another.
+ *
+ * Registration goes through here rather than `store.register` so the store can stay on
+ * `conflictBehavior: 'allow'`; see `createHotkeyStore`.
+ */
+export const registerHotkey = (command: CommandDefinition, store: HotkeyStore = hotkeyStore): void => {
+  // Unregister first: the store warns on a duplicate id rather than replacing, and both callers
+  // re-register the same ids whenever their source changes.
+  store.unregister(command.id);
+
+  const hotkey = normalizeHotkey(command.hotkey);
+  const scopes = scopesOf(command.scopes);
+  for (const existing of store.getState().commands.values()) {
+    if (
+      normalizeHotkey(existing.hotkey) !== hotkey ||
+      existing.options?.target !== command.options?.target ||
+      !scopesOf(existing.scopes).some((scope) => scopes.some((other) => scopesIntersect(scope, other)))
+    ) {
+      continue;
+    }
+
+    // eslint-disable-next-line no-console
+    console.warn(
+      `[hotkeys] Conflict: "${hotkey}" is already registered by command "${existing.id}" in an overlapping scope. Command "${command.id}" will also respond to this hotkey.`,
+    );
+  }
+
+  store.register({ ...command, hotkey });
+};

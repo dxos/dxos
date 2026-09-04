@@ -4,13 +4,15 @@
 
 import { act, cleanup, render } from '@testing-library/react';
 import React from 'react';
-import { afterEach, describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import {
   GRAPH_ROOT_ID,
   type HotkeyStore,
+  createHotkeyStore,
   hotkeyStore,
   nestHotkeyScope,
+  registerHotkey,
   scopeChain,
   setHotkeyScope,
   useActiveHotkeys,
@@ -170,8 +172,74 @@ describe('hotkey scopes', () => {
     setHotkeyScope('root/plank-1', store);
     press('d');
     // Both, not one: the path-scan this replaced fired only the most specific match, so asserting
-    // the pair is what catches a regression back to it. `conflictBehavior: 'warn'` surfaces the
-    // collision that the old scan would have hidden.
+    // the pair is what catches a regression back to it.
     expect(fired).toEqual(['root', 'plank']);
+  });
+});
+
+describe('hotkey conflicts', () => {
+  const withWarnings = (register: (store: HotkeyStore) => void): string[] => {
+    const warnings: string[] = [];
+    const spy = vi.spyOn(console, 'warn').mockImplementation((message) => void warnings.push(String(message)));
+    try {
+      register(createHotkeyStore());
+    } finally {
+      spy.mockRestore();
+    }
+    return warnings;
+  };
+
+  test('sibling scopes binding the same hotkey are not a conflict', () => {
+    // One `space.rename` per space is the case that flooded the console: Ark compares the hotkey
+    // and the DOM target only, so every pair of spaces warned, on every graph sync.
+    const warnings = withWarnings((store) => {
+      for (const space of ['space-1', 'space-2', 'space-3']) {
+        registerHotkey(
+          { id: `${space}:rename`, hotkey: 'shift+F6', scopes: [`root/${space}`], action: () => {} },
+          store,
+        );
+      }
+    });
+
+    expect(warnings).toEqual([]);
+  });
+
+  test('an ancestor scope binding the same hotkey is a conflict', () => {
+    const warnings = withWarnings((store) => {
+      registerHotkey({ id: 'root:rename', hotkey: 'shift+F6', scopes: [GRAPH_ROOT_ID], action: () => {} }, store);
+      registerHotkey({ id: 'space:rename', hotkey: 'shift+F6', scopes: ['root/space-1'], action: () => {} }, store);
+    });
+
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain('root:rename');
+    expect(warnings[0]).toContain('space:rename');
+  });
+
+  test('an unscoped binding conflicts with every scope', () => {
+    const warnings = withWarnings((store) => {
+      registerHotkey({ id: 'global', hotkey: 'shift+F6', action: () => {} }, store);
+      registerHotkey({ id: 'scoped', hotkey: 'shift+F6', scopes: ['root/space-1'], action: () => {} }, store);
+    });
+
+    expect(warnings).toHaveLength(1);
+  });
+
+  test('re-registering the same id is not a conflict with itself', () => {
+    const warnings = withWarnings((store) => {
+      for (let index = 0; index < 3; index++) {
+        registerHotkey({ id: 'rename', hotkey: 'shift+F6', scopes: ['root/space-1'], action: () => {} }, store);
+      }
+    });
+
+    expect(warnings).toEqual([]);
+  });
+
+  test('different hotkeys in the same scope are not a conflict', () => {
+    const warnings = withWarnings((store) => {
+      registerHotkey({ id: 'one', hotkey: 'shift+F6', scopes: ['root/space-1'], action: () => {} }, store);
+      registerHotkey({ id: 'two', hotkey: 'shift+F7', scopes: ['root/space-1'], action: () => {} }, store);
+    });
+
+    expect(warnings).toEqual([]);
   });
 });

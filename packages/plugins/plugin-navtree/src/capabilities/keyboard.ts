@@ -12,7 +12,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { debounce } from '@dxos/async';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { runAction } from '@dxos/plugin-graph';
-import { hotkeyStore, initHotkeys, setHotkeyScope } from '@dxos/react-focus/store';
+import { hotkeyStore, initHotkeys, registerHotkey, setHotkeyScope } from '@dxos/react-focus/store';
 import { getHostPlatform } from '@dxos/util';
 
 import { KEY_BINDING } from '#meta';
@@ -47,10 +47,9 @@ export default Capability.makeModule(
         const scope = path.slice(0, -1).join('/');
         const id = `${scope}:${node.id}`;
         seen.add(id);
-        // Unregister first: the store warns on a duplicate id rather than replacing, and this
-        // re-runs on every graph change.
-        hotkeyStore.unregister(id);
-        hotkeyStore.register({
+        // One binding per node, so the same shortcut recurs across sibling spaces; `registerHotkey`
+        // is what keeps those out of the conflict warnings.
+        registerHotkey({
           id,
           hotkey: shortcut,
           scopes: [scope],

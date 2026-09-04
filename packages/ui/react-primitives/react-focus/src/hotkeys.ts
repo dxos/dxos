@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type CommandDefinition, type HotkeyCommand, type HotkeyStore, normalizeHotkey } from '@zag-js/hotkeys';
+import { type CommandDefinition, type HotkeyCommand, type HotkeyStore } from '@zag-js/hotkeys';
 import { useCallback, useEffect, useId, useRef, useSyncExternalStore } from 'react';
 
-import { holdHotkeyScope, hotkeyStore } from './hotkey-store';
+import { holdHotkeyScope, hotkeyStore, registerHotkey } from './hotkey-store';
 
 export * from './hotkey-store';
 
@@ -50,19 +50,18 @@ export const useHotkeys = ({ commands, id, store = hotkeyStore }: UseHotkeysProp
 
     const ids = commandsRef.current.map(resolveId);
     commandsRef.current.forEach((command, index) => {
-      const commandId = ids[index];
-      // Unregister first: the store warns on a duplicate id rather than replacing.
-      store.unregister(commandId);
-      store.register({
-        ...command,
-        id: commandId,
-        hotkey: normalizeHotkey(command.hotkey),
-        action: (event) => commandsRef.current[index]?.action(event),
-        enabled: () => {
-          const enabled = commandsRef.current[index]?.enabled;
-          return typeof enabled === 'function' ? enabled() : (enabled ?? true);
+      registerHotkey(
+        {
+          ...command,
+          id: ids[index],
+          action: (event) => commandsRef.current[index]?.action(event),
+          enabled: () => {
+            const enabled = commandsRef.current[index]?.enabled;
+            return typeof enabled === 'function' ? enabled() : (enabled ?? true);
+          },
         },
-      });
+        store,
+      );
     });
 
     return () => {
