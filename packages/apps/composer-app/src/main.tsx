@@ -90,6 +90,15 @@ const startupTimeout = (() => {
   return Number.isFinite(timeout) && timeout > 0 ? timeout : undefined;
 })();
 
+/**
+ * Whether the boot loader logs each plugin's activation ("Activating Markdown").
+ * Off by default: the default log is the host's own phases, which is what a user booting the app
+ * is asking about. Opt in with `VITE_DX_BOOT_VERBOSE=true` or `?boot-verbose` on the URL, which
+ * makes it reachable on a deployed origin when diagnosing a slow or stalled boot.
+ */
+const verboseStatus =
+  import.meta.env.VITE_DX_BOOT_VERBOSE === 'true' || new URLSearchParams(window.location.search).has('boot-verbose');
+
 // Injected by the `define` block in vite.config.ts; '' in production builds.
 declare const __DX_DEV_SERVER_BOOT_ID__: string;
 
@@ -122,6 +131,8 @@ declare global {
     DEV: string;
     /** Startup deadline override in SECONDS, dev only — see `startupTimeout` below. */
     VITE_DX_STARTUP_TIMEOUT?: string;
+    /** Log per-plugin activation in the boot loader — see `verboseStatus` below. */
+    VITE_DX_BOOT_VERBOSE?: string;
   }
 
   // Debug hook: run `downloadLogs()` from devtools to save buffered logs (same as Reset dialog).
@@ -681,6 +692,7 @@ const main = async () => {
       // Shortened only to exercise the deadline (`VITE_DX_STARTUP_TIMEOUT=2` puts the loader's
       // stalled offer two seconds in). `undefined` leaves `useApp` on its own 30s default.
       timeout: startupTimeout,
+      verboseStatus,
     });
 
     // Rendered instead of `App`, not thrown: `Main` sits above the app-level error boundary, so a

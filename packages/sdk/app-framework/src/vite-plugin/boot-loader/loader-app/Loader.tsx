@@ -14,6 +14,9 @@ const RING_CENTER = 50;
 // Leading-edge marker: a small dot drawn at the arc's head in an unmasked layer.
 const MARKER_RADIUS = 1; // viewBox units → ~3.8px on the 384px disc
 
+/** Sprite the activation row's icons resolve against when the host configures none. */
+const DEFAULT_SPRITE_PATH = '/icons.svg';
+
 /**
  * Read an element's *current animated* translateY (px) from its live transform
  * matrix — the interpolated value mid-transition, not the last-written property.
@@ -45,6 +48,8 @@ export type LoaderProps = {
   store: LoaderStore;
   /** Inline SVG markup for the brand mark rendered inside the ring. */
   markSvg?: string;
+  /** URL of the icon sprite the activation row resolves `<use href>` against. */
+  spritePath?: string;
 };
 
 /**
@@ -160,6 +165,23 @@ export const Loader: Component<LoaderProps> = (props) => {
         <div id='boot-loader-status-track' ref={trackRef}>
           <For each={props.store.lines()}>{(line) => <div class='boot-loader-status-line'>{line.text}</div>}</For>
         </div>
+      </div>
+      {/* Activation row: every plugin due to activate, seeded monochrome and dimmed, each easing to
+          its own hue as the host reports it in — so the row shows what is left as well as what has
+          landed. Icons resolve against the static sprite, which needs no app bundle. */}
+      <div id='boot-loader-plugins' aria-hidden='true'>
+        <For each={props.store.plugins()}>
+          {(plugin) => (
+            <svg
+              class='boot-loader-plugin'
+              data-active={plugin.active ? '' : undefined}
+              viewBox='0 0 256 256'
+              style={plugin.hue ? { '--boot-loader-plugin-color': `var(--boot-loader-hue-${plugin.hue})` } : undefined}
+            >
+              <use href={`${props.spritePath ?? DEFAULT_SPRITE_PATH}#${plugin.icon}`} />
+            </svg>
+          )}
+        </For>
       </div>
       {/* Shown only once the host reports the deadline passed, and only in dev — startup keeps
           running behind it, so this is an offer rather than a verdict. Placed below the status log,

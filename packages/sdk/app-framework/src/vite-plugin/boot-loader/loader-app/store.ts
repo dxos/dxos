@@ -4,7 +4,7 @@
 
 import { type Accessor, createSignal } from 'solid-js';
 
-import { type StatusPayload } from './types';
+import { type PluginEntry, type StatusPayload } from './types';
 
 //
 // Creep tuning. The ring auto-creeps toward a moving ceiling so a long
@@ -24,6 +24,9 @@ export const STATE_2_RATE = 0.05;
 export const STATE_2_BUMP = 15;
 /** Hard ceiling the auto-creep never crosses (host must drive the rest). */
 export const ABSOLUTE_CEILING = 90;
+
+/** A seeded plugin plus whether it has activated yet. */
+export type PluginRow = PluginEntry & { active: boolean };
 
 /** Loader lifecycle phase. */
 export type Phase = 'creep' | 'host' | 'dismissing';
@@ -69,6 +72,8 @@ export type LoaderStore = {
   lines: Accessor<StatusLine[]>;
   /** Current lifecycle phase. */
   phase: Accessor<Phase>;
+  /** The activation row, in the order the host seeded it. */
+  plugins: Accessor<PluginRow[]>;
   /** The abort handler once startup has stalled, or `undefined` while it is within budget. */
   onAbort: Accessor<(() => void) | undefined>;
   /** Whole seconds since the loader appeared. Ticks only while stalled — see {@link LoaderStore.stalled}. */
@@ -77,6 +82,10 @@ export type LoaderStore = {
   pushStatus: (payload: StatusPayload) => void;
   /** Enter host-driven progress with `fraction` ∈ [0, 1]; never regresses. */
   setProgress: (fraction?: number) => void;
+  /** Seed the activation row; entries without an icon are dropped (nothing to draw). */
+  setPlugins: (entries: PluginEntry[]) => void;
+  /** Mark a seeded entry active. Unknown ids are ignored — the host may activate an unseeded plugin. */
+  activatePlugin: (id: string) => void;
   /** Offer the user an abort (see `BootLoaderApi.stalled`). Idempotent — the first handler wins. */
   stalled: (onAbort: () => void) => void;
   /** Snap to 100%, stop the creep, and enter the dismissing phase. */
@@ -89,6 +98,7 @@ export const createLoaderStore = (initialStatus?: string): LoaderStore => {
   const [progress, setProgressPct] = createSignal(0);
   const [lines, setLines] = createSignal<StatusLine[]>(initialStatus ? [{ id: 0, text: initialStatus }] : []);
   const [phase, setPhase] = createSignal<Phase>('creep');
+  const [plugins, setPluginRows] = createSignal<PluginRow[]>([]);
   // Held as a signal rather than a boolean + prop so the button has the handler directly, and so a
   // second `stalled()` (a re-fired deadline) cannot swap it mid-press.
   const [onAbort, setOnAbort] = createSignal<(() => void) | undefined>(undefined);
@@ -146,6 +156,18 @@ export const createLoaderStore = (initialStatus?: string): LoaderStore => {
     });
   };
 
+  const setPlugins = (entries: PluginEntry[]): void => {
+    setPluginRows(entries.filter((entry) => !!entry.icon).map((entry) => ({ ...entry, active: false })));
+  };
+
+  const activatePlugin = (id: string): void => {
+    setPluginRows((current) =>
+      current.some((row) => row.id === id && !row.active)
+        ? current.map((row) => (row.id === id ? { ...row, active: true } : row))
+        : current,
+    );
+  };
+
   const setProgress = (fraction?: number): void => {
     setPhase('host');
     const pct = clampPercent(fraction);
@@ -185,5 +207,19 @@ export const createLoaderStore = (initialStatus?: string): LoaderStore => {
 
   startCreep();
 
-  return { progress, lines, phase, onAbort, elapsedSeconds, pushStatus, setProgress, stalled, ready, dispose };
+  return {
+    progress,
+    lines,
+    phase,
+    plugins,
+    onAbort,
+    elapsedSeconds,
+    pushStatus,
+    setProgress,
+    setPlugins,
+    activatePlugin,
+    stalled,
+    ready,
+    dispose,
+  };
 };

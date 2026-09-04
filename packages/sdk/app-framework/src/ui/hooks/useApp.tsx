@@ -65,6 +65,8 @@ export type StartupProgress = {
    * into a single status line without re-parsing module ids.
    */
   pluginName?: string;
+  /** Slug of the plugin owning {@link module} (e.g. `markdown`) — the id the boot loader's row keys on. */
+  pluginSlug?: string;
 };
 
 /**
@@ -130,6 +132,12 @@ export type UseAppOptions = {
   safeMode?: boolean;
   debounce?: number;
   timeout?: number;
+  /**
+   * Relay per-plugin `Activating …` lines into the boot loader's status log. Off by default —
+   * activation names framework internals, which is diagnostic detail rather than something a
+   * user booting the app is asking for.
+   */
+  verboseStatus?: boolean;
   fallback?: FC<FallbackProps>;
 };
 
@@ -168,6 +176,7 @@ export const useApp = ({
   safeMode = false,
   debounce = 0,
   timeout = 30_000,
+  verboseStatus = false,
 }: UseAppOptions) => {
   const plugins = useDefaultValue(pluginsProp, () => []);
   const defaults = useDefaultValue(defaultsProp, () => []);
@@ -227,6 +236,22 @@ export const useApp = ({
   useEffect(() => {
     setupDevtools(manager);
   }, [manager]);
+
+  // Seed the boot loader's activation row from the enabled plugins' own meta, before any of them
+  // activates: showing the full set dim up front makes the outstanding work visible, which a row
+  // that only grew as plugins landed could not convey. Meta is the icon's only source — the loader
+  // is a standalone bundle with no access to the plugin registry.
+  useEffect(() => {
+    bootLoader?.plugins(
+      plugins
+        .filter(({ meta }) => enabled.includes(meta.profile.key))
+        .map(({ meta }) => ({
+          id: meta.profile.key.split('.').pop()!,
+          icon: meta.profile.icon?.key,
+          hue: meta.profile.icon?.hue,
+        })),
+    );
+  }, [plugins, enabled]);
 
   useAsyncEffect(async () => {
     log('useApp: effect mount');
@@ -312,6 +337,7 @@ export const useApp = ({
               // completion keeps it accurate ("now activating X") until
               // the next module starts.
               if (module && state === 'activating' && !readyRef.current) {
+                const pluginSlug = pluginSlugOf(module);
                 setStartupProgress((current) => ({
                   ...current,
                   // `event` here is the activation event that first
@@ -322,7 +348,8 @@ export const useApp = ({
                   event: event || undefined,
                   module,
                   humanizedName: humanizeModuleId(module),
-                  pluginName: humanizePluginId(module),
+                  pluginName: pluginSlug ? titleCase(pluginSlug) : undefined,
+                  pluginSlug,
                 }));
               }
               // Update the activation count when a module commits. The
@@ -353,6 +380,7 @@ export const useApp = ({
                   module: undefined,
                   humanizedName: humanizeEventKey(event),
                   pluginName: undefined,
+                  pluginSlug: undefined,
                 }));
               }
               if (error$ && !readyRef.current) {
@@ -435,7 +463,13 @@ export const useApp = ({
           <ContextProtocolProvider value={manager} context={PluginManagerContext}>
             <RegistryContext.Provider value={manager.registry}>
               <SurfaceManagerProvider value={surfaces}>
-                <App ready={ready} error={error} debounce={debounce} progress={progressRef.current} />
+                <App
+                  ready={ready}
+                  error={error}
+                  debounce={debounce}
+                  progress={progressRef.current}
+                  verboseStatus={verboseStatus}
+                />
               </SurfaceManagerProvider>
             </RegistryContext.Provider>
           </ContextProtocolProvider>
@@ -493,14 +527,12 @@ const humanizeModuleId = (moduleId: string): string => {
 };
 
 /**
- * Extracts the owning plugin's label from a module ID, or `undefined` when the id is not
+ * Extracts the owning plugin's slug from a module ID, or `undefined` when the id is not
  * plugin-scoped (framework-internal modules). E.g.
- * "org.dxos.plugin.markdown.module.ReactSurface" → "Markdown".
+ * "org.dxos.plugin.markdown.module.ReactSurface" → "markdown".
  */
-const humanizePluginId = (moduleId: string): string | undefined => {
-  const match = moduleId.match(/\.plugin\.([^.]+)\.module\./);
-  return match ? titleCase(match[1]) : undefined;
-};
+export const pluginSlugOf = (moduleId: string): string | undefined =>
+  moduleId.match(/\.plugin\.([^.]+)\.module\./)?.[1];
 
 /** Kebab slug → Title Case. */
 const titleCase = (slug: string): string =>

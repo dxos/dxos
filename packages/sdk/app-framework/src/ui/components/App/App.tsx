@@ -16,13 +16,13 @@ import {
 } from '../../hooks';
 import { bootLoader } from './loader';
 
-export type AppProps = Pick<UseAppOptions, 'debounce'> & {
+export type AppProps = Pick<UseAppOptions, 'debounce' | 'verboseStatus'> & {
   ready: boolean;
   error: unknown;
   progress?: StartupProgress;
 };
 
-export const App = ({ ready, error, debounce, progress }: AppProps) => {
+export const App = ({ ready, error, debounce, progress, verboseStatus = false }: AppProps) => {
   const reactContexts = useCapabilities(Capabilities.ReactContext);
   const reactRoots = useCapabilities(Capabilities.ReactRoot);
   const sortedContexts = useMemo(() => topologicalSort(reactContexts), [reactContexts]);
@@ -33,9 +33,10 @@ export const App = ({ ready, error, debounce, progress }: AppProps) => {
   // instead of after it — gating both on `Done` leaves a blank frame between the two.
   const shellMounted = stage >= LoadingState.FadeOut;
 
-  // One status line per plugin (and per framework activation event), not per module: a plugin
-  // contributes a dozen-odd modules, so relaying every transition scrolled hundreds of lines past
-  // the user during boot. The framework deliberately leaves this policy to the host.
+  // Activation lines are opt-in (`verboseStatus`): they name framework internals, so the default
+  // boot log is the host's own phases only. When enabled, one line per plugin (and per framework
+  // activation event) rather than per module — a plugin contributes a dozen-odd modules, which
+  // scrolled hundreds of lines past the user. The framework leaves both choices to the host.
   const announcedRef = useRef(new Set<string>());
 
   // Relay the startup lifecycle into the boot loader injected by
@@ -51,11 +52,14 @@ export const App = ({ ready, error, debounce, progress }: AppProps) => {
 
     const fraction = progress?.progress ?? 0;
     bootLoader?.progress(0.5 + fraction * 0.5);
+    if (progress?.pluginSlug) {
+      bootLoader?.activated(progress.pluginSlug);
+    }
 
     // Plugin-level transitions collapse to the plugin's own name; event-level ones (no
     // `pluginName`) are the framework's own phases and are already few.
     const humanized = progress?.pluginName ?? progress?.humanizedName;
-    if (!humanized) {
+    if (!verboseStatus || !humanized) {
       return;
     }
 
@@ -69,7 +73,16 @@ export const App = ({ ready, error, debounce, progress }: AppProps) => {
       module: progress?.module,
       humanized: `Activating ${humanized}`,
     });
-  }, [stage, progress?.progress, progress?.event, progress?.module, progress?.humanizedName, progress?.pluginName]);
+  }, [
+    stage,
+    progress?.progress,
+    progress?.event,
+    progress?.module,
+    progress?.humanizedName,
+    progress?.pluginName,
+    progress?.pluginSlug,
+    verboseStatus,
+  ]);
 
   // Hand off at fade-out: play the loader's graceful shrink-and-fade outro.
   // `useLayoutEffect` runs before the next paint so the outro begins in the

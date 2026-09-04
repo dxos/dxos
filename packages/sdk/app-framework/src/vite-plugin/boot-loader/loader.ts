@@ -45,6 +45,12 @@ export type BootLoaderOptions = {
   markSvg?: string;
 
   /**
+   * URL of the icon sprite the plugin activation row resolves its `<use href>` against; defaults
+   * to `/icons.svg`. A static asset, so the row draws before any app bundle loads.
+   */
+  spritePath?: string;
+
+  /**
    * HTML entry filenames to inject the loader into. Defaults to `index.html` only
    * so auxiliary pages (`recovery.html`, `reset.html`, etc.) stay unobstructed.
    */
@@ -157,7 +163,12 @@ const getLoaderBundle = (): Promise<string> => (bundlePromise ??= compileLoaderB
  * etc.) in `boot-loader.css`, so consumers can override them at the document
  * level without re-parameterizing this plugin.
  */
-export const bootLoaderPlugin = ({ status, markSvg, include = ['index.html'] }: BootLoaderOptions = {}): Plugin => {
+export const bootLoaderPlugin = ({
+  status,
+  markSvg,
+  spritePath,
+  include = ['index.html'],
+}: BootLoaderOptions = {}): Plugin => {
   return {
     name: 'app-framework:boot-loader',
     async transformIndexHtml(_html, ctx) {
@@ -191,7 +202,7 @@ export const bootLoaderPlugin = ({ status, markSvg, include = ['index.html'] }: 
         {
           tag: 'script',
           injectTo: 'body-prepend',
-          children: `window.__BOOT_LOADER_CONFIG__=${JSON.stringify({ rootId, markSvg, status })};`,
+          children: `window.__BOOT_LOADER_CONFIG__=${JSON.stringify({ rootId, markSvg, status, spritePath })};`,
         },
         {
           tag: 'script',

@@ -32,18 +32,55 @@ export default meta;
 
 type Story = StoryObj;
 
-/** Normal startup: the ring creeps, statuses append, then the host reports ready. */
+/**
+ * A representative slice of the enabled plugin set, taken from real `dx.config.ts` meta so the
+ * story exercises the same sprite symbols and hues the app seeds.
+ */
+const PLUGINS = [
+  { id: 'space', icon: 'ph--planet--regular' },
+  { id: 'markdown', icon: 'ph--text-aa--regular', hue: 'indigo' },
+  { id: 'table', icon: 'ph--table--regular', hue: 'green' },
+  { id: 'sheet', icon: 'ph--grid-nine--regular', hue: 'indigo' },
+  { id: 'assistant', icon: 'ph--sparkle--regular', hue: 'amber' },
+  { id: 'inbox', icon: 'ph--tray--regular', hue: 'sky' },
+  { id: 'map', icon: 'ph--map-trifold--regular', hue: 'rose' },
+  { id: 'kanban', icon: 'ph--kanban--regular', hue: 'purple' },
+];
+
+/** Normal startup: the ring creeps, statuses append, plugin icons light, then the host reports ready. */
 export const Default: Story = {
   render: () => {
     const store = createLoaderStore('Starting…');
     onMount(() => {
       const timers = [
         setTimeout(() => store.pushStatus({ humanized: 'Loading plugins', range: { index: 12, total: 80 } }), 400),
+        setTimeout(() => store.setPlugins(PLUGINS), 500),
         setTimeout(() => store.setProgress(0.4), 900),
-        setTimeout(() => store.pushStatus({ humanized: 'Activating Observability: react-surface' }), 1_400),
-        setTimeout(() => store.setProgress(0.8), 1_900),
-        setTimeout(() => store.ready(), 2_400),
+        // Each plugin lights as it activates, staggered the way real activation arrives.
+        ...PLUGINS.map((plugin, index) => setTimeout(() => store.activatePlugin(plugin.id), 1_000 + index * 220)),
+        setTimeout(() => store.setProgress(0.8), 2_900),
+        setTimeout(() => store.ready(), 3_600),
       ];
+      onCleanup(() => timers.forEach(clearTimeout));
+    });
+    onCleanup(() => store.dispose());
+    return <Loader store={store} />;
+  },
+};
+
+/**
+ * The activation row on its own, lit slowly: the whole enabled set is seeded dim and monochrome so
+ * the outstanding work is visible, and each icon eases to its own hue as its plugin activates.
+ */
+export const PluginActivation: Story = {
+  render: () => {
+    const store = createLoaderStore('Activating plugins…');
+    onMount(() => {
+      store.setPlugins(PLUGINS);
+      store.setProgress(0.5);
+      const timers = PLUGINS.map((plugin, index) =>
+        setTimeout(() => store.activatePlugin(plugin.id), 1_500 + index * 900),
+      );
       onCleanup(() => timers.forEach(clearTimeout));
     });
     onCleanup(() => store.dispose());

@@ -33,6 +33,19 @@ export type StatusPayload = {
 };
 
 /**
+ * One plugin in the loader's activation row. Seeded dim before activation starts and lit as each
+ * plugin reports in, so the row doubles as a progress indication of the work still outstanding.
+ */
+export type PluginEntry = {
+  /** Stable id the host uses to light this entry — the plugin's slug (e.g. `markdown`). */
+  id: string;
+  /** Sprite symbol name from the plugin's meta (e.g. `ph--text-aa--regular`). */
+  icon?: string;
+  /** Theme hue name from the plugin's meta (e.g. `indigo`); falls back to the loader's accent. */
+  hue?: string;
+};
+
+/**
  * Imperative facade exposed on `window.__bootLoader`, installed by the inlined
  * loader bundle and driven by the host app (the React relay forwards `useApp`'s
  * startup progress through it).
@@ -40,6 +53,10 @@ export type StatusPayload = {
 export type BootLoaderApi = {
   /** Update the visible status line. */
   status: (payload: StatusPayload) => void;
+  /** Seed the activation row with every plugin due to activate, rendered dim until lit. */
+  plugins: (entries: PluginEntry[]) => void;
+  /** Light the seeded entry with this id; unknown ids are ignored. */
+  activated: (id: string) => void;
   /** Enter host-driven progress — `fraction` ∈ [0, 1]. */
   progress: (fraction?: number) => void;
   /**
@@ -75,6 +92,11 @@ export type BootLoaderConfig = {
   markSvg?: string;
   /** Initial status text rendered before the host fires its first `status(...)`. */
   status?: string;
+  /**
+   * URL of the icon sprite the activation row's `<use href>` resolves against. A static asset
+   * rather than a bundle import, so the loader can reference it before any app JS loads.
+   */
+  spritePath?: string;
 };
 
 /** Fallback backdrop id when no config is present (kept in sync with `loader.ts` + the CSS). */
