@@ -55,6 +55,8 @@ export const make = (): Skill.Skill =>
            \`<surface role='integration-prompt' data='{"service":"anthropic.com"}' />\`
         3. Say that connecting Anthropic lets you continue, then stop and wait — do not retry the
            operation in the same turn, and never ask the user to paste a key into the conversation.
+           The completed flow reports itself as the next user turn, naming the new credential's URI;
+           retry the failed operation there.
 
         ## Giving an agent a credential
         An agent's own credentials — a GitHub token, a Stripe key — are bound to the session by

@@ -555,6 +555,17 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
       yield* Deferred.await(deferred);
     }).pipe(Effect.scoped);
   }
+  /**
+   * Absolute due-time (epoch ms) of the process's pending alarm, or `null` when none is scheduled.
+   *
+   * Exposed for hosts that mirror the process's alarm onto their own scheduler — a Durable Object
+   * whose isolate is reclaimed between turns cannot rely on the in-memory timer, so it needs the
+   * due-time to re-arm a platform alarm.
+   */
+  get alarmDueAt(): number | null {
+    return this.#alarmDueAt;
+  }
+
   get status(): ProcessManager.Status {
     return this.#currentStatus;
   }
@@ -800,6 +811,10 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
     return Effect.gen({ self: this }, function* () {
       log('lifecycle: cleanup');
       yield* this.#clearAlarm();
+      // Terminal: no further turn can run, so the due-time must not be mirrored onto a host
+      // scheduler. `#clearAlarm` deliberately keeps it — `suspend` needs it to survive so `hydrate`
+      // can re-arm — which is why this is cleared here rather than there.
+      this.#alarmDueAt = null;
       Queue.offerUnsafe(this.#outputQueue, Option.none());
       for (const queue of this.#ephemeralSubscribers) {
         Queue.offerUnsafe(queue, Option.none());

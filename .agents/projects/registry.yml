@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: agent-process-edge
+    status: active
+    user: dmaretskyi
+    host: cloud-sandbox
+    created: 2026-08-26
+    summary: 'Run dxos/compute `Process` instances (AgentProcess first, plus a trivial test process) inside Cloudflare Durable Objects so Composer can start an agent chat that lives on EDGE and keeps running with the client closed.'
+    tasks: .agents/projects/agent-process-edge/TASKS.md
+    design: .agents/projects/agent-process-edge/DESIGN.md
+    prs: [12765, 971]
+    resume: "Phases 1-5 are DONE; both PRs open. #12765 (dxos): ProcessProtocol wire types, RemoteProcessManager.Control, RemoteProcessManagerAdapter + RemoteProcessHandle presenting an EDGE host as a local ProcessManager.Manager, EdgeProcessControl transport, AgentProcess/AgentProcessOptions and FunctionContext exported. dxos/edge#971: the ProcessObject DO (one per process, ProcessManagerImpl over DO storage, process alarm mirrored onto the platform alarm), the closed registry now including AGENT_PROCESS_KEY with the eight-service assembly via FunctionContext, the per-space process index, all seven routes incl. RPC via RpcServer.toHttpEffect, and THREE green suites: processes.node.test.ts 9 (routes), process-api.node.test.ts 6 (official ProcessManager/Handle/ProcessMonitor APIs), agent-process.node.test.ts 1 (AgentService.getSession spawns an agent on EDGE, the monitor tree sees it, terminate drops it). Key decision (D1): the EDGE surface GROWS INTO ProcessManager.Manager, not a parallel API. Two host findings worth keeping: ProcessManagerImpl provides ProcessOperationInvoker.Service ONLY when constructed with a handler set (and filters that tag out of external services, so a resolver can never supply it) - the host passes OperationHandlerSet.empty; and an agent's target Feed must have replicated to EDGE before the spawn, since Database.resolve runs on the host. Both branches carry main merged in (dxos 00939b33, edge f2c28ff); edge's CI moved to .depot/ workflows on main. BLOCKER: edge CI is red on every job at pnpm install (ENOENT .local-pack/*.tgz) because the branch carries pnpm link-packages file: overrides - deliberate and authorised for iteration, commented on the PR. To land: publish #12765, bump edge's dxos catalog, then git checkout -- package.json && pnpm install to drop the overrides. REMAINING: the agent model round trip needs the memoized Anthropic fixture; space-membership authz on the process routes; hosting the real operation handler set so agent tool calls execute on EDGE."
   - name: sample-spaces
     status: active
     user: burdon
