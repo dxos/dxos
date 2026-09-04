@@ -37,19 +37,17 @@ describe('validate', () => {
   });
 
   test('grid collisions and overflow are caught before anything is drawn', ({ expect }) => {
-    expect(
-      codes(
-        minimal({
-          layout: { mode: 'grid', cols: 2 },
-          components: [
-            { id: 'a', type: 'backend', label: 'a', row: 0, col: 0 },
-            { id: 'b', type: 'backend', label: 'b', row: 0, col: 0 },
-            { id: 'c', type: 'backend', label: 'c', row: 0, col: 5 },
-          ],
-          connections: [],
-        }),
-      ),
-    ).toEqual(expect.arrayContaining(['layout/grid-collision', 'layout/grid-overflow']));
+    const source = minimal({
+      layout: { mode: 'grid', cols: 2 },
+      components: [
+        { id: 'a', type: 'backend', label: 'a', row: 0, col: 0 },
+        { id: 'b', type: 'backend', label: 'b', row: 0, col: 0 },
+        { id: 'c', type: 'backend', label: 'c', row: 0, col: 5 },
+      ],
+      connections: [],
+    });
+
+    expect(codes(source)).toEqual(expect.arrayContaining(['layout/grid-collision', 'layout/grid-overflow']));
   });
 
   test('a connection to a component that does not exist is named with both ends', ({ expect }) => {
@@ -59,29 +57,25 @@ describe('validate', () => {
   });
 
   test('overlapping components fail', ({ expect }) => {
-    expect(
-      codes(
-        minimal({
-          components: [
-            { id: 'a', type: 'backend', label: 'a', pos: [0, 0], size: [100, 50] },
-            { id: 'b', type: 'backend', label: 'b', pos: [50, 20], size: [100, 50] },
-          ],
-        }),
-      ),
-    ).toContain('layout/component-overlap');
+    const source = minimal({
+      components: [
+        { id: 'a', type: 'backend', label: 'a', pos: [0, 0], size: [100, 50] },
+        { id: 'b', type: 'backend', label: 'b', pos: [50, 20], size: [100, 50] },
+      ],
+    });
+
+    expect(codes(source)).toContain('layout/component-overlap');
   });
 
   test('components closer than the minimum gap fail even when they do not intersect', ({ expect }) => {
-    expect(
-      codes(
-        minimal({
-          components: [
-            { id: 'a', type: 'backend', label: 'a', pos: [0, 0], size: [100, 50] },
-            { id: 'b', type: 'backend', label: 'b', pos: [110, 0], size: [100, 50] },
-          ],
-        }),
-      ),
-    ).toContain('layout/component-overlap');
+    const source = minimal({
+      components: [
+        { id: 'a', type: 'backend', label: 'a', pos: [0, 0], size: [100, 50] },
+        { id: 'b', type: 'backend', label: 'b', pos: [110, 0], size: [100, 50] },
+      ],
+    });
+
+    expect(codes(source)).toContain('layout/component-overlap');
   });
 
   test('a label sitting over the lower half of a component is still caught', ({ expect }) => {
@@ -119,15 +113,15 @@ describe('validate', () => {
   });
 
   test('a disconnected component warns without blocking the write', ({ expect }) => {
-    const result = Validate.validate(
-      minimal({
-        components: [
-          { id: 'a', type: 'backend', label: 'a', pos: [0, 0], size: [100, 50] },
-          { id: 'b', type: 'backend', label: 'b', pos: [400, 0], size: [100, 50] },
-          { id: 'lonely', type: 'external', label: 'lonely', pos: [0, 400], size: [100, 50] },
-        ],
-      }),
-    );
+    const source = minimal({
+      components: [
+        { id: 'a', type: 'backend', label: 'a', pos: [0, 0], size: [100, 50] },
+        { id: 'b', type: 'backend', label: 'b', pos: [400, 0], size: [100, 50] },
+        { id: 'lonely', type: 'external', label: 'lonely', pos: [0, 400], size: [100, 50] },
+      ],
+    });
+
+    const result = Validate.validate(source);
 
     expect(result.ok).toBe(true);
     expect(result.diagnostics.map((diagnostic) => diagnostic.code)).toContain('graph/orphan');
