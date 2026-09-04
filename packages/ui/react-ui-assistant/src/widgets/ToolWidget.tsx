@@ -54,7 +54,7 @@ export const ToolWidget = ({ view, children }: ToolWidgetProps) => {
 
 /**
  * One row of the run: a call and everything that came back for it, or a status or reasoning block
- * the model emitted between calls.
+ * narrating it — a run that never reaches a call is narration alone.
  *
  * The runtime delivers a call, its result and its stats as separate blocks, but a reader thinks in
  * calls — so the result folds into the call it answers rather than becoming a sibling row. Status
@@ -169,8 +169,7 @@ const toEntries = (blocks: ContentBlock.Any[]): ToolEntry[] => {
           id: `reasoning-${entries.length}`,
           kind: 'reasoning',
           active: block.pending === true,
-          // The row names the kind and opens onto the prose: reasoning runs to paragraphs, and a
-          // truncated first line reads as a broken title rather than a summary.
+          // Named by {@link entryLabel}; the prose is what the row opens onto.
           title: '',
           icon: REASONING_ICON,
           text,
@@ -187,6 +186,13 @@ type ToolPanelProps = {
   entries: ToolEntry[];
 } & Pick<TogglePanelRootProps, 'onChangeOpen'>;
 
+/**
+ * The row's own words. Reasoning names the kind instead of its prose: it runs to paragraphs, and a
+ * truncated first line reads as a broken title rather than a summary.
+ */
+const entryLabel = (entry: ToolEntry, t: ReturnType<typeof useTranslation>['t']): string =>
+  entry.kind === 'reasoning' ? t('tool-thinking.label') : entry.title;
+
 /** Whether the row carries anything an expansion could show. */
 const hasDetail = (entry: ToolEntry): boolean =>
   entry.text !== undefined || entry.input !== undefined || entry.error !== undefined || entry.result !== undefined;
@@ -199,17 +205,42 @@ const ToolPanel = ({ entries, onChangeOpen }: ToolPanelProps) => {
   const status = entries.filter((entry) => entry.kind === 'status').at(-1);
   const failed = calls.filter((call) => call.error !== undefined).length;
 
-  // A lone call owns the panel itself: a summary above one row says the same thing twice, and the
+  // A lone row owns the panel itself: a summary above one row says the same thing twice, and the
   // outer disclosure is the one that opens onto its payload.
-  const single = entries.length === 1 && calls.length === 1 ? calls[0] : undefined;
+  const single = entries.length === 1 ? entries[0] : undefined;
+  const singleCall = single?.kind === 'call' ? single : undefined;
 
-  // Three shapes, in the order a reader needs them: the run's own narration while the model is
-  // still saying what it is doing, a lone call's name, and otherwise the count.
+  // Four shapes, in the order a reader needs them: a run that never reached a call, named by the
+  // narration that is all it holds; the narration with the run's count behind it while a call is
+  // still unanswered; a lone call's name; and otherwise the count.
+  //
+  // Narration leads only while the run is in flight. It says what the model is ABOUT to do, so on a
+  // settled run it reads as a sentence stalled mid-step — and the count is what the reader wants
+  // from a run that is over.
   const count = t('tool-run.label', { count: calls.length });
-  const header = status
-    ? `${status.title} (${t('tool-run-suffix.label', { count: calls.length })})`
-    : (single?.title ?? count);
-  const icon = status?.icon ?? single?.icon ?? TOOL_ICON;
+  const narrating = calls.length === 0 ? (status ?? entries[entries.length - 1]) : undefined;
+  const running = calls.some((call) => call.active) ? status : undefined;
+  const header = narrating
+    ? entryLabel(narrating, t)
+    : running
+      ? `${running.title} · ${t('tool-run-suffix.label', { count: calls.length })}`
+      : (singleCall?.title ?? count);
+  const icon = narrating?.icon ?? running?.icon ?? singleCall?.icon ?? TOOL_ICON;
+
+  // Nothing an expansion could show — a lone status, which is what a run looks like while the model
+  // is still saying what it is about to do. A caret that reveals emptiness reads as a failure, so
+  // the row stays plain prose until a call or a second line of narration joins it.
+  if (single && !hasDetail(single)) {
+    return (
+      <div
+        className='flex items-center gap-2 p-1 text-description min-h-(--dx-control)'
+        data-testid={`assistant.tool-${single.kind}`}
+      >
+        <Icon icon={icon} size={4} classNames='shrink-0' />
+        <span className='truncate'>{header}</span>
+      </div>
+    );
+  }
 
   return (
     // The summary is a bare text row rather than a bordered panel header: the border belongs to
@@ -229,7 +260,7 @@ const ToolPanel = ({ entries, onChangeOpen }: ToolPanelProps) => {
     >
       <TogglePanel.Header
         caret='end'
-        data-testid={single ? 'assistant.tool-call' : 'assistant.tool-run'}
+        data-testid={singleCall ? 'assistant.tool-call' : 'assistant.tool-run'}
         classNames='gap-1'
       >
         <span className='flex min-w-0 items-center gap-2 text-description tabular-nums'>
@@ -269,7 +300,7 @@ type ToolCallListProps = {
  */
 const ToolCallList = ({ entries, onOpen }: ToolCallListProps) => {
   const { t } = useTranslation(translationKey);
-  const label = (entry: ToolEntry) => (entry.kind === 'reasoning' ? t('tool-thinking.label') : entry.title);
+  const label = (entry: ToolEntry) => entryLabel(entry, t);
   return (
     <Accordion.Root<ToolEntry>
       items={entries}

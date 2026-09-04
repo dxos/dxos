@@ -54,6 +54,48 @@ describe('createRenderer', () => {
     expect(markdown(rendered)).toContain('Now writing the document.');
   });
 
+  test('narration joins the run it precedes rather than opening a widget of its own', ({ expect }) => {
+    const render = createRenderer(undefined);
+    const rendered = render(
+      message([
+        { _tag: 'status', statusText: 'Reading the space' },
+        { _tag: 'toolCall', toolCallId: '1', name: 'a', input: '{}', providerExecuted: false },
+        { _tag: 'toolResult', toolCallId: '1', name: 'a', providerExecuted: false, result: 'ok' },
+      ]),
+    );
+    expect(toolkitTags(rendered)).toBe(1);
+    expect(markdown(rendered)).not.toContain('<status>');
+  });
+
+  // The turn the model spends only saying what it is doing: a status and its reasoning used to
+  // render as a widget apiece, and the call that arrived next displaced them with a panel.
+  test('narration with no call of its own is still one panel', ({ expect }) => {
+    const render = createRenderer(undefined);
+    const rendered = render(
+      message([
+        { _tag: 'status', statusText: 'Reading the space' },
+        { _tag: 'reasoning', reasoningText: 'The document has to be read before it can be edited.' },
+        { _tag: 'text', text: 'Here is what I found.' },
+      ]),
+    );
+    expect(toolkitTags(rendered)).toBe(1);
+    expect(markdown(rendered)).not.toContain('<status>');
+    expect(markdown(rendered)).not.toContain('<reasoning>');
+    expect(markdown(rendered)).toContain('Here is what I found.');
+  });
+
+  test('narration with nothing to say opens no panel', ({ expect }) => {
+    const render = createRenderer(undefined);
+    const rendered = render(
+      message([
+        { _tag: 'status', statusText: '  ' },
+        { _tag: 'text', text: 'Done.' },
+      ]),
+    );
+    expect(toolkitTags(rendered)).toBe(0);
+    expect(markdown(rendered)).toBe('Done.');
+  });
+
   test('a prompt carrying synthetic context renders only the reader words', ({ expect }) => {
     const text = renderUser(
       userMessage([
