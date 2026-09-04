@@ -20,8 +20,11 @@ use oauth::OAuthServerState;
 #[cfg(desktop)]
 use window_state::WindowState;
 
-/// Set when the web process died while the main window was not visible; the reload runs on the
-/// window's next focus instead of into a hidden, throttled window.
+/// Label of the app window. The spotlight panel is a second webview with its own label.
+const MAIN_WINDOW_LABEL: &str = "main";
+
+/// Set when the main window's web process died while the window was not visible; the reload runs
+/// on the window's next focus.
 #[cfg(target_os = "macos")]
 static RELOAD_ON_FOCUS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
@@ -191,20 +194,22 @@ pub fn run() {
     #[cfg(desktop)]
     let builder = builder.manage(OAuthServerState::new());
 
-    // WebKit still kills the WebContent process under memory pressure, and Tauri's default reaction
-    // is an immediate reload. A reload into a hidden window boots throttled, and whatever goes wrong
-    // waits for the user behind a dialog. Reload now if the window is visible; otherwise on the next
-    // focus (see the `Focused` handler on the main window).
+    // Tauri's default reaction to a WebContent process death is an immediate reload. That is right
+    // for the spotlight panel, and for the main window while it is visible. A hidden main window
+    // waits for its next focus instead: WebKit kills the process under memory pressure whatever the
+    // scheduling policy, and rebooting a large page into that pressure while nobody is looking only
+    // invites the next kill. On macOS 13, where the `background_throttling` policy below is ignored,
+    // the hidden reboot would also run suspended.
     #[cfg(target_os = "macos")]
     let builder = builder.on_web_content_process_terminate(|webview| {
         let window = webview.window();
         let visible = window.is_visible().unwrap_or(true) && !window.is_minimized().unwrap_or(false);
-        if visible {
+        if webview.label() != MAIN_WINDOW_LABEL || visible {
             if let Err(error) = webview.reload() {
-                log::error!("reload after web process termination failed: {error}");
+                log::error!("reload after web process termination failed ({}): {error}", webview.label());
             }
         } else {
-            log::warn!("web process terminated while the window was hidden; reloading on next focus");
+            log::warn!("main window web process terminated while hidden; reloading on next focus");
             RELOAD_ON_FOCUS.store(true, std::sync::atomic::Ordering::SeqCst);
         }
     });
@@ -257,7 +262,7 @@ pub fn run() {
 
                 let app_port = webview_port(&app.config().identifier);
                 let url: tauri::Url = format!("http://localhost:{}", app_port).parse().unwrap();
-                let main_window = WebviewWindowBuilder::new(app, "main", tauri::WebviewUrl::External(url))
+                let main_window = WebviewWindowBuilder::new(app, MAIN_WINDOW_LABEL, tauri::WebviewUrl::External(url))
                     .title("Composer")
                     .inner_size(1600.0, 1200.0)
                     .resizable(true)
@@ -304,7 +309,7 @@ pub fn run() {
             #[cfg(mobile)]
             {
                 use tauri::WebviewWindowBuilder;
-                let _main_window = WebviewWindowBuilder::new(app, "main", tauri::WebviewUrl::App("index.html".into()))
+                let _main_window = WebviewWindowBuilder::new(app, MAIN_WINDOW_LABEL, tauri::WebviewUrl::App("index.html".into()))
                     .build()?;
             }
 

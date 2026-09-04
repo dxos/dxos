@@ -75,6 +75,11 @@ export type UseAppOptions = {
   cacheEnabled?: boolean;
   safeMode?: boolean;
   debounce?: number;
+  /**
+   * Executed milliseconds without an activation event before startup is declared stalled. Not a
+   * deadline on total boot time: a slow boot that keeps activating modules is never aborted, and
+   * time the process was suspended does not count. See `createStartupWatchdog`.
+   */
   timeout?: number;
   fallback?: FC<FallbackProps>;
 };

@@ -65,12 +65,13 @@ import { initAutomergeWasm } from './util/automerge-wasm';
 const ResetDialog = lazy(() => import('./components').then((module) => ({ default: module.ResetDialog })));
 
 /**
- * Startup deadline override, in SECONDS (`VITE_DX_STARTUP_TIMEOUT=2`).
+ * Startup stall window override, in SECONDS (`VITE_DX_STARTUP_TIMEOUT=2`).
  *
- * Exists to exercise the deadline itself: shortening it does not fake a stall, it moves the line
- * that startup has genuinely not crossed yet, so the real path runs with real work behind it. Dev
- * only — in production the deadline is fatal, and a shorter one would just fail a boot sooner.
- * Seconds rather than milliseconds because it is typed by hand.
+ * The window is executed time with no activation event, not time since boot (see
+ * `createStartupWatchdog`), so a short override only trips on a real gap between two activation
+ * events. It exercises the stalled offer with real work behind it, not a faked stall. Dev only: in
+ * production a trip is fatal, and a shorter window would just fail a boot sooner. Seconds rather
+ * than milliseconds because it is typed by hand.
  */
 const startupTimeout = (() => {
   if (!import.meta.env.DEV) {
@@ -112,7 +113,7 @@ declare global {
 
   interface ImportMetaEnv {
     DEV: string;
-    /** Startup deadline override in SECONDS, dev only — see `startupTimeout` below. */
+    /** Startup stall window override in SECONDS, dev only — see `startupTimeout` below. */
     VITE_DX_STARTUP_TIMEOUT?: string;
   }
 
