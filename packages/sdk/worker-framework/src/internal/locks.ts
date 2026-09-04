@@ -4,11 +4,13 @@
 
 import { asyncTimeout } from '@dxos/async';
 
+import { WorkerConnectionError } from '../errors';
+
 /** Max time to wait for a coordinator/worker RPC reply during worker connect. */
 export const LOCK_OR_RPC_WAIT_TIMEOUT = 15_000;
 
 export const lockOrRpcTimeoutError = (operation: string, timeout = LOCK_OR_RPC_WAIT_TIMEOUT): Error =>
-  new Error(`Worker connection timed out after ${timeout}ms: ${operation}.`);
+  new WorkerConnectionError({ message: `Worker connection timed out after ${timeout}ms: ${operation}.` });
 
 export const waitWithLockOrRpcTimeout = <T>(promise: Promise<T>, operation: string): Promise<T> =>
   asyncTimeout(promise, LOCK_OR_RPC_WAIT_TIMEOUT, lockOrRpcTimeoutError(operation));

@@ -6,8 +6,10 @@ import React, { type FC, useCallback, useMemo } from 'react';
 
 import { Format } from '@dxos/echo/Format';
 import { PublicKey } from '@dxos/keys';
+import { toPublicKey } from '@dxos/protocols/buf';
+import { type SubscribeToSpacesResponse_SpaceInfo } from '@dxos/protocols/buf/dxos/devtools/host_pb';
+import { type PublicKey as BufPublicKey } from '@dxos/protocols/buf/dxos/keys_pb';
 import { type Space as SpaceProto } from '@dxos/protocols/proto/dxos/client/services';
-import { type SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexSet } from '@dxos/util';
@@ -29,7 +31,7 @@ export type PipelineTableRow = {
 
 export type PipelineTableProps = {
   state: SpaceProto.PipelineState;
-  metadata: SubscribeToSpacesResponse.SpaceInfo | undefined;
+  metadata: SubscribeToSpacesResponse_SpaceInfo | undefined;
   onSelect?: (feed: PipelineTableRow | undefined) => void;
 };
 
@@ -62,10 +64,14 @@ export const PipelineTable: FC<PipelineTableProps> = ({ state, metadata, onSelec
   );
 
   const getType = (feedKey: PublicKey) => {
+    const matches = (key: BufPublicKey | undefined) => {
+      const other = toPublicKey(key);
+      return other !== undefined && feedKey.equals(other);
+    };
     if (metadata) {
       return {
-        genesis: feedKey.equals(metadata?.genesisFeed),
-        own: feedKey.equals(metadata?.controlFeed) || feedKey.equals(metadata?.dataFeed),
+        genesis: matches(metadata?.genesisFeed),
+        own: matches(metadata?.controlFeed) || matches(metadata?.dataFeed),
       };
     }
 

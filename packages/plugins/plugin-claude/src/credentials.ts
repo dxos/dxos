@@ -8,7 +8,7 @@ import * as Credential from '@dxos/compute/Credential';
 import { Database } from '@dxos/echo';
 
 import { type EnvironmentVariableCredential } from '#api';
-import { type ClaudeAgentOperation } from '#types';
+import { type ClaudeAgentSession } from '#types';
 
 import { ANTHROPIC_SOURCE } from './constants';
 import { CredentialResolutionError, MissingCredentialError } from './errors';
@@ -41,7 +41,7 @@ export const getApiKey: Effect.Effect<string, MissingCredentialError, Credential
  * A name repeated in one request keeps its last entry, since names are unique within a vault.
  */
 export const toVaultCredentials = Effect.fn('toVaultCredentials')(function* (
-  credentials: readonly ClaudeAgentOperation.SessionCredential[],
+  credentials: readonly ClaudeAgentSession.SessionCredential[],
 ) {
   const deduped = [...new Map(credentials.map((credential) => [credential.as, credential])).values()];
   return yield* Effect.forEach(deduped, ({ token, as }) =>

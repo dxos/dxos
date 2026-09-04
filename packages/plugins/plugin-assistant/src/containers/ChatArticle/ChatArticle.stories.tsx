@@ -15,8 +15,9 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AiContext } from '@dxos/assistant';
-import { Chat, PlanningSkill } from '@dxos/assistant-toolkit';
+import { PlanningSkill } from '@dxos/assistant-toolkit';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Filter, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
@@ -165,7 +166,7 @@ const meta = {
                   // Bind the conversation the way `CreateChat` binds a new chat's defaults, because
                   // holding tasks is not the same as working them: the planning skill's update-tasks
                   // tool and its end-request reminder both reach the checklist through
-                  // `Chat.getFromContext`, so without the chat in context the model gets the tool and
+                  // `Harness.getChat`, so without the chat in context the model gets the tool and
                   // no list to apply it to.
                   const registry = yield* Capability.get(Capabilities.AtomRegistry);
                   const runtime = yield* Effect.context<Database.Service>().pipe(
@@ -249,12 +250,16 @@ export const Tasks: Story = {
     });
     await expect(canvasElement.textContent ?? '').toContain('Gather the requirements');
 
-    // Disclosed on mount, and the toggle reports it. Asserted on `hidden` rather than `data-state`:
-    // the machine only stamps that once it has run a transition, so a region open from the first
-    // render carries no state attribute at all.
+    // Collapsed on mount, and the toggle reports it. Asserted on `hidden` rather than `data-state`:
+    // the machine only stamps that once it has run a transition, so the region carries no state
+    // attribute until the reader opens it.
     const region = () => canvasElement.querySelector<HTMLElement>('[data-scope="collapsible"][data-part="content"]')!;
     const toggle = () => canvasElement.querySelector<HTMLElement>('[data-testid="assistant.toggle-tasks"]')!;
-    await expect(region()).not.toHaveAttribute('hidden');
+    await expect(region()).toHaveAttribute('hidden');
+    await expect(toggle()).toHaveAttribute('aria-pressed', 'false');
+
+    await userEvent.click(toggle());
+    await waitFor(() => void expect(region()).not.toHaveAttribute('hidden'), { timeout: 10_000 });
     await expect(toggle()).toHaveAttribute('aria-pressed', 'true');
 
     // Closing hides the region rather than unmounting it — the list keeps its subscriptions, so
@@ -263,10 +268,6 @@ export const Tasks: Story = {
     await waitFor(() => void expect(region()).toHaveAttribute('hidden'), { timeout: 10_000 });
     await expect(toggle()).toHaveAttribute('aria-pressed', 'false');
     await expect(region().textContent ?? '').toContain('Gather the requirements');
-
-    await userEvent.click(toggle());
-    await waitFor(() => void expect(region()).not.toHaveAttribute('hidden'), { timeout: 10_000 });
-    await expect(toggle()).toHaveAttribute('aria-pressed', 'true');
   },
 };
 

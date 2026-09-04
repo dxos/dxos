@@ -35,7 +35,7 @@ import { Annotation, Database, DXN, Key } from '@dxos/echo';
 import { SpanAttributes } from '@dxos/effect';
 import { makeRecordingTracer } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
+import { type LogEntry, LogLevel, type LogProcessor, log } from '@dxos/log';
 import { Organization } from '@dxos/types';
 
 import { ProcessStore } from './process-store';
@@ -385,6 +385,9 @@ const recordedSpans: Tracer.Span[] = [];
 const spaceSpans: Tracer.Span[] = [];
 const alarmSpans: Tracer.Span[] = [];
 const rearmSpans: Tracer.Span[] = [];
+const runtimeSpans: Tracer.Span[] = [];
+const callerSpans: Tracer.Span[] = [];
+const unusedRuntimeSpans: Tracer.Span[] = [];
 
 describe('ManagerImpl', () => {
   it.effect(
@@ -532,6 +535,49 @@ describe('ManagerImpl', () => {
       },
       Effect.provide(TestLayer),
       Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(recordedSpans))),
+    ),
+  );
+
+  it.effect(
+    "traces an operation invoked through the promise entry point on the runtime's tracer",
+    Effect.fn(
+      function* ({ expect }) {
+        const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+        const { error } = yield* Effect.promise(() => invoker.invokePromise(Traced, undefined));
+        expect(error).toBeUndefined();
+
+        expect(spanNamesToRoot(runtimeSpans, 'Handler.span')).toEqual([
+          'Handler.span',
+          Traced.meta.key.toString(),
+          'Process.input',
+          'ProcessOperationInvoker.invoke',
+        ]);
+      },
+      Effect.provide(TestLayer),
+      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(runtimeSpans))),
+    ),
+  );
+
+  it.effect(
+    "nests an operation invoked from a fiber under that fiber's span",
+    Effect.fn(
+      function* ({ expect }) {
+        const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+        yield* invoker
+          .invoke(Traced, undefined)
+          .pipe(Effect.withSpan('Caller.span'), Effect.provideService(Tracer.Tracer, makeRecordingTracer(callerSpans)));
+
+        expect(spanNamesToRoot(callerSpans, 'Handler.span')).toEqual([
+          'Handler.span',
+          Traced.meta.key.toString(),
+          'Process.input',
+          'ProcessOperationInvoker.invoke',
+          'Caller.span',
+        ]);
+        expect(unusedRuntimeSpans).toEqual([]);
+      },
+      Effect.provide(TestLayer),
+      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(unusedRuntimeSpans))),
     ),
   );
 
@@ -879,6 +925,49 @@ describe('ManagerImpl', () => {
         expect(info?.error?.name).toEqual('Error');
         expect(info?.error?.message).toEqual('boom failure');
         expect(info?.error?.stack).toContain('boom failure');
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'a crashed process reports the failure at error level, with the failing error (DX-1250)',
+      Effect.fn(function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        const executable = Process.make(
+          { key: 'test.explicit-fail', input: Schema.Void, output: Schema.Void, services: [] },
+          (ctx) =>
+            Effect.succeed({
+              onSpawn: () => Effect.sync(() => ctx.fail(new Error('boom failure'))),
+              onInput: () => Effect.void,
+              onAlarm: () => Effect.void,
+              onChildEvent: () => Effect.void,
+            }),
+        );
+
+        const entries = yield* captureLogEntries(() => manager.spawn(executable));
+        const failures = entries.filter((entry) => entry.message === 'lifecycle: failed');
+        expect(failures).toHaveLength(1);
+        expect(failures[0].level).toEqual(LogLevel.ERROR);
+        // `e` carries the failing Error itself, so a bundle keeps the message and stack rather than
+        // only the outermost pretty-printed reason.
+        expect(failures[0].computedError).toContain('boom failure');
+        expect(failures[0].computedContext.key).toEqual('test.explicit-fail');
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'a died handler reports the failure at error level too (DX-1250)',
+      Effect.fn(function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        const entries = yield* captureLogEntries(() =>
+          Effect.gen(function* () {
+            const handle = yield* manager.spawn(Process.fromOperation(Failing, handlers));
+            yield* handle.runAndExit({ inputs: [undefined] }).pipe(Stream.runCollect, Effect.exit);
+          }),
+        );
+        const failures = entries.filter((entry) => entry.message === 'lifecycle: failed');
+        expect(failures.length).toBeGreaterThanOrEqual(1);
+        expect(failures.every((entry) => entry.level === LogLevel.ERROR)).toBe(true);
+        expect(failures[0].computedError).toContain('Test Error');
       }, Effect.provide(TestLayer)),
     );
   });
@@ -2204,3 +2293,27 @@ describe('durability', () => {
     }, Effect.provide(DurabilityTestLayer)),
   );
 });
+
+const spanNamesToRoot = (spans: Tracer.Span[], name: string): string[] => {
+  const names: string[] = [];
+  let span: Tracer.AnySpan | undefined = spans.find((candidate) => candidate.name === name);
+  while (span?._tag === 'Span') {
+    names.push(span.name);
+    span = Option.getOrUndefined(span.parent);
+  }
+  return names;
+};
+
+/**
+ * Collect the log entries `body` emits, so a test can assert on the level a code path reports at
+ * and not merely on the state it leaves behind.
+ */
+const captureLogEntries = <A, E, R>(body: () => Effect.Effect<A, E, R>): Effect.Effect<LogEntry[], E, R> =>
+  Effect.suspend(() => {
+    const entries: LogEntry[] = [];
+    const processor: LogProcessor = (_config, entry) => {
+      entries.push(entry);
+    };
+    const remove = log.addProcessor(processor);
+    return body().pipe(Effect.ensuring(Effect.sync(remove)), Effect.as(entries));
+  });

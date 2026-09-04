@@ -292,6 +292,31 @@ export const pluginAsset = (
  * service graph land in the definition's closure and are paid at boot by every session. A loader
  * keeps them in the module body chunk, which is what makes the gating worth anything.
  */
+/**
+ * Module contributing sample spaces.
+ *
+ * Gated on demand, and loader-only: sample content is bulky and interesting to nobody who has not
+ * asked for a list, so an inline array — a static import in the plugin definition — would land the
+ * whole world in the definition's closure and charge every session for it. The loader keeps it in
+ * its own chunk, which is what makes the gating worth anything.
+ */
+export const sampleSpaces = (
+  loader: () => Promise<{ default: ReadonlyArray<AppCapabilities.SampleSpace> }>,
+  options?: { name?: string; environments?: readonly Capability$.Environment[] },
+) =>
+  Capability$.lazyModule<readonly [typeof AppCapabilities.SampleSpace]>(
+    options?.name ?? 'sample-spaces',
+    {
+      activatesOn: ActivationEvents.SampleSpacesRequested,
+      provides: [AppCapabilities.SampleSpace],
+      environments: options?.environments ?? [],
+    },
+    () =>
+      loader().then(({ default: spaces }) => ({
+        default: () => Effect.succeed([Capability$.contributeAll(AppCapabilities.SampleSpace, spaces)]),
+      })),
+  );
+
 export const commands = (
   values: ReadonlyArray<Capabilities.AnyCommand> | (() => Promise<{ default: ReadonlyArray<Capabilities.AnyCommand> }>),
   options?: { name?: string; environments?: readonly Capability$.Environment[] },

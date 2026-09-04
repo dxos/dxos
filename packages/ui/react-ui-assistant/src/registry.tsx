@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { AnchorWidget, type XmlWidgetRegistry, getXmlTextChild } from '@dxos/ui-editor';
+import { AnchorWidget, type XmlWidgetRegistry, getXmlInnerText, getXmlTextChild } from '@dxos/ui-editor';
 
 import {
   FallbackWidget,
@@ -13,6 +13,7 @@ import {
   StatusWidget,
   SuggestionWidget,
   SummaryWidget,
+  SyntheticWidget,
   ToolWidget,
 } from './widgets';
 
@@ -54,9 +55,11 @@ export const assistantRegistry: XmlWidgetRegistry = {
   // agent without reading as the reader's own prompt.
   'synthetic': {
     block: true,
-    factory: ({ children, range }) => {
-      const text = getXmlTextChild(children ?? []);
-      return text ? new ReasoningWidget(text, range?.from) : null;
+    factory: ({ children }) => {
+      // `getXmlInnerText`: a model fences blocks in tags of its own, and `getXmlTextChild` would
+      // stop at the first one — the reader saw a heading and an opening fence, then nothing.
+      const text = getXmlInnerText(children ?? []);
+      return text ? new SyntheticWidget(text) : null;
     },
   },
 
@@ -64,7 +67,9 @@ export const assistantRegistry: XmlWidgetRegistry = {
     block: true,
     streaming: true,
     factory: ({ children, range }) => {
-      const text = getXmlTextChild(children ?? []);
+      // `getXmlInnerText`: a model fences blocks in tags of its own, and `getXmlTextChild` would
+      // stop at the first one — the reader saw a heading and an opening fence, then nothing.
+      const text = getXmlInnerText(children ?? []);
       return text ? new ReasoningWidget(text, range?.from) : null;
     },
   },

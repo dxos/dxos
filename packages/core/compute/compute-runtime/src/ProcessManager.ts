@@ -128,6 +128,13 @@ export interface Handle<_Input, _Output, _Rpcs extends Rpc.Any> {
 
   terminate(): Effect.Effect<void>;
   readonly status: Status;
+
+  /**
+   * Absolute due-time (epoch ms) of the process's pending alarm, or `null` when none is scheduled.
+   * A host that suspends the process between turns (a Durable Object) mirrors this onto its own
+   * scheduler, since the runtime's alarm is an in-memory timer.
+   */
+  readonly alarmDueAt: number | null;
   statusAtom: Atom.Atom<Status>;
 
   /**
@@ -368,9 +375,11 @@ export class ProcessManagerImpl implements Manager {
     this.#store = new ProcessStore(opts.kvStore);
     this.#processTreeAtom = Atom.make<readonly Process.Info[]>([]);
     this.#registry.mount(this.#processTreeAtom);
+    const processTree = Effect.sync(() => this.#registry.get(this.#processTreeAtom));
     this.#monitor = {
-      processTree: Effect.sync(() => this.#registry.get(this.#processTreeAtom)),
+      processTree,
       processTreeAtom: this.#processTreeAtom,
+      list: Process.listFromTree(processTree),
       subscribeToTraceMessages: (filter: Trace.Filter): Stream.Stream<Trace.Message> =>
         Stream.unwrap(
           Effect.gen({ self: this }, function* () {
@@ -487,7 +496,6 @@ export class ProcessManagerImpl implements Manager {
     options?: SpawnOptions,
   ): Effect.Effect<Handle<I, O, _Rpcs>> {
     return Effect.gen({ self: this }, function* () {
-      // Captured from the ambient runtime so alarms are driven by the same `Clock` (incl. `TestClock`).
       const id = this.#idGenerator();
       log('lifecycle: spawn', {
         pid: id,
@@ -497,6 +505,7 @@ export class ProcessManagerImpl implements Manager {
       });
       const scope = yield* Scope.make();
       const dispatchContext = yield* EffectEx.contextWithoutParentSpan();
+      const tracer = yield* Effect.tracer;
       const outputQueue = yield* Queue.unbounded<ProcessHandle.OutputItem<O>>();
 
       const storage = storageServiceLayer(this.#kvStore, `process/${id}/`);
@@ -580,6 +589,7 @@ export class ProcessManagerImpl implements Manager {
           manager: this,
           handlerSet: this.#handlerSet,
           parentProcessId: id,
+          tracer,
         });
         builtinCtx = Context.add(builtinCtx, Operation.Service, childInvoker);
         builtinCtx = Context.add(builtinCtx, ProcessOperationInvoker.Service, childInvoker);
@@ -716,12 +726,12 @@ export class ProcessManagerImpl implements Manager {
     definition: Process.Process<any, any, any, any>,
   ): Effect.Effect<ProcessHandle.ProcessHandleImpl<any, any, any>> {
     return Effect.gen({ self: this }, function* () {
-      // Captured from the ambient runtime so alarms are driven by the same `Clock` (incl. `TestClock`).
       const id = record.id;
       log('lifecycle: rehydrate', { pid: id, key: record.key });
 
       const scope = yield* Scope.make();
       const dispatchContext = yield* EffectEx.contextWithoutParentSpan();
+      const tracer = yield* Effect.tracer;
       const outputQueue = yield* Queue.unbounded<ProcessHandle.OutputItem<any>>();
       const storage = storageServiceLayer(this.#kvStore, `process/${id}/`);
 
@@ -788,6 +798,7 @@ export class ProcessManagerImpl implements Manager {
           manager: this,
           handlerSet: this.#handlerSet,
           parentProcessId: id,
+          tracer,
         });
         builtinCtx = Context.add(builtinCtx, Operation.Service, childInvoker);
         builtinCtx = Context.add(builtinCtx, ProcessOperationInvoker.Service, childInvoker);
@@ -892,7 +903,7 @@ export class ProcessManagerImpl implements Manager {
       }
 
       return handle;
-    }).pipe(Effect.withSpan('ProcessManager.shutdown'));
+    }).pipe(Effect.withSpan('ProcessManager.rehydrate'));
   }
 
   #hydrateFromDefinition<I, O, Rpcs extends Rpc.Any = never>(
@@ -967,7 +978,7 @@ export class ProcessManagerImpl implements Manager {
           yield* this.#store.deleteProcess(pid);
         }
       }
-    }).pipe(Effect.withSpan('ProcessManager.startup'));
+    }).pipe(Effect.withSpan('ProcessManager.discardRecord'));
   }
 
   attach<I, O, Rpcs extends Rpc.Any = never>(id: Process.ID): Effect.Effect<Handle<I, O, Rpcs>> {
@@ -1067,6 +1078,8 @@ class DormantHandle<I, O> implements Handle<I, O, any> {
   readonly environment: Process.Environment;
   readonly status: Status;
   readonly statusAtom: Atom.Atom<Status>;
+  /** Carried on the persisted record, so a dormant handle still reports a pending alarm. */
+  readonly alarmDueAt: number | null;
   // Dormant handles expose no live RPC surface; the empty client serves no requests. Stored untyped
   // (`RpcClient<any>`) so the dormant handle is assignable to `Handle.Any` (see design spec §4.4).
   readonly rpc: RpcClient.RpcClient<any> = EMPTY_RPC_CLIENT;
@@ -1098,6 +1111,7 @@ class DormantHandle<I, O> implements Handle<I, O, any> {
       completedAt: Option.none(),
     };
     this.statusAtom = Atom.make(this.status);
+    this.alarmDueAt = record.alarmDueAt;
   }
 
   hydrate = (definition: Process.Process<I, O, any, any>): Effect.Effect<Handle<I, O, any>> =>

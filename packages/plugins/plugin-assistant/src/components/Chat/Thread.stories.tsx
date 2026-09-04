@@ -211,7 +211,10 @@ export const Thinking: Story = {
   play: async ({ canvasElement }) => {
     await waitFor(
       async () => {
-        await expect(canvasElement.querySelectorAll('[data-reasoning-text]').length).toBeGreaterThan(0);
+        // Reasoning narrates the run it sits in rather than emitting `ReasoningWidget`, so the
+        // prose arrives in the run's panel — `data-reasoning-text` is no longer rendered for it.
+        await expect(canvasElement.querySelectorAll('[data-testid="assistant.tool-run"]').length).toBeGreaterThan(0);
+        await expect(canvasElement.textContent ?? '').toContain('Considering the question before answering.');
       },
       { timeout: 10_000 },
     );
@@ -256,8 +259,9 @@ export const SyntheticTurn: Story = {
       },
       { timeout: 10_000 },
     );
-    // The nudge itself is rendered, as the collapsed panel the registry maps `<synthetic>` to.
-    await expect(canvasElement.querySelectorAll('[data-reasoning-text]').length).toBeGreaterThan(0);
+    // The nudge itself is rendered, as the collapsed panel the registry maps `<synthetic>` to —
+    // `SyntheticWidget`, which marks its prose `data-synthetic-text`, not reasoning's attribute.
+    await expect(canvasElement.querySelectorAll('[data-synthetic-text]').length).toBeGreaterThan(0);
     await expect(canvasElement.textContent ?? '').toContain('checklist still has unchecked items');
   },
 };

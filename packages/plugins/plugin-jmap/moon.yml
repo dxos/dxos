@@ -10,7 +10,7 @@ tasks:
     # A provider plugin is headless: no React, no UI packages. Fail if the plugin entry ever reaches
     # one, so the constraint is enforced rather than assumed.
     command: >-
-      pnpm exec dx-trace-imports
+      bun $workspaceRoot/tools/dx-trace-imports/cli.js
       --export ./JmapPlugin
       --to "@dxos/react-ui"
       --to react

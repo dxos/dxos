@@ -52,4 +52,5 @@ export const Templates = Capability.lazyModule(
   },
   () => import('./templates'),
 );
+
 export const Translations = AppCapability.translations(translations);

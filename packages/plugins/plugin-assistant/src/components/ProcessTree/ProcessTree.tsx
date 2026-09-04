@@ -30,6 +30,13 @@ export type ProcessTreeProps = {
    * @default 1
    */
   depth?: number;
+  /**
+   * Overrides the row label for a process (e.g. the name of the chat it is serving), falling back to
+   * the process name when it returns `undefined`.
+   *
+   * Must be referentially stable — `ProcessTree` is memoized on its props.
+   */
+  resolveLabel?: (process: Process.Info) => string | undefined;
   onProcessSelect?: (process: Process.Info) => void;
   onProcessTerminate?: (process: Process.Info) => void;
 };
@@ -45,9 +52,17 @@ type ProcessNode = {
 /** Synthetic root; the tree renders its children, never the root itself. */
 const ROOT_ID = 'processes';
 
+/**
+ * The agent's running processes as a tree, one row per process with its status glyph and metrics
+ * in trailing columns. The forest is rebuilt on every metrics tick, so open state lives outside the
+ * model and is re-seeded — a collapse must survive the next tick. Renders through `Tree`.
+ */
 export const ProcessTree = React.memo(
   composable<HTMLDivElement, ProcessTreeProps>(
-    ({ processes, depth = DEFAULT_DEPTH, onProcessSelect, onProcessTerminate, ...props }, forwardedRef) => {
+    (
+      { processes, depth = DEFAULT_DEPTH, resolveLabel, onProcessSelect, onProcessTerminate, ...props },
+      forwardedRef,
+    ) => {
       // Open state lives outside the model: `processes` carries live metrics, so the forest (and with
       // it the model) is rebuilt on every tick, and a collapse held only inside the model would be
       // undone by the next one.
@@ -60,12 +75,12 @@ export const ProcessTree = React.memo(
           createStaticTreeModel<ProcessNode>(root, {
             getChildren: (node) => node.children,
             getProps: (node) => ({
-              label: node.process?.params.name ?? node.id,
+              label: (node.process && resolveLabel?.(node.process)) ?? node.process?.params.name ?? node.id,
             }),
             // Expanded by default, matching the flattened view this replaced.
             isOpen: (_node, path) => openRef.current.get(path.join('/')) ?? true,
           }),
-        [root],
+        [root, resolveLabel],
       );
 
       // The ref survives model rebuilds; the atom is what the controlled tree actually reads, so a
@@ -87,13 +102,19 @@ export const ProcessTree = React.memo(
       const renderIcon = useMemo(() => makeIconRenderer(), []);
       const renderColumns = useMemo(() => makeColumnRenderer(onProcessTerminate), [onProcessTerminate]);
 
+      // The compact density step cascades through the CSS control tokens, shrinking every row (and
+      // its toggle/button) without per-element sizing.
       return (
-        <ScrollArea.Root {...composableProps(props, { classNames: 'dx-expand' })} thin ref={forwardedRef}>
+        <ScrollArea.Root
+          {...composableProps(props, { classNames: ['dx-expand dx-density-sm text-sm tabular-nums'] })}
+          thin
+          ref={forwardedRef}
+        >
           <ScrollArea.Viewport>
             <Tree<ProcessNode>
               id={ROOT_ID}
               model={model}
-              gridTemplateColumns='[tree-row-start] minmax(0, 1fr) min-content min-content [tree-row-end]'
+              gridTemplateColumns='[tree-row-start] var(--dx-control) minmax(0, 1fr) min-content min-content [tree-row-end]'
               renderIcon={renderIcon}
               renderColumns={renderColumns}
               onOpenChange={handleOpenChange}
@@ -152,8 +173,8 @@ const makeColumnRenderer =
               classNames='min-h-0 p-1'
               icon='ph--x--regular'
               iconOnly
+              density='sm'
               variant='ghost'
-              size={4}
               label='Actions'
               onClick={(event) => {
                 event.stopPropagation();

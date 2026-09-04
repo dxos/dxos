@@ -103,7 +103,7 @@ export class InvitationsHandler {
       kind: invitation.kind,
       type: invitation.type,
     });
-    metrics.increment('dxos.invitation.host');
+    metrics.increment('dxos.invitation.host', 1, { tags: { role: 'host', method: 'swarm' } });
 
     const hostSpanId = `invitation-host-${invitation.invitationId}`;
     // Reassign ctx to the child context so downstream `@trace.span` calls stay in the same trace.
@@ -182,7 +182,7 @@ export class InvitationsHandler {
               const deviceKey = await extension.completedTrigger.wait({ timeout: invitation.timeout });
               log.verbose('admitted guest', { guest: deviceKey, ...protocol.toJSON() });
               guardedState.set(extension, Invitation.State.SUCCESS);
-              metrics.increment('dxos.invitation.success');
+              metrics.increment('dxos.invitation.success', 1, { tags: { role: 'host', method: 'swarm' } });
               log('host invitation handler opened');
               admitted = true;
 
@@ -193,12 +193,12 @@ export class InvitationsHandler {
               const stateChanged = guardedState.set(extension, Invitation.State.CONNECTING);
               if (err instanceof TimeoutError) {
                 if (stateChanged) {
-                  metrics.increment('dxos.invitation.timeout');
+                  metrics.increment('dxos.invitation.timeout', 1, { tags: { role: 'host', method: 'swarm' } });
                   log.verbose('timeout', { ...protocol.toJSON() });
                 }
               } else {
                 if (stateChanged) {
-                  metrics.increment('dxos.invitation.failed');
+                  metrics.increment('dxos.invitation.failed', 1, { tags: { role: 'host', method: 'swarm' } });
                   log.error('failed', err);
                 }
               }
@@ -215,12 +215,12 @@ export class InvitationsHandler {
           }
           if (err instanceof TimeoutError) {
             if (stateChanged) {
-              metrics.increment('dxos.invitation.timeout');
+              metrics.increment('dxos.invitation.timeout', 1, { tags: { role: 'host', method: 'swarm' } });
               log.verbose('timeout', { err });
             }
           } else {
             if (stateChanged) {
-              metrics.increment('dxos.invitation.failed');
+              metrics.increment('dxos.invitation.failed', 1, { tags: { role: 'host', method: 'swarm' } });
               log.error('failed', err);
             }
           }
@@ -244,7 +244,7 @@ export class InvitationsHandler {
           // ensure the swarm is closed before changing state and closing the stream.
           await swarmConnection.close(ctx);
           guardedState.set(null, Invitation.State.EXPIRED);
-          metrics.increment('dxos.invitation.expired');
+          metrics.increment('dxos.invitation.expired', 1, { tags: { role: 'host', method: 'swarm' } });
           await ctx.dispose();
         },
         expiresOn.getTime() - Date.now(),
@@ -421,6 +421,7 @@ export class InvitationsHandler {
                 invitationId: invitation.invitationId,
                 ...protocol.toJSON(),
               });
+              metrics.increment('dxos.invitation.success', 1, { tags: { role: 'guest', method: 'swarm' } });
               guardedState.complete({
                 ...guardedState.current,
                 ...result,
@@ -460,6 +461,7 @@ export class InvitationsHandler {
       onInvitationSuccess: async (edgeCtx, admissionResponse, admissionRequest) => {
         const result = await protocol.accept(edgeCtx, admissionResponse, admissionRequest);
         log.info('admitted by edge', { ...protocol.toJSON() });
+        metrics.increment('dxos.invitation.success', 1, { tags: { role: 'guest', method: 'edge' } });
         guardedState.complete({ ...guardedState.current, ...result, state: Invitation.State.SUCCESS });
       },
     });

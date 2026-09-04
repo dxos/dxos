@@ -9,6 +9,8 @@ import * as Exit from 'effect/Exit';
 import { AssistantTestLayerWithTriggers } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AiContext } from '@dxos/assistant';
+import * as Agent from '@dxos/assistant/Agent';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
@@ -18,7 +20,6 @@ import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { Message, Outline, Task } from '@dxos/types';
 
-import { Agent, Chat } from '../../../types';
 import { PlanReminder } from './definitions';
 import { PlanningHandlers } from './index';
 
@@ -30,7 +31,6 @@ describe('PlanReminder', () => {
     Effect.fnUntraced(
       function* (_) {
         const conversation = yield* setupChatWithChecklist([false]);
-
         const exit = yield* Effect.exit(Operation.invoke(PlanReminder, {}).pipe(Effect.provide(conversation)));
 
         expect(Exit.isFailure(exit)).toBe(true);
@@ -45,7 +45,6 @@ describe('PlanReminder', () => {
     Effect.fnUntraced(
       function* (_) {
         const conversation = yield* setupChatWithChecklist([false]);
-
         const exit = yield* Effect.exit(Operation.invoke(PlanReminder, {}).pipe(Effect.provide(conversation)));
 
         expect(Exit.isSuccess(exit)).toBe(true);
@@ -60,7 +59,6 @@ describe('PlanReminder', () => {
     Effect.fnUntraced(
       function* (_) {
         const conversation = yield* setupChatWithChecklist([true]);
-
         const exit = yield* Effect.exit(Operation.invoke(PlanReminder, {}).pipe(Effect.provide(conversation)));
 
         // The script is empty, so reaching the model at all would fail as exhausted.

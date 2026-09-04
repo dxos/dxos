@@ -161,6 +161,18 @@ export const QueryRequest = Schema.Struct({
    * Maximum number of blocks to return.
    */
   limit: Schema.optional(Schema.Number),
+
+  /**
+   * Token identifying the store the client believes it is talking to, as last reported in
+   * {@link QueryResponse.serverToken}.
+   *
+   * When it does not match the serving store's own token — the server was swapped or its storage
+   * wiped — every `position` the client remembers names a slot in a store that no longer exists, so
+   * the server ignores `position` and serves the namespace from the start. That keeps recovery to
+   * the same single round-trip as an ordinary pull. Omitted by clients that predate the token, for
+   * which the server keeps honouring `position` verbatim.
+   */
+  expectedServerToken: Schema.optional(Schema.String),
 });
 export interface QueryRequest extends Schema.Schema.Type<typeof QueryRequest> {}
 
@@ -187,6 +199,16 @@ export const QueryResponse = Schema.Struct({
    * Returned blocks for the current page.
    */
   blocks: Schema.Array(Block),
+
+  /**
+   * Identity of the store that assigned the positions in this response. Stable for the life of the
+   * store's storage and regenerated when that storage is recreated, which is how a client detects
+   * that its remembered positions are no longer meaningful.
+   *
+   * Only set by a position authority (a server); absent on responses from a store that does not
+   * assign positions, and on responses from servers that predate the token.
+   */
+  serverToken: Schema.optional(Schema.String),
 });
 export interface QueryResponse extends Schema.Schema.Type<typeof QueryResponse> {}
 
@@ -271,6 +293,11 @@ export const AppendResponse = Schema.Struct({
    * Assigned global positions for appended blocks.
    */
   positions: Schema.Array(Schema.Number),
+
+  /**
+   * Identity of the store that assigned `positions`. See {@link QueryResponse.serverToken}.
+   */
+  serverToken: Schema.optional(Schema.String),
 });
 export interface AppendResponse extends Schema.Schema.Type<typeof AppendResponse> {}
 

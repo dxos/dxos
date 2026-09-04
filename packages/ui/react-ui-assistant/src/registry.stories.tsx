@@ -54,6 +54,17 @@ type Story = StoryObj<typeof meta>;
 // DOM widgets
 //
 
+/**
+ * The shape {@link createRenderer} actually emits for a synthetic-only turn (an alarm wake-up, a
+ * continuation nudge): the tags hug the content and the prose keeps its own line breaks.
+ */
+export const SyntheticTurn: Story = {
+  args: {
+    content:
+      '<synthetic>Your scheduled alarm fired (it was set for 2026-09-04T06:20:11.153Z).\nPoll the agent session — it flagged a problem with the merge going through while checks were pending.</synthetic>',
+  },
+};
+
 export const Prompt: Story = {
   args: {
     content: '<prompt>Hello world!</prompt>',
@@ -68,7 +79,15 @@ export const LinkPreview: Story = {
 
 export const Synthetic: Story = {
   args: {
-    content: '<synthetic>Trigger fired: inbox.message.received (3 new messages).</synthetic>',
+    content: trim`
+      <synthetic>
+      Completed the checklist:
+      <checklist>
+      1. [x] Review new messages.
+      2. [x] Respond to new messages.
+      3. [x] Archive old messages.
+      </checklist>
+      </synthetic>`,
   },
 };
 
@@ -155,6 +174,23 @@ const failure = (id: string, name: string, error: string): ContentBlock.ToolResu
   error,
   providerExecuted: false,
 });
+
+const operationCall = (
+  id: string,
+  name: string,
+  operationName: string,
+  operationIcon: string,
+  input: unknown = { query: 'status', limit: 10 },
+): ContentBlock.ToolCall => ({
+  ...call(id, name, input),
+  operationKey: `dxos.org/operation/${name}`,
+  operationName,
+  operationIcon,
+});
+
+const status = (text: string): ContentBlock.Status => ({ _tag: 'status', statusText: text });
+
+const reasoning = (text: string): ContentBlock.Reasoning => ({ _tag: 'reasoning', reasoningText: text });
 
 /** One tag per run, which is what the thread's projection produces after folding a turn's messages. */
 const toolkit = (blocks: ContentBlock.Any[]): string => `<toolkit>${JSON.stringify(blocks)}</toolkit>`;
@@ -259,6 +295,62 @@ export const ToolkitFailed: Story = {
 export const ToolkitUnmerged: Story = {
   args: {
     content: toolchain.map(([toolCall, toolResult]) => toolkit([toolCall, toolResult])).join('\n\n'),
+  },
+};
+
+/** Operation-backed calls: the row shows the operation's name and icon, not the raw tool name. */
+export const ToolkitOperations: Story = {
+  args: {
+    content: toolkit([
+      operationCall('tc-1', 'markdown-update', 'Update document', 'ph--file-text--regular'),
+      result('tc-1', 'markdown-update', { ok: true }),
+      operationCall('tc-2', 'space-query', 'Query space', 'ph--planet--regular'),
+      result('tc-2', 'space-query', { hits: 12 }),
+    ]),
+  },
+};
+
+/** Status and reasoning narrate the run from inside its panel; settled, the summary counts. */
+export const ToolkitNarrated: Story = {
+  args: {
+    content: toolkit([
+      reasoning('The document has to be read before it can be edited, so the read comes first.'),
+      operationCall('tc-1', 'markdown-update', 'Update document', 'ph--file-text--regular'),
+      result('tc-1', 'markdown-update', { ok: true }),
+      status('Indexing the space'),
+      operationCall('tc-2', 'space-query', 'Query space', 'ph--planet--regular'),
+      result('tc-2', 'space-query', { hits: 12 }),
+    ]),
+  },
+};
+
+/** The same run mid-flight: the summary leads with the narration, since the step is still open. */
+export const ToolkitNarratedRunning: Story = {
+  args: {
+    content: toolkit([
+      reasoning('The document has to be read before it can be edited, so the read comes first.'),
+      operationCall('tc-1', 'markdown-update', 'Update document', 'ph--file-text--regular'),
+      result('tc-1', 'markdown-update', { ok: true }),
+      status('Indexing the space'),
+      operationCall('tc-2', 'space-query', 'Query space', 'ph--planet--regular'),
+    ]),
+  },
+};
+
+/** A run that never reached a call: the panel is the model saying what it is doing, nothing more. */
+export const ToolkitNarrationOnly: Story = {
+  args: {
+    content: toolkit([
+      status('Reading the space'),
+      reasoning('The document has to be read before it can be edited, so the read comes first.'),
+    ]),
+  },
+};
+
+/** A lone status, which is what a run looks like mid-stream: a plain row, with nothing to open. */
+export const ToolkitStatus: Story = {
+  args: {
+    content: toolkit([status('Reading the space')]),
   },
 };
 
