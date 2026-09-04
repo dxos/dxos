@@ -1,5 +1,6 @@
 ---
 '@dxos/plugin-assistant': minor
+'@dxos/plugin-debug': minor
 '@dxos/react-ui-assistant': patch
 ---
 
