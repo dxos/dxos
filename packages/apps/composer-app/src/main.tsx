@@ -598,7 +598,7 @@ const main = async () => {
     }),
   );
 
-  bootStatus('Starting Composer…');
+  bootStatus('Building Composer…');
   // Park the ring at 50% — preload done, activation about to take over.
   bootLoader?.progress(0.5);
   const remotePlugins: Plugin.Plugin[] = remotePluginsResult;
