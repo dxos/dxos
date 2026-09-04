@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren, Suspense, useEffect, useLayoutEffect, useMemo } from 'react';
+import React, { type PropsWithChildren, Suspense, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 
 import { Capabilities } from '../../../common';
 import { topologicalSort } from '../../../helpers';
@@ -33,6 +33,11 @@ export const App = ({ ready, error, debounce, progress }: AppProps) => {
   // instead of after it — gating both on `Done` leaves a blank frame between the two.
   const shellMounted = stage >= LoadingState.FadeOut;
 
+  // One status line per plugin (and per framework activation event), not per module: a plugin
+  // contributes a dozen-odd modules, so relaying every transition scrolled hundreds of lines past
+  // the user during boot. The framework deliberately leaves this policy to the host.
+  const announcedRef = useRef(new Set<string>());
+
   // Relay the startup lifecycle into the boot loader injected by
   // `@dxos/app-framework/vite-plugin` (a Solid app inlined into `index.html`,
   // the only visible loading UI). Plugin activation fills the `[0.5, 1]` half
@@ -46,14 +51,25 @@ export const App = ({ ready, error, debounce, progress }: AppProps) => {
 
     const fraction = progress?.progress ?? 0;
     bootLoader?.progress(0.5 + fraction * 0.5);
-    if (progress?.humanizedName) {
-      bootLoader?.status({
-        event: progress.event,
-        module: progress.module,
-        humanized: `Activating ${progress.humanizedName}`,
-      });
+
+    // Plugin-level transitions collapse to the plugin's own name; event-level ones (no
+    // `pluginName`) are the framework's own phases and are already few.
+    const humanized = progress?.pluginName ?? progress?.humanizedName;
+    if (!humanized) {
+      return;
     }
-  }, [stage, progress?.progress, progress?.event, progress?.module, progress?.humanizedName]);
+
+    const key = progress?.pluginName ?? `event:${progress?.event ?? humanized}`;
+    if (announcedRef.current.has(key)) {
+      return;
+    }
+    announcedRef.current.add(key);
+    bootLoader?.status({
+      event: progress?.event,
+      module: progress?.module,
+      humanized: `Activating ${humanized}`,
+    });
+  }, [stage, progress?.progress, progress?.event, progress?.module, progress?.humanizedName, progress?.pluginName]);
 
   // Hand off at fade-out: play the loader's graceful shrink-and-fade outro.
   // `useLayoutEffect` runs before the next paint so the outro begins in the
