@@ -12,7 +12,7 @@ const config = {
 
 test.describe('iframe-worker', () => {
   let page: Page;
-  let close: () => Promise<void>;
+  let close: (() => Promise<void>) | undefined;
 
   test.beforeAll(async ({ browser }) => {
     const result = await setupPage(browser, { url: `${config.baseUrl}/iframe-worker.html` });
@@ -22,7 +22,8 @@ test.describe('iframe-worker', () => {
   });
 
   test.afterAll(async () => {
-    await close();
+    // Playwright runs `afterAll` even when `beforeAll` threw, so setup may never have assigned this.
+    await close?.();
   });
 
   test('loads and connects.', async () => {

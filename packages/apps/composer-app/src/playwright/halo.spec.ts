@@ -33,8 +33,7 @@ test.describe('HALO tests', () => {
   test.afterEach(async () => {
     // Playwright runs `afterEach` even when `beforeEach` skipped, so neither manager may exist.
     if (host !== undefined && guest !== undefined) {
-      await host.close();
-      await guest.close();
+      await Promise.all([host.close(), guest.close()]);
     }
   });
 

@@ -51,8 +51,7 @@ test.describe('Collaboration tests', () => {
     // NOTE: `afterEach` even if the test is skipped in the beforeEach!
     // Guard against uninitialized app managers.
     if (host !== undefined && guest !== undefined) {
-      await host.close();
-      await guest.close();
+      await Promise.all([host.close(), guest.close()]);
     }
   });
 

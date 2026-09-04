@@ -45,8 +45,7 @@ test.describe('Basic test', () => {
   });
 
   test.afterEach(async () => {
-    await host.close();
-    await guest.close();
+    await Promise.all([host.close(), guest.close()]);
   });
 
   test.describe('Default space', () => {
