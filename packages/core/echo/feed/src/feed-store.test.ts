@@ -765,16 +765,6 @@ describe('Feed V2', () => {
 });
 
 describe('FeedStore server token', () => {
-  const seed = (feed: FeedStore, spaceId: SpaceId, feedId: string, count: number) =>
-    feed.appendLocal(
-      Array.from({ length: count }, (_unused, index) => ({
-        spaceId,
-        feedId,
-        feedNamespace: WellKnownNamespaces.data,
-        data: new Uint8Array([index]),
-      })),
-    );
-
   it.effect('reports its own token from a position authority', () =>
     Effect.gen(function* () {
       const spaceId = SpaceId.random();
@@ -864,6 +854,16 @@ describe('FeedStore server token', () => {
       expect(blocks.map((block) => block.position)).toEqual([null, null, null]);
     }).pipe(Effect.provide(TestLayer)),
   );
+
+  const seed = (feed: FeedStore, spaceId: SpaceId, feedId: string, count: number) =>
+    feed.appendLocal(
+      Array.from({ length: count }, (_unused, index) => ({
+        spaceId,
+        feedId,
+        feedNamespace: WellKnownNamespaces.data,
+        data: new Uint8Array([index]),
+      })),
+    );
 });
 
 describe('FeedStore encryption', () => {

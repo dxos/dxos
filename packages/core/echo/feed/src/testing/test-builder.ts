@@ -6,7 +6,7 @@ import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
-import type * as SqlClient from 'effect/unstable/sql/SqlClient';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import * as Statement from 'effect/unstable/sql/Statement';
 
 import { Context, Resource } from '@dxos/context';
@@ -223,6 +223,20 @@ export class TestPeer extends Resource {
 
   setSyncState(opts: { spaceId: SpaceId; feedNamespace: string; lastPulledPosition: number; serverToken?: string }) {
     return this.#feedStore.setSyncState(opts).pipe(RuntimeProvider.runPromise(this.#runtime.contextEffect));
+  }
+
+  /**
+   * Strips the recorded server token while leaving pull progress intact, reproducing sync state
+   * written before servers reported one. No production path writes this shape.
+   */
+  clearServerToken({ spaceId, feedNamespace }: { spaceId: SpaceId; feedNamespace: string }) {
+    return Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`
+        UPDATE sync_state SET serverToken = NULL
+        WHERE spaceId = ${spaceId} AND feedNamespace = ${feedNamespace}
+      `;
+    }).pipe(RuntimeProvider.runPromise(this.#runtime.contextEffect));
   }
 
   query(req: QueryRequest) {
