@@ -1,12 +1,14 @@
 layer: tool
 language: typescript
-tags:
-  - ts-compile
+description: Performance benchmarks for various DXOS systems
 
 tasks:
   build:
+    command: tsc
     outputs:
       - 'dist'
+    options:
+      runInCI: false
 
   echo:storage:
     command: node dist/echo-storage-benchmarks.js
@@ -14,8 +16,12 @@ tasks:
       - ':build'
     env:
       NODE_OPTIONS: --max-old-space-size=4096
+    options:
+      runInCI: false
 
   property:access:
     command: node property-benchmarks-extended.js
     env:
       NODE_OPTIONS: --max-old-space-size=4096
+    options:
+      runInCI: false
