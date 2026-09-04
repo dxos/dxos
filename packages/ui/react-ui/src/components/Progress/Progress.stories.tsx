@@ -106,6 +106,31 @@ const DefaultStory = ({ indeterminate, error, ...props }: StoryArgs) => {
   );
 };
 
+/**
+ * A deadline rather than a task: the bar starts full and empties over `countdown` ms. **Pause**
+ * holds it where it is, the way a toast holds its close timer while the pointer is over it.
+ */
+const CountdownStory = ({ countdown, ...props }: StoryArgs) => {
+  const [paused, setPaused] = useState(false);
+  const [run, setRun] = useState(0);
+
+  return (
+    <Panel.Root>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>
+          <Toolbar.Button onClick={() => setRun((run) => run + 1)}>Restart</Toolbar.Button>
+          <Toolbar.Button onClick={() => setPaused((paused) => !paused)}>{paused ? 'Resume' : 'Pause'}</Toolbar.Button>
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content classNames='h-6' />
+      <Panel.Statusbar>
+        {/* Remounting is what restarts a CSS animation, so the run counter is the key. */}
+        <Progress key={run} {...props} countdown={countdown} paused={paused} />
+      </Panel.Statusbar>
+    </Panel.Root>
+  );
+};
+
 const meta = {
   title: 'ui/react-ui-core/components/Progress',
   component: Progress,
@@ -133,5 +158,16 @@ export const Default: Story = {};
 export const Indeterminate: Story = {
   args: {
     indeterminate: true,
+  },
+};
+
+/**
+ * Counts down to a deadline the host owns, so the bar empties rather than fills. It carries no
+ * value for assistive technology: the host announces what is about to happen.
+ */
+export const Countdown: Story = {
+  render: CountdownStory,
+  args: {
+    countdown: 10_000,
   },
 };

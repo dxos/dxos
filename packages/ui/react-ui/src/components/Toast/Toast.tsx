@@ -3,7 +3,7 @@
 //
 
 import * as ToastPrimitive from '@radix-ui/react-toast';
-import React, { type ComponentPropsWithRef, forwardRef } from 'react';
+import React, { type ComponentPropsWithRef, createContext, forwardRef, useContext, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { translationKey } from '#translations';
@@ -14,14 +14,28 @@ import { type ThemedClassName } from '../../util';
 import { IconButton } from '../Button';
 import { Column } from '../Column';
 import { Icon } from '../Icon';
+import { Progress } from '../Progress';
 
 //
 // Provider
 //
 
+/** Radix's own default, restated here so `Toast.Root` can size its countdown without the scoped context. */
+const DEFAULT_DURATION = 5_000;
+
+const DurationContext = createContext(DEFAULT_DURATION);
+
 type ToastProviderProps = ToastPrimitive.ToastProviderProps;
 
-const ToastProvider = ToastPrimitive.Provider;
+const ToastProvider = ({ duration = DEFAULT_DURATION, children, ...props }: ToastProviderProps) => (
+  <DurationContext.Provider value={duration}>
+    <ToastPrimitive.Provider duration={duration} {...props}>
+      {children}
+    </ToastPrimitive.Provider>
+  </DurationContext.Provider>
+);
+
+ToastProvider.displayName = 'Toast.Provider';
 
 //
 // Viewport
@@ -42,16 +56,40 @@ ToastViewport.displayName = 'Toast.Viewport';
 
 type ToastRootProps = ThemedClassName<ToastPrimitive.ToastProps>;
 
-const ToastRoot = forwardRef<HTMLLIElement, ToastRootProps>(({ classNames, children, ...props }, forwardedRef) => {
-  const { tx } = useThemeContext();
-  return (
-    <ToastPrimitive.Root {...props} className={tx('toast.root', {}, classNames)} ref={forwardedRef}>
-      <ElevationProvider elevation='toast'>
-        <Column.Root classNames={tx('toast.grid', {})}>{children}</Column.Root>
-      </ElevationProvider>
-    </ToastPrimitive.Root>
-  );
-});
+const ToastRoot = forwardRef<HTMLLIElement, ToastRootProps>(
+  ({ classNames, children, duration, onPause, onResume, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    const providerDuration = useContext(DurationContext);
+    // A toast that never times out has no deadline to draw.
+    const countdown = duration ?? providerDuration;
+    const timed = Number.isFinite(countdown) && countdown > 0;
+    // Radix's close timer stops while the viewport is hovered or focused and while the window is
+    // blurred, so the bar stops with it rather than promising a close that isn't coming.
+    const [paused, setPaused] = useState(false);
+
+    return (
+      <ToastPrimitive.Root
+        {...props}
+        duration={duration}
+        onPause={() => {
+          setPaused(true);
+          onPause?.();
+        }}
+        onResume={() => {
+          setPaused(false);
+          onResume?.();
+        }}
+        className={tx('toast.root', {}, classNames)}
+        ref={forwardedRef}
+      >
+        <ElevationProvider elevation='toast'>
+          <Column.Root classNames={tx('toast.grid', {})}>{children}</Column.Root>
+          {timed && <Progress countdown={countdown} paused={paused} classNames={tx('toast.countdown', {})} />}
+        </ElevationProvider>
+      </ToastPrimitive.Root>
+    );
+  },
+);
 
 ToastRoot.displayName = 'Toast.Root';
 

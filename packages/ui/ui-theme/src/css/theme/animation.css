@@ -246,7 +246,17 @@
       width: 0%;
     }
   }
+  @keyframes progress-countdown {
+    from {
+      width: 100%;
+    }
+    to {
+      width: 0%;
+    }
+  }
   --animate-progress-indeterminate: progress-indeterminate 2s ease-out infinite;
+  /* Each countdown lasts as long as whatever it is counting, so the caller sets the duration inline. */
+  --animate-progress-countdown: progress-countdown 5s linear forwards;
 
   /** 
    * Border trail 
