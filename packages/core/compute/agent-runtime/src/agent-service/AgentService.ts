@@ -7,6 +7,7 @@
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import type * as Scope from 'effect/Scope';
 import * as Semaphore from 'effect/Semaphore';
 import * as Atom from 'effect/unstable/reactivity/Atom';
@@ -146,6 +147,10 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
     AgentService,
     Effect.gen(function* () {
       const processManager = yield* ProcessManager.Service;
+      // Read, never required: a plain layer stack provides the tag beneath this layer, while a
+      // `LayerSpec` stack that declared it would prune this whole provider (and `AgentService` with
+      // it) wherever only local agents are hosted. `getRemoteManager` overrides it for the latter.
+      const remote = yield* Effect.serviceOption(RemoteProcessManager.Service);
 
       // Spaces an edge session has been opened on this run. One remote manager spans them all and
       // each of its verbs takes the space it addresses, so this is what `hydrate` has to walk.
@@ -172,7 +177,8 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
         if (!spaceId) {
           throw new Error('Agent requested on edge, but its conversation has no space.');
         }
-        const getRemoteManager = opts?.getRemoteManager;
+        const getRemoteManager =
+          opts?.getRemoteManager ?? (Option.isSome(remote) ? () => Effect.succeed(remote.value) : undefined);
         if (!getRemoteManager) {
           throw new Error('Agent requested on edge, but no RemoteProcessManager is available.');
         }
