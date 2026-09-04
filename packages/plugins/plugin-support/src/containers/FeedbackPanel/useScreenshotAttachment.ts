@@ -25,7 +25,7 @@ export type ScreenshotAttachment = {
 };
 
 /**
- * Shared "attach screenshot" step for every FeedbackPanel submit path (PostHog, Discord, GitHub).
+ * Shared "attach screenshot" step for the FeedbackPanel submit path.
  *
  * Collapses the help companion first so the capture shows the screen being reported rather than
  * the form itself, then captures and uploads. Best-effort throughout: a failure yields

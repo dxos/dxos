@@ -15,8 +15,10 @@ import type { FeedbackPluginOption } from './types';
  * Mirrors the built-in {@link SelectField} (see `packages/ui/react-ui-form/src/components/Form/fields/SelectField.tsx`)
  * but renders the plugin name as the visible label with the id as a dim trailer — the plain
  * SelectField only supports string-keyed options without rich labels. Selection value remains
- * the plugin id so the form payload stays a simple `string`. A "(none)" sentinel clears the
- * selection because Radix Select cannot bind to `undefined`.
+ * the plugin id so the form payload stays a simple `string`. The select stays controlled
+ * throughout: `undefined` maps to Radix's reserved empty string, which shows the placeholder, and
+ * a sentinel option (rendered only once a choice exists) maps back to `undefined` to clear it.
+ * Passing `undefined` itself would flip the select to uncontrolled and strand its internal state.
  */
 export type AreaSelectFieldProps = FormFieldRendererProps<string | undefined> & {
   plugins: ReadonlyArray<FeedbackPluginOption>;
@@ -58,14 +60,16 @@ export const AreaSelectField = ({
       {presentation === 'static' ? (
         <p>{resolved ? `${resolved.name} (${resolved.id})` : String(value)}</p>
       ) : (
-        <Select.Root value={value ?? CLEAR_VALUE} onValueChange={handleValueChange}>
+        <Select.Root value={value ?? ''} onValueChange={handleValueChange}>
           <Select.TriggerButton classNames='w-full' disabled={!!readonly} placeholder={placeholder} />
           <Select.Portal>
             <Select.Content>
               <Select.Viewport>
-                <Select.Option value={CLEAR_VALUE}>
-                  <span className='text-description italic'>(none)</span>
-                </Select.Option>
+                {value != null && (
+                  <Select.Option value={CLEAR_VALUE}>
+                    <span className='text-description italic'>(none)</span>
+                  </Select.Option>
+                )}
                 {plugins.map((plugin) => (
                   <Select.Option key={plugin.id} value={plugin.id} classNames='flex'>
                     <div className='flex flex-col w-full text-left'>

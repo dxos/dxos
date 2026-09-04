@@ -8,7 +8,10 @@ import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
+import { type Config, EdgeServiceName, getEdgeServiceEndpoint, getEnvString } from '@dxos/config';
 import { Annotation, Database, DXN, Format, Ref, Type } from '@dxos/echo';
+import { log } from '@dxos/log';
+import type * as Observability from '@dxos/observability/Observability';
 
 import * as Support from './Support';
 
@@ -27,11 +30,10 @@ export const Severity = Schema.Literals(['High priority', 'Medium priority', 'Lo
 export type Severity = Schema.Schema.Type<typeof Severity>;
 
 /**
- * Form payload shared by all three FeedbackPanel submit actions (PostHog
- * feedback, Discord help thread, GitHub issue). `version` is a hidden form
- * field populated by the panel from runtime config and forwarded to the
- * backend for triage. `area` is a free-form plugin id; the panel
- * pre-populates options from the active plugin list.
+ * Form payload for the FeedbackPanel submit action. `version` is a hidden form field populated by
+ * the panel from runtime config and forwarded to the backend for triage. `area`, `type`, and
+ * `severity` are optional triage metadata — they ride on the private support ticket, not the public
+ * Discord post, so the form defaults them to unset rather than guessing.
  */
 export const SupportRequest = Schema.Struct({
   title: Schema.String.pipe(
@@ -52,20 +54,22 @@ export const SupportRequest = Schema.Struct({
   ),
   area: Schema.String.annotate({
     title: 'Area',
-    description: 'The plugin or area this relates to (optional).',
+    description: 'The plugin or area this relates to.',
   }).pipe(Schema.optional),
-  type: IssueType,
-  severity: Severity,
+  type: IssueType.pipe(Schema.optional),
+  severity: Severity.pipe(Schema.optional),
   image: Schema.Boolean.pipe(
     Schema.annotate({
       title: 'Attach screenshot',
-      description: 'Capture the current view and attach it to the report. Form fields are obscured for privacy.',
+      description:
+        'Capture the current view and attach it to the report. Sent to our team only — never posted publicly.',
     }),
     Schema.optional,
   ),
   includeLogs: Schema.Boolean.pipe(
     Schema.annotate({
       title: 'Include debug logs',
+      description: 'Attach the debug log bundle to the report. Sent to our team only — never posted publicly.',
     }),
     Schema.optional,
   ),
@@ -75,25 +79,177 @@ export const SupportRequest = Schema.Struct({
 
 export type SupportRequest = Schema.Schema.Type<typeof SupportRequest>;
 
-/** Legacy observability-backend input. Derived from {@link SupportRequest} by the FeedbackPanel. */
-export const UserFeedback = Schema.Struct({
-  message: Schema.String,
-  includeLogs: Schema.Boolean.pipe(Schema.optional),
+/** What filing a report produced: the PostHog ticket, and the public thread when one opened. */
+export const SupportReportResult = Schema.Struct({
+  ticketId: Schema.String,
+  threadUrl: Schema.optional(Schema.String),
 });
 
-export type UserFeedback = Schema.Schema.Type<typeof UserFeedback>;
+export type SupportReportResult = Schema.Schema.Type<typeof SupportReportResult>;
 
-export const CaptureUserFeedback = Operation.make({
+/**
+ * Files a user report through the support service, which creates the PostHog ticket, notes where
+ * the logs went, and opens the public Discord thread. Distinct from {@link CreateTicket}, which
+ * creates an ECHO `Support.Ticket` in a space.
+ */
+export const SubmitReport = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.support.captureFeedback'),
-    name: 'Capture User Feedback',
-    description: 'Capture one-shot user feedback (sent to the observability backend).',
-    icon: 'ph--chat-text--regular',
+    key: DXN.make('org.dxos.operation.support.submitReport'),
+    name: 'Submit Support Report',
+    description: 'Files a user report as a PostHog support ticket with a public Discord help thread.',
+    icon: 'ph--lifebuoy--regular',
   },
   services: [Capability.Service],
-  input: UserFeedback,
-  output: Schema.UndefinedOr(Schema.String),
+  input: Schema.Struct({
+    report: SupportRequest,
+    /** The reporter's identity, for the team's account lookup; absent when there is none yet. */
+    did: Schema.optional(Schema.String),
+    /** Public URL of the captured screenshot, when the reporter attached one. */
+    screenshotUrl: Schema.optional(Schema.String),
+  }),
+  output: SupportReportResult,
 });
+
+/** What filing a team issue produced: the Linear issue, and the id the flushed logs are tagged with. */
+export const SupportIssueResult = Schema.Struct({
+  reportId: Schema.String,
+  issueId: Schema.String,
+  issueIdentifier: Schema.String,
+  issueUrl: Schema.String,
+});
+
+export type SupportIssueResult = Schema.Schema.Type<typeof SupportIssueResult>;
+
+/**
+ * The team's own path: files the report straight to Linear through the support service, with the
+ * logs and session attached, and no support ticket or public thread. The service refuses any
+ * identity the hub does not know as an internal account.
+ */
+export const SubmitIssue = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.support.submitIssue'),
+    name: 'File Linear Issue',
+    description: 'Files a report as a Linear issue with logs attached. Internal accounts only.',
+    icon: 'ph--bug--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    report: SupportRequest,
+    /** Public URL of the captured screenshot, when one was attached. */
+    screenshotUrl: Schema.optional(Schema.String),
+  }),
+  output: SupportIssueResult,
+});
+
+/** The support service, reached through EDGE unless an explicit endpoint is configured. */
+export const supportEndpoint = (config: Config): string | undefined =>
+  getEnvString(config, 'DX_DISCORD_SERVICE_URL') ?? getEdgeServiceEndpoint(config, EdgeServiceName.Discord);
+
+export type SubmitSupportReportOptions = {
+  endpoint: string;
+  observability: Observability.Observability;
+  report: SupportRequest;
+  did?: string;
+  screenshotUrl?: string;
+};
+
+/**
+ * The submit, in order: upload the log dump (its key travels with the report), ask the support
+ * service to file everything, then ship the same dump to PostHog Logs tagged with the ticket. The
+ * last step is detached: the ticket and thread exist by then, and the dump can be large.
+ */
+export const submitSupportReport = async ({
+  endpoint,
+  observability,
+  report,
+  did,
+  screenshotUrl,
+}: SubmitSupportReportOptions): Promise<SupportReportResult> => {
+  const logKey = report.includeLogs !== false ? await observability.support.uploadLogs() : undefined;
+  const response = await fetch(`${endpoint}/feedback`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      title: report.title,
+      body: report.body,
+      type: report.type,
+      severity: report.severity,
+      area: report.area,
+      version: report.version,
+      did,
+      screenshotUrl,
+      logKey,
+      posthog: observability.support.sessionContext(),
+    }),
+  });
+  if (!response.ok) {
+    throw new Error(`support service returned ${response.status}`);
+  }
+  const result = Schema.decodeUnknownSync(SupportReportResult)(await response.json());
+  if (logKey) {
+    void observability.support
+      .flushLogs({ ticketId: result.ticketId })
+      .catch((err) => log.warn('support logs flush failed', { err }));
+  }
+  return result;
+};
+
+export type SubmitSupportIssueOptions = {
+  endpoint: string;
+  observability: Observability.Observability;
+  report: SupportRequest;
+  did: string;
+  screenshotUrl?: string;
+};
+
+/**
+ * Same order as {@link submitSupportReport}, against the service's `/issue` route: upload the
+ * dump, file the issue, then flush the dump to PostHog Logs tagged with the report id the
+ * service minted. A 403 means the identity is not an internal account.
+ */
+export const submitSupportIssue = async ({
+  endpoint,
+  observability,
+  report,
+  did,
+  screenshotUrl,
+}: SubmitSupportIssueOptions): Promise<SupportIssueResult> => {
+  const logKey = report.includeLogs !== false ? await observability.support.uploadLogs() : undefined;
+  const response = await fetch(`${endpoint}/issue`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      title: report.title,
+      body: report.body,
+      type: report.type,
+      severity: report.severity,
+      area: report.area,
+      version: report.version,
+      did,
+      screenshotUrl,
+      logKey,
+      posthog: observability.support.sessionContext(),
+    }),
+  });
+  if (response.status === 403) {
+    throw new Error('Filing Linear issues is limited to internal accounts.');
+  }
+  if (!response.ok) {
+    // The service answers `{ error }` naming which step failed; say so rather than just the status.
+    const detail = await response
+      .text()
+      .then((text) => text.slice(0, 200))
+      .catch(() => '');
+    throw new Error(`support service returned ${response.status}${detail ? `: ${detail}` : ''}`);
+  }
+  const result = Schema.decodeUnknownSync(SupportIssueResult)(await response.json());
+  if (logKey) {
+    void observability.support
+      .flushLogs({ reportId: result.reportId })
+      .catch((err) => log.warn('support logs flush failed', { err }));
+  }
+  return result;
+};
 
 export const CreateTicket = Operation.make({
   meta: {

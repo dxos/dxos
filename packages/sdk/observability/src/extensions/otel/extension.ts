@@ -82,6 +82,9 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
       storedLogLevel != null ? (LogLevel[storedLogLevel.toUpperCase() as keyof typeof LogLevel] ?? logLevel) : logLevel;
     const enabledRef = yield* Ref.make(!disabled);
     const tags = new Map<string, string>();
+    // Tags for log records only. Kept apart from `tags` because those also land on spans and on
+    // metric attributes, where a per-session value would explode cardinality.
+    const logTags = new Map<string, string>();
 
     const rawEndpoint = isNode()
       ? (process.env.DX_OTEL_ENDPOINT ?? _endpoint ?? buildSecrets.OTEL_ENDPOINT)
@@ -157,7 +160,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
         ? new OtelLogs({
             destinations,
             resource,
-            getTags: () => Object.fromEntries(tags),
+            getTags: () => ({ ...Object.fromEntries(tags), ...Object.fromEntries(logTags) }),
             logLevel: resolvedLogLevel,
             onTraceFlagged: (traceId) => traces?.promote(traceId),
           })
@@ -259,9 +262,11 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
           }
           await traces?.flush();
         }),
-      setTags: (incomingTags) => {
+      setTags: (incomingTags, kind) => {
+        // The worker's log sink only ever sees log tags, so both scopes reach it the same way.
+        const target = kind === 'logs' ? logTags : tags;
         for (const [key, value] of Object.entries(incomingTags)) {
-          tags.set(key, value);
+          target.set(key, value);
         }
         remoteLogs?.post({ type: 'otel-tags', tags: { ...incomingTags } });
       },

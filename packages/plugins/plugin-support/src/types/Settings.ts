@@ -7,12 +7,6 @@
 import * as Schema from 'effect/Schema';
 
 export const Settings = Schema.Struct({
-  enableGitHubIssues: Schema.optional(
-    Schema.Boolean.annotate({
-      title: 'Enable GitHub issue submission',
-      description: 'Show the "Create GitHub Issue" button in the feedback panel.',
-    }),
-  ),
   showDiscordCompanion: Schema.optional(
     Schema.Boolean.annotate({
       title: 'Show Discord community panel',

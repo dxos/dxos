@@ -2,32 +2,23 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 
-import { useAtomCapability, useCapability, usePluginManager } from '@dxos/app-framework/ui';
-import { EffectEx } from '@dxos/effect';
-import * as ObservabilityCapabilities from '@dxos/plugin-observability/ObservabilityCapabilities';
+import { usePluginManager } from '@dxos/app-framework/ui';
 import { useConfig } from '@dxos/react-client';
-import { useAsyncEffect } from '@dxos/react-hooks';
 import { Panel } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { FeedbackForm, type FeedbackPluginOption } from '#components';
-import { SupportCapabilities } from '#types';
 
-import { DiscordAction } from './DiscordAction';
 import { DownloadLogsAction } from './DownloadLogsAction';
-import { FeedbackSubmitAction } from './FeedbackSubmitAction';
-import { GitHubAction } from './GitHubAction';
+import { SupportSubmitAction, useSupportSubmit } from './SupportSubmitAction';
 
-/** Renders the feedback form, disabling the PostHog/Discord submit paths when the survey is unavailable. */
+/** Renders the feedback form; the submit files the report through the support service. */
 export const FeedbackPanel = () => {
-  const observability = useCapability(ObservabilityCapabilities.Observability);
-  const settings = useAtomCapability(SupportCapabilities.Settings);
-  const [feedbackAvailable, setFeedbackAvailable] = useState(false);
   const config = useConfig();
   const manager = usePluginManager();
+  const handleSubmit = useSupportSubmit();
 
   const version = config.values.runtime?.app?.build?.version;
 
@@ -43,33 +34,15 @@ export const FeedbackPanel = () => {
 
   const hidden = useMemo(() => ({ version }), [version]);
 
-  useAsyncEffect(
-    async (controller) => {
-      const available = await observability.isAvailable('feedback').pipe(
-        Effect.catch(() => Effect.succeed(false)),
-        Effect.catchDefect(() => Effect.succeed(false)),
-        EffectEx.runAndForwardErrors,
-      );
-      if (!controller.signal.aborted) {
-        setFeedbackAvailable(available);
-      }
-    },
-    [observability],
-  );
-
   return (
     <Panel.Root>
       <Panel.Content>
-        <FeedbackForm.Root hidden={hidden} plugins={plugins}>
+        <FeedbackForm.Root hidden={hidden} plugins={plugins} onSubmit={handleSubmit}>
           <Form.Viewport>
             <Form.Content>
               <Form.FieldSet />
               <DownloadLogsAction />
-              {/* GH only opens a prefilled URL — independent of PostHog feedback availability. */}
-              {/* PostHog + Discord both call `CaptureUserFeedback`, so they share the gate. */}
-              <FeedbackSubmitAction disabled={!feedbackAvailable} />
-              {settings?.enableGitHubIssues && <GitHubAction />}
-              <DiscordAction disabled={!feedbackAvailable} />
+              <SupportSubmitAction />
             </Form.Content>
           </Form.Viewport>
         </FeedbackForm.Root>

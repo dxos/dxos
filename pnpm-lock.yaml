@@ -16099,6 +16099,9 @@ importers:
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph
+      '@dxos/halo-react':
+        specifier: workspace:*
+        version: link:../../core/halo/halo-react
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys

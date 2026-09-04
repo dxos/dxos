@@ -16,14 +16,14 @@ export * from './extensions';
  *
  * - errors: Error tracking (e.g., PostHog)
  * - events: Product usage event tracking (e.g., PostHog)
- * - feedback: User feedback submission (e.g., PostHog)
+ * - support: Support tickets anchoring user reports and telemetry (e.g., PostHog)
  * - ai: Model inferences, tool calls, and turns (e.g., PostHog LLM analytics, OTel gen_ai)
  * - logs: Structured logging (e.g., OTEL)
  * - mcp: MCP server sessions and tool calls (e.g., PostHog)
  * - metrics: Metric data (e.g., OTEL)
  * - traces: Distributed tracing (e.g., OTEL)
  */
-export type Kind = 'ai' | 'errors' | 'events' | 'feedback' | 'logs' | 'mcp' | 'metrics' | 'traces';
+export type Kind = 'ai' | 'errors' | 'events' | 'support' | 'logs' | 'mcp' | 'metrics' | 'traces';
 
 /**
  * Base for every extension API variant. All kinds implement availability the same way.
@@ -176,16 +176,25 @@ export type Mcp = {
 };
 
 /**
- * Feedback extension API (kind-specific methods only).
+ * Support extension API (kind-specific methods only). The ticket itself is filed by a backend;
+ * the extension supplies what only the browser has: the log dump and the session context.
  */
-export type Feedback = {
-  captureUserFeedback(form: FeedbackForm): Promise<string | undefined>;
+export type Support = {
+  /** Uploads the buffered debug logs to long-lived storage; resolves with the key, or undefined when nothing went. */
+  uploadLogs(): Promise<string | undefined>;
+  /** The telemetry session to anchor the ticket to, if this extension has one. */
+  sessionContext(): SupportSessionContext | undefined;
+  /**
+   * Ships the buffered debug logs to the extension's log store, every record stamped with the
+   * given attributes: the ticket id for a support report, the report id for a team issue.
+   */
+  flushLogs(attributes: Record<string, string>): Promise<void>;
 };
 
 export type ExtensionApi =
   | (ExtensionApiBase<'errors'> & Errors)
   | (ExtensionApiBase<'events'> & Events)
-  | (ExtensionApiBase<'feedback'> & Feedback)
+  | (ExtensionApiBase<'support'> & Support)
   | (ExtensionApiBase<'ai'> & Ai)
   // TODO(wittjosiah): Direct logs api?
   | (ExtensionApiBase<'mcp'> & Mcp)
@@ -195,10 +204,17 @@ export type ExtensionApi =
   | ExtensionApiBase<'traces'>;
 
 /**
- * Feedback form to be captured by the feedback extension.
+ * What a browser knows about its own telemetry session, for a backend that files the ticket on
+ * its behalf. Shaped after what posthog-js's own widget sends.
  */
-// TODO(wittjosiah): Support more form fields (e.g., PostHog custom surveys).
-export type FeedbackForm = { message: string; includeLogs?: boolean };
+export type SupportSessionContext = {
+  distinctId: string;
+  /** Browser-minted id the widget API uses for access control on anonymous tickets. */
+  widgetSessionId: string;
+  sessionId?: string;
+  replayUrl?: string;
+  currentUrl?: string;
+};
 
 /**
  * Attributes to be attached to observability events.
@@ -208,15 +224,22 @@ export type Attributes = Record<string, string | number | boolean | undefined>;
 /**
  * Implementation of an observability extension API.
  */
+/** What an extension may reach back into once it is initialized. */
+export type ExtensionContext = {
+  /** Tag every signal, or only the signals of one kind, on every extension that emits them. */
+  setTags(tags: Attributes, kind?: Kind): void;
+};
+
 export type Extension = {
-  initialize?(): Effect.Effect<void, Error>;
+  initialize?(context: ExtensionContext): Effect.Effect<void, Error>;
   close?(): Effect.Effect<void>;
   enable?(): Effect.Effect<void>;
   disable?(): Effect.Effect<void>;
   flush?(): Effect.Effect<void>;
   identify?(distinctId: string, attributes?: Attributes, setOnceAttributes?: Attributes): void;
   alias?(distinctId: string, previousId?: string): void;
-  setTags?(tags: Record<string, string>): void;
+  /** `kind` narrows the tags to one signal kind; without it they apply to everything the extension emits. */
+  setTags?(tags: Record<string, string>, kind?: Kind): void;
   enabled: boolean;
   apis: ExtensionApi[];
 };

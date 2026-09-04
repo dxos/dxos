@@ -20,6 +20,27 @@ import {
   toAiSpanProperties,
   toAiTraceProperties,
 } from './llm-analytics';
+import { otelDestination } from './otel-destination';
+
+/**
+ * Where the browser keeps the id the widget API uses for access control on anonymous tickets.
+ * One per browser profile, minted on first use, so a person's tickets stay reachable together.
+ */
+const WIDGET_SESSION_STORAGE_KEY = 'dxos.support.widgetSessionId';
+
+const widgetSessionId = (): string => {
+  try {
+    const existing = localStorage.getItem(WIDGET_SESSION_STORAGE_KEY);
+    if (existing) {
+      return existing;
+    }
+    const minted = crypto.randomUUID();
+    localStorage.setItem(WIDGET_SESSION_STORAGE_KEY, minted);
+    return minted;
+  } catch {
+    return crypto.randomUUID();
+  }
+};
 
 export type ExtensionsOptions = {
   config: Config;
@@ -27,6 +48,8 @@ export type ExtensionsOptions = {
   release?: string;
   /** Deployment environment, e.g. `production` or `staging`. */
   environment?: string;
+  /** `service.name` on the log records a support ticket flushes to PostHog Logs. */
+  serviceName?: string;
   posthog?: Partial<PostHogConfig>;
   /**
    * Shared persistent log store for debug log dumps.
@@ -84,12 +107,13 @@ const uploadLogs = async (endpoint: string, body: string): Promise<string | unde
   }
 };
 
-/** Create a PostHog-backed observability extension for events, errors, and feedback. */
+/** Create a PostHog-backed observability extension for events, errors, and support tickets. */
 export const extensions: (options: ExtensionsOptions) => Effect.Effect<ObservabilityExtension.Extension> = Effect.fn(
   function* ({
     config,
     release,
     environment,
+    serviceName = 'app',
     posthog: posthogConfig,
     logStore,
     feedbackLogMaxSize,
@@ -105,7 +129,6 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
       return stubExtension;
     }
 
-    const feedbackSurveyId = config.get('runtime.app.env.DX_POSTHOG_FEEDBACK_SURVEY_ID');
     const apiKey = getEnvString(config, 'DX_POSTHOG_API_KEY');
     const api_host = getEnvString(config, 'DX_POSTHOG_API_HOST');
     if (!apiKey || !api_host) {
@@ -115,27 +138,13 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
 
     const { default: posthog } = yield* Effect.promise(() => import('posthog-js'));
     const { logProcessor } = yield* Effect.promise(() => import('./log-processor'));
-    let feedbackSurveyAvailable: boolean | null = null;
     let unregisterPosthogProcessors: (() => void) | undefined;
 
-    const checkFeedbackSurveyAvailable = (): Effect.Effect<boolean> =>
-      feedbackSurveyId
-        ? Effect.promise(() => {
-            if (feedbackSurveyAvailable !== null) {
-              return Promise.resolve(feedbackSurveyAvailable);
-            }
-            return new Promise<boolean>((resolve) => {
-              posthog.getSurveys((surveys) => {
-                const found = surveys.some((s) => s.id === feedbackSurveyId);
-                feedbackSurveyAvailable = found;
-                resolve(found);
-              });
-            });
-          })
-        : Effect.succeed(false);
+    // The last dump uploaded, kept so the flush to PostHog Logs does not export the store again.
+    let lastDump: string | undefined;
 
     return {
-      initialize: () =>
+      initialize: (context) =>
         Effect.sync(() => {
           // https://posthog.com/docs/libraries/js/config
           posthog.init(apiKey, {
@@ -154,8 +163,15 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
           }
           unregisterPosthogProcessors?.();
           const removePosthogLog = log.addProcessor(logProcessor);
+          // PostHog links a log record to the session replay through a log attribute named
+          // `sessionId` carrying its own session id, which rotates; distinct from the OTel
+          // `session.id` resource attribute the OTel extension mints once per boot.
+          const tagSession = () => context.setTags({ sessionId: posthog.get_session_id() }, 'logs');
+          const removeSessionListener = posthog.onSessionId(tagSession);
+          tagSession();
           unregisterPosthogProcessors = () => {
             removePosthogLog();
+            removeSessionListener();
           };
         }),
       close: () =>
@@ -206,48 +222,60 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
           },
         },
         {
-          kind: 'feedback',
-          // TODO(wittjosiah): Support custom surveys.
-          captureUserFeedback: (form) => {
-            return new Promise<string | undefined>((resolve, reject) => {
-              posthog.getSurveys((surveys) => {
-                void (async () => {
-                  try {
-                    const survey = surveys.find((survey) => survey.id === feedbackSurveyId);
-                    if (!survey || survey.questions.length === 0) {
-                      log.error('Missing feedback survey or survey has no questions', { feedbackSurveyId });
-                      resolve(undefined);
-                      return;
-                    }
-
-                    let debugLogDumpKey: string | null = null;
-                    if (form.includeLogs !== false && logStore !== undefined) {
-                      const ndjson = await logStore.export({ maxSize: feedbackLogMaxSize });
-                      if (ndjson.length > 0) {
-                        debugLogDumpKey = (await uploadLogs(feedbackLogsEndpoint, ndjson)) ?? 'failed';
-                      }
-                    }
-
-                    // https://posthog.com/docs/surveys/implementing-custom-surveys
-                    const question = survey.questions[0];
-                    const result = posthog.capture('survey sent', {
-                      $survey_id: survey.id,
-                      $survey_questions: [{ id: question.id, question: question.question }],
-                      [`$survey_response_${question.id}`]: form.message,
-                      // Survey destinations (Slack/webhook notifications) filter on `$survey_completed = true`, so responses without it are dropped.
-                      $survey_completed: true,
-                      debug_log_dump_key: debugLogDumpKey,
-                    });
-                    resolve(result?.uuid);
-                  } catch (err) {
-                    log.error('Failed to capture user feedback', { err });
-                    reject(err);
-                  }
-                })();
-              });
-            });
+          kind: 'support',
+          isAvailable: () => Effect.succeed(logStore !== undefined),
+          uploadLogs: async () => {
+            if (logStore === undefined) {
+              return undefined;
+            }
+            const ndjson = await logStore.export({ maxSize: feedbackLogMaxSize });
+            if (ndjson.length === 0) {
+              return undefined;
+            }
+            lastDump = ndjson;
+            return (await uploadLogs(feedbackLogsEndpoint, ndjson)) ?? 'failed';
           },
-          isAvailable: checkFeedbackSurveyAvailable,
+          sessionContext: () => {
+            if (!posthog.__loaded) {
+              return undefined;
+            }
+            try {
+              return {
+                distinctId: posthog.get_distinct_id(),
+                widgetSessionId: widgetSessionId(),
+                sessionId: posthog.get_session_id(),
+                replayUrl: posthog.get_session_replay_url({ withTimestamp: true, timestampLookBack: 30 }),
+                currentUrl: window.location.href.split('#')[0],
+              };
+            } catch (err) {
+              log.warn('PostHog session context unavailable', { err });
+              return undefined;
+            }
+          },
+          // The dump can run to tens of MB and ships after the ticket exists; a failure here loses
+          // the PostHog copy, never the ticket or the R2 copy.
+          flushLogs: async (attributes) => {
+            const destination = otelDestination(config);
+            if (!destination) {
+              return;
+            }
+            const ndjson = lastDump ?? (await logStore?.export({ maxSize: feedbackLogMaxSize }));
+            lastDump = undefined;
+            if (!ndjson || ndjson.length === 0) {
+              return;
+            }
+            const { flushSupportLogs } = await import('./support-logs');
+            const count = await flushSupportLogs(ndjson, {
+              destination,
+              resourceAttributes: {
+                'service.name': serviceName,
+                ...(release ? { 'service.version': release } : {}),
+                ...(environment ? { 'deployment.environment': environment } : {}),
+              },
+              attributes,
+            });
+            log.info('support logs flushed to PostHog', { ...attributes, count });
+          },
         },
       ],
     };

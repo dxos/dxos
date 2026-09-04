@@ -75,14 +75,7 @@ export default defineConfig({
     },
     ConfigPlugin({
       root: dirname,
-      env: [
-        'DX_ENVIRONMENT',
-        'DX_IPDATA_API_KEY',
-        'DX_POSTHOG_API_KEY',
-        'DX_POSTHOG_API_HOST',
-        'DX_POSTHOG_FEEDBACK_SURVEY_ID',
-        'PACKAGE_VERSION',
-      ],
+      env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_POSTHOG_API_KEY', 'DX_POSTHOG_API_HOST', 'PACKAGE_VERSION'],
     }),
     ThemePlugin({}),
     WasmPlugin(),
