@@ -242,11 +242,14 @@ export const useApp = ({
   // that only grew as plugins landed could not convey. Meta is the icon's only source — the loader
   // is a standalone bundle with no access to the plugin registry.
   useEffect(() => {
-    bootLoader?.plugins(
+    // Optional call, not just an optional facade: an already-loaded page can be running an
+    // `index.html` whose inlined loader bundle predates this method (service-worker cache, stale
+    // dev compile), and a TypeError here would strand that page on the loader forever.
+    bootLoader?.plugins?.(
       plugins
         .filter(({ meta }) => enabled.includes(meta.profile.key))
         .map(({ meta }) => ({
-          id: meta.profile.key.split('.').pop()!,
+          id: pluginSlugOfKey(meta.profile.key),
           icon: meta.profile.icon?.key,
           hue: meta.profile.icon?.hue,
         })),
@@ -531,6 +534,9 @@ const humanizeModuleId = (moduleId: string): string => {
  * plugin-scoped (framework-internal modules). E.g.
  * "org.dxos.plugin.markdown.module.ReactSurface" → "markdown".
  */
+/** Plugin slug from a plugin key — "org.dxos.plugin.markdown" → "markdown". */
+export const pluginSlugOfKey = (key: string): string => key.split('.').at(-1) ?? key;
+
 export const pluginSlugOf = (moduleId: string): string | undefined =>
   moduleId.match(/\.plugin\.([^.]+)\.module\./)?.[1];
 

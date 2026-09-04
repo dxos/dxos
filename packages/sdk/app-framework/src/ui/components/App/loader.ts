@@ -16,9 +16,9 @@ declare global {
       range?: { index: number; total: number };
     }) => void;
     /** Seed the loader's plugin activation row; entries render dim until `activated(...)`. */
-    plugins: (entries: { id: string; icon?: string; hue?: string }[]) => void;
+    plugins?: (entries: { id: string; icon?: string; hue?: string }[]) => void;
     /** Light the seeded row entry with this id. */
-    activated: (id: string) => void;
+    activated?: (id: string) => void;
     progress: (fraction?: number) => void;
     /**
      * Report that startup has outrun its budget without failing it, offering `onAbort` as the way

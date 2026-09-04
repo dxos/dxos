@@ -53,7 +53,8 @@ export const App = ({ ready, error, debounce, progress, verboseStatus = false }:
     const fraction = progress?.progress ?? 0;
     bootLoader?.progress(0.5 + fraction * 0.5);
     if (progress?.pluginSlug) {
-      bootLoader?.activated(progress.pluginSlug);
+      // Optional call — see the note on `plugins?.(...)` in `useApp`.
+      bootLoader?.activated?.(progress.pluginSlug);
     }
 
     // Plugin-level transitions collapse to the plugin's own name; event-level ones (no
