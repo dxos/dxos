@@ -42,11 +42,6 @@
       "source": "./src/edge-http-client.ts",
       "types": "./dist/types/src/edge-http-client.d.ts",
       "import": "./dist/lib/edge-http-client.mjs"
-    },
-    "./process": {
-      "source": "./src/edge-process-http-client.ts",
-      "types": "./dist/types/src/edge-process-http-client.d.ts",
-      "import": "./dist/lib/process.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
