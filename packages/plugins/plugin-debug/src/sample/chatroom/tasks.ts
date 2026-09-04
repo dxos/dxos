@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Database, Obj, Ref } from '@dxos/echo';
-import { Task, TaskSet } from '@dxos/types';
+import { Actor, Task, TaskSet } from '@dxos/types';
 
 import { daysAgo } from './util';
 
@@ -26,8 +26,16 @@ type TaskSeed = {
   readonly title: string;
   readonly description?: string;
   readonly estimate?: Task.Estimate;
+  /** Set where the step needs the reader's own hands — a consent screen, or a repository to own. */
+  readonly assignee?: Actor.Actor;
   readonly subTasks?: ReadonlyArray<TaskSeed>;
 };
+
+/**
+ * The reader, as an assignee. A template cannot know who they are, so the actor carries the role and
+ * a label rather than a Person ref — enough for the row to say the step is not the agent's.
+ */
+const USER: Actor.Actor = { role: 'user', name: 'You' };
 
 const PLAN: TaskSeed = {
   title: 'Ship a coding chatroom app on Cloudflare Workers',
@@ -63,27 +71,34 @@ const PLAN: TaskSeed = {
     },
     {
       title: 'Satisfy the prerequisites',
-      description: 'Four things, all of them blocking: two credentials, a deployed agent, and a repository.',
+      description:
+        "The repository and both credentials are the reader's to create; the agent is the only part that can be delegated. In this order — the token is scoped to a repository that has to exist first.",
       estimate: 'm',
       subTasks: [
+        {
+          title: 'Create an empty GitHub repository for the app',
+          description:
+            'Yours to do: a connector token authorises access to repositories, it cannot create one. Make it empty — the scaffold stage pushes the first commit — and note the owner/name.',
+          estimate: 'xs',
+          assignee: USER,
+        },
+        {
+          title: 'Connect the GitHub credential, scoped to that repository',
+          description:
+            'On the authorisation screen choose "Only select repositories" and pick the one above, with Contents and Pull requests set to read and write. A token scoped to everything is a token the agent did not need.',
+          estimate: 'xs',
+          assignee: USER,
+        },
         {
           title: 'Connect the Anthropic credential',
           description: 'Every managed-agent step calls Anthropic; without it they fail with MissingCredentialError.',
           estimate: 'xs',
-        },
-        {
-          title: 'Connect the GitHub credential',
-          description: 'Contents and Pull requests, read and write. The agent pushes a branch and opens a PR.',
-          estimate: 'xs',
+          assignee: USER,
         },
         {
           title: 'Create and deploy a Claude managed agent',
           description: 'Two steps: creating writes the configuration, deploying is what a session actually runs.',
           estimate: 's',
-        },
-        {
-          title: 'Create the GitHub repository',
-          estimate: 'xs',
         },
         {
           title: 'Bind the GitHub token to the session as GH_TOKEN',
@@ -193,6 +208,7 @@ const buildTasks = (seed: TaskSeed): { tasks: Task.Task[]; stages: Task.Task[] }
       status: 'todo',
       description: seed.description,
       estimate: seed.estimate,
+      assignee: seed.assignee,
       parentTask: parent ? Ref.make(parent) : undefined,
       // Task carries no due date; its dates are activity-log lines, so that is where they go.
       history: [{ date: daysAgo(0), event: 'created' as const, description: 'Filed from the chatroom template.' }],

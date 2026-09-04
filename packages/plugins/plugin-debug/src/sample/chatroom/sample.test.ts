@@ -39,6 +39,7 @@ describe('Chatroom sample space', () => {
       'id': string;
       'title'?: string;
       'status'?: string;
+      'assignee'?: unknown;
       'parentTask'?: unknown;
       'dependsOn'?: unknown;
     }> = JSON.parse(json).objects;
@@ -61,6 +62,15 @@ describe('Chatroom sample space', () => {
 
     // Nothing has started: this space is a plan to run, not a project caught mid-flight.
     expect(tasks.every((task) => task.status === 'todo')).toBe(true);
+
+    // The reader owns the steps an agent cannot do: creating the repository (a connector token
+    // authorises access, it cannot create) and the two consent screens.
+    const mine = tasks.filter((task) => (task.assignee as { role?: string } | undefined)?.role === 'user');
+    expect(mine.map((task) => task.title)).toEqual([
+      'Create an empty GitHub repository for the app',
+      'Connect the GitHub credential, scoped to that repository',
+      'Connect the Anthropic credential',
+    ]);
 
     // Four of the five stages depend on their predecessor; the first depends on nothing.
     expect(tasks.filter((task) => Array.isArray(task.dependsOn) && task.dependsOn.length > 0)).toHaveLength(4);

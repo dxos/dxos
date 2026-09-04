@@ -78,6 +78,9 @@ const INSTRUCTIONS = trim`
   ## GitHub and pull requests
   - An agent has no GitHub access of its own. Bind the space's token as \`GH_TOKEN\` before it is
     needed, not after a 401.
+  - A connector token authorises access to repositories; it cannot CREATE one. Creating the
+    repository is the reader's task, and it comes first — the token is then scoped to that
+    repository rather than to everything they own.
   - Tokens rotate. A session that was pushing fine and now gets 401 or 403 holds a stale copy:
     refresh the binding rather than restarting the session or starting a second one.
   - One PR per work-cycle, with per-unit evidence in the body and an explicit dropped list.
