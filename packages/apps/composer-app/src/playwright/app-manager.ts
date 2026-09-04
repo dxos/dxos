@@ -484,15 +484,28 @@ export class AppManager {
     await this.page.getByTestId('treeView.appSettings').click();
   }
 
-  /** Opens one plugin's settings panel from the settings workspace tree. */
-  async openPluginSettings(plugin: string): Promise<void> {
+  /**
+   * Opens one plugin's settings panel from the settings workspace tree. `ready` is a locator the
+   * panel renders and nothing else does; pass it whenever the caller goes on to touch the panel.
+   *
+   * The tree selects on a settled pointer sequence, so a zero-delay click only moves focus to the
+   * row and opens nothing, and a click landing while the tree is still mounting is dropped the same
+   * way. Selection alone is not proof: a row can end up selected with its article still closed, and
+   * a further click on an already-selected row is a no-op, so each attempt re-enters the settings
+   * workspace to remount the tree rather than clicking the same stuck row again.
+   */
+  async openPluginSettings(plugin: string, ready?: Locator): Promise<void> {
     await this.openSettings();
     const item = this.page.getByTestId(`settings.${plugin}`);
     await expect(item).toBeVisible();
-    // The tree selects on a settled pointer sequence: a zero-delay click only moves focus to the
-    // row, leaving `aria-selected` false and the article unopened.
-    await item.click({ delay: 100 });
-    await expect(item).toHaveAttribute('aria-selected', 'true');
+    await expect(async () => {
+      await this.openSettings();
+      await item.click({ delay: 100 });
+      await expect(item).toHaveAttribute('aria-selected', 'true', { timeout: 2_000 });
+      if (ready) {
+        await expect(ready).toBeVisible({ timeout: 5_000 });
+      }
+    }).toPass({ timeout: 60_000 });
   }
 
   /** The scope control in a settings plank header: on = follows the account, off = this device only. */
@@ -562,11 +575,14 @@ export class AppManager {
     // present either way, so the open list is the only thing worth waiting on.
     await this.openPluginRegistry();
     // The row itself is the tree's control — it holds no nested button — and it selects on a
-    // settled pointer sequence, so a zero-delay click only moves focus and opens nothing.
+    // settled pointer sequence, so a zero-delay click only moves focus and opens nothing. A click
+    // landing while the tree is still mounting is dropped the same way, hence the retry.
     const row = this.page.getByTestId(`pluginRegistry.${category}`);
     await expect(row).toBeVisible();
-    await row.click({ delay: 100 });
-    await expect(this.page.locator('[data-testid^="pluginList."]').first()).toBeVisible();
+    await expect(async () => {
+      await row.click({ delay: 100 });
+      await expect(this.page.locator('[data-testid^="pluginList."]').first()).toBeVisible({ timeout: 5_000 });
+    }).toPass({ timeout: 30_000 });
   }
 
   getPluginToggle(plugin: string): Locator {

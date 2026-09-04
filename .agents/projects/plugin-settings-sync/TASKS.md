@@ -36,8 +36,15 @@ per-namespace scope: `unsynced` routes writes, reads still layer shared undernea
       reassignment, so the atom never notified and the scope control never flipped
 - [x] `AppManager.waitForDefaultWorkspace()` — the boot navigation to the default space lands
       seconds after the shell renders and replaces any route set before it
-- [ ] `halo.spec.ts` two-device test — written, unverifiable in the cloud sandbox: EDGE device
-      invitations stall there, which the pre-existing `join new identity` test fails on too
+- [x] `halo.spec.ts` two-device test — passes against real EDGE device invitations (2026-09-04, local)
+- [x] The stall was never environmental. The test read the auth code straight after creating the
+      invitation, but the host only learns it from `readyForAuthentication`, which the flow reaches
+      once a guest is on the other side — so it waited on a value that could not exist yet. Behind
+      it: the guest was driven before its boot navigation landed, and a device joining an existing
+      identity stops at the inviter's workspace root, never reaching the `/home` plank
+- [x] Merged main forward after three weeks of drift (301 commits). Main's Ark UI tree rebuild
+      (#12873) broke both settings and registry navigation: the row is the control, holds no nested
+      button, and needs a settled pointer sequence — a zero-delay click only moves focus
 
 ## Phase 3 — follow-ups (not in the prototype)
 

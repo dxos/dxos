@@ -42,7 +42,7 @@ test.describe('Settings sync', () => {
     const local = 'http://localhost:3002';
 
     // The registry's dev-plugin URL is an ordinary synced plugin setting.
-    await host.openPluginSettings('org.dxos.plugin.registry');
+    await host.openPluginSettings('org.dxos.plugin.registry', host.getDevPluginUrlInput());
     await host.getDevPluginUrlInput().fill(shared);
     await expect(host.getDevPluginUrlInput()).toHaveValue(shared);
 
