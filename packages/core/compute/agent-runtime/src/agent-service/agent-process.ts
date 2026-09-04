@@ -46,7 +46,7 @@ import { trim } from '@dxos/util';
 import { type DelegationStrategy } from './delegation-strategy';
 import { type MakeTurnProducer, makeAiSessionTurnProducer } from './turn-producer';
 
-interface AgentProcessOptions {
+export interface AgentProcessOptions {
   // TODO(burdon): Instructions?
   systemPrompt?: string;
 

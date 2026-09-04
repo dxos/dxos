@@ -3594,9 +3594,6 @@ importers:
         specifier: 'catalog:'
         version: 2.15.6
     devDependencies:
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../codec-protobuf
       '@dxos/context':
         specifier: workspace:*
         version: link:../context
@@ -3635,9 +3632,6 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../async
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../codec-protobuf
       '@dxos/crypto':
         specifier: workspace:*
         version: link:../crypto
@@ -6333,9 +6327,6 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../../common/codec-protobuf
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
@@ -6428,9 +6419,6 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../../common/codec-protobuf
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
@@ -6563,12 +6551,12 @@ importers:
 
   packages/core/mesh/teleport-extension-gossip:
     dependencies:
+      '@bufbuild/protobuf':
+        specifier: 'catalog:'
+        version: 2.11.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../../common/codec-protobuf
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
@@ -6684,6 +6672,9 @@ importers:
       '@dxos/codec-protobuf':
         specifier: workspace:*
         version: link:../../common/codec-protobuf
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../common/context
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -6984,6 +6975,9 @@ importers:
 
   packages/devtools/devtools:
     dependencies:
+      '@bufbuild/protobuf':
+        specifier: 'catalog:'
+        version: 2.11.0
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/compute/ai
@@ -7289,9 +7283,6 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../common/codec-protobuf
       '@dxos/compute-runtime':
         specifier: workspace:*
         version: link:../../core/compute/compute-runtime
@@ -8793,6 +8784,9 @@ importers:
         specifier: 4.0.0-rc.108
         version: 4.0.0-rc.108
     devDependencies:
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../../core/compute/assistant
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -18379,9 +18373,6 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../common/codec-protobuf
       '@dxos/credentials':
         specifier: workspace:*
         version: link:../../core/halo/credentials
@@ -18445,9 +18436,6 @@ importers:
       '@dxos/client-protocol':
         specifier: workspace:*
         version: link:../client-protocol
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../common/codec-protobuf
       '@dxos/config':
         specifier: workspace:*
         version: link:../config

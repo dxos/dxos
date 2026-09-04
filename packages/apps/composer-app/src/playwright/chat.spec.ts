@@ -36,7 +36,7 @@ test.describe('Chat', () => {
   });
 
   test.afterEach(async () => {
-    await host.closePage();
+    await host.close();
   });
 
   test('sends a message and receives a response', async () => {

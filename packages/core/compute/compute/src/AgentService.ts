@@ -117,4 +117,15 @@ export interface GetSessionOptions {
   // the model into the agent process — the id alone does not identify a resolver.
   readonly provider?: DXN.DXN;
   readonly systemPrompt?: string;
+  /**
+   * Where the agent runs. `local` executes it in this runtime; `edge` spawns it on the remote host
+   * reached through `RemoteProcessManager.Service`, so the conversation continues with the client
+   * closed. Read at spawn only, like `model` — moving a live conversation between runtimes would
+   * mean handing one process's durable state to another.
+   *
+   * @default 'local'
+   */
+  readonly location?: AgentLocation;
 }
+
+export type AgentLocation = 'local' | 'edge';

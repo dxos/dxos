@@ -12,10 +12,17 @@ const config = {
 
 test.describe('multi-worker', () => {
   let page: Page;
+  let close: (() => Promise<void>) | undefined;
 
   test.beforeAll(async ({ browser }) => {
     const result = await setupPage(browser, { url: `${config.baseUrl}/multi-worker.html` });
     page = result.page;
+    close = result.close;
+  });
+
+  test.afterAll(async () => {
+    // Playwright runs `afterAll` even when `beforeAll` threw, so setup may never have assigned this.
+    await close?.();
   });
 
   test('communicates over multiple independent rpc ports.', async () => {

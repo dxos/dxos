@@ -3,8 +3,8 @@
 //
 
 import { type Event, asyncTimeout } from '@dxos/async';
-import { type Any } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
+import { type AnyEnvelope } from '@dxos/protocols/service-contract';
 
 import { type Message, type PeerInfo, type SignalMethods } from '../signal-methods';
 import { PAYLOAD_1 } from './test-messages';
@@ -38,7 +38,7 @@ export const expectReceivedMessage = (event: Event<Message>, expectedMessage: Me
   );
 };
 
-export const createMessage = (author: PeerInfo, recipient: PeerInfo, payload: Any = PAYLOAD_1): Message => ({
+export const createMessage = (author: PeerInfo, recipient: PeerInfo, payload: AnyEnvelope = PAYLOAD_1): Message => ({
   author,
   recipient,
   payload,

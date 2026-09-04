@@ -22,7 +22,7 @@ test.describe.skip('Table tests', () => {
   });
 
   test.afterEach(async () => {
-    await host.closePage();
+    await host.close();
   });
 
   test('create', async () => {

@@ -227,6 +227,14 @@ export interface Process<
 
   readonly services: readonly Context.Key<any, any>[];
 
+  /**
+   * Codecs for the process's inputs and outputs, from {@link MakeProcessOpts}. Exposed on the
+   * interface so a caller that moves a value across a boundary (a remote runtime) can encode it
+   * with the definition's own schema rather than assuming the value is already JSON.
+   */
+  readonly input: Schema.Codec<_Input, any>;
+  readonly output: Schema.Codec<_Output, any>;
+
   // Runtime RPC group, stored as `any`. `RpcGroup`/`RpcClient` are invariant in their type
   // argument (and `Callbacks.rpcHandlers` is contravariant in it), so referencing `_Rpcs` in the
   // structural fields would block `Process<…, never>` from being assignable to `Process.Any`.
@@ -485,11 +493,63 @@ export interface Monitor {
   processTreeAtom: Atom.Atom<readonly Info[]>;
 
   /**
+   * The process tree narrowed by {@link MonitorFilter} — the read a caller looking for *its* process
+   * wants, without reaching past this read-only surface into a manager.
+   *
+   * The aggregate monitor spans local and remote runtimes, so this answers "is my agent running,
+   * wherever it runs" — which is what a UI renders and what a caller holding no handle can ask.
+   */
+  list(filter?: MonitorFilter): Effect.Effect<readonly Info[]>;
+
+  /**
    * Stream ephemeral trace messages matching `filter` (DX-1125), sourced from local in-process
    * runtimes and remote runtimes broadcasting over the space swarm. Used to drive live progress UI.
    */
   subscribeToTraceMessages(filter: Trace.Filter): Stream.Stream<Trace.Message>;
 }
+
+/** Filters for {@link Monitor.list}; an absent field matches everything. */
+export interface MonitorFilter {
+  readonly key?: string;
+  /** Target object the process was spawned against ({@link TargetAnnotation}). */
+  readonly target?: URI.URI;
+  readonly state?: State;
+  /** Space from the process's {@link Environment}; a process with no space matches no space filter. */
+  readonly space?: SpaceId;
+  readonly parentPid?: ID | null;
+}
+
+/**
+ * Whether `info` satisfies `filter`. Exported so every {@link Monitor} filters identically rather
+ * than each implementation growing its own notion of a match.
+ */
+export const matchesFilter = (info: Info, filter: MonitorFilter = {}): boolean => {
+  if (filter.key !== undefined && info.key !== filter.key) {
+    return false;
+  }
+  if (filter.state !== undefined && info.state !== filter.state) {
+    return false;
+  }
+  if (filter.space !== undefined && info.environment.space !== filter.space) {
+    return false;
+  }
+  if (filter.parentPid !== undefined && info.parentPid !== filter.parentPid) {
+    return false;
+  }
+  if (
+    filter.target !== undefined &&
+    Option.getOrUndefined(Annotation.getDictionary(info.params.annotations, TargetAnnotation)) !== filter.target
+  ) {
+    return false;
+  }
+  return true;
+};
+
+/** {@link Monitor.list} over a tree read, so a monitor implements it by supplying only that read. */
+export const listFromTree =
+  (processTree: Effect.Effect<readonly Info[]>) =>
+  (filter?: MonitorFilter): Effect.Effect<readonly Info[]> =>
+    Effect.map(processTree, (tree) => tree.filter((info) => matchesFilter(info, filter)));
 
 export class ProcessMonitorService extends Context.Service<ProcessMonitorService, Monitor>()(
   '@dxos/functions/ProcessMonitorService',
