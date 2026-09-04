@@ -25,6 +25,8 @@ type Toast = {
   duration: number;
   title: string;
   description: string;
+  actionLabel?: string;
+  onAction?: () => void;
 };
 
 /**
@@ -32,6 +34,9 @@ type Toast = {
  * and opens the public help thread; this takes the user there. No ticket means the form stays
  * open with an error toast. A thread that failed to open never loses the ticket; the success
  * toast just falls back to the plain one.
+ *
+ * The thread tab opens only once its URL is back. Browsers may treat a `window.open` this long
+ * after the click as a popup, so the toast carries an "Open thread" action as the fallback.
  */
 export const useSupportSubmit = (): FeedbackSubmitHandler => {
   const { invokePromise } = useOperationInvoker();
@@ -49,15 +54,18 @@ export const useSupportSubmit = (): FeedbackSubmitHandler => {
           title: [toast.title, namespace],
           description: [toast.description, namespace],
           closeLabel: ['close.label', { ns: osTranslations }],
+          ...(toast.actionLabel && toast.onAction
+            ? {
+                actionLabel: [toast.actionLabel, namespace],
+                actionAlt: [toast.actionLabel, namespace],
+                onAction: toast.onAction,
+              }
+            : {}),
         });
       const collapse = () => invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
 
       // Capture before submitting, while the reported screen is still on-screen.
       const screenshot = await attachScreenshot(values);
-
-      // Open a blank popup synchronously while user activation is still valid.
-      // Navigating it after the async work avoids popup-blocker policies.
-      const popup = window.open('', '_blank');
 
       const { data: result, error } = await invokePromise(SupportOperation.SubmitReport, {
         report: values,
@@ -66,7 +74,6 @@ export const useSupportSubmit = (): FeedbackSubmitHandler => {
       });
       if (error || !result) {
         // The panel stays open so nothing the user typed is lost.
-        popup?.close();
         log.error('support report not filed', { error });
         await showToast({
           id: 'feedback-failed',
@@ -79,20 +86,20 @@ export const useSupportSubmit = (): FeedbackSubmitHandler => {
       }
 
       await collapse();
-      // The pre-opened popup is our only way to navigate after the await; if it was blocked, or
-      // no thread opened, show the plain toast rather than claiming a Discord thread opened.
-      if (result.threadUrl && popup) {
-        popup.location.href = result.threadUrl;
+      if (result.threadUrl) {
+        const threadUrl = result.threadUrl;
+        const opened = window.open(threadUrl, '_blank') !== null;
         await showToast({
           id: 'discord-feedback-success',
           icon: 'ph--discord-logo--regular',
-          duration: 5000,
+          duration: opened ? 5000 : 15000,
           title: 'discord-feedback-toast.label',
-          description: 'discord-feedback-toast.description',
+          description: opened ? 'discord-feedback-toast.description' : 'discord-feedback-toast-blocked.description',
+          actionLabel: 'discord-feedback-toast.action',
+          onAction: () => window.open(threadUrl, '_blank'),
         });
         return;
       }
-      popup?.close();
       await showToast({
         id: 'feedback-success',
         icon: 'ph--paper-plane-tilt--regular',
