@@ -44,4 +44,5 @@ export type MakeOptions = {
 export const make = ({ name, source }: MakeOptions = {}): Diagram =>
   Obj.make(Diagram, { name, source: source ?? Ir.emptyArchitecture(name ?? 'Untitled diagram') });
 
+/** Type guard for {@link Diagram} objects. */
 export const isDiagram = (object: unknown): object is Diagram => Obj.instanceOf(Diagram, object);

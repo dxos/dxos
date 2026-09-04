@@ -23,7 +23,7 @@ export default Config2.make({
       than to overrule them with a generic auto-layout pass.
 
       The diagram is an ECHO object, so it replicates, merges, and is editable by agent operations
-      (create, read, write, validate) exposed through the Archify skill.
+      (create, read, write, verify) exposed through the Archify skill.
     `,
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-archify',
     icon: { key: 'ph--tree-structure--regular', hue: 'cyan' },

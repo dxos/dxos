@@ -8,14 +8,6 @@ import * as Ir from './Ir';
 import * as Layout from './Layout';
 import { webApp } from './testing';
 
-const minimal = (components: Ir.Architecture['components'], rest: Partial<Ir.Architecture> = {}): Ir.Architecture => ({
-  schema_version: 1,
-  diagram_type: 'architecture',
-  meta: { title: 'test' },
-  components,
-  ...rest,
-});
-
 describe('layout', () => {
   test('grid cells resolve to fixed coordinates and absolute pos wins over them', ({ expect }) => {
     const [ox, oy] = Layout.DEFAULT_GRID.origin;
@@ -101,6 +93,22 @@ describe('layout', () => {
     }
   });
 
+  test('a label pinned away from its route is still inside the viewBox', ({ expect }) => {
+    const resolved = Layout.resolve(
+      minimal(
+        [
+          { id: 'a', type: 'backend', label: 'a', pos: [0, 0], size: [100, 50] },
+          { id: 'b', type: 'backend', label: 'b', pos: [400, 0], size: [100, 50] },
+        ],
+        { connections: [{ from: 'a', to: 'b', label: 'far', labelAt: [250, -400] }] },
+      ),
+    );
+
+    const [, minY, , height] = resolved.viewBox.split(' ').map(Number);
+    expect(minY).toBeLessThanOrEqual(-400);
+    expect(minY + height).toBeGreaterThan(0);
+  });
+
   test('reach walks connections in the requested direction', ({ expect }) => {
     expect([...Layout.reach(webApp, ['lb'], 'downstream')].sort()).toEqual([
       'api',
@@ -112,4 +120,12 @@ describe('layout', () => {
     ]);
     expect([...Layout.reach(webApp, ['lb'], 'upstream')].sort()).toEqual(['cdn', 'lb', 'users']);
   });
+});
+
+const minimal = (components: Ir.Architecture['components'], rest: Partial<Ir.Architecture> = {}): Ir.Architecture => ({
+  schema_version: 1,
+  diagram_type: 'architecture',
+  meta: { title: 'test' },
+  components,
+  ...rest,
 });

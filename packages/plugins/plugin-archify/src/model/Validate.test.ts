@@ -8,20 +8,6 @@ import * as Ir from './Ir';
 import { webApp } from './testing';
 import * as Validate from './Validate';
 
-const codes = (source: unknown) => Validate.validate(source).diagnostics.map((diagnostic) => diagnostic.code);
-
-const minimal = (rest: Partial<Ir.Architecture> = {}): Ir.Architecture => ({
-  schema_version: 1,
-  diagram_type: 'architecture',
-  meta: { title: 'test' },
-  components: [
-    { id: 'a', type: 'backend', label: 'a', pos: [0, 0], size: [100, 50] },
-    { id: 'b', type: 'backend', label: 'b', pos: [400, 0], size: [100, 50] },
-  ],
-  connections: [{ from: 'a', to: 'b' }],
-  ...rest,
-});
-
 describe('validate', () => {
   test('upstream’s own reference document passes', ({ expect }) => {
     const { ok, diagnostics } = Validate.validate(webApp);
@@ -85,6 +71,36 @@ describe('validate', () => {
     ).toContain('layout/component-overlap');
   });
 
+  test('components closer than the minimum gap fail even when they do not intersect', ({ expect }) => {
+    expect(
+      codes(
+        minimal({
+          components: [
+            { id: 'a', type: 'backend', label: 'a', pos: [0, 0], size: [100, 50] },
+            { id: 'b', type: 'backend', label: 'b', pos: [110, 0], size: [100, 50] },
+          ],
+        }),
+      ),
+    ).toContain('layout/component-overlap');
+  });
+
+  test('a label sitting over the lower half of a component is still caught', ({ expect }) => {
+    const [diagnostic] = Validate.validate(
+      minimal({
+        components: [
+          { id: 'a', type: 'backend', label: 'a', pos: [0, 0], size: [100, 50] },
+          { id: 'b', type: 'backend', label: 'b', pos: [400, 0], size: [100, 50] },
+          { id: 'under', type: 'external', label: 'under', pos: [200, 200], size: [120, 60] },
+        ],
+        // Pinned so the label's lower edge, not its baseline, is what covers "under".
+        connections: [{ id: 'edge', from: 'a', to: 'b', label: 'covered', labelAt: [260, 198] }],
+      }),
+    ).diagnostics;
+
+    expect(diagnostic.code).toBe('label/clearance');
+    expect(diagnostic.subject).toMatchObject({ component: 'under' });
+  });
+
   test('a route through a third component is a repairable error', ({ expect }) => {
     const [diagnostic] = Validate.validate(
       minimal({
@@ -121,4 +137,18 @@ describe('validate', () => {
     const { document } = Validate.validate({ ...webApp, meta: { ...webApp.meta, output: 'ignored.html' } });
     expect(document?.meta).not.toHaveProperty('output');
   });
+});
+
+const codes = (source: unknown) => Validate.validate(source).diagnostics.map((diagnostic) => diagnostic.code);
+
+const minimal = (rest: Partial<Ir.Architecture> = {}): Ir.Architecture => ({
+  schema_version: 1,
+  diagram_type: 'architecture',
+  meta: { title: 'test' },
+  components: [
+    { id: 'a', type: 'backend', label: 'a', pos: [0, 0], size: [100, 50] },
+    { id: 'b', type: 'backend', label: 'b', pos: [400, 0], size: [100, 50] },
+  ],
+  connections: [{ from: 'a', to: 'b' }],
+  ...rest,
 });

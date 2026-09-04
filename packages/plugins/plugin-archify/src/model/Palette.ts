@@ -86,6 +86,7 @@ const LIGHT: Palette = {
   },
 };
 
+/** The palette for a theme mode; the two are the same vocabulary at different luminance. */
 export const paletteFor = (themeMode: 'dark' | 'light'): Palette => (themeMode === 'dark' ? DARK : LIGHT);
 
 /** Stroke colour, dash pattern and width for each relationship variant. */

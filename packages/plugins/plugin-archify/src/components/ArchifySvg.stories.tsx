@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
+import { expect, userEvent, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -48,3 +49,19 @@ export const Default: Story = { args: {} };
 
 /** A guided view: only the components its author listed stay at full strength. */
 export const GuidedView: Story = { args: { view: 'request-path', traceable: false } };
+
+/** Tracing is reachable from the keyboard, not only the mouse. */
+export const KeyboardSelection: Story = {
+  args: {},
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const api = canvas.getByRole('button', { name: /API Server/ });
+
+    api.focus();
+    await userEvent.keyboard('{Enter}');
+    await expect(api).toHaveAttribute('aria-pressed', 'true');
+
+    await userEvent.keyboard(' ');
+    await expect(api).toHaveAttribute('aria-pressed', 'false');
+  },
+};

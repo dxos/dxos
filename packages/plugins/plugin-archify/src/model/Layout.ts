@@ -303,10 +303,15 @@ export const resolve = (diagram: Ir.Architecture): ResolvedDiagram => {
     xs.push(rect.x, rect.x + rect.width);
     ys.push(rect.y, rect.y + rect.height);
   }
-  for (const { points } of connections) {
+  for (const { points, label } of connections) {
     for (const [x, y] of points) {
       xs.push(x);
       ys.push(y);
+    }
+    // A label pinned with labelAt/labelDx/labelDy can sit off the route; it must still be inside.
+    if (label) {
+      xs.push(label.at[0]);
+      ys.push(label.at[1]);
     }
   }
   const minX = Math.min(0, ...xs) - DEFAULTS.margin;

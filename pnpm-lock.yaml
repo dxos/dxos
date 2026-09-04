@@ -7578,9 +7578,6 @@ importers:
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../common/invariant
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys

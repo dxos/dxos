@@ -50,7 +50,12 @@ const rect = (component: Layout.ComponentRect) => ({
   height: Math.round(component.height),
 });
 
-const overlaps = (a: Layout.ComponentRect, b: Layout.ComponentRect, gap = 0): boolean =>
+/** Archify's boxes need air between them to read as separate; this is the enforced minimum. */
+const MIN_COMPONENT_GAP = 30;
+
+type Box = { x: number; y: number; width: number; height: number };
+
+const overlaps = (a: Box, b: Box, gap = 0): boolean =>
   a.x < b.x + b.width + gap && b.x < a.x + a.width + gap && a.y < b.y + b.height + gap && b.y < a.y + a.height + gap;
 
 /** Whether a segment enters a rect, used for both route clearance and label clearance. */
@@ -205,11 +210,11 @@ const geometric = (diagram: Ir.Architecture, resolved: Layout.ResolvedDiagram): 
 
   for (let i = 0; i < placed.length; i++) {
     for (let j = i + 1; j < placed.length; j++) {
-      if (overlaps(placed[i], placed[j])) {
+      if (overlaps(placed[i], placed[j], MIN_COMPONENT_GAP)) {
         diagnostics.push({
           code: 'layout/component-overlap',
           severity: 'error',
-          message: `Components "${placed[i].id}" and "${placed[j].id}" overlap; move one at least 30px clear.`,
+          message: `Components "${placed[i].id}" and "${placed[j].id}" are less than ${MIN_COMPONENT_GAP}px apart; move one at least ${MIN_COMPONENT_GAP}px clear.`,
           subject: { component: placed[i].id, other: placed[j].id },
           evidence: { a: rect(placed[i]), b: rect(placed[j]) },
           supportedFixes: ['components[].pos', 'components[].size'],
@@ -244,9 +249,8 @@ const geometric = (diagram: Ir.Architecture, resolved: Layout.ResolvedDiagram): 
 
     if (label) {
       const box = labelBox(label.at, label.text);
-      const blocker = placed.find((component) =>
-        segmentHitsRect([box.x, box.y], [box.x + box.width, box.y], component),
-      );
+      // The whole label rect, not just its top edge: a component under the lower half hides it too.
+      const blocker = placed.find((component) => overlaps(box, component));
       if (blocker) {
         const below = Math.round(blocker.y + blocker.height + 14);
         diagnostics.push({

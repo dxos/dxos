@@ -52,11 +52,13 @@ export const ArchifySvg = ({ classNames, diagram, focus, selected, onSelect, hid
   const prefix = useId().replace(/:/g, '');
 
   const dimmed = (id: string) => !!focus && focus.size > 0 && !focus.has(id);
+  const toggle = (id: string) => onSelect?.(id === selected ? undefined : id);
   const variants: Ir.Variant[] = ['default', 'emphasis', 'security', 'dashed'];
 
   return (
     <svg
-      role='img'
+      // Selectable components are focusable buttons, so the SVG is a group rather than one image.
+      role={onSelect ? 'group' : 'img'}
       aria-label={diagram.meta.title}
       viewBox={resolved.viewBox}
       preserveAspectRatio='xMidYMid meet'
@@ -136,9 +138,20 @@ export const ArchifySvg = ({ classNames, diagram, focus, selected, onSelect, hid
               key={component.id}
               opacity={faded ? DIM_OPACITY : 1}
               className={onSelect ? 'cursor-pointer' : undefined}
+              role={onSelect ? 'button' : undefined}
+              tabIndex={onSelect ? 0 : undefined}
+              aria-pressed={onSelect ? component.id === selected : undefined}
+              aria-label={onSelect ? [component.label, component.sublabel].filter(Boolean).join(' — ') : undefined}
               onClick={(event) => {
                 event.stopPropagation();
-                onSelect?.(component.id === selected ? undefined : component.id);
+                toggle(component.id);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  toggle(component.id);
+                }
               }}
             >
               {/* Opaque plate: component fills are translucent, so a route underneath would
