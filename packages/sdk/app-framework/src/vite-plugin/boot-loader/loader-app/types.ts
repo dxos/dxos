@@ -33,11 +33,12 @@ export type StatusPayload = {
 };
 
 /**
- * One plugin in the loader's activation row. Seeded dim before activation starts and lit as each
- * plugin reports in, so the row doubles as a progress indication of the work still outstanding.
+ * One plugin the loader's activation row can draw. Registered up front as an icon lookup; the row
+ * itself only grows as plugins actually activate, since most enabled plugins activate lazily on
+ * first use and would otherwise sit dim for the whole boot.
  */
 export type PluginEntry = {
-  /** Stable id the host uses to light this entry — the plugin's slug (e.g. `markdown`). */
+  /** Stable id the host activates this entry by — the plugin's slug (e.g. `markdown`). */
   id: string;
   /** Sprite symbol name from the plugin's meta (e.g. `ph--text-aa--regular`). */
   icon?: string;
@@ -53,9 +54,9 @@ export type PluginEntry = {
 export type BootLoaderApi = {
   /** Update the visible status line. */
   status: (payload: StatusPayload) => void;
-  /** Seed the activation row with every plugin due to activate, rendered dim until lit. */
+  /** Register the icon of every plugin that could activate; draws nothing on its own. */
   plugins: (entries: PluginEntry[]) => void;
-  /** Light the seeded entry with this id; unknown ids are ignored. */
+  /** Add this plugin's icon to the activation row; unregistered ids are ignored. */
   activated: (id: string) => void;
   /** Enter host-driven progress — `fraction` ∈ [0, 1]. */
   progress: (fraction?: number) => void;

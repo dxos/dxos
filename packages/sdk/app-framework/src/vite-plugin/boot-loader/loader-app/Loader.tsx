@@ -166,9 +166,8 @@ export const Loader: Component<LoaderProps> = (props) => {
           <For each={props.store.lines()}>{(line) => <div class='boot-loader-status-line'>{line.text}</div>}</For>
         </div>
       </div>
-      {/* Activation row: every plugin due to activate, seeded monochrome and dimmed, each easing to
-          its own hue as the host reports it in — so the row shows what is left as well as what has
-          landed. Icons resolve against the static sprite, which needs no app bundle. */}
+      {/* Activation row: one icon per plugin as it activates, appended monochrome and easing into its
+          own hue. Icons resolve against the static sprite, which needs no app bundle. */}
       <div id='boot-loader-plugins' aria-hidden='true'>
         <For each={props.store.plugins()}>
           {(plugin) => (

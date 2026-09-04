@@ -367,11 +367,17 @@ body {
     calc(var(--boot-loader-disc-size) / 2 + var(--boot-loader-status-gap) + 4.5em + var(--boot-loader-status-gap))
   );
   display: flex;
-  flex-wrap: wrap;
+  /*
+   * One row, always: wrapping turned the row into a growing block that pushed itself around as
+   * plugins seeded. Icons shrink to a legible floor first, and a very long set is clipped at the
+   * edges rather than reflowing.
+   */
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: center;
   gap: 10px;
   padding: 0 24px;
+  overflow: hidden;
 }
 
 /*
@@ -404,14 +410,13 @@ body {
 .boot-loader-plugin {
   width: 40px;
   height: 40px;
-  flex: 0 0 auto;
+  /* Shrinks to keep the single row intact on narrow viewports; `min-width` is the legibility floor. */
+  flex: 0 1 auto;
+  min-width: 20px;
   color: currentColor;
   fill: currentColor;
-  /*
-   * The row sits at a constant 60% — de-emphasised against the mark and ring the way the status log
-   * is. Lit vs unlit reads from colour and scale rather than opacity.
-   */
-  opacity: 0.6;
+  /* Unlit: barely there, so the lit icons carry the eye and the row still shows what is outstanding. */
+  opacity: 0.1;
   filter: grayscale(100%);
   transform: scale(0.9);
   transition:
@@ -424,6 +429,8 @@ body {
 .boot-loader-plugin[data-active] {
   /* Hue-less plugins light in the loader's own accent rather than staying grey. */
   color: var(--boot-loader-plugin-color, var(--boot-loader-accent));
+  /* Lit icons match the status log's de-emphasis rather than the mark's full strength. */
+  opacity: 0.6;
   filter: grayscale(0%);
   transform: scale(1);
 }

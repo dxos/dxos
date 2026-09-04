@@ -15,9 +15,9 @@ declare global {
        */
       range?: { index: number; total: number };
     }) => void;
-    /** Seed the loader's plugin activation row; entries render dim until `activated(...)`. */
+    /** Register plugin icons for the loader's activation row; draws nothing until `activated(...)`. */
     plugins?: (entries: { id: string; icon?: string; hue?: string }[]) => void;
-    /** Light the seeded row entry with this id. */
+    /** Add the registered plugin with this id to the activation row. */
     activated?: (id: string) => void;
     progress: (fraction?: number) => void;
     /**

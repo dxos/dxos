@@ -82,9 +82,13 @@ export type LoaderStore = {
   pushStatus: (payload: StatusPayload) => void;
   /** Enter host-driven progress with `fraction` ∈ [0, 1]; never regresses. */
   setProgress: (fraction?: number) => void;
-  /** Seed the activation row; entries without an icon are dropped (nothing to draw). */
+  /**
+   * Register the icon for every plugin that *could* activate. Registration alone draws nothing:
+   * most enabled plugins activate lazily on first use, so a row seeded from that set would sit
+   * half-dim for the whole boot. Rows appear from {@link LoaderStore.activatePlugin}.
+   */
   setPlugins: (entries: PluginEntry[]) => void;
-  /** Mark a seeded entry active. Unknown ids are ignored — the host may activate an unseeded plugin. */
+  /** Append this plugin's icon to the row (dim, then easing to its hue). Unregistered ids are ignored. */
   activatePlugin: (id: string) => void;
   /** Offer the user an abort (see `BootLoaderApi.stalled`). Idempotent — the first handler wins. */
   stalled: (onAbort: () => void) => void;
@@ -99,6 +103,9 @@ export const createLoaderStore = (initialStatus?: string): LoaderStore => {
   const [lines, setLines] = createSignal<StatusLine[]>(initialStatus ? [{ id: 0, text: initialStatus }] : []);
   const [phase, setPhase] = createSignal<Phase>('creep');
   const [plugins, setPluginRows] = createSignal<PluginRow[]>([]);
+  // Icons for every plugin that could activate, keyed by slug. Plain map, not a signal: nothing
+  // renders from it directly.
+  const registry = new Map<string, PluginEntry>();
   // Held as a signal rather than a boolean + prop so the button has the handler directly, and so a
   // second `stalled()` (a re-fired deadline) cannot swap it mid-press.
   const [onAbort, setOnAbort] = createSignal<(() => void) | undefined>(undefined);
@@ -157,14 +164,24 @@ export const createLoaderStore = (initialStatus?: string): LoaderStore => {
   };
 
   const setPlugins = (entries: PluginEntry[]): void => {
-    setPluginRows(entries.filter((entry) => !!entry.icon).map((entry) => ({ ...entry, active: false })));
+    registry.clear();
+    for (const entry of entries) {
+      if (entry.icon) {
+        registry.set(entry.id, entry);
+      }
+    }
   };
 
   const activatePlugin = (id: string): void => {
-    setPluginRows((current) =>
-      current.some((row) => row.id === id && !row.active)
-        ? current.map((row) => (row.id === id ? { ...row, active: true } : row))
-        : current,
+    const entry = registry.get(id);
+    if (!entry || plugins().some((row) => row.id === id)) {
+      return;
+    }
+    // Appended dim, then flipped on the next frame so the icon eases into its hue rather than
+    // popping in already lit — a row that only ever renders active would skip the transition.
+    setPluginRows((current) => [...current, { ...entry, active: false }]);
+    requestAnimationFrame(() =>
+      setPluginRows((current) => current.map((row) => (row.id === id ? { ...row, active: true } : row))),
     );
   };
 

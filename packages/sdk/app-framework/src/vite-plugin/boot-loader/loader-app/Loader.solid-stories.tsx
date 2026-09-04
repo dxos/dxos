@@ -69,8 +69,8 @@ export const Default: Story = {
 };
 
 /**
- * The activation row on its own, lit slowly: the whole enabled set is seeded dim and monochrome so
- * the outstanding work is visible, and each icon eases to its own hue as its plugin activates.
+ * The activation row on its own, filling slowly: each plugin's icon is appended monochrome as it
+ * activates and eases into its own hue. Registered-but-never-activated plugins draw nothing.
  */
 export const PluginActivation: Story = {
   render: () => {

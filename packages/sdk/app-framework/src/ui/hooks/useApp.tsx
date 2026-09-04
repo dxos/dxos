@@ -237,10 +237,10 @@ export const useApp = ({
     setupDevtools(manager);
   }, [manager]);
 
-  // Seed the boot loader's activation row from the enabled plugins' own meta, before any of them
-  // activates: showing the full set dim up front makes the outstanding work visible, which a row
-  // that only grew as plugins landed could not convey. Meta is the icon's only source — the loader
-  // is a standalone bundle with no access to the plugin registry.
+  // Hand the boot loader the enabled plugins' icons from their own meta. This registers, it does
+  // not draw: barely half the enabled set activates during startup (the rest activate lazily on
+  // first use), so a row seeded from it sat half-dim for the whole boot. Meta is the icon's only
+  // source — the loader is a standalone bundle with no access to the plugin registry.
   useEffect(() => {
     // Optional call, not just an optional facade: an already-loaded page can be running an
     // `index.html` whose inlined loader bundle predates this method (service-worker cache, stale
