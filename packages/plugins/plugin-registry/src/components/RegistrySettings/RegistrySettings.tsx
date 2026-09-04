@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useState } from 'react';
+import React, { type ReactNode, useCallback, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { log } from '@dxos/log';
@@ -25,6 +25,8 @@ export type RegistrySettingsProps = AppSurface.SettingsProps<
      */
     pluginScopeLocal?: boolean;
     onPluginScopeLocalChange?: (local: boolean) => void;
+    /** Section-level controls for the panel heading. */
+    scope?: ReactNode;
   }
 >;
 
@@ -48,6 +50,7 @@ export const RegistrySettings = ({
   onDisableDev,
   pluginScopeLocal,
   onPluginScopeLocalChange,
+  scope,
 }: RegistrySettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [rejoining, setRejoining] = useState(false);
@@ -104,7 +107,7 @@ export const RegistrySettings = ({
       <Form.Viewport scroll>
         <Form.Content>
           {pluginScopeLocal !== undefined && (
-            <Form.Section title={t('plugin-registry.label')}>
+            <Form.Section title={t('plugin-registry.label')} actions={scope}>
               <Form.Row label={t('plugin-scope.label')} description={t('plugin-scope.description')}>
                 <Input.Root>
                   <Input.Switch

@@ -9,7 +9,7 @@ import React, { useCallback } from 'react';
 import { usePluginManager, useSettingsState } from '@dxos/app-framework/ui';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
-import { useSettingsScope } from '@dxos/app-toolkit/ui';
+import { SettingsScope, useSettingsScope } from '@dxos/app-toolkit/ui';
 import { EffectEx } from '@dxos/effect';
 
 import { RegistrySettings } from '#components';
@@ -52,6 +52,7 @@ export const RegistrySettingsContainer = ({ subject }: RegistrySettingsContainer
 
   return (
     <RegistrySettings
+      scope={<SettingsScope prefix={subject.prefix} />}
       settings={settings}
       onSettingsChange={updateSettings}
       activeDevPluginIds={activeDevPluginIds}

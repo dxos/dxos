@@ -5,7 +5,7 @@
 import React, { useCallback, useState } from 'react';
 
 import { useSettingsState } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { SettingsScope, type AppSurface } from '@dxos/app-toolkit/ui';
 import { Flex, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
@@ -55,7 +55,11 @@ export const CrxSettings = ({ subject, readonly }: CrxSettingsProps) => {
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={meta.profile.name ?? meta.profile.key} description={t('settings.description')}>
+          <Form.Section
+            title={meta.profile.name ?? meta.profile.key}
+            description={t('settings.description')}
+            actions={<SettingsScope prefix={subject.prefix} />}
+          >
             <Form.FieldSet />
           </Form.Section>
 

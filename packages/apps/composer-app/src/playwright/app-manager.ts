@@ -529,9 +529,9 @@ export class AppManager {
     await expect(item).toHaveAttribute('aria-selected', 'true');
   }
 
-  /** The scope control in a settings plank header: on = follows the account, off = this device only. */
-  getSettingsScopeToggle(): Locator {
-    return this.page.getByTestId('settingsScope.toggle');
+  /** The scope toggle group in a settings panel's heading: one item per scope, the active one pressed. */
+  getSettingsScopeToggle(scope: 'synced' | 'local'): Locator {
+    return this.page.getByTestId(`settingsScope.${scope}`);
   }
 
   /**
@@ -539,9 +539,10 @@ export class AppManager {
    * rejoining it has no confirmation to dismiss.
    */
   async useSettingsForThisDeviceOnly(): Promise<void> {
-    const toggle = this.getSettingsScopeToggle();
-    await expect(toggle).toBeVisible();
-    await toggle.click();
+    const local = this.getSettingsScopeToggle('local');
+    await expect(local).toBeVisible();
+    await local.click();
+    await expect(local).toHaveAttribute('data-state', 'on');
   }
 
   /**
@@ -549,7 +550,7 @@ export class AppManager {
    * this device's values, which is why this direction asks.
    */
   async rejoinAccountSettings(): Promise<void> {
-    await this.getSettingsScopeToggle().click();
+    await this.getSettingsScopeToggle('synced').click();
     await this.page.getByTestId('settingsScope.confirm').click();
   }
 

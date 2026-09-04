@@ -5,7 +5,7 @@
 import React, { useCallback, useRef, useState } from 'react';
 
 import { useSettingsState } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { SettingsScope, type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { AccessToken } from '@dxos/link';
@@ -67,7 +67,10 @@ export const CodeSettings = ({ subject }: CodeSettingsProps) => {
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={meta.profile.name ?? meta.profile.key}>
+          <Form.Section
+            title={meta.profile.name ?? meta.profile.key}
+            actions={<SettingsScope prefix={subject.prefix} />}
+          >
             <Form.Row label={t('api-key.label')}>
               <Input.Root>
                 <Input.TextInput

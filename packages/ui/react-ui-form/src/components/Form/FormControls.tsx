@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren, useRef } from 'react';
+import React, { type PropsWithChildren, type ReactNode, useRef } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
 import {
@@ -290,18 +290,27 @@ const FORM_SECTION_NAME = 'Form.Section';
 export type FormSectionProps = ThemedClassName<{
   title?: string;
   description?: string;
+  /**
+   * Controls scoping the section as a whole, rendered at the end of its heading row. For what acts
+   * on the section rather than on any one field — a settings panel's sync scope, say. Rendered only
+   * alongside a `title` or `description`, since without a heading row there is nothing to trail.
+   */
+  actions?: ReactNode;
 }>;
 
 export const FormSection = composable<HTMLDivElement, FormSectionProps>(
-  ({ children, title, description, ...props }, forwardedRef) => {
+  ({ children, title, description, actions, ...props }, forwardedRef) => {
     const { variant = 'default' } = useFormContext(FORM_SECTION_NAME);
     const styles = formTheme.styles({ variant });
     return (
       <div {...composableProps(props, { classNames: styles.section() })} ref={forwardedRef}>
         {(title || description) && (
           <div className={styles.sectionHeader()}>
-            {title && <h2 className={styles.sectionTitle()}>{title}</h2>}
-            {description && <MarkdownView classNames={styles.sectionDescription()} content={description} />}
+            <div className={styles.sectionHeading()}>
+              {title && <h2 className={styles.sectionTitle()}>{title}</h2>}
+              {description && <MarkdownView classNames={styles.sectionDescription()} content={description} />}
+            </div>
+            {actions && <div className={styles.sectionActions()}>{actions}</div>}
           </div>
         )}
         {children}

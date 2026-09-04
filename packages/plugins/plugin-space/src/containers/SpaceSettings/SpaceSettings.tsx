@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import React, { type ReactNode } from 'react';
 
 import { type Space } from '@dxos/react-client/echo';
 import { IconButton, Input, Select, toLocalizedString, useTranslation } from '@dxos/react-ui';
@@ -15,6 +15,8 @@ import { Settings } from '#types';
 import { getSpaceDisplayName } from '../../util';
 
 export type SpaceSettingsProps = {
+  /** Section-level controls for the panel heading. */
+  scope?: ReactNode;
   spaces?: Space[];
   onOpenSpaceSettings?: (space: Space) => void;
   settings?: Settings.Settings;
@@ -34,6 +36,7 @@ export const SpaceSettings = ({
   defaultSpaceId,
   eligibleDefaultSpaces = spaces,
   onDefaultSpaceChange,
+  scope,
 }: SpaceSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
 
@@ -41,7 +44,7 @@ export const SpaceSettings = ({
     <Form.Root variant='settings'>
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={t('plugin.name')}>
+          <Form.Section title={t('plugin.name')} actions={scope}>
             <Form.Row label={t('settings.show-hidden.label')} description={t('settings.show-hidden.description')}>
               <Input.Root>
                 <Input.Switch

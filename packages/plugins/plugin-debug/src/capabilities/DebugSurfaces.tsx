@@ -13,7 +13,7 @@ import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import { SettingsScope, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Annotation, Collection, Entity, Filter, Obj, Type } from '@dxos/echo';
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { type IdbLogStore } from '@dxos/log-store-idb';
@@ -39,7 +39,13 @@ export const DebugSettingsSurface = ({ subject, logStore, onUpload }: DebugSetti
   const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
 
   return (
-    <DebugSettings settings={settings} onSettingsChange={updateSettings} logStore={logStore} onUpload={onUpload} />
+    <DebugSettings
+      settings={settings}
+      onSettingsChange={updateSettings}
+      logStore={logStore}
+      onUpload={onUpload}
+      scope={<SettingsScope prefix={subject.prefix} />}
+    />
   );
 };
 

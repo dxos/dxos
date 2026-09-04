@@ -13,7 +13,7 @@ import * as AppCapabilities from '../../app-framework/AppCapabilities';
 /** Stable fallback so the atom hook keeps a constant identity while the sync is unavailable. */
 const emptyUnsynced = Atom.make<readonly string[]>([]);
 
-export type SettingsScope = {
+export type SettingsScopeState = {
   /**
    * Whether the device-synced settings store is available at all. `false` before the settings space
    * opens and in hosts with no client, where settings are device-local with nothing to choose.
@@ -34,7 +34,7 @@ export type SettingsScope = {
  * The state seam shared by the settings plank header and the plugin registry — the two render very
  * different controls (an icon button versus a switch row), so only the state is worth sharing.
  */
-export const useSettingsScope = (prefix: string): SettingsScope => {
+export const useSettingsScope = (prefix: string): SettingsScopeState => {
   const sync = useOptionalCapability(AppCapabilities.SettingsSync);
   const unsynced = useAtomValue(sync?.unsynced ?? emptyUnsynced);
   const setSynced = useCallback((synced: boolean) => sync?.setSynced(prefix, synced), [sync, prefix]);
