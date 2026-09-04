@@ -308,6 +308,10 @@ pub fn run() {
             {
                 use tauri::WebviewWindowBuilder;
                 let _main_window = WebviewWindowBuilder::new(app, MAIN_WINDOW_LABEL, tauri::WebviewUrl::App("index.html".into()))
+                    // Same rationale as the desktop window above: WKWebView suspends, then
+                    // terminates, the WebContent process of a hidden/backgrounded view.
+                    // `Disabled` = WKInactiveSchedulingPolicyNone, iOS 17+, ignored elsewhere.
+                    .background_throttling(tauri::utils::config::BackgroundThrottlingPolicy::Disabled)
                     .build()?;
             }
 
