@@ -141,6 +141,15 @@ export class AppManager {
     await this.page.waitForURL(/\/w\/[A-Z0-9]{20,}\/home/, { timeout: 60_000 });
   }
 
+  /**
+   * Waits out the same boot navigation for a device that has just joined an existing identity.
+   * Such a device adopts the inviter's workspace and stops at its root, never reaching the `/home`
+   * plank a first-run device lands on, so it needs the looser pattern.
+   */
+  async waitForJoinedWorkspace(): Promise<void> {
+    await this.page.waitForURL(/\/w\/[A-Z0-9]{20,}/, { timeout: 60_000 });
+  }
+
   async openUserAccount(): Promise<void> {
     await this.page.getByTestId('clientPlugin.account').click();
   }
@@ -480,7 +489,10 @@ export class AppManager {
     await this.openSettings();
     const item = this.page.getByTestId(`settings.${plugin}`);
     await expect(item).toBeVisible();
-    await item.click();
+    // The tree selects on a settled pointer sequence: a zero-delay click only moves focus to the
+    // row, leaving `aria-selected` false and the article unopened.
+    await item.click({ delay: 100 });
+    await expect(item).toHaveAttribute('aria-selected', 'true');
   }
 
   /** The scope control in a settings plank header: on = follows the account, off = this device only. */
@@ -549,7 +561,11 @@ export class AppManager {
     // workspace but not the category plank, so the list never opens. The category's tree node is
     // present either way, so the open list is the only thing worth waiting on.
     await this.openPluginRegistry();
-    await this.page.getByTestId(`pluginRegistry.${category}`).getByRole('button').first().click();
+    // The row itself is the tree's control — it holds no nested button — and it selects on a
+    // settled pointer sequence, so a zero-delay click only moves focus and opens nothing.
+    const row = this.page.getByTestId(`pluginRegistry.${category}`);
+    await expect(row).toBeVisible();
+    await row.click({ delay: 100 });
     await expect(this.page.locator('[data-testid^="pluginList."]').first()).toBeVisible();
   }
 
