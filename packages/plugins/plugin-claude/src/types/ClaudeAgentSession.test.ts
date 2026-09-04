@@ -16,7 +16,7 @@ describe('the variable a session credential binds', () => {
   // These configure the container rather than authorising a request: a credential binding is the
   // one place a caller sets an environment variable in a live session, and `0` in the TLS one
   // disables certificate verification outright.
-  test.for(['PATH', 'NODE_OPTIONS', 'NODE_TLS_REJECT_UNAUTHORIZED', 'LD_PRELOAD', 'HTTPS_PROXY'])(
+  test.for(['PATH', 'NODE_OPTIONS', 'NODE_TLS_REJECT_UNAUTHORIZED', 'LD_PRELOAD', 'HTTP_PROXY', 'HTTPS_PROXY'])(
     '%s is rejected',
     (as, { expect }) => {
       expect(accepts(as)).toBe(false);
