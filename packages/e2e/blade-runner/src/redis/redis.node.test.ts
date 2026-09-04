@@ -6,7 +6,6 @@ import { type Message, type PeerId } from '@automerge/automerge-repo';
 import { Redis, type RedisOptions } from 'ioredis';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { type TaggedType } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import {
   EchoTestBuilder,
@@ -16,6 +15,7 @@ import {
 } from '@dxos/echo-client/testing';
 import { PublicKey } from '@dxos/keys';
 import { type TYPES } from '@dxos/protocols';
+import { type TaggedType } from '@dxos/protocols/service-contract';
 import { RpcPeer } from '@dxos/rpc';
 import { openAndClose } from '@dxos/test-utils';
 
