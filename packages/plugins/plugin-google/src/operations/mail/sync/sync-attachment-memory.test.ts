@@ -27,19 +27,25 @@ import { googleSyncTestServices, runGoogleSync } from '../../../testing/sync-fix
 // FIDELITY CAVEAT: this is Node, not workerd. It measures what the pipeline ALLOCATES per attachment
 // byte; it cannot reproduce workerd's 128 MB isolate cap, so read the ratio, not a pass/fail.
 //
-// Measured 2026-09-04, 20 messages per run, marginal cost over the 13.5 MiB no-attachment baseline:
+// Measured 2026-09-04, holding TOTAL payload at 5 MiB and varying only the attachment size. Vary the
+// payload instead and the peak saturates once it passes ~800 MiB, which reads as a falling per-byte
+// cost at the large sizes — an artifact of the ceiling, not a real improvement:
 //
-//   KiB/att   payload    peak heap   marginal
-//         1     0.02 MiB    13.5 MiB    (baseline)
-//        64     1.25 MiB    98.0 MiB      67.6x
-//       256     5.00 MiB   355.4 MiB      68.4x
-//       512    10.00 MiB   856.8 MiB      84.3x
-//      1024    20.00 MiB   812.3 MiB      39.9x  (GC-bound; peak floors out, not a real improvement)
+//   count x size    peak heap   heap delta   per byte
+//      80 x   64K    483.6 MiB    303.0 MiB      60.6x
+//      20 x  256K    623.4 MiB    441.8 MiB      88.4x
+//       5 x 1024K    706.7 MiB    525.4 MiB     105.1x
+//       2 x 2560K    700.2 MiB    519.1 MiB     103.8x
 //
-// Every run reports 20 of 20 blobs INLINE: `operation-service` depends on neither `@dxos/client` nor
-// any other registrant of a blob backend (`registerBlobBackend` appears nowhere in dxos/edge), so the
+// Cost per byte RISES with attachment size and plateaus near 1 MiB, because the peak tracks what the
+// pipeline holds live at once (`fetchConcurrency` 5, `commitPageSize` 10) rather than the run's total
+// — so a few large attachments are worse than many small ones of the same weight. At ~105x, and over
+// a 13.5 MiB no-attachment baseline, (128 - 13.5) / 105 puts a SINGLE 1 MiB attachment on the 128 MiB
+// isolate limit.
+//
+// Every run reports every blob INLINE: `operation-service` depends on neither `@dxos/client` nor any
+// other registrant of a blob backend (`registerBlobBackend` appears nowhere in dxos/edge), so the
 // registry keeps its `'inline'` default and each attachment is embedded in the Automerge document.
-// At ~68x, (128 - 13.5) / 68 means under 2 MiB of attachments exhausts a 128 MiB isolate.
 
 const ATTACHMENT_KB = Number.parseInt(process.env.DX_MEM_KB ?? '512', 10);
 const MESSAGE_COUNT = Number.parseInt(process.env.DX_MEM_COUNT ?? '20', 10);
