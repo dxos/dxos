@@ -17,6 +17,7 @@ export class AppManager {
   shell!: ShellManager;
 
   private _initialized = false;
+  private _close?: () => Promise<void>;
   private _invitationCode = new Trigger<string>();
 
   constructor(private readonly _browser: Browser) {}
@@ -26,13 +27,18 @@ export class AppManager {
       return;
     }
 
-    const { page } = await setupPage(this._browser, { url: INITIAL_URL });
+    const { page, close } = await setupPage(this._browser, { url: INITIAL_URL });
     this.page = page;
+    this._close = close;
     this.page.on('console', (message) => this._onConsoleMessage(message));
     this.shell = new ShellManager(this.page);
     await this.newTodo().waitFor({ state: 'visible' });
     await this.page.getByTestId('placeholder').waitFor({ state: 'hidden' });
     this._initialized = true;
+  }
+
+  async close(): Promise<void> {
+    await this._close?.();
   }
 
   // Getters
