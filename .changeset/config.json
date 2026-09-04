@@ -234,6 +234,7 @@
     ],
     [
       "@dxos/cli",
+      "@dxos/plugin-archify",
       "@dxos/plugin-assistant",
       "@dxos/plugin-atproto",
       "@dxos/plugin-attention",

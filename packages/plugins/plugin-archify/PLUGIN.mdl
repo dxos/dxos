@@ -1,0 +1,98 @@
+---
+id: org.dxos.plugin.archify
+name: ArchifyPlugin
+version: 0.1.0
+---
+
+Archify system-architecture diagrams inside `DXOS` Composer. An agent authors a typed JSON IR;
+a deterministic validator accepts or rejects it with machine-readable repair codes; the same IR
+compiles to SVG on the article, card, section and slide surfaces.
+
+Layout is authored rather than inferred — positions come from explicit coordinates or a fixed
+grid, and routes honour the endpoint sides and waypoints the author chose. The validator's job is
+to check those judgements, not to overrule them.
+
+## Extensions
+
+The following extension dialects are used in this document.
+
+| Term        | URI                          |
+|-------------|------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`      |
+| `component` | `org.dxos.mdl.component@1.0` |
+| `op`        | `org.dxos.mdl.op@1.1`        |
+| `flow`      | `org.dxos.mdl.flow@1.0`      |
+
+## Types
+
+```mdl
+type Diagram
+  desc: An Archify diagram: a name and the typed IR that renders it.
+  fields:
+    name?: string
+    source: Architecture   # the IR, stored structurally so ECHO merges edits field by field
+```
+
+## Components
+
+```mdl
+component Ir
+  desc: Effect schemas for the architecture IR (components, boundaries, connections, guided
+        views, legend cards), transcribed from archify/schemas.
+
+component Layout
+  desc: Deterministic geometry — grid/absolute placement, boundary frames derived from members,
+        side-honouring routes with rounded corners, measured viewBox, and reachability.
+
+component Validate
+  desc: Rule engine producing diagnostics of {code, severity, message, subject, evidence,
+        supportedFixes}. Schema rules run first; geometric rules only once every component
+        resolves to a rect.
+
+component ArchifySvg
+  desc: Pure SVG renderer for a resolved diagram, with focus dimming and selection.
+```
+
+## Operations
+
+```mdl
+op create
+  key: org.dxos.operation.archify.create
+  desc: Creates a diagram, optionally seeded with an IR document; returns its validation report.
+
+op read
+  key: org.dxos.operation.archify.read
+  desc: Returns the stored IR plus its current validation report.
+
+op validate
+  key: org.dxos.operation.archify.validate
+  desc: Checks a candidate IR without storing it, so a draft can be repaired before delivery.
+
+op write
+  key: org.dxos.operation.archify.write
+  desc: Replaces a diagram's IR. Rejected when validation reports an error — the stored diagram
+        is left untouched and the diagnostics describe the repair.
+```
+
+## Flows
+
+```mdl
+flow author
+  desc: The agent loop Archify is built around.
+  steps:
+    - draft the IR from the description or the codebase
+    - validate; repair the field named by each diagnostic's supportedFixes; re-validate
+    - create or write — only a passing document replaces the target
+```
+
+## QA
+
+```mdl
+flow QA-1
+  desc: Agent builds a diagram and it renders in the article.
+  steps:
+    - ask the assistant to diagram a system
+    - the assistant validates a draft, then creates the diagram
+    - open the diagram: the article shows the SVG, the guided views, and the legend cards
+    - select a component: the diagram dims everything it does not reach
+```
