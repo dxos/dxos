@@ -174,7 +174,7 @@ export class SyncClient {
   ): Effect.Effect<{ done: boolean }, unknown, SqlClient.SqlClient | SqlTransaction.SqlTransaction> {
     const self = this;
     return Effect.gen(function* () {
-      const lastPulledPosition = yield* self.#feedStore.getSyncState({
+      const { lastPulledPosition, serverToken } = yield* self.#feedStore.getSyncState({
         spaceId: opts.spaceId,
         feedNamespace: opts.feedNamespace,
       });
@@ -196,6 +196,7 @@ export class SyncClient {
         feedNamespace: opts.feedNamespace,
         position: lastPulledPosition,
         limit: opts.limit,
+        expectedServerToken: serverToken,
       };
       log('feed sync client pull rpc sending', {
         requestId,
@@ -213,6 +214,9 @@ export class SyncClient {
         rpcTag: 'QueryRequest',
       });
       const response = yield* self.#expectResponse<QueryResponse>(requestId, message, 'QueryResponse');
+      // The server answered with `position` ignored, so the batch restarts the namespace.
+      const serverChanged = yield* self.#reconcileServerToken(opts, serverToken, response.serverToken);
+      const basePosition = serverChanged ? -1 : lastPulledPosition;
       if (response.blocks.length === 0) {
         log.trace('feed sync client pull done (empty batch)', {
           requestId,
@@ -230,12 +234,13 @@ export class SyncClient {
       // Update sync state with the max position from the pulled batch.
       const maxPulledPosition = response.blocks.reduce(
         (max, block) => (block.position != null && block.position > max ? block.position : max),
-        lastPulledPosition,
+        basePosition,
       );
       yield* self.#feedStore.setSyncState({
         spaceId: opts.spaceId,
         feedNamespace: opts.feedNamespace,
         lastPulledPosition: maxPulledPosition,
+        serverToken: response.serverToken,
       });
 
       log('feed sync client pull applied batch', {
@@ -264,7 +269,7 @@ export class SyncClient {
   ): Effect.Effect<{ blocksToPull: number }, unknown, SqlClient.SqlClient | SqlTransaction.SqlTransaction> {
     const self = this;
     return Effect.gen(function* () {
-      const lastPulledPosition = yield* self.#feedStore.getSyncState({
+      const { lastPulledPosition, serverToken } = yield* self.#feedStore.getSyncState({
         spaceId: opts.spaceId,
         feedNamespace: opts.feedNamespace,
       });
@@ -286,6 +291,7 @@ export class SyncClient {
         feedNamespace: opts.feedNamespace,
         position: lastPulledPosition,
         limit: opts.limit,
+        expectedServerToken: serverToken,
       };
       yield* self.#sendMessage(ctx, self.#withPeerIds(request)).pipe(
         Effect.tapCause(() => Effect.sync(() => self.#disposeHandler(requestId, cleanupDispose))),
@@ -356,6 +362,22 @@ export class SyncClient {
         rpcTag: 'AppendRequest',
       });
       const response = yield* self.#expectResponse<AppendResponse>(requestId, message, 'AppendResponse');
+      // Positions in the response belong to the responding server, so any stale local ones have to
+      // go before they are applied.
+      const { lastPulledPosition, serverToken } = yield* self.#feedStore.getSyncState({
+        spaceId: opts.spaceId,
+        feedNamespace: opts.feedNamespace,
+      });
+      const serverChanged = yield* self.#reconcileServerToken(opts, serverToken, response.serverToken);
+      if (!serverChanged && response.serverToken != null) {
+        // Recorded on push too, so a client that only ever writes still notices the next swap.
+        yield* self.#feedStore.setSyncState({
+          spaceId: opts.spaceId,
+          feedNamespace: opts.feedNamespace,
+          lastPulledPosition,
+          serverToken: response.serverToken,
+        });
+      }
       yield* self.#feedStore.setPosition({
         spaceId: opts.spaceId,
         blocks: Array.zipWith(response.positions, unpositioned.blocks, (position, block) => ({
@@ -373,6 +395,39 @@ export class SyncClient {
         positionCount: response.positions.length,
       });
       return { done: false };
+    });
+  }
+
+  /**
+   * Compares the token the server reports against the one the local sync state was written under.
+   * Returns true when they differ -- the server was swapped or wiped -- having first dropped every
+   * position derived from the old server so the namespace re-syncs from scratch.
+   *
+   * A first observation (no stored token, including state written before servers reported one) is
+   * adopted without a reset: there is nothing to contradict it.
+   */
+  #reconcileServerToken(
+    opts: { spaceId: SpaceId; feedNamespace: string },
+    storedToken: string | undefined,
+    reportedToken: string | undefined,
+  ): Effect.Effect<boolean, unknown, SqlClient.SqlClient | SqlTransaction.SqlTransaction> {
+    const self = this;
+    return Effect.gen(function* () {
+      if (reportedToken == null || storedToken == null || reportedToken === storedToken) {
+        return false;
+      }
+      log.warn('feed sync server changed, resyncing namespace from scratch', {
+        spaceId: opts.spaceId,
+        feedNamespace: opts.feedNamespace,
+        storedToken,
+        reportedToken,
+      });
+      yield* self.#feedStore.resetSyncState({
+        spaceId: opts.spaceId,
+        feedNamespace: opts.feedNamespace,
+        serverToken: reportedToken,
+      });
+      return true;
     });
   }
 

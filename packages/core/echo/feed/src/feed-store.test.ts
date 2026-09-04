@@ -764,6 +764,108 @@ describe('Feed V2', () => {
   );
 });
 
+describe('FeedStore server token', () => {
+  const seed = (feed: FeedStore, spaceId: SpaceId, feedId: string, count: number) =>
+    feed.appendLocal(
+      Array.from({ length: count }, (_unused, index) => ({
+        spaceId,
+        feedId,
+        feedNamespace: WellKnownNamespaces.data,
+        data: new Uint8Array([index]),
+      })),
+    );
+
+  it.effect('reports its own token from a position authority', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feed.migrate();
+
+      const token = yield* feed.getServerToken(spaceId);
+      const response = yield* feed.query({ spaceId, feedNamespace: WellKnownNamespaces.data });
+      expect(response.serverToken).toBe(token);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  // A replica's own token says nothing about the ordering it caches, and reporting it would make a
+  // client treat its peer as the position authority.
+  it.effect('reports no token from a store that does not assign positions', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: false });
+      yield* feed.migrate();
+
+      const response = yield* feed.query({ spaceId, feedNamespace: WellKnownNamespaces.data });
+      expect(response.serverToken).toBeUndefined();
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('honours position for a client that sends a matching token or none', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = EntityId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feed.migrate();
+      yield* seed(feed, spaceId, feedId, 5);
+      const token = yield* feed.getServerToken(spaceId);
+
+      const legacyClient = yield* feed.query({ spaceId, feedNamespace: WellKnownNamespaces.data, position: 2 });
+      expect(legacyClient.blocks.map((block) => block.position)).toEqual([3, 4]);
+
+      const currentClient = yield* feed.query({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        position: 2,
+        expectedServerToken: token,
+      });
+      expect(currentClient.blocks.map((block) => block.position)).toEqual([3, 4]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('ignores position when the client expected a different server', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = EntityId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feed.migrate();
+      yield* seed(feed, spaceId, feedId, 5);
+
+      const response = yield* feed.query({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        position: 2,
+        expectedServerToken: 'token-of-a-server-that-is-gone',
+      });
+      expect(response.blocks.map((block) => block.position)).toEqual([0, 1, 2, 3, 4]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('resetSyncState strips positions and restarts progress under the new token', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = EntityId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feed.migrate();
+      yield* seed(feed, spaceId, feedId, 3);
+      yield* feed.setSyncState({
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        lastPulledPosition: 2,
+        serverToken: 'old',
+      });
+
+      yield* feed.resetSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data, serverToken: 'new' });
+
+      expect(yield* feed.getSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data })).toEqual({
+        lastPulledPosition: -1,
+        serverToken: 'new',
+      });
+      const { blocks } = yield* feed.query({ spaceId, feedNamespace: WellKnownNamespaces.data });
+      expect(blocks.map((block) => block.position)).toEqual([null, null, null]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+});
+
 describe('FeedStore encryption', () => {
   const PLAINTEXT = new Uint8Array([9, 8, 7, 6, 5]);
   const makeCypher = () => createInMemoryKeyProvider().then((keyProvider) => createWebCryptoCypher({ keyProvider }));
