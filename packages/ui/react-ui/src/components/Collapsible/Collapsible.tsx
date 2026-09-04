@@ -8,7 +8,7 @@
 // or unmounts it around that animation. A stack of these under one caller-owned expansion set is an
 // accordion; the machine is per-section so each one stays independent of how the stack is rendered.
 
-import { Collapsible as CollapsiblePrimitive } from '@ark-ui/react/collapsible';
+import { Collapsible as CollapsiblePrimitive, useCollapsibleContext } from '@ark-ui/react/collapsible';
 import React from 'react';
 
 import { type SlottableProps } from '@dxos/ui-types';
@@ -77,6 +77,9 @@ type CollapsibleTriggerProps = SlottableProps;
 const CollapsibleTrigger = slottable<HTMLButtonElement>(({ asChild, children, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   const { className, ...rest } = composableProps(props);
+  // Read from the machine rather than a prop: `disabled` is declared on the root, so the trigger
+  // would otherwise style itself as interactive on a section that cannot be folded.
+  const { disabled } = useCollapsibleContext();
 
   return (
     <CollapsiblePrimitive.Trigger
@@ -84,7 +87,7 @@ const CollapsibleTrigger = slottable<HTMLButtonElement>(({ asChild, children, ..
       asChild={asChild}
       // The machine renders a button, which submits the form around it unless told otherwise.
       type='button'
-      className={tx('collapsible.trigger', {}, className)}
+      className={tx('collapsible.trigger', { disabled }, className)}
       ref={forwardedRef}
     >
       {children}

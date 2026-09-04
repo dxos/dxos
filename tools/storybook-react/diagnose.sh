@@ -26,15 +26,24 @@ WAIT=600
 WATCH=0
 ENSURE=0
 
+# `set -u` would abort on a bare `$2`, losing the exit-2 path below; and an unvalidated value lets
+# `--port --watch` silently consume the next flag as the port.
+number_arg() {
+  case "${2-}" in
+    '' | *[!0-9]*) echo "$1 needs a number" >&2; exit 2 ;;
+  esac
+  echo "$2"
+}
+
 while [ $# -gt 0 ]; do
   case "$1" in
     --watch) WATCH=1 ;;
     --ensure) ENSURE=1 ;;
-    --port) PORT="$2"; shift ;;
-    --interval) INTERVAL="$2"; shift ;;
-    --timeout) TIMEOUT="$2"; shift ;;
-    --wait) WAIT="$2"; shift ;;
-    -h|--help) sed -n '4,16p' "${BASH_SOURCE[0]}"; exit 0 ;;
+    --port) PORT="$(number_arg "$1" "${2-}")"; shift ;;
+    --interval) INTERVAL="$(number_arg "$1" "${2-}")"; shift ;;
+    --timeout) TIMEOUT="$(number_arg "$1" "${2-}")"; shift ;;
+    --wait) WAIT="$(number_arg "$1" "${2-}")"; shift ;;
+    -h|--help) sed -n '4,18p' "${BASH_SOURCE[0]}"; exit 0 ;;
     *) echo "unknown option: $1" >&2; exit 2 ;;
   esac
   shift
@@ -55,8 +64,14 @@ cpu_of() {
 
 capture() {
   local pid="$1" reason="$2"
-  mkdir -p "${OUT_DIR}"
-  local out="${OUT_DIR}/storybook-diagnosis-$(date +%Y%m%d-%H%M%S).txt"
+  mkdir -p "${OUT_DIR}" || { echo "cannot write to ${OUT_DIR}" >&2; return 1; }
+  # `mktemp`, not a timestamp: two captures in the same second (a second watcher, or a manual run
+  # racing the automatic one) would otherwise share a path and truncate each other's report.
+  local out
+  out="$(mktemp "${OUT_DIR}/storybook-diagnosis-$(date +%Y%m%d-%H%M%S)-XXXXXX")" || {
+    echo "cannot allocate a report file in ${OUT_DIR}" >&2
+    return 1
+  }
 
   {
     echo "=== storybook :${PORT} pid ${pid} @ $(date -u +%Y-%m-%dT%H:%M:%SZ) ==="
@@ -192,6 +207,7 @@ fi
 
 echo "$(date +%H:%M:%S) watching :${PORT} (pid ${PID}) every ${INTERVAL}s."
 hot=0
+watched="${PID}"
 while true; do
   sleep "${INTERVAL}"
 
@@ -207,6 +223,13 @@ while true; do
     [ -z "${PID}" ] && { echo "gave up after ${WAIT}s."; exit 1; }
     hot=0
     continue
+  fi
+
+  # A restart puts a different process on the port; its predecessor's hot polls must not count
+  # toward this one's threshold.
+  if [ "${PID}" != "${watched:-}" ]; then
+    watched="${PID}"
+    hot=0
   fi
 
   reason=""
