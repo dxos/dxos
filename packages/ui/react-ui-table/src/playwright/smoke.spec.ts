@@ -5,6 +5,7 @@
 import { expect, test } from '@playwright/test';
 
 import { type DxGrid } from '@dxos/lit-grid';
+import { DxGridManager } from '@dxos/lit-grid/testing';
 import { random } from '@dxos/random';
 import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 
@@ -191,7 +192,7 @@ test.describe('Table', () => {
 
     // Focus should already be on the new row; engage edit mode.
     await page.keyboard.press('Enter');
-    await page.getByTestId('grid.cell-editor').waitFor({ state: 'visible' });
+    await table.grid.cellEditorReady();
 
     // Type text and confirm.
     const cellContent = 'New row content';
@@ -271,6 +272,7 @@ test.describe('Table', () => {
     // The contactModel is used in the second Table.Main component in the story
     const dxGrid = page.locator('dx-grid').nth(1);
     await dxGrid.waitFor({ state: 'visible' });
+    const grid = new DxGridManager(page, dxGrid);
 
     // Scroll to the last column (column 4)
     await dxGrid.evaluate(async (dxGridElement: DxGrid) => {
@@ -314,7 +316,7 @@ test.describe('Table', () => {
     const nonRefCell = dxGrid.locator('[data-dx-grid-plane="grid"] [aria-rowindex="0"][aria-colindex="6"]');
     await nonRefCell.click();
     await page.keyboard.press('Enter');
-    await page.getByTestId('grid.cell-editor').waitFor({ state: 'visible' });
+    await grid.cellEditorReady();
     await page.keyboard.type(nonRefContent, { delay: 500 });
     await page.keyboard.press('Enter');
     await expect(nonRefCell).toHaveText(nonRefContent);

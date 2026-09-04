@@ -10,7 +10,7 @@ tasks:
   # to live in a react-ui package. None of them were visible without tracing the graph.
   check-module-structure:
     command: >-
-      pnpm exec dx-trace-imports
+      bun $workspaceRoot/tools/dx-trace-imports/cli.js
       --from src/bin.ts
       --to "{react,react-dom}"
       --conditions node
@@ -44,6 +44,8 @@ tasks:
       - bunfig.toml
       - package.json
       - LICENSE
+      # Baked into the binary, so a change to it has to invalidate the cached artifact.
+      - $DX_CLI_POSTHOG_API_KEY
       # The pinned bun version is part of the artifact — 1.3.4 produced binaries that leaked `--smol`
       # into `process.argv`, so a bump has to invalidate the cache.
       - /.prototools

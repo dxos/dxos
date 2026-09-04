@@ -68,12 +68,13 @@ export const TraceToolbar = ({ selected, onSelectedChange }: TraceToolbarProps) 
           },
         )
         .build(),
-    [selected, handleToggle, onSelectedChange],
+    [handleToggle, selected, onSelectedChange],
   );
 
   return (
     <Menu.Root {...menu} alwaysActive>
-      <Menu.Toolbar classNames='justify-end border-be border-subdued-separator'>
+      <Menu.Toolbar classNames='justify-between border-be border-subdued-separator'>
+        <h1 className='px-1'>Processes</h1>
         <Menu.Items />
       </Menu.Toolbar>
     </Menu.Root>

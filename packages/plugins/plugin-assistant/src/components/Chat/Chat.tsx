@@ -45,6 +45,7 @@ import { AiUsageQuotaError, type ProcessorRequestContext } from '../../processor
 import {
   ChatActivity,
   ChatStatus,
+  ChatStatusStack,
   ChatPrompt as NaturalChatPrompt,
   type ChatPromptProps as NaturalChatPromptProps,
 } from '../ChatPrompt';
@@ -796,6 +797,7 @@ export const Chat = {
   Queue: ChatQueue,
   Activity: ChatActivity,
   Status: ChatStatus,
+  StatusStack: ChatStatusStack,
   Thread: ChatThread,
   Outline: ChatOutline,
 };

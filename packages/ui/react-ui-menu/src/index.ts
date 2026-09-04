@@ -14,5 +14,5 @@ export {
   fallbackIcon,
 } from './util';
 export { type ActionGroupBuilder, type ActionGroupBuilderFn, MenuBuilder } from './builder';
-export { TOOLBAR_DISPOSITION, isToolbarAction } from './toolbar';
+export { PROMPT_DISPOSITION, TOOLBAR_DISPOSITION, isPromptAction, isToolbarAction } from './toolbar';
 export { applyPresentation } from './presentation';
