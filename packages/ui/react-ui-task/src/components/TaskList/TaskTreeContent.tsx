@@ -343,9 +343,10 @@ const TaskTreeHeading = ({
         ))}
       <TaskStatusControl task={task} classNames='col-[status]' onTaskUpdate={onTaskUpdate} />
       <span className='col-[title] self-center min-w-0 truncate'>{current.title}</span>
-      {/* The row's second line, spanning from the title to the row's end: it has to clear the
-          ordinal and the status control, or it reads as belonging to the row above. */}
-      {description && <TaskDescription content={description} classNames='col-[title/tree-row-end] row-start-2 pb-1' />}
+      {/* The row's second line, running under the title and its chips only: it has to clear the
+          ordinal and the status control, or it reads as belonging to the row above, and it must stop
+          short of the trailing controls so it does not run beneath the estimate, priority and menu. */}
+      {description && <TaskDescription content={description} classNames='col-[title/chips-end] row-start-2 pb-1' />}
     </>
   );
 };
