@@ -307,6 +307,7 @@ const CarouselCaption = ({ children, classNames }: CarouselCaptionProps) => {
   if (content == null || content === false || content === '') {
     return null;
   }
+
   return (
     // TODO(burdon): Move to ui-theme.
     <div className='col-start-2'>

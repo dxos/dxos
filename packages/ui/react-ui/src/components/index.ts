@@ -10,6 +10,7 @@ export * from './Calendar';
 export * from './Card';
 export * from './Carousel';
 export * from './Clipboard';
+export * from './Collapsible';
 export * from './Column';
 export * from './DatePicker';
 export * from './Deferred';
