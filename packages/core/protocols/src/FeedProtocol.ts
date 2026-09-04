@@ -345,19 +345,31 @@ export const isWellKnownNamespace = (namespace: string) =>
   Object.values(WellKnownNamespaces).includes(namespace as any);
 
 /**
- * Encodes queue replicator service identifier as `<service>:<namespace>:<spaceId>`.
+ * Encodes queue replicator service identifier as `<service>:<spaceId>:<namespace>`.
+ *
+ * The space id comes first, matching every other replicator (`<service>:<spaceId>`). It used to
+ * come second, which meant EDGE could not read the addressed space at a shared segment index and
+ * fell back to a KV lookup per frame on its highest-volume path.
  */
 export const encodeServiceId = (namespace: string, spaceId: SpaceId) =>
-  `${EdgeService.QUEUE_REPLICATOR}:${namespace}:${spaceId}`;
+  `${EdgeService.QUEUE_REPLICATOR}:${spaceId}:${namespace}`;
 
 /**
  * Decodes and validates queue replicator service identifier.
+ *
+ * Accepts the legacy `<service>:<namespace>:<spaceId>` ordering as well, since clients on the old
+ * encoding stay in the field until Composer production has rolled over. The two are told apart by
+ * which segment is a valid space id, so neither needs a version marker.
+ *
+ * TODO(DX-1152): drop the legacy ordering once the space-id-first encoding has reached Composer
+ *   production, along with the matching fallback in EDGE's `resolveServiceSpaceId`.
  */
 export const decodeServiceId = (
   serviceId: string,
 ): { namespace: keyof typeof WellKnownNamespaces; spaceId: SpaceId } => {
-  const [service, namespace, spaceId] = serviceId.split(':');
+  const [service, first, second] = serviceId.split(':');
   invariant(service === EdgeService.QUEUE_REPLICATOR, `Invalid service: ${service}`);
+  const [namespace, spaceId] = SpaceId.isValid(first) ? [second, first] : [first, second];
   invariant(isWellKnownNamespace(namespace), `Invalid namespace: ${namespace}`);
   invariant(SpaceId.isValid(spaceId), `Invalid spaceId: ${spaceId}`);
   return { namespace: namespace as keyof typeof WellKnownNamespaces, spaceId };
