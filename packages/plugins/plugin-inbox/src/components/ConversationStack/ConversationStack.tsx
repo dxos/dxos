@@ -592,13 +592,18 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
                 {sender}
               </Collapsible.Trigger>
             </h2>
-            {isExpanded ? (
-              <>{subject && <div className='font-medium line-clamp-2'>{subject}</div>}</>
-            ) : (
-              <div className='text-sm text-description line-clamp-1' data-testid={summary && 'message.summary'}>
-                {summary ?? snippet}
-              </div>
-            )}
+            {/* One line in one fixed box whichever state the tile is in: a stack shows folded and open
+                tiles at once, and a summary line shorter than a subject line makes the two read as
+                different row heights. Pinned rather than merely clamped, so a message with no subject
+                still holds the line. */}
+            <div
+              // `leading-6` last: `text-sm` carries a line height of its own, and the two states only
+              // share a baseline if the line box is 24px in both.
+              className={mx(isExpanded ? 'font-medium' : 'text-sm text-description', 'h-6 leading-6 line-clamp-1')}
+              data-testid={!isExpanded && summary ? 'message.summary' : undefined}
+            >
+              {isExpanded ? subject : (summary ?? snippet)}
+            </div>
           </div>
 
           <div className='col-start-3 flex items-center'>
