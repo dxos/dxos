@@ -34,6 +34,7 @@ import {
   applyOpfsPragmas,
   checkpointWal,
 } from './opfs-pragmas';
+import { logSqliteQuery, summarizeLoggedParams } from './query-log';
 
 export type { SqliteJournalMode, SqliteSynchronous } from './opfs-pragmas';
 
@@ -97,28 +98,6 @@ const importDatabase = (
   });
 };
 
-/** Log context is truncated at a fixed length; oversized params (blobs, long strings) must not push `time` out of it. */
-const MAX_LOGGED_PARAM_STRING_LENGTH = 64;
-
-const summarizeLoggedParam = (value: unknown): unknown => {
-  if (typeof value === 'string' && value.length > MAX_LOGGED_PARAM_STRING_LENGTH) {
-    return `${value.slice(0, MAX_LOGGED_PARAM_STRING_LENGTH)}…(${value.length} chars)`;
-  }
-  if (value instanceof Uint8Array) {
-    return `<Uint8Array ${value.length} bytes>`;
-  }
-  if (value instanceof ArrayBuffer) {
-    return `<ArrayBuffer ${value.byteLength} bytes>`;
-  }
-  if (Array.isArray(value) && value.length > MAX_LOGGED_PARAM_STRING_LENGTH) {
-    return `<Array ${value.length} items>`;
-  }
-  return value;
-};
-
-const summarizeLoggedParams = (params: ReadonlyArray<unknown>): ReadonlyArray<unknown> =>
-  params.map(summarizeLoggedParam);
-
 const recordSqliteQueryMetrics = (
   sql: string,
   params: ReadonlyArray<unknown>,
@@ -126,12 +105,7 @@ const recordSqliteQueryMetrics = (
   begin: number,
 ): void => {
   const end = performance.now();
-  log('sqlite query', {
-    sql: sql.replace(/\s+/g, ' ').trim(),
-    params: summarizeLoggedParams(params),
-    results: resultCount,
-    time: end - begin,
-  });
+  logSqliteQuery({ sql, params, results: resultCount, time: end - begin });
   performance.measure(sql.slice(0, 128), {
     start: begin,
     end: end,

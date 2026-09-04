@@ -42,6 +42,7 @@
     "src"
   ],
   "dependencies": {
+    "@ark-ui/react": "catalog:",
     "@dxos/async": "workspace:*",
     "@dxos/i18n": "workspace:*",
     "@dxos/invariant": "workspace:*",

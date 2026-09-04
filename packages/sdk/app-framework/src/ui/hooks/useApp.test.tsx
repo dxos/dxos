@@ -6,12 +6,13 @@ import { assert, describe, it } from '@effect/vitest';
 import { render, waitFor } from '@testing-library/react';
 import * as Effect from 'effect/Effect';
 import React from 'react';
+import { vi } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
 import { ActivationEvents, Capabilities } from '../../common';
 import { Capability, Plugin, PluginManager } from '../../core';
-import { useApp } from './useApp';
+import { STARTUP_FAILED_EVENT, type StartupDiagnostics, useApp } from './useApp';
 
 const String = Capability.makeSingleton<{ string: string }>()('org.dxos.test.string');
 const testMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.test'), name: 'Test', tags: ['system'] });
@@ -29,6 +30,90 @@ const TestHost = ({ manager }: { manager: PluginManager.PluginManager }) => {
   const App = useApp({ pluginManager: manager });
   return <App />;
 };
+
+const TimedHost = ({ manager }: { manager: PluginManager.PluginManager }) => {
+  const App = useApp({ pluginManager: manager, timeout: 100 });
+  return <App />;
+};
+
+describe('useApp startup failure reporting', () => {
+  it.effect('a module that fails to activate reports diagnostics on the error and the event', () =>
+    Effect.gen(function* () {
+      const plugin = Plugin.define(testMeta).pipe(
+        Plugin.addModule({
+          id: 'Failing',
+          activatesOn: ActivationEvents.Startup,
+          activate: () => Effect.fail(new Error('TEST: module failed')),
+        }),
+        Plugin.make,
+      )();
+
+      const manager = PluginManager.make({ pluginLoader: pluginLoader([plugin]), plugins: [plugin] });
+      manager.capabilities.contribute({
+        interface: Capabilities.PluginManager,
+        implementation: manager,
+        module: 'org.dxos.app-framework.plugin-manager',
+      });
+      manager.capabilities.contribute({
+        interface: Capabilities.AtomRegistry,
+        implementation: manager.registry,
+        module: 'org.dxos.app-framework.atom-registry',
+      });
+
+      const reported: StartupDiagnostics[] = [];
+      const listener = (event: CustomEvent<StartupDiagnostics>) => reported.push(event.detail);
+      window.addEventListener(STARTUP_FAILED_EVENT, listener);
+
+      const { unmount } = render(<TestHost manager={manager} />);
+      yield* Effect.promise(() => waitFor(() => assert.strictEqual(reported.length, 1)));
+      window.removeEventListener(STARTUP_FAILED_EVENT, listener);
+      unmount();
+
+      assert.strictEqual(reported[0].startupFailureKind, 'module-error');
+      assert.isString(reported[0].startupEventsFired);
+      assert.isNumber(reported[0].startupTotalModules);
+    }),
+  );
+
+  it.effect('the deadline names the modules still in flight, not the last one to start', () =>
+    Effect.gen(function* () {
+      vi.stubEnv('DEV', false);
+      const plugin = Plugin.define(testMeta).pipe(
+        Plugin.addModule({
+          id: 'NeverResolves',
+          activatesOn: ActivationEvents.Startup,
+          activate: () => Effect.never,
+        }),
+        Plugin.make,
+      )();
+
+      const manager = PluginManager.make({ pluginLoader: pluginLoader([plugin]), plugins: [plugin] });
+      manager.capabilities.contribute({
+        interface: Capabilities.PluginManager,
+        implementation: manager,
+        module: 'org.dxos.app-framework.plugin-manager',
+      });
+      manager.capabilities.contribute({
+        interface: Capabilities.AtomRegistry,
+        implementation: manager.registry,
+        module: 'org.dxos.app-framework.atom-registry',
+      });
+
+      const reported: StartupDiagnostics[] = [];
+      const listener = (event: CustomEvent<StartupDiagnostics>) => reported.push(event.detail);
+      window.addEventListener(STARTUP_FAILED_EVENT, listener);
+
+      const { unmount } = render(<TimedHost manager={manager} />);
+      yield* Effect.promise(() => waitFor(() => assert.strictEqual(reported.length, 1), { timeout: 5_000 }));
+      window.removeEventListener(STARTUP_FAILED_EVENT, listener);
+      unmount();
+      vi.unstubAllEnvs();
+
+      assert.strictEqual(reported[0].startupFailureKind, 'timeout');
+      assert.include(reported[0].startupInFlightModules, 'NeverResolves');
+    }),
+  );
+});
 
 describe('useApp cleanup integration', () => {
   it.effect('external manager is not shut down when useApp does not own it', () =>

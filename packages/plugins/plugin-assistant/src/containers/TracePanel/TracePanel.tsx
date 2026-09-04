@@ -285,6 +285,7 @@ const ProcessTreeContainer = ({
     () => filterProcesses(processesDeferred, environments),
     [processesDeferred, environments],
   );
+
   // A process only knows the feed it serves, so the chat's name is joined in here rather than
   // carried on the process itself.
   const chats = useQuery(space.db, Filter.type(Chat.Chat));
@@ -298,6 +299,7 @@ const ProcessTreeContainer = ({
     }
     return names;
   }, [chats]);
+
   // Only the agent process itself is renamed: its children inherit the conversation environment and
   // keep their own operation names.
   const resolveLabel = useCallback(
@@ -315,9 +317,9 @@ const ProcessTreeContainer = ({
 
   return (
     <ProcessTree
+      depth={3}
       processes={visibleProcesses}
       resolveLabel={resolveLabel}
-      depth={3}
       onProcessSelect={onProcessSelect}
       onProcessTerminate={onProcessTerminate}
     />
