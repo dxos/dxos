@@ -175,9 +175,13 @@ export const Loader: Component<LoaderProps> = (props) => {
               element and restart its entrance animation. */}
           <Index each={props.store.plugins()}>
             {(plugin) => (
-              <svg class='boot-loader-plugin' viewBox='0 0 256 256'>
-                <use href={`${props.spritePath ?? DEFAULT_SPRITE_PATH}#${plugin().icon}`} />
-              </svg>
+              // Wrapper owns the slot — size, spacing, and the entrance animation — so the glyph
+              // inside can be restyled (a chip, a badge, a hover affordance) without touching either.
+              <div class='boot-loader-plugin'>
+                <svg class='boot-loader-plugin-icon' viewBox='0 0 256 256'>
+                  <use href={`${props.spritePath ?? DEFAULT_SPRITE_PATH}#${plugin().icon}`} />
+                </svg>
+              </div>
             )}
           </Index>
         </div>

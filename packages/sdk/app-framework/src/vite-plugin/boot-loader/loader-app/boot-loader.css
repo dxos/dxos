@@ -397,11 +397,19 @@ body {
   width: 40px;
   height: 40px;
   flex: 0 0 auto;
+  display: grid;
+  place-items: center;
   /* Monotone — the arrival reads from opacity alone, which keeps the row quiet. */
   color: currentColor;
-  fill: currentColor;
   opacity: 0.2;
   animation: boot-loader-plugin-in 600ms ease-out both;
+}
+
+/* The glyph itself. Styled apart from its slot so either can change without disturbing the other. */
+.boot-loader-plugin-icon {
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
 }
 
 @keyframes boot-loader-plugin-in {
