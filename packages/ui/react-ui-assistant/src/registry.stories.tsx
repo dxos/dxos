@@ -54,6 +54,17 @@ type Story = StoryObj<typeof meta>;
 // DOM widgets
 //
 
+/**
+ * The shape {@link createRenderer} actually emits for a synthetic-only turn (an alarm wake-up, a
+ * continuation nudge): the tags hug the content and the prose keeps its own line breaks.
+ */
+export const SyntheticTurn: Story = {
+  args: {
+    content:
+      '<synthetic>Your scheduled alarm fired (it was set for 2026-09-04T06:20:11.153Z).\nPoll the agent session — it flagged a problem with the merge going through while checks were pending.</synthetic>',
+  },
+};
+
 export const Prompt: Story = {
   args: {
     content: '<prompt>Hello world!</prompt>',
@@ -299,7 +310,7 @@ export const ToolkitOperations: Story = {
   },
 };
 
-/** Status and reasoning narrate the run from inside its panel, and the summary leads with status. */
+/** Status and reasoning narrate the run from inside its panel; settled, the summary counts. */
 export const ToolkitNarrated: Story = {
   args: {
     content: toolkit([
@@ -310,6 +321,36 @@ export const ToolkitNarrated: Story = {
       operationCall('tc-2', 'space-query', 'Query space', 'ph--planet--regular'),
       result('tc-2', 'space-query', { hits: 12 }),
     ]),
+  },
+};
+
+/** The same run mid-flight: the summary leads with the narration, since the step is still open. */
+export const ToolkitNarratedRunning: Story = {
+  args: {
+    content: toolkit([
+      reasoning('The document has to be read before it can be edited, so the read comes first.'),
+      operationCall('tc-1', 'markdown-update', 'Update document', 'ph--file-text--regular'),
+      result('tc-1', 'markdown-update', { ok: true }),
+      status('Indexing the space'),
+      operationCall('tc-2', 'space-query', 'Query space', 'ph--planet--regular'),
+    ]),
+  },
+};
+
+/** A run that never reached a call: the panel is the model saying what it is doing, nothing more. */
+export const ToolkitNarrationOnly: Story = {
+  args: {
+    content: toolkit([
+      status('Reading the space'),
+      reasoning('The document has to be read before it can be edited, so the read comes first.'),
+    ]),
+  },
+};
+
+/** A lone status, which is what a run looks like mid-stream: a plain row, with nothing to open. */
+export const ToolkitStatus: Story = {
+  args: {
+    content: toolkit([status('Reading the space')]),
   },
 };
 

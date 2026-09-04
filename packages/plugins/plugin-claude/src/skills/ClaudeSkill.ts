@@ -18,8 +18,7 @@ export const operations: readonly Operation.Definition.Any[] = [
   ClaudeAgentOperation.DeployAgent,
   ClaudeAgentOperation.StartSession,
   ClaudeAgentOperation.SendMessage,
-  ClaudeAgentOperation.SetSessionCredentials,
-  ClaudeAgentOperation.RevokeSessionCredentials,
+  ClaudeAgentOperation.UpdateSessionCredentials,
   ClaudeAgentOperation.GetTranscript,
 ];
 
@@ -71,11 +70,33 @@ export const make = (): Skill.Skill =>
            prompt or a message — both persist in the session's history. If the credential is not in
            the space yet, prompt for it as described under Missing credentials below.
 
-        Bind at start with Start Claude Agent Session's \`credentials\`; bind or rotate on a session
-        that is already running with Set Claude Agent Session Credentials — it takes effect on the
-        session's next operation, so a 401 mid-run is fixed by attaching the credential and letting
-        the agent retry, not by restarting. Revoke Claude Agent Session Credentials removes one when
-        the work that needed it is done; do that as a matter of course for a short-lived grant.
+        Bind at start with Start Claude Agent Session's \`credentials\`. Every later change goes
+        through Update Claude Agent Session Credentials, which is one tool with three modes —
+        \`credentials\` binds or rotates the ones you name, \`refresh: true\` re-reads every credential
+        the session already holds, and \`revoke\` removes names. A change takes effect on the session's
+        next operation, so a 401 mid-run is fixed by updating the credential and letting the agent
+        retry, never by restarting the session or starting a second one. Revoke as a matter of course
+        when a short-lived grant's work is done.
+
+        ## GitHub
+        An agent has no GitHub access of its own: the container is bare and its \`gh\` is
+        unauthenticated. If the work touches GitHub at all — cloning, pushing a branch, opening a PR,
+        reading an issue — bind the space's GitHub credential BEFORE the agent needs it rather than
+        after it fails:
+        1. Find the token: query \`org.dxos.type.accessToken\` for \`source: "github.com"\`. Nothing
+           there means GitHub is not connected — emit the connector prompt for \`github.com\` with the
+           permissions the work needs (see Missing credentials below) and stop.
+        2. Bind its ref as \`GH_TOKEN\`, and tell the agent in the session message that its GitHub
+           token is in \`GH_TOKEN\` — the variable name, never the value, which you must not read.
+
+        The GitHub credential is an OAuth token and rotates often. A rotation refreshes the
+        AccessToken IN PLACE, so the ref stays valid, but a session's vault holds the value read at
+        bind time and NOTHING propagates a rotation into a running container. So a session that was
+        pushing fine and now gets 401 or 403 from GitHub has a stale token, not a permissions
+        problem: call Update Claude Agent Session Credentials with \`refresh: true\` — which re-reads
+        every ref the session recorded and writes the current value back — and tell the agent to
+        retry. Refresh rather than restarting the session, and refresh before a long GitHub run
+        rather than trusting an earlier bind to still hold.
 
         ## Missing credentials
         A session that goes idle with \`stopReason: requires_action\` is blocked, and a missing
@@ -87,7 +108,7 @@ export const make = (): Skill.Skill =>
 
         \`service\` is the domain, \`scopes\` the permissions the agent actually needs, \`reason\` one
         sentence on why. Then stop and wait; once the user attaches it, bind it to the live session
-        with Set Claude Agent Session Credentials and send a message telling the agent to retry.
+        with Update Claude Agent Session Credentials and send a message telling the agent to retry.
 
         ## Environments
         An environment id (\`env_…\`) is the container template a session runs in. You do not need one
@@ -109,7 +130,11 @@ export const make = (): Skill.Skill =>
         - The transcript returns the most recent \`limit\` events, oldest-first within that window;
           pass \`order: first\` to read the opening of a long session instead.
         - The transcript returns only user and agent prose. Tool calls, thinking signals and status
-          events are omitted, so a quiet transcript on a running session is normal.
+          events are omitted, so a quiet transcript on a running session is normal. An empty window is
+          not a stall either: it returns recent events only, and a long report pushes earlier ones out
+          of view — check elapsed time and \`status\` before concluding anything.
+        - Reuse one session for a work-stream. It keeps its cloned repos, installed tooling and
+          accumulated context; a second session for the same work pays for all of that again.
         - Managed agents compact their own context, so a session never dies of a full context window.
           Treat "running out of context", "approaching the context limit" or a similar warning in the
           transcript as narration, not a fault: do not restart the session, start a fresh one, or
