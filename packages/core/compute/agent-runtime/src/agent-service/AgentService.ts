@@ -7,6 +7,7 @@
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import type * as Scope from 'effect/Scope';
 import * as Semaphore from 'effect/Semaphore';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
@@ -130,16 +131,21 @@ export interface AgentServiceOptions {
    * Provider for space-level MCP server configs.
    */
   getMcpServers?: () => McpServer.McpServer[];
+
+  /**
+   * Resolves the manager that hosts `location: 'edge'` sessions, on demand. Absent — only local
+   * agents can run. Resolved per call rather than required by this layer: a build-time requirement
+   * would prune the whole provider (and `AgentService` with it) on a stack hosting only local
+   * agents.
+   */
+  getRemoteManager?: () => Effect.Effect<RemoteProcessManager.Manager, unknown, Scope.Scope>;
 }
 
-export const layer = (
-  opts?: AgentServiceOptions,
-): Layer.Layer<AgentService, never, ProcessManager.Service | RemoteProcessManager.Service> =>
+export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, never, ProcessManager.Service> =>
   Layer.effect(
     AgentService,
     Effect.gen(function* () {
       const processManager = yield* ProcessManager.Service;
-      const remote = yield* RemoteProcessManager.Service;
 
       // Spaces an edge session has been opened on this run. One remote manager spans them all and
       // each of its verbs takes the space it addresses, so this is what `hydrate` has to walk.
@@ -166,17 +172,32 @@ export const layer = (
         if (!spaceId) {
           throw new Error('Agent requested on edge, but its conversation has no space.');
         }
-        const { list, spawn } = remote;
-        if (!list || !spawn) {
-          throw new Error('Agent requested on edge, but RemoteProcessManager offers no process control.');
+        const getRemoteManager = opts?.getRemoteManager;
+        if (!getRemoteManager) {
+          throw new Error('Agent requested on edge, but no RemoteProcessManager is available.');
         }
+        // Scoped per call: the manager itself is owned by the stack that resolves it, so the scope
+        // covers only the resolution.
+        const withRemote = <A>(use: (manager: RemoteProcessManager.Manager) => Effect.Effect<A>) =>
+          Effect.scoped(Effect.flatMap(getRemoteManager(), use)).pipe(Effect.orDie);
         remoteSpaces.add(spaceId);
         return {
-          list: (options: ProcessManager.ListOptions) => list({ spaceId, ...options }),
+          list: (options: ProcessManager.ListOptions) =>
+            withRemote((manager) => {
+              if (!manager.list) {
+                throw new Error('Agent requested on edge, but RemoteProcessManager offers no process control.');
+              }
+              return manager.list({ spaceId, ...options });
+            }),
           spawn: (definition: ReturnType<typeof makeExecutable>, options: ProcessManager.SpawnOptions) =>
-            // Only the key crosses the wire; the definition stays local, supplying the codecs and the
-            // RPC group the returned handle is typed by.
-            spawn({ spaceId, key: definition.key, definition, ...options }),
+            withRemote((manager) => {
+              if (!manager.spawn) {
+                throw new Error('Agent requested on edge, but RemoteProcessManager offers no process control.');
+              }
+              // Only the key crosses the wire; the definition stays local, supplying the codecs and
+              // the RPC group the returned handle is typed by.
+              return manager.spawn({ spaceId, key: definition.key, definition, ...options });
+            }),
         };
       };
 
