@@ -310,7 +310,7 @@ const CarouselCaption = ({ children, classNames }: CarouselCaptionProps) => {
   return (
     // TODO(burdon): Move to ui-theme.
     <div className='col-start-2'>
-      <p className={mx('text-center text-description', classNames)}>{content}</p>
+      <p className={mx('text-center text-description tabular-nums', classNames)}>{content}</p>
     </div>
   );
 };
