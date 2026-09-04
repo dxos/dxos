@@ -369,8 +369,8 @@ describe('Observability', () => {
         );
         expect(yield* Effect.promise(() => obs.support.uploadLogs())).toBe('logs/1.ndjson');
         expect(obs.support.sessionContext()).toEqual({ distinctId: 'd', widgetSessionId: 'w' });
-        yield* Effect.promise(() => obs.support.flushLogs('ticket-1'));
-        expect(flushLogs).toHaveBeenCalledWith('ticket-1');
+        yield* Effect.promise(() => obs.support.flushLogs({ ticketId: 'ticket-1' }));
+        expect(flushLogs).toHaveBeenCalledWith({ ticketId: 'ticket-1' });
       }),
     );
 

@@ -203,6 +203,36 @@ const makeCommand = (options: DebugCliOptions = {}) => {
       }),
   ).pipe(Command.withDescription('Evaluate a snippet with `dxos` and `composer` in scope.'));
 
+  // Invoked by key so the console stays free of plugin-support; the operation refuses any
+  // identity the hub does not know as an internal account, so there is no gate here.
+  const report = Command.make(
+    'report',
+    {
+      title: Args.string('title').pipe(Args.withDescription('Issue title.'), Args.variadic({ min: 1 })),
+      body: Flag.string('body').pipe(Flag.optional, Flag.withDescription('Issue body; defaults to empty.')),
+      type: Flag.string('type').pipe(Flag.optional, Flag.withDescription('bug | feature.')),
+      severity: Flag.string('severity').pipe(
+        Flag.optional,
+        Flag.withDescription('"High priority" | "Medium priority" | "Low priority".'),
+      ),
+      noLogs: Flag.boolean('no-logs').pipe(Flag.withDescription('Skip the debug log dump.')),
+    },
+    ({ title, body, type, severity, noLogs }) =>
+      Effect.gen(function* () {
+        const result = yield* invokeOperation('org.dxos.operation.support.submitIssue', {
+          report: {
+            title: title.join(' '),
+            body: body._tag === 'Some' ? body.value : '',
+            ...(type._tag === 'Some' ? { type: type.value } : {}),
+            ...(severity._tag === 'Some' ? { severity: severity.value } : {}),
+            includeLogs: !noLogs,
+          },
+        });
+        const issue = result as { issueIdentifier?: string; issueUrl?: string } | undefined;
+        yield* print(issue?.issueUrl ? `${issue.issueIdentifier} ${issue.issueUrl}` : result);
+      }),
+  ).pipe(Command.withDescription('File a Linear issue with the logs attached (internal accounts only).'));
+
   const port = Command.make(
     'port',
     {
@@ -234,7 +264,7 @@ const makeCommand = (options: DebugCliOptions = {}) => {
 
   return Command.make('debug').pipe(
     Command.withDescription('Composer debug console.'),
-    Command.withSubcommands([snapshot, plugins, enable, disable, ops, invoke, evaluate, port]),
+    Command.withSubcommands([snapshot, plugins, enable, disable, ops, invoke, evaluate, report, port]),
   );
 };
 

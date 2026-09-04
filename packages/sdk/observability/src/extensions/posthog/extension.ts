@@ -254,7 +254,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
           },
           // The dump can run to tens of MB and ships after the ticket exists; a failure here loses
           // the PostHog copy, never the ticket or the R2 copy.
-          flushLogs: async (ticketId) => {
+          flushLogs: async (attributes) => {
             const destination = otelDestination(config);
             if (!destination) {
               return;
@@ -272,9 +272,9 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
                 ...(release ? { 'service.version': release } : {}),
                 ...(environment ? { 'deployment.environment': environment } : {}),
               },
-              attributes: { ticketId },
+              attributes,
             });
-            log.info('support logs flushed to PostHog', { ticketId, count });
+            log.info('support logs flushed to PostHog', { ...attributes, count });
           },
         },
       ],

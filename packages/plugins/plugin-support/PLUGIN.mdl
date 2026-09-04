@@ -177,6 +177,16 @@ op searchDocs
 ```
 
 ```mdl
+op submitIssue
+  key: org.dxos.operation.support.submitIssue
+  desc: >
+    Files a report straight to Linear through the support service's `/issue`
+    route: no PostHog ticket, no Discord thread. The log dump and session
+    context travel the same way as submitReport, and the flushed logs are
+    tagged with the report id the service mints. The service refuses any
+    identity the hub does not know as an internal account, so this is the
+    team's path; the debug console's `report` command invokes it by key.
+
 op submitReport
   key: org.dxos.operation.support.submitReport
   desc: >

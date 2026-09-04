@@ -20,7 +20,7 @@ export type FlushSupportLogsOptions = {
   destination: OtelDestination;
   /** `service.name`, `service.version`, and the like; the same ones the live stream carries. */
   resourceAttributes: Record<string, string>;
-  /** Stamped on every record: the ticket id the PostHog Logs link and `/context` filter on. */
+  /** Stamped on every record: the id the PostHog Logs link on the ticket or issue filters on. */
   attributes: Record<string, string>;
 };
 

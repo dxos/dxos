@@ -184,8 +184,11 @@ export type Support = {
   uploadLogs(): Promise<string | undefined>;
   /** The telemetry session to anchor the ticket to, if this extension has one. */
   sessionContext(): SupportSessionContext | undefined;
-  /** Ships the buffered debug logs to the extension's log store, tagged with the ticket. */
-  flushLogs(ticketId: string): Promise<void>;
+  /**
+   * Ships the buffered debug logs to the extension's log store, every record stamped with the
+   * given attributes: the ticket id for a support report, the report id for a team issue.
+   */
+  flushLogs(attributes: Record<string, string>): Promise<void>;
 };
 
 export type ExtensionApi =

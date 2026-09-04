@@ -286,9 +286,9 @@ class ObservabilityImpl implements Observability {
         }
         return undefined;
       },
-      flushLogs: async (ticketId) => {
+      flushLogs: async (attributes) => {
         for (const extension of this._getExtensions('support')) {
-          await extension.flushLogs(ticketId);
+          await extension.flushLogs(attributes);
         }
       },
     };

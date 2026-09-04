@@ -110,6 +110,37 @@ export const SubmitReport = Operation.make({
   output: SupportReportResult,
 });
 
+/** What filing a team issue produced: the Linear issue, and the id the flushed logs are tagged with. */
+export const SupportIssueResult = Schema.Struct({
+  reportId: Schema.String,
+  issueId: Schema.String,
+  issueIdentifier: Schema.String,
+  issueUrl: Schema.String,
+});
+
+export type SupportIssueResult = Schema.Schema.Type<typeof SupportIssueResult>;
+
+/**
+ * The team's own path: files the report straight to Linear through the support service, with the
+ * logs and session attached, and no support ticket or public thread. The service refuses any
+ * identity the hub does not know as an internal account.
+ */
+export const SubmitIssue = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.support.submitIssue'),
+    name: 'File Linear Issue',
+    description: 'Files a report as a Linear issue with logs attached. Internal accounts only.',
+    icon: 'ph--bug--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    report: SupportRequest,
+    /** Public URL of the captured screenshot, when one was attached. */
+    screenshotUrl: Schema.optional(Schema.String),
+  }),
+  output: SupportIssueResult,
+});
+
 /** The support service, reached through EDGE unless an explicit endpoint is configured. */
 export const supportEndpoint = (config: Config): string | undefined =>
   getEnvString(config, 'DX_DISCORD_SERVICE_URL') ?? getEdgeServiceEndpoint(config, EdgeServiceName.Discord);
@@ -157,7 +188,59 @@ export const submitSupportReport = async ({
   const result = Schema.decodeUnknownSync(SupportReportResult)(await response.json());
   if (logKey) {
     void observability.support
-      .flushLogs(result.ticketId)
+      .flushLogs({ ticketId: result.ticketId })
+      .catch((err) => log.warn('support logs flush failed', { err }));
+  }
+  return result;
+};
+
+export type SubmitSupportIssueOptions = {
+  endpoint: string;
+  observability: Observability.Observability;
+  report: SupportRequest;
+  did: string;
+  screenshotUrl?: string;
+};
+
+/**
+ * Same order as {@link submitSupportReport}, against the service's `/issue` route: upload the
+ * dump, file the issue, then flush the dump to PostHog Logs tagged with the report id the
+ * service minted. A 403 means the identity is not an internal account.
+ */
+export const submitSupportIssue = async ({
+  endpoint,
+  observability,
+  report,
+  did,
+  screenshotUrl,
+}: SubmitSupportIssueOptions): Promise<SupportIssueResult> => {
+  const logKey = report.includeLogs !== false ? await observability.support.uploadLogs() : undefined;
+  const response = await fetch(`${endpoint}/issue`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      title: report.title,
+      body: report.body,
+      type: report.type,
+      severity: report.severity,
+      area: report.area,
+      version: report.version,
+      did,
+      screenshotUrl,
+      logKey,
+      posthog: observability.support.sessionContext(),
+    }),
+  });
+  if (response.status === 403) {
+    throw new Error('Filing Linear issues is limited to internal accounts.');
+  }
+  if (!response.ok) {
+    throw new Error(`support service returned ${response.status}`);
+  }
+  const result = Schema.decodeUnknownSync(SupportIssueResult)(await response.json());
+  if (logKey) {
+    void observability.support
+      .flushLogs({ reportId: result.reportId })
       .catch((err) => log.warn('support logs flush failed', { err }));
   }
   return result;

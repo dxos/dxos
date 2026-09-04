@@ -45,7 +45,7 @@ describe('submitSupportReport', () => {
       logKey: 'logs/1.ndjson',
       posthog: { distinctId: 'did:dx:me', widgetSessionId: 'w-1', sessionId: 's-1' },
     });
-    await vi.waitFor(() => expect(flushLogs).toHaveBeenCalledWith('ticket-1'));
+    await vi.waitFor(() => expect(flushLogs).toHaveBeenCalledWith({ ticketId: 'ticket-1' }));
   });
 
   test('skips the logs entirely when the reporter opted out', async () => {
@@ -80,5 +80,58 @@ describe('submitSupportReport', () => {
         report: { title: 'Broken', body: 'It broke.' },
       }),
     ).rejects.toThrow('502');
+  });
+});
+
+describe('submitSupportIssue', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  test('files the issue with the dump key, then flushes with the report id', async () => {
+    const issue = {
+      reportId: 'r-1',
+      issueId: 'issue-uuid',
+      issueIdentifier: 'ENG-7',
+      issueUrl: 'https://linear.test/ENG-7',
+    };
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify(issue)));
+    vi.stubGlobal('fetch', fetchMock);
+    const flushLogs = vi.fn(async () => {});
+    const result = await SupportOperation.submitSupportIssue({
+      endpoint: 'https://edge.test/discord',
+      observability: observabilityWith({
+        uploadLogs: async () => 'logs/1.ndjson',
+        sessionContext: () => ({ distinctId: 'did:dx:me', widgetSessionId: 'w-1', replayUrl: 'https://r' }),
+        flushLogs,
+      }),
+      report: { title: 'Broken', body: 'It broke.', type: 'bug', includeLogs: true },
+      did: 'did:dx:me',
+    });
+
+    expect(result).toEqual(issue);
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('https://edge.test/discord/issue');
+    expect(JSON.parse(String(init.body))).toMatchObject({ title: 'Broken', did: 'did:dx:me', logKey: 'logs/1.ndjson' });
+    await vi.waitFor(() => expect(flushLogs).toHaveBeenCalledWith({ reportId: 'r-1' }));
+  });
+
+  test('names the gate when the service refuses the identity', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(JSON.stringify({ error: 'internal accounts only' }), { status: 403 })),
+    );
+    await expect(
+      SupportOperation.submitSupportIssue({
+        endpoint: 'https://edge.test/discord',
+        observability: observabilityWith({
+          uploadLogs: async () => undefined,
+          sessionContext: () => undefined,
+          flushLogs: async () => {},
+        }),
+        report: { title: 'Broken', body: 'It broke.' },
+        did: 'did:dx:me',
+      }),
+    ).rejects.toThrow('internal accounts');
   });
 });
