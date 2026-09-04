@@ -11,6 +11,7 @@ import { type IdbLogStore } from '@dxos/log-store-idb';
 import { isNode } from '@dxos/util';
 
 import * as ObservabilityExtension from '../../ObservabilityExtension';
+import { DXOS_VERSION } from '../../version';
 import { stubExtension } from '../stub';
 import {
   AI_GENERATION_EVENT,
@@ -146,12 +147,13 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
             cross_subdomain_cookie: false,
             ...posthogConfig,
           });
-          if (release || environment) {
-            posthog.register({
-              ...(release ? { release } : {}),
-              ...(environment ? { environment } : {}),
-            });
-          }
+          // `sdkVersion` is unconditional: it gates EDGE deprecation, so a host that omits `release`
+          // must still be attributable to an SDK version.
+          posthog.register({
+            sdkVersion: DXOS_VERSION,
+            ...(release ? { release } : {}),
+            ...(environment ? { environment } : {}),
+          });
           unregisterPosthogProcessors?.();
           const removePosthogLog = log.addProcessor(logProcessor);
           unregisterPosthogProcessors = () => {
