@@ -23,6 +23,8 @@ PORT=9009
 INTERVAL=15
 TIMEOUT=10
 WAIT=600
+# Seconds after the server process starts during which a pegged core is warm-up, not a wedge.
+WARMUP=300
 WATCH=0
 ENSURE=0
 
@@ -254,7 +256,15 @@ while true; do
     # Answering while pegged is the more common shape: the module graph still serves, but the
     # optimizer or the watcher is burning a core, so every navigation crawls. Three in a row rules
     # out a build.
+    # Cold start pegs a core legitimately for minutes while Vite pre-bundles ~2000 deps, and a
+    # capture taken then reports nothing but the optimizer. Only unresponsiveness is a symptom
+    # that early; the CPU heuristic arms once the server is past warm-up.
+    age="$(ps -o etimes= -p "${PID}" 2>/dev/null | tr -d ' ')"
     cpu="$(cpu_of "${PID}")"
+    if [ -n "${age}" ] && [ "${age}" -lt "${WARMUP}" ]; then
+      hot=0
+      cpu=""
+    fi
     if [ -n "${cpu}" ] && [ "${cpu%%.*}" -ge 90 ]; then
       hot=$((hot + 1))
       echo "$(date +%H:%M:%S) cpu ${cpu}% (${hot}/3)"
