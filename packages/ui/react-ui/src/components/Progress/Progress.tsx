@@ -48,9 +48,9 @@ export const Progress = forwardRef<HTMLSpanElement, ProgressProps>(
         // it illustrates belongs to the host, which announces it. An indeterminate bar is a
         // progressbar with no value — that is what the role means, so it needs no separate
         // live-region role.
+        {...props}
         {...(counting ? { 'aria-hidden': true } : { role: 'progressbar' })}
         {...(!indeterminate && !counting && { 'aria-valuemin': 0, 'aria-valuemax': 1, 'aria-valuenow': progress })}
-        {...props}
         className={tx('progress.root', { indeterminate: sweeping, countdown: counting, error }, classNames)}
         ref={forwardedRef}
       >
