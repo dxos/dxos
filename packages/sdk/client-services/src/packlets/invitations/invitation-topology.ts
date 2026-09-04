@@ -7,7 +7,14 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { SwarmController, Topology } from '@dxos/network-manager';
 import { InvitationOptions } from '@dxos/protocols/proto/dxos/halo/invitations';
-import { ComplexSet } from '@dxos/util';
+import { ComplexMap } from '@dxos/util';
+
+/**
+ * How many times to dial one peer before giving up on it. A connection can die after the transport
+ * comes up but before the invitation flow completes, and a single attempt then strands both sides:
+ * guests never initiate, so nothing redials.
+ */
+const MAX_CONNECTION_ATTEMPTS = 3;
 
 /**
  * Hosts are listening on an invitation topic.
@@ -27,14 +34,12 @@ export class InvitationTopology implements Topology {
   private _controller?: SwarmController;
 
   /**
-   * Peers we tried to establish a connection with.
-   * In invitation flow peers are assigned random ids when they join the swarm, so we'll retry
-   * a peer if they reload an invitation.
-   *
-   * Consider keeping a separate set for peers we know are hosts and have some retry timeout
-   * for guests we failed an invitation flow with (potentially due to a network error).
+   * Dial count per peer we tried to establish a connection with, capped by
+   * {@link MAX_CONNECTION_ATTEMPTS}. In invitation flow peers are assigned random ids when they
+   * join the swarm, so a peer that reloads an invitation is retried under its new id; a peer that
+   * leaves the swarm is dropped from the map, which also resets its budget.
    */
-  private _seenPeers = new ComplexSet<PublicKey>(PublicKey.hash);
+  private _attempts = new ComplexMap<PublicKey, number>(PublicKey.hash);
 
   constructor(private readonly _role: InvitationOptions.Role) {}
 
@@ -54,31 +59,38 @@ export class InvitationTopology implements Topology {
 
     // don't start a connection while we have an active invitation flow
     if (connected.length > 0) {
-      // update seenPeers here as well in case another host initiated a connection with us
-      connected.forEach((c) => this._seenPeers.add(c));
+      // record the attempt here as well in case another host initiated a connection with us; a
+      // connected peer must not burn its retry budget, so this floors at one rather than counting up
+      connected.forEach((peerId) => this._attempts.set(peerId, Math.max(this._attempts.get(peerId) ?? 0, 1)));
       return;
     }
 
-    const firstUnknownPeer = candidates.find((peerId) => !this._seenPeers.has(peerId));
-    // cleanup
-    this._seenPeers = new ComplexSet<PublicKey>(
-      PublicKey.hash,
-      allPeers.filter((peerId) => this._seenPeers.has(peerId)),
-    );
-    if (firstUnknownPeer != null) {
-      log('invitation connect', { ownPeerId, remotePeerId: firstUnknownPeer });
-      this._controller.connect(firstUnknownPeer);
-      this._seenPeers.add(firstUnknownPeer);
+    // cleanup — drop peers that have left the swarm, so a peer that rejoins starts fresh
+    const retained = new ComplexMap<PublicKey, number>(PublicKey.hash);
+    for (const peerId of allPeers) {
+      const attempts = this._attempts.get(peerId);
+      if (attempts !== undefined) {
+        retained.set(peerId, attempts);
+      }
+    }
+    this._attempts = retained;
+
+    const nextPeer = candidates.find((peerId) => (this._attempts.get(peerId) ?? 0) < MAX_CONNECTION_ATTEMPTS);
+    if (nextPeer != null) {
+      const attempt = (this._attempts.get(nextPeer) ?? 0) + 1;
+      log('invitation connect', { ownPeerId, remotePeerId: nextPeer, attempt });
+      this._controller.connect(nextPeer);
+      this._attempts.set(nextPeer, attempt);
     }
   }
 
   async onOffer(peer: PublicKey): Promise<boolean> {
     invariant(this._controller, 'Not initialized.');
-    return !this._seenPeers.has(peer);
+    return (this._attempts.get(peer) ?? 0) < MAX_CONNECTION_ATTEMPTS;
   }
 
   async destroy(): Promise<void> {
-    this._seenPeers.clear();
+    this._attempts.clear();
   }
 
   toString(): string {

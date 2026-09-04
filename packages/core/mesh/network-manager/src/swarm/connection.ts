@@ -27,6 +27,13 @@ const STARTING_SIGNALLING_DELAY = 10;
  */
 const TRANSPORT_CONNECTION_TIMEOUT = 10_000;
 
+/**
+ * How long to wait, once the transport reports connectivity, for the wire protocol to finish its
+ * handshake. A transport can come up half-open — `connected` fires on both peers while frames only
+ * flow one way — and the handshake then blocks on a reply that never arrives.
+ */
+const WIRE_PROTOCOL_HANDSHAKE_TIMEOUT = 10_000;
+
 const TRANSPORT_STATS_INTERVAL = 5_000;
 
 /**
@@ -92,6 +99,8 @@ export enum ConnectionState {
 export class Connection {
   private readonly _ctx = new Context();
   private connectedTimeoutContext = new Context();
+  private handshakeTimeoutContext = new Context();
+  private _protocolOpened = false;
 
   private _protocolClosed = new Trigger();
   private _transportClosed = new Trigger();
@@ -168,9 +177,15 @@ export class Connection {
     this._changeState(ConnectionState.CONNECTING);
 
     // TODO(dmaretskyi): Initialize only after the transport has established connection.
-    this._protocol.open(this.sessionId).catch((err) => {
-      this.errors.raise(err);
-    });
+    void this._protocol
+      .open(this.sessionId)
+      .then(async () => {
+        this._protocolOpened = true;
+        await this.handshakeTimeoutContext.dispose();
+      })
+      .catch((err) => {
+        this.errors.raise(err);
+      });
 
     // TODO(dmaretskyi): Piped streams should do this automatically, but it break's without this code.
     this._protocol.stream.on('close', () => {
@@ -206,6 +221,28 @@ export class Connection {
     this._transport.connected.once(async () => {
       this._changeState(ConnectionState.CONNECTED);
       await this.connectedTimeoutContext.dispose();
+
+      // The transport deadline is spent by the time we get here and `Rpc.open()` has none of its
+      // own, so a half-open channel would otherwise hang this session until the invitation's
+      // 3-minute timeout. Bound the handshake and abort, so the swarm tears the peer down and can
+      // redial.
+      if (!this._protocolOpened) {
+        scheduleTask(
+          this.handshakeTimeoutContext,
+          async () => {
+            log.info(
+              `timeout waiting ${WIRE_PROTOCOL_HANDSHAKE_TIMEOUT / 1000}s for wire protocol handshake, aborting`,
+            );
+            await this.abort(
+              new TimeoutError({
+                message: `${WIRE_PROTOCOL_HANDSHAKE_TIMEOUT / 1000}s for wire protocol handshake`,
+              }),
+            ).catch((err) => this.errors.raise(err));
+          },
+          WIRE_PROTOCOL_HANDSHAKE_TIMEOUT,
+        );
+      }
+
       this._callbacks?.onConnected?.();
 
       scheduleTaskInterval(this._ctx, async () => this._emitTransportStats(), TRANSPORT_STATS_INTERVAL);
@@ -235,6 +272,7 @@ export class Connection {
 
       if (this._state !== ConnectionState.CLOSED && this._state !== ConnectionState.CLOSING) {
         await this.connectedTimeoutContext.dispose();
+        await this.handshakeTimeoutContext.dispose();
         this.errors.raise(err);
       }
     });
@@ -262,6 +300,7 @@ export class Connection {
     }
 
     await this.connectedTimeoutContext.dispose();
+    await this.handshakeTimeoutContext.dispose();
     this._changeState(ConnectionState.ABORTING);
     if (!this.closeReason) {
       this.closeReason = err?.message;
@@ -313,6 +352,7 @@ export class Connection {
     this._changeState(ConnectionState.CLOSING);
 
     await this.connectedTimeoutContext.dispose();
+    await this.handshakeTimeoutContext.dispose();
     await this._ctx.dispose();
 
     let abortProtocol = false;
