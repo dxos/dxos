@@ -116,7 +116,9 @@ const useReportConnection = ({ connectorIds, db, label }: UseReportConnectionOpt
       return;
     }
     const created = matched.find((connection) => !baseline.current?.has(connection.id));
-    if (!created) {
+    // Named only once the credential itself is in the space: the report carries the token's URI, so
+    // an unresolved ref would name something the agent cannot yet read. Stays armed until it is.
+    if (!created || !created.accessToken.peek()) {
       return;
     }
     // One report per flow: disarm before submitting so a later connection needs a fresh click.
