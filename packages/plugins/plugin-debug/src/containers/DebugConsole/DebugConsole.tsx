@@ -19,7 +19,7 @@ const RESET = '\x1b[0m';
 /** Sizes a host that has no size of its own; a host with a definite size passes `fit` instead. */
 const FIXED_GRID = { cols: 100, rows: 24 };
 
-const BANNER = `${BOLD}Debug console${RESET}\n${DIM}snapshot · plugins · enable · disable · ops · invoke · eval · port — "help" for details.${RESET}`;
+const BANNER = `${BOLD}Debug console${RESET}\n${DIM}snapshot · plugins · enable · disable · ops · invoke · eval · report · port — "help" for details.${RESET}`;
 
 export type DebugConsoleProps = {
   /** Rendered as a close button in the toolbar when provided (the popover host closes itself). */
