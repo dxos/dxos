@@ -128,7 +128,11 @@ export const make = (): Skill.Skill =>
         - The transcript returns the most recent \`limit\` events, oldest-first within that window;
           pass \`order: first\` to read the opening of a long session instead.
         - The transcript returns only user and agent prose. Tool calls, thinking signals and status
-          events are omitted, so a quiet transcript on a running session is normal.
+          events are omitted, so a quiet transcript on a running session is normal. An empty window is
+          not a stall either: it returns recent events only, and a long report pushes earlier ones out
+          of view — check elapsed time and \`status\` before concluding anything.
+        - Reuse one session for a work-stream. It keeps its cloned repos, installed tooling and
+          accumulated context; a second session for the same work pays for all of that again.
         - Managed agents compact their own context, so a session never dies of a full context window.
           Treat "running out of context", "approaching the context limit" or a similar warning in the
           transcript as narration, not a fault: do not restart the session, start a fresh one, or
