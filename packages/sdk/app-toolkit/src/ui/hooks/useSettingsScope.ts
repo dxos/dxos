@@ -9,6 +9,7 @@ import { useCallback } from 'react';
 import { useOptionalCapability } from '@dxos/app-framework/ui';
 
 import * as AppCapabilities from '../../app-framework/AppCapabilities';
+import type * as AppSettings from '../../types/AppSettings';
 
 /** Stable fallback so the atom hook keeps a constant identity while the sync is unavailable. */
 const emptyUnsynced = Atom.make<readonly string[]>([]);
@@ -22,10 +23,15 @@ export type SettingsScopeState = {
   /** Whether this prefix follows the account rather than staying on this device. */
   readonly synced: boolean;
   /**
-   * Leave or rejoin the account for this prefix. Leaving is lossless; rejoining replaces this
-   * device's values with the account's, so callers confirm with the user first.
+   * Leave or rejoin the account for this prefix. Leaving is lossless; rejoining keeps one side of
+   * each conflicting key — the account's by default, this device's with `adopt: 'local'`.
    */
-  setSynced: (synced: boolean) => void;
+  setSynced: (synced: boolean, options?: { adopt?: AppSettings.Adopt }) => void;
+  /**
+   * Keys rejoining would change, read at the moment of asking. Empty means rejoining loses nothing,
+   * so there is no question to put to the reader.
+   */
+  getConflicts: () => readonly string[];
 };
 
 /**
@@ -37,7 +43,11 @@ export type SettingsScopeState = {
 export const useSettingsScope = (prefix: string): SettingsScopeState => {
   const sync = useOptionalCapability(AppCapabilities.SettingsSync);
   const unsynced = useAtomValue(sync?.unsynced ?? emptyUnsynced);
-  const setSynced = useCallback((synced: boolean) => sync?.setSynced(prefix, synced), [sync, prefix]);
+  const setSynced = useCallback(
+    (synced: boolean, options?: { adopt?: AppSettings.Adopt }) => sync?.setSynced(prefix, synced, options),
+    [sync, prefix],
+  );
+  const getConflicts = useCallback(() => sync?.conflicts(prefix) ?? [], [sync, prefix]);
 
-  return { available: !!sync, synced: !unsynced.includes(prefix), setSynced };
+  return { available: !!sync, synced: !unsynced.includes(prefix), setSynced, getConflicts };
 };

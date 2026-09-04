@@ -170,26 +170,49 @@ export const clearValue = (draft: Draft, deviceKey: string, namespace: string, k
   delete draft.devices[deviceKey]?.overrides[namespace]?.[key];
 };
 
+/** Which side wins for the keys that {@link conflictingKeys} reports, when rejoining the account. */
+export type Adopt = 'shared' | 'local';
+
+export type SetSyncedOptions = {
+  /**
+   * Values in effect here, frozen into the device layer when LEAVING so nothing visibly changes.
+   * Omit to diverge only from the next write onwards — what the plugin set wants, so plugins
+   * enabled elsewhere later still arrive.
+   */
+  snapshot?: Values;
+  /**
+   * Which side wins when REJOINING. `shared` (the default) discards this device's values; `local`
+   * publishes them to the account, overwriting the shared value for every key this device holds.
+   * Only matters where the two differ — see {@link conflictingKeys}.
+   */
+  adopt?: Adopt;
+};
+
 /**
  * Turn sharing of a namespace on or off for this device.
  *
- * Turning it OFF is lossless and touches no other device: pass `snapshot` (the values in effect
- * here) to freeze them into the device layer so nothing visibly changes. Omit it to diverge only
- * from the next write onwards — what the plugin set wants, so plugins enabled elsewhere later still
- * arrive.
- *
- * Turning it ON discards this device's copy and adopts the account's. That is the one lossy
- * direction, so callers are expected to have confirmed it with the user.
+ * Turning it OFF is lossless and touches no other device. Turning it ON drops this device's copy;
+ * with `adopt: 'local'` that copy is published to the account first, so nothing is lost either way
+ * and only the losing side of a genuine conflict disappears.
  */
 export const setSynced = (
   draft: Draft,
   deviceKey: string,
   namespace: string,
   synced: boolean,
-  snapshot?: Values,
+  { snapshot, adopt = 'shared' }: SetSyncedOptions = {},
 ): void => {
   const device = deviceOf(draft, deviceKey);
   if (synced) {
+    const overrides = device.overrides[namespace];
+    if (overrides && Object.keys(overrides).length > 0) {
+      // Rejoining merges on the same rule as the first reconciliation: a key only one side holds is
+      // adopted, since the other has no competing opinion and nothing is lost by keeping it. `adopt`
+      // therefore decides only the keys both sides hold and disagree on — the ones the reader was
+      // asked about.
+      const shared = namespaceOf(draft.shared, namespace);
+      draft.shared[namespace] = adopt === 'local' ? { ...shared, ...overrides } : { ...overrides, ...shared };
+    }
     device.unsynced = device.unsynced.filter((entry) => entry !== namespace);
     delete device.overrides[namespace];
   } else {
@@ -211,11 +234,24 @@ export const setDeviceLabel = (draft: Draft, deviceKey: string, label: string): 
 // Diffing.
 //
 
+const differs = (a: unknown, b: unknown): boolean => !Object.is(a, b) && JSON.stringify(a) !== JSON.stringify(b);
+
 /** Keys whose value differs between two records, including keys present in only one. */
 export const changedKeys = (before: Values, after: Values): string[] =>
-  [...new Set([...Object.keys(before), ...Object.keys(after)])].filter(
-    (key) => !Object.is(before[key], after[key]) && JSON.stringify(before[key]) !== JSON.stringify(after[key]),
-  );
+  [...new Set([...Object.keys(before), ...Object.keys(after)])].filter((key) => differs(before[key], after[key]));
+
+/**
+ * Keys where rejoining the account forces a choice, because both sides hold the key and disagree.
+ *
+ * A key only one side holds is not among them: rejoining adopts it, so nothing is lost whichever
+ * direction the reader picks. Nor is an override equal to the shared value. Empty therefore means
+ * rejoining is lossless and there is nothing to put to the reader.
+ */
+export const conflictingKeys = (settings: Snapshot, deviceKey: string, namespace: string): string[] => {
+  const overrides = getOverrides(settings, deviceKey, namespace);
+  const shared = settings.shared[namespace] ?? {};
+  return Object.keys(overrides).filter((key) => key in shared && differs(overrides[key], shared[key]));
+};
 
 /**
  * Apply a resolved-value edit back to the layered store: every key that changed is routed to its

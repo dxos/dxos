@@ -94,7 +94,7 @@ describe('Reconciler', () => {
     const local = makeLocal({ toolbar: true });
     const reconciler = bind(store, local);
 
-    store.store.update((draft) => AppSettings.setSynced(draft, DEVICE, NS, false, reconciler.current()));
+    store.store.update((draft) => AppSettings.setSynced(draft, DEVICE, NS, false, { snapshot: reconciler.current() }));
     local.set({ toolbar: false });
 
     expect(store.state.shared[NS]).toEqual({ toolbar: true });
@@ -116,7 +116,7 @@ describe('Reconciler', () => {
     const local = makeLocal({ toolbar: true });
     const reconciler = bind(store, local);
 
-    store.store.update((draft) => AppSettings.setSynced(draft, DEVICE, NS, false, reconciler.current()));
+    store.store.update((draft) => AppSettings.setSynced(draft, DEVICE, NS, false, { snapshot: reconciler.current() }));
     store.store.update((draft) => AppSettings.setValue(draft, 'device-b', NS, 'toolbar', false));
 
     expect(local.get()).toEqual({ toolbar: true });
@@ -127,7 +127,7 @@ describe('Reconciler', () => {
     const local = makeLocal({ toolbar: true });
     const reconciler = bind(store, local);
 
-    store.store.update((draft) => AppSettings.setSynced(draft, DEVICE, NS, false, reconciler.current()));
+    store.store.update((draft) => AppSettings.setSynced(draft, DEVICE, NS, false, { snapshot: reconciler.current() }));
     local.set({ toolbar: false });
     store.store.update((draft) => AppSettings.setSynced(draft, DEVICE, NS, true));
 

@@ -76,7 +76,7 @@ describe('setSynced', () => {
     const defaults = { toolbar: true, folding: true };
     const before = AppSettings.resolve(settings, DEVICE, NS, defaults);
 
-    AppSettings.setSynced(settings, DEVICE, NS, false, before);
+    AppSettings.setSynced(settings, DEVICE, NS, false, { snapshot: before });
 
     expect(AppSettings.resolve(settings, DEVICE, NS, defaults)).toEqual(before);
     expect(AppSettings.resolve(settings, OTHER, NS, defaults)).toEqual(before);
@@ -84,7 +84,7 @@ describe('setSynced', () => {
 
   test('once unsynced, a change made elsewhere no longer lands here', () => {
     const settings = draft({ shared: { [NS]: { toolbar: true } } });
-    AppSettings.setSynced(settings, DEVICE, NS, false, AppSettings.resolve(settings, DEVICE, NS));
+    AppSettings.setSynced(settings, DEVICE, NS, false, { snapshot: AppSettings.resolve(settings, DEVICE, NS) });
 
     AppSettings.setValue(settings, OTHER, NS, 'toolbar', false);
 
@@ -94,7 +94,7 @@ describe('setSynced', () => {
 
   test('a key added to the account after unsyncing still arrives', () => {
     const settings = draft({ shared: { [NS]: { toolbar: true } } });
-    AppSettings.setSynced(settings, DEVICE, NS, false, AppSettings.resolve(settings, DEVICE, NS));
+    AppSettings.setSynced(settings, DEVICE, NS, false, { snapshot: AppSettings.resolve(settings, DEVICE, NS) });
 
     // A plugin update adds a field, set on the other device.
     AppSettings.setValue(settings, OTHER, NS, 'folding', true);
@@ -102,9 +102,9 @@ describe('setSynced', () => {
     expect(AppSettings.resolve(settings, DEVICE, NS)).toEqual({ toolbar: true, folding: true });
   });
 
-  test('turning sync back on discards this device’s copy and adopts the account', () => {
+  test('turning sync back on keeps the account’s value where the two disagree', () => {
     const settings = draft({ shared: { [NS]: { toolbar: true } } });
-    AppSettings.setSynced(settings, DEVICE, NS, false, AppSettings.resolve(settings, DEVICE, NS));
+    AppSettings.setSynced(settings, DEVICE, NS, false, { snapshot: AppSettings.resolve(settings, DEVICE, NS) });
     AppSettings.setValue(settings, DEVICE, NS, 'toolbar', false);
     expect(AppSettings.resolve(settings, DEVICE, NS)).toEqual({ toolbar: false });
 
@@ -113,6 +113,31 @@ describe('setSynced', () => {
     expect(AppSettings.resolve(settings, DEVICE, NS)).toEqual({ toolbar: true });
     expect(AppSettings.isSynced(settings, DEVICE, NS)).toBe(true);
     expect(settings.devices[DEVICE].overrides[NS]).toBeUndefined();
+  });
+
+  test('rejoining with adopt local publishes this device’s values to the account', () => {
+    const settings = draft({ shared: { [NS]: { toolbar: true, folding: true } } });
+    AppSettings.setSynced(settings, DEVICE, NS, false, { snapshot: AppSettings.resolve(settings, DEVICE, NS) });
+    AppSettings.setValue(settings, DEVICE, NS, 'toolbar', false);
+
+    AppSettings.setSynced(settings, DEVICE, NS, true, { adopt: 'local' });
+
+    // Both devices now see this device's value, and the key it never disagreed on is untouched.
+    expect(AppSettings.resolve(settings, DEVICE, NS)).toEqual({ toolbar: false, folding: true });
+    expect(AppSettings.resolve(settings, OTHER, NS)).toEqual({ toolbar: false, folding: true });
+    expect(settings.devices[DEVICE].overrides[NS]).toBeUndefined();
+  });
+
+  test('adopt local leaves keys the account has but this device never overrode', () => {
+    const settings = draft({ shared: { [NS]: { toolbar: true } } });
+    AppSettings.setSynced(settings, DEVICE, NS, false);
+    AppSettings.setValue(settings, DEVICE, NS, 'folding', true);
+    // Meanwhile the account changes a key this device is not holding an opinion on.
+    AppSettings.setValue(settings, OTHER, NS, 'toolbar', false);
+
+    AppSettings.setSynced(settings, DEVICE, NS, true, { adopt: 'local' });
+
+    expect(settings.shared[NS]).toEqual({ toolbar: false, folding: true });
   });
 
   test('unsyncing one namespace leaves the others shared', () => {
@@ -258,5 +283,61 @@ describe('plugins', () => {
 
     AppSettings.applyResolved(settings, DEVICE, installed, { [CHESS]: entry }, {});
     expect(AppSettings.resolve(settings, OTHER, installed)).toEqual({});
+  });
+});
+
+describe('conflictingKeys', () => {
+  test('nothing to decide when the device overrides nothing', () => {
+    const settings = draft({ shared: { [NS]: { toolbar: true } } });
+    AppSettings.setSynced(settings, DEVICE, NS, false);
+
+    expect(AppSettings.conflictingKeys(settings, DEVICE, NS)).toEqual([]);
+  });
+
+  test('an override equal to the shared value is not a conflict', () => {
+    const settings = draft({ shared: { [NS]: { toolbar: true } } });
+    AppSettings.setSynced(settings, DEVICE, NS, false, { snapshot: AppSettings.resolve(settings, DEVICE, NS) });
+
+    // Frozen on leaving, so the device holds the key — but it agrees, so nothing is lost either way.
+    expect(settings.devices[DEVICE].overrides[NS]).toEqual({ toolbar: true });
+    expect(AppSettings.conflictingKeys(settings, DEVICE, NS)).toEqual([]);
+  });
+
+  test('a differing override conflicts', () => {
+    const settings = draft({ shared: { [NS]: { toolbar: true } } });
+    AppSettings.setSynced(settings, DEVICE, NS, false);
+    AppSettings.setValue(settings, DEVICE, NS, 'toolbar', false);
+
+    expect(AppSettings.conflictingKeys(settings, DEVICE, NS)).toEqual(['toolbar']);
+  });
+
+  test('a key only this device holds is not a conflict — rejoining adopts it', () => {
+    const settings = draft();
+    AppSettings.setSynced(settings, DEVICE, NS, false);
+    AppSettings.setValue(settings, DEVICE, NS, 'folding', true);
+
+    expect(AppSettings.conflictingKeys(settings, DEVICE, NS)).toEqual([]);
+
+    AppSettings.setSynced(settings, DEVICE, NS, true);
+    expect(settings.shared[NS]).toEqual({ folding: true });
+  });
+
+  test('a key only the account holds does not conflict', () => {
+    const settings = draft({ shared: { [NS]: { toolbar: true } } });
+    AppSettings.setSynced(settings, DEVICE, NS, false);
+    AppSettings.setValue(settings, DEVICE, NS, 'folding', true);
+    AppSettings.setValue(settings, OTHER, NS, 'toolbar', false);
+
+    // `toolbar` follows the account here already and `folding` is this device's alone, so neither
+    // forces a choice.
+    expect(AppSettings.conflictingKeys(settings, DEVICE, NS)).toEqual([]);
+  });
+
+  test('compares by value, so an equal object is not a conflict', () => {
+    const settings = draft({ shared: { [NS]: { layout: { columns: 2 } } } });
+    AppSettings.setSynced(settings, DEVICE, NS, false);
+    AppSettings.setValue(settings, DEVICE, NS, 'layout', { columns: 2 });
+
+    expect(AppSettings.conflictingKeys(settings, DEVICE, NS)).toEqual([]);
   });
 });

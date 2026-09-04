@@ -343,6 +343,13 @@ export type SettingsProps<T extends {}, Props extends {} = {}> = {
  * Filter: matches a plugin-settings article. When `prefix` is omitted the
  * filter matches any settings subject (used by the generic default settings
  * surface); pass a `prefix` to match a single plugin's settings.
+ *
+ * Passing a `prefix` — registering a bespoke settings article — is DEPRECATED. A settings panel
+ * should be schema-driven, rendered by `plugin-settings`' generic surface from the schema and atom
+ * the plugin already contributes. A bespoke one has to re-implement the panel chrome by hand, which
+ * is how the sync-scope control came to need adding in sixteen places, and each new one is another
+ * place for that to drift. Do not add more; move the existing ones onto their schema as their
+ * remaining custom controls become expressible.
  */
 export const settings = (token: Role.Role<any>, prefix?: string): Surface.Filter<SettingsData> => {
   const guard = (data: unknown): boolean => {

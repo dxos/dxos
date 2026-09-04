@@ -549,9 +549,26 @@ export class AppManager {
    * Puts the open settings panel back under the account, confirming the prompt. Rejoining discards
    * this device's values, which is why this direction asks.
    */
+  /**
+   * Rejoins the account for the open settings panel, keeping the account's values.
+   *
+   * The confirmation only appears when the two sides actually differ; with nothing to decide the
+   * rejoin just happens, so the dialog is dismissed only if it opened.
+   */
   async rejoinAccountSettings(): Promise<void> {
     await this.getSettingsScopeToggle('synced').click();
-    await this.page.getByTestId('settingsScope.confirm').click();
+    const keepShared = this.page.getByTestId('settingsScope.keepShared');
+    if (await keepShared.isVisible({ timeout: 5_000 }).catch(() => false)) {
+      await keepShared.click();
+    }
+    await expect(this.getSettingsScopeToggle('synced')).toHaveAttribute('data-state', 'on');
+  }
+
+  /** Rejoins the account but publishes this device's values to it, from the conflict dialog. */
+  async rejoinAccountSettingsKeepingLocal(): Promise<void> {
+    await this.getSettingsScopeToggle('synced').click();
+    await this.page.getByTestId('settingsScope.keepLocal').click();
+    await expect(this.getSettingsScopeToggle('synced')).toHaveAttribute('data-state', 'on');
   }
 
   /** The registry's dev-plugin URL field — an ordinary synced plugin setting. */

@@ -27,8 +27,9 @@ import { Progress } from '@dxos/progress';
 import type { AnchoredTo } from '@dxos/types';
 import type { Position } from '@dxos/util';
 
-// eslint-disable-next-line @dxos/rules/import-as-namespace
 import type * as Translations$ from '../app/Translations';
+// eslint-disable-next-line @dxos/rules/import-as-namespace
+import type * as AppSettings from '../types/AppSettings';
 // eslint-disable-next-line @dxos/rules/import-as-namespace
 import type * as ObservabilityMapping$ from './ObservabilityMapping';
 
@@ -205,10 +206,16 @@ export type SettingsSync = {
    * Turn sharing of a prefix on or off for this device.
    *
    * Turning it OFF is lossless — nothing visibly changes here and no other device is touched.
-   * Turning it ON discards this device's values and adopts the account's, so callers must confirm
-   * with the user first.
+   * Turning it ON keeps one side of every conflicting key: the account's by default, this device's
+   * with `adopt: 'local'`. Ask the reader only when {@link conflicts} is non-empty.
    */
-  setSynced(prefix: string, synced: boolean): void;
+  setSynced(prefix: string, synced: boolean, options?: { adopt?: AppSettings.Adopt }): void;
+  /**
+   * Keys that rejoining the account would change, so a caller can skip the question when there is
+   * nothing to decide. Read on demand rather than reactively: it is consulted at the moment the
+   * reader asks to rejoin.
+   */
+  conflicts(prefix: string): readonly string[];
 };
 
 /**

@@ -175,7 +175,7 @@ export default Capability.makeModule(
     return Capability.contribute(AppCapabilities.SettingsSync, {
       deviceKey,
       unsynced,
-      setSynced: (namespace, synced) => {
+      setSynced: (namespace, synced, options) => {
         // Whether unsyncing freezes the current values is a property of the namespace, not of the
         // UI: a plugin's settings freeze so the switch is visibly a no-op, while the plugin set
         // deliberately does not, so plugins enabled on another device later still arrive here.
@@ -185,8 +185,11 @@ export default Capability.makeModule(
           synced || namespace === AppSettings.PLUGINS_NAMESPACE
             ? undefined
             : reconcilers.find((reconciler) => reconciler.namespace === namespace)?.current();
-        store.update((draft) => AppSettings.setSynced(draft, deviceKey, namespace, synced, snapshot));
+        store.update((draft) =>
+          AppSettings.setSynced(draft, deviceKey, namespace, synced, { snapshot, adopt: options?.adopt }),
+        );
       },
+      conflicts: (namespace) => AppSettings.conflictingKeys(settings, deviceKey, namespace),
     });
   }),
 );

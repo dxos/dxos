@@ -23,29 +23,40 @@ export type SettingsScopeProps = {
  * `plugin-settings` — which most of them do not depend on.
  *
  * Leaving the account is silent: the current values freeze here and no other device is touched.
- * Rejoining replaces this device's values with the account's, so it asks first.
+ * Rejoining asks only where the two sides actually disagree, and then asks which side to keep —
+ * with no disagreement nothing is lost either way, so there is nothing worth interrupting for.
  */
 export const SettingsScope = ({ prefix }: SettingsScopeProps) => {
   const { t } = useTranslation(osTranslations);
-  const { available, synced, setSynced } = useSettingsScope(prefix);
-  const [confirming, setConfirming] = useState(false);
+  const { available, synced, setSynced, getConflicts } = useSettingsScope(prefix);
+  const [conflicts, setConflicts] = useState<readonly string[]>([]);
 
   const handleValueChange = useCallback(
     (value: string) => {
       // Radix clears the value when the pressed item is the active one; only a real change acts.
-      if (value === 'synced' && !synced) {
-        setConfirming(true);
-      } else if (value === 'local' && synced) {
+      if (value === 'local' && synced) {
         setSynced(false);
+      } else if (value === 'synced' && !synced) {
+        // Rejoining only takes something away where the two sides disagree. With no disagreement
+        // there is nothing to decide, so it just happens.
+        const conflicting = getConflicts();
+        if (conflicting.length === 0) {
+          setSynced(true);
+        } else {
+          setConflicts(conflicting);
+        }
       }
     },
-    [setSynced, synced],
+    [getConflicts, setSynced, synced],
   );
 
-  const handleConfirm = useCallback(() => {
-    setSynced(true);
-    setConfirming(false);
-  }, [setSynced]);
+  const handleResolve = useCallback(
+    (adopt: 'shared' | 'local') => {
+      setSynced(true, { adopt });
+      setConflicts([]);
+    },
+    [setSynced],
+  );
 
   if (!available) {
     return null;
@@ -69,21 +80,32 @@ export const SettingsScope = ({ prefix }: SettingsScopeProps) => {
           iconOnly
         />
       </ToggleGroup>
-      <AlertDialog.Root open={confirming} onOpenChange={setConfirming}>
+      <AlertDialog.Root open={conflicts.length > 0} onOpenChange={(open) => !open && setConflicts([])}>
         <AlertDialog.Overlay>
           <AlertDialog.Content>
             <AlertDialog.Body>
-              <AlertDialog.Title>{t('settings-scope.rejoin-dialog.title')}</AlertDialog.Title>
-              <AlertDialog.Description>{t('settings-scope.rejoin-dialog.description')}</AlertDialog.Description>
+              <AlertDialog.Title>{t('settings-scope.conflict-dialog.title')}</AlertDialog.Title>
+              <AlertDialog.Description>
+                {t('settings-scope.conflict-dialog.description', { count: conflicts.length })}
+              </AlertDialog.Description>
             </AlertDialog.Body>
             <AlertDialog.ActionBar>
               <div className='grow' />
               <AlertDialog.Cancel asChild>
-                <Button>{t('settings-scope.rejoin-dialog.cancel.label')}</Button>
+                <Button>{t('settings-scope.conflict-dialog.cancel.label')}</Button>
               </AlertDialog.Cancel>
               <AlertDialog.Action asChild>
-                <Button data-testid='settingsScope.confirm' variant='primary' onClick={handleConfirm}>
-                  {t('settings-scope.rejoin-dialog.confirm.label')}
+                <Button data-testid='settingsScope.keepLocal' onClick={() => handleResolve('local')}>
+                  {t('settings-scope.conflict-dialog.keep-local.label')}
+                </Button>
+              </AlertDialog.Action>
+              <AlertDialog.Action asChild>
+                <Button
+                  data-testid='settingsScope.keepShared'
+                  variant='primary'
+                  onClick={() => handleResolve('shared')}
+                >
+                  {t('settings-scope.conflict-dialog.keep-shared.label')}
                 </Button>
               </AlertDialog.Action>
             </AlertDialog.ActionBar>

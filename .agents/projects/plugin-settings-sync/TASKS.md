@@ -48,6 +48,12 @@ per-namespace scope: `unsynced` routes writes, reads still layer shared undernea
 
 ## Phase 3 — follow-ups (not in the prototype)
 
+- [ ] Retire bespoke settings articles. 16 of the 30 settings panels render their own article rather
+      than the schema-driven default, so anything belonging to the panel as a whole — the sync scope
+      today, whatever comes next — has to be wired into each of them by hand. Flagged as deprecated
+      on `AppSurface.settings`; the fix is to make each panel's remaining custom controls
+      expressible from its schema, then delete the bespoke surface
+
 - [ ] `DeviceScoped` schema annotation, so an author can mark one machine-specific field without
       forcing the user to unsync the whole plugin (deferred — add when the need shows up)
 - [ ] Garbage-collect override sets for devices no longer in `client.halo.devices`
