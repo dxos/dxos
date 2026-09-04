@@ -5,7 +5,6 @@
 import { describe, test } from 'vitest';
 
 import { Stream } from '@dxos/async';
-import { type ServiceDescriptorLike } from '@dxos/codec-protobuf';
 import { getBufService } from '@dxos/protocols/buf-service';
 import { schema } from '@dxos/protocols/proto';
 import {
@@ -13,6 +12,7 @@ import {
   type TestService,
   type TestStreamService,
 } from '@dxos/protocols/proto/example/testing/rpc';
+import { type ServiceDescriptorLike } from '@dxos/protocols/service-contract';
 
 import { type ProtoRpcPeer, createProtoRpcPeer } from './service';
 import { createLinkedPorts } from './testing';

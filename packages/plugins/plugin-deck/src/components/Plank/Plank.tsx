@@ -92,8 +92,15 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
     const icon = node.properties?.icon ?? 'ph--circle-dashed--regular';
     const label = toLocalizedString(node.properties?.label ?? '', t);
     const data = useMemo<AppSurface.ArticleData>(
-      () => ({ attendableId, subject: node.data, properties: node.properties, popoverAnchorId, ...articleData }),
-      [attendableId, node.data, node.properties, popoverAnchorId, articleData],
+      () => ({
+        attendableId,
+        nodeId: node.id,
+        subject: node.data,
+        properties: node.properties,
+        popoverAnchorId,
+        ...articleData,
+      }),
+      [attendableId, node.id, node.data, node.properties, popoverAnchorId, articleData],
     );
 
     // Anchor the sigil's popover only when this plank's menu is the active popover target.

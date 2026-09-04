@@ -97,6 +97,12 @@ const DefaultStory = () => {
     [runtime],
   );
 
+  // `useSpaces` is empty until the client has created the default space, and the panel is addressed
+  // by that space — reading its id before it exists is what threw the story away on first paint.
+  if (!space) {
+    return <></>;
+  }
+
   return (
     <BaseStory
       toolbar={
@@ -254,16 +260,16 @@ const TimelinePlayback = ({
     <BaseStory
       toolbar={
         <Toolbar.Root>
-          <IconButton iconOnly icon='ph--skip-back--regular' label='Reset (R)' onClick={handleReset} />
-          <IconButton iconOnly icon='ph--caret-left--regular' label='Step back (← / H)' onClick={handlePrev} />
+          <IconButton icon='ph--skip-back--regular' iconOnly label='Reset (R)' onClick={handleReset} />
+          <IconButton icon='ph--caret-left--regular' iconOnly label='Step back (← / H)' onClick={handlePrev} />
           <IconButton
-            iconOnly
             icon={playing ? 'ph--pause--regular' : 'ph--play--regular'}
+            iconOnly
             label={playing ? 'Pause (Space)' : 'Play (Space)'}
             onClick={handleTogglePlay}
           />
-          <IconButton iconOnly icon='ph--caret-right--regular' label='Step forward (→ / L)' onClick={handleNext} />
-          <IconButton iconOnly icon='ph--skip-forward--regular' label='Show all (E / End)' onClick={handleShowAll} />
+          <IconButton icon='ph--caret-right--regular' iconOnly label='Step forward (→ / L)' onClick={handleNext} />
+          <IconButton icon='ph--skip-forward--regular' iconOnly label='Show all (E / End)' onClick={handleShowAll} />
           <Toolbar.Text classNames='text-right text-sm tabular-nums opacity-70'>
             {step} / {total}
           </Toolbar.Text>

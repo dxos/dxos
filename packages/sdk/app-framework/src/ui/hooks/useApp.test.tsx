@@ -12,6 +12,7 @@ import { DXN } from '@dxos/keys';
 
 import { ActivationEvents, Capabilities } from '../../common';
 import { Capability, Plugin, PluginManager } from '../../core';
+import { STARTUP_WATCHDOG_TICK_MS } from './startup-watchdog';
 import { STARTUP_FAILED_EVENT, type StartupDiagnostics, useApp } from './useApp';
 
 const String = Capability.makeSingleton<{ string: string }>()('org.dxos.test.string');
@@ -37,6 +38,33 @@ const TimedHost = ({ manager }: { manager: PluginManager.PluginManager }) => {
 };
 
 describe('useApp startup failure reporting', () => {
+  it.effect('a completed boot never times out', () =>
+    Effect.gen(function* () {
+      const plugin = Plugin.define(testMeta).pipe(
+        Plugin.addModule({
+          id: 'Hello',
+          activatesOn: ActivationEvents.Startup,
+          provides: [String],
+          activate: () => Effect.succeed([Capability.contribute(String, { string: 'hello' })]),
+        }),
+        Plugin.make,
+      )();
+
+      const manager = PluginManager.make({ pluginLoader: pluginLoader([plugin]), plugins: [plugin] });
+      const reported: StartupDiagnostics[] = [];
+      const listener = (event: CustomEvent<StartupDiagnostics>) => reported.push(event.detail);
+      window.addEventListener(STARTUP_FAILED_EVENT, listener);
+
+      const { unmount } = render(<TimedHost manager={manager} />);
+      yield* Effect.promise(() => waitFor(() => assert.isTrue(manager.getActive().length > 0)));
+      yield* Effect.promise(() => new Promise((resolve) => setTimeout(resolve, 2 * STARTUP_WATCHDOG_TICK_MS)));
+      window.removeEventListener(STARTUP_FAILED_EVENT, listener);
+      unmount();
+
+      assert.deepStrictEqual(reported, []);
+    }),
+  );
+
   it.effect('a module that fails to activate reports diagnostics on the error and the event', () =>
     Effect.gen(function* () {
       const plugin = Plugin.define(testMeta).pipe(

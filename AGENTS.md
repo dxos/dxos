@@ -159,11 +159,31 @@ Tasks run through `moon` (`moon run <package>:<task>`). See a package's
 - Lint & fix: `moon run :lint -- --fix`
 - Format: `pnpm format` (oxfmt — CI checks `oxfmt --check`, not prettier)
 - Unused deps & dead files: `pnpm knip` (root deps are excluded — see `REPOSITORY_GUIDE.md`)
-- Storybook: `moon run storybook-react:serve` (port 9009)
+- Storybook: `moon run storybook-react:serve` (port 9009). It periodically wedges;
+  `serve` arms a watcher that captures the cause. If it wedges under a server you
+  started another way, run `bash tools/storybook-react/diagnose.sh` BEFORE restarting —
+  a restart destroys the evidence. → `REPOSITORY_GUIDE.md` §Storybooks.
 
 A remote-cache warning from moon is harmless — builds work, they just don't share the team's
 cache. Worth fixing anyway: `tools/moon-cache/install-certs.sh --op` installs the certificates
 once per machine, for every worktree.
+
+## Working across dxos and edge
+
+The EDGE worker repo (`dxos/edge`) consumes `@dxos/*` as pinned `pkg.pr.new` builds, so a change here
+is invisible there until something publishes it.
+
+- **When both repos are checked out, link locally — never publish to see your own change.** From the
+  edge checkout: `pnpm link-packages` (`scripts/link-packages.mjs ../dxos --all --install`) packs this
+  workspace and installs it over `pnpm.overrides` `file:` entries. It is faster than a publish round
+  trip, depends on no external service, and picks up an export or subpath that does not exist in any
+  published build yet — which is exactly the inner loop for a feature spanning both repos.
+- Do not dispatch `.github/workflows/pkg-pr-new.yml` to unblock local work. A pinned build is for a
+  commit someone else consumes (a catalog bump, edge CI), not for iterating.
+- The `file:` overrides live in edge's root `package.json` and must not be committed there; edge's
+  `CLAUDE.md` covers the undo.
+
+## Long-running tasks
 
 **Run every long task in the background.** A repo-wide build, `pnpm install`, a full `:test` sweep,
 a repo-wide `oxfmt`, a storybook or dev server — anything expected to run past ~30s — goes in the

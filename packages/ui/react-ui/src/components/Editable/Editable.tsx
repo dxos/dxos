@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-// `Editable` — text that becomes an input in place ("inline edit" / "click-to-edit").
+// `Editable` — text that becomes an input in place ("inline edit" / "click-to-edit"), built on
+// `@ark-ui/react`'s Editable (zag state machine).
 //
 //   <Editable.Root value={title} onValueChange={setTitle} placeholder='Untitled'>
 //     <Editable.Preview />
@@ -11,70 +12,45 @@
 //
 // - `Root` — headless; owns the value (controlled or uncontrolled) and whether it is editing.
 // - `Preview` — the static text, and the activation affordance.
-// - `Input` — the field shown while editing; autofocuses and selects.
+// - `Input` — the field shown while editing; autofocuses and puts the caret at the end.
 //
 // The two render into ONE grid cell so the box never changes size between them, and they share
 // their metrics through the theme (see `Editable.theme.ts`). A row containing one of these must not
-// move when the reader clicks it.
+// move when the reader clicks it. The machine hides the part that is not in play rather than
+// unmounting it, so neither ever claims a row of its own.
 
+import { Editable as EditablePrimitive, useEditableContext } from '@ark-ui/react/editable';
 import { createContext } from '@radix-ui/react-context';
-import React, {
-  type ComponentPropsWithRef,
-  type FocusEvent,
-  type KeyboardEvent,
-  type PropsWithChildren,
-  forwardRef,
-  useCallback,
-  useEffect,
-  useRef,
-} from 'react';
+import React, { type ComponentPropsWithRef, type PropsWithChildren, forwardRef, useEffect, useRef } from 'react';
 
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { Icon } from '../Icon';
-import {
-  type EditableActivation,
-  type EditableBlurBehavior,
-  type UseEditableOptions,
-  type UseEditableReturn,
-  useEditable,
-} from './useEditable';
+import { type EditableActivationBinding, type UseEditableOptions, useEditable } from './useEditable';
 
 const EDITABLE_NAME = 'Editable.Root';
 const EDITABLE_PREVIEW_NAME = 'Editable.Preview';
 const EDITABLE_INPUT_NAME = 'Editable.Input';
 
-type EditableContextValue = UseEditableReturn & { placeholder?: string };
-
-const [EditableProvider, useEditableContext] = createContext<EditableContextValue>(EDITABLE_NAME);
+// The keyboard door onto the preview. It depends on the activation gesture, which the root is given
+// and the machine the parts read does not expose.
+const [EditableActivationProvider, useEditableActivation] = createContext<EditableActivationBinding>(EDITABLE_NAME);
 
 //
-// Root — headless context provider; renders the grid the two parts share.
+// Root — seeds the machine and renders the grid the two parts share.
 //
 
-type EditableRootProps = ThemedClassName<
-  PropsWithChildren<
-    UseEditableOptions & {
-      /** Shown, dimmed, when the value is empty. */
-      placeholder?: string;
-    }
-  >
->;
+type EditableRootProps = ThemedClassName<PropsWithChildren<UseEditableOptions>>;
 
 const EditableRoot = forwardRef<HTMLDivElement, EditableRootProps>(
-  ({ children, classNames, placeholder, ...options }, forwardedRef) => {
+  ({ children, classNames, ...options }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const editable = useEditable(options);
+    const { api, activationProps } = useEditable(options);
 
     return (
-      <EditableProvider {...editable} placeholder={placeholder}>
-        <div
-          className={tx('editable.root', { editing: editable.editing, disabled: editable.disabled }, classNames)}
-          ref={forwardedRef}
-        >
-          {children}
-        </div>
-      </EditableProvider>
+      <EditablePrimitive.RootProvider value={api} className={tx('editable.root', {}, classNames)} ref={forwardedRef}>
+        <EditableActivationProvider {...activationProps}>{children}</EditableActivationProvider>
+      </EditablePrimitive.RootProvider>
     );
   },
 );
@@ -82,126 +58,89 @@ const EditableRoot = forwardRef<HTMLDivElement, EditableRootProps>(
 EditableRoot.displayName = EDITABLE_NAME;
 
 //
-// Preview — the static text. Renders nothing while editing, so the input takes the cell.
+// Preview — the static text. Hidden by the machine while editing, so the input takes the cell.
 //
 
-type EditablePreviewProps = ThemedClassName<Omit<ComponentPropsWithRef<'div'>, 'children'>>;
+type EditablePreviewProps = ThemedClassName<Omit<ComponentPropsWithRef<'span'>, 'children'>>;
 
-const EditablePreview = forwardRef<HTMLDivElement, EditablePreviewProps>(({ classNames, ...props }, forwardedRef) => {
+const EditablePreview = forwardRef<HTMLSpanElement, EditablePreviewProps>(({ classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
-  const { value, editing, disabled, placeholder, previewProps } = useEditableContext(EDITABLE_PREVIEW_NAME);
-
-  if (editing) {
-    return null;
-  }
+  const { valueText } = useEditableContext();
+  const { role, onKeyDown } = useEditableActivation(EDITABLE_PREVIEW_NAME);
 
   return (
-    <div
+    <EditablePrimitive.Preview
+      // Ahead of the spread so a caller can still name the preview: the machine names it "edit",
+      // which is what the gesture does rather than what the field holds — in a list of rows that is
+      // every row with the same name.
+      aria-label={undefined}
+      // A gesture the machine only takes from a pointer; without this the preview is a tab stop that
+      // answers nothing.
+      role={role}
+      onKeyDown={onKeyDown}
       {...props}
-      {...previewProps}
       data-testid='editable.preview'
-      className={tx('editable.preview', { disabled, placeholder: !value }, classNames)}
+      className={tx('editable.preview', {}, classNames)}
       ref={forwardedRef}
     >
-      <span className='truncate'>{value || placeholder}</span>
+      <span className='truncate'>{valueText}</span>
       {/* Pushed to the trailing edge: the affordance belongs to the row, not to the text, so it
             does not move as the title's length changes. */}
       <span className='grow' />
       <Icon icon='ph--pencil-simple--regular' size={4} classNames={tx('editable.previewIcon', {})} />
-    </div>
+    </EditablePrimitive.Preview>
   );
 });
 
 EditablePreview.displayName = EDITABLE_PREVIEW_NAME;
 
 //
-// Input — shown while editing; autofocuses and selects so typing replaces.
+// Input — shown while editing; autofocuses and puts the caret at the end.
 //
 
 type EditableInputProps = ThemedClassName<Omit<ComponentPropsWithRef<'input'>, 'value' | 'onChange' | 'placeholder'>>;
 
-const EditableInput = forwardRef<HTMLInputElement, EditableInputProps>(
-  ({ classNames, onKeyDown, onBlur: onBlurProp, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
-    const { draft, editing, placeholder, setDraft, commit, revert, onBlur } = useEditableContext(EDITABLE_INPUT_NAME);
-    const localRef = useRef<HTMLInputElement>(null);
+const EditableInput = forwardRef<HTMLInputElement, EditableInputProps>(({ classNames, ...props }, forwardedRef) => {
+  const { tx } = useThemeContext();
+  const { editing } = useEditableContext();
+  const localRef = useRef<HTMLInputElement | null>(null);
 
-    // Caret at the end rather than a selection: opening a title is usually the start of amending it,
-    // and a select-all turns the next keystroke into a silent delete of the whole value.
-    useEffect(() => {
-      const element = localRef.current;
-      if (editing && element) {
-        element.focus();
-        const end = element.value.length;
-        element.setSelectionRange(end, end);
-      }
-    }, [editing]);
-
-    const handleKeyDown = useCallback(
-      (event: KeyboardEvent<HTMLInputElement>) => {
-        onKeyDown?.(event);
-        if (event.defaultPrevented) {
-          return;
-        }
-        switch (event.key) {
-          case 'Enter':
-            event.preventDefault();
-            commit();
-            break;
-          case 'Escape':
-            // Stopped as well as prevented: an editing row inside a dialog must not close it.
-            event.preventDefault();
-            event.stopPropagation();
-            revert();
-            break;
-        }
-      },
-      [onKeyDown, commit, revert],
-    );
-
-    const handleBlur = useCallback(
-      (event: FocusEvent<HTMLInputElement>) => {
-        onBlurProp?.(event);
-        onBlur();
-      },
-      [onBlurProp, onBlur],
-    );
-
-    if (!editing) {
-      return null;
+  // The machine focuses the input but leaves the caret where the browser puts it, which for a field
+  // opened from the keyboard is the start — so the reader types in front of their own title.
+  useEffect(() => {
+    const element = localRef.current;
+    if (editing && element) {
+      element.focus();
+      const end = element.value.length;
+      element.setSelectionRange(end, end);
     }
+  }, [editing]);
 
-    return (
-      <input
-        {...props}
-        data-testid='editable.input'
-        className={tx('editable.input', {}, classNames)}
-        placeholder={placeholder}
-        value={draft}
-        onChange={(event) => setDraft(event.target.value)}
-        onKeyDown={handleKeyDown}
-        onBlur={handleBlur}
-        ref={(element) => {
-          localRef.current = element;
-          // React 19 lets a callback ref return a cleanup; dropping it would leak whatever the
-          // consumer set up.
-          // Typed `unknown` because `ForwardedRef`'s callback is declared to return void, while
-          // React 19 may hand back a cleanup at runtime.
-          const cleanup: unknown = typeof forwardedRef === 'function' ? forwardedRef(element) : undefined;
-          if (forwardedRef && typeof forwardedRef !== 'function') {
-            forwardedRef.current = element;
+  return (
+    <EditablePrimitive.Input
+      {...props}
+      data-testid='editable.input'
+      className={tx('editable.input', {}, classNames)}
+      ref={(element) => {
+        localRef.current = element;
+        // React 19 lets a callback ref return a cleanup; dropping it would leak whatever the
+        // consumer set up.
+        // Typed `unknown` because `ForwardedRef`'s callback is declared to return void, while
+        // React 19 may hand back a cleanup at runtime.
+        const cleanup: unknown = typeof forwardedRef === 'function' ? forwardedRef(element) : undefined;
+        if (forwardedRef && typeof forwardedRef !== 'function') {
+          forwardedRef.current = element;
+        }
+        return () => {
+          localRef.current = null;
+          if (typeof cleanup === 'function') {
+            cleanup();
           }
-          return () => {
-            localRef.current = null;
-            if (typeof cleanup === 'function') {
-              cleanup();
-            }
-          };
-        }}
-      />
-    );
-  },
-);
+        };
+      }}
+    />
+  );
+});
 
 EditableInput.displayName = EDITABLE_INPUT_NAME;
 
@@ -214,4 +153,4 @@ export const Editable = {
 export { useEditableContext };
 export * from './useEditable';
 
-export type { EditableActivation, EditableBlurBehavior, EditableInputProps, EditablePreviewProps, EditableRootProps };
+export type { EditableInputProps, EditablePreviewProps, EditableRootProps };

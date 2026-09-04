@@ -356,7 +356,7 @@ const MAX_ORDINAL = 99;
  * there and no track is held empty. Cells flow into the tracks in DOM order; the names are for the
  * pane and the description, which place themselves.
  */
-type GridTrack = readonly [name: string | undefined, size: string];
+type GridTrack = readonly [name: string | undefined, size: string, endName?: string];
 
 const buildGridTemplate = ({
   toggle,
@@ -375,7 +375,7 @@ const buildGridTemplate = ({
     showGutter && ['gutter', 'var(--dx-control)'],
     ['status', 'var(--dx-control)'],
     ['title', 'minmax(0, 1fr)'],
-    ['chips', 'min-content'],
+    ['chips', 'min-content', 'chips-end'],
     showEstimates && ['estimate', 'var(--dx-control)'],
     ['priority', 'var(--dx-control)'],
     hasActions && ['actions', 'var(--dx-control)'],
@@ -386,10 +386,12 @@ const buildGridTemplate = ({
   // toggle track is omitted — so the first track's name joins the row's own.
   return tracks
     .map(([name, size], index) => {
-      const names = [index === 0 && 'tree-row-start', name].filter(Boolean).join(' ');
+      // A track's `endName` belongs to the line that follows it, which is the same line the next
+      // track's own name sits on — so it is emitted here rather than by the track that declares it.
+      const names = [index === 0 && 'tree-row-start', tracks[index - 1]?.[2], name].filter(Boolean).join(' ');
       return `${names ? `[${names}] ` : ''}${size}`;
     })
-    .concat('[tree-row-end]')
+    .concat(`[${['tree-row-end', tracks.at(-1)?.[2]].filter(Boolean).join(' ')}]`)
     .join(' ');
 };
 

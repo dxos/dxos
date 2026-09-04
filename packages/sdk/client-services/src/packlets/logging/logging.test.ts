@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
@@ -10,6 +11,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 import { LogLevel, log } from '@dxos/log';
+import { QueryLogsRequestSchema } from '@dxos/protocols/buf/dxos/client/logging_pb';
 
 import { LoggingServiceImpl } from './logging-service';
 
@@ -45,7 +47,10 @@ describe('LoggingService', () => {
   test('queryLogs streams logs', async () => {
     const message = 'Hello World!';
     const entry = await EffectEx.runPromise(
-      readWhileEmitting(Stream.runHead(loggingService['LoggingService.queryLogs']({})), () => log(message)),
+      readWhileEmitting(
+        Stream.runHead(loggingService['LoggingService.queryLogs'](create(QueryLogsRequestSchema))),
+        () => log(message),
+      ),
     );
     expect(entry.message).to.eq(message);
     expect(entry.level).to.eq(LogLevel.DEBUG);
@@ -55,7 +60,11 @@ describe('LoggingService', () => {
     const message = 'This is a failure';
     const entry = await EffectEx.runPromise(
       readWhileEmitting(
-        Stream.runHead(loggingService['LoggingService.queryLogs']({ filters: [{ level: LogLevel.ERROR }] })),
+        Stream.runHead(
+          loggingService['LoggingService.queryLogs'](
+            create(QueryLogsRequestSchema, { filters: [{ level: LogLevel.ERROR }] }),
+          ),
+        ),
         () => {
           log('debugging something');
           log.error(message);

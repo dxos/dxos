@@ -31,6 +31,25 @@ describe('createPromptContent', () => {
     expect(promptBlock.text).toBe('Summarize this.');
   });
 
+  test('a synthetic request becomes a single synthetic block', ({ expect }) => {
+    const content = createPromptContent({
+      message: 'Connected Anthropic.',
+      disposition: 'synthetic',
+      // Selection context is ignored: the report is not a prompt the selection qualifies.
+      context: { selection: { anchors: ['a:b'], text: 'lorem ipsum' } },
+    });
+    if (typeof content === 'string') {
+      throw new Error('expected content blocks');
+    }
+    expect(content).toHaveLength(1);
+    const [block] = content;
+    if (block._tag !== 'text') {
+      throw new Error('expected a text block');
+    }
+    expect(block.disposition).toBe('synthetic');
+    expect(block.text).toBe('Connected Anthropic.');
+  });
+
   test('empty selection text falls back to the bare message', ({ expect }) => {
     expect(createPromptContent({ message: 'hi', context: { selection: { anchors: [], text: '' } } })).toBe('hi');
   });

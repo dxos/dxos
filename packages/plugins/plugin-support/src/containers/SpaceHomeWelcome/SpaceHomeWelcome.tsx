@@ -79,7 +79,7 @@ const WelcomePanel = memo(() => {
       <h1 className='text-2xl font-semibold'>{t('welcome.title')}</h1>
       <p className='pb-4 text-center text-balance text-description'>{t('welcome.description')}</p>
       {slides.length > 0 && (
-        <Carousel.Root count={slides.length} transition='slide' continuous autoAdvance={10_000}>
+        <Carousel.Root count={slides.length} continuous autoAdvance={10_000}>
           <Carousel.Content>
             <Carousel.Previous />
             <Flex justify='center' classNames='w-full'>

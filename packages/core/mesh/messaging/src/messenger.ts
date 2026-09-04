@@ -3,7 +3,6 @@
 //
 
 import { TimeoutError, scheduleExponentialBackoffTaskInterval, scheduleTask, scheduleTaskInterval } from '@dxos/async';
-import { type Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -12,6 +11,7 @@ import { TimeoutError as ProtocolTimeoutError } from '@dxos/protocols';
 import { compatCodec } from '@dxos/protocols/buf-shape-compat';
 import { AcknowledgementSchema, ReliablePayloadSchema } from '@dxos/protocols/buf/dxos/mesh/messaging_pb';
 import { type Acknowledgement, type ReliablePayload } from '@dxos/protocols/proto/dxos/mesh/messaging';
+import { type AnyEnvelope } from '@dxos/protocols/service-contract';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { MessengerMonitor } from './messenger-monitor';
@@ -292,7 +292,7 @@ export class Messenger {
     });
   }
 
-  private async _handleAcknowledgement({ payload }: { payload: Any }): Promise<void> {
+  private async _handleAcknowledgement({ payload }: { payload: AnyEnvelope }): Promise<void> {
     invariant(payload.type_url === 'dxos.mesh.messaging.Acknowledgement');
     this._onAckCallbacks.get(Acknowledgement.decode(payload.value).messageId)?.();
   }

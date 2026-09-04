@@ -72,14 +72,6 @@ import { initAutomergeWasm } from './util/automerge-wasm';
 // (react-ui-form, editor, pickers) which must stay out of the static boot graph.
 const ResetDialog = lazy(() => import('./components').then((module) => ({ default: module.ResetDialog })));
 
-/**
- * Startup deadline override, in SECONDS (`VITE_DX_STARTUP_TIMEOUT=2`).
- *
- * Exists to exercise the deadline itself: shortening it does not fake a stall, it moves the line
- * that startup has genuinely not crossed yet, so the real path runs with real work behind it. Dev
- * only — in production the deadline is fatal, and a shorter one would just fail a boot sooner.
- * Seconds rather than milliseconds because it is typed by hand.
- */
 const startupTimeout = (() => {
   if (!import.meta.env.DEV) {
     return undefined;
@@ -129,7 +121,7 @@ declare global {
 
   interface ImportMetaEnv {
     DEV: string;
-    /** Startup deadline override in SECONDS, dev only — see `startupTimeout` below. */
+    /** Startup stall window override in SECONDS; dev only. */
     VITE_DX_STARTUP_TIMEOUT?: string;
     /** Log per-plugin activation in the boot loader — see `verboseStatus` below. */
     VITE_DX_BOOT_VERBOSE?: string;
