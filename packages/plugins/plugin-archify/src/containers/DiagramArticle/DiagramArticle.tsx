@@ -39,7 +39,9 @@ export const DiagramArticle = ({ subject, role }: DiagramArticleProps) => {
       return undefined;
     }
     if (selected) {
-      return Layout.reach(source, [selected], 'both');
+      // Downstream, not the whole connected component: on a request path every node reaches
+      // every other one through `both`, which lights the diagram up and says nothing.
+      return Layout.reach(source, [selected], 'downstream');
     }
     return view ? new Set(view.focus) : undefined;
   }, [source, view, selected]);

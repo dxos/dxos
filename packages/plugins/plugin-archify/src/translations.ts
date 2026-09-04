@@ -25,7 +25,7 @@ export const translations = [
       [meta.profile.key]: {
         'plugin.name': 'Archify',
         'view.all.label': 'Whole diagram',
-        'trace.label': 'Tracing {{id}}',
+        'trace.label': 'Downstream of {{id}}',
       },
     },
   },

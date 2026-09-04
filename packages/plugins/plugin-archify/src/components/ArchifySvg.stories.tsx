@@ -22,7 +22,7 @@ type StoryArgs = {
 const DefaultStory = ({ view: viewId, traceable = true }: StoryArgs) => {
   const [selected, setSelected] = useState<string>();
   const view = webApp.meta.views?.find((entry) => entry.id === viewId);
-  const focus = selected ? Layout.reach(webApp, [selected], 'both') : view ? new Set(view.focus) : undefined;
+  const focus = selected ? Layout.reach(webApp, [selected], 'downstream') : view ? new Set(view.focus) : undefined;
 
   return (
     <ArchifySvg diagram={webApp} focus={focus} selected={selected} onSelect={traceable ? setSelected : undefined} />
