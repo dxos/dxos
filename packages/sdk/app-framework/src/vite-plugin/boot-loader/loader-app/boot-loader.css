@@ -400,7 +400,7 @@ body {
   /* Monotone throughout — the arrival reads from opacity alone, which keeps the row quiet. */
   color: currentColor;
   fill: currentColor;
-  opacity: 0.3;
+  opacity: 0.1;
   transform: scale(0.9);
   /*
    * Two stages, from the one `data-active` flip: the icon opens faint (width, margin, scale), and
@@ -417,7 +417,7 @@ body {
 .boot-loader-plugin[data-active] {
   width: 40px;
   margin-inline-start: 0;
-  opacity: 0.5;
+  opacity: 0.3;
   transform: scale(1);
 }
 
