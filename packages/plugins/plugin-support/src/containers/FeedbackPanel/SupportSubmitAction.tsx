@@ -24,7 +24,7 @@ type Toast = {
   icon: string;
   duration: number;
   title: string;
-  description: string;
+  description?: string;
   actionLabel?: string;
   onAction?: () => void;
 };
@@ -35,8 +35,10 @@ type Toast = {
  * open with an error toast. A thread that failed to open never loses the ticket; the success
  * toast just falls back to the plain one.
  *
- * The thread tab opens only once its URL is back. Browsers may treat a `window.open` this long
- * after the click as a popup, so the toast carries an "Open thread" action as the fallback.
+ * The thread is handed over through the toast's "Open thread" button, never opened by the app: the
+ * URL comes back well past the few seconds a browser honours `window.open` after a click, so an
+ * automatic open was blocked more often than not. The toast stays until dismissed, since the button
+ * is the only way to the thread.
  */
 export const useSupportSubmit = (): FeedbackSubmitHandler => {
   const { invokePromise } = useOperationInvoker();
@@ -52,7 +54,7 @@ export const useSupportSubmit = (): FeedbackSubmitHandler => {
           icon: toast.icon,
           duration: toast.duration,
           title: [toast.title, namespace],
-          description: [toast.description, namespace],
+          ...(toast.description ? { description: [toast.description, namespace] } : {}),
           closeLabel: ['close.label', { ns: osTranslations }],
           ...(toast.actionLabel && toast.onAction
             ? {
@@ -88,13 +90,11 @@ export const useSupportSubmit = (): FeedbackSubmitHandler => {
       await collapse();
       if (result.threadUrl) {
         const threadUrl = result.threadUrl;
-        const opened = window.open(threadUrl, '_blank') !== null;
         await showToast({
           id: 'discord-feedback-success',
           icon: 'ph--discord-logo--regular',
-          duration: opened ? 5000 : 15000,
+          duration: Infinity,
           title: 'discord-feedback-toast.label',
-          description: opened ? 'discord-feedback-toast.description' : 'discord-feedback-toast-blocked.description',
           actionLabel: 'discord-feedback-toast.action',
           onAction: () => window.open(threadUrl, '_blank'),
         });
