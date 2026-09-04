@@ -115,9 +115,16 @@ export const Subgrid: Story = {
             </h2>
             <span className='col-start-3 px-2 text-description'>12:04</span>
             <Collapsible.Content asChild>
+              {/* Two rows, as a record's detail and its body are: the pair the collapse must hold
+                  apart, since a grid asked to shrink closes the space between its rows first. */}
               <div className='col-span-full grid grid-cols-subgrid items-start'>
                 <span className='px-2 text-description'>↳</span>
-                <p className='col-start-2 col-span-2 pt-2 text-description'>{sections[0].body}</p>
+                <span data-testid='detail' className='col-start-2 col-span-2 text-sm text-description'>
+                  someone@example.com
+                </span>
+                <p data-testid='body' className='col-start-2 col-span-2 pt-2 text-description'>
+                  {sections[0].body}
+                </p>
               </div>
             </Collapsible.Content>
           </div>

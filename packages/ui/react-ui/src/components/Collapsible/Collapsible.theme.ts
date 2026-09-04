@@ -38,10 +38,13 @@ const content: ComponentFunction<CollapsibleStyleProps> = (_props, ...etc) =>
     // The animation runs the box between two heights, so anything taller must be clipped for the
     // duration; `overflow` is otherwise the content's own business.
     'data-[state=closed]:overflow-hidden',
-    // Rows keep their own size and the shrinking box clips them. A grid whose height is being
-    // animated would otherwise re-solve its rows every frame, moving the content while the box that
-    // holds it closes — the collapse should wipe the section away, not compress it.
-    'content-start',
+    // Rows keep their natural size and the shrinking box clips them, rather than being re-solved
+    // against it every frame — the collapse should wipe the section away, not compress it. An `auto`
+    // track can be squeezed to its content's automatic minimum, which is ZERO for any row holding an
+    // overflow container (a Card, a truncating cell), so those rows close while their neighbours hold
+    // and the content visibly slides together. `max-content` pins each row to the height its content
+    // takes at the width the columns already resolved; `content-start` then packs them at the top.
+    'auto-rows-max content-start',
     ...etc,
   );
 
