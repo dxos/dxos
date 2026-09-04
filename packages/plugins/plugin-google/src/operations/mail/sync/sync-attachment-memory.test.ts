@@ -26,6 +26,20 @@ import { googleSyncTestServices, runGoogleSync } from '../../../testing/sync-fix
 //
 // FIDELITY CAVEAT: this is Node, not workerd. It measures what the pipeline ALLOCATES per attachment
 // byte; it cannot reproduce workerd's 128 MB isolate cap, so read the ratio, not a pass/fail.
+//
+// Measured 2026-09-04, 20 messages per run, marginal cost over the 13.5 MiB no-attachment baseline:
+//
+//   KiB/att   payload    peak heap   marginal
+//         1     0.02 MiB    13.5 MiB    (baseline)
+//        64     1.25 MiB    98.0 MiB      67.6x
+//       256     5.00 MiB   355.4 MiB      68.4x
+//       512    10.00 MiB   856.8 MiB      84.3x
+//      1024    20.00 MiB   812.3 MiB      39.9x  (GC-bound; peak floors out, not a real improvement)
+//
+// Every run reports 20 of 20 blobs INLINE: `operation-service` depends on neither `@dxos/client` nor
+// any other registrant of a blob backend (`registerBlobBackend` appears nowhere in dxos/edge), so the
+// registry keeps its `'inline'` default and each attachment is embedded in the Automerge document.
+// At ~68x, (128 - 13.5) / 68 means under 2 MiB of attachments exhausts a 128 MiB isolate.
 
 const ATTACHMENT_KB = Number.parseInt(process.env.DX_MEM_KB ?? '512', 10);
 const MESSAGE_COUNT = Number.parseInt(process.env.DX_MEM_COUNT ?? '20', 10);
