@@ -45,8 +45,8 @@ const JOIN_IDENTITY_BOOT_TIMEOUT = 60_000;
 const DEFAULT_WORKSPACE_URL = /\/w\/[A-Z0-9]{20,}\/home/;
 
 /**
- * How long the URL must hold still before boot counts as finished. Comfortably over the gap between
- * onboarding setting the Home plank and its scheduled expose rewriting the deck, measured at ~540ms.
+ * How long the URL must hold still before boot counts as finished. Comfortably over the gaps between
+ * boot's own navigations, which have run to a few hundred milliseconds.
  */
 const BOOT_QUIET_PERIOD = 1_000;
 
@@ -146,11 +146,12 @@ export class AppManager {
    * opens the default one when they do — replacing whatever route ran in the meantime. Anything that
    * navigates early (settings, the registry) has to let that land first or it is silently undone.
    *
-   * Arriving at Home is not the end of it: onboarding sets the plank and then schedules an expose,
-   * which rewrites the deck a few hundred milliseconds later. So this waits for boot to STOP
-   * navigating rather than for its first sign of having arrived. No reader is ever inside that gap —
-   * it closes long before anyone finds the settings button — but Playwright clicks within
-   * milliseconds of the URL changing, and a click placed in there is undone by the expose.
+   * Arriving is not one step: `plugin-space` resolves the workspace sentinel, and switching to a
+   * workspace opens its first openable child in turn, so the URL moves more than once before it
+   * settles. Wait for it to STOP moving rather than for its first sign of having arrived. A reader
+   * is never inside those gaps — they close long before anyone finds the settings button — but
+   * Playwright clicks within milliseconds of a URL change, and a click landing between two of boot's
+   * own writes is undone by the later one.
    */
   async waitForDefaultWorkspace(): Promise<void> {
     let lastNavigation = Date.now();
