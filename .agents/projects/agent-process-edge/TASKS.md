@@ -258,11 +258,13 @@ by moving them to a subclass behind `@dxos/edge-client/process`.
 
 Consequences for the rest of this project:
 
-- The three subpath exports (`@dxos/edge-client/process`, `@dxos/compute-runtime/remote-process`,
+- The remaining subpath exports (`@dxos/compute-runtime/remote-process`,
   `@dxos/edge-compute/process-control`) exist to keep this feature off Composer's eager boot graph.
   Do not "simplify" them back into the package barrels.
-- Anything added to `EdgeHttpClient` itself, or to a boot-reachable barrel, costs boot bytes against
-  a budget with no margin left. Put new client surface on the subclass.
+- `@dxos/edge-client/process` is **gone**: on review the routes went back onto `EdgeHttpClient`
+  itself (dmaretskyi, "no, put it on the original class"), which is where a client's own routes
+  belong. `Check / boot-budget` is the arbiter of whether that costs too much — it had margin again
+  by then, main's earlier shortfall having been resolved.
 - Resolving the red check needs either a `MAX_PRELOAD_BYTES` bump (accepted growth, which the
   script's docstring invites) or finding what recently landed on `main` — a decision for the repo
   owner, raised in a comment on the PR.

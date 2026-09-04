@@ -14,7 +14,6 @@ import { RemoteProcessManager } from '@dxos/compute-runtime';
 import type * as Process from '@dxos/compute/Process';
 import { Context as DxosContext } from '@dxos/context';
 import { type EdgeHttpClient } from '@dxos/edge-client';
-import { type EdgeProcessHttpClient } from '@dxos/edge-client/process';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -100,7 +99,7 @@ export const fromEdgeClient = (
  * process control, and trigger cancel.
  */
 export const fromEdgeProcessClient = (
-  edgeClient: EdgeProcessHttpClient,
+  edgeClient: EdgeHttpClient,
 ): Layer.Layer<RemoteProcessManager.Service, never, Registry.AtomRegistry> =>
   make(
     () => edgeClient,

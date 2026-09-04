@@ -14,7 +14,6 @@ import * as Operation from '@dxos/compute/Operation';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
-import { EdgeProcessHttpClient } from '@dxos/edge-client/process';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -33,25 +32,18 @@ export type UploadWorkerArgs = {
   assets: Record<string, Uint8Array>;
 };
 
-/** Resolves the configured EDGE url and binds the client to the current identity. */
-const configureEdgeClient = <T extends EdgeHttpClient>(client: Client, make: (edgeUrl: string) => T): T => {
+/**
+ * Resolves the configured EDGE url and binds the client to the current identity.
+ *
+ * @deprecated Migrate to `client.edge`.
+ */
+export const createEdgeClient = (client: Client): EdgeHttpClient => {
   const edgeUrl = client.config.values.runtime?.services?.edge?.url;
   invariant(edgeUrl, 'Edge is not configured.');
-  const edgeClient = make(edgeUrl);
+  const edgeClient = new EdgeHttpClient(edgeUrl);
   edgeClient.setIdentity(createEdgeIdentity(client));
   return edgeClient;
 };
-
-/** @deprecated Migrate to `client.edge`. */
-export const createEdgeClient = (client: Client): EdgeHttpClient =>
-  configureEdgeClient(client, (edgeUrl) => new EdgeHttpClient(edgeUrl));
-
-/**
- * Like {@link createEdgeClient}, but for the process-control routes, which live on a subclass so they
- * stay out of Composer's eager boot graph (see `EdgeProcessHttpClient`).
- */
-export const createEdgeProcessClient = (client: Client): EdgeProcessHttpClient =>
-  configureEdgeClient(client, (edgeUrl) => new EdgeProcessHttpClient(edgeUrl));
 
 /**
  * @deprecated Use {@link FunctionsServiceClient} instead.

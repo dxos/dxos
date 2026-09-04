@@ -18,9 +18,9 @@ import { type Client } from '@dxos/client';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { type RemoteProcessManager } from '@dxos/compute-runtime';
 import { Context as DxosContext } from '@dxos/context';
-import type { EdgeProcessHttpClient } from '@dxos/edge-client/process';
+import { type EdgeHttpClient } from '@dxos/edge-client';
 
-import { createEdgeProcessClient } from './edge-client';
+import { createEdgeClient } from './edge-client';
 import { decodeEvent, decodeSnapshot, toSpawnRequest } from './process-snapshot';
 
 /**
@@ -32,7 +32,7 @@ import { decodeEvent, decodeSnapshot, toSpawnRequest } from './process-snapshot'
  * deliberately unlike `EdgeTriggerManager`'s polls, which swallow failures: a spawn or an input that
  * silently did nothing would leave the caller waiting on a process that does not exist.
  */
-export const make = (getEdgeClient: () => EdgeProcessHttpClient): RemoteProcessManager.Control => ({
+export const make = (getEdgeClient: () => EdgeHttpClient): RemoteProcessManager.Control => ({
   spawn: ({ spaceId, ...request }: RemoteProcessManager.SpawnRequest) =>
     Effect.tryPromise(() => getEdgeClient().spawnProcess(DxosContext.default(), spaceId, toSpawnRequest(request))).pipe(
       Effect.map((response) => decodeSnapshot(response.info)),
@@ -110,9 +110,9 @@ export const make = (getEdgeClient: () => EdgeProcessHttpClient): RemoteProcessM
  * "processes on EDGE".
  */
 export const fromClient = (client: Client): RemoteProcessManager.Control => {
-  let cached: EdgeProcessHttpClient | undefined;
+  let cached: EdgeHttpClient | undefined;
   return make(() => {
-    cached ??= createEdgeProcessClient(client);
+    cached ??= createEdgeClient(client);
     // Re-applied on every access: the cached client would otherwise keep presenting a header
     // minted for a previous identity.
     cached.setIdentity(createEdgeIdentity(client));

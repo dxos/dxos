@@ -10,7 +10,6 @@ export default defineConfig({
     'edge-http-client': 'src/edge-http-client.ts',
     'edge-ws-muxer': 'src/edge-ws-muxer.ts',
     'index': 'src/index.ts',
-    'process': 'src/edge-process-http-client.ts',
     'service': 'src/service/index.ts',
     'testing': 'src/testing/index.ts',
   },
