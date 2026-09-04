@@ -14,11 +14,6 @@ import { ANTHROPIC_SOURCE } from '../constants';
 import * as ClaudeManagedAgent from './ClaudeManagedAgent';
 
 /**
- * A credential bound to a session, by reference rather than by value: the secret is resolved from
- * the space when it is injected and delivered to the container's environment over the control plane,
- * so it never appears in a message, a transcript or an operation result.
- */
-/**
  * Names that change how the container itself runs rather than naming a secret the agent reads —
  * a proxy, the loader, the module path. Rejected because a credential binding is the one place a
  * caller can set an environment variable in a live session, and these would redirect its traffic
@@ -30,6 +25,7 @@ const RESERVED_CREDENTIAL_NAMES = [
   'SHELL',
   'NODE_OPTIONS',
   'NODE_EXTRA_CA_CERTS',
+  'NODE_TLS_REJECT_UNAUTHORIZED',
   'LD_PRELOAD',
   'LD_LIBRARY_PATH',
   'HTTP_PROXY',
@@ -45,6 +41,11 @@ const RESERVED_CREDENTIAL_NAMES = [
  */
 const CREDENTIAL_NAME_PATTERN = new RegExp(`^(?!(?:${RESERVED_CREDENTIAL_NAMES.join('|')})$)[A-Z][A-Z0-9_]*$`);
 
+/**
+ * A credential bound to a session, by reference rather than by value: the secret is resolved from
+ * the space when it is injected and delivered to the container's environment over the control plane,
+ * so it never appears in a message, a transcript or an operation result.
+ */
 export const SessionCredential = Schema.Struct({
   token: Ref.Ref(AccessToken.AccessToken).annotate({
     description: 'The AccessToken object in this space holding the secret.',
