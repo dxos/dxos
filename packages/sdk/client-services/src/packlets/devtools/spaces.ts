@@ -11,8 +11,8 @@ import { fromPublicKey, fromTimeframe } from '@dxos/protocols/buf';
 import {
   type SubscribeToSpacesResponse,
   type SubscribeToSpacesResponse_SpaceInfo,
-  SubscribeToSpacesResponseSchema,
   SubscribeToSpacesResponse_SpaceInfoSchema,
+  SubscribeToSpacesResponseSchema,
 } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type DevtoolsHost } from '@dxos/protocols/rpc';
