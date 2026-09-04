@@ -21,13 +21,16 @@ import { EffectEx } from '@dxos/effect';
 import { BaseError } from '@dxos/errors';
 import { type ContentBlock, Message } from '@dxos/types';
 
+import * as Chat from '../types/Chat';
 import * as AiContext from './AiContext';
 import { type HarnessControlRpcs } from './harness-control';
-import { SessionLoader } from './SessionLoader';
+import { SessionStore } from './SessionStore';
 
 export interface Service {
   /** The conversation {@link AiContext.Binder} (Tier A). */
   binder: Effect.Effect<AiContext.Binder, NotSupportedError>;
+  /** The {@link Chat.Chat} the conversation belongs to (Tier A). */
+  chat: Effect.Effect<Chat.Chat, NotSupportedError>;
   /** The conversation message history (Tier A). */
   history: Effect.Effect<Message.Message[], NotSupportedError>;
   /** Objects bound to the conversation that match the filter (Tier A). */
@@ -51,6 +54,18 @@ export class HarnessService extends Context.Service<HarnessService, Service>()('
 export const binder: Effect.Effect<AiContext.Binder, NotSupportedError, HarnessService> = Effect.flatMap(
   HarnessService,
   (service) => service.binder,
+);
+
+/**
+ * The chat the conversation belongs to.
+ *
+ * The agent process is bound to its chat (its spawn target), so session-scoped tools resolve the
+ * conversation's plan, checklist and instructions from here rather than by looking for a Chat among
+ * the bound context objects.
+ */
+export const getChat: Effect.Effect<Chat.Chat, NotSupportedError, HarnessService> = Effect.flatMap(
+  HarnessService,
+  (service) => service.chat,
 );
 
 /**
@@ -164,11 +179,19 @@ export const make = ({
       Effect.orDie,
     );
     const boundBinder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
+    // Cached rather than resolved up front: a harness is built for every operation the agent
+    // invokes, and most never ask for the chat — resolving one here would put a lookup on the tool
+    // path. The agent process is spawned against the chat, so the host is discovered by the chat's
+    // URI; a feed with no chat (e.g. a bare `AiSession`) keeps the feed as its own host target.
+    const chat = yield* Effect.cached(Chat.loadForFeed(feed).pipe(Effect.provide(runtime)));
     return makeService({
       feed,
+      chat: chatOrFail(chat),
       runtime,
       binder: boundBinder,
-      owningHost: lookupOwningHost(processManager, conversation),
+      owningHost: Effect.flatMap(chat, (chat) =>
+        lookupOwningHost(processManager, chat ? Obj.getURI(chat) : conversation),
+      ),
     });
   });
 
@@ -184,20 +207,30 @@ interface FromBinderOptions {
  * Tier B raises {@link NotSupportedError} since the live-host control surface is not reachable here.
  */
 export const fromBinder = ({ feed, runtime, binder }: FromBinderOptions): Service =>
-  makeService({ feed, runtime, binder, owningHost: Effect.fail(new NotSupportedError()) });
+  makeService({
+    feed,
+    // Resolved per call rather than up front: this is the synchronous constructor, and the chat is
+    // only needed by the tools that ask for it.
+    chat: chatOrFail(Chat.loadForFeed(feed).pipe(Effect.provide(runtime))),
+    runtime,
+    binder,
+    owningHost: Effect.fail(new NotSupportedError()),
+  });
 
 interface MakeServiceOptions {
   feed: Feed.Feed;
+  chat: Effect.Effect<Chat.Chat, NotSupportedError>;
   runtime: Context.Context<Database.Service>;
   binder: AiContext.Binder;
   owningHost: Effect.Effect<RpcClient.RpcClient<HarnessControlRpcs>, NotSupportedError>;
 }
 
-const makeService = ({ feed, runtime, binder, owningHost }: MakeServiceOptions): Service => ({
+const makeService = ({ feed, chat, runtime, binder, owningHost }: MakeServiceOptions): Service => ({
   binder: Effect.succeed(binder),
+  chat,
   history: Effect.gen(function* () {
     const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
-    return yield* new SessionLoader().reifyHistory(feed, messages);
+    return yield* new SessionStore().reifyHistory(feed, messages);
   }).pipe(Effect.provide(runtime)),
   queryContext: <T extends Obj.Unknown>(filter: Filter.Filter<T>) =>
     Effect.sync(() => {
@@ -208,6 +241,10 @@ const makeService = ({ feed, runtime, binder, owningHost }: MakeServiceOptions):
   setAlarm: ({ at, message }) =>
     owningHost.pipe(Effect.flatMap((rpc) => rpc.setAlarm({ at: DateTime.toUtc(at), message }))),
 });
+
+/** A chat-less conversation (e.g. a bare `AiSession` feed) has no chat to hand out. */
+const chatOrFail = (chat: Effect.Effect<Chat.Chat | undefined, never>): Effect.Effect<Chat.Chat, NotSupportedError> =>
+  Effect.flatMap(chat, (chat) => (chat ? Effect.succeed(chat) : Effect.fail(new NotSupportedError())));
 
 /**
  * Resolves the live host owning `conversation` per call (so a process replacement — e.g. a model

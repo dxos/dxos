@@ -31,7 +31,7 @@ export const DefaultStory = <T extends Obj.Any, P extends {} = {}>({
   const roles: CardContainerProps['role'][] = ['intrinsic', 'popover'];
 
   return (
-    <div className='h-full w-full grid grid-cols-2 py-16 gap-8'>
+    <div className='dx-fill grid grid-cols-2 py-16 gap-8'>
       {roles.map((role, i) => (
         <div key={i} className='flex h-full justify-center overflow-hidden'>
           <div className='flex flex-col gap-4 w-full items-center'>

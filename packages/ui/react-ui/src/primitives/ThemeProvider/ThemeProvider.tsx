@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { createKeyborg } from 'keyborg';
 import React, { type PropsWithChildren, createContext, useEffect, useMemo } from 'react';
 
+import { trackKeyboardModality } from '@dxos/react-focus';
 import { type Density, type Elevation, type ThemeFunction, type ThemeMode } from '@dxos/ui-types';
 
 import { type SafeAreaPadding, useSafeArea } from '../../hooks';
@@ -45,11 +45,7 @@ export const ThemeProvider = ({
   platform,
 }: ThemeProviderProps) => {
   useEffect(() => {
-    if (document.defaultView) {
-      const kb = createKeyborg(document.defaultView);
-      kb.subscribe(handleInputModalityChange);
-      return () => kb.unsubscribe(handleInputModalityChange);
-    }
+    return document.defaultView ? trackKeyboardModality(document.defaultView) : undefined;
   }, []);
 
   const safeAreaPadding = useSafeArea();
@@ -76,12 +72,4 @@ export const ThemeProvider = ({
       </IconRegistryProvider>
     </ThemeContext.Provider>
   );
-};
-
-const handleInputModalityChange = (isUsingKeyboard: boolean) => {
-  if (isUsingKeyboard) {
-    document.body.setAttribute('data-w-keyboard', 'true');
-  } else {
-    document.body.removeAttribute('data-w-keyboard');
-  }
 };

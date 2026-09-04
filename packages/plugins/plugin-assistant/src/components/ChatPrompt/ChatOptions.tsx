@@ -7,7 +7,8 @@ import React, { type JSX, useCallback, useMemo, useState } from 'react';
 import { Provider } from '@dxos/ai';
 import { useAtomCapabilityState, useOptionalCapability } from '@dxos/app-framework/ui';
 import { type AiContext } from '@dxos/assistant';
-import { type Chat as ChatModule, McpServer } from '@dxos/assistant-toolkit';
+import { McpServer } from '@dxos/assistant-toolkit';
+import type * as ChatModule from '@dxos/assistant/Chat';
 import { type Database, Filter, Obj, type Registry, Type, URI } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { IconButton, Input, Popover, Select, Toolbar, useTranslation } from '@dxos/react-ui';
@@ -29,8 +30,8 @@ const styles = {
 };
 
 export type ChatOptionsProps = AssistantPreset.ChatPresetProps & {
-  chat?: ChatModule.Chat;
   db: Database.Database;
+  chat?: ChatModule.Chat;
   context: AiContext.Binder;
   registry?: Registry.Registry;
 };
@@ -38,7 +39,7 @@ export type ChatOptionsProps = AssistantPreset.ChatPresetProps & {
 /**
  * Manages the runtime context for the chat.
  */
-export const ChatOptions = ({ chat, db, context, registry, presets, preset, onPresetChange }: ChatOptionsProps) => {
+export const ChatOptions = ({ db, chat, context, registry, presets, preset, onPresetChange }: ChatOptionsProps) => {
   const { t } = useTranslation(meta.profile.key);
 
   return (
@@ -168,7 +169,7 @@ const ModelsPanel = ({
 }: Pick<ChatOptionsProps, 'presets' | 'preset' | 'onPresetChange'>) => {
   const { t } = useTranslation(meta.profile.key);
   return (
-    <div className='dx-container flex flex-col'>
+    <div className='dx-expand flex flex-col'>
       <Listbox.Root value={preset} onValueChange={onPresetChange} autoFocus>
         <Listbox.Content aria-label={t('options.chat-model.title')}>
           {presets?.map(({ id, label }) => (

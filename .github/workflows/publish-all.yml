@@ -138,6 +138,9 @@ jobs:
         run: moon run cli:publish
         env:
           NODE_ENV: production
+          # Baked into the binary by `scripts/build.ts` rather than committed. A build without it
+          # reports nowhere, so a fork's binary cannot land in this project.
+          DX_CLI_POSTHOG_API_KEY: ${{ secrets.DX_CLI_POSTHOG_API_KEY }}
           NPM_CONFIG_PROVENANCE: 'true' # provenance via OIDC; trusted publisher means no NPM_TOKEN.
 
       - name: Publish the CLI (@next snapshot)
@@ -145,6 +148,7 @@ jobs:
         run: moon run cli:publish -- --tag next
         env:
           NODE_ENV: production
+          DX_CLI_POSTHOG_API_KEY: ${{ secrets.DX_CLI_POSTHOG_API_KEY }}
           NPM_CONFIG_PROVENANCE: 'true'
 
       # One tag + one GitHub Release per lockstep group (`v<version>` for core/SDK, `plugins-v<version>` for

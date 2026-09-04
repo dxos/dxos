@@ -32,12 +32,12 @@ export type ChatActionsProps = ThemedClassName<
     customActions?: Atom.Atom<ActionGraphProps>;
     processing?: boolean;
     debug?: boolean;
-    /** Submits the current prompt; the send control renders only when provided. */
-    onSend?: () => void;
     /** Whether the prompt holds text and the processor would accept it; drives the send control's enablement. */
     canSend?: boolean;
     /** Whether the checklist beside the prompt is shown; the toggle renders only when provided. */
     tasksVisible?: boolean;
+    /** Submits the current prompt; the send control renders only when provided. */
+    onSend?: () => void;
     onEvent?: (event: ChatEvent) => void;
   }>
 >;
@@ -49,12 +49,15 @@ export const ChatActions = ({
   customActions,
   processing,
   debug,
-  onSend,
   canSend,
   tasksVisible,
+  onSend,
   onEvent,
 }: ChatActionsProps) => {
   const { t } = useTranslation(meta.profile.key);
+  // While a turn runs the primary control interrupts it — unless there is text waiting, in which
+  // case sending it (which queues it behind the running turn) is what the reader is asking for.
+  const showStop = processing && !canSend;
   return (
     <div className={mx('flex items-center gap-1', classNames)}>
       {children}
@@ -69,37 +72,35 @@ export const ChatActions = ({
         />
       )}
 
-      {tasksVisible !== undefined && (
+      {tasksVisible != null && (
         <IconButton
           variant='ghost'
           classNames={TOUCH_TARGET}
           icon='ph--list-checks--regular'
           iconOnly
-          // The state, not a colour: `aria-pressed` tells assistive tech what this is, and the
-          // theme already dresses a pressed ghost button (`button.css`). Applying an accent here
-          // too would only fight it.
           aria-pressed={tasksVisible}
           label={t(tasksVisible ? 'hide-tasks.button' : 'show-tasks.button')}
           data-testid='assistant.toggle-tasks'
           onClick={() => onEvent?.({ type: 'toggle-tasks' })}
         />
       )}
+
       {/* One control, not two: send and stop are the same affordance at two moments of a turn, and
           as separate buttons one of them was always present and dead. Enter is the only other way to
           submit, and a touch keyboard offers no such affordance. */}
       {onSend && (
         // TODO(dmaretskyi): Set processing state correctly on rehydrated agents.
         <IconButton
-          disabled={!processing && !canSend}
+          disabled={!showStop && !canSend}
           variant='ghost'
-          classNames={mx(TOUCH_TARGET, processing ? 'text-error-text' : canSend && 'text-accent-text')}
-          icon={processing ? 'ph--square--duotone' : 'ph--paper-plane-right--regular'}
+          classNames={mx(TOUCH_TARGET, showStop ? 'text-error-text' : canSend && 'text-accent-text')}
+          icon={showStop ? 'ph--square--duotone' : 'ph--paper-plane-right--regular'}
           iconOnly
-          label={t(processing ? 'cancel-processing.button' : 'send.label')}
+          label={t(showStop ? 'cancel-processing.button' : 'send.label')}
           // One stable handle for the prompt's primary action; its mode is the accessible label,
           // which is also how a reader tells the two apart.
           data-testid='assistant.send'
-          onClick={() => (processing ? onEvent?.({ type: 'cancel' }) : onSend())}
+          onClick={() => (showStop ? onEvent?.({ type: 'cancel' }) : onSend())}
         />
       )}
     </div>
@@ -123,10 +124,12 @@ const ContributedActions = ({
 }) => {
   const menuActions = useMenuActions(actions);
   return (
-    // `Menu.Items` without `Menu.Toolbar`: the items are container-free, so they take their place
-    // in the prompt's own row rather than bringing a toolbar of their own.
     <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive>
-      <Menu.Items />
+      {/* Plain (non-`custom`) items render `Toolbar.*` primitives, which throw without the roving-focus
+          context `Menu.Toolbar` provides; `contents` keeps the items in the prompt's own row. */}
+      <Menu.Toolbar classNames='contents'>
+        <Menu.Items />
+      </Menu.Toolbar>
     </Menu.Root>
   );
 };

@@ -7,13 +7,15 @@
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Option from 'effect/Option';
+import * as Semaphore from 'effect/Semaphore';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { AiContext } from '@dxos/assistant';
+import * as Chat from '@dxos/assistant/Chat';
 import { ProcessManager } from '@dxos/compute-runtime';
 import {
   AgentService,
+  type Conversation,
   type GetSessionOptions,
   type Service,
   type Session,
@@ -75,7 +77,10 @@ export const createSession: (
     }),
   );
 
-  return yield* getSession(feed, { model: opts?.model, provider: opts?.provider });
+  // The agent process runs on a chat, so the conversation gets one even when the caller only
+  // wanted a bare session.
+  const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+  return yield* getSession(chat, { model: opts?.model, provider: opts?.provider });
 }, Effect.scoped);
 
 export interface AgentServiceOptions {
@@ -136,6 +141,21 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
         }
       >();
 
+      // Serializes `getSession` per chat: discovery and spawn sit several suspensions before the
+      // cache is written, so concurrent callers resolving the same conversation would each spawn a
+      // process for it. Kept for the lifetime of the layer — one entry per chat, no bigger than the
+      // session cache beside it.
+      const sessionLocks = new Map<string, Semaphore.Semaphore>();
+      const lockFor = (chatId: string): Semaphore.Semaphore => {
+        const existing = sessionLocks.get(chatId);
+        if (existing) {
+          return existing;
+        }
+        const lock = Effect.runSync(Semaphore.make(1));
+        sessionLocks.set(chatId, lock);
+        return lock;
+      };
+
       const makeExecutable = (model?: DXN.DXN, provider?: DXN.DXN) =>
         AgentProcess({
           systemPrompt: opts?.systemPrompt,
@@ -166,89 +186,82 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
       });
 
       const service: Service = {
-        getSession: (feed: Feed.Feed, options?: GetSessionOptions) =>
-          Effect.gen(function* () {
-            const model = options?.model ?? opts?.model;
-            const provider = options?.provider ?? opts?.provider;
-            const instructions = options?.instructions?.uri;
-            const cached = sessionCache.get(feed.id);
-            if (cached) {
-              if (
-                cached.model === model &&
-                cached.provider === provider &&
-                cached.instructions === instructions &&
-                !isTerminalProcess(cached.handle.status.state)
-              ) {
-                return cached.session;
-              }
-
-              if (!isTerminalProcess(cached.handle.status.state)) {
-                // Model, provider, or steering instructions changed (e.g. the user toggled
-                // online/offline, or the chat's instructions ref was repointed): terminate the
-                // existing process so the conversation continues on a fresh process bound to the new
-                // configuration. Conversation history is preserved via the feed, which the new
-                // process replays.
-                yield* cached.handle.terminate();
-              }
-              sessionCache.delete(feed.id);
-            }
-
-            const target = Obj.getURI(feed);
-            const parsedEchoUri = EID.tryParse(target);
-            const spaceId = parsedEchoUri ? EID.getSpaceId(parsedEchoUri) : undefined;
-            const executable = makeExecutable(model, provider);
-
-            // Reuse a still-running process for this feed only when there was no cached session
-            // (e.g. after the UI remounted). After a model change we always spawn a fresh process,
-            // since the process key does not encode the model.
-            const processes = yield* processManager.list({ target, key: executable.key });
-            let activeProcess = processes.find((process) => !isTerminalProcess(process.status.state));
-
-            // Spawn annotations are immutable, so a running process found via the remount path may
-            // carry stale instructions; terminate it and respawn with the requested ref.
-            if (activeProcess) {
-              const processInstructions = Option.getOrUndefined(
-                Annotation.getDictionary(activeProcess.params.annotations, Process.InstructionsAnnotation),
-              );
-              if (processInstructions !== instructions) {
-                yield* activeProcess.terminate();
-                activeProcess = undefined;
-              }
-            }
-
-            let handle: AgentHandle;
-            if (activeProcess) {
-              yield* activeProcess.hydrate(executable);
-              handle = activeProcess;
-            } else {
-              handle = yield* processManager.spawn(executable, {
-                name: 'Agent',
-                target,
-                // Stamp the host marker so the harness control surface is discoverable by annotation
-                // lookup (set once at spawn, immutable — the identity plane).
-                annotations: Annotation.buildDictionary((dictionary) => {
-                  Annotation.setDictionary(dictionary, Process.HarnessHostAnnotation, true);
-                  if (options?.instructions) {
-                    Annotation.setDictionary(dictionary, Process.InstructionsAnnotation, options.instructions.uri);
+        getSession: (chat: Conversation, options?: GetSessionOptions) =>
+          Effect.suspend(() =>
+            lockFor(chat.id).withPermits(1)(
+              Effect.gen(function* () {
+                const model = options?.model ?? opts?.model;
+                const provider = options?.provider ?? opts?.provider;
+                // Read off the chat rather than passed in: the process is bound to the chat, so its
+                // steering is whatever the chat points at when the process is spawned.
+                const instructions = chat.instructions?.uri;
+                const cached = sessionCache.get(chat.id);
+                if (cached) {
+                  if (
+                    cached.model === model &&
+                    cached.provider === provider &&
+                    cached.instructions === instructions &&
+                    !isTerminalProcess(cached.handle.status.state)
+                  ) {
+                    return cached.session;
                   }
-                }),
-                environment: {
-                  ...(spaceId !== undefined ? { space: spaceId } : {}),
-                  conversation: target,
-                },
-                traceMeta: {
-                  conversation: Ref.make(feed),
-                },
-              });
-            }
 
-            const releaseSession = () => {
-              sessionCache.delete(feed.id);
-            };
-            const session = makeSession(handle, feed, releaseSession);
-            sessionCache.set(feed.id, { model, provider, instructions, handle, session });
-            return session;
-          }),
+                  if (!isTerminalProcess(cached.handle.status.state)) {
+                    // Model, provider, or steering instructions changed (e.g. the user toggled
+                    // online/offline, or the chat's instructions ref was repointed): terminate the
+                    // existing process so the conversation continues on a fresh process bound to the new
+                    // configuration. Conversation history is preserved via the feed, which the new
+                    // process replays.
+                    yield* cached.handle.terminate();
+                  }
+                  sessionCache.delete(chat.id);
+                }
+
+                const feed = yield* Database.load(chat.feed).pipe(Effect.orDie);
+                const target = Obj.getURI(chat);
+                const parsedEchoUri = EID.tryParse(target);
+                const spaceId = parsedEchoUri ? EID.getSpaceId(parsedEchoUri) : undefined;
+                const executable = makeExecutable(model, provider);
+
+                // Reuse a still-running process for this feed only when there was no cached session
+                // (e.g. after the UI remounted). After a model change we always spawn a fresh process,
+                // since the process key does not encode the model.
+                const processes = yield* processManager.list({ target, key: executable.key });
+                let activeProcess = processes.find((process) => !isTerminalProcess(process.status.state));
+
+                let handle: AgentHandle;
+                if (activeProcess) {
+                  // `hydrate` returns the live handle; the listed one may be a dormant view whose
+                  // methods die with "Process not hydrated" (see ProcessManager's DormantHandle).
+                  handle = yield* activeProcess.hydrate(executable);
+                } else {
+                  handle = yield* processManager.spawn(executable, {
+                    name: 'Agent',
+                    target,
+                    // Stamp the host marker so the harness control surface is discoverable by annotation
+                    // lookup (set once at spawn, immutable — the identity plane).
+                    annotations: Annotation.buildDictionary((dictionary) => {
+                      Annotation.setDictionary(dictionary, Process.HarnessHostAnnotation, true);
+                    }),
+                    environment: {
+                      ...(spaceId !== undefined ? { space: spaceId } : {}),
+                      conversation: Obj.getURI(feed),
+                    },
+                    traceMeta: {
+                      conversation: Ref.make(feed),
+                    },
+                  });
+                }
+
+                const releaseSession = () => {
+                  sessionCache.delete(chat.id);
+                };
+                const session = makeSession(handle, chat, feed, releaseSession);
+                sessionCache.set(chat.id, { model, provider, instructions, handle, session });
+                return session;
+              }),
+            ),
+          ),
         hydrate: hydrateAgents,
       };
 
@@ -256,7 +269,13 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
     }),
   );
 
-const makeSession = (process: AgentHandle, feed: Feed.Feed, releaseSession: () => void): Session => ({
+const makeSession = (
+  process: AgentHandle,
+  chat: Conversation,
+  feed: Feed.Feed,
+  releaseSession: () => void,
+): Session => ({
+  chat,
   feed,
   getContext: () =>
     Effect.gen(function* () {
@@ -285,6 +304,9 @@ const makeSession = (process: AgentHandle, feed: Feed.Feed, releaseSession: () =
   // Settle when the turn's reply is complete; do NOT block on background sub-agents
   // (a supervisor delegates work that runs after the turn and reports back out of band).
   waitForCompletion: () => process.runUntilSettled(),
+  // The stopped turn's queue entry is NOT discarded here: `terminate` blocks while a tool holds the
+  // turn open, so anything it did afterwards would land after the reader's next prompt. The next
+  // process to spawn on this feed discards what it inherits instead (see `onSpawn` in agent-process).
   terminate: () => process.terminate().pipe(Effect.tap(() => Effect.sync(releaseSession))),
   subscribeEphemeral: () => process.subscribeEphemeral(),
 });

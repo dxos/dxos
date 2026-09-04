@@ -245,7 +245,7 @@ const MapViewport = composable<HTMLDivElement, MapViewportProps>((props, _forwar
     <MapContainer
       {...composableProps(rest, {
         // Frame classes (formerly on Map.Root): focusable grid container.
-        classNames: 'dx-container group relative grid dx-focus-ring-inset bg-base-surface!',
+        classNames: 'dx-expand overflow-hidden group relative grid dx-focus-ring-inset bg-base-surface!',
       })}
       attributionControl={false}
       zoomControl={false}

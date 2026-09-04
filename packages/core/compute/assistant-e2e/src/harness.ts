@@ -15,7 +15,8 @@ import { AiService } from '@dxos/ai';
 import { LanguageModelFixture, TestAiService } from '@dxos/ai/testing';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import { type TestHarness } from '@dxos/app-framework/testing';
-import { Chat, ChatContextSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
+import { ChatContextSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
+import * as Chat from '@dxos/assistant/Chat';
 import { type ClientOptions } from '@dxos/client';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -230,7 +231,7 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
     options.model ??
     (options.inferenceProvider === 'ollama'
       ? DXN.make('com.openai.model.gpt-oss-20b.default')
-      : DXN.make('com.anthropic.model.claude-opus-4-8.default'));
+      : DXN.make('com.anthropic.model.claude-opus-5.default'));
 
   const OutputSchema = Schema.Struct({
     completedCriteria: Schema.Struct({

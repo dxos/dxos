@@ -89,7 +89,7 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
             {/* Gated on the unfiltered set so hiding every type does not remove the filter itself. */}
             {relatedObjects.length > 0 && (
               <div
-                className={mx('dx-expander flex flex-col gap-form-gap', singleColumn ? 'dx-card-max-width' : 'w-full')}
+                className={mx('dx-expand flex flex-col gap-form-gap', singleColumn ? 'dx-card-max-width' : 'w-full')}
               >
                 <Input.Root>
                   <Input.Label>{t('related-objects.label')}</Input.Label>

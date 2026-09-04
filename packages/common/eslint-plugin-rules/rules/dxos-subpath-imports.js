@@ -19,6 +19,7 @@ const DXOS_SUBPATH_PACKAGES = new Set([
   '@dxos/assistant-toolkit',
   '@dxos/compute',
   '@dxos/graph',
+  '@dxos/observability',
 ]);
 
 /**

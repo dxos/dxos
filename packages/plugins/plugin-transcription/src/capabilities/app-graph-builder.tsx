@@ -10,7 +10,7 @@ import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
-import { Chat } from '@dxos/assistant-toolkit';
+import * as Chat from '@dxos/assistant/Chat';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 
@@ -48,7 +48,9 @@ export default Capability.makeModule(
             properties: {
               label: ['start-recording.label', { ns: meta.profile.key }],
               icon: 'ph--microphone--regular',
-              disposition: 'toolbar',
+              // Both surfaces: dictation acts on whatever text is being composed, which an object
+              // toolbar and a prompt row each have.
+              disposition: ['toolbar', 'prompt'],
               variant: 'custom',
               render: () => <Mic docId={matched.id} />,
             },

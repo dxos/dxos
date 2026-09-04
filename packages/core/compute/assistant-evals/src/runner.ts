@@ -14,7 +14,8 @@ import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import { type TestHarness } from '@dxos/app-framework/testing';
-import { Chat, RunInstructions } from '@dxos/assistant-toolkit';
+import { RunInstructions } from '@dxos/assistant-toolkit';
+import * as Chat from '@dxos/assistant/Chat';
 import { FeedTraceSink } from '@dxos/compute-runtime';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -37,7 +38,7 @@ import { trim } from '@dxos/util';
 
 import { getDefaultSkills } from './skills';
 
-const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claude-opus-4-8.default');
+const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claude-opus-5.default');
 
 /** Per-eval fallback; scenarios with more tool round-trips should pass an explicit `timeout`. */
 const DEFAULT_EVAL_TIMEOUT_MILLIS = 60_000;
@@ -145,7 +146,7 @@ export interface CreateEvalRunnerOptions<I, O> {
   plugins?: Plugin.Plugin[];
   /**
    * Provisions a {@link Chat} on the session feed so planning and other chat-scoped tools work
-   * (e.g. the planning skill's `update-tasks` resolves its plan via `Chat.getFromContext`).
+   * (e.g. the planning skill's `update-tasks` resolves its plan via `Harness.getChat`).
    */
   sessionChat?: boolean;
   /**

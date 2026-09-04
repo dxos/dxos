@@ -40,9 +40,12 @@ const isToolCallParseFailure = (cause: Cause.Cause<unknown>): boolean =>
   cause.reasons.length > 0 &&
   cause.reasons.every((reason) =>
     reason._tag === 'Fail'
-      ? isInvalidOutputError(reason.error)
+      ? isToolParamsError(reason.error)
       : reason._tag === 'Die' && reason.defect instanceof SyntaxError,
   );
 
-const isInvalidOutputError = (error: unknown): boolean =>
-  Predicate.hasProperty(error, 'reason') && Predicate.isTagged(error.reason, 'InvalidOutputError');
+// Providers report unparseable tool params as `InvalidOutputError` or `ToolParameterValidationError`.
+const isToolParamsError = (error: unknown): boolean =>
+  Predicate.hasProperty(error, 'reason') &&
+  (Predicate.isTagged(error.reason, 'InvalidOutputError') ||
+    Predicate.isTagged(error.reason, 'ToolParameterValidationError'));

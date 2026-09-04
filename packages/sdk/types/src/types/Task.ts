@@ -17,15 +17,76 @@ import { type MakeRequired } from '@dxos/util';
 import * as Actor from './Actor';
 import * as Milestone from './Milestone';
 
+//
+// Priority
+//
+
 export const Priority = Schema.Literals(['none', 'low', 'medium', 'high', 'urgent']);
 export type Priority = Schema.Schema.Type<typeof Priority>;
 
 /**
- * `review` sits between working and done: a task whose {@link Task.reviewers} is non-empty lands
- * there when the work is finished, so nothing a reviewer was named for closes without them.
+ * `icon` sits beside `color` so a row, its picker and the form's select cannot name the same
+ * priority with different glyphs. The ramp is neutral — shape carries the level — which is what
+ * leaves `urgent` the only coloured one and so the only one findable in a long list. The extra
+ * field is inert to `SelectOption`, which carries id/title/color and ignores the rest.
  */
-export const Status = Schema.Literals(['todo', 'started', 'review', 'done', 'cancelled', 'failed']);
+export const PriorityOptions: { id: Priority; title: string; color: string; icon: string }[] = [
+  { id: 'none', title: 'None', color: 'gray', icon: 'ph--dot--regular' },
+  { id: 'low', title: 'Low', color: 'gray', icon: 'px--bar-low--regular' },
+  { id: 'medium', title: 'Medium', color: 'gray', icon: 'px--bar-medium--regular' },
+  { id: 'high', title: 'High', color: 'gray', icon: 'px--bar-high--regular' },
+  { id: 'urgent', title: 'Urgent', color: 'rose', icon: 'ph--exclamation-mark--fill' },
+];
+
+//
+// Estimate (T-shirt sizes)
+//
+
+export const Estimate = Schema.Literals(['xs', 's', 'm', 'l', 'xl']);
+export type Estimate = Schema.Schema.Type<typeof Estimate>;
+
+/**
+ * `none` is a row so a picker built from this table can clear the field. It is not an `Estimate` —
+ * an unset estimate is the absent property, not a literal — so it is the one id a writer maps to
+ * `null` rather than passing through.
+ */
+export const EstimateOptions: { id: Estimate | 'none'; title: string; color: string }[] = [
+  { id: 'none', title: 'None', color: 'gray' },
+  { id: 'xs', title: 'XS', color: 'gray' },
+  { id: 's', title: 'S', color: 'gray' },
+  { id: 'm', title: 'M', color: 'gray' },
+  { id: 'l', title: 'L', color: 'gray' },
+  { id: 'xl', title: 'XL', color: 'gray' },
+];
+
+//
+// Status
+//
+
+export const Status = Schema.Literals([
+  'todo',
+  'backlog',
+  'duplicate',
+  'started',
+  'review',
+  'done',
+  'blocked',
+  'cancelled',
+  'failed',
+]);
 export type Status = Schema.Schema.Type<typeof Status>;
+
+export const StatusOptions: { id: Status; title: string; color: string }[] = [
+  { id: 'todo', title: 'Todo', color: 'gray' },
+  { id: 'backlog', title: 'Backlog', color: 'gray' },
+  { id: 'duplicate', title: 'Duplicate', color: 'gray' },
+  { id: 'started', title: 'Started', color: 'sky' },
+  { id: 'review', title: 'In Review', color: 'cyan' },
+  { id: 'done', title: 'Done', color: 'green' },
+  { id: 'blocked', title: 'Blocked', color: 'rose' },
+  { id: 'cancelled', title: 'Cancelled', color: 'rose' },
+  { id: 'failed', title: 'Failed', color: 'rose' },
+];
 
 /**
  * What happened to a task, as recorded in its {@link History}. Deliberately coarser than the field
@@ -58,35 +119,31 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
       }),
     ),
     description: Schema.optional(
-      Schema.String.annotate({ title: 'Description' }).pipe(
+      Schema.String.pipe(
+        Schema.annotate({ title: 'Description' }),
         GeneratorAnnotation.set({
           generator: 'lorem.paragraphs',
           args: [{ min: 1, max: 3 }],
         }),
       ),
     ),
-    priority: Priority.pipe(
-      FormatAnnotation.set(Format.TypeFormat.SingleSelect),
-      GeneratorAnnotation.set({
-        generator: 'helpers.arrayElement',
-        args: [Priority.literals],
-      }),
-      Schema.annotate({
-        title: 'Priority',
-        [PropertyMetaAnnotationId]: {
-          singleSelect: {
-            options: [
-              { id: 'none', title: 'None', color: 'gray' },
-              { id: 'low', title: 'Low', color: 'indigo' },
-              { id: 'medium', title: 'Medium', color: 'purple' },
-              { id: 'high', title: 'High', color: 'amber' },
-              { id: 'urgent', title: 'Urgent', color: 'red' },
-            ],
-          },
-        },
-      }),
-      Schema.optional,
+
+    /**
+     * Parent in the sub-task hierarchy (unbounded depth); unset means a root task. App-level: the
+     * ECHO parent edge means membership in the owning TaskSet, so nothing cascades through this field.
+     */
+    parentTask: Schema.optional(
+      Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task).annotate({ title: 'Parent Task' })),
     ),
+
+    /**
+     * Execution-ordering dependencies: this task is ready to start only when every referenced
+     * task is `done`. Orthogonal to `parentTask` (hierarchy) and `milestone` (grouping).
+     */
+    dependsOn: Schema.optional(
+      Schema.Array(Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task))).annotate({ title: 'Depends On' }),
+    ),
+
     status: Status.pipe(
       FormatAnnotation.set(Format.TypeFormat.SingleSelect),
       GeneratorAnnotation.set({
@@ -97,14 +154,42 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
         title: 'Status',
         [PropertyMetaAnnotationId]: {
           singleSelect: {
-            options: [
-              { id: 'todo', title: 'Todo', color: 'indigo' },
-              { id: 'started', title: 'Started', color: 'purple' },
-              { id: 'review', title: 'In Review', color: 'cyan' },
-              { id: 'done', title: 'Done', color: 'amber' },
-              { id: 'cancelled', title: 'Cancelled', color: 'gray' },
-              { id: 'failed', title: 'Failed', color: 'red' },
-            ],
+            options: StatusOptions,
+          },
+        },
+      }),
+      Schema.optional,
+    ),
+
+    // TODO(burdon): Customize or opinionated?
+    priority: Priority.pipe(
+      FormatAnnotation.set(Format.TypeFormat.SingleSelect),
+      GeneratorAnnotation.set({
+        generator: 'helpers.arrayElement',
+        args: [Priority.literals],
+      }),
+      Schema.annotate({
+        title: 'Priority',
+        [PropertyMetaAnnotationId]: {
+          singleSelect: {
+            options: PriorityOptions,
+          },
+        },
+      }),
+      Schema.optional,
+    ),
+
+    estimate: Estimate.pipe(
+      FormatAnnotation.set(Format.TypeFormat.SingleSelect),
+      GeneratorAnnotation.set({
+        generator: 'helpers.arrayElement',
+        args: [Estimate.literals],
+      }),
+      Schema.annotate({
+        title: 'Estimate',
+        [PropertyMetaAnnotationId]: {
+          singleSelect: {
+            options: EstimateOptions,
           },
         },
       }),
@@ -121,37 +206,6 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
     reviewers: Schema.optional(Schema.Array(Actor.Actor).annotate({ title: 'Reviewers' })),
 
     /**
-     * What the task produced — the documents, sketches and records made while working it. Refs
-     * rather than an ECHO parent edge: an artifact belongs to the project (or wherever it was
-     * filed) and merely records which task made it, so completing a task must not cascade to it.
-     */
-    artifacts: Schema.optional(
-      Schema.Array(Ref.Ref(Obj.Unknown)).pipe(
-        Annotation.FormInputAnnotation.set(false),
-        Schema.annotate({ title: 'Artifacts' }),
-      ),
-    ),
-    estimate: Schema.optional(Schema.Number.annotate({ title: 'Estimate' })),
-
-    /**
-     * Parent in the sub-task hierarchy (unbounded depth); unset means a root task. App-level: the
-     * ECHO parent edge means membership in the owning TaskSet, so nothing cascades through this field.
-     */
-    // `Schema.suspend` because the type refers to itself; clear the field with `delete` rather
-    // than an `undefined` assignment, which the suspended schema rejects on validation.
-    parentTask: Schema.optional(
-      Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task).annotate({ title: 'Parent Task' })),
-    ),
-
-    /**
-     * Execution-ordering dependencies: this task is ready to start only when every referenced
-     * task is `done`. Orthogonal to `parentTask` (hierarchy) and `milestone` (grouping).
-     */
-    dependsOn: Schema.optional(
-      Schema.Array(Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task))).annotate({ title: 'Depends On' }),
-    ),
-
-    /**
      * The milestone this task belongs to; unset means backlog. A sub-task inherits its nearest
      * ancestor's milestone at read time unless it sets its own (matching Linear).
      */
@@ -164,6 +218,18 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
      */
     history: Schema.optional(
       Schema.Array(HistoryEntry).pipe(Annotation.FormInputAnnotation.set(false), Schema.annotate({ title: 'History' })),
+    ),
+
+    /**
+     * What the task produced — the documents, sketches and records made while working it. Refs
+     * rather than an ECHO parent edge: an artifact belongs to the project (or wherever it was
+     * filed) and merely records which task made it, so completing a task must not cascade to it.
+     */
+    artifacts: Schema.optional(
+      Schema.Array(Ref.Ref(Obj.Unknown)).pipe(
+        Annotation.FormInputAnnotation.set(false),
+        Schema.annotate({ title: 'Artifacts' }),
+      ),
     ),
 
     // Set membership is the `TaskSet.tasks` array (flat, ordered, sub-tasks included), not a
@@ -199,7 +265,7 @@ export type Edit = {
   description?: string | null;
   status?: Status;
   priority?: Priority | null;
-  estimate?: number | null;
+  estimate?: Estimate | null;
   assignee?: Actor.Actor | null;
 };
 
@@ -309,7 +375,7 @@ export const update = (task: Task, requested: Edit, options: EditOptions = {}): 
     );
   }
   if (changes.estimate !== undefined && (changes.estimate ?? undefined) !== task.estimate) {
-    notes.push(changes.estimate === null ? 'Estimate cleared.' : `Estimate set to ${changes.estimate}.`);
+    notes.push(changes.estimate === null ? 'Estimate cleared.' : `Estimate set to ${changes.estimate.toUpperCase()}.`);
   }
   if (changes.assignee !== undefined && !sameActor(changes.assignee ?? undefined, task.assignee)) {
     notes.push(changes.assignee === null ? 'Unassigned.' : `Assigned to ${actorLabel(changes.assignee)}.`);
@@ -475,6 +541,15 @@ export const subTasks = (tasks: readonly Task[], task: Task): Task[] => {
   const parent = task.id;
   return tasks.filter((candidate) => refEntityId(candidate.parentTask) === parent);
 };
+
+/**
+ * Whether an agent is working this task right now: assigned to one, and started.
+ *
+ * `started` is stamped when the session takes the task, not when it produces anything, so the pair
+ * is what says "underway" — an agent-assigned task still in `todo` is queued, and a started task
+ * assigned to a person is someone else's, not a running process.
+ */
+export const isAgentWorking = (task: Task): boolean => task.assignee?.role === 'assistant' && task.status === 'started';
 
 /**
  * Whether every `dependsOn` of `task` is `done`, resolved within `tasks` — a dangling dependency

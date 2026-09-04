@@ -2,7 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Agent, Chat, McpServer } from '@dxos/assistant-toolkit';
+import { McpServer } from '@dxos/assistant-toolkit';
+import * as Agent from '@dxos/assistant/Agent';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Skill from '@dxos/compute/Skill';
 import { Sequence } from '@dxos/conductor';
@@ -85,6 +87,7 @@ export const translations: Resource[] = [
       },
       // TODO(burdon): Reconcile with react-ui-chat.
       [meta.profile.key]: {
+        'delete-task.label': 'Delete task',
         'templates.label': 'Templates',
         'open-ambient-chat.label': 'Open Assistant',
         'assistant-chat.label': 'Assistant',
@@ -116,6 +119,16 @@ export const translations: Resource[] = [
         'trace-environment-space.label': 'Space',
         'trace-environment-conversation.label': 'Conversation',
 
+        'activity.starting.label': 'Starting agent',
+        'activity.preparing.label': 'Preparing request',
+        'activity.loading-history.label': 'Loading conversation',
+        'activity.summarizing.label': 'Summarizing conversation',
+        'activity.connecting-mcp.label': 'Connecting to MCP servers',
+        'activity.building-toolkit.label': 'Assembling tools',
+        'activity.encoding-prompt.label': 'Encoding prompt',
+        'activity.contacting-provider.label': 'Contacting inference provider',
+        'activity.attempt': 'attempt {{attempt}}',
+
         'assistant-dialog.title': 'Assistant',
         'open-assistant.label': 'Open assistant',
         'import-compute-operations.label': 'Import compute operations',
@@ -124,6 +137,7 @@ export const translations: Resource[] = [
         'no-results.message': 'No results',
 
         'cancel.button': 'Cancel',
+        'cancel-queued.button': 'Remove from queue',
         'save.button': 'Save',
         'new-thread.button': 'New Chat',
         'rename-thread.button': 'Rename Chat',

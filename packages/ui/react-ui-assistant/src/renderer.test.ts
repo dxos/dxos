@@ -9,19 +9,6 @@ import { ContentBlock, Message } from '@dxos/types';
 
 import { createRenderer } from './renderer';
 
-const message = (blocks: any[]) => Message.make({ created: new Date(0).toISOString(), sender: 'assistant', blocks });
-
-/** The renderer's markdown, which is the only shape these cases produce. */
-const markdown = (content: ItemContent): string => (content.kind === 'markdown' ? content.text : '');
-
-const toolkitTags = (content: ItemContent) => markdown(content).match(/<toolkit/g)?.length ?? 0;
-
-const userMessage = (blocks: ContentBlock.Any[]) =>
-  Message.make({ created: new Date(0).toISOString(), sender: { role: 'user' }, blocks });
-
-const renderUser = (message: Message.Message, viewType: Parameters<typeof createRenderer>[0] = 'normal'): string =>
-  markdown(createRenderer(viewType)(message));
-
 describe('createRenderer', () => {
   test('a run of tool calls is one panel', ({ expect }) => {
     const render = createRenderer(undefined);
@@ -98,3 +85,17 @@ describe('createRenderer', () => {
     expect(text).toBe('');
   });
 });
+
+const message = (blocks: NonNullable<Parameters<typeof Message.make>[0]['blocks']>) =>
+  Message.make({ created: new Date(0).toISOString(), sender: 'assistant', blocks });
+
+/** The renderer's markdown, which is the only shape these cases produce. */
+const markdown = (content: ItemContent): string => (content.kind === 'markdown' ? content.text : '');
+
+const toolkitTags = (content: ItemContent) => markdown(content).match(/<toolkit/g)?.length ?? 0;
+
+const userMessage = (blocks: ContentBlock.Any[]) =>
+  Message.make({ created: new Date(0).toISOString(), sender: { role: 'user' }, blocks });
+
+const renderUser = (message: Message.Message, viewType: Parameters<typeof createRenderer>[0] = 'normal'): string =>
+  markdown(createRenderer(viewType)(message));

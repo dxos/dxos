@@ -17,6 +17,7 @@ import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import * as TestClock from 'effect/testing/TestClock';
+import * as Tracer from 'effect/Tracer';
 import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import * as Rpc from 'effect/unstable/rpc/Rpc';
@@ -31,8 +32,10 @@ import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation, Database, DXN, Key } from '@dxos/echo';
+import { SpanAttributes } from '@dxos/effect';
+import { makeRecordingTracer } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
+import { type LogEntry, LogLevel, type LogProcessor, log } from '@dxos/log';
 import { Organization } from '@dxos/types';
 
 import { ProcessStore } from './process-store';
@@ -55,6 +58,12 @@ const Double = Operation.make({
   meta: { key: DXN.make('com.example.operation.test.double'), name: 'Double' },
   input: Schema.Struct({ value: Schema.Number }),
   output: Schema.Number,
+});
+
+const Traced = Operation.make({
+  meta: { key: DXN.make('com.example.operation.test.traced'), name: 'Traced' },
+  input: Schema.Void,
+  output: Schema.Void,
 });
 
 const Failing = Operation.make({
@@ -118,6 +127,13 @@ const handlers = OperationHandlerSet.make(
     Operation.withHandler(
       Effect.fn(function* (input) {
         return input.value * 2;
+      }),
+    ),
+  ),
+  Traced.pipe(
+    Operation.withHandler(
+      Effect.fn(function* () {
+        yield* Effect.void.pipe(Effect.withSpan('Handler.span'));
       }),
     ),
   ),
@@ -185,10 +201,7 @@ const makeParentAwaitingChild = () =>
     (ctx) =>
       Effect.succeed({
         onSpawn: () => Effect.void,
-        onInput: () =>
-          Effect.sync(() => {
-            ctx.setAlarm(0);
-          }),
+        onInput: () => ctx.setAlarm(0),
         onAlarm: () =>
           Effect.gen(function* () {
             const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
@@ -248,7 +261,7 @@ const makeWaitingExecutable = () =>
     Effect.succeed({
       onSpawn: () =>
         Effect.gen(function* () {
-          ctx.setAlarm(500);
+          yield* ctx.setAlarm(500);
         }),
       onInput: () => Effect.void,
       onAlarm: () =>
@@ -352,6 +365,30 @@ const CapturingTraceTestLayer = Layer.mergeAll(ProcessManager.ProcessOperationIn
   Layer.provide(Layer.succeed(Trace.TraceSink, { write: (message) => capturedTraceMessages.push(message) })),
 );
 
+/** Sets an alarm on input (or at spawn, when `atSpawn` is given) and opens a span when it fires. */
+const makeTracedAlarmExecutable = (options: { atSpawn?: number; scheduleInSpan?: string } = {}) =>
+  Process.make({ key: 'test.traced-alarm', input: Schema.Void, output: Schema.Void, services: [] }, (ctx) =>
+    Effect.succeed({
+      onSpawn: () => (options.atSpawn !== undefined ? ctx.setAlarm(options.atSpawn) : Effect.void),
+      onInput: () =>
+        options.scheduleInSpan ? ctx.setAlarm(0).pipe(Effect.withSpan(options.scheduleInSpan)) : ctx.setAlarm(0),
+      onAlarm: () =>
+        Effect.void.pipe(
+          Effect.withSpan('Alarm.handler'),
+          Effect.tap(() => Effect.sync(() => ctx.succeed())),
+        ),
+      onChildEvent: () => Effect.void,
+    }),
+  );
+
+const recordedSpans: Tracer.Span[] = [];
+const spaceSpans: Tracer.Span[] = [];
+const alarmSpans: Tracer.Span[] = [];
+const rearmSpans: Tracer.Span[] = [];
+const runtimeSpans: Tracer.Span[] = [];
+const callerSpans: Tracer.Span[] = [];
+const unusedRuntimeSpans: Tracer.Span[] = [];
+
 describe('ManagerImpl', () => {
   it.effect(
     'spawns a process and produces output',
@@ -370,6 +407,178 @@ describe('ManagerImpl', () => {
       const outputs = yield* Fiber.join(outputFiber);
       expect(outputs).toEqual([10]);
     }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'runs process handlers under the ambient tracer',
+    Effect.fn(
+      function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        const handle = yield* manager.spawn(Process.fromOperation(Traced, handlers));
+        yield* handle.runAndExit({ inputs: [undefined] }).pipe(Stream.runCollect);
+        expect(recordedSpans.map(({ name }) => name)).toContain('Handler.span');
+      },
+      Effect.provide(TestLayer),
+      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(recordedSpans))),
+    ),
+  );
+
+  it.effect(
+    'stamps the process space on every span a handler opens',
+    Effect.fn(
+      function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        const handle = yield* manager.spawn(Process.fromOperation(Traced, handlers), {
+          environment: { space: 'B7777777777777777777777777' as any },
+        });
+        yield* handle.runAndExit({ inputs: [undefined] }).pipe(Stream.runCollect);
+
+        const span = spaceSpans.find(({ name }) => name === 'Handler.span');
+        expect(span?.attributes.get('spaceId')).toEqual('B7777777777777777777777777');
+      },
+      Effect.provide(TestLayer),
+      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(spaceSpans))),
+    ),
+  );
+
+  it.effect(
+    'runs an alarm handler outside the span that scheduled it',
+    Effect.fn(
+      function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        const handle = yield* manager.spawn(makeTracedAlarmExecutable({ scheduleInSpan: 'Input.span' }));
+        yield* handle.submitInput(undefined);
+        yield* handle.runToCompletion();
+
+        expect(alarmSpans.some(({ name }) => name === 'Input.span')).toEqual(true);
+        // The dispatch span is the root of the alarm's trace: nothing above it, so the scheduling
+        // span cannot be an ancestor.
+        const ancestry: string[] = [];
+        let span: Tracer.AnySpan | undefined = alarmSpans.find(({ name }) => name === 'Alarm.handler');
+        while (span?._tag === 'Span') {
+          ancestry.push(span.name);
+          span = Option.getOrUndefined(span.parent);
+        }
+        expect(span).toBeUndefined();
+        expect(ancestry).toEqual(['Alarm.handler', 'Process.alarm']);
+      },
+      Effect.provide(TestLayer),
+      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(alarmSpans))),
+    ),
+  );
+
+  it.effect(
+    'runs alarm-dispatched handlers under the ambient tracer',
+    Effect.fn(
+      function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        const handle = yield* manager.spawn(makeTracedAlarmExecutable());
+        yield* handle.submitInput(undefined);
+        yield* handle.runToCompletion();
+
+        expect(recordedSpans.map(({ name }) => name)).toContain('Alarm.handler');
+      },
+      Effect.provide(TestLayer),
+      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(recordedSpans))),
+    ),
+  );
+
+  it.effect(
+    'wraps each handler dispatch in a Process span carrying the process identity',
+    Effect.fn(
+      function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        const executable = makeTracedAlarmExecutable();
+        const handle = yield* manager.spawn(executable);
+        yield* handle.submitInput(undefined);
+        yield* handle.runToCompletion();
+
+        const dispatch = recordedSpans.find(
+          ({ name, attributes }) =>
+            name === 'Process.alarm' && attributes.get(SpanAttributes.PROCESS.id) === handle.pid,
+        );
+        expect(dispatch?.attributes.get(SpanAttributes.PROCESS.key)).toEqual(executable.key);
+        const handler = recordedSpans.find(
+          ({ name, parent }) =>
+            name === 'Alarm.handler' && Option.exists(parent, ({ spanId }) => spanId === dispatch?.spanId),
+        );
+        expect(handler).toBeDefined();
+      },
+      Effect.provide(TestLayer),
+      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(recordedSpans))),
+    ),
+  );
+
+  it.effect(
+    'runs child-event handlers under the ambient tracer',
+    Effect.fn(
+      function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        const childExited = yield* Deferred.make<void>();
+        const parent = yield* manager.spawn(
+          Process.make({ key: 'test.traced-parent', input: Schema.Void, output: Schema.Void, services: [] }, () =>
+            Effect.succeed({
+              onChildEvent: () =>
+                Effect.void.pipe(
+                  Effect.withSpan('ChildEvent.handler'),
+                  Effect.andThen(Deferred.succeed(childExited, undefined)),
+                ),
+            }),
+          ),
+        );
+        const child = yield* manager.spawn(Process.fromOperation(Double, handlers), { parentProcessId: parent.pid });
+        yield* child.runAndExit({ inputs: [{ value: 1 }] }).pipe(Stream.runCollect);
+        yield* Deferred.await(childExited);
+
+        expect(recordedSpans.map(({ name }) => name)).toContain('ChildEvent.handler');
+        yield* parent.terminate();
+      },
+      Effect.provide(TestLayer),
+      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(recordedSpans))),
+    ),
+  );
+
+  it.effect(
+    "traces an operation invoked through the promise entry point on the runtime's tracer",
+    Effect.fn(
+      function* ({ expect }) {
+        const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+        const { error } = yield* Effect.promise(() => invoker.invokePromise(Traced, undefined));
+        expect(error).toBeUndefined();
+
+        expect(spanNamesToRoot(runtimeSpans, 'Handler.span')).toEqual([
+          'Handler.span',
+          Traced.meta.key.toString(),
+          'Process.input',
+          'ProcessOperationInvoker.invoke',
+        ]);
+      },
+      Effect.provide(TestLayer),
+      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(runtimeSpans))),
+    ),
+  );
+
+  it.effect(
+    "nests an operation invoked from a fiber under that fiber's span",
+    Effect.fn(
+      function* ({ expect }) {
+        const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+        yield* invoker
+          .invoke(Traced, undefined)
+          .pipe(Effect.withSpan('Caller.span'), Effect.provideService(Tracer.Tracer, makeRecordingTracer(callerSpans)));
+
+        expect(spanNamesToRoot(callerSpans, 'Handler.span')).toEqual([
+          'Handler.span',
+          Traced.meta.key.toString(),
+          'Process.input',
+          'ProcessOperationInvoker.invoke',
+          'Caller.span',
+        ]);
+        expect(unusedRuntimeSpans).toEqual([]);
+      },
+      Effect.provide(TestLayer),
+      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(unusedRuntimeSpans))),
+    ),
   );
 
   it.effect(
@@ -716,6 +925,49 @@ describe('ManagerImpl', () => {
         expect(info?.error?.name).toEqual('Error');
         expect(info?.error?.message).toEqual('boom failure');
         expect(info?.error?.stack).toContain('boom failure');
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'a crashed process reports the failure at error level, with the failing error (DX-1250)',
+      Effect.fn(function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        const executable = Process.make(
+          { key: 'test.explicit-fail', input: Schema.Void, output: Schema.Void, services: [] },
+          (ctx) =>
+            Effect.succeed({
+              onSpawn: () => Effect.sync(() => ctx.fail(new Error('boom failure'))),
+              onInput: () => Effect.void,
+              onAlarm: () => Effect.void,
+              onChildEvent: () => Effect.void,
+            }),
+        );
+
+        const entries = yield* captureLogEntries(() => manager.spawn(executable));
+        const failures = entries.filter((entry) => entry.message === 'lifecycle: failed');
+        expect(failures).toHaveLength(1);
+        expect(failures[0].level).toEqual(LogLevel.ERROR);
+        // `e` carries the failing Error itself, so a bundle keeps the message and stack rather than
+        // only the outermost pretty-printed reason.
+        expect(failures[0].computedError).toContain('boom failure');
+        expect(failures[0].computedContext.key).toEqual('test.explicit-fail');
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'a died handler reports the failure at error level too (DX-1250)',
+      Effect.fn(function* ({ expect }) {
+        const manager = yield* ProcessManager.Service;
+        const entries = yield* captureLogEntries(() =>
+          Effect.gen(function* () {
+            const handle = yield* manager.spawn(Process.fromOperation(Failing, handlers));
+            yield* handle.runAndExit({ inputs: [undefined] }).pipe(Stream.runCollect, Effect.exit);
+          }),
+        );
+        const failures = entries.filter((entry) => entry.message === 'lifecycle: failed');
+        expect(failures.length).toBeGreaterThanOrEqual(1);
+        expect(failures.every((entry) => entry.level === LogLevel.ERROR)).toBe(true);
+        expect(failures[0].computedError).toContain('Test Error');
       }, Effect.provide(TestLayer)),
     );
   });
@@ -1498,6 +1750,97 @@ describe('durability', () => {
   );
 
   it.effect(
+    'a child exit handed over as the app closes still reaches the parent after hydrate',
+    Effect.fn(function* ({ expect }) {
+      const kv = yield* KeyValueStore.KeyValueStore;
+      const registry = yield* Registry.AtomRegistry;
+      const resolver = yield* ServiceResolver.ServiceResolver;
+      const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
+      const traceSink = yield* Trace.TraceSink;
+
+      SlowChildGate.taskSignal = yield* Queue.unbounded<void>();
+      SlowChildGate.completeDeferred = yield* Deferred.make<void>();
+      const alarmStarted = yield* Deferred.make<void>();
+      const alarmResume = yield* Deferred.make<void>();
+      const childEvents: string[] = [];
+      const delivered = yield* Deferred.make<void>();
+      const parentDefinition = Process.make(
+        {
+          key: 'test.parent-child-exit-at-close',
+          input: Schema.Void,
+          output: Schema.Void,
+          services: [ProcessManager.ProcessOperationInvoker.Service],
+        },
+        (ctx) =>
+          Effect.succeed({
+            onInput: () => ctx.setAlarm(0),
+            onAlarm: () =>
+              Effect.gen(function* () {
+                const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+                yield* Effect.forkChild(invoker.invokeFiber(SlowChild, { value: 1 }).pipe(Effect.asVoid));
+                yield* Deferred.succeed(alarmStarted, undefined);
+                yield* Deferred.await(alarmResume);
+              }),
+            onChildEvent: (event) =>
+              Effect.sync(() => {
+                childEvents.push(event._tag);
+              }).pipe(Effect.andThen(Deferred.succeed(delivered, undefined))),
+          }),
+      );
+
+      const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      const parent = yield* managerA.spawn(parentDefinition);
+      yield* parent.submitInput(undefined);
+      yield* Deferred.await(alarmStarted);
+      yield* Queue.take(SlowChildGate.taskSignal);
+
+      // The child completes inline from this fiber and the app closes before yielding again, as
+      // when a tool process finishes just before the agent runtime suspends. The exit must either
+      // be handled now or stay persisted for redelivery; dropping it loses the tool result.
+      yield* Deferred.succeed(SlowChildGate.completeDeferred, undefined);
+      yield* managerA.shutdown();
+
+      const managerB = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      const dormant = yield* managerB.list({ key: parentDefinition.key });
+      yield* dormant[0].hydrate(parentDefinition);
+      yield* Deferred.succeed(alarmResume, undefined);
+
+      yield* Deferred.await(delivered);
+      expect(childEvents).toContain('exited');
+
+      SlowChildGate.taskSignal = undefined;
+      SlowChildGate.completeDeferred = undefined;
+    }, Effect.provide(DurabilityTestLayer)),
+  );
+
+  it.effect(
+    'fires a re-armed alarm under the ambient tracer after hydrate',
+    Effect.fn(
+      function* ({ expect }) {
+        const kv = yield* KeyValueStore.KeyValueStore;
+        const registry = yield* Registry.AtomRegistry;
+        const resolver = yield* ServiceResolver.ServiceResolver;
+        const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
+        const traceSink = yield* Trace.TraceSink;
+
+        const traced = makeTracedAlarmExecutable({ atSpawn: 500 });
+        const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+        yield* managerA.spawn(traced);
+        yield* managerA.shutdown();
+
+        const managerB = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+        const restored = yield* (yield* managerB.list({ key: 'test.traced-alarm' }))[0].hydrate(traced);
+        yield* TestClock.adjust(Duration.millis(500));
+        yield* restored.runToCompletion();
+
+        expect(rearmSpans.map(({ name }) => name)).toContain('Alarm.handler');
+      },
+      Effect.provide(DurabilityTestLayer),
+      Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(rearmSpans))),
+    ),
+  );
+
+  it.effect(
     're-runs onSpawn only when its spawn event is still pending',
     Effect.fn(function* ({ expect }) {
       const kv = yield* KeyValueStore.KeyValueStore;
@@ -1512,9 +1855,9 @@ describe('durability', () => {
         (ctx) =>
           Effect.succeed({
             onSpawn: () =>
-              Effect.sync(() => {
+              Effect.gen(function* () {
                 spawnCount++;
-                ctx.setAlarm(10_000);
+                yield* ctx.setAlarm(10_000);
               }),
             onInput: () => Effect.void,
             onAlarm: () => Effect.void,
@@ -1555,10 +1898,7 @@ describe('durability', () => {
         (ctx) =>
           Effect.succeed({
             onSpawn: () => Effect.void,
-            onInput: () =>
-              Effect.sync(() => {
-                ctx.setAlarm(0);
-              }),
+            onInput: () => ctx.setAlarm(0),
             onAlarm: () =>
               Effect.gen(function* () {
                 yield* Deferred.succeed(alarmStarted, undefined);
@@ -1838,6 +2178,97 @@ describe('durability', () => {
   );
 
   it.effect(
+    'hydrate returns a live handle; the dormant view stays inert',
+    Effect.fn(function* ({ expect }) {
+      const kv = yield* KeyValueStore.KeyValueStore;
+      const registry = yield* Registry.AtomRegistry;
+      const resolver = yield* ServiceResolver.ServiceResolver;
+      const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
+      const traceSink = yield* Trace.TraceSink;
+
+      const waiting = makeWaitingExecutable();
+      const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      const handle = yield* managerA.spawn(waiting);
+      yield* managerA.shutdown();
+
+      const managerB = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      const [dormant] = yield* managerB.list({ key: 'test.waiting' });
+
+      // The dormant view is read-only: callers must use what `hydrate` returns, not the listed
+      // handle (the AgentService regression that surfaced as "Process not hydrated" on submit).
+      const live = yield* dormant.hydrate(waiting);
+      expect(live).not.toBe(dormant);
+      expect(live.pid).toEqual(handle.pid);
+      yield* live.submitInput(undefined);
+      expect(Exit.isFailure(yield* dormant.submitInput(undefined).pipe(Effect.exit))).toBe(true);
+
+      // Hydrating again is idempotent — it returns the same live handle.
+      expect(yield* dormant.hydrate(waiting)).toBe(live);
+    }, Effect.provide(DurabilityTestLayer)),
+  );
+
+  it.effect(
+    'terminating a dormant handle discards the record and its descendants',
+    Effect.fn(function* ({ expect }) {
+      const kv = yield* KeyValueStore.KeyValueStore;
+      const registry = yield* Registry.AtomRegistry;
+      const resolver = yield* ServiceResolver.ServiceResolver;
+      const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
+      const traceSink = yield* Trace.TraceSink;
+
+      const waiting = makeWaitingExecutable();
+      const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      const parent = yield* managerA.spawn(waiting);
+      const child = yield* managerA.spawn(waiting, { parentProcessId: parent.pid });
+      yield* managerA.shutdown();
+
+      const managerB = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      const dormantParent = (yield* managerB.list({ key: 'test.waiting' })).find(
+        (listed) => listed.pid === parent.pid,
+      )!;
+
+      // Discarding a stale process must not require booting it first.
+      yield* dormantParent.terminate();
+
+      expect(yield* managerB.list({ key: 'test.waiting' })).toHaveLength(0);
+      const store = new ProcessStore(kv);
+      expect(yield* store.getProcess(parent.pid)).toBeUndefined();
+      expect(yield* store.getProcess(child.pid)).toBeUndefined();
+    }, Effect.provide(DurabilityTestLayer)),
+  );
+
+  it.effect(
+    'discarding a handle hydrated since the listing still sweeps its dormant descendants',
+    Effect.fn(function* ({ expect }) {
+      const kv = yield* KeyValueStore.KeyValueStore;
+      const registry = yield* Registry.AtomRegistry;
+      const resolver = yield* ServiceResolver.ServiceResolver;
+      const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
+      const traceSink = yield* Trace.TraceSink;
+
+      const waiting = makeWaitingExecutable();
+      const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      const parent = yield* managerA.spawn(waiting);
+      const child = yield* managerA.spawn(waiting, { parentProcessId: parent.pid });
+      yield* managerA.shutdown();
+
+      const managerB = mkManager({ kv, registry, resolver, handlerSet, traceSink });
+      const dormantParent = (yield* managerB.list({ key: 'test.waiting' })).find(
+        (listed) => listed.pid === parent.pid,
+      )!;
+
+      // Another caller hydrates the parent between the listing and the discard. Live termination
+      // only visits children in the handle map, so the still-dormant child would survive.
+      yield* dormantParent.hydrate(waiting);
+      yield* dormantParent.terminate();
+
+      const store = new ProcessStore(kv);
+      expect(yield* store.getProcess(parent.pid)).toBeUndefined();
+      expect(yield* store.getProcess(child.pid)).toBeUndefined();
+    }, Effect.provide(DurabilityTestLayer)),
+  );
+
+  it.effect(
     'terminal processes are not hydrated',
     Effect.fn(function* ({ expect }) {
       const kv = yield* KeyValueStore.KeyValueStore;
@@ -1862,3 +2293,27 @@ describe('durability', () => {
     }, Effect.provide(DurabilityTestLayer)),
   );
 });
+
+const spanNamesToRoot = (spans: Tracer.Span[], name: string): string[] => {
+  const names: string[] = [];
+  let span: Tracer.AnySpan | undefined = spans.find((candidate) => candidate.name === name);
+  while (span?._tag === 'Span') {
+    names.push(span.name);
+    span = Option.getOrUndefined(span.parent);
+  }
+  return names;
+};
+
+/**
+ * Collect the log entries `body` emits, so a test can assert on the level a code path reports at
+ * and not merely on the state it leaves behind.
+ */
+const captureLogEntries = <A, E, R>(body: () => Effect.Effect<A, E, R>): Effect.Effect<LogEntry[], E, R> =>
+  Effect.suspend(() => {
+    const entries: LogEntry[] = [];
+    const processor: LogProcessor = (_config, entry) => {
+      entries.push(entry);
+    };
+    const remove = log.addProcessor(processor);
+    return body().pipe(Effect.ensuring(Effect.sync(remove)), Effect.as(entries));
+  });

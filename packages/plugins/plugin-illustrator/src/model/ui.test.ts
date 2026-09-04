@@ -5,6 +5,8 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
+import { invariant } from '@dxos/invariant';
+
 import * as Ui from './ui';
 
 const Address = Schema.Struct({
@@ -144,8 +146,10 @@ describe('Ui.compile', () => {
 
     for (const command of commands) {
       if (command.op === 'upsert-object') {
-        expect(Number.isFinite(command.object.origin!.x)).toBe(true);
-        expect(Number.isFinite(command.object.origin!.y)).toBe(true);
+        const { origin } = command.object;
+        invariant(origin, 'upsert-object command missing origin');
+        expect(Number.isFinite(origin.x)).toBe(true);
+        expect(Number.isFinite(origin.y)).toBe(true);
       }
     }
   });
@@ -169,8 +173,10 @@ describe('Ui.compile', () => {
     for (const command of commands) {
       if (command.op === 'upsert-object') {
         expect(command.object.scale).toBe(2);
-        expect(command.object.origin!.x).toBeGreaterThanOrEqual(100);
-        expect(command.object.origin!.y).toBeGreaterThanOrEqual(50);
+        const { origin } = command.object;
+        invariant(origin, 'upsert-object command missing origin');
+        expect(origin.x).toBeGreaterThanOrEqual(100);
+        expect(origin.y).toBeGreaterThanOrEqual(50);
       }
     }
   });

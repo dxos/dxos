@@ -6,6 +6,8 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
+import * as Agent from '@dxos/assistant/Agent';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import * as Skill from '@dxos/compute/Skill';
@@ -16,7 +18,6 @@ import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { Outline, Task } from '@dxos/types';
 
-import { Agent, Chat } from '../../../types';
 import DelegationSkill from '../skill';
 import { DelegateTask } from './definitions';
 import { DelegationSkillHandlers } from './index';

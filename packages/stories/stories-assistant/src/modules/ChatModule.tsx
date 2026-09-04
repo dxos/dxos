@@ -6,7 +6,7 @@ import React from 'react';
 
 import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
-import { Chat as ChatSchema } from '@dxos/assistant-toolkit';
+import * as ChatSchema from '@dxos/assistant/Chat';
 import { Filter } from '@dxos/echo';
 import * as Assistant from '@dxos/plugin-assistant/Assistant';
 import { Chat } from '@dxos/plugin-assistant/components';
@@ -64,7 +64,11 @@ const ChatModuleContainer = ({ space }: { space: Space }) => {
         <Panel.Content asChild>
           <Chat.Content>
             <Chat.Thread viewType={view} />
-            <Chat.TaskList classNames='shrink-0 border border-separator border-b-0 rounded-t-sm text-description' />
+            {/* What the request is doing before the first token arrives. */}
+            <Chat.Activity />
+            <Chat.Queue />
+            {/* TODO(dmaretskyi): Breaks layout. */}
+            {/* <Chat.TaskList classNames='shrink-0 border border-separator border-b-0 rounded-t-sm text-description' /> */}
             <Chat.Prompt classNames='border-none rounded-none' {...chatProps} outline preset={preset?.id} />
           </Chat.Content>
         </Panel.Content>

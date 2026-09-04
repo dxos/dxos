@@ -41,7 +41,7 @@ export const MobileDeckLayout = ({ onDismissToast }: MobileDeckLayoutProps) => {
       <PopoverRoot>
         <Dnd.Root>
           <MobileLayout.Root
-            classNames='dx-container grid relative dx-toolbar-surface'
+            classNames='dx-expand overflow-hidden grid relative dx-toolbar-surface'
             onKeyboardOpenChange={setKeyboardOpen}
           >
             <MobileLayout.Panel safe={{ top: true, bottom: splitterMode === 'start' }}>

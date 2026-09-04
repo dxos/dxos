@@ -4,7 +4,8 @@
 
 import { createContext } from '@radix-ui/react-context';
 
-import { type Chat as ChatModule } from '@dxos/assistant-toolkit';
+import { type Alarm } from '@dxos/assistant';
+import type * as ChatModule from '@dxos/assistant/Chat';
 import { type Event } from '@dxos/async';
 import { type Database } from '@dxos/echo';
 import { type ChatThreadController } from '@dxos/react-ui-assistant';
@@ -31,6 +32,12 @@ export type ChatContextValue = {
   db?: Database.Database;
   chat?: ChatModule.Chat;
   messages: Message.Message[];
+  /** Queued input the agent has not taken up yet, in append order. */
+  queued: Message.Message[];
+  /** Alarms still waiting to fire, earliest first. */
+  alarms: Alarm.Alarm[];
+  /** Removes a queued message or a pending alarm from the feed. */
+  onCancel: (item: Message.Message | Alarm.Alarm) => void;
   processor: AiChatProcessor;
   requestTiming: ChatRequestTiming | null;
   /** The thread's controller, shared between `Chat.Thread` and `Chat.Outline`. */

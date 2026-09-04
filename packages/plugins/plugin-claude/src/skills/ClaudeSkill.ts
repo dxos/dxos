@@ -60,12 +60,11 @@ export const make = (): Skill.Skill =>
         ## Giving an agent a credential
         An agent's own credentials — a GitHub token, a Stripe key — are bound to the session by
         REFERENCE, never by value:
-        1. The secret lives in the space as an AccessToken object. Pass its ref as \`token\`, the
-           environment variable the agent should read it as (\`as\`), and optionally the hosts it may
-           be sent to (\`scope\`, defaulting to the token's own source).
+        1. The secret lives in the space as an AccessToken object. Pass its ref as \`token\` and the
+           environment variable the agent should read it as (\`as\`).
         2. The value is resolved when it is injected and handed to the container's environment over
-           the control plane. It never enters the transcript, and the platform refuses to substitute
-           it into a request to any host outside \`scope\`.
+           the control plane. It never enters the transcript: the container only ever sees an opaque
+           placeholder, and the platform substitutes the real value at egress.
         3. NEVER ask the user to paste a secret into the conversation, and never put one in a system
            prompt or a message — both persist in the session's history. If the credential is not in
            the space yet, prompt for it as described under Missing credentials below.
@@ -109,6 +108,11 @@ export const make = (): Skill.Skill =>
           pass \`order: first\` to read the opening of a long session instead.
         - The transcript returns only user and agent prose. Tool calls, thinking signals and status
           events are omitted, so a quiet transcript on a running session is normal.
+        - Managed agents compact their own context, so a session never dies of a full context window.
+          Treat "running out of context", "approaching the context limit" or a similar warning in the
+          transcript as narration, not a fault: do not restart the session, start a fresh one, or
+          re-send the work on that basis alone. Only a real blocker — \`requires_action\`,
+          \`budget_reached\`, or an error — warrants intervention.
 
         ## Choosing configuration
         - Default the model to claude-opus-5 unless the user names another.

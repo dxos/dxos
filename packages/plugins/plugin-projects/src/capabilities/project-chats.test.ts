@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import { setupGraphBuilder } from '@dxos/app-graph/testing';
-import { Chat } from '@dxos/assistant-toolkit';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Project from '@dxos/compute/Project';
 import { Feed, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';

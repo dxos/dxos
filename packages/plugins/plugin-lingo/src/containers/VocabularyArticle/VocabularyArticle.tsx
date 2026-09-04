@@ -62,12 +62,12 @@ export const VocabularyArticle = ({ role, subject, attendableId }: VocabularyArt
   return (
     <Menu.Root {...menuActions} attendableId={attentionId}>
       <Panel.Root role={role}>
-        <Panel.Toolbar asChild classNames='dx-container'>
+        <Panel.Toolbar asChild classNames='dx-expand'>
           <Menu.Toolbar>
             <Menu.Items />
           </Menu.Toolbar>
         </Panel.Toolbar>
-        <Panel.Content classNames='dx-container'>
+        <Panel.Content>
           <WordList words={sorted} />
         </Panel.Content>
       </Panel.Root>

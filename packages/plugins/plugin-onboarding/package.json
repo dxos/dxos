@@ -2,7 +2,7 @@
   "name": "@dxos/plugin-onboarding",
   "version": "0.11.1",
   "private": true,
-  "description": "DXOS Composer onboarding plugin — identity setup, exemplar space, and auth flows.",
+  "description": "DXOS Composer onboarding plugin — identity setup, sample space, and auth flows.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -54,7 +54,7 @@
     "src"
   ],
   "scripts": {
-    "build-exemplar": "vite-node ./scripts/build-exemplar-space.ts"
+    "build-sample": "vite-node ./scripts/build-sample-space.ts"
   },
   "dependencies": {
     "@dxos/app-framework": "workspace:*",

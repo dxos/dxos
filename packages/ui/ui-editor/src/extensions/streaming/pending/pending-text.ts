@@ -208,6 +208,27 @@ const pendingDecorations = EditorView.decorations.compute([pendingTextState], (s
   return Decoration.set([Decoration.widget({ widget: new PendingTextWidget(value), side: 1 }).range(value.anchor)]);
 });
 
+/**
+ * Marks the content element while the preview is on screen.
+ *
+ * `@codemirror/view`'s own placeholder keys off an empty document, and pending text is a decoration
+ * rather than document content — so dictating into an empty editor draws the placeholder underneath
+ * the words being spoken. That placeholder takes no condition, so it is suppressed from the DOM side
+ * instead (see {@link styles}).
+ *
+ * Conditioned exactly as the decoration is: the placeholder goes when the preview arrives to cover
+ * it, not when the mic is tapped — opening a session paints nothing, and blanking the hint before
+ * there is anything to read in its place would only empty the field.
+ */
+const pendingAttributes = EditorView.contentAttributes.compute([pendingTextState], (state) => {
+  const value = state.field(pendingTextState);
+  const attributes: Record<string, string> = {};
+  if (value && hasContent(value)) {
+    attributes['data-pending-text'] = '';
+  }
+  return attributes;
+});
+
 // Flag the editor busy while a pending session is active so other extensions (e.g. the command-hint
 // placeholder) suppress themselves. Deferred to a microtask to avoid dispatching mid-update.
 const busyListener = EditorView.updateListener.of((update) => {
@@ -238,6 +259,7 @@ export const pendingText = (): Extension => [
   pendingTextState,
   busy(),
   pendingDecorations,
+  pendingAttributes,
   busyListener,
   markerTheme(),
   styles,
@@ -248,6 +270,10 @@ export const pendingText = (): Extension => [
 ];
 
 const styles = EditorView.theme({
+  // See {@link pendingAttributes}: the built-in placeholder would otherwise sit behind the preview.
+  '.cm-content[data-pending-text] .cm-placeholder': {
+    display: 'none',
+  },
   // Keep the marker and affordances on a single line (it already sits on its own line at the anchor).
   '.cm-pending-text': {
     display: 'inline-flex',

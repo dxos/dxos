@@ -5,11 +5,13 @@
 import { type Extension } from '@codemirror/state';
 import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
+import { useCapabilities } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 import { SchemaEx } from '@dxos/effect';
 import { URI } from '@dxos/keys';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { useQuery } from '@dxos/react-client/echo';
 import { Panel, Show, ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
@@ -30,13 +32,6 @@ export type OutlineArticleProps = AppSurface.ObjectArticleProps<OutlineType.Outl
    * toolbar, and a second one inside its section reads as a nested editor.
    */
   toolbar?: boolean;
-  /**
-   * Where a click on a promoted item's link goes when the embedder owns a task surface of its own
-   * (a project shows the task on its Tasks tab). Unset, the outline swaps itself for the task form.
-   */
-  onSelectTask?: (task: Task.Task) => void;
-  /** Editor extensions contributed by the host (e.g. plugin-github's `#123` decoration). */
-  extensions?: Extension[];
 };
 
 export const OutlineArticle = ({
@@ -45,8 +40,6 @@ export const OutlineArticle = ({
   subject: outline,
   taskSet,
   toolbar = true,
-  onSelectTask,
-  extensions,
 }: OutlineArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const db = Obj.getDatabase(outline);
@@ -77,16 +70,20 @@ export const OutlineArticle = ({
   );
 
   const handleSelectLink = useCallback((url: string) => setSelected(URI.make(url)), []);
-
-  // The link resolves asynchronously, so the hand-off waits for the target rather than the click,
-  // and clears the selection so the outline stays put instead of swapping to the task form.
-  useEffect(() => {
-    if (task && onSelectTask) {
-      setSelected(undefined);
-      onSelectTask(task);
-    }
-  }, [task, onSelectTask]);
   const handleBack = useCallback(() => setSelected(undefined), []);
+
+  // Editor extensions other plugins contribute (e.g. plugin-github's `#123` decoration), read here
+  // rather than handed down as a prop: this is the component that builds the editor, which is the
+  // same contract `MarkdownArticle` honours for markdown documents.
+  const extensionProviders = useCapabilities(MarkdownCapabilities.ExtensionProvider);
+  const extensions = useMemo<Extension[]>(
+    () =>
+      (extensionProviders ?? [])
+        .flat()
+        .map((provider) => (typeof provider === 'function' ? provider({}) : provider))
+        .filter((extension): extension is Extension => !!extension),
+    [extensionProviders],
+  );
 
   // Reactive: on a cold load (or a story that seeds during client init) the content ref's target
   // is not yet in memory, and a `.target` read would leave the editor permanently unmounted.
@@ -149,9 +146,7 @@ export const OutlineArticle = ({
     return builder.build();
   }, [t, handleConvertCurrent, taskSet, convertible]);
 
-  // `!onSelectTask`: with an embedder taking the task, the form must not paint for the frame
-  // between the target resolving and the effect above clearing the selection.
-  if (task && !onSelectTask) {
+  if (task) {
     return (
       <Menu.Root {...taskActions} attendableId={attendableId}>
         <Panel.Root role={role}>

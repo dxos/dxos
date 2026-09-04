@@ -479,6 +479,39 @@ overriding or delete the hooks.
   `dx-container` = that + clip; clipping is exactly why outset focus rings die and
   `dx-ring-pseudo` exists. The three are one system and should be documented as one.
 
+  **Resolved: the bundle is split and `dx-container` is gone.** "Keep them" was wrong on a
+  measurement the original audit did not make — for a flex or grid item, `min-height:auto` applies
+  only while `overflow` is `visible` (CSS Flexbox §4.5, CSS Grid §6.6), so `overflow-hidden` and the
+  `min-*-0` the utility already carried were two spellings of the same constraint. Every one of the
+  114 sites paid for a clip to get a size.
+
+  The vocabulary is now `dx-fill` (`h-full w-full`), `dx-grow` (`flex-1 min-h-0 min-w-0`),
+  `dx-expand` (both, renamed from `dx-expander`), and `dx-fullscreen` (`absolute inset-0`, its own
+  `overflow-hidden` dropped for the same reason). Clipping is explicit at the ~15 sites that want
+  it: rounded or bordered boxes whose child surface would paint over the radius, and hosts for
+  something that draws past its bounds (a map, a canvas, a scaled slide).
+
+  Two things the split made visible:
+
+  - The three properties are a **union, one per parent type**, and only the applicable one is read.
+    Measured in a 300px grid parent with a 900px child: `flex-1` alone leaves it at 900px, `h-full`
+    alone leaves it at 900px, `min-h-0` alone gives 260px. So `flex-1` next to `grid` is inert, not
+    a bug — which is why the utility works without the author knowing the parent's display type.
+    `ui/ui-theme/Sizing` renders this as measured output.
+  - `withColumn.propagate()` selected on `.dx-container`, so a **sizing class was doubling as the
+    ScrollArea marker**. That is now an explicit `dx-scroll-boundary` on `ScrollArea.Root`.
+
+  The `dx-container-type-*` / `dx-container-query-*` collision noted elsewhere resolves itself, and
+  bit during the migration: a blanket rename caught them and silently broke 9 container-query sites.
+
+- **`dx-fullscreen` is adopted** (69 sites), which also unwound the 7 `dx-container absolute inset-0`
+  sites where the sizing half was already inert. One exception is preserved: a replaced element
+  (`canvas`, `img`, `video`) is not stretched by the insets and sizes to its intrinsic dimensions,
+  so the Terra canvases keep `dx-fill` alongside.
+
+- A `prefer-sizing-utilities` lint rule now catches the hand-rolled spellings — 161 at the start,
+  0 remaining.
+
 ### 6.3 Focus and rings
 
 - **`dx-ring-pseudo` is the right approach** (ring on an `::after` above children; inset, so it

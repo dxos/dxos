@@ -12,8 +12,6 @@ import { Milestone, Task, TaskSet } from '@dxos/types';
 import createTask from './create-task';
 import updateTask from './update-task';
 
-const testLayer = () => TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] });
-
 describe('update-task', () => {
   it.effect('patches only the provided fields', () =>
     Effect.gen(function* () {
@@ -25,13 +23,13 @@ describe('update-task', () => {
         priority: 'low',
       });
 
-      yield* updateTask.handler({ task: Ref.make(task), status: 'started', estimate: 3 });
+      yield* updateTask.handler({ task: Ref.make(task), status: 'started', estimate: 'm' });
 
       expect(task.title).toBe('Draft');
       expect(task.priority).toBe('low');
       expect(task.status).toBe('started');
-      expect(task.estimate).toBe(3);
-    }).pipe(Effect.provide(testLayer())),
+      expect(task.estimate).toBe('m');
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 
   it.effect('records what the patch changed, and nothing when it changed nothing', () =>
@@ -57,7 +55,7 @@ describe('update-task', () => {
       // Re-applying the same patch is not an event: it left the task exactly as it was.
       yield* updateTask.handler({ task: Ref.make(task), status: 'done' });
       expect(task.history).toHaveLength(1);
-    }).pipe(Effect.provide(testLayer())),
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 
   it.effect('clears an optional field with null', () =>
@@ -76,7 +74,7 @@ describe('update-task', () => {
 
       expect(task.assignee).toBeUndefined();
       expect(task.history?.at(-1)?.description).toEqual('Unassigned.');
-    }).pipe(Effect.provide(testLayer())),
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 
   it.effect('clearing parentTask clears the lifecycle edge, not just the ref', () =>
@@ -96,7 +94,7 @@ describe('update-task', () => {
       // Membership is untouched by promotion: the edge points at the set before and after.
       expect(child.parentTask).toBeUndefined();
       expect(Obj.getParent(child)?.id).toBe(taskSet.id);
-    }).pipe(Effect.provide(testLayer())),
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 
   it.effect('clears the lifecycle edge for a task belonging to no set', () =>
@@ -114,7 +112,7 @@ describe('update-task', () => {
 
       expect(child.parentTask).toBeUndefined();
       expect(Obj.getParent(child)).toBeUndefined();
-    }).pipe(Effect.provide(testLayer())),
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 
   it.effect('refuses to re-parent a task under its own sub-task', () =>
@@ -130,7 +128,7 @@ describe('update-task', () => {
 
       const exit = yield* Effect.exit(updateTask.handler({ task: Ref.make(parent), parentTask: Ref.make(child) }));
       expect(exit._tag).toBe('Failure');
-    }).pipe(Effect.provide(testLayer())),
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 
   it.effect('promotes a sub-task back to a root with a null parentTask', () =>
@@ -149,6 +147,6 @@ describe('update-task', () => {
       expect(child.parentTask).toBeUndefined();
       expect(Obj.getParent(child)?.id).toBe(taskSet.id);
       expect(taskSet.tasks.map((ref) => ref.target?.id)).toEqual([parent.id, child.id]);
-    }).pipe(Effect.provide(testLayer())),
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 });

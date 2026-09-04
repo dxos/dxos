@@ -10,21 +10,22 @@ export type SplitterStyleProps = {
 };
 
 const root: ComponentFunction<SplitterStyleProps> = ({ orientation }, ...etc) =>
-  mx('relative flex w-full h-full overflow-hidden', orientation === 'vertical' ? 'flex-col' : 'flex-row', ...etc);
+  mx('relative flex dx-fill overflow-hidden', orientation === 'vertical' ? 'flex-col' : 'flex-row', ...etc);
 
-const panel: ComponentFunction<SplitterStyleProps> = (_props, ...etc) =>
-  mx('relative grid overflow-hidden min-w-0 min-h-0', ...etc);
+const panel: ComponentFunction<SplitterStyleProps> = (_props, ...etc) => mx('relative grid overflow-hidden', ...etc);
 
-// A 7px grab area, absolutely positioned and centered on the split point (the component sets the offset),
-// containing a persistent 1px divider line that brightens on hover/focus/active.
+// A 7px grab area sitting between the panes, containing a persistent 1px divider line that brightens
+// on hover/focus/active. The negative margin cancels its own extent, so the grab area straddles the
+// seam rather than taking a slice of the layout — the panes still meet, and their percentage widths
+// still add up. The cursor comes from the machine, which knows the axis.
 const handle: ComponentFunction<SplitterStyleProps> = ({ orientation }, ...etc) =>
   mx(
-    'group absolute z-10 touch-none select-none',
+    'group relative z-10 touch-none select-none',
     'before:absolute before:block before:bg-separator',
     'before:transition-colors before:duration-100 before:ease-in-out hover:before:bg-focus-ring-subtle focus-visible:before:bg-focus-ring-subtle active:before:bg-focus-ring-subtle',
     orientation === 'vertical'
-      ? 'h-[7px] cursor-row-resize before:inset-x-0 before:top-1/2 before:-translate-y-1/2 before:h-px'
-      : 'w-[7px] cursor-col-resize before:inset-y-0 before:left-1/2 before:-translate-x-1/2 before:w-px',
+      ? 'h-[7px] -my-[3.5px] before:inset-x-0 before:top-1/2 before:-translate-y-1/2 before:h-px'
+      : 'w-[7px] -mx-[3.5px] before:inset-y-0 before:left-1/2 before:-translate-x-1/2 before:w-px',
     ...etc,
   );
 

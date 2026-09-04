@@ -8,7 +8,9 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
+import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
+import * as Tracer from 'effect/Tracer';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
@@ -25,6 +27,7 @@ import * as Trigger from '@dxos/compute/Trigger';
 import * as TriggerEvent from '@dxos/compute/TriggerEvent';
 import { Annotation, Database, DXN, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
+import { makeRecordingTracer } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { Person, Task } from '@dxos/types';
 
@@ -93,6 +96,25 @@ const SubjectProbeOp = Operation.make({
   output: Schema.Struct({ type: Schema.String, subjectId: Schema.optional(Schema.String) }),
   services: [Database.Service],
 });
+
+/** Opens a span when invoked, so a test can see which tracer a dispatched trigger ran under. */
+const TracedOp = Operation.make({
+  meta: { key: DXN.make('com.example.operation.triggerDispatcher.traced'), name: 'Traced' },
+  input: Schema.Any,
+  output: Schema.Void,
+});
+
+const TracedHandlers = OperationHandlerSet.make(
+  TracedOp.pipe(
+    Operation.withHandler(
+      Effect.fn(function* () {
+        yield* Effect.void.pipe(Effect.withSpan('Trigger.handler'));
+      }),
+    ),
+  ),
+);
+
+const dispatcherSpans: Tracer.Span[] = [];
 
 const TestHanlers = OperationHandlerSet.make(
   SubjectProbeOp.pipe(
@@ -169,7 +191,11 @@ const TestLayer = (
       }),
     ),
     Layer.provideMerge(KeyValueStore.layerMemory),
-    Layer.provideMerge(OperationHandlerSet.provide(OperationHandlerSet.merge(ExampleHandlers, TestHanlers))),
+    Layer.provideMerge(
+      OperationHandlerSet.provide(
+        OperationHandlerSet.merge(OperationHandlerSet.merge(ExampleHandlers, TestHanlers), TracedHandlers),
+      ),
+    ),
     Layer.provideMerge(Registry.layer),
     Layer.provideMerge(Trace.layerNoop),
   );
@@ -706,6 +732,47 @@ describe('TriggerDispatcher', () => {
           }).pipe(Effect.ensuring(dispatcher.stop()));
         },
         Effect.provide(TestLayer({ timeControl: 'natural', livePollInterval: Duration.hours(1) })),
+      ),
+    );
+
+    it.live(
+      'forks the trigger refresh and reactive dispatches under the ambient tracer',
+      Effect.fnUntraced(
+        function* ({ expect }) {
+          const feed = yield* Database.add(Feed.make());
+          const functionObj = yield* registerOperation(TracedOp);
+          const trigger = Trigger.make({
+            runnable: Ref.make(functionObj),
+            enabled: true,
+            spec: Trigger.specFeed(feed),
+          });
+          yield* Database.add(trigger);
+
+          const dispatcher = yield* TriggerDispatcher;
+          const registry = yield* Registry.AtomRegistry;
+          yield* dispatcher.start();
+
+          yield* Effect.gen(function* () {
+            yield* Feed.append(feed, [Obj.make(Person.Person, { fullName: 'Jane Doe' })]);
+            yield* Database.flush();
+
+            const traced = yield* Effect.sync(
+              () =>
+                dispatcherSpans.some(({ name }) => name === 'Trigger.handler') &&
+                registry.get(dispatcher.state).invocations.some((invocation) => invocation.trigger.id === trigger.id),
+            ).pipe(
+              Effect.repeat({ until: (traced) => traced, schedule: Schedule.spaced(Duration.millis(25)) }),
+              Effect.timeoutOption(Duration.seconds(2)),
+              Effect.map(Option.getOrElse(() => false)),
+            );
+
+            expect(dispatcherSpans.map(({ name }) => name)).toContain('TriggerDispatcher.refreshTriggers');
+            expect(dispatcherSpans.map(({ name }) => name)).toContain('TriggerDispatcher.invokeTrigger');
+            expect(traced, `recorded spans: ${JSON.stringify(dispatcherSpans.map(({ name }) => name))}`).toBe(true);
+          }).pipe(Effect.ensuring(dispatcher.stop()));
+        },
+        Effect.provide(TestLayer({ timeControl: 'natural', livePollInterval: Duration.hours(1) })),
+        Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(dispatcherSpans))),
       ),
     );
   });
