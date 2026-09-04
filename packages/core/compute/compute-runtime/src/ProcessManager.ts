@@ -128,6 +128,13 @@ export interface Handle<_Input, _Output, _Rpcs extends Rpc.Any> {
 
   terminate(): Effect.Effect<void>;
   readonly status: Status;
+
+  /**
+   * Absolute due-time (epoch ms) of the process's pending alarm, or `null` when none is scheduled.
+   * A host that suspends the process between turns (a Durable Object) mirrors this onto its own
+   * scheduler, since the runtime's alarm is an in-memory timer.
+   */
+  readonly alarmDueAt: number | null;
   statusAtom: Atom.Atom<Status>;
 
   /**
@@ -368,9 +375,11 @@ export class ProcessManagerImpl implements Manager {
     this.#store = new ProcessStore(opts.kvStore);
     this.#processTreeAtom = Atom.make<readonly Process.Info[]>([]);
     this.#registry.mount(this.#processTreeAtom);
+    const processTree = Effect.sync(() => this.#registry.get(this.#processTreeAtom));
     this.#monitor = {
-      processTree: Effect.sync(() => this.#registry.get(this.#processTreeAtom)),
+      processTree,
       processTreeAtom: this.#processTreeAtom,
+      list: Process.listFromTree(processTree),
       subscribeToTraceMessages: (filter: Trace.Filter): Stream.Stream<Trace.Message> =>
         Stream.unwrap(
           Effect.gen({ self: this }, function* () {
@@ -1069,6 +1078,8 @@ class DormantHandle<I, O> implements Handle<I, O, any> {
   readonly environment: Process.Environment;
   readonly status: Status;
   readonly statusAtom: Atom.Atom<Status>;
+  /** Carried on the persisted record, so a dormant handle still reports a pending alarm. */
+  readonly alarmDueAt: number | null;
   // Dormant handles expose no live RPC surface; the empty client serves no requests. Stored untyped
   // (`RpcClient<any>`) so the dormant handle is assignable to `Handle.Any` (see design spec §4.4).
   readonly rpc: RpcClient.RpcClient<any> = EMPTY_RPC_CLIENT;
@@ -1100,6 +1111,7 @@ class DormantHandle<I, O> implements Handle<I, O, any> {
       completedAt: Option.none(),
     };
     this.statusAtom = Atom.make(this.status);
+    this.alarmDueAt = record.alarmDueAt;
   }
 
   hydrate = (definition: Process.Process<I, O, any, any>): Effect.Effect<Handle<I, O, any>> =>
