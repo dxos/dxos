@@ -57,10 +57,6 @@ Benchmarks comparing ECHO object creation, access, and update performance across
 #### Running
 
 ```bash
-# Using moon (recommended)
-moon run benchmarks:echo
-
-# Or directly with node (requires build first)
 npm run benchmark:echo
 ```
 

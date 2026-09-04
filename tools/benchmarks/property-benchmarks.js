@@ -1,6 +1,8 @@
-// Benchmark: Property Access Patterns
+// Copyright 2025 DXOS.org
+//
+// Benchmark: Property Access Patterns.
 
-// Setup objects for benchmarking
+// Setup objects for benchmarking.
 const iterations = 1_000_000;
 
 // Pattern 1: Direct property access (read)
@@ -71,23 +73,30 @@ const immutableObj = new ImmutableAccess();
 console.log('READ benchmarks:');
 console.log('-'.repeat(70));
 
+let checksum = 0;
+
 const t1 = benchmark('1. Direct property read', () => {
-  const x = directObj.value;
+  checksum += directObj.value;
 });
+console.log(`  (checksum: ${checksum})`);
 
+checksum = 0;
 const t2 = benchmark('2. Getter (reads inner.value)', () => {
-  const x = getterObj.value;
+  checksum += getterObj.value;
 });
+console.log(`  (checksum: ${checksum})`);
 
+checksum = 0;
 const t4 = benchmark('4. Immutable (Object.defineProperty)', () => {
-  const x = immutableObj.value;
+  checksum += immutableObj.value;
 });
+console.log(`  (checksum: ${checksum})`);
 
 console.log('\nWRITE benchmarks:');
 console.log('-'.repeat(70));
 
 const t3 = benchmark('3. Simple property write', () => {
-  writeObj.value = writeObj.value + 1;
+  writeObj.value = 42;
 });
 
 console.log('\n' + '='.repeat(70));

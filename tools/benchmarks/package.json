@@ -15,7 +15,7 @@
   "scripts": {
     "build": "tsc",
     "benchmark:property": "node property-benchmarks-extended.js",
-    "benchmark:echo": "node dist/echo-storage-benchmarks.js"
+    "benchmark:echo": "npm run build && node dist/echo-storage-benchmarks.js"
   },
   "devDependencies": {
     "@dxos/async": "workspace:*",

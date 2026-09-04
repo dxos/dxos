@@ -1,10 +1,10 @@
-/**
- * ECHO Storage Performance Benchmarks
- * Compares object creation, access, and update performance across three storage backends:
- * A) No database (in-memory objects only)
- * B) Saved to database with automerge
- * C) Saved to feed storage
- */
+// Copyright 2025 DXOS.org
+//
+// ECHO Storage Performance Benchmarks.
+// Compares object creation, access, and update performance across three storage backends:
+// A) No database (in-memory objects only).
+// B) Saved to database with automerge.
+// C) Saved to feed storage.
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -12,7 +12,7 @@ import { Entity, Feed, Obj, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as Schema from 'effect/Schema';
 
-// Define test schema
+// Define test schema.
 const PersonSchema = Schema.Struct({
   name: Schema.String,
   age: Schema.Number,
@@ -39,7 +39,7 @@ type Person = Schema.Schema.Type<typeof PersonSchema>;
 
 const PersonType: Type.AnyEntity = Entity.define(PersonSchema, { typename: 'Person' });
 
-// Simpler type with just 1 prop for basic tests
+// Simpler type with just 1 prop for basic tests.
 const SimplePersonSchema = Schema.Struct({
   name: Schema.String,
 }).pipe(Schema.brand('SimplePersonSchema'));
@@ -53,7 +53,7 @@ async function benchmarkInMemory(): Promise<void> {
 
   const iterations = 10_000;
 
-  // 1. Obj.make with 1 property
+  // 1. Obj.make with 1 property.
   console.log('\n1. Obj.make (1 prop) - 10k iterations:');
   const start1 = performance.now();
   for (let i = 0; i < iterations; i++) {
@@ -62,7 +62,7 @@ async function benchmarkInMemory(): Promise<void> {
   const time1 = performance.now() - start1;
   console.log(`  ${time1.toFixed(2)}ms (${(iterations / time1 * 1000).toFixed(0)} ops/sec)`);
 
-  // 2. Obj.make with 20 properties
+  // 2. Obj.make with 20 properties.
   console.log('\n2. Obj.make (20 props) - 10k iterations:');
   const start2 = performance.now();
   for (let i = 0; i < iterations; i++) {
@@ -91,7 +91,7 @@ async function benchmarkInMemory(): Promise<void> {
   const time2 = performance.now() - start2;
   console.log(`  ${time2.toFixed(2)}ms (${(iterations / time2 * 1000).toFixed(0)} ops/sec)`);
 
-  // 3. Property access on in-memory object
+  // 3. Property access on in-memory object.
   console.log('\n3. Property read - 1M iterations:');
   const obj = Obj.make(PersonType, {
     name: 'Test Person',
@@ -122,7 +122,7 @@ async function benchmarkInMemory(): Promise<void> {
   const time3 = performance.now() - start3;
   console.log(`  ${time3.toFixed(2)}ms (${(readIterations / time3 * 1000).toFixed(0)} ops/sec)`);
 
-  // 4. Update 1 property
+  // 4. Update 1 property.
   console.log('\n4. Obj.update (1 prop) - 10k iterations:');
   const updateIterations = 10_000;
   const start4 = performance.now();
@@ -132,7 +132,7 @@ async function benchmarkInMemory(): Promise<void> {
   const time4 = performance.now() - start4;
   console.log(`  ${time4.toFixed(2)}ms (${(updateIterations / time4 * 1000).toFixed(0)} ops/sec)`);
 
-  // 5. Update 20 properties
+  // 5. Update 20 properties.
   console.log('\n5. Obj.update (20 props) - 1k iterations:');
   const updateIterations20 = 1_000;
   const start5 = performance.now();
@@ -232,7 +232,7 @@ async function benchmarkDatabase(): Promise<void> {
     const time3 = performance.now() - start3;
     console.log(`  ${time3.toFixed(2)}ms (${(readIterations / time3 * 1000).toFixed(0)} ops/sec)`);
 
-    // 4. Update 1 property
+    // 4. Update 1 property.
     console.log('\n4. Obj.update (1 prop) - 100 iterations:');
     const updateIterations = 100;
     const start4 = performance.now();
@@ -246,7 +246,7 @@ async function benchmarkDatabase(): Promise<void> {
     const time4 = performance.now() - start4;
     console.log(`  ${time4.toFixed(2)}ms (${(updateIterations / time4 * 1000).toFixed(0)} ops/sec)`);
 
-    // 5. Update 20 properties
+    // 5. Update 20 properties.
     console.log('\n5. Obj.update (20 props) - 50 iterations:');
     const updateIterations20 = 50;
     const start5 = performance.now();
@@ -309,6 +309,7 @@ async function benchmarkFeed(): Promise<void> {
       objects1.push(obj);
     }
     await db.appendToFeed(feed, objects1);
+    await db.flush();
     const time1 = performance.now() - start1;
     console.log(`  ${time1.toFixed(2)}ms (${(iterations / time1 * 1000).toFixed(0)} ops/sec)`);
 
@@ -341,6 +342,7 @@ async function benchmarkFeed(): Promise<void> {
       objects2.push(obj);
     }
     await db.appendToFeed(feed, objects2);
+    await db.flush();
     const time2 = performance.now() - start2;
     console.log(`  ${time2.toFixed(2)}ms (${(iterations / time2 * 1000).toFixed(0)} ops/sec)`);
 
@@ -358,7 +360,7 @@ async function benchmarkFeed(): Promise<void> {
     const time3 = performance.now() - start3;
     console.log(`  ${time3.toFixed(2)}ms (${(readIterations / time3 * 1000).toFixed(0)} ops/sec)`);
 
-    // 4. Update 1 property (on feed objects)
+    // 4. Update 1 property. (on feed objects)
     console.log('\n4. Obj.update (1 prop) - 100 iterations:');
     const updateIterations = 100;
     const start4 = performance.now();
@@ -372,7 +374,7 @@ async function benchmarkFeed(): Promise<void> {
     const time4 = performance.now() - start4;
     console.log(`  ${time4.toFixed(2)}ms (${(updateIterations / time4 * 1000).toFixed(0)} ops/sec)`);
 
-    // 5. Update 20 properties (on feed objects)
+    // 5. Update 20 properties. (on feed objects)
     console.log('\n5. Obj.update (20 props) - 50 iterations:');
     const updateIterations20 = 50;
     const start5 = performance.now();
