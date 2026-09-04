@@ -51,7 +51,7 @@ export const translations = [
         'send-report.label': 'Submit report',
         'sending-feedback.label': 'Sending…',
         'public-report.description':
-          'Your report will be posted publicly to our Discord help channel. Attached logs, screenshots, and diagnostics are only sent to the Composer team.',
+          'Posted publicly to our Discord help channel, screenshot included. Logs go to the Composer team only.',
         'discord-presence-team.label': '{{count}} team',
         'discord-presence-members.label': '{{count}} members',
         'discord-presence-online.label': 'Online:',
