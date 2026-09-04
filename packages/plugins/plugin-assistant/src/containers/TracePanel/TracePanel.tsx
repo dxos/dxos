@@ -121,7 +121,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
         {...composableProps(props, {
           ...attentionAttrs,
           classNames: mx(
-            'h-full grid divide-y divide-subdued-separator',
+            'h-full grid',
             // The process tree takes only the height its rows need (capped by its own max-height),
             // so a short tree does not reserve empty space above the timeline.
             !tracePanelDebug && selectedCommit
@@ -133,12 +133,16 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
       >
         <TraceToolbar selected={environments} onSelectedChange={handleEnvironmentsChange} />
 
-        <ProcessTreeContainer
-          space={space}
-          environments={environments}
-          onProcessSelect={handleProcessSelect}
-          onProcessTerminate={onProcessTerminate}
-        />
+        <div className='p-2'>
+          <div className='border border-subdued-separator rounded-md'>
+            <ProcessTreeContainer
+              space={space}
+              environments={environments}
+              onProcessSelect={handleProcessSelect}
+              onProcessTerminate={onProcessTerminate}
+            />
+          </div>
+        </div>
 
         <ScrollContainer.Root pin>
           <ScrollContainer.Content thin>
@@ -319,9 +323,6 @@ const ProcessTreeContainer = ({
 
   return (
     <ProcessTree
-      // `--dx-control` is the row height under the tree's own `dx-density-sm`, so the cap is
-      // eight rows regardless of density changes; beyond that the tree scrolls.
-      classNames='bs-auto max-bs-[calc(8*var(--dx-control))]'
       depth={3}
       processes={visibleProcesses}
       resolveLabel={resolveLabel}

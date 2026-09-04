@@ -102,8 +102,8 @@ export const ProcessTree = React.memo(
       const renderIcon = useMemo(() => makeIconRenderer(), []);
       const renderColumns = useMemo(() => makeColumnRenderer(onProcessTerminate), [onProcessTerminate]);
 
-      // The compact density step cascades through the CSS control tokens, shrinking every row (and
-      // its toggle/button) without per-element sizing.
+      // The compact density step cascades through the CSS control tokens, shrinking every row
+      // (and its toggle/button) without per-element sizing.
       return (
         <ScrollArea.Root
           {...composableProps(props, { classNames: ['dx-expand dx-density-sm text-sm tabular-nums'] })}
@@ -115,6 +115,7 @@ export const ProcessTree = React.memo(
               id={ROOT_ID}
               model={model}
               gridTemplateColumns='[tree-row-start] var(--dx-control) minmax(0, 1fr) min-content min-content [tree-row-end]'
+              density='sm'
               renderIcon={renderIcon}
               renderColumns={renderColumns}
               onOpenChange={handleOpenChange}

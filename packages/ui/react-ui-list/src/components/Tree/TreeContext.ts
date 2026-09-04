@@ -8,6 +8,7 @@ import { type FC, type MutableRefObject, createContext, useContext } from 'react
 
 import { raise } from '@dxos/debug';
 import { type Label } from '@dxos/react-ui';
+import { type Density } from '@dxos/ui-types';
 
 import { type TreeData } from './tree-data';
 
@@ -114,6 +115,8 @@ export type TreeRenderContextValue<T extends { id: string } = any> = {
   toggle: boolean;
   /** The consumer's column template; each row lays itself out on it behind an indent track. */
   gridTemplateColumns: string;
+  /** Control density of the row's disclosure toggle, sized off the density's own `--dx-control`. */
+  density: Density;
   renderColumns?: ColumnRenderer<T>;
   renderIcon?: IconRenderer<T>;
   renderHeading?: HeadingRenderer<T>;
