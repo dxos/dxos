@@ -5,14 +5,12 @@
 import { type Event } from '@dxos/async';
 import type { Stream } from '@dxos/async';
 import { getBufService } from '@dxos/protocols/buf-service';
+import type { Invitation } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import type { LogEntry, QueryLogsRequest } from '@dxos/protocols/buf/dxos/client/logging_pb';
-import { Config } from '@dxos/protocols/buf/dxos/config_pb';
-import type { SignalResponse, SubscribeToSpacesResponse } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import type {
   CreateEpochResponse,
   Device,
   Identity,
-  Invitation,
   JoinSpaceResponse,
   NetworkStatus,
   Platform,
@@ -22,7 +20,9 @@ import type {
   QuerySpacesResponse,
   RecoverIdentityRequest,
   Space,
-} from '@dxos/protocols/proto/dxos/client/services';
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import { Config } from '@dxos/protocols/buf/dxos/config_pb';
+import type { SignalResponse, SubscribeToSpacesResponse } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import type {
   GetSpaceSnapshotResponse,
   SaveSpaceSnapshotResponse,
