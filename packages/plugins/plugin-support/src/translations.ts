@@ -64,9 +64,6 @@ export const translations = [
         'feedback-failed-toast.description':
           'Support is unavailable right now. Your report is still in the form; please try again in a moment.',
         'discord-feedback-toast.label': 'Help thread started in Discord',
-        'discord-feedback-toast.description': 'Your thread is now open in Discord.',
-        'discord-feedback-toast-blocked.description':
-          'The browser blocked the new tab. Open the thread to follow replies.',
         'discord-feedback-toast.action': 'Open thread',
         // Welcome tour + keyboard shortcuts (absorbed from plugin-help).
         'open-help-tour.message': 'Show welcome tour',
