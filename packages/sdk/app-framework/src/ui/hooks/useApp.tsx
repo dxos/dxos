@@ -125,9 +125,8 @@ export type UseAppOptions = {
   safeMode?: boolean;
   debounce?: number;
   /**
-   * Executed milliseconds without an activation event before startup is declared stalled. Not a
-   * deadline on total boot time: a slow boot that keeps activating modules is never aborted, and
-   * time the process was suspended does not count. See `createStartupWatchdog`.
+   * Executed milliseconds without an activation event before startup is declared stalled; suspended
+   * time does not count, and a boot that keeps activating is never aborted.
    */
   timeout?: number;
   fallback?: FC<FallbackProps>;
@@ -262,7 +261,7 @@ export const useApp = ({
     };
 
     const watchdog = createStartupWatchdog({
-      timeout,
+      stallMs: timeout,
       onStall: ({ executedMs }) => {
         const diagnostics = collectDiagnostics('timeout');
 

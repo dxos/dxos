@@ -16,13 +16,13 @@ describe('createStartupWatchdog', () => {
     vi.useRealTimers();
   });
 
-  const setup = (timeout = 5_000) => {
+  const setup = (stallMs = 5_000) => {
     const stalls: number[] = [];
-    const watchdog = createStartupWatchdog({ timeout, onStall: ({ executedMs }) => stalls.push(executedMs) });
+    const watchdog = createStartupWatchdog({ stallMs, onStall: ({ executedMs }) => stalls.push(executedMs) });
     return { stalls, watchdog };
   };
 
-  it('fires once after `timeout` of executed time without progress', () => {
+  it('fires once after `stallMs` of executed time without progress', () => {
     const { stalls } = setup();
     vi.advanceTimersByTime(4_000);
     assert.deepEqual(stalls, []);
@@ -43,7 +43,6 @@ describe('createStartupWatchdog', () => {
   it('does not count time the process did not run', () => {
     const { stalls } = setup();
     vi.advanceTimersByTime(2_000);
-    // One tick observes an hour on the clock: the process was suspended, not stalled.
     const clock = performance.now.bind(performance);
     vi.spyOn(performance, 'now').mockImplementation(() => clock() + 60 * 60_000);
     vi.advanceTimersByTime(1_000);

@@ -20,11 +20,8 @@ use oauth::OAuthServerState;
 #[cfg(desktop)]
 use window_state::WindowState;
 
-/// Label of the app window. The spotlight panel is a second webview with its own label.
 const MAIN_WINDOW_LABEL: &str = "main";
 
-/// Set when the main window's web process died while the window was not visible; the reload runs
-/// on the window's next focus.
 #[cfg(target_os = "macos")]
 static RELOAD_ON_FOCUS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
@@ -194,12 +191,10 @@ pub fn run() {
     #[cfg(desktop)]
     let builder = builder.manage(OAuthServerState::new());
 
-    // Tauri's default reaction to a WebContent process death is an immediate reload. That is right
-    // for the spotlight panel, and for the main window while it is visible. A hidden main window
-    // waits for its next focus instead: WebKit kills the process under memory pressure whatever the
-    // scheduling policy, and rebooting a large page into that pressure while nobody is looking only
-    // invites the next kill. On macOS 13, where the `background_throttling` policy below is ignored,
-    // the hidden reboot would also run suspended.
+    // Tauri's default handler reloads unconditionally. WebKit kills WebContent under memory pressure
+    // whatever the scheduling policy, so a hidden main window waits for focus rather than rebooting
+    // into that pressure; on macOS 13, where `background_throttling` below is ignored, the hidden
+    // reload would also run suspended.
     #[cfg(target_os = "macos")]
     let builder = builder.on_web_content_process_terminate(|webview| {
         let window = webview.window();
@@ -274,9 +269,8 @@ pub fn run() {
                     // all drag events after dragstart, breaking pragmatic-drag-and-drop drop targets.
                     // Tradeoff: native file drop from Finder into the webview is disabled for now.
                     .disable_drag_drop_handler()
-                    // WKWebView's default inactive scheduling policy suspends, then terminates, the
-                    // WebContent process of a hidden (Cmd+H) window; Tauri reloads it still hidden and
-                    // that boot trips the startup watchdog. `Disabled` = WKInactiveSchedulingPolicyNone,
+                    // The default WKInactiveSchedulingPolicy suspends, then terminates, the WebContent
+                    // process of a hidden (Cmd+H) window. `Disabled` = WKInactiveSchedulingPolicyNone;
                     // macOS 14+/iOS 17+, ignored elsewhere.
                     // TODO(wittjosiah): Support suspension instead of opting out of it. Opting out trades
                     // battery for the app not crashing, which is the right trade today, but a hidden app

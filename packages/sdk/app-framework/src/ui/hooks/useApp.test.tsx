@@ -12,6 +12,7 @@ import { DXN } from '@dxos/keys';
 
 import { ActivationEvents, Capabilities } from '../../common';
 import { Capability, Plugin, PluginManager } from '../../core';
+import { STARTUP_WATCHDOG_TICK_MS } from './startup-watchdog';
 import { STARTUP_FAILED_EVENT, type StartupDiagnostics, useApp } from './useApp';
 
 const String = Capability.makeSingleton<{ string: string }>()('org.dxos.test.string');
@@ -56,8 +57,7 @@ describe('useApp startup failure reporting', () => {
 
       const { unmount } = render(<TimedHost manager={manager} />);
       yield* Effect.promise(() => waitFor(() => assert.isTrue(manager.getActive().length > 0)));
-      // The watchdog ticks once a second; wait past the first tick after the window would have closed.
-      yield* Effect.promise(() => new Promise((resolve) => setTimeout(resolve, 1_500)));
+      yield* Effect.promise(() => new Promise((resolve) => setTimeout(resolve, 2 * STARTUP_WATCHDOG_TICK_MS)));
       window.removeEventListener(STARTUP_FAILED_EVENT, listener);
       unmount();
 
