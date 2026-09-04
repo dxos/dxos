@@ -153,7 +153,13 @@ const honorsSides = (points: readonly Ir.Point[], fromSide: Ir.Side, toSide: Ir.
   leaves(points[0], points[1], fromSide) &&
   leaves(points[points.length - 1], points[points.length - 2], toSide);
 
-const via = (connection: Ir.Connection, start: Ir.Point, end: Ir.Point, fromSide: Ir.Side, toSide: Ir.Side): Ir.Point[] => {
+const via = (
+  connection: Ir.Connection,
+  start: Ir.Point,
+  end: Ir.Point,
+  fromSide: Ir.Side,
+  toSide: Ir.Side,
+): Ir.Point[] => {
   if (connection.via?.length) {
     return connection.via.map((point) => [point[0], point[1]] as Ir.Point);
   }

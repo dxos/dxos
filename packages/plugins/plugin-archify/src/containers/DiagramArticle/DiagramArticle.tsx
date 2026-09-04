@@ -24,7 +24,7 @@ export type DiagramArticleProps = {
  * guided views, or pick a component and trace what it reaches. Both are pure view state — neither
  * touches the stored IR, so reading a diagram never edits it.
  */
-export const DiagramArticle = ({ subject }: DiagramArticleProps) => {
+export const DiagramArticle = ({ subject, role }: DiagramArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [snapshot] = useObject(subject);
   const [viewId, setViewId] = useState<string>();
@@ -51,37 +51,39 @@ export const DiagramArticle = ({ subject }: DiagramArticleProps) => {
   }
 
   return (
-    <Panel.Root classNames='dx-fill'>
+    <Panel.Root role={role}>
       {(views.length > 0 || selected) && (
-        <Toolbar.Root>
-          <Button
-            variant={!viewId && !selected ? 'primary' : 'ghost'}
-            onClick={() => {
-              setViewId(undefined);
-              setSelected(undefined);
-            }}
-          >
-            {t('view.all.label')}
-          </Button>
-          {views.map((entry) => (
+        <Panel.Toolbar asChild>
+          <Toolbar.Root>
             <Button
-              key={entry.id}
-              variant={entry.id === viewId && !selected ? 'primary' : 'ghost'}
+              variant={!viewId && !selected ? 'primary' : 'ghost'}
               onClick={() => {
+                setViewId(undefined);
                 setSelected(undefined);
-                setViewId(entry.id === viewId ? undefined : entry.id);
               }}
             >
-              {entry.label}
+              {t('view.all.label')}
             </Button>
-          ))}
-          {selected && (
-            <div role='none' className='flex items-center gap-1 text-description text-sm'>
-              <Icon icon='ph--path--regular' size={4} />
-              <span>{t('trace.label', { id: selected })}</span>
-            </div>
-          )}
-        </Toolbar.Root>
+            {views.map((entry) => (
+              <Button
+                key={entry.id}
+                variant={entry.id === viewId && !selected ? 'primary' : 'ghost'}
+                onClick={() => {
+                  setSelected(undefined);
+                  setViewId(entry.id === viewId ? undefined : entry.id);
+                }}
+              >
+                {entry.label}
+              </Button>
+            ))}
+            {selected && (
+              <div role='none' className='flex items-center gap-1 text-description text-sm'>
+                <Icon icon='ph--path--regular' size={4} />
+                <span>{t('trace.label', { id: selected })}</span>
+              </div>
+            )}
+          </Toolbar.Root>
+        </Panel.Toolbar>
       )}
       <Panel.Content asChild>
         <div role='none' className='dx-attention-surface dx-fill grid grid-rows-[1fr_auto] overflow-hidden'>

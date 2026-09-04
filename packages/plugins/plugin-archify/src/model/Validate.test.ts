@@ -30,14 +30,21 @@ describe('validate', () => {
   });
 
   test('a malformed document reports the field, not a stack trace', ({ expect }) => {
-    const { ok, diagnostics } = Validate.validate({ schema_version: 1, diagram_type: 'architecture', meta: {}, components: [] });
+    const { ok, diagnostics } = Validate.validate({
+      schema_version: 1,
+      diagram_type: 'architecture',
+      meta: {},
+      components: [],
+    });
     expect(ok).toBe(false);
     expect(diagnostics.every((diagnostic) => diagnostic.code === 'schema/invalid')).toBe(true);
     expect(diagnostics.some((diagnostic) => diagnostic.subject.path === 'meta.title')).toBe(true);
   });
 
   test('an unplaced component blocks, and suppresses the geometric rules', ({ expect }) => {
-    const result = Validate.validate(minimal({ components: [{ id: 'a', type: 'backend', label: 'a' }], connections: [] }));
+    const result = Validate.validate(
+      minimal({ components: [{ id: 'a', type: 'backend', label: 'a' }], connections: [] }),
+    );
     expect(result.ok).toBe(false);
     expect(result.diagnostics.map((diagnostic) => diagnostic.code)).toEqual(['layout/unplaced']);
     expect(result.diagnostics[0].supportedFixes).toContain('components[].pos');

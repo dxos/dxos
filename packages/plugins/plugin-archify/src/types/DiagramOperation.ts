@@ -74,7 +74,7 @@ export const Verify = Operation.make({
     icon: 'ph--check-circle--regular',
   },
   input: Schema.Struct({
-    source: Schema.Unknown.annotate({ description: 'The candidate IR document.' }),
+    source: Ir.Architecture.annotate({ description: 'The candidate IR document.' }),
   }),
   output: Schema.Struct(Report),
   services: [],
@@ -90,7 +90,7 @@ export const Write = Operation.make({
   },
   input: Schema.Struct({
     diagram: Ref.Ref(Diagram.Diagram).annotate({ description: 'The diagram to replace.' }),
-    source: Schema.Unknown.annotate({ description: 'The complete replacement IR document.' }),
+    source: Ir.Architecture.annotate({ description: 'The complete replacement IR document.' }),
   }),
   output: Schema.Struct({
     ...Report,

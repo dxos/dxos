@@ -23,9 +23,9 @@ describe('layout', () => {
       ox + 2 * (Layout.DEFAULT_GRID.cellW + Layout.DEFAULT_GRID.gapX),
       oy + 1 * (Layout.DEFAULT_GRID.cellH + Layout.DEFAULT_GRID.gapY),
     ]);
-    expect(Layout.resolvePos({ id: 'a', type: 'backend', label: 'a', row: 1, col: 2, pos: [7, 9] }, Layout.DEFAULT_GRID)).toEqual([
-      7, 9,
-    ]);
+    expect(
+      Layout.resolvePos({ id: 'a', type: 'backend', label: 'a', row: 1, col: 2, pos: [7, 9] }, Layout.DEFAULT_GRID),
+    ).toEqual([7, 9]);
     // Without a grid there is nothing to place a row/col component against.
     expect(Layout.resolvePos({ id: 'a', type: 'backend', label: 'a', row: 1, col: 2 })).toEqual([NaN, NaN]);
   });
@@ -102,7 +102,14 @@ describe('layout', () => {
   });
 
   test('reach walks connections in the requested direction', ({ expect }) => {
-    expect([...Layout.reach(webApp, ['lb'], 'downstream')].sort()).toEqual(['api', 'cache', 'db', 'lb', 'queue', 'worker']);
+    expect([...Layout.reach(webApp, ['lb'], 'downstream')].sort()).toEqual([
+      'api',
+      'cache',
+      'db',
+      'lb',
+      'queue',
+      'worker',
+    ]);
     expect([...Layout.reach(webApp, ['lb'], 'upstream')].sort()).toEqual(['cdn', 'lb', 'users']);
   });
 });

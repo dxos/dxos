@@ -17,6 +17,9 @@ const make = () =>
   Skill.make({
     key: SKILL_KEY,
     name: 'Archify',
+    // Diagramming is additive and reversible (a rejected write changes nothing), so the agent may
+    // turn the skill on for itself rather than stalling on a settings round trip.
+    agentCanEnable: true,
     tools: Skill.toolDefinitions({ operations }),
     instructions: Template.make({
       source: trim`

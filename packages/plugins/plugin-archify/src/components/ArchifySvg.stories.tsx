@@ -10,7 +10,6 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Layout } from '#model';
 
 import { webApp } from '../model/testing';
-
 import { ArchifySvg } from './ArchifySvg';
 
 type StoryArgs = {
@@ -26,12 +25,7 @@ const DefaultStory = ({ view: viewId, traceable = true }: StoryArgs) => {
   const focus = selected ? Layout.reach(webApp, [selected], 'both') : view ? new Set(view.focus) : undefined;
 
   return (
-    <ArchifySvg
-      diagram={webApp}
-      focus={focus}
-      selected={selected}
-      onSelect={traceable ? setSelected : undefined}
-    />
+    <ArchifySvg diagram={webApp} focus={focus} selected={selected} onSelect={traceable ? setSelected : undefined} />
   );
 };
 
