@@ -107,7 +107,7 @@ test.describe('HALO tests', () => {
     await expect(guest.getPluginToggle(StackPlugin.meta.profile.key)).toBeChecked({ timeout: 60_000 });
 
     // 2. Local override: the guest leaves the account for the plugin set only.
-    await guest.openPluginSettings('org.dxos.plugin.registry', guest.getPluginScopeToggle());
+    await guest.openPluginSettings('org.dxos.plugin.registry');
     await guest.usePluginSetForThisDeviceOnly();
 
     await guest.openRegistryCategory('recommended');

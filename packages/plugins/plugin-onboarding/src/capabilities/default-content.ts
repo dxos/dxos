@@ -41,6 +41,8 @@ export default Capability.makeModule(
     const { graph } = yield* AppCapabilities.AppGraph;
     const client = yield* ClientCapabilities.Client;
     const defaultSpace = yield* SpaceCapabilities.DefaultSpace;
+    const registry = yield* Capabilities.AtomRegistry;
+    const layoutAtom = yield* AppCapabilities.Layout;
 
     Obj.update(defaultSpace.properties, (obj) => {
       obj.icon = DEFAULT_SPACE_ICON;
@@ -69,36 +71,53 @@ export default Capability.makeModule(
       });
     }
 
+    // Expanded before the landing below so the home node resolves when the deck opens it.
+    AppGraph.expandSync(graph, GraphNode.RootId, 'child');
+    AppGraph.expandSync(graph, defaultSpace.id, 'child');
+
+    // Claim the opening view BEFORE the sample-space import, not after it.
+    //
+    // The import takes seconds and the app is interactive throughout, so landing afterwards raced
+    // the reader: `Set` applied a few hundred milliseconds after it was invoked, and any navigation
+    // made inside that window was silently overwritten — open Settings while the import was running
+    // and the deck threw you back to Home. Claiming the view first closes that window, because
+    // nothing here awaits between the graph being ready and the deck being set.
+    //
+    // The guard covers the rest: a reader who has already gone somewhere keeps it. Being on the
+    // default space is not enough to detect that, since `plugin-space` switches to it from a forked
+    // fiber and may have done so already; what distinguishes a reader's navigation is the plank it
+    // leaves behind, so this lands only from a standing start.
+    const defaultWorkspace = GraphPath.getSpacePath(defaultSpace.id);
+    const layout = registry.get(layoutAtom);
+    const untouched =
+      (layout.workspace === 'default' || layout.workspace === defaultWorkspace) && layout.active.length === 0;
+    if (untouched) {
+      const homePath = GraphPath.getSpaceHomePath(defaultSpace.id);
+      yield* Effect.gen(function* () {
+        // Claim the workspace before setting the plank: `plugin-space` switches to the default space
+        // from a forked fiber, and a switch restores the target workspace's (empty) persisted deck, so
+        // a plank set first is wiped. Switching here also satisfies that fiber's `workspace === default`
+        // guard, leaving it a no-op if it has not run yet.
+        yield* Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: defaultWorkspace });
+        // Land on the default space's Home, which surfaces the seeded README among its recent objects.
+        // `expectActive` makes this a no-op if the reader opened something while the invocation was
+        // in flight — the guard above cannot see that far, since it runs before the call is made.
+        yield* Operation.invoke(LayoutOperation.Set, { subject: [homePath], expectActive: [] });
+        // Expose is scheduled because the navtree may not have rendered yet at this point.
+        yield* Operation.schedule(LayoutOperation.Expose, { subject: homePath });
+      }).pipe(Effect.provideService(Operation.Service, operationInvoker));
+    }
+
     if (generateSampleSpace) {
       yield* Effect.promise(() => operationInvoker.invokePromise(OnboardingOperation.ImportSampleSpace, {}));
 
       // Eagerly expand the graph so the sample space's content is visible in the navtree
       // as soon as the user opens it, without waiting for a lazy expansion pass.
       const sampleSpace = client.spaces.get().find((space) => space.tags.includes(AppSpace.SAMPLE_SPACE_TAG));
-      AppGraph.expandSync(graph, GraphNode.RootId, 'child');
-      AppGraph.expandSync(graph, defaultSpace.id, 'child');
       if (sampleSpace) {
         AppGraph.expandSync(graph, sampleSpace.id, 'child');
       }
-    } else {
-      AppGraph.expandSync(graph, GraphNode.RootId, 'child');
-      AppGraph.expandSync(graph, defaultSpace.id, 'child');
     }
-
-    const homePath = GraphPath.getSpaceHomePath(defaultSpace.id);
-    yield* Effect.gen(function* () {
-      // Claim the workspace before setting the plank: `plugin-space` switches to the default space
-      // from a forked fiber, and a switch restores the target workspace's (empty) persisted deck, so
-      // a plank set first is wiped. Switching here also satisfies that fiber's `workspace === default`
-      // guard, leaving it a no-op.
-      yield* Operation.invoke(LayoutOperation.SwitchWorkspace, {
-        subject: GraphPath.getSpacePath(defaultSpace.id),
-      });
-      // Land on the default space's Home, which surfaces the seeded README among its recent objects.
-      yield* Operation.invoke(LayoutOperation.Set, { subject: [homePath] });
-      // Expose is scheduled because the navtree may not have rendered yet at this point.
-      yield* Operation.schedule(LayoutOperation.Expose, { subject: homePath });
-    }).pipe(Effect.provideService(Operation.Service, operationInvoker));
 
     return [];
   }),
