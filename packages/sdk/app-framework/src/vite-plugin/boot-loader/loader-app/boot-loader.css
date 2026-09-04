@@ -309,6 +309,7 @@ body {
   flex: 0 0 auto;
   height: 1.5em;
   white-space: nowrap;
+  font-size: 16px;
 }
 
 /*
@@ -384,7 +385,7 @@ body {
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 /*
@@ -394,20 +395,21 @@ body {
  * cannot be composited at all, so the row steps out by one slot per icon rather than animating.
  */
 .boot-loader-plugin {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   flex: 0 0 auto;
   display: grid;
   place-items: center;
   /* Border-box so the border eats into the 40px slot rather than widening the row. */
   box-sizing: border-box;
-  border: 1px solid currentColor;
+  background: var(--boot-loader-bg-light, #444444);
+  /* border: 1px solid currentColor; */
   border-radius: 8px;
-  padding: 6px;
+  padding: 8px;
   /* Monotone — the arrival reads from opacity alone, which keeps the row quiet. */
   color: currentColor;
   opacity: 0.2;
-  animation: boot-loader-plugin-in 600ms ease-out both;
+  animation: boot-loader-plugin-in 200ms ease-out both;
 }
 
 /* The glyph itself. Styled apart from its slot so either can change without disturbing the other. */

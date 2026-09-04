@@ -25,6 +25,13 @@ export const STATE_2_BUMP = 15;
 /** Hard ceiling the auto-creep never crosses (host must drive the rest). */
 export const ABSOLUTE_CEILING = 90;
 
+/**
+ * Minimum spacing between plugin icons entering the row. Activation arrives in bursts — a dozen
+ * plugins inside a couple of frames — which lands as a single clump rather than as anything the eye
+ * can follow, so arrivals queue and drain at this cadence instead.
+ */
+export const PLUGIN_DRAIN_MS = 400;
+
 /** A plugin drawn in the activation row, in activation order. */
 export type PluginRow = PluginEntry;
 
@@ -88,7 +95,10 @@ export type LoaderStore = {
    * half-dim for the whole boot. Rows appear from {@link LoaderStore.activatePlugin}.
    */
   setPlugins: (entries: PluginEntry[]) => void;
-  /** Append this plugin's icon to the row (opening faint, then brightening). Unregistered ids are ignored. */
+  /**
+   * Queue this plugin's icon for the row. Arrivals drain one per {@link PLUGIN_DRAIN_MS} — activation
+   * bursts would otherwise land as one clump. Unregistered and repeated ids are ignored.
+   */
   activatePlugin: (id: string) => void;
   /** Offer the user an abort (see `BootLoaderApi.stalled`). Idempotent — the first handler wins. */
   stalled: (onAbort: () => void) => void;
@@ -106,6 +116,9 @@ export const createLoaderStore = (initialStatus?: string): LoaderStore => {
   // Icons for every plugin that could activate, keyed by slug. Plain map, not a signal: nothing
   // renders from it directly.
   const registry = new Map<string, PluginEntry>();
+  // Arrivals waiting their turn, drained one per `PLUGIN_DRAIN_MS`.
+  const pendingPlugins: PluginEntry[] = [];
+  let drainTimer: ReturnType<typeof setInterval> | null = null;
   // Held as a signal rather than a boolean + prop so the button has the handler directly, and so a
   // second `stalled()` (a re-fired deadline) cannot swap it mid-press.
   const [onAbort, setOnAbort] = createSignal<(() => void) | undefined>(undefined);
@@ -172,15 +185,39 @@ export const createLoaderStore = (initialStatus?: string): LoaderStore => {
     }
   };
 
+  // Appends one queued icon and keeps the timer alive only while there is more to drain, so an
+  // idle loader runs no interval.
+  const drainPlugin = (): void => {
+    const entry = pendingPlugins.shift();
+    if (entry) {
+      // Appended in its final state: the entrance is a CSS animation that runs from the element's
+      // first frame, so it needs no two-step flip to start it (and no frame in which to do so — the
+      // main thread is saturated during boot).
+      setPluginRows((current) => [...current, entry]);
+    }
+    if (pendingPlugins.length === 0) {
+      stopDrain();
+    }
+  };
+
+  const stopDrain = (): void => {
+    if (drainTimer != null) {
+      clearInterval(drainTimer);
+      drainTimer = null;
+    }
+  };
+
   const activatePlugin = (id: string): void => {
     const entry = registry.get(id);
-    if (!entry || plugins().some((row) => row.id === id)) {
+    if (!entry || plugins().some((row) => row.id === id) || pendingPlugins.some((row) => row.id === id)) {
       return;
     }
-    // Appended in its final state: the entrance is a CSS animation that runs from the element's
-    // first frame, so it needs no two-step flip to start it (and no frame in which to do so — the
-    // main thread is saturated during boot).
-    setPluginRows((current) => [...current, entry]);
+    pendingPlugins.push(entry);
+    if (drainTimer == null) {
+      // First arrival of a burst draws immediately; the interval then paces the rest.
+      drainPlugin();
+      drainTimer = setInterval(drainPlugin, PLUGIN_DRAIN_MS);
+    }
   };
 
   const setProgress = (fraction?: number): void => {
@@ -218,6 +255,7 @@ export const createLoaderStore = (initialStatus?: string): LoaderStore => {
   const dispose = (): void => {
     stopCreep();
     stopElapsed();
+    stopDrain();
   };
 
   startCreep();
