@@ -82,10 +82,12 @@ test.describe('HALO tests', () => {
     await host.waitForDefaultWorkspace();
     await host.openUserDevices();
     const invitationCode = await host.createDeviceInvitation();
-    const authCode = await host.getAuthCode();
     await guest.openUserDevices();
     await guest.joinNewIdentity();
     await guest.shell.acceptDeviceInvitation(invitationCode);
+    // Read after the guest connects: the host learns the auth code from `readyForAuthentication`,
+    // which the flow only reaches once there is a guest on the other side.
+    const authCode = await host.getAuthCode();
     await guest.shell.authenticateDevice(authCode);
     await expect(guest.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT, { timeout: 60_000 });
     await guest.waitForDefaultWorkspace();
