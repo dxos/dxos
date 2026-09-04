@@ -51,9 +51,11 @@ export const menu = (options: MenuOptions = {}): Extension => [
 
         container.appendChild(this.tag);
 
-        // Listen for scroll events.
+        // Capture-phase on the document, not `container`: the trigger is `position: fixed`, so its
+        // coordinates go stale when ANY ancestor scrolls — and when the editor grows to fit its
+        // content the scroller is the surrounding plank, which never fires on `scrollDOM`.
         const handler = () => this.scheduleUpdate();
-        this.cleanup = addEventListener(container, 'scroll', handler);
+        this.cleanup = addEventListener(document, 'scroll', handler, { capture: true, passive: true });
         this.scheduleUpdate();
       }
 

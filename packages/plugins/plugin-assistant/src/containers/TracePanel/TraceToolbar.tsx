@@ -74,7 +74,7 @@ export const TraceToolbar = ({ selected, onSelectedChange }: TraceToolbarProps) 
   return (
     <Menu.Root {...menu} alwaysActive>
       <Menu.Toolbar classNames='justify-between border-be border-subdued-separator'>
-        <h1 className='px-1'>Processes</h1>
+        <span />
         <Menu.Items />
       </Menu.Toolbar>
     </Menu.Root>
