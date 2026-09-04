@@ -4,22 +4,21 @@
 
 import { type Event } from '@dxos/async';
 import type { Stream } from '@dxos/async';
-import type { RequestOptions } from '@dxos/codec-protobuf';
 import { getBufService } from '@dxos/protocols/buf-service';
+import type { LogEntry, QueryLogsRequest } from '@dxos/protocols/buf/dxos/client/logging_pb';
 import { Config } from '@dxos/protocols/buf/dxos/config_pb';
+import type { SignalResponse, SubscribeToSpacesResponse } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import type {
   CreateEpochResponse,
   Device,
   Identity,
   Invitation,
   JoinSpaceResponse,
-  LogEntry,
   NetworkStatus,
   Platform,
   QueryAgentStatusResponse,
   QueryEdgeStatusResponse,
   QueryInvitationsResponse,
-  QueryLogsRequest,
   QuerySpacesResponse,
   RecoverIdentityRequest,
   Space,
@@ -27,10 +26,8 @@ import type {
 import type {
   GetSpaceSnapshotResponse,
   SaveSpaceSnapshotResponse,
-  SignalResponse,
   SubscribeToFeedBlocksResponse,
   SubscribeToMetadataResponse,
-  SubscribeToSpacesResponse,
 } from '@dxos/protocols/proto/dxos/devtools/host';
 import type { IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import type {
@@ -64,6 +61,7 @@ import type {
   SpacesService as RpcSpacesService,
   SystemService as RpcSystemService,
 } from '@dxos/protocols/rpc';
+import type { RequestOptions } from '@dxos/protocols/service-contract';
 import { type ServiceBundle } from '@dxos/rpc';
 
 import { type ClientServicesRpc } from './service-rpc';

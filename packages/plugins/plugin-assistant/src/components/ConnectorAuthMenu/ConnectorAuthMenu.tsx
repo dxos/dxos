@@ -3,7 +3,7 @@
 //
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import React, { useContext, useMemo } from 'react';
+import React, { useCallback, useContext, useMemo } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
@@ -29,6 +29,12 @@ export type ConnectorAuthMenuProps = {
   db: Database.Database | undefined;
   /** Existing local object to wire up as the new connection's first sync target. */
   existingTarget?: Ref.Ref<Obj.Unknown>;
+  /**
+   * Called when the user picks an entry, before the action runs. The flows themselves complete out
+   * of band (an OAuth popup, a credential dialog), so this is the only point at which a caller can
+   * tell that the user started one.
+   */
+  onSelect?: () => void;
 };
 
 /**
@@ -37,7 +43,7 @@ export type ConnectorAuthMenuProps = {
  * {@link Connection}s are offered for reuse (bind inline) alongside a "Connect X" entry per connector
  * with an auth flow. Renders nothing when there is nothing to offer.
  */
-export const ConnectorAuthMenu = ({ connectorIds, db, existingTarget }: ConnectorAuthMenuProps) => {
+export const ConnectorAuthMenu = ({ connectorIds, db, existingTarget, onSelect }: ConnectorAuthMenuProps) => {
   const { t } = useTranslation(meta.profile.key);
   const registry = useContext(RegistryContext);
   const runAction = useActionRunner();
@@ -67,12 +73,20 @@ export const ConnectorAuthMenu = ({ connectorIds, db, existingTarget }: Connecto
   // Read the group's children (reuse / connect entries) as the menu content.
   const menuActions = useGraphMenuActions(graph, ConnectorAuth.GROUP_ID);
 
+  const handleAction = useCallback<typeof runAction>(
+    (action) => {
+      onSelect?.();
+      return runAction(action);
+    },
+    [onSelect, runAction],
+  );
+
   if (!graph) {
     return null;
   }
 
   return (
-    <Menu.Root {...menuActions} onAction={runAction} attendableId={NODE_ID} alwaysActive>
+    <Menu.Root {...menuActions} onAction={handleAction} attendableId={NODE_ID} alwaysActive>
       <Menu.Trigger asChild>
         <IconButton variant='ghost' icon='ph--plugs--regular' label={t('connect.label')} />
       </Menu.Trigger>

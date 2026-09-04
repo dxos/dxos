@@ -97,6 +97,12 @@ const DefaultStory = () => {
     [runtime],
   );
 
+  // `useSpaces` is empty until the client has created the default space, and the panel is addressed
+  // by that space — reading its id before it exists is what threw the story away on first paint.
+  if (!space) {
+    return <></>;
+  }
+
   return (
     <BaseStory
       toolbar={

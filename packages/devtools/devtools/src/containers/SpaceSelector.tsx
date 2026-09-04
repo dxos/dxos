@@ -5,6 +5,7 @@
 import * as localForage from 'localforage';
 import React from 'react';
 
+import { toPublicKey } from '@dxos/protocols/buf';
 import { PublicKey } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -30,7 +31,9 @@ export const SpaceSelector = () => {
         return {
           ...state,
           space: spaceKey ? spaces.find((space) => space.key.equals(spaceKey)) : undefined,
-          spaceInfo: spaceKey ? spacesInfo.find((spaceInfo) => spaceInfo.key.equals(spaceKey)) : undefined,
+          spaceInfo: spaceKey
+            ? spacesInfo.find((spaceInfo) => toPublicKey(spaceInfo.key)?.equals(spaceKey))
+            : undefined,
           haloSpaceKey: undefined,
         };
       }

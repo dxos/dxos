@@ -11,6 +11,10 @@ import { Button, Flex, Icon, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
+import { useChatReportContext } from '../../components/Chat/context';
+
+const PLUGIN_PROMPT_NAME = 'PluginPrompt';
+
 export type PluginPromptProps = {
   /** Id of the plugin the agent needs, e.g. `org.dxos.plugin.markdown`. */
   plugin?: string;
@@ -24,6 +28,7 @@ export type PluginPromptProps = {
 export const PluginPrompt = ({ plugin: pluginId }: PluginPromptProps) => {
   const { t } = useTranslation(meta.profile.key);
   const manager = usePluginManager();
+  const { submit } = useChatReportContext(PLUGIN_PROMPT_NAME);
   const { invokePromise } = useOperationInvoker();
   const enabled = useAtomValue(manager.enabled);
   const [pending, setPending] = useState(false);
@@ -47,13 +52,16 @@ export const PluginPrompt = ({ plugin: pluginId }: PluginPromptProps) => {
       const { data, error } = await invokePromise(RegistryOperation.EnablePlugins, { ids: [pluginId] });
       if (error || data?.rejected.some(({ id }) => id === pluginId)) {
         setFailed(true);
+      } else {
+        // The agent is waiting on a click it cannot observe, so the outcome is reported as a turn.
+        submit(`Enabled the plugin \`${pluginId}\`. Continue.`);
       }
     } catch {
       setFailed(true);
     } finally {
       setPending(false);
     }
-  }, [invokePromise, pluginId]);
+  }, [invokePromise, pluginId, submit]);
 
   if (!pluginId) {
     return null;

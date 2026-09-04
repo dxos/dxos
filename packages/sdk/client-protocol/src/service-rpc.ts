@@ -15,7 +15,6 @@ import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 import * as RpcTest from 'effect/unstable/rpc/RpcTest';
 
 import { Stream as PbStream } from '@dxos/async';
-import { type RequestOptions } from '@dxos/codec-protobuf';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -36,6 +35,7 @@ import {
   SystemService,
   WorkerService,
 } from '@dxos/protocols/rpc';
+import { type RequestOptions } from '@dxos/protocols/service-contract';
 import { type RpcPort, layerProtocolRpcPortClient, layerProtocolRpcPortServer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 

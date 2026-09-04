@@ -6,9 +6,9 @@ import { describe, expect, test } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';
 import { Stream } from '@dxos/async';
-import { type Any, type TaggedType } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
 import { type TYPES } from '@dxos/protocols/proto';
+import { type AnyEnvelope, type TaggedType } from '@dxos/protocols/service-contract';
 
 import { RpcPeer } from './rpc';
 import { createLinkedPorts, encodeMessage } from './testing';
@@ -354,7 +354,7 @@ describe('RpcPeer', () => {
         streamHandler: (method, msg) => {
           expect(method).toEqual('method');
           expect(msg.value!).toEqual(encodeMessage('request'));
-          return new Stream<Any>(({ next, close }) => {
+          return new Stream<AnyEnvelope>(({ next, close }) => {
             next(createPayload('res1'));
             next(createPayload('res2'));
             close();
@@ -389,7 +389,7 @@ describe('RpcPeer', () => {
         streamHandler: (method, msg) => {
           expect(method).toEqual('method');
           expect(msg.value).toEqual(encodeMessage('request'));
-          return new Stream<Any>(({ next, close }) => {
+          return new Stream<AnyEnvelope>(({ next, close }) => {
             close(new Error('Test error'));
           });
         },
@@ -420,7 +420,7 @@ describe('RpcPeer', () => {
       const alice = new RpcPeer({
         callHandler: async (msg) => createPayload(),
         streamHandler: (method, msg) =>
-          new Stream<Any>(({ next, close }) => () => {
+          new Stream<AnyEnvelope>(({ next, close }) => () => {
             closeTrigger.wake();
           }),
         port: alicePort,
@@ -448,7 +448,7 @@ describe('RpcPeer', () => {
         streamHandler: (method, msg) => {
           expect(method).toEqual('method');
           expect(msg.value!).toEqual(encodeMessage('request'));
-          return new Stream<Any>(({ ready, close }) => {
+          return new Stream<AnyEnvelope>(({ ready, close }) => {
             ready();
             close();
           });
@@ -476,7 +476,7 @@ describe('RpcPeer', () => {
 
       const alice = new RpcPeer({
         callHandler: async (msg) => createPayload(),
-        streamHandler: (method, msg): Stream<Any> => {
+        streamHandler: (method, msg): Stream<AnyEnvelope> => {
           throw new Error('Test error');
         },
         port: alicePort,

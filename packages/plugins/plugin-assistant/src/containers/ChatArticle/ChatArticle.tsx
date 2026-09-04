@@ -16,7 +16,7 @@ import { ClientOperation } from '@dxos/plugin-client';
 import { useRegistry } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { type ChatView } from '@dxos/react-ui-assistant';
-import { graphActions, isToolbarAction } from '@dxos/react-ui-menu';
+import { graphActions, isPromptAction } from '@dxos/react-ui-menu';
 import { Merge } from '@dxos/util';
 
 import { Chat as ChatComponent, type ChatRootProps } from '#components';
@@ -31,7 +31,7 @@ export type ChatArticleProps = Merge<
 >;
 
 export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
-  ({ role, attendableId, subject: chat, companionTo, debug, onEvent, onSubmit }, forwardedRef) => {
+  ({ role, attendableId, nodeId, subject: chat, companionTo, debug, onEvent, onSubmit }, forwardedRef) => {
     const registry = useRegistry();
     // The marker rail is a hover/precision target pinned to the thread's left edge, and the status
     // pill floats over the last turn — on a phone the rail has nowhere to live outside the text and
@@ -58,13 +58,21 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
       void invokePromise(ClientOperation.OpenUsage, undefined);
     }, [invokePromise]);
 
-    // Toolbar actions other plugins filed on this chat's node — the microphone among them. Read the
-    // way `MarkdownArticle` reads its own, so a contributor reaches the prompt without plugin-assistant
-    // importing it (or knowing it exists).
+    // Actions other plugins filed on this chat's node — the microphone among them — so a contributor
+    // reaches the prompt without plugin-assistant importing it (or knowing it exists).
+    //
+    // Sourced from this surface's own node rather than `attendableId`: a companion shares the host
+    // plank's attention id (`CompanionPlank`), so reading actions from it hands a chat attached to a
+    // document that document's toolbar — its comment action, and a second copy of its microphone
+    // keyed to the document. `nodeId` is the companion node itself, which is where a contributor
+    // matching on the chat files them; it falls back to the object for a surface rendered outside a
+    // plank. Filtered to the prompt surface for the same reason the id is: an action on the chat
+    // acts on the chat, and only some of those belong beside the text being composed.
     const { graph } = useAppGraph();
+    const actionNodeId = nodeId ?? Obj.getURI(chat);
     const customActions = useMemo(
-      () => Atom.make((get) => graphActions(graph, get, attendableId, { filter: isToolbarAction })),
-      [graph, attendableId],
+      () => Atom.make((get) => graphActions(graph, get, actionNodeId, { filter: isPromptAction })),
+      [graph, actionNodeId],
     );
 
     // Reset the one-shot guard when the target conversation changes, so a pending prompt for a new
@@ -140,6 +148,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                   attendableId={attendableId}
                   companionTo={companionTo}
                   customActions={customActions}
+                  nodeId={actionNodeId}
                   preset={preset?.id}
                 />
               </div>

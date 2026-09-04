@@ -27,21 +27,6 @@ export const AgentSummary = Schema.Struct({
 });
 export interface AgentSummary extends Schema.Schema.Type<typeof AgentSummary> {}
 
-/**
- * A credential bound to a session, by reference rather than by value: the secret is resolved from
- * the space when it is injected and delivered to the container's environment over the control plane,
- * so it never appears in a message, a transcript or an operation result.
- */
-export const SessionCredential = Schema.Struct({
-  token: Ref.Ref(AccessToken.AccessToken).annotate({
-    description: 'The AccessToken object in this space holding the secret.',
-  }),
-  as: Schema.NonEmptyString.annotate({
-    description: 'Environment variable the agent reads the secret as, e.g. "GH_TOKEN".',
-  }),
-});
-export interface SessionCredential extends Schema.Schema.Type<typeof SessionCredential> {}
-
 /** One turn of a session transcript. */
 export const TranscriptMessage = Schema.Struct({
   role: Schema.Literals(['user', 'agent']),
@@ -141,7 +126,7 @@ export const StartSession = Operation.make({
       }),
     ),
     credentials: Schema.optional(
-      Schema.Array(SessionCredential).annotate({
+      Schema.Array(ClaudeAgentSession.SessionCredential).annotate({
         description: 'Credentials to bind to the run, referenced by AccessToken rather than inlined.',
       }),
     ),
@@ -212,49 +197,49 @@ export const GetTranscript = Operation.make({
 });
 
 /**
- * Binds or rotates credentials on a session that is already running. The counterpart to passing
- * `credentials` at start: an agent that hits a 401 mid-run can be given the credential it needs
- * without restarting the run, and without the secret passing through a message.
+ * The one way to change a running session's credentials: bind, rotate, refresh and revoke in a
+ * single call. Counterpart to passing `credentials` at start — an agent that hits a 401 mid-run can
+ * be fixed without restarting it, and without the secret passing through a message.
+ *
+ * `refresh` exists because the vault holds the resolved VALUE. The space's OAuth credentials rotate,
+ * and nothing propagates a rotation into a running container, so a session that was working and now
+ * gets a 401 usually holds a stale copy — `refresh: true` re-reads every credential the session
+ * recorded and writes the current value back, with no need to name any of them.
  */
-export const SetSessionCredentials = Operation.make({
+export const UpdateSessionCredentials = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.claude.setSessionCredentials'),
-    name: 'Set Claude Agent Session Credentials',
-    description: 'Binds or rotates credentials on a running Claude managed agent session.',
+    key: DXN.make('org.dxos.operation.claude.updateSessionCredentials'),
+    name: 'Update Claude Agent Session Credentials',
+    description: "Binds, refreshes or revokes credentials on a running Claude managed agent's session.",
     icon: 'ph--key--regular',
   },
   input: Schema.Struct({
-    session: Ref.Ref(ClaudeAgentSession.ClaudeAgentSession).annotate({ description: 'The session to bind to.' }),
-    credentials: Schema.NonEmptyArray(SessionCredential).annotate({
-      description: 'Credentials to upsert, matched by their environment variable name.',
-    }),
+    session: Ref.Ref(ClaudeAgentSession.ClaudeAgentSession).annotate({ description: 'The session to update.' }),
+    // Plain arrays rather than `Schema.NonEmptyArray`, which serializes to `prefixItems` — a keyword
+    // the persisted-operation JSON schema does not carry, so the tool resolver could not project
+    // this operation and dropped it from the model's toolkit entirely.
+    credentials: Schema.optional(
+      Schema.Array(ClaudeAgentSession.SessionCredential).annotate({
+        description: 'Credentials to bind or rotate, matched by their environment variable name.',
+      }),
+    ),
+    revoke: Schema.optional(
+      Schema.Array(Schema.NonEmptyString).annotate({
+        description: 'Environment variable names to revoke, e.g. ["GH_TOKEN"].',
+      }),
+    ),
+    refresh: Schema.optional(
+      Schema.Boolean.annotate({
+        description:
+          'Re-read every credential already bound to this session from the space and write the current value back. Use after an OAuth token has rotated.',
+      }),
+    ),
   }),
   output: Schema.Struct({
     sessionId: Schema.String,
     bound: Schema.Array(Schema.String).annotate({ description: 'Environment variable names now bound.' }),
-  }),
-  services: [Database.Service, Credential.CredentialsService],
-  types: [ClaudeAgentSession.ClaudeAgentSession, AccessToken.AccessToken],
-});
-
-/** Removes credentials from a running session, containing exposure after the work that needed them. */
-export const RevokeSessionCredentials = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.operation.claude.revokeSessionCredentials'),
-    name: 'Revoke Claude Agent Session Credentials',
-    description: 'Removes credentials from a running Claude managed agent session.',
-    icon: 'ph--key--bold',
-  },
-  input: Schema.Struct({
-    session: Ref.Ref(ClaudeAgentSession.ClaudeAgentSession).annotate({ description: 'The session to revoke from.' }),
-    names: Schema.NonEmptyArray(Schema.NonEmptyString).annotate({
-      description: 'Environment variable names to revoke, e.g. ["GH_TOKEN"].',
-    }),
-  }),
-  output: Schema.Struct({
-    sessionId: Schema.String,
     revoked: Schema.Array(Schema.String).annotate({ description: 'Environment variable names revoked.' }),
   }),
   services: [Database.Service, Credential.CredentialsService],
-  types: [ClaudeAgentSession.ClaudeAgentSession],
+  types: [ClaudeAgentSession.ClaudeAgentSession, AccessToken.AccessToken],
 });

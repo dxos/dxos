@@ -14,17 +14,28 @@ import * as Logger from 'effect/Logger';
 import * as Option from 'effect/Option';
 import * as Command from 'effect/unstable/cli/Command';
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { createCliApp } from '@dxos/app-framework/cli';
 import * as AppMigrations from '@dxos/app-toolkit/AppMigrations';
 import { unrefTimeout } from '@dxos/async';
-import { ConfigService, DXOS_VERSION, fromConfig } from '@dxos/client';
-import { DEFAULT_PROFILE } from '@dxos/client-protocol';
+import { ClientService, ConfigService, DXOS_VERSION, fromConfig } from '@dxos/client';
+import { DEFAULT_PROFILE, DXEnv } from '@dxos/client-protocol';
 import { LogLevel, levels, log } from '@dxos/log';
+import * as Observability from '@dxos/observability/Observability';
 import { isRecordEnabled, loadPlugins, makeInstalledPlugins } from '@dxos/plugin-registry';
 
 import { admin, chat, commandConfigLayer, debug, dx, fn, hub, mailbox, mcp, reflect, repl, reset } from './commands';
 import { getCore, getDefaults, getPlugins } from './commands/plugin-defs';
 import { setDispatcher } from './dispatcher';
+import {
+  commandPath,
+  flushObservability,
+  identifySession,
+  initializeObservability,
+  observabilityNamespace,
+} from './observability';
 import { installStderrFilter, registerSharedScope } from './util';
 
 // Filter background `warnAfterTimeout` chatter out of stderr for the lifetime
@@ -53,6 +64,7 @@ if (process.env.DX_TRACK_LEAKS) {
 }
 
 const EXIT_GRACE_PERIOD = 1_000;
+const FLUSH_TIMEOUT = 500;
 const FORCE_EXIT = true;
 const CLI_CONFIG = {
   version: DXOS_VERSION,
@@ -108,7 +120,7 @@ const program = Effect.gen(function* () {
     return yield* runWatchSupervisor();
   }
 
-  const profile = readRootFlag('profile', 'p') ?? DEFAULT_PROFILE;
+  const profile = readRootFlag('profile', 'p') ?? DXEnv.get(DXEnv.PROFILE, DEFAULT_PROFILE);
   const configPath = readRootFlag('config', 'c');
   const config = yield* ConfigService.load({ config: Option.fromNullishOr(configPath), profile });
 
@@ -123,6 +135,10 @@ const program = Effect.gen(function* () {
   // Must precede any plugin import so a third-party plugin's bare specifiers resolve to the host's
   // module instances rather than its own copies.
   registerSharedScope({ enabled: installed.length > 0 });
+
+  const namespace = observabilityNamespace(profile);
+  const installationId = yield* Effect.promise(() => Observability.getInstallationId(namespace));
+  const observabilityInstance = yield* initializeObservability({ config, namespace, distinctId: installationId });
 
   const { command, layer: pluginLayer } = yield* createCliApp({
     rootCommand: dx,
@@ -148,7 +164,12 @@ const program = Effect.gen(function* () {
     // Installs come first, and the builtin they claim is dropped rather than left as an
     // unreachable duplicate: both the manager's lookup and the CLI's plugin loader take the first
     // match by key, so `add --dev` only overrides a builtin if its plugin precedes that builtin.
-    plugins: [...installed, ...getPlugins({ config }).filter((plugin) => !overridden.has(plugin.meta.profile.key))],
+    plugins: [
+      ...installed,
+      ...getPlugins({ config, namespace, observability: () => Promise.resolve(observabilityInstance) }).filter(
+        (plugin) => !overridden.has(plugin.meta.profile.key),
+      ),
+    ],
     enabled,
     core: getCore(),
   });
@@ -158,6 +179,12 @@ const program = Effect.gen(function* () {
   // instead of rebuilding them per invocation.
   const context = yield* Layer.build(Layer.mergeAll(pluginLayer, fromConfig(config), commandConfigLayer(argv)));
   const layer = Layer.succeedContext(context);
+
+  const manager = yield* Capability.get(Capabilities.PluginManager).pipe(Effect.provide(layer));
+  yield* manager.activate(ActivationEvents.Idle);
+
+  const client = yield* ClientService.pipe(Effect.provide(layer));
+  yield* Effect.promise(() => identifySession(observabilityInstance, client, namespace, installationId));
 
   // Register in-process dispatcher so `repl` can reuse the already-built
   // command tree and plugin layer instead of spawning a child `dx` process
@@ -171,9 +198,25 @@ const program = Effect.gen(function* () {
       Command.runWith(command, CLI_CONFIG)(argv).pipe(Effect.provide(layer)) as Effect.Effect<void, unknown, never>,
   );
 
+  const startedAt = Date.now();
   // `runWith` takes the ARGUMENTS, not the raw argv — passing `process.argv` makes the interpreter
   // path the first token, which parses as an unknown subcommand.
-  return yield* Command.runWith(command, CLI_CONFIG)(argv).pipe(Effect.provide(layer));
+  return yield* Command.runWith(
+    command,
+    CLI_CONFIG,
+  )(argv).pipe(
+    Effect.provide(layer),
+    Effect.onExit((exit) =>
+      Effect.sync(() =>
+        observabilityInstance.events.captureEvent('cli.command', {
+          command: commandPath(command, argv),
+          ok: Exit.isSuccess(exit),
+          durationMs: Date.now() - startedAt,
+        }),
+      ),
+    ),
+    Effect.ensuring(flushObservability(observabilityInstance, FLUSH_TIMEOUT)),
+  );
 }).pipe(
   Effect.provide(Layer.mergeAll(BunServices.layer, Logger.layer([Logger.consolePretty()]))),
   Effect.scoped,

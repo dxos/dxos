@@ -18,7 +18,13 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 import { EdgeRegistryPluginProvider } from '@dxos/app-framework';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import * as PluginAssetCache from '@dxos/app-framework/PluginAssetCache';
-import { bootLoader, useApp } from '@dxos/app-framework/ui';
+import {
+  FIRST_INTERACTIVE_EVENT,
+  STARTUP_ACTIVATED_EVENT,
+  STARTUP_FAILED_EVENT,
+  bootLoader,
+  useApp,
+} from '@dxos/app-framework/ui';
 import * as UrlLoader from '@dxos/app-framework/UrlLoader';
 // Narrow entry: the barrel also re-exports auth and the ws muxer, neither of which the
 // boot path uses.
@@ -55,6 +61,8 @@ import {
   setupConfig,
   shouldRunStorageResetMigration,
   showDevRssBanner,
+  startupMark,
+  startupMeasure,
   startupProfiler,
   translations,
 } from './util';
@@ -64,14 +72,6 @@ import { initAutomergeWasm } from './util/automerge-wasm';
 // (react-ui-form, editor, pickers) which must stay out of the static boot graph.
 const ResetDialog = lazy(() => import('./components').then((module) => ({ default: module.ResetDialog })));
 
-/**
- * Startup deadline override, in SECONDS (`VITE_DX_STARTUP_TIMEOUT=2`).
- *
- * Exists to exercise the deadline itself: shortening it does not fake a stall, it moves the line
- * that startup has genuinely not crossed yet, so the real path runs with real work behind it. Dev
- * only — in production the deadline is fatal, and a shorter one would just fail a boot sooner.
- * Seconds rather than milliseconds because it is typed by hand.
- */
 const startupTimeout = (() => {
   if (!import.meta.env.DEV) {
     return undefined;
@@ -112,7 +112,7 @@ declare global {
 
   interface ImportMetaEnv {
     DEV: string;
-    /** Startup deadline override in SECONDS, dev only — see `startupTimeout` below. */
+    /** Startup stall window override in SECONDS; dev only. */
     VITE_DX_STARTUP_TIMEOUT?: string;
   }
 
@@ -207,6 +207,7 @@ const main = async () => {
   // profiler (strict mode requires the parameter, which is exactly what is missing).
   const profilerParam = url.searchParams.get(PARAM_PROFILER);
   const profilerEnabled = profilerParam === null ? Boolean(import.meta.env?.DEV) : isTrue(profilerParam);
+  startupMark('main:start');
   const profiler = profilerEnabled ? startupProfiler() : undefined;
 
   const logLevel = url.searchParams.get(PARAM_LOG_LEVEL) ?? (safeMode ? 'debug' : undefined);
@@ -236,7 +237,7 @@ const main = async () => {
   // Devtools convenience — also surfaced via the help panel and ResetDialog UI.
   globalThis.downloadLogs = () => downloadLogs(logStore);
 
-  profiler?.mark('dynamic-imports:start');
+  startupMark('dynamic-imports:start');
   bootStatus('Loading framework…');
 
   // Load these in parallel; HTTP/2 multiplexes the three chunks and even on
@@ -250,8 +251,8 @@ const main = async () => {
       initAutomergeWasm(),
     ]);
 
-  profiler?.mark('dynamic-imports:end');
-  profiler?.measure('dynamic-imports', 'dynamic-imports:start', 'dynamic-imports:end');
+  startupMark('dynamic-imports:end');
+  startupMeasure('dynamic-imports', 'dynamic-imports:start', 'dynamic-imports:end');
 
   // Namespace for global Composer test & debug hooks.
   const otel = {
@@ -276,7 +277,7 @@ const main = async () => {
 
   AppMigrations.define();
 
-  profiler?.mark('config:start');
+  startupMark('config:start');
   bootStatus('Reading configuration…');
 
   let config = await setupConfig();
@@ -302,8 +303,8 @@ const main = async () => {
     config = await setupConfig();
   }
 
-  profiler?.mark('config:end');
-  profiler?.measure('config', 'config:start', 'config:end');
+  startupMark('config:end');
+  startupMeasure('config', 'config:start', 'config:end');
 
   const isTauri = isTauri$();
   if (isTauri) {
@@ -325,16 +326,10 @@ const main = async () => {
     post: (message) => observabilityWorker.postMessage(message),
   });
 
-  // Capture a one-shot `composer.startup` event when the framework dispatches
-  // `app-framework:startup-activated`. Includes total ms, per-phase ms, top-5
-  // slowest modules, transferred bytes (best-effort), and the boot-loader
-  // visibility mark. Reads `performance.getEntriesByType` directly so production
-  // builds without `?profiler=1` still get data.
   const captureStartupSummary = (): Record<string, string | number | boolean | undefined> => {
     const measures = performance.getEntriesByType('measure');
     const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
     const bootMark = performance.getEntriesByName('boot:html-parsed')[0];
-    const firstInteractive = performance.getEntriesByName('app-framework:first-interactive')[0];
     const phaseDuration = (name: string): number =>
       Math.round(measures.find((measure) => measure.name === `startup:${name}`)?.duration ?? 0);
     const moduleEntries = measures
@@ -353,7 +348,6 @@ const main = async () => {
       servicesMs: phaseDuration('services'),
       pluginsInitMs: phaseDuration('plugins-init'),
       bootLoaderVisibleMs: bootMark ? Math.round(bootMark.startTime) : undefined,
-      firstInteractiveMs: firstInteractive ? Math.round(firstInteractive.startTime) : undefined,
       domContentLoadedMs: navigation ? Math.round(navigation.domContentLoadedEventEnd) : undefined,
       transferredBytes,
       moduleCount: moduleEntries.length,
@@ -364,19 +358,57 @@ const main = async () => {
     });
     return summary;
   };
+  let startupActivated = false;
+  let startupFailureReported = false;
+  const captureStartup = (
+    event: string,
+    endMark: 'ready' | 'aborted',
+    extra?: Record<string, string | number | boolean | undefined>,
+  ) => {
+    startupMark(endMark);
+    startupMeasure('total', 'main:start', endMark);
+    const summary = { ...captureStartupSummary(), ...extra };
+    void observability
+      .then((obs) => {
+        obs.events.captureEvent(event, summary);
+        log.info(event, summary);
+      })
+      .catch((error) => log.catch(error));
+  };
+
+  const captureStartupFailure = (extra?: Record<string, string | number | boolean | undefined>) => {
+    if (startupFailureReported) {
+      return;
+    }
+    startupFailureReported = true;
+    captureStartup('composer.startup.failed', 'aborted', { ...extra, startupActivated });
+  };
+
   window.addEventListener(
-    'app-framework:startup-activated',
+    STARTUP_ACTIVATED_EVENT,
     () => {
-      const summary = captureStartupSummary();
+      startupActivated = true;
+      // The scheduler carries on with independent modules after one fails, so activation can still
+      // arrive once the boot is recorded as failed. Counting it in both buckets would inflate the
+      // success rate this event exists to measure.
+      if (startupFailureReported) {
+        return;
+      }
+      captureStartup('composer.startup', 'ready');
+    },
+    { once: true },
+  );
+  window.addEventListener(
+    FIRST_INTERACTIVE_EVENT,
+    (event) => {
+      const firstInteractiveMs = event.detail;
       void observability
-        .then((obs) => {
-          obs.events.captureEvent('composer.startup', summary);
-          log.info('startup', summary);
-        })
+        .then((obs) => obs.events.captureEvent('composer.first-interactive', { firstInteractiveMs }))
         .catch((error) => log.catch(error));
     },
     { once: true },
   );
+  window.addEventListener(STARTUP_FAILED_EVENT, (event) => captureStartupFailure(event.detail), { once: true });
   // Detect if this is the popover window in Tauri.
   const isPopover = await Match.value(isTauri).pipe(
     Match.when(
@@ -412,7 +444,7 @@ const main = async () => {
   // tauri-plugin-localhost which serves from http://localhost, giving SharedWorker a proper origin.
   const useSingleClientMode = isTauri && isMobile;
 
-  profiler?.mark('services:start');
+  startupMark('services:start');
   bootStatus('Starting services…');
 
   // Decide the deployment mode for client services. The factory is a dumb switch on
@@ -470,15 +502,15 @@ const main = async () => {
     },
   });
 
-  profiler?.mark('services:end');
-  profiler?.measure('services', 'services:start', 'services:end');
+  startupMark('services:end');
+  startupMeasure('services', 'services:start', 'services:end');
 
   // Started here so the handshake and storage open overlap plugin loading, which plugin-client's
   // lazily-imported module would otherwise sit behind. Its call surfaces failures; this one only
   // has to not reject unhandled.
   performance.mark('milestone:client-initialize:start');
   const client = new Client({ config, services });
-  void client.initialize().catch((err) => log.catch(err));
+  void client.initialize().catch((err) => log.error('client services failed to open', { error: err }));
 
   // Started here rather than from plugin-debug, which a plain local `serve` leaves disabled —
   // tying the flag to it would make the flag silently do nothing.
@@ -487,7 +519,7 @@ const main = async () => {
     getDebugPortController().start({ session: __DX_DEBUG_PORT_SESSION__, persist: true });
   }
 
-  profiler?.mark('plugins:start');
+  startupMark('plugins:start');
 
   const isPwa = !isFalse(getEnvString(config, 'DX_PWA'));
   // The forked `client.initialize()` runs outside the render tree: a failure or a stalled worker
@@ -503,7 +535,11 @@ const main = async () => {
     client,
     observability,
     logStore,
-    onFatalError: (error) => raiseFatalError(error),
+    onFatalError: (error) => {
+      // The phase reaches PostHog on the exception itself; this event carries only the timings.
+      captureStartupFailure();
+      raiseFatalError(error);
+    },
 
     // Strictly the `dev` cloud environment (not preview) or a local `DX_DEV=true` opt-in, so a plain
     // local `serve` keeps the lean default plugin set (see `getDefaults` in plugin-defs.tsx).
@@ -555,8 +591,8 @@ const main = async () => {
   const edgeUrl = config.values.runtime?.services?.edge?.url;
   const pluginRegistryProvider = edgeUrl ? new EdgeRegistryPluginProvider(new EdgeHttpClient(edgeUrl)) : undefined;
 
-  profiler?.mark('plugins:end');
-  profiler?.measure('plugins-init', 'plugins:start', 'plugins:end');
+  startupMark('plugins:end');
+  startupMeasure('plugins-init', 'plugins:start', 'plugins:end');
 
   const Fallback = ({ error }: { error: Error }) => {
     const {

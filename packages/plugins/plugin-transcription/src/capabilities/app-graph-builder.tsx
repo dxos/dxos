@@ -48,7 +48,9 @@ export default Capability.makeModule(
             properties: {
               label: ['start-recording.label', { ns: meta.profile.key }],
               icon: 'ph--microphone--regular',
-              disposition: 'toolbar',
+              // Both surfaces: dictation acts on whatever text is being composed, which an object
+              // toolbar and a prompt row each have.
+              disposition: ['toolbar', 'prompt'],
               variant: 'custom',
               render: () => <Mic docId={matched.id} />,
             },

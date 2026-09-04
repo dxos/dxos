@@ -8,6 +8,7 @@ import { type PostHogConfig } from 'posthog-js';
 import { type Config, getEnvString } from '@dxos/config';
 import { log } from '@dxos/log';
 import { type IdbLogStore } from '@dxos/log-store-idb';
+import { isNode } from '@dxos/util';
 
 import * as ObservabilityExtension from '../../ObservabilityExtension';
 import { stubExtension } from '../stub';
@@ -45,6 +46,19 @@ export type ExtensionsOptions = {
    * pass the absolute URL of a deployment that does.
    */
   feedbackLogsEndpoint?: string;
+  /** What the `posthog-node` transport needs; a browser host has posthog-js and reads none of it. */
+  node?: NodeOptions;
+};
+
+export type NodeOptions = {
+  /** Pins the project instead of reading `DX_POSTHOG_API_KEY`. */
+  apiKey?: string;
+  /** Ingestion host — a region, or a proxy on your own domain. */
+  host?: string;
+  /** Attribution for events captured before `identify`, since there is no ambient person. */
+  distinctId?: string;
+  /** Which MCP server this host is, stamped on every `$mcp_*` event. */
+  mcpServer?: { name: string; version: string };
 };
 
 /** Same-origin route of the web deployment, which proxies the upload to object storage. */
@@ -80,7 +94,12 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
     logStore,
     feedbackLogMaxSize,
     feedbackLogsEndpoint = DEFAULT_FEEDBACK_LOGS_ENDPOINT,
+    node,
   }) {
+    if (isNode()) {
+      const { extensions: nodeExtensions } = yield* Effect.promise(() => import('#posthog-transport'));
+      return yield* nodeExtensions({ config, release, environment, node });
+    }
     if (typeof window === 'undefined') {
       log('PostHog is being stubbed because it is running in a worker.');
       return stubExtension;
