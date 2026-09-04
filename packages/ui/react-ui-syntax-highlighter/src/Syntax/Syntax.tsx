@@ -248,7 +248,7 @@ const SyntaxCode = composable<HTMLDivElement, SyntaxScopedProps<SyntaxCodeProps>
     // `overflow-visible` undoes the `overflow-auto` SyntaxHighlighter carries for standalone use:
     // here the enclosing `Syntax.Viewport` owns scrolling, and a nested scroll container would
     // scroll first, showing a native scrollbar instead of the viewport's custom one.
-    const merged = composableProps(props, { classNames: 'py-1 px-2 text-sm overflow-visible' });
+    const merged = composableProps(props, { classNames: 'text-sm overflow-visible' });
 
     if (context.mode === 'json') {
       return (

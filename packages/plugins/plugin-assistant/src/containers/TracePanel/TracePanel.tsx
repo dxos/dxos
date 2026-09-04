@@ -173,9 +173,6 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
         {!tracePanelDebug && selectedCommit && (
           <div className='p-1 overflow-hidden'>
             <Syntax.Root data={details[selectedCommit.id] ?? selectedCommit}>
-              {/* `text-xs` here as well as on the code, so `1lh` resolves against the line-height
-                  the code actually renders at: the cap is sixteen lines whatever the type scale
-                  does, and a shorter detail still collapses to its own height. */}
               <Syntax.Content classNames='text-xs max-h-[calc(16*1lh)] border border-subdued-separator rounded-sm'>
                 <Syntax.Viewport>
                   <Syntax.Code classNames='text-xs' />
