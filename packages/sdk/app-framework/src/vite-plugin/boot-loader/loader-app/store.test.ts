@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 import {
   ABSOLUTE_CEILING,
   CREEP_TICK_MS,
-  PLUGIN_DRAIN_MS,
+  PLUGIN_DRAIN_MAX_MS,
   STATE_1_ASYMPTOTE,
   clampPercent,
   createLoaderStore,
@@ -215,10 +215,11 @@ describe('plugin activation row', () => {
     store.activatePlugin('sheet');
     expect(store.plugins().map(({ id }) => id)).toEqual(['markdown']);
 
-    vi.advanceTimersByTime(PLUGIN_DRAIN_MS);
+    // Advance by the top of the range: each gap is sampled, so only the maximum is guaranteed.
+    vi.advanceTimersByTime(PLUGIN_DRAIN_MAX_MS);
     expect(store.plugins().map(({ id }) => id)).toEqual(['markdown', 'table']);
 
-    vi.advanceTimersByTime(PLUGIN_DRAIN_MS);
+    vi.advanceTimersByTime(PLUGIN_DRAIN_MAX_MS);
     expect(store.plugins().map(({ id }) => id)).toEqual(['markdown', 'table', 'sheet']);
     store.dispose();
   });
@@ -231,7 +232,7 @@ describe('plugin activation row', () => {
     store.activatePlugin('noicon');
     store.activatePlugin('markdown');
     store.activatePlugin('markdown');
-    vi.advanceTimersByTime(PLUGIN_DRAIN_MS * 4);
+    vi.advanceTimersByTime(PLUGIN_DRAIN_MAX_MS * 4);
     expect(store.plugins().map(({ id }) => id)).toEqual(['markdown']);
     store.dispose();
   });

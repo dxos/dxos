@@ -26,11 +26,17 @@ export const STATE_2_BUMP = 15;
 export const ABSOLUTE_CEILING = 90;
 
 /**
- * Minimum spacing between plugin icons entering the row. Activation arrives in bursts — a dozen
- * plugins inside a couple of frames — which lands as a single clump rather than as anything the eye
- * can follow, so arrivals queue and drain at this cadence instead.
+ * Spacing between plugin icons entering the row, sampled per icon from this range. Activation
+ * arrives in bursts — a dozen plugins inside a couple of frames — which lands as a single clump
+ * rather than as anything the eye can follow, so arrivals queue and drain at this cadence instead.
+ * The interval varies because a fixed one reads as a machine ticking rather than work landing.
  */
-export const PLUGIN_DRAIN_MS = 400;
+export const PLUGIN_DRAIN_MIN_MS = 200;
+export const PLUGIN_DRAIN_MAX_MS = 400;
+
+/** A drain delay sampled from `[PLUGIN_DRAIN_MIN_MS, PLUGIN_DRAIN_MAX_MS]`. */
+export const drainDelay = (): number =>
+  PLUGIN_DRAIN_MIN_MS + Math.random() * (PLUGIN_DRAIN_MAX_MS - PLUGIN_DRAIN_MIN_MS);
 
 /** A plugin drawn in the activation row, in activation order. */
 export type PluginRow = PluginEntry;
@@ -96,8 +102,8 @@ export type LoaderStore = {
    */
   setPlugins: (entries: PluginEntry[]) => void;
   /**
-   * Queue this plugin's icon for the row. Arrivals drain one per {@link PLUGIN_DRAIN_MS} — activation
-   * bursts would otherwise land as one clump. Unregistered and repeated ids are ignored.
+   * Queue this plugin's icon for the row. Arrivals drain one at a time, spaced by {@link drainDelay}
+   * — activation bursts would otherwise land as one clump. Unregistered and repeated ids are ignored.
    */
   activatePlugin: (id: string) => void;
   /** Offer the user an abort (see `BootLoaderApi.stalled`). Idempotent — the first handler wins. */
@@ -118,7 +124,7 @@ export const createLoaderStore = (initialStatus?: string): LoaderStore => {
   const registry = new Map<string, PluginEntry>();
   // Arrivals waiting their turn, drained one per `PLUGIN_DRAIN_MS`.
   const pendingPlugins: PluginEntry[] = [];
-  let drainTimer: ReturnType<typeof setInterval> | null = null;
+  let drainTimer: ReturnType<typeof setTimeout> | null = null;
   // Held as a signal rather than a boolean + prop so the button has the handler directly, and so a
   // second `stalled()` (a re-fired deadline) cannot swap it mid-press.
   const [onAbort, setOnAbort] = createSignal<(() => void) | undefined>(undefined);
@@ -185,24 +191,32 @@ export const createLoaderStore = (initialStatus?: string): LoaderStore => {
     }
   };
 
-  // Appends one queued icon and keeps the timer alive only while there is more to drain, so an
-  // idle loader runs no interval.
-  const drainPlugin = (): void => {
-    const entry = pendingPlugins.shift();
-    if (entry) {
-      // Appended in its final state: the entrance is a CSS animation that runs from the element's
-      // first frame, so it needs no two-step flip to start it (and no frame in which to do so — the
-      // main thread is saturated during boot).
-      setPluginRows((current) => [...current, entry]);
-    }
-    if (pendingPlugins.length === 0) {
-      stopDrain();
-    }
+  // Appended in its final state: the entrance is a CSS animation that runs from the element's first
+  // frame, so it needs no two-step flip to start it (and no frame in which to do so — the main
+  // thread is saturated during boot).
+  const emitPlugin = (entry: PluginEntry): void => setPluginRows((current) => [...current, entry]);
+
+  /**
+   * Cooldown after every emission, not merely while the queue is non-empty: activations arrive one
+   * at a time as often as in a burst, and without a cooldown each of those would find no timer armed
+   * and draw immediately — the clump this exists to prevent. Sampled afresh each time, so the row
+   * fills at an uneven human cadence rather than a machine tick. Disarms once the queue is idle.
+   */
+  const scheduleDrain = (): void => {
+    drainTimer = setTimeout(() => {
+      const entry = pendingPlugins.shift();
+      if (!entry) {
+        drainTimer = null;
+        return;
+      }
+      emitPlugin(entry);
+      scheduleDrain();
+    }, drainDelay());
   };
 
   const stopDrain = (): void => {
     if (drainTimer != null) {
-      clearInterval(drainTimer);
+      clearTimeout(drainTimer);
       drainTimer = null;
     }
   };
@@ -212,11 +226,12 @@ export const createLoaderStore = (initialStatus?: string): LoaderStore => {
     if (!entry || plugins().some((row) => row.id === id) || pendingPlugins.some((row) => row.id === id)) {
       return;
     }
-    pendingPlugins.push(entry);
     if (drainTimer == null) {
-      // First arrival of a burst draws immediately; the interval then paces the rest.
-      drainPlugin();
-      drainTimer = setInterval(drainPlugin, PLUGIN_DRAIN_MS);
+      // Nothing has drawn recently, so this one draws at once; the cooldown paces whatever follows.
+      emitPlugin(entry);
+      scheduleDrain();
+    } else {
+      pendingPlugins.push(entry);
     }
   };
 
