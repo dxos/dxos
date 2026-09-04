@@ -1,0 +1,31 @@
+project:
+  name: benchmarks
+  type: tool
+  language: typescript
+  description: Performance benchmarks for various DXOS systems
+
+tasks:
+  build:
+    command: tsc
+    inputs:
+      - '**/*.ts'
+    outputs:
+      - 'dist'
+
+  echo:storage:
+    command: node dist/echo-storage-benchmarks.js
+    deps:
+      - '@dxos/echo:build'
+      - '@dxos/echo-client:build'
+      - '@dxos/echo-host:build'
+    options:
+      env:
+        - NODE_OPTIONS
+        - DEBUG
+
+  property:access:
+    command: node property-benchmarks-extended.js
+    description: Run property access benchmarks
+
+env:
+  NODE_OPTIONS: --max-old-space-size=4096
