@@ -171,12 +171,11 @@ export const Loader: Component<LoaderProps> = (props) => {
         {/* Inner track: the flex row itself, so the outer element keeps its vertical placement
             transform and clips the growth. */}
         <div id='boot-loader-plugins-track'>
-          {/* `Index`, not `For`: rows are appended and then updated in place, and `For` keys by item
-              identity — a replaced row object would re-create the element and kill the width and fade
-              transitions mid-flight. */}
+          {/* `Index`, not `For`: `For` keys by item identity, so any row rewrite would re-create the
+              element and restart its entrance animation. */}
           <Index each={props.store.plugins()}>
             {(plugin) => (
-              <svg class='boot-loader-plugin' data-active={plugin().active ? '' : undefined} viewBox='0 0 256 256'>
+              <svg class='boot-loader-plugin' viewBox='0 0 256 256'>
                 <use href={`${props.spritePath ?? DEFAULT_SPRITE_PATH}#${plugin().icon}`} />
               </svg>
             )}

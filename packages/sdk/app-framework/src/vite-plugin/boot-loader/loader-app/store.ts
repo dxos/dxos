@@ -25,8 +25,8 @@ export const STATE_2_BUMP = 15;
 /** Hard ceiling the auto-creep never crosses (host must drive the rest). */
 export const ABSOLUTE_CEILING = 90;
 
-/** A seeded plugin plus whether it has activated yet. */
-export type PluginRow = PluginEntry & { active: boolean };
+/** A plugin drawn in the activation row, in activation order. */
+export type PluginRow = PluginEntry;
 
 /** Loader lifecycle phase. */
 export type Phase = 'creep' | 'host' | 'dismissing';
@@ -177,12 +177,10 @@ export const createLoaderStore = (initialStatus?: string): LoaderStore => {
     if (!entry || plugins().some((row) => row.id === id)) {
       return;
     }
-    // Appended inactive, then flipped on the next frame so the entrance transition actually runs —
-    // a row that only ever rendered active would skip it.
-    setPluginRows((current) => [...current, { ...entry, active: false }]);
-    requestAnimationFrame(() =>
-      setPluginRows((current) => current.map((row) => (row.id === id ? { ...row, active: true } : row))),
-    );
+    // Appended in its final state: the entrance is a CSS animation that runs from the element's
+    // first frame, so it needs no two-step flip to start it (and no frame in which to do so — the
+    // main thread is saturated during boot).
+    setPluginRows((current) => [...current, entry]);
   };
 
   const setProgress = (fraction?: number): void => {

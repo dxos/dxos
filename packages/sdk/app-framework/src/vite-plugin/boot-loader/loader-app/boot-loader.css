@@ -388,41 +388,35 @@ body {
 }
 
 /*
- * Enters at zero width with the track's gap cancelled, so an appended icon costs no space until it
- * animates open — the row grows outward from its centre and every icon already on screen glides
- * rather than jumping. Faint until lit.
+ * Entrance is a keyframe animation on opacity + transform, and nothing else. During boot the main
+ * thread is saturated — measured frame gaps of ~280ms — so a transition gets no intermediate frames
+ * and snaps to its end state; a composited animation keeps running regardless. Width and margin
+ * cannot be composited at all, so the row steps out by one slot per icon rather than animating.
  */
 .boot-loader-plugin {
-  width: 0;
+  width: 40px;
   height: 40px;
   flex: 0 0 auto;
-  margin-inline-start: -10px;
-  /* Monotone throughout — the arrival reads from opacity alone, which keeps the row quiet. */
+  /* Monotone — the arrival reads from opacity alone, which keeps the row quiet. */
   color: currentColor;
   fill: currentColor;
-  opacity: 0;
-  transform: scale(0.9);
-  /*
-   * Two stages, from the one `data-active` flip: the icon opens faint (width, margin, scale), and
-   * only once it has taken its place does it brighten — the delay is what makes the arrival
-   * readable rather than a simultaneous pop.
-   */
-  transition:
-    width 400ms ease-out,
-    margin-inline-start 400ms ease-out,
-    transform 400ms ease-out,
-    opacity 500ms ease-out 400ms;
+  opacity: 0.2;
+  animation: boot-loader-plugin-in 600ms ease-out both;
 }
 
-.boot-loader-plugin[data-active] {
-  width: 40px;
-  margin-inline-start: 0;
-  opacity: 0.2;
-  transform: scale(1);
+@keyframes boot-loader-plugin-in {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 0.2;
+    transform: scale(1);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .boot-loader-plugin {
-    transition: none;
+    animation: none;
   }
 }

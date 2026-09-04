@@ -78,10 +78,13 @@ export const PluginActivation: Story = {
     onMount(() => {
       store.setPlugins(PLUGINS);
       store.setProgress(0.5);
-      // Slow enough to watch each icon open and the row grow outward from the centre.
-      const timers = PLUGINS.map((plugin, index) =>
-        setTimeout(() => store.activatePlugin(plugin.id), 800 + index * 700),
-      );
+      // Staggered 10ms → 100ms across the set: the app fires activations in bursts, and the
+      // entrance has to survive both ends of that range.
+      let at = 600;
+      const timers = PLUGINS.map((plugin, index) => {
+        at += 10 + (index / Math.max(PLUGINS.length - 1, 1)) * 90;
+        return setTimeout(() => store.activatePlugin(plugin.id), at);
+      });
       onCleanup(() => timers.forEach(clearTimeout));
     });
     onCleanup(() => store.dispose());
