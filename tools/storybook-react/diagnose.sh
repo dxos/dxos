@@ -117,7 +117,13 @@ capture() {
     echo
 
     echo "--- descriptors (watcher exhaustion) ---"
-    echo "count: $(lsof -p "${pid}" 2>/dev/null | wc -l | tr -d ' ')  limit: $(ulimit -n)"
+    # `lsof -p` also lists mapped regions and the executable, which inflated this count past the
+    # limit and made every report look like exhaustion; only numeric FD rows are descriptors.
+    echo "open descriptors: $(lsof -p "${pid}" 2>/dev/null | awk 'NR > 1 && $4 ~ /^[0-9]+/' | wc -l | tr -d ' ')"
+    # macOS exposes no per-process rlimit for another process. This watcher is spawned by `serve.sh`
+    # in the server's own shell, so its limit is the server's — but only when armed that way.
+    echo "soft limit (inherited from the shell that armed this watcher): $(ulimit -n)"
+    echo "the dev server watches with fs.watch: one descriptor per watched directory, ~12k here."
     echo
 
     echo "--- tab log stream ---"
@@ -134,8 +140,17 @@ capture() {
 
   echo
   echo "Captured: ${out}"
-  grep -E "^trigger:|index.json:|^count:|deps_temp_\* dirs in flight:" "${out}"
+  grep -E "^trigger:|index.json:|^open descriptors:|^soft limit|deps_temp_\* dirs in flight:" "${out}"
   echo
+  # chokidar 3's fsevents backend fans every raw event out over one listener per watched path and
+  # rebuilds a path prefix in each, which pinned this server at 100% for minutes at a time. The
+  # dev server is configured onto `fs.watch` instead (`.storybook/main.ts`), so this frame
+  # reappearing means that configuration is not in effect for the process that hung.
+  if grep -q "fse_dispatch_event" "${out}"; then
+    echo "VERDICT: the fsevents watcher backend is live and burning the main thread —"
+    echo "  \`useFsEvents: false\` in .storybook/main.ts is not reaching this server."
+    echo
+  fi
   echo "Main thread, deepest named frames (what the CPU is actually in):"
   # Counts are uniform down a single hot stack, so depth — not count — is the signal. The deepest
   # frames separate the candidates outright: GC thrash shows `Heap::CollectGarbage`, a watcher storm
