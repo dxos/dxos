@@ -132,16 +132,20 @@ const blockToMarkdown = (
 ): string | undefined => {
   switch (block._tag) {
     case 'text': {
-      if (message.sender.role === 'user') {
-        if (block.disposition !== 'synthetic') {
-          return tag('prompt', block.text, block);
-        }
+      // The disposition marks system-generated input, not the sender: the thread folds a run of
+      // machinery messages into one and keeps the FIRST message's identity, so an alarm turn's
+      // synthetic prompt arrives on a message the previous turn's trailing `stats` made
+      // assistant-role — and keying on the role rendered it as the model's own prose.
+      if (block.disposition === 'synthetic') {
         // Synthetic context riding ON a prompt is the chrome's: it renders as its own panel above
         // the bubble, so the bubble frames only the reader's words. A message that is ONLY synthetic
         // is not the reader speaking at all (a trigger, a continuation nudge), so it renders as its
         // own panel row — emitted here, since a message the renderer maps to nothing is dropped as
         // an empty row, which left the answer to it reading as unprompted.
         return isPrompt(message) ? undefined : tag('synthetic', block.text, block);
+      }
+      if (message.sender.role === 'user') {
+        return tag('prompt', block.text, block);
       }
       return block.text.trim() || undefined;
     }

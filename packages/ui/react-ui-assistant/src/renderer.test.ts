@@ -109,6 +109,23 @@ describe('createRenderer', () => {
     expect(text).not.toContain('the selection');
   });
 
+  // `collapseToolRuns` keeps the first message's identity, and the previous turn's trailing `stats`
+  // message starts the run — so an alarm turn's synthetic prompt lands on an assistant-role message.
+  // Keyed on the role, it rendered as the model's own prose with the panel frame gone.
+  test('a synthetic block keeps its panel on an assistant-role message', ({ expect }) => {
+    const rendered = createRenderer('normal')(
+      message([
+        { _tag: 'stats' },
+        ContentBlock.Text.make({ text: 'Your scheduled alarm fired.', disposition: 'synthetic' }),
+        { _tag: 'toolCall', toolCallId: '1', name: 'a', input: '{}', providerExecuted: false },
+        { _tag: 'toolResult', toolCallId: '1', name: 'a', providerExecuted: false, result: 'ok' },
+      ]),
+    );
+
+    expect(markdown(rendered)).toContain('<synthetic>Your scheduled alarm fired.</synthetic>');
+    expect(toolkitTags(rendered)).toBe(1);
+  });
+
   // A message the renderer maps to nothing is dropped as an empty row, so a synthetic-only turn
   // (a trigger, the planning skill's continuation nudge) used to vanish — leaving the answer to it
   // reading as though the assistant had spoken unprompted.

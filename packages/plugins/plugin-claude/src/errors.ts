@@ -48,6 +48,15 @@ export class CredentialNotBoundError extends BaseError.extend(
   'No credential with that name is bound to the session.',
 ) {}
 
+/**
+ * The request asked for nothing. Rejected rather than treated as a no-op: the inputs are optional
+ * plain arrays (see `ClaudeAgentOperation`), so emptiness is checked in the handler.
+ */
+export class NoCredentialChangeError extends BaseError.extend(
+  'NoCredentialChangeError',
+  'No credential change was requested; pass credentials, revoke or refresh.',
+) {}
+
 /** A referenced AccessToken is gone, or its server-custodied value could not be exchanged. */
 export class CredentialResolutionError extends BaseError.extend(
   'CredentialResolutionError',

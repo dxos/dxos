@@ -8,9 +8,25 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
+import { AccessToken } from '@dxos/link';
 
 import { ANTHROPIC_SOURCE } from '../constants';
 import * as ClaudeManagedAgent from './ClaudeManagedAgent';
+
+/**
+ * A credential bound to a session, by reference rather than by value: the secret is resolved from
+ * the space when it is injected and delivered to the container's environment over the control plane,
+ * so it never appears in a message, a transcript or an operation result.
+ */
+export const SessionCredential = Schema.Struct({
+  token: Ref.Ref(AccessToken.AccessToken).annotate({
+    description: 'The AccessToken object in this space holding the secret.',
+  }),
+  as: Schema.NonEmptyString.annotate({
+    description: 'Environment variable the agent reads the secret as, e.g. "GH_TOKEN".',
+  }),
+});
+export interface SessionCredential extends Schema.Schema.Type<typeof SessionCredential> {}
 
 /**
  * A run of a {@link ClaudeManagedAgent.ClaudeManagedAgent}: one Anthropic-hosted session and its
@@ -39,6 +55,14 @@ export class ClaudeAgentSession extends Type.makeObject<ClaudeAgentSession>(
     status: Schema.optional(Schema.String.annotate({ title: 'Status' })),
     /** Why the agent last stopped, when it went idle (e.g. `end_turn`, `requires_action`). */
     stopReason: Schema.optional(Schema.String.annotate({ title: 'Stop reason' })),
+    /**
+     * The AccessToken refs bound to this run, by the variable the agent reads them as. Recorded
+     * because the vault holds only the resolved VALUE: an OAuth token that rotates in the space
+     * leaves the vault stale, and re-reading it needs the ref the value came from.
+     */
+    credentials: Schema.optional(
+      Schema.Array(SessionCredential).annotate({ description: 'Credentials bound to this run.' }),
+    ),
   }).pipe(
     LabelAnnotation.set(['title']),
     Annotation.IconAnnotation.set({ icon: 'ph--terminal-window--regular', hue: 'indigo' }),

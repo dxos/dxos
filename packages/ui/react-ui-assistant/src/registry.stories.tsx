@@ -54,6 +54,17 @@ type Story = StoryObj<typeof meta>;
 // DOM widgets
 //
 
+/**
+ * The shape {@link createRenderer} actually emits for a synthetic-only turn (an alarm wake-up, a
+ * continuation nudge): the tags hug the content and the prose keeps its own line breaks.
+ */
+export const SyntheticTurn: Story = {
+  args: {
+    content:
+      '<synthetic>Your scheduled alarm fired (it was set for 2026-09-04T06:20:11.153Z).\nPoll the agent session — it flagged a problem with the merge going through while checks were pending.</synthetic>',
+  },
+};
+
 export const Prompt: Story = {
   args: {
     content: '<prompt>Hello world!</prompt>',
