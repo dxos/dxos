@@ -34,17 +34,17 @@ type Story = StoryObj;
 
 /**
  * A representative slice of the enabled plugin set, taken from real `dx.config.ts` meta so the
- * story exercises the same sprite symbols and hues the app seeds.
+ * story exercises the same sprite symbols the app registers.
  */
 const PLUGINS = [
   { id: 'space', icon: 'ph--planet--regular' },
-  { id: 'markdown', icon: 'ph--text-aa--regular', hue: 'indigo' },
-  { id: 'table', icon: 'ph--table--regular', hue: 'green' },
-  { id: 'sheet', icon: 'ph--grid-nine--regular', hue: 'indigo' },
-  { id: 'assistant', icon: 'ph--sparkle--regular', hue: 'amber' },
-  { id: 'inbox', icon: 'ph--tray--regular', hue: 'sky' },
-  { id: 'map', icon: 'ph--map-trifold--regular', hue: 'rose' },
-  { id: 'kanban', icon: 'ph--kanban--regular', hue: 'purple' },
+  { id: 'markdown', icon: 'ph--text-aa--regular' },
+  { id: 'table', icon: 'ph--table--regular' },
+  { id: 'sheet', icon: 'ph--grid-nine--regular' },
+  { id: 'assistant', icon: 'ph--sparkle--regular' },
+  { id: 'inbox', icon: 'ph--tray--regular' },
+  { id: 'map', icon: 'ph--map-trifold--regular' },
+  { id: 'kanban', icon: 'ph--kanban--regular' },
 ];
 
 /** Normal startup: the ring creeps, statuses append, plugin icons light, then the host reports ready. */
@@ -70,7 +70,7 @@ export const Default: Story = {
 
 /**
  * The activation row on its own, filling slowly: each plugin's icon is appended monochrome as it
- * activates and eases into its own hue. Registered-but-never-activated plugins draw nothing.
+ * activates and fades in. Registered-but-never-activated plugins draw nothing.
  */
 export const PluginActivation: Story = {
   render: () => {

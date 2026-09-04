@@ -354,9 +354,8 @@ body {
 }
 
 /*
- * Activation row — one icon per plugin due to activate, seeded dim and monochrome, easing to its
- * own hue as the host lights it. Sits below the status log, so the vertical order follows the boot
- * order: mark, ring, log, plugins.
+ * Activation row — one monochrome icon per plugin as the host reports it activating. Sits below the
+ * status log, so the vertical order follows the boot order: mark, ring, log, plugins.
  */
 #boot-loader-plugins {
   position: absolute;
@@ -389,68 +388,36 @@ body {
 }
 
 /*
- * Tailwind's 500 levels, inlined: the loader paints before any app CSS, so it cannot read
- * `@dxos/ui-theme`'s hue tokens. Only the hues plugin meta actually uses are carried.
- * Keep in sync with `packages/ui/ui-theme/src/css/theme/palette.css`.
- */
-#boot-loader {
-  --boot-loader-hue-red: oklch(0.637 0.237 25.331);
-  --boot-loader-hue-orange: oklch(0.705 0.213 47.604);
-  --boot-loader-hue-amber: oklch(0.769 0.188 70.08);
-  --boot-loader-hue-yellow: oklch(0.795 0.184 86.047);
-  --boot-loader-hue-green: oklch(0.723 0.219 149.579);
-  --boot-loader-hue-teal: oklch(0.704 0.14 182.503);
-  --boot-loader-hue-cyan: oklch(0.715 0.143 215.221);
-  --boot-loader-hue-sky: oklch(0.685 0.169 237.323);
-  --boot-loader-hue-blue: oklch(0.623 0.214 259.815);
-  --boot-loader-hue-indigo: oklch(0.585 0.233 277.117);
-  --boot-loader-hue-violet: oklch(0.606 0.25 292.717);
-  --boot-loader-hue-purple: oklch(0.627 0.265 303.9);
-  --boot-loader-hue-fuchsia: oklch(0.667 0.295 322.15);
-  --boot-loader-hue-pink: oklch(0.656 0.241 354.308);
-  --boot-loader-hue-rose: oklch(0.645 0.246 16.439);
-}
-
-/*
  * Enters at zero width with the track's gap cancelled, so an appended icon costs no space until it
  * animates open — the row grows outward from its centre and every icon already on screen glides
- * rather than jumping. Neutral and faint until lit; `grayscale(100%)` stays on both sides of the
- * transition (as with the brand mark) so engines interpolate the percentage instead of treating
- * `none` as a discrete jump.
+ * rather than jumping. Faint until lit.
  */
 .boot-loader-plugin {
   width: 0;
   height: 40px;
   flex: 0 0 auto;
   margin-inline-start: -10px;
+  /* Monotone throughout — the arrival reads from opacity alone, which keeps the row quiet. */
   color: currentColor;
   fill: currentColor;
-  /* Unlit: barely there, so the lit icons carry the eye. */
-  opacity: 0.1;
-  filter: grayscale(100%);
+  opacity: 0.3;
   transform: scale(0.9);
   /*
-   * Two stages, from the one `data-active` flip: the icon opens neutral and faint (width, margin,
-   * scale), and only once it has taken its place do colour and brightness ease in — the delay is
-   * what makes the arrival readable rather than a simultaneous pop.
+   * Two stages, from the one `data-active` flip: the icon opens faint (width, margin, scale), and
+   * only once it has taken its place does it brighten — the delay is what makes the arrival
+   * readable rather than a simultaneous pop.
    */
   transition:
     width 400ms ease-out,
     margin-inline-start 400ms ease-out,
     transform 400ms ease-out,
-    opacity 500ms ease-out 400ms,
-    filter 500ms ease-out 400ms,
-    color 500ms ease-out 400ms;
+    opacity 500ms ease-out 400ms;
 }
 
 .boot-loader-plugin[data-active] {
-  /* Hue-less plugins light in the loader's own accent rather than staying grey. */
-  color: var(--boot-loader-plugin-color, var(--boot-loader-accent));
-  /* Lit icons match the status log's de-emphasis rather than the mark's full strength. */
-  opacity: 0.6;
   width: 40px;
   margin-inline-start: 0;
-  filter: grayscale(0%);
+  opacity: 0.5;
   transform: scale(1);
 }
 

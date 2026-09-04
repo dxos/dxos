@@ -42,8 +42,6 @@ export type PluginEntry = {
   id: string;
   /** Sprite symbol name from the plugin's meta (e.g. `ph--text-aa--regular`). */
   icon?: string;
-  /** Theme hue name from the plugin's meta (e.g. `indigo`); falls back to the loader's accent. */
-  hue?: string;
 };
 
 /**

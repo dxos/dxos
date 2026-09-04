@@ -16,7 +16,7 @@ declare global {
       range?: { index: number; total: number };
     }) => void;
     /** Register plugin icons for the loader's activation row; draws nothing until `activated(...)`. */
-    plugins?: (entries: { id: string; icon?: string; hue?: string }[]) => void;
+    plugins?: (entries: { id: string; icon?: string }[]) => void;
     /** Add the registered plugin with this id to the activation row. */
     activated?: (id: string) => void;
     progress: (fraction?: number) => void;

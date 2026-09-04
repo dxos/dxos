@@ -166,25 +166,17 @@ export const Loader: Component<LoaderProps> = (props) => {
           <For each={props.store.lines()}>{(line) => <div class='boot-loader-status-line'>{line.text}</div>}</For>
         </div>
       </div>
-      {/* Activation row: one icon per plugin as it activates, appended monochrome and easing into its
-          own hue. Icons resolve against the static sprite, which needs no app bundle. */}
+      {/* Activation row: one icon per plugin as it activates, appended monochrome and fading in. Icons resolve against the static sprite, which needs no app bundle. */}
       <div id='boot-loader-plugins' aria-hidden='true'>
         {/* Inner track: the flex row itself, so the outer element keeps its vertical placement
             transform and clips the growth. */}
         <div id='boot-loader-plugins-track'>
           {/* `Index`, not `For`: rows are appended and then updated in place, and `For` keys by item
-              identity — a replaced row object would re-create the element and kill the width/colour
-              transition mid-flight. */}
+              identity — a replaced row object would re-create the element and kill the width and fade
+              transitions mid-flight. */}
           <Index each={props.store.plugins()}>
             {(plugin) => (
-              <svg
-                class='boot-loader-plugin'
-                data-active={plugin().active ? '' : undefined}
-                viewBox='0 0 256 256'
-                style={
-                  plugin().hue ? { '--boot-loader-plugin-color': `var(--boot-loader-hue-${plugin().hue})` } : undefined
-                }
-              >
+              <svg class='boot-loader-plugin' data-active={plugin().active ? '' : undefined} viewBox='0 0 256 256'>
                 <use href={`${props.spritePath ?? DEFAULT_SPRITE_PATH}#${plugin().icon}`} />
               </svg>
             )}

@@ -88,7 +88,7 @@ export type LoaderStore = {
    * half-dim for the whole boot. Rows appear from {@link LoaderStore.activatePlugin}.
    */
   setPlugins: (entries: PluginEntry[]) => void;
-  /** Append this plugin's icon to the row (dim, then easing to its hue). Unregistered ids are ignored. */
+  /** Append this plugin's icon to the row (opening faint, then brightening). Unregistered ids are ignored. */
   activatePlugin: (id: string) => void;
   /** Offer the user an abort (see `BootLoaderApi.stalled`). Idempotent — the first handler wins. */
   stalled: (onAbort: () => void) => void;
@@ -177,8 +177,8 @@ export const createLoaderStore = (initialStatus?: string): LoaderStore => {
     if (!entry || plugins().some((row) => row.id === id)) {
       return;
     }
-    // Appended dim, then flipped on the next frame so the icon eases into its hue rather than
-    // popping in already lit — a row that only ever renders active would skip the transition.
+    // Appended inactive, then flipped on the next frame so the entrance transition actually runs —
+    // a row that only ever rendered active would skip it.
     setPluginRows((current) => [...current, { ...entry, active: false }]);
     requestAnimationFrame(() =>
       setPluginRows((current) => current.map((row) => (row.id === id ? { ...row, active: true } : row))),

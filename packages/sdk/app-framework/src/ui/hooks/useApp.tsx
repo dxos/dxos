@@ -251,7 +251,6 @@ export const useApp = ({
         .map(({ meta }) => ({
           id: pluginSlugOfKey(meta.profile.key),
           icon: meta.profile.icon?.key,
-          hue: meta.profile.icon?.hue,
         })),
     );
   }, [plugins, enabled]);
