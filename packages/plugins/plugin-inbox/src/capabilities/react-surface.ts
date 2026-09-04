@@ -42,7 +42,9 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'subscriptions',
         filter: Surface.makeFilter(AppSurface.Article, (data) => {
-          const lastSegment = data.attendableId.split('/').pop();
+          // A filter runs against every article candidate, including ones whose data carries no
+          // `attendableId` despite the type — throwing here fails the whole surface match.
+          const lastSegment = data.attendableId?.split('/').pop();
           return lastSegment === getSubscriptionsId() && Mailbox.instanceOf(data.subject);
         }),
         component: SubscriptionsArticle,

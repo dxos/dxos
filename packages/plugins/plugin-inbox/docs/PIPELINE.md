@@ -2,18 +2,19 @@
 
 How mail gets into a mailbox and what runs over it afterwards. Sibling docs: [`PLAN.md`](PLAN.md)
 (product plan), [`TASKS.md`](TASKS.md) (ledger), [`TESTING.md`](TESTING.md) (manual test plan),
-[`AUDIT.md`](AUDIT.md) (component/test index).
+[`PIPELINE-AUDIT.md`](PIPELINE-AUDIT.md) (pipeline/operation coverage index). `AUDIT.md` is a
+separate decomposition audit, not a test index.
 
-**Status:** D1–D3 and D5 built; D4 and D6 outstanding. See [Open](#open).
+**Status:** D1–D6 all built. See [Open](#open) for what remains beyond them.
 
 ## The shape
 
 1. **Sync** — dispatches to the connector bound to the mailbox and **writes** the feed. Mechanical, no LLM.
-2. **Scan** — **reads** the feed through N independent cursors, running processors that plugins contribute.
+2. **Analyze** — **reads** the feed through N independent cursors, running processors that plugins contribute.
 
 Both halves are extensible, by deliberately different mechanisms. Sync's provider is an Effect
 service (`MailSyncProvider`) because exactly **one** provider is active per operation — the shape a
-`Context.Tag` models. Scan needs **N** processors active at once from different plugins, which a tag
+`Context.Tag` models. Analyze needs **N** processors active at once from different plugins, which a tag
 cannot express, so it is a capability contribution (`InboxCapabilities.MailboxProcessor`).
 
 A third seam covers one-shot operations a surface invokes rather than the cascade running:
@@ -25,7 +26,7 @@ surface calls (contract capability).
 `sync/mail-sync.ts` is a provider-agnostic harness owning everything not provider-specific:
 binding/mailbox/feed loads, window resolution, the dedup → cap → process → commit pipeline, progress,
 cancellation and stats. plugin-google and plugin-jmap each contribute only a layer.
-`operations/scan/scan-mailbox.ts` resolves contributed processors into a run order from the `after`
+`operations/analyze/analyze-mailbox.ts` resolves contributed processors into a run order from the `after`
 edges each declares, and plugin-inbox contributes its own four through the same seam — so there is no
 privileged built-in path to drift from the contributed one.
 
@@ -43,6 +44,9 @@ subsystem. "Pipeline" survives as the informal collective noun.
 
 A processor's `id` is also its **cursor tag**, so two processors sharing an id would share a
 watermark and silently skip each other's work.
+
+The cascade runner calls its own plan entries **passes** (`analyze-mailbox.ts`), one per processor —
+not "stages", which this vocabulary reserves for the finer granularity above.
 
 ## Inventory
 
@@ -64,7 +68,7 @@ stream merge, `»` a `Stream.grouped` page, and the last element of each chain i
 | plugin-projects | `UpdateInvestorLog`     | —               | —             | LLM                | none — whole feed        | none — filter + regenerate                                                                                                   |
 | plugin-inbox    | `ExtractMailbox`        | —               | —             | LLM                | none                     | none — `@deprecated`                                                                                                         |
 
-Everything with a processor id runs from the Scan cascade. The sync pair runs from the Sync toolbar
+Everything with a processor id runs from the Analyze cascade. The sync pair runs from the Sync toolbar
 action or a routine; `AnalyzeMailbox` is also reachable from brain's "Mailbox Facts" routine; the
 projects trio run from project routines. Per-message one-shots (`ExtractMessage`,
 `CreateProjectFromMessage`, `UnsubscribeSender`, …) are not pipelines; neither is `GenerateReply`,
@@ -88,8 +92,8 @@ Mailbox
     │       ├── toCommitUnit
     │       └── » commitPageSize ⇒ Cursor.commit
     │
-    └── SCAN — READS the feed, one cursor per processor
-        └── ScanMailbox                      topology from MailboxProcessor contributions
+    └── ANALYZE — READS the feed, one cursor per processor
+        └── AnalyzeMailbox                      topology from MailboxProcessor contributions
             ├── contacts       [inbox]       no cursor
             ├── subscriptions  [inbox]       no cursor
             ├── classify       [inbox]       after: contacts
@@ -105,11 +109,40 @@ NOT CONTRIBUTED — same feed, outside the topology
 
 Two things this makes visible:
 
-- **Only four of the twelve have an internal stage chain.** The rest are plain loops, so
+- **Six of the twelve have an internal stage chain**, and two of those are the same harness with the
+  provider layer swapped — so five distinct chains across twelve pipelines. The rest are plain loops:
   `@dxos/pipeline` is not the shared substrate the sync half suggests.
 - **On-arrival extraction is commented out of the sync chain**, because it reaches
   `Capability.Service` and invokes `ExtractMessage`, neither available off-host under edge compute.
-  Moving it to a processor that runs where those services exist is exactly what Scan is for.
+  Moving it to a processor that runs where those services exist is exactly what Analyze is for.
+
+## Operations
+
+Two phases:
+
+```text
+Sync => ConnectorSpec.Connector => connector.sync.operation
+Analyze => InboxOperation.AnalyzeMailbox => MailboxProcessor
+```
+
+### Sync
+
+- Single pipeline with deterministic, fast (non-LLM) stages.
+- Resolved through a REGISTRY rather than a topology: the toolbar action hands a target to
+  `syncTarget`, which finds its binding, then its `Connection`, then the contributed
+  `ConnectorSpec.Connector` whose `sync.operation` it runs. Note the two halves discover their
+  extensions differently — a registry lookup here, a DAG sort there — and say so in different
+  vocabularies.
+- A connector declaring a `sync.trigger` is run by force-firing that trigger rather than invoking the
+  operation, because the trigger dispatcher is what drives `Operation.runAgain()` continuation, so a
+  capped run finishes its remaining batches. Gmail and JMAP both declare one; `Operation.invoke` is
+  the fallback for a connector that does not.
+
+### Analyze
+
+- Multiple processors, each independently cursored.
+- Contributed through `InboxCapabilities.MailboxProcessor`; `operations/analyze/analyze-mailbox.ts`
+  resolves them, filters by tier, orders them by their `after` edges and invokes each in turn.
 
 ## Decisions
 
@@ -131,13 +164,20 @@ is absent); duplicate ids keep the first (ids are cursor tags); a cycle excludes
 blocks, every member naming the whole cycle. Ties resolve to contribution order, since a topology that
 reshuffled between runs would make cursor behaviour irreproducible.
 
-> `ScanMailbox` declares `Capability.Service`, which the operation runtime provides — but resolves
+> `AnalyzeMailbox` declares `Capability.Service`, which the operation runtime provides — but resolves
 > through the `ServiceResolver`, NOT the caller's Effect context. A test cannot supply it with
 > `Effect.provideService`; it must use `AssistantTestLayer`'s `extraServices`.
 
-**D4 — Failure policy follows from the DAG.** NOT BUILT. `continueOnError` still aborts in list order,
-so a failing processor strands whatever sits behind it even when nothing connects them. Intended: a
-failed processor fails its descendants; independent branches continue.
+**D4 — Failure policy follows from the DAG.** BUILT. By default (`continueOnError: false`) a failed
+processor blocks exactly its descendants — `Topology.descendants` walks the transitive closure and each blocked pass is reported
+with the upstream that invalidated it. Independent branches keep running: `subscriptions` declares no
+edge to `classify`, so a classification failure no longer strands it for merely sitting later in the
+list. A caller passing `continueOnError: true` gets the failure reported and nothing blocked.
+
+Sharp edge pinned by test: a `tiers` filter DROPS the edges that ran through a filtered-out processor.
+Selecting `['deterministic','classify','analyze']` leaves `analyze`'s `after: ['summarize']` pointing
+at an absent node, so it is ignored and `analyze` runs despite the classification failure. Correct — a
+processor the caller excluded cannot constrain anything, and `analyze` never consumed classification.
 
 **D5 — An operation belongs to the plugin that owns what it needs.** BUILT. plugin-brain contributes the
 `analyze` processor **and** the `FactStore` layer it needs, so a deployment without brain has no
@@ -158,8 +198,32 @@ Both moves changed a released DXN, so routines bound to the old keys are orphane
 deliberately, pre-1.0. Note the changesets are `minor`, not `major`: at 0.x a breaking change rides
 the minor, and `major` would cut 1.0.0 across the whole fixed publish group.
 
-**D6 — Generalize off `Mailbox`.** NOT BUILT, and the least settled of the six. In one line: make the
-Scan half run contributed, independently-cursored **processors** over any feed, not just a mailbox's.
+**D6 — BUILT 2026-08-15, and not as it was framed.** It was written as "generalize off `Mailbox`",
+which is why it stayed open so long: framed that way it had one implementor and no second consumer, so
+every costing said wait.
+
+The actual defect was narrower and real. `findOrCreateFeedCursor` took ONE object playing two roles —
+the feed's **owner** and the cursor's **subject**. They coincide for a mailbox scanned once; they do
+not for a pass scoped to something narrower over a shared feed. Splitting the two parameters is D6,
+and it is driven by a consumer that exists rather than by the prospect of one.
+
+What shipped:
+
+1. `findFeedCursor` / `findOrCreateFeedCursor` take `subject`, defaulting to the owner — so every
+   pre-existing call site is unchanged.
+2. `isConsumerCursor` now matches on `spec.target`. **This was the whole of the "cursor identity"
+   problem this document called blocking and specified a composite `(processor id, subject id)` key
+   for.** No key format was needed: the write side already stored the target and the predicate simply
+   ignored it.
+3. `createInvocation` → `createInvocations`, returning `{ subject?, operation, input }[]`. Invocations
+   keep the contributing processor's id, so the `after` edges and descendant blocking are untouched.
+4. First consumer: `plugin-projects`' `syncProjectTasks` keeps a cursor per Project over the shared
+   mailbox feed, replacing a full-feed rescan per project per run.
+
+What it did NOT need, against the four candidates below: `Ref.byAnnotation` (dropped twice, and it
+never removed the runtime guard it was meant to replace), a generic feed host, a change to
+`AnalyzeMailbox`'s own `Ref.Ref(Mailbox)` input, or any `MailboxTier` rework. The analysis below is
+kept because it records what was considered and why the cheaper answer was not obvious.
 
 ### What is already generic
 
@@ -171,7 +235,7 @@ the host" sounds:
 | `operations/topology.ts`          | generic — knows only `{ id, after }`                         |
 | `operations/precondition.ts`      | generic — knows only `Cause`s                                |
 | `Cursor` itself                   | generic — `target` is already an untyped association anchor  |
-| the **host** (`ScanMailbox`)      | mailbox-typed — input, progress key, progress label, logging |
+| the **host** (`AnalyzeMailbox`)   | mailbox-typed — input, progress key, progress label, logging |
 | the **seam** (`MailboxProcessor`) | mailbox-typed — subject param and `tier`                     |
 
 ### The subject is the feed's OWNER, not the feed
@@ -206,23 +270,34 @@ is exactly the `FeedOwner` marker this needs. It is not new work:
 So the DISCOVERY half of a feed-generic host is built and shipping. What D6 adds is the cursored-pass
 half.
 
-#### An annotated ref is still not expressible in an input schema — SETTLED 2026-08-14
+#### An annotated ref — CLOSED 2026-08-15, after a round trip
 
-`Ref.Ref` accepts a concrete `Type`, a relation, a `Type.Type`, or the "any object" schema. There is
-**no annotation-constrained overload** — "a ref to any type carrying `FeedAnnotation`" cannot be
-written. A generic operation's input must therefore be `Ref.Ref(Obj.Unknown)` (precedent:
-`Collection.objects`) plus a RUNTIME check.
+`Ref.Ref` accepts a concrete `Type`, a relation, a `Type.Type`, or the "any object" schema. An
+annotation-constrained overload — "a ref to any type carrying `FeedAnnotation`" — was the missing
+piece. It existed briefly, twice, and is now deliberately gone.
 
-This was the open question behind option 4 below, and it is now answered: **`Ref.byAnnotation` was
-proposed in PR #12575 and dropped in review.** What that PR landed instead is the resolution half —
-`FeedAnnotation` now carries `{ property: string }` naming the property that holds the feed, plus
-`getFeedRef(obj)` and `isFeedOwnerSchema(schema)`. So a host can resolve any owner's feed without
-hardcoding `.feed` (already used by `operations/cursor.ts`), but it still cannot make the compiler
-enforce the subject at the boundary.
+What happened, in merge order:
 
-The trade is therefore fixed, not open: today `Ref.Ref(Mailbox.Mailbox)` validates the referenced type
-at the operation boundary; a generic subject gives that up for a runtime guard. Option 1 is the only
-one of the four still standing, and it must be costed with that loss included.
+1. `Ref.byAnnotation` was added on the inbox branch (`b5eba8b43d`, pinned against a real database in
+   `ff5ba58a29`).
+2. **#12575 dropped it** (`eb116fe356`, "drop `Ref.byAnnotation`, keep the `FeedAnnotation` property
+   name"), keeping only the resolution half — `FeedAnnotation` carrying `{ property: string }`, plus
+   `getFeedRef(obj)` and `isFeedOwnerSchema(schema)`, which `operations/cursor.ts` already uses.
+   Merged 2026-08-14T05:24Z.
+3. **#12577 put it back**, because that branch still carried the two commits from step 1 and the merge
+   resurrected them. Merged 2026-08-14T22:46Z.
+
+4. **#12612 dropped it again**, restoring the #12575 decision, once the accidental resurrection was
+   noticed. It is not on `main`.
+
+So the answer is settled and the reasoning is worth keeping, because it is the reason not to propose
+this again: annotations do not participate in the type system, so `Ref.byAnnotation(X)` produced the
+same TypeScript type as `Ref.Ref(Obj.Unknown)`; and the check is synchronous, so it could only inspect
+a target already resident — an unresolved reference passed regardless, and the handler had to re-check
+after loading either way. It bought nothing a runtime guard does not.
+
+The lesson about the round trip is worth keeping too: a branch carrying commits that predate a review
+decision will silently undo it on merge, and nothing warns.
 
 #### Candidates, restated against those facts
 
@@ -234,19 +309,19 @@ one of the four still standing, and it must be costed with that loss included.
    declared. Strictly worse than 1 now that the annotation exists.
 3. **The feed alone**, each processor resolving its own subject. Removes the owner from the seam but
    pushes the cursor-anchor problem into every processor, and each would solve it differently.
-4. ~~**Extend ECHO with an annotation-constrained ref**, then use it.~~ RULED OUT — proposed as
-   `Ref.byAnnotation` in #12575 and dropped in review. Reviving it means re-opening that decision.
+4. ~~**`Ref.byAnnotation` as the subject.**~~ RULED OUT twice, most recently in #12612. It never
+   removed the runtime guard it was meant to replace (see above), so option 1 loses nothing by
+   comparison. Reviving it means re-opening a decision two reviews have now made.
 
-### The open sub-questions
+### The sub-questions, as answered
 
-- **Fan-out.** `createInvocation` returns ONE invocation. The plugin-projects trio needs one per
-  Project over the same mailbox feed, so D6 must decide whether a processor may cover N subjects.
-- **Cursor identity under fan-out.** If it may, the tag can no longer be the processor id alone — it
-  becomes `(processor id, subject id)`, or every subject shares one watermark and they silently skip
-  each other's work. This is the same failure the tags exist to prevent.
-- **Tiers.** `MailboxTier` is mail-shaped cost language (`deterministic`/`classify`/`summarize`/
-  `analyze`). A generic host either keeps tiers as an opaque per-host vocabulary or drops them and
-  relies on the edges alone.
+- **Fan-out.** ANSWERED: yes, a processor may cover N subjects — `createInvocations` returns a list.
+  An empty list reports as skipped rather than vanishing, since a pass that found nothing must stay
+  distinguishable from one that was never contributed.
+- **Cursor identity under fan-out.** ANSWERED, and more cheaply than predicted: the tag stays the
+  processor id, and the SUBJECT joins the cursor's identity through `spec.target`. No composite key.
+- **Tiers.** Untouched, and no longer blocking anything: `MailboxTier` stays an opaque per-host
+  vocabulary. Nothing forces the question while there is one host to disagree with it.
 
 ### There is no second consumer yet
 
@@ -267,8 +342,16 @@ candidate is transcription, which owns its own `Feed`, but its `messageEnricher`
 is written — a write-time seam structurally closer to the sync half's inline stages than to a cursored
 read-time pass.
 
-So D6 is not "generalize for the second instance". It is "build the abstraction on spec, or wait".
-That is a build-vs-defer decision, not a design detail, and it is the one to settle first.
+So D6 was not "generalize for the second instance" — and in the end it was neither. What shipped is
+not an abstraction over feeds at all: it is a correction to what identifies a cursor, which the
+projects pipeline needed regardless of whether anything is ever generic. The generic host remains
+unbuilt, and still has no second consumer asking for it.
+
+**What is still mailbox-typed, deliberately.** `AnalyzeMailbox`'s input stays `Ref.Ref(Mailbox)` — it
+is the operation users invoke directly, and it loses real boundary validation for nothing. So do its
+progress key and `MailboxTier`. Generic-ness belongs at the PROCESSOR seam, where a pass declares its
+own subject; the host's public boundary is not the same question, and conflating them is what made D6
+look bigger than it was. See the D6 entry in [`TASKS.md`](TASKS.md).
 
 ## Fixed along the way
 
@@ -283,7 +366,10 @@ That is a build-vs-defer decision, not a design detail, and it is the one to set
 
 ## Open
 
-1. **D4** — failure policy from the edges.
-2. **D6** — feed-generic processor host.
-3. **Give the seven cursorless consumers a cursor** — mechanical now that an id is also a cursor tag,
-   but each needs its own call on whether feed position or derived-state replacement is right.
+1. **Give the remaining cursorless consumers a cursor** — mechanical now that a cursor is identified by
+   `(feed, subject, tag)`, but each needs its own call on whether feed position or derived-state
+   replacement is right. Settled so far: `syncProjectTasks` YES (2026-08-15, per-project);
+   `ExtractSubscriptions`, `update-travel-log` and `update-investor-log` NO — all three regenerate
+   derived state from the whole feed, so a cursor would corrupt what they produce.
+2. **A feed-generic host** — the residue of D6 as originally framed. Still unbuilt and still without a
+   second consumer asking for it; the cursor correction that D6 turned out to be did not require it.

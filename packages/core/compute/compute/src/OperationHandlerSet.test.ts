@@ -14,8 +14,8 @@ import { DXN } from '@dxos/keys';
 import * as Operation from './Operation';
 import * as OperationHandlerSet from './OperationHandlerSet';
 
-const KEY_A = DXN.make('org.example.test.a');
-const KEY_B = DXN.make('org.example.test.b');
+const KEY_A = DXN.make('com.example.test.a');
+const KEY_B = DXN.make('com.example.test.b');
 
 const makeHandler = (key: DXN.DXN, output: string) =>
   Operation.withHandler(Operation.make({ input: Schema.Void, output: Schema.String, meta: { key } }), () =>
@@ -132,6 +132,27 @@ describe('OperationHandlerSet.lazy', () => {
     expect(loads.a).toEqual(1);
   });
 
+  test('a failed load is not memoized, so a retry re-imports', async ({ expect }) => {
+    let loads = 0;
+    const set = OperationHandlerSet.lazy([
+      Operation.make({ input: Schema.Void, output: Schema.String, meta: { key: KEY_A } }).pipe(
+        Operation.lazyHandler(() => {
+          loads++;
+          return loads === 1
+            ? Promise.reject(new TypeError('Failed to fetch dynamically imported module'))
+            : Promise.resolve({ default: makeHandler(KEY_A, 'A') });
+        }),
+      ),
+    ]);
+    await expect(set.getHandlerFor(KEY_A)).rejects.toThrow('Failed to fetch dynamically imported module');
+    const found = await set.getHandlerFor(KEY_A);
+    expect(found?.meta.key).toEqual(KEY_A);
+    expect(loads).toEqual(2);
+    // The successful load is still cached.
+    await set.getHandlerFor(KEY_A);
+    expect(loads).toEqual(2);
+  });
+
   test('merge loads only the matched child', async ({ expect }) => {
     const loads = { a: 0, b: 0 };
     const setA = OperationHandlerSet.lazy([
@@ -190,5 +211,73 @@ describe('OperationHandlerSet.lazy', () => {
 
     const found = await EffectEx.runPromise(OperationHandlerSet.getHandlerByKey(merged, KEY_A));
     expect(found).toBe(overrideHandler);
+  });
+});
+
+// React's `use` dedupes suspended renders by thenable identity, so the reactive set — what
+// useOperationHandler resolves against — must return the SAME promise for repeated same-key calls.
+describe('OperationHandlerSet.reactive getHandlerFor identity', () => {
+  test('returns a stable promise until the atom changes', async ({ expect }) => {
+    const registry = Registry.make();
+    const atom = Atom.make<readonly OperationHandlerSet.OperationHandlerSet[]>([
+      OperationHandlerSet.make(makeHandler(KEY_A, 'A')),
+    ]).pipe(Atom.keepAlive);
+    registry.mount(atom);
+
+    const reactive = OperationHandlerSet.reactive(registry, atom);
+    const before = reactive.getHandlerFor(KEY_B);
+    expect(reactive.getHandlerFor(KEY_B)).toBe(before);
+    expect(await before).toBeUndefined();
+
+    registry.set(atom, [
+      OperationHandlerSet.make(makeHandler(KEY_A, 'A')),
+      OperationHandlerSet.make(makeHandler(KEY_B, 'B')),
+    ]);
+    const after = reactive.getHandlerFor(KEY_B);
+    expect(after).not.toBe(before);
+    expect((await after)?.meta.key).toEqual(KEY_B);
+  });
+
+  test('a rejection after invalidation does not evict the replacement promise', async ({ expect }) => {
+    const registry = Registry.make();
+    let rejectFirst!: (err: Error) => void;
+    const pendingChild: OperationHandlerSet.OperationHandlerSet = {
+      [OperationHandlerSet.TypeId]: OperationHandlerSet.TypeId,
+      definitions: () => [],
+      getHandlerFor: () => new Promise((_, reject) => (rejectFirst = reject)),
+      getHandlers: () => Promise.resolve([]),
+      handlers: Effect.succeed([]),
+    };
+    const atom = Atom.make<readonly OperationHandlerSet.OperationHandlerSet[]>([pendingChild]).pipe(Atom.keepAlive);
+    registry.mount(atom);
+
+    const reactive = OperationHandlerSet.reactive(registry, atom);
+    const first = reactive.getHandlerFor(KEY_A);
+    registry.set(atom, [OperationHandlerSet.make(makeHandler(KEY_A, 'A'))]);
+    const replacement = reactive.getHandlerFor(KEY_A);
+    rejectFirst(new Error('late'));
+    await expect(first).rejects.toThrow('late');
+    expect(reactive.getHandlerFor(KEY_A)).toBe(replacement);
+  });
+
+  test('a rejection is not memoized', async ({ expect }) => {
+    const registry = Registry.make();
+    let calls = 0;
+    const flakyChild: OperationHandlerSet.OperationHandlerSet = {
+      [OperationHandlerSet.TypeId]: OperationHandlerSet.TypeId,
+      definitions: () => [],
+      getHandlerFor: () => {
+        calls++;
+        return calls === 1 ? Promise.reject(new Error('transient')) : Promise.resolve(makeHandler(KEY_A, 'A'));
+      },
+      getHandlers: () => Promise.resolve([]),
+      handlers: Effect.succeed([]),
+    };
+    const atom = Atom.make<readonly OperationHandlerSet.OperationHandlerSet[]>([flakyChild]).pipe(Atom.keepAlive);
+    registry.mount(atom);
+
+    const reactive = OperationHandlerSet.reactive(registry, atom);
+    await expect(reactive.getHandlerFor(KEY_A)).rejects.toThrow('transient');
+    expect((await reactive.getHandlerFor(KEY_A))?.meta.key).toEqual(KEY_A);
   });
 });

@@ -20,7 +20,7 @@ import { log } from '@dxos/log';
 import { meta } from '#meta';
 import { NativeCapabilities, Update } from '#types';
 
-import { TAURI_LOCALHOST_PORT } from '../constants';
+import { TAURI_LOCALHOST_PORTS } from '../constants';
 
 const SUPPORTS_OTA = ['linux', 'macos', 'windows'];
 
@@ -62,7 +62,7 @@ const formatError = (error: unknown): string => {
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const platform = type();
-    const isDevServer = window.location.port !== TAURI_LOCALHOST_PORT;
+    const isDevServer = !TAURI_LOCALHOST_PORTS.includes(window.location.port);
     const enabled = SUPPORTS_OTA.includes(platform) && !isDevServer;
 
     const registry = yield* Capabilities.AtomRegistry;

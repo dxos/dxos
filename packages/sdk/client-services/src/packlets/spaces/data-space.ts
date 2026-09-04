@@ -3,14 +3,14 @@
 //
 
 import { save } from '@automerge/automerge';
-import { type AutomergeUrl, type DocHandle } from '@automerge/automerge-repo';
+import { type AutomergeUrl } from '@automerge/automerge-repo';
 
 import { Event, Mutex, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
-import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
+import { Context, ContextDisposedError } from '@dxos/context';
 import type { SpecificCredential } from '@dxos/credentials';
 import { timed, warnAfterTimeout } from '@dxos/debug';
-import { type DatabaseRoot, type EchoHost } from '@dxos/echo-host';
+import { type DatabaseRoot, type DocumentLease, type EchoHost } from '@dxos/echo-host';
 import { type DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
 import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { type FeedStore, type FeedWrapper } from '@dxos/feed-store';
@@ -19,12 +19,8 @@ import { type KeyringApi } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { CancelledError, type FeedProtocol, SystemError } from '@dxos/protocols';
-import {
-  type CreateEpochRequest,
-  type Space as SpaceProto,
-  SpaceState,
-} from '@dxos/protocols/proto/dxos/client/services';
-import { type Runtime } from '@dxos/protocols/proto/dxos/config';
+import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
+import { type Space as SpaceProto, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import {
   AdmittedFeed,
@@ -35,6 +31,7 @@ import {
   SpaceMember,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import { type SpacesService } from '@dxos/protocols/rpc';
 import { type Gossip, type Presence } from '@dxos/teleport-extension-gossip';
 import { Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
@@ -81,12 +78,12 @@ export type DataSpaceProps = {
   tags?: string[];
   edgeConnection?: EdgeConnection;
   edgeHttpClient?: EdgeHttpClient;
-  edgeFeatures?: Runtime.Client.EdgeFeatures;
+  edgeFeatures?: Runtime_Client_EdgeFeatures;
   activeEdgeNotarizationPollingInterval?: number;
 };
 
 export type CreateEpochOptions = {
-  migration?: CreateEpochRequest.Migration;
+  migration?: SpacesService.Migration;
   newAutomergeRoot?: string;
 };
 
@@ -487,23 +484,20 @@ export class DataSpace {
   private _onNewAutomergeRoot(rootUrl: string): void {
     log('loading automerge root doc for space', { space: this.key, rootUrl });
 
-    let handle: DocHandle<DatabaseDirectory> | null = null;
+    let lease: DocumentLease<DatabaseDirectory> | null = null;
 
     // TODO(dmaretskyi): Make this single-threaded (but doc loading should still be parallel to not block epoch processing).
     queueMicrotask(async () => {
       try {
         await warnAfterTimeout(5_000, 'Automerge root doc load timeout (DataSpace)', async () => {
-          handle = await cancelWithContext(
-            this._ctx,
-            this._echoHost.loadDoc<DatabaseDirectory>(this._ctx, rootUrl as AutomergeUrl, {
-              fetchFromNetwork: true,
-            }),
-          );
+          lease = await this._echoHost.loadDoc<DatabaseDirectory>(this._ctx, rootUrl as AutomergeUrl, {
+            fetchFromNetwork: true,
+          });
         });
         if (this._ctx.disposed) {
           return;
         }
-        if (!handle) {
+        if (!lease) {
           log.warn('automerge root doc not available yet', { space: this.key, rootUrl });
           return;
         }
@@ -512,9 +506,9 @@ export class DataSpace {
         using _guard = await this._epochProcessingMutex.acquire();
 
         // Attaching space identifiers to legacy documents.
-        const doc = handle.doc();
+        const doc = lease.doc();
         if (!doc.access?.spaceId || !doc.access?.spaceKey) {
-          handle.change((doc: DatabaseDirectory) => {
+          lease.change((doc: DatabaseDirectory) => {
             doc.access ??= {};
             doc.access.spaceId ??= this.id;
             // spaceKey is deprecated but still written so older clients can resolve the owning space.
@@ -524,7 +518,11 @@ export class DataSpace {
 
         // TODO(dmaretskyi): Close roots.
         // TODO(dmaretskyi): How do we handle changing to the next EPOCH?
-        const root = await this._echoHost.updateSpaceRoot(this._ctx, this.id, handle.url);
+        // `updateSpaceRoot` takes its own lease on the root, so this one is released either way.
+        const rootUrlToAssign = lease.url;
+        lease[Symbol.dispose]();
+        lease = null;
+        const root = await this._echoHost.updateSpaceRoot(this._ctx, this.id, rootUrlToAssign);
 
         // NOTE: Make sure this assignment happens synchronously together with the state change.
         this._databaseRoot = root;
@@ -541,6 +539,9 @@ export class DataSpace {
           return;
         }
         log.warn('error loading automerge root doc', { space: this.key, rootUrl, err });
+      } finally {
+        // Released on every path that did not hand it to `updateSpaceRoot`.
+        lease?.[Symbol.dispose]();
       }
     });
   }

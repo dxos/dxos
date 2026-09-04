@@ -9,7 +9,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { debounce } from '@dxos/async';
 import { type Identity } from '@dxos/halo';
 import { useIdentity } from '@dxos/halo-react';
-import { ButtonGroup, Clipboard, Input, useTranslation } from '@dxos/react-ui';
+import { ButtonGroup, Clipboard, Flex, Input, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, type FormUpdateMeta } from '@dxos/react-ui-form';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
 import { hexToEmoji, hexToHue } from '@dxos/util';
@@ -111,7 +111,7 @@ export const ProfileContainer = () => {
                 value={getValue()}
                 onChange={handleChange}
                 placeholder={t('display-name-input.placeholder')}
-                classNames='min-w-64'
+                classNames='w-64 max-w-full min-w-0'
               />
             </Input.Root>
           </Form.Row>
@@ -145,9 +145,9 @@ export const ProfileContainer = () => {
 
         return (
           <Form.Row label={label} description={t('hue.description')}>
-            <div className='flex justify-self-end'>
+            <Flex classNames='justify-self-end'>
               <HuePicker value={getValue()} onChange={handleChange} onReset={handleHueReset} />
-            </div>
+            </Flex>
           </Form.Row>
         );
       },
@@ -157,7 +157,9 @@ export const ProfileContainer = () => {
           <Form.Row label={label} description={t('did.description')}>
             <Input.Root>
               <ButtonGroup classNames='w-full'>
-                <Input.TextInput value={getValue()} disabled classNames='min-w-64' />
+                {/* `flex-1 min-w-0` lets the field shrink below its content width so the copy button
+                    stays inside the row at phone widths; a fixed `min-w-*` would push it past the panel edge. */}
+                <Input.TextInput value={getValue()} disabled classNames='w-full min-w-0' />
                 <Clipboard.IconButton value={getValue() ?? ''} />
               </ButtonGroup>
             </Input.Root>

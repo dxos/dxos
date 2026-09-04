@@ -8,7 +8,7 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { Connection, Cursor } from '@dxos/link';
-import { isCursorForTarget } from '@dxos/plugin-connector';
+import * as Binding from '@dxos/plugin-connector/Binding';
 import type * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { Message } from '@dxos/types';
 
@@ -115,7 +115,7 @@ export const replaceFeed = async (
  */
 export const resetMailbox = async (mailbox: Mailbox.Mailbox, db: Database.Database): Promise<void> => {
   const cursors = await db.query(Filter.type(Cursor.Cursor)).run();
-  cursors.filter((cursor) => isCursorForTarget(cursor, mailbox)).forEach((cursor) => db.remove(cursor));
+  cursors.filter((cursor) => Binding.targets(cursor, mailbox)).forEach((cursor) => db.remove(cursor));
 
   // Delete every sync trigger so a reset clears the scheduled sync. Delete by type so triggers left
   // over from earlier sessions are cleared too.

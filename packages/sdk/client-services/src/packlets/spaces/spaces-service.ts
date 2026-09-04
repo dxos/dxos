@@ -3,6 +3,7 @@
 //
 
 import type { AutomergeUrl } from '@automerge/automerge-repo';
+import { toBinary } from '@bufbuild/protobuf';
 import * as Effect from 'effect/Effect';
 import * as EffectStream from 'effect/Stream';
 
@@ -31,33 +32,20 @@ import {
   encodeError,
   makeInProcessClient,
 } from '@dxos/protocols';
+import { decodeCompat } from '@dxos/protocols/buf-shape-compat';
+import { PeerStateSchema } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
 import {
-  type AdmitContactRequest,
   type ContactAdmission,
-  type CreateEpochRequest,
   type CreateEpochResponse,
-  type CreateSpaceRequest,
-  type ExportSpaceRequest,
-  type ExportSpaceResponse,
-  type ImportSpaceRequest,
-  type ImportSpaceResponse,
-  type JoinBySpaceKeyRequest,
   type JoinSpaceResponse,
-  type PostMessageRequest,
-  type QueryCredentialsRequest,
   type QuerySpacesResponse,
   type Space,
-  SpaceArchive,
   SpaceMember,
   SpaceState,
-  type SubscribeMessagesRequest,
-  type UpdateMemberRoleRequest,
-  type UpdateSpaceRequest,
-  type WriteCredentialsRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
-import { FeedService, type SpacesService } from '@dxos/protocols/rpc';
+import { FeedService, SpacesService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 import { type Provider } from '@dxos/util';
 
@@ -82,7 +70,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     private readonly _getDataSpaceManager: Provider<Promise<DataSpaceManager>>,
   ) {}
 
-  ['SpacesService.createSpace'](request: CreateSpaceRequest): Effect.Effect<Space, Error> {
+  ['SpacesService.createSpace'](request: SpacesService.CreateSpaceRequest): Effect.Effect<Space, Error> {
     return Effect.tryPromise({
       try: async () => {
         this._requireIdentity();
@@ -99,7 +87,11 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     });
   }
 
-  ['SpacesService.updateSpace']({ spaceKey, state, edgeReplication }: UpdateSpaceRequest): Effect.Effect<void, Error> {
+  ['SpacesService.updateSpace']({
+    spaceKey,
+    state,
+    edgeReplication,
+  }: SpacesService.UpdateSpaceRequest): Effect.Effect<void, Error> {
     return Effect.tryPromise({
       try: async () => {
         const ctx = Context.default();
@@ -133,7 +125,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     });
   }
 
-  ['SpacesService.updateMemberRole'](request: UpdateMemberRoleRequest): Effect.Effect<void, Error> {
+  ['SpacesService.updateMemberRole'](request: SpacesService.UpdateMemberRoleRequest): Effect.Effect<void, Error> {
     return Effect.tryPromise({
       try: async () => {
         const identity = this._requireIdentity();
@@ -150,14 +142,14 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
             },
           });
         }
-        const credentials = await createAdmissionCredentials(
-          identity.getIdentityCredentialSigner(),
-          request.memberKey,
-          space.key,
-          space.genesisFeedKey,
-          request.newRole,
-          space.spaceState.membershipChainHeads,
-        );
+        const credentials = await createAdmissionCredentials({
+          signer: identity.getIdentityCredentialSigner(),
+          identityKey: request.memberKey,
+          spaceKey: space.key,
+          genesisFeedKey: space.genesisFeedKey,
+          role: request.newRole,
+          membershipChainHeads: space.spaceState.membershipChainHeads,
+        });
         invariant(credentials[0].credential);
         const spaceMemberCredential = credentials[0].credential.credential;
         invariant(getCredentialAssertion(spaceMemberCredential)['@type'] === 'dxos.halo.credentials.SpaceMember');
@@ -233,7 +225,11 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     });
   }
 
-  ['SpacesService.postMessage']({ spaceKey, channel, message }: PostMessageRequest): Effect.Effect<void, Error> {
+  ['SpacesService.postMessage']({
+    spaceKey,
+    channel,
+    message,
+  }: SpacesService.PostMessageRequest): Effect.Effect<void, Error> {
     return Effect.tryPromise({
       try: async () => {
         const dataSpaceManager = await this._getDataSpaceManager();
@@ -247,7 +243,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
   ['SpacesService.subscribeMessages']({
     spaceKey,
     channel,
-  }: SubscribeMessagesRequest): EffectStream.Stream<GossipMessage, Error> {
+  }: SpacesService.SubscribeMessagesRequest): EffectStream.Stream<GossipMessage, Error> {
     return EffectEx.streamFromEmitter<GossipMessage, Error>((emit) => {
       const ctx = Context.default();
       scheduleTask(ctx, async () => {
@@ -266,7 +262,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
   ['SpacesService.queryCredentials']({
     spaceKey,
     noTail,
-  }: QueryCredentialsRequest): EffectStream.Stream<Credential, Error> {
+  }: SpacesService.QueryCredentialsRequest): EffectStream.Stream<Credential, Error> {
     return EffectEx.streamFromEmitter<Credential, Error>((emit) => {
       const ctx = Context.default();
       const space = this._spaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
@@ -288,7 +284,10 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     });
   }
 
-  ['SpacesService.writeCredentials']({ spaceKey, credentials }: WriteCredentialsRequest): Effect.Effect<void, Error> {
+  ['SpacesService.writeCredentials']({
+    spaceKey,
+    credentials,
+  }: SpacesService.WriteCredentialsRequest): Effect.Effect<void, Error> {
     return Effect.tryPromise({
       try: async () => {
         const space = this._spaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
@@ -316,7 +315,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     spaceKey,
     migration,
     automergeRootUrl,
-  }: CreateEpochRequest): Effect.Effect<CreateEpochResponse, Error> {
+  }: SpacesService.CreateEpochRequest): Effect.Effect<CreateEpochResponse, Error> {
     return Effect.tryPromise({
       try: async () => {
         const dataSpaceManager = await this._getDataSpaceManager();
@@ -328,7 +327,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     });
   }
 
-  ['SpacesService.admitContact'](request: AdmitContactRequest): Effect.Effect<void, Error> {
+  ['SpacesService.admitContact'](request: SpacesService.AdmitContactRequest): Effect.Effect<void, Error> {
     return Effect.tryPromise({
       try: async () => {
         const dataSpaceManager = await this._getDataSpaceManager();
@@ -342,7 +341,9 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     });
   }
 
-  ['SpacesService.joinBySpaceKey']({ spaceKey }: JoinBySpaceKeyRequest): Effect.Effect<JoinSpaceResponse, Error> {
+  ['SpacesService.joinBySpaceKey']({
+    spaceKey,
+  }: SpacesService.JoinBySpaceKeyRequest): Effect.Effect<JoinSpaceResponse, Error> {
     return Effect.tryPromise({
       try: async () => {
         const ctx = Context.default();
@@ -354,7 +355,9 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     });
   }
 
-  ['SpacesService.exportSpace'](request: ExportSpaceRequest): Effect.Effect<ExportSpaceResponse, Error> {
+  ['SpacesService.exportSpace'](
+    request: SpacesService.ExportSpaceRequest,
+  ): Effect.Effect<SpacesService.ExportSpaceResponse, Error> {
     return Effect.tryPromise({
       try: async () => {
         assertArgument(SpaceId.isValid(request.spaceId), 'spaceId', 'Invalid space ID');
@@ -362,8 +365,8 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
         const dataSpaceManager = await this._getDataSpaceManager();
         const space = dataSpaceManager.getSpaceById(request.spaceId) ?? raise(new Error('Space not found'));
 
-        const format = request.format ?? SpaceArchive.Format.BINARY;
-        if (format === SpaceArchive.Format.JSON) {
+        const format = request.format ?? SpacesService.SpaceArchiveFormat.enums.BINARY;
+        if (format === SpacesService.SpaceArchiveFormat.enums.JSON) {
           const archive = await writeSerializedSpaceArchive({ space, echoHost: this._echoHost });
           return { archive };
         }
@@ -399,14 +402,16 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     });
   }
 
-  ['SpacesService.importSpace'](request: ImportSpaceRequest): Effect.Effect<ImportSpaceResponse, Error> {
+  ['SpacesService.importSpace'](
+    request: SpacesService.ImportSpaceRequest,
+  ): Effect.Effect<SpacesService.ImportSpaceResponse, Error> {
     return Effect.tryPromise({
       try: async () => {
         const ctx = Context.default();
         const dataSpaceManager = await this._getDataSpaceManager();
 
         const format = request.archive.format ?? detectSpaceArchiveFormat(request.archive);
-        if (format === SpaceArchive.Format.JSON) {
+        if (format === SpacesService.SpaceArchiveFormat.enums.JSON) {
           const serialized = readSerializedSpaceArchive(request.archive);
           const space = await dataSpaceManager.createSpace(ctx, { tags: request.tags });
           await this._hydrateSpaceFromSerialized(space, serialized);
@@ -442,7 +447,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     const databaseRoot = space.databaseRoot;
     assertState(databaseRoot, 'Space database root is not ready');
 
-    databaseRoot.handle.change((doc: DatabaseDirectory) => {
+    databaseRoot.change((doc: DatabaseDirectory) => {
       if (!doc.objects) {
         doc.objects = {};
       }
@@ -519,11 +524,11 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
         targetDataTimeframe: undefined,
         totalDataTimeframe: undefined,
 
-        spaceRootUrl: space.databaseRoot?.url,
+        directoryUrl: space.databaseRoot?.url,
       },
       members: await Promise.all(
         Array.from(space.inner.spaceState.members.values()).map(async (member) => {
-          const peers = space.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key));
+          const peers = space.presence.getPeersByIdentityKey(member.key);
           const isMe = this._identityManager.identity?.identityKey.equals(member.key);
 
           if (isMe) {
@@ -538,7 +543,9 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
             },
             role: member.role,
             presence: peers.length > 0 ? SpaceMember.PresenceState.ONLINE : SpaceMember.PresenceState.OFFLINE,
-            peerStates: peers,
+            // `Space` is still `protoMessage`-carried, so presence's buf messages convert back
+            // here — one boundary, via the codec rather than a hand-written field map.
+            peerStates: peers.map((peer) => decodeCompat(PeerStateSchema, toBinary(PeerStateSchema, peer))),
           };
         }),
       ),

@@ -16,6 +16,7 @@ import { protocol } from './defs';
 import { type EdgeIdentity } from './edge-identity';
 import { CLOUDFLARE_MESSAGE_MAX_BYTES, WebSocketMuxer } from './edge-ws-muxer';
 import { toUint8Array } from './protocol';
+import { type ReconnectReason, classifyCloseCode, classifySocketError, isOnline } from './reconnect-reason';
 
 const SIGNAL_KEEPALIVE_INTERVAL = 4_000;
 const SIGNAL_KEEPALIVE_TIMEOUT = 12_000;
@@ -30,7 +31,7 @@ const KEEPALIVE_WATCHDOG_LATE_TOLERANCE = 3_000;
 export type EdgeWsConnectionCallbacks = {
   onConnected: () => void;
   onMessage: (message: Message) => void;
-  onRestartRequired: () => void;
+  onRestartRequired: (reason: ReconnectReason) => void;
 };
 
 export class EdgeWsConnection extends Resource {
@@ -86,8 +87,9 @@ export class EdgeWsConnection extends Resource {
     return this._rtt;
   }
 
+  /** Floor uptime to satisfy the int32 EdgeStatus.uptime wire type. */
   public get uptime(): number {
-    return this._openTimestamp ? (Date.now() - this._openTimestamp) / 1000 : 0;
+    return this._openTimestamp ? Math.floor((Date.now() - this._openTimestamp) / 1000) : 0;
   }
 
   public get uploadRate(): number {
@@ -160,15 +162,16 @@ export class EdgeWsConnection extends Resource {
     };
     this._ws.onclose = (event: WebSocket.CloseEvent) => {
       if (this.isOpen) {
-        log.warn('server disconnected', { code: event.code, reason: event.reason });
-        this._callbacks.onRestartRequired();
+        const reason = classifyCloseCode(event.code, isOnline());
+        log.warn('server disconnected', { code: event.code, reason: event.reason, classified: reason });
+        this._callbacks.onRestartRequired(reason);
         muxer.destroy();
       }
     };
     this._ws.onerror = (event: WebSocket.ErrorEvent) => {
       if (this.isOpen) {
         log.warn('edge connection socket error', { error: event.error, info: event.message });
-        this._callbacks.onRestartRequired();
+        this._callbacks.onRestartRequired(classifySocketError(isOnline()));
       } else {
         log.verbose('error ignored on closed connection', { error: event.error });
       }
@@ -298,7 +301,7 @@ export class EdgeWsConnection extends Resource {
             pingAgeMs,
             lastReceivedMessageTimestamp: this._lastReceivedMessageTimestamp,
           });
-          this._callbacks.onRestartRequired();
+          this._callbacks.onRestartRequired('inactivity_timeout');
           return;
         }
         // The silence is self-inflicted (starved event loop stopped our pings and delayed this

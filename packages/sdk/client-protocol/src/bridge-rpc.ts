@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as Scope from 'effect/Scope';
 import * as RpcClient from 'effect/unstable/rpc/RpcClient';
 
-import { type Stream as PbStream } from '@dxos/codec-protobuf/stream';
+import { type Stream as PbStream } from '@dxos/async';
 import { EffectEx } from '@dxos/effect';
 import { type BridgeService as BridgeServiceRpc } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { BridgeService } from '@dxos/protocols/rpc';

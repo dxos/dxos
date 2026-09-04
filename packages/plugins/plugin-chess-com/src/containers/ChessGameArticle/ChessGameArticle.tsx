@@ -9,7 +9,7 @@ import { AppSurface, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/
 import { Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import * as Game from '@dxos/plugin-game/Game';
-import { Card, Icon, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Card, Flex, Icon, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
 
@@ -72,8 +72,11 @@ export const ChessGameArticle = ({ role, subject, attendableId }: ChessGameArtic
       </Menu.Root>
       <Panel.Content>
         {empty ? (
-          <div className='h-full flex items-center justify-center text-subdued text-sm'>{t('empty-games.message')}</div>
+          <Flex center classNames='h-full text-subdued text-sm'>
+            {t('empty-games.message')}
+          </Flex>
         ) : (
+          // TODO(burdon): This seems wrong?
           <Masonry.Root Tile={GameTile} minColumnWidth={18} maxColumnWidth={24}>
             <Masonry.Content thin centered padding>
               <Masonry.Viewport classNames='py-2' items={sortedGames} getId={(game) => game.id} />

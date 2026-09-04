@@ -46,7 +46,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.MaterializeGitHubTar
           }
 
           const created = yield* Database.add(
-            Obj.make(TaskSet.TaskSet, {
+            TaskSet.make({
               [Obj.Meta]: { keys: [fkFor(remoteTarget.id)] },
               name: remoteTarget.name,
             }),

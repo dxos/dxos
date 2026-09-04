@@ -7,9 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
-import type * as Graph from '@dxos/app-graph/Graph';
+import type * as AppGraph from '@dxos/app-graph/AppGraph';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { EDGE_SERVICE_DEFAULTS, EdgeServiceName } from '@dxos/config';
 import {
   AutomergePanel,
   ConfigPanel,
@@ -33,9 +32,8 @@ import {
   SwarmPanel,
   WorkflowPanel,
 } from '@dxos/devtools';
-import { ToolsExplorer } from '@dxos/react-ui-introspect';
 
-import { CliPanel, DebugGraph, DevtoolsOverviewContainer, RegistryPanel } from '#containers';
+import { CliPanel, DebugGraph, DevtoolsOverviewContainer, RegistryPanel, ToolsExplorerContainer } from '#containers';
 import { Devtools } from '#types';
 
 import {
@@ -46,10 +44,8 @@ import {
   SpaceListSurface,
 } from './DevtoolsSurfaces';
 
-const MCP_SERVER_URL = EDGE_SERVICE_DEFAULTS[EdgeServiceName.Introspect];
-
 type GraphDebug = {
-  graph: Graph.Graph;
+  graph: AppGraph.Graph;
   root: string;
 };
 
@@ -80,8 +76,7 @@ export default Capability.makeModule(
       Surface.create({
         id: 'toolsExplorer',
         filter: AppSurface.literal(AppSurface.Article, Devtools.ToolsExplorer),
-        component: ToolsExplorer,
-        props: () => ({ serverUrl: MCP_SERVER_URL }),
+        component: ToolsExplorerContainer,
       }),
       Surface.create({
         id: 'cli',

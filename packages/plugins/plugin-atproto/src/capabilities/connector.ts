@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { ATPROTO_OAUTH_SCOPES } from '@dxos/plugin-connector';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
+import { ATPROTO_OAUTH_SCOPES } from '@dxos/protocols';
 import { ATMOSPHERE_SOURCE, OAuthProvider } from '@dxos/protocols';
 
 /** Pre-flight form for the atproto OAuth flow: the user's handle becomes the login hint. */

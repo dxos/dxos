@@ -11,10 +11,10 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { Filter, Query, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { AssistantSkill } from '@dxos/plugin-assistant';
-import { MarkdownSkill } from '@dxos/plugin-markdown';
+import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { CommentSkill } from '@dxos/plugin-review/skills';
+import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
+import * as CommentSkill from '@dxos/plugin-review/CommentSkill';
 import { Text } from '@dxos/schema';
 import { Cell } from '@dxos/storybook-testing';
 import { trim } from '@dxos/util';
@@ -115,8 +115,8 @@ export const WithMarkdown: Story = {
         [StoryRole.Logging],
       ];
     },
-    onChatCreated: async ({ space, binder }) => {
-      const objects = await space.db.query(Filter.type(Markdown.Document)).run();
+    onChatCreated: async ({ db, binder }) => {
+      const objects = await db.query(Filter.type(Markdown.Document)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
     skills: [AssistantSkill.key, MarkdownSkill.key, CommentSkill.key],
@@ -168,8 +168,8 @@ export const WithSkills: Story = {
       addToRootCollection(space, [document, skill]);
       return [[StoryRole.Chat], [StoryRole.Tasks, Cell.article(skill)]];
     },
-    onChatCreated: async ({ space, binder }) => {
-      const objects = await space.db.query(Filter.type(Markdown.Document)).run();
+    onChatCreated: async ({ db, binder }) => {
+      const objects = await db.query(Filter.type(Markdown.Document)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
@@ -195,7 +195,7 @@ export const WithScript: Story = {
       const { identityKey } = client.halo.identity.get()!;
       await client.halo.writeCredentials([getAccessCredential(identityKey)]);
 
-      const template = templates.find((template) => template.id === 'org.dxos.script.forex-effect');
+      const template = templates.find((template) => template.id === 'com.example.operation.script.forex-effect');
       invariant(template, 'Template not found');
       invariant(template.name, 'Template name not found');
 
@@ -218,7 +218,7 @@ export const WithScript: Story = {
               You can get the exchange rate between two currencies.
             `,
           }),
-          tools: [ToolId.make('org.dxos.script.forex-effect')],
+          tools: [ToolId.make('com.example.operation.script.forex-effect')],
         }),
       );
 
@@ -226,8 +226,8 @@ export const WithScript: Story = {
       addToRootCollection(space, [script]);
       return [[StoryRole.Chat], [Cell.article(script)]];
     },
-    onChatCreated: async ({ space, binder }) => {
-      const skills = await space.db.query(Query.select(Filter.type(Skill.Skill))).run();
+    onChatCreated: async ({ db, binder }) => {
+      const skills = await db.query(Query.select(Filter.type(Skill.Skill))).run();
       await binder.bind({ skills: skills.map((skill) => Ref.make(skill)) });
     },
   }),

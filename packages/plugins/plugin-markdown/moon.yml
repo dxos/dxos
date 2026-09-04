@@ -1,6 +1,7 @@
 layer: library
 language: typescript
 tags:
+  - composer-plugin
   - ts-vite-build
   - ts-test
   - ts-test-storybook
@@ -11,10 +12,11 @@ tasks:
     # Fail when the ./plugin export pulls in `@dxos/react-ui`. The plugin entry must
     # remain UI-free under workerd so it can load in non-DOM environments.
     command: >-
-      pnpm exec dx-trace-imports
+      bun $workspaceRoot/tools/dx-trace-imports/cli.js
       --export ./MarkdownPlugin
       --to "@dxos/react-ui"
       --conditions workerd,worker
+      --conditions node
       --fail-on present
     deps:
       - dx-trace-imports:build

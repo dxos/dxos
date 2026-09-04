@@ -160,7 +160,7 @@ export const getSchemaVersion = (schema: Schema.Top): string | undefined => getT
 /**
  * Gets the typename of the object without the version.
  * Returns only the name portion, not the DXN.
- * @example "org.example.type.contact"
+ * @example "com.example.type.contact"
  *
  * @internal (use Obj.getTypename)
  */
@@ -265,20 +265,6 @@ export const getPropertyMetaAnnotation = <T>(prop: SchemaAST.PropertySignature, 
 export const ReferenceAnnotationId = '@dxos/schema/annotation/Reference';
 export type ReferenceAnnotationValue = TypeAnnotation;
 export const ReferenceAnnotation = createAnnotationHelper<ReferenceAnnotationValue>(ReferenceAnnotationId);
-
-/**
- * Reference constrained by an annotation on the target's schema instead of a typename (`Ref.byAnnotation`).
- */
-export const ReferenceConstraintAnnotationId = '@dxos/schema/annotation/ReferenceConstraint';
-
-export type ReferenceConstraintAnnotationValue = {
-  /** Annotation the referenced object's schema must carry. */
-  annotationId: string;
-};
-
-export const ReferenceConstraintAnnotation = createAnnotationHelper<ReferenceConstraintAnnotationValue>(
-  ReferenceConstraintAnnotationId,
-);
 
 /**
  * SchemaMeta.
@@ -488,19 +474,23 @@ export const GeneratorAnnotation = createAnnotationHelper<GeneratorAnnotationVal
 interface MakeAnnoationsProps<T> {
   id: string;
   schema: Schema.Codec<T, any, never>;
+  /** Skips the FQN format check on `id`, for a pre-existing id that may already be embedded in persisted schemas. */
+  legacyId?: boolean;
 }
 
 // Annotation ids use the same NSID / reverse-DNS format as TypenameSchema —
 // dot-separated segments, middle segments may be hyphenated, final segment may be camelCase.
 // At least 3 segments are required (e.g. org.dxos.annotation.example).
 export const makeUserAnnotation = <T>(props: MakeAnnoationsProps<T>): Annotation.Annotation<T> => {
-  assertArgument(
-    /^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?){2,}(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)?$/.test(
-      props.id,
-    ),
-    'id',
-    'Annotation id must be in the FQN format (org.dxos.annotation.example or org.dxos.space.rootCollection).',
-  );
+  if (!props.legacyId) {
+    assertArgument(
+      /^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?){2,}(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)?$/.test(
+        props.id,
+      ),
+      'id',
+      'Annotation id must be in the FQN format (org.dxos.annotation.example or org.dxos.space.rootCollection). Pass `legacyId: true` to keep an existing non-FQN id.',
+    );
+  }
 
   const annotation: Annotation.Annotation<T> = {
     [ANNOTATION_TYPE_ID]: { _Type: {} as T },
@@ -564,6 +554,29 @@ export const IconAnnotation = makeUserAnnotation<IconAnnotation>({
 export const IconFromRefAnnotation = makeUserAnnotation<string>({
   id: 'org.dxos.annotation.icon.from-ref',
   schema: Schema.String,
+});
+
+/**
+ * Marks a `Ref` field (or an array-of-`Ref` field) as owning its targets: writing a ref into the
+ * field, or creating the holder with one, sets the target's parent to the holding object.
+ *
+ * This is NOT an invariant: it does not guarantee that a target held here has this object as its
+ * parent, only that a write through this field updates the parent. Nothing stops `Obj.setParent`
+ * from re-parenting the target afterwards, a ref whose target is not resolved is left alone, and
+ * removing a ref does NOT clear the target's parent — a move between holders would otherwise lose
+ * the edge depending on write order; call `Obj.setParent(child, undefined)` explicitly. Read the
+ * parent with `Obj.getParent`; never infer it from the field.
+ *
+ * @example
+ * ```ts
+ * Schema.Struct({
+ *   body: Ref.Ref(Text.Text).pipe(Annotation.SetParent.set(true)),
+ * })
+ * ```
+ */
+export const SetParentAnnotation = makeUserAnnotation<boolean>({
+  id: 'org.dxos.annotation.setParent',
+  schema: Schema.Boolean,
 });
 
 /**

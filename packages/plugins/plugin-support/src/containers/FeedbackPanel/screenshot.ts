@@ -17,15 +17,7 @@
 // The `html-to-image` import is dynamic on purpose — pays the ~30 KB only when
 // the user actually clicks "Create GitHub Issue", not on every panel mount.
 
-import { EDGE_SERVICE_DEFAULTS, EdgeServiceName } from '@dxos/config';
 import { log } from '@dxos/log';
-
-/**
- * Default Composer image-service base URL — the Cloudflare Worker that `composer-crx`
- * uses in production. Override per-environment via `runtime.services.edgeServices.image`
- * or the `DX_IMAGE_SERVICE_URL` env var.
- */
-const DEFAULT_IMAGE_SERVICE_URL = EDGE_SERVICE_DEFAULTS[EdgeServiceName.Image];
 
 /** Hard ceiling on the captured PNG — matches the CRM caller's cap. */
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
@@ -144,40 +136,48 @@ export const captureScreenshot = async (target: HTMLElement = document.body): Pr
 
 /**
  * Upload an image blob (PNG or JPEG) to the Composer image service. Returns the resulting public
- * URL on success, or `undefined` on transport / service error so the caller can
- * proceed without an image rather than block the report.
+ * URL on success, or `undefined` when the service is unconfigured or on transport / service error
+ * so the caller can proceed without an image rather than block the report.
  *
  * Service contract: POST multipart/form-data `file=<blob>` → `{ url }`
  */
-export const uploadScreenshot = async (
-  blob: Blob,
-  serviceUrl: string = DEFAULT_IMAGE_SERVICE_URL,
-): Promise<string | undefined> => {
+export const uploadScreenshot = async (blob: Blob, serviceUrl: string | undefined): Promise<string | undefined> => {
+  if (!serviceUrl) {
+    log('image service is not configured (runtime.services.edge.url); skipping screenshot upload');
+    return undefined;
+  }
+
   const form = new FormData();
   // Filename extension matches the blob mime so the worker can pick the right
   // codec; falls back to `.png` for any non-jpeg blob (e.g. legacy callers).
   const ext = blob.type === 'image/jpeg' ? 'jpg' : 'png';
   form.append('file', blob, `composer-${Date.now()}.${ext}`);
 
+  // Logged on every failure path: a bare `Failed to fetch` names neither the host nor the reason,
+  // and triaging DX-1203 needed the endpoint to discover the CORS preflight was the rejection.
+  const endpoint = new URL('upload', `${serviceUrl.replace(/\/+$/, '')}/`);
+
   try {
-    const res = await fetch(new URL('/upload', serviceUrl).toString(), {
+    const res = await fetch(endpoint, {
       method: 'POST',
       body: form,
       // 15s aligns with plugin-crm's external-fetch timeout.
       signal: AbortSignal.timeout(15_000),
     });
     if (!res.ok) {
-      log.warn('image-service rejected upload', { status: res.status });
+      log.warn('image-service rejected upload', { endpoint: endpoint.href, status: res.status });
       return undefined;
     }
     const json = (await res.json()) as { url?: string };
     if (!json.url) {
-      log.warn('image-service returned no url', { json });
+      log.warn('image-service returned no url', { endpoint: endpoint.href, json });
       return undefined;
     }
     return json.url;
   } catch (err) {
-    log.warn('screenshot upload failed', { err });
+    // `TypeError: Failed to fetch` covers CORS rejection, DNS failure, and offline alike, and the
+    // browser deliberately withholds which. `bytes` separates a size-driven failure from the rest.
+    log.warn('screenshot upload failed', { endpoint: endpoint.href, bytes: blob.size, err });
     return undefined;
   }
 };

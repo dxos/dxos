@@ -1,0 +1,804 @@
+name: Check
+
+on:
+  pull_request:
+  merge_group:
+
+  push:
+    branches:
+      - main
+      - ci/*
+
+  schedule:
+    - cron: '0 4 * * 1-5'
+
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        required: false
+        default: false
+
+      e2e:
+        type: boolean
+        description: 'Run the e2e tests'
+        required: false
+        default: false
+
+permissions:
+  contents: read
+  packages: read
+
+env:
+  # Bound once here rather than at every setup call site: a composite action cannot read the
+  # `secrets` context, but it does inherit the process environment.
+  MOON_CACHE_CA_PEM: ${{ secrets.MOON_CACHE_CA_PEM }}
+  MOON_CACHE_CLIENT_PEM: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
+  MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
+  DISCORD_TEST_REPORT_WEBHOOK: ${{ secrets.DISCORD_TEST_REPORT_WEBHOOK }}
+  TRUNK_TOKEN: ${{ secrets.TRUNK_TOKEN }}
+
+# https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/control-the-concurrency-of-workflows-and-jobs
+# The event is part of the key because on a schedule `github.ref` is `refs/heads/main`: without it the
+# nightly shares a group with pushes to main and the next push cancels it mid-e2e.
+#
+# A manual dispatch also keys on its run id, so repeated dispatches of one ref run in parallel:
+# measuring flakiness needs N independent samples of the same commit. Every other event keeps
+# one-run-per-ref, where superseding an in-flight run is what you want.
+concurrency:
+  group: >-
+    ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref
+    }}-${{ github.event_name == 'workflow_dispatch' && github.run_id || '' }}
+  cancel-in-progress: true
+
+# https://moonrepo.dev/docs/guides/ci
+jobs:
+  check:
+    permissions:
+      contents: read
+      packages: read
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 30
+    steps:
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled && !inputs.e2e }}
+        with:
+          detached: true
+
+      # Full depth keeps the commit graph the affected resolver and moon's own merge-base resolve against,
+      # while `filter: blob:none` stops the transfer of every historical file version — the previous
+      # full fetch ranged 32s–15m on the same commit. No `lfs: true`: nothing in the tree is
+      # LFS-tracked. `fetch-tags: false` is not used because checkout ignores it at depth 0; at
+      # ~150 tags the residual refspec cost is noise.
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Setup
+        uses: ./.depot/actions/setup
+
+      - name: Resolve affected scope
+        uses: ./.depot/actions/affected
+
+      # ─── Stage 1: gates that need no build ──────────────────────────────────────────────────────
+      # Independent node scripts, seconds each. `fail-fast: false` so one run reports every failure.
+      - fail-fast: false
+        parallel:
+          - name: Check formatting
+            run: pnpm run format-check
+
+          - name: Check for import cycles
+            run: pnpm run check-cycles
+
+          - name: Check publish config
+            run: pnpm run check-publish-config
+
+          - name: Check changesets
+            env:
+              CHANGESET_BASE_REF: ${{ github.event.pull_request.base.sha }}
+            run: pnpm run check-changesets
+
+          - name: Check version files in sync
+            run: node scripts/sync-versions.mjs --check
+
+          - name: Check remote cache wiring
+            run: node scripts/check-cache-wiring.mjs
+
+          - name: Check package.json paths
+            run: pnpm run pkg-lint
+
+          - name: Check public packages don't depend on private packages
+            run: pnpm run check-public-dependencies
+
+          - name: Check public packages are published
+            run: pnpm run check-packages-published
+
+      # Neither of the next two can join the block above: each rewrites a file that `.moon/tasks/all.yml`
+      # declares an implicit input to every task, and neither restores it on a hard cancellation.
+      #
+      # `.npmrc` sets `strict-peer-dependencies` with `auto-install-peers=false`, so re-resolving is what
+      # surfaces an unsatisfiable peer. `--no-frozen-lockfile` can rewrite `pnpm-lock.yaml`.
+      - name: Check for peer dependency issues
+        run: |
+          trap 'git checkout -- pnpm-lock.yaml' EXIT
+          pnpm install --resolution-only --no-frozen-lockfile
+
+      # `pkg-lint` rejects a malformed `exports`/`imports` entry; this rejects a stale one. The toolbox is
+      # the only writer of those maps, so anything it would change is drift a contributor fixes by running
+      # the same command. `--lint-package-exports` writes `package.json` through `updatePackages()`, which
+      # four of the gates above read, so it stays out of the block for that reason too.
+      - name: Check package exports in sync
+        run: |
+          pnpm toolbox --lint-package-exports
+          git diff --exit-code -- '**/package.json'
+
+      # ─── Stage 2: the compile gate ──────────────────────────────────────────────────────────────
+      # ~15 s warm, minutes cold, and the floor under everything below it.
+      - name: Check
+        run: moon run :lint :build :test-types
+
+      # `check-module-structure` traces the built artifacts (`deps: [build]`), so it cannot move ahead
+      # of the gate however cheap it looks — its 5 s is a post-build number.
+      - name: Check module structure
+        run: moon run :check-module-structure
+
+      # ─── Stage 3: the slow checks ───────────────────────────────────────────────────────────────
+      # ~2m30s against ~1m and ~1m, so they run last, and concurrently. `fail-fast: false` reports both.
+      #
+      # One moon invocation, not a lane each: two concurrent moon processes in one workspace contend for
+      # the same task locks. Only `moon exec` has `--on-failure`. `env -u` because both checks catch a
+      # property of an import edge, whose offending commit lands in a package neither project's inputs
+      # name, so scoped they no-op on the PRs they exist to catch. Unset them, do not set
+      # `MOON_AFFECTED=''`. Empty is not "off", moon reads it as an empty base and still filters.
+      - fail-fast: false
+        parallel:
+          - name: Check dependencies
+            run: pnpm run knip
+
+          # `docs:bundle` IS the docs link check: `starlight-links-validator` runs as the last phase of
+          # `astro build`.
+          - name: Check production plugin set and docs links
+            run: >-
+              env -u MOON_AFFECTED -u MOON_BASE -u MOON_HEAD
+              moon exec composer-app:check-plugin-set docs:bundle --on-failure continue
+
+  # Static boot-graph budget over the production bundle, on its own runner. The class it catches is a
+  # property of an IMPORT EDGE — a boot-reachable module reaching a barrel instead of a subpath — so a
+  # refactor that relocates the edge silently drops the fix and neither the build nor the tests notice;
+  # three separate fixes were undone that way. Not affected-scoped, because the offending edit lands in
+  # some other package. Here rather than on an `e2e` cell so that it gates the PR that introduces the
+  # regression: `e2e` runs on main/changeset-release or an explicit dispatch, so there it never gated one.
+  # Split out of `check`, where its ~41s of bundling (nothing else in the workflow builds `bundle`) sat
+  # behind that job's whole stage 1+2 sequence; the library builds it needs come from the remote cache
+  # instead.
+  boot-budget:
+    permissions:
+      contents: read
+      packages: read
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 30
+    env:
+      COMPARE: >-
+        ${{ github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository }}
+    outputs:
+      status: ${{ steps.compare.outputs.status || 'skipped' }}
+      body: ${{ steps.compare.outputs.body }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Setup
+        uses: ./.depot/actions/setup
+
+      - name: Check boot budget
+        id: budget
+        continue-on-error: true
+        run: moon run composer-app:check-boot-budget
+
+      - name: Record this PR's measurement
+        id: head
+        if: env.COMPARE == 'true'
+        continue-on-error: true
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          cp packages/apps/composer-app/out/boot-budget.json "$RUNNER_TEMP/boot-budget.head.json"
+          cp packages/apps/composer-app/scripts/compare-boot-budget.mjs "$RUNNER_TEMP/compare.mjs"
+          if git diff --quiet "$BASE_SHA" HEAD -- packages/apps/composer-app/scripts/check-boot-budget.mjs; then
+            echo 'comparable=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'comparable=false' >> "$GITHUB_OUTPUT"
+            echo '::notice::boot budget measurement changed in this PR — skipping the base comparison.'
+          fi
+
+      - name: Measure the base commit's boot graph
+        id: base
+        if: env.COMPARE == 'true' && steps.head.outputs.comparable == 'true'
+        continue-on-error: true
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          trap 'git checkout --detach "$HEAD_SHA" >/dev/null 2>&1 || true' EXIT
+          git checkout --detach "$BASE_SHA"
+          pnpm install --prefer-offline
+          # moon owns this path, so head and base measurements land on the same file: deleting first
+          # is what makes the copy below fail loudly instead of measuring the head's leftover report.
+          rm -f packages/apps/composer-app/out/boot-budget.json
+          moon run composer-app:check-boot-budget || true
+          cp packages/apps/composer-app/out/boot-budget.json "$RUNNER_TEMP/boot-budget.base.json"
+
+      - name: Compare with the base
+        id: compare
+        if: steps.base.outcome == 'success'
+        continue-on-error: true
+        run: |
+          node "$RUNNER_TEMP/compare.mjs" \
+            --base "$RUNNER_TEMP/boot-budget.base.json" \
+            --head "$RUNNER_TEMP/boot-budget.head.json"
+
+      - name: Report boot budget failure
+        if: ${{ !cancelled() && steps.budget.outcome == 'failure' }}
+        run: |
+          echo '::error::boot budget exceeded — see the "Check boot budget" step.'
+          exit 1
+
+  # A separate job because `permissions` is job-scoped: holding `pull-requests: write` in
+  # `boot-budget` would put the token in reach of the branch code that job checks out and builds.
+  boot-budget-comment:
+    needs: boot-budget
+    if: >-
+      ${{ !cancelled() && github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      needs.boot-budget.outputs.status != 'skipped' }}
+    runs-on: depot-ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Post or remove boot graph comment
+        continue-on-error: true
+        uses: actions/github-script@v7
+        env:
+          STATUS: ${{ needs.boot-budget.outputs.status }}
+          BODY: ${{ needs.boot-budget.outputs.body }}
+        with:
+          script: |
+            const marker = '<!-- boot-budget -->';
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });
+            const existing = comments.find(
+              (comment) => comment.user?.type === 'Bot' && comment.body && comment.body.includes(marker),
+            );
+            if (process.env.STATUS === 'grew') {
+              const body = `${marker}\n${process.env.BODY}`;
+              if (existing) {
+                await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+              } else {
+                await github.rest.issues.createComment({ owner, repo, issue_number, body });
+              }
+            } else if (existing) {
+              await github.rest.issues.deleteComment({ owner, repo, comment_id: existing.id });
+            }
+
+  # Retention suites (the `memory` tag), which the normal `test` job skips: they need `--expose-gc`
+  # and force a single non-isolated fork, neither of which the sharded matrix can provide. Gated on
+  # DX_DEBUG_LEAKS, the one variable that both un-skips the tag and supplies the flag.
+  #
+  # Both suites gate: the feed one guards the fix that made feed objects collectable, the automerge
+  # one the fix that made ECHO objects and their documents collectable. Do NOT silence a failure here
+  # with `test.fails`, which would also swallow an unrelated crash (the WASM allocator abort these
+  # suites can provoke looks identical to an assertion failure from the outside).
+  memory:
+    permissions:
+      contents: read
+      packages: read
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 30
+    env:
+      DX_DEBUG_LEAKS: '1'
+      VITEST_ENV: 'node'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Setup
+        uses: ./.depot/actions/setup
+
+      # `DX_DEBUG_LEAKS_DIR` keeps the heap snapshots the probe writes out of the workspace. It is
+      # set per step, not on the job: `runner` is not among the contexts available to job-level `env`
+      # (only github/needs/strategy/matrix/vars/inputs), and referencing it there fails the whole
+      # workflow to parse — no jobs run at all.
+      - name: Feed retention
+        env:
+          DX_DEBUG_LEAKS_DIR: ${{ runner.temp }}/profiles
+        run: moon run echo-client-e2e:test -- src/feed-retention.test.ts
+
+      # One invocation per test, because vitest isolation is per FILE and both tests live in one:
+      # a single run leaves the second test measuring the first test's WASM, which is never returned
+      # to the OS. A fresh process per test is the only clean floor.
+      - name: Automerge retention (collection)
+        env:
+          DX_DEBUG_LEAKS_DIR: ${{ runner.temp }}/profiles
+        run: moon run echo-client-e2e:test -- src/automerge-retention.test.ts -t 'collecting removed objects releases them'
+
+      - name: Automerge retention (caller reference)
+        env:
+          DX_DEBUG_LEAKS_DIR: ${{ runner.temp }}/profiles
+        run: moon run echo-client-e2e:test -- src/automerge-retention.test.ts -t 'dropping the caller reference releases objects'
+
+  # Every vitest flavour in one sharded job: unit (`:test`), browser (`:test-browser`), storybook
+  # (`:test-storybook`) and the Cloudflare Workers runtime (`:test-workerd`). They used to be three
+  # jobs split by flavour, which fixed each shard's size to its flavour's total — storybook alone ran
+  # far longer than workerd, and no amount of runners helped. `moon exec --job N --job-total` partitions
+  # the whole target set instead, so the four cells are sized by work rather than by kind and a new
+  # suite lands wherever there is room. File parallelism stays disabled — overloaded runners flake — so
+  # the win is concurrency across machines, not within one. `--on-failure continue` because moon's
+  # default bail drops a failing cell's remaining targets, hiding what they cost.
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ['24.11.1']
+        # 0-based: `--job` is an index. Four cells against the ~13m the three flavour jobs' critical
+        # path took, over ~160s of fixed per-cell setup.
+        shard: [0, 1, 2, 3]
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:${{ matrix.node-version }}
+      credentials:
+        username: dxos-bot
+        password: ${{ github.token }}
+    timeout-minutes: 30
+    env:
+      NODE_VERSION: ${{ matrix.node-version }}
+      # Opt the test job in to flaky-tagged suites (Trunk pass-on-rerun keeps signal),
+      # while still excluding the heavier opt-in tag families.
+      VITEST_TAGS_FILTER: '!sync && !sync-e2e && !functions-e2e && !manual'
+      VITEST_ENV: 'node'
+      # Coverage is unsupported for the workers pool (v8 coverage imports `node:inspector/promises`,
+      # absent in workerd), so `vite.base.config.ts` drops it for the `workerd` project type — which is
+      # what lets a cell mix workerd targets with the rest under one flag.
+      VITEST_COVERAGE: ${{ secrets.CODECOV_TOKEN != '' && 'true' || 'false' }}
+      VITEST_XML_REPORT: 'true'
+      # NOTE: Browser and storybook tests also require a process for chromium. Limiting to 4 provides
+      # headroom for those processes.
+      MOON_CONCURRENCY: 4
+      # Exposed so step conditions can branch on token presence without referencing
+      # secrets directly (secrets are not allowed in if: expressions).
+      TRUNK_TOKEN: ${{ secrets.TRUNK_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - name: Setup
+        uses: ./.depot/actions/setup
+
+      - name: Resolve affected scope
+        uses: ./.depot/actions/affected
+
+      - parallel:
+          # Unconditional: moon owns cell assignment, so which flavours a shard draws is not known here.
+          - name: Install Playwright
+            run: pnpm run install-playwright
+
+          - name: Clean stale test results
+            run: rm -rf test-results
+
+      - name: Test
+        if: ${{ env.TRUNK_TOKEN != '' }}
+        uses: trunk-io/analytics-uploader@v1
+        with:
+          junit-paths: 'test-results/**/results.xml'
+          org-slug: dxos
+          token: ${{ secrets.TRUNK_TOKEN }}
+          quarantine: true
+          run: >-
+            moon exec --on-failure continue :test :test-browser :test-storybook :test-workerd
+            --job ${{ matrix.shard }} --job-total 4 -- --no-file-parallelism
+
+      - name: Test (no analytics)
+        if: ${{ env.TRUNK_TOKEN == '' }}
+        run: >-
+          moon exec --on-failure continue :test :test-browser :test-storybook :test-workerd
+          --job ${{ matrix.shard }} --job-total 4 -- --no-file-parallelism
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: vitest-report-${{ matrix.node-version }}-${{ matrix.shard }}
+          path: test-results
+          retention-days: 7
+
+      - uses: codecov/codecov-action@v5
+        if: ${{ matrix.node-version == '24.11.1' && env.VITEST_COVERAGE == 'true' }}
+        with:
+          directory: ./coverage
+          fail_ci_if_error: false
+          handle_no_reports_found: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+          verbose: true
+
+  # Bundles once and publishes to the moon remote cache, so the cells hydrate the artifacts instead of
+  # each rebuilding the graph. Concurrent cells cannot hit each other's cache writes, which is why this
+  # has to be a job they all depend on.
+  e2e-bundle:
+    if: >-
+      startsWith(github.ref, 'refs/heads/main') ||
+      startsWith(github.ref, 'refs/heads/changeset-release/') ||
+      startsWith(github.head_ref, 'changeset-release/') ||
+      inputs.e2e
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 30
+    env:
+      # Must stay IDENTICAL to the `e2e` job's: moon hashes the AMBIENT value of any env var a task
+      # lists in `inputs`, so jobs that disagree hash `bundle-e2e` differently and never share the
+      # warmed entry. The edge/telemetry/PWA vars live in the task `env`s instead (`tag-e2e.yml`,
+      # `bundle-e2e`), where consistent absence from the ambient environment keeps hashes agreeing
+      # with nothing to keep in sync. Scoped per job because at workflow level it would also move
+      # the hashes of `test`, `storybook`, `workerd` and `cli`.
+      DX_ENVIRONMENT: ci
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - name: Setup
+        uses: ./.depot/actions/setup
+
+      - name: Resolve affected scope
+        uses: ./.depot/actions/affected
+        with:
+          all: ${{ inputs.e2e }}
+
+      # `:bundle-e2e`, not a project list and not `:bundle`. Only a project that serves a production
+      # bundle to Playwright (`vite preview`) defines `bundle-e2e`, so the glob is already exactly the
+      # set that needs warming and stays correct as suites are added — the other e2e suites serve from
+      # source (`vite dev` / `storybook dev`) and need library builds, not bundles. `:bundle` by contrast
+      # built all eleven apps, so every e2e runner also hydrated the docs, cli, storybook-react,
+      # testbench-app, composer-crx, devtools-extension, examples and tasks closures — including docs'
+      # typedoc tasks, which cost more to download than composer's bundle costs to build. Warming
+      # `bundle` instead would warm a hash the e2e closure never waits on.
+      - name: Bundle
+        run: moon run :bundle-e2e
+
+  # Sharded browser × cell, three cells per browser: a cell costs ~160s of fixed setup against
+  # ~450-590s of test work, so more cells buy less than they cost. Cells are `moon exec --job`, so moon
+  # packs whichever targets it assigns and no target list is hand-maintained. `--on-failure continue`
+  # because moon's default bail drops a failing cell's remaining targets, hiding what they cost. The
+  # shape, and the alternatives measured against it, are in `.agents/projects/ci/DESIGN.md`.
+  e2e:
+    # e2e runs on pushes/schedules to main AND on the Changesets "Version Packages" PR (so we never
+    # publish untested). For push events github.ref is refs/heads/<branch>; for pull_request events
+    # github.ref is refs/pull/N/merge so we also check github.head_ref (the source branch name, set only
+    # on pull_request events) to catch the changesets/action PR branch (changeset-release/<base>).
+    needs: e2e-bundle
+    if: >-
+      startsWith(github.ref, 'refs/heads/main') ||
+      startsWith(github.ref, 'refs/heads/changeset-release/') ||
+      startsWith(github.head_ref, 'changeset-release/') ||
+      inputs.e2e
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+        # `composer` gets a dedicated cell (it dwarfs every other suite); `rest` runs the pool.
+        # Explicit here rather than via `moon --job`, whose partitioner co-located composer's former
+        # halves and (at --concurrency=1) ran them serially — measured in .agents/projects/ci/DESIGN.md.
+        shard: [composer, rest]
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    # Headroom over the step's own cap, which fails cleanly with traces attached; hitting this one
+    # cancels the job and proves nothing.
+    timeout-minutes: 50
+    env:
+      # Must stay IDENTICAL to `e2e-bundle`'s block above, which explains why.
+      DX_ENVIRONMENT: ci
+      # Selects this cell's Playwright project; also a moon task hash input, so each browser gets its
+      # own remote-cache entry.
+      PLAYWRIGHT_BROWSER: ${{ matrix.browser }}
+    steps:
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+        with:
+          detached: true
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - name: Setup
+        uses: ./.depot/actions/setup
+
+      - name: Resolve affected scope
+        uses: ./.depot/actions/affected
+        with:
+          all: ${{ inputs.e2e }}
+
+      # No bundle step: the `e2e-ci` targets declare `bundle-e2e` as a dep, so moon hydrates it from the
+      # cache `e2e-bundle` warmed. Step `id`s and outputs survive the block (Depot merges each unit's env
+      # and outputs back on join); were the shard output ever lost, the Test step's interpolation leaves
+      # `moon exec` with no targets, which exits 1 in a non-TTY rather than running nothing green.
+      - parallel:
+          # Only this cell's browser — the other two engines' downloads are dead weight here.
+          - name: Install Playwright
+            run: pnpm run install-playwright ${{ matrix.browser }}
+
+          # Clear Storybook Vite cache in every package so Storybook dev server does a fresh optimizeDeps
+          # run. Avoids 504 Outdated Optimize Dep when graph differs from bundle step. Storybook puts
+          # cache under node_modules/.cache/storybook/<hash>/sb-vite per package.
+          - name: Clear Storybook Vite cache
+            run: find . -type d -path '*/node_modules/.cache/storybook' -prune -print0 | xargs -0 rm -rf
+
+          - name: Clean stale test results
+            run: rm -rf test-results
+
+          # The pool list is computed, not globbed: `:e2e` would match composer-app too, and only
+          # `moon query` honours MQL negation (`moon exec --query` ignores it). Empty is fatal — a bad
+          # query would otherwise run nothing and report green.
+          - name: Select shard targets
+            id: shard
+            run: |
+              if [ "${{ matrix.shard }}" = "composer" ]; then
+                targets=composer-app:e2e
+              else
+                targets=$(moon query tasks "task=e2e && project!=composer-app" |
+                  node -e "let s='';process.stdin.on('data',(d)=>(s+=d)).on('end',()=>console.log(Object.keys(JSON.parse(s).tasks).sort().map((project)=>project+':e2e').join(' ')))")
+              fi
+              [ -n "$targets" ] || { echo 'no e2e targets resolved'; exit 1; }
+              echo "targets=$targets" >> "$GITHUB_OUTPUT"
+
+      - name: Test
+        timeout-minutes: 35
+        uses: trunk-io/analytics-uploader@v1
+        env:
+          # Forces the e2e tasks to actually run: re-running one commit otherwise replays a cache hit and
+          # reports green without executing a test. Unlike MOON_CACHE=off, this leaves the cached
+          # bundle/build dependencies alone.
+          DX_E2E_RUN_ID: ${{ (inputs.e2e || github.event_name == 'schedule') && format('{0}-{1}', github.run_id, github.run_attempt) || '' }}
+        with:
+          junit-paths: 'test-results/playwright/report/*.xml'
+          org-slug: dxos
+          token: ${{ secrets.TRUNK_TOKEN }}
+          quarantine: true
+          run: >-
+            moon exec --on-failure continue ${{ steps.shard.outputs.targets }}
+            --concurrency=1
+
+      - name: Upload Traces
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: playwright-report-${{ matrix.browser }}-${{ matrix.shard }}
+          path: test-results/playwright
+          retention-days: 7
+
+  # Builds, packs and smoke-tests the CLI on its own runner, in parallel with `e2e`. It used to ride along
+  # in that job, which meant the foreign-machine check waited on the Playwright suite for an artifact that
+  # was ready in minutes — and a browser test consuming the 45 minute step budget withheld it entirely.
+  cli:
+    if: >-
+      startsWith(github.ref, 'refs/heads/main') ||
+      startsWith(github.ref, 'refs/heads/changeset-release/') ||
+      startsWith(github.head_ref, 'changeset-release/') ||
+      inputs.e2e
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Setup
+        uses: ./.depot/actions/setup
+
+      # `@dxos/cli` ships as prebuilt platform binaries, so its failure modes live in the packed tarball
+      # rather than the source tree. Depends on `bundle`, so this compiles the binaries too.
+      - name: Smoke test packed CLI
+        run: moon run cli:smoke
+
+      - name: Pack the CLI for the foreign-machine job
+        run: |
+          mkdir -p cli-verify
+          npm pack --silent --pack-destination cli-verify ./packages/devtools/cli/dist/cli
+          npm pack --silent --pack-destination cli-verify ./packages/devtools/cli/dist/cli-linux-x64
+          cp packages/devtools/cli/scripts/verify-installed.mjs cli-verify/
+
+      # The verifier travels with the tarballs because the job that runs them has no checkout.
+      - name: Upload packed CLI
+        uses: actions/upload-artifact@v4
+        with:
+          name: cli-verify
+          path: cli-verify/
+          retention-days: 1
+
+  # Runs the packed CLI where the tree that built it does not exist. Deliberately no checkout, no container
+  # and a different runner: a `--compile`d binary is meant to carry everything, and when a dependency
+  # resolves a path at bundle time instead — `@automerge/automerge`'s WASM, `better-sqlite3`'s native addon —
+  # it works in the job that built it and nowhere else, which is how @dxos/cli@0.10.0 shipped unrunnable.
+  # `cli:smoke` cannot cover this in CI because the build container forbids mount namespaces.
+  cli-foreign:
+    needs: cli
+    if: ${{ !cancelled() && needs.cli.result == 'success' }}
+    runs-on: depot-ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Download packed CLI
+        uses: actions/download-artifact@v4
+        with:
+          name: cli-verify
+          path: cli-verify
+
+      # `--omit=optional` so the launcher's optionalDependencies are not fetched from npm — those versions
+      # are published, so without it the released (and possibly broken) platform package could satisfy the
+      # dependency instead of the tarball built here.
+      # The `./` is load-bearing: npm reads a bare `dir/file.tgz` as the GitHub shorthand `owner/repo` and
+      # tries to clone it.
+      - name: Install from the tarballs
+        run: |
+          npm init -y > /dev/null
+          npm install --no-audit --no-fund --omit=optional ./cli-verify/*.tgz
+
+      # The same verifier `cli:smoke` runs, so the two cannot check different things.
+      - name: Verify the install
+        run: node cli-verify/verify-installed.mjs .
+
+  # Reports every nightly job from one place. e2e is in `needs` so a cancelled e2e is still reported (its
+  # former in-job step used `success() || failure()`, which skips on cancellation) and so the test report
+  # can no longer go out green while e2e is still running. `needs.test.result` aggregates the four
+  # shards: one red cell makes the whole matrix red.
+  report:
+    needs: [test, e2e]
+    if: always() && github.event_name == 'schedule'
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 10
+    steps:
+      # This job only runs a repository-local action, so it never needs git auth; leaving the token in
+      # `.git/config` would expose it to anything in the checked-out tree.
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      # Each report is `always()` so an undelivered one cannot suppress the rest — without it a failing
+      # first report skips the e2e report, silencing the very signal this job exists to send. A failed
+      # step still fails the job.
+      - name: Send test report
+        if: always()
+        uses: ./.depot/actions/test-report
+        with:
+          name: test-24.11.1
+          result: ${{ needs.test.result }}
+      - name: Send e2e report
+        if: always()
+        uses: ./.depot/actions/test-report
+        with:
+          name: e2e
+          result: ${{ needs.e2e.result }}
+
+  # Advisory changeset reminder (NOT a gate): when a PR changes publishable source but has no
+  # `.changeset/*.md`, post/update a single sticky comment; remove it once a changeset is added.
+  # A change that needs no release just omits the changeset — no empty changeset required.
+  # Same-repo PRs only — fork PRs get a read-only token and cannot be commented on.
+  changeset-reminder:
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: depot-ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - name: Detect missing changeset
+        id: detect
+        env:
+          CHANGESET_BASE_REF: ${{ github.event.pull_request.base.sha }}
+        run: node scripts/check-changeset.mjs
+
+      - name: Post or remove reminder comment
+        uses: actions/github-script@v7
+        env:
+          MISSING: ${{ steps.detect.outputs.missing }}
+          PACKAGES: ${{ steps.detect.outputs.packages }}
+        with:
+          script: |
+            const marker = '<!-- changeset-reminder -->';
+            const missing = process.env.MISSING === 'true';
+            const packages = process.env.PACKAGES || '';
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });
+            const existing = comments.find((comment) => comment.body && comment.body.includes(marker));
+            if (missing) {
+              const body = [
+                marker,
+                '### 🦋 No changeset found',
+                '',
+                'This PR changes publishable source but has no `.changeset/*.md`.',
+                packages ? `Affected: ${packages}` : '',
+                '',
+                '- If the change is consumer-relevant (worth a changelog entry), run `pnpm changeset` and commit the file.',
+                "- If it isn't changelog-relevant (chore / refactor / internal), you can ignore this — the code still ships with the next release.",
+              ].filter(Boolean).join('\n');
+              if (existing) {
+                await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+              } else {
+                await github.rest.issues.createComment({ owner, repo, issue_number, body });
+              }
+            } else if (existing) {
+              await github.rest.issues.deleteComment({ owner, repo, comment_id: existing.id });
+            }

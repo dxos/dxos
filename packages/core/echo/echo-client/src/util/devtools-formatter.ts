@@ -46,18 +46,16 @@ export const getBody = (obj: any /* TypedObject */): JsonML => {
   return [
     'ol',
     listStyle,
-    ...Object.keys(objData).map(
-      (key): JsonML => [
-        'li',
-        liStyle,
-        [
-          'span',
-          defaultKeys.includes(key) ? keyStyle : key.startsWith('[[') ? defaultValueKeyStyle : alteredValueKeyStyle,
-          key,
-        ],
-        ['span', {}, ': '],
-        formatValue(objData[key], { nested: true }),
+    ...Object.keys(objData).map((key): JsonML => [
+      'li',
+      liStyle,
+      [
+        'span',
+        defaultKeys.includes(key) ? keyStyle : key.startsWith('[[') ? defaultValueKeyStyle : alteredValueKeyStyle,
+        key,
       ],
-    ),
+      ['span', {}, ': '],
+      formatValue(objData[key], { nested: true }),
+    ]),
   ];
 };

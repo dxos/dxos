@@ -16,7 +16,7 @@ const DefaultStory = (props: Partial<GhostProps>) => {
   return (
     <>
       <Ghost {...props} />
-      <div className='inset-0 absolute grid place-content-center'>
+      <div className='dx-fullscreen grid place-content-center'>
         <DXOS className='w-[40rem] h-[40rem] opacity-5' />
       </div>
     </>
@@ -97,7 +97,7 @@ export const Frame: Story = {
   render: (props) => (
     <>
       <Ghost {...props} classNames='border border-separator' />
-      <div className='inset-0 absolute grid place-content-center'>
+      <div className='dx-fullscreen grid place-content-center'>
         <DXOS className='w-[40rem] h-[40rem] opacity-20' />
       </div>
     </>
@@ -338,14 +338,14 @@ const circleTrajectory = (radiusFraction = 0.4): Trajectory => ({
   },
 });
 
-type TrailStoryProps = Partial<GhostProps> & {
+type TrailStoryArgs = Partial<GhostProps> & {
   trajectory: Trajectory;
   speed?: number;
   wiggleAmplitude?: number;
 };
 
 // Generic trail story: drives the GhostController along any Trajectory with jitter and wiggle.
-const TrailStory = ({ trajectory, speed = 10, wiggleAmplitude = 10, ...props }: TrailStoryProps) => {
+const TrailStory = ({ trajectory, speed = 10, wiggleAmplitude = 10, ...props }: TrailStoryArgs) => {
   const ghostRef = useRef<GhostController>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   // Keep mutable state in a ref so the effect closure always sees the latest values.
@@ -376,7 +376,7 @@ const TrailStory = ({ trajectory, speed = 10, wiggleAmplitude = 10, ...props }: 
   }, [speed, wiggleAmplitude]);
 
   return (
-    <div ref={wrapperRef} className='h-full w-full'>
+    <div ref={wrapperRef} className='dx-fill'>
       <Ghost ref={ghostRef} {...props} />
     </div>
   );
@@ -424,7 +424,7 @@ export const DXOSTrail: Story = {
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   render: (props) => (
     <>
-      <div className='inset-0 absolute z-10 grid place-content-center pointer-events-none [transform:translateZ(0)] blur-sm'>
+      <div className='dx-fullscreen z-10 grid place-content-center pointer-events-none [transform:translateZ(0)] blur-sm'>
         <DXOS className='w-[40rem] h-[40rem] fill-neutral-50 dark:fill-neutral-950' />
       </div>
       <TrailStory {...props} trajectory={dxosTrajectory(0.7)} speed={5} wiggleAmplitude={10} />

@@ -63,7 +63,7 @@ export const EventType = <T>(
 /**
  * Extracts the payload type from an event type.
  */
-export type PayloadType<E extends EventType<any>> = E extends EventType<infer T> ? T : never;
+export type PayloadType<E extends EventType<unknown>> = E extends EventType<infer T> ? T : never;
 
 export const Event = Schema.Struct({
   timestamp: Schema.Number,
@@ -556,6 +556,14 @@ export const StatusUpdate = EventType('status.update', {
 
         /** Progress estimate of remaining time (ms). */
         estimate: Schema.optional(Schema.Number),
+
+        /**
+         * How many phases the run expects, and which is in flight. Independent of `current`/`total`,
+         * which describe the phase in flight: a run can be on phase 2 of 4 and know nothing about how
+         * long phase 2 is.
+         */
+        phases: Schema.optional(Schema.Number),
+        phase: Schema.optional(Schema.Number),
       }),
     ),
   }),

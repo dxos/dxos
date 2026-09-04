@@ -10,13 +10,12 @@ import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { AutofillAnnotation, OptionsLookupAnnotation, autofill, optionsLookup } from '@dxos/react-ui-form';
+import { AutofillAnnotation, OptionsLookupAnnotation, autofill, optionsLookup } from '@dxos/react-ui-form/annotations';
 
 import { Book } from '#types';
 
 import { lookupHiveBook, searchBooks } from '../operations/bookhive';
 import { browserCorsProxy } from '../operations/cors';
-import { getBooksPath } from '../paths';
 
 type CreateBookValues = {
   hiveId?: string;
@@ -94,13 +93,14 @@ export default Capability.makeModule(
             },
             status: props.status,
           });
-          return yield* Operation.invoke(SpaceOperation.AddObject, {
-            object,
-            target: options.target,
-            // Only the section's own "+" supplies a target; fall back to the library section so a book
-            // created from anywhere else still lands there rather than under the database type node.
-            targetNodeId: options.targetNodeId ?? getBooksPath(options.db.spaceId),
-          });
+          return yield* Operation.invoke(
+            SpaceOperation.AddObject,
+            {
+              object,
+              target: options.target,
+            },
+            { spaceId: options.db.spaceId },
+          );
         }),
     });
   }),

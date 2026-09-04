@@ -1,21 +1,35 @@
 name: Composer Tauri Release
 
-# Reusable workflow — invoked only by deploy-apps.yml (its `tauri` job) for the labs/staging/production
-# environments, alongside the Composer web deploy. Not standalone (no workflow_dispatch): to run it, dispatch
+# Reusable workflow — invoked only by deploy-apps.yml (its `tauri` job), alongside the Composer web
+# deploy, for every environment. Not standalone (no workflow_dispatch): to run it, dispatch
 # Deploy Apps with app=composer. Multi-job/multi-runner (ubuntu draft/publish + macOS desktop + macOS iOS),
 # so it's a reusable workflow, not a composite action. The CrabNebula channel is derived from the
-# `environment` input; the desktop version comes from composer-app's package.json.
+# `environment` input; the version is computed by deploy-apps and shared with the web bundle.
 on:
   workflow_call:
     inputs:
       environment:
-        description: Target environment (labs | staging | production).
+        description: Target environment (dev | preview | staging | production).
         type: string
         required: true
       ref:
         description: Git ref to build (default the triggering commit).
         type: string
         default: ''
+      version:
+        # Computed once by deploy-apps' `version` job so the web bundle embedded here and the native
+        # build report the same version. Required — there is no sensible local fallback.
+        description: Version to build.
+        type: string
+        required: true
+      ios:
+        # Only `dev` builds iOS today, and it goes to TestFlight. The app is not shipped yet, so there is
+        # nothing for the other environments to release to and no reason to spend 90 minutes of macOS
+        # runner on them. TODO(wittjosiah): once the app ships — preview and staging on their own TestFlight
+        # streams, production to the App Store.
+        description: Build the iOS app and upload it to TestFlight (desktop always builds).
+        type: boolean
+        default: false
 
 concurrency:
   group: ${{ github.workflow }}-${{ inputs.environment }}
@@ -51,34 +65,36 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: 24
+          # `package-manager-cache` defaults to true and auto-detects pnpm from the root `packageManager`
+          # field; this job never installs, so there's no store to cache and the cache-save post-step
+          # fails once it goes looking for one. (`cache` is a separate, package-manager-name input — not
+          # a toggle — so it's left unset rather than misused for this.)
+          package-manager-cache: false
 
-      - name: Install semver
-        run: pnpm install -g semver
-
-      - name: Install jq
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y jq
-
-      - name: Compute Tauri version
+      - name: Resolve build numbers
         id: bump-version
+        env:
+          # Through the environment, never interpolated into the script: an expression expanded into
+          # `run` is executed by the shell, and a newline in one can forge a second GITHUB_OUTPUT key.
+          VERSION: ${{ inputs.version }}
+          ENVIRONMENT: ${{ inputs.environment }}
+          RUN_NUMBER: ${{ github.run_number }}
         run: |
-          # composer-app/package.json is the source of truth for the version: bumped by deploy-apps' release
-          # job for a production release, current otherwise. Production ships the clean version to the `main`
-          # CrabNebula channel; labs/staging get a unique per-commit prerelease tagged with the env name
-          # (which selects its channel).
-          BASE=$(jq -r '.version' packages/apps/composer-app/package.json)
-          if [ "${{ inputs.environment }}" = "production" ]; then
-            NEW_VERSION="$BASE"
-          else
-            NEW_VERSION="${BASE}-${{ inputs.environment }}.${GITHUB_SHA::7}"
+          # Both values reach files the rest of the run trusts (GITHUB_OUTPUT, GITHUB_ENV), so check the
+          # shape rather than just the character set — `1`, `1..2` and `1.2.3-` are all rejected.
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$ ]]; then
+            echo "::error::not a semver version: $VERSION" && exit 1
           fi
-          echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
-          echo "Tauri version: $NEW_VERSION (env=${{ inputs.environment }})"
-          # CFBundleVersion (Apple's build number) must be plain digits separated by dots — our prerelease
-          # suffix (e.g. "-labs.abc1234") fails that even after Tauri's own semver-prerelease stripping, so
-          # override it separately with the always-numeric, always-increasing run number.
-          echo "ios_bundle_version=${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+          case "$ENVIRONMENT" in
+            dev | preview | staging | production) ;;
+            *) echo "::error::unknown environment: $ENVIRONMENT" && exit 1 ;;
+          esac
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Tauri version: $VERSION (env=$ENVIRONMENT)"
+          # CFBundleVersion (Apple's build number) must be plain digits separated by dots — the
+          # prerelease suffix (e.g. "-dev.7") fails that even after Tauri's own semver-prerelease
+          # stripping, so override it separately with the always-numeric, always-increasing run number.
+          echo "ios_bundle_version=$RUN_NUMBER" >> "$GITHUB_OUTPUT"
 
       - name: Update tauri.conf.json
         uses: ./.github/actions/cn-config
@@ -118,7 +134,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          lfs: true
+          filter: blob:none
           ref: ${{ inputs.ref || github.sha }}
 
       - name: Install Linux dependencies
@@ -149,8 +165,8 @@ jobs:
       - uses: moonrepo/setup-toolchain@v0
         with:
           # IMPORTANT: Keep in-sync with .prototools
-          moon-version: '2.4.5'
-          proto-version: '0.58.2'
+          moon-version: '2.5.2'
+          proto-version: '0.60.2'
 
       - name: Install Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -229,14 +245,14 @@ jobs:
           fi
 
       - name: Set environment variables from secrets and env files
-        run: .github/workflows/scripts/populate-env.sh "${{ inputs.environment }}" >> $GITHUB_ENV
+        run: .github/workflows/scripts/populate-env.sh "$ENVIRONMENT" >> $GITHUB_ENV
         env:
+          ENVIRONMENT: ${{ inputs.environment }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
           COMPOSER_APP_PROD_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
           COMPOSER_APP_TEST_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_TEST_POSTHOG_API_KEY }}
-          DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
           DX_OTEL_ENDPOINT: ${{ secrets.DX_OTEL_ENDPOINT }}
           DX_OTEL_HEADERS: ${{ secrets.DX_OTEL_HEADERS }}
           DX_POSTHOG_API_HOST: ${{ secrets.DX_POSTHOG_API_HOST }}
@@ -324,6 +340,11 @@ jobs:
   build_tauri_ios:
     needs: draft_tauri
 
+    # Belt and braces on the environment as well as the flag: this job uploads to App Store Connect, and
+    # `dev` is the only environment with a TestFlight target. A caller passing `ios: true` for another
+    # environment should fail to build, not ship somewhere unintended.
+    if: inputs.ios && inputs.environment == 'dev'
+
     runs-on: depot-macos-latest
 
     timeout-minutes: 90
@@ -334,7 +355,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          lfs: true
+          filter: blob:none
           ref: ${{ inputs.ref || github.sha }}
 
       - uses: tecolicom/actions-use-homebrew-tools@v1
@@ -347,6 +368,10 @@ jobs:
           environment: ${{ inputs.environment }}
           version: ${{ needs.draft_tauri.outputs.version }}
           ios-bundle-version: ${{ needs.draft_tauri.outputs.ios_bundle_version }}
+          # Keep the bare identifier: an iOS App ID must be registered with Apple and carried by a
+          # provisioning profile, so a suffixed one would fail to sign and strand TestFlight. Running two
+          # builds side by side is a desktop concern anyway.
+          suffix-identifier: 'false'
           working-directory: ./packages/apps/composer-app/src-tauri/
 
       # TODO(wittjosiah): Having pnpm install run through moon was causing OOM issues.
@@ -358,8 +383,8 @@ jobs:
       - uses: moonrepo/setup-toolchain@v0
         with:
           # IMPORTANT: Keep in-sync with .prototools
-          moon-version: '2.4.5'
-          proto-version: '0.58.2'
+          moon-version: '2.5.2'
+          proto-version: '0.60.2'
 
       - name: Install stable toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -397,14 +422,14 @@ jobs:
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
 
       - name: Set environment variables from secrets and env files
-        run: .github/workflows/scripts/populate-env.sh "${{ inputs.environment }}" >> $GITHUB_ENV
+        run: .github/workflows/scripts/populate-env.sh "$ENVIRONMENT" >> $GITHUB_ENV
         env:
+          ENVIRONMENT: ${{ inputs.environment }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
           COMPOSER_APP_PROD_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
           COMPOSER_APP_TEST_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_TEST_POSTHOG_API_KEY }}
-          DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
           DX_OTEL_ENDPOINT: ${{ secrets.DX_OTEL_ENDPOINT }}
           DX_OTEL_HEADERS: ${{ secrets.DX_OTEL_HEADERS }}
           DX_POSTHOG_API_HOST: ${{ secrets.DX_POSTHOG_API_HOST }}
@@ -422,24 +447,32 @@ jobs:
           ./scripts/ios-init.sh
         working-directory: ./packages/apps/composer-app
 
-      # Reuse the web bundle built once by deploy-apps.yml (when called from there); absent on standalone
-      # dispatch — the build step falls back to moon. iOS embeds the frontend but needs no ollama sidecar.
-      - name: Download Composer bundle
-        continue-on-error: true
-        uses: actions/download-artifact@v4
-        with:
-          name: composer-bundle
-          path: packages/apps/composer-app/out/composer
-
+      # No artifact reuse here, unlike the desktop job: the shared `composer-bundle` is built for this
+      # workflow's environment (iOS only builds from `dev`), so it carries the full plugin catalog. iOS
+      # ships the curated production set, so the bundle is always built here — `tauri-ios-build` carries
+      # `DX_PLUGIN_SET=production` on its `bundle` dep. iOS embeds the frontend but needs no ollama sidecar.
+      # TODO(wittjosiah): Restore the artifact reuse once iOS is deployed on production deploys — the
+      # shared bundle is the production set there, so rebuilding it here would be pure duplicated work.
+      # Previous approach, kept here to restore verbatim when that day comes:
+      #
+      # - name: Download Composer bundle
+      #   continue-on-error: true
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     name: composer-bundle
+      #     path: packages/apps/composer-app/out/composer
+      #
+      # - name: Build Tauri app for iOS
+      #   run: |
+      #     if [ -f packages/apps/composer-app/out/composer/index.html ]; then
+      #       echo "Using prebuilt Composer bundle — tauri ios build bare (no moon)."
+      #       ( cd packages/apps/composer-app && pnpm exec tauri ios build --export-method=app-store-connect )
+      #     else
+      #       echo "No prebuilt bundle (unexpected) — falling back to moon."
+      #       moon run composer-app:tauri-ios-build -- --export-method=app-store-connect
+      #     fi
       - name: Build Tauri app for iOS
-        run: |
-          if [ -f packages/apps/composer-app/out/composer/index.html ]; then
-            echo "Using prebuilt Composer bundle — tauri ios build bare (no moon)."
-            ( cd packages/apps/composer-app && pnpm exec tauri ios build --export-method=app-store-connect )
-          else
-            echo "No prebuilt bundle (unexpected) — falling back to moon."
-            moon run composer-app:tauri-ios-build -- --export-method=app-store-connect
-          fi
+        run: moon run composer-app:tauri-ios-build -- --export-method=app-store-connect
         env:
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY_ID }}
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
@@ -461,8 +494,6 @@ jobs:
 
       # https://tauri.app/distribute/app-store/#ios
       - name: Upload assets to App Store Connect
-        # TODO(wittjosiah): Switch to staging? Need to figure out TestFlight -> App Store release process.
-        if: inputs.environment == 'labs'
         run: |
           xcrun altool \
             --upload-app \
@@ -494,17 +525,16 @@ jobs:
       - build_tauri
       - build_tauri_ios
 
+    # `build_tauri_ios` is skipped when `ios` is false, and a skipped dependency would otherwise skip this
+    # job too — leaving the desktop release drafted but never published.
+    if: ${{ !cancelled() && needs.build_tauri.result == 'success' }}
+
     runs-on: depot-ubuntu-24.04
 
     steps:
       - uses: actions/checkout@v5
         with:
           ref: ${{ inputs.ref || github.sha }}
-
-      - name: Install Linux dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y jq
 
       - name: Update tauri.conf.json
         uses: ./.github/actions/cn-config

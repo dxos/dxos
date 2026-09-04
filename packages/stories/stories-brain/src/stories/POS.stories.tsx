@@ -41,7 +41,7 @@ const SAMPLE_CONTENT = trim`
 const llmParse: Parser = (text) =>
   parseText(text).pipe(Effect.provide(Layer.fresh(AiServiceTestingPreset('edge-remote'))), Effect.runPromise);
 
-type StoryProps = {
+type StoryArgs = {
   /** Tag with the LLM parser (edge AI, needs credentials); false uses the offline stub tagger. */
   ai?: boolean;
 };
@@ -51,7 +51,7 @@ type StoryProps = {
  * word is coloured by its Universal POS tag. `Mock` uses the offline stub tagger (no key needed);
  * `LLM` tags via the edge AI service. No plugin manager / ECHO space — just the editor + extension.
  */
-const DefaultStory = ({ ai }: StoryProps) => {
+const DefaultStory = ({ ai }: StoryArgs) => {
   const { themeMode } = useThemeContext();
   const extensions = useMemo(
     () => [

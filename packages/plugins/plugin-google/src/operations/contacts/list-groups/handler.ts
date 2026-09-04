@@ -12,9 +12,9 @@ import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import { withAuthorization } from '@dxos/compute-runtime';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
-import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 
 import { GoogleContacts } from '#apis';
+import { GoogleOperation } from '#types';
 
 import { AccessTokenNotPopulatedError } from '../../../errors';
 
@@ -46,8 +46,8 @@ const listAllContactGroups = (token: string) =>
     return groups;
   });
 
-const handler: Operation.WithHandler<typeof InboxOperation.GetGoogleContactGroups> =
-  InboxOperation.GetGoogleContactGroups.pipe(
+const handler: Operation.WithHandler<typeof GoogleOperation.GetGoogleContactGroups> =
+  GoogleOperation.GetGoogleContactGroups.pipe(
     Operation.withHandler(
       Effect.fn(function* ({ connection }) {
         const target = connection.target;

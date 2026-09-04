@@ -3,22 +3,35 @@
 //
 
 import { Entity, Filter, Obj, Query } from '@dxos/echo';
+import { type URI } from '@dxos/keys';
 import { type SearchResult } from '@dxos/react-ui-search';
 import { Text } from '@dxos/schema';
 
-import { getIcon, mapObjectToTextFields } from './sync';
+import { mapObjectToTextFields } from './sync';
+
+/** Fallback for a type that declares no `IconAnnotation` — the same one the nav tree and cards use. */
+const DEFAULT_ICON = 'ph--circle-dashed--regular';
 
 /** Full-text search filter over the FTS5 index. */
 export const buildSearchFilter = (text: string): Filter.Any => Filter.text(text, { type: 'full-text' });
 
 /**
- * Build the ECHO query for a search box value. Empty input matches nothing; a term
- * routes to the FTS index via a single text-search select (never combined with a
- * type filter — that composition is unsupported by the executor).
+ * Build the ECHO query for a search box value. A term routes to the FTS index, scoped to
+ * `typeUris` when given — the whole-object-JSON index has no per-field choice yet, so an
+ * unscoped search surfaces objects the app never renders. Empty input, and an empty scope,
+ * match nothing.
  */
-export const buildSearchQuery = (text: string | undefined): Query.Any => {
+export const buildSearchQuery = (text: string | undefined, typeUris?: readonly URI.URI[]): Query.Any => {
   const trimmed = text?.trim();
-  return trimmed ? Query.select(buildSearchFilter(trimmed)) : Query.select(Filter.nothing());
+  if (!trimmed || (typeUris && typeUris.length === 0)) {
+    return Query.select(Filter.nothing());
+  }
+  if (!typeUris) {
+    return Query.select(buildSearchFilter(trimmed));
+  }
+  return Query.select(
+    Filter.and(buildSearchFilter(trimmed), Filter.or(...typeUris.map((typeUri) => Filter.type(typeUri)))),
+  );
 };
 
 /**
@@ -67,13 +80,14 @@ export const toSearchResults = <T extends Entity.Unknown>(objects: T[], text: st
     if (Obj.instanceOf(Text.Text, object)) {
       return acc;
     }
-    // TODO(burdon): Use schema (matches the pre-existing pattern in sync.ts's filterObjectsSync).
     const label = Entity.getLabel(object);
+    // TODO(burdon): Use schema for the snippet too (mapObjectToTextFields flattens every string prop).
     const fields = mapObjectToTextFields(object);
     const snippet = fields.content ?? fields.description ?? Object.values(fields).find((value) => value !== label);
     acc.push({
       id: object.id,
-      icon: getIcon(Entity.getType(object)),
+      // Always set, so a row without a type-declared icon still aligns with the rest.
+      icon: Entity.getIcon(object)?.icon ?? DEFAULT_ICON,
       label,
       snippet,
       object,

@@ -20,7 +20,7 @@ import { Expando } from '@dxos/schema';
 import { type TestConnectionStatus } from '#hooks';
 import { translations } from '#translations';
 
-import { isCursorForConnection } from '../../util';
+import * as Binding from '../../Binding';
 import { ConnectionView } from './ConnectionView';
 
 // Sample per-binding options schema (real connectors contribute their own via `connector.optionsSchema`).
@@ -51,7 +51,7 @@ const DefaultStory = ({
   const bindings = useMemo(
     () =>
       connection
-        ? allCursors.filter((cursor): cursor is Cursor.ExternalCursor => isCursorForConnection(cursor, connection))
+        ? allCursors.filter((cursor): cursor is Cursor.ExternalCursor => Binding.isForConnection(cursor, connection))
         : [],
     [allCursors, connection],
   );

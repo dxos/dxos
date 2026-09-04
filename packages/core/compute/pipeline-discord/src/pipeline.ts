@@ -67,19 +67,18 @@ export const DiscordPipeline = {
     RunSummary,
     StateError,
     | Source
-    | StateStore
-    | MessageStore
-    | AgentRegistry
+    | StateStore.StateStore
+    | MessageStore.MessageStore
+    | AgentRegistry.AgentRegistry
     | FactStore
-    | QuestionStore
-    | ExtractedQuestionStore
+    | QuestionStore.QuestionStore
+    | ExtractedQuestionStore.ExtractedQuestionStore
     | AiService.AiService
   > =>
     Effect.gen(function* () {
-      const store = yield* StateStore;
       const steps = yield* Ref.make(0);
       const crawl = Effect.gen(function* () {
-        yield* store.setRunStatus('running');
+        yield* StateStore.setRunStatus('running');
         yield* Crawler.stream(config, { maxSteps: options.maxSteps, steps }).pipe(
           persistMessageStage(),
           agentProfileStage(),
@@ -94,11 +93,11 @@ export const DiscordPipeline = {
           Effect.catch((error) => Effect.logWarning(`final answer pass failed: ${error}`).pipe(Effect.as(0))),
         );
         const { done, errored } = yield* Crawler.summarize();
-        yield* store.setRunStatus(done ? 'done' : 'paused');
+        yield* StateStore.setRunStatus(done ? 'done' : 'paused');
         return { steps: yield* Ref.get(steps), done, errored };
       });
       // Record a failed terminal state on an unexpected abort so a crashed crawl is
       // distinguishable from a live one.
-      return yield* crawl.pipe(Effect.tapError(() => store.setRunStatus('error').pipe(Effect.ignore)));
+      return yield* crawl.pipe(Effect.tapError(() => StateStore.setRunStatus('error').pipe(Effect.ignore)));
     }),
 };

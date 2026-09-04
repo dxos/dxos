@@ -1,0 +1,2397 @@
+{
+  "name": "client-metrics-vibptxv0",
+  "schemaVersion": "v6",
+  "image": "/assets/Icons/eight-ball",
+  "tags": [
+    {
+      "key": "tag",
+      "value": "dxos"
+    },
+    {
+      "key": "tag",
+      "value": "client"
+    }
+  ],
+  "spec": {
+    "display": {
+      "name": "Client Metrics",
+      "description": "Per-client SDK metrics from @dxos/observability. Gauges are read at collection time and exported every 60s, so every panel aggregates ACROSS clients: avg/p90/max answer \"what does a typical or bad client look like\", sum answers \"how much is out there in total\". ctx.tag isolates a single local run from deployed traffic."
+    },
+    "duration": "",
+    "refreshInterval": "",
+    "links": [],
+    "variables": [
+      {
+        "kind": "ListVariable",
+        "spec": {
+          "name": "deployment.environment",
+          "display": {
+            "name": "deployment.environment",
+            "description": "Deployment environment; local runs report 'unknown' unless DX_ENVIRONMENT is set."
+          },
+          "allowAllValue": true,
+          "allowMultiple": true,
+          "capturingRegexp": "",
+          "customAllValue": "",
+          "sort": "alphabetical-asc",
+          "plugin": {
+            "kind": "signoz/DynamicVariable",
+            "spec": {
+              "name": "deployment.environment",
+              "signal": "metrics"
+            }
+          }
+        }
+      },
+      {
+        "kind": "ListVariable",
+        "spec": {
+          "name": "ctx.tag",
+          "display": {
+            "name": "ctx.tag",
+            "description": "Client tag from DX_TELEMETRY_TAG; use it to isolate one run."
+          },
+          "allowAllValue": true,
+          "allowMultiple": true,
+          "capturingRegexp": "",
+          "customAllValue": "",
+          "sort": "alphabetical-asc",
+          "plugin": {
+            "kind": "signoz/DynamicVariable",
+            "spec": {
+              "name": "ctx.tag",
+              "signal": "metrics"
+            }
+          }
+        }
+      }
+    ],
+    "panels": {
+      "stat-spaces": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Spaces per client (avg)",
+            "description": ""
+          },
+          "links": [],
+          "plugin": {
+            "kind": "signoz/NumberPanel",
+            "spec": {
+              "formatting": {
+                "decimalPrecision": "1",
+                "unit": "none"
+              },
+              "thresholds": null,
+              "visualization": {
+                "timePreference": "global_time"
+              }
+            }
+          },
+          "queries": [
+            {
+              "kind": "scalar",
+              "spec": {
+                "name": "A",
+                "plugin": {
+                  "kind": "signoz/BuilderQuery",
+                  "spec": {
+                    "signal": "metrics",
+                    "aggregations": [
+                      {
+                        "metricName": "dxos.client.spaces.count",
+                        "reduceTo": "last",
+                        "spaceAggregation": "avg",
+                        "temporality": "",
+                        "timeAggregation": "avg"
+                      }
+                    ],
+                    "disabled": false,
+                    "filter": {
+                      "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                    },
+                    "functions": [],
+                    "groupBy": [],
+                    "having": {
+                      "expression": ""
+                    },
+                    "legend": "",
+                    "name": "A",
+                    "order": [],
+                    "source": ""
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "stat-docs": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Documents loaded per client (avg)",
+            "description": "location=local \u2014 the resident document count."
+          },
+          "links": [],
+          "plugin": {
+            "kind": "signoz/NumberPanel",
+            "spec": {
+              "formatting": {
+                "decimalPrecision": "0",
+                "unit": "none"
+              },
+              "thresholds": null,
+              "visualization": {
+                "timePreference": "global_time"
+              }
+            }
+          },
+          "queries": [
+            {
+              "kind": "scalar",
+              "spec": {
+                "name": "A",
+                "plugin": {
+                  "kind": "signoz/BuilderQuery",
+                  "spec": {
+                    "signal": "metrics",
+                    "aggregations": [
+                      {
+                        "metricName": "dxos.echo.documents.count",
+                        "reduceTo": "last",
+                        "spaceAggregation": "avg",
+                        "temporality": "",
+                        "timeAggregation": "avg"
+                      }
+                    ],
+                    "disabled": false,
+                    "filter": {
+                      "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag AND location = 'local'"
+                    },
+                    "functions": [],
+                    "groupBy": [],
+                    "having": {
+                      "expression": ""
+                    },
+                    "legend": "",
+                    "name": "A",
+                    "order": [],
+                    "source": ""
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "stat-unsynced": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Unsynced documents (fleet total)",
+            "description": "Summed across clients \u2014 total outstanding backlog."
+          },
+          "links": [],
+          "plugin": {
+            "kind": "signoz/NumberPanel",
+            "spec": {
+              "formatting": {
+                "decimalPrecision": "0",
+                "unit": "none"
+              },
+              "thresholds": null,
+              "visualization": {
+                "timePreference": "global_time"
+              }
+            }
+          },
+          "queries": [
+            {
+              "kind": "scalar",
+              "spec": {
+                "name": "A",
+                "plugin": {
+                  "kind": "signoz/BuilderQuery",
+                  "spec": {
+                    "signal": "metrics",
+                    "aggregations": [
+                      {
+                        "metricName": "dxos.echo.documents.unsynced.count",
+                        "reduceTo": "last",
+                        "spaceAggregation": "sum",
+                        "temporality": "",
+                        "timeAggregation": "latest"
+                      }
+                    ],
+                    "disabled": false,
+                    "filter": {
+                      "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                    },
+                    "functions": [],
+                    "groupBy": [],
+                    "having": {
+                      "expression": ""
+                    },
+                    "legend": "",
+                    "name": "A",
+                    "order": [],
+                    "source": ""
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "stat-heap-pressure": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Heap pressure (worst client %)",
+            "description": "heapUsed / heapSizeLimit. Above ~90% the browser is close to an OOM kill."
+          },
+          "links": [],
+          "plugin": {
+            "kind": "signoz/NumberPanel",
+            "spec": {
+              "formatting": {
+                "decimalPrecision": "1",
+                "unit": "percent"
+              },
+              "thresholds": [
+                {
+                  "color": "Red",
+                  "format": "background",
+                  "operator": "above",
+                  "unit": "percent",
+                  "value": 90
+                }
+              ],
+              "visualization": {
+                "timePreference": "global_time"
+              }
+            }
+          },
+          "queries": [
+            {
+              "kind": "scalar",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.client.runtime.heapUsed",
+                              "reduceTo": "last",
+                              "spaceAggregation": "max",
+                              "temporality": "",
+                              "timeAggregation": "max"
+                            }
+                          ],
+                          "disabled": true,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                          },
+                          "functions": [],
+                          "groupBy": [],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "used",
+                          "name": "A",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      },
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.client.runtime.heapSizeLimit",
+                              "reduceTo": "last",
+                              "spaceAggregation": "max",
+                              "temporality": "",
+                              "timeAggregation": "max"
+                            }
+                          ],
+                          "disabled": true,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                          },
+                          "functions": [],
+                          "groupBy": [],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "limit",
+                          "name": "B",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      },
+                      {
+                        "type": "builder_formula",
+                        "spec": {
+                          "disabled": false,
+                          "expression": "A / B * 100",
+                          "functions": null,
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "heap pressure %",
+                          "name": "F1",
+                          "order": null
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "spaces-dist": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Spaces per client \u2014 avg / max",
+            "description": "Aggregated across clients within each bucket. No p90/p99: SigNoz only supports percentile space aggregation on histograms, not gauges."
+          },
+          "links": [],
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "axes": {
+                "isLogScale": false,
+                "softMax": 0,
+                "softMin": 0
+              },
+              "chartAppearance": {
+                "fillMode": "none",
+                "lineInterpolation": "spline",
+                "lineStyle": "solid",
+                "showPoints": false,
+                "spanGaps": {
+                  "fillLessThan": "",
+                  "fillOnlyBelow": false
+                }
+              },
+              "formatting": {
+                "decimalPrecision": "1",
+                "unit": "none"
+              },
+              "legend": {
+                "customColors": null,
+                "mode": "list",
+                "position": "bottom"
+              },
+              "thresholds": null,
+              "visualization": {
+                "fillSpans": false,
+                "timePreference": "global_time"
+              }
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.client.spaces.count",
+                              "reduceTo": "avg",
+                              "spaceAggregation": "avg",
+                              "temporality": "",
+                              "timeAggregation": "avg"
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                          },
+                          "functions": [],
+                          "groupBy": [],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "avg",
+                          "name": "A",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      },
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.client.spaces.count",
+                              "reduceTo": "min",
+                              "spaceAggregation": "min",
+                              "temporality": "",
+                              "timeAggregation": "min"
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                          },
+                          "functions": [],
+                          "groupBy": [],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "min",
+                          "name": "B",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      },
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.client.spaces.count",
+                              "reduceTo": "max",
+                              "spaceAggregation": "max",
+                              "temporality": "",
+                              "timeAggregation": "max"
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                          },
+                          "functions": [],
+                          "groupBy": [],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "max",
+                          "name": "C",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "spaces-ready": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Known vs ready spaces (avg per client)",
+            "description": "The gap is spaces the client knows about but has not opened."
+          },
+          "links": [],
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "axes": {
+                "isLogScale": false,
+                "softMax": 0,
+                "softMin": 0
+              },
+              "chartAppearance": {
+                "fillMode": "none",
+                "lineInterpolation": "spline",
+                "lineStyle": "solid",
+                "showPoints": false,
+                "spanGaps": {
+                  "fillLessThan": "",
+                  "fillOnlyBelow": false
+                }
+              },
+              "formatting": {
+                "decimalPrecision": "1",
+                "unit": "none"
+              },
+              "legend": {
+                "customColors": null,
+                "mode": "list",
+                "position": "bottom"
+              },
+              "thresholds": null,
+              "visualization": {
+                "fillSpans": false,
+                "timePreference": "global_time"
+              }
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.client.spaces.count",
+                              "reduceTo": "avg",
+                              "spaceAggregation": "avg",
+                              "temporality": "",
+                              "timeAggregation": "avg"
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                          },
+                          "functions": [],
+                          "groupBy": [],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "known",
+                          "name": "A",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      },
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.client.spaces.ready.count",
+                              "reduceTo": "avg",
+                              "spaceAggregation": "avg",
+                              "temporality": "",
+                              "timeAggregation": "avg"
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                          },
+                          "functions": [],
+                          "groupBy": [],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "ready",
+                          "name": "B",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "docs-location": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Documents per client by location",
+            "description": "local vs remote; they converge when the client is fully synced."
+          },
+          "links": [],
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "axes": {
+                "isLogScale": false,
+                "softMax": 0,
+                "softMin": 0
+              },
+              "chartAppearance": {
+                "fillMode": "none",
+                "lineInterpolation": "spline",
+                "lineStyle": "solid",
+                "showPoints": false,
+                "spanGaps": {
+                  "fillLessThan": "",
+                  "fillOnlyBelow": false
+                }
+              },
+              "formatting": {
+                "decimalPrecision": "0",
+                "unit": "none"
+              },
+              "legend": {
+                "customColors": null,
+                "mode": "list",
+                "position": "bottom"
+              },
+              "thresholds": null,
+              "visualization": {
+                "fillSpans": false,
+                "timePreference": "global_time"
+              }
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "name": "A",
+                "plugin": {
+                  "kind": "signoz/BuilderQuery",
+                  "spec": {
+                    "signal": "metrics",
+                    "aggregations": [
+                      {
+                        "metricName": "dxos.echo.documents.count",
+                        "reduceTo": "avg",
+                        "spaceAggregation": "avg",
+                        "temporality": "",
+                        "timeAggregation": "avg"
+                      }
+                    ],
+                    "disabled": false,
+                    "filter": {
+                      "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                    },
+                    "functions": [],
+                    "groupBy": [
+                      {
+                        "name": "location",
+                        "fieldContext": "attribute",
+                        "fieldDataType": "string",
+                        "signal": "metrics"
+                      }
+                    ],
+                    "having": {
+                      "expression": ""
+                    },
+                    "legend": "{{location}}",
+                    "name": "A",
+                    "order": [],
+                    "source": ""
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "unsynced-backlog": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Unsynced backlog per client \u2014 avg / max",
+            "description": "p90/p99 would need this exported as a histogram; a gauge only supports avg/min/max/sum across clients. A max that stays flat while avg sits near 0 is still a single stuck client."
+          },
+          "links": [],
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "axes": {
+                "isLogScale": false,
+                "softMax": 0,
+                "softMin": 0
+              },
+              "chartAppearance": {
+                "fillMode": "none",
+                "lineInterpolation": "spline",
+                "lineStyle": "solid",
+                "showPoints": false,
+                "spanGaps": {
+                  "fillLessThan": "",
+                  "fillOnlyBelow": false
+                }
+              },
+              "formatting": {
+                "decimalPrecision": "0",
+                "unit": "none"
+              },
+              "legend": {
+                "customColors": null,
+                "mode": "list",
+                "position": "bottom"
+              },
+              "thresholds": null,
+              "visualization": {
+                "fillSpans": false,
+                "timePreference": "global_time"
+              }
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.echo.documents.unsynced.count",
+                              "reduceTo": "avg",
+                              "spaceAggregation": "avg",
+                              "temporality": "",
+                              "timeAggregation": "avg"
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                          },
+                          "functions": [],
+                          "groupBy": [],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "avg client",
+                          "name": "A",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      },
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.echo.documents.unsynced.count",
+                              "reduceTo": "max",
+                              "spaceAggregation": "max",
+                              "temporality": "",
+                              "timeAggregation": "max"
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                          },
+                          "functions": [],
+                          "groupBy": [],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "worst client",
+                          "name": "B",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "heap-used": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Heap used \u2014 avg / max",
+            "description": "Thresholds mark the 300-400MB resting target from the memory-usage project. Percentiles across clients need a histogram; a gauge cannot provide them."
+          },
+          "links": [],
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "axes": {
+                "isLogScale": false,
+                "softMax": 0,
+                "softMin": 0
+              },
+              "chartAppearance": {
+                "fillMode": "none",
+                "lineInterpolation": "spline",
+                "lineStyle": "solid",
+                "showPoints": false,
+                "spanGaps": {
+                  "fillLessThan": "",
+                  "fillOnlyBelow": false
+                }
+              },
+              "formatting": {
+                "decimalPrecision": "2",
+                "unit": "bytes"
+              },
+              "legend": {
+                "customColors": null,
+                "mode": "list",
+                "position": "bottom"
+              },
+              "thresholds": [
+                {
+                  "color": "Orange",
+                  "label": "300MB target",
+                  "unit": "bytes",
+                  "value": 314572800
+                },
+                {
+                  "color": "Red",
+                  "label": "400MB ceiling",
+                  "unit": "bytes",
+                  "value": 419430400
+                }
+              ],
+              "visualization": {
+                "fillSpans": false,
+                "timePreference": "global_time"
+              }
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.client.runtime.heapUsed",
+                              "reduceTo": "avg",
+                              "spaceAggregation": "avg",
+                              "temporality": "",
+                              "timeAggregation": "avg"
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                          },
+                          "functions": [],
+                          "groupBy": [],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "avg client",
+                          "name": "A",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      },
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.client.runtime.heapUsed",
+                              "reduceTo": "max",
+                              "spaceAggregation": "max",
+                              "temporality": "",
+                              "timeAggregation": "max"
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                          },
+                          "functions": [],
+                          "groupBy": [],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "worst client",
+                          "name": "B",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "sync-duration": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Time to sync \u2014 min / avg / max",
+            "description": "Duration of each completed sync episode, merged across clients. A client that never finishes syncing contributes nothing here \u2014 see the stall panel."
+          },
+          "links": [],
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "axes": {
+                "isLogScale": false,
+                "softMax": 0,
+                "softMin": 0
+              },
+              "chartAppearance": {
+                "fillMode": "none",
+                "lineInterpolation": "spline",
+                "lineStyle": "solid",
+                "showPoints": false,
+                "spanGaps": {
+                  "fillLessThan": "",
+                  "fillOnlyBelow": false
+                }
+              },
+              "formatting": {
+                "decimalPrecision": "2",
+                "unit": "s"
+              },
+              "legend": {
+                "customColors": null,
+                "mode": "list",
+                "position": "bottom"
+              },
+              "thresholds": null,
+              "visualization": {
+                "fillSpans": false,
+                "timePreference": "global_time"
+              }
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.echo.sync.episode.duration.min",
+                              "reduceTo": "min",
+                              "spaceAggregation": "min",
+                              "temporality": "",
+                              "timeAggregation": "min"
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                          },
+                          "functions": [],
+                          "groupBy": [],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "min",
+                          "name": "A",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      },
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.echo.sync.episode.duration.max",
+                              "reduceTo": "max",
+                              "spaceAggregation": "max",
+                              "temporality": "",
+                              "timeAggregation": "max"
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                          },
+                          "functions": [],
+                          "groupBy": [],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "max",
+                          "name": "B",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      },
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.echo.sync.episode.duration.sum",
+                              "reduceTo": "sum",
+                              "spaceAggregation": "sum",
+                              "temporality": "",
+                              "timeAggregation": "sum"
+                            }
+                          ],
+                          "disabled": true,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                          },
+                          "functions": [],
+                          "groupBy": [],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "sum",
+                          "name": "C",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      },
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.echo.sync.episode.duration.count",
+                              "reduceTo": "sum",
+                              "spaceAggregation": "sum",
+                              "temporality": "",
+                              "timeAggregation": "sum"
+                            }
+                          ],
+                          "disabled": true,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                          },
+                          "functions": [],
+                          "groupBy": [],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "count",
+                          "name": "D",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      },
+                      {
+                        "type": "builder_formula",
+                        "spec": {
+                          "disabled": false,
+                          "expression": "C / D",
+                          "functions": null,
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "avg",
+                          "name": "F1",
+                          "order": null
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "sync-stalled": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Time without sync progress \u2014 avg / max",
+            "description": "Age of the last decrease in the backlog while a client is not caught up; 0 when caught up. This is the stuck detector: >600s means a client has made no progress for ten minutes."
+          },
+          "links": [],
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "axes": {
+                "isLogScale": false,
+                "softMax": 0,
+                "softMin": 0
+              },
+              "chartAppearance": {
+                "fillMode": "none",
+                "lineInterpolation": "spline",
+                "lineStyle": "solid",
+                "showPoints": false,
+                "spanGaps": {
+                  "fillLessThan": "",
+                  "fillOnlyBelow": false
+                }
+              },
+              "formatting": {
+                "decimalPrecision": "0",
+                "unit": "s"
+              },
+              "legend": {
+                "customColors": null,
+                "mode": "list",
+                "position": "bottom"
+              },
+              "thresholds": [
+                {
+                  "color": "Red",
+                  "label": "10 min stalled",
+                  "unit": "s",
+                  "value": 600
+                }
+              ],
+              "visualization": {
+                "fillSpans": false,
+                "timePreference": "global_time"
+              }
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.echo.sync.stalled.duration",
+                              "reduceTo": "avg",
+                              "spaceAggregation": "avg",
+                              "temporality": "",
+                              "timeAggregation": "avg"
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                          },
+                          "functions": [],
+                          "groupBy": [],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "avg client",
+                          "name": "A",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      },
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.echo.sync.stalled.duration",
+                              "reduceTo": "max",
+                              "spaceAggregation": "max",
+                              "temporality": "",
+                              "timeAggregation": "max"
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                          },
+                          "functions": [],
+                          "groupBy": [],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "worst client",
+                          "name": "B",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "loop-lag-main": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Event loop lag \u2014 main thread",
+            "description": "Peak time a timer fired behind schedule per window, i.e. how long the tab was blocked. Main thread lag is felt directly as UI jank."
+          },
+          "links": [],
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "axes": {
+                "isLogScale": false,
+                "softMax": 0,
+                "softMin": 0
+              },
+              "chartAppearance": {
+                "fillMode": "none",
+                "lineInterpolation": "spline",
+                "lineStyle": "solid",
+                "showPoints": false,
+                "spanGaps": {
+                  "fillLessThan": "",
+                  "fillOnlyBelow": false
+                }
+              },
+              "formatting": {
+                "decimalPrecision": "3",
+                "unit": "s"
+              },
+              "legend": {
+                "customColors": null,
+                "mode": "list",
+                "position": "bottom"
+              },
+              "thresholds": null,
+              "visualization": {
+                "fillSpans": false,
+                "timePreference": "global_time"
+              }
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.client.runtime.eventLoop.lag",
+                              "reduceTo": "avg",
+                              "spaceAggregation": "avg",
+                              "temporality": "",
+                              "timeAggregation": "avg"
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag AND dxos.process.type = 'browser'"
+                          },
+                          "functions": [],
+                          "groupBy": [],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "avg",
+                          "name": "A",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      },
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.client.runtime.eventLoop.lag",
+                              "reduceTo": "max",
+                              "spaceAggregation": "max",
+                              "temporality": "",
+                              "timeAggregation": "max"
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag AND dxos.process.type = 'browser'"
+                          },
+                          "functions": [],
+                          "groupBy": [],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "max",
+                          "name": "B",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "loop-lag-worker": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Event loop lag \u2014 workers",
+            "description": "Same measure inside the shared and dedicated workers, where client-services runs. Worker lag does not jank the UI directly; it shows up as RPC queue wait on the panel below."
+          },
+          "links": [],
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "axes": {
+                "isLogScale": false,
+                "softMax": 0,
+                "softMin": 0
+              },
+              "chartAppearance": {
+                "fillMode": "none",
+                "lineInterpolation": "spline",
+                "lineStyle": "solid",
+                "showPoints": false,
+                "spanGaps": {
+                  "fillLessThan": "",
+                  "fillOnlyBelow": false
+                }
+              },
+              "formatting": {
+                "decimalPrecision": "3",
+                "unit": "s"
+              },
+              "legend": {
+                "customColors": null,
+                "mode": "list",
+                "position": "bottom"
+              },
+              "thresholds": null,
+              "visualization": {
+                "fillSpans": false,
+                "timePreference": "global_time"
+              }
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.client.runtime.eventLoop.lag",
+                              "reduceTo": "avg",
+                              "spaceAggregation": "avg",
+                              "temporality": "",
+                              "timeAggregation": "avg"
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag AND dxos.process.type in ('shared-worker', 'dedicated-worker', 'service-worker')"
+                          },
+                          "functions": [],
+                          "groupBy": [
+                            {
+                              "name": "dxos.process.type",
+                              "fieldContext": "attribute",
+                              "fieldDataType": "string",
+                              "signal": "metrics"
+                            }
+                          ],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "avg {{dxos.process.type}}",
+                          "name": "A",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      },
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.client.runtime.eventLoop.lag",
+                              "reduceTo": "max",
+                              "spaceAggregation": "max",
+                              "temporality": "",
+                              "timeAggregation": "max"
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag AND dxos.process.type in ('shared-worker', 'dedicated-worker', 'service-worker')"
+                          },
+                          "functions": [],
+                          "groupBy": [
+                            {
+                              "name": "dxos.process.type",
+                              "fieldContext": "attribute",
+                              "fieldDataType": "string",
+                              "signal": "metrics"
+                            }
+                          ],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "max {{dxos.process.type}}",
+                          "name": "B",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "rpc-timings": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "RPC queue wait vs service time \u2014 max",
+            "description": "Queue wait is time the message spent waiting for the thread; service time is time spent working. Queue wait rising while service time is flat means the receiving realm is saturated, not slow."
+          },
+          "links": [],
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "axes": {
+                "isLogScale": false,
+                "softMax": 0,
+                "softMin": 0
+              },
+              "chartAppearance": {
+                "fillMode": "none",
+                "lineInterpolation": "spline",
+                "lineStyle": "solid",
+                "showPoints": false,
+                "spanGaps": {
+                  "fillLessThan": "",
+                  "fillOnlyBelow": false
+                }
+              },
+              "formatting": {
+                "decimalPrecision": "3",
+                "unit": "s"
+              },
+              "legend": {
+                "customColors": null,
+                "mode": "list",
+                "position": "bottom"
+              },
+              "thresholds": null,
+              "visualization": {
+                "fillSpans": false,
+                "timePreference": "global_time"
+              }
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.rpc.queueWait.duration.max",
+                              "reduceTo": "max",
+                              "spaceAggregation": "max",
+                              "temporality": "",
+                              "timeAggregation": "max"
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                          },
+                          "functions": [],
+                          "groupBy": [],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "queue wait max",
+                          "name": "A",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      },
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.rpc.service.duration.max",
+                              "reduceTo": "max",
+                              "spaceAggregation": "max",
+                              "temporality": "",
+                              "timeAggregation": "max"
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                          },
+                          "functions": [],
+                          "groupBy": [],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "service max",
+                          "name": "B",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      },
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.rpc.queueWait.duration.sum",
+                              "reduceTo": "sum",
+                              "spaceAggregation": "sum",
+                              "temporality": "",
+                              "timeAggregation": "sum"
+                            }
+                          ],
+                          "disabled": true,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                          },
+                          "functions": [],
+                          "groupBy": [],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "qw sum",
+                          "name": "C",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      },
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.rpc.queueWait.duration.count",
+                              "reduceTo": "sum",
+                              "spaceAggregation": "sum",
+                              "temporality": "",
+                              "timeAggregation": "sum"
+                            }
+                          ],
+                          "disabled": true,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                          },
+                          "functions": [],
+                          "groupBy": [],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "qw count",
+                          "name": "D",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      },
+                      {
+                        "type": "builder_formula",
+                        "spec": {
+                          "disabled": false,
+                          "expression": "C / D",
+                          "functions": null,
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "queue wait avg",
+                          "name": "F1",
+                          "order": null
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "ws-reconnect-reason": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "EDGE reconnects by cause",
+            "description": "offline = the browser reported no network; abnormal = closed with no close frame while online; server_error/going_away = the server closed deliberately; inactivity_timeout = the peer went silent while our pings were flowing."
+          },
+          "links": [],
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "axes": {
+                "isLogScale": false,
+                "softMax": 0,
+                "softMin": 0
+              },
+              "chartAppearance": {
+                "fillMode": "none",
+                "lineInterpolation": "spline",
+                "lineStyle": "solid",
+                "showPoints": false,
+                "spanGaps": {
+                  "fillLessThan": "",
+                  "fillOnlyBelow": false
+                }
+              },
+              "formatting": {
+                "decimalPrecision": "0",
+                "unit": "none"
+              },
+              "legend": {
+                "customColors": null,
+                "mode": "list",
+                "position": "bottom"
+              },
+              "thresholds": null,
+              "visualization": {
+                "fillSpans": false,
+                "timePreference": "global_time"
+              }
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "name": "A",
+                "plugin": {
+                  "kind": "signoz/BuilderQuery",
+                  "spec": {
+                    "signal": "metrics",
+                    "aggregations": [
+                      {
+                        "metricName": "dxos.edge.ws.reconnect.count",
+                        "reduceTo": "sum",
+                        "spaceAggregation": "sum",
+                        "temporality": "",
+                        "timeAggregation": "increase"
+                      }
+                    ],
+                    "disabled": false,
+                    "filter": {
+                      "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                    },
+                    "functions": [],
+                    "groupBy": [
+                      {
+                        "name": "reason",
+                        "fieldContext": "attribute",
+                        "fieldDataType": "string",
+                        "signal": "metrics"
+                      }
+                    ],
+                    "having": {
+                      "expression": ""
+                    },
+                    "legend": "{{reason}}",
+                    "name": "A",
+                    "order": [],
+                    "source": ""
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "ws-session-reconnects": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Reconnects per session \u2014 avg / max",
+            "description": "Counted since the process started, so the value IS the per-session total; it resets on reload. A delta counter cannot answer this."
+          },
+          "links": [],
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "axes": {
+                "isLogScale": false,
+                "softMax": 0,
+                "softMin": 0
+              },
+              "chartAppearance": {
+                "fillMode": "none",
+                "lineInterpolation": "spline",
+                "lineStyle": "solid",
+                "showPoints": false,
+                "spanGaps": {
+                  "fillLessThan": "",
+                  "fillOnlyBelow": false
+                }
+              },
+              "formatting": {
+                "decimalPrecision": "1",
+                "unit": "none"
+              },
+              "legend": {
+                "customColors": null,
+                "mode": "list",
+                "position": "bottom"
+              },
+              "thresholds": null,
+              "visualization": {
+                "fillSpans": false,
+                "timePreference": "global_time"
+              }
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.edge.ws.session.reconnects",
+                              "reduceTo": "avg",
+                              "spaceAggregation": "avg",
+                              "temporality": "",
+                              "timeAggregation": "avg"
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                          },
+                          "functions": [],
+                          "groupBy": [],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "avg session",
+                          "name": "A",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      },
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.edge.ws.session.reconnects",
+                              "reduceTo": "max",
+                              "spaceAggregation": "max",
+                              "temporality": "",
+                              "timeAggregation": "max"
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                          },
+                          "functions": [],
+                          "groupBy": [],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "worst session",
+                          "name": "B",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "ws-connected": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Fleet connectivity",
+            "description": "Average of a 0/1 gauge, so this is the fraction of clients with an open EDGE socket."
+          },
+          "links": [],
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "axes": {
+                "isLogScale": false,
+                "softMax": 0,
+                "softMin": 0
+              },
+              "chartAppearance": {
+                "fillMode": "none",
+                "lineInterpolation": "spline",
+                "lineStyle": "solid",
+                "showPoints": false,
+                "spanGaps": {
+                  "fillLessThan": "",
+                  "fillOnlyBelow": false
+                }
+              },
+              "formatting": {
+                "decimalPrecision": "2",
+                "unit": "none"
+              },
+              "legend": {
+                "customColors": null,
+                "mode": "list",
+                "position": "bottom"
+              },
+              "thresholds": null,
+              "visualization": {
+                "fillSpans": false,
+                "timePreference": "global_time"
+              }
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "name": "A",
+                "plugin": {
+                  "kind": "signoz/BuilderQuery",
+                  "spec": {
+                    "signal": "metrics",
+                    "aggregations": [
+                      {
+                        "metricName": "dxos.edge.ws.connected",
+                        "reduceTo": "avg",
+                        "spaceAggregation": "avg",
+                        "temporality": "",
+                        "timeAggregation": "avg"
+                      }
+                    ],
+                    "disabled": false,
+                    "filter": {
+                      "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                    },
+                    "functions": [],
+                    "groupBy": [],
+                    "having": {
+                      "expression": ""
+                    },
+                    "legend": "fraction online",
+                    "name": "A",
+                    "order": [],
+                    "source": ""
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "sync-pending": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Pending sync work per client \u2014 avg / max",
+            "description": "Documents plus feed blocks \u2014 the same definition the episode and stall instruments use, so this panel and the stall alert agree."
+          },
+          "links": [],
+          "plugin": {
+            "kind": "signoz/TimeSeriesPanel",
+            "spec": {
+              "axes": {
+                "isLogScale": false,
+                "softMax": 0,
+                "softMin": 0
+              },
+              "chartAppearance": {
+                "fillMode": "none",
+                "lineInterpolation": "spline",
+                "lineStyle": "solid",
+                "showPoints": false,
+                "spanGaps": {
+                  "fillLessThan": "",
+                  "fillOnlyBelow": false
+                }
+              },
+              "formatting": {
+                "decimalPrecision": "0",
+                "unit": "none"
+              },
+              "legend": {
+                "customColors": null,
+                "mode": "list",
+                "position": "bottom"
+              },
+              "thresholds": null,
+              "visualization": {
+                "fillSpans": false,
+                "timePreference": "global_time"
+              }
+            }
+          },
+          "queries": [
+            {
+              "kind": "time_series",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.echo.sync.pending.count",
+                              "reduceTo": "avg",
+                              "spaceAggregation": "avg",
+                              "temporality": "",
+                              "timeAggregation": "avg"
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                          },
+                          "functions": [],
+                          "groupBy": [],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "avg client",
+                          "name": "A",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      },
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.echo.sync.pending.count",
+                              "reduceTo": "max",
+                              "spaceAggregation": "max",
+                              "temporality": "",
+                              "timeAggregation": "max"
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                          },
+                          "functions": [],
+                          "groupBy": [],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "worst client",
+                          "name": "B",
+                          "order": [],
+                          "source": "",
+                          "stepInterval": 0
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "heap-by-device": {
+        "kind": "Panel",
+        "spec": {
+          "display": {
+            "name": "Heaviest clients by heap",
+            "description": "One row per device; heapSizeLimit is the browser's cap for that client."
+          },
+          "links": [],
+          "plugin": {
+            "kind": "signoz/TablePanel",
+            "spec": {
+              "formatting": {
+                "columnUnits": {
+                  "A": "bytes",
+                  "B": "bytes"
+                },
+                "decimalPrecision": "2"
+              },
+              "thresholds": null,
+              "visualization": {
+                "timePreference": "global_time"
+              }
+            }
+          },
+          "queries": [
+            {
+              "kind": "scalar",
+              "spec": {
+                "plugin": {
+                  "kind": "signoz/CompositeQuery",
+                  "spec": {
+                    "queries": [
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.client.runtime.heapUsed",
+                              "reduceTo": "max",
+                              "spaceAggregation": "max",
+                              "temporality": "",
+                              "timeAggregation": "max"
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                          },
+                          "functions": [],
+                          "groupBy": [
+                            {
+                              "name": "deviceKey",
+                              "fieldContext": "attribute",
+                              "fieldDataType": "string",
+                              "signal": "metrics"
+                            }
+                          ],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "heap used",
+                          "name": "A",
+                          "order": [],
+                          "source": "",
+                          "limit": 20,
+                          "stepInterval": 0
+                        }
+                      },
+                      {
+                        "type": "builder_query",
+                        "spec": {
+                          "signal": "metrics",
+                          "aggregations": [
+                            {
+                              "metricName": "dxos.client.runtime.heapSizeLimit",
+                              "reduceTo": "max",
+                              "spaceAggregation": "max",
+                              "temporality": "",
+                              "timeAggregation": "max"
+                            }
+                          ],
+                          "disabled": false,
+                          "filter": {
+                            "expression": "deployment.environment in $deployment.environment AND ctx.tag in $ctx.tag"
+                          },
+                          "functions": [],
+                          "groupBy": [
+                            {
+                              "name": "deviceKey",
+                              "fieldContext": "attribute",
+                              "fieldDataType": "string",
+                              "signal": "metrics"
+                            }
+                          ],
+                          "having": {
+                            "expression": ""
+                          },
+                          "legend": "heap limit",
+                          "name": "B",
+                          "order": [],
+                          "source": "",
+                          "limit": 20,
+                          "stepInterval": 0
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "layouts": [
+      {
+        "kind": "Grid",
+        "spec": {
+          "items": [
+            {
+              "content": {
+                "$ref": "#/spec/panels/stat-spaces"
+              },
+              "height": 3,
+              "width": 3,
+              "x": 0,
+              "y": 0
+            },
+            {
+              "content": {
+                "$ref": "#/spec/panels/stat-docs"
+              },
+              "height": 3,
+              "width": 3,
+              "x": 3,
+              "y": 0
+            },
+            {
+              "content": {
+                "$ref": "#/spec/panels/stat-unsynced"
+              },
+              "height": 3,
+              "width": 3,
+              "x": 6,
+              "y": 0
+            },
+            {
+              "content": {
+                "$ref": "#/spec/panels/stat-heap-pressure"
+              },
+              "height": 3,
+              "width": 3,
+              "x": 9,
+              "y": 0
+            },
+            {
+              "content": {
+                "$ref": "#/spec/panels/sync-duration"
+              },
+              "height": 6,
+              "width": 6,
+              "x": 0,
+              "y": 3
+            },
+            {
+              "content": {
+                "$ref": "#/spec/panels/sync-stalled"
+              },
+              "height": 6,
+              "width": 6,
+              "x": 6,
+              "y": 3
+            },
+            {
+              "content": {
+                "$ref": "#/spec/panels/spaces-dist"
+              },
+              "height": 6,
+              "width": 6,
+              "x": 0,
+              "y": 9
+            },
+            {
+              "content": {
+                "$ref": "#/spec/panels/spaces-ready"
+              },
+              "height": 6,
+              "width": 6,
+              "x": 6,
+              "y": 9
+            },
+            {
+              "content": {
+                "$ref": "#/spec/panels/docs-location"
+              },
+              "height": 6,
+              "width": 6,
+              "x": 0,
+              "y": 15
+            },
+            {
+              "content": {
+                "$ref": "#/spec/panels/unsynced-backlog"
+              },
+              "height": 6,
+              "width": 6,
+              "x": 6,
+              "y": 15
+            },
+            {
+              "content": {
+                "$ref": "#/spec/panels/sync-pending"
+              },
+              "height": 6,
+              "width": 6,
+              "x": 0,
+              "y": 21
+            },
+            {
+              "content": {
+                "$ref": "#/spec/panels/ws-connected"
+              },
+              "height": 6,
+              "width": 6,
+              "x": 6,
+              "y": 21
+            },
+            {
+              "content": {
+                "$ref": "#/spec/panels/ws-reconnect-reason"
+              },
+              "height": 6,
+              "width": 6,
+              "x": 0,
+              "y": 27
+            },
+            {
+              "content": {
+                "$ref": "#/spec/panels/ws-session-reconnects"
+              },
+              "height": 6,
+              "width": 6,
+              "x": 6,
+              "y": 27
+            },
+            {
+              "content": {
+                "$ref": "#/spec/panels/loop-lag-main"
+              },
+              "height": 6,
+              "width": 6,
+              "x": 0,
+              "y": 33
+            },
+            {
+              "content": {
+                "$ref": "#/spec/panels/loop-lag-worker"
+              },
+              "height": 6,
+              "width": 6,
+              "x": 6,
+              "y": 33
+            },
+            {
+              "content": {
+                "$ref": "#/spec/panels/rpc-timings"
+              },
+              "height": 6,
+              "width": 6,
+              "x": 0,
+              "y": 39
+            },
+            {
+              "content": {
+                "$ref": "#/spec/panels/heap-used"
+              },
+              "height": 6,
+              "width": 6,
+              "x": 6,
+              "y": 39
+            },
+            {
+              "content": {
+                "$ref": "#/spec/panels/heap-by-device"
+              },
+              "height": 6,
+              "width": 6,
+              "x": 0,
+              "y": 45
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

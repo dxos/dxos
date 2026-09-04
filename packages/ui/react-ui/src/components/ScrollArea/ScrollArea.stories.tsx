@@ -24,7 +24,7 @@ const Container = ({ classNames, children }: ThemedClassName<PropsWithChildren>)
 const List = ({ items = 50 }: { items?: number }) => (
   <>
     {Array.from({ length: items }).map((_, index) => (
-      <div key={index} className='snap-start px-1 mbe-1 bg-hover-surface cursor-pointer'>
+      <div key={index} className='snap-start px-1 mb-1 bg-hover-surface cursor-pointer'>
         {index + 1} tempor incididunt ut labore et dolore magna aliqua
       </div>
     ))}
@@ -36,7 +36,7 @@ const Row = ({ items = 50 }: { items?: number }) => (
     {Array.from({ length: items }).map((_, index) => (
       <div
         key={index}
-        className='snap-start shrink-0 h-20 w-20 mie-2 cursor-pointer border border-separator rounded-md flex items-center justify-center bg-hover-surface'
+        className='snap-start shrink-0 h-20 w-20 me-2 cursor-pointer border border-separator rounded-md flex items-center justify-center bg-hover-surface'
       >
         {index + 1}
       </div>
@@ -47,7 +47,7 @@ const Row = ({ items = 50 }: { items?: number }) => (
 const Grid = ({ items = 50 }: { items?: number }) => (
   <>
     {Array.from({ length: items }).map((_, rowIndex) => (
-      <div key={rowIndex} className='snap-start flex gap-2 mbe-2'>
+      <div key={rowIndex} className='snap-start flex gap-2 mb-2'>
         {Array.from({ length: items }).map((_, colIndex) => (
           <div
             key={colIndex}

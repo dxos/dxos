@@ -7,7 +7,7 @@ import React, { memo, useMemo } from 'react';
 import { HomeSection, usePluginManager } from '@dxos/app-framework/ui';
 import { useDefaultSpace } from '@dxos/app-toolkit/ui';
 import { type Space } from '@dxos/react-client/echo';
-import { Carousel, useTranslation } from '@dxos/react-ui';
+import { Carousel, Flex, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -75,27 +75,27 @@ const WelcomePanel = memo(() => {
   }, [manager]);
 
   return (
-    <div className='flex flex-col items-center gap-4 py-8'>
+    <Flex column gap='lg' align='center' classNames='py-8'>
       <h1 className='text-2xl font-semibold'>{t('welcome.title')}</h1>
       <p className='pb-4 text-center text-balance text-description'>{t('welcome.description')}</p>
       {slides.length > 0 && (
-        <Carousel.Root count={slides.length} transition='slide' continuous autoAdvance={10_000}>
+        <Carousel.Root count={slides.length} continuous autoAdvance={10_000}>
           <Carousel.Content>
             <Carousel.Previous />
-            <div className='flex justify-center w-full'>
+            <Flex justify='center' classNames='w-full'>
               <Carousel.Viewport classNames='max-w-[40rem]'>
                 {slides.map((slide, index) => (
                   <Carousel.Slide key={slide.key} index={index} src={slide.src} alt={slide.description} />
                 ))}
               </Carousel.Viewport>
-            </div>
+            </Flex>
             <Carousel.Next />
             <Carousel.Indicators />
             <Carousel.Caption>{(index) => slides[index]?.description}</Carousel.Caption>
           </Carousel.Content>
         </Carousel.Root>
       )}
-    </div>
+    </Flex>
   );
 });
 

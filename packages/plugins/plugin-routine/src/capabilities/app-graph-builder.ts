@@ -5,8 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
-import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
@@ -15,6 +14,7 @@ import * as TypeSection from '@dxos/app-toolkit/TypeSection';
 import * as Operation from '@dxos/compute/Operation';
 import * as Routine from '@dxos/compute/Routine';
 import { Type } from '@dxos/echo';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 import { Position } from '@dxos/util';
@@ -31,16 +31,16 @@ export default Capability.makeModule(
         match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.ai),
         groupSegment: GraphPath.GroupSegments.ai,
         createObject: (space) =>
-          Operation.invoke(SpaceOperation.OpenCreateObject, {
+          Operation.invoke(SpaceOperation.OpenObjectForm, {
             target: space.db,
             typename: Type.getTypename(Routine.Routine),
             targetNodeId: getRoutinesPath(space.db.spaceId),
           }),
       }),
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'spaceSettingsAutomation',
         url: { key: 'routines', kind: 'singleton', path: [SpaceSchema.SETTINGS_SECTION_ID] },
-        match: NodeMatcher.whenNodeType(SpaceSchema.SETTINGS_SECTION_TYPE),
+        match: GraphNodeMatcher.whenNodeType(SpaceSchema.SETTINGS_SECTION_TYPE),
         connector: () => {
           return Effect.succeed([
             AppNode.makeSettingsPanel({
@@ -54,21 +54,7 @@ export default Capability.makeModule(
           ]);
         },
       }),
-      GraphBuilder.createExtension({
-        id: 'automationCompanion',
-        match: NodeMatcher.whenEchoObjectMatches,
-        connector: () =>
-          Effect.succeed([
-            AppNode.makeCompanion({
-              variant: 'automation',
-              label: ['automation-companion.label', { ns: meta.profile.key }],
-              icon: 'ph--lightning--regular',
-              data: 'automation',
-              position: Position.last,
-            }),
-          ]),
-      }),
-      GraphBuilder.createTypeExtension({
+      AppGraphBuilder.createTypeExtension({
         id: 'routineRuns',
         type: Routine.Routine,
         connector: () =>

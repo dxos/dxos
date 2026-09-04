@@ -5,27 +5,28 @@
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as GraphNode from '@dxos/graph/GraphNode';
 
 import { buildGraphMenu } from './useGraphMenuActions';
 
-const action = (id: string, properties: Record<string, any> = {}): Node.ActionLike => ({
+const action = (id: string, properties: Record<string, any> = {}): AppGraphNode.ActionLike => ({
   id,
-  type: Node.ActionType,
+  type: AppGraphNode.ActionType,
   properties,
   data: () => Effect.void,
 });
 
-const group = (id: string, properties: Record<string, any> = {}): Node.ActionLike => ({
+const group = (id: string, properties: Record<string, any> = {}): AppGraphNode.ActionLike => ({
   id,
-  type: Node.ActionGroupType,
+  type: AppGraphNode.ActionGroupType,
   properties,
-  data: Node.actionGroupSymbol,
+  data: AppGraphNode.actionGroupSymbol,
 });
 
 const resolver =
-  (map: Record<string, Node.ActionLike[]>) =>
-  (id: string): Node.ActionLike[] =>
+  (map: Record<string, AppGraphNode.ActionLike[]>) =>
+  (id: string): AppGraphNode.ActionLike[] =>
     map[id] ?? [];
 
 describe('buildGraphMenu', () => {
@@ -35,8 +36,8 @@ describe('buildGraphMenu', () => {
 
     expect(nodes.map((node) => node.id)).toEqual(['delete', 'save']);
     expect(edges).toEqual([
-      { source: Node.RootId, target: 'delete', relation: 'child' },
-      { source: Node.RootId, target: 'save', relation: 'child' },
+      { source: GraphNode.RootId, target: 'delete', relation: 'child' },
+      { source: GraphNode.RootId, target: 'save', relation: 'child' },
     ]);
   });
 
@@ -50,8 +51,8 @@ describe('buildGraphMenu', () => {
     // root → delete, root → more (group), more → archive, more → export.
     expect(nodes.map((node) => node.id)).toEqual(['delete', 'more', 'archive', 'export']);
     expect(edges).toEqual([
-      { source: Node.RootId, target: 'delete', relation: 'child' },
-      { source: Node.RootId, target: 'more', relation: 'child' },
+      { source: GraphNode.RootId, target: 'delete', relation: 'child' },
+      { source: GraphNode.RootId, target: 'more', relation: 'child' },
       { source: 'more', target: 'archive', relation: 'child' },
       { source: 'more', target: 'export', relation: 'child' },
     ]);
@@ -85,7 +86,7 @@ describe('buildGraphMenu', () => {
 
     expect(nodes.map((node) => node.id)).toEqual(['more', 'archive']);
     expect(edges).toEqual([
-      { source: Node.RootId, target: 'more', relation: 'child' },
+      { source: GraphNode.RootId, target: 'more', relation: 'child' },
       { source: 'more', target: 'archive', relation: 'child' },
       { source: 'more', target: 'more', relation: 'child' },
     ]);

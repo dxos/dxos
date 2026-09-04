@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { syntaxTree, syntaxTreeAvailable } from '@codemirror/language';
+import { ensureSyntaxTree, syntaxTree, syntaxTreeAvailable } from '@codemirror/language';
 import { type EditorState, type Extension, Prec, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state';
 import {
   Decoration,
@@ -111,13 +111,41 @@ export type XmlWidgetDef = {
    * Only meaningful for block widgets.
    */
   estimatedHeight?: (props: XmlWidgetProps) => number | undefined;
+
+  /**
+   * How `estimatedHeight` is applied: `fixed` (default) pins the block, `min` treats it as a floor.
+   * Use `min` for a widget whose height changes after it mounts — a disclosure, a growing log —
+   * since a pinned box cannot open and clips what it holds.
+   */
+  heightMode?: 'fixed' | 'min';
 };
 
 export type XmlWidgetRegistry = Record<string, XmlWidgetDef>;
 
+/**
+ * The FIRST child, and only when it is a string.
+ *
+ * Enough for a tag whose content is one run of text; a tag holding a nested element gets everything
+ * from that element onwards dropped, because the parser splits contents into alternating text and
+ * element children. Use {@link getXmlInnerText} where nesting is possible.
+ */
 export const getXmlTextChild = (children: any[]): string | null => {
   const child = children?.[0];
   return typeof child === 'string' ? child : null;
+};
+
+/**
+ * All text inside a tag, nested elements contributing their text but not their markup.
+ *
+ * A model writes prose that happens to fence a block in tags of its own — a reminder quoting a
+ * `<checklist>`, say — and the reader wants the prose whole. Their tag NAMES are dropped rather
+ * than reserialised: they delimit the block for the model, and are noise on screen.
+ */
+export const getXmlInnerText = (children: any[]): string | null => {
+  const text = (children ?? [])
+    .map((child) => (typeof child === 'string' ? child : (getXmlInnerText(child?.children ?? []) ?? '')))
+    .join('');
+  return text.length > 0 ? text : null;
 };
 
 /** Stable id for portaled React/Solid widgets; explicit `id` on the tag wins for `updateWidget`. */
@@ -326,7 +354,14 @@ const createWidgetMap = (setWidgets?: (widgets: XmlWidgetState[]) => void, debug
       widgets.set(id, { ...current, props: { ...current.props, ...widgetState } });
       setWidgets?.([...widgets.values()]);
     },
-    unmounted: (id: string) => {
+    unmounted: (id: string, root?: HTMLElement | null) => {
+      // Stale destroy: a replacement widget (same id) already registered a newer root — CodeMirror
+      // draws the replacement before destroying the old instance, and deleting here would orphan
+      // the live placeholder with no portal (embeds vanished until a view-mode toggle).
+      const current = widgets.get(id);
+      if (!current || (root && current.root !== root)) {
+        return;
+      }
       widgets.delete(id);
       // A cull drops the portal for a frame before it re-mounts — this is the blank-space window.
       if (debug) {
@@ -503,7 +538,8 @@ const createWidgetDecorationsField = (registry: XmlWidgetRegistry = {}, notifier
 
   return StateField.define<WidgetDecorationSet>({
     create: (state) => {
-      return buildDecorations(state, { from: 0, to: state.doc.length }, registry, notifier, urlSchemeMap);
+      // Forced only here, so a streamed chunk is not charged for a parse it will get anyway.
+      return buildDecorations(state, { from: 0, to: state.doc.length }, registry, notifier, urlSchemeMap, true);
     },
     update: ({ from, streamingFrom, decorations }, tr) => {
       // Check for reset effect.
@@ -565,6 +601,9 @@ const createWidgetDecorationsField = (registry: XmlWidgetRegistry = {}, notifier
   });
 };
 
+/** Ceiling on parsing ahead of the background parser; past it `createParseCompletionPlugin` rebuilds. */
+const PARSE_BUDGET = 50;
+
 /**
  * Creates widget decorations for XML tags in the document using the syntax tree.
  * After the tree walk, scans for unclosed streaming tags and creates provisional decorations.
@@ -575,12 +614,16 @@ const buildDecorations = (
   registry: XmlWidgetRegistry,
   notifier: XmlWidgetNotifier,
   urlSchemeMap: Map<string, [string, XmlWidgetDef][]>,
+  /** Parse ahead of the background parser rather than reading a partial tree — see {@link PARSE_BUDGET}. */
+  forceParse = false,
 ): WidgetDecorationSet => {
   const context = state.field(widgetContextStateField, false);
   const widgetStateMap = state.field(widgetStateMapStateField, false) ?? {};
   const builder = new RangeSetBuilder<Decoration>();
 
-  const tree = syntaxTree(state);
+  // A fresh view has parsed only about a viewport, so a large payload's `Element` is absent at
+  // first paint and its markup renders raw until a rebuild — the flash on a remounted row.
+  const tree = (forceParse ? ensureSyntaxTree(state, range.to, PARSE_BUDGET) : null) ?? syntaxTree(state);
   if (!tree || (tree.type.name === 'Program' && tree.length === 0)) {
     return { from: range.from, decorations: Decoration.none };
   }
@@ -618,6 +661,7 @@ const buildDecorations = (
                   def.streaming ? `cm-xml-${nodeRange.from}` : `cm-xml-${nodeRange.from}-${nodeRange.to}`,
                 );
                 const widgetState = widgetStateMap[widgetId];
+                const signature = state.sliceDoc(nodeRange.from, nodeRange.to);
                 const props = {
                   id: widgetId,
                   range: nodeRange,
@@ -632,7 +676,17 @@ const buildDecorations = (
                 const widget: WidgetType | undefined = factory
                   ? (factory(props) ?? undefined)
                   : Component
-                    ? new StubWidget(widgetId, Component, props, notifier, false, !!block, blockHeight, def.debug)
+                    ? new StubWidget({
+                        id: widgetId,
+                        Component,
+                        props,
+                        notifier,
+                        signature,
+                        block: !!block,
+                        blockHeight,
+                        heightMode: def.heightMode,
+                        debug: def.debug,
+                      })
                     : undefined;
 
                 // Add decoration.
@@ -704,7 +758,17 @@ const buildDecorations = (
           const widget: WidgetType | undefined = def.factory
             ? (def.factory(props) ?? undefined)
             : def.Component
-              ? new StubWidget(widgetId, def.Component, props, notifier, false, isBlock, blockHeight, def.debug)
+              ? new StubWidget({
+                  id: widgetId,
+                  Component: def.Component,
+                  props,
+                  notifier,
+                  signature: state.sliceDoc(nodeRange.from, nodeRange.to),
+                  block: isBlock,
+                  blockHeight,
+                  heightMode: def.heightMode,
+                  debug: def.debug,
+                })
               : undefined;
           if (widget) {
             builder.add(
@@ -766,34 +830,96 @@ const buildDecorations = (
         const widget: WidgetType | undefined = def.factory
           ? (def.factory(mergedProps) ?? undefined)
           : def.Component
-            ? new StubWidget(widgetId, def.Component, mergedProps, notifier, true, undefined, undefined, def.debug)
+            ? new StubWidget({
+                id: widgetId,
+                Component: def.Component,
+                props: mergedProps,
+                notifier,
+                streaming: true,
+                heightMode: def.heightMode,
+                debug: def.debug,
+              })
             : undefined;
 
-        if (widget) {
-          builder.add(
-            absoluteFrom,
-            range.to,
-            Decoration.replace({
-              widget,
-              block: def.block,
-              atomic: true,
-              inclusive: true,
-              tag: tagName,
-              streaming: true,
-              contentFrom,
-            }),
-          );
+        // Decorated even when the factory declined: a factory may return null while the tag is still
+        // empty (`<reasoning>` with no text yet), and leaving the range undecorated renders the raw
+        // markup to the reader for exactly as long as that lasts — the flash this scan exists to
+        // prevent. Without a widget it is an inline replace that simply hides the text; `block` needs
+        // a widget to size the line, so it is only claimed when there is one.
+        builder.add(
+          absoluteFrom,
+          range.to,
+          Decoration.replace({
+            ...(widget ? { widget, block: def.block } : {}),
+            atomic: true,
+            inclusive: true,
+            tag: tagName,
+            streaming: true,
+            contentFrom,
+          }),
+        );
 
-          // Set from to just before the streaming tag so next rebuild covers it.
-          streamingFrom = absoluteFrom;
-          last = absoluteFrom;
-        }
+        // Set from to just before the streaming tag so next rebuild covers it.
+        streamingFrom = absoluteFrom;
+        last = absoluteFrom;
 
         // Only one streaming tag at a time.
         break;
       }
     }
+
+    // A chunk boundary can land inside the opening tag itself, leaving a tail like `<reasoni` that
+    // the complete-tag scan above cannot match — and an undecorated tail renders as literal markup
+    // until the `>` arrives. Hidden without a widget: there is no tag name yet to build one from,
+    // and `block` needs a widget to size the line.
+    if (streamingFrom === undefined) {
+      const partial = matchPartialOpenTag(tailText, streamingTagNames);
+      if (partial !== undefined) {
+        const absoluteFrom = range.from + partial.from;
+        builder.add(
+          absoluteFrom,
+          range.to,
+          Decoration.replace({
+            atomic: true,
+            inclusive: true,
+            streaming: true,
+            contentFrom: range.to,
+            // The fragment, not the tag it may become: `tag` is what bookmark navigation matches
+            // against, and a tag that has not arrived yet must not be a jump target.
+            tag: partial.fragment,
+          }),
+        );
+        streamingFrom = absoluteFrom;
+        last = absoluteFrom;
+      }
+    }
   }
 
   return { from: last, streamingFrom, decorations: builder.finish() };
+};
+
+/**
+ * Offset of a trailing `<` that could still become one of `tagNames`, or undefined.
+ *
+ * Only the document tail is considered: an unterminated `<` anywhere earlier is prose (`5 < 6`),
+ * since a real tag would have been closed by the text that follows it. Requiring the fragment to be
+ * a prefix of a registered name is what keeps `a < b` and `<div` out.
+ */
+const matchPartialOpenTag = (text: string, tagNames: string[]): { from: number; fragment: string } | undefined => {
+  const start = text.lastIndexOf('<');
+  if (start === -1) {
+    return undefined;
+  }
+
+  const fragment = text.slice(start + 1);
+  // A `>` means the tag is complete (or is not a tag at all); either way the scan above owns it.
+  if (fragment.includes('>')) {
+    return undefined;
+  }
+
+  // `<` alone is ambiguous — it becomes a tag or stays prose on the next character, and hiding the
+  // tail on that guess flickers the reader's own text.
+  return fragment.length > 0 && tagNames.some((name) => name.startsWith(fragment))
+    ? { from: start, fragment }
+    : undefined;
 };

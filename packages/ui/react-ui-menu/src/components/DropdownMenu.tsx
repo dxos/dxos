@@ -37,10 +37,15 @@ const DropdownMenuItem = ({
   // the current value is announced, not conveyed by the trailing check icon alone. Mutually-exclusive
   // (single-select) groups use radio semantics; multi-select groups use checkbox.
   const checkable = typeof action.properties?.checked === 'boolean';
-  const role = group?.properties?.selectCardinality === 'multiple' ? 'menuitemcheckbox' : 'menuitemradio';
+  const multiple = group?.properties?.selectCardinality === 'multiple';
+  const role = multiple ? 'menuitemcheckbox' : 'menuitemradio';
+  // A multi-select group is set by toggling several members, so suppress the primitive's
+  // close-on-select; picking one value and closing is single-select behaviour.
+  const handleSelect = useCallback((event: Event) => multiple && event.preventDefault(), [multiple]);
   return (
     <NaturalDropdownMenu.Item
       onClick={handleClick}
+      onSelect={handleSelect}
       classNames='gap-2'
       disabled={action.properties?.disabled}
       {...(checkable && { role, 'aria-checked': !!action.properties?.checked })}
@@ -55,7 +60,7 @@ const DropdownMenuItem = ({
       )}
       <ActionLabel action={action} />
       {/* Trailing check marks the current value of a single-select group (`checked`). */}
-      {action.properties?.checked && <Icon icon='ph--check--regular' size={iconSize} classNames='mis-auto' />}
+      {action.properties?.checked && <Icon icon='ph--check--regular' size={iconSize} classNames='ms-auto' />}
     </NaturalDropdownMenu.Item>
   );
 };
@@ -86,7 +91,9 @@ const DropdownMenuRoot = ({
       }
       event.stopPropagation();
       // TODO(thure): Why does Dialog's modal-ness cause issues if we don't explicitly close the menu here?
-      setOptionsMenuOpen(false);
+      if (group?.properties?.selectCardinality !== 'multiple') {
+        setOptionsMenuOpen(false);
+      }
       const params = { parent: group, caller, modifiers: { shift: event.shiftKey } };
       if (onAction) {
         onAction(action, params);

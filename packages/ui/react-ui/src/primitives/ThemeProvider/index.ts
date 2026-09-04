@@ -7,6 +7,7 @@ export { type Label, isLabel, toLocalizedString } from '@dxos/ui-types/translati
 export {
   type IconRegistry,
   type IconSource,
+  extendedIconSource,
   getIconRegistry,
   phosphorIconSource,
   useIconRegistry,

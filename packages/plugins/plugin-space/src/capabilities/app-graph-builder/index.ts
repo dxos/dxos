@@ -9,6 +9,9 @@ import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 export const AppGraphBuilder = Capability.lazyModule(
   'AppGraphBuilder',
   {
+    // Browser-only: the builder defaults its share-link origin to `window.location.origin`, read
+    // when the module activates.
+    environments: [],
     provides: [AppCapabilities.AppGraphBuilder],
     // Its connectors read `client.spaces` inside atom computations (initialized-only, and a
     // pre-init throw is not re-evaluated when initialization lands).

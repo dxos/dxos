@@ -34,7 +34,8 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `component` | `org.dxos.mdl.component@1.0`  |
-| `op`        | `org.dxos.mdl.op@1.0`         |
+| `op`        | `org.dxos.mdl.op@1.1`         |
+| `flow`      | `org.dxos.mdl.flow@1.0`       |
 
 ## Types
 
@@ -196,6 +197,7 @@ Pure read operations — no side effects.
 
 ```mdl
 op queryWorld
+  key: org.dxos.operation.voxel.queryWorld
   desc: Returns the current state of the voxel world including all voxels, grid dimensions, and block size.
   input:
     world: Ref<World>
@@ -207,6 +209,7 @@ Effectful operations — mutate persistent ECHO state.
 
 ```mdl
 op addVoxels
+  key: org.dxos.operation.voxel.add
   desc: Adds one or more voxels to the world at specified coordinates with a given hue.
   input:
     world: Ref<World>
@@ -219,6 +222,7 @@ op addVoxels
 
 ```mdl
 op removeVoxels
+  key: org.dxos.operation.voxel.remove
   desc: Removes voxels at specified coordinates from the world.
   input:
     world: Ref<World>
@@ -231,6 +235,7 @@ op removeVoxels
 
 ```mdl
 op generateShape
+  key: org.dxos.operation.voxel.generateShape
   desc: Generates a 3D geometric shape (cube, wall, sphere, cylinder, or tower) and places it at the given origin.
   input:
     world: Ref<World>
@@ -458,6 +463,69 @@ test T-10: Card read-only mode
   then:
     - camera auto-fits voxel bounds
     - clicking the canvas does not add or remove voxels
+```
+
+---
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Build and query a shape agent-only
+  desc: |
+    The core voxel round-trip through the four agent-callable operations — query an empty world,
+    generate a shape, remove part of it, and query again to confirm the mutation. All four steps
+    have real operations, so an agent can drive every step but the fixture World's creation.
+  actors: both
+  covers: [F-4.2, F-4.3, F-6.1, F-6.3]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - plugin-voxel is enabled — it ships only in the experimental set; it is OFF by default
+    - no World named "QA World" exists — ABORT rather than deleting one this flow did not create
+  test:
+    - name: Create the world
+      do: In the navtree, click + on a collection and choose Voxel. Name it "QA World".
+      capture: created
+      expect: a World named "QA World" appears under the collection with an empty voxel map
+      note: |
+        NO `invoke` — there is no create operation, only the navtree factory
+        (`capabilities/create-object.ts`). This one human-only step is why the flow is
+        `actors: both` rather than `agent`, even though every remaining step invokes a real
+        operation.
+    - name: Confirm the world starts empty
+      do: (implicit — no UI gesture; this validates the create step)
+      invoke: [op:queryWorld] { world: $created.object }
+      capture: initial
+      expect: the query returns zero voxels
+      assert: return $initial.voxelCount === 0;
+    - name: Generate a cube
+      do: In the toolbar, click "Generate shape" (or pick Cube from its menu) at the origin.
+      invoke: [op:generateShape] { world: $created.object, shape: "cube", origin: { x: 0, y: 0, z: 0 }, hue: "blue" }
+      capture: generated
+      expect: a blue cube of voxels appears at the origin in the 3D view
+      assert: return $generated.voxelCount > 0;
+    - name: Remove one corner voxel
+      do: Switch to Remove tool mode and click the voxel at (0, 0, 0).
+      invoke: [op:removeVoxels] { world: $created.object, positions: [{ x: 0, y: 0, z: 0 }] }
+      capture: removed
+      expect: the corner voxel at (0,0,0) disappears from the cube
+    - name: Query the final state
+      do: (implicit — no UI gesture; this validates the two mutations)
+      invoke: [op:queryWorld] { world: $created.object }
+      expect: the voxel count equals the generated count minus one, and (0,0,0) is absent
+      assert: |
+        return $result.voxelCount === $generated.voxelCount - 1 &&
+          !$result.voxels['0:0:0'];
+  after:
+    - name: Delete the world
+      do: Right-click "QA World" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.collection }
+      expect: the row leaves the navtree and its plank closes
 ```
 
 ---

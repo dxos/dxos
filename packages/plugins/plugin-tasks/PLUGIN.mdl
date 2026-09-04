@@ -18,7 +18,8 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
 | `test`      | `org.dxos.mdl.test@1.0`        |
 | `component` | `org.dxos.mdl.component@1.0`   |
-| `op`        | `org.dxos.mdl.op@1.0`          |
+| `op`        | `org.dxos.mdl.op@1.1`          |
+| `flow`      | `org.dxos.mdl.flow@1.0`        |
 
 ## Types
 
@@ -145,6 +146,7 @@ op createOutline
 
 ```mdl
 op quickJournalEntry
+  key: org.dxos.operation.tasks.appendJournalEntry
   desc: |
     Appends a checkbox bullet to today's JournalEntry in the personal space.
     Creates a Journal and/or today's entry if they do not yet exist.
@@ -281,6 +283,89 @@ test T-6: Calendar sidebar toggle
 
 ---
 
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Create an outline and edit it
+  desc: The core outliner round-trip — create an Outline, type into it, read it back.
+  actors: human
+  covers: [F-1.1, F-1.2, T-1]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-tasks is enabled — it is off by default outside dev builds (`isDev` in
+      `plugin-defs.tsx`); enabling is a UI action (Settings -> plugin registry)
+    - no Outline named "QA Outline" exists — ABORT rather than deleting one this flow did not create
+  test:
+    - name: Create the outline
+      do: In the navtree, click + on the space and choose Outline. Name it "QA Outline".
+      expect: an Outline appears under the space and opens in OutlineArticle
+      note: |
+        NO `invoke` — creation goes through `SpaceCapabilities.CreateObjectEntry`
+        (`Outline.make(props)`), not an operation; there is no `org.dxos.operation.tasks.createOutline`
+        despite `op createOutline` being documented above (aspirational, not shipped). This step is
+        human-only, same shape as plugin-chess's `startGame`.
+    - name: Type a nested bullet
+      do: Type "Buy milk", press Enter, press Tab to indent a sub-item, type "2% please".
+      expect: "2% please" renders indented one level under "Buy milk"
+      note: NO `invoke` — CodeMirror indent/outdent is a real keystroke with no operation behind it.
+  after:
+    - name: Delete the outline
+      do: Right-click "QA Outline" in the navtree and choose Delete.
+      invoke: |
+        org.dxos.operation.space.removeObjects {
+          objects: [(await space.db.query(dxos.Filter.type(Outline)).run()).objects.find((o) => o.name === 'QA Outline') ?? (() => { throw new Error("Outline QA Outline not found — refusing to remove an unrelated object"); })()],
+          target: $given.space
+        }
+      expect: the row leaves the navtree and its plank closes if it was open
+      note: |
+        `objects` cannot be filled from an `invoke` result — step 1 had none — so the agent path
+        resolves the Outline live, by name, immediately before this call.
+```
+
+```mdl
+flow QA-2: Quick-add a journal bullet from anywhere
+  desc: The op:quickJournalEntry round-trip — the one agent-invocable path in this plugin.
+  actors: both
+  covers: [F-2.1, F-4.1, T-4, T-5]
+  status: unverified
+  given:
+    - an identity exists
+    - personal space is open
+    - plugin-tasks is enabled — it is off by default outside dev builds
+    - today's JournalEntry does not already contain the literal text "QA quick entry" — ABORT
+      rather than asserting against a dirty fixture
+  test:
+    - name: Append a bullet via the quick-entry path
+      do: Open the QuickEntryDialog (e.g. via its keyboard shortcut) and enter "QA quick entry", then Save.
+      invoke: [op:quickJournalEntry] { text: "QA quick entry" }
+      expect: today's JournalEntry now contains "- [ ] QA quick entry"; a Journal and today's entry
+        were created if either was missing
+      assert: |
+        const journal = (await space.db.query(dxos.Filter.type(Journal)).run()).objects[0];
+        const todayKey = new Date().toISOString().slice(0, 10);
+        const todayRef = journal?.entries?.[todayKey];
+        if (!todayRef) return false;
+        const entry = await todayRef.load();
+        const text = await entry.content.load();
+        return text.content.includes('QA quick entry');
+      note: |
+        `output: void` — Rule 3 applies: the assert checks the effect on TODAY's date-keyed
+        entry specifically, not any entry in the Journal, so a stale entry from a prior run
+        under a different date key cannot satisfy it (Execution Rule 5).
+  after:
+    - name: Remove the bullet
+      do: Open today's journal entry and delete the "QA quick entry" line.
+      expect: the line no longer appears in today's entry
+      note: |
+        NO `invoke` — there is no operation that edits JournalEntry content by line; only the
+        outliner's own CRDT text editing can remove it, so this is a human-only cleanup step.
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl
@@ -331,11 +416,12 @@ ext component
 
 ```mdl
 ext op
-  uri: org.dxos.mdl.op@1.0
+  uri: org.dxos.mdl.op@1.1
   desc: |
     A named operation with typed inputs, outputs, and declared errors.
     Pure ops have no effects or requires. Effectful ops declare both.
   fields:
+    key?: NSID                  # runtime operation key — what the invoker receives
     desc?: Prose
     input?: FieldMap
     output?: TypeExpr

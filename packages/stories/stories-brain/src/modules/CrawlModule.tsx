@@ -81,8 +81,8 @@ const CrawlModuleContainer = ({ space }: { space: Space }) => {
             descendThreads: options.descendThreads,
             seed: { maxDays: options.maxDays },
           });
-          const crawled = yield* (yield* AgentRegistry).list();
-          const stored = yield* (yield* MessageStore).count();
+          const crawled = yield* AgentRegistry.list();
+          const stored = yield* MessageStore.count();
           const messages = crawled.reduce((total, actor) => total + actor.messageCount, 0);
           return { summary, messages, stored };
         }).pipe(

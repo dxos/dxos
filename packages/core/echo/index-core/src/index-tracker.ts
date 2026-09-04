@@ -8,6 +8,7 @@ import * as Migrator from 'effect/unstable/sql/Migrator';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 
+import { SpanAttributes } from '@dxos/effect';
 import { SpaceId } from '@dxos/keys';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
@@ -62,6 +63,9 @@ export class IndexTracker {
     ): Effect.Effect<IndexCursor[], SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
+        if (query.spaceId) {
+          yield* Effect.annotateCurrentSpan(SpanAttributes.SPACE_ID, query.spaceId);
+        }
 
         const spaceIdParam = query.spaceId === undefined ? null : (query.spaceId ?? '');
         const sourceNameParam = query.sourceName === undefined ? null : query.sourceName;
@@ -75,15 +79,13 @@ export class IndexTracker {
             AND (${resourceIdParam} IS NULL OR resourceId = ${resourceIdParam})
         `;
 
-        return rows.map(
-          (row): IndexCursor => ({
-            indexName: row.indexName,
-            spaceId: row.spaceId === '' ? null : Schema.decodeSync(SpaceId)(row.spaceId!),
-            sourceName: row.sourceName,
-            resourceId: row.resourceId === '' ? null : row.resourceId,
-            cursor: row.cursor,
-          }),
-        );
+        return rows.map((row): IndexCursor => ({
+          indexName: row.indexName,
+          spaceId: row.spaceId === '' ? null : Schema.decodeSync(SpaceId)(row.spaceId!),
+          sourceName: row.sourceName,
+          resourceId: row.resourceId === '' ? null : row.resourceId,
+          cursor: row.cursor,
+        }));
       }),
   );
 

@@ -9,6 +9,7 @@ import * as PubSub from 'effect/PubSub';
 import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { EffectEx } from '@dxos/effect';
+import { BaseError, withContext } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ErrorBoundary, ErrorFallback, type FallbackProps } from '@dxos/react-error-boundary';
@@ -20,6 +21,7 @@ import { PluginManagerContext } from '../../context';
 import { type ActivationEvent, type Plugin, PluginManager } from '../../core';
 import { setupDevtools } from '../../devtools';
 import { App, PluginManagerProvider, SurfaceManager, SurfaceManagerProvider } from '../components';
+import { bootLoader } from '../components/App/loader';
 
 const ENABLED_KEY = 'org.dxos.app-framework.enabled';
 
@@ -58,6 +60,54 @@ export type StartupProgress = {
    */
   humanizedName?: string;
 };
+
+/**
+ * Event dispatched on `window` once the `Startup` activation event has fully completed.
+ */
+export const STARTUP_ACTIVATED_EVENT = 'app-framework:startup-activated';
+
+/**
+ * Event dispatched on `window` when startup misses its deadline, carrying
+ * {@link StartupDiagnostics} as `detail`.
+ */
+export const STARTUP_FAILED_EVENT = 'app-framework:startup-failed';
+
+/**
+ * Event dispatched on `window` the first time the app shell renders and the boot loader is
+ * dismissed, carrying the milliseconds since navigation start as `detail`.
+ */
+export const FIRST_INTERACTIVE_EVENT = 'app-framework:first-interactive';
+
+/** Startup did not complete before its deadline. Carries {@link StartupDiagnostics} as context. */
+export class StartupTimeoutError extends BaseError.extend('StartupTimeoutError', 'Startup timed out') {}
+
+/** Where startup had got to when the deadline expired. */
+export type StartupDiagnostics = {
+  /** Which failure produced these: the deadline expiring, or a module refusing to activate. */
+  startupFailureKind: 'timeout' | 'module-error';
+  /** The deadline, in ms; reported for both kinds so the two are comparable. */
+  startupTimeoutMs: number;
+  /** Comma-separated activation events that completed before the failure. */
+  startupEventsFired: string;
+  /** Modules that had finished activating. */
+  startupActivatedModules: number;
+  /** Modules registered in total. */
+  startupTotalModules: number;
+  /** Comma-separated modules still activating, which is the set the stall is in. */
+  startupInFlightModules: string;
+  /** Activation event in flight when the failure hit. */
+  startupLastEvent?: string;
+  /** Comma-separated events queued for replay by a pending reset. */
+  startupPendingReset: string;
+};
+
+declare global {
+  interface WindowEventMap {
+    [STARTUP_ACTIVATED_EVENT]: CustomEvent<void>;
+    [STARTUP_FAILED_EVENT]: CustomEvent<StartupDiagnostics>;
+    [FIRST_INTERACTIVE_EVENT]: CustomEvent<number>;
+  }
+}
 
 export type UseAppOptions = {
   pluginManager?: PluginManager.PluginManager;
@@ -187,12 +237,38 @@ export const useApp = ({
       module: 'org.dxos.app-framework.atom-registry',
     });
 
+    const inFlightModules = new Set<string>();
+
+    const collectDiagnostics = (startupFailureKind: StartupDiagnostics['startupFailureKind']): StartupDiagnostics => ({
+      startupFailureKind,
+      startupTimeoutMs: timeout,
+      startupEventsFired: manager.getEventsFired().join(','),
+      startupActivatedModules: manager.getActive().length,
+      startupTotalModules: manager.getModules().length,
+      startupInFlightModules: [...inFlightModules].join(','),
+      startupLastEvent: progressRef.current.event,
+      startupPendingReset: manager.getPendingReset().join(','),
+    });
+
+    const reportFailure = (diagnostics: StartupDiagnostics) => {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent(STARTUP_FAILED_EVENT, { detail: diagnostics }));
+      }
+    };
+
     const fiber = Effect.gen(function* () {
       const queue = yield* PubSub.subscribe(manager.activation);
       const listener = yield* Effect.forkDetach(
         PubSub.take(queue).pipe(
           Effect.tap(({ event, state, module, error: error$ }) =>
             Effect.sync(() => {
+              if (module) {
+                if (state === 'activating') {
+                  inFlightModules.add(module);
+                } else {
+                  inFlightModules.delete(module);
+                }
+              }
               // Event-level Startup activated (no `module` field) fires once,
               // after every module triggered by Startup has finished. Module
               // activations now also carry their parent event id (so the trace
@@ -214,7 +290,7 @@ export const useApp = ({
                 // import a provider, and consumers can capture the startup
                 // summary without us picking one.
                 if (typeof window !== 'undefined') {
-                  window.dispatchEvent(new CustomEvent('app-framework:startup-activated'));
+                  window.dispatchEvent(new CustomEvent(STARTUP_ACTIVATED_EVENT));
                 }
                 return;
               }
@@ -272,8 +348,10 @@ export const useApp = ({
                 }));
               }
               if (error$ && !readyRef.current) {
-                setError(error$);
+                const diagnostics = collectDiagnostics('module-error');
+                setError(withContext(error$, diagnostics));
                 errorRef.current = error$;
+                reportFailure(diagnostics);
               }
             }),
           ),
@@ -291,15 +369,40 @@ export const useApp = ({
 
     // Set up a timeout for startup.
     const timeoutId = setTimeout(() => {
-      if (!readyRef.current && !errorRef.current) {
-        log.warn('startup timeout diagnostic', {
-          eventsFired: manager.getEventsFired(),
-          activeModules: manager.getActive(),
-          pendingReset: manager.getPendingReset(),
-        });
-        void EffectEx.runAndForwardErrors(Fiber.interrupt(fiber));
-        setError(new Error(`Startup timed out after ${timeout}ms`));
+      if (readyRef.current || errorRef.current) {
+        return;
       }
+
+      const diagnostics = collectDiagnostics('timeout');
+
+      log.warn('startup timeout diagnostic', { ...diagnostics, activeModules: manager.getActive() });
+
+      const abort = () => {
+        void EffectEx.runAndForwardErrors(Fiber.interrupt(fiber));
+        setError(
+          withContext(new StartupTimeoutError({ message: `Startup timed out after ${timeout}ms` }), diagnostics),
+        );
+        reportFailure(diagnostics);
+      };
+
+      // In development the deadline is a symptom, not a verdict: a cold OPFS, a rebuild or a paused
+      // debugger all overrun it while the run is perfectly healthy, and killing it discards the
+      // state worth looking at. Startup continues either way and the user decides — the offer raises
+      // exactly the failure this branch used to raise unprompted.
+      //
+      // The missing-`stalled` case does NOT fall through to failing: the loader is inlined into
+      // `index.html` at build time, so a page served before this shipped has the old bundle, and
+      // treating that as fatal would resurrect the dialog precisely where dev asked for a button.
+      if (import.meta.env?.DEV) {
+        if (bootLoader?.stalled) {
+          bootLoader.stalled(abort);
+        } else {
+          log.warn('startup timed out; boot loader cannot offer an abort (stale inlined bundle?)', { timeout });
+        }
+        return;
+      }
+
+      abort();
     }, timeout);
 
     return () => {
@@ -315,7 +418,7 @@ export const useApp = ({
   const progressRef = useRef(startupProgress);
   progressRef.current = startupProgress;
 
-  const surfaces = useMemo(() => new SurfaceManager(manager.capabilities), [manager]);
+  const surfaces = useMemo(() => new SurfaceManager(manager.capabilities, manager), [manager]);
 
   return useCallback(
     () => (

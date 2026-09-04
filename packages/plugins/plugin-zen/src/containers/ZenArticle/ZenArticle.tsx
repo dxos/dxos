@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Panel } from '@dxos/react-ui';
+import { Flex, Panel } from '@dxos/react-ui';
 import { Oscilloscope } from '@dxos/react-ui-audio';
 
 import { Mixer } from '#components';
@@ -21,9 +21,9 @@ export const ZenArticle = ({ role, subject: dream, attendableId: _attendableId }
     <Panel.Root role={role} classNames='dx-document'>
       <Panel.Content classNames='grid grid-rows-[3fr_1fr]'>
         <Mixer dream={dream} engine={engine} />
-        <div className='flex flex-col p-2'>
+        <Flex column classNames='p-2'>
           <Oscilloscope mode='waveform' active={playing} source={outputNode} />
-        </div>
+        </Flex>
       </Panel.Content>
     </Panel.Root>
   );

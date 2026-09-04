@@ -353,7 +353,7 @@ triggerable routine driving a **cursored** pipeline over the Mailbox feed — th
 
 ## Mailbox pipeline suite (2026-08-12, autonomous session)
 
-Six pipelines over the FeedPipeline workbench plus a summarization tier and the orchestrator that
+Six pipelines over the MailboxAnalyze workbench plus a summarization tier and the orchestrator that
 cascades them, shipped on **PR #12546** (branch `claude/mailbox-research-1e4396`, opened
 after #12538 landed). Test index: `packages/stories/stories-inbox/AUDIT.md`; product plan:
 `packages/plugins/plugin-inbox/docs/PLAN.md` § "Mailbox pipelines → product".
@@ -912,7 +912,7 @@ term Topic may be renamed `Project` and generalized beyond email (threads, task 
       with the nexus schema.
 - [x] **Create Topic from the nav menu** — plugin-brain `CreateObject` capability (`SpaceCapabilities.CreateObjectEntry`
       for `Topic.Topic`) creates the Topic + an `Instructions` (seeded default brief, drives the agent) and
-      links them; wired the `+` action into the Topics type-section (`OpenCreateObject`). Registered via
+      links them; wired the `+` action into the Topics type-section (`OpenObjectForm`). Registered via
       `addCreateObjectModule`. Added `@dxos/plugin-space` dep.
 - [x] **Storybooks in plugin-brain** — co-located `TopicArticle.stories.tsx` + `FactsCompanion.stories.tsx`
       (contributes a seeded `FactStoreRegistry`); added the `storybook`/`ts-test-storybook` tags,

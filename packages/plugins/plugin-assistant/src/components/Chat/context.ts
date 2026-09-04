@@ -4,14 +4,15 @@
 
 import { createContext } from '@radix-ui/react-context';
 
-import { type Chat as ChatModule } from '@dxos/assistant-toolkit';
+import { type Alarm } from '@dxos/assistant';
+import type * as ChatModule from '@dxos/assistant/Chat';
 import { type Event } from '@dxos/async';
 import { type Database } from '@dxos/echo';
-import { type MarkdownStreamController } from '@dxos/react-ui-markdown';
+import { type ChatThreadController } from '@dxos/react-ui-assistant';
+import { type MessageRange } from '@dxos/react-ui-feed';
 import { type Message } from '@dxos/types';
 
 import { type AiChatProcessor } from '../../processor';
-import { type MessageSpan } from '../ChatThread';
 import { type ChatEvent } from './events';
 
 /**
@@ -31,17 +32,38 @@ export type ChatContextValue = {
   db?: Database.Database;
   chat?: ChatModule.Chat;
   messages: Message.Message[];
+  /** Queued input the agent has not taken up yet, in append order. */
+  queued: Message.Message[];
+  /** Alarms still waiting to fire, earliest first. */
+  alarms: Alarm.Alarm[];
+  /** Removes a queued message or a pending alarm from the feed. */
+  onCancel: (item: Message.Message | Alarm.Alarm) => void;
   processor: AiChatProcessor;
   requestTiming: ChatRequestTiming | null;
-  /** The thread's editor controller, shared between `Chat.Thread` and `Chat.Minimap`. */
-  controller: MarkdownStreamController | null;
-  setController: (controller: MarkdownStreamController | null) => void;
-  /** Per-message document offset ranges, published by `Chat.Thread`'s syncer. */
-  messageRanges: MessageSpan[];
-  setMessageRanges: (ranges: MessageSpan[]) => void;
+  /** The thread's controller, shared between `Chat.Thread` and `Chat.Outline`. */
+  controller: ChatThreadController | null;
+  setController: (controller: ChatThreadController | null) => void;
+  /** The visible index range, published by `Chat.Thread` as the reader scrolls. */
+  visibleRange?: MessageRange;
+  setVisibleRange: (range: MessageRange | undefined) => void;
 };
 
 // Internal: not re-exported from `Chat/index.ts`. Accessed by sibling components in this
 // package (e.g. `ChatStreamStatus`) without dragging in `Chat.tsx`'s heavy transitive
 // imports (transcription, etc.).
 export const [ChatContextProvider, useChatContext] = createContext<ChatContextValue>('Chat');
+
+/**
+ * Report path for agent-requested surfaces rendered inside the thread (`<surface>` blocks): a
+ * completed inline flow (a connector authorized, a plugin enabled) has to reach the agent, which
+ * otherwise waits on a click it never observes. `submit` posts the report as an ordinary user turn.
+ */
+export type ChatReportContextValue = {
+  submit: (text: string) => void;
+};
+
+// Defaulted (unlike `ChatContext`) so a surface rendered outside a chat — a storybook, a standalone
+// preview — drops its report instead of throwing.
+export const [ChatReportContextProvider, useChatReportContext] = createContext<ChatReportContextValue>('ChatReport', {
+  submit: () => {},
+});

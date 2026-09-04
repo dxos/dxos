@@ -68,9 +68,9 @@ const buildSampleText = (): string => {
 
 const sampleText = buildSampleText();
 
-type StoryProps = { text: string };
+type StoryArgs = { text: string };
 
-const DefaultStory = ({ text }: StoryProps) => {
+const DefaultStory = ({ text }: StoryArgs) => {
   const { themeMode } = useThemeContext();
   const [collapsed, setCollapsed] = useState(false);
   const extensions = useMemo(() => chatExtensions(themeMode), [themeMode]);
@@ -80,7 +80,7 @@ const DefaultStory = ({ text }: StoryProps) => {
     <Panel.Root>
       <Panel.Toolbar>
         <Toolbar.Root classNames='dx-document'>
-          <SystemIconButton.Expander
+          <SystemIconButton.Disclosure
             active={!collapsed}
             label={collapsed ? 'Expand all' : 'Collapse all'}
             onClick={() => {
@@ -99,7 +99,7 @@ const DefaultStory = ({ text }: StoryProps) => {
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content classNames='grid overflow-hidden'>
-        <div ref={parentRef} className='dx-expander' />
+        <div ref={parentRef} className='dx-expand' />
       </Panel.Content>
     </Panel.Root>
   );

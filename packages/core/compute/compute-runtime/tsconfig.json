@@ -29,6 +29,9 @@
       "path": "../../../sdk/types"
     },
     {
+      "path": "../../echo/blob"
+    },
+    {
       "path": "../../echo/echo"
     },
     {

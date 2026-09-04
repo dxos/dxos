@@ -12,7 +12,7 @@ inputs:
     description: 'Cloud Release application name'
     required: true
   environment:
-    description: Target environment (labs | staging | production) — selects the channel.
+    description: Target environment (dev | preview | staging | production) — selects the channel.
     required: true
   framework:
     description: 'Cloud Release framework'

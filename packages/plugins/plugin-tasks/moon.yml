@@ -1,6 +1,7 @@
 layer: library
 language: typescript
 tags:
+  - composer-plugin
   - ts-vite-build
   - ts-test
   - ts-test-storybook
@@ -14,12 +15,13 @@ tasks:
   check-module-structure:
     # Handler set registered by the headless host.
     command: >-
-      pnpm exec dx-trace-imports
-      --export ./operations
+      bun $workspaceRoot/tools/dx-trace-imports/cli.js
+      --export ./TasksOperationHandlerSet
       --to "@dxos/react-ui"
       --to react
       --to react-dom
       --conditions workerd,worker
+      --conditions node
       --fail-on present
     deps:
       - dx-trace-imports:build

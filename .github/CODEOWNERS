@@ -1,2 +1,5 @@
 .vscode/settings.json @dmaretskyi @wittjosiah
 .prototools @dmaretskyi @wittjosiah
+# What composer.space actually ships. Adding or removing a plugin here changes the production app's
+# surface area and its bundle, so it is always reviewed.
+packages/apps/composer-app/src/plugin-defs.production.tsx @wittjosiah

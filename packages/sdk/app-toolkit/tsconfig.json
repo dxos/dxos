@@ -18,13 +18,13 @@
       "path": "../../common/errors"
     },
     {
+      "path": "../../common/graph"
+    },
+    {
       "path": "../../common/i18n"
     },
     {
       "path": "../../common/invariant"
-    },
-    {
-      "path": "../../common/keyboard"
     },
     {
       "path": "../../common/keys"
@@ -63,6 +63,9 @@
       "path": "../../core/protocols"
     },
     {
+      "path": "../../ui/react-primitives/react-focus"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {
@@ -91,6 +94,12 @@
     },
     {
       "path": "../client-protocol"
+    },
+    {
+      "path": "../config"
+    },
+    {
+      "path": "../migrations"
     },
     {
       "path": "../react-client"

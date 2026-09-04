@@ -1,0 +1,330 @@
+---
+id: org.dxos.plugin.streamDeck
+name: StreamDeckPlugin
+version: 0.1.0
+---
+
+Projects a Composer space onto Stream Deck hardware: the space's favorites on the keys, running
+tasks or space statistics on the dials.
+
+The device itself is driven by a separate Elgato plugin (`@dxos/composer-stream-deck`), because
+Elgato's application holds the HID device exclusively while it runs. This plugin is the brain: it
+builds the model from ECHO, renders every key as an SVG string, and publishes frames over a loopback
+WebSocket. Design: `agents/superpowers/specs/2026-08-19-stream-deck-design.md`.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`       |
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
+| `component` | `org.dxos.mdl.component@1.0`  |
+| `flow`      | `org.dxos.mdl.flow@1.0`       |
+
+## Types
+
+```mdl
+type DeviceProfile
+  desc: Physical characteristics of a Stream Deck model, reported by the device plugin.
+  fields:
+    model: string
+    keys: number
+    dials: number
+    keySize: [number, number]     # key image size in pixels
+    dialSize: [number, number]    # touch-strip segment size, one per dial
+```
+
+```mdl
+type Shortcut
+  desc: What one key shows. Produced by the model, consumed by the renderer; never crosses the wire.
+  fields:
+    target: string                # graph navigation path; the press target
+    label: string
+    icon: string                  # sprite icon name, e.g. ph--house--regular
+    hue?: string                  # chromatic palette name
+```
+
+```mdl
+type MetricSpec
+  desc: What one touch-strip segment shows — a running task, or a statistic when nothing is running.
+  fields:
+    kind: progress | stat
+    title: string
+    ratio?: number                # progress only; absent when the task reports no total
+    detail?: string               # progress only
+    value?: string                # stat only
+```
+
+```mdl
+type SpaceStats
+  fields:
+    objects: number
+    feeds: number
+    types: number
+    plugins: number
+```
+
+```mdl
+type KeyImage
+  desc: One rendered key on the wire. Elgato's setImage accepts SVG, so nothing is rasterised.
+  fields:
+    svg: string
+    target?: string               # echoed back with a press, so the device stays stateless
+```
+
+```mdl
+type DialFeedback
+  desc: One touch-strip segment on the wire, expressed semantically rather than as an Elgato layout.
+  fields:
+    title: string
+    value: string
+    bar?: number                  # fraction in [0, 1]
+```
+
+```mdl
+type Frame
+  desc: The full display state. A null slot is cleared.
+  fields:
+    keys: KeyImage?[]
+    dials: DialFeedback?[]
+```
+
+```mdl
+type BridgeStatus
+  desc: Live connection state, published so surfaces can read it without opening a connection.
+  fields:
+    state: idle | connecting | connected | incompatible
+    device?: DeviceProfile
+```
+
+## Components
+
+```mdl
+component VirtualStreamDeck
+  desc: On-screen replica rendering the very frame the device is sent, so the two cannot drift.
+```
+
+```mdl
+component StreamDeckStatus
+  desc: Rail indicator, rendered only while a device is attached.
+```
+
+```mdl
+component StreamDeckDashboard
+  desc: Space-level deck companion previewing the hardware; renders the frame but does not send it.
+```
+
+## Features
+
+```mdl
+feat F-1: Favorites on the keys
+
+  req F-1.1: A key shows an object carrying the space's `favorite` ECHO tag, with its icon and name.
+  req F-1.2: The favorite tag is resolved by label among keyless tags; a keyed provider tag labelled
+    "favorite" belongs to that provider and is ignored.
+  req F-1.3: Slots are filled from a stable sort (label, then path); positions are not persisted.
+  req F-1.4: A favorite with no derivable navigation path is dropped rather than shown as a dead key.
+  req F-1.5: Pressing a key opens that object and brings the window forward.
+```
+
+```mdl
+feat F-2: Monitors and statistics on the dials
+
+  req F-2.1: While any task is pending or running, each segment shows one task with a progress bar.
+  req F-2.2: A task reporting no total shows as indeterminate rather than as zero progress.
+  req F-2.3: With nothing running, the segments show the space's object, feed, type and plugin counts.
+  req F-2.4: Finished and failed tasks do not occupy a segment.
+```
+
+```mdl
+feat F-3: Rendering
+
+  req F-3.1: A key is rendered as an SVG string at the device's pixel size, with the icon inlined from
+    the app's sprite — a sprite reference cannot resolve outside the document.
+  req F-3.2: Labels are wrapped to two lines and ellipsised; every interpolated label is XML-escaped.
+  req F-3.3: Colours are literal, because the device cannot resolve the theme's CSS custom properties.
+  req F-3.4: The panel and the device are sent the identical frame.
+```
+
+```mdl
+feat F-4: The bridge
+
+  req F-4.1: Composer dials into the device plugin, which listens; a browser tab cannot accept
+    connections, and the Elgato-hosted process outlives any Composer window.
+  req F-4.2: A failed connection is the normal case (most users have no device plugin) and retries
+    quietly with backoff from 1s to 30s, surfacing no error.
+  req F-4.3: A protocol version mismatch stops rather than reconnecting, since a retry cannot fix it.
+  req F-4.4: A frame identical to the last one is not published.
+  req F-4.5: Exactly one bridge exists — the headless driver owns it, and surfaces read
+    `BridgeStatus` instead of connecting themselves.
+  req F-4.6: The driver runs with no surface rendered, so the keys stay live with the panel closed.
+```
+
+## Acceptance
+
+```mdl
+test T-1: Favorites appear in a stable order
+  given: a space with objects tagged `favorite`, one of them added after the others
+  then: the keys are ordered by label, and adding a favorite does not reorder the others by chance
+```
+
+```mdl
+test T-2: A provider tag does not masquerade as the favorite tag
+  given: a tag labelled "favorite" carrying a foreign key
+  then: no favorites are shown
+```
+
+```mdl
+test T-3: A running task takes over the strip
+  given: a pending or running progress task and a space with statistics
+  then: the first segment shows the task with a bar, and the remaining segments are cleared
+```
+
+```mdl
+test T-4: The device shows the offline state when Composer is absent
+  given: the device plugin running with no client connected
+  then: every placed key and dial renders the offline state
+```
+
+```mdl
+test T-5: A press reaches Composer with its slot
+  given: two Favorite keys placed at columns 0 and 1
+  when: the key at column 1 is pressed
+  then: Composer receives a keyDown for slot 1 and opens the object that key was showing
+```
+
+```mdl
+test T-6: An incompatible device plugin does not loop
+  given: a device plugin announcing a different protocol version
+  then: the bridge reports `incompatible` and makes no further connection attempts
+```
+
+---
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: A favorite appears on the virtual deck
+  desc: |
+    The part of the round-trip observable without Stream Deck hardware: tag an object as a
+    favorite and confirm it renders on `VirtualStreamDeck`, the on-screen replica that is sent
+    the identical frame as the device (F-3.4). This plugin declares no operations of its own —
+    favoriting goes through `space.addTag`, owned by `plugin-space`.
+  actors: both
+  covers: [F-1.1, F-1.3, F-3.1, F-3.4, T-1]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-stream-deck is enabled — it is `isDev`-gated both for availability and in defaults
+      (`plugin-defs.tsx`: `isDev && StreamDeckPlugin.make()`), so it is OFF outside dev builds
+    - document: a Document named "QA Favorite" already exists in the space, with no `favorite`
+      tag on it — ABORT rather than tagging or deleting one this flow did not create
+    - favoriteTag: a keyless Tag object labelled "favorite" (query for one before creating
+      another, per `SpaceOperation.AddTag`'s own guidance)
+  test:
+    - name: Tag the document as a favorite
+      do: Right-click "QA Favorite" in the navtree and choose "Add to favorites" (or apply the
+        `favorite` tag from the tag picker).
+      invoke: org.dxos.operation.space.addTag { tag: $given.favoriteTag, object: $given.document }
+      capture: tagged
+      expect: "QA Favorite" carries a keyless tag labelled "favorite"
+      assert: return $tagged.object.tags?.some((t) => t.label === 'favorite' && !t.key);
+      note: |
+        MUST be keyless — F-1.2 says a keyed provider tag also labelled "favorite" belongs to
+        that provider and is ignored, so this step's assert is the one place that distinction is
+        falsifiable.
+    - name: Open the deck dashboard
+      do: Open the space's Stream Deck companion panel (StreamDeckDashboard).
+      expect: VirtualStreamDeck shows a key labelled "QA Favorite" with its document icon
+      note: |
+        NO invoke — VirtualStreamDeck is a read-only render of the same model the bridge sends
+        (F-3.4); there is no operation to invoke, only a surface to observe.
+    - name: Press the key on the virtual deck
+      do: Click the "QA Favorite" key in VirtualStreamDeck.
+      expect: "QA Favorite" opens and its window comes forward (F-1.5)
+  after:
+    - name: Remove the favorite tag
+      do: Right-click "QA Favorite" and remove the "favorite" tag.
+      invoke: org.dxos.operation.space.removeTag { tag: $given.favoriteTag, object: $given.document }
+      expect: the key no longer appears on VirtualStreamDeck
+```
+
+```mdl
+flow QA-2: Real hardware round-trip
+  desc: The device-attached path — a real Stream Deck key press reaching Composer.
+  actors: human
+  covers: [F-4.1, F-4.5, T-5]
+  status: blocked
+  given:
+    - the `@dxos/composer-stream-deck` Elgato plugin is installed and a physical Stream Deck is
+      attached
+    - Composer is running with plugin-stream-deck enabled and has at least one favorite placed
+  test:
+    - name: Press a physical key
+      do: Press the key showing a favorite on the physical device.
+      expect: Composer receives the keyDown for that slot and opens the object that key was
+        showing (T-5)
+      blocked: |
+        Requires physical Stream Deck hardware and the separate Elgato-hosted process holding the
+        HID device (F-4.1) — neither the debug port nor this repo's dev tooling can simulate a
+        HID key press. Per Execution Rule 9, the flow's status is `blocked`, not `failing`.
+  after:
+    - name: No teardown
+      do: No ECHO state is created by a key press; nothing to undo.
+      expect: the deck returns to its idle page with the favorite still bound
+```
+
+---
+
+## Appendix: Extension Definitions
+
+Extension block types used in this document are defined below using
+the core `ext` primitive — the only construct the base language provides.
+
+```mdl
+ext type
+  uri: dxos.spec/ext/type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap        # name[?]: TypeExpr  (# inline comment)
+    literals?: UnionList     # a | b | c
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: dxos.spec/ext/feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self              # feat blocks may contain feat blocks
+```
+
+```mdl
+ext test
+  uri: dxos.spec/ext/test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: dxos.spec/ext/component@1.0
+  desc: A UI component with a described purpose.
+  fields:
+    desc?: Prose
+```

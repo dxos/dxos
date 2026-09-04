@@ -38,11 +38,11 @@ const TestMonitor = Layer.succeed(Trigger.TriggerMonitorService, {
 });
 
 /**
- * Stand-in for a connector's sync operation: like `InboxOperation.GoogleMailSync` it destructures a
+ * Stand-in for a connector's sync operation: like `GoogleOperation.GoogleMailSync` it destructures a
  * required input, so a run that supplies none throws before the handler body.
  */
 const TestRunnable = Operation.make({
-  meta: { key: DXN.make('org.dxos.test.runnable'), name: 'Test Runnable' },
+  meta: { key: DXN.make('com.example.operation.test.runnable'), name: 'Test Runnable' },
   input: Schema.Struct({ label: Schema.Any }),
   output: Schema.Void,
 });

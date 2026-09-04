@@ -9,47 +9,65 @@ import { SpaceId } from '@dxos/keys';
 
 import { type ToolFailure, failure } from './failure';
 
-export const idParameter = Schema.optional(Schema.String).annotate({
-  // The default exists so a read is cheap to issue, not so a write can skip choosing. It is
-  // whichever space the session happens to list first — no relationship to the caller's task — so
-  // an agent that treats "it defaulted" as "it picked the right one" files work into an arbitrary
-  // space. Said plainly here because this description is ambient, while any project's rule about
-  // which space to use lives in a skill the agent may never have loaded.
+export const idParameter = Schema.optional(SpaceId).annotate({
   description:
-    'Space to operate on. Omitting it falls back to the first space in the session context (see ' +
-    'whoami), which is an arbitrary choice, not an inferred one. Pass it explicitly whenever the ' +
-    'call writes, and take the value from the caller or from a reference already in hand rather ' +
-    'than guessing from space names.',
+    'Space to operate on. Required for any operation that acts on a space: nothing is inferred, ' +
+    'and a call that names no space is refused rather than run somewhere arbitrary. Take the value ' +
+    'from the caller, from whoami, or from a reference already in hand — never from guessing at ' +
+    'space names. Omit it for an operation that does not act on a space, or when a reference ' +
+    'argument already names the space it belongs to.',
 });
 
 /**
- * Resolves the target space for a tool call against the session's space context.
- * When the session context is non-empty, an explicit `spaceId` must be inside it;
- * a session with an empty context may pass any valid `spaceId` explicitly.
+ * Resolves the target space for a tool call to the one the caller named, and to nothing else.
+ *
+ * Deliberately without a session default: the session's first space has no relationship to the
+ * caller's task, so defaulting to it files work into an arbitrary space — and a listing tool is
+ * how an agent is supposed to choose, not a fallback. `required` is what the operation itself says
+ * ({@link view.requiresSpace}): a verb that acts on a space must be told which one, while a verb
+ * that asks about the host runs without any.
+ *
+ * Empty is distinguished from omitted because overloading empty as unrestricted would invert a
+ * host's filter exactly when it excluded everything.
  */
 export const resolveId = (
-  sessionSpaceIds: readonly string[],
+  sessionSpaceIds: readonly string[] | undefined,
   spaceId: string | undefined,
-): Effect.Effect<string, ToolFailure, never> => {
-  const resolved = spaceId ?? sessionSpaceIds[0];
-  if (!resolved) {
-    return Effect.fail(
-      failure('invalid_request', 'No space in session context. Pass spaceId or re-authorize with a space id.'),
-    );
+  { required }: { required: boolean },
+): Effect.Effect<SpaceId | undefined, ToolFailure, never> => {
+  if (spaceId === undefined) {
+    return required
+      ? Effect.fail(
+          failure(
+            'invalid_request',
+            'This operation acts on a space, so it needs one named: pass spaceId, or an argument ' +
+              'referencing an object in the space. whoami lists the spaces this session can use.',
+          ),
+        )
+      : Effect.succeed(undefined);
   }
-  if (!SpaceId.isValid(resolved)) {
-    return Effect.fail(failure('invalid_request', `Invalid spaceId: ${resolved}`));
-  }
-  if (sessionSpaceIds.length > 0 && !sessionSpaceIds.includes(resolved)) {
+  if (sessionSpaceIds != null && sessionSpaceIds.length === 0) {
     return Effect.fail(
       failure(
         'space_not_in_context',
-        `Space is not in the session context: ${resolved}. The session was authorized for a fixed ` +
+        'No space is addressable in this session. Create or join a space, or re-authorize this ' +
+          'connection with a space id.',
+      ),
+    );
+  }
+  if (!SpaceId.isValid(spaceId)) {
+    return Effect.fail(failure('invalid_request', `Invalid spaceId: ${spaceId}`));
+  }
+  if (sessionSpaceIds != null && !sessionSpaceIds.includes(spaceId)) {
+    return Effect.fail(
+      failure(
+        'space_not_in_context',
+        `Space is not in the session context: ${spaceId}. The session was authorized for a fixed ` +
           'set of spaces; ask the user to re-authorize this connection including that space id.',
       ),
     );
   }
-  return Effect.succeed(resolved);
+  return Effect.succeed(spaceId);
 };
 
 /** `echo://<spaceId>/<entityId>`, or `echo:///<entityId>` when the reference is space-less. */

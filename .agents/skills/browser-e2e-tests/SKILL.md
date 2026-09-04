@@ -93,6 +93,10 @@ Every interaction lives behind a page-object so specs read as intent, not select
 - `PLAYWRIGHT_BROWSER=chromium|firefox|webkit|all` selects projects; many tests are chromium-only
   via `test.skip(browserName !== 'chromium')`.
 - CI: the `Check` `e2e` job runs only on main/release or `workflow_dispatch e2e=true`.
+- `DX_HARNESS_THROTTLED=1` enables the startup harness's throttled cold start (chromium-only, CDP).
+  Its profile defaults to Fast 3G + 2x CPU and each field is overridable via `DX_HARNESS_LATENCY_MS`,
+  `DX_HARNESS_DOWN_MBPS`, `DX_HARNESS_UP_KBPS`, `DX_HARNESS_CPU` (`throttleProfile` in
+  `harness-helpers.ts`). Override when the default cannot reach ready inside `waitForReady`.
 
 ## Waiting & stability
 

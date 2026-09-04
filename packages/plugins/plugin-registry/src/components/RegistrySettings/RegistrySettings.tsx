@@ -6,7 +6,7 @@ import React, { useCallback, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { log } from '@dxos/log';
-import { AlertDialog, Button, Input, Message, useTranslation } from '@dxos/react-ui';
+import { AlertDialog, Banner, Button, Input, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -118,11 +118,11 @@ export const RegistrySettings = ({
             </Form.Section>
           )}
           <Form.Section title={t('dev-plugin.section.title')}>
-            <Message.Root valence='neutral'>
-              <Message.Content>
-                <Message.Body>{t('dev-plugin.description')}</Message.Body>
-              </Message.Content>
-            </Message.Root>
+            <Banner.Root valence='neutral'>
+              <Banner.Content>
+                <Banner.Body>{t('dev-plugin.description')}</Banner.Body>
+              </Banner.Content>
+            </Banner.Root>
             <Form.Row label={t('dev-plugin.url.label')} description={t('dev-plugin.url.description')}>
               <Input.Root>
                 <Input.TextInput
@@ -145,11 +145,11 @@ export const RegistrySettings = ({
               </Button>
             </Form.Row>
             {enabled && !loadedDevId && !busy && (
-              <Message.Root valence='warning'>
-                <Message.Content>
-                  <Message.Body>{t('dev-plugin.not-loaded.message')}</Message.Body>
-                </Message.Content>
-              </Message.Root>
+              <Banner.Root valence='warning'>
+                <Banner.Content>
+                  <Banner.Body>{t('dev-plugin.not-loaded.message')}</Banner.Body>
+                </Banner.Content>
+              </Banner.Root>
             )}
           </Form.Section>
         </Form.Content>

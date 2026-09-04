@@ -13,13 +13,18 @@ import * as RoutineEvents from '@dxos/plugin-routine/RoutineEvents';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-import { ContactMessageExtractor, SummarizeMessageExtractor } from '#operations';
+import { MessageExtractor } from '#operations';
+import { translations } from '#translations';
 import { InboxCapabilities } from '#types';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const Schema = AppCapability.schema(() => import('./schema'));
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
+  environments: ['node'],
+});
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
+  environments: ['node'],
+});
 export const IdentitySpecs = Capability.lazyModule(
   'IdentitySpecs',
   { provides: [SpaceCapabilities.IdentitySpec] },
@@ -28,12 +33,18 @@ export const IdentitySpecs = Capability.lazyModule(
 export const ContactExtractor = Capability.inlineModule(
   'contact-extractor',
   { provides: [InboxCapabilities.ObjectExtractor] },
-  () => Effect.succeed([Capability.contribute(InboxCapabilities.ObjectExtractor, ContactMessageExtractor)]),
+  () =>
+    Effect.succeed([
+      Capability.contribute(InboxCapabilities.ObjectExtractor, MessageExtractor.ContactMessageExtractor),
+    ]),
 );
 export const SummarizeExtractor = Capability.inlineModule(
   'summarize-extractor',
   { provides: [InboxCapabilities.ObjectExtractor] },
-  () => Effect.succeed([Capability.contribute(InboxCapabilities.ObjectExtractor, SummarizeMessageExtractor)]),
+  () =>
+    Effect.succeed([
+      Capability.contribute(InboxCapabilities.ObjectExtractor, MessageExtractor.SummarizeMessageExtractor),
+    ]),
 );
 export const MailboxProcessors = Capability.lazyModule(
   'MailboxProcessors',
@@ -47,9 +58,6 @@ export const AutomationTemplates = Capability.lazyModule(
 );
 export const NavigationTargetResolver = AppCapability.navigationResolver(() => import('./navigation-target-resolver'), {
   requires: [ClientCapabilities.Client],
-  // Graph start, not the inbox's own: a deep link is resolved before any inbox surface exists,
-  // so gating this on the surface that the resolution leads to would never resolve.
-  activatesOn: ActivationEvents.Idle,
 });
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
@@ -68,3 +76,4 @@ export const InboxSettings = AppCapability.settings(() => import('./settings'), 
   provides: [InboxCapabilities.Settings],
   activatesOn: ActivationEvents.Idle,
 });
+export const Translations = AppCapability.translations(translations);

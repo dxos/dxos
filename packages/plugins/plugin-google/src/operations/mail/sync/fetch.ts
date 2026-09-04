@@ -20,12 +20,17 @@ import { GoogleMailApi, type GoogleMailApiError, type GoogleMailApiService } fro
 import { GoogleApiError } from '../../../errors';
 import { type AttachmentMetadata } from '../mapper';
 
-/** Gmail's streaming-pipeline tuning; see {@link SyncStreamConfig.SyncStreamConfig}. */
+/**
+ * Gmail's streaming-pipeline tuning; see {@link SyncStreamConfig.SyncStreamConfig}.
+ *
+ * `maxItemsPerRun` is sized for the smallest host that runs this sync — a 128 MB Cloudflare Workers
+ * isolate — because it bounds the messages fetched, and so the ECHO documents held, per run.
+ */
 export const GOOGLE_SYNC_CONFIG = {
   listPageSize: 500,
   fetchConcurrency: 5,
   commitPageSize: 10,
-  maxItemsPerRun: 500,
+  maxItemsPerRun: 100,
   dateChunkDays: 7,
 } as const satisfies SyncStreamConfig.SyncStreamConfig;
 
@@ -281,15 +286,13 @@ export const fetchAttachments = (
           Effect.flatMap((body) =>
             // The single-arg form suffices: `catchAll` below discards the error regardless of its
             // shape, so there's no reason to map it to a specific type here.
-            Effect.try(
-              (): EmailStage.Attachment => ({
-                name: attachment.filename,
-                mimeType: attachment.mimeType,
-                size: attachment.size,
-                bytes: Buffer.from(base64UrlToBase64(body.data ?? ''), 'base64'),
-                contentId: attachment.contentId,
-              }),
-            ),
+            Effect.try((): EmailStage.Attachment => ({
+              name: attachment.filename,
+              mimeType: attachment.mimeType,
+              size: attachment.size,
+              bytes: Buffer.from(base64UrlToBase64(body.data ?? ''), 'base64'),
+              contentId: attachment.contentId,
+            })),
           ),
           Effect.catch((error) => {
             log.catch(error, { messageId, attachmentId: attachment.attachmentId });

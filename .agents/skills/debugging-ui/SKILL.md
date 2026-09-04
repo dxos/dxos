@@ -97,6 +97,23 @@ change (port, env, restart), state the intent and ask.
 If you cannot drive a browser at all, say so in your first report and agree the
 verification protocol up front — do not discover this mid-loop.
 
+## Check the classes are real before debugging the layout
+
+A layout that is "wrong for no reason" is often a class that does not exist. The
+`tailwindcss-logical` dialect (`pis-*`, `pbs-*`, `pli-*`, `mis-*`, `is-*`, `bs-*`, `min-bs-*`, …) was
+dropped in the Tailwind v4 migration and compiles to **nothing** — no error, no lint, no warning.
+
+Before forming a hypothesis about a spacing, sizing or overflow bug:
+
+```bash
+git diff | grep -nE '\b(p|m)(is|ie|bs|be|li|lb)-|\b(min-|max-)?(is|bs)-'
+```
+
+Then confirm in the browser rather than in the source: read the element's computed style and check the
+property is actually set. A class that produces no rule is invisible in the source and obvious in
+`getComputedStyle` — which is the cheapest rung on the ladder below, and the one to try first when the
+symptom is geometric. Replacement table in **composer-ui** § "Sizing vs logical utilities".
+
 ## The isolation ladder
 
 Start at the level where the bug manifests — usually the app. **After 2–3 failed
@@ -200,6 +217,9 @@ Every status message to the user is, in order:
 
 - `debugging` — @dxos/log runtime instrumentation pipeline (app.log / test-browser.log,
   `#region DEBUG` markers, query-logs.mjs) for hypothesis testing at any ladder level.
+- `reactivity` — when the symptom is stale or missing data (updates only after navigating
+  away and back, items absent on cold load), the diagnosis usually lands on one of its
+  numbered anti-patterns; load it before writing the fix.
 - `composer-ui` — storybook setup and story conventions for new fixtures.
 - `browser-e2e-tests` — Playwright targeting rules (data-testid) when a repro
   graduates to a regression spec.

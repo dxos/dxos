@@ -31,6 +31,9 @@
       "path": "../../../plugins/plugin-sandbox"
     },
     {
+      "path": "../../../plugins/plugin-space"
+    },
+    {
       "path": "../../../plugins/plugin-testing"
     },
     {
@@ -56,6 +59,9 @@
     },
     {
       "path": "../ai"
+    },
+    {
+      "path": "../assistant"
     },
     {
       "path": "../assistant-toolkit"

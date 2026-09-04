@@ -12,7 +12,9 @@ import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
 import { Feed, Filter, JsonSchema, Key, Obj, Query, type QueryAST, Ref, Scope, Tag } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID } from '@dxos/keys';
-import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
+import { Connection, Cursor } from '@dxos/link';
+import * as Binding from '@dxos/plugin-connector/Binding';
+import * as GoogleOperation from '@dxos/plugin-google/GoogleOperation';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { type Space } from '@dxos/react-client/echo';
@@ -128,6 +130,19 @@ export const generator = () => ({
         const tag = await space.db.query(Filter.type(Tag.Tag, { label: 'Investor' })).first();
         const tagUri = Obj.getURI(tag);
 
+        // The sync operation is account-level: the trigger input names the connection that
+        // authenticates the mailbox's binding, not the mailbox itself.
+        const cursors = await space.db.query(Filter.type(Cursor.Cursor)).run();
+        const binding = cursors.find(
+          (cursor): cursor is Cursor.ExternalCursor => Cursor.isExternal(cursor) && Binding.targets(cursor, mailbox),
+        );
+        invariant(binding, 'Mailbox has no sync binding');
+        // Matched by entity id (`Binding.isForConnection`), not by ref-prop equality — a raw filter
+        // compares `echo:` URI spellings, which vary for one object and can never-match.
+        const connections = await space.db.query(Filter.type(Connection.Connection)).run();
+        const connection = connections.find((candidate) => Binding.isForConnection(binding, candidate));
+        invariant(connection, 'Mailbox binding has no connection');
+
         const objects = range(n, () => {
           const contactsQuery = Query.select(Filter.type(Person.Person)).select(Filter.tag(tagUri));
           const organizationsQuery = Query.select(Filter.type(Organization.Organization)).select(Filter.tag(tagUri));
@@ -137,9 +152,9 @@ export const generator = () => ({
             Trigger.make({
               enabled: true,
               spec: Trigger.specTimer('* * * * *'), // Every minute.
-              runnable: Ref.make(Operation.serialize(InboxOperation.GoogleMailSync)),
+              runnable: Ref.make(Operation.serialize(GoogleOperation.GoogleMailSync)),
               input: {
-                mailbox: Ref.make(mailbox),
+                connection: Ref.make(connection),
               },
             }),
           );
@@ -233,7 +248,7 @@ export const generator = () => ({
           const canvasModel = CanvasGraphModel.create<ComputeShape>();
 
           let functionTrigger: Trigger.Trigger | undefined;
-          canvasModel.builder.call((builder) => {
+          {
             const gpt = canvasModel.createNode(createGpt(position({ x: 0, y: -14 })));
             const triggerShape = createTrigger({
               spaceId: space.id,
@@ -245,28 +260,29 @@ export const generator = () => ({
             const { queueId } = setupQueue(space, canvasModel);
             const append = canvasModel.createNode(createAppend(position({ x: 10, y: 6 })));
 
-            builder
-              .createEdge({
-                source: trigger.id,
-                target: gpt.id,
-                input: 'prompt',
-                output: 'bodyText',
-              })
-              .createEdge({ source: gpt.id, target: text.id, output: 'text' })
-              .createEdge({
-                source: queueId.id,
-                target: append.id,
-                input: 'id',
-              })
-              .createEdge({
-                source: gpt.id,
-                target: append.id,
-                output: 'messages',
-                input: 'items',
-              });
+            canvasModel.createEdge({
+              source: trigger.id,
+              target: gpt.id,
+              input: 'prompt',
+              output: 'bodyText',
+            });
+
+            canvasModel.createEdge({ source: gpt.id, target: text.id, output: 'text' });
+            canvasModel.createEdge({
+              source: queueId.id,
+              target: append.id,
+              input: 'id',
+            });
+
+            canvasModel.createEdge({
+              source: gpt.id,
+              target: append.id,
+              output: 'messages',
+              input: 'items',
+            });
 
             functionTrigger = triggerShape.functionTrigger!.target!;
-          });
+          }
 
           const computeModel = createComputeGraph(canvasModel);
 
@@ -306,7 +322,7 @@ export const generator = () => ({
           const { canvasModel, computeModel } = createQueueSinkPreset(
             space,
             'timer',
-            (triggerSpec) => (triggerSpec.cron = '*/5 * * * * *'),
+            (triggerSpec) => (triggerSpec.cron = '* * * * *'),
             'result',
           );
           return addToSpace(PresetName.TIMER_TICK_QUEUE, space, canvasModel, computeModel);
@@ -336,7 +352,7 @@ export const generator = () => ({
     //       const templateContent = ['{'];
 
     //       let functionTrigger: FunctionTrigger | undefined;
-    //       canvasModel.builder.call((builder) => {
+    //       {
     //         const triggerShape = createTrigger({
     //           spaceId: space.id,
     //           triggerKind: 'email',
@@ -356,10 +372,10 @@ export const generator = () => ({
     //         const properties = SchemaAST.getPropertySignatures(EmailTriggerOutput.ast);
     //         for (let i = 0; i < properties.length; i++) {
     //           const propName = properties[i].name.toString();
-    //           builder.createEdge({ source: trigger.id, target: template.id, input: propName, output: propName });
+    //           canvasModel.createEdge({ source: trigger.id, target: template.id, input: propName, output: propName });
     //           templateContent.push(`  "${propName}": "{{${propName}}}"` + (i === properties.length - 1 ? '' : ','));
     //         }
-    //         templateContent.push('}');
+    //         templateContent.push('}
 
     //         builder
     //           .createEdge({ source: tableId.id, target: appendToTable.id, input: 'id' })
@@ -390,7 +406,7 @@ export const generator = () => ({
         const objects = range(n, () => {
           const canvasModel = CanvasGraphModel.create<ComputeShape>();
 
-          canvasModel.builder.call((builder) => {
+          {
             const gpt = canvasModel.createNode(createGpt(position({ x: 0, y: -14 })));
             const chat = canvasModel.createNode(createChat(position({ x: -18, y: -2 })));
             const text = canvasModel.createNode(createText(position({ x: 19, y: 3, width: 10, height: 10 })));
@@ -398,21 +414,21 @@ export const generator = () => ({
 
             const append = canvasModel.createNode(createAppend(position({ x: 10, y: 6 })));
 
-            builder
-              .createEdge({ source: chat.id, target: gpt.id, input: 'prompt' })
-              .createEdge({ source: gpt.id, target: text.id, output: 'text' })
-              .createEdge({
-                source: queueId.id,
-                target: append.id,
-                input: 'id',
-              })
-              .createEdge({
-                source: gpt.id,
-                target: append.id,
-                output: 'messages',
-                input: 'items',
-              });
-          });
+            canvasModel.createEdge({ source: chat.id, target: gpt.id, input: 'prompt' });
+            canvasModel.createEdge({ source: gpt.id, target: text.id, output: 'text' });
+            canvasModel.createEdge({
+              source: queueId.id,
+              target: append.id,
+              input: 'id',
+            });
+
+            canvasModel.createEdge({
+              source: gpt.id,
+              target: append.id,
+              output: 'messages',
+              input: 'items',
+            });
+          }
 
           const computeModel = createComputeGraph(canvasModel);
 
@@ -443,7 +459,7 @@ export const generator = () => ({
     //       const templateContent = ['{'];
 
     //       let functionTrigger: FunctionTrigger | undefined;
-    //       canvasModel.builder.call((builder) => {
+    //       {
     //         const gpt = canvasModel.createNode(
     //           createGpt(rawPosition({ centerX: -400, centerY: -112, width: 256, height: 202 })),
     //         );
@@ -480,15 +496,15 @@ export const generator = () => ({
     //         );
 
     //         templateContent.push('  "category": "{{text}}",');
-    //         builder.createEdge({ source: gpt.id, target: template.id, input: 'text', output: 'text' });
+    //         canvasModel.createEdge({ source: gpt.id, target: template.id, input: 'text', output: 'text' });
 
     //         const properties = SchemaAST.getPropertySignatures(EmailTriggerOutput.ast);
     //         for (let i = 0; i < properties.length; i++) {
     //           const propName = properties[i].name.toString();
-    //           builder.createEdge({ source: trigger.id, target: template.id, input: propName, output: propName });
+    //           canvasModel.createEdge({ source: trigger.id, target: template.id, input: propName, output: propName });
     //           templateContent.push(`  "${propName}": "{{${propName}}}"` + (i === properties.length - 1 ? '' : ','));
     //         }
-    //         templateContent.push('}');
+    //         templateContent.push('}
 
     //         builder
     //           .createEdge({ source: tableId.id, target: appendToTable.id, input: 'id' })
@@ -524,7 +540,7 @@ export const generator = () => ({
         const objects = range(n, () => {
           const canvasModel = CanvasGraphModel.create<ComputeShape>();
 
-          canvasModel.builder.call((builder) => {
+          {
             const sourceCurrency = canvasModel.createNode(
               createConstant({ value: 'USD', ...position({ x: -10, y: -5 }) }),
             );
@@ -534,23 +550,24 @@ export const generator = () => ({
             const converter = canvasModel.createNode(createFunction(position({ x: 0, y: 0 })));
             const view = canvasModel.createNode(createSurface(position({ x: 12, y: 0 })));
 
-            builder
-              .createEdge({
-                source: sourceCurrency.id,
-                target: converter.id,
-                input: 'from',
-              })
-              .createEdge({
-                source: targetCurrency.id,
-                target: converter.id,
-                input: 'to',
-              })
-              .createEdge({
-                source: converter.id,
-                target: view.id,
-                output: 'rate',
-              });
-          });
+            canvasModel.createEdge({
+              source: sourceCurrency.id,
+              target: converter.id,
+              input: 'from',
+            });
+
+            canvasModel.createEdge({
+              source: targetCurrency.id,
+              target: converter.id,
+              input: 'to',
+            });
+
+            canvasModel.createEdge({
+              source: converter.id,
+              target: view.id,
+              output: 'rate',
+            });
+          }
 
           const computeModel = createComputeGraph(canvasModel);
 
@@ -568,7 +585,7 @@ export const generator = () => ({
           const canvasModel = CanvasGraphModel.create<ComputeShape>();
 
           let functionTrigger: Trigger.Trigger | undefined;
-          canvasModel.builder.call((builder) => {
+          {
             const triggerShape = createTrigger({
               spaceId: space.id,
               triggerKind: 'timer',
@@ -592,35 +609,38 @@ export const generator = () => ({
             const view = canvasModel.createNode(createText(position({ x: 12, y: 0 })));
             const queue = canvasModel.createNode(createFeed(position({ x: 0, y: 12 })));
 
-            builder
-              .createEdge({
-                source: trigger.id,
-                target: converter.id,
-                input: 'tick',
-              })
-              .createEdge({
-                source: channelId.id,
-                target: converter.id,
-                input: 'channelId',
-              })
-              .createEdge({
-                source: queueId.id,
-                target: converter.id,
-                input: 'queueId',
-              })
-              .createEdge({
-                source: converter.id,
-                target: view.id,
-                output: 'newMessages',
-              })
-              .createEdge({
-                source: queueId.id,
-                target: queue.id,
-                input: 'input',
-              });
+            canvasModel.createEdge({
+              source: trigger.id,
+              target: converter.id,
+              input: 'tick',
+            });
+
+            canvasModel.createEdge({
+              source: channelId.id,
+              target: converter.id,
+              input: 'channelId',
+            });
+
+            canvasModel.createEdge({
+              source: queueId.id,
+              target: converter.id,
+              input: 'queueId',
+            });
+
+            canvasModel.createEdge({
+              source: converter.id,
+              target: view.id,
+              output: 'newMessages',
+            });
+
+            canvasModel.createEdge({
+              source: queueId.id,
+              target: queue.id,
+              input: 'input',
+            });
 
             functionTrigger = triggerShape.functionTrigger!.target!;
-          });
+          }
 
           const computeModel = createComputeGraph(canvasModel);
           attachTrigger(functionTrigger, computeModel);
@@ -649,7 +669,7 @@ export const generator = () => ({
     //       invariant(messages, 'Table not found.');
 
     //       let functionTrigger: FunctionTrigger | undefined;
-    //       canvasModel.builder.call((builder) => {
+    //       {
     //         const triggerShape = createTrigger({
     //           spaceId: space.id,
     //           triggerKind: 'queue',
@@ -670,7 +690,7 @@ export const generator = () => ({
     //           .createEdge({ source: trigger.id, target: appendToTable.id, input: 'items', output: 'item' });
 
     //         functionTrigger = triggerShape.functionTrigger!.target!;
-    //       });
+    //       }
 
     //       const computeModel = createComputeGraph(canvasModel);
     //       attachTrigger(functionTrigger, computeModel);
@@ -700,7 +720,7 @@ const createQueueSinkPreset = <SpecType extends Trigger.Kind>(
   );
 
   let functionTrigger: Trigger.Trigger | undefined;
-  canvasModel.builder.call((builder) => {
+  {
     const triggerShape = createTrigger({
       spaceId: space.id,
       triggerKind,
@@ -717,20 +737,20 @@ const createQueueSinkPreset = <SpecType extends Trigger.Kind>(
       createRandom(rawPosition({ centerX: -509, centerY: -30, width: 64, height: 64 })),
     );
 
-    builder
-      .createEdge({ source: queueId.id, target: append.id, input: 'id' })
-      .createEdge({ source: template.id, target: append.id, input: 'items' })
-      .createEdge({
-        source: trigger.id,
-        target: template.id,
-        output: triggerOutputName,
-        input: 'type',
-      })
-      .createEdge({
-        source: random.id,
-        target: template.id,
-        input: 'changeId',
-      });
+    canvasModel.createEdge({ source: queueId.id, target: append.id, input: 'id' });
+    canvasModel.createEdge({ source: template.id, target: append.id, input: 'items' });
+    canvasModel.createEdge({
+      source: trigger.id,
+      target: template.id,
+      output: triggerOutputName,
+      input: 'type',
+    });
+
+    canvasModel.createEdge({
+      source: random.id,
+      target: template.id,
+      input: 'changeId',
+    });
 
     functionTrigger = triggerShape.functionTrigger!.target!;
     const triggerSpec = functionTrigger.spec;
@@ -738,7 +758,7 @@ const createQueueSinkPreset = <SpecType extends Trigger.Kind>(
     Obj.update(functionTrigger, (functionTrigger) => {
       initSpec(functionTrigger.spec as any);
     });
-  });
+  }
 
   const computeModel = createComputeGraph(canvasModel);
 

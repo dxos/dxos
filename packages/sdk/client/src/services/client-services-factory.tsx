@@ -5,14 +5,14 @@
 import { type ClientServicesProvider } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { raise } from '@dxos/debug';
-import { Runtime } from '@dxos/protocols/proto/dxos/config';
+import { Runtime_Client_ServicesMode } from '@dxos/protocols/buf/dxos/config_pb';
 import * as Coordinator from '@dxos/worker-framework/Coordinator';
 
 import { DedicatedWorkerClientServices, type DedicatedWorkerClientServicesOptions } from './dedicated';
 import { type LocalClientServicesParams } from './local-client-services';
 
 export type CreateClientServicesOptions = {
-  /** Factory for creating a dedicated worker. Required for {@link Runtime.Client.ServicesMode.DEDICATED_WORKER}. */
+  /** Factory for creating a dedicated worker. Required for {@link Runtime_Client_ServicesMode.DEDICATED_WORKER}. */
   createDedicatedWorker?: DedicatedWorkerClientServicesOptions['createWorker'];
   /** Factory for creating the coordinator SharedWorker (for dedicated worker mode). Use for a custom entrypoint that e.g. initializes observability. */
   createCoordinatorWorker?: () => SharedWorker;
@@ -58,7 +58,7 @@ export const createClientServices = async (
   }
 
   switch (servicesMode) {
-    case Runtime.Client.ServicesMode.HOST: {
+    case Runtime_Client_ServicesMode.HOST: {
       // Derive sqlitePath from dataRoot when not explicitly provided (only meaningful when the
       // config selects FILE sqlite mode — LocalClientServices ignores sqlitePath otherwise).
       const dataRoot = config.values.runtime?.client?.storage?.dataRoot;
@@ -69,7 +69,7 @@ export const createClientServices = async (
       return fromHost(config, { createOpfsWorker, sqlitePath: effectiveSqlitePath });
     }
 
-    case Runtime.Client.ServicesMode.DEDICATED_WORKER: {
+    case Runtime_Client_ServicesMode.DEDICATED_WORKER: {
       if (!createDedicatedWorker) {
         throw new Error(
           'createClientServices: runtime.client.services_mode=DEDICATED_WORKER requires a createDedicatedWorker option.',

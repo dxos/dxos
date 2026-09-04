@@ -10,7 +10,7 @@ export * as Annotation from './Annotation';
 export * as Blob from './Blob';
 export * as Database from './Database';
 export * as Entity from './Entity';
-export * as Err from './Err';
+export * as Error from './Error';
 export * as Feed from './Feed';
 export * as Filter from './Filter';
 export * as Format from './Format';

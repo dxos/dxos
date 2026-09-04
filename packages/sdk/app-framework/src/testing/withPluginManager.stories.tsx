@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
+import { expect, waitFor, within } from 'storybook/test';
 
 import { ThrowError } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -58,9 +59,11 @@ export const Default: Story = {};
  * the usual "Copy" action.
  */
 export const Crashes: Story = {
-  render: () => <ThrowError />,
-  play: async () => {
-    // This story intentionally renders an ErrorBoundary fallback; clear the smoke-test error flag.
+  render: () => <ThrowError delay={0} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => expect(canvas.getByRole('button', { name: 'Download logs' })).toBeInTheDocument());
+    // Clear the smoke-test flag only once the intended fallback has been asserted.
     (window as any).__ERROR_BOUNDARY_ERRORS__ = [];
   },
 };

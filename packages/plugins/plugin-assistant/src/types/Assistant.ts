@@ -12,8 +12,6 @@ export const Settings = SettingsModule.Settings;
 export type Settings = SettingsModule.Settings;
 
 export const ChatViews = SettingsModule.ChatViews;
-export const ChatView = SettingsModule.ChatView;
-export type ChatView = SettingsModule.ChatView;
 
 export const ModelProviders: readonly DXN.DXN[] = SettingsModule.ModelProviders;
 export const ModelProvider = SettingsModule.ModelProvider;

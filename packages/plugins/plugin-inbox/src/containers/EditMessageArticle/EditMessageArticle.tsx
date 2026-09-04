@@ -11,6 +11,7 @@ import { useQuery } from '@dxos/echo-react';
 import { Panel } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { type Message } from '@dxos/types';
+import { AI_ACTION_ICON } from '@dxos/ui-types';
 
 import { EditMessage } from '#components';
 import { useEmailComposerExtensions, useSendEmail } from '#hooks';
@@ -79,7 +80,7 @@ export const EditMessageArticle = ({ role, subject, attendableId }: EditMessageA
                 'generate',
                 {
                   label: ['draft-toolbar-generate.menu', { ns: meta.profile.key }],
-                  icon: 'ph--sparkle--regular',
+                  icon: AI_ACTION_ICON,
                   testId: 'inbox.draft.generate',
                 },
                 handleGenerate,

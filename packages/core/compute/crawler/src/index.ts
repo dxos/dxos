@@ -5,8 +5,8 @@
 export * as Type from './types';
 export * from './errors';
 export * from './Source';
-export * from './StateStore';
-export * from './AgentRegistry';
+export * as StateStore from './StateStore';
+export * as AgentRegistry from './AgentRegistry';
 export * from './Stage';
 export * as Crawler from './Crawler';
 export * from './stages/extract-facts';

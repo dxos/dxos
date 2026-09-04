@@ -8,6 +8,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
+import { invariant } from '@dxos/invariant';
+
 import { dxBin } from '../../testing';
 
 /**
@@ -18,8 +20,15 @@ import { dxBin } from '../../testing';
  * server exits with the stream rather than answering.
  */
 
-/** The one skill the CLI's registry opts in as a prompt; both halves of the round trip name it. */
-const SKILL = 'codeProject';
+/** The skill both halves of the prompt round trip name. */
+const SKILL = 'project';
+
+/**
+ * Every skill the CLI's registry opts in as an MCP prompt. Asserted exactly: a skill that stops
+ * being contributed drops off this surface silently, which is how the Space skill would have
+ * disappeared unnoticed.
+ */
+const PROMPTS = [SKILL, 'database', 'registry'];
 
 const REQUESTS = [
   {
@@ -31,25 +40,62 @@ const REQUESTS = [
   { jsonrpc: '2.0', method: 'notifications/initialized' },
   { jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} },
   { jsonrpc: '2.0', id: 3, method: 'prompts/list', params: {} },
-  { jsonrpc: '2.0', id: 4, method: 'tools/call', params: { name: 'skillLoad', arguments: { skill: SKILL } } },
+  { jsonrpc: '2.0', id: 4, method: 'tools/call', params: { name: 'loadSkill', arguments: { skill: SKILL } } },
   { jsonrpc: '2.0', id: 5, method: 'prompts/get', params: { name: SKILL, arguments: {} } },
-  { jsonrpc: '2.0', id: 6, method: 'tools/call', params: { name: 'skillLoad', arguments: { skill: 'noSuchSkill' } } },
-  { jsonrpc: '2.0', id: 7, method: 'tools/call', params: { name: 'listTypes', arguments: {} } },
+  { jsonrpc: '2.0', id: 6, method: 'tools/call', params: { name: 'loadSkill', arguments: { skill: 'noSuchSkill' } } },
+  {
+    jsonrpc: '2.0',
+    id: 7,
+    method: 'tools/call',
+    params: { name: 'invokeOperation', arguments: { key: 'org.dxos.operation.registry.queryPlugins' } },
+  },
   { jsonrpc: '2.0', id: 8, method: 'tools/call', params: { name: 'whoami', arguments: {} } },
+  { jsonrpc: '2.0', id: 9, method: 'tools/call', params: { name: 'queryOperations', arguments: {} } },
+  {
+    jsonrpc: '2.0',
+    id: 10,
+    method: 'tools/call',
+    params: { name: 'queryOperations', arguments: { keys: ['org.dxos.operation.space.addObject'] } },
+  },
+  {
+    jsonrpc: '2.0',
+    id: 11,
+    method: 'tools/call',
+    params: { name: 'invokeOperation', arguments: { key: 'org.dxos.nope' } },
+  },
+  { jsonrpc: '2.0', id: 12, method: 'tools/call', params: { name: 'loadSkill', arguments: {} } },
+  {
+    jsonrpc: '2.0',
+    id: 13,
+    method: 'tools/call',
+    params: { name: 'invokeOperation', arguments: { key: 'org.dxos.operation.space.queryTypes' } },
+  },
 ];
 
-/** The host-local toolkits, named as EDGE names them; see the TODOs on each `*-tools.ts`. */
-const STATIC_TOOLS = [
-  'whoami',
-  'listSpaces',
-  'createObject',
-  'getObject',
+/** All that is left of the host-local toolkits; see the TODO on `space-tools.ts`. */
+const STATIC_TOOLS = ['whoami'];
+
+/** This package's fixed surface: every operation is reached through these rather than as a tool. */
+const SURFACE_TOOLS = ['queryOperations', 'invokeOperation', 'loadSkill'];
+
+/**
+ * What the host used to answer with hand-written tools, reached as `queryOperations` rows now.
+ * A space listing is deliberately absent: it belongs with `whoami`, and the two port together —
+ * see the TODO on `space-tools.ts`.
+ */
+const PROJECTED_HOST_OPERATIONS = ['queryPlugins', 'queryTypes'];
+
+const PROJECTED_OBJECT_OPERATIONS = [
+  'addObject',
+  'getObjects',
   'updateObject',
-  'deleteObject',
+  'removeObjects',
   'queryObjects',
-  'listPlugins',
-  'listTypes',
-  'listOperations',
+  'queryTypes',
+  'addTag',
+  'removeTag',
+  'addRelation',
+  'addType',
 ];
 
 type Response = { id?: number; result?: any };
@@ -112,42 +158,77 @@ describe('dx mcp serve', () => {
   // assertions, so one session answers every request and each test reads its own reply.
   let responses: Map<number, Response>;
   beforeAll(async () => {
-    responses = await runSession([1, 2, 3, 4, 5, 6, 7, 8], 90_000);
+    responses = await runSession([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], 90_000);
   }, 120_000);
 
-  test('serves the projected surface over a real MCP session', ({ expect }) => {
+  /** `responses` is populated in `beforeAll` from a fixed, known set of request ids. */
+  const getResult = (id: number) => {
+    const response = responses.get(id);
+    invariant(response, `no response for request ${id}`);
+    return response.result;
+  };
+
+  test('serves a fixed tool surface, whatever the registry holds', ({ expect }) => {
     const initialize = responses.get(1)!.result;
     expect(initialize.serverInfo.name).to.equal('DXOS Spaces');
     // The shared server instructions, applied by the projection's response passes over stdio.
-    expect(initialize.instructions).to.include('skillLoad');
+    expect(initialize.instructions).to.include('queryOperations');
 
     const tools: { name: string; inputSchema: any }[] = responses.get(2)!.result.tools;
     const names = tools.map((tool) => tool.name);
-    expect(names).to.include('skillLoad');
-    // Annotated operations project; the registry the CLI assembles carries the project/task verbs.
-    expect(names).to.include('taskCreate');
-    expect(names).to.include('projectCreate');
+    expect(names.slice().sort()).to.deep.equal([...STATIC_TOOLS, ...SURFACE_TOOLS].sort());
+    // The point of the reshape: an operation is a row, never a tool, so the client's context does
+    // not grow with the registry.
+    expect(names).to.not.include('taskCreate');
 
-    // Every advertised schema declares an object, and a ref parameter is narrowed to its object
-    // shape rather than the untyped `anyOf` the toolkit renders — both response passes, on the
-    // transport EDGE does not use.
+    // Every advertised schema declares an object — the response pass on the transport EDGE does
+    // not use.
     for (const tool of tools) {
       expect(tool.inputSchema.type, `${tool.name} input schema`).to.equal('object');
     }
-    const taskSet = tools.find((tool) => tool.name === 'taskCreate')!.inputSchema.properties.taskSet;
-    expect(taskSet.type).to.equal('object');
-    expect(taskSet).to.not.have.property('anyOf');
 
     const prompts: { name: string }[] = responses.get(3)!.result.prompts;
-    expect(prompts.map((prompt) => prompt.name)).to.include(SKILL);
+    expect(prompts.map((prompt) => prompt.name).sort()).to.deep.equal([...PROMPTS].sort());
+  });
+
+  test('queryOperations reaches the registry, and keys returns the schema to write against', ({ expect }) => {
+    const { operations } = JSON.parse(getResult(9).content[0].text);
+    const keys: string[] = operations.map((operation: { key: string }) => operation.key);
+    // The registry the CLI assembles carries the project/task verbs and plugin-space's object CRUD.
+    // Full keys, not suffixes: several packages now have a bare `create` verb.
+    expect(keys).to.include('org.dxos.operation.tasks.create');
+    expect(keys).to.include('org.dxos.operation.projects.create');
+    for (const verb of [...PROJECTED_OBJECT_OPERATIONS, ...PROJECTED_HOST_OPERATIONS]) {
+      expect(
+        keys.some((key) => key.endsWith(`.${verb}`)),
+        `${verb} is in the catalog`,
+      ).to.be.true;
+    }
+
+    // A view is compact: what it costs the model is a description, not a schema.
+    const row = operations.find((operation: { key: string }) => operation.key === 'org.dxos.operation.tasks.create');
+    expect(row).to.not.have.property('schema');
+    expect(row.skills).to.include(SKILL);
+
+    const detail = JSON.parse(getResult(10).content[0].text).operations[0];
+    expect(detail.key).to.equal('org.dxos.operation.space.addObject');
+    expect(detail.schema.input.type).to.equal('object');
+    expect(detail.hints.mutation).to.be.a('string');
+  });
+
+  // A model recovers from a tool result; a wrong key has to name the tool that lists the right ones.
+  test('invokeOperation reports an unknown key as a tool failure naming queryOperations', ({ expect }) => {
+    const failure = getResult(11);
+    expect(failure.isError).to.be.true;
+    expect(failure.content[0].text).to.include('queryOperations');
   });
 
   // SEP-2640's contract: a skill reaches the model either way, so a client without prompt support
   // loses nothing. Asserted on this host because only a live session exercises both paths at once.
-  test('serves the same skill through skillLoad and prompts/get', ({ expect }) => {
+  test('serves the same skill through loadSkill and prompts/get', ({ expect }) => {
     const loaded = JSON.parse(responses.get(4)!.result.content[0].text);
-    expect(loaded.name).to.equal(SKILL);
-    expect(loaded.key).to.equal('org.dxos.plugin.projects.skill.codeProject');
+    expect(loaded.skills[0].name).to.equal(SKILL);
+    expect(loaded.skills[0].key).to.equal('org.dxos.skill.project');
     expect(loaded.instructions).to.be.a('string').and.to.have.length.greaterThan(0);
 
     const messages: { role: string; content: { type: string; text: string } }[] = responses.get(5)!.result.messages;
@@ -165,21 +246,33 @@ describe('dx mcp serve', () => {
     expect(failure.content[0].text).to.include(SKILL);
   });
 
-  // The host-local half of the surface. Without it a client sees only the projected verbs, and the
-  // ones an agent reaches for first — whoami, listSpaces, the object CRUD — are simply absent.
-  test('serves the static toolkits alongside the projected operations', ({ expect }) => {
+  // Nothing infers a space: the session's first one has no relationship to the task, so a verb that
+  // acts on a space and was told none is refused rather than run somewhere arbitrary.
+  test('a space-addressed operation invoked without a space is refused, not defaulted', ({ expect }) => {
+    const failure = getResult(13);
+    expect(failure.isError).to.be.true;
+    expect(failure.content[0].text).to.include('spaceId');
+  });
+
+  // What an agent reaches for first — which plugins, which spaces, which types — is dispatched like
+  // any other verb now; `whoami` is the one fact this host still answers with a tool of its own.
+  test('dispatches a host verb that needs no space, on a profile with no spaces', ({ expect }) => {
     const names: string[] = responses.get(2)!.result.tools.map((tool: { name: string }) => tool.name);
     for (const tool of STATIC_TOOLS) {
       expect(names, `${tool} is advertised`).to.include(tool);
     }
 
-    const types = JSON.parse(responses.get(7)!.result.content[0].text).types;
-    expect(types).to.be.an('array').with.length.greaterThan(0);
-    expect(types.map((type: { typename: string }) => type.typename)).to.include('org.dxos.type.task');
+    // This profile has no identity and so no spaces: an operation declaring no database must still
+    // answer, which is what makes the space resolution conditional rather than unconditional.
+    const result = getResult(7);
+    expect(result.isError, JSON.stringify(result.content)).to.not.be.true;
+    const { plugins } = JSON.parse(result.content[0].text);
+    expect(plugins.map((plugin: { id: string }) => plugin.id)).to.include('org.dxos.plugin.registry');
   });
 
   // A client renders these as the tool's safety badge, and an unset `destructiveHint` defaults to
-  // true — so a read tool that annotates nothing shows up as destructive.
+  // true — so a read tool that annotates nothing shows up as destructive. Per-operation safety
+  // moved to the `mutation` field of a queryOperations row, asserted above.
   test('advertises safety hints, with no read-only tool marked destructive', ({ expect }) => {
     const tools: { name: string; annotations?: { readOnlyHint?: boolean; destructiveHint?: boolean } }[] =
       responses.get(2)!.result.tools;
@@ -192,8 +285,17 @@ describe('dx mcp serve', () => {
 
     const byName = new Map(tools.map((tool) => [tool.name, tool.annotations]));
     expect(byName.get('whoami')?.readOnlyHint).to.be.true;
-    expect(byName.get('deleteObject')?.destructiveHint).to.be.true;
-    expect(byName.get('createObject')?.destructiveHint).to.be.false;
+    expect(byName.get('queryOperations')?.readOnlyHint).to.be.true;
+    // The one tool that dispatches everything cannot be safer than what it runs.
+    expect(byName.get('invokeOperation')?.destructiveHint).to.be.true;
+  });
+
+  // Discovery has to be reachable without having called queryOperations first, or a model that
+  // wants the workflow before the verbs has nowhere to start.
+  test('loadSkill with no argument lists the skills', ({ expect }) => {
+    const listing = JSON.parse(getResult(12).content[0].text);
+    expect(listing.skills.map((entry: { name: string }) => entry.name)).to.include(SKILL);
+    expect(listing.instructions).to.be.undefined;
   });
 
   // This profile has no identity, which is the interesting case: the tool has to say so as a tool

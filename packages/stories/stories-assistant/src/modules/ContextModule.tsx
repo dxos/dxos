@@ -6,7 +6,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
-import { Chat } from '@dxos/assistant-toolkit';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Project from '@dxos/compute/Project';
 import { Filter, Obj, type Ref } from '@dxos/echo';
 import { useContextBinder } from '@dxos/plugin-assistant/hooks';
@@ -32,12 +32,10 @@ const ContextModuleContainer = ({ space }: { space: Space }) => {
   const binder = useContextBinder(space, feedTarget);
   const objects = useBoundObjects(binder);
 
-  // Durable artifacts live on a Project's collection (the agent stores none): surface the first
-  // project's collection alongside the bound context objects, resolving refs reactively.
+  // Durable artifacts live on the Project (the agent stores none): surface the first project's
+  // artifacts alongside the bound context objects.
   const [project] = useQuery(space.db, Filter.type(Project.Project));
-  const [collectionSnapshot] = useObject(project?.artifacts);
-  const collection = Obj.getReactiveOrUndefined(collectionSnapshot);
-  const artifacts = collection?.objects ?? [];
+  const artifacts = project?.artifacts ?? [];
 
   const items = useMemo<ContextItem[]>(
     () => [
@@ -54,7 +52,7 @@ const ContextModuleContainer = ({ space }: { space: Space }) => {
         data: ref,
       })),
     ],
-    [objects, artifacts, collectionSnapshot],
+    [objects, artifacts],
   );
 
   return (

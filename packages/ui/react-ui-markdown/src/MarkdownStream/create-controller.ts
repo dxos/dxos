@@ -40,20 +40,20 @@ export type MarkdownStreamControllerDeps = {
   contentRef: RefObject<string | undefined>;
   viewRef: RefObject<EditorView | null>;
   queueRef: RefObject<Queue.Queue<string>>;
-  onReset: (text: string) => Promise<void>;
   /**
    * Holds a context set before the view existed, for {@link flushContext} to apply once it does.
    * Also re-applied after a document reset, which rebuilds decorations from a state without it.
    */
   pendingContextRef: RefObject<{ value: any } | undefined>;
+  onReset: (text: string) => Promise<void>;
 };
 
 export const createMarkdownStreamController = ({
   contentRef,
   viewRef,
   queueRef,
-  onReset,
   pendingContextRef,
+  onReset,
 }: MarkdownStreamControllerDeps): MarkdownStreamController => {
   return {
     get length() {
@@ -78,6 +78,7 @@ export const createMarkdownStreamController = ({
       if (!view) {
         return;
       }
+
       const clamped = Math.max(0, Math.min(pos, view.state.doc.length));
       view.dispatch({ effects: EditorView.scrollIntoView(clamped, { y: options?.y ?? 'start' }) });
     },

@@ -19,7 +19,7 @@ const factViewerStyles = tv({
 
     // Graph view.
     graphContent: 'overflow-hidden',
-    graphTree: 'w-full h-full',
+    graphTree: 'dx-fill',
 
     // Subject group card.
     group: 'shrink-0 flex flex-col dx-card-surface border border-subdued-separator rounded-sm overflow-hidden',
@@ -40,7 +40,7 @@ const factViewerStyles = tv({
   variants: {
     // Conflicting facts get a warning rule on the inline-start edge.
     conflicting: {
-      true: { row: 'border-is-2 border-warning-border' },
+      true: { row: 'border-s-2 border-warning-border' },
     },
   },
 });

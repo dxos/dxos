@@ -6,11 +6,11 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Blob, Database, Err } from '@dxos/echo';
+import { fromDigestHex } from '@dxos/blob';
+import { Blob, Database, Error } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 
 import { EchoTestBuilder } from '../testing';
-import { fromDigestHex } from './ni-uri';
 
 describe('Blob', () => {
   let builder: EchoTestBuilder;
@@ -49,7 +49,7 @@ describe('Blob', () => {
       Effect.gen(function* () {
         yield* Blob.fromBytes(bytes);
       }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors),
-    ).rejects.toBeInstanceOf(Err.BlobTooLargeError);
+    ).rejects.toBeInstanceOf(Error.BlobTooLargeError);
   });
 
   test('external backend roundtrip via a registered scheme', async ({ expect }) => {
@@ -140,7 +140,7 @@ describe('Blob', () => {
         Effect.gen(function* () {
           yield* Blob.fromBytes(bytes, { storage: 'capped' });
         }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors),
-      ).rejects.toBeInstanceOf(Err.BlobTooLargeError);
+      ).rejects.toBeInstanceOf(Error.BlobTooLargeError);
     } finally {
       cleanup();
     }

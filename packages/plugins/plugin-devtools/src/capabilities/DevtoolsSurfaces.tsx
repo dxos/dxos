@@ -72,20 +72,16 @@ export const EdgeTracesSurface = () => {
 
 export const EdgeTestingSurface = () => {
   const { invokePromise } = useOperationInvoker();
-  const onSpaceCreate = useCallback(
-    async (space: Space) => {
-      await space.waitUntilReady();
-      await invokePromise(SpaceOperation.Migrate, { space });
-      await space.db.flush();
-    },
-    [invokePromise],
-  );
   const onScriptPluginOpen = useCallback(
     async (space: Space) => {
       await space.waitUntilReady();
       const createResult = await invokePromise(ScriptOperation.CreateScript, { db: space.db });
       if (createResult.data?.object) {
-        await invokePromise(SpaceOperation.AddObject, { target: space.db, object: createResult.data.object });
+        await invokePromise(
+          SpaceOperation.AddObject,
+          { object: createResult.data.object },
+          { spaceId: space.db.spaceId },
+        );
       }
       log.info('script created', { result: createResult });
       if (createResult.data?.object) {
@@ -97,5 +93,5 @@ export const EdgeTestingSurface = () => {
     [invokePromise],
   );
 
-  return <TestingPanel onSpaceCreate={onSpaceCreate} onScriptPluginOpen={onScriptPluginOpen} />;
+  return <TestingPanel onScriptPluginOpen={onScriptPluginOpen} />;
 };

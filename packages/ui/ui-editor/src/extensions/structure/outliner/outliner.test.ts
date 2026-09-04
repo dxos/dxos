@@ -14,6 +14,7 @@ import {
   getItemText,
   indentItemLess,
   indentItemMore,
+  isItemLink,
   moveItemDown,
   moveItemUp,
   replaceItemWithLink,
@@ -174,6 +175,33 @@ describe('outliner commands', () => {
       );
       // The caret lands after the inserted link.
       expect(view.state.selection.main.head).to.eq(lineStart(view.state.doc.toString(), 3) - 1);
+    } finally {
+      view.destroy();
+    }
+  });
+
+  // Converting an item that is already a link would replace it with a link to a NEW object named
+  // after the old label, orphaning the first — so the convert action is gated on this predicate.
+  test('an item converted to a link is not convertible again', ({ expect }) => {
+    const view = new EditorView({ state: EditorState.create({ doc: DOC, extensions }) });
+    try {
+      view.dispatch({ selection: EditorSelection.cursor(lineStart(DOC, 2)) });
+      expect(isItemLink(view.state)).to.be.false;
+
+      replaceItemWithLink(view, { label: '2.1', url: 'dxn:echo:@:01ABC' });
+      view.dispatch({ selection: EditorSelection.cursor(lineStart(view.state.doc.toString(), 2)) });
+      expect(isItemLink(view.state)).to.be.true;
+
+      // A plain item that merely CONTAINS a link is still convertible.
+      const mixed = new EditorView({
+        state: EditorState.create({ doc: join('- [ ] see [2.1](dxn:echo:@:01ABC) for detail'), extensions }),
+      });
+      try {
+        mixed.dispatch({ selection: EditorSelection.cursor(0) });
+        expect(isItemLink(mixed.state)).to.be.false;
+      } finally {
+        mixed.destroy();
+      }
     } finally {
       view.destroy();
     }

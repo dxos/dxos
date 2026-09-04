@@ -3,11 +3,9 @@
 //
 
 import { type CleanupFn } from '@dxos/async';
-import { Blob, Err } from '@dxos/echo';
-import { type BlobBackend } from '@dxos/echo-protocol';
+import { type BlobBackend, digestHexFromBytes } from '@dxos/blob';
+import { Blob, Error as EchoError } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
-
-import { digestHexFromBytes } from './ni-uri';
 
 const BASE64_CHUNK_SIZE = 0x8000;
 
@@ -117,17 +115,17 @@ export class BlobManager {
   async #put(spaceId: SpaceId, data: Uint8Array, storage: string, contentType?: string): Promise<Blob.BlobData> {
     if (storage === Blob.Storage.inline) {
       if (data.byteLength > Blob.MAX_INLINE_SIZE) {
-        throw new Err.BlobTooLargeError({ size: data.byteLength, limit: Blob.MAX_INLINE_SIZE });
+        throw new EchoError.BlobTooLargeError({ size: data.byteLength, limit: Blob.MAX_INLINE_SIZE });
       }
       return Blob.inlineData(data);
     }
 
     const registered = this.#findByName(storage);
     if (!registered) {
-      throw new Err.BlobNotAvailableError({ backend: storage, key: '', reason: 'backend-not-registered' });
+      throw new EchoError.BlobNotAvailableError({ backend: storage, key: '', reason: 'backend-not-registered' });
     }
     if (registered.backend.maxSize !== undefined && data.byteLength > registered.backend.maxSize) {
-      throw new Err.BlobTooLargeError({ size: data.byteLength, limit: registered.backend.maxSize });
+      throw new EchoError.BlobTooLargeError({ size: data.byteLength, limit: registered.backend.maxSize });
     }
 
     const contentHash = await digestHexFromBytes(data);
@@ -135,7 +133,7 @@ export class BlobManager {
     try {
       response = await registered.backend.put({ spaceId, data, contentType, contentHash });
     } catch (error) {
-      throw new Err.BlobWriteError({ backend: storage }, { cause: error });
+      throw new EchoError.BlobWriteError({ backend: storage }, { cause: error });
     }
     return Blob.externalData(response.uri);
   }
@@ -150,10 +148,10 @@ export class BlobManager {
     try {
       bytes = await backend.get({ spaceId, uri: data.uri });
     } catch (error) {
-      throw new Err.BlobNotAvailableError({ backend: name, key: data.uri, reason: 'offline' }, { cause: error });
+      throw new EchoError.BlobNotAvailableError({ backend: name, key: data.uri, reason: 'offline' }, { cause: error });
     }
     if (bytes === undefined) {
-      throw new Err.BlobNotAvailableError({ backend: name, key: data.uri, reason: 'not-found' });
+      throw new EchoError.BlobNotAvailableError({ backend: name, key: data.uri, reason: 'not-found' });
     }
     return bytes;
   }
@@ -202,7 +200,7 @@ export class BlobManager {
     const scheme = uri.split(':')[0];
     const registered = this.#backendsByScheme.get(scheme);
     if (!registered) {
-      throw new Err.BlobNotAvailableError({ backend: scheme, key: uri, reason: 'backend-not-registered' });
+      throw new EchoError.BlobNotAvailableError({ backend: scheme, key: uri, reason: 'backend-not-registered' });
     }
     return registered;
   }

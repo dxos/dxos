@@ -18,6 +18,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./remote-process": {
+      "source": "./src/remote-process.ts",
+      "types": "./dist/types/src/remote-process.d.ts",
+      "import": "./dist/lib/remote-process.mjs"
+    },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
@@ -39,6 +44,7 @@
   "scripts": {},
   "dependencies": {
     "@dxos/ai": "workspace:*",
+    "@dxos/blob": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo": "workspace:*",

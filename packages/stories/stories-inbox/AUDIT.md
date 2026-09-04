@@ -8,14 +8,14 @@ Run storybook play tests: `moon run stories-inbox:test` (or open the story on th
 
 ## Storybook tests (`src/stories/`)
 
-| Story                          | Play test                                                  | Covers                                                                                        |
-| ------------------------------ | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `FeedPipeline` → `FixtureTest` | cursor cycle: Process → counts advance → Reset → reprocess | `InboxOperation.ProcessMailbox` / `ResetProcessCursor`, cursored feed paging, progress meters |
-| `FeedPipeline` → `CrmTest`     | CRM button seeds contacts                                  | contact extraction over the demo seed (Organizations gate)                                    |
-| `FeedPipeline` → `TripTest`    | Auto-extract collapses two trip legs into one Trip         | auto-dispatch extraction (canned AI payloads)                                                 |
-| `MessageExtractor` → `Test`    | single-message extraction                                  | `InboxOperation.ExtractMessage`                                                               |
-| `MailboxSync` → `Default`      | sync progress                                              | mailbox sync progress meter                                                                   |
-| `MailboxHost` → `Default`      | (no play) manual host harness                              | mailbox UI shell                                                                              |
+| Story                            | Play test                                                  | Covers                                                                                        |
+| -------------------------------- | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `MailboxAnalyze` → `FixtureTest` | cursor cycle: Process → counts advance → Reset → reprocess | `InboxOperation.ProcessMailbox` / `ResetProcessCursor`, cursored feed paging, progress meters |
+| `MailboxAnalyze` → `CrmTest`     | CRM button seeds contacts                                  | contact extraction over the demo seed (Organizations gate)                                    |
+| `MailboxAnalyze` → `TripTest`    | Auto-extract collapses two trip legs into one Trip         | auto-dispatch extraction (canned AI payloads)                                                 |
+| `MessageExtractor` → `Test`      | single-message extraction                                  | `InboxOperation.ExtractMessage`                                                               |
+| `MailboxSync` → `Default`        | sync progress                                              | mailbox sync progress meter                                                                   |
+| `MailboxHost` → `Default`        | (no play) manual host harness                              | mailbox UI shell                                                                              |
 
 ## Unit tests — plugin-inbox operations (`packages/plugins/plugin-inbox`)
 

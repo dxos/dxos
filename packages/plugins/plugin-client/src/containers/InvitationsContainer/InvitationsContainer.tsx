@@ -7,7 +7,7 @@ import React, { useCallback, useState } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
 import { Context } from '@dxos/context';
-import { Clipboard, Icon, IconButton, useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { Clipboard, Flex, Icon, IconButton, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 
@@ -118,10 +118,10 @@ export const InvitationsContainer = () => {
 const AvailableInvitationItem = ({ row }: { row: AccountCache.AccountCacheInvitation }) => (
   <Listbox.Item id={row.code} classNames='grid grid-cols-[min-content_1fr_min-content] items-center gap-2'>
     <Icon icon='ph--paper-plane-tilt--duotone' size={5} classNames='text-description' />
-    <div className='flex flex-col min-w-0'>
+    <Flex column classNames='min-w-0'>
       <div className='font-mono truncate'>{row.code}</div>
       <p className='text-description text-xs'>{new Date(row.createdAt).toLocaleString()}</p>
-    </div>
+    </Flex>
     <Clipboard.IconButton value={row.code} />
   </Listbox.Item>
 );
@@ -131,10 +131,10 @@ const RedeemedInvitationItem = ({ row }: { row: AccountCache.AccountCacheInvitat
   return (
     <Listbox.Item id={row.code} classNames='grid grid-cols-[min-content_1fr] items-center gap-2'>
       <Icon icon='ph--check-circle--duotone' size={5} classNames='text-success-text' />
-      <div className='flex flex-col min-w-0'>
+      <Flex column classNames='min-w-0'>
         <div className='font-mono truncate'>{row.code}</div>
         <p className='text-description text-xs'>{new Date(date).toLocaleString()}</p>
-      </div>
+      </Flex>
     </Listbox.Item>
   );
 };

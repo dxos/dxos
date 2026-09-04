@@ -2,8 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+
 import { type defs } from '@dxos/config';
 import { log } from '@dxos/log';
+import { Runtime_Client_StorageSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { clearCaches, clearIndexedDB, clearOPFS, clearServiceWorkers } from '@dxos/util';
 
 // Danger: Deleting this localStorage key will cause all storage (including identity) to be
@@ -55,10 +58,10 @@ export const runStorageResetMigration = async (): Promise<void> => {
   localStorage.setItem(DANGEROUSLY_RESET_STORAGE_KEY, DANGEROUSLY_RESET_STORAGE_VERSION);
 };
 
-export const defaultStorageIsEmpty = async (config?: defs.Runtime.Client.Storage): Promise<boolean> => {
+export const defaultStorageIsEmpty = async (config?: defs.Runtime_Client_Storage): Promise<boolean> => {
   try {
     const { createStorageObjects } = await import('@dxos/client-services');
-    const storage = createStorageObjects(config ?? {}).storage;
+    const storage = createStorageObjects(config ?? create(Runtime_Client_StorageSchema, {})).storage;
     const metadataDir = storage.createDirectory('metadata');
     const echoMetadata = metadataDir.getOrCreateFile('EchoMetadata');
     const { size } = await echoMetadata.stat();

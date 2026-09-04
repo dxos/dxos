@@ -4,7 +4,9 @@
 
 import { type CleanupFn } from '@dxos/async';
 import { type Database, Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
-import { type Graph, GraphModel } from '@dxos/graph';
+import * as GraphEdge from '@dxos/graph/GraphEdge';
+import * as GraphModel from '@dxos/graph/GraphModel';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -17,15 +19,13 @@ import { visitValues } from '@dxos/util';
 // - https://observablehq.com/@d3/psr-b1919-21
 // - https://vasturiano.github.io/react-force-graph/example/basic (3D)
 
-export type SpaceGraphNode = Graph.Node.Node<{
+export type SpaceGraphNode = GraphNode.Of<{
   label: string;
   object?: Obj.Unknown;
 }>;
 
 // TODO(burdon): Differentiate between refs and relations.
-export type SpaceGraphEdge = Graph.Edge.Any;
-
-class SpaceGraphBuilder extends GraphModel.AbstractBuilder<SpaceGraphNode, SpaceGraphEdge, SpaceGraphModel> {}
+export type SpaceGraphEdge = GraphEdge.Any;
 
 const defaultFilter: Filter.Any = Filter.everything();
 
@@ -40,7 +40,7 @@ export type SpaceGraphModelOptions = {
 /**
  * Converts ECHO objects to a graph.
  */
-export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNode, SpaceGraphEdge> {
+export class SpaceGraphModel extends GraphModel.AbstractGraphModel<SpaceGraphNode, SpaceGraphEdge, SpaceGraphModel> {
   private _options?: SpaceGraphModelOptions;
   private _filter?: Filter.Any;
   private _db?: Database.Database;
@@ -51,12 +51,10 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
   private _objectSubscription?: CleanupFn;
   private _timeout?: NodeJS.Timeout;
 
-  override get builder() {
-    return new SpaceGraphBuilder(this);
-  }
-
-  override copy(graph?: Partial<Graph.Graph<SpaceGraphNode, SpaceGraphEdge>>): SpaceGraphModel {
-    return new SpaceGraphModel(this.registry, graph);
+  override copy(graph?: Partial<GraphModel.Data<SpaceGraphNode, SpaceGraphEdge>>): SpaceGraphModel {
+    // No shared registry: a copy is a detached snapshot, and its keepAlive version atom would pin an
+    // entry in the source's registry forever.
+    return new SpaceGraphModel({ graph });
   }
 
   get objects(): Entity.Unknown[] {
@@ -163,14 +161,14 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
 
   private _update() {
     log('update', {
-      nodes: this._graph.nodes.length,
-      edges: this._graph.edges.length,
+      nodes: this.nodes.length,
+      edges: this.edges.length,
       objects: this._objects?.length,
       extraItems: this._extraItems?.length,
     });
 
     // TOOD(burdon): Merge edges also?
-    const currentNodes: SpaceGraphNode[] = [...this._graph.nodes] as SpaceGraphNode[];
+    const currentNodes: SpaceGraphNode[] = [...this.nodes];
 
     // Build new graph state locally, then set it all at once.
     const newNodes: SpaceGraphNode[] = [];

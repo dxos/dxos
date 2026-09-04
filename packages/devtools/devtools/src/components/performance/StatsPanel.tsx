@@ -22,6 +22,7 @@ import {
   ReplicatorPanel,
   SurfaceProfilerPanel,
   type SurfaceProfilerStats,
+  SwarmTracePanel,
   SyncStatusPanel,
 } from './panels';
 
@@ -34,6 +35,7 @@ const PANEL_KEYS = [
   'performance',
   'surfaceProfiler',
   'edge',
+  'swarm',
   'queries',
   'rawQueries',
   'database',
@@ -133,6 +135,7 @@ export const StatsPanel = ({
               <NetworkPanel id='network' network={stats?.network} />
               <EdgePanel id='edge' edge={stats?.edge} />
               <PerformancePanel id='performance' entries={stats?.performanceEntries} />
+              <SwarmTracePanel id='swarm' />
               <SurfaceProfilerPanel
                 id='surfaceProfiler'
                 stats={surfaceProfilerStats}

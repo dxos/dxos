@@ -114,4 +114,46 @@ describe('fetchFlexReport', () => {
     // SendRequest returns the lockout — never proceeds to polling.
     expect(calls).toBe(1);
   });
+
+  test('surfaces the status and body when the proxy answers with a non-2xx', async ({ expect }) => {
+    const fetchImpl = async (): Promise<Response> =>
+      new Response('<html><body>502 Bad Gateway</body></html>', { status: 502, statusText: 'Bad Gateway' });
+    await expect(fetchFlexReport({ token: 't', queryId: 'q', fetchImpl, delayMs: 0 })).rejects.toThrow(
+      /SendRequest HTTP 502 Bad Gateway: .*502 Bad Gateway/,
+    );
+  });
+
+  test('keeps polling past a body that is not Flex XML', async ({ expect }) => {
+    const calls: string[] = [];
+    const fetchImpl = async (url: string): Promise<Response> => {
+      calls.push(url);
+      if (url.includes('SendRequest')) {
+        return new Response(
+          '<FlexStatementResponse><Status>Success</Status><ReferenceCode>REF1</ReferenceCode></FlexStatementResponse>',
+        );
+      }
+      // First GetStatement: a proxy interstitial with no ErrorCode; second: the report.
+      if (calls.filter((call) => call.includes('GetStatement')).length === 1) {
+        return new Response('<html><body>Access Denied</body></html>');
+      }
+      return new Response(xml);
+    };
+
+    const report = await fetchFlexReport({ token: 't', queryId: 'q', fetchImpl, delayMs: 0 });
+    expect(report.positions).toHaveLength(2);
+    expect(calls.filter((call) => call.includes('GetStatement'))).toHaveLength(2);
+  });
+
+  test('reports the last unrecognized body when every poll is exhausted', async ({ expect }) => {
+    const fetchImpl = async (url: string): Promise<Response> =>
+      url.includes('SendRequest')
+        ? new Response(
+            '<FlexStatementResponse><Status>Success</Status><ReferenceCode>REF1</ReferenceCode></FlexStatementResponse>',
+          )
+        : new Response('<html><body>Access Denied</body></html>');
+
+    await expect(fetchFlexReport({ token: 't', queryId: 'q', fetchImpl, delayMs: 0, maxAttempts: 2 })).rejects.toThrow(
+      /unrecognized: .*Access Denied/,
+    );
+  });
 });

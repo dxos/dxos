@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { Chat } from '@dxos/assistant-toolkit';
+import * as Chat from '@dxos/assistant/Chat';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -30,7 +30,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
     (get) => {
       const chats =
         companionTo && db
-          ? get(db.query(Query.select(Filter.id(companionTo.id)).targetOf(Chat.CompanionTo).source()).atom)
+          ? get(db.query(Query.select(Filter.id(companionTo.id)).children()).atom).filter(Obj.instanceOf(Chat.Chat))
           : [];
 
       const builder = MenuBuilder.make().root({
@@ -86,7 +86,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
         );
 
       if (chats.length > 0) {
-        builder.group(
+        builder.separator().group(
           'chats',
           {
             label: ['chat-history.label', { ns: meta.profile.key }],

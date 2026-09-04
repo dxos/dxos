@@ -8,6 +8,8 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { Event, Trigger, asyncTimeout, sleep } from '@dxos/async';
 
 import * as Client from './Client';
+import { WorkerConnectionError } from './errors';
+import { LOCK_OR_RPC_WAIT_TIMEOUT } from './internal/locks';
 import * as Worker from './Worker';
 import * as WorkerProtocol from './WorkerProtocol';
 
@@ -78,25 +80,49 @@ const createWorkerFactory = (storageLockKey: string) => () => {
   return channel.port2 as WorkerProtocol.WorkerOrPort;
 };
 
+/** Reads the diagnostics the connection merges into a failure. */
+const diagnosticsOf = (error: unknown): Record<string, unknown> =>
+  error instanceof Error && 'context' in error && typeof error.context === 'object' && error.context
+    ? { ...error.context }
+    : {};
+
+/**
+ * A coordinator link that is broken in both directions: nothing this tab sends reaches a peer, and
+ * no heartbeat, `new-leader`, or `provide-port` ever reaches this tab. Models the observed wedged
+ * tab whose SharedWorker link died — it can still take Web Locks, so it can still evict a leader.
+ */
+const createBrokenCoordinator = (): WorkerProtocol.WorkerCoordinator => ({
+  onMessage: new Event<WorkerProtocol.CoordinatorMessage>(),
+  sendMessage: () => {},
+});
+
 type Connected = { clientToWorker: MessagePort; workerToClient: MessagePort; isOwner: boolean };
 
 const makeConnection = (
   hub: ReturnType<typeof createHub>,
   keys: { leaderLockKey: string; storageLockKey: string },
   leaderTimeouts = { heartbeatInterval: 50, staleTimeout: 1_000, portTimeout: 3_000 },
+  options: {
+    maxLeaderFailures?: number;
+    createWorker?: () => WorkerProtocol.WorkerOrPort;
+    createCoordinator?: () => WorkerProtocol.WorkerCoordinator;
+  } = {},
 ) => {
   const connectedTrigger = new Trigger<Connected>();
+  const failures: unknown[] = [];
   const connection = new Client.Connection({
-    createWorker: createWorkerFactory(keys.storageLockKey),
-    createCoordinator: () => hub.connect(),
+    createWorker: options.createWorker ?? createWorkerFactory(keys.storageLockKey),
+    createCoordinator: options.createCoordinator ?? (() => hub.connect()),
     leaderLockKey: keys.leaderLockKey,
     leaderTimeouts,
+    maxLeaderFailures: options.maxLeaderFailures,
+    onPersistentFailure: (error) => failures.push(error),
     onConnect: async ({ clientToWorker, workerToClient, isOwner }) => {
       connectedTrigger.wake({ clientToWorker, workerToClient, isOwner });
       return { close: async () => {} };
     },
   });
-  return { connection, connected: connectedTrigger.wait() };
+  return { connection, connected: connectedTrigger.wait(), failures };
 };
 
 describe('Connection multi-client', () => {
@@ -195,6 +221,216 @@ describe('Connection multi-client', () => {
     await sleep(200);
     expect(calls).toBe(1);
   });
+
+  test(
+    'a follower waiting on the leader lock is never reported as a failure',
+    async () => {
+      const hub = createHub();
+      const keys = uniqueKeys();
+
+      const leader = makeConnection(hub, keys);
+      await asyncTimeout(leader.connection.open(), 5_000);
+      onTestFinished(async () => {
+        await leader.connection.close();
+      });
+      const leaderInfo = await asyncTimeout(leader.connected, 5_000);
+      expect(leaderInfo.isOwner).toBe(true);
+
+      // `maxLeaderFailures: 1` escalates on the very first failure, so any misreading of "another tab
+      // holds the lock" as a leader-session failure is caught immediately.
+      const follower = makeConnection(hub, keys, undefined, { maxLeaderFailures: 1 });
+      await asyncTimeout(follower.connection.open(), 5_000);
+      onTestFinished(async () => {
+        await follower.connection.close();
+      });
+      const followerInfo = await asyncTimeout(follower.connected, 5_000);
+      expect(followerInfo.isOwner).toBe(false);
+
+      // Outlive the lock/RPC budget. A bounded wait on the leader lock expires here, and the election
+      // loop reports the expiry as a failed leader session: the tab escalates to `onPersistentFailure`
+      // (a coordinated reload in dev) even though it is connected and healthy.
+      await sleep(LOCK_OR_RPC_WAIT_TIMEOUT + 1_000);
+      expect(follower.failures).toEqual([]);
+
+      // And the more damaging half: a timed-out request leaves the lock's wait queue, so while the
+      // follower backs off there is nobody positioned to take over when the leader goes away.
+      const { pending } = await navigator.locks.query();
+      expect((pending ?? []).map(({ name }) => name)).toContain(keys.leaderLockKey);
+    },
+    LOCK_OR_RPC_WAIT_TIMEOUT + 30_000,
+  );
+
+  test('reconnects after a connect attempt fails past the port exchange', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+
+    let attempts = 0;
+    const connected = new Trigger<void>();
+    const connection = new Client.Connection({
+      createWorker: createWorkerFactory(keys.storageLockKey),
+      createCoordinator: () => hub.connect(),
+      leaderLockKey: keys.leaderLockKey,
+      leaderTimeouts: { heartbeatInterval: 50, staleTimeout: 1_000, portTimeout: 3_000 },
+      onConnect: async () => {
+        // Fails only after the worker has handed out ports and claimed the clientId — the shape of a
+        // handle that rejects before `WorkerService.start` registers a tab-liveness lock, so nothing
+        // on the tab side will ever close the session the worker is holding.
+        if (++attempts === 1) {
+          throw new Error('TEST: transient connect failure');
+        }
+        connected.wake();
+        return { close: async () => {} };
+      },
+    });
+    onTestFinished(async () => {
+      await connection.close();
+    });
+
+    await asyncTimeout(connection.open(), 10_000);
+    await asyncTimeout(connected.wait(), 10_000);
+    expect(attempts).toBeGreaterThan(1);
+  });
+
+  test('a leader whose worker never starts rejects with the leader error, not the bare timeout', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+
+    const connection = new Client.Connection({
+      createWorker: () => {
+        throw new Error('TEST: worker creation failed');
+      },
+      createCoordinator: () => hub.connect(),
+      leaderLockKey: keys.leaderLockKey,
+      leaderTimeouts: { heartbeatInterval: 50, staleTimeout: 1_000, portTimeout: 200, retryBackoff: 10 },
+      onConnect: async () => ({ close: async () => {} }),
+    });
+    onTestFinished(async () => {
+      await connection.close();
+    });
+
+    const error = await connection.open().then(
+      () => {
+        throw new Error('open() must not resolve: no leader session can ever open in this test.');
+      },
+      (err) => err,
+    );
+
+    expect(String(error)).toContain('TEST: worker creation failed');
+    expect(diagnosticsOf(error).workerLeaderFailures).toBeGreaterThan(0);
+  }, 30_000);
+
+  test('a tab that never receives a port reports the port timeouts it accrued', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+    const timeouts = { heartbeatInterval: 20, staleTimeout: 100, portTimeout: 200 };
+
+    const leader = makeConnection(hub, keys, timeouts);
+    await asyncTimeout(leader.connection.open(), 10_000);
+    onTestFinished(async () => {
+      await leader.connection.close();
+    });
+
+    const wedged = makeConnection(hub, keys, timeouts, {
+      maxLeaderFailures: 2,
+      createCoordinator: createBrokenCoordinator,
+    });
+    onTestFinished(async () => {
+      await wedged.connection.close();
+    });
+
+    const error = await wedged.connection.open().then(
+      () => {
+        throw new Error('open() must not resolve: this coordinator never delivers a port.');
+      },
+      (err) => err,
+    );
+
+    // Typed, so a consumer discriminates on the class rather than matching the message.
+    expect(WorkerConnectionError.is(error)).toBe(true);
+    const diagnostics = diagnosticsOf(error);
+    expect(diagnostics.workerPortTimeouts).toBeGreaterThan(0);
+    expect(['requesting-port', 'port-timeout']).toContain(diagnostics.workerConnectPhase);
+    expect(diagnostics.workerMsSinceLeaderHeartbeat).toBeUndefined();
+  }, 30_000);
+
+  test('a leader whose session opened reports itself as the leader when the connection stalls', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+
+    const connection = new Client.Connection({
+      createWorker: createWorkerFactory(keys.storageLockKey),
+      createCoordinator: () => hub.connect(),
+      leaderLockKey: keys.leaderLockKey,
+      leaderTimeouts: { heartbeatInterval: 50, staleTimeout: 1_000, portTimeout: 200, retryBackoff: 10 },
+      // Never resolving leaves the leader holding its lock with the session open, which is the
+      // state `workerIsLeader` exists to name — and the one an enumerated phase list dropped.
+      onConnect: () => new Promise<{ close: () => Promise<void> }>(() => {}),
+    });
+    onTestFinished(async () => {
+      await connection.close();
+    });
+
+    const error = await connection.open().then(
+      () => {
+        throw new Error('open() must not resolve: onConnect never settles in this test.');
+      },
+      (err) => err,
+    );
+
+    const diagnostics = diagnosticsOf(error);
+    expect(diagnostics.workerIsLeader).toBe(true);
+    expect(diagnostics.workerLeaderPhase).toBe('session-open');
+  }, 30_000);
+
+  test('a tab with a broken coordinator link stops stealing instead of restarting the leader forever', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+    const timeouts = { heartbeatInterval: 20, staleTimeout: 100, portTimeout: 200 };
+
+    let leaderWorkers = 0;
+    const countingWorkerFactory = () => {
+      leaderWorkers++;
+      return createWorkerFactory(keys.storageLockKey)();
+    };
+
+    const leader = makeConnection(hub, keys, timeouts, { createWorker: countingWorkerFactory });
+    await asyncTimeout(leader.connection.open(), 10_000);
+    onTestFinished(async () => {
+      await leader.connection.close();
+    });
+    expect((await asyncTimeout(leader.connected, 10_000)).isOwner).toBe(true);
+    expect(leaderWorkers).toBe(1);
+
+    // A steal by this tab is always wasted — it can never receive a port — but still aborts the
+    // incumbent's lock, terminating its worker and forcing a full re-boot.
+    const wedged = makeConnection(hub, keys, timeouts, {
+      maxLeaderFailures: 2,
+      createCoordinator: createBrokenCoordinator,
+    });
+    // Asserted in teardown rather than discarded: `open()` must reject because no port ever arrives,
+    // and swallowing it here would hide any other failure the connection reports.
+    const wedgedOpen = expect(wedged.connection.open()).rejects.toThrow();
+    onTestFinished(async () => {
+      await wedged.connection.close();
+      await wedgedOpen;
+    });
+
+    // ~20 port timeouts' worth of runway, so an unbounded steal loop has room to show itself.
+    await sleep(4_000);
+
+    // Bounded by the steal budget: at most `maxLeaderFailures` evictions, one worker re-creation each.
+    expect(leaderWorkers).toBeLessThanOrEqual(1 + 2);
+
+    // Escalated once so the app can surface a reload, rather than degrading silently forever.
+    expect(wedged.failures).toHaveLength(1);
+    expect(wedged.failures[0]).toBeInstanceOf(Error);
+
+    // And election is not left stranded: someone still holds the lock, so a tab still owns a
+    // worker. A steal that only evicts — without the stealer re-entering election — can end with
+    // the lock free and every tab waiting on a leader that no longer exists.
+    const { held } = await navigator.locks.query();
+    expect((held ?? []).map(({ name }) => name)).toContain(keys.leaderLockKey);
+  }, 30_000);
 
   test('rejects a non-positive maxLeaderFailures', () => {
     const hub = createHub();

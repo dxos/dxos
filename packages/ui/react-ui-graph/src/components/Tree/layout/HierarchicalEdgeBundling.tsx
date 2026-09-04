@@ -87,7 +87,7 @@ export const HierarchicalEdgeBundling = ({
   }, [root, width, height, padding, tension, r, label, slots]);
 
   return (
-    <div ref={setRef} className={mx('dx-expander relative', classNames)}>
+    <div ref={setRef} className={mx('dx-expand relative', classNames)}>
       {width > 0 && height > 0 && (
         <svg
           ref={svgRef}

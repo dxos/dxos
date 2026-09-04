@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import * as Skill from '@dxos/compute/Skill';
 import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
 
@@ -28,7 +28,7 @@ export class Trip extends Type.makeObject<Trip>(DXN.make('org.dxos.type.trip', '
   }).pipe(
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--airplane-takeoff--regular', hue: 'sky' }),
-    AppAnnotation.SkillsAnnotation.set([TRIP_SKILL_KEY]),
+    Skill.SkillsAnnotation.set([TRIP_SKILL_KEY]),
   ),
 ) {}
 

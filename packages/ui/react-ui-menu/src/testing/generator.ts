@@ -7,15 +7,16 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { useContext, useEffect } from 'react';
 
-import * as Graph from '@dxos/app-graph/Graph';
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import { random } from '@dxos/random';
 
 import { type ActionGraphProps } from '../hooks/useMenuActions';
 import { type MenuItem, type MenuItemGroup, type MenuItemsAccessor } from '../types';
 
 export type CreateActionsProps = Partial<{
-  type?: typeof Node.ActionType | typeof Node.ActionGroupType;
+  type?: typeof AppGraphNode.ActionType | typeof AppGraphNode.ActionGroupType;
   callback: () => void;
   count: number;
 }>;
@@ -40,17 +41,17 @@ const icons = {
 };
 
 export const createActions = (params?: CreateActionsProps) => {
-  const { callback = () => console.log('invoke'), count = 12, type = Node.ActionType } = params ?? {};
+  const { callback = () => console.log('invoke'), count = 12, type = AppGraphNode.ActionType } = params ?? {};
   return random.helpers.multiple(
     () => ({
       id: random.string.uuid(),
       type,
-      data: type === Node.ActionGroupType ? Node.actionGroupSymbol : callback,
+      data: type === AppGraphNode.ActionGroupType ? AppGraphNode.actionGroupSymbol : callback,
       properties: {
         label: random.lorem.words(2),
         icon: random.helpers.arrayElement(icons[random.helpers.arrayElement(Object.keys(icons)) as keyof typeof icons]),
         disabled: random.helpers.arrayElement([true, false]),
-        ...(type === Node.ActionGroupType && { variant: 'dropdownMenu' }),
+        ...(type === AppGraphNode.ActionGroupType && { variant: 'dropdownMenu' }),
       },
     }),
     { count },
@@ -59,7 +60,7 @@ export const createActions = (params?: CreateActionsProps) => {
 
 const buildNestedActions = (): ActionGraphProps => {
   const result: ActionGraphProps = { edges: [], nodes: [] };
-  const actionGroups = createActions({ type: Node.ActionGroupType });
+  const actionGroups = createActions({ type: AppGraphNode.ActionGroupType });
   actionGroups.forEach((group) => {
     const actions = createActions();
     result.nodes.push(group, ...actions);
@@ -79,21 +80,19 @@ export const createNestedActionsResolver = (props?: {
   registry?: Registry.AtomRegistry;
 }) => {
   const { groupParams, params, registry } = props ?? {};
-  const graph = Graph.make({ ...(registry && { registry }) });
-  const actionGroups = createActions({ type: Node.ActionGroupType, ...groupParams });
+  const graph = AppGraph.make({ ...(registry && { registry }) });
+  const actionGroups = createActions({ type: AppGraphNode.ActionGroupType, ...groupParams });
   actionGroups.forEach((group) => {
     const actions = createActions(params);
-    graph.pipe(
-      Graph.addNodes([group as Node.NodeArg<any>, ...(actions as Node.NodeArg<any>[])]),
-      Graph.addEdges([
-        { source: 'root', target: group.id, relation: 'child' },
-        ...actions.map((action) => ({ source: group.id, target: action.id, relation: 'child' })),
-      ]),
-      Graph.expandSync(group.id, 'child'),
-    );
+    AppGraph.addNodes(graph, [group as AppGraphNode.NodeArg<any>, ...(actions as AppGraphNode.NodeArg<any>[])]);
+    AppGraph.addEdges(graph, [
+      { source: 'root', target: group.id, relation: 'child' },
+      ...actions.map((action) => ({ source: group.id, target: action.id, relation: 'child' })),
+    ]);
+    AppGraph.expandSync(graph, group.id, 'child');
   });
   const items: MenuItemsAccessor = (group?: MenuItemGroup) =>
-    graph.connections(group?.id ?? Node.RootId, 'child') as Atom.Atom<MenuItem[] | null>;
+    graph.connections(group?.id ?? GraphNode.RootId, 'child') as Atom.Atom<MenuItem[] | null>;
   return { items };
 };
 

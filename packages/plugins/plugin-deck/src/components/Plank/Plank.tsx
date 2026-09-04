@@ -12,7 +12,7 @@ import React, {
 } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import type * as Node from '@dxos/app-graph/Node';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { AppSurface, AttentionSigil, type AttentionSigilAction } from '@dxos/app-toolkit/ui';
 import { Breadcrumb, Icon, Popover, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
@@ -24,7 +24,7 @@ import { Pane } from '../Pane';
 type SurfaceProps = ComponentProps<typeof Surface.Surface>;
 
 export type PlankProps = ThemedClassName<{
-  node: Node.Node;
+  node: AppGraphNode.Node;
   /** Attendable id; defaults to the node id. */
   attendableId?: string;
   /** Grouped sigil menu actions; when present the sigil opens a menu, otherwise it is a plain button. */
@@ -92,8 +92,15 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
     const icon = node.properties?.icon ?? 'ph--circle-dashed--regular';
     const label = toLocalizedString(node.properties?.label ?? '', t);
     const data = useMemo<AppSurface.ArticleData>(
-      () => ({ attendableId, subject: node.data, properties: node.properties, popoverAnchorId, ...articleData }),
-      [attendableId, node.data, node.properties, popoverAnchorId, articleData],
+      () => ({
+        attendableId,
+        nodeId: node.id,
+        subject: node.data,
+        properties: node.properties,
+        popoverAnchorId,
+        ...articleData,
+      }),
+      [attendableId, node.id, node.data, node.properties, popoverAnchorId, articleData],
     );
 
     // Anchor the sigil's popover only when this plank's menu is the active popover target.

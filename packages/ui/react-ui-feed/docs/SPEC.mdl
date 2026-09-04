@@ -1,0 +1,529 @@
+---
+id: org.dxos.ui.react-ui-feed
+name: FeedSpec
+version: 0.1.0
+---
+
+Consolidation spec for the feed spike. The spike answered "can one anchor-placed window scroll
+smoothly with a CodeMirror editor per row" (yes — `DESIGN.md` has the principles, `TESTING.md` the
+manual evidence). This document specifies the four parts to consolidate — **virtualizer**, **list**,
+**outliner**, **minimap** — the seams between them, and what is an aspect (a policy the host may
+swap, exposed as a reusable hook per the `react-ui-list` pattern) versus an internal (an invariant
+the engine must hold, never exposed).
+
+Status 2026-08-18: **implemented** — the virtualizer and debug entry points exist, the model and
+the five aspects are in, the rails moved, and the flagship `assistant/Assistant` story exercises
+the whole loop. Additions found by building: `ListModel.patch` (streaming for frozen items — an
+identity-preserving replacement announced as `updated`), and the follow's speeds raised for
+streaming (8 rows/s; the class defaults were tuned for a single arrival).
+
+Decisions taken:
+
+- The virtualizer shipped as an entry point of this package first, then graduated to
+  `@dxos/react-ui-virtual` (placement, `useWindow`/`Window`, the follow, and `ListModel`);
+  this package depends on it and keeps the message-native layer.
+- The list consumes a **model**, not an array: a low-level `ListModel` (reactive via `@effect/atom`)
+  the virtualizer binds to, and `FeedModel` as the native case — not an add-on. `fromMessages()`
+  keeps the array form as an adapter.
+- The follow glide (`ScrollFollower`) is wired and on by default; instant is the fallback.
+- Search is **not** the list's concern. Cross-cutting per-item data — search highlights, selection —
+  reaches items through provider + hook (the decoration pattern, §Aspects); the list neither knows
+  nor routes it.
+- The rails live in **this package**: `Minimap` is promoted here, and `Outline` moves here from
+  `react-ui-components` — call sites updated, no compatibility re-export.
+- The horizontal axis is in scope for the **virtualizer** (axis-neutral arithmetic, an inline
+  acceptance story against real content) and out of scope for the **feed list** (vertical only;
+  rails stay vertical until a horizontal consumer exists).
+
+## Extensions
+
+The following extension dialects are used in this document.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`        |
+| `feat`      | `org.dxos.mdl.feat@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
+| `component` | `org.dxos.mdl.component@1.0`   |
+| `aspect`    | `org.dxos.mdl.aspect@0.1`      |
+
+## Types
+
+```mdl
+type Extents
+  desc: >
+    The host's answer about row sizes, in scalars along one axis — never height or width, so the
+    axis stays the DOM binding's business. `exact` means never revised by measurement (deterministic
+    layouts: fixed-height rows, declared-width cards) but still checked in dev via onMismatch.
+  fields:
+    of: (index: number) => number
+    exact?: boolean
+```
+
+```mdl
+type Layout
+  desc: The mounted range and where its parent goes. Everything a DOM binding needs, per commit.
+  fields:
+    first: number                     # first mounted row (visible + overscan)
+    last: number
+    visible: { first, last }          # what the reader can actually see — readouts describe this
+    offset: number                    # absolute position of the first mounted row
+    sizerExtent: number               # total scrollable extent, reserve included
+```
+
+```mdl
+type WindowState
+  desc: >
+    Published state for chrome that lives outside the scroller — toolbar, statusbar, rails.
+    Geometry is in pixels (what a map draws); indices are model-space (what a readout names).
+  fields:
+    index: number                     # row at the top of the viewport
+    visible: { first, last }
+    mounted: { first, last }
+    count: number
+    geometry: { scroll, viewport, total, window: { start, extent } }
+```
+
+```mdl
+type ListModel
+  desc: >
+    The low-level contract the virtualizer binds to — what the engine already consumed as separate
+    props (count, getId, extents), made one reactive object. Backed by @effect/atom, so derivations
+    (stops, decorations, readouts) are atoms over it rather than parallel props. Changes carry
+    structure the engine currently has to infer: a prepend says it is one, so anchor preservation
+    is information, not an identity scan.
+  fields:
+    count: Atom<number>
+    getId: (index: number) => string
+    at: (index: number) => T | undefined
+    changes: Stream<{ prepended?: number, appended?: number, updated?: string[] }>
+```
+
+```mdl
+type FeedModel
+  desc: >
+    The native case, not an add-on: a ListModel of messages with the feed's own semantics. Owns
+    ITERATION — how the window walks the source — so reaching an edge asks the model
+    (loadBefore/loadAfter: paged history, reverse-from-tail) instead of leaking a host callback.
+    Owns the stops policy and the streaming tail. Adapters: fromMessages(array) for the plain case;
+    ECHO/queue bindings live outside this package (plugin-assistant adapts).
+  extends: ListModel
+  fields:
+    stops: Atom<Stop[]>               # pluggable policy: per message | prompt | block | day
+    streamingId?: Atom<string>        # tail message reconciling by delta
+    loadBefore?: () => Promise<void>  # consumed by onEdge('start') — paging is the model's business
+    loadAfter?: () => Promise<void>
+```
+
+```mdl
+type Decoration
+  desc: >
+    A range of one item's rendered text that some producer wants painted — search is ONE producer;
+    linting, mentions, and diff spans are others. Keyed by item id; delivered to items via the
+    decoration provider/hook (§Aspects), never through list props.
+  fields:
+    id: string                        # item (message) id
+    range: { offset: number, length: number }
+    kind: string                      # producer tag: 'search' | 'mention' | ...
+```
+
+```mdl
+type Stop
+  desc: >
+    One position navigation can land on. Stops are produced by a pluggable policy over the model
+    (per message, per prompt, per block, per search hit, per day divider) and consumed identically
+    by every driver: toolbar, arrow keys, outliner, minimap.
+  fields:
+    index: number                     # row the stop lives in
+    id: string                        # model identity, survives reordering
+    label?: string                    # what a rail or readout shows for it
+```
+
+```mdl
+type Marker
+  desc: An outliner tick's model. Range is in the host's own position space.
+  fields:
+    id: string
+    title: string
+    description?: string
+    range: { from: number, to: number }
+```
+
+```mdl
+type EdgeDrift
+  desc: What reaching an edge revealed about the estimates. Reported, never silently applied.
+  fields:
+    edge: 'start' | 'end'
+    delta: number
+```
+
+## Components
+
+```mdl
+component Virtualizer
+  desc: >
+    The reusable placement engine: Placement (pure arithmetic, no DOM/React) + useWindow (binding
+    to an element the HOST owns) + Window (the trivial own-scroller binding for stories and simple
+    hosts). Target: extractable package or react-ui-list aspect; retrofit candidate for
+    react-ui-mosaic VirtualStack, which still runs tanstack react-virtual.
+  props:
+    model: ListModel                  # count + identity + change structure; array via fromMessages()
+    extents: Extents                  # measurements stay keyed by model id, never by index
+    axis?: 'block' | 'inline'         # default block; only the binding maps extent to height/width
+    overscan?: number                 # rows mounted before/beyond the visible window, per side (8)
+    reserve?: number                  # empty extent after the last row, part of the resting view
+    sticky?: boolean                  # follow the tail as content arrives
+  state:
+    anchor: { id, index, start }      # the one authoritative position; everything else derived
+    measured: Map<id, extent>
+  actions:
+    scrollToIndex(index, align?, behavior?)   # smooth only across mounted rows; far targets jump
+  emits:
+    onChange(state: WindowState)
+    onEdge(drift: EdgeDrift)
+    onMismatch({ index, id, declared, actual })   # exact means do-not-correct, not do-not-check
+  layout: |
+    scroller (host's; overflow-anchor: none — exactly one party anchors)
+    ├── sizer      (extent only, holds no rows; what the thumb measures)
+    └── window     (one absolutely positioned parent, moved by transform)
+        └── rows   (unpositioned, in flow — the browser reflows followers)
+```
+
+```mdl
+component MessageList
+  desc: >
+    The chat feed built on the Virtualizer. Composite: Root (headless — model mapping, aspects,
+    context) / Viewport (ScrollArea binding of useWindow) / Item (one message, renderable outside
+    the window too). Renders no toolbar or statusbar; useMessageList() exposes state and controls
+    for chrome outside the scroller.
+  props:
+    model: FeedModel                            # or fromMessages(array); stops/streaming/paging live here
+    renderer?: (message) => ItemContent         # resolves each message to a block kind
+    Chrome?: Component<MessageChromeProps>      # host render-prop; avatar/timestamp/fork controls
+    Custom?: Component                          # renderer for kind 'custom'
+    registry?: XmlWidgetRegistry                # XML tag -> React widget
+    estimateSize?: number | (message, index) => number
+    stickyBottom?: boolean
+    tailLines?: number                          # blank lines below the tail at rest; 0 by default
+    overscan?: number
+    debug?: boolean                             # borders, outlines + jump detector
+    # NOT here, deliberately: decorations (née hits) and selection reach items via provider + hook
+    # (§Aspects); isAnchor/streamingId are model concerns (FeedModel.stops / .streamingId).
+  state:
+    currentIndex: number                        # row containing the scroll offset — derived, never set beside it
+    widgetStore: WidgetStateStore               # outlives rows; widget state survives unmount/remount
+  actions:
+    stepAnchor(delta)                           # one seam for every driver: toolbar, arrows, rails
+    scrollToIndex(index, options?)
+    scrollToBottom(options?)
+```
+
+```mdl
+component Outline
+  desc: >
+    Index-space rail: one tick per stop, thinned to a fixed pitch, each tick standing for the span
+    to the next. One popover card tracks the shown tick's center via a separate zero-height anchor —
+    ticks are never wrapped, element identity must stay stable. MOVES here from react-ui-components
+    (call sites updated, no re-export).
+  props:
+    markers: Marker[]
+    visibleRange?: { from, to }       # markers intersecting it render active
+    tickSize?: number                 # 8px; fixed pitch, rail thins to what fits
+    width?: number                    # 32px (2rem), matches Minimap
+  state:
+    pointer: number | null            # tick under the pointer
+    navigated: number | null          # tick the keyboard has navigated to
+    shown: number | null              # which of the two wins; published as data-shown
+  actions:
+    onSelect(marker, index)
+    onNavigate(delta)                 # to be replaced by the shared navigation aspect
+  emits:
+    data-pointer, data-navigated, data-shown   # observable invariants (DESIGN §12)
+```
+
+```mdl
+component Minimap
+  desc: >
+    Content-space rail: the document in miniature, drawn from WindowState.geometry only. Track =
+    total extent (reserve included); faint band = mounted window; solid band = viewport. Promoted
+    from testing/debug to a sibling of Outline in this package. Debug overlays (per-row extents, drift) stay in
+    testing/debug.
+  props:
+    state: WindowState
+    width?: number                    # 32px (2rem), asserted equal to Outline's
+  actions:
+    onSelect(fraction)                # host maps fraction to offset via the navigation seam
+```
+
+## Aspects
+
+The `react-ui-list` pattern: standalone, tested hooks that components compose. The dividing rule —
+**a policy the host may swap is an aspect; an invariant the engine must hold is an internal.**
+Internals (the anchor, prepend detection, the id-keyed measurement pass, the single writer of the
+scroll) are never exposed: a hook over an invariant invites a second party into exactly the seams
+the design keeps single-owner.
+
+```mdl
+aspect useWindow
+  desc: The virtualizer itself, bound to a scroller the host owns. Already exists.
+  owns: placement, layout, sticky intent, measurement pass
+```
+
+```mdl
+aspect useStops
+  desc: >
+    Navigation stops as an atom over the model (FeedModel.stops): per message, per prompt (user
+    turns), per block, per day divider. Shared by list, outliner, minimap so a per-prompt feed
+    shows per-prompt ticks with no extra wiring. isAnchor survives as fromMessages() sugar for the
+    per-message policy.
+  owns: stops policy over ListModel
+```
+
+```mdl
+aspect useDecorations
+  desc: >
+    THE PATTERN for cross-cutting per-item data, retrofitted everywhere rather than invented per
+    surface: a provider at the host carries producers (search, mentions, lint, diff); an item asks
+    useDecorations(id) for its own ranges and paints them. The list neither knows nor routes —
+    search leaves the list API entirely (searchFeed stays a model-level producer, since
+    virtualization hides most items from any DOM search). Candidate consumers beyond the feed:
+    react-ui-editor documents, tables, grid cells.
+  owns: provider of Decoration producers; per-item subscription by id
+```
+
+```mdl
+aspect useItemSelection
+  desc: >
+    The item-side hook of the same pattern: an item asks for its own { selected, toggle, rowProps }
+    by id instead of the list threading selectedIds through props. Backed by useListSelection's
+    modes (single | multi | range) at the provider; model-space ids, so virtualization is untouched.
+  owns: per-item selection binding by id
+```
+
+```mdl
+aspect useFeedNavigation
+  desc: >
+    Step/jump intents over a WindowController plus stops — the ONE seam every driver calls
+    (toolbar buttons, arrow keys, outliner, minimap). Cursor derives from the scroll offset, so
+    every press travels. Smooth-vs-jump policy lives here, not in each caller: smooth within the
+    mounted window, instant beyond it. Distinct from react-ui-list useListNavigation, which is
+    focus traversal over fully-mounted rows — different problem, same naming family.
+  owns: step(delta), jumpTo(stop), currentStop
+```
+
+```mdl
+aspect useFollow
+  desc: >
+    The sticky tail as an intent — withdrawn only by a backwards scroll, never re-derived from
+    proximity (corrections grow the document under a stationary reader). Optionally drives
+    ScrollFollower for the velocity-based glide (rows/s, median row height) — DECIDED: wired and
+    on by default, instant as the fallback (glide: false). Reusable for any streaming container:
+    transcripts, logs.
+  owns: following intent, tail correction, optional glide
+```
+
+```mdl
+aspect useListSelection
+  desc: >
+    ADOPTED from react-ui-list, not rebuilt — single and multi modes exist there with ARIA
+    semantics (aria-selected, dx-selected). Contribute a 'range' mode (shift-click, anchor+focus
+    over the stops sequence). Selection is model-space ids, so it composes with virtualization
+    untouched; the feed keeps its one SelectionGroup for cross-editor text selection.
+  owns: selection value, mode policy (single | multi | range), row bindings
+```
+
+## Features
+
+```mdl
+feat F-1: Virtualizer invariants
+  The properties every binding must hold; each is mutation-checked in placement.test.ts and the
+  placement/* stories.
+  req F-1.1: Prepending moves nothing at or after the anchor.
+  req F-1.2: Measuring a row after the anchor never moves the anchor; measurements are keyed by id.
+  req F-1.3: Corrections move the window's transform, never the scroll offset.
+  req F-1.4: A scroll moves content by exactly what was scrolled — including upward from the tail,
+    where unmeasured rows enter.
+  req F-1.5: Reserve is a sizer term; the last row rests at the content's end, not the document's.
+  req F-1.6: Edge drift is reported (onEdge), never silently applied.
+  req F-1.7: Axis-neutral: block and inline are the same arithmetic; only the binding differs. In
+    scope for the virtualizer including an inline acceptance story with real content; the feed list
+    and rails stay vertical until a horizontal consumer exists.
+```
+
+```mdl
+feat F-2: Rendering
+  req F-2.1: Block renderers are pluggable by kind — markdown (CodeMirror, cached shared extension
+    sets), html, custom; room for json, transcript, tool-call blocks.
+  req F-2.2: Chrome is a host render-prop and must not affect measurement beyond being inside the
+    measured row.
+  req F-2.3: Widgets (XML tag -> React via registry) may expand after mount; expansion is not a
+    special case — it is the same post-commit measurement arriving again.
+  req F-2.4: Widget state lives in a Root-owned store and survives its row unmounting.
+  req F-2.5: The streaming item (FeedModel.streamingId) reconciles by delta rather than remounting.
+```
+
+```mdl
+feat F-3: Navigation
+  req F-3.1: Stops are a model policy (FeedModel.stops via useStops); default is every message;
+    isAnchor survives as fromMessages() sugar.
+  req F-3.2: All drivers — toolbar, arrows, outliner, minimap — call useFeedNavigation; no parallel
+    wiring.
+  req F-3.3: The cursor is the row containing the scroll offset; every press travels.
+  req F-3.4: Steps within the mounted window glide; far jumps are instant. Per-call behavior
+    override, host default.
+  req F-3.5: Cmd/Ctrl+Arrow jumps to first/last.
+```
+
+```mdl
+feat F-4: Selection
+  req F-4.1: Selection modes single, multi, range are interchangeable policies (useListSelection).
+  req F-4.2: Selection is model-space (ids) and survives virtualization; items read their own
+    binding via useItemSelection(id), never a threaded selectedIds prop.
+  req F-4.3: One SelectionGroup spans every editor for text selection.
+```
+
+```mdl
+feat F-5: Follow
+  req F-5.1: Following is an intent; only a backwards scroll withdraws it, returning to the tail
+    restores it.
+  req F-5.2: An answer arriving while the reader is at the tail keeps the tail at rest on the
+    viewport's end.
+  req F-5.3: An answer arriving while the reader is elsewhere moves nothing.
+```
+
+```mdl
+feat F-6: Rails
+  req F-6.1: Outline ticks and card: pointer wins while pointing, keyboard while navigating,
+    pointing again hands back; state observable via data-* attributes.
+  req F-6.2: Minimap draws only from WindowState.geometry; viewport band stays inside the mounted
+    band.
+  req F-6.3: Both rails are 2rem wide by default; asserted equal.
+  req F-6.4: Both rails live in react-ui-feed; Outline moves from react-ui-components with its
+    call sites, leaving no re-export behind.
+```
+
+```mdl
+feat F-7: Model
+  req F-7.1: The virtualizer binds to ListModel; a prepend is told, never inferred by identity scan.
+  req F-7.2: FeedModel is the native case: stops, streamingId, and iteration (loadBefore/loadAfter
+    consumed by onEdge) are model concerns, not list props.
+  req F-7.3: fromMessages(array) adapts the plain case; ECHO/queue bindings adapt outside this
+    package.
+  req F-7.4: Reactivity is @effect/atom; derivations (stops, decorations, readouts) are atoms over
+    the model rather than parallel props.
+```
+
+```mdl
+feat F-8: Retrofit
+  req F-8.1: DONE — the virtualizer (placement + useWindow + Window + follow + ListModel + tests)
+    lives in its own package, @dxos/react-ui-virtual; this package depends on it and the
+    /virtualizer entry point is gone.
+  req F-8.2: react-ui-mosaic VirtualStack (still on tanstack react-virtual) rebinds onto useWindow
+    after the feed has soaked; its pagination hook becomes a ListModel.loadBefore/loadAfter
+    consumer. Mosaic adds drag-and-drop, which the spike never exercised — behind a flag.
+  req F-8.3: react-ui-list conventions adopted, not duplicated: useListSelection extended with
+    range; listbox ARIA semantics for rows; useDecorations retrofitted to editor/table surfaces as
+    they come up.
+```
+
+## Acceptance
+
+```mdl
+test T-1: Tail at rest with reserve
+  given: 500 varied-height messages, a tail reserve on
+  then:
+    - the feed opens with the last message resting on the viewport's bottom edge
+    - the reserve is still scrollable; the last row reaches the top of the viewport and no further
+```
+
+```mdl
+test T-2: Upward scroll holds still
+  given: the reader at the tail of a feed whose estimates are wrong for most rows
+  when: scrolling upward in steps
+  then: the row under the top of the viewport moves by exactly the scrolled distance
+```
+
+```mdl
+test T-3: Prepend moves nothing
+  given: a reader mid-feed
+  when: a page of history is prepended
+  then: no mounted row moves on screen
+```
+
+```mdl
+test T-4: Follow
+  given: a reader at the tail, streaming on
+  when: an answer arrives
+  then: the tail stays at rest; scrolling up during the stream stops the follow until the reader
+    returns to the tail
+```
+
+```mdl
+test T-5: One navigation seam
+  given: a feed with per-prompt stops
+  when: stepping via toolbar, arrows, outline, and minimap
+  then: all four land on the same stops via the same controller, and the outline card follows
+```
+
+---
+
+## Appendix: Extension Definitions
+
+```mdl
+ext type
+  uri: dxos.spec/ext/type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap
+    literals?: UnionList
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: dxos.spec/ext/feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self
+  inline-prose: true
+```
+
+```mdl
+ext test
+  uri: dxos.spec/ext/test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap
+    state?: FieldMap
+    slots?: FieldMap
+    actions?: ActionMap
+    emits?: EventMap
+    layout?: CodeBlock
+```
+
+```mdl
+ext aspect
+  uri: org.dxos.mdl.aspect@0.1
+  desc: >
+    A reusable behavior hook (react-ui-list pattern): a policy the host may swap, composed by
+    components, carrying its own tests. Distinct from component (renders nothing) and from an
+    internal (an invariant the engine must hold, which is never exposed as a hook).
+  fields:
+    desc?: Prose
+    owns?: Prose
+```

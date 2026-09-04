@@ -96,9 +96,10 @@ export const awaitTerminal = (flow: Invitation.Flow): Effect.Effect<Invitation.E
     Stream.filter(isTerminal),
     Stream.runHead,
     Effect.map(
-      Option.getOrElse(
-        (): Invitation.Event => ({ _tag: 'error', message: 'invitation stream ended without a terminal event' }),
-      ),
+      Option.getOrElse((): Invitation.Event => ({
+        _tag: 'error',
+        message: 'invitation stream ended without a terminal event',
+      })),
     ),
     Effect.timeout(Duration.seconds(20)),
     Effect.orDie,

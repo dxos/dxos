@@ -27,7 +27,7 @@ const Position = Schema.Struct({
 
 export const QueryWorld = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.voxel.queryWorld'),
+    key: DXN.make('org.dxos.operation.voxel.queryWorld'),
     name: 'Query world',
     description: 'Returns the current state of the voxel world including all voxels, grid dimensions, and block size.',
     icon: 'ph--cube--regular',
@@ -56,7 +56,7 @@ export const QueryWorld = Operation.make({
 
 export const AddVoxels = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.voxel.addVoxels'),
+    key: DXN.make('org.dxos.operation.voxel.add'),
     name: 'Add voxels',
     description: 'Adds one or more voxels to the world at specified coordinates with a given hue.',
     icon: 'ph--plus--regular',
@@ -77,7 +77,7 @@ export const AddVoxels = Operation.make({
 
 export const RemoveVoxels = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.voxel.removeVoxels'),
+    key: DXN.make('org.dxos.operation.voxel.remove'),
     name: 'Remove voxels',
     description: 'Removes voxels at specified coordinates from the world.',
     icon: 'ph--minus--regular',
@@ -98,7 +98,7 @@ export const RemoveVoxels = Operation.make({
 
 export const GenerateShape = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.voxel.generateShape'),
+    key: DXN.make('org.dxos.operation.voxel.generateShape'),
     name: 'Generate shape',
     description: `Generates a 3D shape made of voxels at the given origin. Available shapes: ${MODEL_TYPES.join(', ')}.`,
     icon: 'ph--cube--regular',

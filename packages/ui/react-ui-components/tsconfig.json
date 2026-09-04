@@ -37,6 +37,9 @@
       "path": "../../core/compute/assistant"
     },
     {
+      "path": "../../core/compute/progress"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {

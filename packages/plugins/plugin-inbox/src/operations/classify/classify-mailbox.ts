@@ -27,7 +27,7 @@ import { trim } from '@dxos/util';
 import { InboxOperation } from '#types';
 
 import { type SystemTagId, findOrCreateSystemTag } from '../../types/SystemTags';
-import { CLASSIFY_CURSOR_KEY_ID, findOrCreateFeedCursor } from '../cursor';
+import { CLASSIFY_CURSOR_KEY_ID, findOrCreateFeedCursor } from '../FeedCursor';
 
 const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 

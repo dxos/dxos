@@ -2,32 +2,31 @@
 // Copyright 2021 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+import * as EffectStream from 'effect/Stream';
+
 import { SubscriptionList } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf/stream';
+import { EffectEx } from '@dxos/effect';
 import { FeedIterator, type FeedStore, type FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import {
-  type SubscribeToFeedBlocksRequest,
-  type SubscribeToFeedBlocksResponse,
-  type SubscribeToFeedsRequest,
-  type SubscribeToFeedsResponse,
-} from '@dxos/protocols/proto/dxos/devtools/host';
+import { type SubscribeToFeedBlocksResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { type DevtoolsHost } from '@dxos/protocols/rpc';
 import { ComplexMap } from '@dxos/util';
 
 import { type SpaceManager } from '../space';
 
 type FeedInfo = {
   feed: FeedWrapper<FeedMessage>;
-  owner?: SubscribeToFeedsResponse.FeedOwner;
+  owner?: DevtoolsHost.SubscribeToFeedsResponse.FeedOwner;
 };
 
 export const subscribeToFeeds = (
   { feedStore, spaceManager }: { feedStore: FeedStore<FeedMessage>; spaceManager: SpaceManager },
-  { feedKeys }: SubscribeToFeedsRequest,
-) => {
-  return new Stream<SubscribeToFeedsResponse>(({ next }) => {
+  { feedKeys }: DevtoolsHost.SubscribeToFeedsRequest,
+): EffectStream.Stream<DevtoolsHost.SubscribeToFeedsResponse, Error> => {
+  return EffectEx.streamFromEmitter<DevtoolsHost.SubscribeToFeedsResponse, Error>((emit) => {
     const subscriptions = new SubscriptionList();
     const feedMap = new ComplexMap<PublicKey, FeedInfo>(PublicKey.hash);
 
@@ -46,7 +45,7 @@ export const subscribeToFeeds = (
           }
         });
 
-      next({
+      emit.single({
         feeds: Array.from(feedMap.values()).map(({ feed, owner }) => ({
           feedKey: feed.key,
           length: feed.properties.length,
@@ -60,16 +59,16 @@ export const subscribeToFeeds = (
     subscriptions.add(feedStore.feedOpened.on(update));
     update();
 
-    return () => {
+    return Effect.sync(() => {
       subscriptions.clear();
-    };
+    });
   });
 };
 
 const findFeedOwner = (
   spaceManager: SpaceManager,
   feedKey: PublicKey,
-): SubscribeToFeedsResponse.FeedOwner | undefined => {
+): DevtoolsHost.SubscribeToFeedsResponse.FeedOwner | undefined => {
   const feedInfo = [...spaceManager.spaces.values()]
     .flatMap((space) => [...space.spaceState.feeds.values()])
     .find((feed) => feed.key.equals(feedKey));
@@ -85,9 +84,9 @@ const findFeedOwner = (
 
 export const subscribeToFeedBlocks = (
   { feedStore }: { feedStore: FeedStore<FeedMessage> },
-  { feedKey, maxBlocks = 10 }: SubscribeToFeedBlocksRequest,
-) => {
-  return new Stream<SubscribeToFeedBlocksResponse>(({ next }) => {
+  { feedKey, maxBlocks = 10 }: DevtoolsHost.SubscribeToFeedBlocksRequest,
+): EffectStream.Stream<SubscribeToFeedBlocksResponse, Error> => {
+  return EffectEx.streamFromEmitter<SubscribeToFeedBlocksResponse, Error>((emit) => {
     if (!feedKey) {
       return;
     }
@@ -102,7 +101,7 @@ export const subscribeToFeedBlocks = (
 
       const update = async () => {
         if (!feed.properties.length) {
-          next({ blocks: [] });
+          emit.single({ blocks: [] });
           return;
         }
 
@@ -116,7 +115,7 @@ export const subscribeToFeedBlocks = (
           }
         }
 
-        next({
+        emit.single({
           blocks: blocks.slice(-maxBlocks),
         });
 
@@ -131,9 +130,9 @@ export const subscribeToFeedBlocks = (
       await update();
     });
 
-    return () => {
+    return Effect.sync(() => {
       subscriptions.clear();
       clearTimeout(timeout);
-    };
+    });
   });
 };

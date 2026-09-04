@@ -10,7 +10,7 @@ import { DXN } from '@dxos/keys';
 
 const Forex = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.script.forex'),
+    key: DXN.make('com.example.operation.script.forex'),
     name: 'Forex',
     description: 'Returns the exchange rate between two currencies.',
   },

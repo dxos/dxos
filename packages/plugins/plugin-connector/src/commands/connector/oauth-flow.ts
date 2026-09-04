@@ -154,7 +154,7 @@ export const performOAuthFlow = Effect.fn(function* (
   const initiator = oauthInitiator ?? createFetchOAuthInitiator();
 
   yield* Effect.gen(function* () {
-    const authHeader = getEdgeAuthHeader(edgeClient);
+    const authHeader = yield* Effect.promise(() => edgeClient.getAuthHeader());
 
     // Initiate OAuth flow.
     const authUrl = yield* initiator.initiate({
@@ -184,13 +184,3 @@ export const performOAuthFlow = Effect.fn(function* (
     });
   }).pipe(Effect.ensuring(server.stop().pipe(Effect.catch(() => Effect.void))));
 });
-
-/**
- * Returns the Edge client's cached auth header if available, so Edge can associate
- * the OAuth flow with the current identity.
- */
-// TODO(wittjosiah): EdgeHttpClient does not expose this publicly. Prefer adding a proper API
-//   (e.g. getAuthHeader() or an initiateOAuth helper) to @dxos/edge-client instead of reading
-//   private _authHeader. Cast is at the external-client boundary until that API exists.
-const getEdgeAuthHeader = (edgeClient: EdgeHttpClient): string | undefined =>
-  (edgeClient as unknown as { _authHeader?: string })._authHeader;

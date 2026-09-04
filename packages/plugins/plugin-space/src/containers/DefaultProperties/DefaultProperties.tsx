@@ -45,9 +45,9 @@ export const DefaultProperties = forwardRef<HTMLDivElement, DefaultPropertiesPro
         }
         return {
           inputSchema: entry.inputSchema,
-          createObject: async (values: any, db: Database.Database): Promise<Obj.Unknown> => {
+          createObject: async (values: any, db: Database.Database): Promise<Obj.Unknown | undefined> => {
             const result = await entry
-              .createObject(values, { db, target: db })
+              .createObject(values, { db })
               .pipe(
                 Effect.provideService(Capability.Service, manager.capabilities),
                 Effect.provideService(Operation.Service, operationInvoker),

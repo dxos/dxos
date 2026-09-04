@@ -33,10 +33,17 @@ export class ToolResolverService extends Context.Service<
 
   static resolveToolkit: (
     ids: ToolId[],
-  ) => Effect.Effect<Toolkit.Toolkit<any>, AiToolNotFoundError, ToolResolverService> = (ids) =>
+  ) => Effect.Effect<Toolkit.Toolkit<Record<string, Tool.Any>>, AiToolNotFoundError, ToolResolverService> = (ids) =>
     Effect.gen(function* () {
       const tools = yield* Effect.forEach(ids, (id) =>
         ToolResolverService.resolve(id).pipe(
+          // A resolver may throw rather than fail — an operation whose persisted schema cannot be
+          // projected to tool parameters is the common case. A defect would abort the whole request
+          // over one bad tool, so it is demoted to the not-found failure the filter below drops.
+          Effect.catchDefect((defect) => {
+            log.error('AI tool resolution failed; excluded from context', { id, defect });
+            return Effect.fail(new AiToolNotFoundError(id));
+          }),
           Effect.tapErrorTag('AiToolNotFoundError', (error) =>
             Effect.sync(() => {
               log.warn('Failed to resolve AI tool', { id, error });

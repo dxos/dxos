@@ -8,44 +8,29 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Collection, Database, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { Connection, Cursor } from '@dxos/link';
-import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 // Person is referenced in Actor.Actor's inferred type (via ExtractContact); importing it allows
 // TypeScript to name it in the emitted .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { Actor, Event, Message, type Person } from '@dxos/types';
-
-import { meta } from '#meta';
+import { AI_ACTION_ICON } from '@dxos/ui-types';
 
 import * as Mailbox from './Mailbox';
-import * as MailSend from './MailSend';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
-
-export const GetGoogleCalendars = Operation.make({
-  // TODO(wittjosiah): Declaring services here forces DynamicRuntime validation to fail before the handler
-  //   runs because composer's invoker doesn't carry per-space Database. The handler provides
-  //   `Database.layer(db)` itself (same pattern as plugin-trello GetTrelloBoards).
-  meta: {
-    key: makeKey('getGoogleCalendars'),
-    name: 'Get Google Calendars',
-    description: 'Discover Google Calendars reachable from a connection without materializing local Calendars.',
-    icon: 'ph--calendar--regular',
-  },
-  input: ConnectorSpec.GetSyncTargetsInput,
-  output: ConnectorSpec.GetSyncTargetsOutput,
-});
 
 export const AddMailbox = Operation.make({
-  meta: { key: makeKey('addMailbox'), name: 'Add Mailbox', icon: 'ph--envelope--regular' },
-  services: [Capability.Service],
+  meta: {
+    key: DXN.make('org.dxos.operation.inbox.addMailbox'),
+    name: 'Add Mailbox',
+    icon: 'ph--envelope--regular',
+  },
+  services: [Capability.Service, Database.Service],
   input: Schema.Struct({
     object: Obj.Unknown,
-    target: Schema.Union([Database.Database, Type.getSchema(Collection.Collection)]),
+    // The database comes from the invocation's space id, never from the input; absent, the mailbox
+    // is filed at the space root.
+    target: Schema.optional(Type.getSchema(Collection.Collection)),
   }),
   output: Schema.Struct({
     id: Schema.String,
@@ -56,7 +41,7 @@ export const AddMailbox = Operation.make({
 
 export const DraftEmail = Operation.make({
   meta: {
-    key: makeKey('draftEmail'),
+    key: DXN.make('org.dxos.operation.inbox.draftEmail'),
     name: 'Draft email',
     description: 'Creates a new email draft.',
     icon: 'ph--pencil--regular',
@@ -87,7 +72,7 @@ export const DraftEmail = Operation.make({
 // TODO(wittjosiah): Reconcile with above.
 export const DraftEmailAndOpen = Operation.make({
   meta: {
-    key: makeKey('draftEmailAndOpen'),
+    key: DXN.make('org.dxos.operation.inbox.draftEmailAndOpen'),
     name: 'Draft email and open',
     icon: 'ph--pencil--regular',
   },
@@ -109,176 +94,29 @@ export const DraftEmailAndOpen = Operation.make({
   output: Schema.Void,
 });
 
-export const GmailSend = Operation.make({
-  meta: {
-    key: makeKey('googleMailSend'),
-    name: 'Send Gmail',
-    description: 'Send emails via Gmail.',
-    icon: 'ph--paper-plane-tilt--regular',
-  },
-  input: Schema.Struct({
-    userId: Schema.String.pipe(Schema.optional),
-    ...MailSend.Input.fields,
-  }),
-  output: MailSend.Output,
-  services: [Credential.CredentialsService],
-}).pipe(Operation.visible);
-
-export const GoogleMailSync = Operation.make({
-  meta: {
-    key: makeKey('googleMailSync'),
-    name: 'Sync Google Mail',
-    description: 'Sync emails from Gmail to the mailbox feed.',
-    icon: 'ph--arrows-clockwise--regular',
-  },
-  input: Schema.Struct({
-    binding: Ref.Ref(Cursor.Cursor).annotate({
-      description: 'Binding whose connection owns credentials and whose target is the Mailbox to sync.',
-    }),
-    userId: Schema.String.pipe(Schema.optional),
-    label: Schema.String.pipe(
-      Schema.annotate({
-        description: 'Gmail label to sync emails from. Defaults to inbox.',
-      }),
-      Schema.optional,
-    ),
-  }),
-  output: Schema.Struct({
-    newMessages: Schema.Number,
-  }),
-  services: [Capability.Service, Database.Service, Credential.CredentialsService, Trace.TraceService],
-}).pipe(Operation.visible, Operation.idempotent);
-
 /**
  * Eagerly materializes the local Mailbox bound to a Gmail connection so the sync cursor's target
  * exists before the cursor is created. Gmail is a single-target connector with no remote selection,
  * so a fresh Mailbox is always created; the connection's `accessToken.account` seeds the default name.
  */
-export const MaterializeGmailTarget = Operation.make({
-  meta: {
-    key: makeKey('materializeGmailTarget'),
-    name: 'Materialize Gmail Target',
-    description: 'Create the local Mailbox bound to a Gmail connection.',
-    icon: 'ph--envelope--regular',
-  },
-  input: ConnectorSpec.MaterializeTargetInput,
-  output: ConnectorSpec.MaterializeTargetOutput,
-});
-
-export const JmapSync = Operation.make({
-  meta: {
-    key: makeKey('jmapSync'),
-    name: 'Sync JMAP',
-    description: 'Sync emails from a JMAP server (e.g. Fastmail) to the mailbox feed.',
-    icon: 'ph--arrows-clockwise--regular',
-  },
-  input: Schema.Struct({
-    binding: Ref.Ref(Cursor.Cursor).annotate({
-      description: 'Binding whose connection owns credentials and whose target is the Mailbox to sync.',
-    }),
-  }),
-  output: Schema.Struct({
-    newMessages: Schema.Number,
-  }),
-  // Capability (on-arrival extractors), Database (feed I/O), Trace (status) — provided by the invoker;
-  // HTTP client and JMAP credentials are provided by the handler from the connection.
-  services: [Capability.Service, Database.Service, Trace.TraceService],
-}).pipe(Operation.visible, Operation.idempotent);
-
 /**
  * Eagerly materializes the local Mailbox bound to a JMAP connection so the sync cursor's target
  * exists before the cursor is created. JMAP is a single-target connector (the account inbox), so a
  * fresh Mailbox is always created; the connection's `accessToken.account` seeds the default name.
  * Mirrors {@link MaterializeGmailTarget}.
  */
-export const MaterializeJmapTarget = Operation.make({
-  meta: {
-    key: makeKey('materializeJmapTarget'),
-    name: 'Materialize JMAP Target',
-    description: 'Create the local Mailbox bound to a JMAP connection.',
-    icon: 'ph--envelope--regular',
-  },
-  input: ConnectorSpec.MaterializeTargetInput,
-  output: ConnectorSpec.MaterializeTargetOutput,
-});
-
-export const JmapSend = Operation.make({
-  meta: {
-    key: makeKey('jmapSend'),
-    name: 'Send JMAP',
-    description: 'Send an email via a JMAP server.',
-    icon: 'ph--paper-plane-tilt--regular',
-  },
-  input: MailSend.Input,
-  output: MailSend.Output,
-}).pipe(Operation.visible);
-
-export const GoogleCalendarSync = Operation.make({
-  meta: {
-    key: makeKey('googleCalendarSync'),
-    name: 'Sync Google Calendar',
-    description:
-      'Sync events from Google Calendar. The initial sync uses startTime ordering for specified number of days. Subsequent syncs use updatedMin to catch all changes.',
-    icon: 'ph--arrows-clockwise--regular',
-  },
-  input: Schema.Struct({
-    binding: Ref.Ref(Cursor.Cursor).annotate({
-      description: 'Binding whose connection owns credentials and whose target is the Calendar to sync.',
-    }),
-    googleCalendarId: Schema.optional(Schema.String),
-    syncBackDays: Schema.optional(Schema.Number),
-    syncForwardDays: Schema.optional(Schema.Number),
-    pageSize: Schema.optional(Schema.Number),
-  }),
-  output: Schema.Struct({
-    newEvents: Schema.Number,
-  }),
-  services: [Database.Service, Credential.CredentialsService],
-}).pipe(Operation.visible);
-
 /**
  * Eagerly materializes the local Calendar for a selected remote Google calendar so the sync
  * cursor's target exists before the cursor is created. Find-or-create keyed on the calendar's
  * foreign key, so re-running for the same remote calendar returns the existing Calendar.
  */
-export const MaterializeCalendarTarget = Operation.make({
-  meta: {
-    key: makeKey('materializeCalendarTarget'),
-    name: 'Materialize Calendar Target',
-    description: 'Create the local Calendar bound to a selected Google calendar.',
-    icon: 'ph--calendar--regular',
-  },
-  input: ConnectorSpec.MaterializeTargetInput,
-  output: ConnectorSpec.MaterializeTargetOutput,
-});
-
 /**
  * Create a single event on Google Calendar (the write counterpart to {@link GoogleCalendarSync}, and
  * the calendar analogue of {@link GmailSend}). Sources credentials from the Integration.
  */
-export const CreateGoogleCalendarEvent = Operation.make({
-  meta: {
-    key: makeKey('createGoogleCalendarEvent'),
-    name: 'Create Google Calendar Event',
-    description: 'Create an event on Google Calendar.',
-    icon: 'ph--calendar-plus--regular',
-  },
-  input: Schema.Struct({
-    event: Type.getSchema(Event.Event),
-    googleCalendarId: Schema.String.annotate({ description: 'Remote Google calendar id.' }),
-    connection: Ref.Ref(Connection.Connection).annotate({
-      description: 'Connection to source Google Calendar credentials from.',
-    }),
-  }),
-  output: Schema.Struct({
-    id: Schema.String.annotate({ description: 'Remote Google event id.' }),
-  }),
-  services: [Credential.CredentialsService],
-}).pipe(Operation.visible);
-
 export const RenameFilter = Operation.make({
   meta: {
-    key: makeKey('renameFilter'),
+    key: DXN.make('org.dxos.operation.inbox.renameFilter'),
     name: 'Rename Filter',
     icon: 'ph--pencil-simple--regular',
   },
@@ -290,39 +128,9 @@ export const RenameFilter = Operation.make({
   output: Schema.Void,
 });
 
-export const GetGoogleContactGroups = Operation.make({
-  meta: {
-    key: makeKey('getGoogleContactGroups'),
-    name: 'Get Google Contact Groups',
-    description: 'Discover Google Contact Groups reachable from a connection.',
-    icon: 'ph--users--regular',
-  },
-  input: ConnectorSpec.GetSyncTargetsInput,
-  output: ConnectorSpec.GetSyncTargetsOutput,
-});
-
-export const GoogleContactsSync = Operation.make({
-  meta: {
-    key: makeKey('googleContactsSync'),
-    name: 'Sync Google Contacts',
-    description: 'Sync contacts from a Google Contact group into Person objects in the space.',
-    icon: 'ph--arrows-clockwise--regular',
-  },
-  input: Schema.Struct({
-    binding: Ref.Ref(Cursor.Cursor).annotate({
-      description: 'Binding whose connection owns credentials and whose externalId is the contact group to sync.',
-    }),
-    pageSize: Schema.optional(Schema.Number),
-  }),
-  output: Schema.Struct({
-    upserted: Schema.Number,
-  }),
-  services: [Database.Service, Credential.CredentialsService],
-}).pipe(Operation.visible);
-
 export const ReadEmail = Operation.make({
   meta: {
-    key: makeKey('readEmail'),
+    key: DXN.make('org.dxos.operation.inbox.readEmail'),
     name: 'Read email',
     description: 'Opens and reads the contents of a mailbox.',
     icon: 'ph--envelope-open--regular',
@@ -351,7 +159,7 @@ export const ReadEmail = Operation.make({
 });
 export const ClassifyEmail = Operation.make({
   meta: {
-    key: makeKey('classifyEmail'),
+    key: DXN.make('org.dxos.operation.inbox.classifyEmail'),
     name: 'Classify email',
     description:
       'Classifies an email message by selecting and applying an appropriate tag from available tags in the database.',
@@ -378,7 +186,11 @@ export const ClassifyEmail = Operation.make({
 
 /** @deprecated Use {@link ExtractContactFromMessage} + the message extractor pipeline instead. */
 export const ExtractContact = Operation.make({
-  meta: { key: makeKey('extractContact'), name: 'Extract Contact', icon: 'ph--user--regular' },
+  meta: {
+    key: DXN.make('org.dxos.operation.inbox.extractContact'),
+    name: 'Extract Contact',
+    icon: 'ph--user--regular',
+  },
   services: [Capability.Service, Database.Service],
   input: Schema.Struct({
     db: Database.Database,
@@ -422,7 +234,7 @@ export const ExtractResultSchema = Schema.Struct({
 
 export const ExtractContactFromMessage = Operation.make({
   meta: {
-    key: makeKey('extractContactFromMessage'),
+    key: DXN.make('org.dxos.operation.inbox.extractContactFromMessage'),
     name: 'Extract Contact from Message',
     icon: 'ph--user--regular',
   },
@@ -438,7 +250,7 @@ export const ExtractContactFromMessage = Operation.make({
  */
 export const ExtractSummaryFromMessage = Operation.make({
   meta: {
-    key: makeKey('extractSummaryFromMessage'),
+    key: DXN.make('org.dxos.operation.inbox.extractSummaryFromMessage'),
     name: 'Extract Summary from Message',
     icon: 'ph--text-aa--regular',
   },
@@ -448,7 +260,7 @@ export const ExtractSummaryFromMessage = Operation.make({
 });
 
 export const ExtractMessage = Operation.make({
-  meta: { key: makeKey('extractMessage'), name: 'Extract Message' },
+  meta: { key: DXN.make('org.dxos.operation.inbox.extractMessage'), name: 'Extract Message' },
   services: [Capability.Service, AiService.AiService, Database.Service],
   input: Schema.Struct({
     // Live object or an immutable snapshot (feed messages resolve to snapshots); the handler
@@ -470,7 +282,7 @@ export const DEFAULT_EXTRACT_MAILBOX_CONCURRENCY = 5;
 /** @deprecated Use batch dispatchers like on-arrival extractors or direct ExtractMessage invocations instead. */
 export const ExtractMailbox = Operation.make({
   meta: {
-    key: makeKey('extractMailbox'),
+    key: DXN.make('org.dxos.operation.inbox.extractMailbox'),
     name: 'Extract Mailbox',
     description: 'Runs a selected extractor over every message in a mailbox feed.',
     icon: 'ph--magic-wand--regular',
@@ -513,20 +325,21 @@ const createProgressKey = (mailbox: Mailbox.Mailbox, suffix: string) =>
   Obj.getURI(mailbox, { prefer: 'absolute' }).toString() + suffix;
 
 /**
- * Progress-registry key for a mailbox's fact-analysis monitor.
+ * Progress-registry key for a mailbox's fact-extraction monitor.
  *
  * The operation moved to plugin-brain, but the key stays here with its siblings: it is derived from
  * the mailbox URI, and every monitor key on a mailbox must be minted the same way or the producer and
- * the article compute different names and no meter appears.
+ * the article compute different names and no meter appears. Named for the facts it extracts rather
+ * than its tier, since the cascade that runs it is now {@link AnalyzeMailbox}.
  */
-export const createAnalyzeProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#analyze');
+export const createFactsProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#facts');
 
 /** Progress-registry key for a mailbox's correspondent-extraction monitor ({@link ExtractCorrespondents}). */
 export const createCorrespondentsProgressKey = (mailbox: Mailbox.Mailbox) =>
   createProgressKey(mailbox, '#correspondents');
 
-/** Progress-registry key for a mailbox's pipeline-cascade monitor ({@link ScanMailbox}). */
-export const createScanProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#scan');
+/** Progress-registry key for a mailbox's pipeline-cascade monitor ({@link AnalyzeMailbox}). */
+export const createAnalyzeProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#analyze');
 
 /** Progress-registry key for a mailbox's summarization monitor ({@link SummarizeMailbox}). */
 export const createSummarizeProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#summarize');
@@ -539,7 +352,7 @@ export const DEFAULT_SUMMARIZE_MAILBOX_BATCH_LIMIT = 25;
 
 export const SummarizeMailbox = Operation.make({
   meta: {
-    key: makeKey('summarizeMailbox'),
+    key: DXN.make('org.dxos.operation.inbox.summarizeMailbox'),
     name: 'Summarize Mailbox',
     description:
       "Summarizes mail from known contacts into the mailbox's annotation feed, one immutable summary per message.",
@@ -576,7 +389,7 @@ export const SummarizeMailbox = Operation.make({
 }).pipe(Operation.idempotent);
 
 /**
- * The cost classes {@link ScanMailbox} runs. Each tier's output gates the next,
+ * The cost classes {@link AnalyzeMailbox} runs. Each tier's output gates the next,
  * so the ordering is the contract — not a convenience:
  *
  * - `deterministic` — no LLM, no spend: contacts (the known-sender allow-list) and subscriptions.
@@ -596,15 +409,15 @@ export type MailboxTier = Schema.Schema.Type<typeof MailboxTier>;
  * A tier SELECTS which processors run, never their order — that comes from the `after` edges each
  * processor declares, so a caller listing tiers backwards still gets the cascade order.
  */
-export const DEFAULT_SCAN_MAILBOX_TIERS: readonly MailboxTier[] = ['deterministic', 'classify', 'summarize'];
+export const DEFAULT_ANALYZE_MAILBOX_TIERS: readonly MailboxTier[] = ['deterministic', 'classify', 'summarize'];
 
-export const ScanMailbox = Operation.make({
+export const AnalyzeMailbox = Operation.make({
   meta: {
-    key: makeKey('scanMailbox'),
-    name: 'Scan Mailbox',
+    key: DXN.make('org.dxos.operation.inbox.analyzeMailbox'),
+    name: 'Analyze Mailbox',
     description:
       'Runs the mailbox pipelines in cascade order — deterministic extraction, then cheap LLM classification, then optional per-message analysis.',
-    icon: 'ph--stack-simple--regular',
+    icon: AI_ACTION_ICON,
   },
   // Only the orchestrator's own needs: each spawned operation resolves its own services (an AI tier
   // brings its own AiService), so the cascade itself stays runnable where no AI layer exists.
@@ -654,12 +467,16 @@ export const ScanMailbox = Operation.make({
     completed: Schema.Number,
     failed: Schema.Number,
     skipped: Schema.Number,
+    /** Passes that never ran because the cascade was interrupted — distinct from skipped. */
+    cancelled: Schema.Number,
     /** Per-processor outcome in run order — the spawned operation's own output, or why it did not run. */
     stages: Schema.Array(
       Schema.Struct({
         tier: MailboxTier,
         /** The contributed processor's id — its topology key and its cursor tag. */
         processor: Schema.String,
+        /** URI of what this run was about; several entries share a processor when it covers N subjects. */
+        subject: Schema.optional(Schema.String),
         status: Schema.Literals(['completed', 'failed', 'skipped', 'cancelled']),
         output: Schema.optional(Schema.Any),
         error: Schema.optional(Schema.String),
@@ -670,7 +487,7 @@ export const ScanMailbox = Operation.make({
 
 export const ExtractCorrespondents = Operation.make({
   meta: {
-    key: makeKey('extractCorrespondents'),
+    key: DXN.make('org.dxos.operation.inbox.extractCorrespondents'),
     name: 'Extract Correspondents',
     description: 'Creates Person objects for everyone the user has sent or replied to, derived from the mailbox feed.',
     icon: 'ph--users--regular',
@@ -702,7 +519,7 @@ export const ExtractCorrespondents = Operation.make({
  */
 export const ResetFeedCursor = Operation.make({
   meta: {
-    key: makeKey('resetFeedCursor'),
+    key: DXN.make('org.dxos.operation.inbox.resetFeedCursor'),
     name: 'Reset Feed Cursor',
     description: "Clears a pipeline's cursor so its next run reprocesses the whole mailbox feed.",
     icon: 'ph--arrow-counter-clockwise--regular',
@@ -737,7 +554,7 @@ export const DEFAULT_CLASSIFY_MAILBOX_PAGE_SIZE = 20;
 
 export const ClassifyMailbox = Operation.make({
   meta: {
-    key: makeKey('classifyMailbox'),
+    key: DXN.make('org.dxos.operation.inbox.classifyMailbox'),
     name: 'Classify Mailbox',
     description:
       'LLM spam detection and category labeling over the mailbox feed; senders with a known Person are never spam.',
@@ -782,7 +599,7 @@ export const ClassifyMailbox = Operation.make({
 
 export const CreateProjectFromMessage = Operation.make({
   meta: {
-    key: makeKey('createProjectFromMessage'),
+    key: DXN.make('org.dxos.operation.inbox.createProjectFromMessage'),
     name: 'Create Project',
     description: "Creates a Project seeded from a message's thread, with an LLM summary.",
     icon: 'ph--stack--regular',
@@ -807,7 +624,7 @@ export const createSubscriptionsProgressKey = (mailbox: Mailbox.Mailbox) =>
 
 export const ExtractSubscriptions = Operation.make({
   meta: {
-    key: makeKey('extractSubscriptions'),
+    key: DXN.make('org.dxos.operation.inbox.extractSubscriptions'),
     name: 'Extract Subscriptions',
     description:
       'Extracts unsubscribe links (header and body) from the mailbox feed and records the per-sender subscriptions on the mailbox.',
@@ -831,7 +648,7 @@ export const ExtractSubscriptions = Operation.make({
 
 export const UnsubscribeSender = Operation.make({
   meta: {
-    key: makeKey('unsubscribeSender'),
+    key: DXN.make('org.dxos.operation.inbox.unsubscribeSender'),
     name: 'Unsubscribe',
     description: 'Adds a skip-sender filter and fires the List-Unsubscribe one-click request for a bulk sender.',
     icon: 'ph--prohibit--regular',

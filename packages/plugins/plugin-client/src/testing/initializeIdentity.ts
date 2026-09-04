@@ -26,8 +26,8 @@ export type InitializeIdentityOptions = {
  * run. Returns the identity and spaces for further setup.
  *
  * Only the identity is this helper's own work: the spaces come from
- * {@link AppSpace.setupIdentitySpaces}, the same call the app's identity-created module and the
- * `halo create` command make, so a story's profile cannot drift from a real one.
+ * {@link AppSpace.setupIdentitySpaces}, the same call the app's identity-created module makes, so
+ * a story's profile cannot drift from a real one.
  */
 export const initializeIdentity = (
   client: Client,

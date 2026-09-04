@@ -16,9 +16,12 @@ tasks:
   # the Cloudflare worker. `build:functions` emits `_worker.js` after `vite build` so it survives
   # Vite's `emptyOutDir`.
   bundle:
-    script: pnpm exec vite build && pnpm run --silent build:functions
+    script: pnpm exec vite build --configLoader native && pnpm run --silent build:functions
+    options:
+      # Same untracked `.env` as `serve`, so a local production bundle carries the same keys.
+      envFile: .env
     deps:
-      - prebuild
+      - ~:#prebuild
   # The bundle Playwright serves, as its own target rather than an `env` override on `e2e`'s `bundle`
   # dep: a dependency-level `env` map is part of that dependency's hash, so the override yields a bundle
   # no other invocation can hydrate. `DX_PWA` stays on for `bundle`, which production deploys ship.
@@ -33,6 +36,9 @@ tasks:
   # order to measure the very thing it is budgeting. `check-boot-budget` runs in the `check` job, so
   # it gates every PR; `check-startup-budget` is still manual — its timings cannot gate without a
   # fixed runner.
+  #
+  # `outputs` is declared so a remote-cache hit restores the measurement without rebuilding the
+  # bundle, which is how CI measures a PR's base commit.
   check-boot-budget:
     command: node scripts/check-boot-budget.mjs
     deps:
@@ -40,6 +46,28 @@ tasks:
     inputs:
       - scripts/check-boot-budget.mjs
       - out/composer/index.html
+    outputs:
+      - out/boot-budget.json
+  # Structural guardrail on the curated set: fails when a plugin `plugin-defs.production.tsx` does not
+  # name reached the bundle anyway. Read off the build's own sourcemaps rather than the UI — a plugin
+  # absent from the registry can still be in the bundle, which is the whole failure this catches.
+  check-plugin-set:
+    command: node scripts/check-plugin-set.mjs
+    deps:
+      # `DX_PLUGIN_SET` is a `bundle` cache input, so the env var alone selects the set — no separate
+      # bundle task. It rides the dep rather than this task: the set is a build-time decision, and a
+      # bundle built without it would be the full catalog while this check reported on it.
+      - target: bundle
+        env:
+          DX_PLUGIN_SET: production
+    inputs:
+      - scripts/check-plugin-set.mjs
+      - src/plugin-defs.production.tsx
+      - src/plugin-defs.core.tsx
+      # Globs, not the bare directory: moon hashes files, and a directory input is skipped with a
+      # warning — leaving the check's own subject out of its cache key.
+      - out/composer/index.html
+      - out/composer/assets/**/*
   # Runtime budget on startup: repeats the warm-cold harness scenario and gates on the MEDIAN
   # modules-at-ready. `--repeat-each` reuses one preview server across the runs, and the samples
   # accumulate via `appendRunSample`; the stale log is cleared first so a rerun cannot inherit a
@@ -68,10 +96,17 @@ tasks:
     deps:
       - bundle
       - fetch-ollama
-  # iOS counterpart of `tauri-build`; no sidecar (the ollama runtime is desktop-only).
+  # iOS counterpart of `tauri-build`; no sidecar (the ollama runtime is desktop-only). Embeds the
+  # PRODUCTION plugin set unconditionally — iOS is still deployed out of the `dev` environment, but what
+  # TestFlight carries should be what `composer.space` carries, not the full catalog that environment
+  # would otherwise select. `tauri-ios` (the dev loop) extends `serve-prod` for the same reason.
   tauri-ios-build:
     deps:
-      - bundle
+      # The env rides the dep, not just this task: `frontendDist` is built by `bundle`, so a bundle
+      # built without it would embed the full catalog while this task believed otherwise.
+      - target: bundle
+        env:
+          DX_PLUGIN_SET: production
   # Both native dev loops run this app's `vite dev` through `beforeDevCommand` (`tauri.ios.conf.json`
   # overrides only `bundle`), so they need exactly `serve`'s narrowed dependency set rather than the
   # `tauri` tag's whole-graph `^:build` — extended so the three inner loops cannot drift.
@@ -83,7 +118,7 @@ tasks:
       # otherwise be concatenated onto this command.
       mergeArgs: replace
   tauri-ios:
-    extends: serve
+    extends: serve-prod
     command: pnpm exec tauri ios dev
     options:
       mergeArgs: replace
@@ -104,7 +139,7 @@ tasks:
       cache: false
       outputStyle: stream
     deps:
-      - prebuild
+      - ~:#prebuild
       - '#dist-runtime:build'
       - '#vite-plugin:build'
       - echo-query:prebuild-query-lite
@@ -120,22 +155,35 @@ tasks:
   prebuild:
     script: pnpm run --silent copy:assets
     deps:
-      - ^:prebuild
+      - ^:#prebuild
     inputs:
       - package.json
       - moon.yml
     outputs:
       - public/assets/plugin-tldraw
+    tags:
+      - prebuild
   # Dev server (`vite dev`) — the everyday inner loop, with the full plugin registry. Vite dev
   # resolves @dxos/* from source (importSource), so pre-building the whole graph is wasted work:
   # only packages whose dist is actually consumed need it, and each kind declares itself by tag.
   serve:
+    # `--configLoader native` loads `vite.config.ts` with node's own type stripping instead of
+    # pre-bundling it with Rolldown, so the config's own dependency graph is resolved exactly as
+    # node resolves it at runtime. Vite plans to make it the default; the config is kept compatible
+    # (extensionful relative imports, `import.meta.dirname`) so both loaders agree.
+    command: pnpm exec vite dev --configLoader native
     options:
+      # Local-only secrets (`DX_POSTHOG_*`, `DX_OTEL_*`) live in an untracked `.env`; nothing else in
+      # the repo dotenv-loads it, and the config plugin only sees `process.env`.
+      envFile: .env
       # The `vite` tag contributes `^:build`, and deps merge by append — without this the whole
       # graph is still built and the tags below are redundant.
       mergeDeps: replace
+      # Args merge by append too, so the tag's own `exec vite dev` would be concatenated onto this
+      # command's.
+      mergeArgs: replace
     deps:
-      - prebuild
+      - ~:#prebuild
       # dist consumed at runtime.
       - '#dist-runtime:build'
       # dist consumed at config-load time: `vite.config.ts` runs in Node, before importSource is
@@ -149,9 +197,36 @@ tasks:
       # A build artifact, not runtime dist: plugin-script imports `@dxos/echo-query/api.d.ts?raw`
       # for in-editor type hints, and vite's dependency scan aborts wholesale — pre-bundling
       # nothing at all — if a single import in the crawl fails to resolve. Named explicitly because
-      # `prebuild`'s `^:prebuild` stops at the first hop: echo-query is reached through
-      # plugin-script, which has no `prebuild` task of its own to continue the chain.
+      # `prebuild`'s `^:#prebuild` stops at the first hop: echo-query is reached through
+      # plugin-script, which has no `prebuild`-tagged task of its own to continue the chain.
       - echo-query:prebuild-query-lite
+      # Dist consumed by the dev server itself: the `dx-agent-claude` plugin imports the middleware
+      # in `configureServer`. Named explicitly rather than tagged — it exports no vite plugin, and
+      # nothing in the browser graph reaches it.
+      - agent-claude:build
+  # `vite preview` still evaluates `vite.config.ts`, so it takes the same loader as `serve` and
+  # `bundle` — one loader per app, or a config change can pass in dev and fail serving the bundle.
+  preview:
+    command: pnpm exec vite preview --configLoader native
+    options:
+      mergeArgs: replace
+  # The same inner loop against the curated set `composer.space` ships (`DX_PLUGIN_SET=production`
+  # aliases `./plugin-defs` -> `plugin-defs.production.tsx` in vite.config.ts). Extends `serve` rather
+  # than restating its narrowed dependency set so the two cannot drift — and the fast local loop is now
+  # also the loop that matches production, so a plugin missing from the shipped set surfaces here
+  # rather than after a deploy.
+  serve-prod:
+    extends: serve
+    env:
+      DX_PLUGIN_SET: production
+  # Dev server with the agent debug port already open, for QA flows an agent drives end to end
+  # (`packages/reflect/deus` — the `## QA` section of a PLUGIN.mdl). The session id is minted per
+  # server start and published to `temp/debug-port.json`; set `DX_DEBUG_PORT_SESSION` to choose it
+  # instead, which removes the read-it-back step for a caller that can set the env.
+  serve-qa:
+    extends: serve
+    env:
+      DX_DEBUG_PORT: 'true'
   # Production startup harness — all four `startup.spec.ts` scenarios (cold, warm-cold, throttled,
   # boot-loader paint) against `vite preview`. Its own task because the spec records benchmark rows
   # rather than asserting behaviour: `e2e` ignores it so a timing measurement never gates a merge.
@@ -162,7 +237,7 @@ tasks:
     env:
       DX_PWA: 'false'
     deps:
-      - prebuild
+      - ~:#prebuild
       # `vite preview` serves `out/composer`, and PWA is a build-time decision — so the flag rides
       # the dep too, or the harness measures a service worker precaching ~30 MB mid-run.
       - target: bundle
@@ -174,14 +249,14 @@ tasks:
   e2e-dev:
     command: pnpm exec playwright test --config=src/playwright/playwright-dev.config.ts
     deps:
-      - prebuild
+      - ~:#prebuild
       - ^:build
   # Welcome-screen focus regression — drives Storybook on :9009 rather than the app, so it cannot
   # run under `e2e`'s `vite preview` web server.
   e2e-welcome-focus:
     command: pnpm exec playwright test --config=src/playwright/playwright-welcome-focus.config.ts
     deps:
-      - prebuild
+      - ~:#prebuild
       - ^:build
   # Vitest (inherited from `ts-test`); the extra inputs keep the cache honest about the Storybook
   # and Vite config this app's tests load.

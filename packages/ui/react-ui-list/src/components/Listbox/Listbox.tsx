@@ -31,7 +31,7 @@
 // - `Viewport` — optional `ScrollArea.Root` + `ScrollArea.Viewport`. Always scrolls when
 //    present. Forwards ScrollArea knobs (`thin`, `padding`, `centered`).
 // - `Content` — the `<ul role='listbox'>` holding the items. Applies the navigation aspect's
-//    container props (Tabster arrow nav, focus-on-entry redirect, role + aria-orientation).
+//    container props (arrow-key navigation, focus-on-entry redirect, role + aria-orientation).
 // - `Item` — `<li role='option'>` with `aria-selected` on the selected row, paired with
 //    `dx-selected` styling. See `ui-theme/src/css/components/state.md`.
 // - `ItemLabel` — text helper that truncates and takes most of the row width.
@@ -58,6 +58,7 @@ import React, {
   useMemo,
 } from 'react';
 
+import { useFocusGroup } from '@dxos/react-focus';
 import { List, ListItem } from '@dxos/react-list';
 import {
   Icon,
@@ -67,10 +68,11 @@ import {
   type ThemedClassName,
   composable,
   composableProps,
+  useMergeRefs,
 } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { type SelectionItemBinding, useListNavigation, useListSelection } from '../../aspects';
+import { type SelectionItemBinding, useListNavigation, useListSelection } from '../../hooks';
 import { listTheme } from '../List.theme';
 import {
   LISTBOX_ITEM_NAME,
@@ -109,11 +111,29 @@ type RootProps = PropsWithChildren<{
    * defined id.
    */
   onValueChange?: (value: string) => void;
+  /**
+   * Called when the user clears the selection (Escape on a focused option). Fires only when
+   * something was selected — repeated Escapes are a no-op — and keeps `onValueChange` narrow.
+   */
+  onDeselect?: () => void;
+  /**
+   * Externally-managed multi-select (e.g. a machine owns the selection): options + arrow
+   * navigation without the internal single-select value model.
+   */
+  multiselectable?: boolean;
   /** Reserved for parity with the prior `Listbox.Root`; focus-on-entry already covers most cases. */
   autoFocus?: boolean;
 }>;
 
-const Root = ({ value, defaultValue, onValueChange, autoFocus: _autoFocus, children }: RootProps) => {
+const Root = ({
+  value,
+  defaultValue,
+  onValueChange,
+  onDeselect,
+  multiselectable = false,
+  autoFocus: _autoFocus,
+  children,
+}: RootProps) => {
   // Selection is opt-in: a list is selectable only when the consumer wires the value model.
   // Plain content lists (the migrated `@dxos/react-ui` `List` call sites) pass none of these
   // and render as `role=list`/`listitem` rows.
@@ -130,11 +150,14 @@ const Root = ({ value, defaultValue, onValueChange, autoFocus: _autoFocus, child
     onValueChange: (next) => {
       if (next !== undefined) {
         onValueChange?.(next);
+      } else {
+        // The aspect emits `undefined` only from `clear` (Escape), never from a row click.
+        onDeselect?.();
       }
     },
   });
 
-  const context = useMemo(() => ({ selectable, selection }), [selectable, selection]);
+  const context = useMemo(() => ({ selectable, multiselectable, selection }), [selectable, multiselectable, selection]);
 
   return <ListboxProvider {...context}>{children}</ListboxProvider>;
 };
@@ -168,7 +191,7 @@ const Viewport = composable<HTMLDivElement, ViewportProps>((props, forwardedRef)
 Viewport.displayName = LISTBOX_VIEWPORT_NAME;
 
 //
-// Content — the listbox `<ul>` (Tabster arrow group + aria-label + role).
+// Content — the listbox `<ul>` (arrow-key group + aria-label + role).
 //
 
 type ContentProps = {
@@ -180,26 +203,29 @@ type ContentProps = {
 };
 
 const Content = composable<HTMLUListElement, ContentProps>((props, forwardedRef) => {
-  const { selectable } = useListboxContext(LISTBOX_CONTENT_NAME);
+  const { selectable, multiselectable } = useListboxContext(LISTBOX_CONTENT_NAME);
 
-  // `useListNavigation` bundles role + aria-orientation + Tabster arrow nav. In `listbox` mode
+  // `useListNavigation` bundles role + aria-orientation + arrow-key navigation. In `listbox` mode
   // it also adds the focus-on-entry redirect (to selected, then first non-disabled option);
   // `list` mode is for the non-selectable rows (arrow nav across interactive descendants only).
-  const navigation = useListNavigation({ mode: selectable ? 'listbox' : 'list' });
+  // External multi-select is still a listbox per WAI-ARIA, so it keeps option navigation.
+  const navigation = useListNavigation({ mode: selectable || multiselectable ? 'listbox' : 'list' });
 
   const { children, ...rest } = props as PropsWithChildren<ContentProps & Record<string, unknown>>;
 
   // We render via the primitive `<List>` so descendant `<ListItem>`s satisfy their Radix
-  // context-scope check. The container's role/aria/Tabster wiring comes from the navigation
+  // context-scope check. The container's role/aria/navigation wiring comes from the navigation
   // aspect rather than the primitive's `selectable` plumbing — that keeps the ARIA grammar
   // (`aria-selected`) owned by `Item` below.
   const composed = composableProps<HTMLUListElement>(rest, { classNames: styles.listboxContent() });
+  const multiselectableProps = multiselectable ? { 'aria-multiselectable': true } : null;
   return (
     <List
       variant='unordered'
       {...composed}
+      {...multiselectableProps}
       {...navigation.containerProps}
-      ref={forwardedRef as unknown as ForwardedRef<HTMLOListElement>}
+      ref={useMergeRefs([forwardedRef, navigation.containerProps.ref]) as unknown as ForwardedRef<HTMLOListElement>}
     >
       {children}
     </List>
@@ -215,6 +241,8 @@ Content.displayName = LISTBOX_CONTENT_NAME;
 type ItemProps = PropsWithChildren<{
   /** Stable identifier; matched against the parent's `value`. */
   id: string;
+  /** Externally-managed selection state (multiselectable lists); overrides the internal model. */
+  selected?: boolean;
   /** Disable the row — focusable but doesn't update selection, dimmed. */
   disabled?: boolean;
   /** Optional click handler in addition to selection; also fired by Enter/Space when interactive. */
@@ -227,14 +255,28 @@ type ItemProps = PropsWithChildren<{
    * click-to-toggle without the focus-then-click double count.
    */
   onMouseDown?: (event: MouseEvent<HTMLLIElement>) => void;
+  /**
+   * Optional key handler, run before the row's own Enter/Space activation so a consumer key binding
+   * can claim the event (`preventDefault`) rather than firing alongside it.
+   */
+  onKeyDown?: (event: KeyboardEvent<HTMLLIElement>) => void;
 }>;
 
 const Item = composable<HTMLLIElement, ItemProps>((props, forwardedRef) => {
-  const { id, disabled, onClick, onFocus, onMouseDown, children, ...rest } = props as ItemProps &
-    Record<string, unknown>;
-  const { selectable, selection } = useListboxContext(LISTBOX_ITEM_NAME);
+  const {
+    id,
+    disabled,
+    selected: selectedProp,
+    onClick,
+    onFocus,
+    onMouseDown,
+    onKeyDown,
+    children,
+    ...rest
+  } = props as ItemProps & Record<string, unknown>;
+  const { selectable, multiselectable, selection } = useListboxContext(LISTBOX_ITEM_NAME);
   const binding: SelectionItemBinding = selection.bind(id, { disabled });
-  const selected = selectable && binding.selected;
+  const selected = selectedProp ?? (selectable && binding.selected);
   // A non-selectable row is interactive only if the caller wired a click; otherwise it's a
   // plain display row (no pointer affordance).
   const interactive = selectable || onClick != null;
@@ -265,6 +307,17 @@ const Item = composable<HTMLLIElement, ItemProps>((props, forwardedRef) => {
     [selectable, binding, onFocus],
   );
 
+  // A row that holds its own controls (a toggle, a delete button) would otherwise take the arrow
+  // keys one focusable at a time, stepping INTO the row instead of on to the next option. The
+  // group makes the row a single stop for the container's arrow navigation; `Enter` enters its
+  // controls and `Escape` returns. Rows with no focusable children are unaffected.
+  const {
+    ref: focusGroupRef,
+    onKeyDown: onFocusGroupKeyDown,
+    onFocus: _onFocusGroupFocus,
+    ...groupProps
+  } = useFocusGroup({ tabBehavior: 'limited' });
+
   // Options aren't natively-interactive elements (unlike `<button>`), so the browser won't fire
   // Enter/Space clicks on their own — wire that up for every interactive row (selectable or not),
   // matching `<button>`'s native activation keys per WAI-ARIA APG listbox guidance. Dispatches a
@@ -272,14 +325,31 @@ const Item = composable<HTMLLIElement, ItemProps>((props, forwardedRef) => {
   // `MouseEvent` type — matches the same `.click()` pattern `MessageStack`'s row navigation uses.
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLLIElement>) => {
-      if (!interactive || disabled || (event.key !== 'Enter' && event.key !== ' ')) {
+      onKeyDown?.(event);
+      onFocusGroupKeyDown(event);
+      if (
+        event.defaultPrevented ||
+        !interactive ||
+        disabled ||
+        // Bubbled from a control inside the row — the groupper puts focus there deliberately, and
+        // its Enter belongs to it, not to the row (and its Escape is the groupper's exit).
+        event.target !== event.currentTarget
+      ) {
         return;
       }
-      event.preventDefault();
-      event.currentTarget.click();
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        event.currentTarget.click();
+      } else if (event.key === 'Escape' && selectable) {
+        // Deselect; a no-op (no emission, no preventDefault) when nothing is selected, so the
+        // event still reaches an enclosing dismissable.
+        selection.clear();
+      }
     },
-    [interactive, disabled],
+    [onKeyDown, onFocusGroupKeyDown, interactive, disabled, selectable, selection],
   );
+
+  const itemRef = useMergeRefs<HTMLLIElement>([forwardedRef, focusGroupRef]);
 
   const composed = composableProps<HTMLLIElement>(rest, {
     classNames: styles.listboxItem({
@@ -295,16 +365,17 @@ const Item = composable<HTMLLIElement, ItemProps>((props, forwardedRef) => {
   return (
     <ListItemProviderHost id={id} selected={selected}>
       <ListItem
+        {...groupProps}
         {...composed}
-        role={selectable ? 'option' : 'listitem'}
+        role={selectable || multiselectable ? 'option' : 'listitem'}
         tabIndex={interactive ? 0 : -1}
-        aria-selected={selectable ? selected : undefined}
+        aria-selected={selectable || multiselectable ? selected : undefined}
         aria-disabled={disabled || undefined}
         onClick={handleClick}
         onFocus={handleFocus}
         onKeyDown={handleKeyDown}
         onMouseDown={onMouseDown}
-        ref={forwardedRef}
+        ref={itemRef}
       >
         {children}
       </ListItem>

@@ -4,9 +4,9 @@ description: >-
   Working inside the Claude Code cloud sandbox (Claude Code on the web, remote sessions,
   scheduled runs). Use when CLAUDE_CODE_REMOTE is set; when `moon`, `gh`, or `oxfmt` are
   "command not found"; when Chromium or Playwright fails with ERR_CONNECTION_RESET or a TLS
-  error against an HTTPS host that curl reaches fine; when /mode, /project, or the branch and
-  worktree guard hooks appear to do nothing; or when a build or dev server unexpectedly
-  triggers a full pnpm install.
+  error against an HTTPS host that curl reaches fine; when /dxos:project answers `Unknown
+  command` or a plugin's skills are missing from the session; or when a build or dev server
+  unexpectedly triggers a full pnpm install.
 ---
 
 # Working in the Claude Code cloud sandbox
@@ -21,44 +21,119 @@ several of their instructions do not hold here.
 (`CCR_AGENT_PROXY_ENABLED`, `CCR_EGRESS_GATEWAY_ENABLED`, …). Any of these means the sandbox.
 `/root/.ccr/README.md` documents the network proxy from the platform side.
 
-## Project hooks do NOT run
+## Project hooks run; plugins do not install themselves
 
-`.claude/settings.json` hooks are inert in cloud sessions. Consequences:
+`.claude/settings.json` hooks fire here as they do locally: `mode.sh` injects the `RESPONSE RULES`
+block on every prompt, so `/mode terse|normal` works, and `guard-branch.sh` / `guard-worktree.sh`
+deny edits whose target working tree is on `main`. They are a backstop, not a guarantee — check
+`git branch --show-current` before the first edit.
 
-- `.claude/hooks/mode.sh` never injects the `RESPONSE RULES` block, and `/mode terse|normal` does
-  nothing. **Read the response rules from `AGENTS.md` → "Responding to the user" directly** —
-  nothing re-injects them mid-session.
-- `.claude/hooks/track.sh` never fires, so `/project …` does not work. Maintain `TASKS.md` /
-  `DESIGN.md` by hand when the work needs tracking.
-- `guard-branch.sh` and `guard-worktree.sh` deny nothing. The Non-negotiables they back (never
-  create/switch branches or worktrees, never edit while on `main`) still apply in full — **you are
-  the only thing enforcing them.** Check `git branch --show-current` before the first edit.
+`~/.claude` does not survive a fresh container. It starts with an empty `installed_plugins.json`
+and only the official marketplace known, and `enabledPlugins` / `extraKnownMarketplaces` in
+`.claude/settings.json` only _declare_ a plugin — nothing fetches one. Every plugin listed there
+is therefore absent: `/dxos:project` answers `Unknown command`, and the skills those plugins ship
+(`task-planning`, `superpowers:*`) are missing from the session's skill list. Skills committed to
+the repo arrive by a different route — the `.claude/skills -> ../.agents/skills` symlink — and
+are always there.
 
-There is no `SessionStart` hook either, so no `SESSION CONTEXT` block: run
+The repo's bootstrap registers the marketplace from the local checkout (no network) and installs.
+It is idempotent:
+
+```bash
+bash .claude/scripts/bootstrap-plugins.sh
+```
+
+Installing does not retrofit the running session; a fresh session in the same container is the
+first to see the plugin. `.config/claude-code-setup.sh` runs the same script, so where the
+environment's setup command is wired the install lands in the cached image and the first session
+already has it.
+
+`claude plugin uninstall` and `claude plugin marketplace remove` **rewrite tracked
+`.claude/settings.json`**, stripping the `dxos` entries out of `enabledPlugins` and
+`extraKnownMarketplaces`. `git diff` after either, and restore. `add` and `install` leave the file
+alone.
+
+No `SessionStart` hook emits a `SESSION CONTEXT` block: run
 `git rev-parse --show-toplevel && git branch --show-current` before any file op.
 
 ## Tooling not on PATH
 
-`moon`, `gh`, and `oxfmt` are all missing. `pnpm` and `node` are present (`/opt/node22/bin`).
+`pnpm` and `node` are present (`/opt/node22/bin`); `gh` is not. `proto`, `moon`, and
+`node_modules` exist only where the environment's setup command ran
+`.config/claude-code-setup.sh`; without it `pnpm exec moon` fails too. Establish which case you
+are in before concluding a command is broken:
 
-| `AGENTS.md` says                            | In the sandbox                                                        |
-| ------------------------------------------- | --------------------------------------------------------------------- |
-| `moon run <package>:<task>`                 | `pnpm exec moon run <package>:<task>` (or `./node_modules/.bin/moon`) |
-| `gh run list --branch … --workflow "Check"` | `mcp__github__*` tools only — there is no `gh`                        |
-| `pnpm format`                               | works (goes through pnpm); a bare `oxfmt` does not                    |
+```bash
+command -v proto moon; ls node_modules | wc -l   # 0 => setup never ran
+```
+
+| `AGENTS.md` says     | Setup ran                      | Setup did not run                             |
+| -------------------- | ------------------------------ | --------------------------------------------- |
+| `moon run <pkg>:<t>` | `pnpm exec moon run <pkg>:<t>` | `bash .config/claude-code-setup.sh` (10+ min) |
+| `pnpm format`        | works                          | `pnpm dlx oxfmt@0.63` — matches the root pin  |
+| `gh run list …`      | `mcp__github__*` tools only    | same — there is no `gh` either way            |
 
 GitHub's REST API is **also unreachable from the shell**: `curl https://api.github.com/…` returns
 `GitHub access is not enabled for this session`, with or without a token. Never build a poll loop or
 `Monitor` around it — it fails identically whether CI is red, green, or still running, so silence
 means nothing. Read run status through the `mcp__github__*` tools, which go through the server side.
 
-## Dependencies are installed but not built
+### `moon` itself may not run at all
 
-The clone ships `node_modules` but no build outputs. A first `moon run <app>:serve` runs a pnpm
-install and then builds the whole dependency graph — expect 10+ minutes. Bundled sub-packages may
-still be missing afterward: `@dxos/shell` needs `moon run shell:bundle` explicitly, or the app's
-shell entry 500s with `Failed to resolve import "@dxos/shell/style.css"`. Build before running
-anything, and budget for it.
+moon loads its `javascript`/`bun` toolchains as WASM plugins from ghcr, whose blob host
+(`pkg-containers.githubusercontent.com`) the egress gateway answers 403 to. When it does, EVERY
+`pnpm exec moon run …` dies with `plugin::loader::registry::load_failure` — build, test and lint
+are all unavailable, and nothing can be validated the normal way. Confirm with
+`curl -sS "$HTTPS_PROXY/__agentproxy/status"` (the host appears under `recentRelayFailures`).
+
+Fallback: typecheck against SOURCES instead of built `dist/types`, via the `source` export
+condition every `@dxos` package declares. Write a throwaway config in the package, run it, delete it:
+
+The `extends` path is relative to the package, so count the directories: three levels for
+`packages/plugins/plugin-x`, four for `packages/core/compute/nlp`. Get it wrong and tsc fails before
+it type-checks anything.
+
+```jsonc
+// packages/plugins/<pkg>/tsconfig.check.json — three levels deep; add a `../` per extra level
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": false,
+    "incremental": false,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "emitDeclarationOnly": false,
+    "noEmit": true,
+    "customConditions": ["source"],
+    "types": ["node", "vite/client"],
+    "skipLibCheck": true,
+  },
+  "include": ["dx.config.ts", "src/**/*.ts", "src/**/*.tsx"],
+}
+```
+
+Run it so the filter cannot swallow the verdict — in a pipeline the shell reports `grep`'s status,
+not `tsc`'s, so a real failure reads as success whenever the filter matches nothing:
+
+```bash
+pnpm exec tsc -p tsconfig.check.json > /tmp/tsc.log; status=$?; grep -E "^(src|dx\.config)" /tmp/tsc.log; exit $status
+```
+
+The filter narrows the output to the package's own paths. The hundreds of `../../…` errors are pre-existing and not yours: codegen'd packages
+(`@dxos/protocols`) have no sources to resolve. This catches real type errors but is NOT the build
+— no vite, no declaration emit, no project references — so say so when reporting.
+
+`pnpm exec oxlint <paths>` and `pnpm format` still work; neither goes through moon.
+
+## Nothing is prebuilt, and `node_modules` may be missing
+
+The clone ships no build outputs, and `node_modules` only where the setup command ran. A first
+`moon run <app>:serve` runs a pnpm install and then builds the whole dependency graph — expect
+10+ minutes. Bundled sub-packages may still be missing afterward: `@dxos/shell` needs
+`moon run shell:bundle` explicitly, or the app's shell entry 500s with
+`Failed to resolve import "@dxos/shell/style.css"`. Build before running anything, and budget
+for it.
 
 A task whose inputs have not changed replays its cached result, so after editing a library, e2e
 bundles pick the edit up only once the library actually rebuilds. When a fix "doesn't work", confirm
@@ -74,9 +149,9 @@ A type error in a file your change never touched is usually an unbuilt dependenc
 ## One checkout, no worktrees
 
 The repo lives at `/home/user/<repo>` on a harness-assigned `claude/…` branch. There are no
-worktrees, so `AGENTS.md`'s `branch == claude/<worktree-dir-name>` pairing cannot hold — the
-directory is the repo name and the branch is something else. That is expected; do not try to fix it.
-The rule that survives is the important one: never create or switch branches or worktrees.
+worktrees — the directory is the repo name and the branch is something else. As in a local
+session, the directory and branch names are not expected to match; do not try to fix it. The
+rule that survives is the important one: never create or switch branches or worktrees.
 
 ## The container is ephemeral
 

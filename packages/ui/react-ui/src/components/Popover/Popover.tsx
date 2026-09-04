@@ -3,6 +3,7 @@
 //
 
 // This is based upon `@radix-ui/react-popover` fetched Oct 25, 2024 at https://github.com/radix-ui/primitives at commit 374c7d7.
+// The upstream source lives at https://github.com/radix-ui/primitives/tree/main/packages/react/popover.
 
 import { composeEventHandlers } from '@radix-ui/primitive';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
@@ -33,8 +34,11 @@ import React, {
 } from 'react';
 import { RemoveScroll } from 'react-remove-scroll';
 
+import { DX_POPOVER_CONTENT_ATTR } from '@dxos/ui-types';
+
 import { useElevationContext, useSafeCollisionPadding, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
+import { ColumnContext } from '../Column/ColumnContext';
 import {
   POPOVER_NAME,
   PopoverProvider,
@@ -222,7 +226,11 @@ const PopoverPortal = (props: PopoverScopedProps<PopoverPortalProps>) => {
     <PortalProvider scope={__scopePopover} forceMount={forceMount}>
       <Presence present={forceMount || context.open}>
         <PortalPrimitive asChild container={container}>
-          {children}
+          {/* The portal escapes the declaring tree's DOM, but React context follows the element tree,
+              so content declared inside a Column would otherwise believe it still has that host's
+              gutter and place itself in a content track no ancestor provides — rendering flush
+              against the popover's own edges. */}
+          <ColumnContext.Provider value={false}>{children}</ColumnContext.Provider>
         </PortalPrimitive>
       </Presence>
     </PortalProvider>
@@ -465,6 +473,7 @@ const PopoverContentImpl = forwardRef<PopoverContentImplElement, PopoverContentI
         >
           <PopperPrimitive.Content
             data-state={getState(context.open)}
+            {...{ [DX_POPOVER_CONTENT_ATTR]: '' }}
             role='dialog'
             id={context.contentId}
             {...popperScope}

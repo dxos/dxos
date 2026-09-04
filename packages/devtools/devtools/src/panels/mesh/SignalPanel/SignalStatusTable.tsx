@@ -9,8 +9,8 @@ import { scheduleTaskInterval } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Format } from '@dxos/echo/Format';
 import { type SignalStatus } from '@dxos/messaging';
-import { type SubscribeToSignalStatusResponse } from '@dxos/protocols/proto/dxos/devtools/host';
-import { SignalState } from '@dxos/protocols/proto/dxos/mesh/signal';
+import { SignalState } from '@dxos/protocols/buf/dxos/mesh/signal_pb';
+import { type DevtoolsHost } from '@dxos/protocols/rpc';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
 
@@ -18,7 +18,7 @@ export interface SignalStatusProps {
   status: SignalStatus[];
 }
 
-const getSignalStatus = (server: SubscribeToSignalStatusResponse.SignalServer): SignalStatus => {
+const getSignalStatus = (server: DevtoolsHost.SubscribeToSignalStatusResponse.SignalServer): SignalStatus => {
   return {
     connectionStarted: server.connectionStarted!,
     lastStateChange: server.lastStateChange!,

@@ -158,7 +158,18 @@ const OperationsToRegistrySpec = LayerSpec.make(
         const sources = yield* Effect.promise(() =>
           Promise.all(sets.map((set) => (set.definitions ? set.definitions() : set.getHandlers()))),
         );
-        registry.add(sources.flat().map(Operation.serialize));
+        const definitions = sources.flat();
+        // The only point every operation in the app is visible at once. Tool names derive from keys
+        // non-injectively (`Operation.toolName`), so two keys can claim one name — which the resolver
+        // would only surface once a model asked for it.
+        const collisions = Operation.findToolNameCollisions(definitions);
+        invariant(
+          collisions.size === 0,
+          `Operations collide on derived tool name: ${[...collisions]
+            .map(([name, keys]) => `${name} <- ${keys.join(', ')}`)
+            .join('; ')}`,
+        );
+        registry.add(definitions.map(Operation.serialize));
         return registry;
       }),
     ),
@@ -242,10 +253,11 @@ const RemoteTriggerManagerSpec = LayerSpec.make(
 );
 
 /**
- * Application-scoped remote (EDGE) process manager, providing the progress meter's cancel control.
- * Uses the EDGE implementation whenever an edge service is configured — cancel is addressed by trigger
- * id + space, so it is not space-scoped — otherwise a read-only no-op. Resolved by the progress trace
- * sink to route an edge-run trigger's cancel; the aggregate {@link TriggerMonitor} view is unaffected.
+ * Application-scoped remote (EDGE) process manager: the progress meter's cancel control and the
+ * process-control surface an agent asked for with `location: 'edge'` is spawned on. Uses the EDGE
+ * implementation whenever an edge service is configured, otherwise a read-only no-op. One instance
+ * serves every space — both cancel and process control take the space they address — so this stays
+ * application-scoped even though processes are per-space.
  */
 const RemoteProcessManagerSpec = LayerSpec.make(
   {

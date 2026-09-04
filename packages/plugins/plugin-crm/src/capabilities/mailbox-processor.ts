@@ -27,10 +27,12 @@ export default Capability.makeModule(
       // Research is an LLM pass, so it sits in the cheap-model tier rather than the deterministic one.
       tier: 'classify',
       after: ['contacts'],
-      createInvocation: (mailbox) => ({
-        operation: CrmOperation.ProcessMailbox,
-        input: { mailbox: Ref.make(mailbox), research: true },
-      }),
+      createInvocations: (mailbox) => [
+        {
+          operation: CrmOperation.ProcessMailbox,
+          input: { mailbox: Ref.make(mailbox), research: true },
+        },
+      ],
     });
   }),
 );

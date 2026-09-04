@@ -6,12 +6,12 @@ import { useContext } from 'react';
 
 import { raise } from '@dxos/debug';
 
-import { Tour } from '#types';
+import { TourContext } from '#components';
 
 /**
  * Access the welcome-tour controller (running flag + steps + start/stop hooks).
- * Provided by `WelcomeTour`; throws when called outside a `Tour.Context.Provider`.
+ * Provided by `WelcomeTour`; throws when called outside a `TourContext.Provider`.
  */
 export const useTour = () => {
-  return useContext(Tour.Context) ?? raise(new Error('Missing Tour.Context'));
+  return useContext(TourContext) ?? raise(new Error('Missing TourContext'));
 };

@@ -22,16 +22,6 @@
       "types": "./dist/types/src/testing/index.d.ts",
       "import": "./dist/lib/testing.mjs"
     },
-    "./Agent": {
-      "source": "./src/types/Agent.ts",
-      "types": "./dist/types/src/types/Agent.d.ts",
-      "import": "./dist/lib/Agent.mjs"
-    },
-    "./Chat": {
-      "source": "./src/types/Chat.ts",
-      "types": "./dist/types/src/types/Chat.d.ts",
-      "import": "./dist/lib/Chat.mjs"
-    },
     "./McpServer": {
       "source": "./src/types/McpServer.ts",
       "types": "./dist/types/src/types/McpServer.d.ts",
@@ -61,7 +51,6 @@
     "@dxos/compute": "workspace:*",
     "@dxos/compute-runtime": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-protocol": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
@@ -72,13 +61,11 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "dfx": "catalog:"
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
-    "@dxos/echo-client": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/ui-theme": "workspace:*",

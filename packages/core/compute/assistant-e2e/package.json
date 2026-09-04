@@ -17,6 +17,7 @@
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
+    "@dxos/assistant": "workspace:*",
     "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
@@ -29,6 +30,7 @@
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-routine": "workspace:*",
     "@dxos/plugin-sandbox": "workspace:*",
+    "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*"

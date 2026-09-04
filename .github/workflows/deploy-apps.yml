@@ -3,8 +3,8 @@ name: Deploy Apps
 # Single workflow for all app deploys. The deployable apps are listed in scripts/apps.mjs (a package dir
 # per app); everything else — Worker name, bundle task, output dir, and which environments it targets — is
 # derived from that app's `wrangler.jsonc`. The app set for an env follows its config's `env.*` sections:
-# main → all main-enabled apps (auto on push); labs → composer; staging → composer + docs; production → all.
-# Fully decoupled from npm publishing.
+# preview → all preview-enabled apps (auto, daily); dev → composer; staging → composer + docs;
+# production → all. Fully decoupled from npm publishing.
 #
 # Production additionally cuts a versioned Composer release (bump composer-app/crx, commit to main, tag
 # composer-v<x>) — the ONLY path that advances Composer's version (Composer is not in Changesets). The other
@@ -14,22 +14,23 @@ name: Deploy Apps
 # The `plan` job resolves the environment + which jobs run into named booleans, so every other job's `if:`
 # is a plain `needs.plan.outputs.<flag> == 'true'` instead of an inline boolean soup.
 #
-# "What's deployed where" is tracked by per-app floating git tags `<app>/<environment>` (non-main). No
-# GitHub Environments.
+# "What's deployed where" is tracked by per-app floating git tags `<app>/<environment>`. No GitHub
+# Environments.
 
 on:
-  push:
-    branches:
-      - main
+  # Preview: `main`'s tip, once a day, rather than a deploy per commit. 07:00 UTC = 03:00 EDT / 02:00 EST
+  # (cron has no timezone, so the wall-clock hour shifts by one across US DST).
+  schedule:
+    - cron: '0 7 * * *'
   workflow_dispatch:
     inputs:
       environment:
-        # Defaults the app set (each app's wrangler.jsonc `env.*`): labs → composer, staging → composer +
-        # docs, production → all. Choose the commit via the branch/tag selector.
+        # Defaults the app set (each app's wrangler.jsonc `env.*`): dev → composer, preview → all,
+        # staging → composer + docs, production → all. Choose the commit via the branch/tag selector.
         description: Target environment
         type: choice
-        options: [labs, staging, production]
-        default: labs
+        options: [dev, preview, staging, production]
+        default: dev
       app:
         # Optional — deploy a single app instead of the whole environment (e.g. a docs hotfix to
         # production); still tagged per-app. `all` (default) deploys every app the environment targets.
@@ -46,20 +47,23 @@ on:
         default: patch
 
 concurrency:
-  # One in-flight deploy per environment.
-  group: deploy-${{ inputs.environment || 'main' }}
-  cancel-in-progress: true
+  # One in-flight deploy per environment. Superseding is right everywhere except production, where the
+  # `release` job has already pushed a commit and a `composer-v*` tag by the time the artifacts build —
+  # cancelling there would strand a tagged release with nothing published against it.
+  group: deploy-${{ inputs.environment || 'preview' }}
+  cancel-in-progress: ${{ inputs.environment != 'production' }}
 
 permissions:
-  contents: read # Only `deploy` writes (its pointer tags); the version bump to main uses dxos-bot's PAT.
+  contents: read # `deploy` (pointer tags) and `tauri` (build-counter tags) opt in; the bump uses a PAT.
 
 jobs:
   # Resolve the run into named booleans so downstream `if:` conditions stay readable. Outputs:
-  #   env      — resolved environment (main | labs | staging | production).
+  #   env      — resolved environment (dev | preview | staging | production).
   #   app      — app to deploy, or `all`.
   #   release  — cut a versioned Composer release (production + Composer in the set).
-  #   bundle   — build the shared Composer bundle (Composer + a labs/staging/production env).
-  #   tauri    — signed native build (bundle + a manual dispatch, i.e. not a branch push).
+  #   bundle   — build the shared Composer bundle (Composer in the set).
+  #   tauri    — signed native build (Composer in the set — every environment ships a desktop app).
+  #   ios      — also build iOS (`dev` only — see the `ios` input on deploy-tauri.yaml).
   plan:
     if: github.repository == 'dxos/dxos'
     runs-on: ubuntu-latest
@@ -69,29 +73,24 @@ jobs:
       release: ${{ steps.plan.outputs.release }}
       bundle: ${{ steps.plan.outputs.bundle }}
       tauri: ${{ steps.plan.outputs.tauri }}
+      ios: ${{ steps.plan.outputs.ios }}
     steps:
       - id: plan
         env:
           IN_ENV: ${{ inputs.environment }}
           IN_APP: ${{ inputs.app }}
-          REF_NAME: ${{ github.ref_name }}
-          EVENT: ${{ github.event_name }}
         run: |
-          # Resolve the environment: the dispatch input, else `main` on main and `labs` on any other push.
-          env="$IN_ENV"
-          if [ -z "$env" ]; then if [ "$REF_NAME" = main ]; then env=main; else env=labs; fi; fi
+          # Resolve the environment: the dispatch input, else `preview` (the scheduled run).
+          env="${IN_ENV:-preview}"
           app="${IN_APP:-all}"
 
           # Does Composer participate? (drives release / bundle / tauri).
           composer=false; if [ "$app" = all ] || [ "$app" = composer ]; then composer=true; fi
-          # labs/staging/production get the shared Composer bundle + native build; main/other do not.
-          named=false; case "$env" in labs | staging | production) named=true ;; esac
-          # Manual dispatch vs a branch push (gates the signed native build).
-          dispatched=false; if [ "$EVENT" = workflow_dispatch ]; then dispatched=true; fi
 
           release=false; if [ "$env" = production ] && [ "$composer" = true ]; then release=true; fi
-          bundle=false;  if [ "$named" = true ] && [ "$composer" = true ]; then bundle=true; fi
-          tauri=false;   if [ "$named" = true ] && [ "$composer" = true ] && [ "$dispatched" = true ]; then tauri=true; fi
+          bundle="$composer"
+          tauri="$composer"
+          ios=false;     if [ "$composer" = true ] && [ "$env" = dev ]; then ios=true; fi
 
           {
             echo "env=$env"
@@ -99,8 +98,9 @@ jobs:
             echo "release=$release"
             echo "bundle=$bundle"
             echo "tauri=$tauri"
+            echo "ios=$ios"
           } >> "$GITHUB_OUTPUT"
-          echo "plan → env=$env app=$app composer=$composer | release=$release bundle=$bundle tauri=$tauri"
+          echo "plan → env=$env app=$app composer=$composer | release=$release bundle=$bundle tauri=$tauri ios=$ios"
 
   # PRODUCTION ONLY — cut a versioned Composer release: bump composer-app/crx, record it on main, tag
   # composer-v<x>. The bumped commit is what the rest of the run builds + deploys (needs.release.outputs.sha).
@@ -171,11 +171,77 @@ jobs:
           git push "$remote" "refs/tags/composer-v${{ steps.bump.outputs.version }}"
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
+  # The version every Composer artifact in this run carries — the web bundle and the native build alike,
+  # so About, the feedback report and the updater all agree on what you are running. Production ships the
+  # release job's clean version; every other environment gets `<next patch>-<env>.<build>`.
+  #
+  # The next patch, not the shipped one: a prerelease sorts below its own release, so numbering a preview
+  # build against the shipped version would make it look like a downgrade from stable and nobody could move
+  # to it. `<build>` counts that channel's builds of that base version, claimed by an immutable
+  # `composer-<env>-<base>-<n>` tag — pushing the tag IS the claim, so a run that loses a race recounts
+  # instead of shipping a duplicate number.
+  version:
+    needs: [plan, release]
+    if: ${{ !cancelled() && needs.release.result != 'failure' && needs.plan.outputs.bundle == 'true' }}
+    permissions:
+      contents: write # Claims the build-counter tag.
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.release.outputs.sha || github.sha }}
+
+      - id: version
+        env:
+          ENVIRONMENT: ${{ needs.plan.outputs.env }}
+          RELEASE_VERSION: ${{ needs.release.outputs.version }}
+        run: |
+          base=$(jq -r '.version' packages/apps/composer-app/package.json)
+          if [ "$ENVIRONMENT" = production ]; then
+            # The release job already bumped package.json; prefer its output when it ran.
+            version="${RELEASE_VERSION:-$base}"
+          else
+            core="${base%%-*}"
+            major="${core%%.*}"; rest="${core#*.}"
+            minor="${rest%%.*}"; patch="${rest#*.}"
+            base="${major}.${minor}.$((patch + 1))"
+
+            prefix="composer-${ENVIRONMENT}-${base}-"
+            attempt=1
+            while :; do
+              # -1 so the first build of a base version is 0, not 1 — it has to be distinguishable
+              # from "the highest build so far is 0".
+              last=-1
+              while read -r _sha ref; do
+                n="${ref#refs/tags/${prefix}}"
+                case "$n" in '' | *[!0-9]*) continue ;; esac
+                if [ "$n" -gt "$last" ]; then last="$n"; fi
+              done < <(git ls-remote --tags origin "refs/tags/${prefix}*")
+
+              build=$((last + 1))
+              if git tag "${prefix}${build}" && git push origin "refs/tags/${prefix}${build}"; then
+                break
+              fi
+              git tag -d "${prefix}${build}" || true
+              if [ "$attempt" -ge 3 ]; then
+                echo "::error::could not claim a build number for ${ENVIRONMENT} after 3 attempts"
+                exit 1
+              fi
+              attempt=$((attempt + 1))
+            done
+            version="${base}-${ENVIRONMENT}.${build}"
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Composer version: $version (env=$ENVIRONMENT)"
+
   # Build Composer's web bundle ONCE and share it as an artifact so the web deploy + native (Tauri) jobs
   # don't each rebuild it.
   build-bundle:
-    needs: [plan, release]
-    if: ${{ !cancelled() && needs.release.result != 'failure' && needs.plan.outputs.bundle == 'true' }}
+    needs: [plan, release, version]
+    if: ${{ !cancelled() && needs.release.result != 'failure' && needs.version.result == 'success' }}
     runs-on: depot-ubuntu-24.04-4
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
@@ -190,7 +256,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          lfs: true
+          filter: blob:none
           # On production, the bumped release commit; otherwise the triggering commit.
           ref: ${{ needs.release.outputs.sha || github.sha }}
 
@@ -206,21 +272,50 @@ jobs:
           COMPOSER_APP_TEST_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_TEST_POSTHOG_API_KEY }}
           COMPOSER_APP_TEST_POSTHOG_PROJECT_ID: ${{ secrets.COMPOSER_APP_TEST_POSTHOG_PROJECT_ID }}
           COMPOSER_APP_TEST_POSTHOG_FEEDBACK_SURVEY_ID: ${{ secrets.COMPOSER_APP_TEST_POSTHOG_FEEDBACK_SURVEY_ID }}
-          DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
           DX_POSTHOG_API_HOST: ${{ secrets.DX_POSTHOG_API_HOST }}
           IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
           IPFS_API_SECRET: ${{ secrets.IPFS_API_SECRET }}
 
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.depot/actions/setup
         with:
           remote-cache: 'false'
+
+      # Stamp the version BEFORE the bundle: `runtime.app.build.version` (what About and the feedback
+      # report show) is read out of package.json at vite build time, so a bundle built without this
+      # would report the last shipped version on a preview build.
+      - name: Stamp the Composer version
+        run: |
+          jq --arg version "$VERSION" '.version = $version' packages/apps/composer-app/package.json > version.tmp
+          mv version.tmp packages/apps/composer-app/package.json
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
 
       # Build only — the artifact is deployed by `deploy` and embedded by the tauri jobs.
       - name: Build Composer bundle
         run: .github/workflows/scripts/bundle-env.mjs "$DEPLOY_ENV" composer
         env:
           NODE_ENV: production
+
+      - name: Upload source maps to PostHog
+        if: env.POSTHOG_CLI_API_KEY != ''
+        continue-on-error: true
+        working-directory: packages/apps/composer-app
+        env:
+          # Not DX_POSTHOG_API_HOST, which this job also exports: that is the app's ingestion proxy and
+          # serves no authenticated API.
+          POSTHOG_CLI_HOST: https://eu.posthog.com
+          POSTHOG_CLI_PROJECT_ID: ${{ env.COMPOSER_APP_POSTHOG_PROJECT_ID }}
+          RELEASE_VERSION: ${{ needs.version.outputs.version }}
+        run: >-
+          pnpm dlx @posthog/cli@0.16.0 sourcemap process
+          --directory out/composer
+          --release-name composer
+          --release-version "$RELEASE_VERSION"
+
+      - name: Warn that source maps were skipped
+        if: env.POSTHOG_CLI_API_KEY == ''
+        run: echo "::warning::POSTHOG_CLI_API_KEY is unset - skipped the source map upload, so this build's stack traces will not symbolicate."
 
       - name: Upload Composer bundle
         uses: actions/upload-artifact@v4
@@ -231,9 +326,12 @@ jobs:
           retention-days: 1
 
   deploy:
-    needs: [plan, release, build-bundle]
-    # Run once the prep jobs succeeded or were skipped (main / static-only); skip only on a failure.
-    if: ${{ !cancelled() && needs.plan.result == 'success' && needs.release.result != 'failure' && needs.build-bundle.result != 'failure' }}
+    needs: [plan, release, version, build-bundle]
+    # Run once the prep jobs succeeded or were skipped (static-only app sets); skip only on a failure.
+    # `version` must be here explicitly: its failure leaves `build-bundle` *skipped* (not failed), which
+    # would otherwise pass the build-bundle check and let this job rebuild Composer inline from the
+    # un-stamped package.json — deploying a bundle that reports the previous release's version.
+    if: ${{ !cancelled() && needs.plan.result == 'success' && needs.release.result != 'failure' && needs.version.result != 'failure' && needs.build-bundle.result != 'failure' }}
     permissions:
       contents: write # Force-updates the per-app `<app>/<env>` deploy pointer tags.
     runs-on: depot-ubuntu-24.04-4
@@ -252,19 +350,19 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          lfs: true
+          filter: blob:none
           ref: ${{ needs.release.outputs.sha || github.sha }}
 
       # Needed before "Check app targets this environment" — apps.mjs imports json5 from node_modules.
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.depot/actions/setup
         with:
           remote-cache: 'false'
 
-      # Catches e.g. `app=storybook-react` on an environment it doesn't define (no env.staging/labs) —
+      # Catches e.g. `app=storybook-react` on an environment it doesn't define (no env.staging/dev) —
       # before this existed, bundle-env.mjs/deploy-env.mjs silently no-op'd and the job still went green
-      # with a false "deploying"/"succeeded" Discord ping despite deploying nothing. Runs before the
-      # "started" notification so an invalid combo never posts to Discord at all.
+      # with a false "succeeded" Discord ping despite deploying nothing. The failure notification checks
+      # this step's conclusion so an invalid combo posts nothing either way.
       - name: Check app targets this environment
         id: validate
         run: |
@@ -274,17 +372,6 @@ jobs:
             echo "::error::\"$DEPLOY_APP\" has no env.$DEPLOY_ENV — nothing would be deployed. Apps with that env: ${valid:-(none)}"
             exit 1
           fi
-
-      - name: Notify Discord — deploy started
-        if: env.DEPLOY_ENV != 'main'
-        continue-on-error: true
-        env:
-          DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: |
-          payload=$(jq -nc --arg env "$DEPLOY_ENV" --arg app "$DEPLOY_APP" --arg url "$RUN_URL" \
-            '{content: (":rocket: Deploying **" + $app + "** to `" + $env + "`\nRun: " + $url)}')
-          curl -sS --fail-with-body -X POST "$DX_DISCORD_WEBHOOK_URL" -H "Content-Type: application/json" -d "$payload"
 
       # Select the env file by the DEPLOY environment (not the git branch) — environment is a deploy
       # parameter, so a production deploy running from main must still read env/production.
@@ -300,7 +387,6 @@ jobs:
           COMPOSER_APP_TEST_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_TEST_POSTHOG_API_KEY }}
           COMPOSER_APP_TEST_POSTHOG_PROJECT_ID: ${{ secrets.COMPOSER_APP_TEST_POSTHOG_PROJECT_ID }}
           COMPOSER_APP_TEST_POSTHOG_FEEDBACK_SURVEY_ID: ${{ secrets.COMPOSER_APP_TEST_POSTHOG_FEEDBACK_SURVEY_ID }}
-          DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
           DX_POSTHOG_API_HOST: ${{ secrets.DX_POSTHOG_API_HOST }}
           IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
           IPFS_API_SECRET: ${{ secrets.IPFS_API_SECRET }}
@@ -326,11 +412,11 @@ jobs:
         env:
           NODE_ENV: production
 
-      # Floating pointer to the SHA deployed for each app+env (the branch-pointer replacement). `main` is the
-      # branch tip (auto-deployed on push) so it carries no tag; every other env tags each app it deployed —
-      # per-app even for `all`, so an individual redeploy (hotfix) moves only that app's tag.
+      # Floating pointer to the SHA deployed for each app+env (the branch-pointer replacement). Every env
+      # tags each app it deployed — per-app even for `all`, so an individual redeploy (hotfix) moves only
+      # that app's tag. Preview carries one too: it is a daily snapshot of `main`, not `main` itself, so
+      # the branch tip is no longer an answer to "what is on preview?".
       - name: Update deploy pointer tags
-        if: env.DEPLOY_ENV != 'main'
         run: |
           for app in $(.github/workflows/scripts/apps.mjs "$DEPLOY_ENV" "$DEPLOY_APP"); do
             tag="${app}/${DEPLOY_ENV}"
@@ -338,8 +424,12 @@ jobs:
             git push -f origin "refs/tags/$tag"
           done
 
+      # Every environment but `preview`: a dispatched deploy is sporadic, so its success is news to whoever
+      # pressed the button. Preview lands at the same time every day and can be assumed to have worked —
+      # its failure still notifies below. No "started" ping either way; the deploy is no longer slow enough
+      # for one to earn its place.
       - name: Notify Discord — deploy succeeded
-        if: success() && env.DEPLOY_ENV != 'main'
+        if: success() && env.DEPLOY_ENV != 'preview'
         continue-on-error: true
         env:
           DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
@@ -349,10 +439,13 @@ jobs:
             '{content: (":white_check_mark: Deployed **" + $app + "** to `" + $env + "`\nRun: " + $url)}')
           curl -sS --fail-with-body -X POST "$DX_DISCORD_WEBHOOK_URL" -H "Content-Type: application/json" -d "$payload"
 
+      # Unconditional, preview included — a silent preview deploy is only safe to read as success if a
+      # broken one says so.
       - name: Notify Discord — deploy failed
-        # Skip when it was the "app targets this environment" check that failed — that's an invalid
-        # app/environment combo caught before any deploy was attempted, not a real deploy failure.
-        if: failure() && env.DEPLOY_ENV != 'main' && steps.validate.conclusion == 'success'
+        # Skip only when it was the "app targets this environment" check that failed — that's an invalid
+        # app/environment combo caught before any deploy was attempted, not a real deploy failure. Anything
+        # earlier (Checkout, Setup) leaves `validate` skipped and must still notify.
+        if: failure() && steps.validate.conclusion != 'failure'
         continue-on-error: true
         env:
           DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
@@ -362,14 +455,42 @@ jobs:
             '{content: (":x: Deploy of **" + $app + "** to `" + $env + "` failed\nRun: " + $url)}')
           curl -sS --fail-with-body -X POST "$DX_DISCORD_WEBHOOK_URL" -H "Content-Type: application/json" -d "$payload"
 
-  # Desktop/mobile build for Composer, for the named environments (not `main` — a signed build per push is
-  # too costly). CrabNebula channel is derived from the environment inside the reusable workflow; iOS → App
-  # Store Connect happens on `labs` only. On production it builds the bumped release commit.
+  # A run that breaks before `deploy` must still say so: a prep failure (release, version, build-bundle)
+  # skips `deploy`, so its own failure ping never fires — and since preview successes are deliberately
+  # silent, a silent broken preview deploy would read as a good one.
+  notify-prep-failure:
+    needs: [plan, release, version, build-bundle]
+    if: ${{ !cancelled() && needs.plan.result == 'success' && (needs.release.result == 'failure' || needs.version.result == 'failure' || needs.build-bundle.result == 'failure') }}
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    env:
+      DEPLOY_ENV: ${{ needs.plan.outputs.env }}
+      DEPLOY_APP: ${{ needs.plan.outputs.app }}
+    steps:
+      - name: Notify Discord — deploy preparation failed
+        env:
+          DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          payload=$(jq -nc --arg env "$DEPLOY_ENV" --arg app "$DEPLOY_APP" --arg url "$RUN_URL" \
+            '{content: (":x: Deploy of **" + $app + "** to `" + $env + "` failed before deploying (release/version/build)\nRun: " + $url)}')
+          curl -sS --fail-with-body -X POST "$DX_DISCORD_WEBHOOK_URL" -H "Content-Type: application/json" -d "$payload"
+
+  # Desktop/mobile build for Composer — every environment ships a desktop app, so dogfooders on the
+  # preview channel get the same daily build the web deploy does. iOS ships on `dev` alone for now (see the
+  # `ios` input). CrabNebula channel is derived from the environment inside the reusable workflow. On
+  # production it builds the bumped release commit.
+  #
+  # TODO(wittjosiah): this job (and deploy-tauri.yaml, which it calls) keeps this workflow on GitHub Actions rather
+  # than Depot CI — deploy-tauri.yaml's build_tauri/build_tauri_ios jobs need depot-macos-latest, and
+  # Depot CI's own orchestrator has no macOS sandboxes yet. Revisit once Depot CI supports macOS runners.
   tauri:
-    needs: [plan, release, build-bundle]
+    needs: [plan, release, version, build-bundle]
     if: ${{ !cancelled() && needs.release.result != 'failure' && needs.build-bundle.result == 'success' && needs.plan.outputs.tauri == 'true' }}
     uses: ./.github/workflows/deploy-tauri.yaml
     with:
       environment: ${{ needs.plan.outputs.env }}
       ref: ${{ needs.release.outputs.sha || github.sha }}
+      ios: ${{ needs.plan.outputs.ios == 'true' }}
+      version: ${{ needs.version.outputs.version }}
     secrets: inherit

@@ -12,7 +12,7 @@ import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { AiService, OpaqueToolkit } from '@dxos/ai';
 import { AiRequest, AiSession, ToolExecutionServices } from '@dxos/assistant';
-import { Chat } from '@dxos/assistant-toolkit';
+import * as Chat from '@dxos/assistant/Chat';
 import { type Space } from '@dxos/client/echo';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
@@ -112,7 +112,6 @@ export class ChatProcessor {
 
     const feed = space.db.add(Feed.make());
     const chat = Chat.make({ feed: Ref.make(feed) });
-    Obj.setParent(feed, chat);
     space.db.add(chat);
 
     const runtime = await EffectEx.runAndForwardErrors(

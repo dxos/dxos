@@ -5,7 +5,7 @@
 import { Chess as ChessJS } from 'chess.js';
 import * as Schema from 'effect/Schema';
 
-import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import * as Skill from '@dxos/compute/Skill';
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation, HiddenAnnotation } from '@dxos/echo/Annotation';
 import { log } from '@dxos/log';
@@ -26,7 +26,7 @@ export class State extends Type.makeObject<State>(DXN.make('org.dxos.type.chess.
     }).pipe(FormInputAnnotation.set(false), Schema.optional),
   }).pipe(
     Annotation.IconAnnotation.set({ icon: 'ph--shield-chevron--regular', hue: 'amber' }),
-    AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
+    Skill.SkillsAnnotation.set([SKILL_KEY]),
     // Implementation detail of the unified `Game` schema. The user-facing object is `Game`;
     // this state is only ever referenced via `Game.variant`. HiddenAnnotation keeps it out of the
     // navtree's typed branches so an orphaned state object doesn't reappear after the

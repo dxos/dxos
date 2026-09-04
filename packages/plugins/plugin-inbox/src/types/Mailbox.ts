@@ -6,10 +6,11 @@ import * as Schema from 'effect/Schema';
 
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as Instructions from '@dxos/compute/Instructions';
+import * as Skill from '@dxos/compute/Skill';
 import { Annotation, type Database, DXN, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
-import { connectorIdsForTarget } from '@dxos/plugin-connector';
 import * as ConnectorAnnotations from '@dxos/plugin-connector/ConnectorAnnotations';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { FeedAnnotation, Tagging, TagIndex } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
@@ -54,7 +55,7 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
     name: Schema.String.pipe(Schema.optional),
 
     /** The durable message log. Every pipeline in `docs/PIPELINE.md` reads from (or writes to) this. */
-    feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
+    feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(true), FormInputAnnotation.set(false)),
 
     /**
      * Append-only feed of derived annotations about the messages in {@link feed} — summaries today
@@ -66,7 +67,11 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
      * old. The primary feed stays pure — no reader has to filter annotations out of the message list.
      * Provisioned lazily on first annotation, like {@link tags}.
      */
-    annotations: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false), Schema.optional),
+    annotations: Ref.Ref(Feed.Feed).pipe(
+      Annotation.SetParent.set(true),
+      FormInputAnnotation.set(false),
+      Schema.optional,
+    ),
 
     /**
      * Inverse tag index for immutable feed Messages: tag id (a `Tag` object's URI) → message ids.
@@ -75,7 +80,7 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
      * live in a child `TagIndex` object instead (the `meta.tags` augmentation for feed objects). Tag
      * labels and hues live on the `Tag` objects themselves.
      */
-    tags: Ref.Ref(TagIndex.TagIndex).pipe(FormInputAnnotation.set(false)),
+    tags: Ref.Ref(TagIndex.TagIndex).pipe(Annotation.SetParent.set(true), FormInputAnnotation.set(false)),
 
     /**
      * Which contributed object extractors run over this mailbox, and the confidence a match must
@@ -148,14 +153,14 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
     AppAnnotation.DeckAnnotation.set({
       levels: [{ key: 'mailbox' }, { key: 'message' }, { key: 'attachment' }],
     }),
-    AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
+    Skill.SkillsAnnotation.set([SKILL_KEY]),
     /**
      * Offer "Connect" in the mailbox toolbar; bind the mailbox as the new connection's sync target.
      * Providers are resolved from the registry (any connector whose `sync.targetTypename` is this
      * type), so a mail provider registers itself rather than being named here.
      */
     ConnectorAnnotations.ConnectorAuthAnnotation.set({
-      connectorIds: connectorIdsForTarget,
+      connectorIds: ConnectorSpec.idsForTarget,
       bindTarget: true,
     }),
   ),
@@ -177,18 +182,13 @@ type MailboxProps = Omit<Obj.MakeProps<typeof Mailbox>, 'feed' | 'tags' | 'filte
 export const make = (props: MailboxProps = {}) => {
   const feed = Feed.make();
   const tags = TagIndex.make();
-  const mailbox = Obj.make(Mailbox, {
+  // The feed and tag index are children (`SetParent`): both cascade-delete with the mailbox.
+  return Obj.make(Mailbox, {
     feed: Ref.make(feed),
     tags: Ref.make(tags),
     filters: [],
     ...props,
   });
-
-  // TODO(wittjosiah): Parent should be declarative in the schema.
-  Obj.setParent(feed, mailbox);
-  // Tag index is a child: cascade-deleted with the mailbox.
-  Obj.setParent(tags, mailbox);
-  return mailbox;
 };
 
 //
@@ -431,7 +431,6 @@ export const findOrCreateAnnotations = (mailbox: Mailbox, db: Pick<Database.Data
   }
 
   const feed = db.add(Feed.make());
-  Obj.setParent(feed, mailbox);
   Obj.update(mailbox, (mailbox) => {
     mailbox.annotations = Ref.make(feed);
   });

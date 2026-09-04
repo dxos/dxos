@@ -6,8 +6,10 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
+import { PROGRESS_STATUS_COMPLETE, PROGRESS_STATUS_FAILED } from '@dxos/app-toolkit';
 import { RunInstructions } from '@dxos/assistant-toolkit';
 import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { type EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -21,11 +23,41 @@ export default FeedOperation.CurateMagazine.pipe(
     Effect.fnUntraced(function* ({ magazine: magazineRef }) {
       const magazine = yield* Effect.promise(() => magazineRef.load());
 
+      // Three phases, and only two of them can be counted: the feeds are countable, the agent call
+      // over every candidate is one opaque request. Reporting the phase is what the uncountable one
+      // can still say — `phases`/`phase` locate the run in its plan, `current`/`total` describe the
+      // phase in flight, and clearing `total` is what drops the bar rather than leaving it pinned.
+      const traceWriter = yield* Trace.TraceService;
+      const progressKey = FeedOperation.createCurateProgressKey(magazine);
+      const label = `Curating ${magazine.name ?? 'magazine'}`;
+      let current = 0;
+      let total: number | undefined;
+      let phase = 0;
+      const reportStatus = (
+        patch: { message?: string; note?: string; current?: number; total?: number; phase?: number } = {},
+      ) => {
+        current = patch.current ?? current;
+        total = 'total' in patch ? patch.total : total;
+        phase = patch.phase ?? phase;
+        traceWriter.write(Trace.StatusUpdate, {
+          message: patch.message ?? patch.note ?? label,
+          progress: { key: progressKey, current, total, phases: PHASES, phase },
+        });
+      };
+
       const validFeeds = yield* loadValidFeeds(magazine);
-      const synced = yield* syncFeeds(validFeeds);
+      reportStatus({ phase: 0, current: 0, total: validFeeds.length, note: 'Syncing feeds' });
+      const synced = yield* syncFeeds(validFeeds).pipe(
+        // A run that dies without a terminal status leaves the meter holding the statusbar forever,
+        // offering a cancel control for work that is no longer happening.
+        Effect.tapError(() => Effect.sync(() => reportStatus({ message: PROGRESS_STATUS_FAILED }))),
+      );
+      reportStatus({ current: validFeeds.length });
 
       // Select matching Posts via the agent (single-shot structured output), then add them mechanically.
       const candidates = yield* collectCandidates(magazine);
+      // No total: one agent call over every candidate, so there is nothing to count until it returns.
+      reportStatus({ phase: 1, current: 0, total: undefined, note: 'Selecting articles' });
       const spaceId = Obj.getDatabase(magazine)?.spaceId;
       const selectedEntries =
         candidates.length > 0 && spaceId ? yield* selectPostIds(magazine, candidates, spaceId) : [];
@@ -36,7 +68,13 @@ export default FeedOperation.CurateMagazine.pipe(
       // posts already curated, so the additions are simply appended (resolveSelected deduped them).
       const db = Obj.getDatabase(magazine);
       const starredUri = db ? yield* Effect.promise(() => Subscription.findSystemTagUri(db, 'starred')) : undefined;
-      const merged = [...magazine.posts, ...selected.map(({ post }) => Ref.make(post))];
+      // Resolve the already-curated refs so the keep bound can read `published`/starred off them:
+      // queue-resident posts never populate `ref.target`, so without this every prior post counts as
+      // unresolved and escapes the bound.
+      const merged = [
+        ...(yield* loadCurated(magazine.posts)),
+        ...selected.map(({ post }) => ({ ref: Ref.make(post), post })),
+      ];
       const nextPosts = applyKeep(merged, magazine.keep ?? Subscription.DEFAULT_KEEP, starredUri);
       const curated = selected.length;
 
@@ -49,6 +87,8 @@ export default FeedOperation.CurateMagazine.pipe(
         });
       }
 
+      reportStatus({ phase: 2, current: 0, total: selected.length, note: 'Adding to magazine' });
+
       // Write agent-generated snippet/imageUrl into per-post magazine state.
       for (const { post, snippet, imageUrl } of selected) {
         if (snippet || imageUrl) {
@@ -56,13 +96,30 @@ export default FeedOperation.CurateMagazine.pipe(
         }
       }
 
+      reportStatus({ current: selected.length, message: PROGRESS_STATUS_COMPLETE });
+
       return { synced, curated };
     }),
   ),
   Operation.opaqueHandler,
 );
 
+/** Phases the curation run reports; the meter draws one step per phase. */
+const PHASES = 3;
+
 // -- Helpers --
+
+/**
+ * Resolves curated post refs, tolerating individual failures: a post whose queue entry has rotated
+ * away must not fail the run, and its ref is carried through unresolved.
+ */
+const loadCurated = (refs: readonly Ref.Ref<Subscription.Post>[]): Effect.Effect<CuratedEntry[]> =>
+  Effect.forEach(refs, (ref) =>
+    Effect.tryPromise(() => ref.load()).pipe(
+      Effect.map((post): CuratedEntry => ({ ref, post })),
+      Effect.orElseSucceed((): CuratedEntry => ({ ref, post: undefined })),
+    ),
+  );
 
 /** Bound on concurrent feed syncs. */
 const SYNC_CONCURRENCY = 8;
@@ -146,7 +203,7 @@ type SelectedEntry = {
 /** Resolves the agent's selected entries back to candidate Posts, preserving order and dropping unknown/duplicate ids. */
 export const resolveSelected = (
   candidates: ReadonlyArray<{ post: Subscription.Post }>,
-  entries: readonly { id: string; snippet?: string; imageUrl?: string }[],
+  entries: readonly { id: string; snippet?: string | null; imageUrl?: string | null }[],
 ): SelectedEntry[] => {
   const byId = new Map(candidates.map(({ post }) => [post.id, post]));
   const seen = new Set<string>();
@@ -155,25 +212,49 @@ export const resolveSelected = (
     const post = byId.get(id);
     if (post && !seen.has(id)) {
       seen.add(id);
-      selected.push({ post, snippet, imageUrl });
+      // The agent may send `null` for a field it has nothing for; per-post state stores absence as
+      // `undefined`, so normalize here rather than writing null into ECHO.
+      selected.push({ post, snippet: snippet ?? undefined, imageUrl: imageUrl ?? undefined });
     }
   }
   return selected;
 };
 
+/** A curated post ref together with its resolved target, when it could be loaded. */
+export type CuratedEntry = { ref: Ref.Ref<Subscription.Post>; post: Subscription.Post | undefined };
+
 /**
- * Bounds a curated posts ref list to `keep` total (non-starred) posts: keeps all starred posts and
- * unresolved refs, plus the `keep` newest non-starred by published date. Pure; returns the retained
- * refs. Delegates the sort/slice/starred partition to {@link partitionByKeepBound}.
+ * Bounds a curated posts list to `keep` total (non-starred) posts: keeps all starred posts, plus the
+ * `keep` newest non-starred by published date, and drops duplicates. Pure; returns the retained refs.
+ * Delegates the sort/slice/starred partition to {@link partitionByKeepBound}.
+ *
+ * Takes resolved entries rather than bare refs. Curated Posts live in a feed queue, so `ref.target`
+ * is undefined in a freshly-spawned process; the previous ref-only signature treated every such post
+ * as unresolved, passed it through unbounded, and let the list grow without limit across runs.
+ * An entry whose `post` could not be loaded is still carried through — a transient load failure must
+ * not delete a starred post — but is deduplicated by ref uri.
  */
 export const applyKeep = (
-  posts: readonly Ref.Ref<Subscription.Post>[],
+  entries: readonly CuratedEntry[],
   keep: number,
   starredUri: string | undefined,
 ): Ref.Ref<Subscription.Post>[] => {
   const isStarred = (post: Subscription.Post) => Subscription.hasTag(post.source?.target, post.id, starredUri);
-  const resolved = posts.map((ref) => ref.target).filter((post): post is Subscription.Post => post !== undefined);
-  const unresolved = posts.filter((ref) => !ref.target);
+  const deduped: CuratedEntry[] = [];
+  const seen = new Set<string>();
+  for (const entry of entries) {
+    const key = entry.post?.id ?? entry.ref.uri;
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    deduped.push(entry);
+  }
+
+  // Reuse each post's original ref so a queue-resident post keeps the uri it was curated under.
+  const refByPostId = new Map(deduped.flatMap((entry) => (entry.post ? [[entry.post.id, entry.ref] as const] : [])));
+  const resolved = deduped.map((entry) => entry.post).filter((post): post is Subscription.Post => post !== undefined);
+  const unresolved = deduped.filter((entry) => !entry.post).map((entry) => entry.ref);
   const { kept } = partitionByKeepBound(resolved, keep, isStarred);
-  return [...kept.map((post) => Ref.make(post)), ...unresolved];
+  return [...kept.map((post) => refByPostId.get(post.id) ?? Ref.make(post)), ...unresolved];
 };

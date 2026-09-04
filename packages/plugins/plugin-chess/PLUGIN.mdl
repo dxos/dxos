@@ -17,8 +17,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `component` | `org.dxos.mdl.component@1.0`  |
-| `op`        | `org.dxos.mdl.op@1.0`         |
+| `op`        | `org.dxos.mdl.op@1.1`         |
 | `service`   | `org.dxos.mdl.service@1.0`    |
+| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `step`      | `org.dxos.mdl.step@1.0`       |
 
 ## Types
 
@@ -232,10 +234,28 @@ op startGame
   output: Game
   effects: [echo:write]
   requires: [GameStore]
+  note: |
+    NO `key` — this operation does not exist at runtime. A game is constructed with `Game.make`
+    and placed with `space.addObject`; the UI route is the navtree's create action, which opens
+    the generic object form. An agent therefore cannot start a game through an operation, which is
+    what [QA-1] step 1 records.
+```
+
+```mdl
+op playEngineMove
+  key: org.dxos.operation.chess.play
+  desc: Uses the chess engine to play the next move for a side.
+  input:
+    game: Ref<Game>
+    side?: white | black | any
+  output: { pgn: string, move?: string }
+  effects: [echo:write]
+  requires: [Database.Service]
 ```
 
 ```mdl
 op submitMove
+  key: org.dxos.operation.chess.move
   desc: Validates and applies a move, then persists the updated Game.
   input:
     game: Game
@@ -442,6 +462,72 @@ test T-8: Legal moves highlighted
   then:
     - op:getLegalMoves returns [e3, e4]
     - Gameboard.highlights === [e3, e4]
+```
+
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Start a game and play the opening
+  desc: The core chess round-trip — create a game, play the first few moves, read the position back.
+  actors: human
+  covers: [F-1.1, F-2.1]
+  status: passing            # 2026-08-23; step 1 performed by a human (no create operation exists)
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - plugin-chess is enabled — it is OFF by default, and no chess operation is registered until
+      it is on. Enabling is a UI action (Settings -> plugin registry); `manager.enable()` returns
+      without error from the debug port and does not enable it.
+    - no game named "QA Game" exists — ABORT rather than deleting one this flow did not create
+    - game: the Game object the human creates in step 1 (named "QA Game"), resolved by the runner
+      after that step so later steps can reference it — there is no create operation to `capture`
+      it from
+  test:
+    - name: Create the game
+      do: In the navtree, click + on a collection and choose Chess. Name it "QA Game".
+      expect: a Game appears under the collection with pieces in their starting positions, white to move
+      note: |
+        NO `invoke` — [op:startGame] has no runtime counterpart (see its note), so this step is
+        human-only and the flow is `actors: human` until chess gains a create operation. That is
+        the finding, not an omission.
+    - name: Play 1. e4
+      do: Drag the e2 pawn to e4.
+      invoke: [op:submitMove] { game: $given.game, move: "e4" }
+      capture: afterE4
+      expect: the pawn stands on e4, the move list reads "1. e4", and it is black's turn
+      assert: return $result.pgn.includes('1. e4');
+    - name: Play 1... e5
+      do: Drag the black e7 pawn to e5.
+      invoke: [op:submitMove] { game: $given.game, move: "e5" }
+      expect: the move list reads "1. e4 e5" and it is white's turn again
+      assert: return $result.pgn.includes('e5');
+    - name: Play 2. Nf3
+      do: Drag the g1 knight to f3.
+      invoke: [op:submitMove] { game: $given.game, move: "Nf3" }
+      expect: the knight stands on f3 and the move list reads "1. e4 e5 2. Nf3"
+      assert: return $result.pgn.includes('Nf3');
+    - name: Reject an illegal move
+      do: Try to drag the a8 rook two squares up the a-file, onto a6 — its own pawn is in the way.
+      invoke: [op:submitMove] { game: $given.game, move: "Ra6" }
+      expect: the move is refused, the board is unchanged, and the game reports an invalid move
+      assert: |
+        // Passes when the invocation FAILS — an accepted illegal move is the defect.
+        return /Invalid move/.test($error?.message ?? '');
+      note: |
+        SAN is side-relative, so the move in `do` and the move in `invoke` must denote the same one.
+        This step first read "drag the f3 knight to f6" against `Nf6`, which after 1. e4 e5 2. Nf3 is
+        BLACK's knight and perfectly legal (Petrov) — the human and agent paths described different
+        moves and the step failed against a correct engine.
+  after:
+    - name: Delete the game
+      do: Right-click "QA Game" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$given.game], target: $given.collection }
+      expect: the row leaves the navtree and its plank closes
 ```
 
 ---

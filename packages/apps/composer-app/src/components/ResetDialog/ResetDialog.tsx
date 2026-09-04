@@ -6,15 +6,15 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { type IdbLogStore } from '@dxos/log-store-idb';
-import { type Observability } from '@dxos/observability';
+import type * as Observability from '@dxos/observability/Observability';
 import { FeedbackForm } from '@dxos/plugin-support/components';
 import type * as SupportOperation from '@dxos/plugin-support/SupportOperation';
 import {
   AlertDialog,
   type AlertDialogRootProps,
+  Banner,
   DropdownMenu,
   IconButton,
-  Message,
   Popover,
   useFileDownload,
   useMediaQuery,
@@ -186,15 +186,15 @@ export const ResetDialog = ({
                   </div>
                 </div>
                 {showStack && (
-                  <Message.Root key={error.message}>
-                    <Message.Content classNames='overflow-auto'>
-                      <Message.Body asChild>
+                  <Banner.Root key={error.message}>
+                    <Banner.Content classNames='overflow-auto'>
+                      <Banner.Body asChild>
                         <pre className='text-xs max-h-[136px]' data-testid='resetDialog.stackTrace'>
                           {error.stack}
                         </pre>
-                      </Message.Body>
-                    </Message.Content>
-                  </Message.Root>
+                      </Banner.Body>
+                    </Banner.Content>
+                  </Banner.Root>
                 )}
               </>
             )}

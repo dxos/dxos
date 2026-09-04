@@ -29,41 +29,49 @@ export const inboxMailboxProcessors: readonly InboxCapabilities.MailboxProcessor
   {
     id: 'contacts',
     tier: 'deterministic',
-    createInvocation: (mailbox, { me }) =>
+    createInvocations: (mailbox, { me }) =>
       // Correspondence is derived relative to the user's own addresses; without them
       // `deriveCorrespondents` returns nothing, so an empty run would report a misleading zero.
       me.length === 0
         ? { skip: 'no identity addresses supplied' }
-        : {
-            operation: InboxOperation.ExtractCorrespondents,
-            input: { mailbox: Ref.make(mailbox), me: [...me] },
-          },
+        : [
+            {
+              operation: InboxOperation.ExtractCorrespondents,
+              input: { mailbox: Ref.make(mailbox), me: [...me] },
+            },
+          ],
   },
   {
     id: 'subscriptions',
     tier: 'deterministic',
-    createInvocation: (mailbox) => ({
-      operation: InboxOperation.ExtractSubscriptions,
-      input: { mailbox: Ref.make(mailbox) },
-    }),
+    createInvocations: (mailbox) => [
+      {
+        operation: InboxOperation.ExtractSubscriptions,
+        input: { mailbox: Ref.make(mailbox) },
+      },
+    ],
   },
   {
     id: 'classify',
     tier: 'classify',
     after: ['contacts'],
-    createInvocation: (mailbox, { batchLimit, model, strict }) => ({
-      operation: InboxOperation.ClassifyMailbox,
-      input: { mailbox: Ref.make(mailbox), batchLimit, model, strict },
-    }),
+    createInvocations: (mailbox, { batchLimit, model, strict }) => [
+      {
+        operation: InboxOperation.ClassifyMailbox,
+        input: { mailbox: Ref.make(mailbox), batchLimit, model, strict },
+      },
+    ],
   },
   {
     id: 'summarize',
     tier: 'summarize',
     after: ['contacts', 'classify'],
-    createInvocation: (mailbox, { model }) => ({
-      operation: InboxOperation.SummarizeMailbox,
-      input: { mailbox: Ref.make(mailbox), model },
-    }),
+    createInvocations: (mailbox, { model }) => [
+      {
+        operation: InboxOperation.SummarizeMailbox,
+        input: { mailbox: Ref.make(mailbox), model },
+      },
+    ],
   },
 ];
 

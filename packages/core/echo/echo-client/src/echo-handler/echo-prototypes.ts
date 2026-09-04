@@ -385,7 +385,12 @@ export const lookupRef = (target: ProxyTarget, encodedRef: EncodedReference): Re
     invariant(target[symbolInternals].linkCache);
     const parsedEchoUri = EID.tryParse(dxn);
     const objectId = parsedEchoUri ? EID.getEntityId(parsedEchoUri) : undefined;
-    invariant(objectId, 'Invalid DXN');
+    // Not every ref addresses an object: `Ref.fromURI` also names a registry entry by type DXN (an
+    // unpersisted routine draft binds its runnable that way). The link cache is keyed by entity id,
+    // so such a ref simply has no local target — resolving it needs a database.
+    if (!objectId) {
+      return new RefImpl(dxn);
+    }
     return new RefImpl(dxn, handleStoredSchema(target, target[symbolInternals].linkCache.get(objectId)));
   }
 };

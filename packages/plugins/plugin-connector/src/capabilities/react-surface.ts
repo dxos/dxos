@@ -9,7 +9,6 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { SchemaEx } from '@dxos/effect';
 import { Connection, Cursor } from '@dxos/link';
 
 import {
@@ -21,8 +20,6 @@ import {
 } from '#containers';
 
 import { CONNECTIONS_SECTION_TYPE, PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG } from '../constants';
-import { ConnectorAnnotationId } from '../types/ConnectorAnnotations';
-import { ConnectorSelectorField } from './ConnectorSelectorField';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -58,11 +55,6 @@ export default Capability.makeModule(() =>
         filter: AppSurface.component<ComponentProps<typeof CustomTokenDialog>>(AppSurface.Dialog, PROVIDER_FORM_DIALOG),
         component: CustomTokenDialog,
         props: ({ data: { props } }) => ({ ...props }),
-      }),
-      Surface.create({
-        id: 'connectorSelector',
-        filter: AppSurface.formInputByField((ast) => !!SchemaEx.findAnnotation<boolean>(ast, ConnectorAnnotationId)),
-        component: ConnectorSelectorField,
       }),
     ]),
   ),

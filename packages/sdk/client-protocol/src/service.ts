@@ -3,30 +3,38 @@
 //
 
 import { type Event } from '@dxos/async';
-import type { RequestOptions, Stream } from '@dxos/codec-protobuf';
-import { schema } from '@dxos/protocols/proto';
+import type { Stream } from '@dxos/async';
+import type { RequestOptions } from '@dxos/codec-protobuf';
+import { getBufService } from '@dxos/protocols/buf-service';
+import type { LogEntry, QueryLogsRequest } from '@dxos/protocols/buf/dxos/client/logging_pb';
+import { Config } from '@dxos/protocols/buf/dxos/config_pb';
+import type { SignalResponse, SubscribeToSpacesResponse } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import type {
+  CreateEpochResponse,
   Device,
   Identity,
   Invitation,
-  LogEntry,
+  JoinSpaceResponse,
   NetworkStatus,
   Platform,
   QueryAgentStatusResponse,
   QueryEdgeStatusResponse,
   QueryInvitationsResponse,
-  QueryLogsRequest,
+  QuerySpacesResponse,
   RecoverIdentityRequest,
-  SpacesService,
+  Space,
 } from '@dxos/protocols/proto/dxos/client/services';
-import type { Config } from '@dxos/protocols/proto/dxos/config';
-import type { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools/host';
+import type {
+  GetSpaceSnapshotResponse,
+  SaveSpaceSnapshotResponse,
+  SubscribeToFeedBlocksResponse,
+  SubscribeToMetadataResponse,
+} from '@dxos/protocols/proto/dxos/devtools/host';
 import type { IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import type {
   QueryRequest as EchoQueryRequest,
   QueryResponse as EchoQueryResponse,
 } from '@dxos/protocols/proto/dxos/echo/query';
-import type { DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import type { SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import type {
   QueryRequest as EdgeQueryRequest,
@@ -41,13 +49,17 @@ import type {
   ProfileDocument,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
 import type { AppService, ShellService } from '@dxos/protocols/proto/dxos/iframe';
+import type { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import type {
+  DataService as RpcDataService,
   DevicesService as RpcDevicesService,
+  DevtoolsHost as RpcDevtoolsHost,
   FeedService as RpcFeedService,
   IdentityService as RpcIdentityService,
   InvitationsService as RpcInvitationsService,
   LoggingService as RpcLoggingService,
   NetworkService as RpcNetworkService,
+  SpacesService as RpcSpacesService,
   SystemService as RpcSystemService,
 } from '@dxos/protocols/rpc';
 import { type ServiceBundle } from '@dxos/rpc';
@@ -174,6 +186,145 @@ export interface QueryServicePromise {
   reindex: (request: void, options?: RequestOptions) => Promise<void>;
 }
 
+export interface DataServicePromise {
+  subscribe: (
+    request: RpcDataService.SubscribeRequest,
+    options?: RequestOptions,
+  ) => Stream<RpcDataService.BatchedDocumentUpdates>;
+  updateSubscription: (request: RpcDataService.UpdateSubscriptionRequest, options?: RequestOptions) => Promise<void>;
+  createDocument: (
+    request: RpcDataService.CreateDocumentRequest,
+    options?: RequestOptions,
+  ) => Promise<RpcDataService.CreateDocumentResponse>;
+  update: (request: RpcDataService.UpdateRequest, options?: RequestOptions) => Promise<void>;
+  flush: (request: RpcDataService.FlushRequest, options?: RequestOptions) => Promise<void>;
+  getDocumentHeads: (
+    request: RpcDataService.GetDocumentHeadsRequest,
+    options?: RequestOptions,
+  ) => Promise<RpcDataService.GetDocumentHeadsResponse>;
+  waitUntilHeadsReplicated: (
+    request: RpcDataService.WaitUntilHeadsReplicatedRequest,
+    options?: RequestOptions,
+  ) => Promise<void>;
+  reIndexHeads: (request: RpcDataService.ReIndexHeadsRequest, options?: RequestOptions) => Promise<void>;
+  updateIndexes: (request: void, options?: RequestOptions) => Promise<void>;
+  subscribeSpaceSyncState: (
+    request: RpcDataService.GetSpaceSyncStateRequest,
+    options?: RequestOptions,
+  ) => Stream<RpcDataService.SpaceSyncState>;
+  stats: (
+    request: RpcDataService.DatabaseStatsRequest,
+    options?: RequestOptions,
+  ) => Promise<RpcDataService.DatabaseStats>;
+  runGarbageCollection: (
+    request: RpcDataService.RunGarbageCollectionRequest,
+    options?: RequestOptions,
+  ) => Promise<RpcDataService.GarbageCollectionReport>;
+}
+
+export interface DevtoolsHostPromise {
+  events: (request: void, options?: RequestOptions) => Stream<RpcDevtoolsHost.Event>;
+  getConfig: (request: void, options?: RequestOptions) => Promise<RpcDevtoolsHost.GetConfigResponse>;
+  getStorageInfo: (request: void, options?: RequestOptions) => Promise<RpcDevtoolsHost.StorageInfo>;
+  resetStorage: (request: RpcDevtoolsHost.ResetStorageRequest, options?: RequestOptions) => Promise<void>;
+  getSnapshots: (request: void, options?: RequestOptions) => Promise<RpcDevtoolsHost.GetSnapshotsResponse>;
+  enableDebugLogging: (
+    request: RpcDevtoolsHost.EnableDebugLoggingRequest,
+    options?: RequestOptions,
+  ) => Promise<RpcDevtoolsHost.EnableDebugLoggingResponse>;
+  disableDebugLogging: (
+    request: RpcDevtoolsHost.EnableDebugLoggingRequest,
+    options?: RequestOptions,
+  ) => Promise<RpcDevtoolsHost.EnableDebugLoggingResponse>;
+  subscribeToKeyringKeys: (
+    request: RpcDevtoolsHost.SubscribeToKeyringKeysRequest,
+    options?: RequestOptions,
+  ) => Stream<RpcDevtoolsHost.SubscribeToKeyringKeysResponse>;
+  subscribeToCredentialMessages: (
+    request: RpcDevtoolsHost.SubscribeToCredentialMessagesRequest,
+    options?: RequestOptions,
+  ) => Stream<RpcDevtoolsHost.SubscribeToCredentialMessagesResponse>;
+  subscribeToSpaces: (
+    request: RpcDevtoolsHost.SubscribeToSpacesRequest,
+    options?: RequestOptions,
+  ) => Stream<SubscribeToSpacesResponse>;
+  subscribeToItems: (
+    request: RpcDevtoolsHost.SubscribeToItemsRequest,
+    options?: RequestOptions,
+  ) => Stream<RpcDevtoolsHost.SubscribeToItemsResponse>;
+  subscribeToFeeds: (
+    request: RpcDevtoolsHost.SubscribeToFeedsRequest,
+    options?: RequestOptions,
+  ) => Stream<RpcDevtoolsHost.SubscribeToFeedsResponse>;
+  subscribeToFeedBlocks: (
+    request: RpcDevtoolsHost.SubscribeToFeedBlocksRequest,
+    options?: RequestOptions,
+  ) => Stream<SubscribeToFeedBlocksResponse>;
+  subscribeToMetadata: (request: void, options?: RequestOptions) => Stream<SubscribeToMetadataResponse>;
+  getSpaceSnapshot: (
+    request: RpcDevtoolsHost.GetSpaceSnapshotRequest,
+    options?: RequestOptions,
+  ) => Promise<GetSpaceSnapshotResponse>;
+  saveSpaceSnapshot: (
+    request: RpcDevtoolsHost.SaveSpaceSnapshotRequest,
+    options?: RequestOptions,
+  ) => Promise<SaveSpaceSnapshotResponse>;
+  clearSnapshots: (request: RpcDevtoolsHost.ClearSnapshotsRequest, options?: RequestOptions) => Promise<void>;
+  getNetworkPeers: (
+    request: RpcDevtoolsHost.GetNetworkPeersRequest,
+    options?: RequestOptions,
+  ) => Promise<RpcDevtoolsHost.GetNetworkPeersResponse>;
+  subscribeToNetworkTopics: (
+    request: void,
+    options?: RequestOptions,
+  ) => Stream<RpcDevtoolsHost.SubscribeToNetworkTopicsResponse>;
+  subscribeToSignalStatus: (
+    request: void,
+    options?: RequestOptions,
+  ) => Stream<RpcDevtoolsHost.SubscribeToSignalStatusResponse>;
+  subscribeToSignal: (request: void, options?: RequestOptions) => Stream<SignalResponse>;
+  subscribeToSwarmInfo: (
+    request: RpcDevtoolsHost.SubscribeToSwarmInfoRequest,
+    options?: RequestOptions,
+  ) => Stream<RpcDevtoolsHost.SubscribeToSwarmInfoResponse>;
+  exportSqliteDatabase: (
+    request: void,
+    options?: RequestOptions,
+  ) => Promise<RpcDevtoolsHost.ExportSqliteDatabaseResponse>;
+  runSqliteQuery: (
+    request: RpcDevtoolsHost.RunSqliteQueryRequest,
+    options?: RequestOptions,
+  ) => Promise<RpcDevtoolsHost.RunSqliteQueryResponse>;
+}
+
+export interface SpacesServicePromise {
+  createSpace: (request: RpcSpacesService.CreateSpaceRequest, options?: RequestOptions) => Promise<Space>;
+  updateSpace: (request: RpcSpacesService.UpdateSpaceRequest, options?: RequestOptions) => Promise<void>;
+  querySpaces: (request: void, options?: RequestOptions) => Stream<QuerySpacesResponse>;
+  updateMemberRole: (request: RpcSpacesService.UpdateMemberRoleRequest, options?: RequestOptions) => Promise<void>;
+  admitContact: (request: RpcSpacesService.AdmitContactRequest, options?: RequestOptions) => Promise<void>;
+  joinBySpaceKey: (
+    request: RpcSpacesService.JoinBySpaceKeyRequest,
+    options?: RequestOptions,
+  ) => Promise<JoinSpaceResponse>;
+  postMessage: (request: RpcSpacesService.PostMessageRequest, options?: RequestOptions) => Promise<void>;
+  subscribeMessages: (
+    request: RpcSpacesService.SubscribeMessagesRequest,
+    options?: RequestOptions,
+  ) => Stream<GossipMessage>;
+  writeCredentials: (request: RpcSpacesService.WriteCredentialsRequest, options?: RequestOptions) => Promise<void>;
+  queryCredentials: (request: RpcSpacesService.QueryCredentialsRequest, options?: RequestOptions) => Stream<Credential>;
+  createEpoch: (request: RpcSpacesService.CreateEpochRequest, options?: RequestOptions) => Promise<CreateEpochResponse>;
+  exportSpace: (
+    request: RpcSpacesService.ExportSpaceRequest,
+    options?: RequestOptions,
+  ) => Promise<RpcSpacesService.ExportSpaceResponse>;
+  importSpace: (
+    request: RpcSpacesService.ImportSpaceRequest,
+    options?: RequestOptions,
+  ) => Promise<RpcSpacesService.ImportSpaceResponse>;
+}
+
 export type ClientServices = {
   SystemService: SystemServicePromise;
   NetworkService: NetworkServicePromise;
@@ -182,16 +333,16 @@ export type ClientServices = {
   IdentityService: IdentityServicePromise;
   InvitationsService: InvitationsServicePromise;
   DevicesService: DevicesServicePromise;
-  SpacesService: SpacesService;
+  SpacesService: SpacesServicePromise;
 
-  DataService: DataService;
+  DataService: DataServicePromise;
   QueryService: QueryServicePromise;
   FeedService: FeedServicePromise;
 
   EdgeAgentService: EdgeAgentServicePromise;
 
   // TODO(burdon): Deprecated.
-  DevtoolsHost: DevtoolsHost;
+  DevtoolsHost: DevtoolsHostPromise;
 };
 
 /**
@@ -239,7 +390,7 @@ export type AppServiceBundle = {
 };
 
 export const appServiceBundle: ServiceBundle<AppServiceBundle> = {
-  AppService: schema.getService('dxos.iframe.AppService'),
+  AppService: getBufService<AppService>('dxos.iframe.AppService'),
 };
 
 export type ShellServiceBundle = {
@@ -247,5 +398,5 @@ export type ShellServiceBundle = {
 };
 
 export const shellServiceBundle: ServiceBundle<ShellServiceBundle> = {
-  ShellService: schema.getService('dxos.iframe.ShellService'),
+  ShellService: getBufService<ShellService>('dxos.iframe.ShellService'),
 };

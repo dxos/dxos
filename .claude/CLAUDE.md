@@ -11,6 +11,18 @@
   `concise` aliases `terse`; `natural`/`default`/`off` alias `normal`. It must
   lead the message, as a slash command does — so a mid-sentence mention of the
   command cannot flip the mode. The `$mode` sentinel has been removed.
+- **`/mode focus [task]`** adds a pinned task to `terse`. `focus` is not a third
+  mode value: the hook writes `terse` to `.claude/.mode` and the task to
+  `.claude/.focus`, so every reader of the mode is unchanged and the pin is just
+  that second file existing. With no task on the line the hook reads the
+  previous user instruction out of the event's `transcript_path` and pins that —
+  deriving it in the hook keeps the pin a mechanism rather than a request that
+  the agent remember. Nothing pinnable means terse and no pin, said out loud.
+  Any write to the mode clears the pin, so naming a verbosity is how you leave
+  focus; the pin is per-worktree like the mode, so concurrent sessions in one
+  worktree share it.
+- `bash .claude/scripts/mode.test.sh` exercises both files by feeding the hook
+  the JSON the `UserPromptSubmit` event carries. Run it after touching either.
 - **Bare `/mode` changes nothing and re-orients**: reply with the worktree and
   branch, the instruction files actually consulted (including skills loaded this
   session), and the current mode — never the modes as numbered options, since a
@@ -32,23 +44,38 @@
 
 ## Task planning
 
-- One command: `/project VERB [ARGS]`, leading the message; a `UserPromptSubmit`
-  hook (`.claude/hooks/track.sh`) reads the raw text before the command expands
-  and injects the matching directive — follow the directive, not the expansion.
-  - `/project` (bare) — status of the CURRENT project: worktree + branch, the
+- One command: `/dxos:project VERB [ARGS]`, leading the message (bare `/project`
+  also matches). It is shipped by the **`dxos` plugin**
+  (`tools/claude/plugins/dxos`), enabled for this repo via `extraKnownMarketplaces`
+  - `enabledPlugins` in `.claude/settings.json` — it is NOT a `.claude/` hook any
+    more. **Enabling is not installing:** run `bash .claude/scripts/bootstrap-plugins.sh`
+    once per machine — and per cloud container, where `.config/claude-code-setup.sh`
+    runs it — or every invocation answers `Unknown command`. The plugin's
+    `UserPromptSubmit` hook reads the raw text before the command expands and
+    injects the matching directive, ending with a `BACKEND:` line naming the
+    store — follow the directive and obey that line.
+  * `/dxos:project` (bare) — status of the CURRENT project: worktree + branch, the
     registry entry's status/docs/PRs, uncommitted files (as clickable links),
     and the next action.
-  - `/project list [all]` — numbered table of the registry
-    (`.agents/projects/registry.yml`); reply with a row number to resume.
-  - `/project tasks [all|<phase>]` — the open `- [ ]` items from the current
+  * `/dxos:project list [all]` — numbered table of the registry
+    (backend-resolved; `.agents/projects/registry.yml` here); reply with a row
+    number to resume.
+  * `/dxos:project tasks [all|<phase>]` — the open `- [ ]` items from the current
     project's `TASKS.md`, numbered and grouped by phase.
-  - `/project new <name> [summary]` / `/project end <name>` — manage entries;
+  * `/dxos:project new <name>` / `/dxos:project end <name>` — manage entries;
     each project has a `TASKS.md` + `DESIGN.md`.
-  - `/project track <text>` — record a follow-up in the active `TASKS.md`
+  * `/dxos:project track <text>` — record a follow-up in the active `TASKS.md`
     (never a background task chip).
-  - `/project hydrate` (alias `checkpoint`) — checkpoint before stopping or
+  * `/dxos:project spawn <N...>` — spin the numbered open tasks (same numbering
+    `tasks` renders) out into background task chips. This is the ONE sanctioned
+    use of a chip; a newly discovered follow-up still goes to `track`.
+  * `/dxos:project history [all]` — table of the PRs a project produced (date,
+    author, one-sentence summary), sourced from the registry entry's `prs` and
+    enriched via `gh`.
+  * `/dxos:project help` — table of every verb and what it does.
+  * `/dxos:project hydrate` (alias `checkpoint`) — checkpoint before stopping or
     opening a PR.
-  - `/project resume [name]` — reload state at session start, always in the
+  * `/dxos:project resume [name]` — reload state at session start, always in the
     session's assigned worktree.
 - The `$project` sentinel and the legacy `$track`/`$hydrate`/`$checkpoint`/
   `$resume`/`$rehydrate` forms are **removed** — they matched anywhere in a

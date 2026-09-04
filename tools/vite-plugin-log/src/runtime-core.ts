@@ -5,12 +5,10 @@
 import { type LogProcessor, inferEnvironmentName, log, parseFilter, serializeToJsonl, shouldLog } from '@dxos/log';
 
 import { VITE_PLUGIN_LOG_SINK_PATH } from './constants.ts';
+import { MAX_LINE_LENGTH, truncateLine } from './truncate-line.ts';
 
 /** Coalesce sends to one macrotask; adjust if needed. */
 const FLUSH_DEBOUNCE_MS = 16;
-
-/** Safety cap on a single serialized line so one huge context object can't bloat a flush. */
-const MAX_LINE_LENGTH = 2_000;
 
 /**
  * Injected by vite-plugin-log via `config.define`; when absent (_e.g._ prebundled artifact),
@@ -90,7 +88,7 @@ export const installRuntime = (transport: Transport): RuntimeHandle => {
       return;
     }
     if (line.length > MAX_LINE_LENGTH) {
-      line = line.slice(0, MAX_LINE_LENGTH);
+      line = truncateLine(line);
     }
     buffer += `${line}\n`;
     scheduleFlush();

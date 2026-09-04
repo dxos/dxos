@@ -1,40 +1,37 @@
 # client-services protobuf → effect-rpc conversion — Tasks
 
 _Resume: Transport seam (PR #12127) and internal service architecture (PR #12214) audited
-DONE against `main` source. Phase 4 (protobuf-removal pass) now IMPLEMENTED for 9 of 13
-services — `ContactsService`, `EdgeAgentService`, `DevicesService`, `NetworkService`,
-`InvitationsService`, `IdentityService`, `SystemService`, `LoggingService`, `FeedService` —
-plus the `service {}` block only (message types kept, all shared) for `QueryService`. Each
-service's proto `service {}` block and now-orphaned request/response messages were deleted
-from `.proto`; `gen-service-rpcs.ts`'s SERVICES list trimmed to the 3 remaining
-proto-generated services (`SpacesService`, `DataService`, `DevtoolsHost`);
-`@dxos/client-protocol`'s deprecated `ClientServices` type re-sourced off hand-written
-Promise/Stream interfaces (`EdgeAgentServicePromise`, `DevicesServicePromise`,
-`FeedServicePromise`, `IdentityServicePromise`, `InvitationsServicePromise`,
-`LoggingServicePromise`, `NetworkServicePromise`, `SystemServicePromise`,
-`QueryServicePromise`) sourced either from the still-live proto modules (types still shared
+DONE against `main` source. Phase 4 (protobuf-removal pass) is now IMPLEMENTED for all 13
+client services — `ContactsService`, `EdgeAgentService`, `DevicesService`, `NetworkService`,
+`InvitationsService`, `IdentityService`, `SystemService`, `LoggingService`, `FeedService`,
+`QueryService` (`service {}` block only, all message types shared), plus the final three
+(`DataService`, `DevtoolsHost`, `SpacesService`) landed across PRs #12578/#12586/#12589 and a
+follow-up round. Each service's proto `service {}` block and now-orphaned request/response
+messages were deleted from `.proto`; `gen-service-rpcs.ts`'s SERVICES list is now fully empty
+(every client service is hand-authored). `@dxos/client-protocol`'s deprecated `ClientServices`
+type is entirely re-sourced off hand-written Promise/Stream interfaces (`EdgeAgentServicePromise`,
+`DevicesServicePromise`, `FeedServicePromise`, `IdentityServicePromise`,
+`InvitationsServicePromise`, `LoggingServicePromise`, `NetworkServicePromise`,
+`SystemServicePromise`, `QueryServicePromise`, `DataServicePromise`, `DevtoolsHostPromise`,
+`SpacesServicePromise`) sourced either from the still-live proto modules (types still shared
 outside the RPC boundary) or from the effect-rpc namespaces in `@dxos/protocols/rpc`
-(`ContactsService` entry dropped outright — zero consumers). One entire file,
-`dxos/client/feed.proto`, was deleted (fully orphaned); `dxos/client/logging.proto` had its
-imports pruned to match. `NetworkService.ts` gained one genuinely-new inline schema
-(`SubscribeMessagesRequest`, moved off `dxos.edge.signal.SubscribeMessagesRequest`, which is
-now deleted from `edge/signal.proto` since nothing else referenced it). Two additional host
-implementations beyond `client-services` needed fixing to the new `FeedService.` namespace
-types: `echo-host`'s `echo-host.ts`/`local-feed-service.ts`. `plugin-calls` needed a new
-`@dxos/client-protocol` dependency to pick up `ClientServices['NetworkService']`.
-VERIFIED: `protocols`/`client-protocol`/`client-services`/`client`/`echo-host`/`devtools`/
-`react-client`/`shell`/`plugin-client`/`plugin-space`/`plugin-calls`/`client-e2e`/
-`observability`/`blade-runner`/`stories-inbox` build and lint clean; `protocols`/
-`client-protocol`/`client-services`/`client`/`echo-host`/`plugin-calls` tests green — the two
-`client:test` failures seen under full-suite parallelism (`dedicated-worker-client-services.test.ts`
-"connect client", "two clients share coordinator") are a pre-existing tight-timeout
-(1-2s) flake, confirmed passing in isolation (7/7, unrelated to this change), same pattern as
-the earlier `feed-syncer.test.ts` flake found in the first round. Remaining 3 services
-(`SpacesService`, `DataService`, `DevtoolsHost`) deliberately deferred — largest, most
-`protoMessage`-retained, not attempted this round. Payload-schema inlining + native-MessagePort
-transport work from `dm/worker-package` (last touch 2026-07-10) remains stalled/unmerged,
-badly diverged from `main`, never opened as a PR — separate from this pass, not attempted here
-(see item 3 below and DESIGN.md's scope note on why item 4 deliberately excludes it)._
+(`ContactsService` entry dropped outright — zero consumers). Two entire files,
+`dxos/client/feed.proto` and `dxos/echo/service.proto`, were deleted outright (fully orphaned);
+`dxos/client/logging.proto`, `dxos/devtools/host.proto`, `dxos/client/services.proto` had their
+now-dead messages/imports pruned to match (the latter two kept a handful of messages that stay
+protobuf-encoded — see the per-service notes below).
+VERIFIED: full-monorepo `moon exec :build` green; every directly touched package (`protocols`,
+`client-protocol`, `client-services`, `client`, `echo-host`, `echo-client`, `devtools`,
+`react-client`, `shell`, `plugin-client`, `plugin-space`, `plugin-calls`, `plugin-google`,
+`plugin-onboarding`, `client-e2e`, `proto-guard`, `migrations`, `halo-adapter-client`,
+`observability`, `blade-runner`, `stories-inbox`) builds, lints, and tests clean. Two flakes
+confirmed pre-existing and unrelated (isolated re-runs pass): `client:test`'s
+`dedicated-worker-client-services.test.ts` tight-timeout flake under full-suite parallelism, and
+`echo-host:test`'s `automerge-repo-subduction.test.ts` "concurrent shutdown" timing flake.
+Payload-schema inlining + native-MessagePort transport work from `dm/worker-package` (last touch
+2026-07-10) remains stalled/unmerged, badly diverged from `main`, never opened as a PR —
+separate from this pass, not attempted here (see item 3 below and DESIGN.md's scope note on why
+item 4 deliberately excludes it)._
 
 ## Phase 1: RPC transport seam (protobuf peer → effect-rpc)
 
@@ -141,9 +138,42 @@ One service at a time, build+test verified before the next:
       proto-gen to `FeedService.ts`. Two host implementations beyond `client-services` needed
       redirecting to `FeedService.`-namespaced types: `echo-host`'s `echo-host.ts` and
       `local-feed-service.ts` (a second, independent `FeedService.Handlers` implementation).
-- [ ] **`SpacesService`, `DataService`** — large; `DataService` has substitution-typed fields
-      (`SpaceSyncState` embeds `Timeframe`) that must stay `protoMessage`. Deferred.
-- [ ] **`DevtoolsHost`** — largest, most `protoMessage`-retained; do last. Deferred.
+- [x] **`DataService`** — inlined `BatchedDocumentUpdates` and `SpaceSyncState` (the latter's
+      `PeerState` nested type kept as a type-only `namespace` member, since a value-exporting
+      namespace can't merge with an outer `const` of the same name). `dxos/echo/service.proto`
+      was fully orphaned once these landed and was deleted outright; the dead
+      `service DataService {}` block went with it. 10 consumer files across `echo-client`, `echo-host`,
+      `functions-runtime-cloudflare`, and `client`/`client-protocol` redirected from the deleted
+      proto module to `@dxos/protocols/rpc`'s `DataService` namespace.
+- [x] **`DevtoolsHost`** — inlined 5 previously-`protoMessage` messages (`Event`, `StorageInfo`,
+      `GetSnapshotsResponse`/`StoredSnapshotInfo`, `SubscribeToFeedsResponse`/`Feed`/`FeedOwner`,
+      `SubscribeToSignalStatusResponse`/`SignalServer` — the latter's `state` field needed
+      `Schema.Enum(SignalState)` importing the real `dxos.mesh.signal.SignalState` proto enum by
+      value, matching the `IdentityRecovery.Kind` precedent, so assignment from
+      `SignalManager.getStatus()` stays type-correct). `host.proto` kept only the 6 messages
+      still embedding un-inlinable substitutions (`SubscribeToSpacesResponse`,
+      `SubscribeToFeedBlocksResponse`, `SubscribeToMetadataResponse`, `GetSpaceSnapshotResponse`,
+      `SaveSpaceSnapshotResponse`, `SignalResponse`); every other message body plus the dead
+      `service DevtoolsHost {}` block and now-unused imports (`google/protobuf/empty.proto`,
+      `dxos/halo/keyring.proto`, `dxos/halo/signed.proto`, `dxos/devtools/swarm.proto`,
+      `dxos/rpc.proto`) were removed. 12 consumer files across `client-services`'s devtools/
+      diagnostics packlets and `devtools` panels/hooks redirected.
+- [x] **`SpacesService`** — no new inlining needed (all 15 request/response payloads were
+      already hand-inlined by an earlier pass); the orphaned proto bodies and the dead
+      `service SpacesService {}` block (plus several already-dead imports predating this pass:
+      `google/protobuf/empty.proto`, `dxos/config.proto`, `dxos/edge/messenger.proto`,
+      `dxos/edge/signal.proto`) were never cleaned up until now. `services.proto` kept only
+      `Space`, `QuerySpacesResponse`, `JoinSpaceResponse`, `CreateEpochResponse`,
+      `ContactAdmission` (still `protoMessage`-referenced). The widest fanout of this whole
+      project: 20 consumer files (client, client-services, client-protocol,
+      halo-adapter-client, migrations, devtools, plugin-space, plugin-google,
+      plugin-onboarding, proto-guard, client-e2e) referenced the deleted `SpaceArchive`/
+      `CreateEpochRequest.Migration`/etc. types, including several accessing enum _values_
+      (`SpaceArchive.Format.BINARY`, `CreateEpochRequest.Migration.X`) — which don't carry over
+      directly, since `Schema.Enum({...})`'s members live under `.enums.X`, not as direct
+      properties (confirmed via the effect source: `Enum<A>` only exposes `{ enums: A }`, no
+      per-key accessors). Every such call site was rewritten to
+      `SpacesService.SpaceArchiveFormat.enums.X` / `SpacesService.Migration.enums.X`.
 - [x] **`QueryService`** — no schema inlining needed (spec's table: "— (all shared)"); only
       the `.proto` `service {}` block itself removed from `echo/query.proto`. All message
       types (`QueryRequest`, `QueryResult`, `QueryResponse`, `QueryReactivity`, `Heads`) kept —
@@ -152,7 +182,8 @@ One service at a time, build+test verified before the next:
 - [x] **Every service above, once its proto block was gone**: checked whether
       `@dxos/client-protocol`'s `ClientServices` type still imported that service's
       Promise-shaped interface from proto, and replaced it — this was the recurring blocker.
-      Remaining for `SpacesService`/`DataService`/`DevtoolsHost` when their turn comes.
+      Done for every service; `ClientServices` no longer imports any Promise-shaped interface
+      from a generated proto `service {}` block.
 
 ### References
 

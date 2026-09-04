@@ -4,7 +4,7 @@
 
 import * as Predicate from 'effect/Predicate';
 
-import { type Space, isSpace } from '@dxos/react-client/echo';
+import { type Space, isSpace } from '@dxos/client/echo';
 
 import { meta } from '#meta';
 

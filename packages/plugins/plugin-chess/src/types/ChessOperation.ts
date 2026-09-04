@@ -15,7 +15,7 @@ import * as PlayerReview from './PlayerReview';
 
 export const Move = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.chess.move'),
+    key: DXN.make('org.dxos.operation.chess.move'),
     name: 'Move',
     description: 'Makes a move in the given chess game.',
     icon: 'ph--play--regular',
@@ -39,7 +39,7 @@ export const Move = Operation.make({
 
 export const Play = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.chess.play'),
+    key: DXN.make('org.dxos.operation.chess.play'),
     name: 'Play',
     description: 'Uses the chess engine to play the next move.',
     icon: 'ph--play--regular',
@@ -66,7 +66,7 @@ export const Play = Operation.make({
 
 export const Print = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.chess.print'),
+    key: DXN.make('org.dxos.operation.chess.print'),
     name: 'Print game',
     description: 'Prints the chess game to ASCII.',
     icon: 'ph--clipboard-text--regular',
@@ -91,7 +91,7 @@ export const Print = Operation.make({
 /** Rebuilds a player review position index from all chess games in the space. */
 export const RebuildPositionIndex = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.plugin.chess.operation.rebuildPositionIndex'),
+    key: DXN.make('org.dxos.operation.chess.rebuildPositionIndex'),
     name: 'Rebuild Position Index',
     description: 'Scans chess games and updates the player review position index.',
     icon: 'ph--arrows-clockwise--regular',

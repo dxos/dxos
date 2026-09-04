@@ -9,6 +9,7 @@ import type * as Atom from 'effect/unstable/reactivity/Atom';
 import type { ComponentType } from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import type * as Operation from '@dxos/compute/Operation';
 import { type Collection, type Database, type Obj, type Type } from '@dxos/echo';
@@ -16,6 +17,7 @@ import { type PublicKey } from '@dxos/keys';
 import { type Label } from '@dxos/ui-types/translations';
 import { type ComplexMap, type Position } from '@dxos/util';
 
+import { type SpaceDashboard } from '#dashboard';
 import { meta } from '#meta';
 
 import * as Settings from './Settings';
@@ -66,6 +68,17 @@ export const EphemeralState = Capability.makeSingleton<Atom.Writable<SpaceEpheme
 );
 
 /**
+ * The active space projected for peripheral displays (Stream Deck, LaMetric).
+ *
+ * Contributed here rather than by each device plugin so that one set of queries serves every
+ * attached device, and so that `plugin-space` needs no knowledge of what is attached: it publishes
+ * facts, and slot counts, truncation and icon resolution stay with the hardware that has them.
+ */
+export const Dashboard = Capability.makeSingleton<Atom.Atom<SpaceDashboard>>()(
+  `${meta.profile.key}.capability.dashboard`,
+);
+
+/**
  * The default space as created by identity setup, so first-run seeding can order itself after it.
  *
  * Contributed only by `IdentityCreated`, so it is absent on every boot that does not create an
@@ -86,6 +99,27 @@ export type OnCreateSpace = (params: {
   rootCollection: Collection.Collection;
 }) => Effect.Effect<void, Error, Operation.Service>;
 export const OnCreateSpace = Capability.make<OnCreateSpace>()(`${meta.profile.key}.capability.onSpaceCreated`);
+
+/**
+ * A starting point a plugin offers for a new space: the defaults the create dialog pre-fills, plus
+ * the content to write once the space exists.
+ *
+ * `apply` is a bound closure rather than a definition, so a consumer needs only "put this content in
+ * that space" without dragging the builder and its schema into the dialog that lists it.
+ */
+export type SpaceTemplate = Readonly<{
+  /** Stable id, namespaced by the owning plugin; the value the create form carries. */
+  id: string;
+  /** Name for the picker, and the default space name when the template is chosen. */
+  label: string;
+  /** One line on what the template creates. */
+  description?: string;
+  icon?: string;
+  hue?: string;
+  /** Registers the content's types on the client, then writes it into the new space. */
+  apply: (params: { readonly client: Client; readonly space: Space }) => Promise<void>;
+}>;
+export const SpaceTemplate = Capability.make<SpaceTemplate>()(`${meta.profile.key}.capability.spaceTemplate`);
 
 export type OnTypeAdded = (params: {
   db: Database.Database;

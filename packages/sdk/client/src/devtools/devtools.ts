@@ -4,6 +4,7 @@
 
 import { next as A } from '@automerge/automerge';
 import { cbor } from '@automerge/automerge-repo';
+import { create } from '@bufbuild/protobuf';
 import * as Schema from 'effect/Schema';
 
 import { ClientRpcServer, type Halo, type Space, makeHandlersFromRpc } from '@dxos/client-protocol';
@@ -12,6 +13,7 @@ import { exposeModule, importModule } from '@dxos/debug';
 import { Feed, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { DXN, PublicKey, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { Runtime_Client_StorageSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { type DiagnosticMetadata, TRACE_PROCESSOR, type TraceProcessor } from '@dxos/tracing';
 import { clearIndexedDB, clearOPFS, joinTables } from '@dxos/util';
 
@@ -221,7 +223,8 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
     };
 
     hook.openDevtoolsApp = async () => {
-      const vault = client.config?.values.runtime?.client?.remoteSource ?? 'https://halo.dxos.org';
+      // No default target: when no remote source is configured the devtools app decides on its own.
+      const vault = client.config?.values.runtime?.client?.remoteSource;
 
       // Check if we're serving devtools locally on the usual port.
       let hasLocalDevtools = false;
@@ -234,7 +237,7 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
       const devtoolsApp = hasLocalDevtools
         ? 'http://localhost:5174/'
         : `https://devtools${isDev ? '.dev.' : '.'}dxos.org/`;
-      const devtoolsUrl = `${devtoolsApp}?target=${vault}`;
+      const devtoolsUrl = vault ? `${devtoolsApp}?target=${vault}` : devtoolsApp;
       window.open(devtoolsUrl, '_blank');
     };
 
@@ -250,7 +253,7 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
     hook.exportProfile = async () => {
       const { createStorageObjects, exportProfileData } = await import('@dxos/client-services');
 
-      const storageConfig = client.config.get('runtime.client.storage') ?? {};
+      const storageConfig = client.config.get('runtime.client.storage') ?? create(Runtime_Client_StorageSchema, {});
 
       const { storage } = createStorageObjects(storageConfig);
 
@@ -269,7 +272,7 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
 
       const { createStorageObjects, decodeProfileArchive, importProfileData } = await import('@dxos/client-services');
 
-      const storageConfig = client.config.get('runtime.client.storage') ?? {};
+      const storageConfig = client.config.get('runtime.client.storage') ?? create(Runtime_Client_StorageSchema, {});
 
       // Kill client so it doesn't interfere.
       await client.destroy().catch(() => {});

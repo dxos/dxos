@@ -2,14 +2,15 @@
 // Copyright 2022 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import * as Effect from 'effect/Effect';
 import * as EffectStream from 'effect/Stream';
 
 import { type Event } from '@dxos/async';
 import { type Config } from '@dxos/config';
 import { EffectEx } from '@dxos/effect';
+import { type Config as ConfigProto, ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { type Platform, type SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
-import { type Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
 import { SystemService } from '@dxos/protocols/rpc';
 import { type MaybePromise, jsonKeyReplacer } from '@dxos/util';
 
@@ -51,7 +52,7 @@ export class SystemServiceImpl implements SystemService.Handlers {
 
   ['SystemService.getConfig'](): Effect.Effect<ConfigProto, Error> {
     return Effect.tryPromise({
-      try: async () => (await this._config?.())?.values ?? {},
+      try: async () => (await this._config?.())?.values ?? create(ConfigSchema, {}),
       catch: (error) => error as Error,
     });
   }

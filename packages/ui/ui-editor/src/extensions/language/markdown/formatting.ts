@@ -17,6 +17,7 @@ import { EditorView, type ViewUpdate, keymap } from '@codemirror/view';
 import { type SyntaxNode, type SyntaxNodeRef } from '@lezer/common';
 
 import { debounceAndThrottle } from '@dxos/async';
+import { trim } from '@dxos/util';
 
 // Markdown refs:
 // https://github.github.com/gfm
@@ -421,23 +422,15 @@ const skipMarkers = (pos: number, tree: SyntaxNode, dir: -1 | 1, limit?: number)
 
 // TODO(burdon): Define and trigger snippets for codeblock, table, etc.
 const snippets = {
-  codeblock: snippet(
-    [
-      //
-      '```#{}',
-      '',
-      '```',
-    ].join('\n'),
-  ),
+  codeblock: snippet(['```#{}', '', '```'].join('\n')),
   table: snippet(
-    [
-      //
-      '| #{col1} | #{col2} |',
-      '| ---- | ---- |',
-      '| #{val1} | #{val2} |',
-      '| #{val3} | #{val4} |',
-      '',
-    ].join('\n'),
+    trim`
+      | #{C-1} | #{C-2} | #{C-3} |
+      | ---- | ---- | ---- |
+      | #{A-1} | #{B-1} | #{C-1} |
+      | #{A-2} | #{B-2} | #{C-2} |
+      | #{A-3} | #{B-3} | #{C-3} |
+    ` + '\n',
   ),
 };
 
@@ -445,12 +438,17 @@ const snippets = {
 // Table
 //
 
-export const insertTable = (view: EditorView) => {
+/**
+ * Inserts the table snippet at the start of the line holding `at` (default: the cursor).
+ * `at` is what lets the slash menu insert at the trigger it just consumed rather than wherever the
+ * selection happens to sit, so both entry points produce the same table.
+ */
+export const insertTable = (view: EditorView, at?: number) => {
   const {
     selection: { main },
     doc,
   } = view.state;
-  const { number } = doc.lineAt(main.anchor);
+  const { number } = doc.lineAt(at ?? main.anchor);
   const { from } = doc.line(number);
 
   snippets.table(view, null, from, from);
@@ -1042,6 +1040,7 @@ export const toggleBlockquote: StateCommand = (target) => {
 export const addCodeblock: StateCommand = (target) => {
   const { state, dispatch } = target;
   const { selection } = state;
+
   // If on a blank line, use the code block snippet.
   if (selection.ranges.length === 1 && selection.main.empty) {
     const { head } = selection.main;

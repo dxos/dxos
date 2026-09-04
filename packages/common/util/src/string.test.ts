@@ -4,9 +4,19 @@
 
 import { describe, test } from 'vitest';
 
-import { inline, trim } from './string';
+import { concat, inline, trim } from './string';
 
 describe('string', () => {
+  test('concat', async ({ expect }) => {
+    const text = concat`
+      one.
+      two.
+      three.
+    `;
+
+    expect(text).to.eq('one. two. three.');
+  });
+
   test('dedent', async ({ expect }) => {
     const text = trim`
       - 1

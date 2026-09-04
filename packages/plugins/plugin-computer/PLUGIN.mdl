@@ -1,0 +1,99 @@
+---
+id: org.dxos.plugin.computer
+name: ComputerPlugin
+version: 0.1.0
+---
+
+Proof-of-concept, dev-only coding harness for Composer ("Coding (Dev)"): a bash tool and a
+multi-string-replace edit tool, carried by a single vite dev-server route that runs a shell script
+under a configured root. Nothing is mounted outside a vite dev server.
+
+## Extensions
+
+| Term | URI                        |
+|------|----------------------------|
+| `op` | `org.dxos.mdl.op@1.1`      |
+| `flow` | `org.dxos.mdl.flow@1.0`  |
+
+## Operations
+
+```mdl
+op bash
+  key: org.dxos.operation.computer.runBash
+  desc: Runs a shell script under the harness root and returns its output.
+  input:
+    script: string
+    cwd?: string         # relative to the harness root
+    timeout?: number     # ms, clamped by the host
+  output:
+    stdout: string
+    stderr: string
+    exitCode: number     # -1 when killed
+    success: boolean
+    signal?: string
+    timedOut: boolean
+    truncated: boolean
+    cwd: string          # absolute directory the script ran in
+    durationMs: number
+  effects: [shell:exec]
+```
+
+```mdl
+op edits
+  key: org.dxos.operation.computer.applyEdits
+  desc: Applies a batch of exact find/replace edits to files; all-or-nothing.
+  input:
+    edits: Array<{ path: string, oldString: string, newString: string, replaceAll?: boolean }>
+    cwd?: string
+  output:
+    applied: boolean
+    files: Array<{ path: string, replacements: number }>
+    error?: string       # set iff applied is false
+  effects: [shell:exec, fs:write]
+```
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Run a shell command and apply an edit
+  desc: |
+    The plugin has no ECHO types and no navtree/article surface — it is two raw tools
+    (`bash`, `edits`) exposed to the assistant. There is no human gesture other than prompting
+    the assistant, so `do` throughout is "ask the assistant to ...".
+  actors: agent
+  status: unverified
+  given:
+    - an identity exists
+    - plugin-computer is enabled — it is dev-only (gated on `isDev` for both availability and
+      default) and never appears in a production build; enable it via the plugin registry in a
+      dev environment, or confirm `isDev` is already on
+    - the vite dev server's harness route is reachable (this plugin only functions there — "Nothing
+      is mounted outside a vite dev server")
+    - a scratch file the harness root can write to, not otherwise used by this space's QA fixtures
+  test:
+    - name: Run a shell command
+      do: Ask the assistant to run `echo qa-computer-check` via the Coding (Dev) tool.
+      invoke: org.dxos.operation.computer.runBash { script: "echo qa-computer-check" }
+      capture: ran
+      expect: the tool reports success with stdout containing "qa-computer-check" and exitCode 0
+      assert: return $ran.success === true && $ran.stdout.includes('qa-computer-check');
+    - name: Write a scratch file
+      do: Ask the assistant to create a scratch file with known content, via the bash tool (the
+        edits tool only replaces existing text, so seeding needs a shell write first).
+      invoke: org.dxos.operation.computer.runBash { script: "echo 'before' > qa-computer-scratch.txt" }
+      expect: the file now exists under the harness root containing "before"
+    - name: Apply an edit
+      do: Ask the assistant to replace "before" with "after" in that file.
+      invoke: org.dxos.operation.computer.applyEdits { edits: [{ path: "qa-computer-scratch.txt", oldString: "before", newString: "after" }] }
+      capture: edited
+      expect: the file's content is now "after"
+      assert: return $edited.applied === true && $edited.files.some((f) => f.path === 'qa-computer-scratch.txt' && f.replacements > 0);
+  after:
+    - name: Remove the scratch file
+      do: Ask the assistant to delete the scratch file.
+      invoke: org.dxos.operation.computer.runBash { script: "rm -f qa-computer-scratch.txt" }
+      expect: the file no longer exists under the harness root
+```

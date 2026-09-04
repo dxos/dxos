@@ -7,41 +7,85 @@ import React, { useState } from 'react';
 
 import { createObject } from '@dxos/echo-client';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { type ContentMap, Mermaid } from '@dxos/plugin-illustrator/model';
+import { type ContentMap, Mermaid, Uml, UmlGrid } from '@dxos/plugin-illustrator/model';
 import { Panel } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { trim } from '@dxos/util';
 
 import { applyCommands } from '#model';
 import { Tldraw } from '#types';
 
 import { CanvasComponent } from './Canvas';
 
-const FLOWCHART = `
-flowchart TB
-    X[X]
+const FLOWCHART = trim`
+  flowchart TB
+      X[X]
 
-    subgraph CORE[" "]
-        A[A]
-        B[B]
-        C[C]
+      subgraph CORE[" "]
+          A[A]
+          B[B]
+          C[C]
 
-        A --> B
-        A --> C
-    end
+          A --> B
+          A --> C
+      end
 
-    Y[Y]
+      Y[Y]
 
-    X --> A
-    X --> B
-    X --> C
-    C --> Y
-    Y --> C
+      X --> A
+      X --> B
+      X --> C
+      C --> Y
+      Y --> C
 `;
 
-const DefaultStory = () => {
+const CLASS_DIAGRAM = trim`
+  classDiagram
+      direction TB
+
+      class Dialect {
+          <<interface>>
+          +id: string
+          +compile(input) Command[]
+      }
+
+      class Scene {
+          +objects: WorldObject[]
+      }
+
+      class WorldObject {
+          +id: string
+          +origin: Point
+          +elements: Element[]
+      }
+
+      class DrawingBuilder {
+          +read(canvas) Scene
+          +apply(canvas, commands) void
+      }
+
+      class TldrawBuilder
+      class ExcalidrawBuilder
+
+      Dialect ..> Scene : compiles to
+      Scene *-- WorldObject
+      DrawingBuilder ..> Scene : reads / applies
+      DrawingBuilder <|.. TldrawBuilder
+      DrawingBuilder <|.. ExcalidrawBuilder
+`;
+
+type StoryArgs = {
+  source: string;
+  scale?: number;
+  /** Grid layout: equal-size cells on the document grid with orthogonal connectors. */
+  grid?: boolean;
+};
+
+const DefaultStory = ({ source, scale = 2, grid }: StoryArgs) => {
   const [canvas] = useState(() => {
     const content: ContentMap = {};
-    applyCommands(content, Mermaid.compile(FLOWCHART, { scale: 2 }));
+    const compile = !Uml.isClassDiagram(source) ? Mermaid.compile : grid ? UmlGrid.compile : Uml.compile;
+    applyCommands(content, compile(source, { scale }));
     return createObject(Drawing.makeCanvas({ schema: Tldraw.TLDRAW_SCHEMA, content }));
   });
 
@@ -65,4 +109,16 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  args: { source: FLOWCHART },
+};
+
+/** The UML dialect rendering its own architecture: dialect → scene → variant builders. */
+export const ClassDiagram: Story = {
+  args: { source: CLASS_DIAGRAM, scale: 1 },
+};
+
+/** Grid variant: equal-size nodes aligned to the document grid, orthogonal connectors. */
+export const ClassDiagramGrid: Story = {
+  args: { source: CLASS_DIAGRAM, scale: 1, grid: true },
+};

@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { describe, expect, test } from 'vitest';
 
-import { Database, Feed, Filter, Obj, Scope } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Scope, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { QueryBuilder } from '@dxos/echo-query';
 import { EffectEx } from '@dxos/effect';
@@ -13,6 +13,8 @@ import { EntityId } from '@dxos/keys';
 import { Message } from '@dxos/types';
 
 import { buildMailboxSelection, buildSystemTagSelection, buildThreadSemiJoin, getSearchText } from './mailbox-search';
+
+const TAG_MAP = { 'tag:work': Tag.make({ label: 'work' }), 'tag:urgent': Tag.make({ label: 'urgent' }) };
 
 describe('buildMailboxSelection', () => {
   const build = (text: string) => new QueryBuilder({}).build(text).filter;
@@ -22,16 +24,61 @@ describe('buildMailboxSelection', () => {
     expect(selection.ast.type).toBe('object');
   });
 
-  test('free text routes to a full-text select (no AND with type)', () => {
+  test('free text composes the full-text select with the message type', () => {
     const text = 'invoice';
     const selection = buildMailboxSelection(text, build(text));
-    expect(selection.ast).toMatchObject({ type: 'text-search', searchKind: 'full-text' });
+    expect(selection.ast).toMatchObject({
+      type: 'and',
+      filters: [{ type: 'object' }, { type: 'text-search', searchKind: 'full-text' }],
+    });
   });
 
   test('structural-only filter is ANDed with the message type', () => {
     const text = 'from:alice@example.com';
     const selection = buildMailboxSelection(text, build(text));
     expect(selection.ast.type).toBe('and');
+  });
+
+  test('a tag term with a resolver scopes the text search to the tag members', () => {
+    const tagged = EntityId.deterministic('tagged-message');
+    const selection = buildMailboxSelection('#work invoice', buildTagged('#work invoice'), {
+      resolveTagIds: (tagUri) => (tagUri === 'tag:work' ? [tagged] : undefined),
+    });
+    expect(selection.ast).toMatchObject({
+      type: 'and',
+      filters: [{ type: 'object' }, { type: 'object', id: [tagged] }, { type: 'text-search' }],
+    });
+  });
+
+  test('multiple tag terms intersect their member ids', () => {
+    const both = EntityId.deterministic('both');
+    const onlyWork = EntityId.deterministic('only-work');
+    const selection = buildMailboxSelection('#work #urgent invoice', buildTagged('#work #urgent invoice'), {
+      resolveTagIds: (tagUri) => (tagUri === 'tag:work' ? [both, onlyWork] : [both]),
+    });
+    expect(selection.ast).toMatchObject({
+      type: 'and',
+      filters: [{ type: 'object' }, { type: 'object', id: [both] }, { type: 'text-search' }],
+    });
+  });
+
+  test('a tag with no members matches nothing rather than falling back to the whole feed', () => {
+    const selection = buildMailboxSelection('#work invoice', buildTagged('#work invoice'), {
+      resolveTagIds: () => [],
+    });
+    // `Filter.id()` of an empty member set is `Filter.nothing()` (a negated match-all).
+    expect(selection.ast).toMatchObject({
+      type: 'and',
+      filters: [{ type: 'object' }, { type: 'not' }, { type: 'text-search' }],
+    });
+  });
+
+  test('an unresolvable tag term is dropped from the text selection', () => {
+    const selection = buildMailboxSelection('#work invoice', buildTagged('#work invoice'));
+    expect(selection.ast).toMatchObject({
+      type: 'and',
+      filters: [{ type: 'object' }, { type: 'text-search' }],
+    });
   });
 });
 
@@ -222,6 +269,22 @@ describe('buildThreadSemiJoin (results)', () => {
     }
   });
 
+  test('free text scoped to tag members returns only the tagged thread', async () => {
+    const fixture = await setup();
+    try {
+      // Both messages contain the term; only `a1` carries the tag, so only its thread returns.
+      const a1 = message('alpha report', '2020-01-01T00:00:00.000Z', 'thread-a');
+      const b1 = message('alpha memo', '2020-01-02T00:00:00.000Z', 'thread-b');
+      await append(fixture, [a1, b1]);
+
+      const filter = Filter.and(Filter.tag('tag:work'), Filter.text('alpha', { type: 'full-text' }));
+      const viewFilter = buildMailboxSelection('#work alpha', filter, { resolveTagIds: () => [a1.id] });
+      expect(await runSemiJoin(fixture, viewFilter)).toEqual(ids(a1));
+    } finally {
+      await fixture.builder.close();
+    }
+  });
+
   test('a threaded message matching both union arms is returned once', async () => {
     const fixture = await setup();
     try {
@@ -237,6 +300,8 @@ describe('buildThreadSemiJoin (results)', () => {
     }
   });
 });
+
+const buildTagged = (text: string) => new QueryBuilder(TAG_MAP).build(text).filter;
 
 /** The semi-join arm of the union (the other arm is the bare view filter). */
 const semiJoinArm = (query: ReturnType<typeof buildThreadSemiJoin>): any => (query.ast as any).queries[0];

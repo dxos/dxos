@@ -9,7 +9,7 @@ import { Model, Provider } from '@dxos/ai';
 import { useOptionalCapability } from '@dxos/app-framework/ui';
 import { EffectEx } from '@dxos/effect';
 import { List, ListItem } from '@dxos/react-list';
-import { IconButton, useTranslation } from '@dxos/react-ui';
+import { Flex, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Combobox } from '@dxos/react-ui-list';
 
@@ -116,9 +116,9 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
               return (
                 <ListItem
                   key={model.name}
-                  className='flex flex-col gap-0.5 rounded-sm dx-input-surface px-2 py-1.5 w-full'
+                  className='flex flex-col gap-trim-xs rounded-sm dx-input-surface px-trim-sm py-trim-xs w-full'
                 >
-                  <div className='flex items-center gap-2'>
+                  <Flex gap='sm' align='center'>
                     <span className='grow truncate font-medium'>{model.name}</span>
                     <IconButton
                       icon={running ? 'ph--eject--regular' : 'ph--play--regular'}
@@ -140,13 +140,13 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
                         void withPending(model.name, () => EffectEx.runPromise(manager.remove(model.name)))()
                       }
                     />
-                  </div>
+                  </Flex>
                   {(size || loadedLabel || error) && (
-                    <div className='flex items-center gap-2 text-sm'>
+                    <Flex gap='sm' align='center' classNames='text-sm'>
                       {size && <span className='text-description'>{size}</span>}
                       {loadedLabel && <span className='text-success-text'>{loadedLabel}</span>}
                       {error && <span className='truncate text-error-text'>{shortError(error)}</span>}
-                    </div>
+                    </Flex>
                   )}
                 </ListItem>
               );
@@ -157,8 +157,11 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
                 ? t('settings.ollama.pulling.message', { percent: percentOf(progress) })
                 : (progress?.status ?? t('settings.ollama.pulling.label'));
               return (
-                <ListItem key={name} className='flex flex-col gap-0.5 rounded-sm dx-input-surface px-2 py-1.5 w-full'>
-                  <div className='flex items-center gap-2'>
+                <ListItem
+                  key={name}
+                  className='flex flex-col gap-trim-xs rounded-sm dx-input-surface px-trim-sm py-trim-xs w-full'
+                >
+                  <Flex gap='sm' align='center'>
                     <span className='grow truncate font-medium text-description'>{name}</span>
                     <IconButton
                       icon='ph--x--regular'
@@ -166,7 +169,7 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
                       label={t('settings.ollama.cancel.label')}
                       onClick={() => void EffectEx.runPromise(manager.cancel(name))}
                     />
-                  </div>
+                  </Flex>
                   <span className='text-sm text-description'>{status}</span>
                 </ListItem>
               );

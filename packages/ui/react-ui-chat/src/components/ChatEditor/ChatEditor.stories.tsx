@@ -166,13 +166,14 @@ export const WithCommands: Story = {
     // Regression: `submit()`'s Enter binding must defer to the open completion popover (both sit at
     // `Prec.highest`) rather than swallowing Enter and submitting the raw "$t" text.
     await userEvent.keyboard('{Enter}');
-    await waitFor(() => expect(content.textContent).toEqual('$track'));
+    // Accepting appends the separator space, so the argument is typed without a further keystroke.
+    await waitFor(() => expect(content.textContent).toEqual('$track '));
     void expect(submittedTexts).toEqual([]);
 
     // Enter with no completion open still submits and resets the editor (submit's own contract).
     // `userEvent.keyboard` (unlike `userEvent.type(content, ...)`) drives `document.activeElement`
     // directly, so it respects CodeMirror's actual cursor position instead of assuming one.
-    await userEvent.keyboard(`${'{Backspace}'.repeat('$track'.length)}hello{Enter}`);
+    await userEvent.keyboard(`${'{Backspace}'.repeat('$track '.length)}hello{Enter}`);
     await waitFor(() => expect(submittedTexts).toEqual(['hello']));
     await waitFor(() => expect(canvasElement.querySelector('.cm-placeholder')).not.toBeNull());
   },

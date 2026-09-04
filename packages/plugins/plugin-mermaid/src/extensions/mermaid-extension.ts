@@ -114,7 +114,7 @@ export const mermaid = (_: MermaidOptions = {}): Extension => {
         position: 'relative',
         display: 'inline-flex',
         width: '100%',
-        maring: '4px 0',
+        margin: '4px 0',
         padding: '16px',
         justifyContent: 'center',
         backgroundColor: 'var(--color-group-surface)',
@@ -167,6 +167,9 @@ class MermaidWidget extends WidgetType {
       Mermaid.initialize({
         darkMode: view.state.facet(EditorView.darkTheme),
         theme: 'neutral',
+        // Native SVG text labels: the strict-mode sanitizer strips foreignObject HTML label
+        // content (mermaid 10.9.4 with dompurify 3.x), leaving unlabeled nodes.
+        flowchart: { htmlLabels: false },
         // TODO(burdon): Styles.
         // NOTE: Must specify 'base' in order to override.
         // theme: 'base',

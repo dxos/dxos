@@ -165,37 +165,36 @@ export const InboxStack = composable<HTMLDivElement, InboxStackProps>(
 
     const tileItems = useMemo(
       () =>
-        items?.map(
-          (item): StackTileData =>
-            isMessageGroup(item)
-              ? {
-                  conversationId: item.id,
-                  messages: item.messages,
-                  total: item.total,
-                  // Conversations show the latest message; star reflects/toggles that message.
-                  starredAtom: starredAtom?.(item.messages[0]?.id),
-                  inboxAtom: inboxAtom?.(item.messages[0]?.id),
-                  enableArchive,
-                  enableIgnoreSender,
-                  enableCreateTopic,
-                  searchQuery,
-                  getContact,
-                  onContactCreate,
-                  onAction,
-                }
-              : {
-                  message: item,
-                  tagsAtom: tagsAtom?.(item.id),
-                  starredAtom: starredAtom?.(item.id),
-                  inboxAtom: inboxAtom?.(item.id),
-                  enableArchive,
-                  enableIgnoreSender,
-                  enableCreateTopic,
-                  searchQuery,
-                  getContact,
-                  onContactCreate,
-                  onAction,
-                },
+        items?.map((item): StackTileData =>
+          isMessageGroup(item)
+            ? {
+                conversationId: item.id,
+                messages: item.messages,
+                total: item.total,
+                // Conversations show the latest message; star reflects/toggles that message.
+                starredAtom: starredAtom?.(item.messages[0]?.id),
+                inboxAtom: inboxAtom?.(item.messages[0]?.id),
+                enableArchive,
+                enableIgnoreSender,
+                enableCreateTopic,
+                searchQuery,
+                getContact,
+                onContactCreate,
+                onAction,
+              }
+            : {
+                message: item,
+                tagsAtom: tagsAtom?.(item.id),
+                starredAtom: starredAtom?.(item.id),
+                inboxAtom: inboxAtom?.(item.id),
+                enableArchive,
+                enableIgnoreSender,
+                enableCreateTopic,
+                searchQuery,
+                getContact,
+                onContactCreate,
+                onAction,
+              },
         ),
       [
         items,
@@ -628,23 +627,16 @@ const ConversationMessageRow = ({
 
   return (
     <Card.Row classNames='items-start'>
-      {/* `h-8`, matching the name line: centring the avatar over the whole two-line row (name +
-          snippet) left it hanging below the name it belongs to. */}
       <Card.Block classNames='h-8 items-center'>
         <ContactAvatar actor={message.sender} getContact={getContact} onContactCreate={onContactCreate} />
       </Card.Block>
       <div className='flex flex-col' onClick={(event) => onMessageClick(event, message.id)}>
         <button type='button' className='flex items-center w-full h-8 text-start text-sm'>
-          {from && <span className='truncate'>{from}</span>}
-          {/* `ml-auto` rather than `justify-between` on the row: a message whose sender carries
-              neither name nor address renders no name at all, and `justify-between` would then treat
-              the date as the only child and pull it to the start. */}
-          <span className='ml-auto pis-2 text-xs text-info-text whitespace-nowrap shrink-0'>{date}</span>
+          <span className='truncate'>{from}</span>
+          <span className='ml-auto ps-2 text-xs text-info-text whitespace-nowrap shrink-0'>{date}</span>
         </button>
-
-        {/* A message with body text always has a truthy `snippet` (`properties.snippet ?? first text block`), so gating the search snippet on `snippet` is safe. */}
         {snippet && (
-          <button type='button' className='text-start text-description line-clamp-2 dx-link-hover'>
+          <button type='button' className='text-start text-sm text-description line-clamp-2 dx-link-hover'>
             {searchQuery && searchSnippet ? <Highlighted text={searchSnippet} query={searchQuery} /> : snippet}
           </button>
         )}

@@ -9,7 +9,7 @@ import React from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
@@ -56,7 +56,7 @@ const DefaultStory = () => {
 const storyGraphBuilders = () =>
   Effect.runSync(
     Effect.all([
-      GraphBuilder.createExtension({
+      AppGraphBuilder.createExtension({
         id: 'storyRecordActions',
         match: (node) =>
           Obj.instanceOf(Organization.Organization, node.data) ? Option.some(node.data) : Option.none(),

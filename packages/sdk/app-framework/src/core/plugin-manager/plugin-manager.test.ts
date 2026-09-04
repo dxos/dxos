@@ -307,7 +307,10 @@ describe('PluginManager', () => {
       assert.deepStrictEqual(manager.getEventsFired(), []);
       yield* manager.activate(ActivationEvents.Startup);
       assert.deepStrictEqual(manager.getActive(), [testPlugin.modules[0].id]);
-      assert.deepStrictEqual(manager.getEventsFired(), [ActivationEvents.Startup.id]);
+      // Idle too: this host has no `requestIdleCallback` (jsdom does not implement it), so the
+      // manager runs the idle wave inline rather than forking it — a forked wave would leave
+      // `start()` returning before the modules gated on it were active.
+      assert.deepStrictEqual(manager.getEventsFired(), [ActivationEvents.Startup.id, ActivationEvents.Idle.id]);
     }),
   );
 
@@ -1923,7 +1926,7 @@ describe('PluginManager', () => {
       Effect.gen(function* () {
         const FailingEvent = ActivationEvent.make('org.dxos.test.activationError');
         const FailingPlugin = Plugin.define(
-          Plugin.makeMeta({ key: DXN.make('org.dxos.test.failing'), name: 'Failing' }),
+          Plugin.makeMeta({ key: DXN.make('com.example.operation.test.failing'), name: 'Failing' }),
         ).pipe(
           Plugin.addModule({
             provides: [],
@@ -3363,5 +3366,52 @@ describe('PluginManager', () => {
         assert.strictEqual(manager.capabilities.getAll(MultiNumber).length, 1);
       }),
     );
+  });
+
+  describe('host-supplied core set', () => {
+    it.effect('defaults to the plugins tagged `system`', () =>
+      Effect.gen(function* () {
+        const tagged = makePlugin('org.dxos.test.tagged', ['system']);
+        const plain = makePlugin('org.dxos.test.plain');
+        const manager = PluginManager.make({ plugins: [tagged, plain], pluginLoader });
+
+        assert.deepStrictEqual(manager.getCore(), ['org.dxos.test.tagged']);
+      }),
+    );
+
+    it.effect('an explicit set replaces the tag, in both directions', () =>
+      Effect.gen(function* () {
+        const tagged = makePlugin('org.dxos.test.tagged', ['system']);
+        const plain = makePlugin('org.dxos.test.plain');
+        const manager = PluginManager.make({
+          plugins: [tagged, plain],
+          // The host both drops a `system`-tagged plugin from core and promotes an untagged one:
+          // the tag is declared once per plugin for every host, so neither direction can be
+          // expressed without this option.
+          core: ['org.dxos.test.plain'],
+          pluginLoader,
+        });
+
+        assert.deepStrictEqual(manager.getCore(), ['org.dxos.test.plain']);
+        assert.isTrue(manager.getEnabled().includes('org.dxos.test.plain'));
+      }),
+    );
+
+    it.effect('ignores ids that name no registered plugin', () =>
+      Effect.gen(function* () {
+        const plain = makePlugin('org.dxos.test.plain');
+        const manager = PluginManager.make({
+          plugins: [plain],
+          core: ['org.dxos.test.plain', 'org.dxos.test.absent'],
+          pluginLoader,
+        });
+
+        // A phantom core id would be permanently un-removable and un-enableable.
+        assert.deepStrictEqual(manager.getCore(), ['org.dxos.test.plain']);
+      }),
+    );
+
+    const makePlugin = (id: string, tags?: string[]) =>
+      Plugin.make(Plugin.define({ profile: { key: id, name: id, tags } }))();
   });
 });

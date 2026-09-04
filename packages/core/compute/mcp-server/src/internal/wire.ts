@@ -23,21 +23,26 @@ import { identity } from './identity';
  *
  * Deliberately fixed and generic: the plugin ecosystem behind this server is open-ended, so
  * per-plugin or per-skill fragments would grow without bound and truncate silently. Plugin- and
- * project-specific guidance lives in skills; the only thing stated here is the *convention* by
- * which a model finds them — a tool description names its skill, `skillLoad` fetches it.
+ * project-specific guidance lives in skills, and the operations themselves are discovered at
+ * runtime — so what is stated here is the *loop* by which a model reaches both.
  */
 export const SERVER_INSTRUCTIONS = [
-  'Tools on this server read and write objects in DXOS spaces (collaborative databases).',
+  'This server reads and writes objects in DXOS spaces (collaborative databases). Its verbs are ' +
+    'not separate tools: call queryOperations to search them, then invokeOperation to run one.',
+  'Before invoking an operation for the first time, call queryOperations with its key to get the ' +
+    'input schema, and match it exactly. Rows also carry a mutation class: none reads, write ' +
+    'creates or updates, destructive deletes.',
   'Every write targets exactly one space. Pass spaceId explicitly on writes, taking it from the ' +
     "caller's instructions, a repo/project configuration, or a reference already in hand — when " +
     'spaceId is omitted the server falls back to an arbitrary session default, which is not an ' +
     'inferred choice; never guess a space from its name.',
   'References between objects travel as {"/": "echo://<spaceId>/<objectId>"} envelopes. Pass ' +
     'references back exactly as you received them.',
-  "Some tools belong to larger workflows described by skills. When a tool's description names a " +
-    'skill, call skillLoad with that name and follow the returned instructions before first using ' +
-    'the tool. Skills are also offered to users as prompts (slash commands); skillLoad brings the ' +
-    'same text into context without user action.',
+  'Operations belong to larger workflows described by skills. When a queryOperations row names a ' +
+    'skill, call loadSkill with that name and follow the returned instructions before invoking ' +
+    'the operation; loadSkill with no argument lists every skill. Skills are also offered to ' +
+    'users as prompts (slash commands); loadSkill brings the same text into context without user ' +
+    'action.',
 ].join('\n');
 
 /**
@@ -61,37 +66,6 @@ export const normalizeToolSchemas = (message: unknown): boolean => {
     }
   }
   return rewritten;
-};
-
-/**
- * Narrows the advertised shape of ref-valued parameters to their structured (object) branch.
- *
- * TODO(wittjosiah): Handle upstream. A reference is an object on the wire, so ECHO's own JSON
- * Schema could say so — `collapseEchoRef` in `@dxos/echo` strips exactly the `type`/`properties`/
- * `required` a schema-unaware consumer needs, and restoring them there would make this pass (and
- * `Projection.tolerateStringifiedRefs`, whose widening produces the ambiguity in the first place)
- * unnecessary. Not done now because it is a breaking change: that output is what gets persisted
- * into stored schemas, and an older reader matches the generic `type === 'object'` branch before
- * the reference sentinel, so it would silently rebuild a reference as a plain `{ '/': string }`
- * struct — a wrong decode, not a loud failure.
- *
- * `tolerateStringifiedRefs` widens a ref-valued parameter to also accept the envelope as a JSON
- * *string*, by unioning the real schema with a string-decode transform. Effect's schema-to-JSON
- * encoder renders that union as `anyOf: [<fully-typed object>, {type: 'string'}]` with no
- * top-level `type` — the same "expected object" shape {@link normalizeToolSchemas} fixes for whole
- * tool schemas, one level into `properties`. A client that keys off `type` before deciding whether
- * an argument is structured JSON sends the envelope as a string, which is exactly the failure
- * `tolerateStringifiedRefs` exists to route around; without this, the fallback would only ever be
- * reached by *accident*. The `anyOf` is dropped rather than kept alongside a hoisted `type` — the
- * two would contradict each other under strict JSON Schema evaluation. Nothing is lost: the server
- * still decodes a JSON-stringified envelope on the way in regardless of what is advertised here.
- */
-export const narrowRefSchemas = (message: unknown): boolean => {
-  let narrowed = false;
-  for (const tool of toolsOf(message)) {
-    narrowed = resolveAmbiguousAnyOf(tool?.inputSchema, new Set()) || narrowed;
-  }
-  return narrowed;
 };
 
 /**
@@ -128,9 +102,8 @@ export const normalize = (
   options: { readonly serverInfo?: Record<string, unknown>; readonly instructions?: string } = {},
 ): boolean => {
   const normalized = normalizeToolSchemas(message);
-  const narrowed = narrowRefSchemas(message);
   const decorated = decorateInitialize(message, options);
-  return normalized || narrowed || decorated;
+  return normalized || decorated;
 };
 
 const resultOf = (message: unknown): Record<string, any> | undefined => {
@@ -141,57 +114,6 @@ const resultOf = (message: unknown): Record<string, any> | undefined => {
 const toolsOf = (message: unknown): Array<Record<string, any>> => {
   const tools = resultOf(message)?.tools;
   return Array.isArray(tools) ? tools : [];
-};
-
-/**
- * Whether this JSON Schema node is exactly the shape `tolerateStringifiedRefs` produces: a bare
- * `anyOf` of the real (object) schema alongside a JSON-encoded-string fallback, with no top-level
- * `type` for a client that reads that keyword without evaluating every branch.
- */
-const findAmbiguousObjectBranch = (node: Record<string, unknown>): Record<string, unknown> | undefined => {
-  if (node.type != null || !Array.isArray(node.anyOf)) {
-    return undefined;
-  }
-  const objectBranches = node.anyOf.filter(
-    (branch: unknown) =>
-      branch != null &&
-      typeof branch === 'object' &&
-      (branch as Record<string, unknown>).type === 'object' &&
-      (branch as Record<string, unknown>).properties != null,
-  );
-  return objectBranches.length === 1 ? (objectBranches[0] as Record<string, unknown>) : undefined;
-};
-
-const resolveAmbiguousAnyOf = (node: unknown, seen: Set<unknown>): boolean => {
-  if (node == null || typeof node !== 'object' || seen.has(node)) {
-    return false;
-  }
-  seen.add(node);
-  const record = node as Record<string, unknown>;
-
-  const objectBranch = findAmbiguousObjectBranch(record);
-  let changed = false;
-  if (objectBranch != null) {
-    delete record.anyOf;
-    Object.assign(record, objectBranch);
-    changed = true;
-  }
-  if (record.properties != null && typeof record.properties === 'object') {
-    for (const property of Object.values(record.properties as Record<string, unknown>)) {
-      changed = resolveAmbiguousAnyOf(property, seen) || changed;
-    }
-  }
-  if (record.items != null) {
-    changed = resolveAmbiguousAnyOf(record.items, seen) || changed;
-  }
-  for (const composition of [record.allOf, record.anyOf, record.oneOf]) {
-    if (Array.isArray(composition)) {
-      for (const branch of composition) {
-        changed = resolveAmbiguousAnyOf(branch, seen) || changed;
-      }
-    }
-  }
-  return changed;
 };
 
 const decoder = new TextDecoder();

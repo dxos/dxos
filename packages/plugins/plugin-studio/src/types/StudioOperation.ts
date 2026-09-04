@@ -11,12 +11,8 @@ import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref } from '@dxos/echo';
 
-import { meta } from '#meta';
-
 import * as Artifact from './Artifact';
 import * as Variant from './Variant';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 /**
  * Generate variants for an Artifact from its prompt and append them. Resolves the
@@ -29,7 +25,7 @@ const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name
  */
 export const Generate = Operation.make({
   meta: {
-    key: makeKey('generate'),
+    key: DXN.make('org.dxos.operation.studio.generate'),
     name: 'Generate',
     description: 'Generate variants for an Artifact from its prompt.',
     icon: 'ph--sparkle--regular',

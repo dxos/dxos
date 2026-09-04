@@ -2,18 +2,17 @@
 // Copyright 2021 DXOS.org
 //
 
+import { create, fromJsonString } from '@bufbuild/protobuf';
 import defaultsDeep from 'lodash.defaultsdeep';
 import isMatch from 'lodash.ismatch';
 
 import { InvalidConfigError } from '@dxos/protocols';
-import { schema } from '@dxos/protocols/proto';
-import { type Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
+import { type Config as ConfigProto, ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { getDeep, setDeep } from '@dxos/util';
 
-import { type ConfigKey, type DeepIndex, type ParseKey } from './types';
+import { type ConfigInit, type ConfigKey, type DeepIndex, type ParseKey } from './types';
 
 type MappingSpec = Record<string, { path: string; type?: string }>;
-const configRootType = schema.getCodecForType('dxos.config.Config');
 
 /**
  * Maps the given objects onto a flattened set of (key x values).
@@ -92,10 +91,70 @@ export const mapToKeyValues = (spec: MappingSpec, values: any) => {
   return config;
 };
 
+/** A plain object in a config tree, narrowed by predicate so `$unknown` stays reachable. */
+type ConfigNode = { $unknown?: unknown } & Record<string, unknown>;
+
+const isPlainNode = (value: unknown): value is ConfigNode =>
+  value !== null && typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype;
+
 /**
- * Validate config object.
+ * Removes the protobuf-es `$typeName` marker from a config tree.
+ *
+ * `defaultsDeep` copies `$typeName` onto plain objects that came from another source, and
+ * protobuf-es then treats those objects as already-constructed messages and skips normalising
+ * their plain descendants -- producing a `Config.values` that `toBinary` cannot encode.
  */
-export const validateConfig = (config: ConfigProto): ConfigProto => {
+export const stripTypeNames = <T>(value: T): T => {
+  if (Array.isArray(value)) {
+    return value.map((item) => stripTypeNames(item)) as T;
+  }
+
+  // Bytes, timestamps and other non-plain leaves are values, not message subtrees.
+  if (!isPlainNode(value)) {
+    return value;
+  }
+
+  const result: Record<string, unknown> = {};
+  for (const [key, item] of Object.entries(value)) {
+    if (key === '$typeName') {
+      continue;
+    }
+
+    // `$unknown` holds raw wire records, which are values rather than a message subtree.
+    result[key] = key === '$unknown' ? item : stripTypeNames(item);
+  }
+
+  return result as T;
+};
+
+/**
+ * Copies `$unknown` records from a merged config tree onto the message `create` built from it.
+ *
+ * `MessageInitShape` excludes `$unknown`, so normalising a tree whose `$typeName` markers were
+ * stripped drops the wire fields a source decoded but this build's schema does not know.
+ */
+export const restoreUnknownFields = (target: unknown, source: unknown): void => {
+  if (!isPlainNode(target) || !isPlainNode(source)) {
+    return;
+  }
+
+  if (source.$unknown !== undefined) {
+    target.$unknown = source.$unknown;
+  }
+
+  for (const [key, value] of Object.entries(source)) {
+    if (key !== '$unknown') {
+      restoreUnknownFields(target[key], value);
+    }
+  }
+};
+
+/**
+ * Validates a config object and normalises it into a buf message.
+ * Field types are checked by the compiler through `ConfigInit`, which is why this no longer runs the
+ * protobuf.js `verify` pass; loaders that read untrusted YAML validate as they parse.
+ */
+export const validateConfig = (config: ConfigInit): ConfigProto => {
   if (!('version' in config)) {
     throw new InvalidConfigError({ message: 'Version not specified' });
   }
@@ -104,12 +163,27 @@ export const validateConfig = (config: ConfigProto): ConfigProto => {
     throw new InvalidConfigError({ message: `Invalid config version: ${config.version}` });
   }
 
-  const error = configRootType.protoType.verify(config);
-  if (error) {
-    throw new InvalidConfigError({ message: String(error) });
+  try {
+    return create(ConfigSchema, config);
+  } catch (err) {
+    throw new InvalidConfigError({ message: String(err) });
   }
+};
 
-  return config;
+/** Keeps non-string `Struct` values out of string-only consumers of `runtime.app.env`. */
+export const getEnvString = (config: Config | undefined, key: string): string | undefined => {
+  const value = config?.values.runtime?.app?.env?.[key];
+  return typeof value === 'string' ? value : undefined;
+};
+
+/** Validates config data from an untrusted source -- a file, an endpoint, browser storage. */
+export const parseConfig = (data: unknown, source: string): ConfigInit => {
+  try {
+    // Serialising through JSON reaches `fromJsonString` without casting to `JsonValue`.
+    return fromJsonString(ConfigSchema, JSON.stringify(data), { ignoreUnknownFields: true });
+  } catch (err) {
+    throw new InvalidConfigError({ message: `Invalid config from ${source}: ${err}` });
+  }
 };
 
 /**
@@ -117,14 +191,16 @@ export const validateConfig = (config: ConfigProto): ConfigProto => {
  * NOTE: Config objects are immutable.
  */
 export class Config {
-  private readonly _config: any;
+  private readonly _config: ConfigProto;
 
   /**
    * Creates an immutable instance.
    * @constructor
    */
-  constructor(config: ConfigProto = {}, ...objects: ConfigProto[]) {
-    this._config = validateConfig(defaultsDeep(config, ...objects, { version: 1 }));
+  constructor(config: ConfigInit = {}, ...objects: ConfigInit[]) {
+    const merged = defaultsDeep(stripTypeNames(config), ...objects.map(stripTypeNames), { version: 1 });
+    this._config = validateConfig(merged);
+    restoreUnknownFields(this._config, merged);
   }
 
   /**
@@ -165,7 +241,7 @@ export class Config {
    *
    * @param key A key in the config object. Can be a nested property with keys separated by dots: 'services.signal.server'.
    */
-  getOrThrow<K extends ConfigKey>(key: K): Exclude<DeepIndex<ConfigProto, ParseKey<K>>, undefined> {
+  getOrThrow<K extends ConfigKey>(key: K): NonNullable<DeepIndex<ConfigProto, ParseKey<K>>> {
     const value: DeepIndex<ConfigProto, ParseKey<K>> | undefined = getDeep(this._config, key.split('.'));
     if (!value) {
       throw new Error(`Config option not present: ${key}`);

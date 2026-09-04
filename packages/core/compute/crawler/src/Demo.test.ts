@@ -16,7 +16,7 @@ import { expect } from 'vitest';
 import { Pipeline } from '@dxos/pipeline';
 import { FactStore } from '@dxos/pipeline-rdf';
 
-import { AgentRegistry } from './AgentRegistry';
+import * as AgentRegistry from './AgentRegistry';
 import * as Crawler from './Crawler';
 import { agentProfileStage } from './stages/agent-profile';
 import { extractFactsStage } from './stages/extract-facts';
@@ -43,7 +43,7 @@ describe('demo', () => {
         );
         const summary = { ...(yield* Crawler.summarize()), steps: yield* Ref.get(steps) };
 
-        const registry = yield* AgentRegistry;
+        const registry = yield* AgentRegistry.AgentRegistry;
         const store = yield* FactStore;
 
         const agents = yield* registry.list();

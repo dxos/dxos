@@ -10,10 +10,6 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN, Type, View } from '@dxos/echo';
 
-import { meta } from '#meta';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
-
 export const DeleteCardFieldOutput = Schema.Struct({
   field: View.FieldSchema.annotate({ description: 'The deleted field schema.' }),
   props: Schema.Any.annotate({ description: 'The deleted field properties.' }),
@@ -24,7 +20,7 @@ export type DeleteCardFieldOutput = Schema.Schema.Type<typeof DeleteCardFieldOut
 
 export const DeleteCardField = Operation.make({
   meta: {
-    key: makeKey('deleteCardField'),
+    key: DXN.make('org.dxos.operation.kanban.deleteCardField'),
     name: 'Delete Card Field',
     icon: 'ph--minus-circle--regular',
   },
@@ -43,7 +39,11 @@ export const DeleteCardOutput = Schema.Struct({
 export type DeleteCardOutput = Schema.Schema.Type<typeof DeleteCardOutput>;
 
 export const DeleteCard = Operation.make({
-  meta: { key: makeKey('deleteCard'), name: 'Delete Card', icon: 'ph--trash--regular' },
+  meta: {
+    key: DXN.make('org.dxos.operation.kanban.deleteCard'),
+    name: 'Delete Card',
+    icon: 'ph--trash--regular',
+  },
   input: Schema.Struct({
     card: Schema.Any,
   }),
@@ -52,7 +52,7 @@ export const DeleteCard = Operation.make({
 
 export const RestoreCardField = Operation.make({
   meta: {
-    key: makeKey('restoreCardField'),
+    key: DXN.make('org.dxos.operation.kanban.restoreCardField'),
     name: 'Restore Card Field',
     icon: 'ph--clock-counter-clockwise--regular',
   },
@@ -68,7 +68,7 @@ export const RestoreCardField = Operation.make({
 
 export const RestoreCard = Operation.make({
   meta: {
-    key: makeKey('restoreCard'),
+    key: DXN.make('org.dxos.operation.kanban.restoreCard'),
     name: 'Restore Card',
     icon: 'ph--clock-counter-clockwise--regular',
   },

@@ -9,7 +9,7 @@ import { Obj, Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/Format';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
+import { SpacesService } from '@dxos/protocols/rpc';
 import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Panel, useFileDownload } from '@dxos/react-ui';
@@ -94,7 +94,7 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
     async (spaceId: string) => {
       const space = spaces.find((space) => space.id === spaceId)!;
       await space.waitUntilReady();
-      const archive = await space.internal.export({ format: SpaceArchive.Format.JSON });
+      const archive = await space.internal.export({ format: SpacesService.SpaceArchiveFormat.enums.JSON });
       download(new Blob([archive.contents as Uint8Array<ArrayBuffer>]), archive.filename);
     },
     [download, spaces],
@@ -103,7 +103,7 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
   const handleArchive = useCallback(
     async (spaceId: string) => {
       const space = spaces.find((space) => space.id === spaceId)!;
-      const archive = await space.internal.export({ format: SpaceArchive.Format.BINARY });
+      const archive = await space.internal.export({ format: SpacesService.SpaceArchiveFormat.enums.BINARY });
       download(new Blob([archive.contents as Uint8Array<ArrayBuffer>]), archive.filename);
     },
     [download, spaces],
@@ -114,7 +114,7 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
       try {
         const filename = backup instanceof File ? backup.name : 'archive';
         const contents = new Uint8Array(await backup.arrayBuffer());
-        const archive = { filename, contents } satisfies SpaceArchive;
+        const archive = { filename, contents } satisfies SpacesService.SpaceArchive;
         const imported = await client.spaces.import(archive);
         Obj.update(imported.properties, (obj) => {
           obj.name = (obj.name ?? '') + ' - IMPORTED';

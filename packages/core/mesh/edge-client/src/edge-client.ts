@@ -5,6 +5,7 @@
 import * as EffectContext from 'effect/Context';
 
 import {
+  type CleanupFn,
   Event,
   PersistentLifecycle,
   Trigger,
@@ -18,6 +19,7 @@ import { log, logInfo } from '@dxos/log';
 import { EdgeCredentialsHeaderCodec } from '@dxos/protocols';
 import { type Message } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
+import { trace } from '@dxos/tracing';
 
 import { authenticateViaChallengeEndpoint, presentCredentialsForChallenge, readAuthChallenge } from './auth-challenge';
 import { protocol } from './defs';
@@ -25,6 +27,7 @@ import { type EdgeIdentity } from './edge-identity';
 import { EdgeWsConnection } from './edge-ws-connection';
 import { EdgeConnectionClosedError, EdgeIdentityChangedError } from './errors';
 import { type Protocol } from './protocol';
+import { type ReconnectReason } from './reconnect-reason';
 import { getEdgeUrlWithProtocol } from './utils';
 
 const DEFAULT_TIMEOUT = 10_000;
@@ -101,6 +104,9 @@ export class EdgeClient extends Resource implements EdgeConnection {
   /** Guards {@link startNetworking} so the connection loop is only ever started once. */
   private _networkingStarted = false;
   private readonly _reconnectListeners = new Set<ReconnectListener>();
+  /** Reconnects since this process started, which is what "per session" means for a browser client. */
+  #sessionReconnects = 0;
+  #metricsCleanup: CleanupFn[] = [];
   private readonly _baseWsUrl: string;
   private readonly _baseHttpUrl: string;
   private _currentConnection?: EdgeWsConnection = undefined;
@@ -234,6 +240,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
    */
   protected override async _open(): Promise<void> {
     log('opening...', { info: this.info });
+    this.#registerMetrics();
     if (this._config.deferConnect) {
       log('deferring connection until startNetworking');
     } else {
@@ -258,6 +265,10 @@ export class EdgeClient extends Resource implements EdgeConnection {
    */
   protected override async _close(): Promise<void> {
     log('closing...', { peerKey: this._identity.peerKey });
+    for (const cleanup of this.#metricsCleanup) {
+      cleanup();
+    }
+    this.#metricsCleanup = [];
     this._closeCurrentConnection();
     await this._persistentLifecycle.close();
   }
@@ -294,8 +305,9 @@ export class EdgeClient extends Resource implements EdgeConnection {
             log.verbose('connected callback ignored, because connection is not active');
           }
         },
-        onRestartRequired: () => {
+        onRestartRequired: (reason) => {
           if (this._isActive(connection)) {
+            this._recordReconnect(reason);
             this._closeCurrentConnection();
             void this._persistentLifecycle.scheduleRestart();
           } else {
@@ -338,6 +350,22 @@ export class EdgeClient extends Resource implements EdgeConnection {
     return connection;
   }
 
+  /** Registers the observed gauges. Idempotent, so an owner that calls `connect` twice is harmless. */
+  #registerMetrics(): void {
+    if (this.#metricsCleanup.length > 0) {
+      return;
+    }
+
+    this.#metricsCleanup.push(
+      trace.metrics.observe('dxos.edge.ws.session.reconnects', () => this.#sessionReconnects, {
+        unit: '{reconnect}',
+      }),
+      // Averaged across clients this is the fraction of the fleet currently online, which a
+      // counter cannot express.
+      trace.metrics.observe('dxos.edge.ws.connected', () => (this._currentConnection ? 1 : 0), { unit: '1' }),
+    );
+  }
+
   private async _disconnect(state: EdgeWsConnection): Promise<void> {
     await state.close();
     this.statusChanged.emit(this.status);
@@ -348,6 +376,21 @@ export class EdgeClient extends Resource implements EdgeConnection {
     this._ready.throw(error);
     this._ready.reset();
     this.statusChanged.emit(this.status);
+  }
+
+  /**
+   * Publishes one reconnect.
+   * The counter answers "how often, and why" across the fleet; the session gauge answers "how bad
+   * is this one client's session", which a delta counter cannot — it resets with the process, so
+   * its value IS the per-session total.
+   */
+  private _recordReconnect(reason: ReconnectReason): void {
+    this.#sessionReconnects++;
+    log('edge ws reconnect', { reason, sessionReconnects: this.#sessionReconnects });
+    trace.metrics.increment('dxos.edge.ws.reconnect.count', 1, {
+      unit: '{reconnect}',
+      tags: { reason },
+    });
   }
 
   private _notifyReconnected(): void {

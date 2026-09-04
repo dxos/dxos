@@ -46,6 +46,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `op`        | `org.dxos.mdl.op@1.0`          |
 | `service`   | `org.dxos.mdl.service@1.0`     |
 | `capability`| `org.dxos.mdl.capability@1.0`  |
+| `flow`      | `org.dxos.mdl.flow@1.0`        |
 
 ## Types
 
@@ -767,6 +768,90 @@ test T-13: Resume a Call after the live session ends
     - the transport provider for Call.transport.kind is resolved
     - join uses the persisted Call.transport.config (no host-object roomId
       derivation required)
+```
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+None of the `op` blocks above have a runtime `Operation.make` counterpart — `startCall`,
+`leaveCall`, `toggleAudio`/`toggleVideo`/`toggleScreenshare`, `raiseHand`, `pinParticipant`, and
+`provisionCall` are all plain async methods on `CallManager` (`packages/plugins/plugin-calls/src/calls/call-manager.ts`),
+called directly from UI handlers — there is no invoker key for any of them. Every flow below is
+therefore `actors: human`. Joining a live call additionally needs a camera/microphone and a
+reachable Cloudflare Calls SFU, which the debug port cannot substitute for — this is a real device
+and network dependency, not a design gap, so it is declared in `given` rather than `blocked`.
+
+```mdl
+flow QA-1: Start a video call from a Channel, toggle media, leave
+  desc: The core calls round-trip — join from a chat Channel, exercise media controls, leave cleanly.
+  actors: human
+  covers: [F-1.2, F-2.1, F-2.2, F-3.1, F-3.2, F-4.1, F-4.2, F-4.3, T-1, T-2, T-3, T-7]
+  status: unverified
+  given:
+    - an identity exists, with a display name set on its profile (F-6.1 — without one, Lobby
+      blocks the join)
+    - space: a space is open
+    - channel: a Channel (chat) exists in that space, with plugin-thread active
+    - plugin-calls is enabled — it defaults ON only in dev environments (isDev); elsewhere it must
+      be enabled via the plugin registry
+    - camera and microphone permissions are available to the browser, and the Cloudflare Calls SFU
+      is reachable — this flow cannot run headless or in an environment without real media devices
+  test:
+    - name: Start the call
+      do: Open the Channel article and click "Start video call" in its toolbar.
+      expect: an "Active Call" deck companion appears alongside the chat; the local participant's
+        video tile is visible with self audio/video published
+      note: NO `invoke` — CallManager.join() is called directly from the toolbar action.
+    - name: Verify the chat is still reachable
+      do: Click back to the Channel's own plank.
+      expect: the Channel article still renders chat (not the participant grid), scrollable
+        independently of the still-mounted "Active Call" companion
+    - name: Toggle the microphone off and on
+      do: Click the microphone toggle in the call toolbar twice.
+      expect: the self tile's mute indicator reflects each toggle, and the published audio track
+        stops/resumes accordingly
+    - name: Raise hand
+      do: Click "Raise hand".
+      expect: the self participant tile shows a hand-raised indicator
+  after:
+    - name: Leave the call
+      do: Click "Leave" in the call toolbar.
+      expect: audio/video/screenshare tracks stop, the "Active Call" companion disappears, and the
+        Channel article returns to full-width chat
+```
+
+```mdl
+flow QA-2: Provision a resumable Call without joining
+  desc: The persistence-only path — provisionCall writes a slim Call to the space with no live session.
+  actors: human
+  covers: [F-9.2, F-9.3, F-10.1, F-10.3, T-10]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-calls is enabled
+  test:
+    - name: Provision a Call
+      do: (no direct UI gesture in plugin-calls alone — this path is driven by a consumer such as
+        plugin-meeting, which calls provisionCall when scheduling a meeting; a bare Call object can
+        also be created via the navtree if the schema is registered for direct creation)
+      expect: a Call object exists in the space with `transport.kind` set to
+        "org.dxos.call.transport.cloudflare" (the default), `transport.config` a resolvable Ref,
+        and `created` set — and with no notes / summary / transcript / participants fields
+      note: |
+        NO `invoke` — `provisionCall` has no operation key; this step is exercised indirectly
+        through plugin-meeting's QA flows in normal use. Listed `blocked` would be wrong here (the
+        step CAN run, just not through this plugin's own UI), so it stays human/unverified.
+  after:
+    - name: Delete the Call
+      do: Right-click the Call in the navtree and choose Delete.
+      expect: the Call no longer appears in the space
+      note: |
+        NO `invoke` — the Call is provisioned outside plugin-calls' own UI (see the test step
+        above), so there is no bound value for `space.removeObjects` to name; deletion stays
+        human-only like the rest of this flow.
 ```
 
 ---

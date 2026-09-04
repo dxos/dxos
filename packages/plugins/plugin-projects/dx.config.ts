@@ -16,6 +16,8 @@ export default Config2.make({
     `,
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-projects',
     icon: { key: 'ph--stack--regular', hue: 'rose' },
-    tags: ['labs', 'assistant'],
+    tags: ['alpha', 'assistant'],
+    // Tasks only: the assistant integration is event-gated, and the CLI runs Projects without one.
+    dependsOn: ['org.dxos.plugin.tasks'],
   },
 });

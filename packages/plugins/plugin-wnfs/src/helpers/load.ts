@@ -6,7 +6,7 @@ import * as Option from 'effect/Option';
 import type { Blockstore } from 'interface-blockstore';
 import { CID } from 'multiformats';
 import * as Uint8Arrays from 'uint8arrays';
-import { AccessKey, PrivateDirectory, PrivateForest, PrivateNode } from 'wnfs';
+import initWnfsWasm, { AccessKey, PrivateDirectory, PrivateForest, PrivateNode } from 'wnfs/web';
 
 import { Annotation, Obj } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
@@ -20,6 +20,17 @@ import { Rng, store } from './common';
 // LOAD
 //
 
+// `wnfs/web` does no wasm work at module evaluation — top-level await in a bundle graph trips
+// WebKit's TDZ bug (see composer-app's `slimWasm`) — so this single chokepoint initializes
+// explicitly, clearing the memo on failure so a transient error does not disable wnfs for good.
+let wasmReady: Promise<unknown> | undefined;
+
+const initWnfsWasmOnce = (): Promise<unknown> =>
+  (wasmReady ??= initWnfsWasm().catch((error: unknown) => {
+    wasmReady = undefined;
+    throw error;
+  }));
+
 export const loadWnfs = async ({
   space,
   blockstore,
@@ -29,6 +40,8 @@ export const loadWnfs = async ({
   blockstore: Blockstore;
   instances?: WnfsCapabilities.Instances;
 }) => {
+  await initWnfsWasmOnce();
+
   // TODO(wittjosiah): Remove.
   // Delete old properties if they exist (pre-DX-971 migration cleanup).
   const propsAny = space.properties as any;

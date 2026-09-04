@@ -94,6 +94,18 @@ export const isAncestor = (ancestor, descendant) => {
 const mergeBase = (a, b) => git(['merge-base', a, b], { allowFail: true });
 
 /**
+ * Newest commit reachable from `ref` that touched `path`, or null if none. Used
+ * as a same-history fallback when a review's recorded `commit:` no longer
+ * resolves as a real ancestor — its origin branch was squashed or rebased away
+ * under a new SHA (or, in a shallow clone, was simply never fetched) — even
+ * though the review's own files are plainly present in `ref`'s history.
+ */
+export const lastCommitTouching = (path, ref = 'HEAD') => {
+  const commit = git(['log', '-1', '--format=%H', ref, '--', path], { allowFail: true });
+  return commit || null;
+};
+
+/**
  * Repo-relative paths changed between `base` and the working tree: committed
  * diff `base..HEAD`, plus staged, unstaged, and untracked changes.
  */

@@ -4,11 +4,11 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import type * as Node from '@dxos/app-graph/Node';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { useObject } from '@dxos/echo-react';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { Panel, useTranslation } from '@dxos/react-ui';
+import { Flex, Panel, useTranslation } from '@dxos/react-ui';
 import {
   type ActionExecutor,
   type ActionGraphProps,
@@ -78,10 +78,10 @@ export const ProviderArticle = ({ role, subject, attendableId }: ProviderArticle
         {searchFields.length > 0 ? (
           <dl className='flex flex-col gap-1'>
             {searchFields.map((field) => (
-              <div key={field.key} className='flex items-baseline justify-between gap-2'>
+              <Flex key={field.key} gap='sm' align='baseline' justify='between'>
                 <dt className='text-sm'>{field.title}</dt>
                 {field.type && <dd className='text-xs text-description'>{field.type}</dd>}
-              </div>
+              </Flex>
             ))}
           </dl>
         ) : (
@@ -117,9 +117,9 @@ const useMenuActions = (
   const onAction: ActionExecutor = useCallback(
     (action) => {
       // Boundary: the menu's ActionExecutor surfaces a structural menu-action node, while the graph
-      // runner needs the nominal `Node.Action`. The objects are the same graph actions the builder
+      // runner needs the nominal `AppGraphNode.Action`. The objects are the same graph actions the builder
       // produced (filtered to `disposition: 'toolbar'`), so the coercion is safe here.
-      void runAction(action as Node.Action, { caller: meta.profile.key });
+      void runAction(action as AppGraphNode.Action, { caller: meta.profile.key });
     },
     [runAction],
   );

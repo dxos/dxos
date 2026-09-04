@@ -29,7 +29,7 @@ EntityId.dangerouslyDisableRandomness();
  */
 const DelegatedWork = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.delegatedWork'),
+    key: DXN.make('com.example.operation.delegatedWork'),
     name: 'Delegated work',
     description: 'Performs a delegated unit of work',
   },
@@ -63,7 +63,7 @@ const delegationHarness: DelegationHarness = { pending: [], completed: [] };
  * (the real strategy is covered by `assistant-toolkit/src/supervisor/delegation-strategy.test.ts`).
  */
 const StubDelegationStrategy: DelegationStrategy = {
-  reconcile: (_feed, activeIds) =>
+  reconcile: (_chat, activeIds) =>
     Effect.succeed(
       delegationHarness.pending
         .filter((work) => !activeIds.has(work.id))
@@ -76,7 +76,7 @@ const StubDelegationStrategy: DelegationStrategy = {
           }),
         })),
     ),
-  onComplete: (_feed, id, exit) =>
+  onComplete: (_chat, id, exit) =>
     Effect.sync(() => {
       delegationHarness.completed.push({ id, exit });
       delegationHarness.pending = delegationHarness.pending.filter((work) => work.id !== id);

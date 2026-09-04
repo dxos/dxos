@@ -10,6 +10,6 @@
   },
   "env": {
     "production": { "name": "todomvc" },
-    "main": { "name": "todomvc-main" },
+    "preview": { "name": "todomvc-preview" },
   },
 }

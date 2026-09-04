@@ -6,7 +6,7 @@ import React from 'react';
 
 import { useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Message, useTranslation } from '@dxos/react-ui';
+import { Banner, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -15,7 +15,7 @@ import { ObservabilityOperation, Settings } from '#types';
 export type ObservabilitySettingsProps = AppSurface.SettingsData;
 
 /**
- * Edits are routed through {@link ObservabilityOperation.Toggle} rather than written to the atom
+ * Edits are routed through {@link ObservabilityOperation.SetEnabled} rather than written to the atom
  * directly, so enabling/disabling observability takes effect on the running services.
  */
 export const ObservabilitySettings = ({ subject }: ObservabilitySettingsProps) => {
@@ -29,17 +29,17 @@ export const ObservabilitySettings = ({ subject }: ObservabilitySettingsProps) =
       values={settings}
       variant='settings'
       onValuesChanged={(values) =>
-        void invokePromise(ObservabilityOperation.Toggle, { state: { ...settings, ...values }.enabled })
+        void invokePromise(ObservabilityOperation.SetEnabled, { state: { ...settings, ...values }.enabled })
       }
     >
       <Form.Viewport scroll>
         <Form.Content>
           <Form.Section title={meta.profile.name ?? meta.profile.key}>
-            <Message.Root valence='info'>
-              <Message.Content>
-                <Message.Body>{t('observability.description')}</Message.Body>
-              </Message.Content>
-            </Message.Root>
+            <Banner.Root valence='info'>
+              <Banner.Content>
+                <Banner.Body>{t('observability.description')}</Banner.Body>
+              </Banner.Content>
+            </Banner.Root>
             <Form.FieldSet />
           </Form.Section>
         </Form.Content>

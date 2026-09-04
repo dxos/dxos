@@ -19,7 +19,7 @@ import { InboxOperation, Mailbox } from '#types';
 import { getTaggedIds } from '../../types/SystemTags';
 
 const TestLayer = AssistantTestLayer({
-  operationHandlers: InboxOperationHandlerSet,
+  operationHandlers: InboxOperationHandlerSet.handlers,
   types: [Cursor.Cursor, Feed.Feed, Mailbox.Mailbox, Message.Message, Person.Person, Tag.Tag, TagIndex.TagIndex],
 });
 

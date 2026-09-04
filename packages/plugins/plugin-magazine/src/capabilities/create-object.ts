@@ -10,7 +10,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Obj, Ref, Type } from '@dxos/echo';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { AutofillAnnotation, OptionsLookupAnnotation, autofill, optionsLookup } from '@dxos/react-ui-form';
+import { AutofillAnnotation, OptionsLookupAnnotation, autofill, optionsLookup } from '@dxos/react-ui-form/annotations';
 
 import { CreateSubscription, FeedOperation, Magazine, Subscription } from '#types';
 
@@ -20,7 +20,6 @@ import {
   listStandardSitePublications,
   searchStandardSiteHandles,
 } from '../operations/sources';
-import { getMagazinesPath } from '../paths';
 
 const StandardSiteCreate = Schema.Struct({
   ...CreateSubscription.StandardSiteCreateBase.fields,
@@ -82,7 +81,9 @@ const RssCreate = Schema.Struct({
   ),
 });
 
-const CreateSubscriptionSchema = Schema.Union([StandardSiteCreate, RssCreate]);
+// RSS first: the form opens on the union's first member, and an RSS URL is the common case — a
+// standard-site subscription additionally needs a handle lookup before it can be submitted.
+const CreateSubscriptionSchema = Schema.Union([RssCreate, StandardSiteCreate]);
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -94,11 +95,14 @@ export default Capability.makeModule(
           createObject: (props, options) =>
             Effect.gen(function* () {
               const object = CreateSubscription.makeSubscriptionFromCreate(props);
-              const result = yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-                targetNodeId: options.targetNodeId,
-              });
+              const result = yield* Operation.invoke(
+                SpaceOperation.AddObject,
+                {
+                  object,
+                  target: options.target,
+                },
+                { spaceId: options.db.spaceId },
+              );
               // Auto-sync after creation if URL is provided.
               if (object.url) {
                 yield* Operation.schedule(
@@ -116,11 +120,14 @@ export default Capability.makeModule(
           createObject: (props, options) =>
             Effect.gen(function* () {
               const magazine = Magazine.make(props);
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object: magazine,
-                target: options.target,
-                targetNodeId: getMagazinesPath(options.db.spaceId),
-              });
+              return yield* Operation.invoke(
+                SpaceOperation.AddObject,
+                {
+                  object: magazine,
+                  target: options.target,
+                },
+                { spaceId: options.db.spaceId },
+              );
             }),
         },
       ]),

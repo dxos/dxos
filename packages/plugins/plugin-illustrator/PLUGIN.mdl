@@ -21,7 +21,8 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
 | `test`      | `org.dxos.mdl.test@1.0`        |
 | `component` | `org.dxos.mdl.component@1.0`   |
-| `op`        | `org.dxos.mdl.op@1.0`          |
+| `op`        | `org.dxos.mdl.op@1.1`          |
+| `flow`      | `org.dxos.mdl.flow@1.0`        |
 
 ## Types
 
@@ -45,11 +46,151 @@ component VariantProvider
 
 ```mdl
 op create
+  key: org.dxos.operation.illustrator.create
   desc: Creates a Sketch with an empty canvas for the requested (or default) variant.
 
 op read
+  key: org.dxos.operation.illustrator.read
   desc: Returns the current scene of a sketch as world objects with object-local coordinates.
 
 op edit
+  key: org.dxos.operation.illustrator.edit
   desc: Applies scene commands to a sketch via the variant's builder; returns the resulting scene.
+
+op generate
+  key: org.dxos.operation.illustrator.generate
+  desc: Replaces a sketch with a diagram compiled from mermaid source (flowchart or classDiagram);
+        the dialect owns the layout, so no coordinates are supplied.
+```
+
+## Dialects
+
+Higher-level diagram languages compile to scene commands (see `src/model/dialect.ts`); each
+dialect owns its layout, so its output lands as ordinary world objects that stay editable by id.
+
+```mdl
+component MermaidFlowchart
+  desc: Mermaid flowchart subset (nodes, subgraphs, directed edges) with a layered layout.
+
+component UmlClass
+  desc: Mermaid classDiagram subset (class blocks with members, stereotypes, generics, and the
+        standard relation arrows) with a layered layout — supertypes above subtypes. Each class
+        compiles to a world object with title/attributes/methods compartments.
+
+component UmlGrid
+  desc: Grid variant — equal-size cells on the document grid (GRID=32), barycenter column
+        alignment, orthogonal Z-routed connectors.
+
+component UmlEngine
+  desc: Engine-backed placement (dagre | ELK layered) over the grid cells and routing — proper
+        crossing minimization and straightness; see docs/DESIGN.md.
+```
+
+## Variants
+
+```mdl
+component SvgVariant
+  desc: SVG renderer variant owned by this plugin (peer of tldraw/excalidraw): the scene DSL is
+        stored verbatim as canvas records (SvgHandler/SvgBuilder) and rendered read-only via
+        SceneSvg.
+```
+
+## Skills
+
+```mdl
+component DrawingSkill
+  desc: Free-form drawing via the scene DSL; the agent does the layout.
+
+component UmlSkill
+  desc: UML class diagrams from source code (bound documents or a fetched GitHub reference):
+        the agent extracts the class model, emits a mermaid classDiagram, and the generate
+        operation compiles and lays it out.
+```
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Create, edit, and read back a drawing
+  desc: |
+    The scene-DSL round-trip through the SVG variant (owned by this plugin, so no renderer plugin
+    dependency is needed). Note: the source's runtime ECHO type is `Drawing`, not the `Sketch`
+    type documented above — this flow uses the real name.
+  actors: agent
+  covers: []
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - no drawing named "QA Sketch" exists — ABORT rather than deleting one this flow did not create
+  test:
+    - name: Create the drawing
+      do: In the navtree, click + on a collection and choose Drawing (or ask the assistant to create one). Name it "QA Sketch".
+      invoke: [op:create] { name: "QA Sketch", variant: "svg" }
+      capture: created
+      expect: a Drawing named "QA Sketch" exists with an empty SVG canvas
+      assert: return !!$created.object
+    - name: Place it in the collection
+      do: (no separate gesture — the navtree create action places it for you)
+      invoke: org.dxos.operation.space.addObject { object: $created.object, target: $given.collection }
+      expect: "QA Sketch" appears as a row under the collection
+    - name: Edit the scene
+      do: Ask the assistant to draw a rectangle labeled "Start" at the origin.
+      invoke: [op:edit] { drawing: $created.object, commands: [{ _tag: "upsert", id: "start", shape: { _tag: "rect", label: "Start", x: 0, y: 0, width: 120, height: 60 } }] }
+      capture: edited
+      expect: a rectangle labeled "Start" renders on the canvas
+      assert: return $edited.upserted.includes('start')
+    - name: Read the scene back
+      do: (no separate gesture — the canvas already shows the result of the edit)
+      invoke: [op:read] { drawing: $created.object }
+      expect: the returned scene's world objects include the "start" shape with the coordinates just written
+      assert: return $result.scene.objects?.some((o) => o.id === 'start')
+  after:
+    - name: Delete the drawing
+      do: Right-click "QA Sketch" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.collection }
+      expect: the row leaves the navtree and its plank closes if it was open
+```
+
+```mdl
+flow QA-2: Generate a UML class diagram from mermaid source
+  desc: The UmlSkill path — replace a drawing's contents with a class diagram compiled from mermaid source, with layout owned by the dialect.
+  actors: agent
+  covers: []
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - no drawing named "QA UML" exists — ABORT rather than deleting one this flow did not create
+  test:
+    - name: Create the drawing
+      do: Ask the assistant to create a new drawing named "QA UML".
+      invoke: [op:create] { name: "QA UML", variant: "svg" }
+      capture: created
+      expect: an empty Drawing named "QA UML" exists
+      assert: return !!$created.object
+    - name: Place it in the collection
+      do: (no separate gesture)
+      invoke: org.dxos.operation.space.addObject { object: $created.object, target: $given.collection }
+      expect: "QA UML" appears as a row under the collection
+    - name: Generate from a mermaid classDiagram
+      do: |
+        Ask the assistant to render this class diagram into "QA UML":
+        classDiagram
+          class Animal { +String name +makeSound() }
+          class Dog
+          Animal <|-- Dog
+      invoke: |
+        [op:generate] { drawing: $created.object, source: "classDiagram\n  class Animal { +String name +makeSound() }\n  class Dog\n  Animal <|-- Dog\n" }
+      expect: two class boxes ("Animal", "Dog") render with a supertype-above-subtype layered layout and an inheritance arrow between them, replacing the drawing's prior contents
+      assert: return $result.upserted.length >= 2
+  after:
+    - name: Delete the drawing
+      do: Right-click "QA UML" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.collection }
+      expect: the row leaves the navtree and its plank closes if it was open
 ```

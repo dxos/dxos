@@ -23,11 +23,11 @@ const createTags = (): Tag.Map => ({
   tag_2: Tag.make({ label: 'Investor' }),
 });
 
-type DefaultStoryProps = {
+type StoryArgs = {
   value?: string;
 };
 
-const DefaultStory = ({ value: valueProp = '' }: DefaultStoryProps) => {
+const DefaultStory = ({ value: valueProp = '' }: StoryArgs) => {
   const { space } = useClientStory();
   const [tags] = useState<Tag.Map>(createTags);
   const [value, setValue] = useState(valueProp);

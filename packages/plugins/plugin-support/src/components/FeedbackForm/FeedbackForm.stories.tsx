@@ -13,7 +13,7 @@ import { translations } from '#translations';
 
 import { FeedbackForm, type FeedbackSubmitHandler } from './FeedbackForm';
 
-type FeedbackFormStoryProps = {
+type FeedbackFormStoryArgs = {
   hidden?: { version?: string };
   onSave?: FeedbackSubmitHandler;
   onDownloadLogs?: () => void;
@@ -29,7 +29,7 @@ const FeedbackFormStory = ({
   onDiscord,
   onGitHub,
   discordPresence,
-}: FeedbackFormStoryProps) => (
+}: FeedbackFormStoryArgs) => (
   <FeedbackForm.Root hidden={hidden}>
     <Form.Viewport>
       <Form.Content>

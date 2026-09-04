@@ -11,7 +11,7 @@ import type * as Script from '@dxos/compute/Script';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { useClient } from '@dxos/react-client';
-import { Clipboard, Input, useControlledState, useTranslation } from '@dxos/react-ui';
+import { Clipboard, Flex, Input, useControlledState, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -50,7 +50,7 @@ export const FunctionBinding = ({ object }: FunctionBindingProps) => {
   }
 
   return (
-    <div className='flex flex-col'>
+    <Flex column>
       <Form.Section title={t('remote-function-settings.heading')} />
 
       {functionUrl && (
@@ -78,7 +78,7 @@ export const FunctionBinding = ({ object }: FunctionBindingProps) => {
           onBlur={handleBindingBlur}
         />
       </Input.Root>
-    </div>
+    </Flex>
   );
 };
 

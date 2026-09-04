@@ -36,7 +36,8 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `component` | `org.dxos.mdl.component@1.0`  |
-| `op`        | `org.dxos.mdl.op@1.0`         |
+| `op`        | `org.dxos.mdl.op@1.1`         |
+| `flow`      | `org.dxos.mdl.flow@1.0`       |
 
 ## Types
 
@@ -110,19 +111,21 @@ type PushResult
 
 ```mdl
 op GetTrelloBoards
+  key: org.dxos.operation.trello.getBoards
   desc: |
     Discovery only — list Trello boards reachable from the integration's
     token. Read-only: returns one descriptor per remote board, NEVER creates
     a local Kanban. Materialization happens lazily in SyncTrelloBoard on first
     sync of a target, so unselected boards leave no trace in the space.
   input:
-    integration: Ref<Integration>
+    connection: Ref<Connection>
   output: GetSyncTargetsOutput
   effects: [http]
 ```
 
 ```mdl
 op SyncTrelloBoard
+  key: org.dxos.operation.trello.syncBoard
   desc: |
     Bidirectional reconcile of currently-selected Trello targets in an
     Integration. Pull-then-push per board. Does NOT discover boards or modify
@@ -134,7 +137,7 @@ op SyncTrelloBoard
     Per-target failures write lastError on that target and continue;
     a toast is emitted on completion regardless of per-target errors.
   input:
-    integration: Ref<Integration>
+    connection: Ref<Connection>
     kanban?: Ref<Kanban>
   output: SyncTrelloBoardOutput
   effects: [echo:read, echo:write, http]
@@ -304,6 +307,67 @@ test T-8: Invalid token fails fast
   given: Integration AccessToken with a malformed token string (no colon)
   when: any Trello API call is attempted
   then: InvalidTrelloAccessTokenError raised; no HTTP request made
+```
+
+---
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Connect Trello, materialize a board, and sync it
+  desc: |
+    The core Trello round-trip — discover boards, materialize one as a local Kanban, then
+    reconcile cards. Confirming the operations against source surfaced a doc/implementation
+    drift worth recording: this document's `GetTrelloBoards`/`SyncTrelloBoard` input is
+    `integration: Ref<Integration>`, but the actual `Operation.make` calls
+    (`src/types/TrelloOperation.ts`) take `connection: Ref<Connection>`/`SyncInput` from
+    `plugin-connector`'s `ConnectorSpec` — the "Integration" model described here has been
+    superseded by the connection/binding model. The flow below follows the real, current schema.
+  actors: human
+  covers: [F-1.1, F-2.1, T-1, T-2]
+  status: blocked
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-trello is enabled — it ships only in the experimental set; it is OFF by default
+    - a real Trello API key + user token, obtained from https://trello.com/app-key
+    - no Kanban materialized from a Trello board exists yet in the space
+  test:
+    - name: Submit Trello credentials
+      do: Open Settings -> Connections, choose Trello, and enter the API key and user token.
+      expect: a Connection (source Trello) now exists, holding an AccessToken of the form `<apiKey>:<userToken>`
+      blocked: |
+        No automated run in this environment holds a live Trello API key + user token to submit.
+        Every later step depends on the Connection this step creates, so the flow cannot proceed
+        past here unattended.
+      capture: connection
+    - name: Discover boards
+      do: Open the integration's target picker.
+      invoke: [op:GetTrelloBoards] { connection: $connection.connection }
+      capture: discovered
+      expect: every open board on the token is listed, and no Kanban is created yet
+      assert: return Array.isArray($discovered.targets);
+    - name: Select and materialize a board
+      do: Pick one board from the list.
+      invoke: org.dxos.operation.trello.materializeTarget { connection: $connection.connection, remoteTarget: $discovered.targets[0] }
+      capture: materialized
+      expect: an empty Kanban appears in the navtree, named after the Trello board
+      note: |
+        `MaterializeTrelloTarget` has no `op` block in this document at all (only
+        `GetTrelloBoards` and `SyncTrelloBoard` are documented) — written as a full key literal.
+    - name: Sync the board
+      do: Click "Sync" on the newly materialized board.
+      invoke: [op:SyncTrelloBoard] { connection: $connection.connection }
+      expect: the Kanban's lists and cards populate from Trello, matching the board's current state
+      assert: return $result.pulled.added >= 0;
+  after:
+    - name: Remove the Trello connection
+      do: In Settings -> Connections, remove the Trello connection (this also deletes the materialized Kanban).
+      invoke: org.dxos.operation.space.removeObjects { objects: [$connection.connection, $materialized.target], target: $given.space }
+      expect: neither the connection nor the Kanban remains in the space
 ```
 
 ---

@@ -161,6 +161,17 @@ export const Loader: Component<LoaderProps> = (props) => {
           <For each={props.store.lines()}>{(line) => <div class='boot-loader-status-line'>{line.text}</div>}</For>
         </div>
       </div>
+      {/* Shown only once the host reports the deadline passed, and only in dev — startup keeps
+          running behind it, so this is an offer rather than a verdict. Placed below the status log,
+          where the reader's eye already is. */}
+      {props.store.onAbort() ? (
+        <div id='boot-loader-stalled'>
+          <p id='boot-loader-stalled-text'>Still starting after {props.store.elapsedSeconds()}s.</p>
+          <button id='boot-loader-stalled-abort' type='button' onClick={() => props.store.onAbort()?.()}>
+            Abort and show diagnostics
+          </button>
+        </div>
+      ) : null}
     </>
   );
 };

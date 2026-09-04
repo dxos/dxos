@@ -32,7 +32,7 @@ export type DebugMode = 'raw' | 'tree' | 'raw+tree';
 
 const defaultId = 'editor-' + PublicKey.random().toHex().slice(0, 8);
 
-export type EditorStoryProps = Pick<UseTextEditorProps, 'id' | 'scrollTo' | 'selection' | 'extensions'> &
+export type EditorStoryArgs = Pick<UseTextEditorProps, 'id' | 'scrollTo' | 'selection' | 'extensions'> &
   Pick<ThemeExtensionsOptions, 'slots'> & {
     debug?: DebugMode;
     debugCustom?: (view: EditorView) => ReactNode;
@@ -45,7 +45,7 @@ export type EditorStoryProps = Pick<UseTextEditorProps, 'id' | 'scrollTo' | 'sel
     onReady?: (view: EditorView) => void;
   };
 
-export const EditorStory = forwardRef<EditorController, EditorStoryProps>(
+export const EditorStory = forwardRef<EditorController, EditorStoryArgs>(
   ({ debug, debugCustom, text, extensions: extensionsProp, ...props }, forwardedRef) => {
     const controllerRef = useRef<EditorController>(null);
     const mergedRef = useMergeRefs([controllerRef, forwardedRef]);
@@ -61,7 +61,7 @@ export const EditorStory = forwardRef<EditorController, EditorStoryProps>(
     );
 
     return (
-      <div className={mx('dx-container grid', debug && 'grid-cols-2 lg:grid-cols-[1fr_600px]')}>
+      <div className={mx('dx-expand grid', debug && 'grid-cols-2 lg:grid-cols-[1fr_600px]')}>
         <EditorComponent ref={mergedRef} object={object} text={text} extensions={extensions} {...props} />
 
         {debug && (
@@ -95,7 +95,7 @@ export const EditorStory = forwardRef<EditorController, EditorStoryProps>(
 /**
  * Default story component.
  */
-const EditorComponent = forwardRef<EditorController, EditorStoryProps>(
+const EditorComponent = forwardRef<EditorController, EditorStoryArgs>(
   (
     {
       id = defaultId,

@@ -48,12 +48,8 @@ export const chatLayer = ({
 }: LayerOptions): Layer.Layer<AiChatServices, ConfigError.ConfigError, ClientService> => {
   const aiServiceLayer = Match.value(provider).pipe(
     Match.when('edge', () => AiServiceTestingPreset('direct')),
-    Match.when('lmstudio', () =>
-      AiModelResolver.AiModelResolver.buildAiService.pipe(Layer.provideMerge(LMStudioResolver.make())),
-    ),
-    Match.when('ollama', () =>
-      AiModelResolver.AiModelResolver.buildAiService.pipe(Layer.provideMerge(OllamaResolver.make())),
-    ),
+    Match.when('lmstudio', () => AiModelResolver.buildAiService.pipe(Layer.provideMerge(LMStudioResolver.make()))),
+    Match.when('ollama', () => AiModelResolver.buildAiService.pipe(Layer.provideMerge(OllamaResolver.make()))),
     Match.exhaustive,
   );
 
@@ -87,7 +83,9 @@ export const chatLayer = ({
           const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
           const registry = yield* Registry.Service;
           const handlers = yield* handlerSet.handlers;
-          registry.add(handlers.map(Operation.serialize));
+          // One non-serializable definition (importSpace's `Uint8Array`) must not take the whole
+          // registry down.
+          registry.add(Operation.serializable(handlers));
           return registry;
         }),
       ),

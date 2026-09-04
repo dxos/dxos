@@ -3,14 +3,14 @@
 //
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import React, { useContext, useMemo } from 'react';
+import React, { useCallback, useContext, useMemo } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
-import * as Graph from '@dxos/app-graph/Graph';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
 import { type Database, Filter, type Obj, type Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { Connection } from '@dxos/link';
-import { CONNECTOR_AUTH_GROUP_ID, connectorAuthActions } from '@dxos/plugin-connector';
+import * as ConnectorAuth from '@dxos/plugin-connector/ConnectorAuth';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { IconButton, useTranslation } from '@dxos/react-ui';
@@ -29,15 +29,21 @@ export type ConnectorAuthMenuProps = {
   db: Database.Database | undefined;
   /** Existing local object to wire up as the new connection's first sync target. */
   existingTarget?: Ref.Ref<Obj.Unknown>;
+  /**
+   * Called when the user picks an entry, before the action runs. The flows themselves complete out
+   * of band (an OAuth popup, a credential dialog), so this is the only point at which a caller can
+   * tell that the user started one.
+   */
+  onSelect?: () => void;
 };
 
 /**
  * Standalone connector-auth menu: a trigger button that opens a dropdown of the same
- * {@link connectorAuthActions} owning plugins contribute to object toolbars. Existing
+ * {@link ConnectorAuth.actions} owning plugins contribute to object toolbars. Existing
  * {@link Connection}s are offered for reuse (bind inline) alongside a "Connect X" entry per connector
  * with an auth flow. Renders nothing when there is nothing to offer.
  */
-export const ConnectorAuthMenu = ({ connectorIds, db, existingTarget }: ConnectorAuthMenuProps) => {
+export const ConnectorAuthMenu = ({ connectorIds, db, existingTarget, onSelect }: ConnectorAuthMenuProps) => {
   const { t } = useTranslation(meta.profile.key);
   const registry = useContext(RegistryContext);
   const runAction = useActionRunner();
@@ -48,7 +54,7 @@ export const ConnectorAuthMenu = ({ connectorIds, db, existingTarget }: Connecto
     if (!db) {
       return undefined;
     }
-    const actions = connectorAuthActions({
+    const actions = ConnectorAuth.actions({
       connectorIds,
       db,
       spaceId: db.spaceId,
@@ -59,20 +65,28 @@ export const ConnectorAuthMenu = ({ connectorIds, db, existingTarget }: Connecto
     if (actions.length === 0) {
       return undefined;
     }
-    const nextGraph = Graph.make({ registry });
-    nextGraph.pipe(Graph.addNodes([{ id: NODE_ID, type: NODE_ID, data: null, properties: {}, actions }]));
+    const nextGraph = AppGraph.make({ registry });
+    AppGraph.addNodes(nextGraph, [{ id: NODE_ID, type: NODE_ID, data: null, properties: {}, actions }]);
     return nextGraph;
   }, [registry, connectorIds, db, existingTarget, allConnectors, allConnections]);
 
   // Read the group's children (reuse / connect entries) as the menu content.
-  const menuActions = useGraphMenuActions(graph, CONNECTOR_AUTH_GROUP_ID);
+  const menuActions = useGraphMenuActions(graph, ConnectorAuth.GROUP_ID);
+
+  const handleAction = useCallback<typeof runAction>(
+    (action) => {
+      onSelect?.();
+      return runAction(action);
+    },
+    [onSelect, runAction],
+  );
 
   if (!graph) {
     return null;
   }
 
   return (
-    <Menu.Root {...menuActions} onAction={runAction} attendableId={NODE_ID} alwaysActive>
+    <Menu.Root {...menuActions} onAction={handleAction} attendableId={NODE_ID} alwaysActive>
       <Menu.Trigger asChild>
         <IconButton variant='ghost' icon='ph--plugs--regular' label={t('connect.label')} />
       </Menu.Trigger>

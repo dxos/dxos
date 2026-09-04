@@ -10,7 +10,7 @@ import * as Project from '@dxos/compute/Project';
 import * as Routine from '@dxos/compute/Routine';
 import * as Skill from '@dxos/compute/Skill';
 import * as Trigger from '@dxos/compute/Trigger';
-import { Collection, Database, Feed, Obj } from '@dxos/echo';
+import { Database, Feed, Filter } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
@@ -54,10 +54,11 @@ describe('crm pipeline project template', () => {
     expect(projectSkills).toContain(Skill.registryURI('org.dxos.skill.crm').toString());
     expect(projectSkills).toContain(Skill.registryURI('org.dxos.skill.webSearch').toString());
 
-    // Routine: a deterministic operation action (no instructions between trigger and operation).
-    expect(project.routines).toHaveLength(1);
-    const routine = await project.routines[0].tryLoad();
-    expect(routine && Obj.getParent(routine)?.id).toBe(project.id);
+    // Routine: a deterministic operation action (no instructions between trigger and operation),
+    // persisted standalone rather than owned by the project.
+    const routines = await db.query(Filter.type(Routine.Routine)).run();
+    expect(routines).toHaveLength(1);
+    const routine = routines[0];
     expect(routine?.spec?.kind).toBe('runnable');
     expect(routine?.spec?.kind === 'runnable' && routine.spec.runnable.uri.toString()).toBe(
       CrmOperation.ProcessMailbox.meta.key.toString(),
@@ -80,7 +81,6 @@ const setup = async (builder: EchoTestBuilder) => {
       Instructions.Instructions,
       Routine.Routine,
       Trigger.Trigger,
-      Collection.Collection,
       Mailbox.Mailbox,
       Feed.Feed,
       TagIndex.TagIndex,

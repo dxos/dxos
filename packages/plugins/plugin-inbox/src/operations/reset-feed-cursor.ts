@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 
 import { InboxOperation } from '#types';
 
-import { findFeedCursor } from './cursor';
+import { findFeedCursor } from './FeedCursor';
 
 /** Clears a consumer's feed cursor so its next run reprocesses the whole mailbox feed. */
 const handler = InboxOperation.ResetFeedCursor.pipe(

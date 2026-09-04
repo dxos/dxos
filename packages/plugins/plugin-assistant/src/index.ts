@@ -5,5 +5,4 @@
 export * as AssistantPlugin from './AssistantPlugin';
 export * from '#meta';
 export * from './paths';
-export * from '#skills';
 export * from '#types';

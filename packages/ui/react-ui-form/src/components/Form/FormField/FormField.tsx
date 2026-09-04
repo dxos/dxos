@@ -11,7 +11,6 @@ import React, { useMemo } from 'react';
 import { Annotation, Format } from '@dxos/echo';
 import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { IconButton, IconButtonProps, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 import { type FieldContext, type FormFieldRenderer, type FormFieldRendererProps } from '#types';
@@ -135,7 +134,9 @@ export const FormField = (props: FormFieldProps) => {
     jsonPath,
     placeholder,
     presentation: layout,
-    required,
+    // The asterisk marks what is still outstanding, so it clears once the field holds a value —
+    // otherwise a fully-filled form reads as though every required field were still unanswered.
+    required: required && isEmptyValue(fieldState.getValue()),
     db,
     ...fieldState,
   };
@@ -316,13 +317,17 @@ FormField.displayName = 'Form.FormField';
 
 // End-of-row form buttons occupy a consistent 32px block (matching the standard `h-8` label row) with
 // the button inset so its hover fill never touches the row's top/bottom/right edges.
-export const CompactIconButton = ({ classNames, ...props }: IconButtonProps) => {
+export const CompactIconButton = (props: IconButtonProps) => {
   return (
     <span className='grid size-8 shrink-0 place-items-center'>
-      <IconButton variant='ghost' iconOnly {...props} classNames={mx('min-h-0 h-7 w-7 p-0', classNames)} />
+      <IconButton variant='ghost' iconOnly density='sm' {...props} />
     </span>
   );
 };
+
+/** Whether a field's value counts as unfilled for the required-marker. `false` and `0` are values. */
+const isEmptyValue = (value: unknown): boolean =>
+  value == null || value === '' || (Array.isArray(value) && value.length === 0);
 
 /**
  * Get property input component.

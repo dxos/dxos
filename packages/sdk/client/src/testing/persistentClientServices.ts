@@ -4,7 +4,7 @@
 
 import { type ClientServicesProvider } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
-import { Runtime } from '@dxos/protocols/proto/dxos/config';
+import { Runtime_Client_ServicesMode } from '@dxos/protocols/buf/dxos/config_pb';
 
 import { createClientServices } from '../services';
 
@@ -29,7 +29,7 @@ export const persistentClientServices = (base?: Config): PersistentClientService
     {
       runtime: {
         client: {
-          servicesMode: Runtime.Client.ServicesMode.DEDICATED_WORKER,
+          servicesMode: Runtime_Client_ServicesMode.DEDICATED_WORKER,
           storage: { persistent: true },
         },
       },

@@ -23,7 +23,7 @@ import { Markdown, MarkdownOperation } from '#types';
 
 const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',
-  operationHandlers: MarkdownOperationHandlerSet,
+  operationHandlers: MarkdownOperationHandlerSet.handlers,
   types: [SpaceProperties, Collection.Collection, Markdown.Document, Text.Text, HasSubject.HasSubject, Feed.Feed],
 });
 
@@ -53,12 +53,12 @@ describe('reject-change operation', () => {
           edits: [{ oldString: 'bravo', newString: 'BRAVO' }],
           branchId,
         });
-        const { newContent } = yield* Operation.invoke(MarkdownOperation.Update, {
+        yield* Operation.invoke(MarkdownOperation.Update, {
           doc: Ref.make(doc),
           edits: [{ oldString: 'delta', newString: 'DELTA' }],
           branchId,
         });
-        expect(newContent).toBe('alpha\nBRAVO\ncharlie\nDELTA\n');
+        expect(yield* branchContent(rootText, branchId)).toBe('alpha\nBRAVO\ncharlie\nDELTA\n');
 
         // Reject only the 'bravo' change: anchor covers 'bravo' on the base (main).
         const accessor = Doc.createAccessor(rootText, ['content']);

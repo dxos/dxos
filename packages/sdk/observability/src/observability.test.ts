@@ -8,10 +8,12 @@ import * as Exit from 'effect/Exit';
 import * as Function from 'effect/Function';
 import { expect, vi } from 'vitest';
 
-import * as Observability from './observability';
-import { type Extension, type ExtensionApi } from './observability-extension';
+import * as Observability from './Observability';
+import * as ObservabilityExtension from './ObservabilityExtension';
 
-const createMockExtension = (overrides?: Partial<Extension> & { apis?: ExtensionApi[] }): Extension => ({
+const createMockExtension = (
+  overrides?: Partial<ObservabilityExtension.Extension> & { apis?: ObservabilityExtension.ExtensionApi[] },
+): ObservabilityExtension.Extension => ({
   initialize: vi.fn(() => Effect.succeed(undefined)),
   close: vi.fn(() => Effect.succeed(undefined)),
   enable: vi.fn(() => Effect.succeed(undefined)),
@@ -373,20 +375,54 @@ describe('Observability', () => {
         const gauge = vi.fn();
         const increment = vi.fn();
         const distribution = vi.fn();
+        const observe = vi.fn(() => () => {});
         const metricsExt = createMockExtension({
-          apis: [{ kind: 'metrics', isAvailable: () => Effect.succeed(true), gauge, increment, distribution }],
+          apis: [{ kind: 'metrics', isAvailable: () => Effect.succeed(true), gauge, increment, distribution, observe }],
         });
         const obs = yield* Function.pipe(
           Observability.make(),
           Observability.addExtension(Effect.succeed(metricsExt)),
           Observability.initialize,
         );
-        obs.metrics.gauge('cpu', 0.5, { host: 'a' });
-        obs.metrics.increment('requests', 1, { route: '/api' });
-        obs.metrics.distribution('latency', 120, { endpoint: '/api' });
-        expect(gauge).toHaveBeenCalledWith('cpu', 0.5, { host: 'a' });
-        expect(increment).toHaveBeenCalledWith('requests', 1, { route: '/api' });
-        expect(distribution).toHaveBeenCalledWith('latency', 120, { endpoint: '/api' });
+        const callback = () => 1;
+        obs.metrics.gauge('cpu', 0.5, { host: 'a' }, { unit: '1' });
+        obs.metrics.increment('requests', 1, { route: '/api' }, { unit: '{request}' });
+        obs.metrics.distribution('latency', 120, { endpoint: '/api' }, { unit: 's' });
+        obs.metrics.observe('spaces', callback, { host: 'a' }, { unit: '{space}' });
+        expect(gauge).toHaveBeenCalledWith('cpu', 0.5, { host: 'a' }, { unit: '1' });
+        expect(increment).toHaveBeenCalledWith('requests', 1, { route: '/api' }, { unit: '{request}' });
+        expect(distribution).toHaveBeenCalledWith('latency', 120, { endpoint: '/api' }, { unit: 's' });
+        expect(observe).toHaveBeenCalledWith('spaces', callback, { host: 'a' }, { unit: '{space}' });
+      }),
+    );
+
+    it.effect('metrics.observe cleanup unregisters from every extension', () =>
+      Effect.gen(function* () {
+        // The contract: one cleanup fn tears down every extension's registration, not just the first.
+        const cleaned: string[] = [];
+        const extensionFor = (name: string) =>
+          createMockExtension({
+            apis: [
+              {
+                kind: 'metrics',
+                isAvailable: () => Effect.succeed(true),
+                gauge: () => {},
+                increment: () => {},
+                distribution: () => {},
+                observe: () => () => cleaned.push(name),
+              },
+            ],
+          });
+        const obs = yield* Function.pipe(
+          Observability.make(),
+          Observability.addExtension(Effect.succeed(extensionFor('first'))),
+          Observability.addExtension(Effect.succeed(extensionFor('second'))),
+          Observability.initialize,
+        );
+        const cleanup = obs.metrics.observe('spaces', () => 3);
+        expect(cleaned).toEqual([]);
+        cleanup();
+        expect(cleaned).toEqual(['first', 'second']);
       }),
     );
 

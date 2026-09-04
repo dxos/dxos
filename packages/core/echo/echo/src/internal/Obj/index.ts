@@ -6,6 +6,7 @@ export * from './common';
 export * from './create-object';
 export * from './deleted';
 export * from './json-serializer';
+export * from './parent-annotation';
 export * from './set-value';
 export * from './snapshot';
 export * from './typed-object';

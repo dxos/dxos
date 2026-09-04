@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import ts from 'typescript';
+import ts from '@typescript/typescript6';
 
 export const attachDocComment = <T extends ts.Node>(node: T, comment: string): T =>
   ts.addSyntheticLeadingComment(

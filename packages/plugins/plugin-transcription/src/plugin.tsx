@@ -3,7 +3,6 @@
 //
 
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import {
   AppGraphBuilder,
@@ -11,6 +10,7 @@ import {
   MarkdownExtension,
   OperationHandler,
   PipelineStatus,
+  PluginAsset,
   ReactSurface,
   RecordingSession,
   Schema,
@@ -19,36 +19,26 @@ import {
   Transcriber,
   TranscriptionDriver,
   TranscriptionSettings,
+  Translations,
 } from '#capabilities';
 import { meta } from '#meta';
-import { translations } from '#translations';
-
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const TranscriptionPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(EntityLookup),
+  Plugin.addModule(MarkdownExtension),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(PipelineStatus),
+  Plugin.addModule(PluginAsset),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(RecordingSession),
+  Plugin.addModule(Schema),
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(TextContent),
-  Plugin.addModule(OperationHandler),
-  Plugin.addModule(Schema),
-  Plugin.addModule(ReactSurface),
-  Plugin.addModule(AppCapability.translations(translations)),
-  Plugin.addModule(TranscriptionSettings),
-  Plugin.addModule(AppGraphBuilder),
-  Plugin.addModule(TranscriptionDriver),
   Plugin.addModule(Transcriber),
-  Plugin.addModule(EntityLookup),
-  Plugin.addModule(RecordingSession),
-  Plugin.addModule(PipelineStatus),
-  Plugin.addModule(MarkdownExtension),
-  Plugin.addModule(
-    AppCapability.pluginAsset({
-      pluginId: meta.profile.key,
-      path: 'PLUGIN.mdl',
-      content: pluginSpec,
-      mimeType: 'application/x-mdl',
-    }),
-  ),
+  Plugin.addModule(TranscriptionDriver),
+  Plugin.addModule(TranscriptionSettings),
+  Plugin.addModule(Translations),
   Plugin.make,
 );
 

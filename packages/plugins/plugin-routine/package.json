@@ -15,13 +15,13 @@
   "imports": {
     "#capabilities": {
       "source": {
-        "workerd": "./src/capabilities/workerd.ts",
-        "node": "./src/capabilities/node.ts",
+        "workerd": "./src/capabilities/gen/workerd.ts",
+        "node": "./src/capabilities/gen/node.ts",
         "default": "./src/capabilities/index.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
       "workerd": "./dist/lib/capabilities.workerd.mjs",
-      "node": "./dist/lib/capabilities/node.mjs",
+      "node": "./dist/lib/capabilities.node.mjs",
       "default": "./dist/lib/capabilities.mjs"
     },
     "#components": {
@@ -50,17 +50,15 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": {
-        "workerd": "./src/plugin.workerd.ts",
-        "node": "./src/plugin.node.ts",
-        "default": "./src/plugin.tsx"
-      },
+      "source": "./src/plugin.tsx",
       "types": "./dist/types/src/plugin.d.ts",
-      "workerd": "./dist/lib/plugin.workerd.mjs",
-      "node": "./dist/lib/plugin.node.mjs",
       "default": "./dist/lib/plugin.mjs"
     },
-    "#testing": "./src/testing/index.ts",
+    "#testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "default": "./dist/lib/testing.mjs"
+    },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
@@ -91,14 +89,19 @@
     },
     "./package.json": "./package.json",
     "./testing": {
-      "source": "./src/testing.ts",
-      "types": "./dist/types/src/testing.d.ts",
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
       "import": "./dist/lib/testing.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
+    },
+    "./util": {
+      "source": "./src/util/index.ts",
+      "types": "./dist/types/src/util/index.d.ts",
+      "import": "./dist/lib/util.mjs"
     },
     "./Routine": {
       "source": "./src/types/Routine.ts",
@@ -171,9 +174,9 @@
     "@dxos/echo-react": "workspace:*",
     "@dxos/edge-compute": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-space": "workspace:*",

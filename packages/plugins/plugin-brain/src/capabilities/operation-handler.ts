@@ -11,6 +11,6 @@ import { BrainOperationHandlerSet } from '#operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contribute(Capabilities.OperationHandler, BrainOperationHandlerSet);
+    return Capability.contribute(Capabilities.OperationHandler, BrainOperationHandlerSet.handlers);
   }),
 );

@@ -6,8 +6,8 @@ import bytes from 'bytes';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { Runtime } from '@dxos/protocols/proto/dxos/config';
-import { type StorageInfo } from '@dxos/protocols/proto/dxos/devtools/host';
+import { Runtime_Client_ServicesMode, Runtime_Client_Storage_SqliteMode } from '@dxos/protocols/buf/dxos/config_pb';
+import { type DevtoolsHost } from '@dxos/protocols/rpc';
 import { useDevtools } from '@dxos/react-client/devtools';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { Icon, Input, Panel, ScrollArea, Toolbar, useFileDownload } from '@dxos/react-ui';
@@ -27,7 +27,7 @@ type DatabaseInfo = {
   databaseFile?: string;
   configuredSqliteMode?: number | string;
   servicesMode?: number | string;
-  storageInfo?: StorageInfo;
+  storageInfo?: DevtoolsHost.StorageInfo;
 };
 
 const quoteIdentifier = (name: string): string => `"${name.replace(/"/g, '""')}"`;
@@ -405,18 +405,18 @@ export const SqlitePanel = () => {
   );
 };
 
-const SERVICES_MODE_LABELS: Record<Runtime.Client.ServicesMode, string> = {
-  [Runtime.Client.ServicesMode.UNSPECIFIED_SERVICES_MODE]: 'Unspecified',
-  [Runtime.Client.ServicesMode.HOST]: 'Host (in-process)',
-  [Runtime.Client.ServicesMode.SHARED_WORKER]: 'Shared worker (deprecated)',
-  [Runtime.Client.ServicesMode.DEDICATED_WORKER]: 'Dedicated worker',
+const SERVICES_MODE_LABELS: Record<Runtime_Client_ServicesMode, string> = {
+  [Runtime_Client_ServicesMode.UNSPECIFIED_SERVICES_MODE]: 'Unspecified',
+  [Runtime_Client_ServicesMode.HOST]: 'Host (in-process)',
+  [Runtime_Client_ServicesMode.SHARED_WORKER]: 'Shared worker (deprecated)',
+  [Runtime_Client_ServicesMode.DEDICATED_WORKER]: 'Dedicated worker',
 };
 
-const SQLITE_MODE_LABELS: Record<Runtime.Client.Storage.SqliteMode, string> = {
-  [Runtime.Client.Storage.SqliteMode.UNSPECIFIED_SQLITE_MODE]: 'Default (memory)',
-  [Runtime.Client.Storage.SqliteMode.MEMORY]: 'Memory',
-  [Runtime.Client.Storage.SqliteMode.OPFS]: 'OPFS (browser worker)',
-  [Runtime.Client.Storage.SqliteMode.FILE]: 'File (persistent)',
+const SQLITE_MODE_LABELS: Record<Runtime_Client_Storage_SqliteMode, string> = {
+  [Runtime_Client_Storage_SqliteMode.UNSPECIFIED_SQLITE_MODE]: 'Default (memory)',
+  [Runtime_Client_Storage_SqliteMode.MEMORY]: 'Memory',
+  [Runtime_Client_Storage_SqliteMode.OPFS]: 'OPFS (browser worker)',
+  [Runtime_Client_Storage_SqliteMode.FILE]: 'File (persistent)',
 };
 
 const formatServicesMode = (value: number | string | undefined): string | undefined => {
@@ -424,16 +424,16 @@ const formatServicesMode = (value: number | string | undefined): string | undefi
     return undefined;
   }
 
-  const modes = Runtime.Client.ServicesMode;
+  const modes = Runtime_Client_ServicesMode;
 
   if (typeof value === 'number') {
-    return SERVICES_MODE_LABELS[value as Runtime.Client.ServicesMode] ?? `Unknown (${value})`;
+    return SERVICES_MODE_LABELS[value as Runtime_Client_ServicesMode] ?? `Unknown (${value})`;
   }
 
   if (typeof value === 'string' && value.trim() !== '') {
     const numeric = Number(value);
     if (Number.isInteger(numeric) && numeric in SERVICES_MODE_LABELS) {
-      return SERVICES_MODE_LABELS[numeric as Runtime.Client.ServicesMode];
+      return SERVICES_MODE_LABELS[numeric as Runtime_Client_ServicesMode];
     }
 
     const enumValue = modes[value as keyof typeof modes];
@@ -478,16 +478,16 @@ const formatSqliteMode = (value: number | string | undefined): string | undefine
     return undefined;
   }
 
-  const modes = Runtime.Client.Storage.SqliteMode;
+  const modes = Runtime_Client_Storage_SqliteMode;
 
   if (typeof value === 'number') {
-    return SQLITE_MODE_LABELS[value as Runtime.Client.Storage.SqliteMode] ?? `Unknown (${value})`;
+    return SQLITE_MODE_LABELS[value as Runtime_Client_Storage_SqliteMode] ?? `Unknown (${value})`;
   }
 
   if (typeof value === 'string' && value.trim() !== '') {
     const numeric = Number(value);
     if (Number.isInteger(numeric) && numeric in SQLITE_MODE_LABELS) {
-      return SQLITE_MODE_LABELS[numeric as Runtime.Client.Storage.SqliteMode];
+      return SQLITE_MODE_LABELS[numeric as Runtime_Client_Storage_SqliteMode];
     }
 
     const enumValue = modes[value as keyof typeof modes];

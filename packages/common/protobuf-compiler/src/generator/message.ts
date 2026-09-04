@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
+import * as ts from '@typescript/typescript6';
 import { dirname, relative, sep } from 'path';
 import type * as protobufjs from 'protobufjs';
-import * as ts from 'typescript';
 
 import { type GeneratorContext } from './context';
 import { attachDocComment } from './doc-comment';

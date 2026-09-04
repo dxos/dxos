@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { log } from '@dxos/log';
-import { ObservabilityProvider } from '@dxos/observability';
+import * as ObservabilityClientProvider from '@dxos/observability/ObservabilityClientProvider';
 
 import { ObservabilityCapabilities, ObservabilityOperation } from '#types';
 
@@ -45,20 +45,29 @@ export default Capability.makeModule(
     // a hung worker pipe surfaces as a missing "added" log, so the last
     // "adding ..." line points to the stall.
     log('client-ready: adding identity data provider');
-    yield* observability.addDataProvider(ObservabilityProvider.Client.identityProvider(client.services.services));
+    yield* observability.addDataProvider(ObservabilityClientProvider.Client.identityProvider(client.services.services));
     log('client-ready: identity data provider added');
 
     log('client-ready: adding network metrics data provider');
-    yield* observability.addDataProvider(ObservabilityProvider.Client.networkMetricsProvider(client.services.services));
+    yield* observability.addDataProvider(
+      ObservabilityClientProvider.Client.networkMetricsProvider(client.services.services),
+    );
     log('client-ready: network metrics data provider added');
 
     log('client-ready: adding runtime metrics data provider');
-    yield* observability.addDataProvider(ObservabilityProvider.Client.runtimeMetricsProvider(client.services.services));
+    yield* observability.addDataProvider(
+      ObservabilityClientProvider.Client.runtimeMetricsProvider(client.services.services),
+    );
     log('client-ready: runtime metrics data provider added');
 
     log('client-ready: adding space metrics data provider');
-    yield* observability.addDataProvider(ObservabilityProvider.Client.spacesMetricsProvider(client));
+    yield* observability.addDataProvider(ObservabilityClientProvider.Client.spacesMetricsProvider(client));
     log('client-ready: space metrics data provider added');
+
+    log('client-ready: adding document metrics data provider');
+    yield* observability.addDataProvider(ObservabilityClientProvider.Client.documentsMetricsProvider(client));
+    yield* observability.addDataProvider(ObservabilityClientProvider.Client.syncMetricsProvider(client));
+    log('client-ready: document metrics data provider added');
 
     return [];
   }),

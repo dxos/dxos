@@ -66,7 +66,7 @@ test.describe('Chat', () => {
           if (failure) {
             return `request failed: ${failure}`;
           }
-          const thread = await assistant.thread.innerText();
+          const thread = await assistant.text();
           if (REPLY.test(thread)) {
             return 'replied';
           }

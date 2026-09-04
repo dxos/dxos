@@ -8,6 +8,7 @@ import type * as SqlError from 'effect/unstable/sql/SqlError';
 
 import { type Context } from '@dxos/context';
 import { ATTR_TYPE } from '@dxos/echo/internal';
+import { SpanAttributes } from '@dxos/effect';
 import type { EntityId, SpaceId } from '@dxos/keys';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
@@ -20,6 +21,7 @@ import {
   type FtsQueryResult,
   type Index,
   type IndexerObject,
+  type QueueWindow,
   ReverseRefIndex,
   type ReverseRefQuery,
 } from './indexes';
@@ -160,6 +162,7 @@ export class IndexEngine {
     spaceIds: readonly SpaceId[];
     includeAllQueues?: boolean;
     queueIds?: readonly string[] | null;
+    window?: QueueWindow;
   }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.queryAll(query);
   }
@@ -194,6 +197,7 @@ export class IndexEngine {
     inverted?: boolean;
     includeAllQueues?: boolean;
     queueIds?: readonly string[] | null;
+    window?: QueueWindow;
   }): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.queryTypes(query);
   }
@@ -267,7 +271,7 @@ export class IndexEngine {
           return recordIds.length;
         }),
       );
-    }).pipe(Effect.withSpan('IndexEngine.deleteObjects'));
+    }).pipe(Effect.withSpan('IndexEngine.deleteObjects'), SpanAttributes.annotateSpace(opts.spaceId));
   }
 
   update(
@@ -321,6 +325,7 @@ export class IndexEngine {
       // stale heads and silently skip documents changed in between.
       Effect.ensuring(Effect.sync(() => dataSource.endPass?.())),
       Effect.withSpan('IndexEngine.update'),
+      SpanAttributes.annotateSpace(opts.spaceId),
     );
   }
 
@@ -369,19 +374,17 @@ export class IndexEngine {
 
           yield* index.update(objects);
           yield* this.#tracker.updateCursors(
-            updatedCursors.map(
-              (_): IndexCursor => ({
-                indexName: opts.indexName,
-                spaceId: _.spaceId,
-                sourceName: source.sourceName,
-                resourceId: _.resourceId,
-                cursor: _.cursor,
-              }),
-            ),
+            updatedCursors.map((_): IndexCursor => ({
+              indexName: opts.indexName,
+              spaceId: _.spaceId,
+              sourceName: source.sourceName,
+              resourceId: _.resourceId,
+              cursor: _.cursor,
+            })),
           );
           return { updated: objects.length, done: false, objects };
         }),
       );
-    }).pipe(Effect.withSpan('IndexEngine.#update'));
+    }).pipe(Effect.withSpan('IndexEngine.#update'), SpanAttributes.annotateSpace(opts.spaceId));
   }
 }

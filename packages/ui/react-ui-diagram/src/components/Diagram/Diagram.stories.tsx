@@ -50,7 +50,7 @@ SourceEditor.displayName = 'SourceEditor';
 
 const EMPTY: Projection = { graph: { nodes: [], edges: [] } };
 
-type StoryProps = {
+type StoryArgs = {
   /** Mermaid source. When set, the source pane is shown and the projection derives from it. */
   source?: string;
   /** A ready-made projection, for when there is no DSL to derive one from. */
@@ -65,7 +65,7 @@ const count = (value: number, noun: string) => `${value} ${noun}${value === 1 ? 
  * projected from a dialect, or handed the neutral model directly — so both belong in one harness
  * rather than in stories that share no code.
  */
-const DefaultStory = ({ source, projection, background }: StoryProps) => {
+const DefaultStory = ({ source, projection, background }: StoryArgs) => {
   // `key` remounts the editor so Reset restores the document; CodeMirror owns its own buffer.
   const [{ text, key }, setSource] = useState({ text: source, key: 0 });
   // Pinned positions live outside the DSL, which cannot express them.
@@ -91,7 +91,7 @@ const DefaultStory = ({ source, projection, background }: StoryProps) => {
   const pinned = Object.keys(overlay.positions ?? {}).length;
 
   return (
-    <div className='dx-container grid' style={{ gridTemplateColumns: text !== undefined ? '1fr 1fr' : '1fr' }}>
+    <div className='dx-expand grid' style={{ gridTemplateColumns: text !== undefined ? '1fr 1fr' : '1fr' }}>
       {text !== undefined && (
         <Panel.Root>
           <Panel.Toolbar asChild>

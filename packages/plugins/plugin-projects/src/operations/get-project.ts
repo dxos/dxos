@@ -5,16 +5,12 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Filter, Obj, Query, type Ref } from '@dxos/echo';
-import { Task } from '@dxos/types';
+import { Database, Obj } from '@dxos/echo';
+import { TaskSet } from '@dxos/types';
 
-import { ProjectMcpOperation } from '#types';
+import { ProjectOperation } from '#types';
 
-/**
- * The detail read behind `projectList`: goals, per-task-set open/total counts, the checklist
- * markdown, and the artifact inventory — everything an external agent needs to orient in one call.
- */
-const handler: Operation.WithHandler<typeof ProjectMcpOperation.GetProject> = ProjectMcpOperation.GetProject.pipe(
+const handler: Operation.WithHandler<typeof ProjectOperation.GetProject> = ProjectOperation.GetProject.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ project: projectRef }) {
       const project = yield* Database.load(projectRef);
@@ -22,11 +18,7 @@ const handler: Operation.WithHandler<typeof ProjectMcpOperation.GetProject> = Pr
       const taskSet = project.taskSet
         ? yield* Database.load(project.taskSet).pipe(Effect.orElseSucceed(() => undefined))
         : undefined;
-      // Membership is the parent edge, so counts come from the children query.
-      const taskSetChildren = taskSet
-        ? yield* Database.query(Query.select(Filter.id(taskSet.id)).children()).run.pipe(Effect.orElseSucceed(() => []))
-        : [];
-      const tasks = taskSetChildren.filter((child): child is Task.Task => Obj.instanceOf(Task.Task, child));
+      const tasks = taskSet ? yield* TaskSet.loadTasks(taskSet) : [];
 
       const outline = project.outline
         ? yield* Database.load(project.outline).pipe(Effect.orElseSucceed(() => undefined))
@@ -35,11 +27,8 @@ const handler: Operation.WithHandler<typeof ProjectMcpOperation.GetProject> = Pr
         ? yield* Database.load(outline.content).pipe(Effect.orElseSucceed(() => undefined))
         : undefined;
 
-      const artifactsCollection = project.artifacts
-        ? yield* Database.load(project.artifacts).pipe(Effect.orElseSucceed(() => undefined))
-        : undefined;
       const artifacts = [];
-      for (const ref of (artifactsCollection?.objects ?? []) as ReadonlyArray<Ref.Ref<Obj.Unknown>>) {
+      for (const ref of project.artifacts) {
         const object = yield* Database.load(ref).pipe(Effect.orElseSucceed(() => undefined));
         if (object) {
           artifacts.push({ id: object.id, typename: Obj.getTypename(object) ?? '' });
@@ -51,7 +40,6 @@ const handler: Operation.WithHandler<typeof ProjectMcpOperation.GetProject> = Pr
         name: project.name,
         status: project.status,
         description: project.description,
-        goals: [...(project.goals ?? [])],
         taskSet: taskSet
           ? {
               id: taskSet.id,

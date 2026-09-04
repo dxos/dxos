@@ -45,7 +45,7 @@ type Maker<C extends Capability$.AnyTag> = <
 export const appGraphBuilder: Maker<typeof AppCapabilities.AppGraphBuilder> = Capability$.moduleMaker(
   'AppGraphBuilder',
   AppCapabilities.AppGraphBuilder,
-  { activatesOn: ActivationEvents.Idle },
+  { activatesOn: ActivationEvents.Idle, environments: ['node', 'workerd'] },
 );
 
 /**
@@ -62,7 +62,7 @@ export const appGraphBuilder: Maker<typeof AppCapabilities.AppGraphBuilder> = Ca
 export const settings: Maker<typeof AppCapabilities.Settings> = Capability$.moduleMaker(
   'Settings',
   AppCapabilities.Settings,
-  { activatesOn: ActivationEvents.Startup },
+  { activatesOn: ActivationEvents.Startup, environments: ['node', 'workerd'] },
 );
 
 /**
@@ -74,7 +74,7 @@ export const settings: Maker<typeof AppCapabilities.Settings> = Capability$.modu
 export const skillDefinition: Maker<typeof AppCapabilities.SkillDefinition> = Capability$.moduleMaker(
   'SkillDefinition',
   AppCapabilities.SkillDefinition,
-  { activatesOn: AppActivationEvents.AssistantStart },
+  { activatesOn: AppActivationEvents.AssistantStart, environments: ['node', 'workerd'] },
 );
 
 /**
@@ -92,7 +92,7 @@ export const skillDefinition: Maker<typeof AppCapabilities.SkillDefinition> = Ca
 export const operationHandler: Maker<typeof Capabilities.OperationHandler> = Capability$.moduleMaker(
   'OperationHandler',
   Capabilities.OperationHandler,
-  { activatesOn: ActivationEvents.Startup },
+  { activatesOn: ActivationEvents.Startup, environments: ['node', 'workerd'] },
 );
 
 /**
@@ -111,13 +111,20 @@ export const operationHandler: Maker<typeof Capabilities.OperationHandler> = Cap
 export const layerSpec: Maker<typeof Capabilities.LayerSpec> = Capability$.moduleMaker(
   'LayerSpec',
   Capabilities.LayerSpec,
-  { activatesOn: ActivationEvents.Startup },
+  { activatesOn: ActivationEvents.Startup, environments: ['node', 'workerd'] },
 );
 
 /** Module maker contributing undo operation mappings. */
 export const undoMappings: Maker<typeof Capabilities.UndoMapping> = Capability$.moduleMaker(
   'UndoMappings',
   Capabilities.UndoMapping,
+  { environments: ['node', 'workerd'] },
+);
+
+/** Module maker contributing observability event mappings. */
+export const observabilityMappings: Maker<typeof AppCapabilities.ObservabilityMapping> = Capability$.moduleMaker(
+  'ObservabilityMappings',
+  AppCapabilities.ObservabilityMapping,
 );
 
 /** Module maker contributing a React context. */
@@ -127,7 +134,7 @@ export const reactContext: Maker<typeof Capabilities.ReactContext> = Capability$
   // A context provider has to wrap the tree on the FIRST render, and shell components read what it
   // provides through the strict `useCapability` hooks — arriving in the idle wave trips the
   // missing-capability invariant rather than merely rendering late.
-  { activatesOn: ActivationEvents.Startup },
+  { activatesOn: ActivationEvents.Startup, environments: [] },
 );
 
 /** Module maker contributing a React root. */
@@ -135,7 +142,7 @@ export const reactRoot: Maker<typeof Capabilities.ReactRoot> = Capability$.modul
   'ReactRoot',
   Capabilities.ReactRoot,
   // Same reason as `reactContext` — a root that mounts at idle is a blank shell until it does.
-  { activatesOn: ActivationEvents.Startup },
+  { activatesOn: ActivationEvents.Startup, environments: [] },
 );
 
 /**
@@ -146,7 +153,7 @@ export const reactRoot: Maker<typeof Capabilities.ReactRoot> = Capability$.modul
 export const navigationResolver: Maker<typeof AppCapabilities.NavigationTargetResolver> = Capability$.moduleMaker(
   'NavigationResolver',
   AppCapabilities.NavigationTargetResolver,
-  { activatesOn: ActivationEvents.Startup },
+  { activatesOn: ActivationEvents.Startup, environments: ['node', 'workerd'] },
 );
 
 /** Module maker contributing a navigation handler. On the startup pass for the same reason as
@@ -154,7 +161,7 @@ export const navigationResolver: Maker<typeof AppCapabilities.NavigationTargetRe
 export const navigationHandler: Maker<typeof AppCapabilities.NavigationHandler> = Capability$.moduleMaker(
   'NavigationHandler',
   AppCapabilities.NavigationHandler,
-  { activatesOn: ActivationEvents.Startup },
+  { activatesOn: ActivationEvents.Startup, environments: [] },
 );
 
 const surfaceMaker: Maker<typeof Capabilities.ReactSurface> = Capability$.moduleMaker(
@@ -181,6 +188,7 @@ export const surface = <
   const { roles, ...rest } = options ?? {};
   return surfaceMaker(loader, {
     ...rest,
+    environments: rest.environments ?? [],
     activatesOn:
       rest.activatesOn ??
       (roles?.length
@@ -193,18 +201,22 @@ export const surface = <
 export const commentConfig: Maker<typeof AppCapabilities.CommentConfig> = Capability$.moduleMaker(
   'CommentConfig',
   AppCapabilities.CommentConfig,
+  { environments: ['node', 'workerd'] },
 );
 
 /** Module maker contributing a text content extractor. */
 export const textContent: Maker<typeof AppCapabilities.TextContent> = Capability$.moduleMaker(
   'TextContent',
   AppCapabilities.TextContent,
+  { environments: ['node', 'workerd'] },
 );
 
 /** Module maker contributing an anchor sort comparator. */
 export const anchorSort: Maker<typeof AppCapabilities.AnchorSort> = Capability$.moduleMaker(
   'AnchorSort',
   AppCapabilities.AnchorSort,
+  // Browser-only: a sort comparator is registered into the app graph, which no headless host builds.
+  { environments: [] },
 );
 
 //
@@ -214,11 +226,16 @@ export const anchorSort: Maker<typeof AppCapabilities.AnchorSort> = Capability$.
 /** Module contributing translations. */
 export const translations = (
   resources: Translations.Resource | Translations.Resource[],
-  options?: { name?: string },
+  options?: { name?: string; environments?: readonly Capability$.Environment[] },
 ) => {
   const value: Translations.Resource[] = Array.isArray(resources) ? resources : [resources];
-  return Capability$.inlineModule(options?.name ?? 'translations', { provides: [AppCapabilities.Translations] }, () =>
-    Effect.succeed([Capability$.contribute(AppCapabilities.Translations, value)]),
+  return Capability$.inlineModule(
+    options?.name ?? 'translations',
+    {
+      provides: [AppCapabilities.Translations],
+      environments: options?.environments ?? ['node', 'workerd'],
+    },
+    () => Effect.succeed([Capability$.contribute(AppCapabilities.Translations, value)]),
   );
 };
 
@@ -229,20 +246,21 @@ export const translations = (
  */
 export const schema = (
   types: ReadonlyArray<Type.AnyEntity> | (() => Promise<{ default: ReadonlyArray<Type.AnyEntity> }>),
-  options?: { name?: string },
+  options?: { name?: string; environments?: readonly Capability$.Environment[] },
 ) => {
+  const spec = {
+    provides: [AppCapabilities.Schema],
+    environments: options?.environments ?? ['node', 'workerd'],
+  } as const;
   if (typeof types === 'function') {
     const loader = types;
-    return Capability$.lazyModule<readonly [typeof AppCapabilities.Schema]>(
-      options?.name ?? 'schema',
-      { provides: [AppCapabilities.Schema] },
-      () =>
-        loader().then(({ default: values }) => ({
-          default: () => Effect.succeed([Capability$.contribute(AppCapabilities.Schema, values)]),
-        })),
+    return Capability$.lazyModule<readonly [typeof AppCapabilities.Schema]>(options?.name ?? 'schema', spec, () =>
+      loader().then(({ default: values }) => ({
+        default: () => Effect.succeed([Capability$.contribute(AppCapabilities.Schema, values)]),
+      })),
     );
   }
-  return Capability$.inlineModule(options?.name ?? 'schema', { provides: [AppCapabilities.Schema] }, () =>
+  return Capability$.inlineModule(options?.name ?? 'schema', spec, () =>
     Effect.succeed([Capability$.contribute(AppCapabilities.Schema, types)]),
   );
 };
@@ -250,11 +268,13 @@ export const schema = (
 /** Module contributing static plugin assets (typically the bundled `PLUGIN.mdl` spec). */
 export const pluginAsset = (
   asset: AppCapabilities.PluginAsset | ReadonlyArray<AppCapabilities.PluginAsset>,
-  options?: { name?: string },
+  options?: { name?: string; environments?: readonly Capability$.Environment[] },
 ) => {
   const values: ReadonlyArray<AppCapabilities.PluginAsset> = Array.isArray(asset) ? asset : [asset];
-  return Capability$.inlineModule(options?.name ?? 'plugin-asset', { provides: [AppCapabilities.PluginAsset] }, () =>
-    Effect.succeed([Capability$.contributeAll(AppCapabilities.PluginAsset, values)]),
+  return Capability$.inlineModule(
+    options?.name ?? 'plugin-asset',
+    { provides: [AppCapabilities.PluginAsset], environments: options?.environments ?? [] },
+    () => Effect.succeed([Capability$.contributeAll(AppCapabilities.PluginAsset, values)]),
   );
 };
 
@@ -272,11 +292,40 @@ export const pluginAsset = (
  * service graph land in the definition's closure and are paid at boot by every session. A loader
  * keeps them in the module body chunk, which is what makes the gating worth anything.
  */
+/**
+ * Module contributing sample spaces.
+ *
+ * Gated on demand, and loader-only: sample content is bulky and interesting to nobody who has not
+ * asked for a list, so an inline array — a static import in the plugin definition — would land the
+ * whole world in the definition's closure and charge every session for it. The loader keeps it in
+ * its own chunk, which is what makes the gating worth anything.
+ */
+export const sampleSpaces = (
+  loader: () => Promise<{ default: ReadonlyArray<AppCapabilities.SampleSpace> }>,
+  options?: { name?: string; environments?: readonly Capability$.Environment[] },
+) =>
+  Capability$.lazyModule<readonly [typeof AppCapabilities.SampleSpace]>(
+    options?.name ?? 'sample-spaces',
+    {
+      activatesOn: ActivationEvents.SampleSpacesRequested,
+      provides: [AppCapabilities.SampleSpace],
+      environments: options?.environments ?? [],
+    },
+    () =>
+      loader().then(({ default: spaces }) => ({
+        default: () => Effect.succeed([Capability$.contributeAll(AppCapabilities.SampleSpace, spaces)]),
+      })),
+  );
+
 export const commands = (
   values: ReadonlyArray<Capabilities.AnyCommand> | (() => Promise<{ default: ReadonlyArray<Capabilities.AnyCommand> }>),
-  options?: { name?: string },
+  options?: { name?: string; environments?: readonly Capability$.Environment[] },
 ) => {
-  const spec = { activatesOn: ActivationEvents.CommandsRequested, provides: [Capabilities.Command] } as const;
+  const spec = {
+    activatesOn: ActivationEvents.CommandsRequested,
+    provides: [Capabilities.Command],
+    environments: options?.environments ?? ['node', 'workerd'],
+  } as const;
   if (typeof values === 'function') {
     const loader = values;
     return Capability$.lazyModule<readonly [typeof Capabilities.Command]>(options?.name ?? 'cli-commands', spec, () =>

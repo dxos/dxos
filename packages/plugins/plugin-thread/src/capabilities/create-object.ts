@@ -16,8 +16,6 @@ import { Channel } from '@dxos/types';
 import { ChannelCreatePanel } from '#containers';
 import { ChannelBackend, ThreadCapabilities } from '#types';
 
-import { getChannelsPath } from '../paths';
-
 type CreateOptions = Parameters<SpaceCapabilities.CreateObjectEntry['createObject']>[1];
 
 export default Capability.makeModule(
@@ -35,11 +33,11 @@ export default Capability.makeModule(
           const object = provider
             ? Channel.make({ name, backend: { kind: provider.kind, config: provider.makeConfig(options ?? {}) } })
             : Channel.make({ name });
-          return yield* Operation.invoke(SpaceOperation.AddObject, {
-            object,
-            target: opts.target,
-            targetNodeId: opts.targetNodeId ?? getChannelsPath(opts.db.spaceId),
-          });
+          return yield* Operation.invoke(
+            SpaceOperation.AddObject,
+            { object, target: opts.target },
+            { spaceId: opts.db.spaceId },
+          );
         }),
     });
   }),

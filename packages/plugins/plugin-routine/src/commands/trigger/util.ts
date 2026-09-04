@@ -12,7 +12,19 @@ import * as Prompt from 'effect/unstable/cli/Prompt';
 import { Ansi, Doc, FormBuilder } from '@dxos/cli-util';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trigger from '@dxos/compute/Trigger';
-import { Annotation, Database, Entity, type Err, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
+import {
+  Annotation,
+  Database,
+  type Error as EchoError,
+  Entity,
+  Feed,
+  Filter,
+  Obj,
+  Query,
+  Ref,
+  Scope,
+  Type,
+} from '@dxos/echo';
 import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { getFeedRef, isFeedOwnerSchema } from '@dxos/schema';
@@ -37,7 +49,7 @@ export const getTriggerRemoteStatus = (trigger: Trigger.Trigger, remoteCronIds: 
 export const printTrigger: (
   trigger: Trigger.Trigger,
   remoteStatus?: TriggerRemoteStatus,
-) => Effect.Effect<Doc.Doc<any>, Err.EntityNotFoundError> = Effect.fn(function* (
+) => Effect.Effect<Doc.Doc<any>, EchoError.EntityNotFoundError> = Effect.fn(function* (
   trigger: Trigger.Trigger,
   remoteStatus?: TriggerRemoteStatus,
 ) {

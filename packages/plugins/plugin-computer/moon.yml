@@ -1,0 +1,26 @@
+layer: library
+language: typescript
+tags:
+  - ts-vite-build
+  - ts-test
+  - vite-plugin
+tasks:
+  # Fail when the browser entry can reach the host. `./vite-plugin` spawns processes and reads the
+  # filesystem; the plugin, its skill and its client have to stay loadable in a page, and only the
+  # import graph proves the two halves stay apart.
+  check-module-structure:
+    command: >-
+      bun $workspaceRoot/tools/dx-trace-imports/cli.js
+      --export .
+      --to "node:child_process"
+      --conditions source,browser,import
+      --fail-on present
+    deps:
+      - dx-trace-imports:build
+      - build
+    inputs:
+      - tsconfig.json
+      - '@group(production)'
+      - /pnpm-lock.yaml
+    options:
+      timeout: 60

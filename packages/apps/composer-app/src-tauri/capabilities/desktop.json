@@ -1,9 +1,15 @@
 {
   "identifier": "desktop-capability",
+  "description": "Permissions for the bundled app, served over HTTP from the asset-server port this build's release channel owns (see src/channel.rs). Every channel's port is listed because the capability set is static while the port is chosen at runtime.",
   "platforms": ["macOS"],
   "windows": ["main", "popover"],
   "remote": {
-    "urls": ["http://localhost:26777/*"]
+    "urls": [
+      "http://localhost:26777/*",
+      "http://localhost:26778/*",
+      "http://localhost:26779/*",
+      "http://localhost:26780/*"
+    ]
   },
   "permissions": [
     "core:default",
@@ -13,14 +19,29 @@
     "deep-link:default",
     "dialog:default",
     "dialog:allow-open",
+    "dialog:allow-save",
     "fs:read-all",
     {
       "identifier": "fs:allow-watch",
-      "allow": [{ "path": "**" }]
+      "allow": [
+        {
+          "path": "**"
+        }
+      ]
     },
     {
       "identifier": "fs:scope",
-      "allow": [{ "path": "**" }, { "path": "**/.composer" }, { "path": "**/.composer/**" }]
+      "allow": [
+        {
+          "path": "**"
+        },
+        {
+          "path": "**/.composer"
+        },
+        {
+          "path": "**/.composer/**"
+        }
+      ]
     },
     "fs:write-all",
     "macos-passkey:default",
@@ -38,6 +59,33 @@
     },
     "opener:allow-open-url",
     "opener:default",
-    "updater:default"
+    "updater:default",
+    "allow-cache-plugin-assets",
+    "allow-evict-plugin",
+    "allow-resolve-cached-url",
+    "allow-list-cached-plugins",
+    "allow-start-oauth-server",
+    "allow-stop-oauth-server",
+    "allow-get-oauth-result",
+    "allow-get-oauth-recovery-result",
+    "allow-initiate-oauth-flow",
+    "allow-get-xattr",
+    "allow-set-xattr",
+    "allow-remove-xattr",
+    "allow-hide-spotlight",
+    {
+      "identifier": "http:default",
+      "allow": [
+        {
+          "url": "https://developer.lametric.com/*"
+        },
+        {
+          "url": "http://*:8080/*"
+        },
+        {
+          "url": "https://*:4343/*"
+        }
+      ]
+    }
   ]
 }

@@ -19,8 +19,14 @@
       "default": "./dist/lib/apis.mjs"
     },
     "#capabilities": {
-      "source": "./src/capabilities/index.ts",
+      "source": {
+        "workerd": "./src/capabilities/gen/workerd.ts",
+        "node": "./src/capabilities/gen/node.ts",
+        "default": "./src/capabilities/index.ts"
+      },
       "types": "./dist/types/src/capabilities/index.d.ts",
+      "workerd": "./dist/lib/capabilities.workerd.mjs",
+      "node": "./dist/lib/capabilities.node.mjs",
       "default": "./dist/lib/capabilities.mjs"
     },
     "#meta": {
@@ -47,6 +53,11 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
+    },
+    "#types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -69,15 +80,20 @@
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
-    "./operations": {
-      "source": "./src/operations/index.ts",
-      "types": "./dist/types/src/operations/index.d.ts",
-      "import": "./dist/lib/operations.mjs"
-    },
     "./JmapPlugin": {
       "source": "./src/JmapPlugin.ts",
       "types": "./dist/types/src/JmapPlugin.d.ts",
       "import": "./dist/lib/JmapPlugin.mjs"
+    },
+    "./JmapOperationHandlerSet": {
+      "source": "./src/operations/JmapOperationHandlerSet.ts",
+      "types": "./dist/types/src/operations/JmapOperationHandlerSet.d.ts",
+      "import": "./dist/lib/JmapOperationHandlerSet.mjs"
+    },
+    "./JmapOperation": {
+      "source": "./src/types/JmapOperation.ts",
+      "types": "./dist/types/src/types/JmapOperation.d.ts",
+      "import": "./dist/lib/JmapOperation.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

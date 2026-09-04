@@ -6,12 +6,7 @@ import bytes from 'bytes';
 import React, { type FC, type ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { log } from '@dxos/log';
-import {
-  type GetSnapshotsResponse,
-  type StorageInfo,
-  type StoredSnapshotInfo,
-  type SubscribeToFeedsResponse,
-} from '@dxos/protocols/proto/dxos/devtools/host';
+import { type DevtoolsHost } from '@dxos/protocols/rpc';
 import { useClient } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { useAsyncEffect } from '@dxos/react-hooks';
@@ -24,7 +19,7 @@ import { Bitbar, JsonView } from '../../../components';
 type SelectionValue =
   | {
       kind: 'feed';
-      feed: SubscribeToFeedsResponse.Feed;
+      feed: DevtoolsHost.SubscribeToFeedsResponse.Feed;
     }
   | {
       kind: 'snapshot';
@@ -39,9 +34,9 @@ type Node = {
 };
 
 const getInfoTree = (
-  storageInfo: StorageInfo,
-  feedInfo: SubscribeToFeedsResponse,
-  snapshots: StoredSnapshotInfo[],
+  storageInfo: DevtoolsHost.StorageInfo,
+  feedInfo: DevtoolsHost.SubscribeToFeedsResponse,
+  snapshots: DevtoolsHost.StoredSnapshotInfo[],
 ): Node[] => [
   {
     id: 'origin',
@@ -91,8 +86,8 @@ const getInfoTree = (
 export const StoragePanel = () => {
   const devtoolsHost = useDevtools();
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [storageInfo, setStorageInfo] = useState<StorageInfo | undefined>();
-  const [snapshotInfo, setSnapshotInfo] = useState<GetSnapshotsResponse | undefined>();
+  const [storageInfo, setStorageInfo] = useState<DevtoolsHost.StorageInfo | undefined>();
+  const [snapshotInfo, setSnapshotInfo] = useState<DevtoolsHost.GetSnapshotsResponse | undefined>();
   const feeds = useStream(() => devtoolsHost.subscribeToFeeds({}), {}, []);
   const client = useClient();
   const services = client.services.services;
@@ -106,8 +101,8 @@ export const StoragePanel = () => {
     setIsRefreshing(true);
     let retry = false;
 
-    let storageInfo: StorageInfo | undefined;
-    let snapshotInfo: GetSnapshotsResponse | undefined;
+    let storageInfo: DevtoolsHost.StorageInfo | undefined;
+    let snapshotInfo: DevtoolsHost.GetSnapshotsResponse | undefined;
 
     try {
       storageInfo = await devtoolsHost.getStorageInfo();

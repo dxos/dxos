@@ -111,7 +111,7 @@ const EditableObject = ({ title, object }: { title: string; object: Obj.Unknown 
     <Panel.Content asChild>
       <ScrollArea.Root orientation='vertical'>
         <ScrollArea.Viewport>
-          <h2 className='mbe-1 px-2 pt-2 text-sm font-medium text-description'>{title}</h2>
+          <h2 className='mb-1 px-2 pt-2 text-sm font-medium text-description'>{title}</h2>
           <ObjectProperties object={object} />
         </ScrollArea.Viewport>
       </ScrollArea.Root>

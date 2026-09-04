@@ -18,8 +18,9 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
 | `test`      | `org.dxos.mdl.test@1.0`        |
 | `component` | `org.dxos.mdl.component@1.0`   |
-| `op`        | `org.dxos.mdl.op@1.0`          |
+| `op`        | `org.dxos.mdl.op@1.1`          |
 | `service`   | `org.dxos.mdl.service@1.0`     |
+| `flow`      | `org.dxos.mdl.flow@1.0`        |
 
 ## Types
 
@@ -78,10 +79,10 @@ service TranscriptionService
   ops:
     transcribe(url: string, lang: string) → Text
   note: |
-    HTTP GET https://transcription.dxos.network/video?url=<url>&lang=<lang>
+    HTTP GET <edge>/transcription/video?url=<url>&lang=<lang>
     Response: { success: boolean, result: { videoId, title, languageCode, generated, text } }.
-    lang defaults to "en". The worker sends no CORS headers, so the browser request is routed
-    through the EDGE CORS proxy via `proxyFetchLegacy` from @dxos/edge-client.
+    lang defaults to "en". Fetched directly: behind the EDGE entrypoint the response carries EDGE's
+    CORS headers, which the worker's own hostname did not send.
   errors:
     TranscriptionFailed: worker returned a non-2xx response, success=false, or empty text
 ```
@@ -90,6 +91,7 @@ service TranscriptionService
 
 ```mdl
 op transcribeVideo
+  key: org.dxos.operation.video.transcribe
   desc: |
     Transcribes a Video via the EDGE TranscriptionService, creates a Text
     object with the result, and links it back via Video.transcript.
@@ -111,6 +113,7 @@ op transcribeVideo
 
 ```mdl
 op summarizeVideo
+  key: org.dxos.operation.video.summarize
   desc: |
     Summarizes a Video's transcript via the assistant AI stack, creates a Text object with the
     markdown summary, and links it back via Video.summary.
@@ -263,6 +266,66 @@ test T-4: Transcribe failure leaves video unchanged
 test T-5: Open transcript
   given: a Video whose transcript is set, opened in the article surface
   then: an affordance to open the transcript target is shown
+```
+
+---
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Add a video, transcribe it, and summarize it
+  desc: The core video round-trip — create a Video, transcribe it via EDGE, then summarize the transcript.
+  actors: human
+  covers: [F-1.1, F-1.2, F-3.1, F-3.2, F-3.3, F-4.1, F-4.2]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - plugin-video is enabled — it ships only in the experimental set (also default-on under
+      `isDev` labs); it is OFF by default in a preview/production build
+    - AI/BYOK is configured in the host, or the summarize step is expected to fail per F-4
+    - no Video named "QA Video" exists — ABORT rather than deleting one this flow did not create
+    - url: a short, publicly reachable video URL with real speech (for the transcript to be non-empty)
+  test:
+    - name: Create the video
+      do: In the navtree, click + on a collection and choose Video. Name it "QA Video" and set its URL to `$given.url`.
+      capture: created
+      expect: a Video named "QA Video" appears under the collection, with transcript unset
+      note: |
+        NO `invoke` — there is no create operation, only the navtree factory
+        (`capabilities/create-object.ts`'s `Video.make`); same finding as plugin-chess's
+        `startGame`. This is why the flow is `actors: human`.
+    - name: Transcribe it
+      do: Open "QA Video" and click Transcribe.
+      invoke: [op:transcribeVideo] { video: $created.object }
+      capture: transcribed
+      expect: the Transcript tab shows non-empty text, and the video's name updates if it was empty
+      assert: return !!$transcribed.object;
+      note: |
+        `[op:transcribeVideo]` resolves via this document's own `key:` (`op@1.1`,
+        `org.dxos.operation.video.transcribe`) — added here because the block had none.
+    - name: Read the transcript back
+      do: Switch to the Transcript tab.
+      expect: the transcript reads the text captured in the previous step
+      assert: |
+        return (await space.db.query(dxos.Filter.everything()).run()).objects
+          .some((o) => o.id === $transcribed.object.id);
+      note: Coalesced with the previous step per Execution Rule 2 — the transcript Text is live.
+    - name: Summarize the transcript
+      do: Click the Summary tab, then the regenerate action.
+      invoke: [op:summarizeVideo] { video: $created.object }
+      capture: summarized
+      expect: the Summary tab shows markdown prose derived from the transcript
+      assert: return !!$summarized.object;
+  after:
+    - name: Delete the video
+      do: Right-click "QA Video" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.collection }
+      expect: the row leaves the navtree and its plank closes
 ```
 
 ---

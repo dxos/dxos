@@ -8,7 +8,7 @@ import * as Rpc from 'effect/unstable/rpc/Rpc';
 import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
 import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
-import { protoMessage, serviceError } from './service-rpc.ts';
+import { serviceError } from './service-rpc.ts';
 import { mutableArray, protoStruct } from './service-schemas.ts';
 
 //
@@ -92,6 +92,11 @@ export const UpdateRequest = Schema.Struct({
 });
 export interface UpdateRequest extends Schema.Schema.Type<typeof UpdateRequest> {}
 
+export const BatchedDocumentUpdates = Schema.Struct({
+  updates: Schema.optional(mutableArray(DocumentUpdate)),
+});
+export interface BatchedDocumentUpdates extends Schema.Schema.Type<typeof BatchedDocumentUpdates> {}
+
 export const FlushRequest = Schema.Struct({
   /**
    * Automerge specific document ids to wait to flush.
@@ -136,10 +141,73 @@ export const GetSpaceSyncStateRequest = Schema.Struct({
 });
 export interface GetSpaceSyncStateRequest extends Schema.Schema.Type<typeof GetSpaceSyncStateRequest> {}
 
+const peerStateSchema = Schema.Struct({
+  peerId: Schema.String,
+
+  /**
+   * Documents that are present locally but not on the remote peer.
+   */
+  missingOnRemote: Schema.Number,
+
+  /**
+   * Documents that are present on the remote peer but not locally.
+   */
+  missingOnLocal: Schema.Number,
+
+  /**
+   * Documents that are present on both peers but have different heads.
+   */
+  differentDocuments: Schema.Number,
+
+  /**
+   * Total number of documents locally.
+   */
+  localDocumentCount: Schema.Number,
+
+  /**
+   * Total number of documents on the remote peer.
+   */
+  remoteDocumentCount: Schema.Number,
+
+  /**
+   * Total number of documents across this peer and the remote peer.
+   */
+  totalDocumentCount: Schema.Number,
+
+  /**
+   * Total number of documents that are not synced.
+   * Includes documents that are present only locally, only on the remote peer, or whether the peers have different versions.
+   */
+  unsyncedDocumentCount: Schema.Number,
+});
+type PeerStateType = Schema.Schema.Type<typeof peerStateSchema>;
+
+export const SpaceSyncState = Schema.Struct({
+  peers: Schema.optional(mutableArray(peerStateSchema)),
+});
+export interface SpaceSyncState extends Schema.Schema.Type<typeof SpaceSyncState> {}
+export namespace SpaceSyncState {
+  export type PeerState = PeerStateType;
+}
+
 export const DatabaseStatsRequest = Schema.Struct({
   spaceId: Schema.String,
 });
 export interface DatabaseStatsRequest extends Schema.Schema.Type<typeof DatabaseStatsRequest> {}
+
+/**
+ * What the host holds in memory, as opposed to the stored counts alongside it: a document present
+ * on disk costs nothing until a handle for it is cached, and handles are never evicted on their own.
+ */
+export const HostLoadedStats = Schema.Struct({
+  /** Automerge handles cached for this space. */
+  documents: Schema.Number,
+  /** Automerge handles cached across every space on this host. */
+  documentsTotal: Schema.Number,
+  /** Active reactive queries registered with the host, across every space. */
+  queriesTotal: Schema.Number,
+});
+export interface HostLoadedStats extends Schema.Schema.Type<typeof HostLoadedStats> {}
 
 /**
  * Per-space storage metrics. @see `docs/GARBAGE_COLLECTION.md` in `@dxos/echo-host`.
@@ -157,6 +225,8 @@ export const DatabaseStats = Schema.Struct({
   feeds: Schema.Number,
   /** Total feed blocks stored locally for the space. */
   feedBlocks: Schema.Number,
+  /** Host-side residency. The client's own caches are added by the client, not carried on the wire. */
+  loaded: HostLoadedStats,
 });
 export interface DatabaseStats extends Schema.Schema.Type<typeof DatabaseStats> {}
 
@@ -196,7 +266,7 @@ export class Rpcs extends RpcGroup.make(
    */
   Rpc.make('subscribe', {
     payload: SubscribeRequest,
-    success: protoMessage('dxos.echo.service.BatchedDocumentUpdates'),
+    success: BatchedDocumentUpdates,
     error: serviceError,
     stream: true,
   }),
@@ -256,7 +326,7 @@ export class Rpcs extends RpcGroup.make(
   // TODO(dmaretskyi): Stream subscription.
   Rpc.make('subscribeSpaceSyncState', {
     payload: GetSpaceSyncStateRequest,
-    success: protoMessage('dxos.echo.service.SpaceSyncState'),
+    success: SpaceSyncState,
     error: serviceError,
     stream: true,
   }),

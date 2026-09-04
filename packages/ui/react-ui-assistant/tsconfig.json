@@ -1,0 +1,60 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/random"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../sdk/types"
+    },
+    {
+      "path": "../react-ui"
+    },
+    {
+      "path": "../react-ui-components"
+    },
+    {
+      "path": "../react-ui-feed"
+    },
+    {
+      "path": "../react-ui-list"
+    },
+    {
+      "path": "../react-ui-markdown"
+    },
+    {
+      "path": "../react-ui-syntax-highlighter"
+    },
+    {
+      "path": "../ui"
+    },
+    {
+      "path": "../ui-editor"
+    },
+    {
+      "path": "../ui-theme"
+    }
+  ]
+}

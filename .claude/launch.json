@@ -15,6 +15,16 @@
       "autoPort": true
     },
     {
+      "name": "composer-agent-debug",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && DX_STRICT=false moon run composer-app:serve -- --port 5281 --strictPort"
+      ],
+      "port": 5281,
+      "autoPort": true
+    },
+    {
       "name": "composer-app-tw-debug",
       "runtimeExecutable": "sh",
       "runtimeArgs": [
@@ -23,6 +33,16 @@
       ],
       "port": 5181,
       "autoPort": true
+    },
+    {
+      "name": "composer-plugin-s3",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && cd \"$(git rev-parse --show-toplevel)/.claude/worktrees/plugin-s3\" && moon run composer-app:serve -- --port 5183 --strictPort"
+      ],
+      "port": 5183,
+      "autoPort": false
     },
     {
       "name": "composer-app-proto",
@@ -45,13 +65,23 @@
       "autoPort": true
     },
     {
-      "name": "composer-serve-min",
+      "name": "composer-serve-prod",
       "runtimeExecutable": "sh",
       "runtimeArgs": [
         "-c",
-        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && moon run composer-app:serve-min -- --port 5281 --strictPort"
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && moon run composer-app:serve-prod -- --port 5281 --strictPort"
       ],
       "port": 5281,
+      "autoPort": false
+    },
+    {
+      "name": "composer-qa",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && moon run composer-app:serve-qa -- --port 5182 --strictPort"
+      ],
+      "port": 5182,
       "autoPort": false
     },
     {
@@ -161,6 +191,26 @@
       "autoPort": false
     },
     {
+      "name": "storybook-dx-container-cleanup",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && cd \"$(git rev-parse --show-toplevel)/.claude/worktrees/dx-container-cleanup/tools/storybook-react\" && pnpm exec storybook dev --port 9017 --no-open --ci"
+      ],
+      "port": 9017,
+      "autoPort": false
+    },
+    {
+      "name": "composer-dx-container-cleanup",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && cd \"$(git rev-parse --show-toplevel)/.claude/worktrees/dx-container-cleanup\" && moon run composer-app:serve -- --port 5184 --strictPort"
+      ],
+      "port": 5184,
+      "autoPort": false
+    },
+    {
       "name": "storybook-moon-9014",
       "runtimeExecutable": "sh",
       "runtimeArgs": [
@@ -178,6 +228,16 @@
         "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && pnpm --filter @dxos/storybook-react exec storybook dev --port 9014 --no-open --ci"
       ],
       "port": 9014,
+      "autoPort": false
+    },
+    {
+      "name": "storybook-agent",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && export DX_AGENT_CWD=\"$(git rev-parse --show-toplevel)/packages/stories/stories-assistant/src/testing/fixtures\" && pnpm --filter @dxos/storybook-react exec storybook dev --port 9016 --no-open --ci"
+      ],
+      "port": 9016,
       "autoPort": false
     }
   ]

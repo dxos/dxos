@@ -3,8 +3,8 @@
 //
 
 import { asyncTimeout } from '@dxos/async';
+import { getFirstStreamValue } from '@dxos/async';
 import { type ClientServices } from '@dxos/client-protocol';
-import { getFirstStreamValue } from '@dxos/codec-protobuf';
 import { type Config, type ConfigProto } from '@dxos/config';
 import { createDidFromIdentityKey, credentialTypeFilter } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
@@ -18,10 +18,9 @@ import {
   SpaceMember,
   type Space as SpaceProto,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { type SubscribeToFeedsResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { type LoggingService } from '@dxos/protocols/rpc';
+import { type DevtoolsHost, type LoggingService } from '@dxos/protocols/rpc';
 
 import { DXOS_VERSION } from '../../version';
 import { type ServiceContext } from '../services';
@@ -49,7 +48,7 @@ export type Diagnostics = {
     spaces?: SpaceStats[];
     networkStatus?: NetworkStatus;
     swarms?: SwarmInfo[];
-    feeds?: Partial<SubscribeToFeedsResponse.Feed>[];
+    feeds?: Partial<DevtoolsHost.SubscribeToFeedsResponse.Feed>[];
     metrics?: LoggingService.Metrics;
     storage?: { file: string; count: number }[];
   };
@@ -179,7 +178,7 @@ const getSpaceStats = async (space: DataSpace): Promise<SpaceStats> => {
           },
         },
         presence:
-          space.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key)).length > 0
+          space.presence.getPeersByIdentityKey(member.key).length > 0
             ? SpaceMember.PresenceState.ONLINE
             : SpaceMember.PresenceState.OFFLINE,
       })),

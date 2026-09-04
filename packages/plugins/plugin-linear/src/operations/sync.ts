@@ -5,22 +5,23 @@
 import * as Effect from 'effect/Effect';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
+import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 
 const { mergeField, snapshotField } = ConnectorSync;
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Filter, Obj, Query, Type } from '@dxos/echo';
-import { EID } from '@dxos/keys';
+import { Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import { Task, TaskSet } from '@dxos/types';
+import * as Binding from '@dxos/plugin-connector/Binding';
+import { Milestone, Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
 import { LinearOperation } from '#types';
 
 import { LINEAR_SOURCE } from '../constants';
-import { formatLinearSyncFailure } from '../errors';
+import { LinearTeamUnresolvedError, formatLinearSyncFailure } from '../errors';
 import { LinearApi } from '../services';
 
 //
@@ -82,9 +83,11 @@ type ProjectSnapshot = {
 type TaskSnapshot = {
   title: string;
   description: string;
-  status: 'todo' | 'in-progress' | 'done';
+  status: 'todo' | 'started' | 'done';
   priority: 'low' | 'medium' | 'high' | 'urgent' | undefined;
-  estimate: number | undefined;
+  // The size, not Linear's points: the snapshot is what a later sync compares the local field
+  // against, and comparing a size to a point count would report every task as diverged.
+  estimate: Task.Estimate | undefined;
 };
 
 // Per-field three-way merge primitives are shared with other integration plugins (Trello, GitHub)
@@ -114,6 +117,33 @@ const sinceFromOptions = (options: LinearOperation.SyncOptions | undefined): str
   }
   return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
 };
+
+/**
+ * Move a task into `container`. Membership and order are the `TaskSet.tasks` array; the ECHO parent
+ * edge is set alongside only so deletion cascades, so both are written together. Idempotent —
+ * sync runs repeatedly and must never append a second ref for a task already in the set.
+ */
+const setTaskContainer = Effect.fn('setTaskContainer')(function* (task: Task.Task, container: TaskSet.TaskSet) {
+  if (container.tasks.some(Ref.hasEntityId(task.id))) {
+    return;
+  }
+  // The reverse-ref index, not `Obj.getParent`: the array states membership, the parent edge does not.
+  const previous = yield* Database.query(
+    Query.select(Filter.id(task.id)).referencedBy(TaskSet.TaskSet, 'tasks'),
+  ).run.pipe(Effect.orElseSucceed(() => []));
+  for (const set of previous) {
+    if (set.id === container.id) {
+      continue;
+    }
+    Obj.update(set, (set) => {
+      set.tasks = set.tasks.filter((ref) => !Ref.hasEntityId(task.id)(ref));
+    });
+  }
+  Obj.update(container, (container) => {
+    container.tasks = [...container.tasks, Ref.make(task)];
+  });
+  Obj.setParent(task, container);
+});
 
 //
 // Pull (snapshot-driven three-way merge)
@@ -164,7 +194,7 @@ export const upsertProject = Effect.fn('upsertProject')(function* (
     return { project: existing, created: false };
   }
 
-  const created = Obj.make(TaskSet.TaskSet, {
+  const created = TaskSet.make({
     [Obj.Meta]: { keys: [fkFor(remote.id)] },
     name: remote.name,
     description: remote.description ?? undefined,
@@ -175,16 +205,55 @@ export const upsertProject = Effect.fn('upsertProject')(function* (
 });
 
 /**
+ * Pull a Linear project milestone into ECHO. Milestones are mirrored remote-wins without a
+ * snapshot merge — they are pull-only (nothing here pushes milestone edits back), so there is no
+ * local side for a three-way merge to protect.
+ */
+export const upsertMilestone = Effect.fn('upsertMilestone')(function* (
+  taskSet: TaskSet.TaskSet,
+  remote: LinearApi.ProjectMilestone,
+) {
+  const name = remote.name;
+  const description = remote.description ?? undefined;
+  // Linear's own milestone status is deliberately not mapped: `Milestone` derives progress from its
+  // tasks, so a stored status could contradict the work it contains.
+  const targetDate = remote.targetDate ?? undefined;
+
+  const existing = yield* findByForeignId<Milestone.Milestone>(Milestone.Milestone, remote.id);
+  const milestone =
+    existing ??
+    (yield* Database.add(Milestone.make({ [Obj.Meta]: { keys: [fkFor(remote.id)] }, name, description, targetDate })));
+  if (existing) {
+    Obj.update(existing, (existing) => {
+      existing.name = name;
+      existing.description = description;
+      existing.targetDate = targetDate;
+    });
+  }
+  // Sequence is the `milestones` array; the parent edge only carries deletion cascade.
+  if (!taskSet.milestones.some(Ref.hasEntityId(milestone.id))) {
+    Obj.update(taskSet, (taskSet) => {
+      taskSet.milestones = [...taskSet.milestones, Ref.make(milestone)];
+    });
+    Obj.setParent(milestone, taskSet);
+  }
+  return milestone;
+});
+
+/**
  * Pull a Linear issue into ECHO as a Task. Same merge shape as
  * {@link upsertProject}, against snapshot fields {title, description, status,
- * priority, estimate}. The Task → Project ref is wired on create and
- * refreshed if the issue's project changes; assignees are intentionally not
- * synced.
+ * priority, estimate}. Set membership is wired on create and re-wired if the
+ * issue's project changes; assignees are intentionally not synced.
+ *
+ * `milestone` is the local mirror of `issue.projectMilestone`, mirrored remote-wins outside the
+ * snapshot merge (nothing pushes milestone edits back, so there is no local side to protect).
  */
 export const upsertTask = Effect.fn('upsertTask')(function* (
   binding: Cursor.ExternalCursor,
   issue: LinearApi.Issue,
   project: TaskSet.TaskSet | undefined,
+  milestone?: Milestone.Milestone,
 ) {
   const status = LinearApi.stateTypeToTaskStatus(issue.state.type);
   const priority = LinearApi.priorityNumberToTaskPriority(issue.priority);
@@ -197,7 +266,7 @@ export const upsertTask = Effect.fn('upsertTask')(function* (
     description: issue.description ?? '',
     status,
     priority,
-    estimate: issue.estimate ?? undefined,
+    estimate: LinearApi.estimatePointsToTaskEstimate(issue.estimate ?? undefined),
   };
 
   const existing = yield* findByForeignId<Task.Task>(Task.Task, issue.id);
@@ -227,7 +296,9 @@ export const upsertTask = Effect.fn('upsertTask')(function* (
       remoteFields.priority,
       snapshotField(snapshot, 'priority'),
     );
-    const estimateResult = mergeField<number | undefined>(
+    // Compared as sizes: the snapshot and remote sides are mapped on the way in, so all three
+    // arms of the merge speak the same vocabulary.
+    const estimateResult = mergeField<Task.Estimate | undefined>(
       existing.estimate,
       remoteFields.estimate,
       snapshotField(snapshot, 'estimate'),
@@ -253,10 +324,18 @@ export const upsertTask = Effect.fn('upsertTask')(function* (
       if (writeEstimate) {
         existing.estimate = estimateResult.value;
       }
+      if (milestone) {
+        if (existing.milestone?.target?.id !== milestone.id) {
+          existing.milestone = Ref.make(milestone);
+        }
+        // Clear only when Linear itself reports no milestone; a merely unresolved one would
+        // otherwise wipe a perfectly good local assignment.
+      } else if (issue.projectMilestone == null && existing.milestone !== undefined) {
+        existing.milestone = undefined;
+      }
     });
-    // Containment is the ECHO parent edge; re-parent when the issue moved projects.
-    if (project && Obj.getParent(existing)?.id !== project.id) {
-      Obj.setParent(existing, project);
+    if (project) {
+      yield* setTaskContainer(existing, project);
     }
     Cursor.writeSnapshot(binding, issue.id, remoteFields);
     return { task: existing, created: false };
@@ -268,11 +347,12 @@ export const upsertTask = Effect.fn('upsertTask')(function* (
     description: issue.description ?? '',
     status,
     priority,
-    estimate: issue.estimate ?? undefined,
+    estimate: LinearApi.estimatePointsToTaskEstimate(issue.estimate ?? undefined),
+    milestone: milestone ? Ref.make(milestone) : undefined,
   });
   const persisted = yield* Database.add(created);
   if (project) {
-    Obj.setParent(persisted, project);
+    yield* setTaskContainer(persisted, project);
   }
   Cursor.writeSnapshot(binding, issue.id, remoteFields);
   return { task: persisted, created: true };
@@ -418,7 +498,7 @@ export const pushTeamUpdates: <E, R>(
         // Send `null` when the user cleared the estimate locally; Linear
         // treats explicit `null` as a clear (undefined would leave it
         // unchanged on the remote).
-        input.estimate = localEstimate ?? null;
+        input.estimate = LinearApi.taskEstimateToEstimatePoints(localEstimate) ?? null;
         diverged = true;
       }
       if (!diverged) {
@@ -444,180 +524,184 @@ export const pushTeamUpdates: <E, R>(
 // Main handler
 //
 
-const handler: Operation.WithHandler<typeof LinearOperation.SyncLinearTeams> = LinearOperation.SyncLinearTeams.pipe(
-  Operation.withHandler(
-    Effect.fn(function* ({ binding: bindingRef }) {
-      // TODO(wittjosiah): The operation should depend on `Database.Service` once
-      //   the OperationInvoker has a `databaseResolver`. Until then we require
-      //   the caller to preload `binding.target` so we can derive the db.
-      const bindingTarget = bindingRef.target;
-      if (!bindingTarget) {
-        return yield* Effect.die(new Error('Binding ref must be preloaded by caller (cursor not resolved).'));
-      }
-      const db = Obj.getDatabase(bindingTarget);
-      if (!db) {
-        return yield* Effect.die(new Error('Binding ref must be preloaded by caller (no database derivable).'));
-      }
+/**
+ * Per-binding sync body run by the account-level fan-out: reconcile the one team the
+ * binding targets, stamping success/failure onto the binding and toasting either way.
+ */
+const syncTeamBinding = Effect.fn(function* (binding: Cursor.ExternalCursor) {
+  const db = Obj.getDatabase(binding);
+  if (!db) {
+    return yield* Effect.fail(new SyncDatabaseMissingError());
+  }
 
-      const bindingId = EID.getEntityId(EID.tryParse(bindingRef.uri)!) ?? 'unknown';
-      const toastIdSuffix = bindingId;
-
-      // Resolve the binding up-front so credentials can be provided from its access
-      // token directly. `Database.load` is requirement-free (the ref carries its own
-      // db), so this runs outside the layered body.
-      const binding = yield* Database.load(bindingRef);
-      if (!Cursor.isExternal(binding)) {
-        // The integration mechanism only ever creates external-sync cursors for Linear.
-        return {
-          pulled: { teams: 0, projects: 0, tasks: 0 },
-          pushed: { projects: 0, tasks: 0 },
-        };
+  const outcome = yield* Effect.result(
+    Effect.gen(function* () {
+      const externalId = binding.spec.externalId;
+      if (!externalId) {
+        return yield* Effect.fail(new LinearTeamUnresolvedError());
       }
+      // `binding.spec.options` is an opaque provider-defined record in the
+      // shared contract; this connector owns and validates its shape.
+      const options = binding.spec.options as LinearOperation.SyncOptions | undefined;
 
-      const outcome = yield* Effect.result(
+      const syncResult = yield* Effect.result(
         Effect.gen(function* () {
-          const externalId = binding.spec.externalId;
-          if (!externalId) {
-            return yield* Effect.die(new Error('Cursor has no externalId; cannot resolve a Linear team.'));
-          }
-          // `binding.spec.options` is an opaque provider-defined record in the
-          // shared contract; this connector owns and validates its shape.
-          const options = binding.spec.options as LinearOperation.SyncOptions | undefined;
-
-          const syncResult = yield* Effect.result(
-            Effect.gen(function* () {
-              // Resolve the remote `Team` for this binding's `externalId`.
-              const allTeams = yield* LinearApi.fetchTeams();
-              const remoteTeam = allTeams.find((team) => team.id === externalId);
-              if (!remoteTeam) {
-                return yield* Effect.fail(new Error('Team not accessible to connection token'));
-              }
-
-              // Pull: projects → DXOS Projects, issues → DXOS Tasks. Each
-              // upsert refreshes `binding.spec.snapshots[<id>]` to remote-current so
-              // the push pass below sees only fields the user has edited
-              // locally since the last pull.
-              const projects = yield* LinearApi.fetchTeamProjects(remoteTeam.id);
-              const projectByRemoteId = new Map<string, TaskSet.TaskSet>();
-              const remoteProjectsById = new Map<string, LinearApi.Project>();
-              let pulledProjects = 0;
-              for (const project of projects) {
-                const { project: local, created } = yield* upsertProject(binding, project);
-                projectByRemoteId.set(project.id, local);
-                remoteProjectsById.set(project.id, project);
-                if (created) {
-                  pulledProjects++;
-                }
-              }
-
-              const since = sinceFromOptions(options);
-              const issues = yield* LinearApi.fetchTeamIssues(remoteTeam.id, { since });
-              const remoteIssuesById = new Map<string, LinearApi.Issue>();
-              let pulledTasks = 0;
-              for (const issue of issues) {
-                const project = issue.project ? projectByRemoteId.get(issue.project.id) : undefined;
-                const { created } = yield* upsertTask(binding, issue, project);
-                remoteIssuesById.set(issue.id, issue);
-                if (created) {
-                  pulledTasks++;
-                }
-              }
-
-              // Push: snapshot-diff every locally-mirrored object back to
-              // Linear. Workflow states are fetched lazily — only when at least
-              // one local Task status diverged — so read-only syncs don't pay
-              // the round-trip.
-              let workflowStates: ReadonlyArray<LinearApi.WorkflowState> | undefined;
-              const resolveStateId = (issue: LinearApi.Issue, status: NonNullable<Task.Task['status']>) => {
-                const desiredType = LinearApi.taskStatusToStateType(status);
-                const states = workflowStates;
-                if (!states) {
-                  return undefined;
-                }
-                // Match by category. Workspaces commonly have multiple states
-                // per category (e.g. "In Review" + "In Progress" both
-                // `started`); pick the first match for stability.
-                return states.find((s) => s.type === desiredType)?.id;
-              };
-
-              // Lazy fetch: we only need workflow states if there are candidate
-              // issues to push. By this point `upsertTask` above has seeded a
-              // snapshot for every id in `remoteIssuesById`, so the existence of
-              // issues is equivalent to "at least one candidate".
-              if (remoteIssuesById.size > 0) {
-                workflowStates = yield* LinearApi.fetchTeamWorkflowStates(remoteTeam.id);
-              }
-
-              const pushResult = yield* pushTeamUpdates(binding, remoteIssuesById, remoteProjectsById, {
-                updateProject: (id, input) => LinearApi.updateProject(id, input),
-                updateIssue: (id, input) => LinearApi.updateIssue(id, input),
-                resolveStateId,
-              });
-
-              // TODO(wittjosiah): Comments sync disabled — re-enable once
-              // chunked/yielded to avoid automerge_wasm crash when upserting
-              // many comments in one tick.
-
-              return {
-                pulledProjects,
-                pulledTasks,
-                pushedProjects: pushResult.projects,
-                pushedTasks: pushResult.tasks,
-              };
-            }),
-          );
-
-          // Record per-binding sync status on the binding (the binding IS the cursor).
-          if (syncResult._tag === 'Success') {
-            Cursor.advance(binding);
-          } else {
-            Cursor.recordError(binding, formatLinearSyncFailure(syncResult.failure));
+          // Resolve the remote `Team` for this binding's `externalId`.
+          const allTeams = yield* LinearApi.fetchTeams();
+          const remoteTeam = allTeams.find((team) => team.id === externalId);
+          if (!remoteTeam) {
+            return yield* Effect.fail(new Error('Team not accessible to connection token'));
           }
 
-          if (syncResult._tag === 'Failure') {
-            log.warn('linear sync: binding failed', { error: syncResult.failure });
-            return yield* Effect.fail(syncResult.failure);
+          // Pull: projects → DXOS Projects, issues → DXOS Tasks. Each
+          // upsert refreshes `binding.spec.snapshots[<id>]` to remote-current so
+          // the push pass below sees only fields the user has edited
+          // locally since the last pull.
+          const projects = yield* LinearApi.fetchTeamProjects(remoteTeam.id);
+          const projectByRemoteId = new Map<string, TaskSet.TaskSet>();
+          const remoteProjectsById = new Map<string, LinearApi.Project>();
+          // Flat across projects: Linear milestone ids are globally unique, so one map resolves
+          // `issue.projectMilestone` without knowing which project the issue sits in.
+          const milestoneByRemoteId = new Map<string, Milestone.Milestone>();
+          let pulledProjects = 0;
+          for (const project of projects) {
+            const { project: local, created } = yield* upsertProject(binding, project);
+            projectByRemoteId.set(project.id, local);
+            remoteProjectsById.set(project.id, project);
+            if (created) {
+              pulledProjects++;
+            }
+            const milestones = yield* LinearApi.fetchProjectMilestones(project.id);
+            for (const milestone of milestones) {
+              milestoneByRemoteId.set(milestone.id, yield* upsertMilestone(local, milestone));
+            }
           }
+
+          const since = sinceFromOptions(options);
+          const issues = yield* LinearApi.fetchTeamIssues(remoteTeam.id, { since });
+          const remoteIssuesById = new Map<string, LinearApi.Issue>();
+          let pulledTasks = 0;
+          for (const issue of issues) {
+            const project = issue.project ? projectByRemoteId.get(issue.project.id) : undefined;
+            const milestone = issue.projectMilestone ? milestoneByRemoteId.get(issue.projectMilestone.id) : undefined;
+            const { created } = yield* upsertTask(binding, issue, project, milestone);
+            remoteIssuesById.set(issue.id, issue);
+            if (created) {
+              pulledTasks++;
+            }
+          }
+
+          // Push: snapshot-diff every locally-mirrored object back to
+          // Linear. Workflow states are fetched lazily — only when at least
+          // one local Task status diverged — so read-only syncs don't pay
+          // the round-trip.
+          let workflowStates: ReadonlyArray<LinearApi.WorkflowState> | undefined;
+          const resolveStateId = (issue: LinearApi.Issue, status: NonNullable<Task.Task['status']>) => {
+            const desiredType = LinearApi.taskStatusToStateType(status);
+            const states = workflowStates;
+            if (!states) {
+              return undefined;
+            }
+            // Match by category. Workspaces commonly have multiple states
+            // per category (e.g. "In Review" + "In Progress" both
+            // `started`); pick the first match for stability.
+            return states.find((state) => state.type === desiredType)?.id;
+          };
+
+          // Lazy fetch: we only need workflow states if there are candidate
+          // issues to push. By this point `upsertTask` above has seeded a
+          // snapshot for every id in `remoteIssuesById`, so the existence of
+          // issues is equivalent to "at least one candidate".
+          if (remoteIssuesById.size > 0) {
+            workflowStates = yield* LinearApi.fetchTeamWorkflowStates(remoteTeam.id);
+          }
+
+          const pushResult = yield* pushTeamUpdates(binding, remoteIssuesById, remoteProjectsById, {
+            updateProject: (id, input) => LinearApi.updateProject(id, input),
+            updateIssue: (id, input) => LinearApi.updateIssue(id, input),
+            resolveStateId,
+          });
+
+          // TODO(wittjosiah): Comments sync disabled — re-enable once
+          // chunked/yielded to avoid automerge_wasm crash when upserting
+          // many comments in one tick.
 
           return {
-            pulled: {
-              teams: 1,
-              projects: syncResult.success.pulledProjects,
-              tasks: syncResult.success.pulledTasks,
-            },
-            pushed: {
-              projects: syncResult.success.pushedProjects,
-              tasks: syncResult.success.pushedTasks,
-            },
+            pulledProjects,
+            pulledTasks,
+            pushedProjects: pushResult.projects,
+            pushedTasks: pushResult.tasks,
           };
-        }).pipe(
-          Effect.provide(Database.layer(db)),
-          Effect.provide(LinearApi.LinearCredentials.fromAccessToken(binding.spec.source)),
-        ),
+        }),
       );
 
-      if (outcome._tag === 'Success') {
-        yield* Effect.ignore(
-          Operation.invoke(LayoutOperation.AddToast, {
-            id: `${meta.profile.key}.sync-success.${toastIdSuffix}`,
-            icon: 'ph--check--regular',
-            title: ['sync-toast.success.label', { ns: meta.profile.key }],
-          }),
-        );
-        return outcome.success;
+      // Record per-binding sync status on the binding (the binding IS the cursor).
+      if (syncResult._tag === 'Success') {
+        Cursor.advance(binding);
       } else {
-        const message = formatLinearSyncFailure(outcome.failure);
-        yield* Effect.ignore(
-          Operation.invoke(LayoutOperation.AddToast, {
-            id: `${meta.profile.key}.sync-error.${toastIdSuffix}`,
-            icon: 'ph--warning--regular',
-            title: ['sync-toast.error.label', { ns: meta.profile.key }],
-            description: message,
-          }),
-        );
-        return yield* Effect.fail(outcome.failure);
+        Cursor.recordError(binding, formatLinearSyncFailure(syncResult.failure));
       }
-    }, Effect.provide(FetchHttpClient.layer)),
+
+      if (syncResult._tag === 'Failure') {
+        log.warn('linear sync: binding failed', { error: syncResult.failure });
+        return yield* Effect.fail(syncResult.failure);
+      }
+
+      return {
+        pulled: {
+          teams: 1,
+          projects: syncResult.success.pulledProjects,
+          tasks: syncResult.success.pulledTasks,
+        },
+        pushed: {
+          projects: syncResult.success.pushedProjects,
+          tasks: syncResult.success.pushedTasks,
+        },
+      };
+    }).pipe(Effect.provide(Database.layer(db)), Effect.provide(LinearApi.fromAccessToken(binding.spec.source))),
+  );
+
+  if (outcome._tag === 'Success') {
+    yield* Effect.ignore(
+      Operation.invoke(LayoutOperation.AddToast, {
+        id: `${meta.profile.key}.sync-success`,
+        icon: 'ph--check--regular',
+        title: ['sync-toast.success.label', { ns: meta.profile.key }],
+      }),
+    );
+    return outcome.success;
+  } else {
+    const message = formatLinearSyncFailure(outcome.failure);
+    yield* Effect.ignore(
+      Operation.invoke(LayoutOperation.AddToast, {
+        id: `${meta.profile.key}.sync-error`,
+        icon: 'ph--warning--regular',
+        title: ['sync-toast.error.label', { ns: meta.profile.key }],
+        description: message,
+      }),
+    );
+    return yield* Effect.fail(outcome.failure);
+  }
+}, Effect.provide(FetchHttpClient.layer));
+
+const handler: Operation.WithHandler<typeof LinearOperation.SyncLinearTeams> = LinearOperation.SyncLinearTeams.pipe(
+  Operation.withHandler(({ connection, priority }) =>
+    Binding.syncAll({
+      connection,
+      priority,
+      sync: (binding) => syncTeamBinding(binding),
+    }).pipe(
+      Effect.map(({ outputs }) => ({
+        pulled: outputs.reduce(
+          (total, { pulled }) => ({
+            teams: total.teams + pulled.teams,
+            projects: total.projects + pulled.projects,
+            tasks: total.tasks + pulled.tasks,
+          }),
+          { teams: 0, projects: 0, tasks: 0 },
+        ),
+      })),
+    ),
   ),
 );
 

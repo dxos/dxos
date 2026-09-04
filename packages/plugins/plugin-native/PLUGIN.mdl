@@ -20,6 +20,8 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.0`         |
+| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `step`      | `org.dxos.mdl.step@1.0`       |
 
 ## Types
 
@@ -142,7 +144,7 @@ feat F-2: Over-the-Air Updates
     then: the status atom transitions to failed with a human-readable error string
 
   req F-2.4:
-    when: the app is running in a dev-server build (port ≠ TAURI_LOCALHOST_PORT)
+    when: the app is running in a dev-server build (port not in TAURI_LOCALHOST_PORTS)
     then: the updater is disabled and status remains unsupported
 
   req F-2.5:
@@ -207,11 +209,54 @@ test T-4: Failed update check transitions to failed status
 
 ```mdl
 test T-5: Dev-server build disables updater
-  given: the app is served on a port other than TAURI_LOCALHOST_PORT
+  given: the app is served on a port outside TAURI_LOCALHOST_PORTS
   when: the Updater module activates
   then:
     - status is set to unsupported immediately
     - no HTTP update check is performed
+```
+
+---
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Check for an OTA update
+  desc: |
+    The plugin contributes no runtime operation — `CheckForUpdate`, `InstallUpdate`, and
+    `RelaunchApp` are direct calls into the Tauri updater/shell plugins from native-only code
+    (`Updater` module, `SpotlightListener`), not `Operation.make` entries reachable through the
+    debug port or any web session. There is also no invocation surface to run this against: the
+    agent debug port drives a running Composer web page, and this plugin only activates inside
+    the Tauri desktop shell (`isTauri && !isMobile && !isPopover`, see `plugin-defs.core.tsx`) —
+    a build this environment cannot launch or attach to. Every step is therefore blocked.
+  actors: human
+  covers: [F-2.1, F-2.2, T-3]
+  status: blocked
+  given:
+    - a Tauri desktop build of Composer is installed and running (macOS, Linux, or Windows)
+    - an OTA update is actually available for the running version
+  test:
+    - name: Check for an update
+      do: Open Settings → App, and click "Check for updates" (or wait for the hourly background check).
+      expect: the status line transitions checking → available, showing the new version string
+      blocked: |
+        No `Operation.make` exists for `CheckForUpdate` — it is a direct Tauri updater plugin
+        call from `Updater`'s background fiber, invisible to the agent debug port. It also cannot
+        run inside this session at all: the port attaches to a web page, and this feature only
+        exists in a Tauri desktop build. A human tester with a real desktop build and a genuine
+        pending release is the only way to exercise this.
+    - name: Install and relaunch
+      do: Click "Update Now", wait for the download to finish, then click "Relaunch".
+      expect: the app downloads the update, shows a "Relaunch" toast, and restarts on the new version
+      blocked: Same as the previous step — `InstallUpdate`/`RelaunchApp` are native-only and have no operation key.
+  after:
+    - name: (nothing to undo)
+      do: No fixture was created; an update, once installed, cannot be un-installed by this flow.
+      expect: n/a
 ```
 
 ---

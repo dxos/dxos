@@ -6,9 +6,10 @@ import { Client } from '@dxos/client';
 import { mountDevtoolsHooks } from '@dxos/client/devtools';
 import { type LocalClientServices, fromHost } from '@dxos/client/local';
 import { Config, defs } from '@dxos/config';
-import { Runtime } from '@dxos/protocols/proto/dxos/config';
+import { Runtime_Client_Storage_SqliteMode } from '@dxos/protocols/buf/dxos/config_pb';
 
 import { setupConfig } from '../util';
+import { initAutomergeWasm } from '../util/automerge-wasm';
 
 let bootedClient: Client | undefined;
 
@@ -25,24 +26,27 @@ export const bootRecoveryClient = async (): Promise<Client> => {
     return bootedClient;
   }
 
+  // This client hosts echo in-page; automerge is slim-resolved and must be initialized before
+  // it (see util/automerge-wasm.ts).
+  await initAutomergeWasm();
+
   const base = await setupConfig();
   const config = new Config(
     {
       runtime: {
         client: {
-          servicesMode: defs.Runtime.Client.ServicesMode.HOST,
+          servicesMode: defs.Runtime_Client_ServicesMode.HOST,
           disableP2pReplication: true,
           enableVectorIndexing: false,
           signalTelemetryEnabled: false,
           edgeFeatures: {
             feedReplicator: false,
-            echoReplicator: false,
             subductionReplicator: false,
             signaling: false,
             agents: false,
           },
           storage: {
-            sqliteMode: Runtime.Client.Storage.SqliteMode.OPFS,
+            sqliteMode: Runtime_Client_Storage_SqliteMode.OPFS,
           },
         },
         services: {

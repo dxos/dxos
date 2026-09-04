@@ -18,7 +18,6 @@ import { Blob, Database, Feed, Filter, Obj, Order, Query, Ref, Scope, Tag } from
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Cursor } from '@dxos/link';
-import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { createSyncProgressKey } from '@dxos/plugin-inbox/sync';
 import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
@@ -27,6 +26,7 @@ import { TagIndex } from '@dxos/schema';
 import { Message, Person } from '@dxos/types';
 
 import { type GmailDataset, GoogleMailApi } from '#services';
+import { GoogleOperation } from '#types';
 
 import { GMAIL_CONNECTOR_ID, GMAIL_SOURCE } from '../../../constants';
 import { GoogleApiError } from '../../../errors';
@@ -291,7 +291,9 @@ describe('runGoogleSync against a mock Gmail API', () => {
       true,
     );
     expect(statusUpdates.every((update) => update.progress?.key === createSyncProgressKey(mailbox))).toBe(true);
-    expect(statusUpdates.some((update) => update.message === mailbox.name)).toBe(true);
+    // Names the phase as well as the mailbox: two meters run over one mailbox (sync, then analyze),
+    // so the bare name left the user unable to tell which was moving.
+    expect(statusUpdates.some((update) => update.message === `Syncing ${mailbox.name}`)).toBe(true);
   });
 
   // `Pipeline.abortWith` interrupts, so nothing after the pipeline runs — the terminal status has to
@@ -684,7 +686,7 @@ describe('runGoogleSync against a mock Gmail API', () => {
   }, 30_000);
 
   test('GoogleMailSync is marked idempotent for durable-execution retry', ({ expect }) => {
-    expect(Operation.isIdempotent(InboxOperation.GoogleMailSync)).toBe(true);
+    expect(Operation.isIdempotent(GoogleOperation.GoogleMailSync)).toBe(true);
   });
 
   //

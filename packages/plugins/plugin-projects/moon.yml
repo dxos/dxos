@@ -1,6 +1,7 @@
 layer: library
 language: typescript
 tags:
+  - composer-plugin
   - ts-vite-build
   - ts-test
   - ts-test-storybook
@@ -9,16 +10,16 @@ tasks:
   check-module-structure:
     # The edge operation-service imports these entries directly rather than activating the plugin —
     # its React surfaces cannot load in a worker bundle — so they are the seam that headless host
-    # depends on: `./operations` for the handler set, `./skills` for the codeProject skill
-    # definition. Keep them UI-free: a leak here breaks that host at build time, far from here.
+    # depends on: `./ProjectOperationHandlerSet` for the handler set. Keep it UI-free: a leak here
+    # breaks that host at build time, far from here.
     command: >-
-      pnpm exec dx-trace-imports
-      --export ./operations
-      --export ./skills
+      bun $workspaceRoot/tools/dx-trace-imports/cli.js
+      --export ./ProjectOperationHandlerSet
       --to "@dxos/react-ui"
       --to react
       --to react-dom
       --conditions workerd,worker
+      --conditions node
       --fail-on present
     deps:
       - dx-trace-imports:build

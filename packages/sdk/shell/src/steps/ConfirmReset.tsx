@@ -5,7 +5,7 @@
 import React, { type ReactNode, useCallback, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { Dialog, Message, useTranslation } from '@dxos/react-ui';
+import { Banner, Dialog, useTranslation } from '@dxos/react-ui';
 
 import { Action, TextInput } from '../components';
 import { translationKey } from '../translations';
@@ -78,12 +78,12 @@ export const ConfirmReset = ({
 
   return (
     <>
-      <Message.Root valence='error'>
-        <Message.Content classNames='mb-trim-md'>
-          <Message.Title>{resolvedTitle}</Message.Title>
-          <Message.Body>{resolvedMessage}</Message.Body>
-        </Message.Content>
-      </Message.Root>
+      <Banner.Root valence='error'>
+        <Banner.Content classNames='mb-trim-md'>
+          <Banner.Title>{resolvedTitle}</Banner.Title>
+          <Banner.Body>{resolvedMessage}</Banner.Body>
+        </Banner.Content>
+      </Banner.Root>
       <TextInput
         {...{ validationMessage }}
         disabled={disabled}

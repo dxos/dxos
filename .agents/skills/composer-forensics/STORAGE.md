@@ -59,8 +59,10 @@ Useful to confirm the origin exists even when OPFS mapping is unclear.
 
 | Origin                                    | Typical use                  |
 | ----------------------------------------- | ---------------------------- |
-| `https://main.composer.space`             | Production                   |
-| `https://labs.composer.space`             | Labs                         |
+| `https://composer.space`                  | Production                   |
+| `https://preview.composer.space`          | Preview (dogfood)            |
+| `https://main.composer.space`             | Retired (pre-2026 profiles)  |
+| `https://labs.composer.space`             | Retired (pre-2026 profiles)  |
 | `https://<branch>.composer-app.pages.dev` | PR previews                  |
 | `http://localhost:5173`                   | Local dev (profile-specific) |
 

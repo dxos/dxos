@@ -230,6 +230,32 @@ state, much of it built at module-init time (Effect contexts, schema classes).
 - [ ] Measure what schema/layer construction contributes at boot.
 - [ ] Assess whether that construction can be deferred to first use.
 
+## Fleet-wide memory metrics (contract with `sdk-metrics`)
+
+Added by the [`sdk-metrics`](../sdk-metrics/TASKS.md) project, which exports these to
+SigNoz from every client. This project measures memory on one machine; those series make
+the same numbers observable across the fleet, so the 300-400MB resting target becomes
+verifiable in production rather than locally. Recorded here so both projects read the
+same series — agree any change before a dashboard or alert is built on them.
+
+| Series                                                           | Unit | Notes                                                            |
+| ---------------------------------------------------------------- | ---- | ---------------------------------------------------------------- |
+| `dxos.client.runtime.heapUsed` / `.heapTotal` / `.heapSizeLimit` | `By` | `performance.memory`; main-thread and Chromium only              |
+| `dxos.client.services.runtime.heapUsed` / `.heapTotal` / `.rss`  | `By` | whichever realm hosts client-services, sampled over RPC          |
+| `dxos.client.runtime.memory.bytes`                               | `By` | `scope` ∈ `window \| shared-worker \| dedicated-worker \| other` |
+
+- **The resting-target panel reads `dxos.client.runtime.heapUsed`**, not
+  `memory.bytes`. The latter needs `measureUserAgentSpecificMemory`, which requires
+  cross-origin isolation and is feature-detected, so its series is simply absent for
+  clients without it — a target panel built on it would silently under-report.
+- `memory.bytes` is nonetheless the only view of the shared and dedicated workers, which
+  Phase 3 identified as major consumers and which `performance.memory` cannot see: it
+  reports the calling realm alone.
+- Unattributed cost buckets to `scope=other` rather than being dropped, so the scopes sum
+  to the total the browser reported.
+- Heap pressure is `heapUsed / heapSizeLimit`, computed at query time rather than
+  exported as its own series; above ~0.9 the client is close to an OOM kill.
+
 ## Deferred
 
 - Perf-timeline gating and a CI regression guard (2026-08-06). The findings
@@ -242,3 +268,5 @@ state, much of it built at module-init time (Effect contexts, schema classes).
 - Linear DX-1148 — feed/query payload retention.
 - `.agents/projects/feed-live-objects/DESIGN.md` — push-over-poll roadmap.
 - `.agents/projects/startup-latency/DESIGN.md` — demand-driven activation.
+- `.agents/projects/sdk-metrics/DESIGN.md` — the OTel metrics pipeline these series ship
+  through, and the cardinality budget they count against.

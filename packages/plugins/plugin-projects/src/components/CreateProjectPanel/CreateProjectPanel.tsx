@@ -7,6 +7,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { useCapabilities } from '@dxos/app-framework/ui';
 import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import { Input, useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 
 import { meta } from '#meta';
@@ -26,6 +27,7 @@ export const CreateProjectPanel = ({ onCreateObject, templates: templatesProp }:
   const { t } = useTranslation(meta.profile.key);
   const [name, setName] = useState('');
   const capabilityTemplates = useCapabilities(ProjectCapabilities.Template);
+
   const templates = templatesProp ?? capabilityTemplates;
   // The global create dialog has no subject, so subject-required templates (e.g. an inbox research
   // template needing a Mailbox) are excluded; they are offered from the relevant object instead.
@@ -46,34 +48,41 @@ export const CreateProjectPanel = ({ onCreateObject, templates: templatesProp }:
   );
 
   return (
-    <div role='none' className='flex flex-col gap-form-gap'>
-      <Input.Root>
-        <Input.TextInput
-          autoFocus
-          data-testid='create-project-panel.name-input'
-          placeholder={t('create-panel.name.placeholder')}
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-        />
-      </Input.Root>
-      <SearchList.Root onSearch={handleSearch}>
-        <SearchList.Input
-          classNames='mb-form-gap'
-          data-testid='create-project-panel.template-input'
-          placeholder={t('create-panel.template.placeholder')}
-        />
-        <SearchList.Viewport>
-          {results.map((template) => (
-            <SearchList.Item
-              key={template.id}
-              value={template.id}
-              label={template.label}
-              icon={template.icon ?? 'ph--stack--regular'}
-              onSelect={() => handleSelect(template.id)}
+    <Form.Root>
+      <Form.Viewport>
+        {/* `Form.Content` pads its bottom only, so the top is matched here to sit off the dialog's
+            chrome; the gap spaces the name field from the template picker, which are otherwise flush. */}
+        <Form.Content classNames='pt-form-padding gap-form-gap'>
+          <Input.Root>
+            <Input.TextInput
+              autoFocus
+              data-testid='create-project-panel.name-input'
+              placeholder={t('create-panel.name.placeholder')}
+              value={name}
+              onChange={(event) => setName(event.target.value)}
             />
-          ))}
-        </SearchList.Viewport>
-      </SearchList.Root>
-    </div>
+          </Input.Root>
+          <SearchList.Root onSearch={handleSearch}>
+            <SearchList.Input
+              data-testid='create-project-panel.template-input'
+              placeholder={t('create-panel.template.placeholder')}
+            />
+            {/* Flush with the form's column: the viewport's default padding reserves a scroll strip,
+                which insets the rows from the name input above them. */}
+            <SearchList.Viewport padding={false}>
+              {results.map((template) => (
+                <SearchList.Item
+                  key={template.id}
+                  value={template.id}
+                  label={template.label}
+                  icon={template.icon ?? 'ph--stack--regular'}
+                  onSelect={() => handleSelect(template.id)}
+                />
+              ))}
+            </SearchList.Viewport>
+          </SearchList.Root>
+        </Form.Content>
+      </Form.Viewport>
+    </Form.Root>
   );
 };

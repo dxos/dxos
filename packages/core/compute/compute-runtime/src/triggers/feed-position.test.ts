@@ -4,28 +4,13 @@
 
 import { describe, test } from 'vitest';
 
-import { Obj } from '@dxos/echo';
+import { Feed, Obj } from '@dxos/echo';
 import { FeedProtocol } from '@dxos/protocols';
 import { Person } from '@dxos/types';
 
-import { filterReadyFeedItems, getFeedPosition } from './feed-position';
+import { filterReadyFeedItems } from './feed-position';
 
 describe('feed-position', () => {
-  describe('getFeedPosition', () => {
-    test('returns undefined when the key is absent', ({ expect }) => {
-      const obj = Obj.make(Person.Person, { fullName: 'Alice' });
-      expect(getFeedPosition(obj)).toBeUndefined();
-    });
-
-    test('returns the position id when the key is present', ({ expect }) => {
-      const person = Obj.make(Person.Person, { fullName: 'Alice' });
-      Obj.update(person, (person) => {
-        Obj.getMeta(person).keys.push({ source: FeedProtocol.KEY_QUEUE_POSITION, id: '42' });
-      });
-      expect(getFeedPosition(person)).toBe('42');
-    });
-  });
-
   describe('filterReadyFeedItems', () => {
     const stamp = <T extends Obj.Any>(obj: T, position: string): T => {
       Obj.update(obj, (obj) => {
@@ -40,8 +25,8 @@ describe('feed-position', () => {
       const carol = stamp(Obj.make(Person.Person, { fullName: 'Carol' }), '2');
 
       const ready = filterReadyFeedItems([alice, bob, carol], undefined);
-      expect(ready.map(({ item }: { item: Obj.Any; position: string }) => item)).toEqual([alice, carol]);
-      expect(ready.map(({ position }: { item: Obj.Any; position: string }) => position)).toEqual(['0', '2']);
+      expect(ready.map(({ item }) => item)).toEqual([alice, carol]);
+      expect(ready.map(({ cursor }) => cursor)).toEqual(['0', '2']);
     });
 
     test('skips items at or below the cursor', ({ expect }) => {
@@ -49,23 +34,23 @@ describe('feed-position', () => {
       const bob = stamp(Obj.make(Person.Person, { fullName: 'Bob' }), '1');
       const carol = stamp(Obj.make(Person.Person, { fullName: 'Carol' }), '2');
 
-      const ready = filterReadyFeedItems([alice, bob, carol], '1');
-      expect(ready.map(({ position }: { item: Obj.Any; position: string }) => position)).toEqual(['2']);
+      const ready = filterReadyFeedItems([alice, bob, carol], Feed.Cursor.make('1'));
+      expect(ready.map(({ cursor }) => cursor)).toEqual(['2']);
     });
 
-    test('returns all stamped items when cursor is undefined', ({ expect }) => {
+    test('returns all stamped items when cursor is undefined or the start sentinel', ({ expect }) => {
       const alice = stamp(Obj.make(Person.Person, { fullName: 'Alice' }), '0');
       const bob = stamp(Obj.make(Person.Person, { fullName: 'Bob' }), '1');
 
-      const ready = filterReadyFeedItems([alice, bob], undefined);
-      expect(ready).toHaveLength(2);
+      expect(filterReadyFeedItems([alice, bob], undefined)).toHaveLength(2);
+      expect(filterReadyFeedItems([alice, bob], Feed.START)).toHaveLength(2);
     });
 
     test('rejects all items when cursor is malformed', ({ expect }) => {
       const alice = stamp(Obj.make(Person.Person, { fullName: 'Alice' }), '0');
       const bob = stamp(Obj.make(Person.Person, { fullName: 'Bob' }), '1');
 
-      const ready = filterReadyFeedItems([alice, bob], 'not-a-number');
+      const ready = filterReadyFeedItems([alice, bob], Feed.Cursor.make('not-a-number'));
       expect(ready).toEqual([]);
     });
 
@@ -74,8 +59,8 @@ describe('feed-position', () => {
       const bob = stamp(Obj.make(Person.Person, { fullName: 'Bob' }), '2abc');
       const carol = stamp(Obj.make(Person.Person, { fullName: 'Carol' }), '3');
 
-      const ready = filterReadyFeedItems([alice, bob, carol], '0');
-      expect(ready.map(({ position }: { item: Obj.Any; position: string }) => position)).toEqual(['3']);
+      const ready = filterReadyFeedItems([alice, bob, carol], Feed.Cursor.make('0'));
+      expect(ready.map(({ cursor }) => cursor)).toEqual(['3']);
     });
   });
 });

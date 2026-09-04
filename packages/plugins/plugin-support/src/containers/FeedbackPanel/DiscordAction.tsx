@@ -6,8 +6,8 @@ import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { EdgeServiceName, getEdgeServiceEndpoint } from '@dxos/config';
-import { useConfig } from '@dxos/react-client';
+import { EdgeServiceName, getEnvString } from '@dxos/config';
+import { useConfig, useEdgeServiceEndpoint } from '@dxos/react-client';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { FeedbackForm, type FeedbackSubmitHandler } from '#components';
@@ -16,6 +16,7 @@ import { meta } from '#meta';
 import { SupportOperation } from '#types';
 
 import { formatRequestMessage } from './request';
+import { useScreenshotAttachment } from './useScreenshotAttachment';
 
 /** Build a direct PostHog event permalink (±15s search window via timestamp). */
 const makePostHogEventUrl = (projectId: string, eventUuid: string): string =>
@@ -34,20 +35,18 @@ export const DiscordAction = ({ disabled }: DiscordActionProps) => {
   const { invokePromise } = useOperationInvoker();
   const config = useConfig();
 
-  const posthogProjectId = config.values.runtime?.app?.env?.DX_POSTHOG_PROJECT_ID as string | undefined;
-  const discordServiceUrl =
-    (config.values.runtime?.app?.env?.DX_DISCORD_SERVICE_URL as string | undefined) ??
-    getEdgeServiceEndpoint(config, EdgeServiceName.Discord);
+  const posthogProjectId = getEnvString(config, 'DX_POSTHOG_PROJECT_ID');
+  const discordEndpoint = useEdgeServiceEndpoint(EdgeServiceName.Discord);
+  const discordServiceUrl = getEnvString(config, 'DX_DISCORD_SERVICE_URL') ?? discordEndpoint;
 
   const discordPresence = useDiscordPresence(discordServiceUrl);
+  const attachScreenshot = useScreenshotAttachment();
 
   const handleDiscord = useCallback<FeedbackSubmitHandler>(
     async (values) => {
-      if (!discordServiceUrl) {
-        return;
-      }
-
-      const message = formatRequestMessage(values);
+      // Capture before submitting, while the reported screen is still on-screen.
+      const screenshot = await attachScreenshot(values);
+      const message = formatRequestMessage(values, screenshot.url);
 
       // PostHog submission is the primary path — if it fails the error propagates
       // and no misleading toast is shown.
@@ -106,8 +105,14 @@ export const DiscordAction = ({ disabled }: DiscordActionProps) => {
         });
       }
     },
-    [invokePromise, discordServiceUrl, posthogProjectId],
+    [invokePromise, discordServiceUrl, posthogProjectId, attachScreenshot],
   );
+
+  // Nothing to offer without the service: rendering the button would submit into a no-op, and the
+  // panel's own "Send feedback" action already covers the PostHog-only path.
+  if (!discordServiceUrl) {
+    return null;
+  }
 
   return (
     <>

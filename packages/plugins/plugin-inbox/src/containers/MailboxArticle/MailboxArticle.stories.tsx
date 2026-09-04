@@ -19,7 +19,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Blob, Database, Feed, Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
-import { useQuery, useResolveRef } from '@dxos/echo-react';
+import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -33,10 +33,10 @@ import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Loading, TestGrid, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
+import { InboxPlugin } from '#plugin';
 import { initializeMailbox, seedSummaries } from '#testing';
 import { InboxCapabilities, Mailbox } from '#types';
 
-import { InboxPlugin } from '../../plugin';
 import * as InboxOperation from '../../types/InboxOperation';
 import AttachmentArticle from '../AttachmentArticle';
 import MessageArticle from '../MessageArticle';
@@ -98,9 +98,9 @@ type StoryArgs = {
   conversations?: boolean;
   /** Seed the realistic `SAMPLE_MESSAGES` corpus instead of the lorem builder, for the `SearchFilter` play test. */
   seedSearchTerm?: boolean;
-  /** Seeds a sync binding (AccessToken → Connection → Cursor) so `InitializeMailbox` shows "Mailbox empty" instead of "No connections configured". */
+  /** Seeds a sync binding (AccessToken → Connection → Cursor) so `InitializeMailbox` shows "No messages" instead of "No connections configured". */
   bound?: boolean;
-  /** Registers a running `#scan` monitor so the statusbar progress meter renders (see `ProgressProbe`). */
+  /** Registers a running `#analyze` monitor so the statusbar progress meter renders (see `ProgressProbe`). */
   progress?: boolean;
   /** Attaches a real PDF blob to the first message, for the three-column `Attachments` story. */
   attachments?: boolean;
@@ -137,10 +137,10 @@ const seedAttachment = async (db: Database.Database, mailbox: Mailbox.Mailbox) =
 };
 
 /**
- * Registers a running monitor under the mailbox's `#scan` progress key, exactly as the scan
+ * Registers a running monitor under the mailbox's `#analyze` progress key, exactly as the analyze
  * cascade's trace status does — so the article's statusbar meter is exercised WITHOUT an LLM or a
  * scheduled process. The producer/consumer key derivation is the thing under test: both sides call
- * `createScanProgressKey` on their own copy of the mailbox.
+ * `createAnalyzeProgressKey` on their own copy of the mailbox.
  */
 const ProgressProbe = ({ mailbox }: { mailbox: Mailbox.Mailbox }) => {
   const registry = useOptionalCapability(AppCapabilities.ProgressRegistry);
@@ -148,7 +148,7 @@ const ProgressProbe = ({ mailbox }: { mailbox: Mailbox.Mailbox }) => {
     if (!registry) {
       return;
     }
-    const handle = registry.register(InboxOperation.createScanProgressKey(mailbox), { label: 'Scanning' });
+    const handle = registry.register(InboxOperation.createAnalyzeProgressKey(mailbox), { label: 'Analyzing' });
     handle.total(10);
     handle.set(3);
     return () => handle.remove();
@@ -185,6 +185,8 @@ const DefaultStory = ({ conversations, progress }: StoryArgs) => {
 
   // Summaries are immutable annotations on a second feed, keyed by `parentMessage` — shown here
   // because they are not on the message and would otherwise be invisible in this story.
+  // TODO(wittjosiah): This additional hook call shouldn't be necessary, useResolveRef should handle this case.
+  useObject(mailbox, 'annotations');
   const annotationsFeed = useResolveRef(mailbox?.annotations);
   const annotations = useQuery(
     space?.db,
@@ -481,7 +483,7 @@ export const SearchFilter: Story = {
   },
 };
 
-// The statusbar progress meter, which the scan cascade and Gmail sync drive through the
+// The statusbar progress meter, which the analyze cascade and mail sync drive through the
 // progress registry. Both sides key the monitor by the mailbox URI, derived independently — the bug
 // this guards is a key that differs between producer and consumer, which leaves the run invisible.
 export const Progress: Story = {

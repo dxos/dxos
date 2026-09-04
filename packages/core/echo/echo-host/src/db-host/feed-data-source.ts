@@ -140,6 +140,7 @@ export class FeedDataSource implements IndexDataSource {
                 queueNamespace: cursor.resourceId,
                 documentId: null,
                 recordId: null,
+                queuePosition: block.position ?? null,
                 data,
                 createdAt: null,
                 updatedAt: block.timestamp,

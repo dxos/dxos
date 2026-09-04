@@ -18,9 +18,9 @@ import { Grid, type GridContentProps, type GridEditing, type GridRootProps } fro
 
 const storybookItems = random.helpers.uniqueArray(random.commerce.productName, 16);
 
-type GridStoryProps = GridContentProps & Pick<GridRootProps, 'onEditingChange'>;
+type GridStoryArgs = GridContentProps & Pick<GridRootProps, 'onEditingChange'>;
 
-const GridStory = ({ initialCells, ...props }: GridStoryProps) => {
+const GridStory = ({ initialCells, ...props }: GridStoryArgs) => {
   const triggerRef = useRef<HTMLButtonElement>(null) as RefObject<HTMLButtonElement>;
 
   const [cells, setCells] = useState<GridContentProps['initialCells']>(initialCells);
@@ -223,7 +223,7 @@ export const Calendar: Story = {
             // TODO(burdon): Formatting changes when cell is selected.
             cells[toPlaneCellIndex({ col, row })] = {
               readonly: true,
-              accessoryHtml: '<div class="flex h-full w-full justify-center items-center overflow-hidden">0</div>',
+              accessoryHtml: '<div class="flex dx-fill justify-center items-center overflow-hidden">0</div>',
               className: '',
             };
           }

@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { type GetProfileUsageResponse, type MeteringLimit, type MeteringUsageItem } from '@dxos/protocols';
-import { Message, Status, useTranslation } from '@dxos/react-ui';
+import { Banner, Progress, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldProvider } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -66,8 +66,6 @@ const formatLimitLabel = (limit: MeteringLimit, t: TFunction): string => {
   return `${subtype ? `${limit.eventType}/${subtype}` : limit.eventType} · ${metric}`;
 };
 
-const formatAmount = (amount: number): string => amount.toLocaleString();
-
 const SECONDS_PER_HOUR = 60 * 60;
 
 /** Render `windowHours` as a localized "N months / days / hours" string. */
@@ -105,7 +103,7 @@ const computeRows = (data: GetProfileUsageResponse, t: TFunction): UsageRow[] =>
         return {
           key,
           label,
-          caption: t('usage-unlimited.description', { used: formatAmount(used), window }),
+          caption: t('usage-unlimited.description', { used: used.toLocaleString(), window }),
           windowHours,
         };
       }
@@ -113,7 +111,7 @@ const computeRows = (data: GetProfileUsageResponse, t: TFunction): UsageRow[] =>
       return {
         key,
         label,
-        caption: `${t('usage-percent-used.label', { percent })} · ${t('usage-limit.description', { used: formatAmount(used), limit: formatAmount(limit.limit), window })}`,
+        caption: `${t('usage-percent-used.label', { percent })} · ${t('usage-limit.description', { used: used.toLocaleString(), limit: limit.limit.toLocaleString(), window })}`,
         percent,
         windowHours,
       };
@@ -198,7 +196,7 @@ export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProp
       return (
         <Form.Row label={label} description={description}>
           {typeof percent === 'number' ? (
-            <Status progress={percent / 100} aria-label={t('usage-percent-used.label', { percent })} />
+            <Progress progress={percent / 100} aria-label={t('usage-percent-used.label', { percent })} />
           ) : (
             t('usage-unlimited.label')
           )}
@@ -214,12 +212,12 @@ export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProp
         <Form.Content>
           <Form.Section title={t('usage-section.title')} description={t('usage-section.description')}>
             {message ? (
-              <Message.Root valence={message.valence}>
-                <Message.Content>
-                  <Message.Title icon={message.icon}>{t(message.title)}</Message.Title>
-                  <Message.Body>{t(message.description)}</Message.Body>
-                </Message.Content>
-              </Message.Root>
+              <Banner.Root valence={message.valence}>
+                <Banner.Content>
+                  <Banner.Title icon={message.icon}>{t(message.title)}</Banner.Title>
+                  <Banner.Body>{t(message.description)}</Banner.Body>
+                </Banner.Content>
+              </Banner.Root>
             ) : (
               <Form.FieldSet fieldProvider={meterFieldProvider} />
             )}

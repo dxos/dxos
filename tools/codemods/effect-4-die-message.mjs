@@ -11,9 +11,9 @@
 //   node tools/codemods/effect-4-die-message.mjs [--dry] [path...]
 //
 
+import ts from '@typescript/typescript6';
 import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
-import ts from 'typescript';
 
 const args = process.argv.slice(2);
 const dry = args.includes('--dry');

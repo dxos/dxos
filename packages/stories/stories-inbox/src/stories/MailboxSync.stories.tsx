@@ -18,6 +18,7 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as ConnectorPlugin from '@dxos/plugin-connector/ConnectorPlugin';
 import { translations as connectorTranslations } from '@dxos/plugin-connector/translations';
 import * as DebugPlugin from '@dxos/plugin-debug/DebugPlugin';
+import * as GooglePlugin from '@dxos/plugin-google/GooglePlugin';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
@@ -30,11 +31,10 @@ import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { withLayout } from '@dxos/react-ui/testing';
 import { TagIndex } from '@dxos/schema';
-import { ModuleContainer } from '@dxos/storybook-testing';
+import { ModuleContainer, UpdateCompanionStubPlugin } from '@dxos/storybook-testing';
 import { Message, Organization, Person } from '@dxos/types';
 
 import { StoryRole } from '../modules';
-import { StorySyncPlugin } from '../testing';
 import { StoryModulesPlugin } from '../testing/modules';
 
 const TYPES = [
@@ -54,7 +54,7 @@ const TYPES = [
 
 // Computed once at module scope (not inside the `withPluginManager` initializer, which re-runs on
 // every render) so the story doesn't spawn a fresh dedicated worker/coordinator on each re-render.
-const CLIENT_SERVICES = persistentClientServices(configPreset({ edge: 'main' }));
+const CLIENT_SERVICES = persistentClientServices(configPreset({ edge: 'preview' }));
 
 const DECORATORS = [
   withSurfaceDebug(false),
@@ -80,11 +80,14 @@ const DECORATORS = [
       InboxPlugin(),
       ConnectorPlugin.make(),
       DebugPlugin.make({}),
+      // `Mailbox` resolves its connector-auth providers from the registry, so without one registered
+      // the toolbar offers no Connect action.
+      GooglePlugin.make(),
       AssistantPlugin.make(),
       PreviewPlugin.make(),
       ProgressPlugin.make(),
       RoutinePlugin.make(),
-      StorySyncPlugin(),
+      UpdateCompanionStubPlugin(),
       StoryModulesPlugin(),
       StorybookPlugin.make({}),
     ],

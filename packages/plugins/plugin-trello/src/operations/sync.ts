@@ -12,9 +12,9 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 const { mergeDeep, mergeField, snapshotField } = ConnectorSync;
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { EID } from '@dxos/keys';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
+import * as Binding from '@dxos/plugin-connector/Binding';
 import * as Kanban from '@dxos/plugin-kanban/Kanban';
 import * as KanbanConstants from '@dxos/plugin-kanban/KanbanConstants';
 import { Expando } from '@dxos/schema';
@@ -505,123 +505,134 @@ export const findOrCreateKanbanForBoard: (board: TrelloBoard) => Effect.Effect<K
     return yield* Database.add(makeEmptyKanbanForBoard(board.id, board.name));
   });
 
-const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = TrelloOperation.SyncTrelloBoard.pipe(
-  Operation.withHandler(
-    Effect.fn(function* ({ binding }) {
-      // TODO(wittjosiah): the operation should just depend on `Database.Service`
-      //   once the OperationInvoker has a `databaseResolver`. For now, derive
-      //   the db from the input ref's target and provide `Database.layer(db)`
-      //   for the handler body.
-      const bindingObj = binding.target;
-      const db = bindingObj ? Obj.getDatabase(bindingObj) : undefined;
-      if (!db) {
-        return yield* Effect.fail(new SyncDatabaseMissingError());
-      }
+/**
+ * Per-binding sync body run by the account-level fan-out: reconcile the one board the
+ * binding targets, stamping success/failure onto the binding and toasting either way.
+ */
+const syncBoardBinding = Effect.fn(function* (bound: Cursor.ExternalCursor) {
+  const db = Obj.getDatabase(bound);
+  if (!db) {
+    return yield* Effect.fail(new SyncDatabaseMissingError());
+  }
 
-      const toastIdSuffix = EID.getEntityId(EID.tryParse(binding.uri)!) ?? 'unknown';
+  // Wrap the body in `Effect.result` so we can emit a toast on either path
+  // before returning. The toast distinguishes "the sync ran" from "the sync
+  // crashed" (e.g. credential parse, fetch boards, no db); the persisted
+  // `lastError` on the binding carries the diagnostic detail.
+  const outcome = yield* Effect.result(
+    Effect.gen(function* () {
+      const kanban = yield* Database.load(bound.spec.target);
 
-      // Resolve the binding up-front so credentials can be provided from its access
-      // token directly. `Database.load` is requirement-free (the ref carries its own
-      // db), so this runs outside the layered body.
-      const bound = yield* Database.load(binding);
-      if (!Cursor.isExternal(bound)) {
-        // The integration mechanism only ever creates external-sync cursors for Trello.
+      if (!Obj.instanceOf(Kanban.Kanban, kanban) || !Kanban.isKanbanItems(kanban)) {
+        // The integration mechanism only ever binds items-variant Kanbans for Trello.
         return { pulled: { added: 0, updated: 0, removed: 0 }, pushed: { created: 0, updated: 0 } };
       }
 
-      // Wrap the body in `Effect.result` so we can emit a toast on either path
-      // before returning. The toast distinguishes "the sync ran" from "the sync
-      // crashed" (e.g. credential parse, fetch boards, no db); the persisted
-      // `lastError` on the binding carries the diagnostic detail.
-      const outcome = yield* Effect.result(
-        Effect.gen(function* () {
-          const kanban = yield* Database.load(bound.spec.target);
-
-          if (!Obj.instanceOf(Kanban.Kanban, kanban) || !Kanban.isKanbanItems(kanban)) {
-            // The integration mechanism only ever binds items-variant Kanbans for Trello.
-            return { pulled: { added: 0, updated: 0, removed: 0 }, pushed: { created: 0, updated: 0 } };
-          }
-
-          // Resolve the remote board id: prefer the binding's `externalId`, fall
-          // back to the Kanban's foreign-key meta (set by `materializeTarget`).
-          const boardId =
-            bound.spec.externalId ?? Obj.getMeta(kanban).keys.find((key) => key.source === TRELLO_SOURCE)?.id;
-          if (boardId === undefined) {
-            return { pulled: { added: 0, updated: 0, removed: 0 }, pushed: { created: 0, updated: 0 } };
-          }
-
-          // Look up the remote `TrelloBoard` (for board-level fields like `name`).
-          const allBoards = yield* TrelloApi.fetchBoards();
-          const remoteBoard = allBoards.find((board) => board.id === boardId);
-          if (!remoteBoard) {
-            return { pulled: { added: 0, updated: 0, removed: 0 }, pushed: { created: 0, updated: 0 } };
-          }
-
-          // The trello-api functions return `Effect<T, HttpClientError | ParseError, HttpClient>`
-          // with retry+timeout baked in. The HttpClient layer is provided at the
-          // operation boundary below. Trello's cards endpoint doesn't support a
-          // delta cursor, so we full-fetch every sync and never advance the
-          // cursor's `value` (only its run status, below).
-          const lists = yield* TrelloApi.fetchLists(boardId);
-          const cards = yield* TrelloApi.fetchCards(boardId);
-          const reconcileResult = yield* reconcileBoardCards(bound, kanban, remoteBoard, cards, lists);
-
-          const pushResult = yield* pushBoardCards(bound, kanban, lists, {
-            create: ({ listId, name, desc }) =>
-              TrelloApi.createCard({ idList: listId, name, desc }).pipe(Effect.map((card) => ({ id: card.id }))),
-            update: (foreignId, payload) =>
-              TrelloApi.updateCard(foreignId, {
-                name: payload.name,
-                desc: payload.desc,
-                idList: payload.listId,
-              }).pipe(Effect.map(() => undefined)),
-          });
-
-          // Stamp success on the binding.
-          Cursor.advance(bound);
-
-          return {
-            pulled: reconcileResult,
-            pushed: pushResult,
-          };
-        }).pipe(
-          // A failure mid-sync writes `lastError` on the binding then re-raises,
-          // so the toast path still surfaces the crash.
-          Effect.tapError((error) =>
-            Effect.sync(() => {
-              Cursor.recordError(bound, formatTrelloSyncFailure(error));
-            }),
-          ),
-          Effect.provide(Database.layer(db)),
-          Effect.provide(TrelloApi.TrelloCredentials.fromAccessToken(bound.spec.source)),
-        ),
-      );
-
-      // Toasting is UX-only and the layout/capability service isn't always
-      // present (tests, server-side invocations). `Effect.ignore` swallows
-      // missing-service errors so they don't fail the sync.
-      if (outcome._tag === 'Success') {
-        yield* Effect.ignore(
-          Operation.invoke(LayoutOperation.AddToast, {
-            id: `${meta.profile.key}.sync-success.${toastIdSuffix}`,
-            icon: 'ph--check--regular',
-            title: ['sync-toast.success.label', { ns: meta.profile.key }],
-          }),
-        );
-        return outcome.success;
-      } else {
-        const message = formatTrelloSyncFailure(outcome.failure);
-        yield* Effect.ignore(
-          Operation.invoke(LayoutOperation.AddToast, {
-            id: `${meta.profile.key}.sync-error.${toastIdSuffix}`,
-            icon: 'ph--warning--regular',
-            title: ['sync-toast.error.label', { ns: meta.profile.key }],
-            description: message,
-          }),
-        );
-        return yield* Effect.fail(outcome.failure);
+      // Resolve the remote board id: prefer the binding's `externalId`, fall
+      // back to the Kanban's foreign-key meta (set by `materializeTarget`).
+      const boardId = bound.spec.externalId ?? Obj.getMeta(kanban).keys.find((key) => key.source === TRELLO_SOURCE)?.id;
+      if (boardId === undefined) {
+        return { pulled: { added: 0, updated: 0, removed: 0 }, pushed: { created: 0, updated: 0 } };
       }
-    }, Effect.provide(FetchHttpClient.layer)),
+
+      // Look up the remote `TrelloBoard` (for board-level fields like `name`).
+      const allBoards = yield* TrelloApi.fetchBoards();
+      const remoteBoard = allBoards.find((board) => board.id === boardId);
+      if (!remoteBoard) {
+        return { pulled: { added: 0, updated: 0, removed: 0 }, pushed: { created: 0, updated: 0 } };
+      }
+
+      // The trello-api functions return `Effect<T, HttpClientError | ParseError, HttpClient>`
+      // with retry+timeout baked in. The HttpClient layer is provided at the
+      // operation boundary below. Trello's cards endpoint doesn't support a
+      // delta cursor, so we full-fetch every sync and never advance the
+      // cursor's `value` (only its run status, below).
+      const lists = yield* TrelloApi.fetchLists(boardId);
+      const cards = yield* TrelloApi.fetchCards(boardId);
+      const reconcileResult = yield* reconcileBoardCards(bound, kanban, remoteBoard, cards, lists);
+
+      const pushResult = yield* pushBoardCards(bound, kanban, lists, {
+        create: ({ listId, name, desc }) =>
+          TrelloApi.createCard({ idList: listId, name, desc }).pipe(Effect.map((card) => ({ id: card.id }))),
+        update: (foreignId, payload) =>
+          TrelloApi.updateCard(foreignId, {
+            name: payload.name,
+            desc: payload.desc,
+            idList: payload.listId,
+          }).pipe(Effect.map(() => undefined)),
+      });
+
+      // Stamp success on the binding.
+      Cursor.advance(bound);
+
+      return {
+        pulled: reconcileResult,
+        pushed: pushResult,
+      };
+    }).pipe(
+      // A failure mid-sync writes `lastError` on the binding then re-raises,
+      // so the toast path still surfaces the crash.
+      Effect.tapError((error) =>
+        Effect.sync(() => {
+          Cursor.recordError(bound, formatTrelloSyncFailure(error));
+        }),
+      ),
+      Effect.provide(Database.layer(db)),
+      Effect.provide(TrelloApi.fromAccessToken(bound.spec.source)),
+    ),
+  );
+
+  // Toasting is UX-only and the layout/capability service isn't always
+  // present (tests, server-side invocations). `Effect.ignore` swallows
+  // missing-service errors so they don't fail the sync.
+  if (outcome._tag === 'Success') {
+    yield* Effect.ignore(
+      Operation.invoke(LayoutOperation.AddToast, {
+        id: `${meta.profile.key}.sync-success`,
+        icon: 'ph--check--regular',
+        title: ['sync-toast.success.label', { ns: meta.profile.key }],
+      }),
+    );
+    return outcome.success;
+  } else {
+    const message = formatTrelloSyncFailure(outcome.failure);
+    yield* Effect.ignore(
+      Operation.invoke(LayoutOperation.AddToast, {
+        id: `${meta.profile.key}.sync-error`,
+        icon: 'ph--warning--regular',
+        title: ['sync-toast.error.label', { ns: meta.profile.key }],
+        description: message,
+      }),
+    );
+    return yield* Effect.fail(outcome.failure);
+  }
+}, Effect.provide(FetchHttpClient.layer));
+
+const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = TrelloOperation.SyncTrelloBoard.pipe(
+  Operation.withHandler(({ connection, priority }) =>
+    Binding.syncAll({
+      connection,
+      priority,
+      sync: (bound) => syncBoardBinding(bound),
+    }).pipe(
+      Effect.map(({ outputs }) => ({
+        pulled: outputs.reduce(
+          (total, { pulled }) => ({
+            added: total.added + pulled.added,
+            updated: total.updated + pulled.updated,
+            removed: total.removed + pulled.removed,
+          }),
+          { added: 0, updated: 0, removed: 0 },
+        ),
+        pushed: outputs.reduce(
+          (total, { pushed }) => ({
+            created: total.created + pushed.created,
+            updated: total.updated + pushed.updated,
+          }),
+          { created: 0, updated: 0 },
+        ),
+      })),
+    ),
   ),
 );
 

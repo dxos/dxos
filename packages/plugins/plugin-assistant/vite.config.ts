@@ -6,13 +6,11 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'AssistantSkill': 'src/skills/assistant/AssistantSkill.ts',
     'index': 'src/index.ts',
     'AssistantPlugin': 'src/AssistantPlugin.ts',
-    'plugin.node': 'src/plugin.node.ts',
-    'plugin.workerd': 'src/plugin.workerd.ts',
     'skills': 'src/skills/index.ts',
     'capabilities': 'src/capabilities/index.ts',
-    'capabilities.workerd': 'src/capabilities/workerd.ts',
     'components': 'src/components/index.ts',
     'containers': 'src/containers/index.ts',
     'execution-graph': 'src/execution-graph/index.ts',
@@ -21,7 +19,7 @@ export default defineConfig({
     'meta': 'src/meta.ts',
     'operations': 'src/operations/index.ts',
     'plugin': 'src/plugin.ts',
-    'testing': 'src/testing.ts',
+    'testing': 'src/testing/index.ts',
     'translations': 'src/translations.ts',
     'AssistantEvents': 'src/types/AssistantEvents.ts',
     'AssistantOptions': 'src/types/AssistantOptions.ts',

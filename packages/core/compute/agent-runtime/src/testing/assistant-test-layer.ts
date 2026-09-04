@@ -13,7 +13,8 @@ import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { AiService, OpaqueToolkit, Provider } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
-import { Harness } from '@dxos/assistant';
+import { Alarm, Harness } from '@dxos/assistant';
+import * as Chat from '@dxos/assistant/Chat';
 import { ServiceNotAvailableError } from '@dxos/compute';
 import {
   FeedTraceSink,
@@ -99,6 +100,7 @@ export type AssistantTestServices =
   | OpaqueToolkit.OpaqueToolkitProvider
   | Operation.Service
   | ProcessManager.Service
+  | RemoteProcessManager.Service
   | ProcessManager.ProcessOperationInvoker.Service
   | Process.ProcessMonitorService
   | AtomRegistry.AtomRegistry
@@ -116,7 +118,7 @@ export const AssistantTestLayer = (
     options.model ??
     (options.aiServicePreset === 'ollama'
       ? DXN.make('com.openai.model.gpt-oss-20b.default')
-      : DXN.make('com.anthropic.model.claude-opus-4-8.default'));
+      : DXN.make('com.anthropic.model.claude-opus-5.default'));
 
   // The catalog's shared model ids need a provider to resolve; pair the resolved model with the
   // provider its preset registers a resolver for.
@@ -139,9 +141,11 @@ export const AssistantTestLayer = (
     Layer.provideMerge(captureAgentService(agentServiceHolder)),
     Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
     Layer.provideMerge(ProcessMonitor.layer),
+    Layer.provideMerge(AgentServiceRuntime.layer(agentOptions)),
+    // Below `AgentService` in the chain, which now requires the remote manager too: a local test
+    // stack has no EDGE, so both the monitor's remote half and `location: 'edge'` see nothing.
     Layer.provideMerge(RemoteProcessManager.layerNoop),
     Layer.provideMerge(RemoteTraceMonitor.layerNoop),
-    Layer.provideMerge(AgentServiceRuntime.layer(agentOptions)),
     Layer.provideMerge(Trace.testTraceService({ meta: { processName: 'test' } })),
     // Order matters: in a `provideMerge` chain each layer's *requirements* are satisfied only by
     // layers added later (whose outputs feed it). `captureProcessManager` needs the manager, the
@@ -232,7 +236,7 @@ export const AssistantTestServiceResolverLayer = (
             // operation resolution runs.
             const agentService = agentServiceHolder.current;
             if (!agentService) {
-              return yield* Effect.fail(new ServiceNotAvailableError(AgentService.AgentService.key));
+              return yield* Effect.fail(new ServiceNotAvailableError(AgentService.key));
             }
             return agentService;
           }),
@@ -268,8 +272,11 @@ export const AssistantTestBaseLayer = ({
     Instructions.Instructions,
     Operation.PersistentOperation,
     Feed.Feed,
+    // The agent process runs on a chat, so every session — bare ones included — persists one.
+    Chat.Chat,
     Trigger.Trigger,
     Tag.Tag,
+    Alarm.Alarm,
   );
   types = Array.dedupeWith(types, (a, b) => Type.getTypename(a) === Type.getTypename(b));
 
@@ -288,7 +295,7 @@ export const AssistantTestBaseLayer = ({
           const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
           const registry = yield* Registry.Service;
           const handlers = yield* handlerSet.handlers;
-          registry.add(handlers.map(Operation.serialize));
+          registry.add(Operation.serializable(handlers));
           return registry;
         }),
       ),
@@ -320,10 +327,11 @@ export type AssistantTestServicesWithTriggers = AssistantTestServices | TriggerD
 export const AssistantTestLayerWithTriggers = (
   options: TestLayerWithTriggersOptions,
 ): Layer.Layer<AssistantTestServicesWithTriggers, never, TestContextService> =>
-  Layer.mergeAll(
-    AssistantTestLayer(options),
-    TriggerDispatcher.layer({ timeControl: 'manual', startingTime: new Date('2025-09-05T15:01:00.000Z') }).pipe(
-      Layer.provide(AtomRegistry.layer),
-    ),
-    TriggerStateStore.layerMemory,
-  ) as any;
+  // `Layer.provideMerge` (not `Layer.mergeAll`) at each step: `mergeAll` unions requirements without
+  // letting sibling layers discharge one another, so `TriggerDispatcher`'s own dependency on
+  // `TriggerStateStore`/`ProcessManager.Service`/`Database.Service` needs threading explicitly.
+  TriggerDispatcher.layer({ timeControl: 'manual', startingTime: new Date('2025-09-05T15:01:00.000Z') }).pipe(
+    Layer.provide(AtomRegistry.layer),
+    Layer.provideMerge(TriggerStateStore.layerMemory),
+    Layer.provideMerge(AssistantTestLayer(options)),
+  );

@@ -20,8 +20,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
 | `test`      | `org.dxos.mdl.test@1.0`        |
 | `component` | `org.dxos.mdl.component@1.0`   |
-| `op`        | `org.dxos.mdl.op@1.0`          |
+| `op`        | `org.dxos.mdl.op@1.1`          |
 | `service`   | `org.dxos.mdl.service@1.0`     |
+| `flow`      | `org.dxos.mdl.flow@1.0`        |
+| `step`      | `org.dxos.mdl.step@1.0`        |
 
 ## External types & capabilities
 
@@ -156,23 +158,39 @@ component EditableMarkdownCard
 
 ```mdl
 op create
-  desc: Creates a new markdown Document and adds it to the active space.
+  key: org.dxos.operation.markdown.create
+  desc: Creates a new markdown Document and adds it to the active space. Agent-facing (skill tool).
   input: { name: string, content: string }
-  output: string                # DXN of created Document
+  output: { id: string }        # DXN of created Document
   effects: [echo:write]
+  requires: [Database.Service]
+
+op createDraft
+  key: org.dxos.operation.markdown.createDraft
+  desc: |
+    UI-facing factory invoked by the navtree create action. Returns a DETACHED Document —
+    placement is a separate `space.addObject` call. Distinct from [op:create], which is the
+    agent-facing tool and writes through the Database service.
+  input: { name?: string, content?: string }
+  output: { object: Document }
+  requires: [Capability.Service]
 
 op open
+  key: org.dxos.operation.markdown.open
   desc: Reads the current contents of a markdown Document.
   input: { doc: Ref<Document> }
-  output: string
+  output: { content: string }
   effects: [echo:read]
+  requires: [Database.Service]
 
 op update
+  key: org.dxos.operation.markdown.update
   desc: Applies a set of find/replace edits to a markdown Document (optionally on a branch).
   input: { doc: Ref<Document>, edits: Edit[], branchId?: string }
-  output: string
+  output: { newContent: string }
   errors: { NotFound: oldString not present in document }
   effects: [echo:write]
+  requires: [Database.Service]
 
 op CreateBranch
   desc: Fork a core branch off main (or a checkpoint), returning the branch's canonical content DXN.
@@ -360,6 +378,189 @@ test T-7: Suggesting mode authors on the user's branch
     - a second author's suggestion still renders vs main and does not strike the user's new text
 ```
 
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). `expect` is the success criterion both actors
+judge; `assert` is an optional deterministic check evaluated in the debug port. Report failures
+by flow and step number (e.g. `QA-1.3`).
+
+```mdl
+flow QA-1: Create, place, open and edit a document
+  desc: The core markdown round-trip through the running app.
+  actors: both
+  covers: [F-1.1, F-1.3, T-1, T-2]
+  status: passing            # 2026-08-27, re-run through the recording driver
+  note: |
+    `doc` is a `Ref`, not the live object. The invoker does not decode input through the
+    operation schema, so a bare `$created.object` fails with `ref.tryLoad is not a function`.
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - no document named "QA Notes" exists — ABORT rather than deleting one this flow did not create
+  test:
+    - name: Create the document
+      do: In the navtree, click + on a collection and choose Markdown. Name it "QA Notes".
+      invoke: [op:createDraft] { name: "QA Notes", content: "# QA Notes\n\nThere is a tyop.\n" }
+      capture: created
+      expect: a Document named "QA Notes" now exists with that body
+      assert: return !!$created.object
+
+    - name: Place it in the collection
+      do: (no separate gesture — the navtree create action places it; the agent path splits the
+        one gesture into a factory call and a placement)
+      invoke: org.dxos.operation.space.addObject { object: $created.object, target: $given.collection }
+      capture: added
+      expect: "QA Notes" appears as a row under the collection in the navtree
+      assert: |
+        return $given.collection.objects.some((ref) => ref.target?.id === $created.object.id);
+      note: |
+        Coalesced with the previous step — `created.object` is live and cannot cross a snippet
+        boundary. Only serializable values survive one; `$created.object.id` is a scalar and does.
+
+    - name: Open it
+      id: open
+      do: Click "QA Notes" in the navtree.
+      invoke: org.dxos.operation.appToolkit.open { subject: ["root/$spaceId/content/collections/$created.object.id"] }
+      expect: the editor renders "# QA Notes" and the navtree row is selected
+      note: |
+        `subject` is a navigation-path array and must be BUILT — `addObject` does not return one.
+        This step was briefly blocked: `appToolkit.open` was declared twice (LayoutOperation's
+        "Open" and SettingsOperation's "Open Settings"), so resolving by key found two. The
+        Settings one is now `openSettings`.
+      assert: |
+        return Array.from(document.querySelectorAll('[aria-current], [aria-selected="true"]'))
+          .some((el) => el.textContent?.includes('QA Notes'));
+
+    - name: Fix the typo
+      do: In the editor, change "tyop" to "typo".
+      invoke: [op:update] { doc: Ref.make($created.object), edits: [{ oldString: "tyop", newString: "typo" }] }
+      expect: the document body reads "There is a typo." and the editor re-renders
+      assert: return $result.newContent.includes('There is a typo.') && !document.body.innerText.includes('tyop');
+  after:
+    - name: Delete the document
+      do: Right-click "QA Notes" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.collection }
+      expect: the row leaves the navtree AND the open plank closes
+      assert: |
+        return !(await space.db.query(dxos.Filter.everything()).run()).objects.some((o) => o.id === $created.object.id) &&
+          !document.body.innerText.includes('QA Notes');
+      note: |
+        NOT `space.db.remove` — that unlinks nothing and leaves a plank pointing at a deleted
+        object, which the user cannot close. The operation reports what it closed as `wasActive`.
+```
+
+
+```mdl
+flow QA-2: Link one page to another
+  desc: Two documents and a reference between them — the `@` link path end to end.
+  actors: both
+  covers: [F-4.1, F-4.2, F-4.3, T-4]
+  status: passing
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - no documents named "Page 1" or "Page 2" exist — ABORT rather than deleting ones this flow
+      did not create
+  test:
+    - name: Create Page 1
+      do: In the navtree, click + on a collection and choose Markdown. Name it "Page 1" and type a heading and a sentence.
+      invoke: [op:createDraft] { name: "Page 1", content: "# Page 1\n\nThe first page.\n" }
+      capture: page1
+      expect: a Document named "Page 1" is returned, its body reading "The first page."
+      assert: return !!$page1.object
+      note: Coalesce with the placement step — `object` is live and cannot cross a snippet boundary.
+    - name: Place Page 1
+      do: (the navtree create action places it for you)
+      invoke: org.dxos.operation.space.addObject { object: $page1.object, target: $given.collection }
+      expect: "Page 1" appears as a row under the collection
+    - name: Open Page 1
+      id: open-page-1
+      do: Click "Page 1" in the navtree.
+      invoke: org.dxos.operation.appToolkit.open { subject: ["root/$given.space.id/content/collections/$page1.object.id"] }
+      expect: Page 1 opens in the editor and its navtree row is selected
+      assert: |
+        return Array.from(document.querySelectorAll('[aria-current], [aria-selected="true"]'))
+          .some((el) => el.textContent?.includes('Page 1'));
+      note: |
+        The later edit binds to whichever document the editor holds, so Page 1 must be the open
+        plank before it — an edit invoked against an unopened document lands in the database
+        without the surface the human is watching ever showing it.
+
+    - name: Create Page 2
+      do: Repeat for a second document named "Page 2" with its own heading and sentence.
+      invoke: [op:createDraft] { name: "Page 2", content: "# Page 2\n\nThe second page.\n" }
+      capture: page2
+      expect: a Document named "Page 2" is returned, its body reading "The second page."
+      assert: return !!$page2.object
+    - name: Place Page 2
+      do: (as above)
+      invoke: org.dxos.operation.space.addObject { object: $page2.object, target: $given.collection }
+      expect: "Page 2" appears as a row alongside "Page 1"
+    - name: Link Page 1 to Page 2
+      id: link
+      do: |
+        With Page 1 open (previous steps), put the caret at the end, then type `/` and choose
+        "Inline link" (or type `@Page 2` directly) and pick Page 2 from the query.
+      invoke: [op:update] { doc: Ref.make($page1.object), edits: [{ newString: "\nSee [Page 2]($page2.uri).\n" }] }
+      expect: the end of Page 1 shows an internal reference to Page 2, not a plain web hyperlink
+      assert: |
+        return /\]\(echo:\/\//.test($result.newContent);
+      note: |
+        The target MUST be the object's DXN — `Obj.getURI(object)`, of the form
+        `echo://<spaceId>/<objectId>` — which is exactly what the link query and the "Inline link"
+        command write (see `useLinkQuery.insertLink`). A root-relative `/<objectId>` renders as an
+        ordinary http hyperlink and resolves to nothing; asserting only that the label appears does
+        not catch it, which is why the assert matches the scheme.
+    - name: Follow the link
+      do: Click the "Page 2" link in Page 1.
+      expect: Page 2 opens and its navtree row is selected
+      note: |
+        NO `invoke` — opening Page 2 by path would pass without the link being involved at all, so
+        it would assert nothing about the previous step. Following the reference is a click; leave
+        it to the human rather than substituting an operation that tests something else.
+  after:
+    - name: Delete both pages
+      do: Right-click each of "Page 1" and "Page 2" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$page1.object, $page2.object], target: $given.collection }
+      expect: both rows leave the navtree and any open planks close
+```
+
+```mdl
+flow QA-3: A contributed slash-command runs
+  desc: The MenuExtension capability end to end, using plugin-debug's Lorem ipsum command.
+  actors: both
+  covers: [F-1.1]
+  status: unverified
+  given:
+    - a space is open and contains at least one collection
+    - plugin-debug is enabled
+    - attendableId: the id of an empty document already open in the editor, the attention target
+      `insertLoremIpsum` inserts into
+  test:
+    - name: Open the command menu
+      do: With the caret on an empty line, type `/`.
+      expect: the popup lists a "Debug" group containing "Lorem ipsum", below the built-in groups
+      note: |
+        NO `invoke` — opening the popup is a real keystroke, and CodeMirror does not observe
+        synthetic input events. This step is human-only; an agent runs the flow from the next step
+        and reports this one as unverified rather than asserting it passed.
+    - name: Insert a paragraph
+      do: Select "Lorem ipsum".
+      invoke: org.dxos.operation.debug.insertLoremIpsum { subject: $given.attendableId, head: 0 }
+      expect: a paragraph of placeholder prose appears at the caret
+      assert: return view.state.doc.length > 0;
+    - name: Insert a second paragraph
+      do: Repeat.
+      invoke: org.dxos.operation.debug.insertLoremIpsum { subject: $given.attendableId, head: 0 }
+      expect: the second paragraph differs from the first — the text is generated, not a fixed string
+  after:
+    - name: Clear the document
+      do: Select all and delete.
+```
+
 ---
 
 ## Appendix: Extension Definitions
@@ -412,11 +613,12 @@ ext component
 
 ```mdl
 ext op
-  uri: org.dxos.mdl.op@1.0
+  uri: org.dxos.mdl.op@1.1
   desc: |
     A named operation with typed inputs, outputs, and declared errors.
     Pure ops have no effects or requires. Effectful ops declare both.
   fields:
+    key?: NSID                  # runtime operation key — what the invoker receives
     desc?: Prose
     input?: FieldMap
     output?: TypeExpr

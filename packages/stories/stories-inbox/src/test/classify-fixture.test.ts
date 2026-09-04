@@ -13,8 +13,8 @@ import { fixtureExists, readFixture } from '@dxos/fixtures';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
+import * as InboxOperationHandlerSet from '@dxos/plugin-inbox/InboxOperationHandlerSet';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
-import { InboxOperationHandlerSet } from '@dxos/plugin-inbox/operations';
 import { getTaggedIds } from '@dxos/plugin-inbox/SystemTags';
 import { TagIndex } from '@dxos/schema';
 import { ContentBlock, Message, Person } from '@dxos/types';
@@ -58,7 +58,7 @@ const reconstruct = (archived: ArchivedMessage): Message.Message =>
   });
 
 const TestLayer = AssistantTestLayer({
-  operationHandlers: InboxOperationHandlerSet,
+  operationHandlers: InboxOperationHandlerSet.handlers,
   types: [Cursor.Cursor, Feed.Feed, Mailbox.Mailbox, Message.Message, Person.Person, Tag.Tag, TagIndex.TagIndex],
   disableLlmMemoization: true,
 });

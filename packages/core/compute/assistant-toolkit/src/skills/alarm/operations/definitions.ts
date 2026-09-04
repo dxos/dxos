@@ -11,14 +11,14 @@ import { trim } from '@dxos/util';
 
 export const SetAlarm = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.alarm.setAlarm'),
+    key: DXN.make('org.dxos.operation.assistantToolkit.setAlarm'),
     name: 'Set alarm',
     icon: 'ph--alarm--regular',
     description: trim`
       Schedule an alarm to wake yourself up in the future.
       Provide exactly one of "in" (a duration from now) or "at" (an absolute time).
       When the alarm fires you will receive a prompt and can continue working.
-      Setting a new alarm replaces any previously scheduled one.
+      Several alarms may be pending at once; each fires independently.
     `,
   },
   input: Schema.Struct({
@@ -44,7 +44,7 @@ export const SetAlarm = Operation.make({
 
 export const GetCurrentDate = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.alarm.getCurrentDate'),
+    key: DXN.make('org.dxos.operation.assistantToolkit.getCurrentDate'),
     name: 'Get current date',
     icon: 'ph--clock--regular',
     description: 'Get the current date and time as an ISO-8601 string.',

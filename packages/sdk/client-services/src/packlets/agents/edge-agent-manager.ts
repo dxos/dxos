@@ -15,8 +15,8 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { EdgeAgentStatus, EdgeCallFailedError } from '@dxos/protocols';
+import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
-import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 
 import { type Identity, type IdentityProvider, IdentityProviderService } from '../identity';
@@ -45,7 +45,7 @@ export class EdgeAgentManager extends Resource {
   private _fetchAgentStatusTask: DeferredTask | undefined;
 
   constructor(
-    private readonly _edgeFeatures: Runtime.Client.EdgeFeatures | undefined,
+    private readonly _edgeFeatures: Runtime_Client_EdgeFeatures | undefined,
     private readonly _edgeHttpClient: EdgeHttpClient | undefined,
     private readonly _dataSpaceManager: DataSpaceManager,
     private readonly _identityProvider: IdentityProvider,
@@ -201,7 +201,7 @@ export class EdgeAgentManager extends Resource {
 }
 
 export type EdgeAgentManagerLayerOptions = {
-  edgeFeatures?: Runtime.Client.EdgeFeatures;
+  edgeFeatures?: Runtime_Client_EdgeFeatures;
 };
 
 /**

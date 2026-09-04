@@ -10,7 +10,7 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import { expect } from 'vitest';
 
-import { type StoredMessage } from '../stores';
+import { MessageStore } from '../stores';
 import { detectTopics, salientTokens } from './detect-topics';
 
 const at = (minutesPastTen: number): string =>
@@ -23,7 +23,7 @@ const message = (
   text: string,
   minutesPastTen: number,
   parentId?: string,
-): StoredMessage => ({
+): MessageStore.StoredMessage => ({
   id,
   targetId: 'chan-1',
   authorId,
@@ -42,7 +42,7 @@ const message = (
  *   Topic C (lunch), after a 54-minute session gap: m8 Carol starts it (despite being a Topic A
  *     participant) → m9 Alice joins via @Carol.
  */
-const CHANNEL: StoredMessage[] = [
+const CHANNEL: MessageStore.StoredMessage[] = [
   message('9000', 'a1', 'Alice', 'Should Composer use OPFS for local persistent storage?', 0),
   message('9001', 'b1', 'Bob', 'When is the next release of Composer planned?', 1),
   message('9002', 'c1', 'Carol', '@Alice OPFS gives durable browser storage.', 2),
@@ -104,7 +104,7 @@ describe('detectTopics (eval)', () => {
   it.effect(
     'a subthread is a single topic spanning the whole conversation (even across time gaps)',
     Effect.fnUntraced(function* () {
-      const thread: StoredMessage[] = [
+      const thread: MessageStore.StoredMessage[] = [
         { ...message('9100', 'a1', 'Alice', 'Kicking off the design review.', 0), targetId: 'thread-9' },
         { ...message('9101', 'b1', 'Bob', 'Left comments inline.', 5), targetId: 'thread-9' },
         // A long pause does not split a subthread conversation.
@@ -126,7 +126,7 @@ describe('detectTopics (eval)', () => {
 
       // No mentions or replies: pure subject continuity (shared vocabulary) keeps a topic together
       // only when overlap clears the threshold.
-      const drift: StoredMessage[] = [
+      const drift: MessageStore.StoredMessage[] = [
         message('9200', 'a1', 'Alice', 'The automerge compaction job keeps failing.', 0),
         message('9201', 'b1', 'Bob', 'Compaction failing here too, automerge version mismatch?', 2),
         message('9202', 'c1', 'Carol', 'Selling my old keyboard, anyone interested?', 4),

@@ -9,11 +9,11 @@ import * as Migrator from 'effect/unstable/sql/Migrator';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import type * as SqlError from 'effect/unstable/sql/SqlError';
 
-import type { ProtoCodec } from '@dxos/codec-protobuf';
 import { RuntimeProvider } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { schema } from '@dxos/protocols/proto';
-import type { Heads as HeadsProto } from '@dxos/protocols/proto/dxos/echo/query';
+import { decodeCompat, encodeCompat } from '@dxos/protocols/buf-shape-compat';
+import { HeadsSchema } from '@dxos/protocols/buf/dxos/echo/query_pb';
+import { type Heads as HeadsProto } from '@dxos/protocols/proto/dxos/echo/query';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/heads';
@@ -21,15 +21,11 @@ import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/heads';
 // SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
 type SqlTransactionTag = SqlTransaction.SqlTransaction;
 
-// Lazy so that code that doesn't use indexing doesn't need to load the codec (breaks in workerd).
-let headsCodec: ProtoCodec<HeadsProto>;
-const getHeadsCodec = () => (headsCodec ??= schema.getCodecForType('dxos.echo.query.Heads'));
-
-const encodeHeads = (heads: Heads): Uint8Array => getHeadsCodec().encode({ hashes: heads });
+const encodeHeads = (heads: Heads): Uint8Array => encodeCompat(HeadsSchema, { hashes: heads });
 
 const decodeHeads = (data: Uint8Array): Heads => {
   try {
-    return getHeadsCodec().decode(data).hashes!;
+    return decodeCompat<HeadsProto>(HeadsSchema, data).hashes ?? [];
   } catch {
     // Legacy encoding migration path for heads persisted before protobuf encoding.
     log.warn('Detected legacy encoding of heads in SQLite storage.');

@@ -6,8 +6,10 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'JmapOperationHandlerSet': 'src/operations/JmapOperationHandlerSet.ts',
     'index': 'src/index.ts',
     'JmapPlugin': 'src/JmapPlugin.ts',
+    'JmapOperation': 'src/types/JmapOperation.ts',
     'apis': 'src/apis/index.ts',
     'capabilities': 'src/capabilities/index.ts',
     'meta': 'src/meta.ts',
@@ -17,6 +19,7 @@ export default defineConfig({
     'testing': 'src/testing/index.ts',
     'testing/node': 'src/testing/node.ts',
     'translations': 'src/translations.ts',
+    'types': 'src/types/index.ts',
   },
   test: { node: true },
 });

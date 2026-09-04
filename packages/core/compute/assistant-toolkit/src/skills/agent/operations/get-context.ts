@@ -4,34 +4,31 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Harness } from '@dxos/assistant';
+import { Harness, HarnessContextError } from '@dxos/assistant';
+import * as Agent from '@dxos/assistant/Agent';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
-import { HarnessContextError } from '../../../errors';
-import { Agent, Chat } from '../../../types';
 import { GetContext } from './definitions';
 
 export default GetContext.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
       const agents = yield* Harness.queryContext(Filter.type(Agent.Agent));
-      const chats = yield* Harness.queryContext(Filter.type(Chat.Chat));
+      // The process is bound to its chat, so the conversation's own chat is authoritative; the
+      // agent's companion chat is the fallback for a host that has none (e.g. a bare session).
+      const sessionChat = yield* Harness.getChat.pipe(Effect.orElseSucceed(() => undefined));
 
-      if (agents.length === 0 && chats.length === 0) {
+      if (agents.length === 0 && !sessionChat) {
         return { id: '', name: '', instructions: 'No agent context.', checklist: 'No checklist found.' };
       }
       if (agents.length > 1) {
         return yield* Effect.fail(new HarnessContextError({ type: 'agent', count: agents.length }));
       }
-      if (chats.length > 1) {
-        return yield* Effect.fail(new HarnessContextError({ type: 'chat', count: chats.length }));
-      }
 
-      // Prefer the directly bound chat; fall back to the agent's companion chat when no chat is bound.
-      const directChat = chats.length === 1 ? chats[0] : undefined;
-      const chat = directChat ?? (agents.length > 0 ? yield* Agent.loadChat(agents[0]) : undefined);
+      const chat = sessionChat ?? (agents.length > 0 ? yield* Agent.loadChat(agents[0]) : undefined);
 
       if (agents.length === 0) {
         invariant(chat, 'Expected a bound chat when no agent is in context.');

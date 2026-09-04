@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-resolve-cached-url"
+description = "Enables the resolve_cached_url command without any pre-configured scope."
+commands.allow = ["resolve_cached_url"]
+
+[[permission]]
+identifier = "deny-resolve-cached-url"
+description = "Denies the resolve_cached_url command without any pre-configured scope."
+commands.deny = ["resolve_cached_url"]

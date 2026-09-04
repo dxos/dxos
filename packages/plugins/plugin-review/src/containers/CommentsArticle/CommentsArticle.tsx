@@ -19,7 +19,7 @@ import { useIdentity, useMembers } from '@dxos/halo-react';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownOperation from '@dxos/plugin-markdown/MarkdownOperation';
 import { type Space, getSpace } from '@dxos/react-client/echo';
-import { Card, Icon, Message, Panel, ScrollArea, Toolbar, Trans, useTranslation } from '@dxos/react-ui';
+import { Banner, Card, Icon, Panel, ScrollArea, Toolbar, Trans, useTranslation } from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { type MessageMetadata, type ObjectTileComponent } from '@dxos/react-ui-thread';
@@ -308,10 +308,11 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   );
 
   const handleResolve = useCallback(
-    (anchor: AnchoredTo.AnchoredTo) =>
-      invokePromise(CommentOperation.ToggleResolved, {
-        thread: Relation.getSource(anchor) as Thread.Thread,
-      }),
+    (anchor: AnchoredTo.AnchoredTo) => {
+      // The control flips, so it reads the thread's status and states the one it wants.
+      const thread = Relation.getSource(anchor) as Thread.Thread;
+      return invokePromise(CommentOperation.SetResolved, { thread, resolved: thread.status !== 'resolved' });
+    },
     [invokePromise],
   );
 
@@ -345,7 +346,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         anchor: anchor.anchor,
         proposal,
       });
-      await invokePromise(CommentOperation.ToggleResolved, { thread });
+      await invokePromise(CommentOperation.SetResolved, { thread, resolved: true });
     },
     [invokePromise, subject],
   );
@@ -364,7 +365,10 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         anchor: anchor.anchor,
         branch,
       });
-      await invokePromise(CommentOperation.ToggleResolved, { thread: Relation.getSource(anchor) as Thread.Thread });
+      await invokePromise(CommentOperation.SetResolved, {
+        thread: Relation.getSource(anchor) as Thread.Thread,
+        resolved: true,
+      });
     },
     [invokePromise, subject, reviewBranch],
   );
@@ -498,9 +502,9 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         })}
       </div>
     ) : hasSuggestions ? null : (
-      <Message.Root>
-        <Message.Content classNames='m-trim-md'>
-          <Message.Body>
+      <Banner.Root>
+        <Banner.Content classNames='m-trim-md'>
+          <Banner.Body>
             <span>
               <Trans
                 {...{
@@ -513,9 +517,9 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
                 }}
               />
             </span>
-          </Message.Body>
-        </Message.Content>
-      </Message.Root>
+          </Banner.Body>
+        </Banner.Content>
+      </Banner.Root>
     );
 
   return (

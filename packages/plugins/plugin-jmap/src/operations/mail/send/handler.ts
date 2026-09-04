@@ -7,17 +7,17 @@ import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
-import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
 
 import { Jmap, JmapMail } from '#apis';
 import { JmapCredentials } from '#services';
+import { JmapOperation } from '#types';
 
 import { JmapApiError, JmapSendIdentityNotFoundError, JmapSendMessageInvalidError } from '../../../errors';
 
 const MAIL_ACCOUNT_CAPABILITY = 'urn:ietf:params:jmap:mail';
 
-export default InboxOperation.JmapSend.pipe(
+export default JmapOperation.JmapSend.pipe(
   Operation.withHandler(({ message, connection: connectionRef }) =>
     Effect.gen(function* () {
       log('sending email via jmap', { connection: connectionRef.uri });

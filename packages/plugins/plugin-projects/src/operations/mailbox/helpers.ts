@@ -17,24 +17,22 @@ import { meta } from '#meta';
 export const PROJECT_PIPELINE_KEY_SOURCE = meta.profile.key;
 
 /**
- * Finds the named markdown document in the project's artifacts collection, creating and filing it
- * on first use. The name is the identity — pipelines regenerate a document's content wholesale, so
- * reruns converge on one artifact instead of appending copies.
+ * Finds the named markdown document among the project's artifacts, creating and filing it on first
+ * use. The name is the identity — pipelines regenerate a document's content wholesale, so reruns
+ * converge on one artifact instead of appending copies.
  */
 export const findOrCreateDocumentArtifact = (project: Project.Project, name: string) =>
   Effect.gen(function* () {
     const { db } = yield* Database.Service;
-    invariant(project.artifacts, 'Project has no artifacts collection.');
-    const artifacts = yield* Database.load(project.artifacts);
-    for (const ref of artifacts.objects) {
+    for (const ref of project.artifacts) {
       const object = yield* Effect.promise(() => ref.load());
       if (Obj.instanceOf(Markdown.Document, object) && object.name === name) {
         return object;
       }
     }
     const document = db.add(Markdown.make({ name }));
-    Obj.update(artifacts, (artifacts) => {
-      artifacts.objects.push(Ref.make(document));
+    Obj.update(project, (project) => {
+      project.artifacts = [...project.artifacts, Ref.make(document)];
     });
     return document;
   });
@@ -67,6 +65,10 @@ export const upsertTask = (
     invariant(project.taskSet, 'Project has no task set.');
     const taskSet = yield* Database.load(project.taskSet);
     const task = db.add(Obj.make(Task.Task, { title, description, status: 'todo', [Obj.Meta]: { keys: [key] } }));
+    // Membership and order are the set's `tasks` array; the parent edge rides along for cascade.
+    Obj.update(taskSet, (taskSet) => {
+      taskSet.tasks = [...taskSet.tasks, Ref.make(task)];
+    });
     Obj.setParent(task, taskSet);
     return true;
   });

@@ -25,7 +25,8 @@ const RunnableSpec = Schema.Struct({
 
 const InstructionsSpec = Schema.Struct({
   kind: Schema.Literal('instructions'),
-  instructions: Ref.Ref(Instructions.Instructions),
+  /** Owned by the routine: `SetParent` cascades it. */
+  instructions: Ref.Ref(Instructions.Instructions).pipe(Annotation.SetParent.set(true)),
 });
 
 const RoutineSpec = Schema.Union([RunnableSpec, InstructionsSpec]);
@@ -54,7 +55,7 @@ export class Routine extends Type.makeObject<Routine>(DXN.make('org.dxos.type.ro
      * because the runnable may be a shared registry operation referenced by multiple automations, which would
      * conflate triggers. MVP enforces length <= 1.
      */
-    triggers: Schema.Array(Ref.Ref(Trigger.Trigger)),
+    triggers: Schema.Array(Ref.Ref(Trigger.Trigger)).pipe(Annotation.SetParent.set(true)),
   }).pipe(
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--lightning--regular', hue: 'amber' }),

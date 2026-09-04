@@ -859,6 +859,189 @@ describe('QueryPlanner', () => {
     `);
   });
 
+  test('full-text search AND type pushes the typename into the selector', () => {
+    const query = Query.select(Filter.and(Filter.text('Bill'), Filter.type(TestSchema.Person)));
+
+    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    expect(plan).toMatchInlineSnapshot(`
+      {
+        "steps": [
+          {
+            "_tag": "SelectStep",
+            "scope": [
+              {
+                "_tag": "space",
+                "spaceId": "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+              },
+            ],
+            "selector": {
+              "_tag": "TextSelector",
+              "searchKind": "full-text",
+              "text": "Bill",
+              "typename": [
+                "dxn:com.example.type.person:0.1.0",
+              ],
+            },
+          },
+          {
+            "_tag": "FilterDeletedStep",
+            "mode": "only-non-deleted",
+          },
+          {
+            "_tag": "FilterStep",
+            "filter": {
+              "id": undefined,
+              "props": {},
+              "type": "object",
+              "typename": "dxn:com.example.type.person:0.1.0",
+            },
+          },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "direction": "asc",
+                "kind": "natural",
+              },
+            ],
+          },
+        ],
+      }
+    `);
+  });
+
+  test('full-text search AND or-of-types pushes all typenames into the selector', () => {
+    const query = Query.select(
+      Filter.and(Filter.text('Bill'), Filter.or(Filter.type(TestSchema.Person), Filter.type(TestSchema.Organization))),
+    );
+
+    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    expect(plan).toMatchInlineSnapshot(`
+      {
+        "steps": [
+          {
+            "_tag": "SelectStep",
+            "scope": [
+              {
+                "_tag": "space",
+                "spaceId": "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+              },
+            ],
+            "selector": {
+              "_tag": "TextSelector",
+              "searchKind": "full-text",
+              "text": "Bill",
+              "typename": [
+                "dxn:com.example.type.person:0.1.0",
+                "dxn:com.example.type.organization:0.1.0",
+              ],
+            },
+          },
+          {
+            "_tag": "FilterDeletedStep",
+            "mode": "only-non-deleted",
+          },
+          {
+            "_tag": "FilterStep",
+            "filter": {
+              "filters": [
+                {
+                  "id": undefined,
+                  "props": {},
+                  "type": "object",
+                  "typename": "dxn:com.example.type.person:0.1.0",
+                },
+                {
+                  "id": undefined,
+                  "props": {},
+                  "type": "object",
+                  "typename": "dxn:com.example.type.organization:0.1.0",
+                },
+              ],
+              "type": "or",
+            },
+          },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "direction": "asc",
+                "kind": "natural",
+              },
+            ],
+          },
+        ],
+      }
+    `);
+  });
+
+  test('full-text search AND type-with-props narrows by type and re-checks props', () => {
+    const query = Query.select(Filter.and(Filter.text('Bill'), Filter.type(TestSchema.Person, { name: 'Bill' })));
+
+    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    expect(plan).toMatchInlineSnapshot(`
+      {
+        "steps": [
+          {
+            "_tag": "SelectStep",
+            "scope": [
+              {
+                "_tag": "space",
+                "spaceId": "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+              },
+            ],
+            "selector": {
+              "_tag": "TextSelector",
+              "searchKind": "full-text",
+              "text": "Bill",
+              "typename": [
+                "dxn:com.example.type.person:0.1.0",
+              ],
+            },
+          },
+          {
+            "_tag": "FilterDeletedStep",
+            "mode": "only-non-deleted",
+          },
+          {
+            "_tag": "FilterStep",
+            "filter": {
+              "id": undefined,
+              "props": {
+                "name": {
+                  "operator": "eq",
+                  "type": "compare",
+                  "value": "Bill",
+                },
+              },
+              "type": "object",
+              "typename": "dxn:com.example.type.person:0.1.0",
+            },
+          },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "direction": "asc",
+                "kind": "natural",
+              },
+            ],
+          },
+        ],
+      }
+    `);
+  });
+
+  test('negated full-text search AND type throws query too complex', () => {
+    const query = Query.select(Filter.not(Filter.and(Filter.text('Bill'), Filter.type(TestSchema.Person))));
+    expect(() => planner.createPlan(withSpaceIdOptions(query.ast))).toThrow('Query too complex');
+  });
+
+  test('two full-text searches AND-ed throw query too complex', () => {
+    const query = Query.select(Filter.and(Filter.text('Bill'), Filter.text('Ted')));
+    expect(() => planner.createPlan(withSpaceIdOptions(query.ast))).toThrow('Query too complex');
+  });
+
   test('select multiple types', () => {
     const query = Query.select(Filter.or(Filter.type(TestSchema.Organization), Filter.type(TestSchema.Person)));
 

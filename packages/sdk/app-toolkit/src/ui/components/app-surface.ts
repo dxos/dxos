@@ -248,6 +248,14 @@ export const Article: Role.Role<ArticleData<any>> = Role.make('org.dxos.role.art
 /** Surface data for article role (from PlankComponent). */
 export type ArticleData<Subject = unknown, Props extends {} = {}, CompanionTo = unknown> = {
   attendableId: string;
+  /**
+   * The graph node this surface renders, which is what its contributed actions are filed under.
+   *
+   * Distinct from `attendableId`: a companion shares its host plank's attention id, so the two are
+   * the same for a primary plank and differ for a companion. A surface that reads its own actions
+   * from `attendableId` therefore renders the host's toolbar when it is a companion.
+   */
+  nodeId?: string;
   subject: Subject;
   properties?: Record<string, any>; // TODO(burdon): What is this for?
   variant?: string;
@@ -377,6 +385,8 @@ export const Related: Role.Role<{ attendableId?: string; subject: any }> = Role.
  */
 export type SectionData<Subject = unknown, Props extends {} = {}> = {
   attendableId: string;
+  /** The graph node this surface renders; see {@link ArticleData.nodeId}. */
+  nodeId?: string;
   subject: Subject;
   /**
    * Set when the section is sized by its container (e.g. a user-resized embed) rather than its
@@ -428,6 +438,20 @@ export type ObjectPropertiesProps<
 //
 // Card
 //
+
+/**
+ * Role token for the card header's leading depiction — a person's avatar, an organization's logo,
+ * a type's glyph.
+ *
+ * Scoped to the card deliberately, rather than declared once per type: how an object is depicted
+ * depends on the space it gets. A 6-unit card block affords initials or a photograph; a 16px navtree
+ * row does not, and those surfaces keep resolving `IconAnnotation` through `Obj.getIcon`. A type
+ * contributing here says how it looks IN A CARD, and says nothing about anywhere else.
+ *
+ * Unlike {@link CardContent}, a miss is not "render nothing" — every object needs some depiction —
+ * so hosts check {@link Surface.useIsAvailable} and fall back. `CardIconSlot` packages that pair.
+ */
+export const CardIcon: Role.Role<CardData<any>> = Role.make('org.dxos.role.cardIcon');
 
 /** Role token for the card slot. */
 export const CardContent: Role.Role<CardData<any>> = Role.make('org.dxos.role.cardContent');

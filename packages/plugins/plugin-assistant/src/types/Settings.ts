@@ -10,6 +10,7 @@ import * as Struct from 'effect/Struct';
 import { Provider } from '@dxos/ai';
 import { SchemaEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
+import { ChatView } from '@dxos/react-ui-assistant/types';
 
 // A provider id is an open DXN (third-party providers define their own), validated as a DXN rather
 // than restricted to a closed literal union. The known providers come from the @dxos/ai registry.
@@ -17,13 +18,8 @@ export const ModelProvider = DXN.Schema;
 export type ModelProvider = DXN.DXN;
 export const ModelProviders: readonly DXN.DXN[] = Provider.all.map((provider) => provider.id);
 
-export const ChatView = Schema.Union([
-  Schema.Literal('normal').annotate({ title: 'Normal' }),
-  Schema.Literal('summary').annotate({ title: 'Summary' }),
-  Schema.Literal('thinking').annotate({ title: 'Thinking' }),
-  Schema.Literal('debug').annotate({ title: 'Debug' }),
-]);
-export type ChatView = Schema.Schema.Type<typeof ChatView>;
+// The view type is the thread's own concern (`@dxos/react-ui-assistant`); only the literal values
+// survive here, for the settings UI.
 export const ChatViews = SchemaEx.getLiteralValues(ChatView);
 
 export const ModelDefaults = Schema.Struct({
@@ -75,6 +71,13 @@ export const Settings = Schema.Struct({
     Schema.Boolean.annotate({
       title: 'Trace panel debug',
       description: 'Show the raw span tree as JSON in the trace panel instead of the commit graph.',
+    }),
+  ),
+  traceProcessEnvironments: Schema.optional(
+    Schema.mutable(Schema.Array(Schema.String)).annotate({
+      title: 'Trace panel process environments',
+      description:
+        'Process environments (app, space, conversation) shown in the trace panel. Unset uses the default selection, which hides app-level chatter.',
     }),
   ),
 }).mapFields(Struct.map(Schema.mutableKey));

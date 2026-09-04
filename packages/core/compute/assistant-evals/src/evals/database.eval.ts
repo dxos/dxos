@@ -12,14 +12,14 @@ import { trim } from '@dxos/util';
 import { objectExists, toolInvocations } from '../assertions';
 import { createEvalRunner } from '../runner';
 
-const QUERY_OPERATION_KEY = 'dxn:org.dxos.function.database.query';
+const QUERY_OPERATION_KEY = 'dxn:org.dxos.operation.space.queryObjects';
 
 // Ported from the gated `Database > create and query` scenario (../testing/database.test.ts).
 // Grades the DB effect directly instead of the agent's own self-reported `completedCriteria`.
 const task = createEvalRunner({
   instructions: trim`
     Create a new organization called "{{name}}".
-    Query the database to confirm that the organization is created and the query tool is working.
+    Query the database to confirm that the organization is created and the space-query-objects tool is working.
   `,
   input: Schema.Struct({ name: Schema.String }),
   output: Schema.Unknown,

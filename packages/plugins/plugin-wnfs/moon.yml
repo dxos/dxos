@@ -1,19 +1,21 @@
 layer: library
 language: typescript
 tags:
+  - composer-plugin
   - ts-vite-build
   - ts-test
   - pack
+
 tasks:
-  # Fail when the ./plugin export pulls in React. The node/workerd plugin variant must stay
-  # loadable outside a DOM, and `Capability.lazy` does not stop a bundler walking into a React
-  # surface — only a node-conditioned `#capabilities` barrel does.
   check-module-structure:
+    # The plugin generates node and workerd capability barrels, so its headless entry must stay
+    # UI-free: fail if React ever becomes reachable from it under either condition.
     command: >-
-      pnpm exec dx-trace-imports
+      bun $workspaceRoot/tools/dx-trace-imports/cli.js
       --export ./WnfsPlugin
       --to "{react,react-dom}"
       --conditions workerd,worker
+      --conditions node
       --fail-on present
     deps:
       - dx-trace-imports:build

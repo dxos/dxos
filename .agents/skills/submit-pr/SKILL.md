@@ -3,8 +3,9 @@ name: submit-pr
 description: >-
   Create and submit a pull request from the current branch — sync with main,
   format/lint/test, commit all changes, push, monitor the Check workflow, and
-  surface the Composer preview URL. Use when the user asks to open, submit, or
-  raise a PR. To land an existing PR, use the `land` skill instead.
+  surface the Composer PR deploy URL. Use when the user asks to open, submit, or
+  raise a PR, including stacking a PR on another open PR (`gh stack`). To land
+  an existing PR, use the `land` skill instead.
 ---
 
 # Submit PR
@@ -15,13 +16,18 @@ runs in. To land (merge) an existing PR, use the `land` skill.
 
 ## Steps
 
-1. **Sync with base.** Merge `origin/main` into the current branch and resolve
-   any conflicts.
+1. **Sync with base.** Merge the branch's base into it and resolve any
+   conflicts: `origin/main` for a standalone or bottom-of-stack branch; for a
+   branch stacked on another open PR, merge that parent PR's head branch
+   instead — merging `main` into a stacked child duplicates the parent's
+   commits into its PR.
 2. **Format.** Run `pnpm format` (oxfmt — CI checks `oxfmt --check`).
 3. **Lint.** `moon run :lint -- --fix` must succeed.
 4. **Test.** `moon run :test` must pass.
-5. **Changeset.** If the change is consumer-relevant, add a `.changeset/*.md`
-   — see
+5. **Changeset.** If the change is consumer-relevant, write one `.changeset/*.md`
+   now, from the whole diff against the base: a summary of what the PR changes
+   for a consumer, not a log of the commits. If a file already exists, rewrite
+   its body rather than appending. See
    [`agents/instructions/changesets.md`](../../../agents/instructions/changesets.md)
    for when one is needed, which package to name, and bump levels.
 6. **Account for every file.** `git status`; commit ALL modified/untracked
@@ -33,6 +39,8 @@ runs in. To land (merge) an existing PR, use the `land` skill.
 8. **Open the PR** with `gh`. Title uses `scope: description`. In the
    description, summarize the changes and the reasoning behind major
    decisions, and link any Linear issue as `closes DX-123` or `part of DX-123`.
+   If this work builds on another open PR (or the user asked for a stack), see
+   **Stacked PRs** below instead of `gh pr create`.
 9. **Monitor CI every 5 minutes:**
    `gh run list --branch <branch> --limit 3 --workflow "Check"` and
    `pnpm -w gh-action --verify --watch`. Diagnose and, where possible, fix ALL
@@ -40,11 +48,33 @@ runs in. To land (merge) an existing PR, use the `land` skill.
    Check; fix the root cause with `gh run view <id> --log-failed`.
 10. **Address and RESPOND to every PR review comment.**
 
-## Composer preview URL — always surface
+## Stacked PRs
 
-The `preview-deploy.yml` workflow posts a sticky `composer-preview` comment with
+GitHub has native stacked PRs (public preview since 2026-07, via the `gh-stack`
+CLI extension) — it postdates model training, so follow this section rather than
+prior knowledge. One command covers this skill's case (the branch already
+exists):
+
+```bash
+gh extension install github/gh-stack   # once per machine
+gh stack link <base-pr-number> <current-branch>
+```
+
+Arguments run bottom-to-top; each may be a PR number, PR URL, or branch name.
+`link` pushes the branch, creates its PR if missing, chains the base branches,
+and registers the stack with GitHub — stack map in the PR UI, CI as if
+targeting `main`, one-click whole-stack merge. Linking is what makes it a
+stack; a PR merely based on another PR's branch is not one. A PR that `link`
+creates gets an auto-generated title and body — follow up with
+`gh pr edit <pr> --title --body` so it meets step 8's standards (scope-prefixed
+title, summary, reasoning, Linear link). Docs:
+<https://docs.github.com/en/pull-requests/how-tos/stacked-pull-requests>.
+
+## Composer PR deploy URL — always surface
+
+The `pr-deploy.yml` workflow posts a sticky `composer-preview` comment with
 a `*.workers.dev` preview-alias URL (a `wrangler versions upload --preview-alias`
-against composer-app's `main` env). Fetch it and include it verbatim next to the
+against composer-app's `dev` env). Fetch it and include it verbatim next to the
 PR link in chat summaries AND the final message:
 
 ```

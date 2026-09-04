@@ -8,7 +8,7 @@ import { Client } from '@dxos/client';
 import { DXN, Obj, Ref, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
-import { CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';
+import { SpacesService } from '@dxos/protocols/rpc';
 
 import { SpacesDumper } from './space-json-dump';
 import { Todo } from './types';
@@ -44,7 +44,7 @@ const seedData = async (client: Client) => {
     await space.db.flush();
 
     const promise = space.internal.db.rootChanged.waitForCount(1);
-    await space.internal.createEpoch({ migration: CreateEpochRequest.Migration.PRUNE_AUTOMERGE_ROOT_HISTORY });
+    await space.internal.createEpoch({ migration: SpacesService.Migration.enums.PRUNE_AUTOMERGE_ROOT_HISTORY });
     await promise;
     await space.db.flush();
 

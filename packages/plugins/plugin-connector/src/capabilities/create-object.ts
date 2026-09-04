@@ -5,32 +5,40 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { Database, Obj, Type } from '@dxos/echo';
+import { Type } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 
-import { ConnectorCoordination, ConnectorForm } from '#types';
+import { CreateConnectionPanel } from '#create-panel';
+import { ConnectorCoordination } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
       id: Type.getTypename(Connection.Connection),
-      inputSchema: ConnectorForm.CreateConnectionForm,
-      createObject: (props: { connectorId: string }, options) =>
+      // A custom panel rather than an `inputSchema`: the fields to show depend on which connector is
+      // picked, which a single static schema cannot express. It also collapses what used to be two
+      // dialogs — service picker, then credentials — into one.
+      customPanel: CreateConnectionPanel,
+      createObject: (props: { connectorId: string; values?: unknown }, options) =>
         Effect.gen(function* () {
-          const db = Database.isDatabase(options.target) ? options.target : Obj.getDatabase(options.target);
-          if (!db) {
-            return yield* Effect.fail(new Error('No database for create target'));
-          }
+          const { db } = options;
 
           // Read on demand (invoked from the create-object form submit, not module activation) so
           // this module doesn't need to declare a static dependency on the coordinator.
           const coordinator = yield* Capability.get(ConnectorCoordination.ConnectorCoordinator);
-          const result = yield* coordinator.createConnection({
-            db,
-            spaceId: db.spaceId,
-            connectorId: props.connectorId,
-          });
+
+          // With values in hand the credential form has already been filled, so go straight to the
+          // submit path; `createConnection` would re-open the dialog the panel just replaced. It
+          // still handles the OAuth-preflight connectors, whose form yields a `loginHint`.
+          const result = yield* props.values === undefined
+            ? coordinator.createConnection({ db, spaceId: db.spaceId, connectorId: props.connectorId })
+            : coordinator.submitCredentialForm({
+                db,
+                spaceId: db.spaceId,
+                connectorId: props.connectorId,
+                values: props.values,
+              });
 
           const id =
             result.kind === 'oauth-started'
@@ -42,9 +50,9 @@ export default Capability.makeModule(
           return {
             id,
             subject: [],
-            // The connection is created asynchronously by the coordinator (OAuth popup /
-            // credential dialog), so no object exists at return time; the contract requires one.
-            object: undefined as unknown as Obj.Unknown,
+            // The connection may still be created asynchronously by the coordinator (OAuth popup),
+            // in which case no object exists at return time.
+            object: undefined,
           };
         }),
     });

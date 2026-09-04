@@ -859,6 +859,24 @@ describe('query api', () => {
       });
     });
 
+    test('hasParent AST, decode, and pretty-print', ({ expect }) => {
+      const filter = Filter.hasParent(false);
+      expect(filter.ast).toMatchObject({ type: 'has-parent', value: false });
+      Schema.decodeSync(Schema.toType(QueryAST.Filter))(filter.ast);
+      expect(Filter.pretty(filter)).toBe('Filter.hasParent(false)');
+      expect(Filter.hasParent().ast).toMatchObject({ type: 'has-parent', value: true });
+    });
+
+    test('hasParent matches via toPredicate', ({ expect }) => {
+      const parent = Obj.make(TestSchema.Person, { name: 'Parent' });
+      const child = Obj.make(TestSchema.Person, { name: 'Child' });
+      Obj.setParent(child, parent);
+      expect(Filter.toPredicate(child, Filter.hasParent())).toBe(true);
+      expect(Filter.toPredicate(child, Filter.hasParent(false))).toBe(false);
+      expect(Filter.toPredicate(parent, Filter.hasParent(false))).toBe(true);
+      expect(Filter.toPredicate(parent, Filter.hasParent())).toBe(false);
+    });
+
     test('childOf pretty-prints correctly', () => {
       const parentRef = Ref.fromURI(EID.make({ spaceId: SpaceId.random(), entityId: EntityId.random() }));
       const filter = Filter.childOf(parentRef);

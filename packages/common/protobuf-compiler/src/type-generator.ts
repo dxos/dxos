@@ -2,10 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
+import * as ts from '@typescript/typescript6';
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import pb from 'protobufjs';
-import * as ts from 'typescript';
 
 import {
   createIndexSourceFile,

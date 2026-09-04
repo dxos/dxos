@@ -27,6 +27,7 @@ import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols
 import { type FeedService } from '@dxos/protocols/rpc';
 
 import { type DatabaseImpl } from '../proxy-db';
+import { FeedCoreRegistry } from './feed-core-registry';
 import { FeedObjectCore } from './feed-object-core';
 
 const TRACE_FEED_LOAD = false;
@@ -121,6 +122,7 @@ export class FeedHandle {
     const changed = objectSetChanged(this._objects, decodedObjects);
     TRACE_FEED_LOAD && log.info('feed refresh', { changed, objects: objects?.length ?? 0, refreshId });
     this._objects = decodedObjects;
+    this.#objectIds = new Set(decodedObjects.map((obj) => obj.id));
     this._isLoading = false;
     if (changed) {
       this.updated.emit();
@@ -143,8 +145,12 @@ export class FeedHandle {
 
   private _parentEntity: Obj.Unknown | undefined = undefined;
 
-  /** Per-object client-side state, keyed by id — the single source of truth for entity identity. */
-  readonly #cores = new Map<EntityId, FeedObjectCore>();
+  /**
+   * Per-object client-side state, keyed by id — the single source of truth for entity identity.
+   * Held weakly: identity only needs preserving while a caller holds the object, so reading a feed
+   * does not make it resident for the life of the handle. See {@link FeedCoreRegistry}.
+   */
+  readonly #cores = new FeedCoreRegistry();
   /** Cores with a local `Obj.update` not yet captured for append. */
   readonly #dirtyCores = new Set<FeedObjectCore>();
   /** In-flight append RPCs, awaited by {@link waitForPendingWrites}. */
@@ -153,6 +159,8 @@ export class FeedHandle {
   readonly #hydrating = new Map<EntityId, Promise<Entity.Unknown | undefined>>();
 
   private _objects: Entity.Unknown[] = [];
+  /** Mirrors `_objects`'s ids, kept incremental so append/delete avoid rescanning the whole working set. */
+  #objectIds = new Set<string>();
   private _isLoading = true;
   private _error: Error | null = null;
   private _refreshId = 0;
@@ -207,6 +215,15 @@ export class FeedHandle {
       uri: this._echoUri,
       objects: this._objects.length,
     };
+  }
+
+  /**
+   * Objects resident in this handle's core cache. A superset of the queried working set: a core is
+   * registered for every object the handle has hydrated, and is dropped only on `delete` or
+   * `dispose`, so this is the retention-relevant count rather than `_objects.length`.
+   */
+  get residentObjectCount(): number {
+    return this.#cores.size;
   }
 
   /**
@@ -293,8 +310,18 @@ export class FeedHandle {
 
   /** Append newly-tracked core entities to the ordered working-set view and notify subscribers. */
   #addOptimistic(cores: FeedObjectCore[]): void {
-    const existingIds = new Set(this._objects.map((obj) => obj.id));
-    this._objects = [...this._objects, ...cores.map((core) => core.entity).filter((obj) => !existingIds.has(obj.id))];
+    const newEntities: Entity.Unknown[] = [];
+    for (const core of cores) {
+      const entity = core.entity;
+      if (!this.#objectIds.has(entity.id)) {
+        this.#objectIds.add(entity.id);
+        newEntities.push(entity);
+      }
+    }
+    if (newEntities.length === 0) {
+      return;
+    }
+    this._objects = [...this._objects, ...newEntities];
     this.updated.emit();
   }
 
@@ -316,6 +343,7 @@ export class FeedHandle {
         this.#cores.delete(id);
         this.#dirtyCores.delete(core);
       }
+      this.#objectIds.delete(id);
     }
     this._objects = this._objects.filter((item) => !ids.includes(item.id));
     this.updated.emit();
@@ -553,15 +581,29 @@ export class FeedHandle {
    * Resolves feed items by id. Used by reference resolution.
    */
   async getObjectsById(ids: EntityId[]): Promise<(Entity.Unknown | undefined)[]> {
-    const missingIds = ids.filter((id) => !this.#cores.has(id));
-    if (missingIds.length > 0) {
+    // Resolve what is already live and hold it here for the rest of the call: the core registry is
+    // weak, so an id resolvable at entry could otherwise be collected across the await below and
+    // read back as `undefined` — a miss for an object the feed does have.
+    const resolved = new Map<EntityId, Entity.Unknown>();
+    for (const id of ids) {
+      const entity = this.#cores.get(id)?.entity;
+      if (entity !== undefined) {
+        resolved.set(id, entity);
+      }
+    }
+
+    if (ids.some((id) => !resolved.has(id))) {
       this._loadObjectsPromise ??= this._loadObjects().finally(() => {
         this._loadObjectsPromise = undefined;
       });
-      await this._loadObjectsPromise;
+      for (const entity of await this._loadObjectsPromise) {
+        if (EntityId.isValid(entity.id)) {
+          resolved.set(EntityId.make(entity.id), entity);
+        }
+      }
     }
 
-    return ids.map((id) => this.#cores.get(id)?.entity);
+    return ids.map((id) => resolved.get(id));
   }
 
   private async _loadObjects(): Promise<Entity.Unknown[]> {
@@ -643,6 +685,13 @@ export class FeedHandle {
     }
     this.#feedSubscriptionCleanup?.();
     this.#feedSubscriptionCleanup = null;
+
+    // Release the last snapshot with the subscription that produced it. The array is a strong
+    // reference to every object the feed contained, so keeping it past the last subscriber would
+    // pin the whole working set for the life of the handle — and it is stale from this point
+    // anyway, since nothing is left to refresh it.
+    this._objects = [];
+    this.#objectIds.clear();
   }
 
   async dispose() {

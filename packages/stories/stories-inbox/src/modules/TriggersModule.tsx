@@ -10,6 +10,7 @@ import { useSpaceCallback } from '@dxos/app-framework/ui';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Filter, Obj, Query } from '@dxos/echo';
+import * as Binding from '@dxos/plugin-connector/Binding';
 import { useTriggerRuntimeControls } from '@dxos/plugin-routine/hooks';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Button, Input, Panel, Toolbar } from '@dxos/react-ui';
@@ -17,7 +18,7 @@ import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 /**
  * Lists active triggers in the space and exposes manual cron invocation via {@link TriggerDispatcher}.
- * Triggers are created solely by the connector integration (the sync toggle → {@link createSyncRoutine}),
+ * Triggers are created solely by the connector integration (the sync toggle → {@link Binding.createRoutine}),
  * so this panel only observes and invokes them.
  */
 export const TriggersModule = () => {

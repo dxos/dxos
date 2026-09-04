@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { openBrowser } from '@dxos/cli-util';
-import { OAUTH_TIMEOUT_MS, startOAuthCallbackServer } from '@dxos/cli-util/oauth';
+import { CALLBACK_TIMEOUT_MS, startLocalCallbackServer } from '@dxos/cli-util/callback';
 import { ClientService } from '@dxos/client';
 import { Database } from '@dxos/echo';
 import { createEdgeClient } from '@dxos/edge-compute';
@@ -21,26 +21,24 @@ import { type OAuthPreset } from './util';
 
 /**
  * Bun-based OAuth callback server provider for CLI usage. Wraps the shared callback server in
- * `@dxos/cli-util/oauth` (listening on Edge's `/redirect/oauth`), adapting its captured query
+ * `@dxos/cli-util/callback` (listening on Edge's `/redirect/oauth`), adapting its captured query
  * params to the connector OAuth `OAuthFlowResult`.
  */
 const createBunServerProvider = (): OAuthServerProvider => ({
   start: () =>
-    startOAuthCallbackServer('/redirect/oauth').pipe(
+    startLocalCallbackServer('/redirect/oauth').pipe(
       Effect.map((server) => ({
         port: server.port,
         stop: server.stop,
         // The shared server resolves on any callback; the connector flow ignores the access
         // token id and maps the captured `accessTokenId` / `accessToken` params to the result.
-        waitForResult: (_accessTokenId: string, timeoutMs: number = OAUTH_TIMEOUT_MS) =>
+        waitForResult: (_accessTokenId: string, timeoutMs: number = CALLBACK_TIMEOUT_MS) =>
           server.waitForResult(timeoutMs).pipe(
-            Effect.map(
-              (params): OAuthFlowResult => ({
-                success: true,
-                accessTokenId: params.accessTokenId,
-                accessToken: params.accessToken,
-              }),
-            ),
+            Effect.map((params): OAuthFlowResult => ({
+              success: true,
+              accessTokenId: params.accessTokenId,
+              accessToken: params.accessToken,
+            })),
           ),
       })),
     ),

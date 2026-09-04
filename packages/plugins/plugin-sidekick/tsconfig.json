@@ -25,7 +25,7 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/compute/assistant-toolkit"
+      "path": "../../core/compute/assistant"
     },
     {
       "path": "../../core/compute/compute"

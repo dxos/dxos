@@ -21,7 +21,7 @@ import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
-import { Attention } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention/types';
 import { isTauri } from '@dxos/util';
 
 import { CompanionViewState, DeckCapabilities, DeckSchema } from '#types';
@@ -30,6 +30,7 @@ import {
   combineVerdicts,
   getCandidateEntityIds,
   getRenderedPlanks,
+  isCompanionOpen,
   resolveCompanionAnchor,
   serializeDeckToUrl,
 } from '../util';
@@ -95,12 +96,9 @@ export default Capability.makeModule(
     const provideServices = <A, E>(effect: Effect.Effect<A, E, Operation.Service>) =>
       effect.pipe(Effect.provideService(Operation.Service, operationService));
 
-    // Helper to get state.
-    const getState = () => registry.get(stateAtom);
-
     // Helper to get computed deck from state.
     const getDeck = () => {
-      const state = getState();
+      const state = registry.get(stateAtom);
       const deck = state.decks[state.activeDeck];
       invariant(deck, `Deck not found: ${state.activeDeck}`);
       return deck;
@@ -108,7 +106,7 @@ export default Capability.makeModule(
 
     // Helper to update state.
     const updateState = (fn: (current: DeckSchema.StoredDeckState) => DeckSchema.StoredDeckState) => {
-      registry.set(stateAtom, fn(getState()));
+      registry.set(stateAtom, fn(registry.get(stateAtom)));
     };
 
     /**
@@ -227,7 +225,7 @@ export default Capability.makeModule(
       // to the sentinel rather than to `root/default`, which resolves to no node and so can never heal.
       const workspacePath =
         workspace === DeckSchema.DEFAULT_DECK_ID ? DeckSchema.DEFAULT_DECK_ID : GraphPath.getSpacePath(workspace);
-      const state = getState();
+      const state = registry.get(stateAtom);
       if (workspacePath !== state.activeDeck) {
         yield* Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: workspacePath });
       }
@@ -411,7 +409,7 @@ export default Capability.makeModule(
     // fresh profile starts on the sentinel below, whose first real workspace arrives later.
     let synced = false;
     const syncUrl = (method: 'push' | 'replace' = 'push') => {
-      const state = getState();
+      const state = registry.get(stateAtom);
       if (state.activeDeck === DeckSchema.DEFAULT_DECK_ID) {
         // The sentinel is not a workspace: serializing it produces `/w/default`, which on the next load
         // parses as a workspace that resolves to no node, leaving the app with an unavailable workspace.
@@ -456,8 +454,12 @@ export default Capability.makeModule(
         // is laid out, so anchoring to an earlier one would serialize a companion the deck cannot render.
         const rendered = getRenderedPlanks(deck.active, registry.get(settingsAtom)?.flatten);
         const anchorId = resolveCompanionAnchor(rendered, attention.getCurrent());
-        // Only the attended plank's companion is on screen, so only it belongs in the URL.
-        const plankId = anchorId && deck.companionPlanks.includes(anchorId) ? anchorId : undefined;
+        // Only the attended plank's companion is on screen, so only it belongs in the URL. Under
+        // `flatten` the open flag is deck-wide, so it applies to whichever plank is rendered.
+        const plankId =
+          anchorId && isCompanionOpen(deck.companionPlanks, registry.get(settingsAtom)?.flatten, anchorId)
+            ? anchorId
+            : undefined;
         const selection = viewState.get(CompanionViewState.aspect, CompanionViewState.CONTEXT);
         if (plankId && selection.variant) {
           const companionNodeId = `${plankId}/${Attention.linkedSegment(selection.variant)}`;

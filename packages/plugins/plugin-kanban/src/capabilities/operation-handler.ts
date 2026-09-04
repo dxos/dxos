@@ -9,6 +9,6 @@ import { KanbanOperationHandlerSet } from '#operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contribute(Capabilities.OperationHandler, KanbanOperationHandlerSet);
+    return Capability.contribute(Capabilities.OperationHandler, KanbanOperationHandlerSet.handlers);
   }),
 );

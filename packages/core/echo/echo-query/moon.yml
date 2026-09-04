@@ -7,11 +7,7 @@ tags:
 tasks:
   build:
     deps:
-      - prebuild
-  prebuild:
-    deps:
-      - echo-query:prebuild-lezer
-      - echo-query:prebuild-query-lite
+      - ~:#prebuild
   prebuild-lezer:
     command: pnpm exec lezer-generator --typeScript ./src/parser/query.grammar -o ./src/parser/gen/query.ts
     inputs:
@@ -19,6 +15,8 @@ tasks:
     outputs:
       - src/parser/gen/query.terms.ts
       - src/parser/gen/query.ts
+    tags:
+      - prebuild
   prebuild-query-lite:
     command: pnpm exec tsdown --logLevel error
     deps:
@@ -28,6 +26,8 @@ tasks:
       - tsdown.config.ts
     outputs:
       - dist/query-lite/*
+    tags:
+      - prebuild
   test:
     deps:
-      - prebuild
+      - ~:#prebuild

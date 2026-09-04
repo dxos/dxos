@@ -7,22 +7,12 @@
 import * as Schema from 'effect/Schema';
 
 import * as Operation from '@dxos/compute/Operation';
-import { DXN, Ref } from '@dxos/echo';
-import {
-  // Unused by name, but the emitted declarations reference it — dropping the import breaks
-  // declaration emit (TS2742).
-  // eslint-disable-next-line unused-imports/no-unused-imports
-  Connection,
-  Cursor,
-} from '@dxos/link';
-// Unused by name, but the emitted declarations reference it — dropping the import breaks
-// declaration emit (TS2742). The suppression rode the pre-subpath barrel import too.
+import { DXN } from '@dxos/echo';
+// Referenced in the emitted .d.ts of the operations (via `ConnectorSpec`'s schemas); importing it
+// lets TypeScript name it (TS2883).
 // eslint-disable-next-line unused-imports/no-unused-imports
+import { Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
-
-import { meta } from '#meta';
-
-const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 /**
  * Discovery only — list GitHub repositories the connection's token can see.
@@ -35,7 +25,7 @@ const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name
  */
 export const GetGitHubRepositories = Operation.make({
   meta: {
-    key: makeKey('getGithubRepositories'),
+    key: DXN.make('org.dxos.operation.github.getRepositories'),
     name: 'Get GitHub Repositories',
     description: 'List GitHub repositories reachable from a connection without materializing local objects.',
     icon: 'ph--github-logo--regular',
@@ -46,12 +36,12 @@ export const GetGitHubRepositories = Operation.make({
 
 /**
  * Find-or-create the empty local root Project for a selected GitHub repo so a
- * {@link Cursor} can reference it as its `spec.target`. Keyed by the repo's
+ * cursor can reference it as its `spec.target`. Keyed by the repo's
  * GitHub foreign id (`remoteTarget.id`), so it is idempotent across re-selection.
  */
 export const MaterializeGitHubTarget = Operation.make({
   meta: {
-    key: makeKey('materializeGithubTarget'),
+    key: DXN.make('org.dxos.operation.github.materializeTarget'),
     name: 'Materialize GitHub Target',
     description: 'Create the empty local root Project bound to a selected GitHub repository.',
     icon: 'ph--github-logo--regular',
@@ -75,23 +65,21 @@ export const SyncOptions = Schema.Struct({
 export interface SyncOptions extends Schema.Schema.Type<typeof SyncOptions> {}
 
 /**
- * Reconcile GitHub data for one {@link Cursor} (one repo).
+ * Reconcile GitHub data for every repo bound to a connection (one cursor per repo).
  *
- * Pull-then-push for the bound repo: auto-upsert its owning org + members,
+ * Pull-then-push per bound repo: auto-upsert its owning org + members,
  * three-way merge the repo as a Project and its issues/PRs as Tasks (respecting
  * `maxDaysBack` if set), then push diverged Project/Task fields back to GitHub.
- * Sync state (`lastTick`/`lastError`/`spec.snapshots`) is written onto the binding.
+ * Sync state (`lastTick`/`lastError`/`spec.snapshots`) is written onto each binding.
  */
 export const SyncGitHubRepositories = Operation.make({
   meta: {
-    key: makeKey('syncGithubRepositories'),
+    key: DXN.make('org.dxos.operation.github.syncRepositories'),
     name: 'Sync GitHub Repositories',
-    description: 'Reconcile one bound GitHub repo plus its owning org, members, issues, PRs, and comments.',
+    description: 'Reconcile every bound GitHub repo plus its owning org, members, issues, PRs, and comments.',
     icon: 'ph--arrows-clockwise--regular',
   },
-  input: Schema.Struct({
-    binding: Ref.Ref(Cursor.Cursor),
-  }),
+  input: ConnectorSpec.SyncInput,
   output: Schema.Struct({
     pulled: Schema.Struct({
       organizations: Schema.Number,

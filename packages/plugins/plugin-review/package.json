@@ -15,13 +15,13 @@
   "imports": {
     "#capabilities": {
       "source": {
-        "workerd": "./src/capabilities/workerd.ts",
-        "node": "./src/capabilities/node.ts",
+        "workerd": "./src/capabilities/gen/workerd.ts",
+        "node": "./src/capabilities/gen/node.ts",
         "default": "./src/capabilities/index.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
       "workerd": "./dist/lib/capabilities.workerd.mjs",
-      "node": "./dist/lib/capabilities/node.mjs",
+      "node": "./dist/lib/capabilities.node.mjs",
       "default": "./dist/lib/capabilities.mjs"
     },
     "#components": {
@@ -50,14 +50,8 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": {
-        "workerd": "./src/plugin.workerd.ts",
-        "node": "./src/plugin.node.ts",
-        "default": "./src/plugin.tsx"
-      },
+      "source": "./src/plugin.tsx",
       "types": "./dist/types/src/plugin.d.ts",
-      "workerd": "./dist/lib/plugin.workerd.mjs",
-      "node": "./dist/lib/plugin.node.mjs",
       "default": "./dist/lib/plugin.mjs"
     },
     "#skills": {
@@ -83,17 +77,7 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./operations": {
-      "source": "./src/operations/index.ts",
-      "types": "./dist/types/src/operations/index.d.ts",
-      "import": "./dist/lib/operations.mjs"
-    },
     "./package.json": "./package.json",
-    "./skills": {
-      "source": "./src/skills/index.ts",
-      "types": "./dist/types/src/skills/index.d.ts",
-      "import": "./dist/lib/skills.mjs"
-    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
@@ -133,6 +117,16 @@
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/Settings.mjs"
+    },
+    "./CommentOperationHandlerSet": {
+      "source": "./src/operations/CommentOperationHandlerSet.ts",
+      "types": "./dist/types/src/operations/CommentOperationHandlerSet.d.ts",
+      "import": "./dist/lib/CommentOperationHandlerSet.mjs"
+    },
+    "./CommentSkill": {
+      "source": "./src/skills/CommentSkill.ts",
+      "types": "./dist/types/src/skills/CommentSkill.d.ts",
+      "import": "./dist/lib/CommentSkill.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -179,6 +173,7 @@
     "@dxos/echo-doc": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/graph": "workspace:*",
     "@dxos/halo": "workspace:*",
     "@dxos/halo-adapter-client": "workspace:*",
     "@dxos/halo-react": "workspace:*",

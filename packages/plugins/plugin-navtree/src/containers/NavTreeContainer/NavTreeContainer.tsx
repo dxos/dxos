@@ -11,13 +11,14 @@ import * as Fiber from 'effect/Fiber';
 import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import * as Graph from '@dxos/app-graph/Graph';
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface, useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { useMediaQuery, useSidebars } from '@dxos/react-ui';
-import { type TreeData, isTreeData } from '@dxos/react-ui-list';
+import { type TreeData, isTreeDataFor } from '@dxos/react-ui-list';
 import { arrayMove } from '@dxos/util';
 
 import { NAV_TREE_ITEM, NavTree, NavTreeContext } from '#components';
@@ -34,13 +35,15 @@ export const NODE_TYPE = 'dxos/app-graph/node';
 const HOVER_SETTLE_DELAY = Duration.millis(150);
 
 // TODO(wittjosiah): Avoid using Surface within the navtree, prefer declarative data flow.
-const NavTreeItemEnd = ({ node, open }: { node: Node.Node; open: boolean }) => {
+const NavTreeItemEnd = ({ node, open }: { node: AppGraphNode.Node; open: boolean }) => {
   const data = useMemo(() => ({ id: node.id, subject: node.data, open }), [node.id, node.data, open]);
   return <Surface.Surface type={AppSurface.NavtreeItemEnd} data={data} limit={1} />;
 };
 
-const getItems = (graph: Graph.ReadableGraph, node?: Node.Node, disposition?: string) => {
-  return Graph.getConnections(graph, node?.id ?? Node.RootId, 'child').filter((node) => filterItems(node, disposition));
+const getItems = (graph: AppGraph.ReadableGraph, node?: AppGraphNode.Node, disposition?: string) => {
+  return AppGraph.getConnections(graph, node?.id ?? GraphNode.RootId, 'child').filter((node) =>
+    filterItems(node, disposition),
+  );
 };
 
 export type NavTreeContainerProps = {
@@ -56,7 +59,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     const { graph } = useAppGraph();
     const { getItem, setItem } = useNavTreeState();
     const layout = useLayout();
-    const model = useNavTreeModel(Node.RootId);
+    const model = useNavTreeModel(GraphNode.RootId);
     const { navigationSidebarState } = useSidebars(meta.profile.key);
     const latestRef = useRef({
       tab,
@@ -75,17 +78,17 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     }, [tab, layout.active, navigationSidebarState, isLg]);
 
     const handleOpenChange = useCallback(
-      ({ item: { id }, path, open }: { item: Node.Node; path: string[]; open: boolean }) => {
+      ({ item: { id }, path, open }: { item: AppGraphNode.Node; path: string[]; open: boolean }) => {
         // TODO(thure): This might become a localstorage leak; openItemIds that no longer exist should be removed from this map.
         setItem(path, 'open', open);
-        Graph.expandSync(graph, id, 'child');
+        AppGraph.expandSync(graph, id, 'child');
       },
       [graph, setItem],
     );
 
     const handleTabChange = useCallback(
       (node: NavTreeNode.NavTreeItemGraphNode) => {
-        Graph.expandSync(graph, node.id, 'child');
+        AppGraph.expandSync(graph, node.id, 'child');
 
         const {
           tab: activeTab,
@@ -108,7 +111,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
 
         // Open the first item if the workspace is empty.
         if (activeItems.length === 0) {
-          const [item] = getItems(graph, node).filter((node) => !Node.isActionLike(node));
+          const [item] = getItems(graph, node).filter((node) => !AppGraphNode.isActionLike(node));
           if (item && item.data) {
             void invokePromise(LayoutOperation.Open, { subject: [item.id] });
           }
@@ -128,18 +131,28 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       return target.item.properties.canDrop?.(source) ?? false;
     }, []);
 
-    const canSelect = useCallback(({ item }: { item: Node.Node }) => {
+    const canSelect = useCallback(({ item }: { item: AppGraphNode.Node }) => {
       return item.properties.selectable ?? true;
     }, []);
 
     const handleSelect = useCallback(
-      ({ item: node, path, option, shift }: { item: Node.Node; path: string[]; option: boolean; shift: boolean }) => {
+      ({
+        item: node,
+        path,
+        option,
+        shift,
+      }: {
+        item: AppGraphNode.Node;
+        path: string[];
+        option: boolean;
+        shift: boolean;
+      }) => {
         if (!node.data) {
           return;
         }
 
-        if (Node.isAction(node)) {
-          const [parent] = Graph.getConnections(graph, node.id, Node.childRelation('inbound'));
+        if (AppGraphNode.isAction(node)) {
+          const [parent] = AppGraph.getConnections(graph, node.id, AppGraphNode.childRelation('inbound'));
           if (parent) {
             void runAction(node, { parent, path, caller: NAV_TREE_ITEM });
           }
@@ -161,8 +174,10 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           void invokePromise(LayoutOperation.ScrollIntoView, { subject: node.id });
         }
 
-        const defaultAction = Graph.getActions(graph, node.id).find((action) => Node.hasDisposition(action, 'default'));
-        if (Node.isAction(defaultAction)) {
+        const defaultAction = AppGraph.getActions(graph, node.id).find((action) =>
+          AppGraphNode.hasDisposition(action, 'default'),
+        );
+        if (AppGraphNode.isAction(defaultAction)) {
           void runAction(defaultAction);
         }
 
@@ -178,7 +193,9 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     // TODO(wittjosiah): Factor out hook.
     useEffect(() => {
       return monitorForElements({
-        canMonitor: ({ source }) => isTreeData(source.data),
+        // Scoped to this tree: monitors are global and every tree's payload has the same shape, so
+        // without the id this claimed a task list's drag and then read its item as a graph node.
+        canMonitor: ({ source }) => isTreeDataFor(source.data, GraphNode.RootId),
         onDrop: ({ location, source }) => {
           // Didn't drop on anything.
           if (!location.current.dropTargets.length) {
@@ -235,15 +252,15 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       });
     }, [graph]);
 
-    // Group nodes are always expanded and have no toggle, so they never trigger Graph.expand through
+    // Group nodes are always expanded and have no toggle, so they never trigger AppGraph.expand through
     // user interaction. Watch the workspace's children reactively and mark any group nodes as open
     // so the state machinery treats them consistently with regular open nodes (including on next load).
     const workspaceChildren = useAtomValue(graph.connections(tab, 'child'));
     useEffect(() => {
       for (const child of workspaceChildren) {
-        if (Node.hasDisposition(child, 'group')) {
-          setItem([Node.RootId, tab, child.id], 'open', true);
-          Graph.expandSync(graph, child.id, 'child');
+        if (AppGraphNode.hasDisposition(child, 'group')) {
+          setItem([GraphNode.RootId, tab, child.id], 'open', true);
+          AppGraph.expandSync(graph, child.id, 'child');
         }
       }
     }, [workspaceChildren, tab, setItem, graph]);
@@ -259,10 +276,10 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     }, []);
     useEffect(() => interruptHoverExpand, [interruptHoverExpand]);
     const onItemHover = useCallback(
-      ({ item }: { item: Node.Node }) => {
+      ({ item }: { item: AppGraphNode.Node }) => {
         interruptHoverExpand();
         hoverExpandRef.current = Effect.runFork(
-          Effect.sleep(HOVER_SETTLE_DELAY).pipe(Effect.andThen(Graph.expand(graph, item.id, 'child'))),
+          Effect.sleep(HOVER_SETTLE_DELAY).pipe(Effect.andThen(AppGraph.expand(graph, item.id, 'child'))),
         );
       },
       [graph, interruptHoverExpand],
@@ -298,7 +315,13 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
 
     return (
       <NavTreeContext.Provider value={navTreeContextValue}>
-        <NavTree id={Node.RootId} root={Graph.getRoot(graph)} tab={tab} open={layout.sidebarOpen} ref={forwardedRef} />
+        <NavTree
+          id={GraphNode.RootId}
+          root={AppGraph.getRoot(graph)}
+          tab={tab}
+          open={layout.sidebarOpen}
+          ref={forwardedRef}
+        />
       </NavTreeContext.Provider>
     );
   },

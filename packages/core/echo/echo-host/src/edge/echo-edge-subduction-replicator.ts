@@ -90,9 +90,8 @@ export type EchoEdgeSubductionReplicatorProps = {
  * {@link AutomergeReplicatorConnection}. Outbound repo messages are wrapped in a router
  * frame and sent to the edge.
  *
- * No classical automerge-repo sync, collection-query/state, bundle sync, or rate-limiting
- * runs through this class — Subduction's sedimentree protocol replaces those
- * responsibilities. For the classical sync path see {@link EchoEdgeReplicator}.
+ * No automerge-repo sync, collection-query/state, or rate-limiting runs through this class —
+ * Subduction's sedimentree protocol replaces those responsibilities.
  */
 export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
   private readonly _edgeConnection: EdgeConnection;
@@ -441,12 +440,9 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
     return this._remotePeerId;
   }
 
-  get bundleSyncEnabled(): boolean {
-    return false;
-  }
-
   async shouldAdvertise(params: ShouldAdvertiseProps): Promise<boolean> {
     if (!this._sharedPolicyEnabled) {
+      log.verbose('share policy probe', { documentId: params.documentId, allow: true, reason: 'policy-disabled' });
       return true;
     }
     const spaceId = await this._context.getContainingSpaceIdForDocument(params.documentId);
@@ -463,7 +459,17 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
       // If a document is not present locally return true only if it already exists on edge.
       return remoteDocumentExists;
     }
-    return spaceId === this._spaceId;
+    // `reason` separates the expected cross-space denial — which fans out across every
+    // space-scoped peer each sync round — from a same-space document being wrongly refused.
+    const allow = spaceId === this._spaceId;
+    log.verbose('share policy probe', {
+      documentId: params.documentId,
+      allow,
+      reason: allow ? 'same-space' : 'cross-space',
+      documentSpaceId: spaceId,
+      connectionSpaceId: this._spaceId,
+    });
+    return allow;
   }
 
   shouldSyncCollection(params: ShouldSyncCollectionProps): boolean {

@@ -13,10 +13,12 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Option from 'effect/Option';
 import type * as Scope from 'effect/Scope';
 import * as Semaphore from 'effect/Semaphore';
+import * as Tracer from 'effect/Tracer';
 
 import { ServiceNotAvailableError } from '@dxos/compute';
 import type * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
+import { SpanAttributes } from '@dxos/effect';
 import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
@@ -615,7 +617,13 @@ class Slice {
 
   #materializeLayers(newLayers: LayerSpec.LayerSpec[]): Effect.Effect<void, ServiceNotAvailableError> {
     return Effect.gen({ self: this }, function* () {
-      const baseLayer: Layer.Layer<unknown, unknown, unknown> = Layer.syncContext(() => this.#services) as any;
+      // `ManagedRuntime.make` starts from an empty context, so the slice would otherwise trace to
+      // Effect's default, which exports nothing.
+      const defaultTracer = Context.make(Tracer.Tracer, yield* Effect.tracer);
+      const withDefaultTracer = (services: Context.Context<unknown>) => Context.merge(defaultTracer, services);
+      const baseLayer: Layer.Layer<unknown, unknown, unknown> = Layer.syncContext(() =>
+        withDefaultTracer(this.#services),
+      ) as any;
       const combinedLayer = newLayers.reduce<Layer.Layer<unknown, unknown, unknown>>(
         (acc, spec) => Layer.provideMerge(spec.make(this.#context) as Layer.Layer<unknown, unknown, unknown>, acc),
         baseLayer,
@@ -650,7 +658,13 @@ class Slice {
           }),
         );
       }
-    });
+    }).pipe(
+      Effect.withSpan('LayerStack.materializeLayers', {
+        attributes: {
+          [SpanAttributes.LAYER.provides]: newLayers.flatMap((layer) => layer.provides.map((tag) => tag.key)),
+        },
+      }),
+    );
   }
 
   async destroy() {

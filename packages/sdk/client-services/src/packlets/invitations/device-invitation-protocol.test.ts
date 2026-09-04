@@ -41,6 +41,26 @@ describe('services/device', () => {
     expect(guest.identityManager.identity?.identityKey).to.deep.eq(identity1.identityKey);
   });
 
+  test('the joining device never mints a competing halo root', async () => {
+    const [host, guest] = await chain<ServiceContext>([closeAfterTest])(
+      createPeers(2, undefined, { automergeCredentials: true }),
+    );
+
+    const identity = await host.createIdentity();
+    const spaceId = identity.haloSpaceId;
+    const hostRefs = host.echoHost.getSpaceRootRefs(spaceId);
+    expect(hostRefs?.spaceRootDocUrl).to.exist;
+
+    await Promise.all(performInvitation({ host, guest, options: { kind: Invitation.Kind.DEVICE } }));
+
+    // Halo documents have no replication path between devices yet, so the named root cannot arrive.
+    // What matters is that the guest does not mint a competing root over the same space: two roots
+    // would leave the devices disagreeing about which document carries the credential chain.
+    expect(guest.identityManager.identity?.haloSpaceId).to.equal(spaceId);
+    const guestRoot = guest.echoHost.getSpaceRootRefs(spaceId)?.spaceRootDocUrl;
+    expect(guestRoot === undefined || guestRoot === hostRefs!.spaceRootDocUrl).to.be.true;
+  });
+
   test('invitation when already joined', async () => {
     const [host, guest] = await chain<ServiceContext>([closeAfterTest])(createPeers(2));
 

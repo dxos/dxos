@@ -113,7 +113,7 @@ export const formatSpace = Effect.fn(function* (space: Space, options: FormatSpa
     key,
     epoch,
     startup,
-    automergeRoot: pipeline?.spaceRootUrl,
+    automergeRoot: pipeline?.directoryUrl,
     // appliedEpoch,
     syncState: `${syncState.count} ${getSyncIndicator(syncState.up, syncState.down)} (${syncState.peers} peers)`,
   };

@@ -7,18 +7,48 @@ import * as Rpc from 'effect/unstable/rpc/Rpc';
 import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
 import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
-import { protoMessage, serviceError } from './service-rpc.ts';
+import { SignalResponseSchema, SubscribeToSpacesResponseSchema } from './buf/proto/gen/dxos/devtools/host_pb.ts';
+import { SignedMessageSchema } from './buf/proto/gen/dxos/halo/signed_pb.ts';
+import { SignalState } from './proto/gen/dxos/mesh/signal.ts';
+import { bufMessage, protoMessage, serviceError } from './service-rpc.ts';
 import { mutableArray, protoTimestamp, publicKey } from './service-schemas.ts';
 
 //
 // RPC message schemas.
 //
 
+export const ReadyEvent = Schema.Struct({});
+export interface ReadyEvent extends Schema.Schema.Type<typeof ReadyEvent> {}
+
+export const Event = Schema.Struct({
+  ready: Schema.optional(ReadyEvent),
+});
+export interface Event extends Schema.Schema.Type<typeof Event> {}
+
 export const GetConfigResponse = Schema.Struct({
   /** JSON-encoded configuration object. */
   config: Schema.String,
 });
 export interface GetConfigResponse extends Schema.Schema.Type<typeof GetConfigResponse> {}
+
+export const StorageInfo = Schema.Struct({
+  type: Schema.String,
+  storageUsage: Schema.Number,
+  originUsage: Schema.Number,
+  usageQuota: Schema.Number,
+});
+export interface StorageInfo extends Schema.Schema.Type<typeof StorageInfo> {}
+
+export const StoredSnapshotInfo = Schema.Struct({
+  key: Schema.String,
+  size: Schema.Number,
+});
+export interface StoredSnapshotInfo extends Schema.Schema.Type<typeof StoredSnapshotInfo> {}
+
+export const GetSnapshotsResponse = Schema.Struct({
+  snapshots: Schema.optional(mutableArray(StoredSnapshotInfo)),
+});
+export interface GetSnapshotsResponse extends Schema.Schema.Type<typeof GetSnapshotsResponse> {}
 
 export const ResetStorageRequest = Schema.Struct({});
 export interface ResetStorageRequest extends Schema.Schema.Type<typeof ResetStorageRequest> {}
@@ -55,7 +85,7 @@ export interface SubscribeToCredentialMessagesRequest extends Schema.Schema.Type
 > {}
 
 export const SubscribeToCredentialMessagesResponse = Schema.Struct({
-  messages: Schema.optional(mutableArray(protoMessage('dxos.halo.signed.SignedMessage'))),
+  messages: Schema.optional(mutableArray(bufMessage(SignedMessageSchema))),
 });
 export interface SubscribeToCredentialMessagesResponse extends Schema.Schema.Type<
   typeof SubscribeToCredentialMessagesResponse
@@ -81,6 +111,31 @@ export const SubscribeToFeedsRequest = Schema.Struct({
   feedKeys: Schema.optional(mutableArray(publicKey)),
 });
 export interface SubscribeToFeedsRequest extends Schema.Schema.Type<typeof SubscribeToFeedsRequest> {}
+
+const feedOwnerSchema = Schema.Struct({
+  identity: publicKey,
+  device: publicKey,
+});
+type FeedOwnerType = Schema.Schema.Type<typeof feedOwnerSchema>;
+
+const feedSchema = Schema.Struct({
+  feedKey: publicKey,
+  length: Schema.Number,
+  bytes: Schema.Number,
+  /** Bitfield of downloaded blocks. */
+  downloaded: Schema.Uint8Array,
+  owner: Schema.optional(feedOwnerSchema),
+});
+type FeedType = Schema.Schema.Type<typeof feedSchema>;
+
+export const SubscribeToFeedsResponse = Schema.Struct({
+  feeds: Schema.optional(mutableArray(feedSchema)),
+});
+export interface SubscribeToFeedsResponse extends Schema.Schema.Type<typeof SubscribeToFeedsResponse> {}
+export namespace SubscribeToFeedsResponse {
+  export type Feed = FeedType;
+  export type FeedOwner = FeedOwnerType;
+}
 
 export const SubscribeToFeedBlocksRequest = Schema.Struct({
   spaceKey: Schema.optional(publicKey),
@@ -134,6 +189,25 @@ export const SubscribeToNetworkTopicsResponse = Schema.Struct({
   topics: Schema.optional(mutableArray(Topic)),
 });
 export interface SubscribeToNetworkTopicsResponse extends Schema.Schema.Type<typeof SubscribeToNetworkTopicsResponse> {}
+
+const signalServerSchema = Schema.Struct({
+  host: Schema.String,
+  state: Schema.Enum(SignalState),
+  error: Schema.optional(Schema.String),
+  /** Number of milliseconds before reconnection. */
+  reconnectIn: Schema.Number,
+  connectionStarted: protoTimestamp,
+  lastStateChange: protoTimestamp,
+});
+type SignalServerType = Schema.Schema.Type<typeof signalServerSchema>;
+
+export const SubscribeToSignalStatusResponse = Schema.Struct({
+  servers: Schema.optional(mutableArray(signalServerSchema)),
+});
+export interface SubscribeToSignalStatusResponse extends Schema.Schema.Type<typeof SubscribeToSignalStatusResponse> {}
+export namespace SubscribeToSignalStatusResponse {
+  export type SignalServer = SignalServerType;
+}
 
 export const SubscribeToSwarmInfoRequest = Schema.Struct({});
 export interface SubscribeToSwarmInfoRequest extends Schema.Schema.Type<typeof SubscribeToSwarmInfoRequest> {}
@@ -218,7 +292,7 @@ export interface RunSqliteQueryResponse extends Schema.Schema.Type<typeof RunSql
 export class Rpcs extends RpcGroup.make(
   /** Subscribe to server-to-client events. */
   Rpc.make('events', {
-    success: protoMessage('dxos.devtools.host.Event'),
+    success: Event,
     error: serviceError,
     stream: true,
   }),
@@ -228,7 +302,7 @@ export class Rpcs extends RpcGroup.make(
     error: serviceError,
   }),
   Rpc.make('getStorageInfo', {
-    success: protoMessage('dxos.devtools.host.StorageInfo'),
+    success: StorageInfo,
     error: serviceError,
   }),
   Rpc.make('resetStorage', {
@@ -236,7 +310,7 @@ export class Rpcs extends RpcGroup.make(
     error: serviceError,
   }),
   Rpc.make('getSnapshots', {
-    success: protoMessage('dxos.devtools.host.GetSnapshotsResponse'),
+    success: GetSnapshotsResponse,
     error: serviceError,
   }),
   Rpc.make('enableDebugLogging', {
@@ -263,7 +337,7 @@ export class Rpcs extends RpcGroup.make(
   }),
   Rpc.make('subscribeToSpaces', {
     payload: SubscribeToSpacesRequest,
-    success: protoMessage('dxos.devtools.host.SubscribeToSpacesResponse'),
+    success: bufMessage(SubscribeToSpacesResponseSchema),
     error: serviceError,
     stream: true,
   }),
@@ -275,7 +349,7 @@ export class Rpcs extends RpcGroup.make(
   }),
   Rpc.make('subscribeToFeeds', {
     payload: SubscribeToFeedsRequest,
-    success: protoMessage('dxos.devtools.host.SubscribeToFeedsResponse'),
+    success: SubscribeToFeedsResponse,
     error: serviceError,
     stream: true,
   }),
@@ -315,12 +389,12 @@ export class Rpcs extends RpcGroup.make(
     stream: true,
   }),
   Rpc.make('subscribeToSignalStatus', {
-    success: protoMessage('dxos.devtools.host.SubscribeToSignalStatusResponse'),
+    success: SubscribeToSignalStatusResponse,
     error: serviceError,
     stream: true,
   }),
   Rpc.make('subscribeToSignal', {
-    success: protoMessage('dxos.devtools.host.SignalResponse'),
+    success: bufMessage(SignalResponseSchema),
     error: serviceError,
     stream: true,
   }),

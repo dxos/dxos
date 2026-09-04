@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as ts from '@typescript/typescript6';
 import * as Effect from 'effect/Effect';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import * as HttpClient from 'effect/unstable/http/HttpClient';
 import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
-import * as ts from 'typescript';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { initializeBundler } from '@dxos/edge-compute/bundler';

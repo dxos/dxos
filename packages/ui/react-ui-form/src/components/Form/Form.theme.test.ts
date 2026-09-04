@@ -22,6 +22,11 @@ describe('formTheme', () => {
     expect(styles.fieldLabel()).toContain('[grid-area:header]');
     expect(styles.fieldLabelText()).toContain('text-lg');
     expect(styles.fieldControl()).toContain('justify-end');
+    // Both cells and the control inside must be able to shrink below their content: a grid track's
+    // automatic minimum is min-content, which is what let a long value overflow the field's border.
+    expect(styles.fieldControl()).toContain('min-w-0');
+    expect(styles.fieldControl()).toContain('[&>*]:min-w-0');
+    expect(styles.fieldDescription()).toContain('min-w-0');
     expect(formTheme.behavior.settings.showDescription).toBe(true);
   });
 

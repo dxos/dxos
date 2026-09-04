@@ -24,7 +24,7 @@ const handler: Operation.WithHandler<typeof TableOperation.AddRow> = TableOperat
       const schema = types.find((t) => Type.getURI(t) === typeUri);
       invariant(schema);
       const object = Obj.make(Type.assertObject(schema), data);
-      yield* Operation.invoke(SpaceOperation.AddObject, { target: db, object });
+      yield* Operation.invoke(SpaceOperation.AddObject, { object }, { spaceId: db.spaceId });
     }),
   ),
 );

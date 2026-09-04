@@ -7,17 +7,35 @@ import * as Effect from 'effect/Effect';
 import { Event, scheduleTaskInterval } from '@dxos/async';
 import { type Client, type ClientServices } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { DeviceKind } from '@dxos/client/halo';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ConnectionState, type NetworkStatus, Platform } from '@dxos/protocols/proto/dxos/client/services';
+// Value imports come straight from protocols: reaching them through the `@dxos/client` barrels
+// puts echo-client (and wa-sqlite, automerge-repo with it) in the app's eager boot graph.
+import {
+  ConnectionState,
+  DeviceKind,
+  type NetworkStatus,
+  Platform,
+  SpaceState,
+} from '@dxos/protocols/proto/dxos/client/services';
 
-import { type DataProvider } from '../observability';
+import * as Observability from '../Observability';
+import { type CrossRealmMemory, measureCrossRealmMemory, readHeap, supportsCrossRealmMemory } from './memory';
+import { SyncEpisodeTracker } from './sync-episodes';
+import { subscribeSyncSummary } from './sync-state';
 
 const SPACE_METRICS_MIN_INTERVAL = 1000 * 60 * 10; // 10 minutes
 const NETWORK_METRICS_MIN_INTERVAL = 1000 * 60 * 10; // 10 minutes
 const RUNTIME_METRICS_MIN_INTERVAL = 1000 * 60 * 10; // 10 minutes
+
+/** Under the 60s export interval, so an observed gauge never reports a stale sample. */
+const MEMORY_SAMPLE_INTERVAL = 1000 * 30;
+
+const BYTES = { unit: 'By' } as const;
+const SPACES = { unit: '{space}' } as const;
+const DOCUMENTS = { unit: '{document}' } as const;
+const SECONDS = { unit: 's' } as const;
 
 // TODO(wittjosiah): Improve privacy of telemetry identifiers.
 //  - Identifier should be generated client-side with no attachment to identity.
@@ -25,7 +43,7 @@ const RUNTIME_METRICS_MIN_INTERVAL = 1000 * 60 * 10; // 10 minutes
 //  - Identifier can be synced via HALO to allow for correlation of events bewteen devices.
 //  - Identifier should also be stored outside of HALO such that it is available immediately on startup.
 /** Subscribes to identity and device changes and sets observability tags accordingly. */
-export const identityProvider = (clientServices: Partial<ClientServices>): DataProvider =>
+export const identityProvider = (clientServices: Partial<ClientServices>): Observability.DataProvider =>
   Effect.fn(function* (observability) {
     // TODO(wittjosiah): RPC subscribe returns void; cleanup requires upstream API change.
     clientServices.IdentityService!.queryIdentity().subscribe((idqr) => {
@@ -55,8 +73,34 @@ export const identityProvider = (clientServices: Partial<ClientServices>): DataP
     });
   });
 
+/**
+ * What {@link identityManagerProvider} reads: the host-side identity manager, in a realm that has no
+ * client proxy to subscribe through.
+ */
+export type IdentitySource = {
+  readonly identity: { readonly did: string } | undefined;
+  readonly stateUpdate: { on(listener: () => void): unknown };
+};
+
+/**
+ * Tags every span and log of a realm with the identity, read from the services host itself. For the
+ * dedicated worker, whose tracer and tags are its own: the tab's {@link identityProvider} only tags
+ * the tab. Tags only — the tab already identifies the user with the analytics backend.
+ */
+export const identityManagerProvider = (identityManager: IdentitySource): Observability.DataProvider =>
+  Effect.fn(function* (observability) {
+    const apply = () => {
+      const did = identityManager.identity?.did;
+      if (did) {
+        observability.setTags({ did });
+      }
+    };
+    identityManager.stateUpdate.on(apply);
+    apply();
+  });
+
 /** Periodically publishes network connection and buffer metrics. */
-export const networkMetricsProvider = (clientServices: Partial<ClientServices>): DataProvider =>
+export const networkMetricsProvider = (clientServices: Partial<ClientServices>): Observability.DataProvider =>
   Effect.fn(function* (observability) {
     const ctx = new Context();
     let lastNetworkStatus: NetworkStatus | undefined;
@@ -116,7 +160,7 @@ export const networkMetricsProvider = (clientServices: Partial<ClientServices>):
   });
 
 /** Periodically publishes platform and heap memory metrics. */
-export const runtimeMetricsProvider = (clientServices: Partial<ClientServices>): DataProvider =>
+export const runtimeMetricsProvider = (clientServices: Partial<ClientServices>): Observability.DataProvider =>
   Effect.fn(function* (observability) {
     const ctx = new Context();
     log('runtimeMetricsProvider: requesting platform from SystemService');
@@ -131,30 +175,61 @@ export const runtimeMetricsProvider = (clientServices: Partial<ClientServices>):
       runtime: platform.runtime,
     });
 
-    scheduleTaskInterval(
-      ctx,
-      async () => {
-        if (clientServices.constructor.name === 'WorkerClientServices') {
-          const memory = (window.performance as any).memory;
-          if (memory) {
-            observability.metrics.gauge('dxos.client.runtime.heapTotal', memory.totalJSHeapSize);
-            observability.metrics.gauge('dxos.client.runtime.heapUsed', memory.usedJSHeapSize);
-            observability.metrics.gauge('dxos.client.runtime.heapSizeLimit', memory.jsHeapSizeLimit);
-          }
-        }
+    // Heap is a synchronous read, so the gauge reads it directly at collection time.
+    const heapGauges = [
+      ['dxos.client.runtime.heapUsed', () => readHeap().used],
+      ['dxos.client.runtime.heapTotal', () => readHeap().total],
+      ['dxos.client.runtime.heapSizeLimit', () => readHeap().limit],
+    ] as const;
+    for (const [name, read] of heapGauges) {
+      ctx.onDispose(observability.metrics.observe(name, read, undefined, BYTES));
+    }
 
-        clientServices.SystemService?.getPlatform()
-          .then((platform) => {
-            if (platform.memory) {
-              observability.metrics.gauge('dxos.client.services.runtime.rss', platform.memory.rss);
-              observability.metrics.gauge('dxos.client.services.runtime.heapTotal', platform.memory.heapTotal);
-              observability.metrics.gauge('dxos.client.services.runtime.heapUsed', platform.memory.heapUsed);
-            }
-          })
-          .catch((error) => log('platform error', { error }));
-      },
-      RUNTIME_METRICS_MIN_INTERVAL,
-    );
+    // The platform reading is an RPC and cross-realm memory waits for a GC, so both are sampled on
+    // their own cadence and the gauges read the latest sample.
+    let platformMemory: Platform['memory'];
+    let crossRealmMemory: CrossRealmMemory | undefined;
+
+    const servicesGauges = [
+      ['dxos.client.services.runtime.heapUsed', () => platformMemory?.heapUsed],
+      ['dxos.client.services.runtime.heapTotal', () => platformMemory?.heapTotal],
+      ['dxos.client.services.runtime.rss', () => platformMemory?.rss],
+    ] as const;
+    for (const [name, read] of servicesGauges) {
+      ctx.onDispose(observability.metrics.observe(name, read, undefined, BYTES));
+    }
+
+    if (supportsCrossRealmMemory()) {
+      for (const scope of ['window', 'shared-worker', 'dedicated-worker', 'other'] as const) {
+        ctx.onDispose(
+          observability.metrics.observe(
+            'dxos.client.runtime.memory.bytes',
+            () => crossRealmMemory?.[scope],
+            { scope },
+            BYTES,
+          ),
+        );
+      }
+    }
+
+    const sample = async () => {
+      try {
+        const platform = await clientServices.SystemService?.getPlatform();
+        platformMemory = platform?.memory;
+      } catch (error) {
+        log('platform error', { error });
+      }
+
+      try {
+        crossRealmMemory = await measureCrossRealmMemory();
+      } catch (error) {
+        // Not cross-origin isolated, or a measurement is already in flight; neither is retryable here.
+        log('cross-realm memory unavailable', { error });
+      }
+    };
+
+    scheduleTaskInterval(ctx, sample, MEMORY_SAMPLE_INTERVAL);
+    void sample();
 
     return async () => {
       await ctx.dispose();
@@ -162,25 +237,53 @@ export const runtimeMetricsProvider = (clientServices: Partial<ClientServices>):
   });
 
 /** Periodically publishes space membership, object count, and pipeline progress metrics. */
-export const spacesMetricsProvider = (client: Client): DataProvider =>
+export const spacesMetricsProvider = (client: Client): Observability.DataProvider =>
   Effect.fn(function* (observability) {
     const ctx = new Context();
-    // TODO(nf): update subscription on new spaces
+    // Pipeline subscriptions only; the gauges below read the live space list at collection time.
     const spaces = client.spaces.get();
     const subscriptions = new Map<string, { unsubscribe: () => void }>();
     ctx.onDispose(() => subscriptions.forEach((subscription) => subscription.unsubscribe()));
 
+    // Read at collection time. The gap between the two is the "known but not opened" signal.
+    ctx.onDispose(
+      observability.metrics.observe('dxos.client.spaces.count', () => client.spaces.get().length, undefined, SPACES),
+    );
+    ctx.onDispose(
+      observability.metrics.observe(
+        'dxos.client.spaces.ready.count',
+        () => client.spaces.get().filter((space) => space.state.get() === SpaceState.SPACE_READY).length,
+        undefined,
+        SPACES,
+      ),
+    );
+
     const updateSpaceMetrics = new Event<Space>().debounce(SPACE_METRICS_MIN_INTERVAL);
     updateSpaceMetrics.on(ctx, async () => {
       log('send space metrics');
-      for (const data of mapSpaces(spaces, { truncateKeys: true })) {
-        observability.metrics.gauge('dxos.client.space.members', data.members, { key: data.key });
-        observability.metrics.gauge('dxos.client.space.objects', data.objects, { key: data.key });
-        observability.metrics.gauge('dxos.client.space.epoch', data.epoch, { key: data.key });
-        observability.metrics.gauge('dxos.client.space.currentDataMutations', data.currentDataMutations, {
-          key: data.key,
-        });
-      }
+      // Reported as device-wide totals rather than per space: the previous `key` attribute cost one
+      // series per space per device, unbounded in the number of spaces a user creates.
+      const mapped = mapSpaces(client.spaces.get(), { truncateKeys: true });
+      const total = (pick: (data: (typeof mapped)[number]) => number | undefined) =>
+        mapped.reduce((sum, data) => sum + (pick(data) ?? 0), 0);
+
+      observability.metrics.gauge(
+        'dxos.client.space.members',
+        total((data) => data.members),
+      );
+      observability.metrics.gauge(
+        'dxos.client.space.objects',
+        total((data) => data.objects),
+      );
+      observability.metrics.gauge(
+        'dxos.client.space.currentDataMutations',
+        total((data) => data.currentDataMutations),
+      );
+      // Max, not a sum: epochs are per-space sequence numbers, so adding them means nothing.
+      observability.metrics.gauge(
+        'dxos.client.space.epoch',
+        mapped.reduce((max, data) => Math.max(max, data.epoch ?? 0), 0),
+      );
     });
 
     const subscribeToSpaceUpdate = (space: Space) =>
@@ -205,6 +308,87 @@ export const spacesMetricsProvider = (client: Client): DataProvider =>
     });
 
     scheduleTaskInterval(ctx, async () => updateSpaceMetrics.emit(), SPACE_METRICS_MIN_INTERVAL);
+
+    return async () => {
+      await ctx.dispose();
+    };
+  });
+
+/** Publishes the document backlog folded across every space. */
+export const documentsMetricsProvider = (client: Client): Observability.DataProvider =>
+  Effect.fn(function* (observability) {
+    const ctx = new Context();
+    const { summary } = subscribeSyncSummary(client, ctx);
+
+    ctx.onDispose(
+      observability.metrics.observe(
+        'dxos.echo.documents.count',
+        () => summary().localDocumentCount,
+        { location: 'local' },
+        DOCUMENTS,
+      ),
+    );
+    ctx.onDispose(
+      observability.metrics.observe(
+        'dxos.echo.documents.count',
+        () => summary().remoteDocumentCount,
+        { location: 'remote' },
+        DOCUMENTS,
+      ),
+    );
+    ctx.onDispose(
+      observability.metrics.observe(
+        'dxos.echo.documents.unsynced.count',
+        () => summary().unsyncedDocumentCount,
+        undefined,
+        DOCUMENTS,
+      ),
+    );
+
+    return async () => {
+      await ctx.dispose();
+    };
+  });
+
+/**
+ * Publishes how long a client takes to sync, and how long it has been stuck.
+ *
+ * Both are needed. `episode.duration` records only when a backlog clears, so a client that never
+ * finishes syncing contributes nothing to it — `stalled.duration` is what makes that client visible.
+ */
+export const syncMetricsProvider = (client: Client): Observability.DataProvider =>
+  Effect.fn(function* (observability) {
+    const ctx = new Context();
+    const episodes = new SyncEpisodeTracker();
+    let pending = 0;
+
+    // Fed on every sync-state emission rather than at collection time: an episode that opens and
+    // closes inside one 60s export window would otherwise never be seen at all.
+    subscribeSyncSummary(client, ctx, (summary) => {
+      pending = summary.pendingWorkCount;
+      const closed = episodes.observe(Date.now(), summary.pendingWorkCount);
+      if (closed) {
+        log('sync episode closed', { durationMs: closed.durationMs, truncated: closed.truncated });
+        observability.metrics.distribution(
+          'dxos.echo.sync.episode.duration',
+          closed.durationMs / 1_000,
+          undefined,
+          SECONDS,
+        );
+      }
+    });
+
+    ctx.onDispose(
+      observability.metrics.observe('dxos.echo.sync.pending.count', () => pending, undefined, { unit: '{item}' }),
+    );
+    ctx.onDispose(
+      observability.metrics.observe(
+        'dxos.echo.sync.stalled.duration',
+        () => episodes.stalledForMs(Date.now()) / 1_000,
+        undefined,
+        SECONDS,
+      ),
+    );
 
     return async () => {
       await ctx.dispose();

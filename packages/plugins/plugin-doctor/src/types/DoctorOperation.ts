@@ -157,7 +157,7 @@ const QueryComposerLogsOutput = Schema.Struct({
 
 export const QueryComposerLogs = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.function.doctor.queryComposerLogs'),
+    key: DXN.make('org.dxos.operation.doctor.queryComposerLogs'),
     name: 'Query Composer Logs',
     icon: 'ph--magnifying-glass--regular',
     description: trim`

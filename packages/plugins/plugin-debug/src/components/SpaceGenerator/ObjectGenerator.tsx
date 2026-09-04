@@ -44,7 +44,7 @@ export const createGenerator = <S extends Type.AnyObj>(
           .find((s) => Type.getTypename(s) === typename)
       : undefined;
     if (!view && !staticSchema) {
-      await invokePromise(SpaceOperation.AddType, { db: space.db, type: schema, show: false });
+      await invokePromise(SpaceOperation.AddType, { type: schema, show: false }, { spaceId: space.id });
     }
 
     // Create objects.
@@ -130,21 +130,20 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
     async (space, n, cb) => {
       const objects = range(n, () => {
         const model = ComputeGraphModel.create();
-        model.builder
-          .createNode({ id: 'gpt-INPUT', type: NODE_INPUT })
-          .createNode({ id: 'gpt-GPT', type: 'gpt' })
-          .createNode({
-            id: 'gpt-QUEUE_ID',
-            type: 'constant',
-            value: EID.make({ spaceId: space.id, entityId: Key.EntityId.random() }),
-          })
-          .createNode({ id: 'gpt-APPEND', type: 'append' })
-          .createNode({ id: 'gpt-OUTPUT', type: NODE_OUTPUT })
-          .createEdge({ node: 'gpt-INPUT', property: 'prompt' }, { node: 'gpt-GPT', property: 'prompt' })
-          .createEdge({ node: 'gpt-GPT', property: 'text' }, { node: 'gpt-OUTPUT', property: 'text' })
-          .createEdge({ node: 'gpt-QUEUE_ID', property: DEFAULT_OUTPUT }, { node: 'gpt-APPEND', property: 'id' })
-          .createEdge({ node: 'gpt-GPT', property: 'messages' }, { node: 'gpt-APPEND', property: 'items' })
-          .createEdge({ node: 'gpt-QUEUE_ID', property: DEFAULT_OUTPUT }, { node: 'gpt-OUTPUT', property: 'queue' });
+        model.createNode({ id: 'gpt-INPUT', type: NODE_INPUT });
+        model.createNode({ id: 'gpt-GPT', type: 'gpt' });
+        model.createNode({
+          id: 'gpt-QUEUE_ID',
+          type: 'constant',
+          value: EID.make({ spaceId: space.id, entityId: Key.EntityId.random() }),
+        });
+        model.createNode({ id: 'gpt-APPEND', type: 'append' });
+        model.createNode({ id: 'gpt-OUTPUT', type: NODE_OUTPUT });
+        model.createEdge({ node: 'gpt-INPUT', property: 'prompt' }, { node: 'gpt-GPT', property: 'prompt' });
+        model.createEdge({ node: 'gpt-GPT', property: 'text' }, { node: 'gpt-OUTPUT', property: 'text' });
+        model.createEdge({ node: 'gpt-QUEUE_ID', property: DEFAULT_OUTPUT }, { node: 'gpt-APPEND', property: 'id' });
+        model.createEdge({ node: 'gpt-GPT', property: 'messages' }, { node: 'gpt-APPEND', property: 'items' });
+        model.createEdge({ node: 'gpt-QUEUE_ID', property: DEFAULT_OUTPUT }, { node: 'gpt-OUTPUT', property: 'queue' });
 
         return space.db.add(model.root);
       });

@@ -95,20 +95,18 @@ describe('sync pipeline harness', () => {
 
   // Provider-agnostic mapping stage: raw → an `insert` Change (no contact resolution needed here).
   const mapStage: Stage.Stage<Raw, EmailStage.Change, never, never> = Stage.map('map', (raw: Raw) =>
-    Effect.sync(
-      (): EmailStage.Change => ({
-        _tag: 'insert',
-        message: Obj.make(Message.Message, {
-          [Obj.Meta]: { keys: [{ id: raw.id, source: TEST_SOURCE }] },
-          created: new Date(raw.key).toISOString(),
-          sender: { email: raw.email },
-          blocks: [{ _tag: 'text', text: raw.body }],
-        }),
-        foreignId: raw.id,
-        key: raw.key,
-        tagUris: [],
+    Effect.sync((): EmailStage.Change => ({
+      _tag: 'insert',
+      message: Obj.make(Message.Message, {
+        [Obj.Meta]: { keys: [{ id: raw.id, source: TEST_SOURCE }] },
+        created: new Date(raw.key).toISOString(),
+        sender: { email: raw.email },
+        blocks: [{ _tag: 'text', text: raw.body }],
       }),
-    ),
+      foreignId: raw.id,
+      key: raw.key,
+      tagUris: [],
+    })),
   );
 
   // Faults after `n` units reach it, simulating a crash mid-run.
@@ -271,21 +269,19 @@ describe('sync pipeline harness', () => {
     const mapAttachmentStage: Stage.Stage<AttachmentRaw, EmailStage.Change, never, never> = Stage.map(
       'map',
       (raw: AttachmentRaw) =>
-        Effect.sync(
-          (): EmailStage.Change => ({
-            _tag: 'insert',
-            message: Obj.make(Message.Message, {
-              [Obj.Meta]: { keys: [{ id: raw.id, source: TEST_SOURCE }] },
-              created: new Date(raw.key).toISOString(),
-              sender: { email: raw.email },
-              blocks: [{ _tag: 'text', text: raw.body }],
-            }),
-            foreignId: raw.id,
-            key: raw.key,
-            tagUris: [],
-            attachments: raw.attachments,
+        Effect.sync((): EmailStage.Change => ({
+          _tag: 'insert',
+          message: Obj.make(Message.Message, {
+            [Obj.Meta]: { keys: [{ id: raw.id, source: TEST_SOURCE }] },
+            created: new Date(raw.key).toISOString(),
+            sender: { email: raw.email },
+            blocks: [{ _tag: 'text', text: raw.body }],
           }),
-        ),
+          foreignId: raw.id,
+          key: raw.key,
+          tagUris: [],
+          attachments: raw.attachments,
+        })),
     );
 
     const stats: Cursor.Stats = { newMessages: 0 };
@@ -349,21 +345,19 @@ describe('sync pipeline harness', () => {
     const mapAttachmentStage: Stage.Stage<AttachmentRaw, EmailStage.Change, never, never> = Stage.map(
       'map',
       (item: AttachmentRaw) =>
-        Effect.sync(
-          (): EmailStage.Change => ({
-            _tag: 'insert',
-            message: Obj.make(Message.Message, {
-              [Obj.Meta]: { keys: [{ id: item.id, source: TEST_SOURCE }] },
-              created: new Date(item.key).toISOString(),
-              sender: { email: item.email },
-              blocks: [{ _tag: 'text', text: item.body }],
-            }),
-            foreignId: item.id,
-            key: item.key,
-            tagUris: [],
-            attachments: item.attachments,
+        Effect.sync((): EmailStage.Change => ({
+          _tag: 'insert',
+          message: Obj.make(Message.Message, {
+            [Obj.Meta]: { keys: [{ id: item.id, source: TEST_SOURCE }] },
+            created: new Date(item.key).toISOString(),
+            sender: { email: item.email },
+            blocks: [{ _tag: 'text', text: item.body }],
           }),
-        ),
+          foreignId: item.id,
+          key: item.key,
+          tagUris: [],
+          attachments: item.attachments,
+        })),
     );
 
     const stats: Cursor.Stats = { newMessages: 0 };

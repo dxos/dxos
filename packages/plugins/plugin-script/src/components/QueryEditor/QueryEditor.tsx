@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { ModuleResolutionKind, ScriptTarget } from '@typescript/typescript6';
 import React, { useState } from 'react';
-import { ModuleResolutionKind, ScriptTarget } from 'typescript';
 
 // TODO(burdon): Document.
 import queryApi from '@dxos/echo-query/api.d.ts?raw';

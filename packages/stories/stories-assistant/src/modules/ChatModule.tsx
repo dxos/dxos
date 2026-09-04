@@ -6,7 +6,7 @@ import React from 'react';
 
 import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
-import { Chat as ChatSchema } from '@dxos/assistant-toolkit';
+import * as ChatSchema from '@dxos/assistant/Chat';
 import { Filter } from '@dxos/echo';
 import * as Assistant from '@dxos/plugin-assistant/Assistant';
 import { Chat } from '@dxos/plugin-assistant/components';
@@ -31,7 +31,7 @@ const ChatModuleContainer = ({ space }: { space: Space }) => {
 
   const registry = useRegistry();
   const runtime = useProcessManagerRuntime();
-  const processor = useChatProcessor({ runtime, space, chat, preset, registry });
+  const processor = useChatProcessor({ runtime, db: space.db, chat, preset, registry });
 
   // Honor the view mode selected in ChatOptions (persisted on `chat.viewType`). Subscribe via
   // `useObject` so changing the mode re-renders, and narrow the stored string to a valid ChatView.
@@ -64,8 +64,12 @@ const ChatModuleContainer = ({ space }: { space: Space }) => {
         <Panel.Content asChild>
           <Chat.Content>
             <Chat.Thread viewType={view} />
-            <Chat.TaskList classNames='max-h-[120px] border-t border-separator rounded-sm text-description' />
-            <Chat.Prompt {...chatProps} classNames='border-none rounded-none' outline preset={preset?.id} />
+            {/* What the request is doing before the first token arrives. */}
+            <Chat.Activity />
+            <Chat.Queue />
+            {/* TODO(dmaretskyi): Breaks layout. */}
+            {/* <Chat.TaskList classNames='shrink-0 border border-separator border-b-0 rounded-t-sm text-description' /> */}
+            <Chat.Prompt classNames='border-none rounded-none' {...chatProps} outline preset={preset?.id} />
           </Chat.Content>
         </Panel.Content>
       </Panel.Root>

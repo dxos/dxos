@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import * as Tool from 'effect/unstable/ai/Tool';
 import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { AiService, OpaqueToolkit } from '@dxos/ai';
@@ -17,10 +16,11 @@ import {
   makeToolExecutionService,
   makeToolResolverFromOperations,
 } from '@dxos/assistant';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Template from '@dxos/compute/Template';
 import * as Trace from '@dxos/compute/Trace';
-import { Database, Feed, JsonSchema, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -28,25 +28,10 @@ import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
 import { PromptError } from '../errors';
-import * as Chat from '../types/Chat';
+import { makeCompleteJobParameters, makeCompleteJobTool } from './complete-job-tool';
 import { RunInstructions } from './definitions';
 
-const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claude-opus-4-8.default');
-
-/** `Instructions.make` defaults `output` to `Schema.Void`; this is what that serializes to. */
-const UNDECLARED_OUTPUT = JsonSchema.toJsonSchema(Schema.Void);
-
-const routineOutputSchema = (output: JsonSchema.JsonSchema): Schema.Top => {
-  // A routine that declares no output still has to let `completeJob` carry an arbitrary success
-  // payload — decoding against the default would reject one with `Expected null | undefined`.
-  const undeclared =
-    ('$id' in output && output.$id === '/schemas/unknown') ||
-    ('type' in output && output.type === (UNDECLARED_OUTPUT as { type?: unknown }).type);
-  if (undeclared) {
-    return Schema.Any;
-  }
-  return JsonSchema.toEffectSchema(output);
-};
+const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claude-opus-5.default');
 
 export default RunInstructions.pipe(
   Operation.withHandler(
@@ -94,9 +79,14 @@ export default RunInstructions.pipe(
           You are an agent running in the non-interactive mode.
           The user is unable to see what you are doing, and cannot answer any questions.
           Do not ask questions.
-          Complete the task before you, and at the end call [completeJob] with the output.
-          If you are unable to complete the task, call [completeJob] with the failure reason.
+          Complete the task before you, and at the end call [completeJob] with {"success": <output>}.
+          The output goes inside "success" — never at the top level, and never wrapped in a second
+          "success" of its own.
+          If you are unable to complete the task, call [completeJob] with {"failure": {"message": "..."}}.
+          Pass one of the two, never both, and omit the field you do not use.
           If no output is required, call [completeJob] with an empty object: {}
+          The success value must be strictly valid JSON: quote free text, and write numbers without
+          digit separators (3628800, never 3,628,800).
           Do not stop until you call [completeJob].
         `;
         if (data.systemInstructions) {
@@ -116,7 +106,8 @@ export default RunInstructions.pipe(
 
         const resultSink = yield* Deferred.make<unknown, PromptError>();
         const promptToolkit = makePromptAgentToolkit({
-          output: routineOutputSchema(instructions.output),
+          completeJobTool: makeCompleteJobTool(instructions.output),
+          parameters: makeCompleteJobParameters(instructions.output),
           resultSink,
         });
 
@@ -179,37 +170,29 @@ export default RunInstructions.pipe(
 );
 
 const makePromptAgentToolkit = (options: {
-  output: Schema.Top;
+  completeJobTool: ReturnType<typeof makeCompleteJobTool>;
+  parameters: ReturnType<typeof makeCompleteJobParameters>;
   resultSink: Deferred.Deferred<unknown, PromptError>;
 }) => {
-  class PromptAgentToolkit extends Toolkit.make(
-    Tool.make('completeJob', {
-      parameters: Schema.Struct({
-        success: Schema.optional(options.output),
-        failure: Schema.optional(
-          Schema.Struct({
-            message: Schema.String.annotate({
-              description: 'Short message describing the error.',
-            }),
-            description: Schema.optional(Schema.String).annotate({
-              description: 'Optional longer message describing in detail what went wrong',
-            }),
-          }),
-        ),
-      }),
-    }),
-  ) {}
+  class PromptAgentToolkit extends Toolkit.make(options.completeJobTool) {}
   const layer = PromptAgentToolkit.toLayer({
-    completeJob: Effect.fnUntraced(function* (result) {
-      if (result.failure) {
+    completeJob: Effect.fnUntraced(function* (input) {
+      // A dynamic tool's input is unvalidated; a decode failure is reported to the model as a
+      // tool failure so it can correct the call.
+      const result = yield* Schema.decodeUnknownEffect(options.parameters)(input).pipe(
+        Effect.mapError((error) => String(error)),
+      );
+      // A success payload wins over a failure sent alongside it, so a placeholder cannot discard
+      // completed work.
+      if (result.success == null && result.failure) {
         yield* Deferred.fail(
           options.resultSink,
           new PromptError(result.failure.message, {
-            description: result.failure.description,
+            description: result.failure.description ?? undefined,
           }),
         );
       } else {
-        yield* Deferred.succeed(options.resultSink, result.success);
+        yield* Deferred.succeed(options.resultSink, result.success ?? undefined);
       }
     }),
   });

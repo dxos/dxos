@@ -6,6 +6,8 @@
 
 # Response-verbosity toggle state — per-user runtime, not repo policy.
 .claude/.mode
+# The focus pin that rides alongside it — a task, so even less repo policy.
+.claude/.focus
 # Transitional: pre-rename state file, deleted on first mode.sh run.
 .claude/.response-mode
 
@@ -66,6 +68,10 @@ build/Release
 # Dependency directories
 node_modules/
 jspm_packages/
+
+# pnpm store, when it resolves inside the checkout instead of a global cache dir (observed on Depot
+# CI's sandbox — see .oxfmtrc.json's ignorePatterns for why this also needs to be there).
+.pnpm-store/
 
 # Optional npm cache directory
 .npm
@@ -170,7 +176,13 @@ profiles/
 # Bot temp files
 dxos-tmp
 build
+
+# Credentials the user hands to an agent for a task (see AGENTS.md "Handing an agent a
+# credential"). Ignored at every depth. An ignore rule is default exclusion, NOT enforcement:
+# `git add -f` still stages these, and a path already in the index stays tracked.
 .secrets
+.secrets/
+**/.secrets/
 
 # Custom git hooks
 .husky/post-applypatch
@@ -244,3 +256,15 @@ node_modules
 # Icon-copy artifact: a misconfigured asset step writes phosphor SVGs to a literal
 # "dummy-non-existing-folder" rather than skipping. Generated output, never sources.
 dummy-non-existing-folder/
+tools/vscode/vscode-mdl/dist
+
+# Generated headless capability barrels (dx-plugin prebuild, produced by plugin prebuild tasks).
+**/src/capabilities/gen/
+
+# Stryker mutation testing (evaluation).
+.stryker-tmp/
+reports/mutation/
+
+# Bun writes its cache under `$HOME/Library` on macOS, which lands in the package directory when a
+# command runs with HOME unset — as an MCP server spawned by a client can.
+**/Library/Caches/

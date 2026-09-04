@@ -7,7 +7,7 @@ import React, { Fragment, useCallback, useEffect } from 'react';
 
 import type * as Template from '@dxos/compute/Template';
 import { type Obj } from '@dxos/echo';
-import { Input, Select, useTranslation } from '@dxos/react-ui';
+import { Grid, Input, Select, useTranslation } from '@dxos/react-ui';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -63,7 +63,7 @@ export const TemplateForm = ({ id, template, onChange }: TemplateFormProps) => {
       <TemplateEditor id={id} source={template.source} classNames='dx-base-surface min-h-[120px]' />
 
       {(template.inputs?.length ?? 0) > 0 && (
-        <div className='grid grid-cols-[10rem_10rem_1fr] gap-1 items-center'>
+        <Grid cols={['10rem', '10rem', '1fr']} grow={false} align='center' classNames='gap-1'>
           {template.inputs?.filter(isNonNullable).map((input) => (
             <Fragment key={input.name}>
               <div className='ps-3 text-blue-text'>{input.name}</div>
@@ -103,7 +103,7 @@ export const TemplateForm = ({ id, template, onChange }: TemplateFormProps) => {
               </div>
             </Fragment>
           ))}
-        </div>
+        </Grid>
       )}
     </div>
   );

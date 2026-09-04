@@ -6,14 +6,15 @@ import React, { type FC, useMemo } from 'react';
 
 import { MulticastObservable } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
-import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
-import { type SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { toPublicKey } from '@dxos/protocols/buf';
+import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { type SubscribeToSpacesResponse_SpaceInfo } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import { useMulticastObservable } from '@dxos/react-hooks';
 import { Timeframe } from '@dxos/timeframe';
 
 import { PropertiesTable, PropertySchemaFormat } from '../../../components';
 
-export const SpaceProperties: FC<{ space: Space; metadata: SubscribeToSpacesResponse.SpaceInfo }> = ({
+export const SpaceProperties: FC<{ space: Space; metadata: SubscribeToSpacesResponse_SpaceInfo }> = ({
   space,
   metadata,
 }) => {
@@ -45,7 +46,7 @@ export const SpaceProperties: FC<{ space: Space; metadata: SubscribeToSpacesResp
     const startupTime = open && ready && ready.getTime() - open.getTime();
 
     return {
-      key: metadata.key,
+      key: toPublicKey(metadata.key),
       state: SpaceState[space.state.get()],
       startupTime,
       controlProgress,

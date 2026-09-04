@@ -13,6 +13,7 @@ as a **video** generation provider for `plugin-studio`. No React/UI surfaces.
 | ------ | ----------------------- |
 | `feat` | `org.dxos.mdl.feat@1.0` |
 | `test` | `org.dxos.mdl.test@1.0` |
+| `flow` | `org.dxos.mdl.flow@1.0` |
 
 ## Connector
 
@@ -82,3 +83,61 @@ feat HeyGenGenerateForm
 ## Out of scope (v1)
 
 - Audio generation (HeyGen is video-only).
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Connect a HeyGen key and generate a video
+  desc: |
+    HeyGen is headless — it contributes a Connector credential form and a GenerationService, but
+    owns no UI and no operation of its own. Generation runs entirely through plugin-studio's
+    generic `Generate` operation with `provider: "heygen"`; there is no plugin-heygen-local key to
+    invoke.
+  actors: both
+  covers: [HeyGenConnector, HeyGenGenerationService, HeyGenGenerateForm]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - a valid HeyGen API key
+    - no Artifact named "QA Avatar Clip" exists — ABORT rather than reusing one this flow did not create
+  test:
+    - name: Connect HeyGen
+      do: Open Settings -> Connectors -> HeyGen, paste the API key, and submit.
+      expect: a Connection + AccessToken pair for source "heygen.com" now exists
+      note: |
+        NO `invoke` — credential submission goes through the Connector's `onSubmit` UI callback,
+        not an operation with a runtime key.
+    - name: Create a video Artifact
+      do: In the navtree, click + on a collection and choose Studio Artifact, kind Video. Name it "QA Avatar Clip" and enter a script prompt.
+      capture: created
+      expect: an Artifact of kind "video" named "QA Avatar Clip" exists with the prompt set
+      note: |
+        NO `invoke` — `Artifact.make()` is wired through `CreateObjectEntry`, the same
+        UI-only factory pattern as plugin-game's `createGame` (see that plugin's QA); there is no
+        operation key behind object creation itself.
+    - name: Generate with HeyGen
+      do: In the Artifact's generate panel, pick "HeyGen" as the provider, choose an avatar and voice from the pickers (populated via `listAvatars()`/`listVoices()`), and click Generate.
+      invoke: org.dxos.operation.studio.generate { artifact: $created.object, provider: "heygen", config: { avatarId: "<picked-avatar-id>", voiceId: "<picked-voice-id>" } }
+      capture: generated
+      expect: |
+        the invoke blocks until HeyGen's job reaches a terminal state (enqueue + awaitResult both
+        run inside the operation), and the appended Variant holds a playable video/mp4 URL
+      assert: |
+        const artifact = await space.db.load($created.object);
+        const last = await space.db.load(artifact.variants[artifact.variants.length - 1]);
+        return $generated.count === 1 && last.contentType === 'video/mp4' && typeof last.url === 'string' && last.url.length > 0;
+      note: Async provider — `enqueue` returns a jobId, `awaitResult` polls `GET /v3/videos/{jobId}` until status 'completed' before the operation returns, so the assert can check the terminal Variant directly.
+  after:
+    - name: Delete the Artifact
+      do: Right-click "QA Avatar Clip" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.collection }
+      expect: the row leaves the navtree and its plank closes if it was open
+    - name: Disconnect HeyGen
+      do: In Settings -> Connectors -> HeyGen, remove the connection.
+      expect: the Connection and its AccessToken are removed
+```

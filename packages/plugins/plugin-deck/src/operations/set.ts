@@ -21,11 +21,13 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Set> = LayoutOperati
     Effect.fnUntraced(function* (input) {
       const deck = yield* DeckCapabilities.getDeck();
       const attention = yield* Capability.get(AttentionCapabilities.Attention);
+      const { flatten } = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
 
       const { deckUpdates, toAttend } = computeActiveUpdates({
         next: input.subject as string[],
         deck,
         attention,
+        flatten,
       });
       yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
         updateActiveDeck(state, { ...deckUpdates, plankNames: updatePlankNames(deck.plankNames, deckUpdates.active) }),

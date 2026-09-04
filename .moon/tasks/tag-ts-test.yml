@@ -15,6 +15,10 @@ tasks:
       - node-std:build
       - vite-plugin-import-source:build
       - ^:build
+      # Dependency packages' generated sources (e.g. the plugin capability barrels) must exist
+      # before tests resolve them under the source condition. Addressed by the `prebuild` task tag
+      # rather than a task name, since the generating task is named per what it generates.
+      - '^:#prebuild'
     inputs:
       - '@group(sources)'
       - /vite.base.config.ts
@@ -29,6 +33,9 @@ tasks:
       - $VITEST_ENV
       - $VITEST_XML_REPORT
       - $VITEST_TAGS_FILTER
+      # Tag gating lives in `/vitest.tags.ts` and is read from the environment, so a cached result
+      # would otherwise replay a run in which the tagged suites were skipped.
+      - $DX_RUN_MANUAL_TESTS
       - $DX_RUN_MODEL_FIXTURE_TESTS
       - $DX_UPDATE_MODEL_FIXTURES
       # Env-gated CPU-profile / leak-detect instrumentation (vite.base.config.ts); listed so toggling
@@ -48,6 +55,10 @@ tasks:
       - node-std:build
       - vite-plugin-import-source:build
       - ^:build
+      # Dependency packages' generated sources (e.g. the plugin capability barrels) must exist
+      # before tests resolve them under the source condition. Addressed by the `prebuild` task tag
+      # rather than a task name, since the generating task is named per what it generates.
+      - '^:#prebuild'
     preset: server
 
 inheritedBy:

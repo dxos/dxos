@@ -16,7 +16,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contribute(
       Capabilities.OperationHandler,
-      OperationHandlerSet.merge(ScriptOperationHandlerSet, ScriptHandlers),
+      OperationHandlerSet.merge(ScriptOperationHandlerSet.handlers, ScriptHandlers),
     );
   }),
 );

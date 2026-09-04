@@ -1,0 +1,277 @@
+---
+id: org.dxos.plugin.laMetric
+name: LaMetricPlugin
+version: 0.1.0
+---
+
+Shows a Composer space on a LaMetric TIME: a progress bar while a task is running, the space's
+statistics otherwise, cycled through the device's frames.
+
+Unlike the Stream Deck, no companion application is needed: the device is an HTTP server on the LAN,
+so this plugin pushes to it directly. Local push goes through LaMetric's stock "My Data (DIY)" app,
+because a custom indicator app cannot be pushed to locally; cloud push, for use off the device's
+network, is a separate mechanism against a published app. Requests go through Tauri's HTTP client
+because neither endpoint is reachable from a web view. Design:
+`agents/superpowers/specs/2026-08-19-lametric-design.md`.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`       |
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
+| `component` | `org.dxos.mdl.component@1.0`  |
+| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `step`      | `org.dxos.mdl.step@1.0`       |
+
+## Types
+
+```mdl
+type GoalData
+  desc: A determinate progress bar the device draws itself.
+  fields:
+    start: number
+    current: number
+    end: number
+    unit: string
+```
+
+```mdl
+type Frame
+  desc: One screen in the device's cycle. LaMetric's own shape, not ours — either text or a goal.
+  literals: TextFrame | GoalFrame
+```
+
+```mdl
+type Payload
+  desc: The whole body of a widget update; the device replaces its cycle with these frames.
+  fields:
+    frames: Frame[]
+```
+
+```mdl
+type TransportConfig
+  desc: Where and how to push. An address selects the LAN device; its absence selects the cloud.
+  fields:
+    address?: string
+    port?: number                 # defaults to 4343 for https, 8080 for http
+    scheme?: http | https
+    apiKey?: string               # local: password of a `dev` Basic credential
+    widgetId?: string             # discovered from the device for local push
+    appId?: string                # cloud only
+    accessToken?: string          # cloud only
+```
+
+```mdl
+type PushStatus
+  desc: What the last push did, published so a surface can show a failure only the user can fix.
+  fields:
+    state: idle | pushed | failed
+    kind?: local | cloud          # pushed only
+    status?: number               # failed only
+```
+
+## Components
+
+```mdl
+component VirtualLaMetric
+  desc: On-screen replica of the 37x8 matrix, rasterised by the same pure function as the tests, so
+    what is reviewed is what the hardware shows — including whether a line has to scroll.
+```
+
+## Features
+
+```mdl
+feat F-1: What the device shows
+
+  req F-1.1: While any task is pending or running, a determinate task renders as a goal frame and the
+    device draws its own bar.
+  req F-1.2: A task reporting no total renders as a text frame, because `goalData` requires an end.
+  req F-1.3: With nothing running, the frames show the space's object, feed, type and plugin counts.
+  req F-1.4: At most four frames are pushed; the device cycles at a fixed rate, so a longer list
+    delays every number in it.
+  req F-1.5: Statistic labels are abbreviated at the source. Nine characters fit on 37 pixels, and a
+    dashboard is read at a glance.
+  req F-1.6: Favorites are not rendered: with no bindable input a favorite is a name scrolling past.
+  req F-1.7: Every frame carries an explicit `index`. Without one the device renders only the first
+    frame of the cycle.
+```
+
+```mdl
+feat F-2: Transport
+
+  req F-2.1: A configured device address is preferred over the cloud — it avoids a round-trip through
+    LaMetric's servers and works with no internet.
+  req F-2.6: Local and cloud are different requests, not one request at two hosts. Local addresses the
+    stock DIY package over the device's v2 API with Basic `dev:<api key>`; cloud addresses a published
+    app over the v1 developer API with an access token. Only the body is shared.
+  req F-2.7: The DIY widget UUID is discovered from the device's app list, since it identifies one
+    installation and is shown nowhere in LaMetric's apps or portal.
+  req F-2.2: Both paths issue their request through Tauri's HTTP client. LaMetric's cloud answers a
+    CORS preflight with 405 and sends no `Access-Control-*` header, and the LAN device is plain HTTP
+    or a self-signed certificate, so neither is reachable from the web view.
+  req F-2.3: The permission is scoped to the LaMetric hosts, not granted globally.
+  req F-2.4: Incomplete configuration builds no transport and issues no request, which is the common
+    case since most users have no device.
+  req F-2.5: A rejected push is reported through `PushStatus` and logged, never thrown at the caller.
+  req F-2.8: A 2xx is not evidence that anything rendered. The device accepts a push to a widget id
+    that does not exist, so only the package and the body shape are actually validated.
+```
+
+```mdl
+feat F-3: Push rate
+
+  req F-3.1: A payload identical to the last one is not sent.
+  req F-3.2: Changes inside the minimum interval are coalesced and the last one is sent on the
+    trailing edge, so the device ends up showing the latest state rather than the start of a burst.
+  req F-3.3: The driver runs with no surface rendered, so the display stays live with no panel open.
+```
+
+```mdl
+feat F-4: Source of the projection
+
+  req F-4.1: The space is projected by `plugin-space`'s dashboard capability, so one set of queries
+    serves every attached peripheral rather than one set per device plugin.
+  req F-4.2: This plugin applies its own geometry — the frame count — to those facts.
+```
+
+## Acceptance
+
+```mdl
+test T-1: A running task takes over the display
+  given: a determinate progress task at 45.6% and a space with statistics
+  then: one goal frame is pushed with current 46, end 100, and no statistic frames
+```
+
+```mdl
+test T-2: An indeterminate task still says something
+  given: a progress task reporting a current count but no total
+  then: a text frame carries the task's title and count, and no goal frame is pushed
+```
+
+```mdl
+test T-3: Statistics fit without scrolling
+  given: a space with 42 objects
+  then: the frame reads "42 obj", which is narrower than the 37-pixel matrix
+```
+
+```mdl
+test T-4: The device is only addressed when it is configured
+  given: an address and a widget but no device API key
+  then: no transport is built and no request is made
+```
+
+```mdl
+test T-7: The DIY widget is found on the device
+  given: a device app list containing the clock and the `com.lametric.diy.devwidget` package
+  then: the widget UUID of the DIY package is selected, and nothing is selected when it is absent
+```
+
+```mdl
+test T-5: A burst of space changes becomes one push
+  given: three different payloads inside the minimum push interval
+  then: the first is sent immediately and only the last of the remainder is sent on the trailing edge
+```
+
+```mdl
+test T-6: The request is what the device expects
+  given: a stand-in HTTP device and a configured local transport
+  then: it receives POST /api/v2/widget/update/com.lametric.diy.devwidget/<widget> with a Basic
+    `dev:<api key>` credential and the frames as its body
+```
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+This plugin has no `op` extension and ships no registered operations — the driver is a settings
+config plus a background push loop, not something a user object-model action drives. It is
+dev-only in `getDefaults` (`isDev`), so OFF for a normal user; enabling it is a Settings action,
+same caveat as plugin-chess's own enable step.
+
+```mdl
+flow QA-1: Configure a local device and see the display take over
+  desc: The one user-visible surface — entering transport settings and watching the driver push.
+    No object is created, invoked, or read back through ECHO; the "device" itself is external
+    hardware or a stand-in HTTP server, neither of which the debug port can drive.
+  actors: human
+  covers: [F-1.3, F-2.1, F-2.4]
+  status: blocked
+  given:
+    - an identity exists
+    - plugin-lametric is enabled — it is OFF by default (isDev-only default). Enabling is a UI
+      action (Settings -> plugin registry); no operation enables it programmatically.
+    - a LaMetric TIME device is reachable on the LAN, with its address, API key and widget id known
+  test:
+    - name: Enter the device address and API key
+      do: Open Settings -> LaMetric and fill in address, port, scheme, and the `dev` Basic API key.
+      expect: PushStatus moves from idle toward pushed once the widget id is discovered
+      note: |
+        NO `invoke` — this plugin declares no operations at all (no `## Operations` section, no
+        `key:` anywhere in source); settings are a plain form bound to TransportConfig.
+      blocked: |
+        Requires physical LaMetric hardware (or a stand-in HTTP server standing in for one) on a
+        reachable LAN, and only works from the Tauri shell — the web view cannot reach either the
+        device or LaMetric's cloud (F-2.2). No such fixture exists in this repo's QA harness.
+    - name: Watch the device cycle through statistics
+      do: With no task running, look at the device (or VirtualLaMetric in storybook).
+      expect: frames show the space's object, feed, type and plugin counts, at most four, each with
+        an explicit `index`
+      note: NO `invoke` — this is an observation of hardware/story output, not an ECHO effect.
+  after:
+    - name: Clear the device settings
+      do: Open Settings -> LaMetric and clear the address/API key fields.
+      expect: PushStatus returns to idle and no further requests are sent
+```
+
+---
+
+## Appendix: Extension Definitions
+
+Extension block types used in this document are defined below using
+the core `ext` primitive — the only construct the base language provides.
+
+```mdl
+ext type
+  uri: dxos.spec/ext/type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap        # name[?]: TypeExpr  (# inline comment)
+    literals?: UnionList     # a | b | c
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: dxos.spec/ext/feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self              # feat blocks may contain feat blocks
+```
+
+```mdl
+ext test
+  uri: dxos.spec/ext/test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: dxos.spec/ext/component@1.0
+  desc: A UI component with a described purpose.
+  fields:
+    desc?: Prose
+```

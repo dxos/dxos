@@ -4,7 +4,6 @@
 
 import {
   type DocumentId,
-  type Heads,
   type Message,
   NetworkAdapter,
   type PeerId,
@@ -166,6 +165,8 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   async shouldAdvertise(peerId: PeerId, params: ShouldAdvertiseProps): Promise<boolean> {
     const connection = this._connections.get(peerId);
     if (!connection) {
+      // Denies every document for the peer, so a stale peerId reads as a share-policy refusal.
+      log.verbose('share policy probe: no connection for peer', { peerId, documentId: params.documentId });
       return false;
     }
 
@@ -211,30 +212,6 @@ export class EchoNetworkAdapter extends NetworkAdapter {
           : null;
       })
       .filter(isNonNullable);
-  }
-
-  bundleSyncEnabledForPeer(peerId: PeerId): boolean {
-    const connection = this._connections.get(peerId);
-    if (!connection) {
-      return false;
-    }
-    return connection.connection.bundleSyncEnabled;
-  }
-
-  async pushBundle(ctx: Context, peerId: PeerId, bundle: { documentId: DocumentId; data: Uint8Array; heads: Heads }[]) {
-    const connection = this._connections.get(peerId);
-    if (!connection) {
-      throw new PeerNotFoundError({ context: { peerId } });
-    }
-    return connection.connection.pushBundle!(ctx, bundle);
-  }
-
-  async pullBundle(ctx: Context, peerId: PeerId, docHeads: Record<DocumentId, Heads>) {
-    const connection = this._connections.get(peerId);
-    if (!connection) {
-      throw new PeerNotFoundError({ context: { peerId } });
-    }
-    return connection.connection.pullBundle!(ctx, docHeads);
   }
 
   private _send(message: Message): void {

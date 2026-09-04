@@ -9,6 +9,8 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import * as Operation from '@dxos/compute/Operation';
+import * as Routine from '@dxos/compute/Routine';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Database, DXN, Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
@@ -35,7 +37,7 @@ describe('createSingleCursor', () => {
   // Stand-in materialize operation: creates a fresh Expando named after the connection's
   // access-token account (real connectors, e.g. Gmail, materialize a Mailbox the same way).
   const MaterializeExampleTarget = Operation.make({
-    meta: { key: DXN.make('org.dxos.test.createSingleCursor.materialize') },
+    meta: { key: DXN.make('com.example.operation.test.createSingleCursor.materialize') },
     input: ConnectorSpec.MaterializeTargetInput,
     output: ConnectorSpec.MaterializeTargetOutput,
   });
@@ -62,8 +64,8 @@ describe('createSingleCursor', () => {
   // Never invoked here — `ConnectorSync` requires an operation, and this test only exercises
   // target materialization and binding.
   const SyncExampleTarget = Operation.make({
-    meta: { key: DXN.make('org.dxos.test.createSingleCursor.sync') },
-    input: Schema.Struct({ binding: Ref.Ref(Cursor.Cursor) }),
+    meta: { key: DXN.make('com.example.operation.test.createSingleCursor.sync') },
+    input: Schema.Struct({ connection: Ref.Ref(Connection.Connection), priority: Schema.optional(Schema.String) }),
     output: Schema.Any,
   });
 
@@ -76,7 +78,14 @@ describe('createSingleCursor', () => {
 
   const setup = async () => {
     const { db, graph } = await builder.createDatabase();
-    graph.registry.add([Connection.Connection, Cursor.Cursor, AccessToken.AccessToken, Expando.Expando]);
+    graph.registry.add([
+      Connection.Connection,
+      Cursor.Cursor,
+      AccessToken.AccessToken,
+      Expando.Expando,
+      Routine.Routine,
+      Trigger.Trigger,
+    ]);
     const token = db.add(
       Obj.make(AccessToken.AccessToken, { source: 'example.com', token: 'tok', account: 'me@example.com' }),
     );
@@ -114,5 +123,39 @@ describe('createSingleCursor', () => {
     const cursors = await queryCursors(db);
     expect(cursors).toHaveLength(1);
     expect(Obj.getLabel(mailbox)).toBe('me@example.com');
+  });
+
+  test('a declared sync trigger reports needsSyncRoutine without persisting a routine', async ({ expect }) => {
+    const { db, connection } = await setup();
+    const connector = makeConnector({
+      sync: {
+        operation: SyncExampleTarget,
+        materializeTarget: MaterializeExampleTarget,
+        trigger: Trigger.specTimer('0 * * * *'),
+      },
+    });
+
+    const result = await createSingleCursor(invoker, db, connector, connection, undefined).pipe(
+      EffectEx.runAndForwardErrors,
+    );
+
+    // The routine is offered through the create-routine form by the caller, never persisted here.
+    expect(result?.needsSyncRoutine).toBe(true);
+    const routines = await Database.query(Filter.type(Routine.Routine)).run.pipe(
+      Effect.provide(Database.layer(db)),
+      EffectEx.runAndForwardErrors,
+    );
+    expect(routines).toHaveLength(0);
+  });
+
+  test('no declared sync trigger means no routine is needed', async ({ expect }) => {
+    const { db, connection } = await setup();
+
+    const result = await createSingleCursor(invoker, db, makeConnector(), connection, undefined).pipe(
+      EffectEx.runAndForwardErrors,
+    );
+
+    expect(result?.needsSyncRoutine).toBe(false);
+    expect(result?.cursor).toBeDefined();
   });
 });

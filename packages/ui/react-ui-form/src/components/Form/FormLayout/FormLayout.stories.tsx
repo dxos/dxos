@@ -284,12 +284,12 @@ export const NestedLabelStatic: Story = {
  * parse, the previous valid layout stays on screen and an error banner
  * surfaces under the editor.
  */
-type PlaygroundStoryProps = {
+type PlaygroundStoryArgs = {
   /** Wrap the rendered form in `Card.Root` / `Card.Body` chrome. */
   card?: boolean;
 };
 
-const PlaygroundStory = ({ card = false }: PlaygroundStoryProps) => {
+const PlaygroundStory = ({ card = false }: PlaygroundStoryArgs) => {
   const schema = useMemo(() => omitId(Type.getSchema(Flight)), []);
   const [template, setTemplate] = useState(FLIGHT_LAYOUT);
   const [lastValid, setLastValid] = useState(FLIGHT_LAYOUT);
@@ -342,7 +342,7 @@ const PlaygroundStory = ({ card = false }: PlaygroundStoryProps) => {
     <Tooltip.Provider>
       <div
         className={mx(
-          'dx-container grid grid-rows-1 p-4 gap-4 overflow-hidden',
+          'dx-expand grid grid-rows-1 p-4 gap-4',
           card ? 'grid-cols-[var(--spacing-card-min-width)_var(--spacing-card-min-width)_1fr]' : 'grid-cols-2',
         )}
       >

@@ -14,6 +14,7 @@ import { invariant } from '@dxos/invariant';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as Binding from '@dxos/plugin-connector/Binding';
 import * as Subscription from '@dxos/plugin-magazine/Subscription';
 
 import { BLUESKY_TARGET, DEFAULT_MAX_PAGES, MAX_PAGES_HARD_CAP } from '../constants';
@@ -22,40 +23,34 @@ import { SyncBlueskyTargets } from './definitions';
 
 const handler: Operation.WithHandler<typeof SyncBlueskyTargets> = SyncBlueskyTargets.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ binding: bindingRef }) {
+    Effect.fnUntraced(function* ({ connection, priority }) {
       const client = yield* Capability.get(ClientCapabilities.Client);
-      const binding = yield* Database.load(bindingRef);
-      if (!Cursor.isExternal(binding)) {
-        return { appended: 0 };
-      }
-      const db = Obj.getDatabase(binding);
-      if (!db) {
-        return yield* Effect.fail(new SyncDatabaseMissingError());
-      }
-
-      // The credentials layer loads the access token, validates the handle,
-      // and resolves the user's PDS once. Public XRPC reads (e.g.
-      // `getAuthorFeed`) only need HttpClient and ignore the layer.
-      return yield* syncBinding({ client, binding, db }).pipe(
-        Effect.provide(BlueskyApi.Credentials.fromAccessToken(binding.spec.source, client)),
-        Effect.provide(FetchHttpClient.layer),
-      );
+      const { outputs } = yield* Binding.syncAll({
+        connection,
+        priority,
+        sync: (binding) =>
+          // The credentials layer loads the access token, validates the handle,
+          // and resolves the user's PDS once. Public XRPC reads (e.g.
+          // `getAuthorFeed`) only need HttpClient and ignore the layer.
+          syncBinding({ client, binding }).pipe(
+            Effect.provide(BlueskyApi.Credentials.fromAccessToken(binding.spec.source, client)),
+            Effect.provide(FetchHttpClient.layer),
+          ),
+      });
+      return { appended: outputs.reduce((total, output) => total + output.appended, 0) };
     }),
   ),
 );
 
 export default handler;
 
-const syncBinding = ({
-  client,
-  binding,
-  db,
-}: {
-  client: Client;
-  binding: Cursor.ExternalCursor;
-  db: Database.Database;
-}) =>
+const syncBinding = ({ client, binding }: { client: Client; binding: Cursor.ExternalCursor }) =>
   Effect.gen(function* () {
+    const db = Obj.getDatabase(binding);
+    if (!db) {
+      return yield* Effect.fail(new SyncDatabaseMissingError());
+    }
+
     const externalId = binding.spec.externalId;
     if (!externalId) {
       return { appended: 0 };

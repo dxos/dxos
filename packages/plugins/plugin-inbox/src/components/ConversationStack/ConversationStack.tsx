@@ -9,7 +9,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
-import type * as Graph from '@dxos/app-graph/Graph';
+import type * as AppGraph from '@dxos/app-graph/AppGraph';
 import { Database, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { normalizeText } from '@dxos/markdown';
@@ -121,7 +121,7 @@ type ConversationStackContextValue = {
   /** Ids of the expanded messages; every other message renders as a collapsed summary. */
   expanded: ReadonlySet<string>;
   /** App graph for contributed (`disposition: 'toolbar'`) actions (container-resolved). */
-  graph?: Graph.ReadableGraph;
+  graph?: AppGraph.ReadableGraph;
   /** Process-manager runtime for draft send / composer AI (container-resolved). */
   runtime?: Capabilities.ProcessManagerRuntime;
   /** Send operation per installed mail provider, keyed by connector id (container-resolved). */
@@ -287,12 +287,12 @@ const ConversationStackContent = composable<HTMLDivElement, ConversationStackCon
 
       const scrollIntoView = () => tile.scrollIntoView({ block: 'end', behavior: 'smooth' });
       scrollIntoView();
-      // Focus the reply's body editor (`.dx-expander` distinguishes it from the recipient editors,
+      // Focus the reply's body editor (`.dx-expand` distinguishes it from the recipient editors,
       // which are CodeMirror too). The composer mounts asynchronously — watch the tile until the
       // editor appears, bounded by the same settle window as the scroll re-pinning below;
       // `preventScroll` keeps the focus from cutting the smooth scroll short.
       const focusBody = () => {
-        const content = tile.querySelector<HTMLElement>('.dx-expander .cm-content');
+        const content = tile.querySelector<HTMLElement>('.dx-expand .cm-content');
         if (content) {
           content.focus({ preventScroll: true });
           focusObserver.disconnect();
@@ -423,7 +423,7 @@ const ConversationSummaryTile = ({ summary }: ConversationSummaryTileProps) => {
       // Same column template and gutter width as a message tile, so the heading and text line up with
       // the senders and bodies above rather than starting at the tile edge.
       className={mx(
-        'dx-document dx-attention-surface border border-subdued-separator rounded overflow-hidden mbs-2',
+        'dx-document dx-attention-surface border border-subdued-separator rounded overflow-hidden mt-2',
         MESSAGE_TILE_COLUMNS,
       )}
       data-testid='conversation.summary'
@@ -544,7 +544,7 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
   // One subgrid spanning the tile's columns, so the summary row and the detail/body row share them.
   return (
     <div className='contents'>
-      <div className='col-span-full grid grid-cols-subgrid items-start pbs-1'>
+      <div className='col-span-full grid grid-cols-subgrid items-start pt-1'>
         {/* Summary row: avatar (col 1) | title (col 2) | date + star (col 3) | menu (col 4). */}
         {/* `db` (not `getContact`): a conversation holds few messages, so a query per tile is
             affordable here — unlike the virtualized mailbox list, which resolves the whole page at once. */}

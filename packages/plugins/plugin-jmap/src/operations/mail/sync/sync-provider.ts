@@ -39,12 +39,17 @@ type DeltaPlan = {
 
 const MAIL_ACCOUNT_CAPABILITY = 'urn:ietf:params:jmap:mail';
 
-/** JMAP mail's streaming-pipeline tuning; see {@link SyncStreamConfig.SyncStreamConfig}. */
+/**
+ * JMAP mail's streaming-pipeline tuning; see {@link SyncStreamConfig.SyncStreamConfig}.
+ *
+ * `maxItemsPerRun` is sized for the smallest host that runs this sync — a 128 MB Cloudflare Workers
+ * isolate — because it bounds the messages fetched, and so the ECHO documents held, per run.
+ */
 const JMAP_SYNC_CONFIG = {
   listPageSize: 50,
   fetchConcurrency: 5,
   commitPageSize: 10,
-  maxItemsPerRun: 500,
+  maxItemsPerRun: 100,
 } as const satisfies SyncStreamConfig.SyncStreamConfig;
 
 /**
@@ -165,15 +170,12 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
             // The first-tick baseline (and stale-token fallback): the current `Email/get` state with no
             // delta applied (so mail arriving during backfill is caught by the next incremental, not
             // missed). Defined once so both call sites share the same capture.
-            const captureFreshDelta = Effect.map(
-              api.emailGet(target, []),
-              (result): DeltaPlan => ({
-                token: result.state,
-                createdIds: undefined,
-                updatedIds: [],
-                hasMoreDelta: false,
-              }),
-            );
+            const captureFreshDelta = Effect.map(api.emailGet(target, []), (result): DeltaPlan => ({
+              token: result.state,
+              createdIds: undefined,
+              updatedIds: [],
+              hasMoreDelta: false,
+            }));
 
             // Resolve the delta plan. An incremental run fetches one bounded `Email/changes` chunk since
             // the token (`maxChanges` = the per-run budget); `hasMoreChanges` drives `runAgain`, and
@@ -332,15 +334,13 @@ const fetchAttachments = (
       attachments,
       (attachment) =>
         api.downloadBlob(target, attachment.blobId, { name: attachment.name, type: attachment.mimeType }).pipe(
-          Effect.map(
-            (bytes): EmailStage.Attachment => ({
-              name: attachment.name,
-              mimeType: attachment.mimeType,
-              size: attachment.size ?? bytes.byteLength,
-              bytes,
-              contentId: attachment.contentId,
-            }),
-          ),
+          Effect.map((bytes): EmailStage.Attachment => ({
+            name: attachment.name,
+            mimeType: attachment.mimeType,
+            size: attachment.size ?? bytes.byteLength,
+            bytes,
+            contentId: attachment.contentId,
+          })),
           Effect.catch((error) => {
             log.catch(error, { blobId: attachment.blobId, name: attachment.name });
             return Effect.succeed(undefined);

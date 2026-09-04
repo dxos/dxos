@@ -25,20 +25,28 @@ import { log } from '@dxos/log';
 import { EdgeFunctionEnv, ErrorCodec, type FunctionProtocol, type TraceProtocol } from '@dxos/protocols';
 
 import { FunctionsAiHttpClient } from './functions-ai-http-client';
-import { accessTokenResolverFromService, configuredCredentialsLayer, credentialsLayerFromDatabase } from './services';
+import {
+  accessTokenResolverFromService,
+  configuredCredentialsLayer,
+  createS3Host,
+  credentialsLayerFromDatabase,
+} from './services';
 
 /**
  * Services provided to invoked function handlers in the EDGE runtime.
  * Handlers reach other operations via `Operation.Service` (backed by the EDGE
  * `FunctionsService`); remote dispatch is keyed by the operation's `deployedId`.
  */
-type EdgeFunctionServices =
+export type EdgeFunctionServices =
   | AiService.AiService
   | Credential.CredentialsService
   | Database.Service
   | Trace.TraceService
   | Operation.Service
-  | Registry.Service;
+  | Registry.Service
+  // Provided by `FunctionContext.createLayer`, so a consumer that requires it (e.g. `AgentProcess`)
+  // is satisfied by the same layer rather than having to merge its own provider.
+  | OpaqueToolkit.OpaqueToolkitProvider;
 
 export interface FunctionWrappingOptions {
   /**
@@ -157,12 +165,18 @@ export const wrapFunctionHandler = (
 
 /**
  * Container for services and context for a function.
+ *
+ * Exported because a hosted `Process` needs the same set: the EDGE process host assembles this
+ * against its own bindings rather than rebuilding the layer stack, which is how the two runtimes stay
+ * in step when a service is added.
  */
-class FunctionContext extends Resource {
+export class FunctionContext extends Resource {
   readonly context: FunctionProtocol.Context;
   readonly client: EchoClient | undefined;
   db: DatabaseImpl | undefined;
   readonly opts: FunctionWrappingOptions;
+  /** Released in `_close`: this is a `Resource`, so a reopen would otherwise stack registrations. */
+  #unregisterBlobBackend: (() => void) | undefined;
 
   constructor(context: FunctionProtocol.Context, opts: FunctionWrappingOptions) {
     super();
@@ -191,9 +205,28 @@ class FunctionContext extends Resource {
 
     await this.db?.setSpaceRoot(this.context.spaceRootUrl ?? failedInvariant('spaceRootUrl missing in context'));
     await this.db?.open();
+
+    // Register the S3 backend so a handler running here can write to a bucket the space is
+    // connected to. Without it this host has inline storage only (4 MiB), and an upload would land
+    // there silently rather than in the configured bucket. Nothing Cloudflare-specific is needed —
+    // it is an outbound fetch to the customer's own endpoint — so this works on edge unchanged.
+    //
+    // Imported dynamically: `plugin-client` pulls this package into the app's eager boot graph, and
+    // a static import would put the SigV4 signer there with it — for code that only ever runs
+    // inside a function invocation.
+    if (this.client && this.db) {
+      const db = this.db;
+      const { S3_BACKEND, createS3BlobBackend } = await import('@dxos/blob/s3');
+      this.#unregisterBlobBackend = this.client.graph.registerBlobBackend(
+        S3_BACKEND,
+        createS3BlobBackend(createS3Host({ getDatabase: (spaceId) => (spaceId === db.spaceId ? db : undefined) })),
+      );
+    }
   }
 
   override async _close() {
+    this.#unregisterBlobBackend?.();
+    this.#unregisterBlobBackend = undefined;
     await this.db?.close();
     await this.client?.close();
   }
@@ -279,7 +312,7 @@ const InternalAiServiceLayer = (functionsAiService: EdgeFunctionEnv.FunctionsAiS
     Layer.provide(httpClient),
   );
   const resolver = AnthropicResolver.make().pipe(Layer.provide(anthropicClient));
-  return AiModelResolver.AiModelResolver.buildAiService.pipe(Layer.provide(resolver));
+  return AiModelResolver.buildAiService.pipe(Layer.provide(resolver));
 };
 
 /**

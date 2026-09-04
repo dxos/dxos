@@ -60,10 +60,15 @@ const tagMatcher = new MatchDecorator({
   // `\w+` stops at the first non-word char, so no trailing boundary is needed; requiring one
   // (e.g. `\W`) would consume that char and fail to match a tag at the end of the document.
   regexp: /#(\w+)/g,
+  // A bare number is not a tag: `#123` is an issue or pull-request reference, which another
+  // extension resolves and links. Replacing it with a tag widget would hide it from that one,
+  // since the widget is atomic.
   decoration: (match) =>
-    Decoration.replace({
-      widget: new TagWidget(match[1]),
-    }),
+    /^\d+$/.test(match[1])
+      ? null
+      : Decoration.replace({
+          widget: new TagWidget(match[1]),
+        }),
 });
 
 const styles = EditorView.theme({

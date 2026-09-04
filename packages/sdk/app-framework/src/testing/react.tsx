@@ -71,7 +71,7 @@ const HarnessProviders = ({ harness, extra, children }: HarnessProvidersProps) =
   const ContributedContext = composeContexts(contributed);
   const ExtraContext = composeExtra(extra);
   // Mirror useApp's provider stack (see SurfaceManager) so the unit-test render path matches the app.
-  const surfaces = useMemo(() => new SurfaceManager(harness.manager.capabilities), [harness]);
+  const surfaces = useMemo(() => new SurfaceManager(harness.manager.capabilities, harness.manager), [harness]);
   return (
     <PluginManagerProvider value={harness.manager}>
       <ContextProtocolProvider value={harness.manager} context={PluginManagerContext}>

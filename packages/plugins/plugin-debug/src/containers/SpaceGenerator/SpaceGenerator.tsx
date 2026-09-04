@@ -4,20 +4,32 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useOperationInvoker, useOptionalCapability } from '@dxos/app-framework/ui';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import { useCapabilities, useOperationInvoker, useOptionalCapability, usePluginManager } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { ProgressMeter, useProgressMonitor } from '@dxos/app-toolkit/ui';
+import { useProgressMonitor } from '@dxos/app-toolkit/ui';
 import { ComputeGraph } from '@dxos/conductor';
 import { Filter, Obj, Type } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as Sheet from '@dxos/plugin-sheet/Sheet';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { IconButton, Input, Panel, ScrollArea, ThemedClassName, useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import {
+  Flex,
+  IconButton,
+  Input,
+  Panel,
+  ScrollArea,
+  ThemedClassName,
+  useAsyncEffect,
+  useTranslation,
+} from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
+import { ProgressMeter } from '@dxos/react-ui-components';
 import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Organization, Person, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
@@ -45,6 +57,14 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
     const [count, setCount] = useState(1);
     const [info, setInfo] = useState<any>({});
     const presets = useMemo(() => generator(), []);
+    const manager = usePluginManager();
+    const sampleSpaces = useCapabilities(AppCapabilities.SampleSpace);
+
+    // Mounting is the demand signal: sample-space modules are gated on `SampleSpacesRequested`,
+    // which nothing else fires, so their content stays out of the app until this panel opens.
+    useEffect(() => {
+      EffectEx.runDetached(manager.activate(ActivationEvents.SampleSpacesRequested));
+    }, [manager]);
 
     // Register types.
     useAsyncEffect(async () => {
@@ -57,8 +77,20 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
         recordTypes.map((type) => [Type.getTypename(type), createGenerator(client, invokePromise, type)]),
       );
 
-      return new Map([...staticGenerators, ...presets.items, ...recordGenerators]);
-    }, [client, invokePromise, presets]);
+      // A sample space is a generator that ignores the count: it writes one coherent world, not n
+      // of anything. Keyed by preset id so it sits in the same table as the type generators.
+      const sampleGenerators = new Map<string, ObjectGenerator<any>>(
+        sampleSpaces.map((sample) => [
+          sample.id,
+          async (space) => {
+            await sample.apply({ client, space });
+            return [];
+          },
+        ]),
+      );
+
+      return new Map([...staticGenerators, ...presets.items, ...recordGenerators, ...sampleGenerators]);
+    }, [client, invokePromise, presets, sampleSpaces]);
 
     // Query space to get info.
     const updateInfo = useCallback(async () => {
@@ -196,6 +228,15 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
                   label='Presets'
                   onClick={handleCreateData}
                 />
+                {sampleSpaces.length > 0 && (
+                  <SchemaTable
+                    classNames='py-1'
+                    types={sampleSpaces.map(({ id, label }) => ({ typename: id, presetLabel: label }))}
+                    objects={info.objects}
+                    label='Sample Spaces'
+                    onClick={handleCreateData}
+                  />
+                )}
                 <ProgressGenerator classNames='py-1' />
               </ScrollArea.Viewport>
             </ScrollArea.Root>
@@ -307,7 +348,7 @@ const ProgressGenerator = ({ classNames }: ProgressGeneratorProps) => {
 
   return (
     <div className={mx('flex flex-col gap-1 py-1', classNames)}>
-      <div className='flex items-center gap-2'>
+      <Flex gap='sm' align='center'>
         <span className='grow'>Progress Monitor</span>
         {running ? (
           <IconButton
@@ -318,7 +359,7 @@ const ProgressGenerator = ({ classNames }: ProgressGeneratorProps) => {
         ) : (
           <IconButton icon='ph--play--regular' label='Start test progress' disabled={!registry} onClick={handleStart} />
         )}
-      </div>
+      </Flex>
       {monitor && (monitor.status === 'running' || monitor.status === 'error') && (
         <ProgressMeter state={monitor} onCancel={() => registry?.cancel(TEST_PROGRESS_NAME)} />
       )}

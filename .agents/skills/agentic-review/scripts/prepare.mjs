@@ -34,6 +34,7 @@ import {
   headCommit,
   isAncestor,
   isWorkingTreeDirty,
+  lastCommitTouching,
   mainMergeBase,
   repoRoot,
   shortSha,
@@ -103,15 +104,28 @@ const scanPriorReviews = () => {
     if (!review || String(review.data.isFinalized) !== 'true' || !commit) {
       continue;
     }
-    if (commit === head || !isAncestor(commit, head)) {
+    if (commit === head) {
       continue;
+    }
+    let effectiveCommit = commit;
+    if (!isAncestor(commit, head)) {
+      // The recorded commit can be unreachable from HEAD even for a genuinely
+      // prior review: its origin branch may have been squashed/rebased into
+      // main under a new SHA, or a shallow clone may never have fetched it.
+      // Fall back to the commit that actually landed this review's own files
+      // in HEAD's history — reachable by construction, so safe to diff from.
+      const landing = lastCommitTouching(`${REVIEWS_DIR}/${entry.name}/REVIEW.md`, head);
+      if (!landing || landing === head || !isAncestor(landing, head)) {
+        continue;
+      }
+      effectiveCommit = landing;
     }
     for (const ruleId of ruleIdsFromReviewDir(dir, review)) {
       seenRuleIds.add(ruleId);
     }
-    const timestamp = commitTimestamp(commit);
+    const timestamp = commitTimestamp(effectiveCommit);
     if (!newest || timestamp > newest.timestamp) {
-      newest = { commit, timestamp };
+      newest = { commit: effectiveCommit, timestamp };
     }
   }
   return { newest, seenRuleIds };

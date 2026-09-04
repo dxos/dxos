@@ -19,7 +19,8 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `component` | `org.dxos.mdl.component@1.0`  |
-| `op`        | `org.dxos.mdl.op@1.0`         |
+| `op`        | `org.dxos.mdl.op@1.1`         |
+| `flow`      | `org.dxos.mdl.flow@1.0`       |
 
 ## Types
 
@@ -103,6 +104,7 @@ component SearchArticle
 
 ```mdl
 op OpenSearch
+  key: org.dxos.operation.search.open
   desc: |
     Opens the global SearchDialog by dispatching a LayoutOperation.UpdateDialog
     event. No input parameters required; the dialog manages its own query state.
@@ -211,6 +213,53 @@ test T-5: Non-matching query shows empty state
   then:
     - results list is empty
     - empty slot is rendered
+```
+
+---
+
+## QA
+
+Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+
+```mdl
+flow QA-1: Open search and find an object
+  desc: The core search round-trip — open the dialog, type a query, get a matching result.
+  actors: both
+  covers: [F-1.1, F-1.2, F-1.3, T-1, T-2]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - doc: a Markdown document named "QA Search Target" exists in the collection (created via
+      plugin-markdown's [op:createDraft] and placed with `space.addObject`, per its own QA-1)
+  test:
+    - name: Open the search dialog
+      do: Press ⌘K (or click the search icon).
+      invoke: [op:OpenSearch]
+      expect: SearchDialog is visible and the search input has focus
+
+    - name: Type a matching query
+      do: Type "QA Search Target" into the search input.
+      expect: a result row for "QA Search Target" appears, with matched field key "title" or "name"
+        and the value containing "QA Search Target"
+      note: |
+        No `invoke` — SearchDialog manages its own debounced (400 ms) query state internally; there
+        is no operation to type a query through. This step is human-only, which is why the flow is
+        `actors: both` rather than `agent`.
+
+    - name: Select the result
+      do: Click the result row.
+      invoke: org.dxos.operation.appToolkit.open { subject: ["root/$given.space.id/content/collections/$given.doc.id"] }
+      expect: the editor opens "QA Search Target" and the dialog closes
+      note: |
+        The agent path approximates the click via direct navigation — SearchDialog's own
+        `selectResult` handler is internal UI state, not an operation.
+  after:
+    - name: Close the dialog if still open
+      do: Press Escape.
+      expect: SearchDialog is closed
 ```
 
 ---

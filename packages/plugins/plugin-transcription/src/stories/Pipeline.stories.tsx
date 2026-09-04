@@ -26,11 +26,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useAtomCapability, useCapabilities } from '@dxos/app-framework/ui';
-import { qualifyId } from '@dxos/app-graph';
-import * as Graph from '@dxos/app-graph/Graph';
-import * as GraphBuilder from '@dxos/app-graph/GraphBuilder';
-import * as Node from '@dxos/app-graph/Node';
-import * as NodeMatcher from '@dxos/app-graph/NodeMatcher';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
@@ -39,6 +36,9 @@ import { Filter, Query } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
+import { qualifyId } from '@dxos/graph/GraphNode';
+import * as GraphNode from '@dxos/graph/GraphNode';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { DXN } from '@dxos/keys';
 import {
   type CommitFn,
@@ -68,11 +68,10 @@ import { seedTestData } from '@dxos/types/testing';
 import { appendPendingText, cancelPendingText, setPendingAnchor, setPendingInterim } from '@dxos/ui-editor';
 import { isNonNullable, trim } from '@dxos/util';
 
+import { TranscriptionPlugin } from '#plugin';
 import { enableQueryIndexes } from '#testing';
 import { translations } from '#translations';
 import { TranscriptionCapabilities } from '#types';
-
-import { TranscriptionPlugin } from '../plugin';
 
 const SAMPLE_CONTENT = trim`
   # Test
@@ -104,9 +103,9 @@ const StoryGraphPlugin = () =>
         { provides: [AppCapabilities.AppGraphBuilder] },
         Effect.fnUntraced(function* () {
           const capabilities = yield* Capability.Service;
-          const extensions = yield* GraphBuilder.createExtension({
+          const extensions = yield* AppGraphBuilder.createExtension({
             id: 'storyDocs',
-            match: NodeMatcher.whenRoot,
+            match: GraphNodeMatcher.whenRoot,
             connector: (_, get) =>
               Effect.gen(function* () {
                 // Tolerate the teardown window when stories swap: the Client capability may already be
@@ -154,7 +153,7 @@ const DefaultStory = ({ stages, seed }: StoryArgs) => {
   const { graph } = useAppGraph();
   const [space] = useSpaces();
   const [doc] = useQuery(space?.db, Query.type(Markdown.Document));
-  const attendableId = doc && qualifyId(Node.RootId, doc.id);
+  const attendableId = doc && qualifyId(GraphNode.RootId, doc.id);
   // Mark the editor attended so its toolbar (and the contributed record action) are active.
   const attentionAttrs = useAttentionAttributes(attendableId);
   const [editorViews] = useCapabilities(MarkdownCapabilities.EditorViews);
@@ -169,7 +168,7 @@ const DefaultStory = ({ stages, seed }: StoryArgs) => {
   // Story renders the surface directly (no deck), so expand the doc node's actions.
   useEffect(() => {
     if (attendableId) {
-      void Graph.expandSync(graph, attendableId, 'action');
+      void AppGraph.expandSync(graph, attendableId, 'action');
     }
   }, [graph, attendableId]);
 
@@ -296,8 +295,8 @@ const DefaultStory = ({ stages, seed }: StoryArgs) => {
   }
 
   return (
-    <div className='dx-container grid grid-cols-[1fr_20rem] gap-2' {...attentionAttrs}>
-      <div className='dx-expander'>
+    <div className='dx-expand grid grid-cols-[1fr_20rem] gap-2' {...attentionAttrs}>
+      <div className='dx-expand'>
         <Surface.Surface type={AppSurface.Article} data={data} limit={1} />
       </div>
       <PipelineStatus

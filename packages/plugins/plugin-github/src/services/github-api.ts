@@ -81,6 +81,17 @@ const GitHubPullRefSchema = Schema.Struct({
   merged_at: Schema.NullOr(Schema.String).pipe(Schema.optional),
 });
 
+const GitHubMilestoneSchema = Schema.Struct({
+  id: Schema.Number,
+  number: Schema.Number,
+  title: Schema.String,
+  description: Schema.NullOr(Schema.String).pipe(Schema.optional),
+  state: Schema.NullOr(Schema.String).pipe(Schema.optional),
+  /** ISO datetime, unlike the date-only shape the local model stores. */
+  due_on: Schema.NullOr(Schema.String).pipe(Schema.optional),
+});
+export type GitHubMilestone = Schema.Schema.Type<typeof GitHubMilestoneSchema>;
+
 const GitHubIssueSchema = Schema.Struct({
   id: Schema.Number,
   number: Schema.Number,
@@ -97,6 +108,7 @@ const GitHubIssueSchema = Schema.Struct({
   user: Schema.NullOr(GitHubUserSchema).pipe(Schema.optional),
   assignees: Schema.Array(GitHubUserSchema).pipe(Schema.optional),
   labels: Schema.Array(GitHubLabelSchema).pipe(Schema.optional),
+  milestone: Schema.NullOr(GitHubMilestoneSchema).pipe(Schema.optional),
   pull_request: Schema.NullOr(GitHubPullRefSchema).pipe(Schema.optional),
 });
 export type GitHubIssue = Schema.Schema.Type<typeof GitHubIssueSchema>;
@@ -119,7 +131,7 @@ export type GitHubComment = Schema.Schema.Type<typeof GitHubCommentSchema>;
  * Layer-based credentials service. Mirrors `TrelloCredentials`: every API call
  * pulls the token from this service rather than threading it through as an
  * explicit parameter, so callers compose a single
- * `Effect.provide(GitHubApi.GitHubCredentials.fromConnection(ref))` at the
+ * `Effect.provide(GitHubApi.fromConnection(ref))` at the
  * operation boundary.
  *
  * Token sourcing: an operation invoked with a `Connection` composes
@@ -129,28 +141,28 @@ export type GitHubComment = Schema.Schema.Type<typeof GitHubCommentSchema>;
  */
 export class GitHubCredentials extends Context.Service<GitHubCredentials, GitHubCredentialsValue>()(
   '@dxos/plugin-github/GitHubCredentials',
-) {
-  /** Creates a credentials layer from an AccessToken ref. Loads it and returns its `token`. */
-  static fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>) =>
-    Layer.effect(
-      GitHubCredentials,
-      Effect.gen(function* () {
-        const accessToken = yield* Database.load(accessTokenRef);
-        return { token: accessToken.token };
-      }),
-    );
+) {}
 
-  /** Creates a credentials layer from a Connection ref. Loads its `accessToken` and returns its `token`. */
-  static fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
-    Layer.effect(
-      GitHubCredentials,
-      Effect.gen(function* () {
-        const connection = yield* Database.load(connectionRef);
-        const accessToken = yield* Database.load(connection.accessToken);
-        return { token: accessToken.token };
-      }),
-    );
-}
+/** Creates a credentials layer from an AccessToken ref. Loads it and returns its `token`. */
+export const fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>) =>
+  Layer.effect(
+    GitHubCredentials,
+    Effect.gen(function* () {
+      const accessToken = yield* Database.load(accessTokenRef);
+      return { token: accessToken.token };
+    }),
+  );
+
+/** Creates a credentials layer from a Connection ref. Loads its `accessToken` and returns its `token`. */
+export const fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
+  Layer.effect(
+    GitHubCredentials,
+    Effect.gen(function* () {
+      const connection = yield* Database.load(connectionRef);
+      const accessToken = yield* Database.load(connection.accessToken);
+      return { token: accessToken.token };
+    }),
+  );
 
 //
 // Request pipeline
@@ -366,6 +378,19 @@ export const fetchRepoIssues = (
     }
     return req;
   }, GitHubIssueSchema);
+
+/**
+ * GET /repos/{owner}/{repo}/milestones — `state=all` so closed milestones stay mirrored (the
+ * issues still assigned to them have to resolve to something).
+ */
+export const fetchRepoMilestones = (owner: string, repo: string): GitHubEffect<readonly GitHubMilestone[]> =>
+  githubPaginated(
+    () =>
+      HttpClientRequest.get(
+        `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/milestones`,
+      ).pipe(HttpClientRequest.appendUrlParam('state', 'all')),
+    GitHubMilestoneSchema,
+  );
 
 /** GET /repos/{owner}/{repo}/issues/{number}/comments. */
 export const fetchIssueComments = (

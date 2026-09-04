@@ -12,8 +12,8 @@ import { Database } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { EMAIL_EXTRACT_OPTIONS, type FactExtractor, messageToDocument, runFactPipeline } from '@dxos/pipeline-email';
 import { type RDF, extractDocFacts } from '@dxos/pipeline-rdf';
+import * as FeedCursor from '@dxos/plugin-inbox/FeedCursor';
 import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
-import { findOrCreateAnalyzeCursor } from '@dxos/plugin-inbox/operations';
 
 import { BrainOperation } from '#types';
 
@@ -35,14 +35,14 @@ const handler = BrainOperation.AnalyzeMailbox.pipe(
     }) {
       const mailbox = yield* Database.load(mailboxRef);
       const feed = yield* Database.load(mailbox.feed);
-      const cursor = yield* findOrCreateAnalyzeCursor(mailbox);
+      const cursor = yield* FeedCursor.findOrCreateAnalyzeCursor(mailbox);
       const aiService = yield* AiService.AiService;
 
       // Live progress via trace `status.update` events (`#analyze` key), projected into the runtime
       // ProgressRegistry — same seam as mail sync and the process pipeline. The pipeline's first
       // `onProgress` delivers the exact pending count, so the meter is determinate.
       const traceWriter = yield* Trace.TraceService;
-      const progressKey = InboxOperation.createAnalyzeProgressKey(mailbox);
+      const progressKey = InboxOperation.createFactsProgressKey(mailbox);
       let total: number | undefined;
       const reportStatus = (patch: { message?: string; current?: number; total?: number } = {}) => {
         total = patch.total ?? total;

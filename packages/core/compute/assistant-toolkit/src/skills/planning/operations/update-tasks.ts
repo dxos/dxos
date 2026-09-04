@@ -4,37 +4,44 @@
 
 import * as Effect from 'effect/Effect';
 
+import { Harness } from '@dxos/assistant';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
-import { Obj } from '@dxos/echo';
-import { Outline } from '@dxos/types';
+import { Database } from '@dxos/echo';
+import { Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { Chat } from '../../../types';
 import { UpdateTasks } from './definitions';
 
 /**
- * Upserts checklist items into the conversation's working outline (markdown `- [ ]` lines,
- * matched by title). The outline is the cheap, fluid form of work — durable Task objects are
- * created by promotion/delegation, not here.
+ * Upserts tasks onto the conversation's checklist, matched by title: an existing task's status is
+ * updated in place, a new title becomes a durable task appended to the chat.
  */
 export default UpdateTasks.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ tasks }) {
-      const chat = yield* Chat.getFromContext;
-      const { text } = yield* Chat.ensureOutlineText(chat);
+      const chat = yield* Harness.getChat;
+      const { db } = yield* Database.Service;
 
-      Obj.update(text, (text) => {
-        text.content = Outline.upsertChecklistItems(
-          text.content,
-          tasks.map(({ title, status }) => ({ title, done: status === 'done' })),
-        );
-      });
+      // Mutable copy: a payload naming the same new title twice must upsert its own creation.
+      const existing = [...(yield* Chat.loadTasks(chat))];
+      for (const { title, status } of tasks) {
+        const task = existing.find((candidate) => candidate.title === title.trim());
+        if (task) {
+          // A task someone was named to review lands in `review` rather than closing; the rule is
+          // `Task.update`'s, since the model naming `done` cannot know about reviewers.
+          Task.setStatus(task, status);
+        } else {
+          existing.push(Chat.addTask(db, chat, title, { status }));
+        }
+      }
+      yield* Database.flush();
 
       return trim`
         You must update a task to 'done' when complete, and keep exactly one task in progress.
-        Current checklist:
+
         <checklist>
-          ${text.content}
+        ${yield* Chat.formatChecklist(chat)}
         </checklist>
       `;
     }),

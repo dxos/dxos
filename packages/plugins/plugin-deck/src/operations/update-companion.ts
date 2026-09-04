@@ -9,26 +9,29 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
-import { Attention } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention/types';
 
 import { CompanionViewState, DeckCapabilities } from '#types';
 
-import { resolveCompanionAnchor, resolveCompanionPlank } from '../util';
-import { addCompanionPlank, updateActiveDeck } from './helpers';
+import { closeCompanionPlank, openCompanionPlank, resolveCompanionAnchor, resolveCompanionPlank } from '../util';
+import { updateActiveDeck } from './helpers';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.UpdateCompanion> = LayoutOperation.UpdateCompanion.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
+      const { flatten } = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
+
       if (input.subject === null) {
-        // Closing targets the named plank: companions are per-plank, so the close control says which
-        // plank it belongs to. Callers that cannot know (the URL handler pruning a companion the URL no
-        // longer carries) fall back to the attended plank. The selected variant is left intact so
+        // Closing targets the named plank: while the deck slides companions are per-plank, so the close
+        // control says which plank it belongs to. Callers that cannot know (the URL handler pruning a
+        // companion the URL no longer carries) fall back to the attended plank. Flat mode ignores the
+        // plank and closes the deck's companion outright. The selected variant is left intact so
         // reopening restores the last tab.
         const deck = yield* DeckCapabilities.getDeck();
         const attention = yield* Capability.get(AttentionCapabilities.Attention);
         const plankId = input.anchor ?? resolveCompanionAnchor(deck.active, attention.getCurrent());
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
-          updateActiveDeck(state, { companionPlanks: deck.companionPlanks.filter((id) => id !== plankId) }),
+          updateActiveDeck(state, { companionPlanks: closeCompanionPlank(deck.companionPlanks, flatten, plankId) }),
         );
       } else {
         // Resolve the plank first: a bare variant on an empty deck names none, and recording a selected
@@ -52,7 +55,9 @@ const handler: Operation.WithHandler<typeof LayoutOperation.UpdateCompanion> = L
         viewState.update(CompanionViewState.aspect, CompanionViewState.CONTEXT, (prev) => ({ ...prev, variant }));
 
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
-          updateActiveDeck(state, { companionPlanks: addCompanionPlank(state, plankId) }),
+          updateActiveDeck(state, {
+            companionPlanks: openCompanionPlank(state.decks[state.activeDeck]?.companionPlanks ?? [], flatten, plankId),
+          }),
         );
       }
     }),

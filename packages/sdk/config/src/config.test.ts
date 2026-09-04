@@ -2,9 +2,15 @@
 // Copyright 2021 DXOS.org
 //
 
-import { expect, test } from 'vitest';
+import { create, createRegistry, fromBinary, fromJson, toBinary, toJson } from '@bufbuild/protobuf';
+import { StructSchema, anyPack } from '@bufbuild/protobuf/wkt';
+import { describe, expect, test } from 'vitest';
+
+import { ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
 
 import { Config, mapFromKeyValues, mapToKeyValues } from './config';
+import { EDGE_URLS } from './edge-services';
+import { configPreset } from './preset';
 // @ts-ignore
 import defaults from './testing/defaults.js';
 // @ts-ignore
@@ -35,7 +41,7 @@ test('Basic config', () => {
     },
   );
 
-  expect(config.values).toEqual({
+  expect(toJson(ConfigSchema, config.values)).toEqual({
     version: 1,
     runtime: {
       app: {
@@ -55,11 +61,7 @@ test('Runtime and module config', () => {
         modules: [
           {
             name: 'example:app/tasks',
-            record: {
-              web: {
-                entryPoint: 'main.js',
-              },
-            },
+            record: anyPack(StructSchema, fromJson(StructSchema, { web: { entryPoint: 'main.js' } })),
           },
         ],
       },
@@ -77,16 +79,15 @@ test('Runtime and module config', () => {
     },
   );
 
-  expect(config.values).toEqual({
+  expect(toJson(ConfigSchema, config.values, { registry: createRegistry(StructSchema) })).toEqual({
     version: 1,
     package: {
       modules: [
         {
           name: 'example:app/tasks',
           record: {
-            web: {
-              entryPoint: 'main.js',
-            },
+            '@type': 'type.googleapis.com/google.protobuf.Struct',
+            'value': { web: { entryPoint: 'main.js' } },
           },
         },
       ],
@@ -154,5 +155,58 @@ test.skip('mapToKeyValuesping', () => {
   expect(values).toEqual({
     TEST_CLIENT_ID: 123,
     TEST_CLIENT_TAG: 'testing',
+  });
+});
+
+describe('Config sources', () => {
+  test('message source produces an encodable config', () => {
+    const config = new Config(
+      {
+        runtime: {
+          client: {
+            storage: { persistent: true },
+          },
+        },
+      },
+      configPreset({ edge: 'preview' }).values,
+    );
+
+    expect(() => toBinary(ConfigSchema, config.values)).not.toThrow();
+    expect(config.get('runtime.client.storage.persistent')).to.eq(true);
+    expect(config.get('runtime.services.edge.url')).to.eq(EDGE_URLS.preview);
+  });
+
+  test('reversed source order produces an encodable config', () => {
+    const config = new Config(configPreset({ edge: 'preview' }).values, {
+      runtime: {
+        client: {
+          storage: { persistent: true },
+        },
+      },
+    });
+
+    expect(() => toBinary(ConfigSchema, config.values)).not.toThrow();
+    expect(config.get('runtime.client.storage.persistent')).to.eq(true);
+  });
+
+  test('unknown wire fields survive a source round-trip', () => {
+    // A varint field this build's schema does not know, as `fromBinary` would leave it on the message.
+    const unknown = { no: 9999, wireType: 0, data: new Uint8Array([42]) };
+    const source = create(ConfigSchema, { version: 1 });
+    source.$unknown = [unknown];
+
+    const config = new Config(source, {
+      runtime: {
+        client: {
+          storage: { persistent: true },
+        },
+      },
+    });
+
+    expect(config.values.$unknown).to.deep.eq([unknown]);
+    expect(config.get('runtime.client.storage.persistent')).to.eq(true);
+
+    const decoded = fromBinary(ConfigSchema, toBinary(ConfigSchema, config.values));
+    expect(decoded.$unknown).to.deep.eq([unknown]);
   });
 });

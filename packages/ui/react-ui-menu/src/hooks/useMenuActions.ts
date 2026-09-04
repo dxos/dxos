@@ -7,13 +7,14 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import { type DependencyList, useCallback, useContext, useMemo } from 'react';
 
-import * as Graph from '@dxos/app-graph/Graph';
-import * as Node from '@dxos/app-graph/Node';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as GraphNode from '@dxos/graph/GraphNode';
 
 import { type MenuItem, type MenuItemGroup, type MenuItemsAccessor } from '../types';
 
-export type ActionGraphNodes = Node.NodeArg<any>[];
-export type ActionGraphEdges = Graph.Edge[];
+export type ActionGraphNodes = AppGraphNode.NodeArg<any>[];
+export type ActionGraphEdges = AppGraph.Edge[];
 export type ActionGraphProps = {
   nodes: ActionGraphNodes;
   edges: ActionGraphEdges;
@@ -28,19 +29,20 @@ export const useMenuActions = (props: Atom.Atom<ActionGraphProps>): MenuActions 
   const menuGraphProps = useAtomValue(props);
 
   // Create a new graph whenever props change to preserve correct order.
-  // (Graph.addEdges appends rather than replaces, which breaks ordering on updates.)
+  // (AppGraph.addEdges appends rather than replaces, which breaks ordering on updates.)
   // NOTE: Using useMemo rather than a ref-mutation pattern to avoid calling registry.set during render,
   // which would trigger atom state updates in other components (setState-in-render React warning).
   const graph = useMemo(() => {
-    const newGraph = Graph.make({ registry });
-    newGraph.pipe(Graph.addNodes(menuGraphProps.nodes as Node.NodeArg<any>[]), Graph.addEdges(menuGraphProps.edges));
+    const newGraph = AppGraph.make({ registry });
+    AppGraph.addNodes(newGraph, menuGraphProps.nodes as AppGraphNode.NodeArg<any>[]);
+    AppGraph.addEdges(newGraph, menuGraphProps.edges);
     return newGraph;
   }, [registry, menuGraphProps]);
 
   const items: MenuItemsAccessor = useCallback(
     (group?: MenuItemGroup) => {
       // TODO(wittjosiah): Migrate to using action relation instead of child.
-      return graph.connections(group?.id || Node.RootId, 'child') as Atom.Atom<MenuItem[] | null>;
+      return graph.connections(group?.id || GraphNode.RootId, 'child') as Atom.Atom<MenuItem[] | null>;
     },
     [graph],
   );

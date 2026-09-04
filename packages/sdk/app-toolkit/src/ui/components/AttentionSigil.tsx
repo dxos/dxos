@@ -4,8 +4,8 @@
 
 import React, { Fragment, type PropsWithChildren, forwardRef, useState } from 'react';
 
-import type * as Node from '@dxos/app-graph/Node';
-import { keySymbols } from '@dxos/keyboard';
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import { keySymbols } from '@dxos/react-focus';
 import { Button, type ButtonProps, DropdownMenu, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Attention, useAttention } from '@dxos/react-ui-attention';
 import { mx, osTranslations } from '@dxos/ui-theme';
@@ -19,7 +19,7 @@ export type KeyBinding = {
   unknown?: string;
 };
 
-export type AttentionSigilAction = Pick<Node.ActionLike, 'id' | 'properties' | 'data'>;
+export type AttentionSigilAction = Pick<AppGraphNode.ActionLike, 'id' | 'properties' | 'data'>;
 
 export type AttentionSigilButtonSize = 'md' | 'lg';
 

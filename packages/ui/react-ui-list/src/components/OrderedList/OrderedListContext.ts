@@ -9,7 +9,7 @@ import {
   type ReorderListController,
   type UseListDisclosureReturn,
   type UseListNavigationReturn,
-} from '../../aspects';
+} from '../../hooks';
 
 // Kept out of `OrderedListRoot.tsx`: react-refresh only fast-refreshes a module whose exports are
 // all components, so a context exported beside them forces a full page reload on every edit.
@@ -22,6 +22,8 @@ export type OrderedListContextValue<T extends ListItemRecord> = {
   reorder: ReorderListController<T>;
   disclosure: UseListDisclosureReturn;
   navigation: UseListNavigationReturn;
+  /** Mirrors the mode given to `useListNavigation`, so a row knows which aria grammar it is in. */
+  navigationMode: 'list' | 'listbox';
   readonly?: boolean;
   active: ReorderActive<T>;
   /**

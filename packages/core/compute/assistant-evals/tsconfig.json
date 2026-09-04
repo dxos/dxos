@@ -33,10 +33,19 @@
       "path": "../../../plugins/plugin-markdown"
     },
     {
+      "path": "../../../plugins/plugin-projects"
+    },
+    {
       "path": "../../../plugins/plugin-routine"
     },
     {
+      "path": "../../../plugins/plugin-space"
+    },
+    {
       "path": "../../../plugins/plugin-table"
+    },
+    {
+      "path": "../../../plugins/plugin-tasks"
     },
     {
       "path": "../../../plugins/plugin-testing"

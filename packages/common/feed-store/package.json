@@ -50,7 +50,6 @@
     "streamx": "catalog:"
   },
   "devDependencies": {
-    "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/random": "workspace:*",

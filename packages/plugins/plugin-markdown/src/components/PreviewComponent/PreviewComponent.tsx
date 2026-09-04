@@ -4,12 +4,12 @@
 
 import React, { type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import { Surface, useOptionalCapability } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { type Space } from '@dxos/client/echo';
-import { Obj } from '@dxos/echo';
+import { type Database, Obj } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import { URI } from '@dxos/keys';
 import { Card, Icon, IconButton } from '@dxos/react-ui';
@@ -51,7 +51,7 @@ const maybeScrollIntoView = (element: HTMLElement): void => {
 };
 
 export type PreviewComponentProps = XmlWidgetProps<{
-  space?: Space;
+  db?: Database.Database;
   dxn: string;
   label: string;
   block?: boolean;
@@ -67,27 +67,33 @@ export type PreviewComponentProps = XmlWidgetProps<{
  * Used as the Component entry in a urlSchemes XmlWidgetDef.
  */
 export const PreviewComponent = ({
-  view,
-  range,
-  space,
+  db,
   dxn,
   label: labelProp,
+  view,
+  range,
   onOpen,
   isSurfaceAvailable: isSurfaceAvailableProp,
 }: PreviewComponentProps) => {
-  const { invokePromise } = useOperationInvoker();
+  // Optional, not `useOperationInvoker`: that hook SUSPENDS until the capability exists, and a
+  // suspending portal holds the whole editor tree un-committed — embeds never appeared on the
+  // first document render. The invoker is only the open-click fallback; absence is tolerable.
+  const invoker = useOptionalCapability(Capabilities.OperationInvoker);
+  const invokePromise = invoker?.invokePromise;
 
   // Fall back to the app's surface registry unless a caller injects a check (e.g. from a story).
   const defaultIsSurfaceAvailable = Surface.useIsAvailable();
   const isSurfaceAvailable = isSurfaceAvailableProp ?? defaultIsSurfaceAvailable;
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Resolve relative to the containing document's own space so space-relative embeds
+  // Resolve relative to the containing document's own database so space-relative embeds
   // (bare `echo:/<id>` URIs, used so links survive being imported into a new space) resolve.
   const uri = useMemo(() => (dxn ? URI.make(dxn) : undefined), [dxn]);
-  const ref = useMemo(() => (uri && space ? space.db.makeRef<Obj.Unknown>(uri) : undefined), [uri, space]);
+  const ref = useMemo(() => (uri && db ? db.makeRef<Obj.Unknown>(uri) : undefined), [uri, db]);
   const object = useResolveRef(ref);
-  const subject = useObject(object);
+  // Tuple, not the snapshot itself: binding the array as `subject` made every surface filter's
+  // instanceOf check fail, so embeds rendered nothing.
+  const [subject] = useObject(object);
 
   // px per rem; ResizeHandle works in rem while the persisted height is in px.
   const remSize = useMemo(() => parseFloat(getComputedStyle(document.documentElement).fontSize) || 16, []);
@@ -170,70 +176,73 @@ export const PreviewComponent = ({
     [uri, object, onOpen, invokePromise],
   );
 
-  if (!uri || !object || !data) {
-    return null;
-  }
+  if (uri && object && data) {
+    const objectIcon = Obj.getIcon(object);
+    const objectLabel = Obj.getLabel(object);
 
-  const objectIcon = Obj.getIcon(object);
-  const objectLabel = Obj.getLabel(object);
+    // Section preview.
+    if (isSurfaceAvailable({ type: AppSurface.Section, data })) {
+      return (
+        <div
+          className='relative grid scroll-mt-16'
+          style={sizeStyle(size, 'vertical')}
+          {...resizeAttributes}
+          ref={containerRef}
+        >
+          <div className='grid overflow-hidden border border-subdued-separator rounded-md'>
+            <Surface.Surface type={AppSurface.Section} data={data} limit={1} />
+          </div>
 
-  // Section preview.
-  if (isSurfaceAvailable({ type: AppSurface.Section, data })) {
-    return (
-      <div
-        className='relative grid scroll-mt-16'
-        style={sizeStyle(size, 'vertical')}
-        {...resizeAttributes}
-        ref={containerRef}
-      >
-        <div className='grid overflow-hidden border border-subdued-separator rounded-md'>
-          <Surface.Surface type={AppSurface.Section} data={data} limit={1} />
-        </div>
+          <div className='absolute bottom-1 right-1 flex items-center justify-end gap-1'>
+            <span className='dx-tag dx-tag--neutral flex items-center gap-1'>
+              {objectIcon && <Icon icon={objectIcon.icon} size={4} />}
+              {objectLabel}
+            </span>
+          </div>
 
-        <div className='absolute bottom-1 right-1 flex items-center justify-end gap-1'>
-          <span className='dx-tag dx-tag--neutral flex items-center gap-1'>
-            {objectIcon && <Icon icon={objectIcon.icon} size={4} />}
-            {objectLabel}
-          </span>
-        </div>
-        <div className='absolute top-1 right-1 flex items-center justify-end gap-1'>
-          <IconButton
-            density='sm'
-            icon='ph--arrow-square-out--regular'
-            iconOnly
-            label='Open'
-            variant='ghost'
-            onClick={handleOpen}
+          <div className='absolute top-1 right-1 flex items-center justify-end gap-1'>
+            <IconButton
+              density='sm'
+              icon='ph--arrow-square-out--regular'
+              iconOnly
+              label='Open'
+              variant='ghost'
+              onClick={handleOpen}
+            />
+          </div>
+
+          <ResizeHandle
+            side='block-end'
+            fallbackSize={FALLBACK_SIZE}
+            minSize={MIN_SIZE}
+            size={size}
+            onSizeChange={handleResize}
           />
         </div>
+      );
+    }
 
-        <ResizeHandle
-          side='block-end'
-          fallbackSize={FALLBACK_SIZE}
-          minSize={MIN_SIZE}
-          size={size}
-          onSizeChange={handleResize}
-        />
-      </div>
-    );
+    // Card preview.
+    if (isSurfaceAvailable({ type: AppSurface.CardContent, data })) {
+      return (
+        <div>
+          <Card.Root>
+            <Card.Header>
+              <Card.Block />
+              <Card.Title>{objectLabel}</Card.Title>
+            </Card.Header>
+            <Card.Body>
+              <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />
+            </Card.Body>
+          </Card.Root>
+        </div>
+      );
+    }
   }
 
-  // Card preview.
-  if (isSurfaceAvailable({ type: AppSurface.CardContent, data })) {
-    return (
-      <div>
-        <Card.Root>
-          <Card.Header>
-            <Card.Block />
-            <Card.Title>{objectLabel}</Card.Title>
-          </Card.Header>
-          <Card.Body>
-            <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />
-          </Card.Body>
-        </Card.Root>
-      </div>
-    );
-  }
-
-  return null;
+  return (
+    <span className='bg-card-surface text-sm border border-separator rounded-sm p-1'>
+      Invalid object: <span className='font-mono'>{dxn}</span>
+    </span>
+  );
 };

@@ -12,8 +12,12 @@ export const queryStringToMatch = (queryString?: string): RegExp | undefined => 
   return trimmed ? new RegExp(trimmed, 'i') : undefined;
 };
 
+/**
+ * Coarse type kind sniffed from an entity's properties, for `SearchResult.type`. Not an icon id —
+ * icons come from the type's `IconAnnotation` (see `toSearchResults`).
+ */
 // TODO(burdon): Type name registry linked to schema?
-export const getIcon = (type: Type.AnyEntity | undefined): string | undefined => {
+const getTypeKind = (type: Type.AnyEntity | undefined): string | undefined => {
   if (!type) {
     return undefined;
   }
@@ -58,7 +62,7 @@ export const filterObjectsSync = <T extends Entity.Unknown>(objects: T[], match?
 
       results.push({
         id: object.id,
-        type: getIcon(Entity.getType(object)),
+        type: getTypeKind(Entity.getType(object)),
         label,
         match,
         // TODO(burdon): Truncate.

@@ -222,7 +222,7 @@ export const Surfaces = {
       return () => observer.disconnect();
     }, []);
     return (
-      <div className='absolute inset-0 overflow-auto bg-white dark:bg-black'>
+      <div className='dx-fullscreen overflow-auto bg-white dark:bg-black'>
         <div className='flex flex-col'>
           {order.map(([surface, foreground, label]) => (
             <div
@@ -274,7 +274,7 @@ export const Tags = {
 export const Animation = {
   render: () => {
     return (
-      <div className='absolute inset-0 grid place-items-center'>
+      <div className='dx-fullscreen grid place-items-center'>
         <div className='dx-density-lg border border-separator rounded-md'>
           <div
             className={mx(

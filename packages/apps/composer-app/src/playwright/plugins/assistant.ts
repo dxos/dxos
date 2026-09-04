@@ -33,11 +33,11 @@ export class Assistant {
   }
 
   /**
-   * The message thread. It is a read-only CodeMirror document (`MarkdownStream`) rather than a list
-   * of message elements, so assertions read its text rather than count nodes.
+   * The message thread's root. The thread is a virtualized list of read-only CodeMirror documents,
+   * one per message, so this matches the container and {@link text} reads across the messages.
    */
   get thread(): Locator {
-    return this.#locator.getByTestId('assistant.thread').locator('.cm-content');
+    return this.#locator.getByTestId('assistant.thread');
   }
 
   /**
@@ -46,6 +46,14 @@ export class Assistant {
    */
   get error(): Locator {
     return this.#locator.page().getByTestId('assistant.error');
+  }
+
+  /**
+   * The thread's text, one message per line. Joined across the message editors because a
+   * single-element read would violate strict mode as soon as a reply joins the prompt.
+   */
+  async text(): Promise<string> {
+    return (await this.thread.locator('.cm-content').allInnerTexts()).join('\n');
   }
 
   /**
