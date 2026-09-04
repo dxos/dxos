@@ -19,17 +19,17 @@ test.describe('Table', () => {
   test('Loads', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
     test.skip(browserName === 'firefox');
-    const { page } = await setupPage(browser, { url: storyUrl });
+    const { page, close } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
     await table.grid.ready();
-    await page.close();
+    await close();
   });
 
   test('sort', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
     test.skip(browserName === 'firefox');
-    const { page } = await setupPage(browser, { url: storyUrl });
+    const { page, close } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
     await table.grid.ready();
@@ -40,13 +40,13 @@ test.describe('Table', () => {
     await table.sortColumn(0, 'ascending');
     await expect(table.grid.cell(0, 0, 'grid')).toContainText('Aut.');
     await expect(table.grid.cell(0, 9, 'grid')).toHaveText('Sit.');
-    await page.close();
+    await close();
   });
 
   test('selection', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
     test.skip(browserName === 'firefox');
-    const { page } = await setupPage(browser, { url: storyUrl });
+    const { page, close } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
     await table.grid.ready();
@@ -62,26 +62,26 @@ test.describe('Table', () => {
     await expect(table.selection(1)).not.toBeChecked();
     await expect(table.selection(2)).not.toBeChecked();
 
-    await page.close();
+    await close();
   });
 
   test('delete row', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
     test.skip(browserName === 'firefox');
-    const { page } = await setupPage(browser, { url: storyUrl });
+    const { page, close } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
     await table.grid.ready();
     await expect(page.getByRole('gridcell', { name: 'Sapiente.' })).toHaveCount(1);
     await table.deleteRow(0);
     await expect(page.getByRole('gridcell', { name: 'Sapiente.' })).toHaveCount(0);
-    await page.close();
+    await close();
   });
 
   test('delete row--select all', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
     test.skip(browserName === 'firefox');
-    const { page } = await setupPage(browser, { url: storyUrl });
+    const { page, close } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
     await table.grid.ready();
@@ -93,13 +93,13 @@ test.describe('Table', () => {
     await expect(page.getByRole('gridcell', { name: 'Aut.' })).toHaveCount(0);
     await expect(page.getByRole('gridcell', { name: 'Beatae.' })).toHaveCount(0);
     await expect(table.grid.cellsWithinPlane('grid')).toHaveCount(0);
-    await page.close();
+    await close();
   });
 
   test('delete column', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
     test.skip(browserName === 'firefox');
-    const { page } = await setupPage(browser, { url: storyUrl });
+    const { page, close } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
     await table.grid.ready();
@@ -119,13 +119,13 @@ test.describe('Table', () => {
 
     // Ensure that the delete menu item is not visible when there is only one column left.
     await expect(page.getByTestId('column-delete')).toHaveCount(0);
-    await page.close();
+    await close();
   });
 
   test('add column without changing format', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
     test.skip(browserName === 'firefox');
-    const { page } = await setupPage(browser, { url: storyUrl });
+    const { page, close } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
     await table.grid.ready();
@@ -134,13 +134,13 @@ test.describe('Table', () => {
     await table.addColumn({ label: newColumnLabel });
 
     await expect(page.getByRole('gridcell', { name: newColumnLabel })).toBeVisible();
-    await page.close();
+    await close();
   });
 
   test('add column with format', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
     test.skip(browserName === 'firefox');
-    const { page } = await setupPage(browser, { url: storyUrl });
+    const { page, close } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
     await table.grid.ready();
@@ -149,13 +149,13 @@ test.describe('Table', () => {
     await table.addColumn({ label: newColumnLabel, format: 'Number' });
 
     await expect(page.getByRole('gridcell', { name: newColumnLabel })).toBeVisible();
-    await page.close();
+    await close();
   });
 
   test.skip('test toggles', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
     test.skip(browserName === 'firefox');
-    const { page } = await setupPage(browser, { url: storyUrl });
+    const { page, close } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
     await table.grid.ready();
@@ -172,13 +172,13 @@ test.describe('Table', () => {
     await expect(table.grid.cell(0, 0, 'grid')).toHaveText('Aut.');
     await expect(table.grid.cell(0, 1, 'grid')).toHaveText('Beatae.');
 
-    await page.close();
+    await close();
   });
 
   test('add row and edit cell', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
     test.skip(browserName === 'firefox');
-    const { page } = await setupPage(browser, { url: storyUrl });
+    const { page, close } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
     await table.grid.ready();
@@ -201,14 +201,14 @@ test.describe('Table', () => {
 
     // Assert the cell content is saved.
     await expect(newCell).toHaveText(cellContent);
-    await page.close();
+    await close();
   });
 
   // TODO(wittjosiah): Remove? Conflicts with story play function which is run as a unit test anyways.
   test.skip('extant relations work as expected', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
     test.skip(browserName === 'firefox');
-    const { page } = await setupPage(browser, { url: relationsStoryUrl });
+    const { page, close } = await setupPage(browser, { url: relationsStoryUrl });
 
     // Wait for the page to load
     await page.locator('dx-grid > .dx-grid').nth(1).waitFor({ state: 'visible' });
@@ -256,14 +256,14 @@ test.describe('Table', () => {
     // Assert that the cell element has the org name
     await expect(targetCell).toHaveText(orgName);
 
-    await page.close();
+    await close();
   });
 
   // TODO(wittjosiah): Remove? Conflicts with story play function which is run as a unit test anyways.
   test.skip('new relations work as expected', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
     test.skip(browserName === 'firefox');
-    const { page } = await setupPage(browser, { url: relationsStoryUrl });
+    const { page, close } = await setupPage(browser, { url: relationsStoryUrl });
 
     // Wait for the page to load
     await page.locator('dx-grid > .dx-grid').nth(1).waitFor({ state: 'visible' });
@@ -321,6 +321,6 @@ test.describe('Table', () => {
     await page.keyboard.press('Enter');
     await expect(nonRefCell).toHaveText(nonRefContent);
 
-    await page.close();
+    await close();
   });
 });

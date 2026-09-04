@@ -12,11 +12,17 @@ const config = {
 
 test.describe('iframe', () => {
   let page: Page;
+  let close: () => Promise<void>;
 
   test.beforeAll(async ({ browser }) => {
     const result = await setupPage(browser, { url: `${config.baseUrl}/iframe.html` });
     page = result.page;
+    close = result.close;
     await page.locator(':text("value")').waitFor({ state: 'visible' });
+  });
+
+  test.afterAll(async () => {
+    await close();
   });
 
   test('parent and child share source of truth.', async () => {

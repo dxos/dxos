@@ -145,7 +145,17 @@ export const setupPage = async (browser: Browser | BrowserContext, options: Setu
   const { url, bridgeLogs, viewportSize } = options;
 
   const context = 'newContext' in browser ? await browser.newContext() : browser;
+  const ownsContext = context !== browser;
   const page = await context.newPage();
+
+  // Closing the page is not enough. Playwright never reclaims a context created off the worker-scoped
+  // `browser` fixture, and it opens a trace chunk on every LIVE context when a test starts, so each
+  // leaked context is re-serialized into every later trace in that worker until the writer exceeds
+  // V8's string limit and the run reports `RangeError: Invalid string length` over a truncated
+  // trace.zip instead of the failure it was recording.
+  const close = async (): Promise<void> => {
+    await (ownsContext ? context.close() : page.close());
+  };
 
   if (viewportSize) {
     await page.setViewportSize(viewportSize);
@@ -184,7 +194,7 @@ export const setupPage = async (browser: Browser | BrowserContext, options: Setu
     await page.goto(url);
   }
 
-  return { context, page };
+  return { context, page, close };
 };
 
 export const storybookUrl = (storyId: string, port = 9009) =>

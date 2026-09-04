@@ -12,11 +12,17 @@ const config = {
 
 test.describe('iframe-worker', () => {
   let page: Page;
+  let close: () => Promise<void>;
 
   test.beforeAll(async ({ browser }) => {
     const result = await setupPage(browser, { url: `${config.baseUrl}/iframe-worker.html` });
     page = result.page;
+    close = result.close;
     await page.locator(':text("value")').waitFor({ state: 'visible' });
+  });
+
+  test.afterAll(async () => {
+    await close();
   });
 
   test('loads and connects.', async () => {

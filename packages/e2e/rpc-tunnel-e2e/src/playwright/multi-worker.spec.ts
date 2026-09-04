@@ -12,10 +12,16 @@ const config = {
 
 test.describe('multi-worker', () => {
   let page: Page;
+  let close: () => Promise<void>;
 
   test.beforeAll(async ({ browser }) => {
     const result = await setupPage(browser, { url: `${config.baseUrl}/multi-worker.html` });
     page = result.page;
+    close = result.close;
+  });
+
+  test.afterAll(async () => {
+    await close();
   });
 
   test('communicates over multiple independent rpc ports.', async () => {

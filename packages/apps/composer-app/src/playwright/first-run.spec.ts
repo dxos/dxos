@@ -17,7 +17,7 @@ test.describe.skip('First-run tests', () => {
   });
 
   test.afterEach(async () => {
-    await host.closePage();
+    await host.close();
   });
 
   test('help plugin tooltip displays (eventually) on first run and increments correctly', async () => {
