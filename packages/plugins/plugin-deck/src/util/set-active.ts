@@ -6,21 +6,6 @@ import { Attention } from '@dxos/react-ui-attention/types';
 
 import { DeckSchema } from '#types';
 
-/**
- * Whether an automatic navigation may still apply.
- *
- * Invoking a layout operation is not instantaneous — a lazily imported handler alone costs a few
- * hundred milliseconds — and the write happens at the end of that. A caller that is not the reader
- * (boot-time seeding, a restore) therefore passes the active ids it decided against, and its write
- * is dropped if the reader has moved since. A caller that IS the reader passes nothing and always
- * wins.
- *
- * Exact and order-sensitive: a deck showing the same planks in a different order is a different
- * view, and the reader put it that way.
- */
-export const expectationHolds = (active: readonly string[], expected: readonly string[] | undefined): boolean =>
-  expected === undefined || (active.length === expected.length && active.every((id, index) => id === expected[index]));
-
 export type SetActiveOptions = {
   next: string[];
   deck: DeckSchema.DeckState;

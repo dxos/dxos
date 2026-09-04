@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { DeckSchema } from '#types';
 
-import { computeActiveUpdates, expectationHolds } from './set-active';
+import { computeActiveUpdates } from './set-active';
 
 const makeDeck = (overrides: Partial<DeckSchema.DeckState> = {}): DeckSchema.DeckState => ({
   ...DeckSchema.defaultDeck,
@@ -94,33 +94,5 @@ describe('computeActiveUpdates', () => {
       expect(deckUpdates.active).toEqual([]);
       expect(deckUpdates.inactive).toEqual(expect.arrayContaining(['a', 'b']));
     });
-  });
-});
-
-describe('expectationHolds', () => {
-  test('a caller that states no expectation always wins', ({ expect }) => {
-    expect(expectationHolds([], undefined)).toBe(true);
-    expect(expectationHolds(['item1'], undefined)).toBe(true);
-  });
-
-  test('an automatic write applies while the reader has not moved', ({ expect }) => {
-    expect(expectationHolds([], [])).toBe(true);
-    expect(expectationHolds(['item1'], ['item1'])).toBe(true);
-  });
-
-  test('an automatic write is dropped once the reader has opened something', ({ expect }) => {
-    expect(expectationHolds(['settings'], [])).toBe(false);
-  });
-
-  test('and once they have closed everything', ({ expect }) => {
-    expect(expectationHolds([], ['item1'])).toBe(false);
-  });
-
-  test('reordering the same planks is a different view, so the write is dropped', ({ expect }) => {
-    expect(expectationHolds(['item1', 'item2'], ['item2', 'item1'])).toBe(false);
-  });
-
-  test('a longer deck sharing its prefix is not a match', ({ expect }) => {
-    expect(expectationHolds(['item1', 'item2'], ['item1'])).toBe(false);
   });
 });

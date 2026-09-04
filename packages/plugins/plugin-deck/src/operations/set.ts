@@ -13,18 +13,13 @@ import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabili
 import { DeckCapabilities } from '#types';
 
 import { updatePlankNames } from '../layout';
-import { computeActiveUpdates, expectationHolds } from '../util';
+import { computeActiveUpdates } from '../util';
 import { updateActiveDeck } from './helpers';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.Set> = LayoutOperation.Set.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const deck = yield* DeckCapabilities.getDeck();
-
-      if (!expectationHolds(deck.active, input.expectActive)) {
-        return;
-      }
-
       const attention = yield* Capability.get(AttentionCapabilities.Attention);
       const { flatten } = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
 

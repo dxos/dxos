@@ -19,9 +19,7 @@ export const DefaultContent = Capability.lazyModule(
   {
     requires: [
       Capabilities.OperationInvoker,
-      Capabilities.AtomRegistry,
       AppCapabilities.AppGraph,
-      AppCapabilities.Layout,
       ClientCapabilities.Client,
       ClientCapabilities.SchemaRegistered,
       SpaceCapabilities.OnCreateSpace,

@@ -386,12 +386,6 @@ export const Set = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     subject: Schema.Array(Schema.String.annotate({ description: 'Ids of the items to set.' })),
-    expectActive: Schema.optional(
-      Schema.Array(Schema.String).annotate({
-        description:
-          'Apply only while the active ids are still exactly these. For automatic navigation, which must never override a reader who moved while it was in flight.',
-      }),
-    ),
   }),
   output: Schema.Void,
 });
