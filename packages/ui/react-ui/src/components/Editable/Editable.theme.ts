@@ -7,9 +7,6 @@ import { type ComponentFunction, type Density } from '@dxos/ui-types';
 
 export type EditableStyleProps = Partial<{
   density: Density;
-  disabled: boolean;
-  editing: boolean;
-  placeholder: boolean;
 }>;
 
 /**
@@ -24,14 +21,17 @@ const shared = 'min-h-(--dx-control) px-(--dx-control-pad) text-base leading-(--
 
 const root: ComponentFunction<EditableStyleProps> = (_props, ...etc) => mx('grid w-full min-w-0', ...etc);
 
-const preview: ComponentFunction<EditableStyleProps> = (props, ...etc) =>
+// Emptiness and disabled state are the machine's to report, so they are read off the attributes it
+// stamps rather than passed in: `data-[disabled]:hover:` outranks the plain `hover:` it overrides.
+const preview: ComponentFunction<EditableStyleProps> = (_props, ...etc) =>
   mx(
     shared,
     // The preview centres its single line exactly as an `<input>` does, so the swap moves nothing.
     'group/editable flex items-center gap-1 w-full min-w-0 rounded-xs cursor-text',
     'border border-transparent',
-    props.placeholder && 'text-placeholder',
-    props.disabled ? 'cursor-not-allowed opacity-50' : 'hover:bg-focus-surface',
+    'data-[placeholder-shown]:text-placeholder',
+    'hover:bg-focus-surface',
+    'data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 data-[disabled]:hover:bg-transparent',
     ...etc,
   );
 

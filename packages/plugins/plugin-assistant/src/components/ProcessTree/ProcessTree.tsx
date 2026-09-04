@@ -106,7 +106,7 @@ export const ProcessTree = React.memo(
       // its toggle/button) without per-element sizing.
       return (
         <ScrollArea.Root
-          {...composableProps(props, { classNames: ['dx-expand', 'dx-density-sm'] })}
+          {...composableProps(props, { classNames: ['dx-expand dx-density-sm text-sm tabular-nums'] })}
           thin
           ref={forwardedRef}
         >
@@ -173,8 +173,8 @@ const makeColumnRenderer =
               classNames='min-h-0 p-1'
               icon='ph--x--regular'
               iconOnly
+              density='sm'
               variant='ghost'
-              size={4}
               label='Actions'
               onClick={(event) => {
                 event.stopPropagation();
