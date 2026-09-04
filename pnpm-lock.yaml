@@ -6327,9 +6327,6 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../../common/codec-protobuf
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
@@ -6422,9 +6419,6 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../../common/codec-protobuf
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
@@ -6678,6 +6672,9 @@ importers:
       '@dxos/codec-protobuf':
         specifier: workspace:*
         version: link:../../common/codec-protobuf
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../common/context
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -7286,9 +7283,6 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../common/codec-protobuf
       '@dxos/compute-runtime':
         specifier: workspace:*
         version: link:../../core/compute/compute-runtime
@@ -18379,9 +18373,6 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../common/codec-protobuf
       '@dxos/credentials':
         specifier: workspace:*
         version: link:../../core/halo/credentials

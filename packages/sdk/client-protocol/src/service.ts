@@ -4,7 +4,6 @@
 
 import { type Event } from '@dxos/async';
 import type { Stream } from '@dxos/async';
-import type { RequestOptions } from '@dxos/codec-protobuf';
 import { getBufService } from '@dxos/protocols/buf-service';
 import type { LogEntry, QueryLogsRequest } from '@dxos/protocols/buf/dxos/client/logging_pb';
 import { Config } from '@dxos/protocols/buf/dxos/config_pb';
@@ -62,6 +61,7 @@ import type {
   SpacesService as RpcSpacesService,
   SystemService as RpcSystemService,
 } from '@dxos/protocols/rpc';
+import type { RequestOptions } from '@dxos/protocols/service-contract';
 import { type ServiceBundle } from '@dxos/rpc';
 
 import { type ClientServicesRpc } from './service-rpc';

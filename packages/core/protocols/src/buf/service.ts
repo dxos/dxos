@@ -5,18 +5,17 @@
 import { type DescMethod, type DescService } from '@bufbuild/protobuf';
 
 import { Stream } from '@dxos/async';
-import {
-  type Any,
-  type EncodingOptions,
-  type RequestOptions,
-  type ServiceBackend,
-  type ServiceProvider,
-} from '@dxos/codec-protobuf';
 import { invariant } from '@dxos/invariant';
 import { getAsyncProviderValue } from '@dxos/util';
 
+import {
+  type AnyEnvelope,
+  type RequestOptions,
+  type ServiceBackend,
+  type ServiceProvider,
+} from '../service-contract.ts';
 import { bufRegistry } from './registry';
-import { type CompatCodec, compatCodec } from './shape-compat';
+import { type CompatCodec, type CompatOptions, compatCodec } from './shape-compat';
 
 // Buf's descriptors replace protobuf.js's `pb.Service` here. The shapes on either side of the codec
 // are unchanged, so `ServiceBundle` consumers and RPC handlers see the same values as before; see
@@ -52,7 +51,7 @@ export class BufServiceDescriptor<Service> {
     return this._service;
   }
 
-  createClient(backend: ServiceBackend, encodingOptions?: EncodingOptions): Service {
+  createClient(backend: ServiceBackend, encodingOptions?: CompatOptions): Service {
     const client: Record<string, unknown> = {};
     for (const method of this._service.methods) {
       // `localName` is the camelCase key protobuf.js derived by hand, so handler and client names
@@ -64,14 +63,14 @@ export class BufServiceDescriptor<Service> {
     return client as Service;
   }
 
-  createServer(handlers: ServiceProvider<Service>, encodingOptions?: EncodingOptions): BufServiceHandler<Service> {
+  createServer(handlers: ServiceProvider<Service>, encodingOptions?: CompatOptions): BufServiceHandler<Service> {
     return new BufServiceHandler(this._service, this.#methodCodecs(), handlers, encodingOptions);
   }
 
-  #methodStub(method: DescMethod, backend: ServiceBackend, encodingOptions?: EncodingOptions) {
+  #methodStub(method: DescMethod, backend: ServiceBackend, encodingOptions?: CompatOptions) {
     const codecs = this.#methodCodecs().get(method.name);
     invariant(codecs, `Method not found: ${method.name}`);
-    const request = (value: unknown): Any => ({
+    const request = (value: unknown): AnyEnvelope => ({
       value: codecs.request.encode(value, encodingOptions),
       type_url: typeUrlFor(method.input),
     });
@@ -108,10 +107,10 @@ export class BufServiceHandler<Service> implements ServiceBackend {
     private readonly _service: DescService,
     private readonly _methods: Map<string, MethodCodecs>,
     private readonly _handlers: ServiceProvider<Service>,
-    private readonly _encodingOptions?: EncodingOptions,
+    private readonly _encodingOptions?: CompatOptions,
   ) {}
 
-  async call(methodName: string, request: Any, options?: RequestOptions): Promise<Any> {
+  async call(methodName: string, request: AnyEnvelope, options?: RequestOptions): Promise<AnyEnvelope> {
     const { method, request: requestCodec, response: responseCodec } = this.#methodInfo(methodName);
     invariant(method.methodKind === 'unary', `Invalid RPC method call: response streaming mismatch. ${methodName}`);
 
@@ -121,7 +120,7 @@ export class BufServiceHandler<Service> implements ServiceBackend {
     return { value: responseCodec.encode(response, this._encodingOptions), type_url: typeUrlFor(method.output) };
   }
 
-  callStream(methodName: string, request: Any, options?: RequestOptions): Stream<Any> {
+  callStream(methodName: string, request: AnyEnvelope, options?: RequestOptions): Stream<AnyEnvelope> {
     const { method, request: requestCodec, response: responseCodec } = this.#methodInfo(methodName);
     invariant(
       method.methodKind === 'server_streaming',
@@ -133,7 +132,7 @@ export class BufServiceHandler<Service> implements ServiceBackend {
       this.#handler(method).then((handler) => handler(decoded, options) as Stream<unknown>),
     );
 
-    return Stream.map(responses, (data): Any => ({
+    return Stream.map(responses, (data): AnyEnvelope => ({
       value: responseCodec.encode(data, this._encodingOptions),
       type_url: typeUrlFor(method.output),
     }));
