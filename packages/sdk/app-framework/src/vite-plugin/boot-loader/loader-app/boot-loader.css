@@ -407,7 +407,10 @@ body {
   flex: 0 0 auto;
   color: currentColor;
   fill: currentColor;
-  /* Faint but legible on both palettes — the unlit icons are the point (work still outstanding). */
+  /*
+   * The row sits at a constant 60% — de-emphasised against the mark and ring the way the status log
+   * is. Lit vs unlit reads from colour and scale rather than opacity.
+   */
   opacity: 0.6;
   filter: grayscale(100%);
   transform: scale(0.9);
@@ -421,7 +424,6 @@ body {
 .boot-loader-plugin[data-active] {
   /* Hue-less plugins light in the loader's own accent rather than staying grey. */
   color: var(--boot-loader-plugin-color, var(--boot-loader-accent));
-  opacity: 1;
   filter: grayscale(0%);
   transform: scale(1);
 }
