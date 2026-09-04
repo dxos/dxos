@@ -34,7 +34,7 @@ import { translations } from '#translations';
 import subAgentFixture from '../../execution-graph/testing/sub-agent-delegation.json';
 // TODO(dmaretskyi): testing.ts module shadows the ./testing dir.
 import { initClientFromSpaceSnapshot } from '../../testing/snapshot';
-import { PLAYBACK_INTERVAL_MS, runScenario, STEP_STORAGE_KEY, useLocalStorageNumber } from './testing';
+import { PLAYBACK_INTERVAL_MS, STEP_STORAGE_KEY, runScenario, useLocalStorageNumber } from './testing';
 import { TracePanel } from './TracePanel';
 
 type BaseStoryArgs = PropsWithChildren<{

@@ -125,7 +125,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
             // The process tree takes only the height its rows need (capped by its own max-height),
             // so a short tree does not reserve empty space above the timeline.
             !tracePanelDebug && selectedCommit
-              ? 'grid-rows-[min-content_min-content_1fr_minmax(0,206px)]'
+              ? 'grid-rows-[min-content_min-content_1fr_min-content]'
               : 'grid-rows-[min-content_min-content_1fr]',
           ),
         })}
@@ -134,7 +134,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
         <TraceToolbar selected={environments} onSelectedChange={handleEnvironmentsChange} />
 
         <div className='p-2'>
-          <div className='border border-subdued-separator rounded-md'>
+          <div className='border border-subdued-separator rounded-sm'>
             <ProcessTreeContainer
               space={space}
               environments={environments}
@@ -171,13 +171,18 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
         </ScrollContainer.Root>
 
         {!tracePanelDebug && selectedCommit && (
-          <Syntax.Root data={details[selectedCommit.id] ?? selectedCommit}>
-            <Syntax.Content>
-              <Syntax.Viewport>
-                <Syntax.Code classNames='text-xs' />
-              </Syntax.Viewport>
-            </Syntax.Content>
-          </Syntax.Root>
+          <div className='p-1 overflow-hidden'>
+            <Syntax.Root data={details[selectedCommit.id] ?? selectedCommit}>
+              {/* `text-xs` here as well as on the code, so `1lh` resolves against the line-height
+                  the code actually renders at: the cap is sixteen lines whatever the type scale
+                  does, and a shorter detail still collapses to its own height. */}
+              <Syntax.Content classNames='text-xs max-h-[calc(16*1lh)] border border-subdued-separator rounded-sm'>
+                <Syntax.Viewport>
+                  <Syntax.Code classNames='text-xs' />
+                </Syntax.Viewport>
+              </Syntax.Content>
+            </Syntax.Root>
+          </div>
         )}
       </div>
     );
