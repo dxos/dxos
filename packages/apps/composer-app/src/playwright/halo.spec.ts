@@ -10,12 +10,6 @@ import { AppManager, INITIAL_SPACE_COUNT, INITIAL_URL } from './app-manager';
 // TODO(wittjosiah): WebRTC only available in chromium browser for testing currently.
 //   https://github.com/microsoft/playwright/issues/2973
 test.describe('HALO tests', () => {
-  // TODO(wittjosiah): STRICTLY temporary, remove when DX-1152 lands. These retries exist solely
-  //   because the production edge's two-peer path stalls endemically (invitations and replication,
-  //   ~2% per operation); the defect is known, tracked, and not maskable — Trunk still records every
-  //   first-attempt failure. Do not copy this pattern to any suite without a tracked issue.
-  test.describe.configure({ retries: 2 });
-
   let host: AppManager;
   let guest: AppManager;
 
