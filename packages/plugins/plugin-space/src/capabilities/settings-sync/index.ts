@@ -17,6 +17,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { resolveSettingsSpace } from '../../util';
 import { type Binding, Reconciler } from './binding';
+import { awaitDevice } from './device';
 import { getOrCreateSettings, makeStore } from './store';
 
 /**
@@ -33,11 +34,17 @@ export default Capability.makeModule(
     const manager = yield* Capabilities.PluginManager;
     const registry = yield* Capabilities.AtomRegistry;
 
-    const device = client.halo.device;
-    if (!device) {
-      log.warn('no device identity; settings will not sync');
+    // A host with no identity has nothing to sync and never will, so it stops here. Everywhere else
+    // the device is only a matter of time: `halo.device` reads a stream that fills in
+    // asynchronously, and on a device that has just joined an existing identity it is still empty
+    // when spaces become ready. Bailing on that emptiness left the joining device with no sync and
+    // no scope control until its next reload, so this waits for the stream instead.
+    if (!client.halo.identity.get()) {
+      log.warn('no identity; settings will not sync');
       return [];
     }
+
+    const device = yield* awaitDevice(client.halo);
 
     const deviceKey = device.deviceKey.toHex();
     const space = yield* resolveSettingsSpace(client);
