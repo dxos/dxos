@@ -361,6 +361,12 @@ export const encodeServiceId = (namespace: string, spaceId: SpaceId) =>
  * encoding stay in the field until Composer production has rolled over. The two are told apart by
  * which segment is a valid space id, so neither needs a version marker.
  *
+ * EDGE cannot call this until it pins a build that contains it: the published `@dxos/protocols` it
+ * currently runs reads the two segments positionally and throws on the space-id-first encoding. It
+ * therefore carries its own `decodeQueueServiceId` (dxos/edge#1021), which this function replaces.
+ *
+ * TODO(DX-1152): once EDGE bumps `@dxos/protocols` to a build carrying this, delete its
+ *   `decodeQueueServiceId` and call this from `router.ts` again.
  * TODO(DX-1152): drop the legacy ordering once the space-id-first encoding has reached Composer
  *   production, along with the matching fallback in EDGE's `resolveServiceSpaceId`.
  */
