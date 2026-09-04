@@ -21,6 +21,7 @@ import { type ActivationEvent, type Plugin, PluginManager } from '../../core';
 import { setupDevtools } from '../../devtools';
 import { App, PluginManagerProvider, SurfaceManager, SurfaceManagerProvider } from '../components';
 import { bootLoader } from '../components/App/loader';
+import { createStartupWatchdog } from './startup-watchdog';
 
 const ENABLED_KEY = 'org.dxos.app-framework.enabled';
 
@@ -132,7 +133,6 @@ export const useApp = ({
 
   const readyRef = useRef(false);
   const [ready, setReady] = useState(false);
-  const errorRef = useRef<unknown>(null);
   const [error, setError] = useState<unknown>(null);
   const [startupProgress, setStartupProgress] = useState<StartupProgress>({
     activated: 0,
@@ -188,16 +188,49 @@ export const useApp = ({
       module: 'org.dxos.app-framework.atom-registry',
     });
 
+    const watchdog = createStartupWatchdog({
+      timeout,
+      onStall: (stall) => {
+        log.warn('startup timeout diagnostic', {
+          ...stall,
+          eventsFired: manager.getEventsFired(),
+          activeModules: manager.getActive(),
+          pendingReset: manager.getPendingReset(),
+        });
+
+        const abort = () => {
+          void EffectEx.runAndForwardErrors(Fiber.interrupt(fiber));
+          setError(new Error(`Startup timed out after ${timeout}ms`));
+        };
+
+        // In development the deadline is a symptom, not a verdict: a cold OPFS, a rebuild or a paused
+        // debugger all overrun it while the run is perfectly healthy, and killing it discards the
+        // state worth looking at. Startup continues either way and the user decides — the offer raises
+        // exactly the failure this branch used to raise unprompted.
+        //
+        // The missing-`stalled` case does NOT fall through to failing: the loader is inlined into
+        // `index.html` at build time, so a page served before this shipped has the old bundle, and
+        // treating that as fatal would resurrect the dialog precisely where dev asked for a button.
+        if (import.meta.env?.DEV) {
+          if (bootLoader?.stalled) {
+            bootLoader.stalled(abort);
+          } else {
+            log.warn('startup timed out; boot loader cannot offer an abort (stale inlined bundle?)', { timeout });
+          }
+          return;
+        }
+
+        abort();
+      },
+    });
+
     const fiber = Effect.gen(function* () {
       const queue = yield* PubSub.subscribe(manager.activation);
       const listener = yield* Effect.forkDetach(
         PubSub.take(queue).pipe(
           Effect.tap(({ event, state, module, error: error$ }) =>
             Effect.sync(() => {
-              // Any activation message is progress; the stall deadline below counts from the last one.
-              if (!readyRef.current) {
-                deadlineProgressAtMs = deadlineElapsedMs;
-              }
+              watchdog.progress();
               // Event-level Startup activated (no `module` field) fires once,
               // after every module triggered by Startup has finished. Module
               // activations now also carry their parent event id (so the trace
@@ -209,7 +242,7 @@ export const useApp = ({
               // completion — leaving downstream capabilities (operation-invoker,
               // app-graph, …) un-registered when the boot loader dismisses.
               if (event === ActivationEvents.Startup.id && state === 'activated' && !module) {
-                clearInterval(timeoutId);
+                watchdog.dispose();
                 setReady(true);
                 readyRef.current = true;
                 // Trigger startup profiler dump if available.
@@ -277,8 +310,8 @@ export const useApp = ({
                 }));
               }
               if (error$ && !readyRef.current) {
+                watchdog.dispose();
                 setError(error$);
-                errorRef.current = error$;
               }
             }),
           ),
@@ -294,64 +327,9 @@ export const useApp = ({
       return yield* Fiber.join(listener);
     }).pipe(Effect.scoped, Effect.runFork);
 
-    // Stall deadline: `timeout` of observed execution time with no activation progress, not
-    // `timeout` since mount. A boot that is slow but still activating modules (a reload after the
-    // web process was killed, a cold store) is never aborted; only one that has stopped. Each fire
-    // credits at most two slices, so time the process did not run (a suspended hidden webview, App
-    // Nap, system sleep) counts neither as progress nor as stall.
-    const DEADLINE_SLICE_MS = 1_000;
-    let deadlineElapsedMs = 0;
-    let deadlineProgressAtMs = 0;
-    let deadlineLastTickAt = performance.now();
-    const timeoutId = setInterval(() => {
-      const now = performance.now();
-      const sinceLastMs = now - deadlineLastTickAt;
-      deadlineLastTickAt = now;
-      deadlineElapsedMs += Math.min(sinceLastMs, 2 * DEADLINE_SLICE_MS);
-      if (deadlineElapsedMs - deadlineProgressAtMs < timeout) {
-        return;
-      }
-      clearInterval(timeoutId);
-      if (readyRef.current || errorRef.current) {
-        return;
-      }
-
-      log.warn('startup timeout diagnostic', {
-        executedMs: Math.round(deadlineElapsedMs),
-        stalledForMs: Math.round(deadlineElapsedMs - deadlineProgressAtMs),
-        eventsFired: manager.getEventsFired(),
-        activeModules: manager.getActive(),
-        pendingReset: manager.getPendingReset(),
-      });
-
-      const abort = () => {
-        void EffectEx.runAndForwardErrors(Fiber.interrupt(fiber));
-        setError(new Error(`Startup timed out after ${timeout}ms`));
-      };
-
-      // In development the deadline is a symptom, not a verdict: a cold OPFS, a rebuild or a paused
-      // debugger all overrun it while the run is perfectly healthy, and killing it discards the
-      // state worth looking at. Startup continues either way and the user decides — the offer raises
-      // exactly the failure this branch used to raise unprompted.
-      //
-      // The missing-`stalled` case does NOT fall through to failing: the loader is inlined into
-      // `index.html` at build time, so a page served before this shipped has the old bundle, and
-      // treating that as fatal would resurrect the dialog precisely where dev asked for a button.
-      if (import.meta.env?.DEV) {
-        if (bootLoader?.stalled) {
-          bootLoader.stalled(abort);
-        } else {
-          log.warn('startup timed out; boot loader cannot offer an abort (stale inlined bundle?)', { timeout });
-        }
-        return;
-      }
-
-      abort();
-    }, DEADLINE_SLICE_MS);
-
     return () => {
       log('useApp: effect cleanup');
-      clearInterval(timeoutId);
+      watchdog.dispose();
       void EffectEx.runAndForwardErrors(Fiber.interrupt(fiber));
       if (!isExternalManager) {
         EffectEx.runDetached(manager.shutdown());
