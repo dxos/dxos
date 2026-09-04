@@ -3,14 +3,9 @@
 //
 
 import * as Schema from 'effect/Schema';
-import { describe, expect, test } from 'vitest';
+import { describe, test } from 'vitest';
 
 import * as ClaudeAgentSession from './ClaudeAgentSession';
-
-// Only the variable name is under test, so the field is decoded on its own rather than through a
-// whole credential with a live AccessToken ref behind it.
-const accepts = (as: string) =>
-  Schema.decodeUnknownOption(ClaudeAgentSession.SessionCredential.fields.as)(as)._tag === 'Some';
 
 describe('the variable a session credential binds', () => {
   test('an ordinary token name is accepted', ({ expect }) => {
@@ -21,9 +16,9 @@ describe('the variable a session credential binds', () => {
   // These configure the container rather than authorising a request: a credential binding is the
   // one place a caller sets an environment variable in a live session, and `0` in the TLS one
   // disables certificate verification outright.
-  test.each(['PATH', 'NODE_OPTIONS', 'NODE_TLS_REJECT_UNAUTHORIZED', 'LD_PRELOAD', 'HTTPS_PROXY'])(
+  test.for(['PATH', 'NODE_OPTIONS', 'NODE_TLS_REJECT_UNAUTHORIZED', 'LD_PRELOAD', 'HTTPS_PROXY'])(
     '%s is rejected',
-    (as) => {
+    (as, { expect }) => {
       expect(accepts(as)).toBe(false);
     },
   );
@@ -40,3 +35,8 @@ describe('the variable a session credential binds', () => {
     expect(accepts('')).toBe(false);
   });
 });
+
+// Only the variable name is under test, so the field is decoded on its own rather than through a
+// whole credential with a live AccessToken ref behind it.
+const accepts = (as: string) =>
+  Schema.decodeUnknownOption(ClaudeAgentSession.SessionCredential.fields.as)(as)._tag === 'Some';
