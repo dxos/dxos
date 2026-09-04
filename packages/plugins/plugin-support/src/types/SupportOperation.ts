@@ -235,7 +235,12 @@ export const submitSupportIssue = async ({
     throw new Error('Filing Linear issues is limited to internal accounts.');
   }
   if (!response.ok) {
-    throw new Error(`support service returned ${response.status}`);
+    // The service answers `{ error }` naming which step failed; say so rather than just the status.
+    const detail = await response
+      .text()
+      .then((text) => text.slice(0, 200))
+      .catch(() => '');
+    throw new Error(`support service returned ${response.status}${detail ? `: ${detail}` : ''}`);
   }
   const result = Schema.decodeUnknownSync(SupportIssueResult)(await response.json());
   if (logKey) {
