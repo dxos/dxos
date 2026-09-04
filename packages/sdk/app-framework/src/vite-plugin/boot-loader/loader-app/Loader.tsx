@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Component, For, createEffect, createSignal, onCleanup, onMount } from 'solid-js';
+import { type Component, For, Index, createEffect, createSignal, onCleanup, onMount } from 'solid-js';
 
 import { type LoaderStore } from './store';
 
@@ -169,18 +169,27 @@ export const Loader: Component<LoaderProps> = (props) => {
       {/* Activation row: one icon per plugin as it activates, appended monochrome and easing into its
           own hue. Icons resolve against the static sprite, which needs no app bundle. */}
       <div id='boot-loader-plugins' aria-hidden='true'>
-        <For each={props.store.plugins()}>
-          {(plugin) => (
-            <svg
-              class='boot-loader-plugin'
-              data-active={plugin.active ? '' : undefined}
-              viewBox='0 0 256 256'
-              style={plugin.hue ? { '--boot-loader-plugin-color': `var(--boot-loader-hue-${plugin.hue})` } : undefined}
-            >
-              <use href={`${props.spritePath ?? DEFAULT_SPRITE_PATH}#${plugin.icon}`} />
-            </svg>
-          )}
-        </For>
+        {/* Inner track: the flex row itself, so the outer element keeps its vertical placement
+            transform and clips the growth. */}
+        <div id='boot-loader-plugins-track'>
+          {/* `Index`, not `For`: rows are appended and then updated in place, and `For` keys by item
+              identity — a replaced row object would re-create the element and kill the width/colour
+              transition mid-flight. */}
+          <Index each={props.store.plugins()}>
+            {(plugin) => (
+              <svg
+                class='boot-loader-plugin'
+                data-active={plugin().active ? '' : undefined}
+                viewBox='0 0 256 256'
+                style={
+                  plugin().hue ? { '--boot-loader-plugin-color': `var(--boot-loader-hue-${plugin().hue})` } : undefined
+                }
+              >
+                <use href={`${props.spritePath ?? DEFAULT_SPRITE_PATH}#${plugin().icon}`} />
+              </svg>
+            )}
+          </Index>
+        </div>
       </div>
       {/* Shown only once the host reports the deadline passed, and only in dev — startup keeps
           running behind it, so this is an offer rather than a verdict. Placed below the status log,

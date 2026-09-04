@@ -44,7 +44,8 @@ body {
   position: fixed;
   inset: 0;
   z-index: 10;
-  font-size: 13px;
+  /* 14px — the status log is the loader's only running text, and 13px read a size too small. */
+  font-size: 14px;
   font-family:
     ui-sans-serif,
     system-ui,
@@ -367,17 +368,24 @@ body {
     calc(var(--boot-loader-disc-size) / 2 + var(--boot-loader-status-gap) + 4.5em + var(--boot-loader-status-gap))
   );
   display: flex;
-  /*
-   * One row, always: wrapping turned the row into a growing block that pushed itself around as
-   * plugins seeded. Icons shrink to a legible floor first, and a very long set is clipped at the
-   * edges rather than reflowing.
-   */
+  justify-content: center;
+  padding: 0 24px;
+  /* Clips the slide-out rather than letting a long row reflow or scroll the page. */
+  overflow: hidden;
+}
+
+/*
+ * One row, always: wrapping turned the row into a growing block that shoved itself around as icons
+ * arrived, and a very long set is clipped by the parent instead. Growth is animated on the icons
+ * themselves (width + margin below) rather than by transforming this track: the centred row then
+ * expands symmetrically from the middle, with no invert step to land a frame late and read as a
+ * jump.
+ */
+#boot-loader-plugins-track {
+  display: flex;
   flex-wrap: nowrap;
   align-items: center;
-  justify-content: center;
   gap: 10px;
-  padding: 0 24px;
-  overflow: hidden;
 }
 
 /*
@@ -404,26 +412,35 @@ body {
 }
 
 /*
- * Dim monochrome until lit. `grayscale(100%)` stays on both sides of the transition (as with the
- * brand mark) so engines interpolate the percentage instead of treating `none` as a discrete jump.
+ * Enters at zero width with the track's gap cancelled, so an appended icon costs no space until it
+ * animates open — the row grows outward from its centre and every icon already on screen glides
+ * rather than jumping. Neutral and faint until lit; `grayscale(100%)` stays on both sides of the
+ * transition (as with the brand mark) so engines interpolate the percentage instead of treating
+ * `none` as a discrete jump.
  */
 .boot-loader-plugin {
-  width: 40px;
+  width: 0;
   height: 40px;
-  /* Shrinks to keep the single row intact on narrow viewports; `min-width` is the legibility floor. */
-  flex: 0 1 auto;
-  min-width: 20px;
+  flex: 0 0 auto;
+  margin-inline-start: -10px;
   color: currentColor;
   fill: currentColor;
-  /* Unlit: barely there, so the lit icons carry the eye and the row still shows what is outstanding. */
+  /* Unlit: barely there, so the lit icons carry the eye. */
   opacity: 0.1;
   filter: grayscale(100%);
   transform: scale(0.9);
+  /*
+   * Two stages, from the one `data-active` flip: the icon opens neutral and faint (width, margin,
+   * scale), and only once it has taken its place do colour and brightness ease in — the delay is
+   * what makes the arrival readable rather than a simultaneous pop.
+   */
   transition:
-    opacity 400ms ease-out,
-    filter 400ms ease-out,
+    width 400ms ease-out,
+    margin-inline-start 400ms ease-out,
     transform 400ms ease-out,
-    color 400ms ease-out;
+    opacity 500ms ease-out 400ms,
+    filter 500ms ease-out 400ms,
+    color 500ms ease-out 400ms;
 }
 
 .boot-loader-plugin[data-active] {
@@ -431,6 +448,8 @@ body {
   color: var(--boot-loader-plugin-color, var(--boot-loader-accent));
   /* Lit icons match the status log's de-emphasis rather than the mark's full strength. */
   opacity: 0.6;
+  width: 40px;
+  margin-inline-start: 0;
   filter: grayscale(0%);
   transform: scale(1);
 }

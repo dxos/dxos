@@ -78,8 +78,9 @@ export const PluginActivation: Story = {
     onMount(() => {
       store.setPlugins(PLUGINS);
       store.setProgress(0.5);
+      // Slow enough to watch each icon open and the row grow outward from the centre.
       const timers = PLUGINS.map((plugin, index) =>
-        setTimeout(() => store.activatePlugin(plugin.id), 1_500 + index * 900),
+        setTimeout(() => store.activatePlugin(plugin.id), 800 + index * 700),
       );
       onCleanup(() => timers.forEach(clearTimeout));
     });
