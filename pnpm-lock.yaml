@@ -6557,6 +6557,9 @@ importers:
 
   packages/core/mesh/teleport-extension-gossip:
     dependencies:
+      '@bufbuild/protobuf':
+        specifier: 'catalog:'
+        version: 2.11.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -6978,6 +6981,9 @@ importers:
 
   packages/devtools/devtools:
     dependencies:
+      '@bufbuild/protobuf':
+        specifier: 'catalog:'
+        version: 2.11.0
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/compute/ai

@@ -178,7 +178,7 @@ const getSpaceStats = async (space: DataSpace): Promise<SpaceStats> => {
           },
         },
         presence:
-          space.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key)).length > 0
+          space.presence.getPeersByIdentityKey(member.key).length > 0
             ? SpaceMember.PresenceState.ONLINE
             : SpaceMember.PresenceState.OFFLINE,
       })),

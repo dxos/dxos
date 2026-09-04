@@ -2,12 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+import { timestampDate, timestampFromDate } from '@bufbuild/protobuf/wkt';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Format } from '@dxos/echo/Format';
 import { levels, parseFilter } from '@dxos/log';
-import { LogLevel } from '@dxos/protocols/buf/dxos/client/logging_pb';
-import { type LogEntry, type QueryLogsRequest } from '@dxos/protocols/proto/dxos/client/services';
+import {
+  type LogEntry,
+  LogEntrySchema,
+  LogLevel,
+  type QueryLogsRequest,
+  QueryLogsRequestSchema,
+} from '@dxos/protocols/buf/dxos/client/logging_pb';
 import { useClient } from '@dxos/react-client';
 import { useStream } from '@dxos/react-client/devtools';
 import { Panel, Toolbar, useFileDownload } from '@dxos/react-ui';
@@ -17,7 +24,11 @@ import { MasterDetailTable, Searchbar, Select } from '../../../components';
 
 const MAX_LOGS = 2_000;
 
-const defaultEntry: LogEntry = { level: LogLevel.DEBUG, message: '', timestamp: new Date(0) };
+const defaultEntry: LogEntry = create(LogEntrySchema, {
+  level: LogLevel.DEBUG,
+  message: '',
+  timestamp: timestampFromDate(new Date(0)),
+});
 
 const shortFile = (file?: string) => file?.split('/').slice(-1).join('/');
 
@@ -32,14 +43,14 @@ export const LoggingPanel = () => {
   // Filtering.
   const [text, setText] = useState('');
   // TODO(burdon): Store in context.
-  const [query, setQuery] = useState<QueryLogsRequest>({});
+  const [query, setQuery] = useState<QueryLogsRequest>(create(QueryLogsRequestSchema));
   const handleSearchChange = useCallback((text: string) => {
     setText(text);
     if (!text) {
-      setQuery({});
+      setQuery(create(QueryLogsRequestSchema));
     }
 
-    setQuery({ filters: parseFilter(text) });
+    setQuery(create(QueryLogsRequestSchema, { filters: parseFilter(text) }));
   }, []);
 
   // Logs.
@@ -92,8 +103,8 @@ export const LoggingPanel = () => {
 
   const tableData = useMemo(() => {
     return logs.map((entry, index) => ({
-      id: `${entry.timestamp}-${index}`, // Stable ID based on position and timestamp
-      timestamp: entry.timestamp,
+      id: `${entry.timestamp?.seconds}-${index}`, // Stable ID based on position and timestamp
+      timestamp: entry.timestamp && timestampDate(entry.timestamp),
       level: Object.entries(levels)
         .find(([, level]) => level === entry.level)?.[0]
         .toUpperCase(),

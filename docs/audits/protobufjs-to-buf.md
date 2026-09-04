@@ -12,7 +12,7 @@ at the bottom — read those before picking up a thread.
 | 2   | Test/example protos                     | todo     | Untouched — `#3`'s harness was built against real dxos messages instead. |
 | 3   | Shape-compat layer                      | **done** | `@dxos/protocols/buf-shape-compat` + conformance harness (15 tests).     |
 | 4   | `dxos.config`                           | **done** | Converted natively; `@dxos/config` inputs are `ConfigInit`, values buf.  |
-| 5   | devtools                                | **part** | Enums, `JsonView`, and two mis-annotated imports moved; 14 left.         |
+| 5   | devtools                                | **part** | Enums (incl. the `cli-util`/`plugin-debug` stragglers) done; 15 blocked. |
 | 6   | `Stream` extraction                     | **done** | Moved to `@dxos/async`; generator emits it from there.                   |
 | 7   | `protoMessage()` / `serviceError` → buf | **done** | All 45 types route through buf, once `#3` learned to resolve `Any`.      |
 | 8   | Remaining `ServiceDescriptor` RPC       | **done** | All 21 production sites on buf descriptors; interop asserted both ways.  |
@@ -23,6 +23,10 @@ at the bottom — read those before picking up a thread.
 
 **Every milestone-sized thread is done.** `#8` was the last one. What remains is the teardown, and
 it is sequenced by the direction below rather than by the numbered threads.
+
+Two ordering constraints survive from the thread view and are not superseded by the slices: `#5`'s
+remainder is **not** an independent sweep and must follow `#9c`/`#9d` -- see the correction under
+`#5` -- and `#2` is independent, so it can slot in anywhere.
 
 **The direction: change the consumers, do not re-home the types.** `@dxos/codec-protobuf` dies with
 protobuf.js, so nothing it exports needs a new address. Each package that imports it gets its
@@ -179,17 +183,292 @@ simply pointing at the wrong type, and the fix is to point it at the Effect type
 declares.
 
 Two moved that way -- `KeyRecord` and `ConnectionInfo`, both to `DevtoolsHost.*` -- and
-`devtools:build` is the proof, per the attempt-and-let-`tsc`-rule habit below. `NetworkPanel`'s
-`PeerState` looked like a third and is not: `SpaceSyncState.PeerState` in `DataService` is a _sync_
-peer, unrelated to `dxos.mesh.presence.PeerState`, and `tsc` said so rather than the two silently
-unifying. Fourteen declarations remain, and those are the genuinely blocked ones: values whose wire
-type is `protoMessage`-carried (`SubscribeToSpacesResponse`, `SubscribeToFeedBlocksResponse`,
-`SubscribeToMetadataResponse`, `SignalResponse`, `Credential`, `Contact`, `LogEntry`,
-`QueryLogsRequest`, `QueryEdgeStatusResponse`, `Space`, `PeerState`). Each needs its type moved to `bufMessage`,
-which rewrites that type's consumers -- and `QueryEdgeStatusResponse` embeds `EdgeStatus`, which
-reaches **22 source files** across edge-client, echo-host, client-services and plugin-space's sync
-UI. `EdgePanel`'s nested-enum access (`WsStatus.ConnectionState.CONNECTED`, which buf emits as
-`EdgeStatus_ConnectionState`) is a one-line fix gated behind that slice.
+`devtools:build` is the proof, per the attempt-and-let-`tsc`-rule habit below.
+
+### Correction: `#5` does not ride on `#7`, and `NetworkPanel` was described backwards
+
+Two claims in the paragraph above were wrong, and both were measured against main `32584c984a` by
+applying all 15 remaining conversions at once and reading `dx-build`'s 64 errors.
+
+**`NetworkPanel`'s `PeerState` is `dxos.mesh.presence.PeerState`.** The earlier note had it as
+`SpaceSyncState.PeerState` from `DataService`; it is not. `NetworkPanel.tsx:7` imports
+`type PeerState` from `@dxos/protocols/proto/dxos/mesh/presence` and uses it at line 18. That
+message _is_ generated as a bufMessage (`PeerStateSchema` in `buf/dxos/mesh/presence_pb`), so
+codegen is not the blocker. The blocker is the **producer**: `teleport-extension-gossip`'s
+`Presence` still emits the protobuf.js-substituted shape, so `peerId` is a `@dxos/keys` `PublicKey`
+(hence `.truncate()` at line 98) rather than buf's `PublicKey` _message_. Nothing in the repo
+currently assigns `NetworkGraphNode.peer`, so converting it would type-check after adapting
+`.truncate()` -- and would be describing a shape no producer emits. It is gated on `#8.4`
+(teleport extensions), not on a missing bufMessage.
+
+**`#7` unblocked nothing here.** `protoMessage` is still typed
+`Schema.Codec<TYPES[K], Uint8Array>` over the protobuf.js `src/proto/gen` barrel; `#7` routed the
+_bytes_ through buf via the compat layer while deliberately preserving the protobuf.js type and
+substituted runtime shape. That is the whole point of the shape-compat layer -- call sites do not
+change when a codec is swapped -- so there is nothing for a devtools type sweep to ride on. Only
+`bufMessage` exposes a buf type, and just one `DevtoolsHost` field uses it today
+(`SignedMessageSchema`).
+
+All 15 remaining declarations are therefore blocked, in four mechanically distinct ways:
+
+- **Missing `$typeName`.** Every buf type is `Message<"name"> & {...}`, so a protobuf.js-shaped
+  value is never assignable to it. This is what breaks `useCredentials`, `useStats`' probe and
+  `LoggingPanel`.
+- **Substituted fields.** `Credential.id` is `@dxos/keys` `PublicKey` on protobuf.js and a
+  `PublicKey` _message_ on buf; likewise `Date` vs `Timestamp` (`.getTime()`), `Timeframe` vs
+  `TimeframeVector` (`.get()`), and `Any` vs a `['@type']`-indexable bag.
+- **`oneof` modelling.** buf emits a discriminated union, so `SignalResponse.swarmEvent` and
+  `.message` simply do not exist -- 17 of the 64 errors are this one difference in
+  `SignalMessageTable`.
+- **Optionality.** buf marks singular message fields optional (`metadata?`), protobuf.js does not.
+
+Two files -- `useStats.ts` and `EdgePanel.tsx` -- _compile_ after conversion, but only because
+`Object.assign({}, stats, { edge })` erases the mismatch. A direct probe
+(`const x: BufResp = protoShapedValue`) fails with the missing-`$typeName` error, so converting
+them would annotate buf types over protobuf.js values: a silent lie rather than a migration. They
+are counted as blocked.
+
+Each carrier would have to move `protoMessage` -> `bufMessage`, and tracing what that pulls in
+shows `#5`'s remainder is downstream of `#9c`/`#9d`, not of `#7`:
+`SubscribeToMetadataResponse` embeds `EchoMetadata` (the metadata store is on `compatCodec`, so its
+exposed type is still protobuf.js), `SubscribeToFeedBlocksResponse.Block` embeds `FeedMessage`
+(`pipeline/codec`, explicitly held back), and `SubscribeToSpacesResponse.SpaceInfo` embeds
+`Space.PipelineState` -> `TimeframeVector` + `Credential`. `QueryEdgeStatusResponse` embeds
+`EdgeStatus`, which reaches **22 source files** across edge-client, echo-host, client-services and
+plugin-space's sync UI. `EdgePanel`'s nested-enum access
+(`WsStatus.ConnectionState.CONNECTED`) is a one-line fix gated behind that slice.
+
+### Enums move iff the name survives
+
+`tsc` relates enum types by **name**, not by declaration — verified with a local probe: a bare
+`enum SameName` and a `namespace Outer { export enum SameName }` compare without complaint, while
+an identically-valued `enum DifferentName` raises `TS2367`. So:
+
+- **Top-level enums** keep their name under buf and convert with no call-site change. The last two
+  stragglers moved on that basis: `EdgeReplicationSetting` in `cli-util/src/util/space.ts` and
+  `ConnectionState` in `plugin-debug`'s `DebugStatus.tsx`, both value-identical
+  (`0`/`1`) and green under `cli-util:build` / `plugin-debug:build`.
+- **Nested enums** are flattened by buf (`EdgeStatus.ConnectionState` -> `EdgeStatus_ConnectionState`),
+  the name changes, and every `===` against the protobuf.js-typed field breaks. That is why
+  `EdgePanel` cannot be fixed ahead of its type move, and it generalises to any nested enum
+  elsewhere in the migration.
+
+## The cross-codec guard: what it proves, and the two divergences it found
+
+Built against the current tree rather than a released build, because both codecs are in the
+workspace right now. It walks the buf registry programmatically -- 258 messages, 517 generated
+cases -- synthesises a fully populated value per message, and asserts that the two decoders agree on
+the same bytes and the two encoders agree on the same value.
+
+**It is not a downgrade or compatibility guard, and must not be cited as one.** Both sides
+regenerate from the same `src/proto` tree, so a wire-incompatible edit to a `.proto` moves them
+together and passes here unnoticed -- which is precisely the failure a comparison against a
+_released_ build would catch. What this does give is continuous agreement between the two codecs on
+every CI run as declarations move, which the one-shot historical comparison never could. The two are
+complements, not substitutes.
+
+**It dies with protobuf.js.** The guard exists only while both codecs do; the teardown slice deletes
+it along with `@dxos/codec-protobuf`. Noted here so it is not later found and puzzled over.
+
+### Rejected: pinning a released version
+
+`@dxos/protocols@0.11.1` (published 2026-08-05) is the last stable release preceding the first
+buf-migration commit on main (`bdb02cd3a1`, 2026-08-24); the only thing published in between is a
+`1.0.0-next-<sha>` CI snapshot, and the codec did not move until `48eb05d613` (2026-08-26), so both
+readings of the cutoff select it. The derivation holds and is worth keeping.
+
+What killed it is a finding in its own right: **the pin cannot be loaded in-process.**
+`@dxos/protocols@0.11.1` pulls `@dxos/keys@0.11.1`, built against effect 3.x, which calls
+`Schema.filter`; under the workspace's `effect@4.0.0-rc.108` that throws at import time, before any
+test body runs. Aliasing it into the workspace also fails, because pnpm's `packages/**/*` glob links
+the workspace copy over the pin. It _does_ load in an isolated closure -- verified, `effect@3.21.4`,
+`dxos.echo.query.Heads` round-tripping to `0a04613162320a0463336434` -- which is the shape a real
+downgrade guard would need: a spawned process with its own dependency graph, because that is what a
+build in the field actually is.
+
+### The clearest evidence in this migration that a green test run is not proof
+
+The guard reported **518/518 passing while silently skipping every repeated field.** Its field walk
+branched on `field.repeated`, which does not exist on buf's descriptors: buf models a repeated field
+as its own `fieldKind: 'list'` carrying a `listKind` discriminant, so every `list` field fell
+through the walk's `default` and was never populated.
+
+vitest ran the file green. The type error sat in a branch no generated case ever reached, so nothing
+executed it. Only `protocols:build` rejected it. Nothing about the test output distinguished a guard
+walking 258 messages properly from one walking them with every repeated field missing -- the case
+count was identical either way, because the cases are per message, not per field.
+
+Correcting the walk raised the ledger from **19 entries to 42**, with **zero new error classes**:
+the same single root cause reaching further, now through repeated members (`spaces`, `signatures`,
+`invitations`, `parents`, `credentials`, `contacts`). Nothing new was wrong; more of what was
+already wrong became visible.
+
+Two things follow, and they are the reason this is recorded here rather than left in a commit
+message. `moon build` belongs on every package a change touches, including the ones where the only
+change is a test file. And a coverage claim should be checked against what the generator actually
+emitted, not against the number of cases it produced -- 518 was true and meant less than it looked.
+
+### What the ledger is, and is not
+
+**42 recorded divergences.** Not a tolerance budget and not a list of things that are fine: a
+ledger of one root cause -- protobuf.js's decoder materialising an _absent_ singular message field
+with unsubstituted defaults, which its own encoder then rejects -- observed at 42 message/field
+sites. Each entry is keyed on the message **and the exact field paths**, so a listed message that
+starts diverging somewhere new goes red. A no-growth assertion pins the count, and a staleness check
+fails a listed message that stops diverging, since a stale entry would silence a future regression
+on a message that is currently clean. Entries are expected to disappear as messages move to buf.
+
+Headline figures, in the order they should be read: the guard went **483/517 -> 518/518** once the
+19 real divergences were separated from three generator artefacts, then **19 -> 42** once the
+repeated-field miss was corrected. `encodeCompat`/`decodeCompat` handling all 258 messages is
+recorded beside that, never instead of it -- the finding is that protobuf.js's decoder and its
+encoder disagree, not that the compat path is clean.
+
+### Divergence 1: protobuf.js cannot re-encode its own decode output
+
+Its decoder materialises an _absent_ singular nested message with **unsubstituted** defaults, which
+its own encoder then rejects. On `Chain.credential`:
+
+```
+chain = {"credential":{"issuer":{"data":{}},
+                       "issuanceDate":{"seconds":"0","nanos":0},
+                       "subject":{"id":{"data":{}},"assertion":{"type_url":"","value":{}}}}}
+re-encode -> TypeError: value.getTime is not a function
+```
+
+`issuer` comes back as `{data:{}}` rather than a `PublicKey`, `issuanceDate` as `{seconds,nanos}`
+rather than a `Date`. Seventeen messages are affected, all of them ones that can contain an absent
+nested message. This is the legacy codec's own asymmetry and predates the migration; the compat
+layer does not have it -- `encodeCompat`/`decodeCompat` handled all 258 messages. That is
+reassuring, but it is not the headline: the headline is that protobuf.js's decoder and its encoder
+disagree, and the guard records each affected message with the _specific_ field and error rather
+than muting the message wholesale.
+
+### Divergence 2: `Timestamp` -> `Date` loses sub-millisecond precision
+
+The substitution target is a JS `Date`, which is millisecond-resolution, so a `nanos` value that is
+not a multiple of 1,000,000 cannot survive a round-trip (`nanos: 102` returns as `0`). The guard
+deliberately generates only millisecond-representable timestamps, so **it does not exercise this
+case** -- otherwise every message carrying a timestamp would fail for this one reason and mask
+everything else. Recorded here because the guard no longer says it.
+
+**Checked against signed data, and it is not reachable.** Two independent reasons:
+
+1. Every timestamp on a signed credential is set from `new Date()` --
+   `credential-factory.ts:58` (`issuanceDate`), `credential-factory.ts:66` and
+   `presentations/presentation.ts:29` (`creationDate`). A JS `Date` cannot hold sub-millisecond
+   precision, so `nanos` is always a multiple of 1,000,000 by construction.
+2. The signature is not computed over protobuf bytes at all. `getCredentialProofPayload` returns
+   `canonicalStringify(copy)`, and the replacer has no `Date` branch, so a date reaches the payload
+   through `JSON.stringify` -> `Date.prototype.toJSON()` -> an ISO-8601 string truncated to
+   milliseconds. The `nanos` field never enters a signature even in principle, and a re-encode that
+   changes `nanos` cannot change a signature.
+
+So the byte difference is real but confined to the wire, where it is the ordinary proto3-default
+omission and readable in both directions.
+
+## `#2`: split by fate before converting, and most of it dies at teardown
+
+`#2`'s nominal file list spans four places. Judged per file rather than per directory, almost none
+of it is worth converting -- the packages that own it are what the teardown slice deletes.
+
+**Dies at teardown -- leave on protobuf.js:**
+
+| File                                                                          | Why                                                                                                                                                                                                                     |
+| ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `codec-protobuf/test/codec.node.test.ts` + its three `example/testing` protos | Exercises `@dxos/codec-protobuf` itself.                                                                                                                                                                                |
+| `codec-protobuf/src/substitutions/struct.test.ts`                             | Tests the legacy substitution table.                                                                                                                                                                                    |
+| `protobuf-compiler/test/*` (12 files)                                         | Tests the legacy generator's output.                                                                                                                                                                                    |
+| `protobuf-compiler/src/namespaces.test.ts`                                    | Same.                                                                                                                                                                                                                   |
+| **`tools/protobuf-test` (whole package)**                                     | Reads as a standalone fixture and is not: its own header says "Imported by protobuf-compiler tests", and `protobuf-compiler/test/types.test.ts:19` is its only reference in the repo. It goes with `protobuf-compiler`. |
+
+**Gated on `#8.2`, not `#2`:** the `example/testing/rpc` importers -- `rpc/service.test.ts`,
+`rpc/service-type-url.test.ts`, `teleport/testing/test-extension.ts`,
+`teleport/testing/test-extension-with-streams.ts`, `teleport/muxing/muxer.test.ts`,
+`websocket-rpc/e2e.node.test.ts`, `rpc-tunnel-e2e/test-client.ts`, `rpc-tunnel-e2e/test-worker.ts`.
+These already take their _descriptor_ from `getBufService`, but still import the protobuf.js
+**service interface** as the type argument. Deriving that interface from buf's `GenService` is
+`#8.2`'s remaining work; the methods have to move to buf shapes at the same time, because
+`BufServiceDescriptor` still hands back compat-shaped values.
+
+**Nothing left to migrate.** `example/testing/{data,rpc}.proto` are already buf-generated
+(`buf/proto/gen/example/testing/`), `buf/registry.ts` already consumes them, and there are no
+message-only consumers to move. `#2`'s remaining value is the ledger above, not a conversion.
+
+## Proto-guard: the downgrade leg needs its own dependency closure
+
+The dated snapshot proves old bytes decode on new code. The reverse -- bytes this codec writes being
+readable by a build already in the field -- is the direction that strands a rollback, and it is not
+covered.
+
+**Pin: `@dxos/protocols@0.11.1`, published 2026-08-05.** Derived as the last stable release
+preceding the first buf-migration commit on main (`bdb02cd3a1`, "protocols: audit protobuf.js usage
+and start the buf migration", 2026-08-24). The only thing published in between is a
+`1.0.0-next-<sha>` CI snapshot on 2026-08-10, which is not a release. The codec itself did not move
+until `48eb05d613` (2026-08-26), so either reading of "first buf-migration commit" selects the same
+version. Write it as a literal, never resolve "latest before X" at runtime -- that drifts silently.
+
+**It cannot be imported in-process.** `@dxos/protocols@0.11.1` pulls `@dxos/keys@0.11.1`, which is
+built against `effect@3.x` and calls `Schema.filter`; against the workspace's `effect@4.0.0-rc.108`
+that is `TypeError: Schema.filter is not a function`, thrown at import time before any test body
+runs. Aliasing the package into the workspace does not work.
+
+**It does work in an isolated closure**, which is what a downgrade test should use anyway -- a build
+in the field has its own dependency graph. Verified: an `npm install @dxos/protocols@0.11.1` in a
+scratch directory resolves `effect@3.21.4` and its codec round-trips
+(`dxos.echo.query.Heads` -> `0a04613162320a0463336434`). The remaining work is the harness: install
+the pinned version into a gitignored fixture directory and spawn it to decode bytes the current
+codec wrote. Assert shape and round-trip, not byte identity -- protobuf.js writes `nanos: 0` where
+buf omits the proto3 default, which is wire-compatible and expected.
+
+## `#9c` `EchoMetadata` is blocked on a scope decision, not in progress
+
+The metadata _codec_ has already moved -- both stores are on `compatCodec`, so the bytes are buf
+today. What `#9c` moves is the **type the store exposes**, and that is where it stops.
+
+**Containment breaks through `invitations`.** `EchoMetadata.invitations` is
+`repeated dxos.client.services.Invitation` (`metadata.proto:35`) -- a **concrete message field, not
+an `Any`**, so `preserveAny` does not apply and moving `EchoMetadata` makes the field a buf
+`Invitation[]` by construction. Not a prediction; the build says so:
+
+```
+metadata-store.ts(231,36): error TS2345: Argument of type
+  '.../buf/proto/gen/dxos/client/invitation_pb").Invitation' is not assignable to parameter of type
+  '.../proto/gen/dxos/client/services").Invitation'
+```
+
+`dxos.client.services.Invitation` has **55 importers across 7 packages** (client-services 23,
+client 8, client-protocol 7, client-e2e 6, halo 2, shell 1, observability 1) and is itself a
+`protoMessage` carrier on `InvitationsService`. That is a milestone-sized slice.
+
+**A per-field carve-out is not available.** `EchoMetadata` is one generated type; its `invitations`
+field _is_ `Invitation[]` from the buf module. Leaving that one field on the protobuf.js type would
+need a structural alias, and a half-migrated message is worse than an unmigrated one because it
+looks finished. `SpaceMetadata` and `IdentityRecord` cannot be split off either -- both are children
+of `EchoMetadata`, so the container's type determines theirs.
+
+Note for scoping: the raw importer count for `@dxos/protocols/proto/dxos/echo/metadata` is 29, but
+**21 of those import only `EdgeReplicationSetting`**, a top-level enum that moves independently and
+already has. The message-type surface is 8 files in `packages/sdk/client-services` -- true of the
+imports, and _not_ a description of what moving `EchoMetadata` costs, which is the containment
+above.
+
+### Where the proto does draw a line
+
+`EchoMetadata` and `LargeSpaceMetadata` are **two independent persisted records with separate
+codecs** in the store. `LargeSpaceMetadata` -> `ControlPipelineSnapshot` ->
+`{PublicKey feed_key, Credential credential}` + `TimeframeVector` references **neither `Invitation`
+nor anything else out of scope**, beyond the sanctioned two-site `Credential` boundary decode at
+`control-pipeline.ts:148` and `:165`. Consumer surface: three files. That record can move on its own
+whenever the scope decision lands.
+
+### An `Invitation` move obliges a guard re-run
+
+`invitations` appears in **four entries of the cross-codec ledger** (`['invitations']` twice,
+`['metadata.invitations', 'metadata.spaces']`, and `['invitations', 'spaces']`). Changing
+`Invitation`'s type reshapes those, so that slice carries a guard re-run with the 42 count and the
+staleness check reconfirmed. Visible here so it is priced before anyone commits to it, rather than
+discovered inside it.
 
 ## `#8` is the last milestone-sized thread, and it is not a rider
 
@@ -453,7 +732,11 @@ with no casts. What remains in devtools needs `#7` first:
 protobuf.js `src/proto/gen` barrel — so every value the effect-rpc services hand devtools is
 protobuf.js-shaped. Re-pointing devtools' type imports at `@dxos/protocols/buf/*` while that
 holds would type buf shapes over protobuf.js values, and the only way to compile it is the casts
-the repo forbids. #5 is therefore ordered strictly after #7, not merely helped by it.
+the repo forbids.
+
+This still holds with `#7` landed: `#7` changed which codec writes the bytes, not the type
+`protoMessage` exposes nor the substituted shape it decodes to. `#5` is ordered after the type
+moves to `bufMessage` — i.e. after `#9c`/`#9d` — not after `#7`. See the correction under `#5`.
 
 ### Where buf and protobuf.js bytes actually differ
 

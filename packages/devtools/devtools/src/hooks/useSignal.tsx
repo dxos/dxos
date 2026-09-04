@@ -2,21 +2,27 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useMemo } from 'react';
+import { useEffect, useState } from 'react';
 
-import { type SignalResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { type SignalResponse } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import { useDevtools } from '@dxos/react-client/devtools';
 
-export const useSignal = () => {
+export const useSignal = (): SignalResponse[] => {
   const devtoolsHost = useDevtools();
-  const signalResponses = useMemo(() => {
-    const signalOutput = devtoolsHost.subscribeToSignal();
-    const signalResponses: SignalResponse[] = [];
-    signalOutput.subscribe((response: SignalResponse) => {
-      signalResponses.push(response);
-      return [...signalResponses];
+  const [responses, setResponses] = useState<SignalResponse[]>([]);
+
+  useEffect(() => {
+    const stream = devtoolsHost.subscribeToSignal();
+    const received: SignalResponse[] = [];
+    stream.subscribe((response) => {
+      received.push(response);
+      setResponses([...received]);
     });
+
+    return () => {
+      void stream.close();
+    };
   }, []);
 
-  return signalResponses;
+  return responses;
 };
