@@ -169,6 +169,12 @@ export class Presence extends Resource {
     };
 
     this._peerStates.set(message.peerId, record);
+    // A peer that announces a new identity key would otherwise stay indexed under the previous one
+    // until its record ages out, and be reported for an identity it no longer claims.
+    const previousIdentityKey = previous && toPublicKey(previous.state.identityKey);
+    if (previous && previousIdentityKey?.toHex() !== toPublicKey(record.state.identityKey)?.toHex()) {
+      this._removePeerFromIdentityKeyIndex(previous);
+    }
     this._updatePeerInIdentityKeyIndex(record);
     this.updated.emit();
   }

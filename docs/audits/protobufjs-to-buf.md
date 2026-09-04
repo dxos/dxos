@@ -789,47 +789,93 @@ migrating only if the fixtures are worth keeping. `#4`, `#5` and `#7` are easy t
 overlook here because they read protobuf.js through generated types and `protoMessage()` rather
 than through `codec-protobuf` directly, but they are consumers all the same.
 
-## The teardown, by consumer
+## The teardown: one dependency chain, not four parallel slices
 
-Migrating every runtime call site does **not** make `codec-protobuf` deletable: most imports outside
-the package are `type`s, so they survive any amount of runtime migration. An earlier revision
-concluded from this that the shared types had to **move**, into a new `common/`-level package. They
-do not — they have to _go_, together with the consumers' dependence on their shape. That section is
-deleted rather than left standing beside this one, because a reader following it would build the
-package this plan no longer wants.
+**The generated bindings are themselves protobuf.js consumers.** `@dxos/protocols/proto/*` is
+emitted by `protobuf-compiler`, and 40 of the files under `protocols/src/proto/gen/` import
+`@dxos/codec-protobuf` directly -- `Schema` and `decompressSchema` to build the runtime schema,
+`RequestOptions` in every service stub. So the bindings cannot outlive `codec-protobuf`, and
+`codec-protobuf` cannot be deleted while anything still imports the bindings.
 
-Deleting `codec-protobuf` is not one commit at the end. It is one slice per group of consumers that
-want the same thing from it, each independently landable. Measured on `main`: 29 import sites
-outside the package, of which 7 are the package's own machinery reached through the generated barrel
-and die with it.
+That makes the teardown a **strict chain**. An earlier revision of this plan got it backwards by
+calling the barrel sweep separable from killing protobuf.js: it is the critical path.
 
-| Slice                       | Symbols                                                                        | Consumers                                                                                                               | What the upstream change is                                                                                                                                                                                                                                                                |
-| --------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **A. Value codecs**         | `Codec`, `EncodingOptions`                                                     | `hypercore/crypto.ts`, `hypercore.test.ts`, `feed-store/testing/test-generator.ts`, `client-services/pipeline/codec.ts` | None of it is about protobuf: a `Codec` is `encode`/`decode`. Declare the structural type where the parameter lives and drop `EncodingOptions`, which only ever carried protobuf.js's `preserveAny`.                                                                                       |
-| **B. The `Any` envelope**   | `Any`, `WithTypeUrl`, `TaggedType`                                             | `messaging` (4 files), `rpc` (3), `blade-runner` (2), `teleport-extension-gossip`                                       | Real shape change: the legacy `Any` is `{ type_url, value }` and buf's is `{ $typeName, typeUrl, value }`. Consumers move to buf's `Any` from `@bufbuild/protobuf/wkt`, and `{ '@type': … }` tagging goes with `preserveAny`.                                                              |
-| **C. The RPC seam**         | `RequestOptions`, `ServiceBackend`, `ServiceProvider`, `ServiceDescriptorLike` | `rpc/service.ts`, `client-protocol` (2), `protocols/buf/service.ts`                                                     | Interlocked with B, since `ServiceBackend.call(method, request: Any)` is typed on the envelope. `RequestOptions` is protobuf.js encoding options threaded through RPC; on buf there are none, so the parameter is removed rather than retyped. **Must fix the generator too** — see below. |
-| **D. The generated barrel** | `TypedProtoMessage`, `Schema`, `decompressSchema`, the `*Substitutions`        | `protocols/proto/{gen,substitutions,types}.ts`, `protobuf-compiler`                                                     | Not a migration: these are protobuf.js by definition and are deleted with the two packages.                                                                                                                                                                                                |
+```
+263 consumer files  ->  the bindings   ->  codec-protobuf      ->  protobufjs
+(31 packages)           (protocols/     +  protobuf-compiler       (catalog pin)
+                         src/proto)
+                                     ^
+      14 files in 6 packages --------+
+      (codec-protobuf's own direct consumers)
+```
 
-Order: A, then B+C together, then D. A is independent of everything. D is last by construction.
+Nothing downstream can start until everything upstream of it is done. The only genuine parallelism
+is between the two inbound arrows: group 1 and group 2 are independent of each other, and both must
+finish before group 3.
 
-Two consumers need a real type fix rather than an import swap, and neither should be smuggled into a
-sweep:
+### Group 1 -- the bindings' consumers (263 files, 31 packages), the critical path
 
-- **`echo-client/automerge/repo-proxy.ts`** imports `Struct` for exactly one expression,
-  `initialValue as Struct`. The cast is load-bearing: `create<T>(initialValue?: T)` leaves `T`
-  unconstrained, and the RPC field is `Record<string, unknown>`. Constraining `T` is the honest fix
-  and it ripples through echo-client's public API, because a TS `interface` has no implicit index
-  signature and so is not assignable to `Record<string, unknown>`.
-- **`client-services/pipeline/codec.ts`** is the value encoding for hypercore-signed feed blocks
-  replicated between peers. Slice A makes its _type_ buf-agnostic, which is what had blocked it, but
-  swapping the codec instance itself still wants cross-version fixtures of real feeds.
+Every file importing `@dxos/protocols/proto/*` moves to the buf generated types. This is the long
+pole, and it is presence handling rather than an import swap: buf cannot recover proto3's
+`optional`, so each converted site handles absence, and `!` is barred.
 
-### The generator re-establishes slice C on every run
+Sub-order by namespace, because two namespaces are ~60% of the surface:
 
-`protobuf-compiler`'s `file-generator.ts` emits `import type { RequestOptions } from '@dxos/codec-protobuf'`
-into every generated service stub, from a single `CODEC_MODULE` constant that also serves the
-serializer machinery. Fixing the call sites without fixing the generator means the next `prebuild`
-puts the import back. Slice C is therefore a generator change first and a consumer change second.
+| Namespace               | Sites | Note                                                                                      |
+| ----------------------- | ----- | ----------------------------------------------------------------------------------------- |
+| `dxos/client/services`  | 177   | largest; `client-services` alone holds 79 files                                           |
+| `dxos/halo/credentials` | 172   | **9 sites are credentials core** (`halo/credentials/src/credentials/`), fenced by default |
+| `dxos/echo/metadata`    | 38    | `#9c`; the codec is already buf, the exposed type is what moves                           |
+| `dxos/echo/feed`        | 36    | `#9c`; includes the signed feed-block path                                                |
+| `dxos/halo/invitations` | 26    |                                                                                           |
+| ~20 further namespaces  | tail  |                                                                                           |
+
+**Retiring the shape-compat layer is this group, not a step after it.** The layer exists so a codec
+can swap without call sites changing; a call site already on a buf type does not need it. The layer
+goes when its last consumer does.
+
+### Group 2 -- `codec-protobuf`'s direct consumers (14 files, 6 packages), parallel to group 1
+
+| What                                                                                         | Where                                          | The change                                                                                                                                                                                                                |
+| -------------------------------------------------------------------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The `Any` envelope: `Any`, `WithTypeUrl`, `TaggedType`                                       | `messaging` (4), `rpc` (3), `blade-runner` (2) | legacy `{ type_url, value }` -> buf's `{ $typeName, typeUrl, value }`; `{ '@type': … }` goes with `preserveAny`                                                                                                           |
+| The RPC seam: `RequestOptions`, `ServiceBackend`, `ServiceProvider`, `ServiceDescriptorLike` | `rpc` (2), `client-protocol` (2)               | `RequestOptions` is protobuf.js encoding options threaded through RPC, so it is removed rather than retyped                                                                                                               |
+| `Struct`                                                                                     | `echo-client` (1)                              | a real type fix: it exists only for `initialValue as Struct`, and removing the cast means constraining `create<T>`, which ripples through echo-client's public API since a TS `interface` has no implicit index signature |
+
+The first two interlock -- `ServiceBackend.call(method, request: Any)` is typed on the envelope --
+so they land together.
+
+### Group 3 -- the bindings
+
+Delete `protocols/src/proto/` (the generated tree, `substitutions.ts`, `types.ts`), the `./proto`,
+`./proto/*` and `./proto/dxos/*.proto` export-map entries, and the `prebuild` codegen task. Blocked
+on group 1: every remaining importer is a compile error until it completes.
+
+### Group 4 -- the two packages
+
+Delete `@dxos/codec-protobuf` and `@dxos/protobuf-compiler`. Blocked on groups 2 and 3. The 8
+generated fixtures under `protobuf-compiler/test/proto/gen` go with them, which is why `#2` has
+nothing left to migrate.
+
+### Group 5 -- protobufjs
+
+Drop the `protobufjs: ^8.0.0` catalog pin, and the two allowlists that name the packages as strings
+rather than imports: `composer-app/src/vite/optimize-deps.ts` (two entries, one the `protobufjs`
+transitive) and `app-framework/src/vite-plugin/packages.ts`. Neither appears in an import sweep, so
+both rot silently if missed.
+
+### Free now
+
+`teleport-extension-gossip` declares `@dxos/codec-protobuf` with no imports left -- dead since its
+own `PeerState` move. Removing the declaration takes declaring packages 8 -> 7 with no code change.
+
+### The generator re-establishes group 2 on every run
+
+`protobuf-compiler`'s `file-generator.ts` emits
+`import type { RequestOptions } from '@dxos/codec-protobuf'` into every generated service stub.
+Sweeping the call sites without fixing the generator means the next `prebuild` puts the import back,
+so group 2 is a generator change first. It becomes moot only once group 3 deletes the generated
+output entirely.
 
 ### What `Compat<T>` established before it was dropped
 

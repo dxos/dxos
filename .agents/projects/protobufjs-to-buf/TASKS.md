@@ -1,43 +1,62 @@
 # Tasks — protobuf.js → buf
 
-Slice letters are the audit's ("The teardown, by consumer"); numbers are its thread table.
+Groups are the audit's ("The teardown: one dependency chain"). They are a **chain**, not parallel
+slices: the generated bindings import `codec-protobuf` themselves, so nothing downstream can start
+until everything upstream is done. Only groups 1 and 2 are independent of each other.
 
-## Phase: teardown by consumer
+## Done
 
-- [x] **Slice A — value codecs.** `Codec`/`EncodingOptions` gone from `hypercore`, `feed-store` and
-      `client-services`; `createCodecEncoding` takes a structural `ValueCodec<T>` and no longer
-      threads protobuf.js encoding options. Packages declaring the dependency: 11 → 8.
-- [ ] **Slice B — the `Any` envelope.** `Any`/`WithTypeUrl`/`TaggedType` in `messaging` (4 files),
-      `rpc` (3), `blade-runner` (2), `teleport-extension-gossip`. Legacy `{ type_url, value }` →
-      buf's `{ $typeName, typeUrl, value }`; `{ '@type': … }` tagging goes with `preserveAny`.
-- [ ] **Slice C — the RPC seam.** `RequestOptions`/`ServiceBackend`/`ServiceProvider`/
-      `ServiceDescriptorLike` in `rpc/service.ts`, `client-protocol` (2), `protocols/buf/service.ts`.
-      **Fix `protobuf-compiler`'s `file-generator.ts` first** or the next prebuild re-adds the
-      import. Land with B — `ServiceBackend.call(method, request: Any)` ties them together.
-- [ ] **Slice D — the generated barrel.** `protocols/proto/{gen,substitutions,types}.ts` and
-      `protobuf-compiler`'s own fixtures. Deleted with the two packages, not migrated.
+- [x] Value codecs: `createCodecEncoding` takes a structural `ValueCodec<T>`; `hypercore`,
+      `feed-store` and `client-services` off `codec-protobuf`.
+- [x] `PeerState` to buf at the gossip producer; `SignalResponse`, `SubscribeToSpacesResponse`,
+      `LogEntry`, `QueryLogsRequest` to `bufMessage`; the last top-level enums moved.
+- [x] Cross-codec agreement guard (258 messages / 518 cases, field-keyed divergence ledger).
+- [x] Drop the dead `codec-protobuf` declaration from `teleport-extension-gossip`. 8 → 7.
 
-## Phase: type fixes that are not import swaps
+## Group 1 — the bindings' consumers (263 files, 31 packages) · CRITICAL PATH
 
-- [ ] `echo-client/automerge/repo-proxy.ts` — `initialValue as Struct` hides an unconstrained
-      `create<T>`. Constraining `T` ripples through echo-client's public API, since a TS `interface`
-      is not assignable to `Record<string, unknown>`.
-- [ ] `client-services/pipeline/codec.ts` — type is buf-agnostic as of slice A; swapping the codec
-      instance is the signed feed-block replication path and wants cross-version feed fixtures.
+Presence handling, not an import swap: buf loses proto3 `optional`, so each site handles absence and
+`!` is barred. Order by namespace — two are ~60% of the surface.
 
-## Phase: remaining sweeps
+- [ ] `dxos/client/services` — 177 sites (`client-services` holds 79 files).
+- [ ] `dxos/halo/credentials` — 172 sites. **9 are credentials core** (`halo/credentials/src/credentials/`),
+      fenced by default; the other 163 are reachable without touching it.
+- [ ] `dxos/echo/metadata` — 38 sites (`#9c`; codec already buf, the exposed type moves).
+- [ ] `dxos/echo/feed` — 36 sites (`#9c`; includes the signed feed-block path, wants cross-version
+      feed fixtures).
+- [ ] `dxos/halo/invitations` — 26 sites.
+- [ ] ~20 remaining namespaces, tail.
+- [ ] Retire the shape-compat layer. **This is part of group 1, not a step after it** — the layer
+      exists so codecs can swap without call sites changing, so it goes when its last consumer does.
 
-- [ ] `#5` devtools — 14 files still importing `@dxos/protocols/proto/*`.
-- [ ] `#9d` credentials — 94 declarations. Signature stability is proven by
-      `credentials/buf-compat.test.ts`; what is left is presence handling at each site, per the buf
-      `optional` rule in DESIGN.md.
-- [ ] `#2` test/example protos — may become moot: deleting the two packages removes their fixtures.
+## Group 2 — `codec-protobuf`'s direct consumers (14 files, 6 packages) · parallel to group 1
 
-## Phase: finish
+- [ ] **Fix `protobuf-compiler`'s `file-generator.ts` first** — it emits
+      `import type { RequestOptions } from '@dxos/codec-protobuf'` into every service stub, so the
+      next `prebuild` undoes any sweep that skips it.
+- [ ] The `Any` envelope — `messaging` (4), `rpc` (3), `blade-runner` (2). Legacy
+      `{ type_url, value }` → buf's `{ $typeName, typeUrl, value }`; `{ '@type': … }` goes with
+      `preserveAny`.
+- [ ] The RPC seam — `rpc` (2), `client-protocol` (2). Lands with the envelope, since
+      `ServiceBackend.call(method, request: Any)` is typed on it. `RequestOptions` is removed, not
+      retyped.
+- [ ] `echo-client/repo-proxy.ts` `Struct` — a real type fix. It exists only for
+      `initialValue as Struct`; removing the cast means constraining `create<T>`, which ripples
+      through echo-client's public API because a TS `interface` has no implicit index signature.
 
-- [ ] Delete `@dxos/codec-protobuf` and `@dxos/protobuf-compiler`; drop `protobufjs` from the
-      catalog. Also drop the `codec-protobuf` entries from `composer-app/src/vite/optimize-deps.ts`
-      and `app-framework/src/vite-plugin/packages.ts`.
-- [ ] Retire the shape-compat layer once its consumers read buf shapes directly. The layer imitates
-      protobuf.js quirks, and imitation bugs are silent — both `Buffer`-view defects in #12833 were
-      exactly that.
+## Group 3 — the bindings · blocked on group 1
+
+- [ ] Delete `protocols/src/proto/` (generated tree, `substitutions.ts`, `types.ts`), the `./proto`,
+      `./proto/*` and `./proto/dxos/*.proto` export-map entries, and the `prebuild` task.
+
+## Group 4 — the two packages · blocked on groups 2 and 3
+
+- [ ] Delete `@dxos/codec-protobuf` and `@dxos/protobuf-compiler`. The 8 generated fixtures under
+      `protobuf-compiler/test/proto/gen` go with them — which is why `#2` has nothing to migrate.
+
+## Group 5 — protobufjs · blocked on group 4
+
+- [ ] Drop the `protobufjs: ^8.0.0` catalog pin.
+- [ ] Clear the two string allowlists no import sweep can see:
+      `composer-app/src/vite/optimize-deps.ts` (2 entries) and
+      `app-framework/src/vite-plugin/packages.ts`.
