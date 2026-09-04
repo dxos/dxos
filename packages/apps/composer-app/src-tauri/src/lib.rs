@@ -278,6 +278,10 @@ pub fn run() {
                     // WebContent process of a hidden (Cmd+H) window; Tauri reloads it still hidden and
                     // that boot trips the startup watchdog. `Disabled` = WKInactiveSchedulingPolicyNone,
                     // macOS 14+/iOS 17+, ignored elsewhere.
+                    // TODO(wittjosiah): Support suspension instead of opting out of it. Opting out trades
+                    // battery for the app not crashing, which is the right trade today, but a hidden app
+                    // should be able to suspend and resume cleanly: `Throttle` or the default policy, with
+                    // the app surviving the reload and the workers reconnecting.
                     .background_throttling(tauri::utils::config::BackgroundThrottlingPolicy::Disabled)
                     .devtools(true)
                     .build()?;
