@@ -41,7 +41,7 @@ export const IntegrationPrompt = ({ service, scopes, reason }: IntegrationPrompt
   const matched = useMemo(() => (service ? matchConnectors(connectors, service) : []), [connectors, service]);
   const connectorIds = useMemo(() => matched.map((connector) => connector.id), [matched]);
   const label = matched[0]?.label ?? service;
-  const { armReport } = useReportConnection({ connectorIds, db: space?.db, label });
+  const { armReport } = useReportConnection({ connectors: matched, db: space?.db, service });
 
   if (!service) {
     return null;
@@ -82,10 +82,11 @@ export const IntegrationPrompt = ({ service, scopes, reason }: IntegrationPrompt
 };
 
 type UseReportConnectionOptions = {
-  connectorIds: readonly string[];
+  /** Connectors the prompt offers; the report is named after the one the flow actually used. */
+  connectors: readonly ConnectorSpec.ConnectorEntry[];
   db: Database.Database | undefined;
-  /** Human-readable service name used in the report, e.g. `Anthropic`. */
-  label: string | undefined;
+  /** The requested service, named in the report when the connector carries no label. */
+  service: string | undefined;
 };
 
 /**
@@ -97,12 +98,16 @@ type UseReportConnectionOptions = {
  * fills in asynchronously, so a mount-time baseline could not tell a pre-existing connection from
  * one this flow created. A flow whose prompt unmounts before it finishes goes unreported.
  */
-const useReportConnection = ({ connectorIds, db, label }: UseReportConnectionOptions) => {
+const useReportConnection = ({ connectors, db, service }: UseReportConnectionOptions) => {
   const { submit } = useChatReportContext(INTEGRATION_PROMPT_NAME);
   const connections = useQuery(db, Filter.type(Connection.Connection));
   const matched = useMemo(
-    () => connections.filter((connection) => !!connection.connectorId && connectorIds.includes(connection.connectorId)),
-    [connections, connectorIds],
+    () =>
+      connections.filter(
+        (connection) =>
+          !!connection.connectorId && connectors.some((connector) => connector.id === connection.connectorId),
+      ),
+    [connections, connectors],
   );
   // Ids present when the user started the flow; anything beyond them is what the flow produced.
   const baseline = useRef<Set<string> | undefined>(undefined);
@@ -123,8 +128,12 @@ const useReportConnection = ({ connectorIds, db, label }: UseReportConnectionOpt
     }
     // One report per flow: disarm before submitting so a later connection needs a fresh click.
     baseline.current = undefined;
-    submit(`Connected ${label ?? created.connectorId}. Credential: ${created.accessToken.uri}`);
-  }, [matched, label, submit]);
+    // A fuzzy service match can offer several connectors, so the report names the one that produced
+    // this connection rather than the first of them.
+    const label =
+      connectors.find((connector) => connector.id === created.connectorId)?.label ?? service ?? created.connectorId;
+    submit(`Connected ${label}. Credential: ${created.accessToken.uri}`);
+  }, [matched, connectors, service, submit]);
 
   return { armReport };
 };

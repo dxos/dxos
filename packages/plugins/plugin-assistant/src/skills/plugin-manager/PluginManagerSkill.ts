@@ -63,7 +63,8 @@ export const make = (): Skill.Skill =>
 
           Use the id exactly as the list above spells it. Emit the surface once per plugin, then
           briefly say what enabling it would let you do. When the user enables it, a message
-          reporting that arrives as the next user turn — resume there rather than polling.
+          reporting that the plugin was enabled arrives as the next user turn — resume there rather
+          than polling.
         - Call [query-plugins] to search the whole installed set, or to re-read state after the
           user has enabled something. A plugin's tools appear only once it activates, so confirm
           \`active\` there rather than assuming the capability is ready.
