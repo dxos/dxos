@@ -120,8 +120,9 @@ const PLAN: TaskSeed = {
           estimate: 'xs',
         },
         {
-          title: "Deploy with wrangler's unauthenticated mode",
-          description: 'Record what it prints, including the URL it hands back.',
+          title: "Deploy with wrangler's unauthenticated mode (--temporary)",
+          description:
+            'Record both URLs it prints: the Worker URL, and the claim URL. Claim it before going further — the temporary account is deleted after an hour, and every later stage redeploys this Worker.',
           estimate: 's',
         },
         {

@@ -108,7 +108,7 @@ export const make = (): Skill.Skill =>
 
         \`service\` is the domain, \`scopes\` the permissions the agent actually needs, \`reason\` one
         sentence on why. Then stop and wait; once the user attaches it, bind it to the live session
-        with Set Claude Agent Session Credentials and send a message telling the agent to retry.
+        with Update Claude Agent Session Credentials and send a message telling the agent to retry.
 
         ## Environments
         An environment id (\`env_…\`) is the container template a session runs in. You do not need one

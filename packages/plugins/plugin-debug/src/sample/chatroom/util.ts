@@ -13,4 +13,5 @@ export const REFERENCE = process.env.NOW ? new Date(process.env.NOW) : new Date(
  */
 export const clock = SampleSpace.makeClock(REFERENCE);
 
+/** ISO timestamp that many days before {@link REFERENCE}, at an optional UTC hour of that day. */
 export const daysAgo = clock.daysAgo;

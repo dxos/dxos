@@ -219,11 +219,14 @@ const ToolPanel = ({ entries, onChangeOpen }: ToolPanelProps) => {
   // from a run that is over.
   const count = t('tool-run.label', { count: calls.length });
   const narrating = calls.length === 0 ? (status ?? entries[entries.length - 1]) : undefined;
-  const running = calls.some((call) => call.active) ? status : undefined;
+  // Reasoning stands in for a missing status: a run whose only narration is thought still has
+  // something to say about what it is doing, and the bare count says nothing.
+  const reasoning = entries.filter((entry) => entry.kind === 'reasoning').at(-1);
+  const running = calls.some((call) => call.active) ? (status ?? reasoning) : undefined;
   const header = narrating
     ? entryLabel(narrating, t)
     : running
-      ? `${running.title} · ${t('tool-run-suffix.label', { count: calls.length })}`
+      ? `${entryLabel(running, t)} · ${t('tool-run-suffix.label', { count: calls.length })}`
       : (singleCall?.title ?? count);
   const icon = narrating?.icon ?? running?.icon ?? singleCall?.icon ?? TOOL_ICON;
 
