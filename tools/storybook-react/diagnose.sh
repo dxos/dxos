@@ -32,6 +32,12 @@ number_arg() {
   case "${2-}" in
     '' | *[!0-9]*) echo "$1 needs a number" >&2; exit 2 ;;
   esac
+  # Zero is not merely small here: `curl -m 0` disables the deadline entirely, so a wedged server
+  # would never be detected, and a zero interval spins. Only `--wait 0` (do not wait) is meaningful.
+  if [ "$2" -eq 0 ] && [ "$1" != '--wait' ]; then
+    echo "$1 must be greater than zero" >&2
+    exit 2
+  fi
   echo "$2"
 }
 
@@ -166,6 +172,22 @@ watcher_pid() {
 }
 
 if [ "${ENSURE}" -eq 1 ]; then
+  mkdir -p "${OUT_DIR}"
+  # `mkdir` is atomic, so it serializes the check-then-spawn below: two `serve` invocations racing
+  # for one port would otherwise both find nothing and both spawn. A lock older than a minute
+  # outlived whatever held it — no spawn takes that long.
+  lock="${OUT_DIR}/.watcher-${PORT}.lock"
+  if [ -d "${lock}" ] && [ -z "$(find "${lock}" -maxdepth 0 -mmin +1 2>/dev/null)" ]; then
+    echo "another --ensure is starting a watcher for :${PORT}."
+    exit 0
+  fi
+  rmdir "${lock}" 2>/dev/null || true
+  if ! mkdir "${lock}" 2>/dev/null; then
+    echo "another --ensure is starting a watcher for :${PORT}."
+    exit 0
+  fi
+  trap 'rmdir "${lock}" 2>/dev/null || true' EXIT
+
   existing="$(watcher_pid | head -1)"
   if [ -n "${existing}" ]; then
     echo "storybook hang watcher already running for :${PORT} (pid ${existing})."

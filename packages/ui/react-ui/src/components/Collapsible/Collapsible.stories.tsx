@@ -77,9 +77,10 @@ const DefaultStory = ({ exclusive }: StoryArgs) => {
   );
 };
 
+// No `component`: the stories render `DefaultStory`, whose args are the controls; naming the
+// primitive made storybook infer them from `Collapsible.Root` instead — and needed a cast to do it.
 const meta = {
   title: 'ui/react-ui-core/components/Collapsible',
-  component: Collapsible.Root as any,
   render: DefaultStory,
   decorators: [withTheme()],
 } satisfies Meta<typeof DefaultStory>;
