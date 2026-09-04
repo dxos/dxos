@@ -5,6 +5,9 @@
 import { expect, test } from '@playwright/test';
 
 import { AppManager } from './app-manager';
+// #region DEBUG
+import { dumpBrowserLogs } from './debug-log-dump';
+// #endregion DEBUG
 import { Markdown } from './plugins';
 
 const perfomInvitation = async (host: AppManager, guest: AppManager) => {
@@ -38,7 +41,14 @@ test.describe('Collaboration tests', () => {
     await guest.init();
   });
 
-  test.afterEach(async () => {
+  test.afterEach(async ({}, testInfo) => {
+    // #region DEBUG
+    if (process.env.DEBUG_DUMP_ALWAYS || testInfo.status !== testInfo.expectedStatus) {
+      const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+      await dumpBrowserLogs(host?.page, `${stamp}-${testInfo.title}-host`);
+      await dumpBrowserLogs(guest?.page, `${stamp}-${testInfo.title}-guest`);
+    }
+    // #endregion DEBUG
     // NOTE: `afterEach` even if the test is skipped in the beforeEach!
     // Guard against uninitialized app managers.
     if (host !== undefined && guest !== undefined) {
