@@ -195,9 +195,9 @@ export const useApp = ({
 
     const watchdog = createStartupWatchdog({
       timeout,
-      onStall: (stall) => {
+      onStall: ({ executedMs }) => {
         log.warn('startup timeout diagnostic', {
-          ...stall,
+          executedMs,
           eventsFired: manager.getEventsFired(),
           activeModules: manager.getActive(),
           pendingReset: manager.getPendingReset(),

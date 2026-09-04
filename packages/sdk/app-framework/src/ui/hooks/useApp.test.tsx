@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { assert, describe, it } from '@effect/vitest';
-import { render, waitFor } from '@testing-library/react';
+import { afterEach, assert, describe, it, vi } from '@effect/vitest';
+import { render, screen, waitFor } from '@testing-library/react';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
@@ -25,10 +25,53 @@ const pluginLoader = (plugins: Plugin.Plugin[]) =>
     return { plugin };
   });
 
-const TestHost = ({ manager }: { manager: PluginManager.PluginManager }) => {
-  const App = useApp({ pluginManager: manager });
+const TestHost = ({ manager, timeout }: { manager: PluginManager.PluginManager; timeout?: number }) => {
+  const App = useApp({ pluginManager: manager, timeout, fallback: () => <div>startup failed</div> });
   return <App />;
 };
+
+const makeManager = (plugin: Plugin.Plugin) =>
+  PluginManager.make({ pluginLoader: pluginLoader([plugin]), plugins: [plugin] });
+
+describe('useApp startup watchdog', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('a completed boot never times out', async () => {
+    const plugin = Plugin.define(testMeta).pipe(
+      Plugin.addModule({
+        id: 'Hello',
+        activatesOn: ActivationEvents.Startup,
+        provides: [String],
+        activate: () => Effect.succeed([Capability.contribute(String, { string: 'hello' })]),
+      }),
+      Plugin.make,
+    )();
+    const manager = makeManager(plugin);
+    render(<TestHost manager={manager} timeout={100} />);
+    await waitFor(() => assert.isTrue(manager.getActive().length > 0));
+    // The watchdog ticks once a second; wait past the first tick after the window would have closed.
+    await new Promise((resolve) => setTimeout(resolve, 1_500));
+    assert.isNull(screen.queryByText('startup failed'));
+  });
+
+  it('a boot with no activation progress fails in production', async () => {
+    vi.stubEnv('DEV', false);
+    const plugin = Plugin.define(testMeta).pipe(
+      Plugin.addModule({
+        id: 'Hello',
+        activatesOn: ActivationEvents.Startup,
+        provides: [String],
+        activate: () => Effect.never.pipe(Effect.map(() => [Capability.contribute(String, { string: 'never' })])),
+      }),
+      Plugin.make,
+    )();
+    const manager = makeManager(plugin);
+    render(<TestHost manager={manager} timeout={100} />);
+    await waitFor(() => assert.isNotNull(screen.queryByText('startup failed')), { timeout: 3_000 });
+  });
+});
 
 describe('useApp cleanup integration', () => {
   it.effect('external manager is not shut down when useApp does not own it', () =>
