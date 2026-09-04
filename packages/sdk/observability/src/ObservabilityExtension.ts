@@ -19,10 +19,11 @@ export * from './extensions';
  * - support: Support tickets anchoring user reports and telemetry (e.g., PostHog)
  * - ai: Model inferences, tool calls, and turns (e.g., PostHog LLM analytics, OTel gen_ai)
  * - logs: Structured logging (e.g., OTEL)
+ * - mcp: MCP server sessions and tool calls (e.g., PostHog)
  * - metrics: Metric data (e.g., OTEL)
  * - traces: Distributed tracing (e.g., OTEL)
  */
-export type Kind = 'ai' | 'errors' | 'events' | 'support' | 'logs' | 'metrics' | 'traces';
+export type Kind = 'ai' | 'errors' | 'events' | 'support' | 'logs' | 'mcp' | 'metrics' | 'traces';
 
 /**
  * Base for every extension API variant. All kinds implement availability the same way.
@@ -157,6 +158,23 @@ export type Ai = {
   captureToolCall(toolCall: ToolCall): void;
 };
 
+/** What every event in one MCP session carries; learned at `initialize` and stamped on the calls that follow. */
+export type McpSession = {
+  /** Groups the session's events; one server process is one session over a stdio transport. */
+  sessionId: string;
+  clientName?: string;
+  clientVersion?: string;
+  protocolVersion?: string;
+};
+
+/** MCP extension API (kind-specific methods only). */
+export type Mcp = {
+  captureInitialize(session: McpSession): void;
+  captureToolCall(
+    call: McpSession & { toolName: string; parameters?: unknown; durationMs: number; isError: boolean },
+  ): void;
+};
+
 /**
  * Support extension API (kind-specific methods only). The ticket itself is filed by a backend;
  * the extension supplies what only the browser has: the log dump and the session context.
@@ -176,6 +194,7 @@ export type ExtensionApi =
   | (ExtensionApiBase<'support'> & Support)
   | (ExtensionApiBase<'ai'> & Ai)
   // TODO(wittjosiah): Direct logs api?
+  | (ExtensionApiBase<'mcp'> & Mcp)
   | ExtensionApiBase<'logs'>
   | (ExtensionApiBase<'metrics'> & Metrics)
   // TODO(wittjosiah): Direct traces api?

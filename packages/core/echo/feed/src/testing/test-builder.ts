@@ -6,7 +6,7 @@ import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
-import type * as SqlClient from 'effect/unstable/sql/SqlClient';
+import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import * as Statement from 'effect/unstable/sql/Statement';
 
 import { Context, Resource } from '@dxos/context';
@@ -30,6 +30,7 @@ export class TestBuilder extends Resource {
   #peers: TestPeer[] = [];
   readonly #spaceId: SpaceId;
   readonly #feedNamespace: string;
+  readonly #logSql: boolean;
 
   constructor({
     numPeers,
@@ -45,6 +46,7 @@ export class TestBuilder extends Resource {
     super();
     this.#spaceId = spaceId;
     this.#feedNamespace = feedNamespace;
+    this.#logSql = logSql;
     this.#peers = Array.makeBy(
       numPeers,
       (i) =>
@@ -72,6 +74,24 @@ export class TestBuilder extends Resource {
 
   protected override async _close(): Promise<void> {
     await Promise.all(this.#peers.map((peer) => peer.close()));
+  }
+
+  /**
+   * Swaps the server for one with empty storage, keeping its peer id, so clients keep addressing
+   * the same peer while everything it had assigned is gone. Models a redeployed or wiped server.
+   */
+  async replaceServer(): Promise<TestPeer> {
+    const previous = this.#peers[0];
+    await previous.close();
+    const replacement = new TestPeer({
+      isServer: true,
+      actorId: previous.peerId,
+      sendMessage: (ctx, msg) => this.#routeMessage(ctx, msg),
+      logSql: this.#logSql,
+    });
+    this.#peers[0] = replacement;
+    await replacement.open();
+    return replacement;
   }
 
   async pull(client: TestPeer, { limit = 10 }: { limit?: number } = {}): Promise<{ done: boolean }> {
@@ -191,10 +211,32 @@ export class TestPeer extends Resource {
     }).pipe(RuntimeProvider.runPromise(this.#runtime.contextEffect));
   }
 
+  getServerToken(spaceId: SpaceId) {
+    return this.#feedStore.getServerToken(spaceId).pipe(RuntimeProvider.runPromise(this.#runtime.contextEffect));
+  }
+
   getSyncState({ spaceId, feedNamespace }: { spaceId: SpaceId; feedNamespace: string }) {
     return this.#feedStore
       .getSyncState({ spaceId, feedNamespace })
       .pipe(RuntimeProvider.runPromise(this.#runtime.contextEffect));
+  }
+
+  setSyncState(opts: { spaceId: SpaceId; feedNamespace: string; lastPulledPosition: number; serverToken?: string }) {
+    return this.#feedStore.setSyncState(opts).pipe(RuntimeProvider.runPromise(this.#runtime.contextEffect));
+  }
+
+  /**
+   * Strips the recorded server token while leaving pull progress intact, reproducing sync state
+   * written before servers reported one. No production path writes this shape.
+   */
+  clearServerToken({ spaceId, feedNamespace }: { spaceId: SpaceId; feedNamespace: string }) {
+    return Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`
+        UPDATE sync_state SET serverToken = NULL
+        WHERE spaceId = ${spaceId} AND feedNamespace = ${feedNamespace}
+      `;
+    }).pipe(RuntimeProvider.runPromise(this.#runtime.contextEffect));
   }
 
   query(req: QueryRequest) {

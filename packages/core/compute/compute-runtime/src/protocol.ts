@@ -37,13 +37,16 @@ import {
  * Handlers reach other operations via `Operation.Service` (backed by the EDGE
  * `FunctionsService`); remote dispatch is keyed by the operation's `deployedId`.
  */
-type EdgeFunctionServices =
+export type EdgeFunctionServices =
   | AiService.AiService
   | Credential.CredentialsService
   | Database.Service
   | Trace.TraceService
   | Operation.Service
-  | Registry.Service;
+  | Registry.Service
+  // Provided by `FunctionContext.createLayer`, so a consumer that requires it (e.g. `AgentProcess`)
+  // is satisfied by the same layer rather than having to merge its own provider.
+  | OpaqueToolkit.OpaqueToolkitProvider;
 
 export interface FunctionWrappingOptions {
   /**
@@ -162,8 +165,12 @@ export const wrapFunctionHandler = (
 
 /**
  * Container for services and context for a function.
+ *
+ * Exported because a hosted `Process` needs the same set: the EDGE process host assembles this
+ * against its own bindings rather than rebuilding the layer stack, which is how the two runtimes stay
+ * in step when a service is added.
  */
-class FunctionContext extends Resource {
+export class FunctionContext extends Resource {
   readonly context: FunctionProtocol.Context;
   readonly client: EchoClient | undefined;
   db: DatabaseImpl | undefined;

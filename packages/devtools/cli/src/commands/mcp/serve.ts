@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as McpProtocol from 'effect/unstable/ai/McpProtocol';
 import * as Command from 'effect/unstable/cli/Command';
 import * as Options from 'effect/unstable/cli/Flag';
@@ -17,9 +18,11 @@ import { DXOS_VERSION } from '@dxos/client';
 import { Registry } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { McpServer } from '@dxos/mcp-server';
+import * as ObservabilityCapabilities from '@dxos/plugin-observability/ObservabilityCapabilities';
 import * as ProjectsEvents from '@dxos/plugin-projects/ProjectsEvents';
 import { isRecordEnabled, loadPlugins } from '@dxos/plugin-registry';
 
+import { analyticsStdio } from './analytics';
 import { makeLocalServer } from './local-server';
 import { SpaceToolkit, spaceHandlers } from './space-tools';
 import { WATCH_CHILD_ENV, formatReady } from './watch-protocol';
@@ -93,6 +96,12 @@ export const serve = Command.make(
     // stdout carries the protocol, so progress goes to the log (stderr).
     log.info('serving MCP over stdio', { spaces: server.host.spaceIds.length });
 
+    // Optional: the observability plugin is disableable, and a profile that turned it off still
+    // serves — it just reports nothing.
+    const observability = Option.getOrUndefined(yield* Capability.getOption(ObservabilityCapabilities.Observability));
+    const capture = observability && (yield* observability.isAvailable('mcp')) ? observability.mcp : undefined;
+    const stdio = capture ? McpServer.stdio.pipe(Layer.provide(analyticsStdio(capture))) : McpServer.stdio;
+
     const staticToolkits = McpServer.toolkit(SpaceToolkit).pipe(
       Layer.provide(SpaceToolkit.toLayer(spaceHandlers(server))),
     );
@@ -122,7 +131,7 @@ export const serve = Command.make(
             protocols: [McpProtocol.v2025_06_18],
           }),
         ),
-        Layer.provide(McpServer.stdio),
+        Layer.provide(stdio),
       ),
     );
   }),

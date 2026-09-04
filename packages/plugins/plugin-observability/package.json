@@ -29,6 +29,15 @@
       "types": "./dist/types/src/containers/index.d.ts",
       "default": "./dist/lib/containers.mjs"
     },
+    "#commands": {
+      "source": {
+        "node": "./src/capabilities/commands.node.ts",
+        "default": "./src/capabilities/commands.ts"
+      },
+      "types": "./dist/types/src/capabilities/commands.d.ts",
+      "node": "./dist/lib/commands.node.mjs",
+      "default": "./dist/lib/commands.mjs"
+    },
     "#meta": {
       "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
@@ -36,14 +45,21 @@
     },
     "#operation-handler": {
       "source": {
-        "workerd": "./src/capabilities/operation-handler.headless.ts",
-        "node": "./src/capabilities/operation-handler.headless.ts",
+        "workerd": "./src/capabilities/operation-handler.workerd.ts",
         "default": "./src/capabilities/operation-handler.ts"
       },
       "types": "./dist/types/src/capabilities/operation-handler.d.ts",
-      "workerd": "./dist/lib/operation-handler.headless.mjs",
-      "node": "./dist/lib/operation-handler.headless.mjs",
+      "workerd": "./dist/lib/operation-handler.workerd.mjs",
       "default": "./dist/lib/operation-handler.mjs"
+    },
+    "#privacy-banner": {
+      "source": {
+        "node": "./src/capabilities/privacy-banner.ts",
+        "default": "./src/capabilities/privacy-banner.noop.ts"
+      },
+      "types": "./dist/types/src/capabilities/privacy-banner.d.ts",
+      "node": "./dist/lib/privacy-banner.mjs",
+      "default": "./dist/lib/privacy-banner.noop.mjs"
     },
     "#operations": {
       "source": "./src/operations/index.ts",
@@ -137,6 +153,7 @@
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
+    "@dxos/cli-util": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/config": "workspace:*",

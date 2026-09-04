@@ -248,6 +248,14 @@ export const Article: Role.Role<ArticleData<any>> = Role.make('org.dxos.role.art
 /** Surface data for article role (from PlankComponent). */
 export type ArticleData<Subject = unknown, Props extends {} = {}, CompanionTo = unknown> = {
   attendableId: string;
+  /**
+   * The graph node this surface renders, which is what its contributed actions are filed under.
+   *
+   * Distinct from `attendableId`: a companion shares its host plank's attention id, so the two are
+   * the same for a primary plank and differ for a companion. A surface that reads its own actions
+   * from `attendableId` therefore renders the host's toolbar when it is a companion.
+   */
+  nodeId?: string;
   subject: Subject;
   properties?: Record<string, any>; // TODO(burdon): What is this for?
   variant?: string;
@@ -377,6 +385,8 @@ export const Related: Role.Role<{ attendableId?: string; subject: any }> = Role.
  */
 export type SectionData<Subject = unknown, Props extends {} = {}> = {
   attendableId: string;
+  /** The graph node this surface renders; see {@link ArticleData.nodeId}. */
+  nodeId?: string;
   subject: Subject;
   /**
    * Set when the section is sized by its container (e.g. a user-resized embed) rather than its

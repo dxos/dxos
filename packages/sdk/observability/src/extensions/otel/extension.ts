@@ -36,6 +36,8 @@ export type ExtensionsOptions = {
   serviceVersion: string;
   /** For the OTEL, the environment of the entity for which signals (metrics or trace) are collected. */
   environment: string;
+  /** Where the user's opt-out is stored: a localForage prefix in the browser, a config directory in node. */
+  namespace?: string;
   config: Config;
   endpoint?: string;
   headers?: Record<string, string>;
@@ -54,6 +56,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
     serviceName,
     serviceVersion,
     environment,
+    namespace = serviceName,
     config,
     endpoint: _endpoint,
     headers: _headers,
@@ -70,11 +73,11 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
   }) {
     const { OtelLogs } = yield* Effect.promise(() => import('./logs'));
     const { OtelMetrics } = yield* Effect.promise(() => import('./metrics'));
-    const { OtelTraces } = yield* Effect.promise(() => import('./traces'));
+    const { OtelTraces } = yield* Effect.promise(() => import('#otel-traces'));
 
-    const cachedDisabled = yield* Effect.promise(() => isObservabilityDisabled(serviceName));
-    const disabled = cachedDisabled || isObservabilityDisabledSync(serviceName);
-    const storedLogLevel = yield* Effect.promise(() => getOtelLogLevel(serviceName));
+    const cachedDisabled = yield* Effect.promise(() => isObservabilityDisabled(namespace));
+    const disabled = cachedDisabled || isObservabilityDisabledSync(namespace);
+    const storedLogLevel = yield* Effect.promise(() => getOtelLogLevel(namespace));
     const resolvedLogLevel =
       storedLogLevel != null ? (LogLevel[storedLogLevel.toUpperCase() as keyof typeof LogLevel] ?? logLevel) : logLevel;
     const enabledRef = yield* Ref.make(!disabled);
@@ -140,19 +143,20 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
     const sessionId = crypto.randomUUID();
     const { resource, metricsResource } = createResources(baseAttributes, sessionId);
 
-    const traces = tracesEnabled
-      ? new OtelTraces({
-          destinations,
-          resource,
-          getTags: () => Object.fromEntries(tags),
-          spanSink: observabilityWorker
-            ? { post: (record: OtelSpanSink.Span) => observabilityWorker.post(record) }
-            : undefined,
-        })
-      : undefined;
-    const remoteLogs = logsEnabled ? observabilityWorker : undefined;
+    const traces =
+      tracesEnabled && !disabled
+        ? new OtelTraces({
+            destinations,
+            resource,
+            getTags: () => Object.fromEntries(tags),
+            spanSink: observabilityWorker
+              ? { post: (record: OtelSpanSink.Span) => observabilityWorker.post(record) }
+              : undefined,
+          })
+        : undefined;
+    const remoteLogs = logsEnabled && !disabled ? observabilityWorker : undefined;
     const logs =
-      logsEnabled && !remoteLogs
+      logsEnabled && !disabled && !remoteLogs
         ? new OtelLogs({
             destinations,
             resource,
@@ -167,7 +171,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
         ? new RemoteMetricsForwarder(observabilityWorker.post)
         : undefined;
     const metrics =
-      metricsEnabled && !observabilityWorker
+      metricsEnabled && !disabled && !observabilityWorker
         ? new OtelMetrics({
             destinations,
             resource: metricsResource,
@@ -178,10 +182,6 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
     const extension: ObservabilityExtension.Extension = {
       initialize: () =>
         Effect.sync(() => {
-          if (disabled) {
-            return;
-          }
-
           if (logs) {
             log.runtimeConfig.processors.push(logs.logProcessor);
           }
@@ -214,12 +214,23 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
           }
         }),
       enable: Effect.fn(function* () {
-        yield* Effect.promise(() => storeObservabilityDisabled(serviceName, false));
+        yield* Effect.promise(() => storeObservabilityDisabled(namespace, false));
         yield* Ref.update(enabledRef, () => true);
       }),
+      // Ordered so nothing is captured after this point: the processor does not consult
+      // `enabledRef`, and the store is awaited before a shutdown that may throw.
       disable: Effect.fn(function* () {
-        yield* Effect.promise(() => storeObservabilityDisabled(serviceName, true));
         yield* Ref.update(enabledRef, () => false);
+        if (logs) {
+          const index = log.runtimeConfig.processors.indexOf(logs.logProcessor);
+          if (index >= 0) {
+            log.runtimeConfig.processors.splice(index, 1);
+          }
+        }
+        yield* Effect.promise(() => storeObservabilityDisabled(namespace, true));
+        // TODO(wittjosiah): `close` drains by design, so revoking still ships what is queued;
+        //   discarding it means shutting each exporter down before its provider.
+        yield* extension.close!();
       }),
       close: () =>
         Effect.promise(async () => {

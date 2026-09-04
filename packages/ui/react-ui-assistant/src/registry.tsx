@@ -13,6 +13,7 @@ import {
   StatusWidget,
   SuggestionWidget,
   SummaryWidget,
+  SyntheticWidget,
   ToolWidget,
 } from './widgets';
 
@@ -54,11 +55,11 @@ export const assistantRegistry: XmlWidgetRegistry = {
   // agent without reading as the reader's own prompt.
   'synthetic': {
     block: true,
-    factory: ({ children, range }) => {
+    factory: ({ children }) => {
       // `getXmlInnerText`: a model fences blocks in tags of its own, and `getXmlTextChild` would
       // stop at the first one — the reader saw a heading and an opening fence, then nothing.
       const text = getXmlInnerText(children ?? []);
-      return text ? new ReasoningWidget(text, range?.from) : null;
+      return text ? new SyntheticWidget(text) : null;
     },
   },
 

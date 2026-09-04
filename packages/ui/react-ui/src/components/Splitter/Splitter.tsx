@@ -2,21 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useComposedRefs } from '@radix-ui/react-compose-refs';
+// `Splitter` — two panes and the seam between them, built on `@ark-ui/react`'s Splitter (zag state
+// machine). The machine owns the drag (pointer capture, the global resize cursor), the keyboard
+// resize, the `separator` role and its `aria-value*`, the lower bound on both panes, and keeping the
+// anchored pane's width across a container resize. DXOS owns the pane vocabulary the app speaks:
+// sizes in rem rather than percent, an `anchor` saying which pane the size measures, and a `mode`
+// that collapses to one pane or the other with an animation.
+
+import { Splitter as SplitterPrimitive } from '@ark-ui/react/splitter';
 import { createContext } from '@radix-ui/react-context';
-import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, {
-  type CSSProperties,
-  type KeyboardEvent,
-  type PointerEvent,
-  type RefObject,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import React, { type ComponentProps, type RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type SlottableProps } from '@dxos/ui-types';
 
@@ -30,6 +25,12 @@ type SplitterMode = 'start' | 'end' | 'split';
 
 type Position = 'start' | 'end';
 
+/** A pane extent as the machine takes it: a bare number is a percentage, a string carries its unit. */
+type PanelSize = NonNullable<ComponentProps<typeof SplitterPrimitive.Root>['size']>[number];
+
+/** The seam sits between the two panes, which is the only pair there is. */
+const RESIZE_TRIGGER_ID = 'start:end';
+
 //
 // Context
 //
@@ -38,88 +39,35 @@ const SPLITTER_NAME = 'Splitter';
 
 type SplitterContextValue = {
   orientation: SplitterOrientation;
-  mode: SplitterMode;
-  /** Which panel `size` measures; the other panel fills the remainder. */
-  anchor: Position;
-  /** The anchored panel's extent in rem, or `undefined` for an even (50/50) split. */
-  size: number | undefined;
   transition: number;
   resizable: boolean;
-  /** Lower bound (rem) applied to both panels. */
-  minSize: number;
-  dragging: boolean;
   /** True only briefly after a `mode` change, so the collapse animates but layout reflows (resize) do not. */
   animating: boolean;
-  rootRef: RefObject<HTMLDivElement | null>;
-  setSize: (size: number) => void;
-  setDragging: (dragging: boolean) => void;
 };
 
 const [SplitterProvider, useSplitterContext] = createContext<SplitterContextValue>(SPLITTER_NAME);
 
 const getRem = (): number => parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
 
-// Lower-bound clamp applied to both panels: the start panel can't drop below `minSize` nor exceed the
-// container minus `minSize` (reserving room for the end panel, which also carries the min).
-const clampStyle = (minSize: number, orientation: SplitterOrientation): CSSProperties =>
-  orientation === 'horizontal'
-    ? { minInlineSize: `${minSize}rem`, maxInlineSize: `calc(100% - ${minSize}rem)` }
-    : { minBlockSize: `${minSize}rem`, maxBlockSize: `calc(100% - ${minSize}rem)` };
-
-const endMinStyle = (minSize: number, orientation: SplitterOrientation): CSSProperties =>
-  orientation === 'horizontal' ? { minInlineSize: `${minSize}rem` } : { minBlockSize: `${minSize}rem` };
-
-// In `split` mode the anchored panel is fixed at `size` rem (clamped) and the other fills the rest; when
-// `size` is undefined both panels grow equally (50/50). Otherwise one panel fills (flex-grow) and the
-// other collapses to zero (content stays mounted, clipped).
-const panelStyle = (
-  position: Position,
-  mode: SplitterMode,
-  anchor: Position,
-  size: number | undefined,
-  minSize: number,
-  orientation: SplitterOrientation,
-): CSSProperties => {
-  if (mode !== 'split') {
-    const fills = (mode === 'start' && position === 'start') || (mode === 'end' && position === 'end');
-    return { flexGrow: fills ? 1 : 0, flexShrink: 1, flexBasis: 0 };
-  }
-
-  // No explicit size: split evenly.
-  if (size === undefined) {
-    return { flexGrow: 1, flexShrink: 1, flexBasis: 0, ...endMinStyle(minSize, orientation) };
-  }
-
-  return position === anchor
-    ? { flexGrow: 0, flexShrink: 1, flexBasis: `${size}rem`, ...clampStyle(minSize, orientation) }
-    : { flexGrow: 1, flexShrink: 1, flexBasis: 0, ...endMinStyle(minSize, orientation) };
+/**
+ * The size array the machine takes, with the pane that is not anchored left as a hole for it to
+ * fill from the remainder — the machine reads each index independently, so the pane it finds nothing
+ * for is the one that flexes.
+ */
+const anchoredSizes = (size: number, anchor: Position): PanelSize[] => {
+  const sizes: PanelSize[] = [];
+  sizes[anchor === 'start' ? 0 : 1] = `${size}rem`;
+  return sizes;
 };
 
-// Absolute position for the handle, centered on the split point (`size` rem from the anchored edge, or
-// the middle for an even split). The offset is clamped to the same bounds as the anchored panel
-// (`minSize` .. `100% - minSize`) so a sudden container shrink (e.g. opening devtools) that caps the
-// panel keeps the handle pinned to the panel edge instead of floating into the other panel.
-const handlePosition = (
-  orientation: SplitterOrientation,
-  anchor: Position,
-  size: number | undefined,
-  minSize: number,
-): CSSProperties => {
-  if (size === undefined) {
-    return orientation === 'horizontal'
-      ? { insetBlock: 0, insetInlineStart: '50%', transform: 'translateX(-50%)' }
-      : { insetInline: 0, insetBlockStart: '50%', transform: 'translateY(-50%)' };
+/** The machine reports percentages; the app speaks rem, measured along the split axis. */
+const toRem = (percent: number, root: RefObject<HTMLDivElement | null>, orientation: SplitterOrientation): number => {
+  const rect = root.current?.getBoundingClientRect();
+  if (!rect) {
+    return 0;
   }
-
-  const offset = `clamp(${minSize}rem, ${size}rem, calc(100% - ${minSize}rem))`;
-  if (orientation === 'horizontal') {
-    return anchor === 'end'
-      ? { insetBlock: 0, insetInlineEnd: offset, transform: 'translateX(50%)' }
-      : { insetBlock: 0, insetInlineStart: offset, transform: 'translateX(-50%)' };
-  }
-  return anchor === 'end'
-    ? { insetInline: 0, insetBlockEnd: offset, transform: 'translateY(50%)' }
-    : { insetInline: 0, insetBlockStart: offset, transform: 'translateY(-50%)' };
+  const extent = orientation === 'horizontal' ? rect.width : rect.height;
+  return ((percent / 100) * extent) / getRem();
 };
 
 //
@@ -165,13 +113,6 @@ const SplitterRoot = slottable<HTMLDivElement, SplitterRootElementProps>(
   ) => {
     const { tx } = useThemeContext();
     const rootRef = useRef<HTMLDivElement>(null);
-    const composedRef = useComposedRefs(forwardedRef, rootRef);
-    const [size, setSize] = useControllableState({
-      prop: sizeProp,
-      defaultProp: defaultSize,
-      onChange: onSizeChange,
-    });
-    const [dragging, setDragging] = useState(false);
 
     // Animate ONLY for a brief window right after a `mode` change (the collapse). The rest of the time the
     // transition is off, so layout reflows from a container/window resize never animate (no jitter) — this
@@ -191,27 +132,75 @@ const SplitterRoot = slottable<HTMLDivElement, SplitterRootElementProps>(
       return () => clearTimeout(timer);
     }, [mode, transition]);
 
+    const collapsed = mode !== 'split';
+    const panels = useMemo(
+      () => [
+        {
+          id: 'start' as const,
+          // A collapsed pane has to be allowed to reach zero, which its own lower bound would
+          // otherwise hold it above.
+          minSize: mode === 'end' ? '0%' : `${minSize}rem`,
+          // The anchored pane keeps its width when the container changes size; the other absorbs it.
+          resizeBehavior: anchor === 'start' ? ('preserve-pixel-size' as const) : undefined,
+        },
+        {
+          id: 'end' as const,
+          minSize: mode === 'start' ? '0%' : `${minSize}rem`,
+          resizeBehavior: anchor === 'end' ? ('preserve-pixel-size' as const) : undefined,
+        },
+      ],
+      [mode, anchor, minSize],
+    );
+
+    const size = useMemo<PanelSize[] | undefined>(() => {
+      if (mode === 'start') {
+        return ['100%', '0%'];
+      }
+      if (mode === 'end') {
+        return ['0%', '100%'];
+      }
+      return sizeProp === undefined ? undefined : anchoredSizes(sizeProp, anchor);
+    }, [mode, sizeProp, anchor]);
+
+    const handleResize = useCallback(
+      ({ size }: { size: number[] }) => {
+        // A collapse is the caller's own instruction coming back; reporting it would overwrite the
+        // size the panes return to.
+        if (!onSizeChange || collapsed) {
+          return;
+        }
+        const percent = size[anchor === 'start' ? 0 : 1];
+        if (percent !== undefined) {
+          onSizeChange(toRem(percent, rootRef, orientation));
+        }
+      },
+      [onSizeChange, collapsed, anchor, orientation],
+    );
+
     const { className, ...rest } = composableProps(props);
-    const Comp = asChild ? Slot : Primitive.div;
 
     return (
-      <SplitterProvider
-        orientation={orientation}
-        mode={mode}
-        anchor={anchor}
-        size={size}
-        transition={transition}
-        resizable={resizable}
-        minSize={minSize}
-        animating={animating}
-        dragging={dragging}
-        rootRef={rootRef}
-        setSize={setSize}
-        setDragging={setDragging}
-      >
-        <Comp {...rest} ref={composedRef} className={tx('splitter.root', { orientation }, className)}>
+      <SplitterProvider orientation={orientation} transition={transition} resizable={resizable} animating={animating}>
+        <SplitterPrimitive.Root
+          {...rest}
+          asChild={asChild}
+          orientation={orientation}
+          panels={panels}
+          size={size}
+          defaultSize={defaultSize === undefined ? undefined : anchoredSizes(defaultSize, anchor)}
+          onResize={handleResize}
+          className={tx('splitter.root', { orientation }, className)}
+          ref={(element) => {
+            rootRef.current = element;
+            if (typeof forwardedRef === 'function') {
+              forwardedRef(element);
+            } else if (forwardedRef) {
+              forwardedRef.current = element;
+            }
+          }}
+        >
           {children}
-        </Comp>
+        </SplitterPrimitive.Root>
       </SplitterProvider>
     );
   },
@@ -230,28 +219,27 @@ type SplitterPanelProps = SlottableProps<{ position: Position }>;
 const SplitterPanel = slottable<HTMLDivElement, { position: Position }>(
   ({ asChild, children, position, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const { orientation, mode, anchor, size, minSize, transition, dragging, animating } =
-      useSplitterContext(PANEL_NAME);
+    const { transition, animating } = useSplitterContext(PANEL_NAME);
     const { className, style, ...rest } = composableProps(props);
-    const Comp = asChild ? Slot : Primitive.div;
 
     // Only animate during the brief post-mode-change window (collapse), never while dragging or on a plain
     // container/window resize — so the panels track layout reflows instantly without jitter.
-    const animate = transition > 0 && animating && !dragging;
+    const animate = transition > 0 && animating;
 
     return (
-      <Comp
+      <SplitterPrimitive.Panel
         {...rest}
+        asChild={asChild}
+        id={position}
         ref={forwardedRef}
         className={tx('splitter.panel', {}, className)}
         style={{
-          ...panelStyle(position, mode, anchor, size, minSize, orientation),
           transition: animate ? `flex-grow ${transition}ms ease-out, flex-basis ${transition}ms ease-out` : undefined,
           ...style,
         }}
       >
         {children}
-      </Comp>
+      </SplitterPrimitive.Panel>
     );
   },
 );
@@ -266,115 +254,30 @@ const HANDLE_NAME = 'Splitter.Handle';
 
 type SplitterHandleProps = SlottableProps;
 
-const SplitterHandle = slottable<HTMLDivElement>(({ asChild, children, ...props }, forwardedRef) => {
+const SplitterHandle = slottable<HTMLButtonElement>(({ asChild, children, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
-  const { orientation, anchor, size, resizable, minSize, rootRef, setSize, setDragging } =
-    useSplitterContext(HANDLE_NAME);
+  const { orientation, resizable } = useSplitterContext(HANDLE_NAME);
   const { className, ...rest } = composableProps(props);
-  const Comp = asChild ? Slot : Primitive.div;
-
-  // Container extent (rem) along the split axis; the upper bound is `extent - minSize`.
-  const extentRem = useCallback((): number => {
-    const rect = rootRef.current?.getBoundingClientRect();
-    if (!rect) {
-      return (size ?? minSize) + minSize;
-    }
-    return (orientation === 'horizontal' ? rect.width : rect.height) / getRem();
-  }, [orientation, rootRef, size, minSize]);
-
-  const handlePointerDown = useCallback(
-    (event: PointerEvent<HTMLDivElement>) => {
-      if (event.button !== 0) {
-        return;
-      }
-      event.preventDefault();
-      event.currentTarget.setPointerCapture(event.pointerId);
-      setDragging(true);
-    },
-    [setDragging],
-  );
-
-  // Map the pointer position within the Root to the anchored panel's extent (rem), clamped so neither
-  // panel drops below `minSize`. For an `end` anchor the extent is measured from the far edge.
-  const handlePointerMove = useCallback(
-    (event: PointerEvent<HTMLDivElement>) => {
-      if (!event.currentTarget.hasPointerCapture(event.pointerId)) {
-        return;
-      }
-      const root = rootRef.current;
-      if (!root) {
-        return;
-      }
-      const rect = root.getBoundingClientRect();
-      const rem = getRem();
-      const offset = (orientation === 'horizontal' ? event.clientX - rect.left : event.clientY - rect.top) / rem;
-      const extent = (orientation === 'horizontal' ? rect.width : rect.height) / rem;
-      const next = anchor === 'end' ? extent - offset : offset;
-      setSize(Math.min(Math.max(next, minSize), Math.max(minSize, extent - minSize)));
-    },
-    [orientation, anchor, minSize, rootRef, setSize],
-  );
-
-  const handlePointerUp = useCallback(
-    (event: PointerEvent<HTMLDivElement>) => {
-      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-        event.currentTarget.releasePointerCapture(event.pointerId);
-      }
-      setDragging(false);
-    },
-    [setDragging],
-  );
-
-  // Arrow keys nudge the start panel's size (rem); Home/End jump to the bounds.
-  // Keeps the resize affordance usable without a pointer.
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLDivElement>) => {
-      const horizontal = orientation === 'horizontal';
-      const step = event.shiftKey ? 4 : 1;
-      // Start from the current size, or the midpoint when the split is even (unsized).
-      const base = size ?? extentRem() / 2;
-      let next: number | undefined;
-      if (event.key === (horizontal ? 'ArrowRight' : 'ArrowDown')) {
-        next = base + step;
-      } else if (event.key === (horizontal ? 'ArrowLeft' : 'ArrowUp')) {
-        next = base - step;
-      } else if (event.key === 'Home') {
-        next = minSize;
-      } else if (event.key === 'End') {
-        next = extentRem() - minSize;
-      }
-      if (next === undefined) {
-        return;
-      }
-      event.preventDefault();
-      setSize(Math.min(Math.max(next, minSize), Math.max(minSize, extentRem() - minSize)));
-    },
-    [orientation, size, minSize, extentRem, setSize],
-  );
 
   if (!resizable) {
     return null;
   }
 
   return (
-    <Comp
+    <SplitterPrimitive.ResizeTrigger
       {...rest}
+      asChild={asChild}
+      id={RESIZE_TRIGGER_ID}
+      // The machine renders a button, which submits the form around it unless told otherwise.
+      type='button'
       ref={forwardedRef}
-      role='separator'
-      tabIndex={0}
+      // A separator's orientation is its own, not the group's: panes side by side are parted by a
+      // vertical line. The machine reports the group's.
       aria-orientation={orientation === 'horizontal' ? 'vertical' : 'horizontal'}
-      aria-valuemin={Math.round(minSize)}
-      aria-valuenow={size !== undefined ? Math.round(size) : undefined}
       className={tx('splitter.handle', { orientation }, className)}
-      style={handlePosition(orientation, anchor, size, minSize)}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerCancel={handlePointerUp}
-      onKeyDown={handleKeyDown}
     >
       {children}
-    </Comp>
+    </SplitterPrimitive.ResizeTrigger>
   );
 });
 

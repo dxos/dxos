@@ -115,7 +115,7 @@ describe('Spaces', () => {
     await client.destroy();
   });
 
-  test('post and listen to messages', async () => {
+  test('post and listen to messages', { timeout: 60_000 }, async () => {
     const [client1, client2] = await createInitializedClients(2);
 
     log('initialized');
@@ -149,7 +149,9 @@ describe('Spaces', () => {
       await space1.postMessage('goodbye', { data: 'Goodbye' });
     }
 
-    await asyncTimeout(Promise.all([hello.wait(), goodbye.wait()]), 200);
+    // Guards against a hang, so it is generous: two peers replicating is not a latency assertion, and
+    // both 200ms and 2s were under the round trip's own cost on a loaded runner.
+    await asyncTimeout(Promise.all([hello.wait(), goodbye.wait()]), 30_000);
   });
 
   // Trying to read from the feed, even if the range is not set to be downloaded, will trigger a download.
