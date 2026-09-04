@@ -7,6 +7,7 @@ import { timestampDate } from '@bufbuild/protobuf/wkt';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
 import { Format } from '@dxos/echo/Format';
+import { log } from '@dxos/log';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { bufRegistry } from '@dxos/protocols/buf-registry';
 import { ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
@@ -35,13 +36,18 @@ const receivedAtOf = (response: SignalResponse): Date | undefined =>
 
 /** Reads the message id out of the still-packed payload; the envelope only carries bytes. */
 const messageIdOf = (message: SignalMessage | undefined): string | undefined => {
-  switch (message?.payload?.typeUrl) {
-    case RELIABLE_PAYLOAD:
-      return toPublicKey(fromBinary(ReliablePayloadSchema, message.payload.value).messageId)?.toString();
-    case ACKNOWLEDGEMENT:
-      return toPublicKey(fromBinary(AcknowledgementSchema, message.payload.value).messageId)?.toString();
-    default:
-      return undefined;
+  try {
+    switch (message?.payload?.typeUrl) {
+      case RELIABLE_PAYLOAD:
+        return toPublicKey(fromBinary(ReliablePayloadSchema, message.payload.value).messageId)?.toString();
+      case ACKNOWLEDGEMENT:
+        return toPublicKey(fromBinary(AcknowledgementSchema, message.payload.value).messageId)?.toString();
+      default:
+        return undefined;
+    }
+  } catch (err) {
+    log.warn('failed to decode signal message id', { err });
+    return undefined;
   }
 };
 
@@ -55,13 +61,20 @@ const topicOf = (message: SignalMessage | undefined): unknown => {
   if (message?.payload?.typeUrl !== RELIABLE_PAYLOAD) {
     return undefined;
   }
-  const inner = fromBinary(ReliablePayloadSchema, message.payload.value).payload;
-  const desc = inner && bufRegistry.getMessage(inner.typeUrl);
-  if (!desc || !inner) {
+  try {
+    const inner = fromBinary(ReliablePayloadSchema, message.payload.value).payload;
+    const desc = inner && bufRegistry.getMessage(inner.typeUrl);
+    if (!desc || !inner) {
+      return undefined;
+    }
+    const decoded: Record<string, unknown> = fromBinary(desc, inner.value);
+    return decoded.topic;
+  } catch (err) {
+    // Wire bytes from another peer: `fromBinary` throws on a malformed or truncated payload, and
+    // this runs inside the table's row transform, so one bad message would take the panel down.
+    log.warn('failed to decode signal payload', { err });
     return undefined;
   }
-  const decoded: Record<string, unknown> = fromBinary(desc, inner.value);
-  return decoded.topic;
 };
 
 export type View<T> = {
