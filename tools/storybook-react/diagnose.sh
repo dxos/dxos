@@ -7,25 +7,33 @@
 #
 #   bash tools/storybook-react/diagnose.sh              # capture now
 #   bash tools/storybook-react/diagnose.sh --watch      # capture by itself, the moment it wedges
+#   bash tools/storybook-react/diagnose.sh --ensure     # start a watcher in the background if none runs
 #
 # `--watch` exists because the hang arrives when you are mid-flow and want to restart, not to run a
-# script: it polls until the server stops answering (or pegs a core), captures, and exits.
+# script: it polls until the server stops answering (or pegs a core), then captures. `--ensure` is
+# what the serve task calls, so the watcher is simply always there rather than something to remember.
 #
 # Options: --port N (9009) --interval N (15s, watch poll) --timeout N (10s, "answered" deadline)
+#          --wait N (600s, how long to wait for the port before giving up — the serve task starts
+#          this alongside the server, so the port is not bound yet)
 
 set -uo pipefail
 
 PORT=9009
 INTERVAL=15
 TIMEOUT=10
+WAIT=600
 WATCH=0
+ENSURE=0
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --watch) WATCH=1 ;;
+    --ensure) ENSURE=1 ;;
     --port) PORT="$2"; shift ;;
     --interval) INTERVAL="$2"; shift ;;
     --timeout) TIMEOUT="$2"; shift ;;
+    --wait) WAIT="$2"; shift ;;
     -h|--help) sed -n '4,16p' "${BASH_SOURCE[0]}"; exit 0 ;;
     *) echo "unknown option: $1" >&2; exit 2 ;;
   esac
@@ -131,45 +139,103 @@ capture() {
   echo "Now restart the server. Send this file to whoever is fixing the hang."
 }
 
-PID="$(server_pid)"
-if [ -z "${PID}" ]; then
-  echo "Nothing listening on :${PORT}."
-  exit 1
+# Already-running watcher for this port. Matching on the port keeps one watcher per server rather
+# than per worktree, which is what the serve task needs — several servers may run at once.
+watcher_pid() {
+  pgrep -f "diagnose\.sh .*--watch" 2>/dev/null | while read -r candidate; do
+    if ps -o command= -p "${candidate}" 2>/dev/null | grep -q -- "--port ${PORT}\b"; then
+      echo "${candidate}"
+      return
+    fi
+  done
+}
+
+if [ "${ENSURE}" -eq 1 ]; then
+  existing="$(watcher_pid | head -1)"
+  if [ -n "${existing}" ]; then
+    echo "storybook hang watcher already running for :${PORT} (pid ${existing})."
+    exit 0
+  fi
+  mkdir -p "${OUT_DIR}"
+  log="${OUT_DIR}/storybook-watcher-${PORT}.log"
+  # Detached, so it outlives the task that started it and keeps watching for the server's whole life.
+  nohup bash "${BASH_SOURCE[0]}" --watch --port "${PORT}" --interval "${INTERVAL}" \
+    --timeout "${TIMEOUT}" --wait "${WAIT}" >>"${log}" 2>&1 &
+  disown 2>/dev/null || true
+  echo "storybook hang watcher started for :${PORT} (log: ${log})."
+  exit 0
 fi
 
+PID="$(server_pid)"
+
 if [ "${WATCH}" -eq 0 ]; then
+  if [ -z "${PID}" ]; then
+    echo "Nothing listening on :${PORT}."
+    exit 1
+  fi
   capture "${PID}" "manual"
   exit 0
 fi
 
-echo "Watching :${PORT} (pid ${PID}) every ${INTERVAL}s — captures and exits the moment it wedges."
-echo "Leave this running; Ctrl-C to stop."
+# Started alongside the server by the serve task, so the port is not bound yet; a storybook boot on
+# this repo is minutes, not seconds.
+waited=0
+while [ -z "${PID}" ] && [ "${waited}" -lt "${WAIT}" ]; do
+  sleep "${INTERVAL}"
+  waited=$((waited + INTERVAL))
+  PID="$(server_pid)"
+done
+if [ -z "${PID}" ]; then
+  echo "Nothing came up on :${PORT} within ${WAIT}s; giving up."
+  exit 1
+fi
+
+echo "$(date +%H:%M:%S) watching :${PORT} (pid ${PID}) every ${INTERVAL}s."
 hot=0
 while true; do
   sleep "${INTERVAL}"
 
   PID="$(server_pid)"
   if [ -z "${PID}" ]; then
-    echo "Server on :${PORT} is gone (stopped or crashed) — nothing to capture."
-    exit 1
-  fi
-
-  if ! curl -sf -m "${TIMEOUT}" -o /dev/null "http://localhost:${PORT}/index.json"; then
-    capture "${PID}" "no response within ${TIMEOUT}s"
-    exit 0
-  fi
-
-  # Answering while pegged is the more common shape: the module graph still serves, but the optimizer
-  # or the watcher is burning a core, so every navigation crawls. Three in a row rules out a build.
-  cpu="$(cpu_of "${PID}")"
-  if [ -n "${cpu}" ] && [ "${cpu%%.*}" -ge 90 ]; then
-    hot=$((hot + 1))
-    echo "$(date +%H:%M:%S) cpu ${cpu}% (${hot}/3)"
-    if [ "${hot}" -ge 3 ]; then
-      capture "${PID}" "cpu ${cpu}% sustained over 3 polls"
-      exit 0
-    fi
-  else
+    echo "$(date +%H:%M:%S) server on :${PORT} is gone (stopped or restarted) — waiting for it to return."
+    waited=0
+    while [ -z "${PID}" ] && [ "${waited}" -lt "${WAIT}" ]; do
+      sleep "${INTERVAL}"
+      waited=$((waited + INTERVAL))
+      PID="$(server_pid)"
+    done
+    [ -z "${PID}" ] && { echo "gave up after ${WAIT}s."; exit 1; }
     hot=0
+    continue
+  fi
+
+  reason=""
+  if ! curl -sf -m "${TIMEOUT}" -o /dev/null "http://localhost:${PORT}/index.json"; then
+    reason="no response within ${TIMEOUT}s"
+  else
+    # Answering while pegged is the more common shape: the module graph still serves, but the
+    # optimizer or the watcher is burning a core, so every navigation crawls. Three in a row rules
+    # out a build.
+    cpu="$(cpu_of "${PID}")"
+    if [ -n "${cpu}" ] && [ "${cpu%%.*}" -ge 90 ]; then
+      hot=$((hot + 1))
+      echo "$(date +%H:%M:%S) cpu ${cpu}% (${hot}/3)"
+      [ "${hot}" -ge 3 ] && reason="cpu ${cpu}% sustained over 3 polls"
+    else
+      hot=0
+    fi
+  fi
+
+  if [ -n "${reason}" ]; then
+    capture "${PID}" "${reason}"
+    hot=0
+    # Re-arm rather than exit: nobody is babysitting an auto-started watcher, and the hang recurs.
+    # Waiting for the server to answer again first keeps one wedge from producing a run of reports.
+    echo "$(date +%H:%M:%S) waiting for :${PORT} to answer again before re-arming."
+    until curl -sf -m "${TIMEOUT}" -o /dev/null "http://localhost:${PORT}/index.json"; do
+      sleep "${INTERVAL}"
+      [ -z "$(server_pid)" ] && break
+    done
+    echo "$(date +%H:%M:%S) re-armed."
   fi
 done
