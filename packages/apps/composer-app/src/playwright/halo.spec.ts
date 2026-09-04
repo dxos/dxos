@@ -31,9 +31,8 @@ test.describe('HALO tests', () => {
   });
 
   test.afterEach(async () => {
-    // NOTE: `afterEach` even if the test is skipped in the beforeEach!
-    // Guard against uninitialized app managers.
-    if (host !== undefined || guest !== undefined) {
+    // Playwright runs `afterEach` even when `beforeEach` skipped, so neither manager may exist.
+    if (host !== undefined && guest !== undefined) {
       await host.close();
       await guest.close();
     }

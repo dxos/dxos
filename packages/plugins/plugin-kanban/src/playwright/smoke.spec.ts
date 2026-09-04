@@ -31,8 +31,7 @@ test.describe('Kanban MutableSchema', () => {
   });
 
   test.afterEach(async () => {
-    // `afterEach` runs even when `beforeEach` skipped, so the context may never have been created;
-    // closing it unconditionally turned every skipped webkit test into a teardown failure.
+    // Playwright runs `afterEach` even when `beforeEach` skipped, so the context may not exist.
     await close?.();
   });
 

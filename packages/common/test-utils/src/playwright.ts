@@ -148,11 +148,8 @@ export const setupPage = async (browser: Browser | BrowserContext, options: Setu
   const ownsContext = context !== browser;
   const page = await context.newPage();
 
-  // Closing the page is not enough. Playwright never reclaims a context created off the worker-scoped
-  // `browser` fixture, and it opens a trace chunk on every LIVE context when a test starts, so each
-  // leaked context is re-serialized into every later trace in that worker until the writer exceeds
-  // V8's string limit and the run reports `RangeError: Invalid string length` over a truncated
-  // trace.zip instead of the failure it was recording.
+  // Playwright opens a trace chunk on every live context at test start, so a context left behind by a
+  // closed page is re-serialized into every later trace in that worker.
   const close = async (): Promise<void> => {
     await (ownsContext ? context.close() : page.close());
   };
