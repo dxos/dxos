@@ -50,7 +50,13 @@ import {
   type ChatPromptProps as NaturalChatPromptProps,
 } from '../ChatPrompt';
 import { ChatQueue as NaturalChatQueue, type ChatQueueProps as NaturalChatQueueProps } from '../ChatQueue';
-import { ChatContextProvider, type ChatContextValue, type ChatRequestTiming, useChatContext } from './context';
+import {
+  ChatContextProvider,
+  type ChatContextValue,
+  ChatReportContextProvider,
+  type ChatRequestTiming,
+  useChatContext,
+} from './context';
 import { type ChatEvent } from './events';
 import { SurfaceWidget } from './SurfaceWidget';
 import { projectAlarms, projectThread, resolveRewind } from './thread';
@@ -273,6 +279,10 @@ const ChatRoot = ({
     // them the handler would keep resolving rewinds against whatever was mounted first.
   }, [event, dump, processor, streaming, active, onEvent, onSubmit, getContext, feed, messages, chat, db]);
 
+  // An inline surface (connector prompt, plugin prompt) reports its completed flow as an ordinary
+  // user turn, so the agent resumes on the same seam as a typed prompt.
+  const handleReport = useCallback((text: string) => event.emit({ type: 'submit', text }), [event]);
+
   return (
     <ChatContextProvider
       debug={debug}
@@ -291,7 +301,7 @@ const ChatRoot = ({
       setVisibleRange={setVisibleRange}
       {...props}
     >
-      {children}
+      <ChatReportContextProvider submit={handleReport}>{children}</ChatReportContextProvider>
     </ChatContextProvider>
   );
 };

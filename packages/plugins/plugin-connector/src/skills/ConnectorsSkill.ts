@@ -26,6 +26,8 @@ const instructions = trim`
 
   Use the service's domain as the 'service' value (for example 'gmail.com', 'slack.com', 'github.com').
   Emit the surface once, then briefly tell the user that connecting the service will let you continue.
+  Do not poll or retry in the same turn: when the flow completes, a message reporting it — naming the
+  service and the new credential's URI — arrives as the next user turn, and that is your cue to resume.
 `;
 
 export const make = (): Skill.Skill =>
