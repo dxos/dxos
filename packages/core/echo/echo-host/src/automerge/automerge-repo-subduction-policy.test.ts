@@ -555,47 +555,53 @@ describe.skipIf(process.env.CI)('SubductionPolicy', () => {
     // gate for OUTBOUND data flow on the holder. Combined with
     // `authorizePut` on the receiver, this gives a fully client-side
     // gate for both directions.
-    test('authorizeFetch fires on BOTH proactive push and explicit fetch (empirical)', async () => {
-      // Half 1: proactive push. Hook fires when host broadcasts.
-      const { policy: pushPolicy, counters: pushCounters } = createCountingPolicy();
-      const { repos: pushRepos, adapters: pushAdapters } = await createHostClientRepoTopology({
-        subductionPolicies: { host: pushPolicy },
-      });
-      const [pushHost, pushClient] = pushRepos;
-      await connectAdapters(pushAdapters);
-      const pushHandle = pushHost.create<{ text?: string }>({ text: 'pushed' });
-      await waitForSubductionSave();
-      // Assert the host-side hook fired BEFORE the client issues any
-      // explicit `find` — proves it was the proactive broadcast (not a
-      // later fetch) that consulted `authorizeFetch`.
-      // Empirical: >= 1 (observed 2 locally). Don't pin an exact
-      // count — the bridge may batch or invoke twice per broadcast
-      // (once at connect-time-sync, once per `#save`).
-      expect(pushCounters.authorizeFetch).to.be.greaterThan(0);
-      await expect
-        .poll(async () => (await pushClient.find<{ text?: string }>(pushHandle.url)).doc()?.text, {
-          timeout: 5_000,
-        })
-        .toEqual('pushed');
+    // Two topologies with a 5s poll and a 10s wait between them, so the 15s default cannot cover it —
+    // same reason the two-phase `authorizePut` test below names its own budget.
+    test(
+      'authorizeFetch fires on BOTH proactive push and explicit fetch (empirical)',
+      { timeout: 30_000 },
+      async () => {
+        // Half 1: proactive push. Hook fires when host broadcasts.
+        const { policy: pushPolicy, counters: pushCounters } = createCountingPolicy();
+        const { repos: pushRepos, adapters: pushAdapters } = await createHostClientRepoTopology({
+          subductionPolicies: { host: pushPolicy },
+        });
+        const [pushHost, pushClient] = pushRepos;
+        await connectAdapters(pushAdapters);
+        const pushHandle = pushHost.create<{ text?: string }>({ text: 'pushed' });
+        await waitForSubductionSave();
+        // Assert the host-side hook fired BEFORE the client issues any
+        // explicit `find` — proves it was the proactive broadcast (not a
+        // later fetch) that consulted `authorizeFetch`.
+        // Empirical: >= 1 (observed 2 locally). Don't pin an exact
+        // count — the bridge may batch or invoke twice per broadcast
+        // (once at connect-time-sync, once per `#save`).
+        expect(pushCounters.authorizeFetch).to.be.greaterThan(0);
+        await expect
+          .poll(async () => (await pushClient.find<{ text?: string }>(pushHandle.url)).doc()?.text, {
+            timeout: 5_000,
+          })
+          .toEqual('pushed');
 
-      // Half 2: explicit fetch (doc-before-connect pattern). Pre-issue
-      // the client's fetch BEFORE peers learn about each other so the
-      // eventual `reconnectAdapters` drives an explicit fetch flow
-      // (rather than collapsing into the proactive-push path). Hook
-      // still fires; pin > 0.
-      const { policy: fetchPolicy, counters: fetchCounters } = createCountingPolicy();
-      const { repos: fetchRepos, adapters: fetchAdapters } = await createHostClientRepoTopology({
-        subductionPolicies: { host: fetchPolicy },
-      });
-      const [fetchHost, fetchClient] = fetchRepos;
-      await connectAdapters(fetchAdapters, { noEmitPeerCandidate: true });
-      const fetchHandle = fetchHost.create<{ text?: string }>({ text: 'fetched' });
-      await waitForSubductionSave();
-      const fetchProgress = fetchClient.findWithProgress<{ text?: string }>(fetchHandle.url);
-      await reconnectAdapters(fetchAdapters);
-      await waitForQueryState(fetchProgress, ['ready'], { timeout: 10_000 });
-      expect(fetchCounters.authorizeFetch).to.be.greaterThan(0);
-    });
+        // Half 2: explicit fetch (doc-before-connect pattern). Pre-issue
+        // the client's fetch BEFORE peers learn about each other so the
+        // eventual `reconnectAdapters` drives an explicit fetch flow
+        // (rather than collapsing into the proactive-push path). Hook
+        // still fires; pin > 0.
+        const { policy: fetchPolicy, counters: fetchCounters } = createCountingPolicy();
+        const { repos: fetchRepos, adapters: fetchAdapters } = await createHostClientRepoTopology({
+          subductionPolicies: { host: fetchPolicy },
+        });
+        const [fetchHost, fetchClient] = fetchRepos;
+        await connectAdapters(fetchAdapters, { noEmitPeerCandidate: true });
+        const fetchHandle = fetchHost.create<{ text?: string }>({ text: 'fetched' });
+        await waitForSubductionSave();
+        const fetchProgress = fetchClient.findWithProgress<{ text?: string }>(fetchHandle.url);
+        await reconnectAdapters(fetchAdapters);
+        await waitForQueryState(fetchProgress, ['ready'], { timeout: 10_000 });
+        expect(fetchCounters.authorizeFetch).to.be.greaterThan(0);
+      },
+    );
 
     // Hypothesis: `filterAuthorizedFetch` is consulted by
     // `get_authorized_subscriber_conns` ONLY for peers that explicitly
