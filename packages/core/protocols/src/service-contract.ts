@@ -36,8 +36,11 @@ export type AnyEnvelope = {
 /** A message tagged with its own type name, as an `Any` field decodes to. */
 export type TaggedType<TYPES extends {}, Name extends keyof TYPES> = TYPES[Name] & { '@type': Name };
 
+/** Moves already-encoded envelopes for one service, leaving the codec to its descriptor. */
 export interface ServiceBackend {
+  /** Invokes a unary method and resolves with the encoded response. */
   call(method: string, request: AnyEnvelope, requestOptions?: RequestOptions): Promise<AnyEnvelope>;
+  /** Invokes a server-streaming method; the stream yields one encoded response per message. */
   callStream(method: string, request: AnyEnvelope, requestOptions?: RequestOptions): Stream<AnyEnvelope>;
 }
 
@@ -50,9 +53,13 @@ export type ServiceProvider<Service> = Service | (() => Service) | (() => Promis
  * reproduce protobuf.js's substituted shapes, and go when it does.
  */
 export interface ServiceDescriptorLike<Service> {
+  /** Fully-qualified proto service name, the key a bundle routes on. */
   readonly name: string;
+  /** Builds a client whose methods encode onto `backend` and decode its responses. */
   createClient(backend: ServiceBackend, encodingOptions?: CompatOptions): Service;
   /**
+   * Builds a backend that decodes onto `handlers` and encodes what they return.
+   *
    * `NoInfer` keeps `createClient` the single source of `Service`: a descriptor built against
    * `@dxos/codec-protobuf`'s own structurally-identical `ServiceProvider` would otherwise make a
    * bundle infer the provider union here instead of the service.

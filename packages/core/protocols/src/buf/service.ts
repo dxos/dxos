@@ -51,6 +51,7 @@ export class BufServiceDescriptor<Service> {
     return this._service;
   }
 
+  /** Builds a client whose methods encode onto `backend` and decode its responses. */
   createClient(backend: ServiceBackend, encodingOptions?: CompatOptions): Service {
     const client: Record<string, unknown> = {};
     for (const method of this._service.methods) {
@@ -63,6 +64,7 @@ export class BufServiceDescriptor<Service> {
     return client as Service;
   }
 
+  /** Builds a backend that decodes onto `handlers` and encodes what they return. */
   createServer(handlers: ServiceProvider<Service>, encodingOptions?: CompatOptions): BufServiceHandler<Service> {
     return new BufServiceHandler(this._service, this.#methodCodecs(), handlers, encodingOptions);
   }
