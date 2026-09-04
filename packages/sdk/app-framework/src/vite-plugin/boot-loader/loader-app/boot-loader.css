@@ -399,6 +399,11 @@ body {
   flex: 0 0 auto;
   display: grid;
   place-items: center;
+  /* Border-box so the border eats into the 40px slot rather than widening the row. */
+  box-sizing: border-box;
+  border: 1px solid currentColor;
+  border-radius: 8px;
+  padding: 6px;
   /* Monotone — the arrival reads from opacity alone, which keeps the row quiet. */
   color: currentColor;
   opacity: 0.2;
