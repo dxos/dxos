@@ -375,9 +375,11 @@ export class ProcessManagerImpl implements Manager {
     this.#store = new ProcessStore(opts.kvStore);
     this.#processTreeAtom = Atom.make<readonly Process.Info[]>([]);
     this.#registry.mount(this.#processTreeAtom);
+    const processTree = Effect.sync(() => this.#registry.get(this.#processTreeAtom));
     this.#monitor = {
-      processTree: Effect.sync(() => this.#registry.get(this.#processTreeAtom)),
+      processTree,
       processTreeAtom: this.#processTreeAtom,
+      list: Process.listFromTree(processTree),
       subscribeToTraceMessages: (filter: Trace.Filter): Stream.Stream<Trace.Message> =>
         Stream.unwrap(
           Effect.gen({ self: this }, function* () {
