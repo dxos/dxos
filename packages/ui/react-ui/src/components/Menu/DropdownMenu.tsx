@@ -32,8 +32,7 @@ import { type ThemedClassName } from '../../util';
 import { ColumnContext } from '../Column/ColumnContext';
 import { ScrollArea } from '../ScrollArea';
 import {
-  CONTEXT_MENU_NAME,
-  DROPDOWN_MENU_NAME,
+  MENU_NAME,
   type MenuAlign,
   type MenuContentHandlers,
   type MenuPlacementOptions,
@@ -64,9 +63,12 @@ type MenuRootProps = {
 
 type MenuRootImplProps = MenuRootProps & {
   name: string;
-  /** Where content sits when it says nothing: below a trigger, beside a submenu's trigger item. */
-  defaultSide: MenuSide;
-  defaultAlign: MenuAlign;
+  /**
+   * Where content sits when it says nothing. Unset, the root decides: below a trigger, or beside the
+   * pointer once a context trigger has announced itself. A submenu pins it beside its trigger item.
+   */
+  defaultSide?: MenuSide;
+  defaultAlign?: MenuAlign;
 };
 
 /** Re-places open content when its requested placement changes; needs the machine's api. */
@@ -87,9 +89,16 @@ const MenuRootImpl: FC<MenuRootImplProps> = ({
   defaultOpen,
   onOpenChange,
   name,
-  defaultSide,
-  defaultAlign,
+  defaultSide: defaultSideProp,
+  defaultAlign: defaultAlignProp,
 }) => {
+  const [contextTriggered, setContextTriggered] = useState(false);
+  const markContextTrigger = useCallback(() => {
+    setContextTriggered(true);
+    return () => setContextTriggered(false);
+  }, []);
+  const defaultSide = defaultSideProp ?? (contextTriggered ? 'right' : 'bottom');
+  const defaultAlign = defaultAlignProp ?? (contextTriggered ? 'start' : 'center');
   const [open = false, setOpen] = useControllableState({
     prop: openProp,
     defaultProp: defaultOpen,
@@ -146,8 +155,16 @@ const MenuRootImpl: FC<MenuRootImplProps> = ({
   );
 
   const context = useMemo(
-    () => ({ open, onOpenChange: setOpen, triggerRef, setVirtualAnchor, setPlacement, handlersRef }),
-    [open, setOpen, setVirtualAnchor],
+    () => ({
+      open,
+      onOpenChange: setOpen,
+      triggerRef,
+      setVirtualAnchor,
+      setPlacement,
+      markContextTrigger,
+      handlersRef,
+    }),
+    [open, setOpen, setVirtualAnchor, markContextTrigger],
   );
 
   return (
@@ -174,17 +191,9 @@ const MenuRootImpl: FC<MenuRootImplProps> = ({
   );
 };
 
-const DropdownMenuRoot: FC<MenuRootProps> = (props) => (
-  <MenuRootImpl {...props} name={DROPDOWN_MENU_NAME} defaultSide='bottom' defaultAlign='center' />
-);
+const MenuRoot: FC<MenuRootProps> = (props) => <MenuRootImpl {...props} name={MENU_NAME} />;
 
-DropdownMenuRoot.displayName = DROPDOWN_MENU_NAME;
-
-const ContextMenuRoot: FC<MenuRootProps> = (props) => (
-  <MenuRootImpl {...props} name={CONTEXT_MENU_NAME} defaultSide='right' defaultAlign='start' />
-);
-
-ContextMenuRoot.displayName = CONTEXT_MENU_NAME;
+MenuRoot.displayName = MENU_NAME;
 
 //
 // Trigger
@@ -201,12 +210,13 @@ const DropdownMenuTrigger = forwardRef<HTMLButtonElement, MenuTriggerProps>((pro
 
 DropdownMenuTrigger.displayName = TRIGGER_NAME;
 
-const CONTEXT_TRIGGER_NAME = 'ContextMenu.Trigger';
+const CONTEXT_TRIGGER_NAME = 'Menu.ContextTrigger';
 
 type ContextMenuTriggerProps = ComponentPropsWithRef<typeof MenuPrimitive.ContextTrigger>;
 
 const ContextMenuTrigger = forwardRef<HTMLButtonElement, ContextMenuTriggerProps>((props, forwardedRef) => {
-  const { triggerRef } = useMenuContext(CONTEXT_TRIGGER_NAME);
+  const { triggerRef, markContextTrigger } = useMenuContext(CONTEXT_TRIGGER_NAME);
+  useLayoutEffect(() => markContextTrigger(), [markContextTrigger]);
   return <MenuPrimitive.ContextTrigger {...props} ref={useComposedRefs(forwardedRef, triggerRef)} />;
 });
 
@@ -597,9 +607,15 @@ MenuSubTrigger.displayName = 'DropdownMenu.SubTrigger';
 // Namespaces
 //
 
-export const DropdownMenuParts = {
-  Root: DropdownMenuRoot,
+/**
+ * The menu's parts, inert in the sense Ark's are: the caller renders every item and sets every
+ * property. `Root` serves dropdown and context menus alike — a `ContextTrigger` inside it opens on
+ * right-click at the pointer and shifts the default placement to the side.
+ */
+export const Menu = {
+  Root: MenuRoot,
   Trigger: DropdownMenuTrigger,
+  ContextTrigger: ContextMenuTrigger,
   VirtualTrigger: MenuVirtualTrigger,
   Portal: MenuPortal,
   Content: MenuContent,
@@ -619,25 +635,31 @@ export const DropdownMenuParts = {
   SubContent: MenuContent,
 };
 
-export const ContextMenuParts = {
-  Root: ContextMenuRoot,
-  Trigger: ContextMenuTrigger,
-  Portal: MenuPortal,
-  Content: MenuContent,
-  Viewport: MenuViewport,
-  Group: MenuGroup,
-  GroupLabel: MenuGroupLabel,
-  Label: MenuGroupLabel,
-  Item: MenuItem,
-  CheckboxItem: MenuCheckboxItem,
-  RadioGroup: MenuRadioGroup,
-  RadioItem: MenuRadioItem,
-  ItemIndicator: MenuItemIndicator,
-  Separator: MenuSeparator,
-  Arrow: MenuArrow,
-  Sub: MenuSub,
-  SubTrigger: MenuSubTrigger,
-  SubContent: MenuContent,
+/** Alias of {@link Menu}, kept until the part-level sites are re-pointed. */
+export const DropdownMenu = Menu;
+
+/** Alias of {@link Menu} whose `Trigger` is the context trigger, kept until the sites are re-pointed. */
+export const ContextMenu = { ...Menu, Trigger: ContextMenuTrigger };
+
+export type {
+  MenuArrowProps,
+  MenuCheckboxItemProps,
+  MenuContentProps,
+  MenuGroupLabelProps,
+  MenuGroupProps,
+  MenuItemIndicatorProps,
+  MenuItemProps,
+  MenuPortalProps,
+  MenuRadioGroupProps,
+  MenuRadioItemProps,
+  MenuRootProps,
+  MenuSeparatorProps,
+  MenuSubProps,
+  MenuSubTriggerProps,
+  MenuTriggerProps,
+  MenuViewportProps,
+  MenuVirtualTriggerProps,
+  ContextMenuTriggerProps as MenuContextTriggerProps,
 };
 
 export type {

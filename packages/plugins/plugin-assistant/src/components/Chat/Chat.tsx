@@ -32,7 +32,7 @@ import {
   isPrompt,
   useFeedModel,
 } from '@dxos/react-ui-feed';
-import { Menu, MenuRootProps, createMenuAction } from '@dxos/react-ui-menu';
+import { ActionToolbar, createMenuAction, MenuRootProps } from '@dxos/react-ui-menu';
 import { TaskList } from '@dxos/react-ui-task';
 import { Message, Task } from '@dxos/types';
 import { keyToFallback } from '@dxos/util';
@@ -352,12 +352,15 @@ const ChatToolbar = composable<HTMLDivElement, ChatToolbarProps>(
     const menuActions = useChatToolbarActions({ chat, companionTo });
 
     return (
-      <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive={alwaysActive}>
-        <Menu.Toolbar {...composableProps(props)} ref={forwardedRef}>
-          <Menu.Items />
-          {children}
-        </Menu.Toolbar>
-      </Menu.Root>
+      <ActionToolbar
+        {...menuActions}
+        attendableId={attendableId}
+        alwaysActive={alwaysActive}
+        {...composableProps(props)}
+        ref={forwardedRef}
+      >
+        {children}
+      </ActionToolbar>
     );
   },
 );

@@ -9,6 +9,7 @@ import React, { type FC, type PropsWithChildren } from 'react';
 import { Obj } from '@dxos/echo';
 import { Toolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps, slottable } from '@dxos/react-ui';
+import { type MenuActions } from '@dxos/react-ui-menu';
 import { Board, type BoardModel, useBoard, useEventHandlerAdapter } from '@dxos/react-ui-mosaic';
 import { type ProjectionModel } from '@dxos/schema';
 import { type Pipeline } from '@dxos/types';
@@ -21,6 +22,8 @@ import { PIPELINE_ROOT, PipelineRootContext, usePipeline } from './PipelineConte
 type ItemProps = {
   item: Obj.Unknown;
   projectionModel?: ProjectionModel;
+  /** The card's menu, for the item to contribute its actions to. */
+  menu?: MenuActions;
 };
 
 //

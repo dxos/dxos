@@ -11,10 +11,10 @@ import { Column, Flex, Panel, ScrollArea } from '@dxos/react-ui';
 import {
   type ActionExecutor,
   type ActionGraphProps,
-  Menu,
-  MenuBuilder,
+  ActionToolbar,
   graphActions,
   isToolbarAction,
+  MenuBuilder,
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
 
@@ -41,13 +41,10 @@ export const SpaceHomeArticle = ({ role, attendableId, space }: SpaceHomeArticle
 
   return (
     <Panel.Root role={role}>
-      <Menu.Root {...actions} attendableId={attendableId} onAction={onAction}>
-        <Panel.Toolbar asChild>
-          <Menu.Toolbar>
-            <Menu.Items />
-          </Menu.Toolbar>
-        </Panel.Toolbar>
-      </Menu.Root>
+      <Panel.Toolbar asChild>
+        <ActionToolbar {...actions} attendableId={attendableId} onAction={onAction} />
+      </Panel.Toolbar>
+
       <Panel.Content asChild>
         <Column.Root gutter={gutter} style={{ gridTemplateRows: 'minmax(0,1fr) auto' }}>
           <ScrollArea.Root orientation='vertical' centered padding>

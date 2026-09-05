@@ -31,14 +31,7 @@ import {
 } from '@dxos/react-ui';
 import { Listbox, useListDisclosure } from '@dxos/react-ui-list';
 import { MarkdownEditable, type MarkdownEditableController } from '@dxos/react-ui-markdown';
-import {
-  Menu,
-  type MenuAction,
-  type MenuItem,
-  createMenuAction,
-  executeMenuAction,
-  fallbackIcon,
-} from '@dxos/react-ui-menu';
+import { ActionMenu, createMenuAction, executeMenuAction, fallbackIcon, type MenuAction, type MenuItem } from '@dxos/react-ui-menu';
 import { type Actor, Task } from '@dxos/types';
 import { hoverableControlItem, mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
@@ -508,8 +501,8 @@ const TaskEstimateControl = ({ task }: { task: Task.Task }) => {
   }
 
   return (
-    <Menu.Root>
-      <Menu.Trigger asChild>
+    <>
+      <ActionMenu actions={Task.EstimateOptions.map(({ id, title }) => createMenuAction( `estimate-${id}`, // `none` is not an `Estimate`: an unset estimate is the absent property. () => onTaskUpdate(task, { estimate: id === 'none' ? null : id }), { label: title, classNames: estimateTextStyle(id), checked: (estimate ?? 'none') === id, }, ), )}>
         <IconBlock>
           <Button
             variant='ghost'
@@ -523,25 +516,12 @@ const TaskEstimateControl = ({ task }: { task: Task.Task }) => {
             {label}
           </Button>
         </IconBlock>
-      </Menu.Trigger>
+      </ActionMenu>
       {/* Sourced from the schema's own option table, so the picker offers exactly what the field
           accepts and carries the same hue the form's select paints it with. Clearing is offered
           first; the table has no `none` row because the field is simply absent when unset. */}
-      <Menu.Content
-        items={Task.EstimateOptions.map(({ id, title }) =>
-          createMenuAction(
-            `estimate-${id}`,
-            // `none` is not an `Estimate`: an unset estimate is the absent property.
-            () => onTaskUpdate(task, { estimate: id === 'none' ? null : id }),
-            {
-              label: title,
-              classNames: estimateTextStyle(id),
-              checked: (estimate ?? 'none') === id,
-            },
-          ),
-        )}
-      />
-    </Menu.Root>
+      
+    </>
   );
 };
 
@@ -574,8 +554,8 @@ const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
   }
 
   return (
-    <Menu.Root>
-      <Menu.Trigger asChild>
+    
+      <ActionMenu actions={Task.PriorityOptions.map(({ id, icon: optionIcon }) => createMenuAction(`priority-${id}`, () => onTaskUpdate(task, { priority: id }), { label: t(`priority-${id}.label`), icon: optionIcon, iconClassNames: priorityTextStyle(id), checked: priority === id, }), )}>
         <IconBlock>
           <IconButton
             variant='ghost'
@@ -590,20 +570,11 @@ const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
             onClick={(event) => event.stopPropagation()}
           />
         </IconBlock>
-      </Menu.Trigger>
+      </ActionMenu>
       {/* Sourced from the schema's own option table, so the picker offers exactly what the field
           accepts and carries the same hue the form's select paints it with. */}
-      <Menu.Content
-        items={Task.PriorityOptions.map(({ id, icon: optionIcon }) =>
-          createMenuAction(`priority-${id}`, () => onTaskUpdate(task, { priority: id }), {
-            label: t(`priority-${id}.label`),
-            icon: optionIcon,
-            iconClassNames: priorityTextStyle(id),
-            checked: priority === id,
-          }),
-        )}
-      />
-    </Menu.Root>
+      
+    
   );
 };
 
@@ -684,8 +655,7 @@ const TaskListItemActions = ({ task }: { task: Task.Task }) => {
   }
 
   return (
-    <Menu.Root>
-      <Menu.Trigger asChild>
+    <ActionMenu actions={actions}>
         <IconBlock>
           <IconButton
             variant='ghost'
@@ -697,9 +667,7 @@ const TaskListItemActions = ({ task }: { task: Task.Task }) => {
             onClick={(event) => event.stopPropagation()}
           />
         </IconBlock>
-      </Menu.Trigger>
-      <Menu.Content items={actions} />
-    </Menu.Root>
+      </ActionMenu>
   );
 };
 

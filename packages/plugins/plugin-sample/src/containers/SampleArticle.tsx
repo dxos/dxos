@@ -17,12 +17,12 @@ import { useObject } from '@dxos/echo-react';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { Panel } from '@dxos/react-ui';
 import {
-  type ActionExecutor,
-  type ActionGraphProps,
-  Menu,
-  MenuBuilder,
+  ActionToolbar,
   graphActions,
   isToolbarAction,
+  MenuBuilder,
+  type ActionExecutor,
+  type ActionGraphProps,
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
 
@@ -64,11 +64,7 @@ export const SampleArticle = ({ role, subject, attendableId }: SampleArticleProp
   return (
     <Panel.Root role={role}>
       <Panel.Toolbar>
-        <Menu.Root {...actions} attendableId={attendableId} onAction={onAction}>
-          <Menu.Toolbar>
-            <Menu.Items />
-          </Menu.Toolbar>
-        </Menu.Root>
+        <ActionToolbar {...actions} attendableId={attendableId} onAction={onAction} />
       </Panel.Toolbar>
       <Panel.Content>
         <SampleItemView
@@ -91,7 +87,7 @@ export default SampleArticle;
 /**
  * Builds toolbar menu actions from the app graph for the given node, via `graphActions` (actions
  * opted into the toolbar with `disposition: 'toolbar'`) spliced into a `MenuBuilder`.
- * `useMenuActions` converts the atom into props for `Menu.Root`.
+ * `useMenuActions` converts the atom into props for `ActionToolbar`.
  * `useActionRunner` executes graph actions when triggered.
  */
 const useMenuActions = (

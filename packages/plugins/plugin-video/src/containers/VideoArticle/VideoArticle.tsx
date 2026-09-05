@@ -10,7 +10,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { IconButton, Panel, Tabs, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 import { Video, VideoOperation } from '#types';
@@ -94,36 +94,32 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
   );
 
   return (
-    <Menu.Root {...menuActions} attendableId={attendableId}>
-      <Panel.Root role={role}>
-        <Panel.Toolbar asChild>
-          <Menu.Toolbar>
-            <Menu.Items />
-          </Menu.Toolbar>
-        </Panel.Toolbar>
-        <Panel.Content classNames='grid grid-rows-[auto_1fr]'>
-          <Surface.Surface
-            type={AppSurface.Section}
-            data={{
-              subject,
-              attendableId,
-              part: 'player',
-            }}
-            limit={1}
-          />
-          <TranscriptTabs
-            attendableId={attendableId}
-            subject={subject}
-            role={role}
-            tab={tab}
-            onTabChange={setTab}
-            onRegenerate={handleRegenerate}
-            isRegenerateDisabled={!hasTranscript || summarizing}
-            isSummarizing={summarizing}
-          />
-        </Panel.Content>
-      </Panel.Root>
-    </Menu.Root>
+    <Panel.Root role={role}>
+      <Panel.Toolbar asChild>
+        <ActionToolbar {...menuActions} attendableId={attendableId} />
+      </Panel.Toolbar>
+      <Panel.Content classNames='grid grid-rows-[auto_1fr]'>
+        <Surface.Surface
+          type={AppSurface.Section}
+          data={{
+            subject,
+            attendableId,
+            part: 'player',
+          }}
+          limit={1}
+        />
+        <TranscriptTabs
+          attendableId={attendableId}
+          subject={subject}
+          role={role}
+          tab={tab}
+          onTabChange={setTab}
+          onRegenerate={handleRegenerate}
+          isRegenerateDisabled={!hasTranscript || summarizing}
+          isSummarizing={summarizing}
+        />
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 

@@ -15,7 +15,7 @@ import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilitie
 import { useQuery } from '@dxos/react-client/echo';
 import { Panel, Show, ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
-import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Outline as OutlineType, Task, TaskSet } from '@dxos/types';
 
 import { Outline, type OutlineController } from '#components';
@@ -148,18 +148,14 @@ export const OutlineArticle = ({
 
   if (task) {
     return (
-      <Menu.Root {...taskActions} attendableId={attendableId}>
-        <Panel.Root role={role}>
-          <Panel.Toolbar>
-            <Menu.Toolbar classNames='dx-document'>
-              <Menu.Items />
-            </Menu.Toolbar>
-          </Panel.Toolbar>
-          <Panel.Content>
-            <TaskForm task={task} classNames='dx-document' />
-          </Panel.Content>
-        </Panel.Root>
-      </Menu.Root>
+      <Panel.Root role={role}>
+        <Panel.Toolbar>
+          <ActionToolbar {...taskActions} attendableId={attendableId} classNames='dx-document' />
+        </Panel.Toolbar>
+        <Panel.Content>
+          <TaskForm task={task} classNames='dx-document' />
+        </Panel.Content>
+      </Panel.Root>
     );
   }
 
@@ -176,20 +172,16 @@ export const OutlineArticle = ({
           resolveLinkLabel={resolveLinkLabel}
           extensions={extensions}
         >
-          <Menu.Root {...outlineActions} attendableId={attendableId}>
-            <Panel.Root role={role}>
-              <Show when={toolbar}>
-                <Panel.Toolbar>
-                  <Menu.Toolbar classNames='dx-document'>
-                    <Menu.Items />
-                  </Menu.Toolbar>
-                </Panel.Toolbar>
-              </Show>
-              <Panel.Content asChild>
-                <Outline.Content classNames='dx-document' />
-              </Panel.Content>
-            </Panel.Root>
-          </Menu.Root>
+          <Panel.Root role={role}>
+            <Show when={toolbar}>
+              <Panel.Toolbar>
+                <ActionToolbar {...outlineActions} attendableId={attendableId} classNames='dx-document' />
+              </Panel.Toolbar>
+            </Show>
+            <Panel.Content asChild>
+              <Outline.Content classNames='dx-document' />
+            </Panel.Content>
+          </Panel.Root>
         </Outline.Root>
       )}
     </Show>

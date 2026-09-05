@@ -30,11 +30,11 @@ import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/rea
 import { ProgressMeter } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
 import {
-  Menu,
-  MenuBuilder,
-  TOOLBAR_DISPOSITION,
+  ActionToolbar,
   graphActions,
   isToolbarAction,
+  MenuBuilder,
+  TOOLBAR_DISPOSITION,
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
 import { TagIndex } from '@dxos/schema';
@@ -442,13 +442,9 @@ export const MailboxArticle = ({
   return (
     <Panel.Root data-testid='inbox.mailbox'>
       <ElevationProvider elevation='positioned'>
-        <Menu.Root {...menuActions} onAction={runAction} attendableId={id}>
-          <Panel.Toolbar asChild>
-            <Menu.Toolbar>
-              <Menu.Items />
-            </Menu.Toolbar>
-          </Panel.Toolbar>
-        </Menu.Root>
+        <Panel.Toolbar asChild>
+          <ActionToolbar {...menuActions} onAction={runAction} attendableId={id} />
+        </Panel.Toolbar>
       </ElevationProvider>
       <Panel.Content>
         <Deferred pending={showEmptyState} fallback={() => <InitializeMailbox mailbox={mailbox} />}>

@@ -12,15 +12,15 @@ Decided 2026-09-05.
 - **`react-ui` is a parts kit.** `Menu` is inert in the sense Ark's is: the caller renders every
   item and sets every property. It knows nothing of actions, labels, icons, shortcuts or attention.
   Its surface matches `Select`: `Root · Trigger · ContextTrigger · VirtualTrigger · Portal · Content ·
-  Viewport · Item · ItemIndicator · CheckboxItem · RadioGroup · RadioItem · Group · GroupLabel ·
-  Separator · Arrow · Sub · SubTrigger · SubContent`. Ark's `Positioner` stays inside `Content`
+Viewport · Item · ItemIndicator · CheckboxItem · RadioGroup · RadioItem · Group · GroupLabel ·
+Separator · Arrow · Sub · SubTrigger · SubContent`. Ark's `Positioner` stays inside `Content`
   (elevation and placement live there); `Portal` stays a part because it is optional, takes a
   container and re-bridges React context across the DOM move; `Viewport` stays a part because it is
   the bounded scroll area the `Arrow` must sit outside of. `DropdownMenu` and `ContextMenu` become
   aliases of `Menu` and are removed in a later sweep of the ~100 part-level sites.
 - **`react-ui-menu` builds from the action graph.** It keeps the data side as it is — `MenuBuilder`,
   `useMenuBuilder`, `useMenuActions`, `useGraphMenuActions`, `createMenuAction`, dispositions,
-  `applyPresentation` — and renders through two builders that *compose* `react-ui` rather than
+  `applyPresentation` — and renders through two builders that _compose_ `react-ui` rather than
   extend it. Nothing it exports mirrors a `react-ui` namespace; `Menu.Toolbar`, `Menu.Items`,
   `Menu.Content` and `useMenu` go.
 - **`react-ui-list` builds from collections.** `Combobox`, `Listbox`, `Picker`, `Tree`, and later a
@@ -34,7 +34,7 @@ const menu = useMenuBuilder((get) => …, deps, { onAction, caller, iconSize });
 
 <ActionToolbar {...menu} attendableId={id} classNames={…}>{children}</ActionToolbar>
 
-<ActionMenu {...menu} group={group} | items={items}>
+<ActionMenu {...menu} group={group} | actions={items}>
   <Toolbar.IconButton icon='ph--dots-three--regular' label='More' />   {/* the trigger */}
 </ActionMenu>
 ```
@@ -67,7 +67,7 @@ const menu = useMenuBuilder((get) => …, deps, { onAction, caller, iconSize });
 ### What this replaces
 
 The 2026-09-05 "menu split" (`DropdownMenu.Entries`, `Toolbar.Entries`, `MenuEntriesProvider`, the
-`MenuEntry` model in `ui-types`) put a data-driven renderer *in* `react-ui`; it is reverted by this
+`MenuEntry` model in `ui-types`) put a data-driven renderer _in_ `react-ui`; it is reverted by this
 design. The `keyBinding` field on the shared chrome stays.
 
 ### Follow-ups (tracked in `TASKS.md`)

@@ -6,22 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { EffectEx } from '@dxos/effect';
-import {
-  type MenuActionProperties,
-  type MenuEntry,
-  type MenuGroupEntry,
-  type MenuItemGroupProperties,
-} from '@dxos/ui-types';
+import { type MenuActionProperties, type MenuItemGroupProperties } from '@dxos/ui-types';
+import { getHostPlatform } from '@dxos/util';
 
-import {
-  type MenuAction,
-  type MenuGroupContext,
-  type MenuItem,
-  type MenuItemGroup,
-  type MenuSeparator,
-  isMenuGroup,
-  isSeparator,
-} from './types';
+import { type MenuAction, type MenuItemGroup, type MenuSeparator } from './types';
 
 /**
  * Execute a menu action's Effect with its captured context.
@@ -38,35 +26,11 @@ export const executeMenuAction = async (action: MenuAction, params: AppGraphNode
   await EffectEx.runAndForwardErrors(effect);
 };
 
-//
-// Entries: the graph nodes projected onto the plain model `@dxos/react-ui` renders. The node behind
-// an entry is kept beside it (not on it), so the model stays free of graph types while an
-// invocation can still reach the node's Effect.
-//
-
-const entryNodes = new WeakMap<MenuEntry, MenuItem | MenuGroupContext>();
-
-/** The plain entry for a menu node. */
-export const toMenuEntry = (item: MenuItem): MenuEntry => {
-  const entry: MenuEntry = isSeparator(item)
-    ? { id: item.id, kind: 'separator', properties: { variant: item.properties.variant } }
-    : isMenuGroup(item)
-      ? // A graph group's properties are an open record, validated by the plugin that contributed them.
-        { id: item.id, kind: 'group', properties: item.properties as MenuItemGroupProperties }
-      : { id: item.id, kind: 'action', properties: item.properties as MenuActionProperties };
-  entryNodes.set(entry, item);
-  return entry;
+export const getShortcut = (action: AppGraphNode.ActionLike) => {
+  return typeof action.properties?.keyBinding === 'string'
+    ? action.properties.keyBinding
+    : action.properties?.keyBinding?.[getHostPlatform()];
 };
-
-/** A group entry for any node whose connections are a menu's items, not only an action group. */
-export const toMenuGroupEntry = (node: MenuGroupContext): MenuGroupEntry => {
-  const entry: MenuGroupEntry = { id: node.id, kind: 'group', properties: node.properties as MenuItemGroupProperties };
-  entryNodes.set(entry, node);
-  return entry;
-};
-
-/** The node an entry was projected from; undefined for an entry this package did not produce. */
-export const menuEntryNode = (entry: MenuEntry): MenuItem | MenuGroupContext | undefined => entryNodes.get(entry);
 
 export const fallbackIcon = 'ph--circle-dashed--regular';
 

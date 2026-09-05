@@ -8,15 +8,15 @@ import React, { useContext, useEffect, useMemo } from 'react';
 
 import { composable, composableProps } from '@dxos/react-ui';
 import {
-  type ActionGraphEdges,
-  type ActionGraphNodes,
-  type ActionGraphProps,
-  Menu,
-  type MenuAction,
-  MenuRootProps,
+  ActionToolbar,
   createGapSeparator,
   createMenuAction,
   createMenuItemGroup,
+  MenuRootProps,
+  type ActionGraphEdges,
+  type ActionGraphNodes,
+  type ActionGraphProps,
+  type MenuAction,
   useMenuActions,
 } from '@dxos/react-ui-menu';
 
@@ -135,11 +135,7 @@ export const TableToolbar = composable<HTMLDivElement, TableToolbarProps>(
     const menuActions = useMenuActions(actionsCreator);
 
     return (
-      <Menu.Root {...menuActions} attendableId={attendableId}>
-        <Menu.Toolbar {...composableProps(props)} ref={forwardedRef}>
-          <Menu.Items />
-        </Menu.Toolbar>
-      </Menu.Root>
+      <ActionToolbar {...menuActions} attendableId={attendableId} {...composableProps(props)} ref={forwardedRef} />
     );
   },
 );

@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Icon, IconBlock, IconButton, Input, Tag, useTranslation } from '@dxos/react-ui';
-import { Menu, createMenuAction } from '@dxos/react-ui-menu';
+import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { Task } from '@dxos/types';
 
 import { translationKey } from '#translations';
@@ -59,8 +59,8 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
   }
 
   return (
-    <Menu.Root>
-      <Menu.Trigger asChild>
+    
+      <ActionMenu actions={Task.StatusOptions.map(({ id }) => createMenuAction(`status-${id}`, () => onTaskUpdate(task, { status: id }), { label: t(`status-${id}.label`), icon: STATUS_ICONS[id].icon, iconClassNames: statusTextStyle(id), checked: status === id, }), )}>
         {/* The block, not the button, is the trigger: the same `IconBlock > IconButton` shape as
             the priority cell, so every control in the row is one rail-item square. */}
         <IconBlock square classNames={classNames}>
@@ -78,20 +78,11 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
             onClick={(event) => event.stopPropagation()}
           />
         </IconBlock>
-      </Menu.Trigger>
+      </ActionMenu>
       {/* Sourced from the schema's own option table, so the picker offers exactly what the field
           accepts and carries the same hue the form's select paints it with. */}
-      <Menu.Content
-        items={Task.StatusOptions.map(({ id }) =>
-          createMenuAction(`status-${id}`, () => onTaskUpdate(task, { status: id }), {
-            label: t(`status-${id}.label`),
-            icon: STATUS_ICONS[id].icon,
-            iconClassNames: statusTextStyle(id),
-            checked: status === id,
-          }),
-        )}
-      />
-    </Menu.Root>
+      
+    
   );
 };
 

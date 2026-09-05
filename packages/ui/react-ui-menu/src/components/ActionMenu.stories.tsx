@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { Button, IconButton } from '@dxos/react-ui';
@@ -13,26 +13,23 @@ import { withRegistry } from '@dxos/storybook-utils';
 
 import { translations } from '#translations';
 
-import { Menu, useMenu } from '../components';
-import { type ActionGraphProps, useMenuActions } from '../hooks';
+import { type ActionGraphProps, useMenuActions, useMenuContribution } from '../hooks';
 import { createActions } from '../testing';
-import { type MenuItem } from '../types';
+import { type MenuActions, type MenuItem } from '../types';
 import { createMenuAction } from '../util';
-
-const STORY_NAME = 'StoryMenuItems';
+import { ActionMenu } from './ActionMenu';
 
 const meta = {
-  title: 'ui/react-ui-menu/MenuItems',
-  component: Menu.Root,
+  title: 'ui/react-ui-menu/ActionMenu',
   decorators: [withTheme(), withRegistry],
   parameters: {
     translations,
   },
-} satisfies Meta<typeof Menu.Root>;
+} satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 const createBaseActionsAtom = (count = 3) => {
   const actions = createActions({ count });
@@ -50,43 +47,41 @@ const openDropdown = async (canvasElement: HTMLElement) => {
   return body;
 };
 
-const StaticItemsProvider = () => {
-  const menu = useMenu(STORY_NAME);
-  const items: MenuItem[] = useMemo(
-    () => [
-      createMenuAction('static-1', () => {}, {
-        label: 'Static Action 1',
-        icon: 'ph--star--regular',
-      }),
-      createMenuAction('static-2', () => {}, {
-        label: 'Static Action 2',
-        icon: 'ph--heart--regular',
-      }),
-    ],
-    [],
-  );
-
-  useEffect(() => {
-    menu.addMenuItems({ id: 'static-items', mode: 'additive', items });
-    return () => menu.removeMenuItems('static-items');
-  }, [menu, items]);
-
+/** A contributor: registers items with a menu it does not own, for as long as it is mounted. */
+const Contributor = ({
+  menu,
+  id,
+  items,
+  mode = 'additive',
+  priority,
+}: {
+  menu: MenuActions;
+  id: string;
+  items: MenuItem[];
+  mode?: 'additive' | 'replacement';
+  priority?: number;
+}) => {
+  useMenuContribution(menu, { id, mode, priority, items });
   return null;
 };
+
+const staticItems: MenuItem[] = [
+  createMenuAction('static-1', () => {}, { label: 'Static Action 1', icon: 'ph--star--regular' }),
+  createMenuAction('static-2', () => {}, { label: 'Static Action 2', icon: 'ph--heart--regular' }),
+];
 
 export const StaticItems: Story = {
   render: () => {
     const actionsAtom = useMemo(() => createBaseActionsAtom(2), []);
-    const menuActions = useMenuActions(actionsAtom);
+    const menu = useMenuActions(actionsAtom);
 
     return (
-      <Menu.Root {...menuActions}>
-        <StaticItemsProvider />
-        <Menu.Trigger asChild>
+      <>
+        <Contributor menu={menu} id='static-items' items={staticItems} />
+        <ActionMenu {...menu}>
           <IconButton icon='ph--list-checks--regular' label='Options' />
-        </Menu.Trigger>
-        <Menu.Content />
-      </Menu.Root>
+        </ActionMenu>
+      </>
     );
   },
   play: async ({ canvasElement }) => {
@@ -96,17 +91,6 @@ export const StaticItems: Story = {
     await expect(labels).toContain('Static Action 1');
     await expect(labels).toContain('Static Action 2');
   },
-};
-
-const ReactiveItemsProvider = ({ items }: { items: MenuItem[] }) => {
-  const menu = useMenu(STORY_NAME);
-
-  useEffect(() => {
-    menu.addMenuItems({ id: 'reactive-items', mode: 'additive', priority: 50, items });
-    return () => menu.removeMenuItems('reactive-items');
-  }, [menu, items]);
-
-  return null;
 };
 
 export const ReactiveItems: Story = {
@@ -123,17 +107,16 @@ export const ReactiveItems: Story = {
       [count],
     );
 
-    const menuActions = useMenuActions(actionsAtom);
+    const menu = useMenuActions(actionsAtom);
 
     return (
       <div className='flex flex-col gap-4'>
-        <Menu.Root {...menuActions}>
-          <ReactiveItemsProvider items={reactiveItems} />
-          <Menu.Trigger asChild>
+        <Contributor menu={menu} id='reactive-items' priority={50} items={reactiveItems} />
+        <div>
+          <ActionMenu {...menu}>
             <IconButton icon='ph--list-checks--regular' label='Options' />
-          </Menu.Trigger>
-          <Menu.Content />
-        </Menu.Root>
+          </ActionMenu>
+        </div>
         <Button data-testid='update-button' onClick={() => setCount((prev) => prev + 1)}>
           Update Reactive Item ({count})
         </Button>
@@ -157,39 +140,22 @@ export const ReactiveItems: Story = {
   },
 };
 
-const ReplacementItemsProvider = () => {
-  const menu = useMenu(STORY_NAME);
-  const items: MenuItem[] = useMemo(
-    () => [
-      createMenuAction('replacement-1', () => {}, {
-        label: 'Replacement Only',
-        icon: 'ph--swap--regular',
-      }),
-    ],
-    [],
-  );
-
-  useEffect(() => {
-    menu.addMenuItems({ id: 'replacement-items', mode: 'replacement', items });
-    return () => menu.removeMenuItems('replacement-items');
-  }, [menu, items]);
-
-  return null;
-};
+const replacementItems: MenuItem[] = [
+  createMenuAction('replacement-1', () => {}, { label: 'Replacement Only', icon: 'ph--swap--regular' }),
+];
 
 export const ReplacementMode: Story = {
   render: () => {
     const actionsAtom = useMemo(() => createBaseActionsAtom(5), []);
-    const menuActions = useMenuActions(actionsAtom);
+    const menu = useMenuActions(actionsAtom);
 
     return (
-      <Menu.Root {...menuActions}>
-        <ReplacementItemsProvider />
-        <Menu.Trigger asChild>
+      <>
+        <Contributor menu={menu} id='replacement-items' mode='replacement' items={replacementItems} />
+        <ActionMenu {...menu}>
           <IconButton icon='ph--list-checks--regular' label='Options (replaced)' />
-        </Menu.Trigger>
-        <Menu.Content />
-      </Menu.Root>
+        </ActionMenu>
+      </>
     );
   },
   play: async ({ canvasElement }) => {
@@ -200,60 +166,27 @@ export const ReplacementMode: Story = {
   },
 };
 
-const LowPriorityItemsProvider = () => {
-  const menu = useMenu(STORY_NAME);
-  const items: MenuItem[] = useMemo(
-    () => [
-      createMenuAction('low-priority', () => {}, {
-        label: 'Low Priority (150)',
-        icon: 'ph--arrow-down--regular',
-      }),
-    ],
-    [],
-  );
+const lowPriorityItems: MenuItem[] = [
+  createMenuAction('low-priority', () => {}, { label: 'Low Priority (150)', icon: 'ph--arrow-down--regular' }),
+];
 
-  useEffect(() => {
-    menu.addMenuItems({ id: 'low-priority-items', mode: 'additive', items, priority: 150 });
-    return () => menu.removeMenuItems('low-priority-items');
-  }, [menu, items]);
-
-  return null;
-};
-
-const HighPriorityItemsProvider = () => {
-  const menu = useMenu(STORY_NAME);
-  const items: MenuItem[] = useMemo(
-    () => [
-      createMenuAction('high-priority', () => {}, {
-        label: 'High Priority (50)',
-        icon: 'ph--arrow-up--regular',
-      }),
-    ],
-    [],
-  );
-
-  useEffect(() => {
-    menu.addMenuItems({ id: 'high-priority-items', mode: 'additive', items, priority: 50 });
-    return () => menu.removeMenuItems('high-priority-items');
-  }, [menu, items]);
-
-  return null;
-};
+const highPriorityItems: MenuItem[] = [
+  createMenuAction('high-priority', () => {}, { label: 'High Priority (50)', icon: 'ph--arrow-up--regular' }),
+];
 
 export const PriorityOrdering: Story = {
   render: () => {
-    const actionsAtom = useMemo(() => createBaseActionsAtom(0), []);
-    const menuActions = useMenuActions(actionsAtom);
+    // A menu with no items of its own, filled entirely by contributions (the card-menu shape).
+    const menu = useMenuActions();
 
     return (
-      <Menu.Root {...menuActions}>
-        <LowPriorityItemsProvider />
-        <HighPriorityItemsProvider />
-        <Menu.Trigger asChild>
+      <>
+        <Contributor menu={menu} id='low-priority-items' priority={150} items={lowPriorityItems} />
+        <Contributor menu={menu} id='high-priority-items' priority={50} items={highPriorityItems} />
+        <ActionMenu {...menu}>
           <IconButton icon='ph--list-checks--regular' label='Options (priority ordered)' />
-        </Menu.Trigger>
-        <Menu.Content />
-      </Menu.Root>
+        </ActionMenu>
+      </>
     );
   },
   play: async ({ canvasElement }) => {

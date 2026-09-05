@@ -19,7 +19,7 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
-import { Menu } from '@dxos/react-ui-menu';
+import { ActionMenu } from '@dxos/react-ui-menu';
 import { getStyles } from '@dxos/ui-theme';
 
 import { useDeckState } from '#hooks';
@@ -169,42 +169,40 @@ export const PopoverContent = () => {
              * height "no preview" row when no subject resolves a card Surface (e.g. system-type
              * objects like a raw Feed that have no registered card and no renderable fields).
              */
-            <Menu.Root>
-              <Card.Root border={false} classNames={['dx-card-popover', roundedClassNames]}>
-                <Card.Header>
-                  <Card.Block>
-                    <CardIconSlot subject={popoverSubject}>
-                      {icon && <Icon icon={icon} classNames={iconStyles?.text} />}
-                    </CardIconSlot>
-                  </Card.Block>
-                  <Card.Title>{title}</Card.Title>
-                  {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-                  <Card.Block end>
-                    <Menu.Trigger asChild disabled={!objectMenuItems.length}>
-                      <IconButton
-                        variant='ghost'
-                        density='sm'
-                        icon='ph--dots-three-vertical--regular'
-                        iconOnly
-                        label='Actions'
-                      />
-                    </Menu.Trigger>
-                    <Menu.Content items={objectMenuItems} />
-                  </Card.Block>
-                </Card.Header>
 
-                {content && 'subject' in content ? (
-                  /** CardContent must render the Card.Body. */
-                  <Surface.Surface type={AppSurface.CardContent} data={content} limit={1} />
-                ) : (
-                  <Card.Body classNames='min-h-8'>
-                    <Card.Row>
-                      <Card.Text variant='description'>{t('popover-no-preview.message')}</Card.Text>
-                    </Card.Row>
-                  </Card.Body>
-                )}
-              </Card.Root>
-            </Menu.Root>
+            <Card.Root border={false} classNames={['dx-card-popover', roundedClassNames]}>
+              <Card.Header>
+                <Card.Block>
+                  <CardIconSlot subject={popoverSubject}>
+                    {icon && <Icon icon={icon} classNames={iconStyles?.text} />}
+                  </CardIconSlot>
+                </Card.Block>
+                <Card.Title>{title}</Card.Title>
+                {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
+                <Card.Block end>
+                  <ActionMenu disabled={!objectMenuItems.length} actions={objectMenuItems}>
+                    <IconButton
+                      variant='ghost'
+                      density='sm'
+                      icon='ph--dots-three-vertical--regular'
+                      iconOnly
+                      label='Actions'
+                    />
+                  </ActionMenu>
+                </Card.Block>
+              </Card.Header>
+
+              {content && 'subject' in content ? (
+                /** CardContent must render the Card.Body. */
+                <Surface.Surface type={AppSurface.CardContent} data={content} limit={1} />
+              ) : (
+                <Card.Body classNames='min-h-8'>
+                  <Card.Row>
+                    <Card.Text variant='description'>{t('popover-no-preview.message')}</Card.Text>
+                  </Card.Row>
+                </Card.Body>
+              )}
+            </Card.Root>
           )}
         </Popover.Viewport>
         <Popover.Arrow />

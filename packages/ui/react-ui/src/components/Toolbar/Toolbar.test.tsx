@@ -8,7 +8,7 @@ import { afterEach, describe, test } from 'vitest';
 
 import { ThemeProvider } from '../../providers';
 import { defaultTx } from '../../theme';
-import { Toolbar } from './index';
+import { Toolbar } from './Toolbar';
 
 /**
  * `Toolbar.Root` resolves its role as `role ?? 'toolbar'`, so a `role` key spread as `undefined`

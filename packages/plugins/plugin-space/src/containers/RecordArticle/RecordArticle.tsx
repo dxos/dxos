@@ -11,12 +11,12 @@ import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { Card, Flex, Icon, Input, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import {
-  type ActionExecutor,
-  type ActionGraphProps,
-  Menu,
-  MenuBuilder,
+  ActionToolbar,
   graphActions,
   isToolbarAction,
+  MenuBuilder,
+  type ActionExecutor,
+  type ActionGraphProps,
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
@@ -54,11 +54,7 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
   return (
     <Panel.Root role={role}>
       <Panel.Toolbar>
-        <Menu.Root {...actions} attendableId={attendableId} onAction={onAction}>
-          <Menu.Toolbar>
-            <Menu.Items />
-          </Menu.Toolbar>
-        </Menu.Root>
+        <ActionToolbar {...actions} attendableId={attendableId} onAction={onAction} />
       </Panel.Toolbar>
       <Panel.Content asChild>
         <ScrollArea.Root orientation='vertical'>

@@ -9,7 +9,7 @@ import React, { useCallback, useContext, useMemo } from 'react';
 
 import { ElevationProvider } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { type ActionGraphProps, Menu, MenuBuilder, MenuRootProps, useMenuActions } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, MenuRootProps, type ActionGraphProps, useMenuActions } from '@dxos/react-ui-menu';
 import { HuePicker } from '@dxos/react-ui-pickers';
 
 import { type EditorState, getSelectedObjectIds } from '../../tools';
@@ -44,13 +44,16 @@ export const SpacetimeToolbar = composable<HTMLDivElement, SpacetimeToolbarProps
 
     return (
       <ElevationProvider elevation='base'>
-        <Menu.Root attendableId={attendableId} alwaysActive={alwaysActive} {...menuActions}>
-          <Menu.Toolbar {...composableProps(props)} ref={forwardedRef}>
-            <Menu.Items />
-            {/* TODO(burdon): Extend builder to support custom components. */}
-            <HuePicker value={editorState.hue} onChange={(hue) => updateEditorState({ hue })} />
-          </Menu.Toolbar>
-        </Menu.Root>
+        <ActionToolbar
+          attendableId={attendableId}
+          alwaysActive={alwaysActive}
+          {...menuActions}
+          {...composableProps(props)}
+          ref={forwardedRef}
+        >
+          {/* TODO(burdon): Extend builder to support custom components. */}
+          <HuePicker value={editorState.hue} onChange={(hue) => updateEditorState({ hue })} />
+        </ActionToolbar>
       </ElevationProvider>
     );
   },

@@ -1,5 +1,5 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
@@ -8,31 +8,31 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useContext, useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { IconButton, Input } from '@dxos/react-ui';
+import { IconButton, Input, Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
 import { translations } from '#translations';
 
 import { MenuBuilder } from '../builder';
-import { Menu } from '../components';
 import { type ActionGraphProps, useMenuActions, useMenuBuilder } from '../hooks';
 import { createActions, createNestedActions, createNestedActionsResolver, useMutateActions } from '../testing';
+import { ActionMenu } from './ActionMenu';
+import { ActionToolbar } from './ActionToolbar';
 
 random.seed(1234);
 
 const meta = {
-  title: 'ui/react-ui-menu/ToolbarMenu',
-  component: Menu.Toolbar,
+  title: 'ui/react-ui-menu/ActionToolbar',
   decorators: [withTheme(), withRegistry],
   parameters: {
     translations,
   },
-} satisfies Meta<typeof Menu.Toolbar>;
+} satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj;
 
 export const DropdownMenu: Story = {
   render: () => {
@@ -45,31 +45,22 @@ export const DropdownMenu: Story = {
     }, []);
 
     useMutateActions(actions);
-    const menuActions = useMenuActions(actions);
+    const menu = useMenuActions(actions);
 
     return (
-      <Menu.Root {...menuActions}>
-        <Menu.Trigger asChild>
-          <IconButton icon='ph--list-checks--regular' label='Options' />
-        </Menu.Trigger>
-        <Menu.Content />
-      </Menu.Root>
+      <ActionMenu {...menu}>
+        <IconButton icon='ph--list-checks--regular' label='Options' />
+      </ActionMenu>
     );
   },
 };
 
-export const Toolbar: Story = {
+export const Default: Story = {
   render: () => {
     const registry = useContext(RegistryContext);
-    const nestedMenuActions = useMemo(() => createNestedActionsResolver({ registry }), [registry]);
+    const menu = useMemo(() => createNestedActionsResolver({ registry }), [registry]);
 
-    return (
-      <Menu.Root {...nestedMenuActions}>
-        <Menu.Toolbar>
-          <Menu.Items />
-        </Menu.Toolbar>
-      </Menu.Root>
-    );
+    return <ActionToolbar {...menu} alwaysActive />;
   },
 };
 
@@ -83,20 +74,14 @@ export const Toolbar: Story = {
  * @idiom org.dxos.react-ui-menu.toolbarMenu
  *   applies: Toolbars whose entries depend on reactive state
  *   instead-of: Hand-wired children inside a bespoke `Toolbar.Root`
- *   uses: {@link useMenuActions}, {@link Menu.Root}, {@link Menu.Toolbar}
+ *   uses: {@link useMenuActions}, {@link ActionToolbar}
  */
 export const UseMenuActionsToolbar: Story = {
   render: () => {
     useMutateActions(createNestedActions);
-    const menuActions = useMenuActions(createNestedActions);
+    const menu = useMenuActions(createNestedActions);
 
-    return (
-      <Menu.Root {...menuActions}>
-        <Menu.Toolbar>
-          <Menu.Items />
-        </Menu.Toolbar>
-      </Menu.Root>
-    );
+    return <ActionToolbar {...menu} alwaysActive />;
   },
 };
 
@@ -108,7 +93,7 @@ export const SwitchToolbar: Story = {
     const [wordWrap, setWordWrap] = useState(false);
     const [lineNumbers, setLineNumbers] = useState(true);
 
-    const menuActions = useMenuBuilder(
+    const menu = useMenuBuilder(
       () =>
         MenuBuilder.make()
           .root({ label: 'Editor settings' })
@@ -120,34 +105,45 @@ export const SwitchToolbar: Story = {
       [wordWrap, lineNumbers],
     );
 
+    return <ActionToolbar {...menu} alwaysActive />;
+  },
+};
+
+/**
+ * `ActionToolbar` renders its own children after the graph items — here a growing filter input
+ * trails the actions.
+ */
+export const TrailingChildren: Story = {
+  render: () => {
+    const registry = useContext(RegistryContext);
+    const menu = useMemo(() => createNestedActionsResolver({ registry }), [registry]);
+
     return (
-      <Menu.Root {...menuActions} alwaysActive>
-        <Menu.Toolbar>
-          <Menu.Items />
-        </Menu.Toolbar>
-      </Menu.Root>
+      <ActionToolbar {...menu} alwaysActive>
+        <Input.Root>
+          <Input.TextInput variant='subdued' placeholder='Filter…' classNames='grow min-w-40' />
+        </Input.Root>
+      </ActionToolbar>
     );
   },
 };
 
 /**
- * `Menu.Toolbar` renders only its children, so JSX order controls where the graph items sit —
- * here a growing filter input leads and the actions trail (the SubscriptionsArticle shape).
+ * The other way round: a hand-written `Toolbar.Root` with an `ActionMenu` among its own controls.
  */
-export const CustomPlacement: Story = {
+export const EmbeddedMenu: Story = {
   render: () => {
     const registry = useContext(RegistryContext);
-    const nestedMenuActions = useMemo(() => createNestedActionsResolver({ registry }), [registry]);
+    const menu = useMemo(() => createNestedActionsResolver({ registry }), [registry]);
 
     return (
-      <Menu.Root {...nestedMenuActions}>
-        <Menu.Toolbar>
-          <Input.Root>
-            <Input.TextInput variant='subdued' placeholder='Filter…' classNames='grow min-w-40' />
-          </Input.Root>
-          <Menu.Items />
-        </Menu.Toolbar>
-      </Menu.Root>
+      <Toolbar.Root>
+        <Toolbar.Button>Foo</Toolbar.Button>
+        <Toolbar.Separator />
+        <ActionMenu {...menu}>
+          <Toolbar.IconButton icon='ph--dots-three-vertical--regular' label='More' />
+        </ActionMenu>
+      </Toolbar.Root>
     );
   },
 };

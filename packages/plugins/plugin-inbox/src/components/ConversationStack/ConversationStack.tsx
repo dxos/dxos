@@ -25,7 +25,7 @@ import {
 } from '@dxos/react-ui';
 import { Avatar, ContactAvatar, Row } from '@dxos/react-ui-card';
 import { Html, emailDialect } from '@dxos/react-ui-components';
-import { Menu, type MenuActions, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, type MenuActions, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { TagIndex } from '@dxos/schema';
 import { type Actor, ContentBlock, DraftMessage, type Message as MessageType } from '@dxos/types';
@@ -838,11 +838,7 @@ type MessageMenuProps = {
 
 /** Per-message toolbar menu (reply/forward/delete/extract), built by the tile and rendered top-right. */
 const MessageMenu = ({ attendableId, actions }: MessageMenuProps) => (
-  <Menu.Root {...(actions ?? {})} attendableId={attendableId} alwaysActive>
-    <Menu.Toolbar classNames='p-1 bg-transparent'>
-      <Menu.Items />
-    </Menu.Toolbar>
-  </Menu.Root>
+  <ActionToolbar {...(actions ?? {})} attendableId={attendableId} alwaysActive classNames='p-1 bg-transparent' />
 );
 
 MessageMenu.displayName = MESSAGE_MENU_NAME;
@@ -1052,11 +1048,13 @@ const ConversationStackToolbar = composable<HTMLDivElement, ConversationStackToo
   const menuActions = useThreadViewActions({ options, onCollapseAll, onExpandAll });
 
   return (
-    <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive>
-      <Menu.Toolbar {...composableProps(props)} ref={forwardedRef}>
-        <Menu.Items />
-      </Menu.Toolbar>
-    </Menu.Root>
+    <ActionToolbar
+      {...menuActions}
+      attendableId={attendableId}
+      alwaysActive
+      {...composableProps(props)}
+      ref={forwardedRef}
+    />
   );
 });
 

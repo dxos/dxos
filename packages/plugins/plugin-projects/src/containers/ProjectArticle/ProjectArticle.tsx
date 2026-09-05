@@ -19,11 +19,11 @@ import { SchemaAST } from '@dxos/effect';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import { InstructionsEditor } from '@dxos/plugin-routine/components';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Flex, Icon, Panel, Tabs, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Flex, Icon, Panel, Tabs, useTranslation } from '@dxos/react-ui';
 import { useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
-import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { buildTaskForest, flattenVisibleTasks } from '@dxos/react-ui-task';
 import { type Milestone, Task, type TaskSet } from '@dxos/types';
 
@@ -146,84 +146,79 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   }
 
   return (
-    <Menu.Root {...actions} attendableId={attendableId}>
-      <Tabs.Root asChild orientation='horizontal' value={tab} onValueChange={(value) => setTab(value as Tab)}>
-        <Panel.Root role={role}>
-          <Panel.Toolbar>
-            <Menu.Toolbar>
-              <Tabs.Tablist classNames='w-auto p-0'>
-                <Tabs.Button value='overview' data-testid='projectsPlugin.tab.overview'>
-                  {t('overview.label')}
-                </Tabs.Button>
-                <Tabs.Button value='tasks' data-testid='projectsPlugin.tab.tasks'>
-                  {t('tasks.label')}
-                </Tabs.Button>
-              </Tabs.Tablist>
-              <Toolbar.Separator />
-              <Menu.Items />
-            </Menu.Toolbar>
-          </Panel.Toolbar>
-          <Panel.Content classNames='flex flex-col'>
-            {/* Rendered by hand rather than through `Tabs.Panel`: Radix mounts its content
+    <Tabs.Root asChild orientation='horizontal' value={tab} onValueChange={(value) => setTab(value as Tab)}>
+      <Panel.Root role={role}>
+        <Panel.Toolbar classNames='flex items-center'>
+          <Tabs.Tablist classNames='w-auto p-0'>
+            <Tabs.Button value='overview' data-testid='projectsPlugin.tab.overview'>
+              {t('overview.label')}
+            </Tabs.Button>
+            <Tabs.Button value='tasks' data-testid='projectsPlugin.tab.tasks'>
+              {t('tasks.label')}
+            </Tabs.Button>
+          </Tabs.Tablist>
+          <ActionToolbar {...actions} attendableId={attendableId} classNames='grow' />
+        </Panel.Toolbar>
+        <Panel.Content classNames='flex flex-col'>
+          {/* Rendered by hand rather than through `Tabs.Panel`: Radix mounts its content
                 hidden for a frame, and the artifact gallery's masonry measures zero there and
                 never recovers. The tablist still owns the switching. */}
-            {tab === 'overview' && (
-              <Form.Root schema={HeaderValues} defaultValues={defaultValues} onValuesChanged={handleValuesChanged}>
-                <Form.Viewport scroll>
-                  <Form.Content>
-                    <Form.FieldSet />
+          {tab === 'overview' && (
+            <Form.Root schema={HeaderValues} defaultValues={defaultValues} onValuesChanged={handleValuesChanged}>
+              <Form.Viewport scroll>
+                <Form.Content>
+                  <Form.FieldSet />
 
-                    {instructions && <InstructionsEditor db={db} instructions={instructions} />}
+                  {instructions && <InstructionsEditor db={db} instructions={instructions} />}
 
-                    {/* Standing context (inputs bound into every project session) — deliberately a
+                  {/* Standing context (inputs bound into every project session) — deliberately a
                     separate labeled section from Artifacts (outputs the project owns). */}
-                    {instructions && (
-                      <Form.Section title={t('context.label')}>
-                        <InstructionsEditor db={db} instructions={instructions} fields={CONTEXT_FIELDS} />
-                      </Form.Section>
-                    )}
+                  {instructions && (
+                    <Form.Section title={t('context.label')}>
+                      <InstructionsEditor db={db} instructions={instructions} fields={CONTEXT_FIELDS} />
+                    </Form.Section>
+                  )}
 
-                    {/* Above Tasks: the outline is where work is drafted, the task set where it lands.
+                  {/* Above Tasks: the outline is where work is drafted, the task set where it lands.
                     `taskSet` rides along so promoting an item files it into THIS project's ledger
                     rather than into a set owned by the outline. */}
-                    {outline && (
-                      <Form.Section title={t('outline.label')}>
-                        <Surface.Surface
-                          type={AppSurface.Section}
-                          data={{ subject: outline, attendableId, taskSet }}
-                          limit={1}
-                        />
-                      </Form.Section>
-                    )}
-
-                    {milestoneRefs.length > 0 && (
-                      <Form.Section title={t('milestones.label')}>
-                        <MilestoneList refs={milestoneRefs} />
-                      </Form.Section>
-                    )}
-
-                    <Form.Section title={t('artifacts.label')}>
-                      <ObjectGallery refs={project.artifacts} onOpen={handleOpen} onDelete={handleDeleteArtifact} />
+                  {outline && (
+                    <Form.Section title={t('outline.label')}>
+                      <Surface.Surface
+                        type={AppSurface.Section}
+                        data={{ subject: outline, attendableId, taskSet }}
+                        limit={1}
+                      />
                     </Form.Section>
-                  </Form.Content>
-                </Form.Viewport>
-              </Form.Root>
-            )}
+                  )}
 
-            {/* The ledger gets the whole panel here, so the list scrolls on its own rather than inside the form's viewport. */}
-            {tab === 'tasks' &&
-              (taskSet ? (
-                // TODO(burdon): Inline component for more control?
-                <Surface.Surface type={AppSurface.Section} data={{ subject: taskSet, attendableId }} limit={1} />
-              ) : (
-                <Flex justify='center' classNames='p-4 text-subdued'>
-                  {t('no-task-set.message')}
-                </Flex>
-              ))}
-          </Panel.Content>
-        </Panel.Root>
-      </Tabs.Root>
-    </Menu.Root>
+                  {milestoneRefs.length > 0 && (
+                    <Form.Section title={t('milestones.label')}>
+                      <MilestoneList refs={milestoneRefs} />
+                    </Form.Section>
+                  )}
+
+                  <Form.Section title={t('artifacts.label')}>
+                    <ObjectGallery refs={project.artifacts} onOpen={handleOpen} onDelete={handleDeleteArtifact} />
+                  </Form.Section>
+                </Form.Content>
+              </Form.Viewport>
+            </Form.Root>
+          )}
+
+          {/* The ledger gets the whole panel here, so the list scrolls on its own rather than inside the form's viewport. */}
+          {tab === 'tasks' &&
+            (taskSet ? (
+              // TODO(burdon): Inline component for more control?
+              <Surface.Surface type={AppSurface.Section} data={{ subject: taskSet, attendableId }} limit={1} />
+            ) : (
+              <Flex justify='center' classNames='p-4 text-subdued'>
+                {t('no-task-set.message')}
+              </Flex>
+            ))}
+        </Panel.Content>
+      </Panel.Root>
+    </Tabs.Root>
   );
 };
 

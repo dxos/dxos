@@ -12,8 +12,7 @@ import { type CollisionPadding } from '../../hooks';
 // Kept out of `DropdownMenu.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so a context and its hook exported beside them force a full page reload on every edit.
 
-export const DROPDOWN_MENU_NAME = 'DropdownMenu';
-export const CONTEXT_MENU_NAME = 'ContextMenu';
+export const MENU_NAME = 'Menu';
 
 export type MenuSide = 'top' | 'right' | 'bottom' | 'left';
 export type MenuAlign = 'start' | 'center' | 'end';
@@ -54,7 +53,9 @@ export type MenuContextValue = {
   triggerRef: RefObject<HTMLElement | null>;
   setVirtualAnchor(ref: RefObject<Element | null>): () => void;
   setPlacement(options: MenuPlacementOptions): void;
+  /** A context trigger announces itself so the root places content beside the pointer, not below a button. */
+  markContextTrigger(): () => void;
   handlersRef: RefObject<MenuContentHandlers>;
 };
 
-export const [MenuProvider, useMenuContext] = createContext<MenuContextValue>(DROPDOWN_MENU_NAME);
+export const [MenuProvider, useMenuContext] = createContext<MenuContextValue>(MENU_NAME);

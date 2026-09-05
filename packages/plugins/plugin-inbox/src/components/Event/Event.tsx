@@ -8,7 +8,7 @@ import { type Database, Obj } from '@dxos/echo';
 import { createContext } from '@dxos/react-hooks';
 import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuRootProps } from '@dxos/react-ui-menu';
 import { type Actor, type Event as EventType } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -86,11 +86,13 @@ const EventToolbar = composable<HTMLDivElement, EventToolbarProps>(
     });
 
     return (
-      <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive={alwaysActive}>
-        <Menu.Toolbar {...composableProps(props)} ref={forwardedRef}>
-          <Menu.Items />
-        </Menu.Toolbar>
-      </Menu.Root>
+      <ActionToolbar
+        {...menuActions}
+        attendableId={attendableId}
+        alwaysActive={alwaysActive}
+        {...composableProps(props)}
+        ref={forwardedRef}
+      />
     );
   },
 );
