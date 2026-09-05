@@ -284,12 +284,34 @@ export class InvitationsProxy implements Invitations {
     const context = this._getInvitationContext();
     log('checking invitation context', { invitation, context });
     return Object.entries(context).reduce((acc, [key, value]) => {
-      const invitationValue = (invitation as any)[key];
-      if (invitationValue instanceof PublicKey && value instanceof PublicKey) {
-        return acc && invitationValue.equals(value);
-      } else {
-        return acc && invitationValue === value;
-      }
+      const invitationValue = (invitation as Record<string, unknown>)[key];
+      return acc && contextValuesEqual(invitationValue, value);
     }, true);
   }
 }
+
+/** The key bytes behind a context value, for the key types an invitation can carry. */
+const keyBytes = (value: unknown): Uint8Array | undefined => {
+  if (value instanceof PublicKey) {
+    return value.asUint8Array();
+  }
+  if (value !== null && typeof value === 'object' && 'data' in value && value.data instanceof Uint8Array) {
+    return value.data;
+  }
+};
+
+/**
+ * Compares one field of the invitation context.
+ *
+ * A key is compared by its bytes: it reaches here either as the domain `PublicKey` or as the buf
+ * message, and two messages carrying the same key are distinct objects.
+ */
+const contextValuesEqual = (invitationValue: unknown, value: unknown): boolean => {
+  const left = keyBytes(invitationValue);
+  const right = keyBytes(value);
+  if (left && right) {
+    return left.length === right.length && left.every((byte, index) => byte === right[index]);
+  }
+
+  return invitationValue === value;
+};
