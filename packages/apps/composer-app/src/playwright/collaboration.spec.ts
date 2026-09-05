@@ -8,12 +8,17 @@ import { AppManager } from './app-manager';
 import { Markdown } from './plugins';
 
 const perfomInvitation = async (host: AppManager, guest: AppManager) => {
+  const spaceId = host.currentSpaceId;
   await host.shareSpace();
   const invitationCode = await host.createSpaceInvitation();
   const authCode = await host.getAuthCode();
   await guest.joinSpace();
   await guest.shell.acceptSpaceInvitation(invitationCode);
   await guest.shell.authenticate(authCode);
+  // Authenticating does not itself move the guest into the space: until the app switches
+  // workspaces the navtree still being rendered is the one the guest is leaving, which answers
+  // object queries with its own contents.
+  await guest.waitForSpace(spaceId);
   await navigateToNewDocument(host);
 };
 
@@ -29,11 +34,6 @@ const navigateToNewDocument = async (app: AppManager) => {
 // these tests stay ENABLED in the meantime, both as sensors for that defect and because skipping one
 // victim of a shared cause just moves the failure to the next test.
 test.describe('Collaboration tests', () => {
-  // TODO(wittjosiah): STRICTLY temporary, remove when DX-1152 lands. Retries here exist solely
-  //   because of the endemic edge stalls named above; the defect is known and tracked, and Trunk
-  //   still records every first-attempt failure. Do not copy this pattern without a tracked issue.
-  test.describe.configure({ retries: 2 });
-
   let host: AppManager;
   let guest: AppManager;
 

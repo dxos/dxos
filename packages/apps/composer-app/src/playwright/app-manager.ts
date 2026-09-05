@@ -31,6 +31,12 @@ const WORKSPACE_KEY = 'w';
 /** Builds the pair-chain base for a workspace: `/<anchor>/<workspace>`. */
 const workspaceUrl = (workspace: string) => `${INITIAL_URL.replace(/\/$/, '')}/${WORKSPACE_KEY}/${workspace}`;
 
+/** The workspace segment of a `/<anchor>/<workspace>` pathname; undefined off the workspace route. */
+const workspaceOf = (url: URL): string | undefined => {
+  const [, key, workspace] = url.pathname.split('/');
+  return key === WORKSPACE_KEY && workspace ? workspace : undefined;
+};
+
 // Only the default space is seeded on every new identity. The exemplar space is skipped on
 // localhost (see OnboardingPlugin `generateSampleSpace`), which is where e2e tests run.
 export const INITIAL_SPACE_COUNT = 1;
@@ -391,6 +397,26 @@ export class AppManager {
       await objectForm.getByLabel('Name').fill(name);
     }
     await objectForm.getByTestId('save-button').click();
+  }
+
+  /** The space id the app is currently showing, read off the `/w/<spaceId>` route. */
+  get currentSpaceId(): string {
+    const url = new URL(this.page.url());
+    const spaceId = workspaceOf(url);
+    if (!spaceId) {
+      throw new Error(`app is not in a space workspace: ${url.pathname}`);
+    }
+    return spaceId;
+  }
+
+  /**
+   * Waits until the app is showing `spaceId`. Joining a space moves the app between workspaces
+   * asynchronously, and until it does the navtree of the space being left is what answers queries --
+   * so an object assertion made in that window measures the wrong space, and a section toggled in it
+   * leaves the joined space's section untouched.
+   */
+  async waitForSpace(spaceId: string, timeout = 30_000): Promise<void> {
+    await this.page.waitForURL((url) => workspaceOf(url) === spaceId, { timeout });
   }
 
   async navigateToObject(nth = 0, delay = 100): Promise<void> {
