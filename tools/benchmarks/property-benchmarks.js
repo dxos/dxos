@@ -48,7 +48,11 @@ class ImmutableAccess {
   }
 }
 
-// Utility function for timing
+// Measures the execution time of a callback function repeated for a specified number of iterations.
+/** @param {string} name - Label for the benchmark result. */
+/** @param {Function} fn - The function to benchmark. */
+/** @param {number} runs - Number of iterations to run (default: 1,000,000). */
+/** @returns {number} Duration in milliseconds. */
 function benchmark(name, fn, runs = iterations) {
   const start = performance.now();
   for (let i = 0; i < runs; i++) {

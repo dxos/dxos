@@ -46,6 +46,7 @@ const SimplePersonSchema = Schema.Struct({
 
 const SimplePersonType: Type.AnyEntity = Entity.define(SimplePersonSchema, { typename: 'SimplePerson' });
 
+// Benchmark ECHO object operations with in-memory storage.
 async function benchmarkInMemory(): Promise<void> {
   console.log('\n' + '='.repeat(70));
   console.log('A) IN-MEMORY (No Database)');
@@ -163,6 +164,7 @@ async function benchmarkInMemory(): Promise<void> {
   console.log(`  ${time5.toFixed(2)}ms (${(updateIterations20 / time5 * 1000).toFixed(0)} ops/sec)`);
 }
 
+// Benchmark ECHO object operations with database persistence using automerge.
 async function benchmarkDatabase(): Promise<void> {
   console.log('\n' + '='.repeat(70));
   console.log('B) SAVED TO DATABASE (with Automerge)');
@@ -286,6 +288,7 @@ async function benchmarkDatabase(): Promise<void> {
   }
 }
 
+// Benchmark ECHO object operations with feed-based ordered storage.
 async function benchmarkFeed(): Promise<void> {
   console.log('\n' + '='.repeat(70));
   console.log('C) SAVED TO FEED (Feed Storage Backend)');
@@ -414,6 +417,7 @@ async function benchmarkFeed(): Promise<void> {
   }
 }
 
+// Run all ECHO storage backend benchmarks across in-memory, database, and feed scenarios.
 async function main() {
   console.log('\nECHO Storage Backend Performance Benchmarks');
   console.log('='.repeat(70));

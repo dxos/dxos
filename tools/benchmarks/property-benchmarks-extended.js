@@ -45,6 +45,12 @@ class ImmutableAccess {
   }
 }
 
+// Measures the execution time of a callback, accounting for multiple operations per run.
+/** @param {string} name - Label for the benchmark result. */
+/** @param {Function} fn - The function to benchmark. */
+/** @param {number} runs - Number of iterations to run (default: 1,000,000). */
+/** @param {number} opsMultiplier - Operations per run for accurate rate reporting (default: 1). */
+/** @returns {number} Duration in milliseconds. */
 function benchmark(name, fn, runs = iterations, opsMultiplier = 1) {
   const start = performance.now();
   for (let i = 0; i < runs; i++) {
