@@ -2,9 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-// Radix's popover was forked here (popper + dismissable layer + focus scope + presence, by hand);
-// on Ark the machine owns all of that, and this file is anatomy plus the DXOS additions: a virtual
-// anchor, the `Viewport` clip, the `[data-popover-collision-boundary]` ancestor, and the safe-area
+// The machine owns positioning, dismissal, focus and presence; this file is anatomy plus the DXOS
+// additions: a virtual anchor, the `Viewport` clip, the `[data-popover-collision-boundary]` ancestor, and the safe-area
 // collision padding.
 
 import { ark } from '@ark-ui/react/factory';
@@ -103,7 +102,7 @@ const PopoverRoot: FC<PopoverRootProps> = ({ children, open: openProp, defaultOp
   const safeCollisionPadding = useSafeCollisionPadding(collisionPadding);
   const overflowPadding = toOverflowPadding(safeCollisionPadding);
 
-  // The closest annotated ancestor bounds the content, as it did under Radix.
+  // The closest annotated ancestor bounds the content.
   const boundary = useMemo(() => {
     const closest = triggerRef.current?.closest<HTMLElement>('[data-popover-collision-boundary]') ?? null;
     const given = Array.isArray(collisionBoundary) ? collisionBoundary : collisionBoundary ? [collisionBoundary] : [];
@@ -138,8 +137,8 @@ const PopoverRoot: FC<PopoverRootProps> = ({ children, open: openProp, defaultOp
     modal,
     ids: { content: contentId },
     positioning,
-    // Radix let the content veto its own auto focus with `preventDefault()`; asked at render, so
-    // the machine reads the answer when it opens.
+    // The content vetoes its own auto focus with `preventDefault()`, asked at render so the machine
+    // reads the answer when it opens.
     autoFocus: !prevents(handlersRef.current.onOpenAutoFocus),
     finalFocusEl: () => triggerRef.current,
     onInteractOutside: (event) => handlersRef.current.onInteractOutside?.(event),
@@ -160,7 +159,7 @@ const PopoverRoot: FC<PopoverRootProps> = ({ children, open: openProp, defaultOp
   );
 
   return (
-    // Closed content is not in the DOM at all, as under Radix's Presence: `lazyMount` for before
+    // Closed content is not in the DOM at all: `lazyMount` for before
     // the first open, `unmountOnExit` for after.
     <PopoverPrimitive.RootProvider value={popover} lazyMount unmountOnExit>
       <PopoverProvider {...context}>{children}</PopoverProvider>

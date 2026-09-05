@@ -46,8 +46,7 @@ import { type MosaicTileProps } from './Tile';
 // - [Placeholder 3.5]
 //
 // Implementation Notes
-// - We use [Radix composition](https://www.radix-ui.com/primitives/docs/guides/composition) to factor out composible aspects (e.g., Focus, Mosaic, etc.)
-// - NOTE: Use Slottable only if needed to disambiguate; otherwise a suspected Radix bug causes compositional problems.
+// - `asChild` composition (see the composite-components skill) factors out composable aspects (e.g., Focus, Mosaic, etc.)
 
 const MOSAIC_STACK_NAME = 'MosaicStack';
 

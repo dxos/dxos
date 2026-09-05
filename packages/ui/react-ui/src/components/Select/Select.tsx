@@ -54,7 +54,7 @@ type SelectRootProps = {
   children?: ReactNode;
   value?: string;
   defaultValue?: string;
-  /** A method, so a handler typed for a narrower value union is accepted as Radix's was. */
+  /** A method, so a handler typed for a narrower value union is accepted. */
   onValueChange?(value: string): void;
   open?: boolean;
   defaultOpen?: boolean;
@@ -132,8 +132,8 @@ const SelectRoot: FC<SelectRootProps> = ({
   const context = useMemo(() => ({ register, entries }), [register, entries]);
 
   return (
-    // The options register from inside the content, so it stays mounted (hidden) while closed —
-    // where Radix kept it in a detached fragment — and the root's element takes no space.
+    // The options register from inside the content, so it stays mounted (hidden) while closed, and
+    // the root's element takes no space.
     <SelectPrimitive.RootProvider value={select} className='contents'>
       <SelectProvider {...context}>{children}</SelectProvider>
       {name && <SelectPrimitive.HiddenSelect />}

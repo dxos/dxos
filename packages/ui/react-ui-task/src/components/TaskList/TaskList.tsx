@@ -16,17 +16,17 @@ import { Filter, Obj } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import {
   Button,
-  composable,
-  composableProps,
-  createContext,
   DxAnchorActivate,
   Icon,
   IconBlock,
   IconButton,
   Input,
   Tag,
-  toLocalizedString,
   Toolbar,
+  composable,
+  composableProps,
+  createContext,
+  toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
 import { Listbox, useListDisclosure } from '@dxos/react-ui-list';
@@ -53,7 +53,7 @@ import { type TaskNode, buildTaskForest, flattenVisibleTasks } from './tree-mode
 const shortDid = (did: string): string => `${did.slice(0, 12)}…`;
 
 //
-// Context — plain Radix context (un-scoped); nesting task lists has no meaning today.
+// Context — a plain `createContext` context from `@dxos/react-hooks` (un-scoped); nesting task lists has no meaning today.
 //
 
 const TASK_LIST_NAME = 'TaskList.Root';

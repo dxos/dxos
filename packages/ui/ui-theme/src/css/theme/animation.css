@@ -176,9 +176,8 @@
    * Accordion 
    */
   /**
-   * Accordion disclosure. `--height` is set inline on the content by Ark's accordion; the previous
-   * pair animated to `--radix-accordion-content-height`, which only Radix ever set, so after the
-   * migration they ran to `unset` and nothing moved.
+   * Accordion disclosure. `--height` is set inline on the content by the machine; a keyframe that
+   * runs to a variable nothing sets runs to `unset`, and nothing moves.
    */
   /*
    * The box runs between two heights while its content keeps its full size, so the content is

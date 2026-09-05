@@ -27,7 +27,7 @@ import { DatePickerProvider, useDatePickerContext } from './DatePickerContext';
 //
 // Public API.
 //
-// Wraps the new react-aria-components-backed `<Calendar>` (single + range) in a Radix Popover,
+// Wraps the new react-aria-components-backed `<Calendar>` (single + range) in a `Popover`,
 // preserving the previous slot-style namespace: `<DatePicker.Root>`, `<DatePicker.Trigger>`,
 // `<DatePicker.Content>`, `<DatePicker.Calendar>`. Multi-select is no longer supported (no
 // in-repo consumers); use `<Calendar.Root>` directly with custom state if needed.

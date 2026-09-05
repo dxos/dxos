@@ -11,7 +11,7 @@ import { composable, composableProps, slottable } from './slots';
 
 //
 // A slottable host and two candidate children: one built with `composable()`, one a plain
-// `forwardRef`. Radix `Slot` merges its props into whichever child it is given, but a child that
+// `forwardRef`. The `asChild` factory merges its props into whichever child it is given, but a child that
 // does not spread them drops the injected `className` and `ref` — silently, with no error and no
 // type complaint. `slottable()` detects that in dev builds and marks the rendered element with
 // `dx-slot-warning` (a dashed rose outline).

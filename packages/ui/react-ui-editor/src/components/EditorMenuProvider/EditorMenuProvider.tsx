@@ -194,7 +194,7 @@ export const EditorMenuProvider = ({
             // The search input shares the box, so `numItems` keeps meaning "items visible".
             maxBlockSize: 36 * numItems + 10 + (search ? 36 : 0),
           }}
-          // NOTE: We keep the focus in the editor, but Radix routes escape key.
+          // Focus stays in the editor; the menu machine still routes Escape here.
           onEscapeKeyDown={() => {
             const currentView = getViewRef.current?.();
             if (currentView) {

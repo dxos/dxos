@@ -350,7 +350,7 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
       onZoomChange?.(Math.max(minZoom, Math.round((zoom - zoomStep) * 100) / 100));
     }, [captureAnchor, onZoomChange, zoom, zoomStep, minZoom]);
 
-    // Selection (hand-rolled controlled/uncontrolled; Radix useControllableState mishandles clearing).
+    // Selection (hand-rolled controlled/uncontrolled; `useControllableState` keys on presence and mishandles clearing).
     const emptySelection = useMemo<ReadonlySet<string>>(() => new Set(), []);
     const [uncontrolledSelected, setUncontrolledSelected] = useState<ReadonlySet<string>>(
       defaultSelected ?? emptySelection,

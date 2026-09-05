@@ -786,6 +786,13 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       `ThemeProvider`, `layout.ts`), not primitives in the Radix/Ark sense; with the machines now under
       `components/`, the name misleads. Decide the split (providers vs layout) and where `Show`
       (`components/Show`, a conditional-render helper, not a component with anatomy) belongs.
+- [ ] **Storybook icon sprite first-load gap** (tracked 2026-09-05, not the port's). The dev server
+      assembles the page's icon sprite from the modules it has scanned, so a story's first load can
+      receive a sprite (99 symbols) that lacks that story's own icons — `Toggle` showed a blank
+      button for `ph--text-b--regular` — and the runtime fallback 404s because `/phosphor` is
+      deliberately not served (`tools/storybook-react/.storybook/main.ts`). A reload gets the full
+      sprite (143). Fix belongs in the icons plugin: scan the story module before answering the
+      sprite request, or serve the fallback in dev.
 - [ ] **Separate, not this phase: touch drag in the Tree.** `pragmatic-drag-and-drop` is native
       HTML5 DnD, which does not fire from touch in iPhone WKWebView, so Tree reordering is
       desktop-only under Tauri mobile. Library-independent; verify on device first. Tracked

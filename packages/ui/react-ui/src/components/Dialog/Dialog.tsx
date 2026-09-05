@@ -107,8 +107,8 @@ const DialogRootImpl = ({
   const contentRef = useRef<HTMLDivElement | null>(null);
   const handlersRef = useRef<DialogContentHandlers>({});
 
-  // Radix let the content veto its own auto focus with `preventDefault()`; asked at render, so the
-  // machine reads the answer when it opens.
+  // The content vetoes its own auto focus with `preventDefault()`, asked at render so the machine
+  // reads the answer when it opens.
   const openAutoFocusVetoed = prevents(handlersRef.current.onOpenAutoFocus);
   const closeAutoFocusVetoed = prevents(handlersRef.current.onCloseAutoFocus);
 
@@ -136,7 +136,7 @@ const DialogRootImpl = ({
 
   return (
     <ElevationProvider elevation='dialog'>
-      {/* Closed content is not in the DOM at all, as under Radix's Presence. */}
+      {/* Closed content is not in the DOM at all. */}
       <DialogPrimitive.RootProvider value={dialog} lazyMount unmountOnExit>
         <DialogProvider {...context}>{children}</DialogProvider>
       </DialogPrimitive.RootProvider>
@@ -184,9 +184,8 @@ type DialogOverlayProps = ThemedClassName<ComponentPropsWithRef<typeof DialogPri
 };
 
 /**
- * The scrim, which is also where the content sits: Radix let the content nest inside the overlay
- * and every consumer does, so the backdrop doubles as the centring host rather than Ark's separate
- * `Positioner`.
+ * The scrim, which is also where the content sits: consumers nest `Content` inside `Overlay`, so
+ * the backdrop doubles as the centring host rather than Ark's separate `Positioner`.
  */
 const DialogOverlay = forwardRef<HTMLDivElement, DialogOverlayProps>(
   ({ classNames, children, blockAlign, ...props }, forwardedRef) => {
@@ -367,7 +366,7 @@ const DialogDescription = forwardRef<HTMLParagraphElement, DialogDescriptionProp
   ({ classNames, srOnly, children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      // A paragraph, as Radix rendered; Ark's default is a div.
+      // A paragraph; Ark's default is a div.
       <DialogPrimitive.Description asChild {...props}>
         <p className={tx('dialog.description', { srOnly }, classNames)} ref={forwardedRef}>
           {children}

@@ -7,7 +7,7 @@ import { createContext } from '@dxos/react-ui';
 import { type UseListSelectionReturn } from '../../hooks';
 
 //
-// Contexts — plain Radix contexts (un-scoped). Scoped composition (nested Listboxes,
+// Contexts — plain `createContext` contexts from `@dxos/react-hooks` (un-scoped). Scoped composition (nested Listboxes,
 // Combobox embeddings) is a future expansion; when needed, switch to `createContextScope`
 // and thread `__listboxScope` through every subcomponent's props in one focused PR.
 //

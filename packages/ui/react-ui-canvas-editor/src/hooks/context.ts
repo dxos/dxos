@@ -70,5 +70,5 @@ export type EditorContextType<S extends CanvasBoard.Shape = CanvasBoard.Shape> =
 /**
  * @internal
  */
-// TODO(burdon): Use Radix.
+// TODO(burdon): Use `createContext` from `@dxos/react-hooks`.
 export const EditorContext = createContext<EditorContextType | undefined>(undefined);

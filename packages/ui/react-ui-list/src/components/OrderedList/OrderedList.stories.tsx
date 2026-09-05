@@ -226,7 +226,7 @@ const DraggableWithToggleStory = () => {
 
 //
 // Nested — a parent `OrderedList.DetailItem` whose detail panel contains another
-// `OrderedList`. Exercises Radix context shadowing (each `<OrderedList.Root>` provides its
+// `OrderedList`. Exercises context shadowing (each `<OrderedList.Root>` provides its
 // own reorder/disclosure/nav controllers) and pragmatic-dnd's per-list `canDrop` filter
 // (so a sub-item can't drop into the parent list, and vice versa).
 //

@@ -45,7 +45,7 @@ export type MenuContentHandlers = {
   onEscapeKeyDown?: (event: MenuEscapeKeyDownEvent) => void;
 };
 
-/** Radix's item `onSelect`: a cancelable event, `preventDefault()` keeps the menu open. */
+/** The item's `onSelect`: a cancelable event, `preventDefault()` keeps the menu open. */
 export type MenuSelectHandler = (event: Event) => void;
 
 export type MenuContextValue = {

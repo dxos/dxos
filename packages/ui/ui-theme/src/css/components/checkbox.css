@@ -41,7 +41,6 @@
   }
 
   /* TODO(ZaymonFC): Focus is handled by .dx-focus-ring, but should ideally be applied as part of this component.*/
-  /* NOTE: This isn't compatible with the Radix switch. */
   .dx-checkbox--switch {
     @apply inline-block appearance-none relative shrink-0 h-5 w-8;
     @apply shadow-inner transition-colors bg-un-accent;

@@ -2,10 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-// Radix's menu, dropdown-menu and context-menu were three forks here; on Ark they are one machine
-// (`Menu.Trigger` for a dropdown, `Menu.ContextTrigger` for a context menu, a nested `Menu.Root` for
-// a submenu). This file is the shared anatomy; `ContextMenu.tsx` re-exports it under the second
-// namespace with the other trigger.
+// One menu machine serves dropdown, context and sub menus (`Menu.Trigger` for a dropdown,
+// `Menu.ContextTrigger` for a context menu, a nested `Menu.Root` for a submenu). This file is the
+// shared anatomy, exported as both the `DropdownMenu` and `ContextMenu` namespaces.
 
 import { ark } from '@ark-ui/react/factory';
 import { Menu as MenuPrimitive, useMenuContext as useMenuPrimitiveContext } from '@ark-ui/react/menu';
@@ -117,7 +116,7 @@ const MenuRootImpl: FC<MenuRootImplProps> = ({
   const safeCollisionPadding = useSafeCollisionPadding(collisionPadding);
   const overflowPadding = toOverflowPadding(safeCollisionPadding);
 
-  // The closest annotated ancestor bounds the content, as it did under Radix.
+  // The closest annotated ancestor bounds the content.
   const boundary = useMemo(() => {
     const closest = triggerRef.current?.closest<HTMLElement>('[data-popover-collision-boundary]') ?? null;
     const given = Array.isArray(collisionBoundary) ? collisionBoundary : collisionBoundary ? [collisionBoundary] : [];
@@ -164,7 +163,7 @@ const MenuRootImpl: FC<MenuRootImplProps> = ({
       onPointerDownOutside={(event) => handlersRef.current.onPointerDownOutside?.(event)}
       onFocusOutside={(event) => handlersRef.current.onFocusOutside?.(event)}
       onEscapeKeyDown={(event) => handlersRef.current.onEscapeKeyDown?.(event)}
-      // Closed content is not in the DOM at all, as under Radix's Presence.
+      // Closed content is not in the DOM at all.
       lazyMount
       unmountOnExit
     >
@@ -380,7 +379,7 @@ const ITEM_NAME = 'DropdownMenu.Item';
  * Selection handled on the item's own click — which keyboard activation reaches too, since the
  * machine clicks the highlighted element on Enter. Not the machine's `onSelect`: that reads the
  * highlighted value from React-state-backed context, which a click landing before React commits
- * the pointerdown's highlight (a test does) finds empty. Radix's contract holds: `onSelect` gets a
+ * the pointerdown's highlight (a test does) finds empty. The contract: `onSelect` gets a
  * cancelable event and `preventDefault()` keeps the menu open.
  */
 const useSelectableItem = (name: string, valueProp: string | undefined, onSelect: MenuSelectHandler | undefined) => {

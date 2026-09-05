@@ -199,7 +199,7 @@ const DropdownMenuToolbarItem = ({ group, items: propsItems }: ToolbarMenuDropdo
     </NaturalToolbar.Button>
   );
 
-  // No menu behind a disabled trigger, since `disabled` alone does not gate Radix's open handler and the
+  // No menu behind a disabled trigger, since `disabled` alone does not gate the machine's open handler and the
   // group presented an empty dropdown.
   if (disabled) {
     return trigger;

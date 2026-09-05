@@ -16,7 +16,7 @@ export type SelectOptionEntry = {
   value: string;
   /** What typeahead matches and the hidden `<select>` shows; the option's text content unless told otherwise. */
   text: string;
-  /** What the trigger shows when this option is selected, as Radix's `ItemText` did. */
+  /** What the trigger shows when this option is selected. */
   node: ReactNode;
   disabled: boolean;
   element: HTMLElement | null;

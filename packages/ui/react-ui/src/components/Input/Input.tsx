@@ -361,7 +361,7 @@ type CheckedState = boolean | 'indeterminate';
 type CheckboxProps = ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, 'defaultChecked' | 'defaultValue'>> & {
   checked?: CheckedState;
   defaultChecked?: CheckedState;
-  // A method signature, so a handler typed for the boolean it will get still fits (as with Radix).
+  // A method signature, so a handler typed for the boolean it will get still fits.
   onCheckedChange?(checked: CheckedState): void;
   size?: Size;
   disabled?: boolean;

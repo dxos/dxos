@@ -214,7 +214,7 @@ function CardMenu<T extends any | void = void>({ context, items }: CardMenuProps
   const { t } = useTranslation(translationKey);
   // A `Card.Root` with an `onClick` is a click target, and this menu sits inside it. React portals
   // propagate through the React tree rather than the DOM, so without this both the trigger and the
-  // item selection reach the card's handler and activate it on the way past. Radix's `asChild`
+  // item selection reach the card's handler and activate it on the way past. The factory's `asChild`
   // composes the trigger handler, so the menu still opens.
   const stopPropagation = useCallback<MouseEventHandler>((event) => event.stopPropagation(), []);
   return (
