@@ -11,7 +11,8 @@ import { performInvitation } from '@dxos/client-services/testing';
 import { createInitializedClientsWithContext } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
 import { AlreadyJoinedError, AuthorizationError } from '@dxos/protocols';
-import { ConnectionState, Invitation, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { ConnectionState, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 describe('Spaces/member-management', () => {
@@ -116,7 +117,7 @@ const inviteMember = async (host: Space, guestOrMany: Client | Client[], role: H
     const [{ invitation: hostInvitation }] = await Promise.all(
       performInvitation({ host, guest: guest.spaces, options: { role } }),
     );
-    expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
+    expect(hostInvitation?.state).to.eq(Invitation_State.SUCCESS);
     await waitHasRole(host, guest, role);
   }
 };
