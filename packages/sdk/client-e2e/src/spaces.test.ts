@@ -26,7 +26,7 @@ import { EncodedReference } from '@dxos/echo-protocol';
 import { TestSchema as TestSchema$ } from '@dxos/echo/testing';
 import { DXN, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { fromPublicKey } from '@dxos/protocols/buf';
+import { toPublicKey } from '@dxos/protocols/buf';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { range } from '@dxos/util';
 
@@ -126,7 +126,7 @@ describe('Spaces', () => {
     const [, { invitation: guestInvitation }] = await Promise.all(
       performInvitation({ host: space1, guest: client2.spaces }),
     );
-    const space2 = await waitForSpace(client2, guestInvitation!.spaceKey!, {
+    const space2 = await waitForSpace(client2, toPublicKey(guestInvitation!.spaceKey)!, {
       ready: true,
     });
 
@@ -188,7 +188,7 @@ describe('Spaces', () => {
       await space1.db.flush();
       // Create epoch.
       await client1.services.services.SpacesService?.createEpoch({
-        spaceKey: fromPublicKey(space1.key),
+        spaceKey: space1.key,
       });
     }
 

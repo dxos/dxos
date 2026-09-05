@@ -11,6 +11,7 @@ import { createInitializedClientsWithContext, testSpaceAutomerge, waitForSpace }
 import { Context } from '@dxos/context';
 import { TestSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
+import { toPublicKey } from '@dxos/protocols/buf';
 import { Invitation, Invitation_AuthMethod, Invitation_State, Invitation_Type } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { QueryInvitationsResponse_Action, QueryInvitationsResponse_Type } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -32,7 +33,7 @@ describe('Spaces/invitations', () => {
     expect(hostInvitation?.state).to.eq(Invitation_State.SUCCESS);
 
     {
-      const space = await waitForSpace(client2, guestInvitation!.spaceKey!, { ready: true });
+      const space = await waitForSpace(client2, toPublicKey(guestInvitation!.spaceKey)!, { ready: true });
       await testSpaceAutomerge(expect, space.db);
     }
   });
