@@ -5,6 +5,7 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { log } from '@dxos/log';
+import { toPublicKey } from '@dxos/protocols/buf';
 import { useClient, useMulticastObservable } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useId, useThemeContext } from '@dxos/react-ui';
