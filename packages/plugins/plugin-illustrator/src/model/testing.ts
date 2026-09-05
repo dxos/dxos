@@ -4,7 +4,8 @@
 
 /**
  * Minimal layout discussion piece: three packages with three types each — an inheritance fan-in
- * (B, C extend A), a chain with a has-many (X ⇒ Y → Z), and a fan-in (P, R → Q). Small enough to
+ * (B, C extend A), a chain with a has-many (X ⇒ Y → Z), and a fan-in (P, R → Q), plus two
+ * cross-package references (Y → A, Q → X) so routes must leave and enter frames. Small enough to
  * reason about every placement and route by eye. Relationship kinds are carried by the edge
  * tokens (UML end markers), not labels.
  */
@@ -31,6 +32,8 @@ flowchart TB
   Y --> Z
   P --> Q
   R --> Q
+  Y --> A
+  Q --> X
 `;
 
 /** Exercises class blocks, a stereotype, generics, cardinalities, and every relation kind. */

@@ -80,6 +80,18 @@ its scorer interface now and fixtures later.
 - [x] **Even frame gaps** — `frameGapMin` / `frameGapSpread` metrics; `unevenFrameGaps` cost term;
       and, because no candidate had even gaps, a `compactGroups` placement pass that closes surplus
       inter-frame gutters by whole pitches (nodes stay on the lattice).
+- [x] **Arrangement axis** — `layered | columns` candidates when ≥2 groups; columns lifts cross-group
+      edges to root-level group edges so `SEPARATE_CHILDREN` orders packages by dependency. `Basic`
+      gained Y→A and Q→X (Rich); layered 0/2 beats columns 1/3 under current weights; bench has an
+      `arrangement` control. `Mermaid.toStandard` rewrites UML tokens so the mermaid.js reference
+      column renders.
+- [x] **Gap-weight calibration** — with columns available, `unevenFrameGaps` at 2/unit made the
+      objective take 3 crossings on `pipeline` to even a 7-unit spread; now 0.5/unit. Corpus after:
+      assistant 13→7 crossings (columns wins there), pipeline back to 0/9, others unchanged. First
+      weight tuned with the corpus as evidence — the loop the framework exists for.
+- [ ] **Coincident ports across routing modes** — in columns, R→Q (internal, vertical flow) and Q→X
+      (cross-group, horizontal) both attach at Q's right side on the same y; straightening only
+      spreads ports among edges it handles. Add a `shared-port` diagnostic and spread across modes.
 - [ ] **Bus for LR/RL** and for bases not directly above their subtypes (a jogged trunk).
 - [ ] **Excalidraw markers** — map `head`/`tail` onto `startArrowhead`/`endArrowhead`.
 - [ ] **Crossings after quantization** — run ELK `INTERACTIVE` (crossing minimization seeded from the

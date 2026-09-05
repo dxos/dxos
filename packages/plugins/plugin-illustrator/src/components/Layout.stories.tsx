@@ -14,7 +14,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { createBasicExtensions, createThemeExtensions, listener, mermaidHighlightStyle } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
-import { Diagnostics, MermaidEngine, type Scene, UmlGrid } from '#model';
+import { Diagnostics, Mermaid as MermaidDialect, MermaidEngine, type Scene, UmlGrid } from '#model';
 
 import appFramework from '../../docs/diagrams/app-framework.mmd?raw';
 import assistant from '../../docs/diagrams/assistant.mmd?raw';
@@ -66,8 +66,14 @@ const MermaidDiagram = ({ source }: { source: string }) => {
   useEffect(() => {
     let cancelled = false;
     // Default (strict) security level: the source is free text and the SVG is injected as HTML.
-    Mermaid.initialize({ startOnLoad: false, theme: themeMode === 'dark' ? 'dark' : 'neutral' });
-    Mermaid.render(`mermaid-${id}`, source)
+    // SVG text labels rather than HTML ones: strict mode sanitizes the latter to nothing here.
+    Mermaid.initialize({
+      startOnLoad: false,
+      theme: themeMode === 'dark' ? 'dark' : 'neutral',
+      flowchart: { htmlLabels: false },
+    });
+    // Our UML edge tokens are outside mermaid's grammar; the reference render gets them as labels.
+    Mermaid.render(`mermaid-${id}`, MermaidDialect.toStandard(source))
       .then(({ svg }) => {
         if (!cancelled) {
           setSvg(svg);
@@ -105,9 +111,11 @@ type StoryArgs = {
   source: string;
   /** Lattice pitch as a multiple of the cell size; 0 lets the objective choose. */
   lattice: number;
+  /** Group arrangement; `auto` lets the objective choose. */
+  arrangement: 'auto' | MermaidEngine.Arrangement;
 };
 
-const Bench = ({ source: initial, lattice }: StoryArgs) => {
+const Bench = ({ source: initial, lattice, arrangement }: StoryArgs) => {
   const [source, setSource] = useState(initial);
   useEffect(() => setSource(initial), [initial]);
   const [objects, setObjects] = useState<Scene.WorldObject[]>([]);
@@ -115,8 +123,11 @@ const Bench = ({ source: initial, lattice }: StoryArgs) => {
   const [failure, setFailure] = useState<string>();
   useEffect(() => {
     let cancelled = false;
-    // 0 lets the objective choose among the lattice candidates; otherwise the lattice is fixed.
-    MermaidEngine.layout(source, lattice > 0 ? { lattice } : {})
+    // 0 / auto let the objective choose along that axis; otherwise the axis is fixed.
+    MermaidEngine.layout(source, {
+      ...(lattice > 0 ? { lattice } : {}),
+      ...(arrangement !== 'auto' ? { arrangement: [arrangement] } : {}),
+    })
       .then((layout) => {
         if (!cancelled) {
           setObjects(objectsOf(layout.commands));
@@ -132,7 +143,7 @@ const Bench = ({ source: initial, lattice }: StoryArgs) => {
     return () => {
       cancelled = true;
     };
-  }, [source, lattice]);
+  }, [source, lattice, arrangement]);
   const report = useMemo(() => Diagnostics.analyze(objects), [objects]);
   const errors = Diagnostics.errors(report);
 
@@ -169,7 +180,7 @@ const Bench = ({ source: initial, lattice }: StoryArgs) => {
               {` · ${report.metrics.nodes} nodes · ${report.metrics.connectors} connectors · ${report.metrics.crossings} crossings · ${report.metrics.bends} bends · gap spread ${report.metrics.frameGapSpread}`}
               {result && (
                 <div className='text-description'>
-                  {`chosen: lattice ${result.chosen.candidate.lattice} · order ${result.chosen.candidate.order} · bus ${result.chosen.candidate.bus} · cost ${result.chosen.evaluation.cost.toFixed(2)} of ${result.ranked.length} candidates — `}
+                  {`chosen: lattice ${result.chosen.candidate.lattice} · order ${result.chosen.candidate.order} · ${result.chosen.candidate.arrangement} · bus ${result.chosen.candidate.bus} · cost ${result.chosen.evaluation.cost.toFixed(2)} of ${result.ranked.length} candidates — `}
                   {result.chosen.evaluation.terms
                     .map(({ id, value, weighted }) => `${id} ${value}×→${weighted.toFixed(1)}`)
                     .join(' · ')}
@@ -193,11 +204,17 @@ const meta = {
   render: Bench,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: { layout: 'fullscreen' },
-  args: { lattice: 0 },
+  args: { lattice: 0, arrangement: 'auto' },
   argTypes: {
     lattice: {
       description: '0 lets the objective choose among candidates; otherwise fixes the lattice pitch.',
       control: { type: 'range', min: 0, max: 3, step: 0.25 },
+    },
+    arrangement: {
+      description:
+        'auto lets the objective choose; layered stacks groups along the flow, columns sets them side by side.',
+      control: 'radio',
+      options: ['auto', 'layered', 'columns'],
     },
   },
 } satisfies Meta<typeof Bench>;

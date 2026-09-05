@@ -9,8 +9,8 @@ exports[`corpus: app-framework > soft metrics 1`] = `
 
 exports[`corpus: assistant > soft metrics 1`] = `
 {
-  "bends": 17,
-  "crossings": 13,
+  "bends": 13,
+  "crossings": 7,
 }
 `;
 

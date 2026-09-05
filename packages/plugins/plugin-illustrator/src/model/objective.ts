@@ -119,11 +119,15 @@ export const bends: CostTerm = {
   measure: ({ report }) => report.metrics.bends,
 };
 
-/** Uneven gutters between frames, in grid units. */
+/**
+ * Uneven gutters between frames, in grid units. Weighted so a whole cell of unevenness costs about
+ * half a crossing: on the pipeline corpus diagram a weight of 2 made the objective accept three
+ * crossings to even out a 7-unit spread, which no reader would.
+ */
 export const unevenFrameGaps: CostTerm = {
   id: 'uneven-frame-gaps',
   description: 'Spread of the gaps between neighbouring frames.',
-  weight: 2,
+  weight: 0.5,
   measure: ({ report }) => report.metrics.frameGapSpread / GRID,
 };
 

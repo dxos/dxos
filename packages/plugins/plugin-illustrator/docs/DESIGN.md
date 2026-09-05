@@ -185,9 +185,11 @@ a layout and the report that grades one are the same measurements:
 
 - **Constraint** — hard. `violations(layout)` names each way the layout breaks it. Built-ins:
   `noHardDefects` (every `error` diagnostic), `framesApart(gap)`.
-- **Cost term** — soft, weighted. Built-ins: `crossings` (3), `bends` (1), `unevenFrameGaps` (2,
-  in grid units), `compactness` (0.05). One crossing ≈ three bends is the current exchange rate; the
-  corpus snapshots are where a weight change shows its consequences.
+- **Cost term** — soft, weighted. Built-ins: `crossings` (3), `bends` (1), `unevenFrameGaps` (0.5
+  per grid unit), `compactness` (0.05). One crossing ≈ three bends is the current exchange rate; the
+  corpus snapshots are where a weight change shows its consequences. The gap weight was 2 until the
+  arrangement axis arrived: on `pipeline` the objective then chose three crossings to even out a
+  7-unit gutter spread, which is the kind of verdict a weight exists to prevent.
 
 Engines and rules are **candidate generators**; `Objective.select` ranks candidates by fewest
 violations, then lowest cost, and returns them all so a bench can show what lost and why. The
@@ -199,6 +201,19 @@ produce: the uneven-gutter term found that _no_ candidate had even frame gaps, w
 the group-compaction pass in placement (a constraint-side fix), not to a weight change. Second, a
 user's flag on a layout maps onto exactly one of three moves — a new constraint, a new cost term, or
 a weight — which is the shape the feedback loop takes.
+
+### Arrangement as a generator: layered vs columns
+
+A second candidate axis, tried whenever a graph has two or more groups. `layered` lays the whole
+hierarchy out in one flow (ELK `INCLUDE_CHILDREN`), so cross-package edges stack the packages along
+it. `columns` lays each package out in the flow direction and arranges the packages side by side
+across it (`SEPARATE_CHILDREN`, root direction perpendicular), with cross-package edges routed
+sideways; because the root cannot see edges inside its children in that mode, every cross-group
+edge is lifted to a root-level edge between the groups so they fall into dependency order. On the
+`Basic` fixture with two cross-package references the two arrangements land close — layered
+0 crossings / 2 bends, columns 1 crossing / 3 bends (Y→A becomes straight, Q→X gains a crossing) —
+and the objective's exchange rate (one crossing ≈ three bends) decides. The bench's `arrangement`
+control forces either, which is how that rate gets argued about with a picture in front of you.
 
 ### Rules as generators: the inheritance bus
 

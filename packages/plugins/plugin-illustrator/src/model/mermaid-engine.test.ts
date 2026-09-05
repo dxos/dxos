@@ -7,6 +7,7 @@ import { describe, test } from 'vitest';
 import { trim } from '@dxos/util';
 
 import { analyze, errors } from './diagnostics';
+import { toStandard } from './mermaid';
 import { compile, layout } from './mermaid-engine';
 import type * as Scene from './scene';
 import { BASIC } from './testing';
@@ -84,8 +85,8 @@ describe('mermaid-engine', () => {
   test('layout ranks every candidate and the chosen one has the lowest feasible cost', async ({ expect }) => {
     const result = await layout(BASIC);
 
-    // lattice × order × bus.
-    expect(result.ranked).toHaveLength(8);
+    // lattice × order × arrangement × bus (three groups, so both arrangements are tried).
+    expect(result.ranked).toHaveLength(16);
     const feasible = result.ranked.filter(({ evaluation }) => evaluation.violations.length === 0);
     expect(feasible.length).toBeGreaterThan(0);
     expect(result.chosen).toBe(result.ranked[0]);
@@ -109,6 +110,15 @@ describe('mermaid-engine', () => {
     const labelled = edges.filter((element) => element.kind === 'text' && element.text === 'via mixin');
     expect(labelled).toHaveLength(1);
     expect(edges.filter((element) => element.kind === 'arrow' && element.head === 'triangle')).toHaveLength(2);
+  });
+
+  test('toStandard rewrites the UML tokens into mermaid-legal labelled arrows', ({ expect }) => {
+    expect(toStandard(BASIC)).not.toMatch(/--\|>|--\{|o-->/);
+    expect(toStandard('  B --|> A')).toBe('  B -->|extends| A');
+    expect(toStandard('X --{ Y')).toBe('X -->|has many| Y');
+    expect(toStandard('P o--> Q')).toBe('P -->|contains| Q');
+    // Plain arrows and labelled edges pass through untouched.
+    expect(toStandard('Y -->|sync| Z')).toBe('Y -->|sync| Z');
   });
 
   test('edge tokens carry the UML end markers', async ({ expect }) => {

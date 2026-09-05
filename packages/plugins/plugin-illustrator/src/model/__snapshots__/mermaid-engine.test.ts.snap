@@ -2,7 +2,7 @@
 
 exports[`mermaid-engine > basic: no hard defects, every connector straight or one bend 1`] = `
 {
-  "bends": 1,
+  "bends": 2,
   "crossings": 0,
 }
 `;

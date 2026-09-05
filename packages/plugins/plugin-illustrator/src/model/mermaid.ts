@@ -53,6 +53,22 @@ const EDGE_KINDS: Record<string, RelationKind> = {
   'o-->': 'contains',
 };
 
+/**
+ * Rewrite the UML edge tokens into mermaid-legal labelled arrows, for rendering the source with
+ * mermaid.js itself (as a reference beside our layout). Lossy by design: mermaid flowcharts have no
+ * triangle or crow's foot, so the kind becomes a label; `%% ref` lines are already comments.
+ */
+export const toStandard = (source: string): string =>
+  source
+    .split('\n')
+    .map((line) =>
+      line
+        .replace(/^(\s*\S+)\s*--\|>\s*(\S+)\s*$/, '$1 -->|extends| $2')
+        .replace(/^(\s*\S+)\s*--\{\s*(\S+)\s*$/, '$1 -->|has many| $2')
+        .replace(/^(\s*\S+)\s*o-->\s*(\S+)\s*$/, '$1 -->|contains| $2'),
+    )
+    .join('\n');
+
 /** Scene arrow markers for a relationship kind. */
 export const markers = (kind: RelationKind): Pick<Scene.Arrow, 'head' | 'tail'> => {
   switch (kind) {
