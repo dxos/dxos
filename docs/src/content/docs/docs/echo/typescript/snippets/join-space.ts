@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Client } from '@dxos/client';
+import { Client, PublicKey } from '@dxos/client';
 import { InvitationEncoder } from '@dxos/client/invitations';
 
 const client = new Client();
@@ -23,4 +23,4 @@ const invitation = client.spaces.join(receivedInvitation);
 await invitation.authenticate('<authentication code here>');
 
 // Space joined!
-const _space = client.spaces.get(invitation.get().spaceKey!);
+const _space = client.spaces.get(PublicKey.from(invitation.get().spaceKey!.data));

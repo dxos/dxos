@@ -131,7 +131,10 @@ const testSuite = (getProps: () => PerformInvitationProps, getPeers: () => [Serv
     const params = getProps();
     const keypair1 = createAdmissionKeypair();
     const keypair2 = createAdmissionKeypair();
-    const invalidKeypair = { publicKey: keypair1.publicKey, privateKey: keypair2.privateKey };
+    const invalidKeypair = buf.create(AdmissionKeypairSchema, {
+      publicKey: keypair1.publicKey,
+      privateKey: keypair2.privateKey,
+    });
     const [hostResult, guestResult] = await Promise.all(
       performInvitation({
         ...params,
@@ -398,7 +401,7 @@ describe('Invitations', () => {
         expect(invitation.get().state).to.eq(Invitation_State.EXPIRED);
         // TODO: assumes too much about implementation.
         expect(hostMetadata.getInvitations()).to.have.lengthOf(0);
-        const swarmTopic = hostContext.networkManager.topics.find((topic) => topic.equals(invitation.get().swarmKey));
+        const swarmTopic = hostContext.networkManager.topics.find((topic) => topic.equals(toPublicKey(invitation.get().swarmKey)!));
         expect(swarmTopic).to.be.undefined;
       });
     });
@@ -440,10 +443,10 @@ describe('Invitations', () => {
           persistentInvitationId = persistentInvitation.get().invitationId;
           await savedTrigger.wait();
           await waitForCondition({
-            condition: () => hostContext.networkManager.topics.includes(persistentInvitation.get().swarmKey),
+            condition: () => hostContext.networkManager.topics.includes(toPublicKey(persistentInvitation.get().swarmKey)!),
           });
           // TODO(nf): expose this in API as suspendInvitation()/SuspendableInvitation?
-          await hostContext.networkManager.leaveSwarm(Context.default(), persistentInvitation.get().swarmKey);
+          await hostContext.networkManager.leaveSwarm(Context.default(), toPublicKey(persistentInvitation.get().swarmKey)!);
         }
 
         const { service: newHostService, manager: newHostManager } = await createInvitationsApi(
