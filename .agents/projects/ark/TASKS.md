@@ -623,8 +623,7 @@ Findings that shaped the plan, so they are not re-derived:
 - [x] **Phase 1 — own the scaffolding.** Done 2026-09-05 on this branch. `@dxos/react-hooks` owns
       `composeRefs`/`useComposedRefs` (over the existing `mergeRefs`), `useControllableState` (Radix
       signature, uncontrolled `onChange` reported post-commit so updaters resolve through React),
-      `createContext` (Radix signature, no scope) and `composeEventHandlers`, with tests. `Primitive.*`
-      + `Slot` → `ark.<tag>` from `@ark-ui/react/factory` in 45 files; the seven scoped contexts nobody
+      `createContext` (Radix signature, no scope) and `composeEventHandlers`, with tests. `Primitive.*` + `Slot` → `ark.<tag>` from `@ark-ui/react/factory` in 45 files; the seven scoped contexts nobody
       ever scoped (react-list ×2, react-input, grid, menu, syntax-highlighter, shell Viewport) are plain
       contexts — `create*Scope`, `*ScopedProps` and the `__*Scope` props are gone. The five Radix
       scaffolding packages plus `-id` and `primitive` left 46 package.jsons; `react-ui` keeps
