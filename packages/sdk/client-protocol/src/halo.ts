@@ -9,8 +9,8 @@ import {
   type Contact,
   type Device,
   type Identity,
-  type RecoverIdentityRequest_ExternalSignature,
-} from '@dxos/protocols/buf/dxos/client/services_pb';
+  type RecoverIdentityRequest,
+} from '@dxos/protocols/proto/dxos/client/services';
 import {
   type Credential,
   type DeviceProfileDocument,
@@ -28,7 +28,7 @@ export type RecoverIdentityArgs =
   | { recoveryCode: string }
   | { recoveryProof: string }
   | { token: string }
-  | { external: RecoverIdentityRequest_ExternalSignature };
+  | { external: RecoverIdentityRequest.ExternalSignature };
 
 /**
  * TODO(burdon): Public API (move comments here).

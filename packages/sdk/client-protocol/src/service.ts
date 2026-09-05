@@ -7,20 +7,7 @@ import type { Stream } from '@dxos/async';
 import { getBufService } from '@dxos/protocols/buf-service';
 import type { Invitation } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import type { LogEntry, QueryLogsRequest } from '@dxos/protocols/buf/dxos/client/logging_pb';
-import type {
-  CreateEpochResponse,
-  Device,
-  Identity,
-  JoinSpaceResponse,
-  NetworkStatus,
-  Platform,
-  QueryAgentStatusResponse,
-  QueryEdgeStatusResponse,
-  QueryInvitationsResponse,
-  QuerySpacesResponse,
-  RecoverIdentityRequest,
-  Space,
-} from '@dxos/protocols/buf/dxos/client/services_pb';
+import type { QueryInvitationsResponse } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { Config } from '@dxos/protocols/buf/dxos/config_pb';
 import type { SignalResponse, SubscribeToSpacesResponse } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import type {
@@ -47,6 +34,19 @@ import type {
   Presentation,
   ProfileDocument,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
+import type {
+  CreateEpochResponse,
+  Device,
+  Identity,
+  JoinSpaceResponse,
+  NetworkStatus,
+  Platform,
+  QueryAgentStatusResponse,
+  QueryEdgeStatusResponse,
+  QuerySpacesResponse,
+  RecoverIdentityRequest,
+  Space,
+} from '@dxos/protocols/proto/dxos/client/services';
 import type { AppService, ShellService } from '@dxos/protocols/proto/dxos/iframe';
 import type { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import type {

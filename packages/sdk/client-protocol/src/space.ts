@@ -10,13 +10,13 @@ import { type Obj } from '@dxos/echo';
 import { type EchoDatabase, type SpaceSyncState } from '@dxos/echo-client';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type Messenger } from '@dxos/protocols';
-import { type Invitation, type SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { type Invitation } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   type Contact,
   type Space as SpaceData,
   type SpaceMember,
-  type Space_PipelineState as SpacePipelineState,
-} from '@dxos/protocols/buf/dxos/client/services_pb';
+  type SpaceState,
+} from '@dxos/protocols/proto/dxos/client/services';
 import { type EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { type Credential, type Epoch, type MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -121,7 +121,7 @@ export interface Space extends Messenger {
   /**
    * Current state of space pipeline.
    */
-  get pipeline(): MulticastObservable<SpacePipelineState>;
+  get pipeline(): MulticastObservable<SpaceData.PipelineState>;
 
   get invitations(): MulticastObservable<CancellableInvitation[]>;
 
