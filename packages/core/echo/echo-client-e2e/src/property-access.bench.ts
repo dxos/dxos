@@ -160,17 +160,21 @@ await feedDb.flush();
 await automergeWideDb.flush();
 await feedWideDb.flush();
 
-// Flushes a persisted row's database before each of its phases — tinybench `setup` runs once before
-// warmup and once before run, awaited, so the drain completes before any iteration is timed. It has
-// to be `setup` and not `teardown`: tinybench awaits the former but fires the latter without
-// awaiting, so an async flush there would overlap the next row's iterations and still be in flight
-// at `afterAll`. Without any per-row drain, pending changes accumulate across the whole block, and
-// `DataService.update` ships them in a single RPC under a 30s timeout; a block's worth on 250-field
-// objects does not fit. As a side effect each phase starts from a drained queue, so automerge rows
-// no longer drift as the run goes on.
+// Flushes a persisted row's database once, before its warmup phase. tinybench `setup` is awaited, so
+// the drain completes before any iteration runs; it has to be `setup` and not `teardown`, which
+// tinybench fires without awaiting — an async flush there overlaps the next row's iterations and is
+// still in flight at `afterAll`. Without any per-row drain, pending changes accumulate across the
+// whole block, and `DataService.update` ships them in a single RPC under a 30s timeout; a block's
+// worth on 250-field objects does not fit.
+//
+// Before warmup only, not before run: a flush leaves background persistence settling for a while,
+// and draining right before the timed phase put that settling inside it — feed writes read 2x and
+// an automerge make row went bimodal. Warmup exists to absorb exactly that transient, so the drain
+// sits ahead of it and the run phase sees steady state. Pending state is then bounded to one row's
+// warmup plus run, which the drain of the next row carries.
 const flushing = (db: typeof automergeDb, options: typeof BENCH_OPTIONS) => ({
   ...options,
-  setup: () => db.flush(),
+  setup: (_task: unknown, mode: 'warmup' | 'run') => (mode === 'warmup' ? db.flush() : undefined),
 });
 
 // Generated at runtime so the written value is not a literal V8 can constant-fold into the store.
