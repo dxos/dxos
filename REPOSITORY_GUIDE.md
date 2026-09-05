@@ -161,6 +161,35 @@ The following command generates storybooks across the individual packages:
 moon run storybook-react:serve
 ```
 
+### When the server wedges
+
+The dev server periodically stops answering, or keeps answering while pegging a
+core, and only a restart clears it. The cause is not yet known — a restart
+destroys the evidence, which is why it has stayed that way. Two things are
+established: it is not memory (the server inherits an 8.4GB ceiling and idles
+around 1.2GB), and it is **activity-driven, not uptime-driven** — recorded
+intervals between wedges range from 1 minute to 32 hours, clustering during
+working hours and near-vanishing overnight.
+
+`serve` therefore arms a watcher beside the server (`tools/storybook-react/serve.sh`
+→ `diagnose.sh --ensure`). It polls, and the first time the server stops answering
+or holds ≥90% CPU for three polls it writes a report to `temp/` naming what the
+CPU is in, whether a Vite dep re-optimization was in flight, and how many
+storybook processes are alive; then it re-arms. Nothing to remember and nothing
+to run.
+
+To capture on demand, or when the server was started some other way:
+
+```bash
+bash tools/storybook-react/diagnose.sh            # capture now
+bash tools/storybook-react/diagnose.sh --watch    # capture whenever it next wedges
+```
+
+**Do not restart before capturing** — that is the whole difficulty. And check for
+a second server first: an orphaned keeper daemon from a previous session was found
+restarting storybook on another port for five days, doubling the watcher and
+memory load against the same repo.
+
 ### Fast dev mode (`serve-fast`)
 
 Long React sessions can slow down and eventually wedge the browser tab. By
