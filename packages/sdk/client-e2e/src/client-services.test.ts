@@ -228,7 +228,7 @@ describe('Client services', () => {
       }),
     );
 
-    expect(guestInvitation?.spaceKey).to.deep.eq(hostSpace.key);
+    expect(toPublicKey(guestInvitation?.spaceKey)).to.deep.eq(hostSpace.key);
     expect(hostInvitation?.spaceKey).to.deep.eq(guestInvitation?.spaceKey);
     expect(hostInvitation?.state).to.eq(Invitation_State.SUCCESS);
     log('invitation complete');

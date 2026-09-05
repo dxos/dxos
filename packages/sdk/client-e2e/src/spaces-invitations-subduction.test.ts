@@ -50,7 +50,7 @@ describe.skipIf(process.env.CI)('Spaces/invitations (subduction)', { timeout: 30
     const [{ invitation: hostInvitation }, { invitation: guestInvitation }] = await Promise.all(
       performInvitation({ host: space1, guest: client2.spaces }),
     );
-    expect(guestInvitation?.spaceKey).to.deep.eq(space1.key);
+    expect(toPublicKey(guestInvitation?.spaceKey)).to.deep.eq(space1.key);
     expect(hostInvitation?.spaceKey).to.deep.eq(guestInvitation?.spaceKey);
     expect(hostInvitation?.state).to.eq(Invitation_State.SUCCESS);
 
