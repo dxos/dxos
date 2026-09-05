@@ -3,7 +3,7 @@
 //
 
 import { ark } from '@ark-ui/react/factory';
-import * as TabsPrimitive from '@radix-ui/react-tabs';
+import { Tabs as TabsPrimitive } from '@ark-ui/react/tabs';
 import React, { type ComponentPropsWithoutRef, type MouseEvent, useCallback, useLayoutEffect } from 'react';
 
 import { findFirstFocusable } from '@dxos/react-focus';
@@ -26,6 +26,8 @@ import { mx } from '@dxos/ui-theme';
 
 type TabsActivePart = 'list' | 'panel';
 
+type TabsOrientation = 'horizontal' | 'vertical';
+
 const TABS_NAME = 'Tabs';
 
 //
@@ -36,7 +38,10 @@ type TabsContextValue = {
   activePart: TabsActivePart;
   setActivePart: (nextActivePart: TabsActivePart) => void;
   attendableId?: string;
-} & Pick<TabsPrimitive.TabsProps, 'orientation' | 'value'>;
+} & {
+  orientation?: TabsOrientation;
+  value?: string;
+};
 
 const [TabsContextProvider, useTabsContext] = createContext<TabsContextValue>(TABS_NAME, {
   orientation: 'vertical',
@@ -48,8 +53,14 @@ const [TabsContextProvider, useTabsContext] = createContext<TabsContextValue>(TA
 // Root
 //
 
-type TabsRootCustomProps = TabsPrimitive.TabsProps &
-  Partial<
+type TabsRootCustomProps = Omit<ComponentPropsWithoutRef<'div'>, 'defaultValue' | 'dir'> & {
+  value?: string;
+  defaultValue?: string;
+  onValueChange?: (value: string) => void;
+  orientation?: TabsOrientation;
+  /** `manual`: a tab activates on click or Enter; `automatic`: on focus. */
+  activationMode?: 'automatic' | 'manual';
+} & Partial<
     Pick<TabsContextValue, 'activePart' | 'attendableId'> & {
       onActivePartChange: (nextActivePart: TabsActivePart) => void;
       defaultActivePart: TabsActivePart;
@@ -117,13 +128,13 @@ const TabsRoot = slottable<HTMLDivElement, TabsRootCustomProps>(
         return;
       }
 
-      const panel = root.querySelector<HTMLElement>('[role="tabpanel"][data-state="active"]');
+      const panel = root.querySelector<HTMLElement>('[role="tabpanel"][data-selected]');
       if (!panel) {
         return;
       }
 
-      // Radix marks the active panel focusable for roving tabindex; `findFirstFocusable` skips the
-      // container itself, so the panel's content receives focus rather than the panel.
+      // The machine marks the selected panel focusable; `findFirstFocusable` skips the container
+      // itself, so the panel's content receives focus rather than the panel.
       findFirstFocusable(panel)?.focus();
     }, [activePart, value, suppressRegionFocus]);
 
@@ -141,8 +152,11 @@ const TabsRoot = slottable<HTMLDivElement, TabsRootCustomProps>(
           orientation={orientation}
           activationMode={activationMode}
           data-active={activePart}
-          value={value}
-          onValueChange={handleValueChange}
+          value={value ?? null}
+          onValueChange={({ value }) => handleValueChange(value)}
+          // Inactive panels unmount: their content re-runs its effects on activation, which the
+          // panel focus move above relies on.
+          unmountOnExit
           ref={tabsRoot}
         >
           {children}
@@ -180,7 +194,7 @@ TabsViewport.displayName = 'Tabs.Viewport';
 // Tablist
 //
 
-type TabsTablistProps = ThemedClassName<TabsPrimitive.TabsListProps>;
+type TabsTablistProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 
 const TabsTablist = ({ children, classNames, ...props }: TabsTablistProps) => {
   const { orientation } = useTabsContext('TabsTablist');
@@ -239,7 +253,7 @@ TabsTabGroupHeading.displayName = 'Tabs.TabGroupHeading';
 // Tab
 //
 
-type TabsButtonProps = ButtonProps & Pick<TabsPrimitive.TabsTriggerProps, 'value'>;
+type TabsButtonProps = ButtonProps & { value: string };
 
 const TabsButton = ({ value, classNames, children, onClick, variant, ...props }: TabsButtonProps) => {
   const { setActivePart, orientation, value: contextValue, attendableId } = useTabsContext('TabsButton');
@@ -281,7 +295,7 @@ TabsButton.displayName = 'Tabs.Button';
 // IconButton
 //
 
-type TabsIconButtonProps = IconButtonProps & Pick<TabsPrimitive.TabsTriggerProps, 'value'>;
+type TabsIconButtonProps = IconButtonProps & { value: string };
 
 const TabsIconButton = ({ value, classNames, onClick, variant, iconOnly, ...props }: TabsIconButtonProps) => {
   const { setActivePart, orientation, value: contextValue, attendableId } = useTabsContext('TabsIconButton');
@@ -322,13 +336,8 @@ TabsIconButton.displayName = 'Tabs.IconButton';
 // Panel
 //
 // Do NOT wrap TabsPanel children in React.Activity.
-// Radix TabsPrimitive.Content already unmounts inactive panels (no forceMount) — inactive tab
-// content is not in the DOM and effects do not run, which is the desired behaviour.
-// React.Activity (experimental in React 19) is a reconciler-level symbol that deactivates its
-// subtree when mode='hidden'. It was redundant here and prevented initial render of active panels.
-//
 
-type TabsPanelProps = ThemedClassName<TabsPrimitive.TabsContentProps>;
+type TabsPanelProps = ThemedClassName<ComponentPropsWithoutRef<'div'> & { value: string }>;
 
 const TabsPanel = ({ classNames, children, ...props }: TabsPanelProps) => (
   <TabsPrimitive.Content {...props} className={mx('p-0! dx-focus-ring-inset-over-all', classNames)}>
@@ -338,7 +347,7 @@ const TabsPanel = ({ classNames, children, ...props }: TabsPanelProps) => (
 
 TabsPanel.displayName = 'Tabs.Panel';
 
-type TabsTabPrimitiveProps = TabsPrimitive.TabsTriggerProps;
+type TabsTabPrimitiveProps = ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>;
 
 //
 // Tabs

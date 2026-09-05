@@ -28,8 +28,7 @@
     "@ark-ui/react": "catalog:",
     "@dxos/react-focus": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
-    "@dxos/react-ui-attention": "workspace:*",
-    "@radix-ui/react-tabs": "catalog:"
+    "@dxos/react-ui-attention": "workspace:*"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
