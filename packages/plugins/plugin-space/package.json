@@ -258,8 +258,7 @@
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/atom-react": "catalog:",
-    "react-drag-drop-files": "catalog:",
-    "react-qr-rounded": "catalog:"
+    "react-drag-drop-files": "catalog:"
   },
   "devDependencies": {
     "@dxos/agent-runtime": "workspace:*",

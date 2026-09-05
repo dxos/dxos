@@ -442,7 +442,6 @@ export const optimizeDepsInclude: string[] = [
   'react',
   'react-dom',
   'react-dom/client',
-  'react-qr-rounded',
   'react/jsx-dev-runtime',
   'react/jsx-runtime',
   'semver',

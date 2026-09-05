@@ -30,6 +30,7 @@ export * from './Banner';
 export * from './Panel';
 export * from './Popover';
 export * from './Progress';
+export * from './QrCode';
 export * from './ScrollArea';
 export * from './ScrollContainer';
 export * from './Select';

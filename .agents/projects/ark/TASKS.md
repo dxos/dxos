@@ -816,7 +816,11 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       controls, select, slider, progress, tags, avatar, skeleton, navigation, editable, collapsible, card,
       banner, overlays, dialogs), each its own story plus `All` composing them, under a sticky bar that
       sets the accent hue (overriding the accent role tokens on the subtree) and density.
-- [ ] **Replace `react-qr-rounded` with Ark's QR code** (`@ark-ui/react/qr-code`; tracked 2026-09-05).
+- [x] **Replace `react-qr-rounded` with Ark's QR code** DONE 2026-09-05: `QrCode` in `react-ui`
+      (`@ark-ui/react/qr-code`, `errorCorrection` → uqr `ecc`, pattern in `currentColor`); the three
+      usages (shell invitation, space members, client devices) keep their centred emoji as a sibling.
+      Visual change: square modules, no rounded dots and no reserved centre cut-out — the emoji sits on
+      the modules, which ECC `Q` tolerates. Package gone from four manifests and the catalog.
 - [ ] **Fold `react-ui-tabs` into `react-ui` and remove the package** (tracked 2026-09-05): Tabs is on
       Ark already; it belongs beside the other core components. Consumers change one import.
 - [ ] **Fold `react-ui-menu` into `react-ui` and remove the package** (tracked 2026-09-05): the

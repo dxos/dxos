@@ -25,6 +25,7 @@ import { menuTheme } from '../components/Menu/Menu.theme';
 import { panelTheme } from '../components/Panel/Panel.theme';
 import { popoverTheme } from '../components/Popover/Popover.theme';
 import { progressTheme } from '../components/Progress/Progress.theme';
+import { qrCodeTheme } from '../components/QrCode/QrCode.theme';
 import { scrollAreaTheme } from '../components/ScrollArea/ScrollArea.theme';
 import { selectTheme } from '../components/Select/Select.theme';
 import { separatorTheme } from '../components/Separator/Separator.theme';
@@ -71,6 +72,7 @@ export const defaultTheme: Theme<Record<string, any>> = {
   menu: menuTheme,
   popover: popoverTheme,
   progress: progressTheme,
+  qrCode: qrCodeTheme,
   scrollArea: scrollAreaTheme,
   select: selectTheme,
   separator: separatorTheme,

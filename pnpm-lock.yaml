@@ -1338,9 +1338,6 @@ catalogs:
     react-markdown:
       specifier: ^10.1.0
       version: 10.1.0
-    react-qr-rounded:
-      specifier: ^1.0.0
-      version: 1.0.0
     react-resize-detector:
       specifier: ^11.0.1
       version: 11.0.1
@@ -2673,9 +2670,6 @@ importers:
       react-dom:
         specifier: ~19.2.7
         version: 19.2.7(react@19.2.7)
-      react-qr-rounded:
-        specifier: 'catalog:'
-        version: 1.0.0(react@19.2.7)
       solid-js:
         specifier: 'catalog:'
         version: 1.9.11
@@ -8772,9 +8766,6 @@ importers:
       effect:
         specifier: 4.0.0-rc.108
         version: 4.0.0-rc.108
-      react-qr-rounded:
-        specifier: 'catalog:'
-        version: 1.0.0(react@19.2.7)
       yaml:
         specifier: 'catalog:'
         version: 2.8.2
@@ -15381,9 +15372,6 @@ importers:
       react-drag-drop-files:
         specifier: 'catalog:'
         version: 2.3.8(react-dom@19.2.7(react@19.2.7))(react-is@17.0.2)(react@19.2.7)
-      react-qr-rounded:
-        specifier: 'catalog:'
-        version: 1.0.0(react@19.2.7)
     devDependencies:
       '@dxos/agent-runtime':
         specifier: workspace:*
@@ -18897,9 +18885,6 @@ importers:
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0
-      react-qr-rounded:
-        specifier: 'catalog:'
-        version: 1.0.0(react@19.2.7)
       scheduler:
         specifier: 'catalog:'
         version: 0.27.0
@@ -39439,9 +39424,6 @@ packages:
   pwacompat@2.0.17:
     resolution: {integrity: sha512-6Du7IZdIy7cHiv7AhtDy4X2QRM8IAD5DII69mt5qWibC2d15ZU8DmBG1WdZKekG11cChSu4zkSUGPF9sweOl6w==}
 
-  qrcode-generator@1.4.4:
-    resolution: {integrity: sha512-HM7yY8O2ilqhmULxGMpcHSF1EhJJ9yBj8gvDEuZ6M+KGJ0YY2hKpnXvRD+hZPLrDVck3ExIGhmPtSdcjC+guuw==}
-
   qs@6.15.0:
     resolution: {integrity: sha512-mAZTtNCeetKMH+pSjrb76NAM8V9a05I9aBZOHztWy/UqcJdQYNsf59vrRKWnojAT9Y+GbIvoTBC++CPHqpDBhQ==}
     engines: {node: '>=0.6'}
@@ -39678,11 +39660,6 @@ packages:
     resolution: {integrity: sha512-qKxVopLT/TyA6BX3Ue5NwabOsAzm0Q7kAPwq6L+wWDwisYs7R8vZ0nRXqq6rkueboxpkjvLGU9fWifiX/ZZFxQ==}
     peerDependencies:
       '@types/react': ~19.2.17
-      react: ~19.2.7
-
-  react-qr-rounded@1.0.0:
-    resolution: {integrity: sha512-6ZW/yUwXXqdFzFu1zVyR2fZy2vyfX2ymFDEQEd2fjZqgC01voQlDfZzC5UmGur95kOfW7wh0gNUPKANeicM9hw==}
-    peerDependencies:
       react: ~19.2.7
 
   react-reconciler@0.32.0:
@@ -63004,8 +62981,6 @@ snapshots:
 
   pwacompat@2.0.17: {}
 
-  qrcode-generator@1.4.4: {}
-
   qs@6.15.0:
     dependencies:
       side-channel: 1.1.0
@@ -63371,11 +63346,6 @@ snapshots:
       vfile: 6.0.3
     transitivePeerDependencies:
       - supports-color
-
-  react-qr-rounded@1.0.0(react@19.2.7):
-    dependencies:
-      qrcode-generator: 1.4.4
-      react: 19.2.7
 
   react-reconciler@0.32.0(react@19.2.7):
     dependencies:

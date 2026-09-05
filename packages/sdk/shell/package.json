@@ -61,7 +61,6 @@
     "@dxos/util": "workspace:*",
     "@xstate/react": "catalog:",
     "date-fns": "catalog:",
-    "react-qr-rounded": "catalog:",
     "scheduler": "catalog:",
     "use-sync-external-store": "catalog:",
     "xstate": "catalog:"

@@ -569,7 +569,6 @@ catalog:
   react-json-tree: ^0.18.0
   react-leaflet: ^5.0.0
   react-markdown: ^10.1.0
-  react-qr-rounded: ^1.0.0
   react-resize-detector: ^11.0.1
   react-router-dom: ^6.30.3
   react-syntax-highlighter: ^15.6.1

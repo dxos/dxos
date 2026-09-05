@@ -183,7 +183,6 @@
     "isomorphic-fetch": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "react-qr-rounded": "catalog:",
     "solid-js": "catalog:",
     "workbox-expiration": "catalog:",
     "workbox-precaching": "catalog:",

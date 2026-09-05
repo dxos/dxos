@@ -3,10 +3,9 @@
 //
 
 import React, { useMemo } from 'react';
-import { QR } from 'react-qr-rounded';
 
 import { type InvitationStatus } from '@dxos/react-client/invitations';
-import { Clipboard, Icon, useId, useTranslation } from '@dxos/react-ui';
+import { Clipboard, Icon, QrCode, useId, useTranslation } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
@@ -58,17 +57,12 @@ export const InvitationManager = ({
               {t(multiUse ? 'invite-many-qr.label' : 'invite-one-qr.label')}
             </p>
             <div className={mx('text-description', 'w-full max-w-[14rem] relative')}>
-              <QR
-                rounding={100}
-                backgroundColor='transparent'
-                color='currentColor'
-                className={mx('dx-fill p-2', showAuthCode && 'invisible')}
+              <QrCode
+                classNames={['p-2', showAuthCode && 'invisible']}
                 aria-labelledby={qrLabel}
-                errorCorrectionLevel='Q'
-                cutout={true}
-              >
-                {invitationUrl ?? 'never'}
-              </QR>
+                errorCorrection='Q'
+                value={invitationUrl ?? 'never'}
+              />
               <Centered>
                 <Emoji text={emoji} />
               </Centered>

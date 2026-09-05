@@ -199,7 +199,6 @@
     "@dxos/shell": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:",
-    "react-qr-rounded": "catalog:",
     "yaml": "catalog:"
   },
   "devDependencies": {

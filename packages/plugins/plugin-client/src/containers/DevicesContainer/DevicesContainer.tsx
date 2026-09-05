@@ -3,7 +3,6 @@
 //
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { QR } from 'react-qr-rounded';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { EffectEx } from '@dxos/effect';
@@ -12,7 +11,7 @@ import { useDevices, useInvitationFlow } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
-import { Button, Clipboard, Flex, Icon, IconButton, useId, useTranslation } from '@dxos/react-ui';
+import { Button, Clipboard, Flex, Icon, IconButton, QrCode, useId, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 import { AuthCode, Centered, DeviceListItem, Emoji, Viewport } from '@dxos/shell/react';
@@ -257,16 +256,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
       <div role='group' className='grid grid-cols-[1fr_min-content]'>
         <Flex justify='center' classNames='py-4'>
           <div className='w-full md:max-w-80 aspect-square relative text-description'>
-            <QR
-              rounding={100}
-              backgroundColor='transparent'
-              color='currentColor'
-              aria-labelledby={qrLabel}
-              errorCorrectionLevel='Q'
-              cutout={true}
-            >
-              {url ?? 'never'}
-            </QR>
+            <QrCode aria-labelledby={qrLabel} errorCorrection='Q' value={url ?? 'never'} />
             <Centered>
               <Emoji text={emoji} />
             </Centered>
