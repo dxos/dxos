@@ -94,9 +94,10 @@ const Frame = ({ children }: PropsWithChildren) => {
     <Tooltip.Provider>
       <Toast.Provider>
         <div className='flex flex-col min-h-dvh' style={accentStyle(hue)}>
-          <Toolbar.Root classNames='sticky top-0 z-10 dx-base-surface border-b border-separator px-4'>
+          <Toolbar.Root classNames='sticky top-0 z-10'>
             <span className='text-sm text-description'>Accent</span>
             <HueSelect value={hue} onValueChange={setHue} />
+            <Toolbar.Separator />
             <span className='text-sm text-description'>Density</span>
             <Toolbar.ToggleGroup
               type='single'
@@ -104,7 +105,7 @@ const Frame = ({ children }: PropsWithChildren) => {
               onValueChange={(next) => next && setDensity(next as Density)}
             >
               {DENSITIES.map((option) => (
-                <Toolbar.ToggleGroupItem key={option} value={option}>
+                <Toolbar.ToggleGroupItem key={option} value={option} classNames='uppercase text-xs'>
                   {option}
                 </Toolbar.ToggleGroupItem>
               ))}
