@@ -46,8 +46,8 @@ its scorer interface now and fixtures later.
       unset, a group packs at 20px and every route through it is fenced (→ `route-through-node`).
 - [x] **`%% ref <Id> <target>`** directive in the flowchart parser → `WorldObject.ref` (portable: a
       comment to mermaid proper).
-- [x] **Tier 2 scoreboard** — `scripts/render-diagrams.tsx -- --scoreboard` (vite-node; bun cannot
-      load elkjs): corpus × {layered, elk} → errors / crossings / bends / area.
+- [x] **Tier 2 scoreboard** — `moon run plugin-illustrator:render-diagrams -- --scoreboard`
+      (vite-node; bun cannot load elkjs): corpus × {layered, elk} → errors / crossings / bends / area.
 - [x] **Diagram corpus** (`docs/diagrams/`) — six sources written from read-only Explore surveys with
       per-node refs (echo, assistant, compute, pipeline, app-framework, edge), rendered to `.svg`;
       `corpus.test.ts` gates hard defects, snapshots soft metrics, and checks every ref resolves
@@ -104,7 +104,8 @@ its scorer interface now and fixtures later.
       `MermaidEngine` and returns `diagnostics`; the UML skill tells the agent to fix errors and
       regenerate, and documents flowcharts + `%% ref`.
 - [ ] **Contact sheet** of the six SVGs as one reviewable artifact.
-- [ ] **DESIGN.md** — add Diagnostics + selection sections; drop future-work #4 once done.
+- [x] **DESIGN.md** — Diagnostics, selection, flowchart engine and objective sections added.
+- [ ] Drop DESIGN.md future-work #4 (free-text overflow) once `Diagnostics` measures `text` elements.
 
 ## Phase 1: Scene DSL (agent draws/edits diagrams)
 

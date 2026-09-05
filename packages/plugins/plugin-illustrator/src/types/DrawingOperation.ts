@@ -88,7 +88,7 @@ export const Generate = Operation.make({
     drawing: Ref.Ref(Drawing.Drawing).annotate({ description: 'The drawing to generate into.' }),
     source: Schema.String.annotate({
       description:
-        'Mermaid source: a flowchart or a classDiagram. Flowcharts may carry `%% ref <nodeId> <dxn-or-url>` lines saying what a node depicts.',
+        'Mermaid source: a flowchart or a classDiagram. Flowcharts may carry `%% ref <nodeId> <target>` lines saying what a node depicts: an ECHO object reference opens on activation; other URIs and paths are carried for tooling.',
     }),
   }),
   output: Schema.Struct({

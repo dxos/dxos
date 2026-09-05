@@ -445,13 +445,35 @@ export const SceneSvg = ({ classNames, objects, grid, selection, onSelectionChan
           key={object.id}
           data-object={object.id}
           data-selected={selected.has(object.id) || undefined}
-          className={mx(interactive && 'cursor-pointer', selected.has(object.id) && 'text-accent-text')}
+          // Keyboard: Tab focuses an object, Space selects it, Enter selects and activates it.
+          tabIndex={interactive ? 0 : undefined}
+          role={interactive ? 'button' : undefined}
+          aria-label={interactive ? object.id : undefined}
+          aria-pressed={interactive ? selected.has(object.id) : undefined}
+          className={mx(
+            interactive && 'cursor-pointer outline-none focus-visible:[&>*]:stroke-accent-text',
+            selected.has(object.id) && 'text-accent-text',
+          )}
           onClick={interactive ? (event) => handleSelect(object.id, event) : undefined}
           onDoubleClick={
             onActivate
               ? (event) => {
                   event.stopPropagation();
                   onActivate(object.id);
+                }
+              : undefined
+          }
+          onKeyDown={
+            interactive
+              ? (event) => {
+                  if (event.key === ' ' || event.key === 'Enter') {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    onSelectionChange?.(event.shiftKey ? [...selected, object.id] : [object.id]);
+                    if (event.key === 'Enter') {
+                      onActivate?.(object.id);
+                    }
+                  }
                 }
               : undefined
           }

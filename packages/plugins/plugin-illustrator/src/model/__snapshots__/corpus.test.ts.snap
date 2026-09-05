@@ -30,8 +30,8 @@ exports[`corpus: echo > soft metrics 1`] = `
 
 exports[`corpus: edge > soft metrics 1`] = `
 {
-  "bends": 34,
-  "crossings": 11,
+  "bends": 28,
+  "crossings": 17,
 }
 `;
 

@@ -1,6 +1,5 @@
 ---
 '@dxos/plugin-illustrator': minor
-'@dxos/plugin-tldraw': minor
 ---
 
 Scene diagnostics, renderer-implemented selection, and an engine-backed flowchart dialect with lattice placement.

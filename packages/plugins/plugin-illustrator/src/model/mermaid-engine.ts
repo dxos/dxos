@@ -182,15 +182,29 @@ const compactGroups = (
     const current = groups[index];
     // Gap between the two frames: last member's far edge plus pad, to first member's near edge less pad.
     const gap = current.start - FRAME_PAD - (previous.end + size + FRAME_PAD);
-    const surplus = Math.floor((gap - FRAME_GAP) / step) * step;
+    let surplus = Math.floor((gap - FRAME_GAP) / step) * step;
     if (surplus <= 0) {
       continue;
     }
-    // Shift this group and every node at or beyond its start, so relative order is preserved.
-    for (const [id, point] of result) {
-      if (point[axis] >= current.start) {
-        result.set(id, { ...point, [axis]: point[axis] - surplus });
-      }
+    // Everything at or beyond this group's start shifts together, so relative order is preserved —
+    // but only onto free lattice points: an ungrouped node moving with the block must not land on
+    // a node that stays put.
+    const moving = [...result].filter(([, point]) => point[axis] >= current.start);
+    const staying = new Set(
+      [...result].filter(([, point]) => point[axis] < current.start).map(([, point]) => `${point.x}:${point.y}`),
+    );
+    const collides = (shift: number) =>
+      moving.some(([, point]) =>
+        staying.has(`${axis === 'x' ? point.x - shift : point.x}:${axis === 'y' ? point.y - shift : point.y}`),
+      );
+    while (surplus > 0 && collides(surplus)) {
+      surplus -= step;
+    }
+    if (surplus <= 0) {
+      continue;
+    }
+    for (const [id, point] of moving) {
+      result.set(id, { ...point, [axis]: point[axis] - surplus });
     }
     for (const later of groups.slice(index)) {
       later.start -= surplus;

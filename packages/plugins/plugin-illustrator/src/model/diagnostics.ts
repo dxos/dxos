@@ -168,11 +168,16 @@ const overlapArea = (a: Rect, b: Rect): number => {
   return w > EPSILON && h > EPSILON ? w * h : 0;
 };
 
+/**
+ * Strict enclosure: the inner rect fits inside AND is smaller. Two identical rects are stacked
+ * nodes — the strongest overlap — not a container and its member.
+ */
 const contains = (outer: Rect, inner: Rect): boolean =>
   outer.x - EPSILON <= inner.x &&
   outer.y - EPSILON <= inner.y &&
   outer.x + outer.w + EPSILON >= inner.x + inner.w &&
-  outer.y + outer.h + EPSILON >= inner.y + inner.h;
+  outer.y + outer.h + EPSILON >= inner.y + inner.h &&
+  (inner.w < outer.w - EPSILON || inner.h < outer.h - EPSILON);
 
 /**
  * Length of the segment's run through the rect's INTERIOR (Liang-Barsky). A connector legitimately

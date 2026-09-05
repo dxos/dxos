@@ -10,7 +10,8 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { URI } from '@dxos/keys';
+import { EID, URI } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { useTranslation } from '@dxos/react-ui';
 import { useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 
@@ -51,18 +52,22 @@ export const DrawingArticle = ({ role, attendableId, subject: drawing, extrinsic
     (objectId: string) => {
       const db = canvas && Obj.getDatabase(canvas);
       const object = canvas && match?.builder.read(canvas).scene.objects.find(({ id }) => id === objectId);
-      if (!db || !object?.ref || !URI.isURI(object.ref)) {
+      // Only ECHO refs have an activation; URLs and paths are carried on the object for tooling.
+      if (!db || !object?.ref || !EID.isEID(object.ref)) {
         return;
       }
+      const ref = object.ref;
       void db
-        .makeRef(URI.make(object.ref))
+        .makeRef(URI.make(ref))
         .load()
         .then((target) =>
           // A ref may name a relation or type, which have no navigable path.
           Obj.isObject(target)
             ? invokePromise(LayoutOperation.Open, { subject: [GraphPath.getObjectPathFromObject(target)] })
             : undefined,
-        );
+        )
+        // The referenced object may be gone or not yet replicated; that is not the drawing's error.
+        .catch((error: unknown) => log.warn('activation target did not load', { ref, error }));
     },
     [canvas, match, invokePromise],
   );

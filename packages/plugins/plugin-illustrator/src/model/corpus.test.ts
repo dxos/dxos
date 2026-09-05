@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { readdirSync, readFileSync } from 'node:fs';
-import { basename, join } from 'node:path';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { basename, join, resolve, sep } from 'node:path';
 import { describe, test } from 'vitest';
 
 import { analyze, errors } from './diagnostics';
@@ -42,14 +42,15 @@ describe.each(corpus)('corpus: %s', (_name, source) => {
   });
 
   test('every ref names a path in this repository or a URL', async ({ expect }) => {
-    const { existsSync } = await import('node:fs');
     const objects = objectsOf(await MermaidEngine.compile(source));
     const refs = objects.flatMap((object) => (object.ref ? [[object.id, object.ref] as const] : []));
 
     expect(refs.length).toBeGreaterThan(0);
     for (const [id, ref] of refs) {
-      const ok = /^[a-z]+:\/\//.test(ref) || existsSync(join(REPO, ref));
-      expect(ok, `${id} → ${ref}`).toBe(true);
+      // A path must resolve inside the repository — `../` out of it would pass `existsSync` alone.
+      const target = resolve(REPO, ref);
+      const inRepo = target.startsWith(resolve(REPO) + sep) && existsSync(target);
+      expect(/^[a-z]+:\/\//.test(ref) || inRepo, `${id} → ${ref}`).toBe(true);
     }
   });
 });

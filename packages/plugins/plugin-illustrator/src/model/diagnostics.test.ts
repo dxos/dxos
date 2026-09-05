@@ -39,6 +39,10 @@ describe('diagnostics', () => {
     const overlapping = analyze([box('a', 0, 0), box('b', 32, 32)]);
     expect(overlapping.diagnostics.map(({ code }) => code)).toEqual(['node-overlap']);
 
+    // Exactly stacked nodes are the strongest overlap, not a container and its member.
+    const stacked = analyze([box('a', 0, 0), box('b', 0, 0)]);
+    expect(stacked.diagnostics.map(({ code }) => code)).toEqual(['node-overlap']);
+
     // A subgraph frame enclosing its members is a container, not a collision.
     const contained = analyze([box('frame', 0, 0, 400, 400), box('a', 32, 32)]);
     expect(contained.diagnostics).toEqual([]);

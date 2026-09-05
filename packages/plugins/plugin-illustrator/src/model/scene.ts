@@ -180,7 +180,7 @@ export const WorldObject = Schema.Struct({
   scale: Schema.optional(Schema.Number).annotate({ description: 'Canvas px per local unit (default 1).' }),
   ref: Schema.optional(Schema.String).annotate({
     description:
-      'What the object depicts, as a DXN (an ECHO object) or a URI (e.g. a repository path), so a selected node can resolve to related content.',
+      'What the object depicts: an ECHO object reference (activating the node opens it) or any other URI or path, carried for tooling.',
   }),
   elements: Schema.Array(Element),
 });

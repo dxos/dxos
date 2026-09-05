@@ -65,11 +65,8 @@ const MermaidDiagram = ({ source }: { source: string }) => {
   const [error, setError] = useState<string>();
   useEffect(() => {
     let cancelled = false;
-    Mermaid.initialize({
-      startOnLoad: false,
-      theme: themeMode === 'dark' ? 'dark' : 'neutral',
-      securityLevel: 'loose',
-    });
+    // Default (strict) security level: the source is free text and the SVG is injected as HTML.
+    Mermaid.initialize({ startOnLoad: false, theme: themeMode === 'dark' ? 'dark' : 'neutral' });
     Mermaid.render(`mermaid-${id}`, source)
       .then(({ svg }) => {
         if (!cancelled) {

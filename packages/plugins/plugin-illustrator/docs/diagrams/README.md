@@ -15,7 +15,8 @@ the code must not drift from the code.
   `A --> B`, `A -->|label| B`. Anything else is ignored by the parser.
 - `%% ref <Id> <path-or-url>` says what a node depicts. It is a comment to mermaid proper, so the
   sources render unchanged in any other mermaid tool; here it becomes `WorldObject.ref`, which
-  selection and activation resolve.
+  selection and activation use to resolve the referenced object (activation opens ECHO refs; URLs
+  and paths are carried for tooling).
 - Keep a diagram to ≲ 14 nodes and ≤ 3 groups; split rather than crowd.
 
 ## Commands

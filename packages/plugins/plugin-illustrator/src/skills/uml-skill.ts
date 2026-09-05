@@ -71,9 +71,10 @@ const make = () =>
 
         The same tool compiles a mermaid \`flowchart\` (TB or LR) for architecture and data-flow
         diagrams: \`subgraph id [Label] … end\` groups, \`Id[Label]\` nodes, \`A --> B\` and
-        \`A -->|label| B\` edges. Add \`%% ref <Id> <target>\` lines to say what a node depicts —
-        an object DXN or a URL/path — so selecting the node can lead to it. Keep to ~14 nodes
-        and 3 groups; split a larger system into several drawings.
+        \`A -->|label| B\` edges. Add \`%% ref <Id> <target>\` lines to say what a node depicts:
+        an ECHO object reference opens when the node is activated; a URL or path is kept on the
+        node for tooling. Keep to ~14 nodes and 3 groups; split a larger system into several
+        drawings.
 
         When asked for the diagram source rather than a canvas rendering (e.g. to embed in a
         markdown document), return the same mermaid classDiagram in a fenced mermaid block.
