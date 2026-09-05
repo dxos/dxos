@@ -1,5 +1,340 @@
 # @dxos/plugin-assistant
 
+## 0.12.0
+
+### Minor Changes
+
+- 2cad6c0: The chat now says what a request is doing while the reader waits for the first token, instead of showing an unexplained pause.
+
+  `@dxos/assistant` adds an ephemeral `RequestPhase` trace event (`assistant.requestPhase`) carrying the setup stage a turn has reached — `preparing`, `loading-history`, `summarizing`, `connecting-mcp`, `building-toolkit`, `encoding-prompt`, `contacting-provider` — plus a 1-based `attempt` so a request the provider makes us re-issue reads as a retry rather than a stall, and a free-form `detail` (the MCP server count, today). Emit one with `emitRequestPhase(phase, opts)`; it rides the existing ephemeral trace channel alongside `PartialBlock`, so it never reaches the durable feed. The `connecting-mcp` phase is skipped entirely when there are no servers, so a no-op stage never misreports where the wait is.
+
+  `@dxos/plugin-assistant` exposes the latest phase on `AiChatProcessor.activity` and renders it as `Chat.Activity`, a line between the thread and the composer. It clears as soon as content streams in — the reply is the better progress report — and on the request settling, being cancelled, or failing. Mounted in the chat article, the chat dialog, and the assistant story chat.
+
+- cd205fb: Add a `TurnProducer` seam to the agent process so an alternative engine can produce conversation turns: `AgentServiceOptions.makeTurnProducer` injects the producer (defaulting to the built-in `AiSession`), and the new `AssistantCapabilities.AgentTurnProducer` capability lets a plugin contribute one.
+- b7d66c8: The `Chat` schema is no longer re-exported from the `@dxos/plugin-assistant/Assistant` namespace; import it from `@dxos/assistant-toolkit` instead. Plugin and UI packages also widen their `@dxos/react-ui` and `@dxos/ui-theme` peer-dependency ranges from an exact workspace pin to `workspace:^`, so consumers are no longer forced onto a single matching version.
+- b8762ef: Chat context binding is now contributed through the `SubjectContext` capability: a chat opened against an object binds whatever every applicable provider derives from it, rather than a hardcoded set of cases. Project chats are ordinary companion chats — `ProjectOperation.CreateChat` is removed, and a project's instructions and skills reach its chat through a contributed provider. Adds `Skill.resolveAnnotatedSkills`, which resolves a type's declared skills across the registry and the space with a space copy (a fork) winning.
+- f3f55a8: `Chat` holds its tasks directly: `taskSet: Ref<TaskSet>` is replaced by `tasks: Ref<Task>[]`. The type version goes `0.1.0` → `0.2.0` to mark the breaking field change; there is no data migration. The chat's `tasks` array is the membership-and-order record, exactly the shape `TaskSet.tasks` has, and `SetParent` on the field makes every task a child of the conversation that produced it.
+
+  What this removes: the lazy task-set dance. `Chat.ensureTaskSet` / `ensureTaskSetSync` / `peekTaskSetRef` are gone, and with them the create-then-link race a conversation's first recorded task used to run. `Chat.addTask` / `Chat.deleteTask` are the shared write primitives (mirroring `TaskSet.addTask` / `deleteTask`), and `Chat.resolveTasks` is the non-Effect twin of `Chat.loadTasks`. `Chat.TaskList` reads `chat.tasks` directly, which closes its parent-walk TODO.
+
+  Behaviour change: a project chat's checklist is now its own rather than the owning project's `TaskSet`, so a project's chats no longer share one ledger and delegated tasks no longer appear in the project's task list. `Project.taskSet` is unchanged and remains the project's durable ledger, written by the project verbs.
+
+  **`@dxos/types` — the derived task views move from `TaskSet` to `Task`.** They always took a plain `readonly Task[]` and never touched a `TaskSet`; they lived in that module only because a task set used to be the sole container. With `Chat` as a second container the misplacement forced consumers to import a type they do not use, so `refEntityId`, `dedupeById`, `parentTaskId`, `orderTasks`, `rootTasks`, `subTasks`, `isTaskReady`, `effectiveMilestoneId(s)`, `tasksForMilestone`, `backlogTasks`, `milestoneProgress`, `collectSubtree` and `Progress` are now `Task.*`, joined by a new `Task.subtree` (every task transitively under one within a list — the synchronous counterpart of `collectSubtree`, cycle-safe, and what a delete has to sweep out of a membership array). `TaskSet` keeps what takes a task set: the schema, `make`, `instanceOf`, `addTask`, `deleteTask`, `resolveTasks`, `resolveMilestones`, and the membership and ordering helpers (`findTaskSet`, `addTaskToSet`, `removeTasksFromSet`, `reorder`, `resolveParentTask`, `applyParentTask`, …).
+
+  Call sites update mechanically (`TaskSet.rootTasks` → `Task.rootTasks`, `TaskSet.refEntityId` → `Task.refEntityId`, and so on). `react-ui-task` and `plugin-tasks` follow the rename; `assistant-toolkit` and `plugin-assistant` now reference `TaskSet` nowhere at all.
+
+- 4521dec: Every new chat now carries the planning skill, so a conversation can read and update the durable task checklist it already holds rather than answering task questions from nothing. A new "Coding Chatroom App" space template seeds a brief, a five-stage plan as a task tree, and a Development skill covering how work is tracked and how managed agents are briefed. `SetSessionCredentials` and `RevokeSessionCredentials` are replaced by a single `UpdateSessionCredentials` operation whose `refresh` mode re-reads every credential a running session already holds, so a rotated OAuth token no longer needs the session restarted — the two removed operations were also invisible to the model, since a `Schema.NonEmptyArray` input serialized to a JSON-schema keyword the tool resolver could not project. In the thread, a system-generated turn renders in its own framed panel again instead of as the model's own prose, and status and reasoning blocks fold into the tool run they narrate — including a run that never reaches a call — so a turn spent only narrating reads as one row rather than a widget per block.
+- 7d000b9: Added `Filter.hasParent(boolean)` for selecting objects by parent presence (indexed, reactive to `Obj.setParent`). Breaking: the `Chat.CompanionTo` relation is removed — companion and agent chats are now linked to their subject by the ECHO parent edge (`Obj.setParent`), and the standalone-chats query selects unparented chats directly.
+
+  Companion chats are linked via `Chat.CompanionChatAnnotation` (refs stored on the subject object) plus the parent edge — `Chat.linkCompanion`; `Obj.setParent` now warns when the parent holds no ref to the child (to become an invariant). The `Err` module is renamed to `Error` (`@dxos/echo/Error`).
+
+- 983fe1d: Removed the Agent Wizard skill. `AgentWizardSkill`, `AgentWizardHandlers` and `AgentWizardOperations` are gone from `@dxos/assistant-toolkit`, and the skill is no longer contributed or bound into new chats by `@dxos/plugin-assistant`.
+
+  Its wizard-only tools (`org.dxos.operation.assistantToolkit.createAgent`, `org.dxos.operation.assistantToolkit.getAgentRules`) are removed with it — agent creation is now a UI action. `SyncAutomation` (`org.dxos.operation.assistantToolkit.syncTriggers`) is unchanged and keeps its key, but now lives in the agent skill: reach it via `AgentSkillOperations.SyncAutomation` and register `AgentSkillHandlers`.
+
+### Patch Changes
+
+- 4025ffe: Agent process state now lives in the session feed: queued prompts are Messages carrying a queued annotation, alarms are a new `Alarm` feed record (several may be pending at once), and both are managed with regular feed CRUD. A queue entry is marked consumed only after the turn it drove, so an interrupted turn is redelivered rather than lost. `SessionLoader` is renamed `SessionStore` and gains the read/write surface (`loadState`, `loadPending`, `enqueueMessage`, `ack`, `setAlarm`, `cancelAlarm`). The chat UI surfaces both: queued prompts stack above the composer and are cancellable, the next alarm shows in the status pill, and submitting during a running turn queues behind it instead of being dropped. Breaking: `SessionLoader` no longer exists, and the set-alarm operation no longer replaces the previous alarm.
+- 8363f12: Fix AI chat requests failing with `AiModelNotAvailableError`: the edge, local and bundled-sidecar model resolvers activated after the AI service had already snapshotted its resolver list. Ollama is now sent tool call arguments as an object, so the turn following a tool call is no longer rejected with HTTP 400. A model the configured provider does not serve is named in the chat's failure toast rather than reported as an unexpected error, and `@dxos/react-ui`'s translations are registered at startup so its primitives no longer render raw keys.
+- cd6f37f: Chat now re-attaches to an agent that is still working when the view is remounted (e.g. navigating to another page mid-turn), so the running indicator and streamed output are no longer lost.
+- a1075de: Assistant chat UI fixes. The outline rail lists one tick per prompt again — tool results travel back as user-role messages carrying a synthetic text block, so filtering on the role alone added a tick per tool call, titled from raw `<result>` markup, and cut each turn's range short at its first tool call. The thread gains a floating scroll-to-bottom button, which `useFollow` supports by publishing `atEnd` as state and `MessageList.Viewport` by taking an `overlay` slot. Suggestion chips are capped by the column they render in rather than the viewport, and are spaced by their own padding rather than a separator character that wrapped onto the next row. The chat options Skills and Objects lists sit flush to the popover edge, via ScrollArea knobs `SearchList.Viewport` now forwards. XML-tag widgets force a bounded parse on their first decoration build, so a remounted feed row does not show raw markup while the background parser catches up. A multi-step turn now renders as one tool panel rather than a card per call: the thread's projection folds each run of tool-only messages into one message (the runtime delivers one block per message), and the panel shows a row per call — naming the call in flight while the turn is live, then counting the run once it settles.
+- 9fe88c8: Fixed two errors when opening the assistant companion: a momentary "Cannot read properties of null" flash while the chat was being provisioned (the companion now renders blank until it exists), and a "RovingFocusGroupItem must be used within RovingFocusGroup" crash when another plugin contributed a plain toolbar action to the prompt (the contributed items now render inside a toolbar context).
+- 15f952c: The chat's activity line ("Assembling tools", "Contacting inference provider", …) now sits above the counters pill rather than below it, so the sentence reads as a caption over the elapsed/token numbers. Both lines are composed by a new `Chat.StatusStack`.
+- 51c7e91: Fix live sub-agent delegation: the `completeJob` tool schema is now sent to the provider verbatim (the structured-output transformer produced empty subschemas the Anthropic API rejects), and delegation failures post a concise message instead of a stack trace. Breaking: `Chat.outline` is replaced by `Chat.taskSet` — the conversation's working surface is a durable `TaskSet` (planning and delegation write `Task` objects; standalone chats delegate into their own set); the `Task.Status` literal `in-progress` is renamed `started` (named `Task.Priority`/`Task.Status` schemas are now exported); and `TaskList.Root` gains a `showGroupLabels` prop.
+- 2fd4095: Compact the trace panel's process rows and label an agent row with the name of the chat it is serving.
+- 81b5eb2: Inline chat prompts now report their completed flow back to the agent as a synthetic turn, so the conversation resumes instead of stalling on a click the agent cannot observe: connecting a service reports the connector and the new credential's URI once it is in the space, and enabling a plugin reports the plugin.
+- 9477170: Stop a queued prompt appearing in both the queue and the transcript while the agent's turn runs.
+- 7c426d4: Present operations that yield via `Operation.runAgain()` (`RunAgainError`) as a distinct "incomplete" state in the trace graph and routine run list, rather than a hard error, since the run will be re-invoked. The `operation.end` trace event now carries the failing error's `errorCode` so consumers can distinguish a run-again yield from a genuine failure.
+- 256f286: Projects gain a lifecycle `status` field (`active | paused | blocked | ended`), surfaced through the MCP-projected verbs, and plugin-projects ships a project-management skill for external agents — including the `/codeProject setup` flow that binds a repo to an existing space. The skill's key segment is `codeProject` because the segment doubles as the projected MCP prompt name and plain `project` belongs to assistant-toolkit's own skill.
+
+  `toEffectSchema` recognizes ECHO's reference sentinel before the generic `type: 'object'` branch, so a reference node widened with structural keywords (as a wire boundary may do for schema-unaware consumers) decodes as a reference instead of a plain struct. Serialization is unchanged — persisted schemas stay byte-identical to previous releases.
+
+  Worker (`workerd`) bundles no longer pull in React. Wrangler resolves `workerd, worker, browser` and never `node`, so a `#capabilities` map offering only `node` and `default` handed workers the browser barrel and its React surfaces. Every plugin with a headless entry now resolves a server-safe barrel under a `workerd` condition, and the `check-module-structure` guards trace with `workerd,worker` — the conditions a worker actually resolves — so a reintroduced leak fails the check instead of passing against a build that is never shipped.
+
+- Updated dependencies [0280a6a]
+- Updated dependencies [9477170]
+- Updated dependencies [86d1482]
+- Updated dependencies [4025ffe]
+- Updated dependencies [62d755f]
+- Updated dependencies [2cad6c0]
+- Updated dependencies [af1c007]
+- Updated dependencies [cd205fb]
+- Updated dependencies [106d38a]
+- Updated dependencies [8363f12]
+- Updated dependencies [9477170]
+- Updated dependencies [d2be597]
+- Updated dependencies [e2eecf2]
+- Updated dependencies [2800d03]
+- Updated dependencies [96f94c2]
+- Updated dependencies [9477170]
+- Updated dependencies [592b00e]
+- Updated dependencies [6d52561]
+- Updated dependencies [22bea85]
+- Updated dependencies [4a0b78b]
+- Updated dependencies [34a8433]
+- Updated dependencies [0fe00c5]
+- Updated dependencies [b8762ef]
+- Updated dependencies [f3f55a8]
+- Updated dependencies [51c7e91]
+- Updated dependencies [4521dec]
+- Updated dependencies [b2d5bb2]
+- Updated dependencies [3aa3d63]
+- Updated dependencies [85ad256]
+- Updated dependencies [2d4107f]
+- Updated dependencies [c56ba34]
+- Updated dependencies [069e8ed]
+- Updated dependencies [7becabf]
+- Updated dependencies [73daef4]
+- Updated dependencies [75971ad]
+- Updated dependencies [3958355]
+- Updated dependencies [b4c7782]
+- Updated dependencies [fee7666]
+- Updated dependencies [d194929]
+- Updated dependencies [557e243]
+- Updated dependencies [49aee6c]
+- Updated dependencies [ea11703]
+- Updated dependencies [5305365]
+- Updated dependencies [c01fef6]
+- Updated dependencies [881f900]
+- Updated dependencies [881f900]
+- Updated dependencies [881f900]
+- Updated dependencies [881f900]
+- Updated dependencies [881f900]
+- Updated dependencies [a09e18e]
+- Updated dependencies [a3d45c4]
+- Updated dependencies [8a77160]
+- Updated dependencies [881f900]
+- Updated dependencies [6d28380]
+- Updated dependencies [da37a13]
+- Updated dependencies [0a01ff7]
+- Updated dependencies [1c995c4]
+- Updated dependencies [7575cb6]
+- Updated dependencies [a69d861]
+- Updated dependencies [ba08e65]
+- Updated dependencies [dbff1e4]
+- Updated dependencies [3ee20ca]
+- Updated dependencies [9817b6f]
+- Updated dependencies [5fcd238]
+- Updated dependencies [5e8878c]
+- Updated dependencies [e094f74]
+- Updated dependencies [23d2d8c]
+- Updated dependencies [b0953f0]
+- Updated dependencies [375b863]
+- Updated dependencies [6c6987e]
+- Updated dependencies [3e02201]
+- Updated dependencies [261c821]
+- Updated dependencies [ed43a8d]
+- Updated dependencies [dde6714]
+- Updated dependencies [4800a6f]
+- Updated dependencies [1b62726]
+- Updated dependencies [a3b6ef0]
+- Updated dependencies [b02fe16]
+- Updated dependencies [c439ba0]
+- Updated dependencies [6af130f]
+- Updated dependencies [c8b7158]
+- Updated dependencies [2c442f9]
+- Updated dependencies [2922d36]
+- Updated dependencies [d62a947]
+- Updated dependencies [7d000b9]
+- Updated dependencies [cafa240]
+- Updated dependencies [813069c]
+- Updated dependencies [4c107a2]
+- Updated dependencies [b9d72bb]
+- Updated dependencies [9477170]
+- Updated dependencies [84568a0]
+- Updated dependencies [0ef896f]
+- Updated dependencies [48fd9fe]
+- Updated dependencies [3e9a10f]
+- Updated dependencies [8ea2bf9]
+- Updated dependencies [5ceaf9c]
+- Updated dependencies [48ea128]
+- Updated dependencies [8ca2ac7]
+- Updated dependencies [2c06e2e]
+- Updated dependencies [098a0bb]
+- Updated dependencies [0132aab]
+- Updated dependencies [a74e9b0]
+- Updated dependencies [47c8d7e]
+- Updated dependencies [10b1239]
+- Updated dependencies [9c86066]
+- Updated dependencies [5180720]
+- Updated dependencies [b600f72]
+- Updated dependencies [99e323d]
+- Updated dependencies [ea11703]
+- Updated dependencies [bf4f1e6]
+- Updated dependencies [9477170]
+- Updated dependencies [cc45381]
+- Updated dependencies [bcfe4c5]
+- Updated dependencies [6328de3]
+- Updated dependencies [12b6618]
+- Updated dependencies [df0ab57]
+- Updated dependencies [41e2750]
+- Updated dependencies [ebb8f4a]
+- Updated dependencies [4f760ce]
+- Updated dependencies [0a7d273]
+- Updated dependencies [557e243]
+- Updated dependencies [ca34a80]
+- Updated dependencies [b65d4fb]
+- Updated dependencies [29543ca]
+- Updated dependencies [e26af7e]
+- Updated dependencies [ab79741]
+- Updated dependencies [c0e5651]
+- Updated dependencies [3214dcf]
+- Updated dependencies [40ecd44]
+- Updated dependencies [24fcadc]
+- Updated dependencies [1160094]
+- Updated dependencies [77a2d34]
+- Updated dependencies [4804da0]
+- Updated dependencies [61fe676]
+- Updated dependencies [d4b4919]
+- Updated dependencies [63e500b]
+- Updated dependencies [9684ee8]
+- Updated dependencies [7c426d4]
+- Updated dependencies [02fe893]
+- Updated dependencies [cd4da46]
+- Updated dependencies [19f19a2]
+- Updated dependencies [1b6e258]
+- Updated dependencies [93c7523]
+- Updated dependencies [4a71ef2]
+- Updated dependencies [987f7e1]
+- Updated dependencies [e7fc023]
+- Updated dependencies [a09e18e]
+- Updated dependencies [1ab4bb8]
+- Updated dependencies [fc8c80c]
+- Updated dependencies [32468c3]
+- Updated dependencies [0a3e9dd]
+- Updated dependencies [08c82f9]
+- Updated dependencies [256f286]
+- Updated dependencies [306f50d]
+- Updated dependencies [6c881a2]
+- Updated dependencies [f048062]
+- Updated dependencies [092f3be]
+- Updated dependencies [74f9b30]
+- Updated dependencies [cc9b81f]
+- Updated dependencies [4cb12a9]
+- Updated dependencies [5b504b4]
+- Updated dependencies [eb95cd7]
+- Updated dependencies [89bca65]
+- Updated dependencies [0b1dcbd]
+- Updated dependencies [a53cabb]
+- Updated dependencies [d7b0a3b]
+- Updated dependencies [20e86ba]
+- Updated dependencies [1482a3f]
+- Updated dependencies [983fe1d]
+- Updated dependencies [af1ff99]
+- Updated dependencies [2513a52]
+- Updated dependencies [1d6f730]
+- Updated dependencies [b125655]
+- Updated dependencies [f962a7d]
+- Updated dependencies [10defed]
+- Updated dependencies [0280a6a]
+- Updated dependencies [9e91762]
+- Updated dependencies [4f55909]
+- Updated dependencies [f4c2702]
+- Updated dependencies [dea5df9]
+- Updated dependencies [318bbad]
+- Updated dependencies [fc83abd]
+- Updated dependencies [efa7836]
+- Updated dependencies [678ba58]
+- Updated dependencies [8904184]
+- Updated dependencies [e680b16]
+- Updated dependencies [a805212]
+- Updated dependencies [77d0026]
+- Updated dependencies [e288833]
+- Updated dependencies [ea11703]
+- Updated dependencies [886453b]
+- Updated dependencies [0280a6a]
+- Updated dependencies [18597fc]
+- Updated dependencies [63629c5]
+- Updated dependencies [881f900]
+- Updated dependencies [66f381d]
+- Updated dependencies [d8e9de1]
+- Updated dependencies [0c92b44]
+- Updated dependencies [72b2984]
+- Updated dependencies [32584c9]
+- Updated dependencies [32353e6]
+- Updated dependencies [559acfa]
+- Updated dependencies [97efbaa]
+- Updated dependencies [b767bc1]
+- Updated dependencies [e8088ea]
+- Updated dependencies [bb94124]
+- Updated dependencies [928e0b2]
+- Updated dependencies [5d816a6]
+- Updated dependencies [f9816c0]
+- Updated dependencies [578b543]
+- Updated dependencies [78523d2]
+- Updated dependencies [9986e16]
+- Updated dependencies [211ae8e]
+- Updated dependencies [06cbe76]
+- Updated dependencies [40b50c2]
+- Updated dependencies [4ae2005]
+- Updated dependencies [85bdad2]
+- Updated dependencies [714beb8]
+- Updated dependencies [4a10672]
+- Updated dependencies [ee180f6]
+- Updated dependencies [79d5ecf]
+- Updated dependencies [cc11297]
+- Updated dependencies [ff37699]
+  - @dxos/app-framework@0.12.0
+  - @dxos/app-toolkit@0.12.0
+  - @dxos/compute-runtime@0.12.0
+  - @dxos/agent-runtime@0.12.0
+  - @dxos/client@0.12.0
+  - @dxos/plugin-markdown@0.12.0
+  - @dxos/assistant@0.12.0
+  - @dxos/plugin-registry@0.12.0
+  - @dxos/echo@0.12.0
+  - @dxos/ai@0.12.0
+  - @dxos/react-ui@0.12.0
+  - @dxos/assistant-toolkit@0.12.0
+  - @dxos/link@0.12.0
+  - @dxos/config@0.12.0
+  - @dxos/compute@0.12.0
+  - @dxos/plugin-tasks@0.12.0
+  - @dxos/react-ui-task@0.12.0
+  - @dxos/types@0.12.0
+  - @dxos/react-ui-assistant@0.12.0
+  - @dxos/plugin-client@0.12.0
+  - @dxos/plugin-connector@0.12.0
+  - @dxos/plugin-space@0.12.0
+  - @dxos/react-ui-form@0.12.0
+  - @dxos/plugin-deck@0.12.0
+  - @dxos/echo-client@0.12.0
+  - @dxos/edge-client@0.12.0
+  - @dxos/ui-editor@0.12.0
+  - @dxos/graph@0.12.0
+  - @dxos/app-graph@0.12.0
+  - @dxos/devtools@0.12.0
+  - @dxos/react-ui-menu@0.12.0
+  - @dxos/react-ui-transcription@0.12.0
+  - @dxos/react-ui-list@0.12.0
+  - @dxos/ui-theme@0.12.0
+  - @dxos/ui-types@0.12.0
+  - @dxos/plugin-routine@0.12.0
+  - @dxos/plugin-transcription@0.12.0
+  - @dxos/react-ui-components@0.12.0
+  - @dxos/react-ui-feed@0.12.0
+  - @dxos/schema@0.12.0
+  - @dxos/util@0.12.0
+  - @dxos/plugin-attention@0.12.0
+  - @dxos/plugin-graph@0.12.0
+  - @dxos/plugin-status-bar@0.12.0
+  - @dxos/conductor@0.12.0
+  - @dxos/react-client@0.12.0
+  - @dxos/echo-react@0.12.0
+  - @dxos/react-ui-search@0.12.0
+  - @dxos/react-ui-attention@0.12.0
+  - @dxos/react-ui-chat@0.12.0
+  - @dxos/react-ui-syntax-highlighter@0.12.0
+  - @dxos/react-ui-tabs@0.12.0
+  - @dxos/halo-react@0.12.0
+  - @dxos/ui@0.12.0
+  - @dxos/async@0.12.0
+  - @dxos/effect@0.12.0
+  - @dxos/log@0.12.0
+  - @dxos/react-list@0.12.0
+  - @dxos/invariant@0.12.0
+  - @dxos/keys@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

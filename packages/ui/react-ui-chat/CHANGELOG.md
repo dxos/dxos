@@ -1,5 +1,44 @@
 # @dxos/react-ui-chat
 
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [96f94c2]
+- Updated dependencies [d194929]
+- Updated dependencies [557e243]
+- Updated dependencies [4800a6f]
+- Updated dependencies [1b62726]
+- Updated dependencies [813069c]
+- Updated dependencies [098a0bb]
+- Updated dependencies [41e2750]
+- Updated dependencies [557e243]
+- Updated dependencies [29543ca]
+- Updated dependencies [d4b4919]
+- Updated dependencies [0a3e9dd]
+- Updated dependencies [306f50d]
+- Updated dependencies [6c881a2]
+- Updated dependencies [cc9b81f]
+- Updated dependencies [1d6f730]
+- Updated dependencies [fc83abd]
+- Updated dependencies [8904184]
+- Updated dependencies [e680b16]
+- Updated dependencies [a805212]
+- Updated dependencies [32584c9]
+- Updated dependencies [e8088ea]
+- Updated dependencies [928e0b2]
+- Updated dependencies [f9816c0]
+- Updated dependencies [06cbe76]
+  - @dxos/react-ui@0.12.0
+  - @dxos/ui-editor@0.12.0
+  - @dxos/ui-theme@0.12.0
+  - @dxos/react-ui-editor@0.12.0
+  - @dxos/react-ui-components@0.12.0
+  - @dxos/util@0.12.0
+  - @dxos/react-ui-dnd@0.12.0
+  - @dxos/async@0.12.0
+  - @dxos/invariant@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

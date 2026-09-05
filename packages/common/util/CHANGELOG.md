@@ -1,5 +1,15 @@
 # @dxos/util
 
+## 0.12.0
+
+### Patch Changes
+
+- e8088ea: Fix logs and file exports in the native app, where both halves failed silently: downloads went through `<a download>`, which the Tauri webview drops, and are now saved via the native save dialog, falling back to the anchor where the dialog is unreachable; feedback log uploads posted to a relative path that does not exist on the app's own origin, and now take a configurable absolute endpoint.
+- @dxos/debug@0.12.0
+  - @dxos/invariant@0.12.0
+  - @dxos/keys@0.12.0
+  - @dxos/node-std@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

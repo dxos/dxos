@@ -1,5 +1,145 @@
 # @dxos/plugin-sandbox
 
+## 0.12.0
+
+### Patch Changes
+
+- 6a2ae32: Add a DeepSeek harness skill: provisions a sandbox with the space's DeepSeek credential bound to it, installs the harness CLI, and runs it on a prompt. The sandbox plugin now exports its operation definitions as `@dxos/plugin-sandbox/SandboxOperation`.
+- ed43a8d: Every EDGE service is now addressed as `<env>.dxos.network/<service>`, derived from one configured
+  entrypoint. `getEdgeServiceEndpoint` falls back to `runtime.services.edge.url` plus the service's
+  path prefix, so configuring EDGE configures calls, image, transcription, discord, the CORS proxy,
+  introspect and sandbox with it; `runtime.services.edgeServices` stays as the per-service override and
+  no longer has to be populated. An unconfigured client still resolves nothing.
+
+  No client path contains `/api/<service>` any more: the calls API moved from `/api/calls` to
+  `<edge>/calls/rtc`, sandbox-service's REST API from `<host>/api/sandbox` to `<edge>/sandbox`, and the
+  CORS proxy from `cors.dxos.network` to `<edge>/cors-proxy`. Video transcripts are fetched directly rather
+  than through the CORS proxy, since the EDGE entrypoint sends CORS headers that the worker's own
+  hostname did not.
+
+  Requires the paired `dxos/edge` change to be deployed to production FIRST. That change is additive —
+  every path a released Composer calls keeps answering — so the two can land in either order without an
+  outage, but a build made from this commit only works against an EDGE that serves the prefixes.
+
+  `configPreset({ sandbox })` sets `runtime.services.sandbox.url` only for `local`; the deployed
+  sandbox-service is reached through EDGE.
+
+- Updated dependencies [0280a6a]
+- Updated dependencies [86d1482]
+- Updated dependencies [af1c007]
+- Updated dependencies [106d38a]
+- Updated dependencies [e2eecf2]
+- Updated dependencies [2800d03]
+- Updated dependencies [592b00e]
+- Updated dependencies [6d52561]
+- Updated dependencies [4a0b78b]
+- Updated dependencies [34a8433]
+- Updated dependencies [0fe00c5]
+- Updated dependencies [b8762ef]
+- Updated dependencies [f3f55a8]
+- Updated dependencies [2d4107f]
+- Updated dependencies [75971ad]
+- Updated dependencies [3958355]
+- Updated dependencies [ea11703]
+- Updated dependencies [5305365]
+- Updated dependencies [a3d45c4]
+- Updated dependencies [881f900]
+- Updated dependencies [6d28380]
+- Updated dependencies [da37a13]
+- Updated dependencies [0a01ff7]
+- Updated dependencies [1c995c4]
+- Updated dependencies [a69d861]
+- Updated dependencies [ba08e65]
+- Updated dependencies [dbff1e4]
+- Updated dependencies [5fcd238]
+- Updated dependencies [5e8878c]
+- Updated dependencies [e094f74]
+- Updated dependencies [a3b6ef0]
+- Updated dependencies [b02fe16]
+- Updated dependencies [c439ba0]
+- Updated dependencies [6af130f]
+- Updated dependencies [2c442f9]
+- Updated dependencies [2922d36]
+- Updated dependencies [d62a947]
+- Updated dependencies [7d000b9]
+- Updated dependencies [cafa240]
+- Updated dependencies [4c107a2]
+- Updated dependencies [b9d72bb]
+- Updated dependencies [3e9a10f]
+- Updated dependencies [8ea2bf9]
+- Updated dependencies [8ca2ac7]
+- Updated dependencies [2c06e2e]
+- Updated dependencies [0132aab]
+- Updated dependencies [a74e9b0]
+- Updated dependencies [47c8d7e]
+- Updated dependencies [10b1239]
+- Updated dependencies [9c86066]
+- Updated dependencies [5180720]
+- Updated dependencies [b600f72]
+- Updated dependencies [99e323d]
+- Updated dependencies [ea11703]
+- Updated dependencies [cc45381]
+- Updated dependencies [bcfe4c5]
+- Updated dependencies [6328de3]
+- Updated dependencies [12b6618]
+- Updated dependencies [ebb8f4a]
+- Updated dependencies [ca34a80]
+- Updated dependencies [e26af7e]
+- Updated dependencies [ab79741]
+- Updated dependencies [24fcadc]
+- Updated dependencies [4804da0]
+- Updated dependencies [61fe676]
+- Updated dependencies [63e500b]
+- Updated dependencies [7c426d4]
+- Updated dependencies [cd4da46]
+- Updated dependencies [19f19a2]
+- Updated dependencies [1ab4bb8]
+- Updated dependencies [32468c3]
+- Updated dependencies [256f286]
+- Updated dependencies [306f50d]
+- Updated dependencies [5b504b4]
+- Updated dependencies [d7b0a3b]
+- Updated dependencies [1482a3f]
+- Updated dependencies [2513a52]
+- Updated dependencies [b125655]
+- Updated dependencies [f962a7d]
+- Updated dependencies [f4c2702]
+- Updated dependencies [dea5df9]
+- Updated dependencies [318bbad]
+- Updated dependencies [efa7836]
+- Updated dependencies [678ba58]
+- Updated dependencies [ea11703]
+- Updated dependencies [886453b]
+- Updated dependencies [0280a6a]
+- Updated dependencies [18597fc]
+- Updated dependencies [63629c5]
+- Updated dependencies [881f900]
+- Updated dependencies [d8e9de1]
+- Updated dependencies [72b2984]
+- Updated dependencies [32584c9]
+- Updated dependencies [32353e6]
+- Updated dependencies [559acfa]
+- Updated dependencies [97efbaa]
+- Updated dependencies [e8088ea]
+- Updated dependencies [bb94124]
+- Updated dependencies [5d816a6]
+- Updated dependencies [78523d2]
+- Updated dependencies [40b50c2]
+- Updated dependencies [85bdad2]
+- Updated dependencies [4a10672]
+- Updated dependencies [ee180f6]
+- Updated dependencies [cc11297]
+- Updated dependencies [ff37699]
+  - @dxos/app-framework@0.12.0
+  - @dxos/app-toolkit@0.12.0
+  - @dxos/client@0.12.0
+  - @dxos/echo@0.12.0
+  - @dxos/link@0.12.0
+  - @dxos/compute@0.12.0
+  - @dxos/types@0.12.0
+  - @dxos/util@0.12.0
+  - @dxos/keys@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

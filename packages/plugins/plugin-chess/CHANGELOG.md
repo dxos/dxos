@@ -1,5 +1,158 @@
 # @dxos/plugin-chess
 
+## 0.12.0
+
+### Patch Changes
+
+- 256f286: Projects gain a lifecycle `status` field (`active | paused | blocked | ended`), surfaced through the MCP-projected verbs, and plugin-projects ships a project-management skill for external agents — including the `/codeProject setup` flow that binds a repo to an existing space. The skill's key segment is `codeProject` because the segment doubles as the projected MCP prompt name and plain `project` belongs to assistant-toolkit's own skill.
+
+  `toEffectSchema` recognizes ECHO's reference sentinel before the generic `type: 'object'` branch, so a reference node widened with structural keywords (as a wire boundary may do for schema-unaware consumers) decodes as a reference instead of a plain struct. Serialization is unchanged — persisted schemas stay byte-identical to previous releases.
+
+  Worker (`workerd`) bundles no longer pull in React. Wrangler resolves `workerd, worker, browser` and never `node`, so a `#capabilities` map offering only `node` and `default` handed workers the browser barrel and its React surfaces. Every plugin with a headless entry now resolves a server-safe barrel under a `workerd` condition, and the `check-module-structure` guards trace with `workerd,worker` — the conditions a worker actually resolves — so a reintroduced leak fails the check instead of passing against a build that is never shipped.
+
+- 6c881a2: Treat query editor tags as atomic chips, keep typed text off them, fix `selectionEnd` never moving the caret, and expand the chess board to fill its card.
+- Updated dependencies [0280a6a]
+- Updated dependencies [86d1482]
+- Updated dependencies [af1c007]
+- Updated dependencies [106d38a]
+- Updated dependencies [e2eecf2]
+- Updated dependencies [2800d03]
+- Updated dependencies [96f94c2]
+- Updated dependencies [6d52561]
+- Updated dependencies [4a0b78b]
+- Updated dependencies [34a8433]
+- Updated dependencies [0fe00c5]
+- Updated dependencies [b8762ef]
+- Updated dependencies [85ad256]
+- Updated dependencies [2d4107f]
+- Updated dependencies [c56ba34]
+- Updated dependencies [069e8ed]
+- Updated dependencies [7becabf]
+- Updated dependencies [73daef4]
+- Updated dependencies [75971ad]
+- Updated dependencies [3958355]
+- Updated dependencies [fee7666]
+- Updated dependencies [d194929]
+- Updated dependencies [557e243]
+- Updated dependencies [ea11703]
+- Updated dependencies [5305365]
+- Updated dependencies [a3d45c4]
+- Updated dependencies [6d28380]
+- Updated dependencies [da37a13]
+- Updated dependencies [0a01ff7]
+- Updated dependencies [1c995c4]
+- Updated dependencies [a69d861]
+- Updated dependencies [ba08e65]
+- Updated dependencies [dbff1e4]
+- Updated dependencies [3ee20ca]
+- Updated dependencies [5fcd238]
+- Updated dependencies [5e8878c]
+- Updated dependencies [e094f74]
+- Updated dependencies [3e02201]
+- Updated dependencies [a3b6ef0]
+- Updated dependencies [b02fe16]
+- Updated dependencies [c439ba0]
+- Updated dependencies [6af130f]
+- Updated dependencies [2c442f9]
+- Updated dependencies [2922d36]
+- Updated dependencies [d62a947]
+- Updated dependencies [7d000b9]
+- Updated dependencies [cafa240]
+- Updated dependencies [813069c]
+- Updated dependencies [4c107a2]
+- Updated dependencies [b9d72bb]
+- Updated dependencies [9477170]
+- Updated dependencies [0ef896f]
+- Updated dependencies [48fd9fe]
+- Updated dependencies [3e9a10f]
+- Updated dependencies [8ea2bf9]
+- Updated dependencies [48ea128]
+- Updated dependencies [8ca2ac7]
+- Updated dependencies [2c06e2e]
+- Updated dependencies [098a0bb]
+- Updated dependencies [0132aab]
+- Updated dependencies [47c8d7e]
+- Updated dependencies [10b1239]
+- Updated dependencies [9c86066]
+- Updated dependencies [5180720]
+- Updated dependencies [b600f72]
+- Updated dependencies [99e323d]
+- Updated dependencies [ea11703]
+- Updated dependencies [cc45381]
+- Updated dependencies [bcfe4c5]
+- Updated dependencies [df0ab57]
+- Updated dependencies [ebb8f4a]
+- Updated dependencies [557e243]
+- Updated dependencies [ca34a80]
+- Updated dependencies [29543ca]
+- Updated dependencies [e26af7e]
+- Updated dependencies [ab79741]
+- Updated dependencies [24fcadc]
+- Updated dependencies [4804da0]
+- Updated dependencies [61fe676]
+- Updated dependencies [d4b4919]
+- Updated dependencies [63e500b]
+- Updated dependencies [7c426d4]
+- Updated dependencies [19f19a2]
+- Updated dependencies [1ab4bb8]
+- Updated dependencies [32468c3]
+- Updated dependencies [0a3e9dd]
+- Updated dependencies [256f286]
+- Updated dependencies [306f50d]
+- Updated dependencies [5b504b4]
+- Updated dependencies [d7b0a3b]
+- Updated dependencies [1482a3f]
+- Updated dependencies [2513a52]
+- Updated dependencies [1d6f730]
+- Updated dependencies [b125655]
+- Updated dependencies [9e91762]
+- Updated dependencies [f4c2702]
+- Updated dependencies [dea5df9]
+- Updated dependencies [318bbad]
+- Updated dependencies [fc83abd]
+- Updated dependencies [efa7836]
+- Updated dependencies [678ba58]
+- Updated dependencies [8904184]
+- Updated dependencies [e680b16]
+- Updated dependencies [a805212]
+- Updated dependencies [e288833]
+- Updated dependencies [ea11703]
+- Updated dependencies [886453b]
+- Updated dependencies [18597fc]
+- Updated dependencies [63629c5]
+- Updated dependencies [881f900]
+- Updated dependencies [72b2984]
+- Updated dependencies [32584c9]
+- Updated dependencies [32353e6]
+- Updated dependencies [559acfa]
+- Updated dependencies [e8088ea]
+- Updated dependencies [bb94124]
+- Updated dependencies [928e0b2]
+- Updated dependencies [5d816a6]
+- Updated dependencies [f9816c0]
+- Updated dependencies [78523d2]
+- Updated dependencies [40b50c2]
+- Updated dependencies [85bdad2]
+- Updated dependencies [4a10672]
+- Updated dependencies [ee180f6]
+- Updated dependencies [cc11297]
+- Updated dependencies [ff37699]
+  - @dxos/app-framework@0.12.0
+  - @dxos/app-toolkit@0.12.0
+  - @dxos/echo@0.12.0
+  - @dxos/react-ui@0.12.0
+  - @dxos/compute@0.12.0
+  - @dxos/plugin-client@0.12.0
+  - @dxos/ui-theme@0.12.0
+  - @dxos/util@0.12.0
+  - @dxos/plugin-game@0.12.0
+  - @dxos/echo-react@0.12.0
+  - @dxos/react-ui-audio@0.12.0
+  - @dxos/react-ui-gameboard@0.12.0
+  - @dxos/log@0.12.0
+  - @dxos/invariant@0.12.0
+  - @dxos/keys@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes
