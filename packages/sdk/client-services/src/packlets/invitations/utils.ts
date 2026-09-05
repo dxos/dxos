@@ -5,8 +5,9 @@
 import { type Mutex, type MutexGuard } from '@dxos/async';
 import { type Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import { bufWkt } from '@dxos/protocols/buf';
-import { Invitation, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { Invitation, Invitation_AuthMethod, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { Invitation as LegacyInvitation } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 export const stateToString = (state: Invitation_State): string => {
@@ -61,5 +62,38 @@ export const toSpaceMemberRole = (role: SpaceMember_Role | undefined): SpaceMemb
     // An invitation without a role admits an administrator, as it did before the role was carried.
     case undefined:
       return SpaceMember.Role.ADMIN;
+  }
+};
+
+/**
+ * Reads the peer-protocol auth method as the invitation's buf auth method.
+ *
+ * `dxos.halo.invitations` still carries `Invitation.AuthMethod` through the protobuf.js codec, so
+ * the enum arrives nominally distinct from the buf one despite being the same proto enum.
+ */
+export const toBufAuthMethod = (authMethod: LegacyInvitation.AuthMethod | undefined): Invitation_AuthMethod => {
+  switch (authMethod) {
+    case LegacyInvitation.AuthMethod.NONE:
+      return Invitation_AuthMethod.NONE;
+    case LegacyInvitation.AuthMethod.SHARED_SECRET:
+      return Invitation_AuthMethod.SHARED_SECRET;
+    case LegacyInvitation.AuthMethod.KNOWN_PUBLIC_KEY:
+      return Invitation_AuthMethod.KNOWN_PUBLIC_KEY;
+    case undefined:
+      return Invitation_AuthMethod.NONE;
+  }
+};
+
+/** Writes the invitation's buf auth method as the peer-protocol one. Inverse of {@link toBufAuthMethod}. */
+export const fromBufAuthMethod = (authMethod: Invitation_AuthMethod | undefined): LegacyInvitation.AuthMethod => {
+  switch (authMethod) {
+    case Invitation_AuthMethod.NONE:
+      return LegacyInvitation.AuthMethod.NONE;
+    case Invitation_AuthMethod.SHARED_SECRET:
+      return LegacyInvitation.AuthMethod.SHARED_SECRET;
+    case Invitation_AuthMethod.KNOWN_PUBLIC_KEY:
+      return LegacyInvitation.AuthMethod.KNOWN_PUBLIC_KEY;
+    case undefined:
+      return LegacyInvitation.AuthMethod.NONE;
   }
 };

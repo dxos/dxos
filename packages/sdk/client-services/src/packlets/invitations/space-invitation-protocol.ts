@@ -25,7 +25,7 @@ import {
 
 import { type DataSpaceManager, type SigningContext } from '../spaces';
 import { type InvitationProtocol } from './invitation-protocol';
-import { computeExpirationTime, toSpaceMemberRole } from './utils';
+import { computeExpirationTime, fromBufAuthMethod, toSpaceMemberRole } from './utils';
 
 export class SpaceInvitationProtocol implements InvitationProtocol {
   constructor(
@@ -107,7 +107,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
       space.key,
       {
         invitationId: invitation.invitationId,
-        authMethod: invitation.authMethod,
+        authMethod: fromBufAuthMethod(invitation.authMethod),
         swarmKey: toPublicKey(invitation.swarmKey),
         role: toSpaceMemberRole(invitation.role),
         expiresOn: computeExpirationTime(invitation),
