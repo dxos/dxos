@@ -792,6 +792,13 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       ever appeared in the dev storybook while the runner (no StrictMode) passed. Deferred store calls
       now consult an `alive` ref, so only a real unmount dismisses. `TestStrictMode` wraps the stack in
       `StrictMode` in the runner. Verified in the live tab: toasts appear; closing the middle closes ranks.
+      **Runner parity (2026-09-05):** the vitest storybook project now defines `FRAMEWORK_OPTIONS`
+      `{ strictMode: true }` in `vite.base.config.ts`, so it renders under StrictMode like the dev server
+      (a `setProjectAnnotations` decorator does not reach the renderer). Effect-count probe reads 2; the
+      Toast module without the alive guard fails two stories in it. Swept react-ui (61 files) and 38 of
+      40 consumer packages green; the one StrictMode-exposed defect found, `HtmlViewer`'s disposed flag
+      never reset on remount, is fixed. Toast stories rationalized to five (Default with args, Stacked
+      with an `overlap` control, TestLifecycle, TestPile, TestClosesRanks).
       A root that unmounts while visible is `dismiss`ed, not `remove`d: removing drops the actor before
       it retires its height from the pile, which left a phantom slot between survivors (seen 2026-09-05).
       `Toast.Viewport` is Ark's `Toaster`, rendering each registered root inside the machine's actor so

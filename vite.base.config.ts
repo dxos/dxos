@@ -449,6 +449,10 @@ const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
     resolve: {
       alias: { ...TIKTOKEN_ALIAS },
     },
+    // The dev server renders every story under `StrictMode` (`framework.options.strictMode` in
+    // `main.ts`), which the React renderer reads from this global; the runner does not inject it, so
+    // a defect that only StrictMode's double-invoked effects expose would pass here and fail live.
+    define: { FRAMEWORK_OPTIONS: JSON.stringify({ strictMode: true }) },
     optimizeDeps: {
       include: ['react', 'react-dom', 'react/jsx-runtime'],
     },
