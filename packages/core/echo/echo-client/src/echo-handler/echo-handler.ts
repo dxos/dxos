@@ -168,7 +168,31 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   get(target: ProxyTarget, prop: string | symbol, receiver: any): any {
-    invariant(Array.isArray(target[symbolPath]));
+    // Decoded primitives are served from the target's leaf cache while it is current, ahead of every
+    // other check: array targets carry no cache, the internal accessors below are all symbols, and
+    // entries are only ever written on the virtual-data path after the `Reflect.has` walk has
+    // classified the key — a key that resolved to document data cannot later resolve to a prototype
+    // accessor. `notifyUpdate` bumps the core generation on every mutation, local or remote, before
+    // anything can observe it, so a hit is never stale.
+    let leafCache: LeafCache | undefined;
+    if (typeof prop === 'string') {
+      leafCache = target[symbolLeafCache];
+      if (leafCache) {
+        const generation = target[symbolInternals].generation;
+        if (leafCache.generation !== generation) {
+          leafCache.values.clear();
+          leafCache.generation = generation;
+        } else if (leafCache.values.has(prop)) {
+          return leafCache.values.get(prop);
+        }
+      }
+    }
+
+    // The build instruments every `invariant` call with an allocated call-site record, so on this
+    // path the call sits behind the check rather than being the check.
+    if (!Array.isArray(target[symbolPath])) {
+      invariant(false, 'Proxy target has no path.');
+    }
 
     // Cross-cutting internal accessors that apply to records and arrays alike.
     switch (prop) {
@@ -187,25 +211,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         return Reflect.get(target, prop);
       }
       return this._arrayGet(target, prop);
-    }
-
-    // Decoded primitives are served from the target's leaf cache while it is current. A hit may be
-    // returned ahead of the `Reflect.has` walk below because entries are only ever written on the
-    // virtual-data path, after that walk has classified the key — and a key that resolved to document
-    // data cannot later resolve to a prototype accessor. `notifyUpdate` bumps the core generation on
-    // every mutation, local or remote, before anything can observe it, so a hit is never stale.
-    let leafCache: LeafCache | undefined;
-    if (typeof prop === 'string') {
-      leafCache = target[symbolLeafCache];
-      if (leafCache) {
-        const generation = target[symbolInternals].generation;
-        if (leafCache.generation !== generation) {
-          leafCache.values.clear();
-          leafCache.generation = generation;
-        } else if (leafCache.values.has(prop)) {
-          return leafCache.values.get(prop);
-        }
-      }
     }
 
     // The ECHO system surface (id, [Type], [Meta], [Parent], toJSON, ...) is defined as

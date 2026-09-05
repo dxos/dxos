@@ -171,11 +171,11 @@ against the bench, not a result.
 The proxy-core findings below split the work into three stages of rising risk, each measurable and
 committable on its own. Numbers are predictions until the bench says otherwise.
 
-| stage | change                                                                                                    | keeps Proxy?   | expected read   | risk                                       |
-| ----- | --------------------------------------------------------------------------------------------------------- | -------------- | --------------- | ------------------------------------------ |
-| **A** | fast path in `TypedReactiveHandler.get`: skip the per-read descriptor allocation and the primitive boxing | yes            | 250 → ~70 ns    | none — pure fast path, no semantic change  |
-| **B** | automerge handler reads a materialized snapshot instead of the doc, refreshed on doc change               | yes            | 1.7 µs → ~70 ns | medium — pending the persisted-path report |
-| **C** | closed-struct instances become accessor-backed plain objects (this doc's Proposal), scoped per D3/D6/D7   | no (for those) | ~70 → ~10 ns    | **blocked under constraint 3 — see D9**    |
+| stage | change                                                                                                    | keeps Proxy?   | expected read   | risk                                      |
+| ----- | --------------------------------------------------------------------------------------------------------- | -------------- | --------------- | ----------------------------------------- |
+| **A** | fast path in `TypedReactiveHandler.get`: skip the per-read descriptor allocation and the primitive boxing | yes            | 250 → ~70 ns    | none — pure fast path, no semantic change |
+| **B** | automerge handler serves decoded leaves from a generation-stamped per-target cache (F2, F4)               | yes            | 1.7 µs → ~70 ns | low — invalidation is one funnel (F2)     |
+| **C** | closed-struct instances become accessor-backed plain objects (this doc's Proposal), scoped per D3/D6/D7   | no (for those) | ~70 → ~10 ns    | **blocked under constraint 3 — see D9**   |
 
 A ships regardless. B is independent of C. C is excluded by three existing tests (F3) and waits on a
 decision to relax constraint 3 for them; until then the Proxy stays and the residual trap floor
@@ -306,6 +306,34 @@ relies on it.
 - Every read of a **ref** field allocates a new `RefImpl` and a new `createRefResolver`
   (`echo-prototypes.ts:376-396`).
 - Schema resolution via registry lookup runs **per set** (`echo-prototypes.ts:146-192`).
+
+### F4 — The trap prelude, not the cache (profile 2026-09-05, at `63cc39ab`)
+
+Stage B landed at 464 ns per automerge read (BENCHMARKS.md), 4× the unpersisted read rather than next
+to it. A tight-loop harness outside tinybench (5M reads over a 64-object pool, `vite-node` against the
+built packages) reproduced the gap — **218 ns automerge vs 77 ns unpersisted** — and a CPU profile at
+50 µs sampling put 49% of self time in `EchoReactiveHandler.get` itself, 23% in the caller (the loop plus
+proxy dispatch), 11% in `ProxyHandlerSlot.get`, and nothing in `Map` or the document. The cache was
+hitting; the cost was everything `get` did before reaching it:
+
+1. `invariant(Array.isArray(target[symbolPath]))` — the log plugin rewrites every `invariant` call to
+   pass a call-site record (`{ F, L, S: this, A: [...] }`), so the assertion **allocates an object and an
+   array on every read**. Moving the call behind a plain `if` keeps the guard and the allocation on the
+   failing branch only: 218 → 201 ns.
+2. The four-case symbol `switch` and `target instanceof EchoArray` (a four-step prototype walk on a
+   target whose own keys were deleted after `db.add`, so it is in dictionary mode with a per-object
+   prototype — every such lookup is megamorphic across the pool). Checking the cache **first** removes both
+   from the hit path: 201 → **85 ns**, within ~15 ns of the typed handler.
+
+Why checking first is safe: the cache is only ever populated on the virtual-data path, after
+`Reflect.has` has classified the key as not-on-the-prototype-chain, and that surface is static (the
+behaviour prototypes are fixed classes; instance state carries only symbols). Array targets have no
+`symbolLeafCache` on their chain, so `EchoArray` reads fall through untouched. Every internal accessor
+the `switch` serves is a symbol, and symbols never enter the cache. The meta root's virtual
+`createdAt`/`updatedAt` return before the caching tail, so they are never stored.
+
+Dictionary mode itself was measured and is **not** the story: an isolated micro-benchmark of the same
+three symbol lookups on a fast-mode vs a deleted-keys target differs by ~8 ns.
 
 ### F3 — Blast radius (report 2026-09-05)
 

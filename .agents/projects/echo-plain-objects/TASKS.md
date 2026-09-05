@@ -1,6 +1,6 @@
 # echo-plain-objects — Tasks
 
-_Resume: Stage A edits are in the tree (typed-handler.ts get-trap reorder, proxy-utils.ts isValidProxyTarget early exit) — format, typecheck, run `echo` tests, bench, commit. Stage C is BLOCKED under constraint 3 (DESIGN.md D9) pending the user's choice; A and B proceed regardless. Uncommitted: registry entry, TASKS/DESIGN/BENCHMARKS, the two Stage A files. Last: all three Phase 1 reports folded into DESIGN.md F1–F3._
+_Resume: Phase 3b (cache check first in `EchoReactiveHandler.get`) is committed and green on both suites — one bench pass is in flight; record it in BENCHMARKS.md, then the Phase 5 reviewer pass and the PR body update. Stage C stays BLOCKED under constraint 3 (DESIGN.md D9) pending the user's choice. Uncommitted: none (a scratch profiling script sits untracked in echo-client-e2e and is deleted before the PR is final). Last: Stage B landed at `63cc39ab`, profiled (F4), lint fix `9c2b274b`._
 
 Design and decisions: [DESIGN.md](./DESIGN.md). Numbers: [`echo-client-e2e/BENCHMARKS.md`](../../../packages/core/echo/echo-client-e2e/BENCHMARKS.md).
 
@@ -73,15 +73,33 @@ Independent of Stage C; the Proxy stays.
 ### Tasks
 
 - [x] **Confirm the cost is the doc read** — F2.
-- [ ] **Generation counter on `ObjectCore`** — incremented in `notifyUpdate()`; nothing else.
-- [ ] **Leaf cache on the target's instance state** — keyed by `prop`, stamped with the generation;
-      checked in `EchoReactiveHandler.get` before the `Reflect.has` walk; populated on the existing path
-      only when the wrapped result is a primitive. Records, arrays and refs untouched (refs excluded on
-      purpose — see F2).
-- [ ] **Read-after-write inside `Obj.update`** — a `set` invalidates before the callback's next read;
-      confirm with the existing tests, not a new one.
-- [ ] **Green: `echo-client` and `echo-client-e2e` tests, unmodified.**
-- [ ] **Measure** — rerun, record. Expect automerge reads near the post-Stage-A unpersisted number.
+- [x] **Generation counter on `ObjectCore`** — `generation`, incremented in `notifyUpdate()` before the
+      emit; nothing else.
+- [x] **Leaf cache on the target's instance state** — `symbolLeafCache` installed by
+      `createInstanceState`; checked in `EchoReactiveHandler.get`; populated only when the wrapped result
+      is a primitive. Records, arrays and refs untouched.
+- [x] **Read-after-write inside `Obj.update`** — covered by the existing suites (every `set` reaches
+      `notifyUpdate` synchronously, F2).
+- [x] **Green: `echo-client` and `echo-client-e2e` tests, unmodified** — 549 and 324 passed.
+- [x] **Measure** — `63cc39ab` in `BENCHMARKS.md`, two passes. Automerge reads 1.06 µs → 464 ns (2.3×),
+      but 4× above unpersisted, not next to it as predicted.
+
+## Phase 3b — the trap prelude
+
+The Stage B miss: a tight-loop profile (F4) put the cache hit at 218 ns against 77 ns for the typed
+handler, and the difference was everything `get` did _before_ consulting the cache — an `invariant`
+whose build-time call-site record allocates on every read, a symbol `switch`, and an `instanceof` walk.
+Checking the cache first is safe (F4 says why) and took the hit to 85 ns.
+
+### Tasks
+
+- [x] **Profile the hit path** — F4. 49% self time in `get` itself, 23% in the caller, 11% in the
+      handler slot; the cache lookups are not where the time is.
+- [x] **`invariant` behind the check** — the allocated record moves to the failing branch. 218 → 201 ns.
+- [x] **Cache check first** — ahead of the `invariant`, the symbol `switch` and `instanceof EchoArray`;
+      arrays carry no cache and the internal accessors are symbols, so nothing is bypassed. 201 → 85 ns.
+- [x] **Green: `echo-client` and `echo-client-e2e` tests, unmodified** — 549 and 324 passed.
+- [ ] **Measure** — one pass, record. Expect automerge reads within ~20 ns of unpersisted.
 
 ### Follow-ups recorded, not in scope
 

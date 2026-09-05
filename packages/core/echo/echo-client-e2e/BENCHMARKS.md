@@ -129,3 +129,67 @@ twice back to back at one commit to bound that variance before any further autom
 `x10`/`x1`: unpersisted 6.3×, automerge 8.4×, feed 5.8× — lower than at baseline (7.4 / 9.0 / 7.5)
 because the per-op cost fell while the floor did not, so the floor is a larger share of `x1`. A fully
 elided read would sit at ~1×; nothing is close.
+
+---
+
+## `63cc39ab` — 2026-09-05 — Stage B: generation-stamped leaf cache on automerge reads
+
+`echo-client` 549/549 and `echo-client-e2e` 324/324 unmodified. Clean tree. **Two passes back to back**
+on the same commit, to bound run-to-run variance before reading any further automerge number; both are
+shown. Harness floor 71 / 71 ns.
+
+Change: each record target carries a `Map` of decoded primitives stamped with an `ObjectCore`
+generation that `notifyUpdate` increments on every mutation; a hit returns before the document read.
+Records, arrays and refs are not cached (DESIGN.md F2, "Stage B, precisely").
+
+### Narrow object — 2 fields (pass 1 / pass 2)
+
+| per-op    |      plain | echo unpersisted |  echo automerge |      echo feed |
+| --------- | ---------: | ---------------: | --------------: | -------------: |
+| **read**  |   7 / 8 ns |     108 / 103 ns |    475 / 453 ns |   111 / 101 ns |
+| **write** |   3 / 4 ns |   8.25 / 8.38 µs |    285 / 339 µs | 8.39 / 8.46 µs |
+| **make**  | 17 / 14 ns |   74.4 / 77.0 µs | 3.43 / 3.17 ms† |   257 / 256 µs |
+
+Write split (pass 1): unpersisted `T`≈1.2 / `S`≈7.1 µs · automerge `T`≈22 / `S`≈263 µs · feed
+`T`≈1.4 / `S`≈7.0 µs.
+
+### Wide object — 250 fields (pass 1 / pass 2)
+
+| per-op    |        plain | echo unpersisted |  echo automerge |      echo feed |
+| --------- | -----------: | ---------------: | --------------: | -------------: |
+| **read**  |   12 / 13 ns |     109 / 104 ns |    453 / 537 ns |   114 / 118 ns |
+| **write** |     3 / 3 ns |   11.2 / 8.70 µs |    342 / 324 µs | 8.61 / 9.41 µs |
+| **make**  | 861 / 932 ns |   1.12 / 1.11 ms | 21.0 / 18.5 ms† | 2.35 / 2.23 ms |
+
+### What two passes on one commit say about variance
+
+| row                  | pass 1 | pass 2 | spread |
+| -------------------- | -----: | -----: | -----: |
+| read, automerge      | 475 ns | 453 ns |     5% |
+| read, automerge wide | 453 ns | 537 ns |    17% |
+| read, unpersisted    | 108 ns | 103 ns |     5% |
+| write, automerge     | 285 µs | 339 µs |    17% |
+| make, automerge (x1) | 3.4 ms | 3.2 ms |     8% |
+
+Back-to-back passes agree to ~5% on the read rows and ~17% on the allocation-heavy automerge rows.
+**Across runs separated in time the spread is wider:** the unpersisted and feed reads, which no Stage B
+line touches, read 130 / 117 ns at Stage A and 105 / 106 ns here — a 20% move with no diff behind it.
+So on the ~100 ns rows a change under ~20% between sections of this file is not evidence; the Stage A
+automerge delta (1.6×) stays outside that band and stays unattributed.
+
+### Stage A → Stage B
+
+| per-op               | Stage A | Stage B (mean of 2) |    Δ | vs baseline `0dab2f81` |
+| -------------------- | ------: | ------------------: | ---: | ---------------------: |
+| read, automerge      | 1.06 µs |              464 ns | 2.3× |         1.69 µs → 3.6× |
+| read, automerge wide | 1.02 µs |              495 ns | 2.1× |         1.83 µs → 3.7× |
+| write, automerge     |  283 µs |              312 µs |    – |    within the 17% band |
+| make, automerge      |  3.3 ms |              3.3 ms |    – |                        |
+
+The cache hits — 464 ns is well under the 1.06 µs document read — but it lands 4× above the unpersisted
+read (105 ns), not next to it as F2 predicted. That gap is the trap prelude, not the cache; see the
+next section.
+
+### Elision check
+
+`x10`/`x1`: unpersisted 5.9×, automerge 8.8×, feed 6.1× (pass 1). Nothing elided.
