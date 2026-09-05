@@ -22115,9 +22115,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/react-focus':
-        specifier: workspace:*
-        version: link:../react-primitives/react-focus
       '@dxos/react-hooks':
         specifier: workspace:*
         version: link:../react-primitives/react-hooks
@@ -22127,9 +22124,6 @@ importers:
       '@dxos/ui-types':
         specifier: workspace:*
         version: link:../ui-types
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
     devDependencies:
       '@dxos/random':
         specifier: workspace:*

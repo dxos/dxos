@@ -62,7 +62,7 @@ export class TableManager {
     await this.page.getByTestId(TABLE_SELECTORS.newColumnButton).click();
     if (format) {
       await this.page.getByRole('combobox').click();
-      await this.page.getByLabel(format).click();
+      await this.page.getByRole('option', { name: format }).click();
     }
     await this.page.getByPlaceholder('Property label').click();
     await this.page.getByPlaceholder('Property label').fill(label);
