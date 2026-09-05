@@ -26,8 +26,7 @@
   ],
   "dependencies": {
     "@ark-ui/react": "catalog:",
-    "@dxos/react-hooks": "workspace:*",
-    "@radix-ui/react-collapsible": "catalog:"
+    "@dxos/react-hooks": "workspace:*"
   },
   "devDependencies": {
     "@storybook/react-vite": "catalog:",

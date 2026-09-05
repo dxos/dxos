@@ -60,6 +60,8 @@ type TabsRootCustomProps = Omit<ComponentPropsWithoutRef<'div'>, 'defaultValue' 
   orientation?: TabsOrientation;
   /** `manual`: a tab activates on click or Enter; `automatic`: on focus. */
   activationMode?: 'automatic' | 'manual';
+  /** Keep inactive panels mounted (hidden) instead of unmounting them. */
+  keepMounted?: boolean;
 } & Partial<
     Pick<TabsContextValue, 'activePart' | 'attendableId'> & {
       onActivePartChange: (nextActivePart: TabsActivePart) => void;
@@ -83,6 +85,7 @@ const TabsRoot = slottable<HTMLDivElement, TabsRootCustomProps>(
       defaultValue,
       orientation = 'vertical',
       activationMode = 'manual',
+      keepMounted = false,
       attendableId,
       suppressRegionFocus = false,
       asChild,
@@ -154,9 +157,9 @@ const TabsRoot = slottable<HTMLDivElement, TabsRootCustomProps>(
           data-active={activePart}
           value={value ?? null}
           onValueChange={({ value }) => handleValueChange(value)}
-          // Inactive panels unmount: their content re-runs its effects on activation, which the
-          // panel focus move above relies on.
-          unmountOnExit
+          // Inactive panels unmount unless asked otherwise: their content re-runs its effects on
+          // activation, which the panel focus move above relies on.
+          unmountOnExit={!keepMounted}
           ref={tabsRoot}
         >
           {children}

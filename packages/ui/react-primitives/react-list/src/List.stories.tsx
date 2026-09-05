@@ -104,7 +104,7 @@ const MultiSelectStory = () => {
 };
 
 //
-// Collapsible item — opens / closes a Radix `Collapsible`-backed body.
+// Collapsible item — opens / closes an Ark `Collapsible`-backed body.
 // Useful for accordion-style headings without reaching for the full
 // `react-ui-list` `Accordion` component.
 //

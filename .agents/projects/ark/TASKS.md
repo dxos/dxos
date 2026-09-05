@@ -650,6 +650,21 @@ Findings that shaped the plan, so they are not re-derived:
       Progress is countdown/error/rewind semantics the `progress` machine has no notion of; Avatar's
       content is the lit `DxAvatar` element, so Ark's image-fallback machine has nothing to own;
       Clipboard is a ten-line context plus two buttons. Recorded in MIGRATION.md.
+      **Phase 3 Tooltip design (found 2026-09-05, before starting):** the DXOS Tooltip is not a Radix copy but
+      a single-provider design — one `Tooltip.Provider`, one content node, N `Tooltip.Trigger content= side=`
+      (47 consumers), a virtual anchor moved to the active trigger, and `Tooltip.test.tsx` pins two invariants:
+      only the active trigger carries `aria-describedby`/`data-state`, and hovering one trigger re-renders no
+      other. Zag's tooltip machine (1.43) has native multi-trigger support (`triggerValue`, `ids.trigger(value)`,
+      active-trigger positioning), which fits the shape — BUT Ark's `Tooltip.Trigger` component subscribes every
+      trigger to machine state (all re-render on hover) and Zag stamps `aria-describedby` and `data-state=open`
+      on every trigger of the machine, not just the current one. So: keep our own trigger element (imperative
+      attributes as today), give it `id = value` so `ids.trigger = (value) => value` lets the machine find it,
+      drive the machine through `setTriggerValue`/`setOpen`/`reposition({ placement: side })` from the existing
+      delay/skip-delay logic, and take Ark's `Positioner`/`Content`/`Arrow`+`ArrowTip` + `interactive` content
+      hover in place of popper/dismissable-layer/presence and the 150-line grace-area hull. `onInteract` (the
+      TextTooltip truncation veto) gates the open in the provider. Deletion is smaller than the guide's 942
+      LOC suggests; the win is the content layer, not the trigger logic.
+
 - [ ] **Phase 3 — the forks.** Tooltip → Popover → Menu. Add `Positioner`, keep our `Viewport`,
       `Arrow` → `Arrow`+`ArrowTip` (`fill-separator` → `--arrow-background`), rename the five
       variables, delete the three aliasing blocks, collapse DropdownMenu + ContextMenu onto one

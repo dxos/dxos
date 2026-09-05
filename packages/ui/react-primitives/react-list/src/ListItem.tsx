@@ -2,10 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Collapsible } from '@ark-ui/react/collapsible';
 import { ark } from '@ark-ui/react/factory';
-import { type CollapsibleContentProps, type CollapsibleTriggerProps } from '@radix-ui/react-collapsible';
-import * as Collapsible from '@radix-ui/react-collapsible';
-import React, { type ComponentProps, type ForwardRefExoticComponent, forwardRef } from 'react';
+import React, { type ComponentProps, forwardRef } from 'react';
 
 import { useControllableState, useId } from '@dxos/react-hooks';
 
@@ -30,13 +29,13 @@ const ListItemHeading = forwardRef<HTMLDivElement, ListItemHeadingProps>(
   },
 );
 
-type ListItemOpenTriggerProps = CollapsibleTriggerProps;
+type ListItemOpenTriggerProps = ComponentProps<typeof Collapsible.Trigger>;
 
 const ListItemOpenTrigger = Collapsible.Trigger;
 
 type ListItemCollapsibleContentProps = ComponentProps<typeof Collapsible.Content>;
 
-const ListItemCollapsibleContent: ForwardRefExoticComponent<CollapsibleContentProps> = Collapsible.Content;
+const ListItemCollapsibleContent = Collapsible.Content;
 
 const ListItem = forwardRef<ListItemElement, ListItemProps>((props: ListItemProps, forwardedRef) => {
   const id = useId('listItem', props.id);
@@ -85,7 +84,7 @@ const ListItem = forwardRef<ListItemElement, ListItemProps>((props: ListItemProp
   return (
     <ListItemProvider headingId={headingId} open={open} selected={selected} setSelected={setSelected}>
       {collapsible ? (
-        <Collapsible.Root asChild open={open} onOpenChange={setOpen}>
+        <Collapsible.Root asChild open={open} onOpenChange={({ open }) => setOpen(open)}>
           {listItem}
         </Collapsible.Root>
       ) : (

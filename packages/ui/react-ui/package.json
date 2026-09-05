@@ -68,7 +68,6 @@
     "@radix-ui/react-presence": "catalog:",
     "@radix-ui/react-primitive": "catalog:",
     "@radix-ui/react-select": "catalog:",
-    "@radix-ui/react-slider": "catalog:",
     "@radix-ui/react-slot": "catalog:",
     "@radix-ui/react-toast": "catalog:",
     "@radix-ui/react-tooltip": "catalog:",

@@ -451,7 +451,7 @@ Editable → Splitter → Carousel (Carousel also imports `@dxos/react-focus`).
 
 Deliverable: one PR, `react-ui: rebuild Carousel, Editable, Splitter and Stepper on Ark UI`.
 
-### Phase 1 — own the scaffolding _(in progress)_
+### Phase 1 — own the scaffolding _(done, 2026-09-05)_
 
 Create the replacements for the five Radix scaffolding packages inside `react-primitives`
 (`react-hooks` already holds `compose-refs`'s single use there):
@@ -471,7 +471,30 @@ behavioural imports at `@dxos/react-ui`. Update the `composite-components` skill
 Outcome: `@radix-ui/react-context`, `-primitive`, `-slot`, `-compose-refs`, `-use-controllable-state`
 and `-id` leave every `package.json` except `react-ui`'s. Zero anatomy change, zero consumer change.
 
-### Phase 2 — leaves: behavioural swaps with no anatomy leak
+### Phase 2 — leaves: behavioural swaps with no anatomy leak _(in progress, 2026-09-05)_
+
+Verdicts revised on inspection while doing it:
+
+- **Progress, Avatars, Clipboard are not ported.** `Progress` is countdown / error-fill / rewind-snap
+  semantics the `progress` machine has no notion of; `Avatar.Content` is the lit `DxAvatar` element,
+  so Ark's image-fallback machine has nothing to own; `Clipboard` is a ten-line context and two
+  buttons. Each would add a machine to the eager graph for no behaviour.
+- **ScrollArea keeps its hand-built thumbs.** Ark's `scroll-area` needs a `Content` part _inside_ the
+  viewport to measure, and 530 consumers style `ScrollArea.Viewport` as the direct parent of their
+  children — a wrapper there is a layout break, not a port. What Phase 2 does to it is the `Slottable`
+  restructure: `Root` owns its element and renders the thumbs beside the children (no consumer passed
+  `asChild` to it); `Viewport` keeps `asChild`.
+- **Toolbar is pulled forward from Phase 5.** `Toolbar.Root` is a `@dxos/react-focus` group (axis =
+  orientation, memorised entry, cyclic) and any focusable child is an item; `Toolbar.ToggleGroup` is the
+  Ark-backed `ToggleGroup` with `rovingFocus={false}`. The `Toolbar.*` namespace is unchanged.
+- **`ToggleGroup` keeps the Radix-shaped single/multiple API** over Ark's `value: string[]`.
+- **`Input.Checkbox` is a native input behind a styled control.** Element props (test ids, handlers)
+  reach the control, form props the input; the `Input.Root` id lands on the input so `Input.Label`
+  still reaches it. The control toggles by clicking the input itself rather than through label
+  activation, because a tree row's click handler calls `preventDefault()` and that cancels label
+  activation in Chromium (happy-dom does not emulate it — the storybook run caught it).
+- **`Input.Switch` and `Input.PinInput` stay hand-built** for now; `pin-input` is a later-phase
+  candidate (deletes ~150 lines, three consumers).
 
 Each is a single component whose Ark anatomy matches ours closely enough that the namespace API
 holds. One PR each or small batches:
@@ -529,7 +552,8 @@ Outcome: `react-popper`, `-dismissable-layer`, `-focus-scope`, `-focus-guards`, 
   `Control`, `ValueText`, `Indicator`, `Positioner`, `List`; `ScrollUpButton`/`ScrollDownButton`/
   `Arrow` deleted. 44 consumer files, 39 using `Viewport`, 8 using the scroll buttons. Decide up front
   whether `Select.Option` keeps a children-driven convenience layer that builds the collection from
-  JSX, so most consumers change one import and nothing else.
+  JSX, so most consumers change one import and nothing else. **Decided 2026-09-05: keep the children
+  API in this pass; moving consumers to Ark's `collection` prop is a later phase of its own.**
 
 ### Phase 5 — decisions, not ports
 
