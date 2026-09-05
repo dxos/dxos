@@ -93,6 +93,24 @@ describe('mermaid-engine', () => {
     expect(result.chosen.candidate.bus).toBe(true);
   });
 
+  test('a labelled inheritance edge keeps its own connector and label beside the bus', async ({ expect }) => {
+    const objects = objectsOf(
+      await compile(trim`
+        flowchart TB
+          B --|> A
+          C --|> A
+          D --|>|via mixin| A
+      `),
+    );
+    const edges = objects.find(({ id }) => id === 'edges')!.elements;
+
+    expect(edges.find(({ id }) => id === 'A-bus')?.kind).toBe('line');
+    expect(edges.filter(({ id }) => /-stub-\d$/.test(id))).toHaveLength(2);
+    const labelled = edges.filter((element) => element.kind === 'text' && element.text === 'via mixin');
+    expect(labelled).toHaveLength(1);
+    expect(edges.filter((element) => element.kind === 'arrow' && element.head === 'triangle')).toHaveLength(2);
+  });
+
   test('edge tokens carry the UML end markers', async ({ expect }) => {
     const objects = objectsOf(
       await compile(trim`

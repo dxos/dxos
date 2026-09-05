@@ -12,6 +12,8 @@
 
 import ELK, { type ElkNode } from 'elkjs/lib/elk.bundled.js';
 
+import { invariant } from '@dxos/invariant';
+
 import * as Diagnostics from './diagnostics';
 import * as Layout from './layout';
 import { type Direction, type MermaidEdge, type MermaidGraph, markers, parse } from './mermaid';
@@ -374,7 +376,8 @@ const inheritanceBuses = (
   const consumed = new Set<MermaidEdge>();
   const byBase = new Map<string, MermaidEdge[]>();
   for (const edge of edges) {
-    if (edge.kind === 'inheritance') {
+    // A labelled edge keeps its own connector: the bus has no place to put its text.
+    if (edge.kind === 'inheritance' && !edge.label) {
       byBase.set(edge.to, [...(byBase.get(edge.to) ?? []), edge]);
     }
   }
@@ -552,6 +555,7 @@ export const layout = async (source: string, options: CompileOptions = {}): Prom
   const lattices = typeof options.lattice === 'number' ? [options.lattice] : (options.lattice ?? LATTICES);
   const orders = options.order ?? ORDERS;
   const buses = options.bus ?? [true, false];
+  invariant(lattices.length > 0 && orders.length > 0 && buses.length > 0, 'every candidate axis needs a value');
 
   const candidates: Candidate[] = [];
   for (const lattice of lattices) {

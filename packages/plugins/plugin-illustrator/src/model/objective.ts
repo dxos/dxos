@@ -10,6 +10,8 @@
 // generators; the objective is the judge. See `docs/DESIGN.md`.
 //
 
+import { invariant } from '@dxos/invariant';
+
 import type * as Diagnostics from './diagnostics';
 import type * as Scene from './scene';
 import { GRID } from './uml-grid';
@@ -69,6 +71,7 @@ export const select = <T extends { layout: Layout }>(
   objective: Objective,
   candidates: readonly T[],
 ): { chosen: Ranked<T>; ranked: readonly Ranked<T>[] } => {
+  invariant(candidates.length > 0, 'select needs at least one candidate');
   const ranked = candidates
     .map((candidate) => ({ candidate, evaluation: evaluate(objective, candidate.layout) }))
     .sort(
