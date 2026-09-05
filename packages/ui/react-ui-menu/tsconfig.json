@@ -30,13 +30,7 @@
       "path": "../../common/storybook-utils"
     },
     {
-      "path": "../../common/util"
-    },
-    {
       "path": "../../sdk/app-graph"
-    },
-    {
-      "path": "../react-primitives/react-focus"
     },
     {
       "path": "../react-primitives/react-hooks"

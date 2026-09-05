@@ -597,7 +597,7 @@ MenuSubTrigger.displayName = 'DropdownMenu.SubTrigger';
 // Namespaces
 //
 
-export const DropdownMenu = {
+export const DropdownMenuParts = {
   Root: DropdownMenuRoot,
   Trigger: DropdownMenuTrigger,
   VirtualTrigger: MenuVirtualTrigger,
@@ -619,7 +619,7 @@ export const DropdownMenu = {
   SubContent: MenuContent,
 };
 
-export const ContextMenu = {
+export const ContextMenuParts = {
   Root: ContextMenuRoot,
   Trigger: ContextMenuTrigger,
   Portal: MenuPortal,

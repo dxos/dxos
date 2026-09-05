@@ -42,11 +42,9 @@
     "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/react-focus": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
-    "@dxos/ui-types": "workspace:*",
-    "@dxos/util": "workspace:*"
+    "@dxos/ui-types": "workspace:*"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",

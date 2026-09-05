@@ -4,10 +4,11 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import { createContext as createReactContext, useMemo } from 'react';
+import { createContext as createReactContext, useContext, useMemo } from 'react';
 
 import { log } from '@dxos/log';
 import { createContext } from '@dxos/react-hooks';
+import { type MenuEntriesHook } from '@dxos/react-ui';
 
 import {
   type MenuContextValue,
@@ -17,6 +18,7 @@ import {
   type MenuItemsAccessor,
   type MenuItemsMap,
 } from '../types';
+import { menuEntryNode, toMenuEntry } from '../util';
 
 // Kept out of `Menu.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so contexts and hooks exported beside them force a full page reload on every edit.
@@ -42,17 +44,11 @@ export const menuContextDefaults: MenuContextValue = {
 export const [MenuContextProvider, useMenuScoped] = createContext<MenuContextValue>(MENU_NAME, menuContextDefaults);
 
 //
-// Dropdown context (internal) — allows Menu.Content to close the parent dropdown.
+// Explicit items (internal) — `Menu.Content items` replaces the root's base items for the entries
+// rendered beneath it, while contributions still apply on top.
 //
 
-export type MenuDropdownContextValue = {
-  closeMenu: () => void;
-  caller?: string;
-};
-
-export const MenuDropdownContext = createReactContext<MenuDropdownContextValue>({
-  closeMenu: () => {},
-});
+export const MenuPropsItemsContext = createReactContext<MenuItem[] | undefined>(undefined);
 
 //
 // Item resolution.
@@ -119,4 +115,15 @@ export const useMenuItems = (
 
 export const useMenu = (consumerName: string): MenuContextValue => {
   return useMenuScoped(consumerName);
+};
+
+/**
+ * The `useEntries` hook `Menu.Root` hands to `@dxos/react-ui`'s renderers: a group's items (the root's
+ * when `group` is undefined) as plain entries, with the atom subscription and contributions applied here.
+ */
+export const useMenuItemEntries: MenuEntriesHook = (group) => {
+  const propsItems = useContext(MenuPropsItemsContext);
+  const node = group ? (menuEntryNode(group) as MenuGroupContext | undefined) : undefined;
+  const items = useMenuItems(node, group ? undefined : propsItems, 'useMenuItemEntries');
+  return useMemo(() => items?.map(toMenuEntry), [items]);
 };

@@ -18,6 +18,8 @@ export type MenuItemChrome = {
   disabled?: boolean;
   hidden?: boolean;
   testId?: string;
+  /** Shown beside the label; a record is keyed by host platform (`macos`, `windows`, …). */
+  keyBinding?: string | Partial<Record<string, string>>;
   /** Applied to the button element rendered for this action. */
   classNames?: ClassNameValue;
   /** Applied to the inner `<Icon>` element when the action renders as an icon button. */
@@ -108,3 +110,42 @@ export type MenuItemGroupProperties =
   | PlainMenuItemGroupProperties
   | DropdownMenuItemGroupProperties
   | ToggleGroupMenuItemGroupProperties;
+
+//
+// Entries: the plain, source-agnostic model a menu or toolbar renders. Whatever produces a menu (an
+// action graph, component state) projects onto these, so the renderer depends on no data source.
+//
+
+export type MenuSeparatorVariant = 'gap' | 'line';
+
+/** What a gesture carries to the action it invokes. */
+export type MenuInvokeParams = {
+  /** The group the invoked entry sits in, when it is not a root entry. */
+  parent?: MenuGroupEntry;
+  /** Identifies the component that owns the menu. */
+  caller?: string;
+  /** Input modifiers held during the gesture (e.g. shift-clicking a menu item). */
+  modifiers?: { shift?: boolean };
+};
+
+export type MenuActionEntry<P extends MenuActionProperties = MenuActionProperties> = {
+  id: string;
+  kind: 'action';
+  properties: P;
+  /** Runs the action. Bound by whatever produced the entry, since only it knows how the action executes. */
+  invoke?: (params?: MenuInvokeParams) => void | Promise<void>;
+};
+
+export type MenuGroupEntry<P extends MenuItemGroupProperties = MenuItemGroupProperties> = {
+  id: string;
+  kind: 'group';
+  properties: P;
+};
+
+export type MenuSeparatorEntry = {
+  id: string;
+  kind: 'separator';
+  properties: { variant?: MenuSeparatorVariant };
+};
+
+export type MenuEntry = MenuActionEntry | MenuGroupEntry | MenuSeparatorEntry;

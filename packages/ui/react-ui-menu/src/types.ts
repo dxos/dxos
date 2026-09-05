@@ -6,7 +6,11 @@ import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { type IconButtonProps, type ToolbarSeparatorProps } from '@dxos/react-ui';
-import { type MenuActionProperties } from '@dxos/ui-types';
+import {
+  type DropdownMenuItemGroupProperties,
+  type MenuActionProperties,
+  type ToggleGroupMenuItemGroupProperties,
+} from '@dxos/ui-types';
 
 export type MenuAction<P extends {} = {}> = AppGraphNode.Action<P & MenuActionProperties>;
 
@@ -66,3 +70,6 @@ export type MenuContextValue = {
   /** Optional action executor. If provided, will be used instead of default execution. */
   onAction?: ActionExecutor;
 };
+
+/** The group variants a toolbar renders: a dropdown trigger or a toggle group. */
+export type ToolbarMenuActionGroupProperties = DropdownMenuItemGroupProperties | ToggleGroupMenuItemGroupProperties;

@@ -828,22 +828,22 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       14 import sites and 12 manifests/tsconfig references updated; package removed; app-framework's
       package list and the focus/ontology docs follow.
 - [ ] **Reconcile the `react-ui` satellite packages: `react-ui-attention`, `react-ui-menu`, etc.**
-      (tracked 2026-09-05; supersedes "fold `react-ui-menu` into `react-ui`"). Findings so far:
-      `react-ui-attention` and `app-graph` use `react-ui` only as a dev dependency (stories), so
-      there is no runtime cycle; `react-ui-menu`'s components (`Menu`, `DropdownMenu`, `ToolbarMenu`,
-      `ActionLabel`, `MenuContext`) reach `app-graph` only through `types.ts`/`util.ts` (the
-      `AppGraphNode.Action`/`ActionGroup` shapes, the `ActionType`/`ActionGroupType` strings,
-      `actionGroupSymbol`, `hasDisposition`, and running an action's `data` Effect), plus `effect`,
-      `@effect/atom-react` and `useAttention`. A decoupled move puts the item model and node-type
-      constants in `ui-types`, gives `react-ui` `effect` + `@effect/atom-react`, lifts attention to
-      a prop (as Tabs did with `selectedVariant`), and leaves the graph hooks/builder in
-      `react-ui-menu`; 46 consumer packages re-point. Decide the target layering for the whole
-      family (attention, menu, and the other `react-ui-*` satellites) before moving any one of them.
-- [ ] **Review each `react-ui` component's theme against its Ark anatomy** (tracked 2026-09-05), e.g.
-      Tabs: the theme functions were written for Radix parts and data attributes (`data-state`,
-      `data-orientation` values, `data-highlighted`); walk each ported component's theme file against
-      the Ark part list and the attributes the machine actually sets, and drop rules that no longer
-      match anything.
+      (tracked 2026-09-05). `react-ui-attention` and `app-graph` use `react-ui` only as a dev
+      dependency (stories), so there is no runtime cycle. The menu split below is the first step;
+      decide the target layering for the rest of the family after it lands.
+  - [x] **Menu split (2026-09-05): the renderer in `react-ui`, the graph and atoms in
+        `react-ui-menu`.** `ui-types` gains the plain entry model (`MenuEntry` = action | group |
+        separator, `MenuInvokeParams`, `keyBinding` on the shared chrome). `react-ui` gains
+        `DropdownMenu.Entries` / `ContextMenu.Entries` / `Toolbar.Entries`, data-driven renderers over
+        `MenuEntriesProvider` — `useEntries(group)` is a hook the source supplies, so a submenu or a
+        toolbar dropdown still resolves lazily, and `onAction(entry, params)` runs an entry — plus
+        `MenuEntryLabel`/`menuEntryLabel`. `react-ui-menu` keeps `Menu.Root` (the provider: the atom
+        accessor, contributions, `onAction` on graph nodes), `Menu.Content`, `Menu.Toolbar`
+        (attention-gated) and `Menu.Items` as thin glue over those renderers, and its hooks/builder;
+        its four renderers (`DropdownMenu`, `ToolbarMenu`, `ActionLabel`, `action-label`) are gone.
+        The node behind an entry lives in a WeakMap (`menuEntryNode`), so the plain model carries no
+        graph type and `Menu.Root onAction` still receives `AppGraphNode.Action`s. Consumer imports
+        unchanged (`ToolbarMenuActionGroupProperties` now lives in `types.ts`).
 - [ ] **Phase 5 — decisions.** RAC (keep for the date/time cluster vs consolidate onto Ark; default
       keep); Toolbar (no Ark toolbar — focus group from `@dxos/react-focus` + `toggle-group`); Focus
       (keep as the seam).

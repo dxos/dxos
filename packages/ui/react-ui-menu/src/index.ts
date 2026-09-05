@@ -12,6 +12,9 @@ export {
   createMenuItemGroup,
   executeMenuAction,
   fallbackIcon,
+  menuEntryNode,
+  toMenuEntry,
+  toMenuGroupEntry,
 } from './util';
 export { type ActionGroupBuilder, type ActionGroupBuilderFn, MenuBuilder } from './builder';
 export { PROMPT_DISPOSITION, TOOLBAR_DISPOSITION, isPromptAction, isToolbarAction } from './toolbar';

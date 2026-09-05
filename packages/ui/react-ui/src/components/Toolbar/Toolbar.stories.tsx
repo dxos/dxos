@@ -9,7 +9,7 @@ import { withTheme } from '../../testing';
 import { Toggle } from '../Button';
 import { Icon } from '../Icon';
 import { Select } from '../Select';
-import { Toolbar } from './Toolbar';
+import { Toolbar } from './index';
 
 type StorybookToolbarProps = {};
 

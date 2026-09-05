@@ -368,7 +368,7 @@ ToolbarMenu.displayName = 'Toolbar.Menu';
 // Toolbar
 //
 
-export const Toolbar = {
+export const ToolbarParts = {
   Root: ToolbarRoot,
   Text: ToolbarText,
   Button: ToolbarButton,

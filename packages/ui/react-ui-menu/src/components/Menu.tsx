@@ -4,11 +4,21 @@
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Atom from 'effect/unstable/reactivity/Atom';
-import React, { type MouseEvent, type PropsWithChildren, useCallback, useContext, useMemo } from 'react';
+import React, { type PropsWithChildren, useCallback, useContext, useMemo } from 'react';
 
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { useControllableState } from '@dxos/react-hooks';
-import { type DropdownMenuRootProps, Icon, DropdownMenu as NaturalDropdownMenu } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import {
+  DropdownMenu,
+  type DropdownMenuRootProps,
+  MenuEntriesProvider,
+  type MenuEntryExecutor,
+  Toolbar,
+  type ToolbarRootProps,
+  composable,
+  composableProps,
+} from '@dxos/react-ui';
+import { useAttention } from '@dxos/react-ui-attention';
 
 import {
   type AddMenuItemsProps,
@@ -17,18 +27,15 @@ import {
   type MenuGroupContext,
   type MenuItem,
   type MenuItemsMap,
-  isSeparator,
 } from '../types';
-import { executeMenuAction } from '../util';
-import { ActionLabel } from './ActionLabel';
+import { executeMenuAction, menuEntryNode, toMenuEntry, toMenuGroupEntry } from '../util';
 import {
   MenuContextProvider,
-  MenuDropdownContext,
+  MenuPropsItemsContext,
   menuContextDefaults,
-  useMenuItems,
+  useMenuItemEntries,
   useMenuScoped,
 } from './MenuContext';
-import { ToolbarMenu, ToolbarMenuItems } from './ToolbarMenu';
 
 //
 // MenuProvider (internal) — the context provider used by Menu.Root.
@@ -70,6 +77,19 @@ const MenuProvider = ({
     [registry, menuItemsAtom],
   );
 
+  // The renderer hands back the plain entry; the node behind it carries the Effect that runs.
+  const execute = useCallback<MenuEntryExecutor>(
+    (entry, { parent, ...params }) => {
+      const action = menuEntryNode(entry) as MenuAction | undefined;
+      if (!action) {
+        return;
+      }
+      const invocation: AppGraphNode.InvokeProps = { ...params, parent: parent && menuEntryNode(parent) };
+      return onAction ? onAction(action, invocation) : executeMenuAction(action, invocation);
+    },
+    [onAction],
+  );
+
   return (
     <MenuContextProvider
       items={items}
@@ -81,7 +101,9 @@ const MenuProvider = ({
       removeMenuItems={removeMenuItems}
       onAction={onAction}
     >
-      {children}
+      <MenuEntriesProvider iconSize={iconSize} onAction={execute} useEntries={useMenuItemEntries}>
+        {children}
+      </MenuEntriesProvider>
     </MenuContextProvider>
   );
 };
@@ -111,15 +133,13 @@ const MenuRoot = ({ children, open, defaultOpen, onOpenChange, caller, ...props 
     onChange: onOpenChange,
   });
 
-  const closeMenu = useCallback(() => setMenuOpen(false), [setMenuOpen]);
-
   return (
     <MenuProvider {...props}>
-      <MenuDropdownContext.Provider value={{ closeMenu, caller }}>
-        <NaturalDropdownMenu.Root open={menuOpen} onOpenChange={setMenuOpen}>
+      <MenuEntriesProvider caller={caller}>
+        <DropdownMenu.Root open={menuOpen} onOpenChange={setMenuOpen}>
           {children}
-        </NaturalDropdownMenu.Root>
-      </MenuDropdownContext.Provider>
+        </DropdownMenu.Root>
+      </MenuEntriesProvider>
     </MenuProvider>
   );
 };
@@ -134,81 +154,55 @@ type MenuContentProps = {
   caller?: string;
 };
 
-const MenuContentItem = ({
-  item,
-  onClick,
-}: {
-  item: MenuItem;
-  onClick: (action: MenuAction, event: MouseEvent) => void;
-}) => {
-  const action = item as MenuAction;
-  const handleClick = useCallback((event: MouseEvent) => onClick(action, event), [action, onClick]);
-  const { iconSize } = useMenuScoped('MenuContentItem');
-  return (
-    <NaturalDropdownMenu.Item
-      onClick={handleClick}
-      classNames='gap-2'
-      disabled={action.properties?.disabled}
-      {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
-    >
-      {action.properties?.icon && (
-        <Icon
-          icon={action.properties.icon}
-          size={iconSize}
-          classNames={mx(action.properties.spin && 'animate-spin', action.properties.iconClassNames)}
-        />
-      )}
-      <ActionLabel action={action} />
-    </NaturalDropdownMenu.Item>
-  );
-};
-
 /**
  * Renders the dropdown menu portal, content, and graph-backed items.
  *
  * Must be a descendant of `Menu.Root`. Reads items via `useMenuItems` from the
  * nearest menu context, with optional `group`/`items` prop overrides.
  */
-const MenuContent = ({ group, items: propsItems, caller: callerOverride }: MenuContentProps) => {
-  const { closeMenu, caller: contextCaller } = useContext(MenuDropdownContext);
-  const caller = callerOverride ?? contextCaller;
-  const { onAction } = useMenuScoped('MenuContent');
-  const resolvedItems = useMenuItems(group, propsItems, 'MenuContent');
+const MenuContent = ({ group, items, caller }: MenuContentProps) => {
+  const groupEntry = useMemo(() => group && toMenuGroupEntry(group), [group]);
 
-  const handleActionClick = useCallback(
-    (action: MenuAction, event: MouseEvent) => {
-      if (action.properties?.disabled) {
-        return;
-      }
-      event.stopPropagation();
-      closeMenu();
-      const params = { parent: group, caller, modifiers: { shift: event.shiftKey } };
-      if (onAction) {
-        onAction(action, params);
-      } else {
-        void executeMenuAction(action, params);
-      }
-    },
-    [group, caller, onAction, closeMenu],
+  const content = (
+    <MenuPropsItemsContext.Provider value={items}>
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content>
+          <DropdownMenu.Viewport>
+            <DropdownMenu.Entries group={groupEntry} />
+          </DropdownMenu.Viewport>
+          <DropdownMenu.Arrow />
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
+    </MenuPropsItemsContext.Provider>
   );
+
+  return caller ? <MenuEntriesProvider caller={caller}>{content}</MenuEntriesProvider> : content;
+};
+
+//
+// Menu.Toolbar
+//
+
+type MenuToolbarProps = ToolbarRootProps;
+
+/**
+ * Attention-gated toolbar container with no graph items of its own — render `Menu.Items` among its
+ * children, whose JSX order controls where the graph items sit.
+ */
+const MenuToolbar = composable<HTMLDivElement, MenuToolbarProps>(({ children, ...props }, forwardedRef) => {
+  const { attendableId, alwaysActive } = useMenuScoped('MenuToolbar');
+  const { hasAttention } = useAttention(attendableId);
 
   return (
-    <NaturalDropdownMenu.Portal>
-      <NaturalDropdownMenu.Content>
-        <NaturalDropdownMenu.Viewport>
-          {resolvedItems?.map((item) =>
-            isSeparator(item) ? (
-              <NaturalDropdownMenu.Separator key={item.id} />
-            ) : (
-              <MenuContentItem key={item.id} item={item} onClick={handleActionClick} />
-            ),
-          )}
-        </NaturalDropdownMenu.Viewport>
-        <NaturalDropdownMenu.Arrow />
-      </NaturalDropdownMenu.Content>
-    </NaturalDropdownMenu.Portal>
+    <Toolbar.Root
+      {...composableProps(props, { classNames: attendableId })}
+      disabled={!alwaysActive && !hasAttention}
+      ref={forwardedRef}
+    >
+      {children}
+    </Toolbar.Root>
   );
-};
+});
 
 //
 // Namespace.
@@ -226,22 +220,13 @@ const MenuContent = ({ group, items: propsItems, caller: callerOverride }: MenuC
  */
 const Menu = {
   Root: MenuRoot,
-  Trigger: NaturalDropdownMenu.Trigger,
+  Trigger: DropdownMenu.Trigger,
   Content: MenuContent,
-  VirtualTrigger: NaturalDropdownMenu.VirtualTrigger,
-  Toolbar: ToolbarMenu,
-  Items: ToolbarMenuItems,
+  VirtualTrigger: DropdownMenu.VirtualTrigger,
+  Toolbar: MenuToolbar,
+  Items: Toolbar.Entries,
 };
 
-export { Menu };
+export { Menu, toMenuEntry };
 
-export type { MenuContentProps, MenuRootProps };
-
-export type {
-  ToolbarMenuActionGroupProperties,
-  ToolbarMenuActionGroupProps,
-  ToolbarMenuActionProps,
-  ToolbarMenuDropdownMenuActionGroup,
-  ToolbarMenuProps,
-  ToolbarMenuToggleGroupActionGroup,
-} from './ToolbarMenu';
+export type { MenuContentProps, MenuRootProps, MenuToolbarProps };

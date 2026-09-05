@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { withTheme } from '../../testing';
-import { ContextMenu } from './DropdownMenu';
+import { ContextMenu } from './index';
 
 const DefaultStory = () => {
   // NOTE(thure): Since long-tap will select text in some OSs, apply `select-none` to `ContextMenu.Trigger` where possible.

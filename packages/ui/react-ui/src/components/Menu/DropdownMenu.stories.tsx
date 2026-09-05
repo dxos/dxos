@@ -8,7 +8,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withTheme } from '../../testing';
 import { Button } from '../Button';
-import { DropdownMenu } from './DropdownMenu';
+import { DropdownMenu } from './index';
 
 const DefaultStory = () => {
   return (
