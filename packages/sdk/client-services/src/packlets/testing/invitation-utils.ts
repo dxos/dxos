@@ -6,6 +6,7 @@ import { Trigger } from '@dxos/async';
 import { type AuthenticatingInvitation, type CancellableInvitation, InvitationEncoder } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
+import { toPublicKey } from '@dxos/protocols/buf';
 import { Invitation, Invitation_AuthMethod, Invitation_Kind, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
@@ -96,7 +97,8 @@ export const performInvitation = ({
                     if (hooks?.guest?.onConnecting?.(guestObservable)) {
                       break;
                     }
-                    invariant(hostInvitation.swarmKey!.equals(guestInvitation.swarmKey!));
+                    const guestSwarmKey = toPublicKey(guestInvitation.swarmKey);
+                    invariant(guestSwarmKey && toPublicKey(hostInvitation.swarmKey)?.equals(guestSwarmKey));
                     break;
                   }
 

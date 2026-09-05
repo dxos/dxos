@@ -23,7 +23,7 @@ import {
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 
 import type { FlowLockHolder } from './invitation-state';
-import { stateToString, tryAcquireBeforeContextDisposed } from './utils';
+import { fromBufAuthMethod, stateToString, tryAcquireBeforeContextDisposed } from './utils';
 
 /// Timeout for the options exchange.
 const OPTIONS_TIMEOUT = 10_000;
@@ -121,7 +121,7 @@ export class InvitationHostExtension
             scheduleTask(this._ctx, () => this.close());
             // TODO(dmaretskyi): Better error handling.
             return {
-              authMethod: Invitation_AuthMethod.NONE,
+              authMethod: fromBufAuthMethod(Invitation_AuthMethod.NONE),
             };
           }
 
@@ -133,7 +133,7 @@ export class InvitationHostExtension
 
           log('introduced host invitation');
           return {
-            authMethod: invitation.authMethod,
+            authMethod: fromBufAuthMethod(invitation.authMethod),
             challenge: this._challenge,
           };
         },
