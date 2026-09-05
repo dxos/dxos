@@ -8,14 +8,16 @@ import * as Rpc from 'effect/unstable/rpc/Rpc';
 import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
 import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
-import { protoMessage, serviceError } from './service-rpc.ts';
+import { InvitationSchema } from './buf/proto/gen/dxos/client/invitation_pb.ts';
+import { QueryInvitationsResponseSchema } from './buf/proto/gen/dxos/client/services_pb.ts';
+import { bufMessage, protoMessage, serviceError } from './service-rpc.ts';
 
 //
 // RPC message schemas.
 //
 
 export const AcceptInvitationRequest = Schema.Struct({
-  invitation: protoMessage('dxos.client.services.Invitation'),
+  invitation: bufMessage(InvitationSchema),
   deviceProfile: Schema.optional(protoMessage('dxos.halo.credentials.DeviceProfileDocument')),
 });
 export interface AcceptInvitationRequest extends Schema.Schema.Type<typeof AcceptInvitationRequest> {}
@@ -37,14 +39,14 @@ export interface CancelInvitationRequest extends Schema.Schema.Type<typeof Cance
  */
 export class Rpcs extends RpcGroup.make(
   Rpc.make('createInvitation', {
-    payload: protoMessage('dxos.client.services.Invitation'),
-    success: protoMessage('dxos.client.services.Invitation'),
+    payload: bufMessage(InvitationSchema),
+    success: bufMessage(InvitationSchema),
     error: serviceError,
     stream: true,
   }),
   Rpc.make('acceptInvitation', {
     payload: AcceptInvitationRequest,
-    success: protoMessage('dxos.client.services.Invitation'),
+    success: bufMessage(InvitationSchema),
     error: serviceError,
     stream: true,
   }),
@@ -57,7 +59,7 @@ export class Rpcs extends RpcGroup.make(
     error: serviceError,
   }),
   Rpc.make('queryInvitations', {
-    success: protoMessage('dxos.client.services.QueryInvitationsResponse'),
+    success: bufMessage(QueryInvitationsResponseSchema),
     error: serviceError,
     stream: true,
   }),
