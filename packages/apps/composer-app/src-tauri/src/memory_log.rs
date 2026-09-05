@@ -54,8 +54,6 @@ fn run(path: PathBuf, window: tauri::WebviewWindow) {
             return;
         }
     }
-    rotate(&path);
-
     let started = Instant::now();
     let timebase = timebase_ns();
     let mut state = HostState::default();
@@ -92,6 +90,7 @@ fn run(path: PathBuf, window: tauri::WebviewWindow) {
             lines.push_str(&line.to_string());
             lines.push('\n');
         }
+        rotate(&path);
         if let Err(error) = OpenOptions::new().create(true).append(true).open(&path).and_then(|mut file| file.write_all(lines.as_bytes())) {
             log::warn!("memory log write failed: {error}");
         }

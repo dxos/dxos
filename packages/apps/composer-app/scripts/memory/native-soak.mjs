@@ -77,7 +77,7 @@ const launchHidden = async (app) => {
   throw new Error(`${app} did not start`);
 };
 
-const sampleProcesses = (helper, pid, app) =>
+const sampleProcesses = (helper, pid) =>
   JSON.parse(execFileSync(helper, [String(pid)], { encoding: 'utf8' })).map((row) => ({
     ...row,
     process: row.pid === pid ? 'app' : (HELPER_NAMES[row.name] ?? row.name),
@@ -85,13 +85,20 @@ const sampleProcesses = (helper, pid, app) =>
 
 const sampleCategories = (pid) => {
   const file = path.join(tmpdir(), `composer-footprint-${pid}.json`);
-  spawnSync('footprint', ['-p', String(pid), '--json', file], { stdio: 'ignore' });
-  const categories = JSON.parse(readFileSync(file, 'utf8')).processes[0]?.categories ?? {};
-  return Object.fromEntries(
-    Object.entries(categories)
-      .filter(([name]) => CATEGORIES.includes(name))
-      .map(([name, { dirty }]) => [name, dirty]),
-  );
+  if (spawnSync('footprint', ['-p', String(pid), '--json', file], { stdio: 'ignore' }).status !== 0) {
+    return undefined;
+  }
+  try {
+    const categories = JSON.parse(readFileSync(file, 'utf8')).processes[0]?.categories ?? {};
+    return Object.fromEntries(
+      Object.entries(categories)
+        .filter(([name]) => CATEGORIES.includes(name))
+        .map(([name, { dirty }]) => [name, dirty]),
+    );
+  } catch {
+    // WebContent can exit between the capture and the read; the sample then has no breakdown.
+    return undefined;
+  }
 };
 
 const soak = async () => {
@@ -117,14 +124,15 @@ const soak = async () => {
   let running = true;
   process.on('SIGINT', () => (running = false));
   for (let i = 0; running && Date.now() - started < minutes * 60_000; i++) {
-    if (!appPid(app)) {
+    const currentPid = appPid(app);
+    if (!currentPid) {
       appendFileSync(out, `${JSON.stringify({ t: Date.now(), event: 'app-exit' })}\n`);
       console.error('app exited');
       break;
     }
     const t = Date.now();
     const uptime_s = Math.round((t - started) / 1000);
-    const rows = sampleProcesses(helper, pid, app);
+    const rows = sampleProcesses(helper, currentPid);
     for (const row of rows) {
       const previous = lastPid.get(row.process);
       if (previous && previous !== row.pid) {
@@ -171,6 +179,10 @@ const slopePerHour = (points) => {
   return variance === 0 ? 0 : (covariance / variance) * 3_600_000;
 };
 
+/** Cumulative kernel counters restart with the process, so a delta only spans one pid. */
+const deltaWithinPids = (rows, field) =>
+  rows.reduce((sum, row, i) => (i > 0 && rows[i - 1].pid === row.pid ? sum + row[field] - rows[i - 1][field] : sum), 0);
+
 const report = (file) => {
   const lines = readFileSync(file, 'utf8')
     .split('\n')
@@ -193,7 +205,8 @@ const report = (file) => {
   const table = [];
   for (const [name, rows] of byProcess) {
     const pids = new Set(rows.map((row) => row.pid));
-    const disk = rows.at(-1).disk_written - rows[0].disk_written;
+    const disk = deltaWithinPids(rows, 'disk_written');
+    const cpu = deltaWithinPids(rows, 'cpu_ms');
     table.push({
       'process': name,
       'pids': pids.size,
@@ -203,7 +216,7 @@ const report = (file) => {
       'peak MB': MB(Math.max(...rows.map((row) => row.peak))),
       'slope MB/h': +MB(slopePerHour(rows.map((row) => [row.t, row.footprint]))).toFixed(1),
       'disk write KB/s': +(disk / 1024 / ((rows.at(-1).t - rows[0].t) / 1000 || 1)).toFixed(1),
-      'cpu s': +((rows.at(-1).cpu_ms - rows[0].cpu_ms) / 1000).toFixed(1),
+      'cpu s': +(cpu / 1000).toFixed(1),
     });
   }
   console.table(table);
