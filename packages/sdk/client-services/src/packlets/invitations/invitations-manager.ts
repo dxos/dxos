@@ -18,7 +18,7 @@ import { generatePasscode } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { buf, bufWkt, fromPublicKey } from '@dxos/protocols/buf';
+import { buf, bufInit, bufWkt, fromPublicKey } from '@dxos/protocols/buf';
 import { Invitation, InvitationSchema, Invitation_AuthMethod, Invitation_State, Invitation_Type } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -28,7 +28,7 @@ import { trace } from '@dxos/tracing';
 import { type IMetadataStore, IMetadataStoreService, hasInvitationExpired } from '../metadata';
 import type { InvitationProtocol } from './invitation-protocol';
 import { type InvitationsHandler, InvitationsHandlerService, createAdmissionKeypair } from './invitations-handler';
-import { fromBufInvitation, invitationInit, toBufInvitation } from './utils';
+import { fromBufInvitation, toBufInvitation } from './utils';
 
 /**
  * Effect service tag for {@link InvitationsManager}.
@@ -275,8 +275,8 @@ export class InvitationsManager {
       role,
       multiUse,
       delegationCredentialId: options?.delegationCredentialId,
-      ...invitationInit(options),
-      ...invitationInit(protocol.getInvitationContext()),
+      ...bufInit(options),
+      ...bufInit(protocol.getInvitationContext()),
     });
   }
 

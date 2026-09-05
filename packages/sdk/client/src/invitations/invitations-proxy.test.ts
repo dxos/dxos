@@ -6,8 +6,9 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import { Stream } from '@dxos/async';
 import type { ClientServices } from '@dxos/client-protocol';
+import { buf } from '@dxos/protocols/buf';
 import { Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { QueryInvitationsResponse, QueryInvitationsResponse_Action, QueryInvitationsResponse_Type } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { QueryInvitationsResponse, QueryInvitationsResponse_Action, QueryInvitationsResponse_Type, QueryInvitationsResponseSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
 
 import { InvitationsProxy } from './invitations-proxy';
 
@@ -38,22 +39,28 @@ describe('InvitationsProxy', () => {
     const proxy = makeProxy(
       () =>
         new Stream<QueryInvitationsResponse>(({ next }) => {
-          next({
-            action: QueryInvitationsResponse_Action.ADDED,
-            type: QueryInvitationsResponse_Type.CREATED,
-            invitations: [],
-            existing: true,
-          });
-          next({
-            action: QueryInvitationsResponse_Action.ADDED,
-            type: QueryInvitationsResponse_Type.ACCEPTED,
-            invitations: [],
-            existing: true,
-          });
-          next({
-            action: QueryInvitationsResponse_Action.LOAD_COMPLETE,
-            type: QueryInvitationsResponse_Type.CREATED,
-          });
+          next(
+            buf.create(QueryInvitationsResponseSchema, {
+              action: QueryInvitationsResponse_Action.ADDED,
+              type: QueryInvitationsResponse_Type.CREATED,
+              invitations: [],
+              existing: true,
+            }),
+          );
+          next(
+            buf.create(QueryInvitationsResponseSchema, {
+              action: QueryInvitationsResponse_Action.ADDED,
+              type: QueryInvitationsResponse_Type.ACCEPTED,
+              invitations: [],
+              existing: true,
+            }),
+          );
+          next(
+            buf.create(QueryInvitationsResponseSchema, {
+              action: QueryInvitationsResponse_Action.LOAD_COMPLETE,
+              type: QueryInvitationsResponse_Type.CREATED,
+            }),
+          );
         }),
     );
 

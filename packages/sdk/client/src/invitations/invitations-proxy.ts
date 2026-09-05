@@ -15,7 +15,8 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Invitation, Invitation_AuthMethod, Invitation_State, Invitation_Type } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { buf, bufInit, fromPublicKey } from '@dxos/protocols/buf';
+import { Invitation, InvitationSchema, Invitation_AuthMethod, Invitation_State, Invitation_Type } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { QueryInvitationsResponse, QueryInvitationsResponse_Action, QueryInvitationsResponse_Type } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
@@ -197,14 +198,14 @@ export class InvitationsProxy implements Invitations {
   }
 
   getInvitationOptions(): Invitation {
-    return {
+    return buf.create(InvitationSchema, {
       invitationId: PublicKey.random().toHex(),
       type: Invitation_Type.INTERACTIVE,
       authMethod: Invitation_AuthMethod.SHARED_SECRET,
       state: Invitation_State.INIT,
-      swarmKey: PublicKey.random(),
-      ...this._getInvitationContext(),
-    };
+      swarmKey: fromPublicKey(PublicKey.random()),
+      ...bufInit(this._getInvitationContext()),
+    });
   }
 
   // TODO(nf): Some way to retrieve observables for resumed invitations?
