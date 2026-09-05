@@ -20,7 +20,7 @@ import { Annotation, Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
-import { Input, ScrollContainer, ThemedClassName, composable, composableProps } from '@dxos/react-ui';
+import { Input, Panel, ScrollContainer, ThemedClassName, composable, composableProps } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { type Commit, Timeline } from '@dxos/react-ui-components';
 import { Menu } from '@dxos/react-ui-menu';
@@ -121,90 +121,83 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
     );
 
     return (
-      <div
-        {...composableProps(props, {
-          ...attentionAttrs,
-          classNames: mx(
-            'h-full grid',
+      <Panel.Root {...composableProps(props, { ...attentionAttrs, classNames: 'h-full' })} ref={forwardedRef}>
+        <Menu.Root {...menu} alwaysActive>
+          <Panel.Toolbar asChild>
+            <Menu.Toolbar classNames='justify-between'>
+              <span />
+              <Menu.Items />
+            </Menu.Toolbar>
+          </Panel.Toolbar>
+        </Menu.Root>
+
+        <Panel.Content
+          classNames={mx(
+            'grid grid-cols-[minmax(0,1fr)]',
             // The process tree takes only the height its rows need (capped by its own max-height),
             // so a short tree does not reserve empty space above the timeline.
             !tracePanelDebug && selectedCommit
-              ? 'grid-rows-[min-content_min-content_1fr_min-content]'
-              : 'grid-rows-[min-content_min-content_1fr]',
-          ),
-        })}
-        ref={forwardedRef}
-      >
-        <Menu.Root {...menu} alwaysActive>
-          <Menu.Toolbar classNames='justify-between'>
-            <span />
-            <Menu.Items />
-          </Menu.Toolbar>
-        </Menu.Root>
-
-        <div>
-          <div className='px-1'>
+              ? 'grid-rows-[min-content_1fr_min-content]'
+              : 'grid-rows-[min-content_1fr]',
+          )}
+        >
+          {/* TODO(burdon): Select process to show details. */}
+          <div className='min-w-0'>
             <Input.Root>
-              <Input.Label>Processes</Input.Label>
+              <Input.Label classNames='px-1'>Processes</Input.Label>
             </Input.Root>
-          </div>
-          <div>
-            {/* Two rows, not two lines: a tree row is `--dx-control` tall, not a line-height, and
-                `Tree` separates rows with `gap-0.5` — so `2lh` fell short and clipped the second. */}
             <ProcessTreeContainer
-              classNames='max-h-[calc(2*var(--dx-control)+0.125rem)]'
+              classNames='max-h-[2lh]'
               space={space}
               environments={environments}
               onProcessSelect={handleProcessSelect}
               onProcessTerminate={onProcessTerminate}
             />
           </div>
-        </div>
 
-        <div>
-          <div className='px-1'>
+          <div className='min-w-0'>
             <Input.Root>
-              <Input.Label>Trace</Input.Label>
+              <Input.Label classNames='px-1'>Trace</Input.Label>
             </Input.Root>
+            <ScrollContainer.Root pin>
+              <ScrollContainer.Content thin>
+                <ScrollContainer.Fade />
+                <ScrollContainer.Viewport>
+                  {tracePanelDebug ? (
+                    <Syntax.Root data={spanTree}>
+                      <Syntax.Content>
+                        <Syntax.Viewport>
+                          <Syntax.Code classNames='text-xs' />
+                        </Syntax.Viewport>
+                      </Syntax.Content>
+                    </Syntax.Root>
+                  ) : (
+                    <Timeline
+                      branches={branches}
+                      branch={currentBranch}
+                      commits={commits}
+                      onSelect={handleCommitSelect}
+                    />
+                  )}
+                </ScrollContainer.Viewport>
+                <ScrollContainer.ScrollDownButton />
+              </ScrollContainer.Content>
+            </ScrollContainer.Root>
           </div>
-          <ScrollContainer.Root pin>
-            <ScrollContainer.Content thin>
-              <ScrollContainer.Fade />
-              <ScrollContainer.Viewport>
-                {tracePanelDebug ? (
-                  <Syntax.Root data={spanTree}>
-                    <Syntax.Content>
-                      <Syntax.Viewport>
-                        <Syntax.Code classNames='text-xs' />
-                      </Syntax.Viewport>
-                    </Syntax.Content>
-                  </Syntax.Root>
-                ) : (
-                  <Timeline
-                    branches={branches}
-                    branch={currentBranch}
-                    commits={commits}
-                    onSelect={handleCommitSelect}
-                  />
-                )}
-              </ScrollContainer.Viewport>
-              <ScrollContainer.ScrollDownButton />
-            </ScrollContainer.Content>
-          </ScrollContainer.Root>
-        </div>
 
-        {!tracePanelDebug && selectedCommit && (
-          <div className='p-2'>
-            <Syntax.Root data={details[selectedCommit.id] ?? selectedCommit}>
-              <Syntax.Content classNames='border border-subdued-separator rounded-sm'>
-                <Syntax.Viewport>
-                  <Syntax.Code classNames='max-h-[20lh] text-xs' />
-                </Syntax.Viewport>
-              </Syntax.Content>
-            </Syntax.Root>
-          </div>
-        )}
-      </div>
+          {!tracePanelDebug && selectedCommit && (
+            <div className='p-2'>
+              <Syntax.Root data={details[selectedCommit.id] ?? selectedCommit}>
+                <Syntax.Content classNames='border border-subdued-separator rounded-sm'>
+                  <Syntax.Viewport>
+                    <Syntax.Code classNames='max-h-[20lh] text-xs' />
+                  </Syntax.Viewport>
+                </Syntax.Content>
+              </Syntax.Root>
+            </div>
+          )}
+        </Panel.Content>
+      </Panel.Root>
     );
   },
 );
@@ -341,6 +334,7 @@ const ProcessTreeContainer = ({
       if (process.key !== AGENT_PROCESS_KEY) {
         return undefined;
       }
+
       const target = Annotation.getDictionary(process.params.annotations, Process.TargetAnnotation).pipe(
         Option.getOrUndefined,
       );
