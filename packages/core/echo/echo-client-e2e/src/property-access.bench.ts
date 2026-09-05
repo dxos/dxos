@@ -15,8 +15,9 @@ import { blackhole } from './testing/bench-util';
 //
 // Property-access cost of an ECHO object relative to a plain JS object, across the three object
 // storage kinds. Complements `echo.bench.ts`, which measures database operations (insert / select /
-// update / delete, each with a flush); this file deliberately never flushes, so what is left is the
-// per-access cost of the reactive proxy itself — the surface an API optimization would move.
+// update / delete, each with a flush); no measured body here ever flushes, so what is left is the
+// per-access cost of the reactive proxy itself — the surface an API optimization would move. Flushes
+// happen only in row teardown, outside every timed window (see `flushing`).
 //
 // Reading is a proxy `get` trap; writing must go through `Obj.update`, since a direct assignment on
 // an initialized ECHO object throws. That asymmetry is the point of the matrix: a write carries the
@@ -48,9 +49,10 @@ const MAKE_SINK_MASK = MAKE_SINK_SIZE - 1;
 const BATCH = 10;
 const BENCH_OPTIONS = { time: 1_000 };
 // The `make` rows run a shorter window than the rest: the persisted kinds insert a new object per
-// iteration and never flush, so a full second would pile up enough documents to distort the tail of
-// the run (and strain memory). Uniform across all four kinds so the make rows stay comparable to
-// each other; hz is normalized, so the shorter window costs resolution, not correctness.
+// iteration, and within a row nothing flushes, so a full second would grow the document enough to
+// distort the tail of that row (and strain memory). Uniform across all four kinds so the make rows
+// stay comparable to each other; hz is normalized, so the shorter window costs resolution, not
+// correctness.
 const MAKE_BENCH_OPTIONS = { time: 250 };
 
 class BenchObject extends Type.makeObject<BenchObject>(DXN.make('com.example.type.benchObject', '0.1.0'))(
@@ -105,9 +107,9 @@ const openDatabase = async (storagePath: string) => {
 };
 
 // A database per persisted kind and width rather than one shared between them. Every row mutates the
-// database it runs against — `make` adds objects, and no row flushes, so writes pile up as un-flushed
-// changes — so on a shared database each block would be measured against a database sized by whichever
-// blocks happened to run before it, by an amount that varies with their iteration counts.
+// database it runs against — `make` adds objects that persist across rows — so on a shared database
+// each block would be measured against a database sized by whichever blocks happened to run before
+// it, by an amount that varies with their iteration counts.
 const automergeDb = await openDatabase(storagePaths[0]);
 const feedDb = await openDatabase(storagePaths[1]);
 const automergeWideDb = await openDatabase(storagePaths[2]);
@@ -158,6 +160,16 @@ await feedDb.flush();
 await automergeWideDb.flush();
 await feedWideDb.flush();
 
+// Flushes a persisted row's database once after its warmup and once after its run — tinybench's
+// `teardown` is per task, not per iteration, so this never lands inside a measured window. Without
+// it, pending changes accumulate across the whole block, and `DataService.update` ships them in a
+// single RPC under a 30s timeout; a block's worth on 250-field objects does not fit. As a side
+// effect each row starts from a drained queue, so automerge rows no longer drift as the run goes on.
+const flushing = (db: typeof automergeDb, options: typeof BENCH_OPTIONS) => ({
+  ...options,
+  teardown: () => db.flush(),
+});
+
 // Generated at runtime so the written value is not a literal V8 can constant-fold into the store.
 const valuePool = Array.from({ length: VALUE_POOL_SIZE }, () => Math.floor(Math.random() * 1_000_000));
 // Pre-built so the `make` rows measure object construction rather than string concatenation.
@@ -189,6 +201,13 @@ afterAll(async () => {
     feedWidePool,
     makeSink,
   ]);
+  // Each persisted row already flushes in its teardown (see `flushing`), so these are a final drain
+  // of anything the last row left behind. Sequential rather than inside `builder.close()`, which
+  // closes four peers in parallel and could not say which one was slow if it timed out.
+  await automergeDb.flush();
+  await feedDb.flush();
+  await automergeWideDb.flush();
+  await feedWideDb.flush();
   // Closes the peers and disposes their storage. The exit handler above only unlinks the directory,
   // and cannot await this — which is why the close belongs here, where a hook can be async.
   await builder.close();
@@ -350,7 +369,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
       () => {
         checksum += automergePool[cursor++ & OBJECT_POOL_MASK].value;
       },
-      BENCH_OPTIONS,
+      flushing(automergeDb, BENCH_OPTIONS),
     );
 
     bench(
@@ -360,7 +379,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
           checksum += automergePool[cursor++ & OBJECT_POOL_MASK].value;
         }
       },
-      BENCH_OPTIONS,
+      flushing(automergeDb, BENCH_OPTIONS),
     );
 
     bench(
@@ -370,7 +389,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
           obj.value = valuePool[cursor & VALUE_POOL_MASK];
         });
       },
-      BENCH_OPTIONS,
+      flushing(automergeDb, BENCH_OPTIONS),
     );
 
     bench(
@@ -382,7 +401,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
           });
         }
       },
-      BENCH_OPTIONS,
+      flushing(automergeDb, BENCH_OPTIONS),
     );
 
     bench(
@@ -394,7 +413,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
           }
         });
       },
-      BENCH_OPTIONS,
+      flushing(automergeDb, BENCH_OPTIONS),
     );
 
     // `make` here is construction plus `db.add` — the object has to reach the database for the row
@@ -407,7 +426,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
           Obj.make(BenchObject, { value: valuePool[index], label: labelPool[index] }),
         );
       },
-      MAKE_BENCH_OPTIONS,
+      flushing(automergeDb, MAKE_BENCH_OPTIONS),
     );
 
     bench(
@@ -420,7 +439,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
           );
         }
       },
-      MAKE_BENCH_OPTIONS,
+      flushing(automergeDb, MAKE_BENCH_OPTIONS),
     );
   });
 
@@ -430,7 +449,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
       () => {
         checksum += feedPool[cursor++ & OBJECT_POOL_MASK].value;
       },
-      BENCH_OPTIONS,
+      flushing(feedDb, BENCH_OPTIONS),
     );
 
     bench(
@@ -440,7 +459,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
           checksum += feedPool[cursor++ & OBJECT_POOL_MASK].value;
         }
       },
-      BENCH_OPTIONS,
+      flushing(feedDb, BENCH_OPTIONS),
     );
 
     bench(
@@ -450,7 +469,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
           obj.value = valuePool[cursor & VALUE_POOL_MASK];
         });
       },
-      BENCH_OPTIONS,
+      flushing(feedDb, BENCH_OPTIONS),
     );
 
     bench(
@@ -462,7 +481,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
           });
         }
       },
-      BENCH_OPTIONS,
+      flushing(feedDb, BENCH_OPTIONS),
     );
 
     bench(
@@ -474,7 +493,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
           }
         });
       },
-      BENCH_OPTIONS,
+      flushing(feedDb, BENCH_OPTIONS),
     );
 
     bench(
@@ -486,7 +505,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
           { to: feed },
         );
       },
-      MAKE_BENCH_OPTIONS,
+      flushing(feedDb, MAKE_BENCH_OPTIONS),
     );
 
     bench(
@@ -500,7 +519,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
           );
         }
       },
-      MAKE_BENCH_OPTIONS,
+      flushing(feedDb, MAKE_BENCH_OPTIONS),
     );
   });
 });
@@ -658,7 +677,7 @@ describe(
         () => {
           checksum += automergeWidePool[cursor++ & OBJECT_POOL_MASK].value;
         },
-        BENCH_OPTIONS,
+        flushing(automergeWideDb, BENCH_OPTIONS),
       );
 
       bench(
@@ -668,7 +687,7 @@ describe(
             checksum += automergeWidePool[cursor++ & OBJECT_POOL_MASK].value;
           }
         },
-        BENCH_OPTIONS,
+        flushing(automergeWideDb, BENCH_OPTIONS),
       );
 
       bench(
@@ -678,7 +697,7 @@ describe(
             obj.value = valuePool[cursor & VALUE_POOL_MASK];
           });
         },
-        BENCH_OPTIONS,
+        flushing(automergeWideDb, BENCH_OPTIONS),
       );
 
       bench(
@@ -690,7 +709,7 @@ describe(
             });
           }
         },
-        BENCH_OPTIONS,
+        flushing(automergeWideDb, BENCH_OPTIONS),
       );
 
       bench(
@@ -702,7 +721,7 @@ describe(
             }
           });
         },
-        BENCH_OPTIONS,
+        flushing(automergeWideDb, BENCH_OPTIONS),
       );
 
       bench(
@@ -713,7 +732,7 @@ describe(
             Obj.make(WideBenchObject, { ...widePadding, value: valuePool[index], label: labelPool[index] }),
           );
         },
-        MAKE_BENCH_OPTIONS,
+        flushing(automergeWideDb, MAKE_BENCH_OPTIONS),
       );
 
       bench(
@@ -726,7 +745,7 @@ describe(
             );
           }
         },
-        MAKE_BENCH_OPTIONS,
+        flushing(automergeWideDb, MAKE_BENCH_OPTIONS),
       );
     });
 
@@ -736,7 +755,7 @@ describe(
         () => {
           checksum += feedWidePool[cursor++ & OBJECT_POOL_MASK].value;
         },
-        BENCH_OPTIONS,
+        flushing(feedWideDb, BENCH_OPTIONS),
       );
 
       bench(
@@ -746,7 +765,7 @@ describe(
             checksum += feedWidePool[cursor++ & OBJECT_POOL_MASK].value;
           }
         },
-        BENCH_OPTIONS,
+        flushing(feedWideDb, BENCH_OPTIONS),
       );
 
       bench(
@@ -756,7 +775,7 @@ describe(
             obj.value = valuePool[cursor & VALUE_POOL_MASK];
           });
         },
-        BENCH_OPTIONS,
+        flushing(feedWideDb, BENCH_OPTIONS),
       );
 
       bench(
@@ -768,7 +787,7 @@ describe(
             });
           }
         },
-        BENCH_OPTIONS,
+        flushing(feedWideDb, BENCH_OPTIONS),
       );
 
       bench(
@@ -780,7 +799,7 @@ describe(
             }
           });
         },
-        BENCH_OPTIONS,
+        flushing(feedWideDb, BENCH_OPTIONS),
       );
 
       bench(
@@ -792,7 +811,7 @@ describe(
             { to: wideFeed },
           );
         },
-        MAKE_BENCH_OPTIONS,
+        flushing(feedWideDb, MAKE_BENCH_OPTIONS),
       );
 
       bench(
@@ -806,7 +825,7 @@ describe(
             );
           }
         },
-        MAKE_BENCH_OPTIONS,
+        flushing(feedWideDb, MAKE_BENCH_OPTIONS),
       );
     });
   },
