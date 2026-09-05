@@ -414,7 +414,7 @@ three marked **behavioural**.
 - **`react-list` — `collapsible` + `checkbox`.** Ark has both machines. `Collapsible` is a leaf swap;
   `Checkbox` shares its migration with `Input`. `react-list` is the lowest tier (`react-primitives`),
   so it moves in Phase 2 with the other leaves.
-- **`react-ui-tabs` — `tabs`.** Ark `Tabs` anatomy (`Root/List/Trigger/Content/Indicator`) is a
+- **`react-ui-tabs` — `tabs`** (folded into `react-ui` as `Tabs` on 2026-09-05; the package is gone). Ark `Tabs` anatomy (`Root/List/Trigger/Content/Indicator`) is a
   near-match for 's; the only addition is the optional `Indicator`. Leaf swap.
 - **Plugin-level behavioural imports** (`plugin-*` reaching for `@-ui/react-tooltip`, `-toolbar`,
   `-toggle-group`, `-toggle`, `-toast` directly) are pre-existing layering violations — a plugin

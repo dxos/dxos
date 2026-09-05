@@ -10,9 +10,9 @@ import { useOptionalCapability } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Panel, Select, useTranslation } from '@dxos/react-ui';
+import { Panel, Select, Tabs, useTranslation } from '@dxos/react-ui';
+import { useAttention } from '@dxos/react-ui-attention';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import { Tabs } from '@dxos/react-ui-tabs';
 
 import { TelemetryPanel, type TelemetryRow, TerraForm, TerraMap } from '#components';
 import { meta } from '#meta';
@@ -74,6 +74,8 @@ const buildTelemetry = (objects: readonly SimObject[], config: TerraConfigValues
   });
 
 export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticleProps) => {
+  // The selected view tab reads as primary while this article has attention.
+  const { hasAttention } = useAttention(attendableId);
   const { t } = useTranslation(meta.profile.key);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const managerRef = useRef<SceneManager | null>(null);
@@ -357,7 +359,7 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
               orientation='horizontal'
               value={view}
               onValueChange={handleViewChange}
-              attendableId={attendableId}
+              selectedVariant={hasAttention ? 'primary' : 'default'}
             >
               <Tabs.Tablist classNames='w-auto p-0'>
                 <Tabs.Button value='scene' data-testid='terra.toolbar.view-scene'>

@@ -6,9 +6,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { random } from '@dxos/random';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
+import { withLayout, withTheme } from '../../testing';
 import { Tabs, TabsRootProps } from './Tabs';
 
 random.seed(1234);
@@ -50,7 +50,7 @@ const content = [...Array(24)].reduce((acc: { [key: string]: { title: string; pa
 }, {});
 
 const meta = {
-  title: 'ui/react-ui-tabs/Tabs',
+  title: 'ui/react-ui-core/components/Tabs',
   component: Tabs.Root,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],

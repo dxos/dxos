@@ -39,6 +39,7 @@ export * from './Skeleton';
 export * from './Slider';
 export * from './Splitter';
 export * from './Stepper';
+export * from './Tabs';
 export * from './Tag';
 export * from './TextCrawl';
 export * from './Toast';

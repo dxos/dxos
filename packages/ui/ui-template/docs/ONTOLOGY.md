@@ -358,7 +358,7 @@ component that fits nowhere means the taxonomy is short a row. Findings follow t
 |                               | `SyntaxHighlighter`     | `text_surface`      |
 | `react-ui-table`              | `Table`                 | `collection`        |
 |                               | `TableCellEditor`       | `control`           |
-| `react-ui-tabs`               | `Tabs`                  | `navigation`        |
+| `react-ui` (`Tabs`)           | `Tabs`                  | `navigation`        |
 | `react-ui-task`               | `TaskList`              | `collection`        |
 | `react-ui-terminal`           | `Terminal`              | `text_surface`      |
 | `react-ui-thread`             | `Message`               | `conversation`      |

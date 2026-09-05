@@ -11,10 +11,9 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
 import { useActionRunner, useEdges } from '@dxos/plugin-graph/hooks';
-import { DensityProvider, IconButton, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { DensityProvider, IconButton, ScrollArea, Tabs, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Empty, Tree } from '@dxos/react-ui-list';
 import { Menu, type MenuItem } from '@dxos/react-ui-menu';
-import { Tabs } from '@dxos/react-ui-tabs';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
 import { getListActions, useActions, useLoadDescendents } from '#hooks';

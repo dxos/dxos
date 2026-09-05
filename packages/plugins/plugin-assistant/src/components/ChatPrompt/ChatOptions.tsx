@@ -11,11 +11,10 @@ import { McpServer } from '@dxos/assistant-toolkit';
 import type * as ChatModule from '@dxos/assistant/Chat';
 import { type Database, Filter, Obj, type Registry, Type, URI } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { IconButton, Input, Popover, Select, Toolbar, useTranslation } from '@dxos/react-ui';
+import { IconButton, Input, Popover, Select, Tabs, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type ChatView } from '@dxos/react-ui-assistant';
 import { Listbox } from '@dxos/react-ui-list';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
-import { Tabs } from '@dxos/react-ui-tabs';
 import { getStyles, mx } from '@dxos/ui-theme';
 
 import { useActiveSkills, useContextObjects, useFilteredTypes, useSkillHandlers, useSkills } from '#hooks';

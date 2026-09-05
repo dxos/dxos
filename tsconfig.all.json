@@ -820,9 +820,6 @@
       "path": "packages/ui/react-ui-table/tsconfig.json"
     },
     {
-      "path": "packages/ui/react-ui-tabs/tsconfig.json"
-    },
-    {
       "path": "packages/ui/react-ui-task/tsconfig.json"
     },
     {

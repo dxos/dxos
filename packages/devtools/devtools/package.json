@@ -58,7 +58,6 @@
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
-    "@dxos/react-ui-tabs": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/timeframe": "workspace:*",
     "@dxos/tracing": "workspace:*",

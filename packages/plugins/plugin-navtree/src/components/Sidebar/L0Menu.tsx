@@ -31,6 +31,7 @@ import {
   Icon,
   IconButton,
   ScrollArea,
+  Tabs,
   type ThemedClassName,
   Tooltip,
   toLocalizedString,
@@ -39,7 +40,6 @@ import {
 } from '@dxos/react-ui';
 import { DropIndicator } from '@dxos/react-ui-list';
 import { Menu, type MenuItem } from '@dxos/react-ui-menu';
-import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 

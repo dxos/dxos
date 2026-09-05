@@ -174,7 +174,6 @@
       "@dxos/react-ui-search",
       "@dxos/react-ui-syntax-highlighter",
       "@dxos/react-ui-table",
-      "@dxos/react-ui-tabs",
       "@dxos/react-ui-task",
       "@dxos/react-ui-terminal",
       "@dxos/react-ui-thread",

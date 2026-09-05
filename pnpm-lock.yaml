@@ -6942,9 +6942,6 @@ importers:
       '@dxos/react-ui-table':
         specifier: workspace:*
         version: link:../../ui/react-ui-table
-      '@dxos/react-ui-tabs':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-tabs
       '@dxos/rpc':
         specifier: workspace:*
         version: link:../../core/mesh/rpc
@@ -7584,9 +7581,6 @@ importers:
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../ui/react-ui-syntax-highlighter
-      '@dxos/react-ui-tabs':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-tabs
       '@dxos/react-ui-task':
         specifier: workspace:*
         version: link:../../ui/react-ui-task
@@ -9602,9 +9596,6 @@ importers:
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../ui/react-ui-syntax-highlighter
-      '@dxos/react-ui-tabs':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-tabs
       '@dxos/react-ui-terminal':
         specifier: workspace:*
         version: link:../../ui/react-ui-terminal
@@ -9738,9 +9729,6 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
-      '@dxos/react-ui-tabs':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-tabs
       '@dxos/ui-types':
         specifier: workspace:*
         version: link:../../ui/ui-types
@@ -12856,9 +12844,6 @@ importers:
       '@dxos/react-ui-search':
         specifier: workspace:*
         version: link:../../ui/react-ui-search
-      '@dxos/react-ui-tabs':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-tabs
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -13053,9 +13038,6 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
-      '@dxos/react-ui-tabs':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-tabs
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
@@ -13659,9 +13641,6 @@ importers:
       '@dxos/react-ui-search':
         specifier: workspace:*
         version: link:../../ui/react-ui-search
-      '@dxos/react-ui-tabs':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-tabs
       '@dxos/react-ui-task':
         specifier: workspace:*
         version: link:../../ui/react-ui-task
@@ -14029,9 +14008,6 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
-      '@dxos/react-ui-tabs':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-tabs
       '@dxos/react-ui-thread':
         specifier: workspace:*
         version: link:../../ui/react-ui-thread
@@ -15345,9 +15321,6 @@ importers:
       '@dxos/react-ui-table':
         specifier: workspace:*
         version: link:../../ui/react-ui-table
-      '@dxos/react-ui-tabs':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-tabs
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
@@ -16355,9 +16328,6 @@ importers:
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
-      '@dxos/react-ui-tabs':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-tabs
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -17232,9 +17202,6 @@ importers:
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
-      '@dxos/react-ui-tabs':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-tabs
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
@@ -22609,49 +22576,6 @@ importers:
         specifier: '>=8.2.1'
         version: 8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
 
-  packages/ui/react-ui-tabs:
-    dependencies:
-      '@ark-ui/react':
-        specifier: 'catalog:'
-        version: 5.39.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      '@dxos/react-focus':
-        specifier: workspace:*
-        version: link:../react-primitives/react-focus
-      '@dxos/react-hooks':
-        specifier: workspace:*
-        version: link:../react-primitives/react-hooks
-      '@dxos/react-ui-attention':
-        specifier: workspace:*
-        version: link:../react-ui-attention
-    devDependencies:
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../common/random
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
-      '@dxos/ui-theme':
-        specifier: workspace:*
-        version: link:../ui-theme
-      '@storybook/react-vite':
-        specifier: 'catalog:'
-        version: 10.5.8(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(esbuild@0.28.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.5.8(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
-      '@types/react':
-        specifier: ~19.2.17
-        version: 19.2.17
-      '@types/react-dom':
-        specifier: ~19.2.3
-        version: 19.2.3(@types/react@19.2.17)
-      react:
-        specifier: ~19.2.7
-        version: 19.2.7
-      react-dom:
-        specifier: ~19.2.7
-        version: 19.2.7(react@19.2.7)
-      vite:
-        specifier: '>=8.2.1'
-        version: 8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
-
   packages/ui/react-ui-task:
     dependencies:
       '@atlaskit/pragmatic-drag-and-drop':
@@ -23208,9 +23132,6 @@ importers:
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../react-ui-list
-      '@dxos/react-ui-tabs':
-        specifier: workspace:*
-        version: link:../react-ui-tabs
       '@zag-js/react':
         specifier: 'catalog:'
         version: 1.43.3(react-dom@19.2.7(react@19.2.7))(react@19.2.7)

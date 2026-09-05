@@ -8,9 +8,9 @@ import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { IconButton, Panel, Tabs, Toolbar, useTranslation } from '@dxos/react-ui';
+import { useAttention } from '@dxos/react-ui-attention';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import { Tabs } from '@dxos/react-ui-tabs';
 
 import { meta } from '#meta';
 import { Video, VideoOperation } from '#types';
@@ -158,9 +158,16 @@ const TranscriptTabs = ({
   onRegenerate,
 }: TranscriptTabsProps) => {
   const { t } = useTranslation(meta.profile.key);
+  // The selected tab reads as primary while this article has attention.
+  const { hasAttention } = useAttention(attendableId);
   return (
     <Panel.Root asChild role={role}>
-      <Tabs.Root orientation='horizontal' value={tab} attendableId={attendableId} onValueChange={onTabChange}>
+      <Tabs.Root
+        orientation='horizontal'
+        value={tab}
+        selectedVariant={hasAttention ? 'primary' : 'default'}
+        onValueChange={onTabChange}
+      >
         <Panel.Toolbar asChild>
           <Toolbar.Root>
             <Tabs.Tablist classNames='p-0'>

@@ -821,8 +821,12 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       usages (shell invitation, space members, client devices) keep their centred emoji as a sibling.
       Visual change: square modules, no rounded dots and no reserved centre cut-out — the emoji sits on
       the modules, which ECC `Q` tolerates. Package gone from four manifests and the catalog.
-- [ ] **Fold `react-ui-tabs` into `react-ui` and remove the package** (tracked 2026-09-05): Tabs is on
-      Ark already; it belongs beside the other core components. Consumers change one import.
+- [x] **Fold `react-ui-tabs` into `react-ui`** DONE 2026-09-05: `components/Tabs` (already Ark's tabs plus
+      the master-detail `activePart` focus moves). The one coupling that blocked it — `useAttention`
+      choosing the selected tab's button variant — is lifted to a `selectedVariant` prop on `Tabs.Root`;
+      plugin-video, the only consumer that passed an `attendableId`, computes `hasAttention` itself.
+      14 import sites and 12 manifests/tsconfig references updated; package removed; app-framework's
+      package list and the focus/ontology docs follow.
 - [ ] **Fold `react-ui-menu` into `react-ui` and remove the package** (tracked 2026-09-05): the
       action-graph menu wrappers (`useMenuActions`, `Menu.Root`, `ToolbarMenu`, `DropdownMenu`) sit
       on `react-ui`'s Menu; one package fewer in the boot graph's dependency chain.

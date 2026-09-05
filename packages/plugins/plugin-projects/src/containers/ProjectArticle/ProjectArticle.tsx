@@ -19,12 +19,11 @@ import { SchemaAST } from '@dxos/effect';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import { InstructionsEditor } from '@dxos/plugin-routine/components';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Flex, Icon, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Flex, Icon, Panel, Tabs, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import { Tabs } from '@dxos/react-ui-tabs';
 import { buildTaskForest, flattenVisibleTasks } from '@dxos/react-ui-task';
 import { type Milestone, Task, type TaskSet } from '@dxos/types';
 

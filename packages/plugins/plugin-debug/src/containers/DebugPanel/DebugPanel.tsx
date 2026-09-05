@@ -4,9 +4,8 @@
 
 import React, { useCallback } from 'react';
 
-import { Panel, SystemIconButton, ToggleIconButton, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Panel, SystemIconButton, Tabs, ToggleIconButton, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
-import { Tabs } from '@dxos/react-ui-tabs';
 
 import { meta } from '#meta';
 

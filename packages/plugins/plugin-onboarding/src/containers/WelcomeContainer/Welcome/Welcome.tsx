@@ -21,8 +21,7 @@ import * as NativeOAuth from '@dxos/app-toolkit/NativeOAuth';
 import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { DXOSHorizontalType } from '@dxos/brand';
 import { log } from '@dxos/log';
-import { Button, DropdownMenu, Flex, Icon, Input, ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { Tabs } from '@dxos/react-ui-tabs';
+import { Button, DropdownMenu, Flex, Icon, Input, Tabs, ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../../meta';

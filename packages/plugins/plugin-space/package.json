@@ -250,7 +250,6 @@
     "@dxos/react-ui-pickers": "workspace:*",
     "@dxos/react-ui-search": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
-    "@dxos/react-ui-tabs": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/types": "workspace:*",

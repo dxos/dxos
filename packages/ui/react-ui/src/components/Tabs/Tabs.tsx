@@ -7,20 +7,12 @@ import { Tabs as TabsPrimitive } from '@ark-ui/react/tabs';
 import React, { type ComponentPropsWithoutRef, type MouseEvent, useCallback, useLayoutEffect } from 'react';
 
 import { findFirstFocusable } from '@dxos/react-focus';
-import { createContext, useControllableState } from '@dxos/react-hooks';
-import {
-  Button,
-  type ButtonProps,
-  IconButton,
-  type IconButtonProps,
-  type SlottableProps,
-  type ThemedClassName,
-  composableProps,
-  slottable,
-  useForwardedRef,
-} from '@dxos/react-ui';
-import { useAttention } from '@dxos/react-ui-attention';
+import { createContext, useControllableState, useForwardedRef } from '@dxos/react-hooks';
 import { mx } from '@dxos/ui-theme';
+import { type SlottableProps } from '@dxos/ui-types';
+
+import { type ThemedClassName, composableProps, slottable } from '../../util';
+import { Button, type ButtonProps, IconButton, type IconButtonProps } from '../Button';
 
 type TabsActivePart = 'list' | 'panel';
 
@@ -35,7 +27,8 @@ const TABS_NAME = 'Tabs';
 type TabsContextValue = {
   activePart: TabsActivePart;
   setActivePart: (nextActivePart: TabsActivePart) => void;
-  attendableId?: string;
+  /** The button variant of the selected tab in a horizontal tablist; `default` unless the host says otherwise. */
+  selectedVariant?: ButtonProps['variant'];
 } & {
   orientation?: TabsOrientation;
   value?: string;
@@ -61,7 +54,7 @@ type TabsRootCustomProps = Omit<ComponentPropsWithoutRef<'div'>, 'defaultValue' 
   /** Keep inactive panels mounted (hidden) instead of unmounting them. */
   keepMounted?: boolean;
 } & Partial<
-    Pick<TabsContextValue, 'activePart' | 'attendableId'> & {
+    Pick<TabsContextValue, 'activePart' | 'selectedVariant'> & {
       onActivePartChange: (nextActivePart: TabsActivePart) => void;
       defaultActivePart: TabsActivePart;
       /** Skip master-detail focus moves (e.g. when a child form owns initial focus). */
@@ -84,7 +77,7 @@ const TabsRoot = slottable<HTMLDivElement, TabsRootCustomProps>(
       orientation = 'vertical',
       activationMode = 'manual',
       keepMounted = false,
-      attendableId,
+      selectedVariant,
       suppressRegionFocus = false,
       asChild,
       ...props
@@ -145,7 +138,7 @@ const TabsRoot = slottable<HTMLDivElement, TabsRootCustomProps>(
         activePart={activePart}
         setActivePart={setActivePart}
         value={value}
-        attendableId={attendableId}
+        selectedVariant={selectedVariant}
       >
         <TabsPrimitive.Root
           {...composableProps<HTMLDivElement>(props)}
@@ -221,7 +214,7 @@ TabsTablist.displayName = 'Tabs.Tablist';
 // BackButton
 //
 
-const TabsBackButton = ({ onClick, classNames, ...props }: ButtonProps) => {
+const TabsBackButton = ({ classNames, onClick, ...props }: ButtonProps) => {
   const { setActivePart } = useTabsContext('TabsBackButton');
   const handleClick = useCallback(
     (event: MouseEvent<HTMLButtonElement>) => {
@@ -242,7 +235,7 @@ TabsBackButton.displayName = 'Tabs.BackButton';
 
 type TabsTabGroupHeadingProps = ThemedClassName<ComponentPropsWithoutRef<'h2'>>;
 
-const TabsTabGroupHeading = ({ children, classNames, ...props }: TabsTabGroupHeadingProps) => (
+const TabsTabGroupHeading = ({ classNames, children, ...props }: TabsTabGroupHeadingProps) => (
   <h2 {...props} className={mx('my-1 px-2 text-sm text-un-accent', classNames)}>
     {children}
   </h2>
@@ -257,8 +250,7 @@ TabsTabGroupHeading.displayName = 'Tabs.TabGroupHeading';
 type TabsButtonProps = ButtonProps & { value: string };
 
 const TabsButton = ({ value, classNames, children, onClick, variant, ...props }: TabsButtonProps) => {
-  const { setActivePart, orientation, value: contextValue, attendableId } = useTabsContext('TabsButton');
-  const { hasAttention } = useAttention(attendableId);
+  const { setActivePart, orientation, value: contextValue, selectedVariant } = useTabsContext('TabsButton');
 
   const handleClick = useCallback(
     // NOTE: This handler is only called if the tab is *already active*.
@@ -274,8 +266,7 @@ const TabsButton = ({ value, classNames, children, onClick, variant, ...props }:
       <Button
         {...props}
         variant={
-          variant ??
-          (orientation === 'horizontal' && contextValue === value ? (hasAttention ? 'primary' : 'default') : 'ghost')
+          variant ?? (orientation === 'horizontal' && contextValue === value ? (selectedVariant ?? 'default') : 'ghost')
         }
         classNames={[
           orientation === 'vertical' && 'block justify-start text-start w-full',
@@ -299,8 +290,7 @@ TabsButton.displayName = 'Tabs.Button';
 type TabsIconButtonProps = IconButtonProps & { value: string };
 
 const TabsIconButton = ({ value, classNames, onClick, variant, iconOnly, ...props }: TabsIconButtonProps) => {
-  const { setActivePart, orientation, value: contextValue, attendableId } = useTabsContext('TabsIconButton');
-  const { hasAttention } = useAttention(attendableId);
+  const { setActivePart, orientation, value: contextValue, selectedVariant } = useTabsContext('TabsIconButton');
 
   // NOTE: This handler is only called if the tab is *already active*.
   const handleClick = useCallback(
@@ -317,8 +307,7 @@ const TabsIconButton = ({ value, classNames, onClick, variant, iconOnly, ...prop
         {...props}
         iconOnly={iconOnly}
         variant={
-          variant ??
-          (orientation === 'horizontal' && contextValue === value ? (hasAttention ? 'primary' : 'default') : 'ghost')
+          variant ?? (orientation === 'horizontal' && contextValue === value ? (selectedVariant ?? 'default') : 'ghost')
         }
         classNames={[
           orientation === 'vertical' && !iconOnly && 'justify-start text-start w-full',
