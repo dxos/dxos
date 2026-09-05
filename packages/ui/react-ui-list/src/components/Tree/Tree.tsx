@@ -762,7 +762,9 @@ const TreeBranchContent: FC<TreeNodeRowProps> = ({ node }) => {
       ref={handleRef}
       // `[&[hidden]]:hidden` restores the UA collapse that the `grid` display would defeat.
       className={mx(
-        'col-[tree-row] grid grid-cols-subgrid [&[hidden]]:hidden',
+        // Same `gap-0.5` as the tree: this is a separate grid, so the tree's own gap does not reach
+        // the rows inside an expanded branch.
+        'col-[tree-row] grid grid-cols-subgrid gap-0.5 [&[hidden]]:hidden',
         'overflow-y-clip [interpolate-size:allow-keywords]',
         closing ? 'animate-tree-conceal' : 'data-[animate]:data-[state=open]:animate-tree-disclose',
       )}

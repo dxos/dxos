@@ -188,8 +188,10 @@ start a second one "on a free port" to avoid disturbing them — two servers on 
 starve each other (each holds a monorepo-wide watcher and 1-2GB), and each one's file
 writes wedge the other, which is how a debugging session ends up chasing its own noise.
 
-- **Reuse before starting.** `curl -s -o /dev/null -w '%{http_code}' http://localhost:9009/`
-  — if it answers, drive it with Playwright and start nothing.
+- **Reuse before starting.**
+  `curl -s -o /dev/null -w '%{http_code}' --connect-timeout 2 --max-time 5 http://localhost:9009/`
+  — bounded, so a wedged server cannot hang the probe. Reuse it only on a `200`, and only after
+  the worktree check below: a `000` is not a free port, and any other code is not a storybook.
 - **The server serves ONE worktree.** If 9009 is serving a different worktree than the one
   you are editing, restart it against yours (`moon run storybook-react:serve` from your
   worktree) rather than adding a second server. Say so in your reply — you are moving a
