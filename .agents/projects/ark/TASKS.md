@@ -632,8 +632,8 @@ Findings that shaped the plan, so they are not re-derived:
       skill and `slots.ts`. The plugin-level `@radix-ui/react-tooltip`/`-toolbar`/… imports the plan
       mentions no longer existed in `src` — only composer-app's package.json listed six Radix packages
       with no import; `react-slot` was the one this pass could drop, the rest wait for Phase 6.
-- [ ] **Phase 2 — leaves.** Order, one commit each, gated on build + the touched packages' unit and
-      storybook tests: Separator (hand-rolled `role="separator"`) → Toggle + ToggleGroup (adapter keeps
+- [x] **Phase 2 — leaves.** Done 2026-09-05 (commits 2f58623d5f, 2ff04eccc4, d248f761cd, b533d002cd).
+      Order, one commit each, gated on build + the touched packages' unit and storybook tests: Separator (hand-rolled `role="separator"`) → Toggle + ToggleGroup (adapter keeps
       the single/multiple API: `single` maps `value` ↔ `[value]`) + **Toolbar** (`Root` = `useFocusGroup`
       with the orientation as axis, `memorizeCurrent`, `cyclic`; `role="toolbar"` kept; Button/IconButton/
       Toggle/Link wrappers become pass-throughs since react-focus takes any focusable; `ToggleGroup` runs
@@ -650,6 +650,14 @@ Findings that shaped the plan, so they are not re-derived:
       Progress is countdown/error/rewind semantics the `progress` machine has no notion of; Avatar's
       content is the lit `DxAvatar` element, so Ark's image-fallback machine has nothing to own;
       Clipboard is a ten-line context plus two buttons. Recorded in MIGRATION.md.
+      **Found doing it:** (1) an Ark checkbox toggles through label activation, which any ancestor
+      `preventDefault()` on click cancels in Chromium and happy-dom does not emulate — the react-ui-task
+      story caught it; the control now clicks the input itself and is pointer-focusable so focus does
+      not jump to the tree row (which re-renders the row under the click). (2) Ark's slider hides its
+      thumbs (`visibility: hidden`) until it has measured them — pass `thumbSize` or every
+      `getByRole('slider')` fails. (3) Ark's tabs have no per-panel `forceMount`; `keepMounted` on
+      `Tabs.Root` replaces it. (4) `pnpm install` while a moon test run is spawning vite yanks the
+      binary from under it (`spawn vite EACCES`); never install during a run.
       **Phase 3 Tooltip design (found 2026-09-05, before starting):** the DXOS Tooltip is not a Radix copy but
       a single-provider design — one `Tooltip.Provider`, one content node, N `Tooltip.Trigger content= side=`
       (47 consumers), a virtual anchor moved to the active trigger, and `Tooltip.test.tsx` pins two invariants:

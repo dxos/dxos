@@ -13,7 +13,6 @@ import { ark } from '@ark-ui/react/factory';
 import React, {
   type ChangeEvent,
   type ComponentPropsWithRef,
-  type ElementType,
   type KeyboardEvent,
   type PropsWithChildren,
   type MouseEvent as ReactMouseEvent,

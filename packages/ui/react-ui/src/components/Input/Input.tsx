@@ -4,8 +4,8 @@
 
 import { Checkbox as CheckboxPrimitive, useCheckbox } from '@ark-ui/react/checkbox';
 import React, {
-  type ComponentPropsWithRef,
   type ComponentPropsWithoutRef,
+  type ComponentPropsWithRef,
   type MouseEvent,
   PropsWithChildren,
   type ReactNode,
@@ -569,8 +569,8 @@ export const Input = {
 };
 
 export type {
-  CheckedState,
   CheckboxProps,
+  CheckedState,
   DateInputProps,
   DateTimeInputProps,
   DescriptionAndValidationProps,

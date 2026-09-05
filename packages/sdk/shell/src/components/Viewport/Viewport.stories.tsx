@@ -13,7 +13,7 @@ import { Viewport, useViewportContext } from './Viewport';
 
 type StorybookViewportProps = {};
 
-const Views = ({}: {}) => {
+const Views = () => {
   const { setActiveView } = useViewportContext('StorybookViews');
   return (
     <Viewport.Views>

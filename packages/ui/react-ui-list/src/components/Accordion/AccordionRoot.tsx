@@ -5,7 +5,7 @@
 import { Accordion as AccordionPrimitive } from '@ark-ui/react/accordion';
 import React, { type ReactNode } from 'react';
 
-import { createContext, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, createContext } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 // Records flowing through this compound carry caller-defined shapes (any record with an

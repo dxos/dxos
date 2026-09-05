@@ -14,12 +14,12 @@ import React, {
 
 import { useFocusGroup } from '@dxos/react-focus';
 import {
-  createContext,
   IconBlock,
   IconButton,
   type IconButtonProps,
   type ThemedClassName,
   ToggleIconButton,
+  createContext,
   useMergeRefs,
   useTranslation,
 } from '@dxos/react-ui';
