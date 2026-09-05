@@ -106,7 +106,7 @@ export const ProcessTree = React.memo(
       // (and its toggle/button) without per-element sizing.
       return (
         <ScrollArea.Root
-          {...composableProps(props, { classNames: ['dx-expand dx-density-sm text-sm tabular-nums'] })}
+          {...composableProps(props, { classNames: ['dx-expand dx-density-sm'] })}
           thin
           ref={forwardedRef}
         >
@@ -114,8 +114,9 @@ export const ProcessTree = React.memo(
             <Tree<ProcessNode>
               id={ROOT_ID}
               model={model}
-              gridTemplateColumns='[tree-row-start] var(--dx-control) minmax(0, 1fr) min-content min-content [tree-row-end]'
               density='sm'
+              classNames='text-sm tabular-nums'
+              gridTemplateColumns='[tree-row-start] var(--dx-control) minmax(0, 1fr) min-content min-content [tree-row-end]'
               renderIcon={renderIcon}
               renderColumns={renderColumns}
               onOpenChange={handleOpenChange}

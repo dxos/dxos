@@ -149,8 +149,10 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
             </Input.Root>
           </div>
           <div>
+            {/* Two rows, not two lines: a tree row is `--dx-control` tall, not a line-height, and
+                `Tree` separates rows with `gap-0.5` — so `2lh` fell short and clipped the second. */}
             <ProcessTreeContainer
-              classNames='max-h-[2lh]'
+              classNames='max-h-[calc(2*var(--dx-control)+0.125rem)]'
               space={space}
               environments={environments}
               onProcessSelect={handleProcessSelect}
