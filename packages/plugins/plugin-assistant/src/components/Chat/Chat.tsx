@@ -13,7 +13,7 @@ import { Alarm } from '@dxos/assistant';
 import { resolveSlashCommand } from '@dxos/assistant-toolkit';
 import * as AssistantChat from '@dxos/assistant/Chat';
 import { Event } from '@dxos/async';
-import { type Database, Filter, Obj, Query } from '@dxos/echo';
+import { type Database, Filter, Obj, Order, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
 import { PublicKey } from '@dxos/keys';
@@ -60,6 +60,7 @@ import {
 import { type ChatEvent } from './events';
 import { SurfaceWidget } from './SurfaceWidget';
 import { projectAlarms, projectThread, resolveRewind } from './thread';
+import { advanceWindow, initialWindow } from './window';
 
 //
 // Root
@@ -116,10 +117,23 @@ const ChatRoot = ({
   const [controller, setController] = useState<ChatThreadController | null>(null);
   const [visibleRange, setVisibleRange] = useState<MessageRange | undefined>(undefined);
 
+  // The thread renders the feed's tail, so it reads the tail rather than every message ever
+  // appended: a long-running chat's history is unbounded and its cost would be paid on every open.
+  // Newest-first with a limit is what the index can window (the scan is reversed and stopped at the
+  // limit), so the read costs the window; `projectThread` sorts into append order regardless. The
+  // window grows as the reader walks back through it (see `advanceWindow`).
+  const [feedWindow, setFeedWindow] = useState(initialWindow);
   const feedMessages = useQuery(
     db,
-    feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
+    feed
+      ? Query.select(Filter.type(Message.Message)).orderBy(Order.natural('desc')).limit(feedWindow.size).from(feed)
+      : Query.select(Filter.nothing()),
   );
+  useEffect(() => {
+    setFeedWindow((current) =>
+      advanceWindow(current, { startIndex: visibleRange?.startIndex, loaded: feedMessages.length }),
+    );
+  }, [visibleRange?.startIndex, feedMessages.length]);
   const feedAlarms = useQuery(
     db,
     feed ? Query.select(Filter.type(Alarm.Alarm)).from(feed) : Query.select(Filter.nothing()),
