@@ -147,7 +147,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
               <Input.Label classNames='px-1'>Processes</Input.Label>
             </Input.Root>
             <ProcessTreeContainer
-              classNames='max-h-[2lh]'
+              classNames='max-h-[8lh]'
               space={space}
               environments={environments}
               onProcessSelect={handleProcessSelect}
