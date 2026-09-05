@@ -452,7 +452,9 @@ describe('Invitations', () => {
           await savedTrigger.wait();
           await waitForCondition({
             condition: () =>
-              hostContext.networkManager.topics.includes(toPublicKey(persistentInvitation.get().swarmKey)!),
+              hostContext.networkManager.topics.some((topic) =>
+                topic.equals(toPublicKey(persistentInvitation.get().swarmKey)!),
+              ),
           });
           // TODO(nf): expose this in API as suspendInvitation()/SuspendableInvitation?
           await hostContext.networkManager.leaveSwarm(
