@@ -781,11 +781,11 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       alone, not the app under the provider); `Toast.Root` renders nothing where it stands — it registers
       `{ children, classNames, props, ref, countdown }` and mirrors `open` into the store (`create` with
       its own id / `dismiss`), with `onStatusChange('dismissing')` reported back as `onOpenChange(false)`;
-      **Store calls are deferred to a microtask** (found 2026-09-05 chasing a phantom slot the runner never
-      showed): Zag's React binding `flushSync`s when the store publishes, which React refuses inside an
-      effect ("flushSync was called from inside a lifecycle method", 72 per run) and then applies late,
-      leaving the group's heights and the DOM out of step in a live browser. `create`/`dismiss`/`remove`
-      now run from `queueMicrotask` out of the effects; the warning count is zero.
+      **Store calls are deferred to a microtask:** Zag's React binding `flushSync`s when the store
+      publishes, which React refuses inside an effect ("flushSync was called from inside a lifecycle
+      method", 72 per run). Hygiene, not the phantom-slot fix — the slot reproduced on 8ee1fe6662 (remove
+      on unmount) and not on e55eeabd87 (dismiss on unmount) with the same seven-toast script, which is
+      now `TestPileClosesRanks`. Lesson recorded: verify a repro fails on the old code before crediting a fix.
       A root that unmounts while visible is `dismiss`ed, not `remove`d: removing drops the actor before
       it retires its height from the pile, which left a phantom slot between survivors (seen 2026-09-05).
       `Toast.Viewport` is Ark's `Toaster`, rendering each registered root inside the machine's actor so

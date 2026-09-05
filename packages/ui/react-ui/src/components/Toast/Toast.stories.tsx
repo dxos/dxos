@@ -227,3 +227,41 @@ export const TestStacked: StoryObj = {
     });
   },
 };
+
+/**
+ * The sequence that once left a hole: seven toasts, the pile expanded, several closed. A closed
+ * toast's root unmounts; if the store dropped the actor outright, its height stayed in the pile and
+ * the survivors kept their slots (Toast 4 and 5 up top, a gap, Toast 7 at the bottom).
+ */
+export const TestPileClosesRanks: StoryObj = {
+  render: () => <StackedStory overlap />,
+  play: async ({ canvasElement }) => {
+    const button = within(canvasElement).getByRole('button', { name: 'Add toast' });
+    const roots = () => [...document.querySelectorAll<HTMLElement>('[data-scope="toast"][data-part="root"]')];
+    const group = () => document.querySelector<HTMLElement>('[data-scope="toast"][data-part="group"]')!;
+    const closeToast = async (name: string) => {
+      const target = roots().find((root) => root.textContent!.includes(name))!;
+      await userEvent.click(within(target).getByRole('button', { name: /close/i }));
+    };
+    for (let i = 0; i < 7; i++) {
+      await userEvent.click(button);
+      await waitFor(async () => expect(roots()).toHaveLength(i + 1));
+    }
+    await userEvent.hover(group());
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    await closeToast('Toast 1');
+    await closeToast('Toast 2');
+    await closeToast('Toast 3');
+    await waitFor(async () => expect(roots()).toHaveLength(4));
+    await closeToast('Toast 6');
+    await waitFor(async () => expect(roots()).toHaveLength(3));
+    await waitFor(async () => {
+      const rects = roots()
+        .map((root) => root.getBoundingClientRect())
+        .sort((a, b) => a.top - b.top);
+      // Contiguous: every survivor sits one gap below the previous one.
+      await expect(Math.round(rects[1].top - rects[0].bottom)).toBe(8);
+      await expect(Math.round(rects[2].top - rects[1].bottom)).toBe(8);
+    });
+  },
+};
