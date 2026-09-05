@@ -41,13 +41,8 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { decodeError, runServiceCall, subscribeStream } from '@dxos/protocols';
-import {
-  type Contact,
-  Invitation,
-  type Space as SpaceData,
-  type SpaceMember,
-  SpaceState,
-} from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation, Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { type Contact, type Space as SpaceData, type SpaceMember, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import {
@@ -166,7 +161,7 @@ export class SpaceProxy implements Space, CustomInspectable {
       this._clientServices.services.InvitationsService,
       this._clientServices.services.IdentityService,
       () => ({
-        kind: Invitation.Kind.SPACE,
+        kind: Invitation_Kind.SPACE,
         spaceKey: this.key,
       }),
     );

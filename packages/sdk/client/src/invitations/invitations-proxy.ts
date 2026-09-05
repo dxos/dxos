@@ -15,7 +15,8 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Invitation, QueryInvitationsResponse } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation, Invitation_AuthMethod, Invitation_State, Invitation_Type } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { QueryInvitationsResponse, QueryInvitationsResponse_Action, QueryInvitationsResponse_Type } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { RPC_TIMEOUT } from '../common';
@@ -108,26 +109,26 @@ export class InvitationsProxy implements Invitations {
     stream.subscribe(
       ({ action, type, invitations, existing }: QueryInvitationsResponse) => {
         switch (action) {
-          case QueryInvitationsResponse.Action.ADDED: {
+          case QueryInvitationsResponse_Action.ADDED: {
             log('remote invitations added', { type, invitations });
             invitations
               ?.filter((invitation) => this._matchesInvitationContext(invitation))
               .filter((invitation) => !this._invitations.has(invitation.invitationId))
               .forEach((invitation) => {
-                type === QueryInvitationsResponse.Type.CREATED ? this.share(invitation) : this.join(invitation);
+                type === QueryInvitationsResponse_Type.CREATED ? this.share(invitation) : this.join(invitation);
               });
             if (existing) {
-              type === QueryInvitationsResponse.Type.CREATED
+              type === QueryInvitationsResponse_Type.CREATED
                 ? initialCreatedReceived.wake()
                 : initialAcceptedReceived.wake();
             }
             break;
           }
-          case QueryInvitationsResponse.Action.REMOVED: {
+          case QueryInvitationsResponse_Action.REMOVED: {
             log('remote invitations removed', { type, invitations });
-            const cache = type === QueryInvitationsResponse.Type.CREATED ? this._created : this._accepted;
+            const cache = type === QueryInvitationsResponse_Type.CREATED ? this._created : this._accepted;
             const cacheUpdate =
-              type === QueryInvitationsResponse.Type.CREATED ? this._createdUpdate : this._acceptedUpdate;
+              type === QueryInvitationsResponse_Type.CREATED ? this._createdUpdate : this._acceptedUpdate;
             invitations?.forEach((removed) => {
               const index = cache
                 .get()
@@ -142,11 +143,11 @@ export class InvitationsProxy implements Invitations {
             existing && initialAcceptedReceived.wake();
             break;
           }
-          case QueryInvitationsResponse.Action.LOAD_COMPLETE: {
+          case QueryInvitationsResponse_Action.LOAD_COMPLETE: {
             persistentLoaded.wake();
             break;
           }
-          case QueryInvitationsResponse.Action.SAVED: {
+          case QueryInvitationsResponse_Action.SAVED: {
             log('remote invitations saved', { invitations });
             this._savedUpdate.emit(invitations ?? []);
             break;
@@ -198,9 +199,9 @@ export class InvitationsProxy implements Invitations {
   getInvitationOptions(): Invitation {
     return {
       invitationId: PublicKey.random().toHex(),
-      type: Invitation.Type.INTERACTIVE,
-      authMethod: Invitation.AuthMethod.SHARED_SECRET,
-      state: Invitation.State.INIT,
+      type: Invitation_Type.INTERACTIVE,
+      authMethod: Invitation_AuthMethod.SHARED_SECRET,
+      state: Invitation_State.INIT,
       swarmKey: PublicKey.random(),
       ...this._getInvitationContext(),
     };
