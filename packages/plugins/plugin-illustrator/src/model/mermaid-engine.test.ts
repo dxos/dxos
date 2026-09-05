@@ -9,7 +9,7 @@ import { trim } from '@dxos/util';
 import { analyze, errors } from './diagnostics';
 import { compile } from './mermaid-engine';
 import type * as Scene from './scene';
-import { THREE_PACKAGES } from './testing';
+import { BASIC } from './testing';
 import { GRID } from './uml-grid';
 
 const objectsOf = (commands: readonly Scene.Command[]) =>
@@ -81,8 +81,8 @@ describe('mermaid-engine', () => {
     expect(inside('Edge', 'core')).toBe(false);
   });
 
-  test('three packages: no hard defects, every connector straight or one bend', async ({ expect }) => {
-    const objects = objectsOf(await compile(THREE_PACKAGES));
+  test('basic: no hard defects, every connector straight or one bend', async ({ expect }) => {
+    const objects = objectsOf(await compile(BASIC));
     const report = analyze(objects);
 
     expect(errors(report).map(({ message }) => message)).toEqual([]);

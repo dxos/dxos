@@ -7,7 +7,7 @@
  * (B, C extend A), a chain with a has-many (X ⇒ Y → Z), and a fan-in (P, R → Q). Small enough to
  * reason about every placement and route by eye.
  */
-export const THREE_PACKAGES = `
+export const BASIC = `
 flowchart TB
   subgraph pkgA [Package A]
     A[A]
