@@ -23,8 +23,8 @@ export type InvitationResult = {
 };
 
 interface InvitationReducerState {
-  status: Invitation.State; // TODO(burdon): Rename state.
-  haltedAt?: Invitation.State;
+  status: Invitation_State; // TODO(burdon): Rename state.
+  haltedAt?: Invitation_State;
   result: InvitationResult;
   error?: Error;
   id?: string;
@@ -32,8 +32,8 @@ interface InvitationReducerState {
   shareable?: boolean;
   invitationCode?: string;
   authCode?: string;
-  authMethod?: Invitation.AuthMethod;
-  type?: Invitation.Type;
+  authMethod?: Invitation_AuthMethod;
+  type?: Invitation_Type;
 }
 
 type InvitationPayload = { invitation: Invitation };
@@ -56,22 +56,22 @@ export type InvitationAction =
     } & InvitationPayload)
   | ({
       status: Invitation_State.CANCELLED | Invitation_State.TIMEOUT;
-      haltedAt: Invitation.State;
+      haltedAt: Invitation_State;
     } & InvitationPayload)
   | {
       status: Invitation_State.ERROR;
       error?: Error;
-      haltedAt: Invitation.State;
+      haltedAt: Invitation_State;
     };
 
 export type InvitationStatus = {
   id?: string;
   invitationCode?: string;
   authCode?: string;
-  authMethod?: Invitation.AuthMethod;
-  type?: Invitation.Type;
-  status: Invitation.State;
-  haltedAt?: Invitation.State;
+  authMethod?: Invitation_AuthMethod;
+  type?: Invitation_Type;
+  status: Invitation_State;
+  haltedAt?: Invitation_State;
   multiUse?: boolean;
   shareable?: boolean;
   result: InvitationResult;

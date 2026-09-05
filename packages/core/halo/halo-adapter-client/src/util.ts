@@ -9,8 +9,11 @@ import { type MulticastObservable } from '@dxos/async';
 import {
   AuthenticatingInvitationObservable,
   type CancellableInvitationObservable,
-  Invitation as ClientInvitation,
+  type Invitation as ClientInvitation,
   InvitationEncoder,
+  Invitation_AuthMethod as ClientInvitationAuthMethod,
+  Invitation_State as ClientInvitationState,
+  Invitation_Type as ClientInvitationType,
 } from '@dxos/client/invitations';
 import { EffectEx } from '@dxos/effect';
 import { Invitation as HaloInvitation, Space as HaloSpace, InvitationError } from '@dxos/halo';
@@ -46,32 +49,32 @@ export const streamFromClientObservable = <T>(
     Effect.promise(() => client.waitUntilInitialized()).pipe(Effect.map(() => streamFromObservable(getObservable()))),
   );
 
-const TERMINAL_STATES: ReadonlySet<ClientInvitation.State> = new Set([
-  ClientInvitation.State.SUCCESS,
-  ClientInvitation.State.CANCELLED,
-  ClientInvitation.State.TIMEOUT,
-  ClientInvitation.State.ERROR,
-  ClientInvitation.State.EXPIRED,
+const TERMINAL_STATES: ReadonlySet<ClientInvitationState> = new Set([
+  ClientInvitationState.SUCCESS,
+  ClientInvitationState.CANCELLED,
+  ClientInvitationState.TIMEOUT,
+  ClientInvitationState.ERROR,
+  ClientInvitationState.EXPIRED,
 ]);
 
 const toEvent = (invitation: ClientInvitation): HaloInvitation.Event | undefined => {
   switch (invitation.state) {
-    case ClientInvitation.State.CONNECTING:
+    case ClientInvitationState.CONNECTING:
       return { _tag: 'connecting' };
-    case ClientInvitation.State.CONNECTED:
+    case ClientInvitationState.CONNECTED:
       return { _tag: 'connected' };
-    case ClientInvitation.State.READY_FOR_AUTHENTICATION:
+    case ClientInvitationState.READY_FOR_AUTHENTICATION:
       return { _tag: 'readyForAuthentication', authCode: invitation.authCode };
-    case ClientInvitation.State.AUTHENTICATING:
+    case ClientInvitationState.AUTHENTICATING:
       return { _tag: 'authenticating' };
-    case ClientInvitation.State.SUCCESS:
+    case ClientInvitationState.SUCCESS:
       return { _tag: 'success', result: {} };
-    case ClientInvitation.State.CANCELLED:
+    case ClientInvitationState.CANCELLED:
       return { _tag: 'cancelled' };
-    case ClientInvitation.State.TIMEOUT:
-    case ClientInvitation.State.ERROR:
-    case ClientInvitation.State.EXPIRED:
-      return { _tag: 'error', message: `Invitation ${ClientInvitation.State[invitation.state]}` };
+    case ClientInvitationState.TIMEOUT:
+    case ClientInvitationState.ERROR:
+    case ClientInvitationState.EXPIRED:
+      return { _tag: 'error', message: `Invitation ${ClientInvitationState[invitation.state]}` };
     default:
       // INIT and any unmodeled state — not surfaced.
       return undefined;
@@ -134,27 +137,27 @@ export const toShareOptions = (options?: HaloInvitation.ShareOptions): Partial<C
   ...(options?.target !== undefined ? { target: options.target } : {}),
 });
 
-const toAuthMethod = (method?: HaloInvitation.AuthMethod): ClientInvitation.AuthMethod => {
+const toAuthMethod = (method?: HaloInvitation.AuthMethod): ClientInvitationAuthMethod => {
   switch (method) {
     case 'shared-secret':
-      return ClientInvitation.AuthMethod.SHARED_SECRET;
+      return ClientInvitationAuthMethod.SHARED_SECRET;
     case 'known-public-key':
-      return ClientInvitation.AuthMethod.KNOWN_PUBLIC_KEY;
+      return ClientInvitationAuthMethod.KNOWN_PUBLIC_KEY;
     case 'none':
     default:
-      return ClientInvitation.AuthMethod.NONE;
+      return ClientInvitationAuthMethod.NONE;
   }
 };
 
-const toType = (type?: HaloInvitation.Type): ClientInvitation.Type => {
+const toType = (type?: HaloInvitation.Type): ClientInvitationType => {
   switch (type) {
     case 'delegated':
-      return ClientInvitation.Type.DELEGATED;
+      return ClientInvitationType.DELEGATED;
     case 'multiuse':
-      return ClientInvitation.Type.MULTIUSE;
+      return ClientInvitationType.MULTIUSE;
     case 'interactive':
     default:
-      return ClientInvitation.Type.INTERACTIVE;
+      return ClientInvitationType.INTERACTIVE;
   }
 };
 
