@@ -20,7 +20,6 @@ import React, {
   forwardRef,
   useEffect,
   useId,
-  useLayoutEffect,
   useMemo,
   useState,
   useSyncExternalStore,
@@ -156,13 +155,27 @@ const ToastRoot = forwardRef<HTMLDivElement, ToastRootProps>(
     });
     const countdown = duration ?? providerDuration;
 
-    // Whatever rendered last is what the viewport shows.
-    useLayoutEffect(() => {
+    // Whatever rendered last is what the viewport shows. A passive effect, not a layout one: the
+    // registry re-renders the viewport synchronously, which React refuses mid-commit.
+    useEffect(() => {
       registry.set(id, { children, classNames, props, ref: forwardedRef, countdown });
     });
 
+    // Store calls leave the effect on a microtask: the store's React binding flushes synchronously
+    // when it publishes, which React refuses inside a lifecycle and then applies late, leaving the
+    // machine and the DOM out of step.
     useEffect(() => {
-      if (open) {
+      let cancelled = false;
+      queueMicrotask(() => {
+        if (cancelled) {
+          return;
+        }
+        if (!open) {
+          if (toaster.isVisible(id)) {
+            toaster.dismiss(id);
+          }
+          return;
+        }
         if (toaster.isVisible(id)) {
           return;
         }
@@ -186,20 +199,23 @@ const ToastRoot = forwardRef<HTMLDivElement, ToastRootProps>(
             }
           },
         });
-      } else if (toaster.isVisible(id)) {
-        toaster.dismiss(id);
-      }
-    }, [open, id, toaster, countdown, setOpen]);
+      });
+      return () => {
+        cancelled = true;
+      };
+    }, [open, id, toaster, countdown, setOpen, registry]);
     // On unmount a visible toast is dismissed, not removed: removing drops the actor before it
     // reports its height gone, and the pile keeps laying out around the phantom.
     useEffect(
       () => () => {
-        if (toaster.isVisible(id)) {
-          toaster.dismiss(id);
-        } else {
-          toaster.remove(id);
-          registry.delete(id);
-        }
+        queueMicrotask(() => {
+          if (toaster.isVisible(id)) {
+            toaster.dismiss(id);
+          } else {
+            toaster.remove(id);
+            registry.delete(id);
+          }
+        });
       },
       [toaster, registry, id],
     );

@@ -781,6 +781,11 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       alone, not the app under the provider); `Toast.Root` renders nothing where it stands — it registers
       `{ children, classNames, props, ref, countdown }` and mirrors `open` into the store (`create` with
       its own id / `dismiss`), with `onStatusChange('dismissing')` reported back as `onOpenChange(false)`;
+      **Store calls are deferred to a microtask** (found 2026-09-05 chasing a phantom slot the runner never
+      showed): Zag's React binding `flushSync`s when the store publishes, which React refuses inside an
+      effect ("flushSync was called from inside a lifecycle method", 72 per run) and then applies late,
+      leaving the group's heights and the DOM out of step in a live browser. `create`/`dismiss`/`remove`
+      now run from `queueMicrotask` out of the effects; the warning count is zero.
       A root that unmounts while visible is `dismiss`ed, not `remove`d: removing drops the actor before
       it retires its height from the pile, which left a phantom slot between survivors (seen 2026-09-05).
       `Toast.Viewport` is Ark's `Toaster`, rendering each registered root inside the machine's actor so
@@ -798,6 +803,12 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       controls, select, slider, progress, tags, avatar, skeleton, navigation, editable, collapsible, card,
       banner, overlays, dialogs), each its own story plus `All` composing them, under a sticky bar that
       sets the accent hue (overriding the accent role tokens on the subtree) and density.
+- [ ] **Replace `react-qr-rounded` with Ark's QR code** (`@ark-ui/react/qr-code`; tracked 2026-09-05).
+- [ ] **Fold `react-ui-tabs` into `react-ui` and remove the package** (tracked 2026-09-05): Tabs is on
+      Ark already; it belongs beside the other core components. Consumers change one import.
+- [ ] **Fold `react-ui-menu` into `react-ui` and remove the package** (tracked 2026-09-05): the
+      action-graph menu wrappers (`useMenuActions`, `Menu.Root`, `ToolbarMenu`, `DropdownMenu`) sit
+      on `react-ui`'s Menu; one package fewer in the boot graph's dependency chain.
 - [ ] **Phase 5 — decisions.** RAC (keep for the date/time cluster vs consolidate onto Ark; default
       keep); Toolbar (no Ark toolbar — focus group from `@dxos/react-focus` + `toggle-group`); Focus
       (keep as the seam).
