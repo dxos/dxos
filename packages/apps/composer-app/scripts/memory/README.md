@@ -148,3 +148,19 @@ WebContent's dirty split at rest: WebKit malloc 734, graphics 235, JS VM
 Gigacage 116, JIT 52; none of them moved over the half hour, so the 30-minute
 slope is zero and the growth to a kill happens on a longer clock or on a
 different event.
+
+The boot peak, sampled every 2 s on a second hidden launch (this one rested
+at 976 MB; resting footprint varies by ~180 MB between launches):
+
+| t    | Footprint MB | WebKit malloc | Graphics | JS VM Gigacage | JIT |
+| ---- | ------------ | ------------- | -------- | -------------- | --- |
+| 2 s  | 247          | 133           | 121      | 4              | 6   |
+| 4 s  | 2,023        | 1,313         | 435      | 169            | 35  |
+| 15 s | 1,054        | 833           | 117      | 37             | 51  |
+| 3 m  | 976          | 756           | 117      | 35             | 53  |
+
+Half of WebContent's resting footprint is bmalloc, which holds JSC's GC heap,
+the DOM and CSS together and is opaque from outside the process; at rest
+another ~1 GB of it is reclaimable (freed but not yet returned). The Web
+Inspector's heap snapshot (Safari, Develop menu, the app's window) is the
+only breakdown of the JS part in WebKit.
