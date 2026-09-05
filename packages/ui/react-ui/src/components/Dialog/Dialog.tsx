@@ -33,11 +33,36 @@ import {
 } from './DialogContext';
 
 /**
- * Marks the control a dialog wants focused when it opens. The machine otherwise focuses the first
- * tabbable descendant, which is the header's close button — a dialog that offers a Cancel action
- * prefers it, so a reflexive Enter dismisses rather than commits.
+ * Marks the control a dialog wants focused when it opens, overriding the default of the action
+ * bar's first control.
  */
 export const DIALOG_AUTOFOCUS_ATTRIBUTE = 'data-dx-autofocus';
+
+/** The class `Dialog.ActionBar` renders with, which is how the root finds it at open. */
+const ACTION_BAR_CLASS = 'dx-dialog__actionbar';
+
+const TABBABLE =
+  'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+/**
+ * What takes focus when a dialog opens: the marked control, else the action bar's first control
+ * — the header's close button comes first in the DOM, and a reflexive Enter should reach the
+ * dialog's own action, not dismiss it — else the content itself when auto focus was vetoed, else
+ * the machine's first-tabbable pass.
+ */
+const getInitialFocusEl = (content: HTMLElement | null, vetoed: boolean): HTMLElement | null => {
+  if (!content) {
+    return null;
+  }
+  const marked = content.querySelector<HTMLElement>(`[${DIALOG_AUTOFOCUS_ATTRIBUTE}]`);
+  if (marked) {
+    return marked;
+  }
+  if (vetoed) {
+    return content;
+  }
+  return content.querySelector<HTMLElement>(`.${ACTION_BAR_CLASS} :is(${TABBABLE})`);
+};
 
 /** The answer a `preventDefault()`-style handler gives, asked ahead of the moment it would fire. */
 const prevents = (handler: ((event: Event) => void) | undefined) => {
@@ -97,13 +122,7 @@ const DialogRootImpl = ({
     restoreFocus: !closeAutoFocusVetoed,
     // An alert demands an answer; a click beside it is not one.
     closeOnInteractOutside: role === 'dialog',
-    // The marked control first; a vetoed auto focus lands on the content itself, which is what
-    // Radix's vetoed focus scope left focused; otherwise the machine's first-tabbable pass.
-    initialFocusEl: () => {
-      const content = contentRef.current;
-      const marked = content?.querySelector<HTMLElement>(`[${DIALOG_AUTOFOCUS_ATTRIBUTE}]`);
-      return marked ?? (openAutoFocusVetoed ? content : null);
-    },
+    initialFocusEl: () => getInitialFocusEl(contentRef.current, openAutoFocusVetoed),
     onInteractOutside: (event) => handlersRef.current.onInteractOutside?.(event),
     onPointerDownOutside: (event) => handlersRef.current.onPointerDownOutside?.(event),
     onFocusOutside: (event) => handlersRef.current.onFocusOutside?.(event),
@@ -235,7 +254,7 @@ const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
         className={tx('dialog.content', { size, inOverlayLayout: propsInOverlayLayout || inOverlayLayout }, classNames)}
         ref={useComposedRefs(forwardedRef, contentRef)}
       >
-        <Column.Root classNames='dx-expand' gutter='lg'>
+        <Column.Root classNames='dx-expand' gutter='md'>
           {children}
         </Column.Root>
       </DialogPrimitive.Content>

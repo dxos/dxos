@@ -223,7 +223,38 @@ export const TestOpenClose: StoryObj = {
   },
 };
 
-/** Without a `Description` the dialog carries no `aria-describedby`; the marked control takes focus. */
+/** The action bar's first control takes focus, not the close button that precedes it in the DOM. */
+export const TestActionBarFocus: StoryObj = {
+  render: () => (
+    <Dialog.Root defaultOpen>
+      <Dialog.Overlay>
+        <Dialog.Content>
+          <Dialog.Header>
+            <Dialog.Title>Actionable dialog</Dialog.Title>
+            <Dialog.Close asChild>
+              <Dialog.ActionIconButton action='close' />
+            </Dialog.Close>
+          </Dialog.Header>
+          <Dialog.Body>
+            <Input.Root>
+              <Input.TextInput placeholder='A field that comes first too' />
+            </Input.Root>
+          </Dialog.Body>
+          <Dialog.ActionBar>
+            <Button>Cancel</Button>
+            <Button variant='primary'>Commit</Button>
+          </Dialog.ActionBar>
+        </Dialog.Content>
+      </Dialog.Overlay>
+    </Dialog.Root>
+  ),
+  play: async () => {
+    await waitFor(async () => expect(dialogElement()).not.toBeNull());
+    await waitFor(async () => expect(document.activeElement?.textContent).toBe('Cancel'));
+  },
+};
+
+/** Without a `Description` the dialog carries no `aria-describedby`; the marked control wins over the action bar. */
 export const TestNoDescriptionAutoFocus: StoryObj = {
   render: () => (
     <Dialog.Root defaultOpen>
@@ -237,9 +268,11 @@ export const TestNoDescriptionAutoFocus: StoryObj = {
           </Dialog.Header>
           <Dialog.ActionBar>
             <Dialog.Close asChild>
-              <Button {...{ [DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}>Cancel</Button>
+              <Button>Cancel</Button>
             </Dialog.Close>
-            <Button variant='primary'>Commit</Button>
+            <Button variant='primary' {...{ [DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}>
+              Commit
+            </Button>
           </Dialog.ActionBar>
         </Dialog.Content>
       </Dialog.Overlay>
@@ -256,6 +289,6 @@ export const TestNoDescriptionAutoFocus: StoryObj = {
       await expect(dialog.getAttribute('aria-labelledby')).not.toBeNull();
       await expect(dialog.getAttribute('aria-describedby')).toBeNull();
     });
-    await waitFor(async () => expect(document.activeElement?.textContent).toBe('Cancel'));
+    await waitFor(async () => expect(document.activeElement?.textContent).toBe('Commit'));
   },
 };
