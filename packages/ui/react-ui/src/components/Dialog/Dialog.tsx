@@ -2,19 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
+// `Dialog` and `AlertDialog` are one implementation over Ark's dialog machine, which owns focus
+// trapping, scroll locking, dismissal and the `aria-labelledby`/`aria-describedby` wiring (present
+// only when a `Title`/`Description` is rendered). DXOS owns the layout parts — `Overlay` as the
+// centring host the content nests in, `Header`/`Body`/`ActionBar` on the Column grid — and the
+// `data-dx-autofocus` contract.
+
+import { Dialog as DialogPrimitive, useDialog } from '@ark-ui/react/dialog';
 import { ark } from '@ark-ui/react/factory';
-import * as DialogPrimitive from '@radix-ui/react-dialog';
-import React, {
-  type ComponentPropsWithRef,
-  type ForwardRefExoticComponent,
-  type FunctionComponent,
-  forwardRef,
-  useCallback,
-  useRef,
-} from 'react';
+import { Portal } from '@ark-ui/react/portal';
+import React, { type ComponentPropsWithRef, type FC, type ReactNode, forwardRef, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { createContext, useMergeRefs } from '@dxos/react-hooks';
+import { useComposedRefs, useControllableState } from '@dxos/react-hooks';
 import { osTranslations } from '@dxos/ui-theme';
 import { type SlottableProps } from '@dxos/ui-types';
 
@@ -24,23 +24,108 @@ import { type DialogSize } from '../../theme';
 import { type ThemedClassName, composableProps, slottable } from '../../util';
 import { IconButton } from '../Button';
 import { Column } from '../Column';
+import {
+  type DialogContentHandlers,
+  DialogProvider,
+  OverlayLayoutProvider,
+  useDialogContext,
+  useOverlayLayoutContext,
+} from './DialogContext';
+
+/**
+ * Marks the control a dialog wants focused when it opens. The machine otherwise focuses the first
+ * tabbable descendant, which is the header's close button — a dialog that offers a Cancel action
+ * prefers it, so a reflexive Enter dismisses rather than commits.
+ */
+export const DIALOG_AUTOFOCUS_ATTRIBUTE = 'data-dx-autofocus';
+
+/** The answer a `preventDefault()`-style handler gives, asked ahead of the moment it would fire. */
+const prevents = (handler: ((event: Event) => void) | undefined) => {
+  if (!handler) {
+    return false;
+  }
+  const event = new Event('autofocus', { cancelable: true });
+  handler(event);
+  return event.defaultPrevented;
+};
 
 //
 // Root
 //
 
-type DialogRootProps = DialogPrimitive.DialogProps;
+type DialogRootProps = {
+  children?: ReactNode;
+  open?: boolean;
+  defaultOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  /** A modal dialog traps focus, locks scroll and hides the page from assistive technology. */
+  modal?: boolean;
+};
 
-const DialogRoot: FunctionComponent<DialogRootProps> = (props) => (
-  <ElevationProvider elevation='dialog'>
-    <DialogPrimitive.Root
-      // NOTE: Radix warning unless set to undefined.
-      // https://www.radix-ui.com/primitives/docs/components/dialog#description
-      aria-describedby={undefined}
-      {...props}
-    />
-  </ElevationProvider>
-);
+type DialogRootImplProps = DialogRootProps & {
+  role: 'dialog' | 'alertdialog';
+};
+
+const DialogRootImpl = ({
+  children,
+  open: openProp,
+  defaultOpen,
+  onOpenChange,
+  modal = true,
+  role,
+}: DialogRootImplProps) => {
+  const [open = false, setOpen] = useControllableState({
+    prop: openProp,
+    defaultProp: defaultOpen,
+    onChange: onOpenChange,
+  });
+  const contentRef = useRef<HTMLDivElement | null>(null);
+  const handlersRef = useRef<DialogContentHandlers>({});
+
+  // Radix let the content veto its own auto focus with `preventDefault()`; asked at render, so the
+  // machine reads the answer when it opens.
+  const openAutoFocusVetoed = prevents(handlersRef.current.onOpenAutoFocus);
+  const closeAutoFocusVetoed = prevents(handlersRef.current.onCloseAutoFocus);
+
+  const dialog = useDialog({
+    open,
+    onOpenChange: ({ open: next }) => setOpen(next),
+    role,
+    modal,
+    trapFocus: modal,
+    preventScroll: modal,
+    restoreFocus: !closeAutoFocusVetoed,
+    // An alert demands an answer; a click beside it is not one.
+    closeOnInteractOutside: role === 'dialog',
+    // The marked control first; a vetoed auto focus lands on the content itself, which is what
+    // Radix's vetoed focus scope left focused; otherwise the machine's first-tabbable pass.
+    initialFocusEl: () => {
+      const content = contentRef.current;
+      const marked = content?.querySelector<HTMLElement>(`[${DIALOG_AUTOFOCUS_ATTRIBUTE}]`);
+      return marked ?? (openAutoFocusVetoed ? content : null);
+    },
+    onInteractOutside: (event) => handlersRef.current.onInteractOutside?.(event),
+    onPointerDownOutside: (event) => handlersRef.current.onPointerDownOutside?.(event),
+    onFocusOutside: (event) => handlersRef.current.onFocusOutside?.(event),
+    onEscapeKeyDown: (event) => handlersRef.current.onEscapeKeyDown?.(event),
+  });
+
+  const context = useMemo(
+    () => ({ open, modal, onOpenChange: setOpen, contentRef, handlersRef }),
+    [open, modal, setOpen],
+  );
+
+  return (
+    <ElevationProvider elevation='dialog'>
+      {/* Closed content is not in the DOM at all, as under Radix's Presence. */}
+      <DialogPrimitive.RootProvider value={dialog} lazyMount unmountOnExit>
+        <DialogProvider {...context}>{children}</DialogProvider>
+      </DialogPrimitive.RootProvider>
+    </ElevationProvider>
+  );
+};
+
+const DialogRoot: FC<DialogRootProps> = (props) => <DialogRootImpl {...props} role='dialog' />;
 
 DialogRoot.displayName = 'Dialog.Root';
 
@@ -48,7 +133,7 @@ DialogRoot.displayName = 'Dialog.Root';
 // Trigger
 //
 
-type DialogTriggerProps = DialogPrimitive.DialogTriggerProps;
+type DialogTriggerProps = ComponentPropsWithRef<typeof DialogPrimitive.Trigger>;
 
 const DialogTrigger = DialogPrimitive.Trigger;
 
@@ -56,9 +141,18 @@ const DialogTrigger = DialogPrimitive.Trigger;
 // Portal
 //
 
-type DialogPortalProps = DialogPrimitive.DialogPortalProps;
+type DialogPortalProps = {
+  children?: ReactNode;
+  /** Specify a container element to portal the content into. */
+  container?: HTMLElement | null;
+};
 
-const DialogPortal = DialogPrimitive.Portal;
+const DialogPortal = ({ children, container }: DialogPortalProps) => {
+  const containerRef = useMemo(() => (container ? { current: container } : undefined), [container]);
+  return <Portal container={containerRef}>{children}</Portal>;
+};
+
+DialogPortal.displayName = 'Dialog.Portal';
 
 //
 // Overlay
@@ -66,30 +160,27 @@ const DialogPortal = DialogPrimitive.Portal;
 
 const DIALOG_OVERLAY_NAME = 'Dialog.Overlay';
 
-type OverlayLayoutContextValue = { inOverlayLayout?: boolean };
+type DialogOverlayProps = ThemedClassName<ComponentPropsWithRef<typeof DialogPrimitive.Backdrop>> & {
+  blockAlign?: 'center' | 'start' | 'end';
+};
 
-const [OverlayLayoutProvider, useOverlayLayoutContext] = createContext<OverlayLayoutContextValue>(
-  DIALOG_OVERLAY_NAME,
-  {},
-);
-
-type DialogOverlayProps = ThemedClassName<
-  DialogPrimitive.DialogOverlayProps & { blockAlign?: 'center' | 'start' | 'end' }
->;
-
-const DialogOverlay: ForwardRefExoticComponent<DialogOverlayProps> = forwardRef<HTMLDivElement, DialogOverlayProps>(
+/**
+ * The scrim, which is also where the content sits: Radix let the content nest inside the overlay
+ * and every consumer does, so the backdrop doubles as the centring host rather than Ark's separate
+ * `Positioner`.
+ */
+const DialogOverlay = forwardRef<HTMLDivElement, DialogOverlayProps>(
   ({ classNames, children, blockAlign, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-
     return (
-      <DialogPrimitive.Overlay
+      <DialogPrimitive.Backdrop
         {...props}
         data-block-align={blockAlign}
         className={tx('dialog.overlay', {}, classNames)}
         ref={forwardedRef}
       >
         <OverlayLayoutProvider inOverlayLayout>{children}</OverlayLayoutProvider>
-      </DialogPrimitive.Overlay>
+      </DialogPrimitive.Backdrop>
     );
   },
 );
@@ -102,75 +193,47 @@ DialogOverlay.displayName = DIALOG_OVERLAY_NAME;
 
 const DIALOG_CONTENT_NAME = 'Dialog.Content';
 
-type DialogContentProps = ThemedClassName<ComponentPropsWithRef<typeof DialogPrimitive.Content>> & {
-  size?: DialogSize;
-  inOverlayLayout?: boolean;
-};
+type DialogContentProps = ThemedClassName<ComponentPropsWithRef<typeof DialogPrimitive.Content>> &
+  DialogContentHandlers & {
+    size?: DialogSize;
+    inOverlayLayout?: boolean;
+  };
 
-/**
- * Marks the control a dialog wants focused when it opens. Radix otherwise focuses the first tabbable
- * descendant, which is the header's close button — a dialog that offers a Cancel action prefers it,
- * so a reflexive Enter dismisses rather than commits.
- */
-export const DIALOG_AUTOFOCUS_ATTRIBUTE = 'data-dx-autofocus';
-
-/**
- * Honours {@link DIALOG_AUTOFOCUS_ATTRIBUTE} on open, for both Dialog and AlertDialog.
- * Returns the ref the content element must carry, since the marked control is found by querying it.
- */
-export const useDialogAutoFocus = (
-  forwardedRef: React.ForwardedRef<HTMLDivElement>,
-  onOpenAutoFocus?: (event: Event) => void,
-) => {
-  const contentRef = useRef<HTMLDivElement>(null);
-  const ref = useMergeRefs([forwardedRef, contentRef]);
-
-  const handleOpenAutoFocus = useCallback(
-    (event: Event) => {
-      onOpenAutoFocus?.(event);
-      if (event.defaultPrevented) {
-        return;
-      }
-
-      const target = contentRef.current?.querySelector<HTMLElement>(`[${DIALOG_AUTOFOCUS_ATTRIBUTE}]`);
-      if (target) {
-        // Preventing the default suppresses Radix's own first-tabbable pass, which would otherwise
-        // run after this handler and steal the focus back.
-        event.preventDefault();
-        target.focus();
-      }
-    },
-    [onOpenAutoFocus],
-  );
-
-  return { ref, onOpenAutoFocus: handleOpenAutoFocus };
-};
-
-const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef<HTMLDivElement, DialogContentProps>(
+const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
   (
-    { classNames, children, size = 'sm', inOverlayLayout: propsInOverlayLayout, onOpenAutoFocus, ...props },
+    {
+      classNames,
+      children,
+      size = 'sm',
+      inOverlayLayout: propsInOverlayLayout,
+      onOpenAutoFocus,
+      onCloseAutoFocus,
+      onInteractOutside,
+      onPointerDownOutside,
+      onFocusOutside,
+      onEscapeKeyDown,
+      ...props
+    },
     forwardedRef,
   ) => {
     const { tx } = useThemeContext();
     const { inOverlayLayout } = useOverlayLayoutContext(DIALOG_CONTENT_NAME);
-    const autoFocus = useDialogAutoFocus(forwardedRef, onOpenAutoFocus);
+    const { contentRef, handlersRef } = useDialogContext(DIALOG_CONTENT_NAME);
+    // The handlers are read at event time; nothing re-renders on their account.
+    handlersRef.current = {
+      onOpenAutoFocus,
+      onCloseAutoFocus,
+      onInteractOutside,
+      onPointerDownOutside,
+      onFocusOutside,
+      onEscapeKeyDown,
+    };
 
     return (
       <DialogPrimitive.Content
         {...props}
-        // NOTE: Radix warning unless set to undefined.
-        // https://www.radix-ui.com/primitives/docs/components/dialog#description
-        aria-describedby={undefined}
-        onOpenAutoFocus={autoFocus.onOpenAutoFocus}
-        className={tx(
-          'dialog.content',
-          {
-            size,
-            inOverlayLayout: propsInOverlayLayout || inOverlayLayout,
-          },
-          classNames,
-        )}
-        ref={autoFocus.ref}
+        className={tx('dialog.content', { size, inOverlayLayout: propsInOverlayLayout || inOverlayLayout }, classNames)}
+        ref={useComposedRefs(forwardedRef, contentRef)}
       >
         <Column.Root classNames='dx-expand' gutter='lg'>
           {children}
@@ -260,7 +323,7 @@ DialogBody.displayName = 'Dialog.Body';
 // Title
 //
 
-type DialogTitleProps = ThemedClassName<DialogPrimitive.DialogTitleProps> & { srOnly?: boolean };
+type DialogTitleProps = ThemedClassName<ComponentPropsWithRef<typeof DialogPrimitive.Title>> & { srOnly?: boolean };
 
 const DialogTitle = forwardRef<HTMLHeadingElement, DialogTitleProps>(
   ({ classNames, srOnly, ...props }, forwardedRef) => {
@@ -277,17 +340,20 @@ DialogTitle.displayName = 'Dialog.Title';
 // Description
 //
 
-type DialogDescriptionProps = ThemedClassName<DialogPrimitive.DialogDescriptionProps> & { srOnly?: boolean };
+type DialogDescriptionProps = ThemedClassName<ComponentPropsWithRef<typeof DialogPrimitive.Description>> & {
+  srOnly?: boolean;
+};
 
 const DialogDescription = forwardRef<HTMLParagraphElement, DialogDescriptionProps>(
-  ({ classNames, srOnly, ...props }, forwardedRef) => {
+  ({ classNames, srOnly, children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      <DialogPrimitive.Description
-        {...props}
-        className={tx('dialog.description', { srOnly }, classNames)}
-        ref={forwardedRef}
-      />
+      // A paragraph, as Radix rendered; Ark's default is a div.
+      <DialogPrimitive.Description asChild {...props}>
+        <p className={tx('dialog.description', { srOnly }, classNames)} ref={forwardedRef}>
+          {children}
+        </p>
+      </DialogPrimitive.Description>
     );
   },
 );
@@ -316,9 +382,9 @@ DialogActionBar.displayName = 'Dialog.ActionBar';
 // Close
 //
 
-type DialogCloseProps = DialogPrimitive.DialogCloseProps;
+type DialogCloseProps = ComponentPropsWithRef<typeof DialogPrimitive.CloseTrigger>;
 
-const DialogClose = DialogPrimitive.Close;
+const DialogClose = DialogPrimitive.CloseTrigger;
 
 //
 // Dialog
@@ -338,6 +404,8 @@ export const Dialog = {
   Close: DialogClose,
   ActionIconButton: DialogActionIconButton,
 };
+
+export { DialogRootImpl };
 
 export type {
   DialogActionBarProps,

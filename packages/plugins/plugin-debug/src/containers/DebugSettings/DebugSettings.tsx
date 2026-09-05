@@ -241,7 +241,6 @@ export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }
                         </Select.Option>
                       ))}
                     </Select.Viewport>
-                    <Select.Arrow />
                   </Select.Content>
                 </Select.Portal>
               </Select.Root>

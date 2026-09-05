@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { random } from '@dxos/random';
 
@@ -11,7 +12,7 @@ import { withTheme } from '../../testing';
 import { Button } from '../Button';
 import { Input } from '../Input';
 import { ScrollArea } from '../ScrollArea';
-import { Dialog, type DialogContentProps } from './Dialog';
+import { Dialog, DIALOG_AUTOFOCUS_ATTRIBUTE, type DialogContentProps } from './Dialog';
 
 type StoryArgs = Pick<DialogContentProps, 'size'> &
   Partial<{
@@ -172,5 +173,89 @@ export const Scrolling: Story = {
     closeTrigger: 'Close',
     blockAlign: 'center',
     size: 'md',
+  },
+};
+
+const dialogElement = () => document.querySelector<HTMLElement>('[role="dialog"]');
+
+/** Opens from the trigger, is labelled and described by its parts, and closes on Escape. */
+export const TestOpenClose: StoryObj = {
+  render: () => (
+    <Dialog.Root>
+      <Dialog.Trigger asChild>
+        <Button>Open dialog</Button>
+      </Dialog.Trigger>
+      <Dialog.Overlay>
+        <Dialog.Content>
+          <Dialog.Header>
+            <Dialog.Title>Described dialog</Dialog.Title>
+            <Dialog.Close asChild>
+              <Dialog.ActionIconButton action='close' />
+            </Dialog.Close>
+          </Dialog.Header>
+          <Dialog.Body>
+            <Dialog.Description>A description the dialog points at.</Dialog.Description>
+          </Dialog.Body>
+        </Dialog.Content>
+      </Dialog.Overlay>
+    </Dialog.Root>
+  ),
+  play: async ({ canvasElement }) => {
+    const trigger = within(canvasElement).getByRole('button', { name: 'Open dialog' });
+    await expect(dialogElement()).toBeNull();
+    await userEvent.click(trigger);
+    const dialog = await waitFor(async () => {
+      const element = dialogElement();
+      await expect(element).not.toBeNull();
+      return element!;
+    });
+    await expect(dialog.getAttribute('aria-modal')).toBe('true');
+    await waitFor(async () => {
+      const labelledBy = dialog.getAttribute('aria-labelledby');
+      const describedBy = dialog.getAttribute('aria-describedby');
+      await expect(labelledBy && document.getElementById(labelledBy)?.textContent).toBe('Described dialog');
+      await expect(describedBy && document.getElementById(describedBy)?.textContent).toContain('description');
+    });
+    // Focus lands inside the dialog.
+    await waitFor(async () => expect(dialog.contains(document.activeElement)).toBe(true));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(async () => expect(dialogElement()).toBeNull());
+  },
+};
+
+/** Without a `Description` the dialog carries no `aria-describedby`; the marked control takes focus. */
+export const TestNoDescriptionAutoFocus: StoryObj = {
+  render: () => (
+    <Dialog.Root defaultOpen>
+      <Dialog.Overlay>
+        <Dialog.Content>
+          <Dialog.Header>
+            <Dialog.Title>Undescribed dialog</Dialog.Title>
+            <Dialog.Close asChild>
+              <Dialog.ActionIconButton action='close' />
+            </Dialog.Close>
+          </Dialog.Header>
+          <Dialog.ActionBar>
+            <Dialog.Close asChild>
+              <Button {...{ [DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}>Cancel</Button>
+            </Dialog.Close>
+            <Button variant='primary'>Commit</Button>
+          </Dialog.ActionBar>
+        </Dialog.Content>
+      </Dialog.Overlay>
+    </Dialog.Root>
+  ),
+  play: async () => {
+    const dialog = await waitFor(async () => {
+      const element = dialogElement();
+      await expect(element).not.toBeNull();
+      return element!;
+    });
+    // The machine assumes both parts until its first-frame check finds which are rendered.
+    await waitFor(async () => {
+      await expect(dialog.getAttribute('aria-labelledby')).not.toBeNull();
+      await expect(dialog.getAttribute('aria-describedby')).toBeNull();
+    });
+    await waitFor(async () => expect(document.activeElement?.textContent).toBe('Cancel'));
   },
 };

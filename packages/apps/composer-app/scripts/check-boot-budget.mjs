@@ -72,7 +72,8 @@ const MAX_PRELOAD_ENTRIES = 25;
  * 3,915, `-dismissable-layer` 3,312, `-focus-scope` 3,113, `-presence` 1,931, `react-remove-scroll`
  * 5,506, `aria-hidden` 1,466) is still in the graph because `react-select`, `react-dialog` and
  * `react-toast` import it; Phase 4 evicts those, and this ceiling should come back down then. The
- * ~200 KB margin is kept.
+ * ~200 KB margin is kept. Phase 4a (Dialog, Main, Select on Ark) measured 4,547,849 — 17,620 back —
+ * with `react-toast` still holding the Radix layer; the ceiling comes down with Toast.
  */
 const MAX_PRELOAD_BYTES = 4.55 * 1024 * 1024;
 

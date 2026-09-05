@@ -441,7 +441,6 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
           <Select.TriggerButton placeholder={t('type-filter.placeholder')} />
           <Select.Portal>
             <Select.Content>
-              <Select.ScrollUpButton />
               <Select.Viewport>
                 <Select.Option value={ANY}>{t('any-type-filter.label')}</Select.Option>
                 {typeOptions.map(({ uri, label }) => (
@@ -450,8 +449,6 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
                   </Select.Option>
                 ))}
               </Select.Viewport>
-              <Select.ScrollDownButton />
-              <Select.Arrow />
             </Select.Content>
           </Select.Portal>
         </Select.Root>

@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Dialog as DialogPrimitive, useDialog } from '@ark-ui/react/dialog';
 import { ark } from '@ark-ui/react/factory';
-import { DialogContent, Root as DialogRoot, DialogTitle } from '@radix-ui/react-dialog';
 import React, {
   type ComponentPropsWithRef,
   type KeyboardEvent,
@@ -33,8 +33,14 @@ const MAIN_CONTENT_NAME = 'Main.Content';
 const NAVIGATION_SIDEBAR_NAME = 'Main.NavigationSidebar';
 const COMPLEMENTARY_SIDEBAR_NAME = 'Main.ComplementarySidebar';
 
-const handleOpenAutoFocus = (event: Event) => {
-  !document.body.hasAttribute(KEYBOARD_MODALITY_ATTR) && event.preventDefault();
+/** The answer a `preventDefault()`-style handler gives, asked ahead of the moment it would fire. */
+const prevents = (handler: ((event: Event) => void) | undefined) => {
+  if (!handler) {
+    return false;
+  }
+  const event = new Event('autofocus', { cancelable: true });
+  handler(event);
+  return event.defaultPrevented;
 };
 
 //
@@ -153,15 +159,22 @@ MainOverlay.displayName = MAIN_OVERLAY_NAME;
 // Sidebar
 //
 
-type MainSidebarProps = ThemedClassName<ComponentPropsWithRef<typeof DialogContent>> & {
+type MainSidebarProps = ThemedClassName<ComponentPropsWithRef<typeof ark.div>> & {
   swipeToDismiss?: boolean;
   state?: SidebarState;
   resizing?: boolean;
   onStateChange?: (nextState: SidebarState) => void;
+  /** Vetoes the focus the sidebar takes on opening; by default it takes focus only from the keyboard. */
+  onOpenAutoFocus?: (event: Event) => void;
   side: 'w-start' | 'w-end';
   label: Label;
 };
 
+/**
+ * Below `lg` an open sidebar is a non-modal dialog — the machine owns its dismissal (Escape, a tap
+ * outside) and its ARIA — and the content stays mounted so the CSS can slide it; at `lg` it is a
+ * plain landmark and the machine stays closed.
+ */
 const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
   (
     { classNames, children, swipeToDismiss, onOpenAutoFocus, state, resizing, onStateChange, side, label, ...props },
@@ -172,13 +185,33 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
     const { t } = useTranslation(osTranslations);
     // A ref object for `useSwipeToDismiss`, merged rather than synced: `useForwardedRef` writes the
     // forwarded ref once in an effect, which never delivers the node when `Root` swaps between
-    // `ark.div` and `DialogContent` on a media-query change.
+    // `ark.div` and the dialog content on a media-query change.
     const ref = useRef<HTMLDivElement>(null);
     const composedRef = useMergeRefs<HTMLDivElement>([ref, forwardedRef]);
     const noopRef = useRef(null);
 
     useSwipeToDismiss(swipeToDismiss ? ref : noopRef, {
       onDismiss: () => onStateChange?.('closed'),
+    });
+
+    // Pointer-opened, the sidebar leaves focus where it was; the machine always focuses something,
+    // so it is handed the element that already has it.
+    const autoFocusVetoed = onOpenAutoFocus
+      ? prevents(onOpenAutoFocus)
+      : !document.body.hasAttribute(KEYBOARD_MODALITY_ATTR);
+    const dialog = useDialog({
+      'open': !isLg && state !== 'closed',
+      'onOpenChange': ({ open }) => {
+        if (!open) {
+          onStateChange?.('closed');
+        }
+      },
+      'aria-label': toLocalizedString(label, t),
+      'modal': false,
+      'trapFocus': false,
+      'preventScroll': false,
+      'restoreFocus': false,
+      'initialFocusEl': () => (autoFocusVetoed ? (document.activeElement as HTMLElement | null) : null),
     });
 
     // NOTE(thure): This is a workaround for something further down the tree grabbing focus on Escape. Adding this
@@ -196,25 +229,28 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
       [props.onKeyDown],
     );
 
-    const Root = isLg ? ark.div : DialogContent;
+    const sidebarProps = {
+      ...(state === 'closed' && { inert: true }),
+      ...props,
+      'data-side': side === 'w-end' ? 'ie' : 'is',
+      'data-state': state,
+      'data-resizing': resizing ? 'true' : 'false',
+      'className': tx('main.sidebar', {}, classNames),
+      'onKeyDownCapture': handleKeyDown,
+      'ref': composedRef,
+    };
+
+    if (isLg) {
+      return <ark.div {...sidebarProps}>{children}</ark.div>;
+    }
 
     return (
-      <DialogRoot open={state !== 'closed'} aria-label={toLocalizedString(label, t)} modal={false}>
-        {!isLg && <DialogTitle className='sr-only'>{toLocalizedString(label, t)}</DialogTitle>}
-        <Root
-          {...(!isLg && { forceMount: true, tabIndex: -1, onOpenAutoFocus: onOpenAutoFocus ?? handleOpenAutoFocus })}
-          {...(state === 'closed' && { inert: true })}
-          {...props}
-          data-side={side === 'w-end' ? 'ie' : 'is'}
-          data-state={state}
-          data-resizing={resizing ? 'true' : 'false'}
-          className={tx('main.sidebar', {}, classNames)}
-          onKeyDownCapture={handleKeyDown}
-          ref={composedRef}
-        >
+      <DialogPrimitive.RootProvider value={dialog}>
+        {/* The machine hides closed content; the CSS slides it out instead, so it stays shown. */}
+        <DialogPrimitive.Content tabIndex={-1} {...sidebarProps} hidden={false}>
           {children}
-        </Root>
-      </DialogRoot>
+        </DialogPrimitive.Content>
+      </DialogPrimitive.RootProvider>
     );
   },
 );

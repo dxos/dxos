@@ -69,7 +69,6 @@ export const createSelectField = ({
                     </Select.Option>
                   ))}
                 </Select.Viewport>
-                <Select.Arrow />
               </Select.Content>
             </Select.Portal>
           )}

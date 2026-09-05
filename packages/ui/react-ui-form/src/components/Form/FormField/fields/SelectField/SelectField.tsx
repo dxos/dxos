@@ -49,7 +49,6 @@ export const SelectField = ({ type, readonly, placeholder, options, onValueChang
                     </Select.Option>
                   ))}
                 </Select.Viewport>
-                <Select.Arrow />
               </Select.Content>
             </Select.Portal>
           )}

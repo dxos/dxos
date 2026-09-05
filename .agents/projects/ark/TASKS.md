@@ -740,10 +740,39 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       variables, delete the three aliasing blocks, collapse DropdownMenu + ContextMenu onto one
       `menu` machine, retire the 116 `__scope*` props. Removes ten Radix packages plus `aria-hidden`
       and `react-remove-scroll`.
-- [ ] **Phase 4 — Dialog + Main, Toast, Select.** Evaluate `drawer` for `Main`'s sidebars (also the
-      missing mobile bottom sheet); Toast is a model change (`createToaster` store); decide whether
-      `Select.Option` keeps a children-driven layer that builds the collection so most of the 44
-      consumers change one import.
+- [x] **Phase 4a — Dialog + Main, Select.** DONE 2026-09-05. `Dialog` and `AlertDialog` are one
+      implementation (`DialogRootImpl` with `role`) over Ark's dialog machine, `lazyMount unmountOnExit`;
+      `Overlay` is Ark's `Backdrop` with the content nested inside it, since all 27 consumers nest
+      `Content` in `Overlay` and Ark's separate `Positioner` would have changed every one — the backdrop's
+      own presence also runs the exit animation Radix's Presence ran. `Content` lifts its dismissal/focus
+      handlers to the root as Popover does; `onOpenAutoFocus` and `onCloseAutoFocus` are asked at render
+      (`initialFocusEl` → the `data-dx-autofocus` control, else the content when vetoed; `restoreFocus`).
+      Zag's `checkRenderedElements` sets `aria-labelledby`/`aria-describedby` only for a rendered
+      `Title`/`Description` (play story pins the no-description case). `AlertDialog`: `role='alertdialog'`,
+      `closeOnInteractOutside: false`; `Cancel`/`Action` are `CloseTrigger`. `modal={false}` maps to
+      `modal`/`trapFocus`/`preventScroll` off. `Dialog.Description` stays a `<p>` (Ark's default is a div).
+      `Main`'s sidebars keep the dialog machine (`useDialog` directly, `modal: false`, `aria-label` from
+      `label`, `open` only below `lg`) with `hidden={false}` on the content so the always-mounted sidebar
+      keeps its CSS slide; pointer-opened sidebars keep focus where it is by handing the machine
+      `document.activeElement` as `initialFocusEl` (Zag always focuses something). **Ark `drawer`
+      evaluated and NOT used:** its machine positions and animates the content itself (translate,
+      snap points), which would fight `main.css`'s inset-driven slide, and at `lg` the sidebar is not a
+      dialog at all — a mobile bottom sheet is a feature of its own, not this port.
+      `Select` keeps the children API: each `Item`/`Option` registers `{ value, text, node, element }`
+      with the root, which builds `createListCollection` from the entries in document order; `Value`
+      renders the selected entry's `node` (Radix's `ItemText` behaviour — the icon in `SelectField`
+      survives). Consequence: the content stays mounted hidden while closed (Radix kept it in a detached
+      fragment), or nothing would register. Root's element is `display: contents`. `onValueChange` is a
+      method signature (a consumer typed it for a narrower union). `Arrow`, `ScrollUpButton`,
+      `ScrollDownButton` deleted and removed from 28 consumer files (Zag scrolls the highlighted item
+      into view). `--radix-select-*` → `--reference-width`/`--available-height`; z-index via the
+      positioner variable. Play stories: Dialog open/labelled/described/Escape, no-description +
+      autofocus, AlertDialog outside click + Cancel, Select pointer + keyboard past a disabled option,
+      Main toggle. Radix left in `react-ui`: `react-toast` only (Toast excluded from this run).
+      Boot budget after 4a: 4,547,849 bytes (−17,620 from Phase 3), ceiling left at 4.55 MB until Toast
+      evicts the Radix layer. Gates: full build, 34-package storybook sweep (SearchDialog's FTS play story
+      timed out under the 2-wide sweep, passes alone in 2 s), react-ui unit tests, lint of the 18 touched
+      packages, knip, format.
 - [ ] **Phase 5 — decisions.** RAC (keep for the date/time cluster vs consolidate onto Ark; default
       keep); Toolbar (no Ark toolbar — focus group from `@dxos/react-focus` + `toggle-group`); Focus
       (keep as the seam).

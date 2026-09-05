@@ -1,7 +1,7 @@
 # Radix → Ark UI migration (plan)
 
 **Status:** in progress. Phase 0 landed as #12902 (2026-09-03). Phase 1 (own the scaffolding) is on
-`claude/react-ui-ark-port-fe9f63`; Phases 2–4a follow on the same branch — see the ledger in
+`claude/react-ui-ark-port-fe9f63`, with Phases 2, 3 and 4a (Dialog/Main, Select) — see the ledger in
 `.agents/projects/ark/TASKS.md` for what is decided and what is done. Every number below was measured against this tree at `@ark-ui/react@5.39.1` /
 `@zag-js/*@1.43.3` and the `@radix-ui/*` versions in the lockfile on 2026-09-02 — re-measure before
 trusting a figure in a later quarter.
@@ -572,6 +572,21 @@ Outcome: `react-popper`, `-dismissable-layer`, `-focus-scope`, `-focus-guards`, 
   whether `Select.Option` keeps a children-driven convenience layer that builds the collection from
   JSX, so most consumers change one import and nothing else. **Decided 2026-09-05: keep the children
   API in this pass; moving consumers to Ark's `collection` prop is a later phase of its own.**
+
+**Done for Dialog, Main and Select (2026-09-05); Toast is not in this pass.** Verdict revisions:
+
+- `Dialog.Overlay` is Ark's `Backdrop` with the content nested inside it, not a sibling `Positioner`:
+  every consumer nests `Content` in `Overlay`, and the backdrop's own presence runs the exit animation.
+  `AlertDialog` is the same implementation with `role="alertdialog"` and outside clicks ignored.
+- The no-description acceptance holds: Zag adds `aria-describedby` only when a `Description` element is
+  in the DOM, pinned by a play story.
+- Ark's `drawer` was evaluated for `Main`'s sidebars and not used: it positions and animates its content
+  itself, which fights the inset-driven slide in `main.css`, and at `lg` the sidebar is a plain landmark.
+  The sidebars stay on the dialog machine with `hidden={false}` so they remain mounted for the CSS. A
+  mobile bottom sheet remains a feature of its own.
+- `Select` keeps the children API by having each option register with the root, which builds the
+  `collection`; the trigger shows the selected option's own children as Radix's `ItemText` did. The
+  content therefore stays mounted (hidden) while closed. `Arrow` and the scroll buttons are gone.
 
 ### Phase 5 — decisions, not ports
 
