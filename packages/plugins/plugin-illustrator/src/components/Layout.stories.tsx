@@ -22,6 +22,7 @@ import compute from '../../docs/diagrams/compute.mmd?raw';
 import echo from '../../docs/diagrams/echo.mmd?raw';
 import edge from '../../docs/diagrams/edge.mmd?raw';
 import pipeline from '../../docs/diagrams/pipeline.mmd?raw';
+import { THREE_PACKAGES } from '../model/testing';
 import { SceneSvg } from './SceneSvg';
 
 //
@@ -194,6 +195,8 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+/** Three packages × three types: inheritance fan-in, has-many chain, fan-in — small enough to argue over. */
+export const Packages: Story = { args: { source: THREE_PACKAGES.trim() } };
 export const Echo: Story = { args: { source: echo } };
 export const Assistant: Story = { args: { source: assistant } };
 export const Compute: Story = { args: { source: compute } };

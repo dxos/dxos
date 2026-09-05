@@ -9,6 +9,7 @@ import { trim } from '@dxos/util';
 import { analyze, errors } from './diagnostics';
 import { compile } from './mermaid-engine';
 import type * as Scene from './scene';
+import { THREE_PACKAGES } from './testing';
 import { GRID } from './uml-grid';
 
 const objectsOf = (commands: readonly Scene.Command[]) =>
@@ -78,6 +79,17 @@ describe('mermaid-engine', () => {
     expect(inside('Echo', 'core')).toBe(true);
     expect(inside('Mesh', 'core')).toBe(true);
     expect(inside('Edge', 'core')).toBe(false);
+  });
+
+  test('three packages: no hard defects, every connector straight or one bend', async ({ expect }) => {
+    const objects = objectsOf(await compile(THREE_PACKAGES));
+    const report = analyze(objects);
+
+    expect(errors(report).map(({ message }) => message)).toEqual([]);
+    expect(report.metrics.connectors).toBe(6);
+    // Each package's relations fit in two lattice rows, so nothing should need a second bend.
+    expect(report.metrics.crossings).toBe(0);
+    expect({ crossings: report.metrics.crossings, bends: report.metrics.bends }).toMatchSnapshot();
   });
 
   test('has no hard defects and records its soft metrics', async ({ expect }) => {
