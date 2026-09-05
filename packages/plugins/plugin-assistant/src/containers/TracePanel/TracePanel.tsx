@@ -148,14 +148,15 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
               <Input.Label>Processes</Input.Label>
             </Input.Root>
           </div>
-          {/* <div className='p-0.5 max-h-[8lh] border border-subdued-separator rounded-sm'> */}
-          <ProcessTreeContainer
-            space={space}
-            environments={environments}
-            onProcessSelect={handleProcessSelect}
-            onProcessTerminate={onProcessTerminate}
-          />
-          {/* </div> */}
+          <div>
+            <ProcessTreeContainer
+              classNames='max-h-[2lh]'
+              space={space}
+              environments={environments}
+              onProcessSelect={handleProcessSelect}
+              onProcessTerminate={onProcessTerminate}
+            />
+          </div>
         </div>
 
         <div>
@@ -195,7 +196,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
             <Syntax.Root data={details[selectedCommit.id] ?? selectedCommit}>
               <Syntax.Content classNames='border border-subdued-separator rounded-sm'>
                 <Syntax.Viewport>
-                  <Syntax.Code classNames='max-h-[16lh] text-xs' />
+                  <Syntax.Code classNames='max-h-[20lh] text-xs' />
                 </Syntax.Viewport>
               </Syntax.Content>
             </Syntax.Root>

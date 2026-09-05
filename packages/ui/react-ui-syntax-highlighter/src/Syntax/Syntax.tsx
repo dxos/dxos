@@ -244,11 +244,10 @@ type SyntaxCodeProps = ComposableProps<{
 /** Highlighted code leaf. Reads source/data from `Syntax.Root` context. */
 const SyntaxCode = composable<HTMLDivElement, SyntaxScopedProps<SyntaxCodeProps>>(
   ({ __scopeSyntax, testId, ...props }, forwardedRef) => {
-    const merged = composableProps(props, { classNames: 'text-sm overflow-visible' });
+    const merged = composableProps(props, { classNames: 'text-sm' });
 
     const context = useSyntaxContext(SYNTAX_CODE_NAME, __scopeSyntax);
     if (context.mode === 'json') {
-      console.log(merged.className);
       return (
         <JsonHighlighter
           {...merged}
