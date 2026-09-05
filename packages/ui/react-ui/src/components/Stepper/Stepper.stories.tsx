@@ -295,7 +295,7 @@ export const TestFailure: Story = {
     };
     const errorSurface = swatch('bg-error-surface').backgroundColor;
     const separator = swatch('border-separator').borderTopColor;
-    const primarySurface = swatch('bg-primary-surface').backgroundColor;
+    const accent = swatch('bg-accent-bg').backgroundColor;
 
     const circles = () =>
       [...canvasElement.querySelectorAll('[data-scope="steps"][data-part="item"] [role="img"]')].map((circle) => {
@@ -304,13 +304,8 @@ export const TestFailure: Story = {
       });
 
     await waitFor(async () => expect(circles()).toHaveLength(4));
-    // Stages the run reached are filled in the primary hue; the one ahead of it is an outline.
-    await expect(circles().map((circle) => circle.backgroundColor === primarySurface)).toEqual([
-      true,
-      true,
-      true,
-      false,
-    ]);
+    // Stages the run reached are filled in the accent; the one ahead of it is an outline.
+    await expect(circles().map((circle) => circle.backgroundColor === accent)).toEqual([true, true, true, false]);
 
     canvas.getByTestId('stepper.fail').click();
 
@@ -319,7 +314,7 @@ export const TestFailure: Story = {
     await waitFor(async () =>
       expect(circles().map((circle) => circle.backgroundColor === errorSurface)).toEqual([true, true, true, false]),
     );
-    await expect(circles().every((circle) => circle.backgroundColor !== primarySurface)).toEqual(true);
+    await expect(circles().every((circle) => circle.backgroundColor !== accent)).toEqual(true);
 
     // The stage it never reached is untouched: it did not fail, and colouring it would claim the
     // failure reached further than it did.

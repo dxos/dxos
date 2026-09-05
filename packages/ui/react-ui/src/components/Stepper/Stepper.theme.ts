@@ -25,14 +25,14 @@ export type StepperStyleProps = {
 /** Circles ahead of the run read as an outline; everything the run has reached is filled. */
 const stepFill: Record<StepState, string> = {
   pending: 'bg-base-surface border-separator',
-  active: 'bg-primary-surface border-transparent',
-  complete: 'bg-primary-surface border-transparent',
+  active: 'bg-accent-bg border-transparent',
+  complete: 'bg-accent-bg border-transparent',
   error: 'bg-error-surface border-transparent',
 };
 
 /**
  * The same drawing with the run's colour swapped for the error hue. What failed is the run, not only
- * the stage it stopped on, so a plan half-drawn in the primary hue would read as half of it having
+ * the stage it stopped on, so a plan half-drawn in the accent would read as half of it having
  * gone fine. Only stages the run started change: one it never reached did not fail, and colouring it
  * would claim the failure reached further than it did.
  */
@@ -66,7 +66,7 @@ const step: ComponentFunction<StepperStyleProps> = (
   );
 
 const notch: ComponentFunction<StepperStyleProps> = (_props, ...etc) =>
-  mx('dx-fullscreen animate-spin text-primary-surface', ...etc);
+  mx('dx-fullscreen animate-spin text-accent-bg', ...etc);
 
 /**
  * The line between two stages. A separator-derived track rather than a surface: the stepper is drawn
@@ -76,7 +76,7 @@ const connector: ComponentFunction<StepperStyleProps> = (_props, ...etc) =>
   mx('relative grow min-w-1 rounded-full bg-separator', ...etc);
 
 const fill: ComponentFunction<StepperStyleProps> = ({ failed }, ...etc) =>
-  mx('absolute inset-y-0 start-0 rounded-full', failed ? 'bg-error-surface' : 'bg-primary-surface', ...etc);
+  mx('absolute inset-y-0 start-0 rounded-full', failed ? 'bg-error-surface' : 'bg-accent-bg', ...etc);
 
 export const stepperTheme: Theme<StepperStyleProps> = {
   root,
