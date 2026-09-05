@@ -809,6 +809,14 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       deliberately not served (`tools/storybook-react/.storybook/main.ts`). A reload gets the full
       sprite (143). Fix belongs in the icons plugin: scan the story module before answering the
       sprite request, or serve the fallback in dev.
+      **Second symptom (2026-09-05, playground):** after a `pnpm install` ran under the live server, its
+      sprite (`tools/storybook-react/static/icons.svg`) stopped being rewritten at all — stuck at 99
+      symbols while newly loaded stories' icons (all valid Phosphor names) never appeared, across
+      reloads and a re-transform of the story. A fresh server (the vitest storybook runner) builds the
+      sprite correctly (109 symbols, every icon present), so the plugin's write path wedges when
+      `node_modules` is relinked beneath it (watcher/asset stat on replaced symlinks is the suspect).
+      Recovery is a server restart; a durable fix would re-stat assets on each write and resubscribe
+      the watcher after the assets directory is replaced.
 - [ ] **Separate, not this phase: touch drag in the Tree.** `pragmatic-drag-and-drop` is native
       HTML5 DnD, which does not fire from touch in iPhone WKWebView, so Tree reordering is
       desktop-only under Tauri mobile. Library-independent; verify on device first. Tracked
