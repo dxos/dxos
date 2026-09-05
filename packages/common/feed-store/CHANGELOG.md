@@ -1,5 +1,24 @@
 # @dxos/feed-store
 
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [4bac701]
+- Updated dependencies [e8088ea]
+  - @dxos/hypercore@0.12.0
+  - @dxos/util@0.12.0
+  - @dxos/keyring@0.12.0
+  - @dxos/async@0.12.0
+  - @dxos/log@0.12.0
+  - @dxos/random-access-storage@0.12.0
+  - @dxos/crypto@0.12.0
+  - @dxos/debug@0.12.0
+  - @dxos/invariant@0.12.0
+  - @dxos/keys@0.12.0
+  - @dxos/node-std@0.12.0
+  - @dxos/vendor-hypercore@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

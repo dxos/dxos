@@ -1,5 +1,111 @@
 # @dxos/react-ui-canvas-editor
 
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [af1c007]
+- Updated dependencies [106d38a]
+- Updated dependencies [e2eecf2]
+- Updated dependencies [2800d03]
+- Updated dependencies [96f94c2]
+- Updated dependencies [0fe00c5]
+- Updated dependencies [75971ad]
+- Updated dependencies [3958355]
+- Updated dependencies [d194929]
+- Updated dependencies [557e243]
+- Updated dependencies [ea11703]
+- Updated dependencies [da37a13]
+- Updated dependencies [0a01ff7]
+- Updated dependencies [1c995c4]
+- Updated dependencies [a69d861]
+- Updated dependencies [ba08e65]
+- Updated dependencies [5fcd238]
+- Updated dependencies [5e8878c]
+- Updated dependencies [e094f74]
+- Updated dependencies [4800a6f]
+- Updated dependencies [1b62726]
+- Updated dependencies [a3b6ef0]
+- Updated dependencies [b02fe16]
+- Updated dependencies [c439ba0]
+- Updated dependencies [6af130f]
+- Updated dependencies [2c442f9]
+- Updated dependencies [2922d36]
+- Updated dependencies [d62a947]
+- Updated dependencies [7d000b9]
+- Updated dependencies [813069c]
+- Updated dependencies [8cb5553]
+- Updated dependencies [4c107a2]
+- Updated dependencies [b9d72bb]
+- Updated dependencies [3e9a10f]
+- Updated dependencies [8ea2bf9]
+- Updated dependencies [8ca2ac7]
+- Updated dependencies [098a0bb]
+- Updated dependencies [0132aab]
+- Updated dependencies [47c8d7e]
+- Updated dependencies [10b1239]
+- Updated dependencies [b600f72]
+- Updated dependencies [99e323d]
+- Updated dependencies [ea11703]
+- Updated dependencies [bcfe4c5]
+- Updated dependencies [41e2750]
+- Updated dependencies [ebb8f4a]
+- Updated dependencies [557e243]
+- Updated dependencies [ca34a80]
+- Updated dependencies [29543ca]
+- Updated dependencies [24fcadc]
+- Updated dependencies [4804da0]
+- Updated dependencies [d4b4919]
+- Updated dependencies [63e500b]
+- Updated dependencies [19f19a2]
+- Updated dependencies [0a3e9dd]
+- Updated dependencies [256f286]
+- Updated dependencies [306f50d]
+- Updated dependencies [5b504b4]
+- Updated dependencies [d7b0a3b]
+- Updated dependencies [1482a3f]
+- Updated dependencies [2513a52]
+- Updated dependencies [1d6f730]
+- Updated dependencies [b125655]
+- Updated dependencies [f4c2702]
+- Updated dependencies [318bbad]
+- Updated dependencies [fc83abd]
+- Updated dependencies [8904184]
+- Updated dependencies [e680b16]
+- Updated dependencies [a805212]
+- Updated dependencies [ea11703]
+- Updated dependencies [18597fc]
+- Updated dependencies [881f900]
+- Updated dependencies [72b2984]
+- Updated dependencies [32584c9]
+- Updated dependencies [32353e6]
+- Updated dependencies [559acfa]
+- Updated dependencies [e8088ea]
+- Updated dependencies [928e0b2]
+- Updated dependencies [5d816a6]
+- Updated dependencies [f9816c0]
+- Updated dependencies [40b50c2]
+- Updated dependencies [85bdad2]
+- Updated dependencies [4a10672]
+- Updated dependencies [cc11297]
+- Updated dependencies [ff37699]
+  - @dxos/echo@0.12.0
+  - @dxos/react-ui@0.12.0
+  - @dxos/ui-editor@0.12.0
+  - @dxos/graph@0.12.0
+  - @dxos/react-focus@0.12.0
+  - @dxos/ui-theme@0.12.0
+  - @dxos/react-ui-editor@0.12.0
+  - @dxos/util@0.12.0
+  - @dxos/conductor@0.12.0
+  - @dxos/react-ui-attention@0.12.0
+  - @dxos/react-ui-canvas@0.12.0
+  - @dxos/react-ui-syntax-highlighter@0.12.0
+  - @dxos/effect@0.12.0
+  - @dxos/log@0.12.0
+  - @dxos/debug@0.12.0
+  - @dxos/invariant@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

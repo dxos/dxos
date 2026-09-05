@@ -1,5 +1,16 @@
 # @dxos/brand
 
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [d4b4919]
+- Updated dependencies [e680b16]
+- Updated dependencies [a805212]
+- Updated dependencies [32584c9]
+- Updated dependencies [928e0b2]
+  - @dxos/ui-theme@0.12.0
+
 ## 0.11.1
 
 ## 0.11.0

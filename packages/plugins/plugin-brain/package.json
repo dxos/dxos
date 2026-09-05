@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-brain",
-  "version": "0.11.1",
+  "version": "0.12.0",
   "private": true,
   "description": "Assistant skill and operations for querying and summarizing the space fact store",
   "homepage": "https://dxos.org",

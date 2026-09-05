@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-payments",
-  "version": "0.11.1",
+  "version": "0.12.0",
   "private": true,
   "description": "Pay for edge resources via x402 (USDC) or Stripe Checkout.",
   "homepage": "https://dxos.org",

@@ -1,5 +1,39 @@
 # @dxos/react-ui-introspect
 
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [96f94c2]
+- Updated dependencies [d194929]
+- Updated dependencies [557e243]
+- Updated dependencies [a09e18e]
+- Updated dependencies [813069c]
+- Updated dependencies [098a0bb]
+- Updated dependencies [557e243]
+- Updated dependencies [29543ca]
+- Updated dependencies [c0e5651]
+- Updated dependencies [77a2d34]
+- Updated dependencies [d4b4919]
+- Updated dependencies [0a3e9dd]
+- Updated dependencies [306f50d]
+- Updated dependencies [1d6f730]
+- Updated dependencies [fc83abd]
+- Updated dependencies [8904184]
+- Updated dependencies [e680b16]
+- Updated dependencies [a805212]
+- Updated dependencies [0c92b44]
+- Updated dependencies [32584c9]
+- Updated dependencies [928e0b2]
+- Updated dependencies [f9816c0]
+- Updated dependencies [4ae2005]
+  - @dxos/react-ui@0.12.0
+  - @dxos/react-ui-form@0.12.0
+  - @dxos/react-ui-list@0.12.0
+  - @dxos/ui-theme@0.12.0
+  - @dxos/react-ui-syntax-highlighter@0.12.0
+  - @dxos/introspect-tools@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

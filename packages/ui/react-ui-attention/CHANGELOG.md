@@ -1,5 +1,23 @@
 # @dxos/react-ui-attention
 
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [8cb5553]
+- Updated dependencies [d4b4919]
+- Updated dependencies [e680b16]
+- Updated dependencies [a805212]
+- Updated dependencies [32584c9]
+- Updated dependencies [928e0b2]
+- Updated dependencies [77d0026]
+  - @dxos/react-focus@0.12.0
+  - @dxos/ui-theme@0.12.0
+  - @dxos/ui-types@0.12.0
+  - @dxos/react-hooks@0.12.0
+  - @dxos/log@0.12.0
+  - @dxos/invariant@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

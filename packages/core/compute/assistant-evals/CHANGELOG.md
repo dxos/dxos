@@ -1,5 +1,30 @@
 # @dxos/assistant-evals
 
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [0280a6a]
+- Updated dependencies [86d1482]
+- Updated dependencies [2d4107f]
+- Updated dependencies [6d28380]
+- Updated dependencies [dbff1e4]
+- Updated dependencies [b02fe16]
+- Updated dependencies [cafa240]
+- Updated dependencies [cc45381]
+- Updated dependencies [ab79741]
+- Updated dependencies [63e500b]
+- Updated dependencies [32468c3]
+- Updated dependencies [256f286]
+- Updated dependencies [306f50d]
+- Updated dependencies [dea5df9]
+- Updated dependencies [efa7836]
+- Updated dependencies [678ba58]
+- Updated dependencies [63629c5]
+- Updated dependencies [bb94124]
+  - @dxos/app-toolkit@0.12.0
+  - @dxos/keys@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

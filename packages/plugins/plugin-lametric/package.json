@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-lametric",
-  "version": "0.11.1",
+  "version": "0.12.0",
   "private": true,
   "description": "Show a space on a LaMetric TIME — progress while a task runs, statistics otherwise.",
   "homepage": "https://dxos.org",

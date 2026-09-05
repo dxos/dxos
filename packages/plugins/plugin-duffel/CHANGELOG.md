@@ -1,5 +1,70 @@
 # @dxos/plugin-duffel
 
+## 0.12.0
+
+### Patch Changes
+
+- Updated dependencies [0280a6a]
+- Updated dependencies [86d1482]
+- Updated dependencies [96f94c2]
+- Updated dependencies [6d52561]
+- Updated dependencies [4a0b78b]
+- Updated dependencies [34a8433]
+- Updated dependencies [2d4107f]
+- Updated dependencies [d194929]
+- Updated dependencies [557e243]
+- Updated dependencies [5305365]
+- Updated dependencies [6d28380]
+- Updated dependencies [dbff1e4]
+- Updated dependencies [23d2d8c]
+- Updated dependencies [b0953f0]
+- Updated dependencies [375b863]
+- Updated dependencies [3e02201]
+- Updated dependencies [dde6714]
+- Updated dependencies [b02fe16]
+- Updated dependencies [cafa240]
+- Updated dependencies [813069c]
+- Updated dependencies [5ceaf9c]
+- Updated dependencies [2c06e2e]
+- Updated dependencies [098a0bb]
+- Updated dependencies [9c86066]
+- Updated dependencies [cc45381]
+- Updated dependencies [557e243]
+- Updated dependencies [29543ca]
+- Updated dependencies [e26af7e]
+- Updated dependencies [ab79741]
+- Updated dependencies [61fe676]
+- Updated dependencies [d4b4919]
+- Updated dependencies [63e500b]
+- Updated dependencies [1ab4bb8]
+- Updated dependencies [32468c3]
+- Updated dependencies [0a3e9dd]
+- Updated dependencies [256f286]
+- Updated dependencies [306f50d]
+- Updated dependencies [1d6f730]
+- Updated dependencies [10defed]
+- Updated dependencies [dea5df9]
+- Updated dependencies [fc83abd]
+- Updated dependencies [efa7836]
+- Updated dependencies [678ba58]
+- Updated dependencies [8904184]
+- Updated dependencies [a805212]
+- Updated dependencies [886453b]
+- Updated dependencies [63629c5]
+- Updated dependencies [e8088ea]
+- Updated dependencies [bb94124]
+- Updated dependencies [f9816c0]
+- Updated dependencies [4a10672]
+- Updated dependencies [ee180f6]
+  - @dxos/app-framework@0.12.0
+  - @dxos/app-toolkit@0.12.0
+  - @dxos/react-ui@0.12.0
+  - @dxos/edge-client@0.12.0
+  - @dxos/plugin-trip@0.12.0
+  - @dxos/util@0.12.0
+  - @dxos/effect@0.12.0
+  - @dxos/log@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

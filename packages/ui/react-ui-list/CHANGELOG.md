@@ -1,5 +1,72 @@
 # @dxos/react-ui-list
 
+## 0.12.0
+
+### Minor Changes
+
+- 29543ca: MOSAIC ui-template groundwork across the UI packages.
+
+  - `Grid` layout primitive: track lists (`cols={['min-content', '1fr']}`), `subgrid`, `gap` from the spacing ramp, `align`/`center`, `contents`, and `asChild`.
+  - `Show`/`Switch` conditional-rendering primitives: `<Show when fallback>` renders its children (or a render prop receiving the narrowed value) while `when` is present — anything except `undefined`/`null`/`false` — and `<Switch.Root on fallback>` renders the first `<Switch.Match when>` whose `when` strictly equals (or, as a predicate, matches) `on`. Both are DOM-free and mirror the ui-template `show`/`fallback`/`switch`/`match` grammar.
+  - `Combobox`: the popover aligns exactly with its trigger (trigger-width content, zero collision padding), the trigger reuses the `Select` trigger slot and the placeholder role, and single-select lists emit one selection per press.
+  - `Listbox`: visible row focus ring, `onDeselect` (Escape clears only a non-empty selection), and a `multiselectable` mode for externally-managed selection with option navigation.
+  - `TaskList.Root`'s `onTaskCreate` now receives a `TaskDraft` (`{ title, ...optional patch fields }`) instead of a bare title, so a description (or priority/assignee) can be supplied when available.
+
+- 32584c9: `TaskList` renders its hierarchical mode as a `Tree`, so disclosure, roving focus and the WAI-ARIA keymap come from the tree machine rather than from hand-maintained `aria-level`/`posinset`/`setsize` on listbox options. The flat and grouped modes are unchanged.
+
+  Drag and drop is restored on that path and gains the placements it never had: a drop onto a row makes the task its **first** child, the row's edges reorder around it, and a strip past the last row appends at the end. Arrow keys move focus with the highlight following; `Shift+Arrow` reorders and re-indents.
+
+  `Tree` grows the options this needed, all off by default so `plugin-navtree` is unaffected: `leavesAcceptChildren` (a childless row can be dropped onto), `dropBelowExpanded` (an open branch offers "after this row and its subtree"), `dropAtEnd`, `selectionFollowsFocus`, `onKeyDown`, and `debug`, which paints every row's drop bands. `TogglePanel` is rebuilt on Ark's Collapsible — its parts and props are unchanged, and it gains a `caret` position and a `classNames` pass-through — and `ToolWidget` composes it with the accordion.
+
+  **Breaking for stored data:** `Task.estimate` is a t-shirt size (`xs` | `s` | `m` | `l` | `xl`) rather than a bare number, annotated as a single-select like `Task.priority`. A size is what a reader can agree on without knowing a team's point scale. There is no migration in this change. `Task.Status` also gains `backlog`, `blocked` and `duplicate`. Linear sync maps between the vocabularies rather than dropping the field: points bucket into sizes inbound (`1→xs`, `2→s`, `3→m`, `5→l`, `8+→xl`) and each size pushes its bucket's representative value outbound, which is lossy in that direction by construction.
+
+  `TaskList.Root` takes `showEstimates` to render the estimate beside the priority control, and the two description flags are reconciled into a single `showDescription`.
+
+- 928e0b2: Tree rebuilt on `@ark-ui/react` TreeView — full APG keyboard navigation (arrows, Home/End,
+  typeahead, `*`), machine-managed focus and ARIA, atom-model walk into a controlled TreeCollection,
+  pragmatic-drag-and-drop retained, animated disclose/conceal; `TreeItemHeading`/`TreeItemById` removed.
+- 4ae2005: Lay every `Tree` row out on one grid the consumer templates: the disclosure toggle is the template's first track (omit it with `toggle={false}` for a flat list), the heading's cells and columns render straight into the row, and each row indents by padding its own grid so nested rows shift as a block. **Breaking:** a `gridTemplateColumns` passed to `Tree` must now begin with the toggle track. The task list builds its template from its options — gutter, status, title, chips, estimate, priority, actions — with every fixed cell one rail-item square and no column gap, and no longer reserves a gutter for a drag handle.
+
+### Patch Changes
+
+- c0e5651: Restore drag and drop in the navtree. A tree item's `treeId`, the scope a pragmatic-dnd monitor claims its own drags by, was the tree's own `id`. That holds only when a monitor serves exactly one `Tree`; the navtree mounts one per workspace tab, so its rows carried a per-tab id, the monitor watching for the graph root claimed nothing, and reordering a collection and dropping an object into one both silently did nothing.
+
+  The scope is now the root of the tree's path, so trees sharing a path root are one drag scope. Both existing monitors were already written against that value and are unchanged.
+
+  A drop target now also rejects sources from another tree. A monitor scoping the drags it claims is only half of it: rows and the append strip accepted any source, so a navtree row dropped on a task list was read by the navtree's monitor as a graph node.
+
+- 0c92b44: `TaskList.Edit` gains `showDescription`, which edits a description under the title — the selected
+  task's, or the new task's when creating, so a task can be added with one. The combobox trigger now
+  collapses its caret column when a caller supplies its own children, which was painting a strip of
+  trigger surface beside the field.
+- Updated dependencies [96f94c2]
+- Updated dependencies [d194929]
+- Updated dependencies [557e243]
+- Updated dependencies [813069c]
+- Updated dependencies [8cb5553]
+- Updated dependencies [098a0bb]
+- Updated dependencies [4f760ce]
+- Updated dependencies [557e243]
+- Updated dependencies [29543ca]
+- Updated dependencies [d4b4919]
+- Updated dependencies [0a3e9dd]
+- Updated dependencies [306f50d]
+- Updated dependencies [1d6f730]
+- Updated dependencies [fc83abd]
+- Updated dependencies [8904184]
+- Updated dependencies [e680b16]
+- Updated dependencies [a805212]
+- Updated dependencies [32584c9]
+- Updated dependencies [928e0b2]
+- Updated dependencies [f9816c0]
+  - @dxos/react-ui@0.12.0
+  - @dxos/react-focus@0.12.0
+  - @dxos/react-ui-menu@0.12.0
+  - @dxos/ui-theme@0.12.0
+  - @dxos/ui-types@0.12.0
+  - @dxos/react-list@0.12.0
+  - @dxos/debug@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes

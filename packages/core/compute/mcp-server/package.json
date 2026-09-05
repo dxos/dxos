@@ -1,6 +1,6 @@
 {
   "name": "@dxos/mcp-server",
-  "version": "0.11.1",
+  "version": "0.12.0",
   "description": "DXOS MCP server: the tool and prompt surface projected from the operation registry.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
