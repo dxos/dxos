@@ -1,0 +1,15 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`mermaid-engine > basic: no hard defects, every connector straight or one bend 1`] = `
+{
+  "bends": 1,
+  "crossings": 0,
+}
+`;
+
+exports[`mermaid-engine > has no hard defects and records its soft metrics 1`] = `
+{
+  "bends": 3,
+  "crossings": 0,
+}
+`;

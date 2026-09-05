@@ -131,7 +131,7 @@ describe('mermaid', () => {
 
     expect(graph.direction).toBe('LR');
     expect(graph.nodes.map((node) => node.id)).toEqual(['A', 'B']);
-    expect(graph.edges).toEqual([{ from: 'A', to: 'B' }]);
+    expect(graph.edges).toEqual([{ from: 'A', to: 'B', kind: 'reference' }]);
   });
 });
 

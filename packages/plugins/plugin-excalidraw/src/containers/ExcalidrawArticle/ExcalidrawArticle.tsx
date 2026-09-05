@@ -23,23 +23,86 @@ import { useStoreAdapter } from '#hooks';
 
 export type ExcalidrawArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps;
 
+/** Scene object ids of the selected elements; unmanaged elements carry no `customData.object`. */
+const selectedObjectIds = (
+  elements: readonly ExcalidrawElement[],
+  selectedElementIds: Readonly<Record<string, boolean>>,
+): string[] => [
+  ...new Set(
+    elements.flatMap((element) =>
+      selectedElementIds[element.id] && typeof element.customData?.object === 'string'
+        ? [element.customData.object]
+        : [],
+    ),
+  ),
+];
+
+const sameSet = (left: readonly string[], right: readonly string[]) =>
+  left.length === right.length && left.every((id) => right.includes(id));
+
 /**
+ * Article surface for the excalidraw variant: binds the canvas store adapter to an Excalidraw
+ * instance and mirrors selection to and from the host in scene object ids.
  * https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/props
  */
-export const ExcalidrawArticle = ({ role, canvas, attendableId }: ExcalidrawArticleProps) => {
+export const ExcalidrawArticle = ({
+  role,
+  canvas,
+  attendableId,
+  selection,
+  onSelectionChange,
+}: ExcalidrawArticleProps) => {
   invariant(Obj.instanceOf(Drawing.Canvas, canvas));
   const containerRef = useRef<HTMLDivElement>(null);
   const { themeMode } = useThemeContext();
   const [down, setDown] = useState<boolean>(false);
   const excalidrawAPIRef = useRef<ExcalidrawImperativeAPI>(null);
+  // Last selection reported to the host, so its echo back through `selection` is a no-op.
+  const reportedSelectionRef = useRef<readonly string[]>([]);
+  // The host's current selection, readable from the adapter's update callback.
+  const selectionRef = useRef(selection);
+  selectionRef.current = selection;
   // Buffer the most recent elements from the adapter so that however the adapter
   // and the <Excalidraw/> imperative API settle in (either order), we always hand
   // the current scene to the component once both are ready.
   const latestElementsRef = useRef<readonly ExcalidrawElement[]>([]);
+
+  /** Select every element stamped with a selected scene object id. */
+  const applySelection = (api: ExcalidrawImperativeAPI, elements: readonly ExcalidrawElement[]) => {
+    const wanted = selectionRef.current;
+    if (!wanted || sameSet(wanted, reportedSelectionRef.current)) {
+      return;
+    }
+    // An empty host selection clears the editor's; the element check below is for non-empty ones.
+    if (wanted.length === 0) {
+      reportedSelectionRef.current = wanted;
+      api.updateScene({ appState: { selectedElementIds: {} } });
+      return;
+    }
+    const selectedElementIds = Object.fromEntries(
+      elements
+        .filter(
+          (element) => typeof element.customData?.object === 'string' && wanted.includes(element.customData.object),
+        )
+        .map((element) => [element.id, true as const]),
+    );
+    // Only claim the selection once elements exist to carry it; an early call would record it
+    // as applied while selecting nothing.
+    if (Object.keys(selectedElementIds).length > 0) {
+      reportedSelectionRef.current = wanted;
+      api.updateScene({ appState: { selectedElementIds } });
+    }
+  };
+
   const adapter = useStoreAdapter(canvas, {
     onUpdate: ({ elements }) => {
       latestElementsRef.current = elements;
-      excalidrawAPIRef.current?.updateScene({ elements });
+      const api = excalidrawAPIRef.current;
+      if (api) {
+        api.updateScene({ elements });
+        // Elements may arrive after the host set a selection; apply it now that they exist.
+        applySelection(api, elements);
+      }
     },
   });
 
@@ -73,12 +136,27 @@ export const ExcalidrawArticle = ({ role, canvas, attendableId }: ExcalidrawArti
   };
 
   // Track updates.
-  const handleChange: ExcalidrawProps['onChange'] = (elements) => {
+  const handleChange: ExcalidrawProps['onChange'] = (elements, appState) => {
     const modified = adapter.update(elements);
     if (!down && modified.length) {
       adapter.save();
     }
+    if (onSelectionChange) {
+      const selected = selectedObjectIds(elements, appState.selectedElementIds);
+      if (!sameSet(selected, reportedSelectionRef.current)) {
+        reportedSelectionRef.current = selected;
+        onSelectionChange(selected);
+      }
+    }
   };
+
+  // Selection, host → editor; the adapter's update path re-applies it once elements have loaded.
+  useEffect(() => {
+    const api = excalidrawAPIRef.current;
+    if (api) {
+      applySelection(api, adapter.getElements());
+    }
+  }, [adapter, selection]);
 
   // Save updates when mouse is released.
   const handlePointerUpdate: ExcalidrawProps['onPointerUpdate'] = ({ button }) => {

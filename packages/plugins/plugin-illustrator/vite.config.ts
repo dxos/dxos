@@ -22,6 +22,7 @@ export default defineConfig({
     LegacySketch: 'src/types/LegacySketch.ts',
     DrawingOperation: 'src/types/DrawingOperation.ts',
     IllustratorCapabilities: 'src/types/IllustratorCapabilities.ts',
+    IllustratorError: 'src/types/IllustratorError.ts',
     IllustratorEvents: 'src/types/IllustratorEvents.ts',
     types: 'src/types/index.ts',
   },

@@ -109,6 +109,31 @@ export const makeAvoidingRouter = (obstacles: Rect[], fallback: Router): Router 
   };
 
   /**
+   * Fewest turns any path from (x, y) heading `dir` needs to reach the target: none while aligned
+   * and heading at it, two when heading away along its axis, otherwise one. Admissible, and since
+   * a turn costs as much as a thousand steps it is what makes the search converge on a diagram
+   * hundreds of cells across — distance alone leaves it exploring almost uniformly.
+   */
+  const turnsNeeded = (x: number, y: number, dir: number, target: Point): number => {
+    const dx = target.x - x;
+    const dy = target.y - y;
+    if (dx !== 0 && dy !== 0) {
+      return 1;
+    }
+    if (dx === 0 && dy === 0) {
+      return 0;
+    }
+    const towards = dx !== 0 ? (dx > 0 ? 0 : 2) : dy > 0 ? 1 : 3;
+    return dir === towards ? 0 : (dir + 2) % 4 === towards ? 2 : 1;
+  };
+
+  const estimateFrom = (x: number, y: number, dir: number, target: Point): number =>
+    Math.abs(target.x - x) + Math.abs(target.y - y) + turnsNeeded(x, y, dir, target) * TURN_COST;
+
+  // Every cell in every heading, so a reachable target is never abandoned on a large diagram.
+  const budget = Math.max(50_000, (bounds.x1 - bounds.x0) * (bounds.y1 - bounds.y0) * 4);
+
+  /**
    * Bounded A* between two stub ends (grid coordinates). Successors already dominated by a
    * settled state are pruned before pushing; undefined when the target is unreachable.
    */
@@ -119,13 +144,13 @@ export const makeAvoidingRouter = (obstacles: Rect[], fallback: Router): Router 
         y: source.y,
         dir: startDir,
         cost: 0,
-        estimate: Math.abs(target.x - source.x) + Math.abs(target.y - source.y),
+        estimate: estimateFrom(source.x, source.y, startDir, target),
       },
     ];
     const settled = new Map<string, number>();
     let found: State | undefined;
 
-    for (let iterations = 0; open.length > 0 && iterations < 50_000; iterations++) {
+    for (let iterations = 0; open.length > 0 && iterations < budget; iterations++) {
       const current = heapPop(open);
       if (current.x === target.x && current.y === target.y) {
         found = current;
@@ -164,7 +189,7 @@ export const makeAvoidingRouter = (obstacles: Rect[], fallback: Router): Router 
           y,
           dir,
           cost,
-          estimate: Math.abs(target.x - x) + Math.abs(target.y - y),
+          estimate: estimateFrom(x, y, dir, target),
           prev: current,
         });
       }

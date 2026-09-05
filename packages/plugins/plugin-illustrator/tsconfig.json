@@ -19,10 +19,16 @@
   ],
   "references": [
     {
+      "path": "../../common/errors"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
       "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/log"
     },
     {
       "path": "../../common/util"
@@ -52,7 +58,16 @@
       "path": "../../ui/react-ui"
     },
     {
+      "path": "../../ui/react-ui-attention"
+    },
+    {
+      "path": "../../ui/react-ui-editor"
+    },
+    {
       "path": "../../ui/react-ui-search"
+    },
+    {
+      "path": "../../ui/ui-editor"
     },
     {
       "path": "../../ui/ui-theme"

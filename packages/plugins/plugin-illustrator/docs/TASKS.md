@@ -1,6 +1,111 @@
-# plugin-tldraw (né plugin-sketch) + plugin-illustrator — Tasks
+# plugin-illustrator — Tasks
 
-_Resume: PR #12380 MERGED 2026-07-29 (squash `3502b3d5`) — it carried the illustrator base, the plugin-sketch->plugin-tldraw rename, the mermaid dialect, the sketch->drawing migration, the excalidraw label/binding fixes AND the initial `react-ui-diagram` spike. Branch continues past the squash with the grid-alignment work (`container` type rename, per-variant Background offset) and a fresh `origin/main` merge (`96066fd`); all green (307 lint tasks, 15 react-ui-diagram + 346 ui-editor tests, oxfmt clean). Phase 4 is DESIGNED and APPROVED but NOT implemented — DSL is truth, diagram is a projection, substrate is React Flow, neutral representation is an extended `@dxos/graph`. Design + phasing: `agents/superpowers/specs/2026-07-29-diagram-substrate-design.md`. Next: open a follow-up PR for the post-squash work, then implementation step 1 (rewrite `@dxos/graph` with `Node.parent` + `Edge.sourcePort`/`targetPort`)._
+_Resume (2026-09-05): project renamed `illustrator-scene-dsl`; this file moved here from
+`plugin-tldraw/TASKS.md`. Phase 5 is in progress on branch `illustrator-selection-diagrams`
+(see below). Layout design: `DESIGN.md` beside this file. Phases 1–4 below are history; Phase 4's
+React Flow substrate remains designed-not-implemented and is NOT on the Phase 5 path._
+
+## Phase 5: eval substrate, selection, diagram corpus (2026-09-05)
+
+Goal set with Rich (offline): finish the implementation steps, then produce six diagrams of the
+DXOS/EDGE architecture that double as the eval corpus. Archify (`tt-a1i/archify`) was reviewed and
+rejected as a layout engine — it has none (fixed cell math; the LLM places nodes) — its one
+transferable idea, validate-and-repair, is what `Diagnostics` implements.
+
+Decisions (reversible, taken to avoid blocking): `WorldObject.ref` is a DXN **or** URI; selection
+is at world-object granularity, controlled + uncontrolled, scene ids only; the **host**
+(`DrawingArticle`) writes `react-ui-attention` Selection ViewState so every renderer behaves the
+same; the corpus lives in `docs/diagrams/*.mmd` and IS the deliverable (one copy, no drift);
+hard diagnostics gate CI, soft ones are golden-filed; Tier-3 (LLM generation eval, evalite) gets
+its scorer interface now and fixtures later.
+
+- [x] **`Diagnostics.analyze`** (`src/model/diagnostics.ts`) — pure analysis of an emitted scene,
+      independent of dialect and placement: `node-overlap`, `route-through-node`, `label-overflow`
+      (errors) and `edge-crossing`, `excessive-bends` (warnings) + `Metrics`. Works on hand-authored
+      scenes and on scenes read back from a renderer.
+- [x] **Tier 1 harness** — `diagnostics.test.ts` runs every placement strategy over `CLASS_DIAGRAM`;
+      hard codes asserted empty, soft metrics snapshotted (17/17). Two analyzer false positives found
+      and fixed by the first run: group/subgraph frames are containers, not obstacles (a box
+      enclosing another object's box); and a label's last line carries no trailing leading
+      (`(lines−1)·lineH + lineH/1.35`).
+- [x] **`WorldObject.ref`** — optional DXN/URI on the scene object.
+- [x] **Selection contract** — `DrawingVariantSurfaceProps.selection` / `onSelectionChange` /
+      `onActivate`; `SceneSvg` implements it (click / shift-toggle / background-clear /
+      double-click; `data-object`, `data-selected`, accent highlight); `SvgArticle` passes through.
+- [x] **Host wiring** — `DrawingArticle` reads/writes Selection ViewState keyed by `attendableId`;
+      `onActivate` resolves an ECHO `ref` via `db.makeRef(uri).load()` (guarded by `Obj.isObject`)
+      and opens it via `LayoutOperation.Open`. URI refs carry no default activation yet.
+- [x] **tldraw variant** — page-state `selectedShapeIds` ↔ scene object ids (`shape.meta.object`),
+      set-compared so the echo of our own report is a no-op; double-click → `onActivate`.
+- [x] **excalidraw variant** — `appState.selectedElementIds` ↔ `customData.object`; selection only
+      (double-click enters text editing there).
+- [x] **Mermaid flowchart onto the engine seam** — `mermaid-engine.ts`: ELK compound layout
+      (subgraphs as hierarchical nodes), uniform grid cells, frames recomputed from snapped members,
+      shared A* router (frames are containers, not obstacles). `RoutedRelation.relation` widened to
+      `Layout.LayoutEdge`. Lesson from the corpus: ELK spacing is per compound node, not inherited —
+      unset, a group packs at 20px and every route through it is fenced (→ `route-through-node`).
+- [x] **`%% ref <Id> <target>`** directive in the flowchart parser → `WorldObject.ref` (portable: a
+      comment to mermaid proper).
+- [x] **Tier 2 scoreboard** — `moon run plugin-illustrator:render-diagrams -- --scoreboard`
+      (vite-node; bun cannot load elkjs): corpus × {layered, elk} → errors / crossings / bends / area.
+- [x] **Diagram corpus** (`docs/diagrams/`) — six sources written from read-only Explore surveys with
+      per-node refs (echo, assistant, compute, pipeline, app-framework, edge), rendered to `.svg`;
+      `corpus.test.ts` gates hard defects, snapshots soft metrics, and checks every ref resolves
+      (repo path or URL). The corpus found two engine defects the UML fixtures never would: ELK
+      per-group spacing (above) and the router's fixed 50k-iteration A* budget — replaced by an
+      admissible turn-aware heuristic (`turnsNeeded × TURN_COST`) plus an area-scaled budget, which
+      left every UML snapshot unchanged.
+- [x] **Selection verified in Storybook** (`SceneSvg › Selection`, driven by clicks): click →
+      `[Dialect]` with `data-selected`; shift-click adds `Scene`; shift-click again toggles it off;
+      double-click selects + activates; background click clears.
+- [x] **Lattice placement + straightened ports** (Rich's review of the EDGE render: needless jogs,
+      nodes not aligned) — node origins quantize to `lattice × cell` (1.5) with a frame-clearance
+      floor when groups exist; ports straighten inside the cross-axis overlap. Corpus bends:
+      pipeline 19→9, app-framework 35→25, assistant 29→20, compute 32→22, echo 28→25, edge 37→30;
+      crossings rose on assistant (7→17) and edge (9→22) — snapshots record it.
+- [x] **Frame gap** — pitch floor includes `FRAME_GAP` so adjacent packages never touch; asserted in
+      the `Basic` engine test (every frame pair ≥ GRID apart).
+- [x] **UML edge markers** — `Scene.Arrow.head` (`arrow | triangle | crowsfoot | none`) and `tail`
+      (`none | circle`); flowchart tokens `--|>`, `--{`, `o-->` set `MermaidEdge.kind`, lowered to
+      markers; `SceneSvg` draws them (hollow triangle filled with `--surface-bg`); tldraw maps
+      triangle/dot (no crow's foot there → arrow). Inheritance reversed for layering so the base type
+      ranks above. `Basic` fixture uses tokens and no labels.
+- [x] **Objective framework** (`objective.ts`) — heuristics as constraints (hard) + weighted cost
+      terms (soft) over `Diagnostics`; engines/rules are candidate generators; `select` ranks by
+      violations then cost and returns every candidate. Flowchart engine: `lattice × order × bus`
+      candidates; `layout()` returns the ranking, `compile()` the winner. Bench shows the chosen
+      candidate and its cost terms; `lattice 0` = let the objective choose.
+- [x] **Inheritance bus** — first rule expressed as a candidate generator: siblings on one row →
+      stubs to one bus → single triangle trunk into the base (TB only).
+- [x] **Even frame gaps** — `frameGapMin` / `frameGapSpread` metrics; `unevenFrameGaps` cost term;
+      and, because no candidate had even gaps, a `compactGroups` placement pass that closes surplus
+      inter-frame gutters by whole pitches (nodes stay on the lattice).
+- [ ] **Bus for LR/RL** and for bases not directly above their subtypes (a jogged trunk).
+- [ ] **Excalidraw markers** — map `head`/`tail` onto `startArrowhead`/`endArrowhead`.
+- [ ] **Crossings after quantization** — run ELK `INTERACTIVE` (crossing minimization seeded from the
+      quantized positions) as a second pass, or quantize before the crossing sweep.
+- [x] **Layout bench story** (`components/Layout.stories.tsx`) — two columns: left = `react-ui-editor`
+      (mermaid language mode + `mermaidHighlightStyle`, theme-aware) above the mermaid.js reference
+      render; right = engine layout scaled to fit, with the Tier-1 report. One story per corpus
+      diagram, `lattice` as a range control. Dev deps added: `mermaid`, `codemirror-lang-mermaid`,
+      `@codemirror/{language,view}`, `@dxos/react-ui-editor`, `@dxos/ui-editor`. Gotcha: the SVG must
+      be the grid item itself — a percentage height inside a wrapper resolves to the viewBox size.
+- [ ] **`edges` object is selectable** — clicking a connector selects the dialect's `edges`
+      object. Fine for hand-drawn line-only objects, odd for dialect output; options: dialects mark
+      the object non-selectable, or `SceneSvg` skips objects with no closed shapes. Decide with
+      Rich.
+- [ ] **Corpus review with Rich** — the six diagrams are faithful to what the surveys verified but
+      dense (13–18 connectors); expect edits to scope, and the metric snapshots to follow.
+- [x] **Tier 3** — `assistant-evals/src/evals/diagram.eval.ts`: the agent diagrams a described
+      six-component system into an SVG-variant drawing; scorers are all deterministic — no hard
+      defects (the Tier-1 report over the stored scene), every component present, every `%% ref`
+      grounded to the URL it was given, connector count. Live-only (needs `DX_ANTHROPIC_API_KEY`),
+      not yet run. To make the loop real, `DrawingOperation.Generate` now compiles flowcharts with
+      `MermaidEngine` and returns `diagnostics`; the UML skill tells the agent to fix errors and
+      regenerate, and documents flowcharts + `%% ref`.
+- [ ] **Contact sheet** of the six SVGs as one reviewable artifact.
+- [x] **DESIGN.md** — Diagnostics, selection, flowchart engine and objective sections added.
+- [ ] Drop DESIGN.md future-work #4 (free-text overflow) once `Diagnostics` measures `text` elements.
 
 ## Phase 1: Scene DSL (agent draws/edits diagrams)
 
