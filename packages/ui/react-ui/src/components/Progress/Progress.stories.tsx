@@ -106,10 +106,6 @@ const DefaultStory = ({ indeterminate, error, ...props }: StoryArgs) => {
   );
 };
 
-/**
- * A deadline rather than a task: the bar starts full and empties over `countdown` ms. **Pause**
- * holds it where it is, the way a toast holds its close timer while the pointer is over it.
- */
 const CountdownStory = ({ countdown, ...props }: StoryArgs) => {
   const [paused, setPaused] = useState(false);
   const [run, setRun] = useState(0);
@@ -162,8 +158,7 @@ export const Indeterminate: Story = {
 };
 
 /**
- * Counts down to a deadline the host owns, so the bar empties rather than fills. It carries no
- * value for assistive technology: the host announces what is about to happen.
+ * Counts down to a deadline the host owns, so the bar empties rather than fills.
  */
 export const Countdown: Story = {
   render: CountdownStory,

@@ -65,10 +65,6 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/**
- * The bar under the toast empties over the toast's duration. It holds while the pointer is over the
- * toast, on the same pause that holds the close timer.
- */
 export const Default: Story = {
   args: {
     defaultOpen: true,
@@ -80,10 +76,6 @@ export const Default: Story = {
   },
 };
 
-/**
- * A toast with no deadline draws no countdown: there is nothing to count, and an empty track would
- * imply a close that never comes. It waits for the close button.
- */
 export const Persistent: Story = {
   args: {
     defaultOpen: true,

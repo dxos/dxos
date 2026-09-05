@@ -13,7 +13,7 @@ export type ProgressProps = ThemedClassName<
     Omit<ProgressStyleProps, 'countdown'> & {
       /** How far through, 0..1. Ignored when `indeterminate` or `countdown`. */
       progress?: number;
-      /** Milliseconds to empty the bar over, for a deadline rather than a task. */
+      /** Milliseconds to empty the bar over, for a deadline rather than a task; hidden from AT. */
       countdown?: number;
       /** Holds a `countdown` where it is, for a deadline that has stopped running down. */
       paused?: boolean;
@@ -31,7 +31,6 @@ export const Progress = forwardRef<HTMLSpanElement, ProgressProps>(
     // is being reported is the failure, not a fraction. It stops sweeping for the same reason —
     // motion after the run is over reads as still working.
     const sweeping = !!indeterminate && !error;
-    // A countdown that never ends has nothing to show, and one already spent has nothing left.
     const counting = !!countdown && Number.isFinite(countdown) && countdown > 0 && !indeterminate && !error;
     const fraction = indeterminate ? (error ? 1 : 0) : progress;
     // An advance eases; a rewind snaps. Sliding the fill backwards animates a run that never
@@ -44,10 +43,8 @@ export const Progress = forwardRef<HTMLSpanElement, ProgressProps>(
 
     return (
       <span
-        // A countdown empties in CSS, so its value never reaches assistive technology; the deadline
-        // it illustrates belongs to the host, which announces it. An indeterminate bar is a
-        // progressbar with no value — that is what the role means, so it needs no separate
-        // live-region role.
+        // An indeterminate bar is a progressbar with no value — that is what the role means, so it
+        // needs no separate live-region role.
         {...props}
         {...(counting ? { 'aria-hidden': true } : { role: 'progressbar' })}
         {...(!indeterminate && !counting && { 'aria-valuemin': 0, 'aria-valuemax': 1, 'aria-valuenow': progress })}

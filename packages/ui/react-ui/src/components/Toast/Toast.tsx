@@ -60,11 +60,10 @@ const ToastRoot = forwardRef<HTMLLIElement, ToastRootProps>(
   ({ classNames, children, duration, onPause, onResume, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const providerDuration = useContext(DurationContext);
-    // A toast that never times out has no deadline to draw.
     const countdown = duration ?? providerDuration;
     const timed = Number.isFinite(countdown) && countdown > 0;
-    // Radix's close timer stops while the viewport is hovered or focused and while the window is
-    // blurred, so the bar stops with it rather than promising a close that isn't coming.
+    // Radix pauses its close timer while the viewport is hovered or focused and while the window is
+    // blurred.
     const [paused, setPaused] = useState(false);
 
     return (
