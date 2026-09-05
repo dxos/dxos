@@ -59,14 +59,15 @@ type ToastProviderProps = {
   children?: ReactNode;
   /** Milliseconds a toast stays unless it says otherwise. */
   duration?: number;
+  /** Open toasts pile up and expand under the pointer (default); `false` lays them out as rows. */
+  overlap?: boolean;
 };
 
-const ToastProvider = ({ duration = DEFAULT_DURATION, children }: ToastProviderProps) => {
+const ToastProvider = ({ duration = DEFAULT_DURATION, overlap = true, children }: ToastProviderProps) => {
   const [toaster] = useState(() =>
     createToaster({
       placement: 'bottom-end',
-      // A fanned pile that expands while the pointer is over it, as Ark's own toaster.
-      overlap: true,
+      overlap,
       gap: 8,
       duration,
       removeDelay: REMOVE_DELAY,
@@ -159,7 +160,6 @@ const ToastRoot = forwardRef<HTMLDivElement, ToastRootProps>(
     useLayoutEffect(() => {
       registry.set(id, { children, classNames, props, ref: forwardedRef, countdown });
     });
-    useEffect(() => () => registry.delete(id), [registry, id]);
 
     useEffect(() => {
       if (open) {
@@ -179,13 +179,30 @@ const ToastRoot = forwardRef<HTMLDivElement, ToastRootProps>(
             if (status === 'dismissing') {
               setOpen(false);
             }
+            // The root may already be gone; its content stays registered until the machine has
+            // played the exit and retired the toast's height from the pile.
+            if (status === 'unmounted') {
+              registry.delete(id);
+            }
           },
         });
       } else if (toaster.isVisible(id)) {
         toaster.dismiss(id);
       }
     }, [open, id, toaster, countdown, setOpen]);
-    useEffect(() => () => toaster.remove(id), [toaster, id]);
+    // On unmount a visible toast is dismissed, not removed: removing drops the actor before it
+    // reports its height gone, and the pile keeps laying out around the phantom.
+    useEffect(
+      () => () => {
+        if (toaster.isVisible(id)) {
+          toaster.dismiss(id);
+        } else {
+          toaster.remove(id);
+          registry.delete(id);
+        }
+      },
+      [toaster, registry, id],
+    );
 
     return null;
   },

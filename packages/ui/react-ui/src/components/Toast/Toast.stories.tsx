@@ -156,12 +156,12 @@ export const TestLifecycle: StoryObj = {
   },
 };
 
-const StackedStory = () => {
+const StackedStory = ({ overlap = true }: { overlap?: boolean }) => {
   const [toasts, setToasts] = useState<number[]>([]);
   const add = () => setToasts((current) => [...current, (current.at(-1) ?? 0) + 1]);
   const remove = (id: number) => setToasts((current) => current.filter((toast) => toast !== id));
   return (
-    <Toast.Provider>
+    <Toast.Provider overlap={overlap}>
       <Button onClick={add}>Add toast</Button>
       <Toast.Viewport />
       {toasts.map((id) => (
@@ -177,8 +177,15 @@ const StackedStory = () => {
 };
 
 /** Every declared root is a toast of its own; open ones pile up, and the pile expands under the pointer. */
-export const Stacked: StoryObj = {
-  render: () => <StackedStory />,
+export const Stacked: StoryObj<{ overlap: boolean }> = {
+  render: (args) => <StackedStory {...args} />,
+  args: { overlap: true },
+};
+
+/** The same stack laid out as rows, `overlap={false}` on the provider. */
+export const StackedRows: StoryObj<{ overlap: boolean }> = {
+  render: (args) => <StackedStory {...args} />,
+  args: { overlap: false },
 };
 
 export const TestStacked: StoryObj = {
@@ -207,7 +214,16 @@ export const TestStacked: StoryObj = {
       await expect(tops[1] - tops[0]).toBeGreaterThanOrEqual(height);
       await expect(tops[2] - tops[1]).toBeGreaterThanOrEqual(height);
     });
-    await userEvent.click(within(roots()[2]).getByRole('button', { name: /close/i }));
+    // Closing the middle one: the survivors close ranks, with no phantom slot left between them.
+    const middle = roots().sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top)[1];
+    await userEvent.click(within(middle).getByRole('button', { name: /close/i }));
     await waitFor(async () => expect(roots()).toHaveLength(2));
+    await userEvent.hover(document.querySelector<HTMLElement>('[data-scope="toast"][data-part="group"]')!);
+    await waitFor(async () => {
+      const rects = roots()
+        .map((root) => root.getBoundingClientRect())
+        .sort((a, b) => a.top - b.top);
+      await expect(Math.round(rects[1].top - rects[0].bottom)).toBe(8);
+    });
   },
 };

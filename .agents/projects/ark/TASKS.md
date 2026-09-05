@@ -775,11 +775,14 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       packages, knip, format.
 - [x] **Phase 4b — Toast.** DONE 2026-09-05. Ark's toast is a store plus a `Toaster` host; the
       declarative API the nine consumers use is kept: `Toast.Provider` owns `createToaster` (bottom-end,
-      overlap — a pile that expands under the pointer, as Ark's demo (user, 2026-09-05) — 8px gap, offsets via `--dx-toast-offset-end` so `md` widens the end inset) and a
+      overlap — a pile that expands under the pointer, as Ark's demo (user, 2026-09-05), `overlap={false}`
+      on the provider for rows — 8px gap, offsets via `--dx-toast-offset-end` so `md` widens the end inset) and a
       `ToastRegistry` (an external store, so a root re-registering each render re-renders the viewport
       alone, not the app under the provider); `Toast.Root` renders nothing where it stands — it registers
       `{ children, classNames, props, ref, countdown }` and mirrors `open` into the store (`create` with
       its own id / `dismiss`), with `onStatusChange('dismissing')` reported back as `onOpenChange(false)`;
+      A root that unmounts while visible is `dismiss`ed, not `remove`d: removing drops the actor before
+      it retires its height from the pile, which left a phantom slot between survivors (seen 2026-09-05).
       `Toast.Viewport` is Ark's `Toaster`, rendering each registered root inside the machine's actor so
       `Title`/`Description`/`Close`/`Action` find their toast and the countdown reads `paused` from it.
       `duration: Infinity` persists (Zag honours it). `title: true` on create so the root carries
