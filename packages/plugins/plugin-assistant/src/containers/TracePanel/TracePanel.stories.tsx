@@ -34,7 +34,7 @@ import { translations } from '#translations';
 import subAgentFixture from '../../execution-graph/testing/sub-agent-delegation.json';
 // TODO(dmaretskyi): testing.ts module shadows the ./testing dir.
 import { initClientFromSpaceSnapshot } from '../../testing/snapshot';
-import { PLAYBACK_INTERVAL_MS, SimulatedAgent, STEP_STORAGE_KEY, useLocalStorageNumber } from './testing';
+import { PLAYBACK_INTERVAL_MS, STEP_STORAGE_KEY, runScenario, useLocalStorageNumber } from './testing';
 import { TracePanel } from './TracePanel';
 
 type BaseStoryArgs = PropsWithChildren<{
@@ -44,55 +44,73 @@ type BaseStoryArgs = PropsWithChildren<{
 const BaseStory = ({ children, toolbar }: BaseStoryArgs) => (
   <Panel.Root classNames='h-full min-h-0'>
     <Panel.Toolbar asChild>{toolbar}</Panel.Toolbar>
-    <Panel.Content asChild classNames='min-h-0'>
-      {children}
-    </Panel.Content>
+    <Panel.Content>{children}</Panel.Content>
   </Panel.Root>
 );
 
 const JsonInspectorPanel = ({ data }: { data: unknown }) => (
-  <div className='min-h-0 h-full'>
-    <ScrollContainer.Root pin>
-      <ScrollContainer.Content thin>
-        <ScrollContainer.Viewport>
-          <Syntax.Root data={data}>
-            <Syntax.Content>
-              <Syntax.Viewport>
-                <Syntax.Code classNames='text-xs' />
-              </Syntax.Viewport>
-            </Syntax.Content>
-          </Syntax.Root>
-        </ScrollContainer.Viewport>
-        <ScrollContainer.ScrollDownButton />
-        <ScrollContainer.Fade />
-      </ScrollContainer.Content>
-    </ScrollContainer.Root>
-  </div>
+  <ScrollContainer.Root pin>
+    <ScrollContainer.Content thin>
+      <ScrollContainer.Viewport>
+        <Syntax.Root data={data}>
+          <Syntax.Content>
+            <Syntax.Viewport>
+              <Syntax.Code classNames='text-xs' />
+            </Syntax.Viewport>
+          </Syntax.Content>
+        </Syntax.Root>
+      </ScrollContainer.Viewport>
+      <ScrollContainer.ScrollDownButton />
+      <ScrollContainer.Fade />
+    </ScrollContainer.Content>
+  </ScrollContainer.Root>
 );
 
 const DefaultStory = () => {
   const [space] = useSpaces();
   const runtime = useProcessManagerRuntime();
 
+  // Advances through `agentScenarios` so repeated clicks show different shapes (nesting, concurrency, failure).
+  const scenarioRef = useRef(0);
   const handleStart = useCallback(() => {
-    if (!runtime) {
+    if (!runtime || !space) {
       return;
     }
 
-    void runtime.runPromise(
-      Effect.gen(function* () {
-        const manager = yield* ProcessManager.Service;
-        const handle = yield* manager.spawn(SimulatedAgent);
-        yield* handle.submitInput(Math.floor(Math.random() * 1_000));
-        log.info('submitInput', { handle });
-      }),
-    );
-  }, [runtime]);
+    runtime
+      .runPromise(
+        Effect.gen(function* () {
+          const manager = yield* ProcessManager.Service;
+          // The trace sink is resolved per space, so a process spawned without one writes nowhere.
+          yield* runScenario(manager, scenarioRef.current++, { space: space.id });
+        }),
+      )
+      // A story that swallows a spawn failure looks identical to one with no data.
+      .catch((err) => log.error('scenario failed', { err }));
+  }, [runtime, space]);
 
-  // TODO(burdon): Implement.
+  // The panel is empty until something has run, so seed one scenario on mount.
+  const startedRef = useRef(false);
+  useEffect(() => {
+    if (runtime && space && !startedRef.current) {
+      startedRef.current = true;
+      handleStart();
+    }
+  }, [runtime, space, handleStart]);
+
   const handleStop = useCallback(
     (process: Process.Info) => {
-      log.info('stop', { process });
+      if (!runtime) {
+        return;
+      }
+
+      void runtime.runPromise(
+        Effect.gen(function* () {
+          const manager = yield* ProcessManager.Service;
+          const handle = yield* manager.attach(process.pid);
+          yield* handle.terminate();
+        }).pipe(Effect.catchCause((cause) => Effect.sync(() => log.warn('terminate failed', { process, cause })))),
+      );
     },
     [runtime],
   );
@@ -260,16 +278,16 @@ const TimelinePlayback = ({
     <BaseStory
       toolbar={
         <Toolbar.Root>
-          <IconButton iconOnly icon='ph--skip-back--regular' label='Reset (R)' onClick={handleReset} />
-          <IconButton iconOnly icon='ph--caret-left--regular' label='Step back (← / H)' onClick={handlePrev} />
+          <IconButton icon='ph--skip-back--regular' iconOnly label='Reset (R)' onClick={handleReset} />
+          <IconButton icon='ph--caret-left--regular' iconOnly label='Step back (← / H)' onClick={handlePrev} />
           <IconButton
-            iconOnly
             icon={playing ? 'ph--pause--regular' : 'ph--play--regular'}
+            iconOnly
             label={playing ? 'Pause (Space)' : 'Play (Space)'}
             onClick={handleTogglePlay}
           />
-          <IconButton iconOnly icon='ph--caret-right--regular' label='Step forward (→ / L)' onClick={handleNext} />
-          <IconButton iconOnly icon='ph--skip-forward--regular' label='Show all (E / End)' onClick={handleShowAll} />
+          <IconButton icon='ph--caret-right--regular' iconOnly label='Step forward (→ / L)' onClick={handleNext} />
+          <IconButton icon='ph--skip-forward--regular' iconOnly label='Show all (E / End)' onClick={handleShowAll} />
           <Toolbar.Text classNames='text-right text-sm tabular-nums opacity-70'>
             {step} / {total}
           </Toolbar.Text>

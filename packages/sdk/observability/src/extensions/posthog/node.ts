@@ -9,6 +9,7 @@ import { log } from '@dxos/log';
 
 import buildSecrets from '../../cli-observability-secrets.json';
 import * as ObservabilityExtension from '../../ObservabilityExtension';
+import { DXOS_VERSION } from '../../version';
 import { stubExtension } from '../stub';
 import { type ExtensionsOptions } from './extension';
 
@@ -58,6 +59,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
     const client = new PostHogMCP(apiKey, { host, enableExceptionAutocapture: true });
 
     const superProperties: ObservabilityExtension.Attributes = {
+      sdkVersion: DXOS_VERSION,
       ...(release ? { release } : {}),
       ...(environment ? { environment } : {}),
     };

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Component, For, createEffect, createSignal, onCleanup, onMount } from 'solid-js';
+import { type Component, For, Index, createEffect, createSignal, onCleanup, onMount } from 'solid-js';
 
 import { type LoaderStore } from './store';
 
@@ -13,6 +13,9 @@ const RING_RADIUS = 48;
 const RING_CENTER = 50;
 // Leading-edge marker: a small dot drawn at the arc's head in an unmasked layer.
 const MARKER_RADIUS = 1; // viewBox units → ~3.8px on the 384px disc
+
+/** Sprite the activation row's icons resolve against when the host configures none. */
+const DEFAULT_SPRITE_PATH = '/icons.svg';
 
 /**
  * Read an element's *current animated* translateY (px) from its live transform
@@ -45,6 +48,8 @@ export type LoaderProps = {
   store: LoaderStore;
   /** Inline SVG markup for the brand mark rendered inside the ring. */
   markSvg?: string;
+  /** URL of the icon sprite the activation row resolves `<use href>` against. */
+  spritePath?: string;
 };
 
 /**
@@ -159,6 +164,26 @@ export const Loader: Component<LoaderProps> = (props) => {
         <div id='boot-loader-status-fade' />
         <div id='boot-loader-status-track' ref={trackRef}>
           <For each={props.store.lines()}>{(line) => <div class='boot-loader-status-line'>{line.text}</div>}</For>
+        </div>
+      </div>
+      {/* Activation row: one icon per plugin as it activates, appended monochrome and fading in. Icons resolve against the static sprite, which needs no app bundle. */}
+      <div id='boot-loader-plugins' aria-hidden='true'>
+        {/* Inner track: the flex row itself, so the outer element keeps its vertical placement
+            transform and clips the growth. */}
+        <div id='boot-loader-plugins-track'>
+          {/* `Index`, not `For`: `For` keys by item identity, so any row rewrite would re-create the
+              element and restart its entrance animation. */}
+          <Index each={props.store.plugins()}>
+            {(plugin) => (
+              // Wrapper owns the slot — size, spacing, and the entrance animation — so the glyph
+              // inside can be restyled (a chip, a badge, a hover affordance) without touching either.
+              <div class='boot-loader-plugin'>
+                <svg class='boot-loader-plugin-icon' viewBox='0 0 256 256'>
+                  <use href={`${props.spritePath ?? DEFAULT_SPRITE_PATH}#${plugin().icon}`} />
+                </svg>
+              </div>
+            )}
+          </Index>
         </div>
       </div>
       {/* Shown only once the host reports the deadline passed, and only in dev — startup keeps

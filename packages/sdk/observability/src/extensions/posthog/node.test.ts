@@ -8,6 +8,7 @@ import { Config } from '@dxos/config';
 import { EffectEx } from '@dxos/effect';
 
 import * as ObservabilityExtension from '../../ObservabilityExtension';
+import { DXOS_VERSION } from '../../version';
 import { extensions } from './node';
 
 const DID = 'did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK';
@@ -57,7 +58,7 @@ describe('posthog node extension', () => {
       {
         distinctId: INSTALLATION_ID,
         event: 'cli.command',
-        properties: { release: '1.2.3', command: 'space list' },
+        properties: { sdkVersion: DXOS_VERSION, release: '1.2.3', command: 'space list' },
       },
     ]);
 

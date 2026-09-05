@@ -11,6 +11,7 @@ import { buttonTheme } from '../components/Button/Button.theme';
 import { iconButtonTheme } from '../components/Button/IconButton.theme';
 import { calendarTheme } from '../components/Calendar/Calendar.theme';
 import { cardTheme } from '../components/Card/Card.theme';
+import { collapsibleTheme } from '../components/Collapsible/Collapsible.theme';
 import { columnTheme } from '../components/Column/Column.theme';
 import { datePickerTheme } from '../components/DatePicker/DatePicker.theme';
 import { dialogTheme } from '../components/Dialog/Dialog.theme';
@@ -56,6 +57,7 @@ export const defaultTheme: Theme<Record<string, any>> = {
   button: buttonTheme,
   calendar: calendarTheme,
   card: cardTheme,
+  collapsible: collapsibleTheme,
   datePicker: datePickerTheme,
   dialog: dialogTheme,
   focus: focusTheme,
