@@ -74,10 +74,10 @@ import {
   stripShadowingProperties,
 } from './echo-prototypes';
 import {
+  type LeafCache,
   type ProxyTarget,
   TargetKey,
   getEchoDatabase,
-  type LeafCache,
   symbolHandler,
   symbolInternals,
   symbolLeafCache,
