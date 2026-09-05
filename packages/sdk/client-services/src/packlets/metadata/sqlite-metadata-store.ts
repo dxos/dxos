@@ -55,7 +55,7 @@ const MAIN_KEY = 'main';
 const largeKey = (spaceKey: PublicKey) => `large:${spaceKey.toHex()}`;
 
 // Legacy invitation type detection.
-const isLegacyInvitationFormat = (invitation: Invitation): boolean => invitation.type === Invitation_Type.MULTIUSE;
+const isLegacyInvitationFormat = (invitation: Invitation): boolean => invitation.type === Invitation.Type.MULTIUSE;
 
 export type SqliteMetadataStoreProps = {
   runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
