@@ -673,7 +673,16 @@ Findings that shaped the plan, so they are not re-derived:
       TextTooltip truncation veto) gates the open in the provider. Deletion is smaller than the guide's 942
       LOC suggests; the win is the content layer, not the trigger logic.
 
-- [ ] **Phase 3 — the forks.** Tooltip → Popover → Menu. Add `Positioner`, keep our `Viewport`,
+- [ ] **Phase 3 — the forks.** Tooltip DONE 2026-09-05 (see design above): `Tooltip.Provider` is one
+      `useTooltip` machine with `ids.trigger = (value) => value`, our own `ark.button` trigger delegating
+      pointer/blur/click to `api.getTriggerProps({ value })` at event time (so no trigger subscribes),
+      imperative `aria-describedby`/`data-state` on the active trigger as before, Ark `Positioner` /
+      `Content` / `Arrow`+`ArrowTip` in a `Portal`, `interactive` content hover from the machine. The
+      positioner's inline `z-index: var(--z-index)` outranks any `z-*` class, so the theme sets the
+      variable (`[--z-index:50]`) instead; the arrow is painted from `--arrow-background`. `Tooltip.test.tsx`
+      (4) and a new `TestHover` play story (opens, positions at the trigger, hands over) pass. Gone:
+      `@radix-ui/react-tooltip`, `-visually-hidden`, the `TooltipScopedProps`/`createTooltipScope` exports,
+      the grace-area hull. `useSafeCollisionPadding` now types its padding itself (`CollisionPadding`). Tooltip → Popover → Menu. Add `Positioner`, keep our `Viewport`,
       `Arrow` → `Arrow`+`ArrowTip` (`fill-separator` → `--arrow-background`), rename the five
       variables, delete the three aliasing blocks, collapse DropdownMenu + ContextMenu onto one
       `menu` machine, retire the 116 `__scope*` props. Removes ten Radix packages plus `aria-hidden`

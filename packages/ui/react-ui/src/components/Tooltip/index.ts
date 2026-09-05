@@ -3,7 +3,7 @@
 //
 
 export * from './TextTooltip';
-export { type TooltipScopedProps, createTooltipScope, useTooltipContext } from './TooltipContext';
+export { useTooltipContext } from './TooltipContext';
 
 export * from './Tooltip';
 export * from './tooltipContent';
