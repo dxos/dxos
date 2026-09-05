@@ -25,8 +25,7 @@
   ],
   "dependencies": {
     "@dxos/app-toolkit": "workspace:*",
-    "@dxos/keys": "workspace:*",
-    "@dxos/plugin-illustrator": "workspace:*"
+    "@dxos/keys": "workspace:*"
   },
   "devDependencies": {
     "@dxos/ai": "workspace:*",
@@ -40,6 +39,7 @@
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-crm": "workspace:*",
+    "@dxos/plugin-illustrator": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-projects": "workspace:*",
