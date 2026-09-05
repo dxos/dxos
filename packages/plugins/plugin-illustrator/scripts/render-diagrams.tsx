@@ -37,6 +37,8 @@ const STYLE = `
   .stroke-none { stroke: none; }
   .fill-neutral-100 { fill: #f5f5f5; }
   .fill-neutral-800 { fill: #262626; }
+  .stroke-neutral-800 { stroke: #262626; }
+  svg { --surface-bg: #ffffff; }
   .text-neutral-400 { color: #a3a3a3; }
   .stroke-neutral-500\\/20 { stroke: rgba(115, 115, 115, 0.2); }
 `;

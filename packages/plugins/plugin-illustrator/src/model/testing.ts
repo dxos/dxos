@@ -5,7 +5,8 @@
 /**
  * Minimal layout discussion piece: three packages with three types each — an inheritance fan-in
  * (B, C extend A), a chain with a has-many (X ⇒ Y → Z), and a fan-in (P, R → Q). Small enough to
- * reason about every placement and route by eye.
+ * reason about every placement and route by eye. Relationship kinds are carried by the edge
+ * tokens (UML end markers), not labels.
  */
 export const BASIC = `
 flowchart TB
@@ -24,9 +25,9 @@ flowchart TB
     Q[Q]
     R[R]
   end
-  B -->|extends| A
-  C -->|extends| A
-  X -->|has many| Y
+  B --|> A
+  C --|> A
+  X --{ Y
   Y --> Z
   P --> Q
   R --> Q

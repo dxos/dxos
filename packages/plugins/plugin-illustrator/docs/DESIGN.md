@@ -164,8 +164,17 @@ INCLUDE_CHILDREN`), so crossing minimization and layer assignment respect contai
   not obstacles) with `zRouter` as the per-edge fallback; the emitted `line` + `arrow` pair is the same
   shape the UML emitters produce, so `Diagnostics` reads it unchanged. `RoutedRelation.relation` was
   widened to `Layout.LayoutEdge` for this — the routers only ever read endpoints.
-- **Not modelled:** nested subgraphs (the parser records only the innermost group), edge styles other
-  than the arrow, node shapes other than the rectangle.
+- **Relationship kinds.** The edge token names the kind — `-->` reference, `--|>` inheritance,
+  `--{` has-many, `o-->` contains — as `MermaidEdge.kind`, a dialect-level fact that is _lowered_
+  to `Scene.Arrow.head` / `tail` (arrow · hollow triangle · crow's foot · circle at the source). The
+  scene stays visual; a renderer never learns UML. Inheritance edges are reversed for layering so
+  the supertype ranks above its subtypes, matching `relationRanks` in the class-diagram dialects;
+  has-many and containment already flow owner-above-owned. The extra tokens are outside mermaid's
+  flowchart grammar, so mermaid.js (the bench's reference column) rejects those lines.
+- **Frames keep a gap.** With groups, the lattice pitch floor also includes `FRAME_GAP`, so two
+  frames whose members sit in adjacent lattice cells still read as separate packages.
+- **Not modelled:** nested subgraphs (the parser records only the innermost group), node shapes
+  other than the rectangle.
 
 ## Diagnostics (`diagnostics.ts`)
 

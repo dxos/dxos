@@ -63,6 +63,14 @@ its scorer interface now and fixtures later.
       floor when groups exist; ports straighten inside the cross-axis overlap. Corpus bends:
       pipeline 19→9, app-framework 35→25, assistant 29→20, compute 32→22, echo 28→25, edge 37→30;
       crossings rose on assistant (7→17) and edge (9→22) — snapshots record it.
+- [x] **Frame gap** — pitch floor includes `FRAME_GAP` so adjacent packages never touch; asserted in
+      the `Basic` engine test (every frame pair ≥ GRID apart).
+- [x] **UML edge markers** — `Scene.Arrow.head` (`arrow | triangle | crowsfoot | none`) and `tail`
+      (`none | circle`); flowchart tokens `--|>`, `--{`, `o-->` set `MermaidEdge.kind`, lowered to
+      markers; `SceneSvg` draws them (hollow triangle filled with `--surface-bg`); tldraw maps
+      triangle/dot (no crow's foot there → arrow). Inheritance reversed for layering so the base type
+      ranks above. `Basic` fixture uses tokens and no labels.
+- [ ] **Excalidraw markers** — map `head`/`tail` onto `startArrowhead`/`endArrowhead`.
 - [ ] **Crossings after quantization** — run ELK `INTERACTIVE` (crossing minimization seeded from the
       quantized positions) as a second pass, or quantize before the crossing sweep.
 - [x] **Layout bench story** (`components/Layout.stories.tsx`) — two columns: left = `react-ui-editor`

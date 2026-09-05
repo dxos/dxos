@@ -28,10 +28,43 @@ export type MermaidGroup = {
   children: string[];
 };
 
+/** Relationship kind, from the edge token; drawn with the UML end markers in `markers`. */
+export type RelationKind = 'reference' | 'inheritance' | 'hasMany' | 'contains';
+
 export type MermaidEdge = {
   from: string;
   to: string;
+  kind: RelationKind;
   label?: string;
+};
+
+/**
+ * Edge tokens: mermaid's own arrows read as references; the classDiagram-style `--|>` (hollow
+ * triangle) and ER-style `--{` (crow's foot) and `o-->` (circle at the source) extend the flowchart
+ * grammar with the UML kinds, at the cost of mermaid.js rejecting those lines.
+ */
+const EDGE_KINDS: Record<string, RelationKind> = {
+  '-->': 'reference',
+  '---': 'reference',
+  '-.->': 'reference',
+  '==>': 'reference',
+  '--|>': 'inheritance',
+  '--{': 'hasMany',
+  'o-->': 'contains',
+};
+
+/** Scene arrow markers for a relationship kind. */
+export const markers = (kind: RelationKind): Pick<Scene.Arrow, 'head' | 'tail'> => {
+  switch (kind) {
+    case 'inheritance':
+      return { head: 'triangle' };
+    case 'hasMany':
+      return { head: 'crowsfoot' };
+    case 'contains':
+      return { tail: 'circle' };
+    default:
+      return {};
+  }
 };
 
 export type MermaidGraph = {
@@ -45,8 +78,8 @@ const DIRECTIONS: Direction[] = ['TB', 'BT', 'LR', 'RL'];
 
 // `A[Label]`, `A(Label)`, `A{Label}` or a bare `A`.
 const NODE = /^([A-Za-z0-9_-]+)(?:\[(.*?)\]|\((.*?)\)|\{(.*?)\})?$/;
-// `A --> B`, `A-->|label|B`, `A --- B`.
-const EDGE = /^(.+?)\s*(-->|---|-\.->|==>)\s*(?:\|(.*?)\|\s*)?(.+)$/;
+// `A --> B`, `A-->|label|B`, `A --- B`, plus the UML kinds `B --|> A`, `X --{ Y`, `A o--> B`.
+const EDGE = /^(.+?)\s*(o-->|--\|>|--\{|-->|---|-\.->|==>)\s*(?:\|(.*?)\|\s*)?(.+)$/;
 const SUBGRAPH = /^subgraph\s+([A-Za-z0-9_-]+)(?:\s*\[(.*?)\])?\s*$/;
 
 // `%% ref A packages/core/echo` — a comment to mermaid proper, so sources stay portable.
@@ -119,11 +152,16 @@ export const parse = (source: string): MermaidGraph => {
 
     const edge = EDGE.exec(line);
     if (edge) {
-      const [, from, , label, to] = edge;
+      const [, from, token, label, to] = edge;
       const fromId = declare(from);
       const toId = declare(to);
       if (fromId && toId) {
-        edges.push({ from: fromId, to: toId, ...(label ? { label: unquote(label) } : {}) });
+        edges.push({
+          from: fromId,
+          to: toId,
+          kind: EDGE_KINDS[token] ?? 'reference',
+          ...(label ? { label: unquote(label) } : {}),
+        });
       }
       continue;
     }
@@ -258,6 +296,7 @@ export const compile = (source: string, options: CompileOptions = {}): Scene.Com
           id: `${edge.from}-${edge.to}`,
           from: `${edge.from}/box`,
           to: `${edge.to}/box`,
+          ...markers(edge.kind),
           ...(edge.label ? { text: edge.label } : {}),
         })),
       },

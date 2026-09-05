@@ -13,7 +13,7 @@
 import ELK, { type ElkNode } from 'elkjs/lib/elk.bundled.js';
 
 import * as Layout from './layout';
-import { type Direction, type MermaidEdge, type MermaidGraph, parse } from './mermaid';
+import { type Direction, type MermaidEdge, type MermaidGraph, markers, parse } from './mermaid';
 import { makeAvoidingRouter } from './ortho-router';
 import type * as Scene from './scene';
 import { GRID, type Rect, type Router, zRouter } from './uml-grid';
@@ -28,6 +28,8 @@ const LATTICE = 1.5;
 /** Frame inset around a subgraph's members; the top also holds the frame label. */
 const FRAME_PAD = GRID;
 const FRAME_LABEL_H = GRID;
+/** Clear space between two frames, so packages read as separate even when their nodes are adjacent. */
+const FRAME_GAP = GRID;
 const GRID_FINE = GRID / 2;
 
 const FONT = Layout.FONT_METRICS.m;
@@ -146,7 +148,14 @@ const place = async (graph: MermaidGraph, cell: Cell, pitch: Pitch): Promise<Pla
       'elk.layered.considerModelOrder.strategy': 'PREFER_NODES',
     },
     children,
-    edges: graph.edges.map((edge, index) => ({ id: `edge-${index}`, sources: [edge.from], targets: [edge.to] })),
+    // Inheritance points at the abstraction, which ranks ABOVE its subtypes — so those edges are
+    // reversed for layering, as `relationRanks` does for class diagrams. Has-many and containment
+    // already flow owner-above-owned.
+    edges: graph.edges.map((edge, index) => ({
+      id: `edge-${index}`,
+      sources: [edge.kind === 'inheritance' ? edge.to : edge.from],
+      targets: [edge.kind === 'inheritance' ? edge.from : edge.to],
+    })),
   });
 
   const raw = new Map<string, Scene.Point>();
@@ -251,12 +260,13 @@ export const compile = async (source: string, options: CompileOptions = {}): Pro
   const graph = parse(source);
   const { origin = { x: 0, y: 0 }, scale = 1, maxWidth = MAX_W, lattice = LATTICE } = options;
   const cell = measureCell(graph, maxWidth);
-  // With groups, the gutter between lattice rows must also hold two frame borders and a label
-  // band, or adjacent frames overlap after quantization — so the clearance is a floor on the pitch.
+  // With groups, the gutter between lattice rows must also hold two frame borders, a label band,
+  // and clear space between the frames, or adjacent frames touch or overlap after quantization —
+  // so that clearance is a floor on the pitch.
   const framed = graph.groups.some((group) => group.children.length > 0);
   const pitch: Pitch = {
-    x: snapUp(Math.max(cell.w * lattice, framed ? cell.w + FRAME_PAD * 2 : 0)),
-    y: snapUp(Math.max(cell.h * lattice, framed ? cell.h + FRAME_PAD * 2 + FRAME_LABEL_H : 0)),
+    x: snapUp(Math.max(cell.w * lattice, framed ? cell.w + FRAME_PAD * 2 + FRAME_GAP : 0)),
+    y: snapUp(Math.max(cell.h * lattice, framed ? cell.h + FRAME_PAD * 2 + FRAME_LABEL_H + FRAME_GAP : 0)),
   };
   const { nodes, frames } = await place(graph, cell, pitch);
   const horizontal = graph.direction === 'LR' || graph.direction === 'RL';
@@ -329,7 +339,13 @@ export const compile = async (source: string, options: CompileOptions = {}): Pro
       if (points.length > 2) {
         elements.push({ kind: 'line', id: `${id}-path`, points: points.slice(0, -1) });
       }
-      elements.push({ kind: 'arrow', id, start: points[points.length - 2], end: points[points.length - 1] });
+      elements.push({
+        kind: 'arrow',
+        id,
+        start: points[points.length - 2],
+        end: points[points.length - 1],
+        ...markers(edge.kind),
+      });
       if (edge.label) {
         const head = points[Math.floor(points.length / 2) - 1];
         const tail = points[Math.floor(points.length / 2)];

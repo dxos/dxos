@@ -11373,9 +11373,6 @@ importers:
       '@codemirror/language':
         specifier: 'catalog:'
         version: 6.12.4
-      '@codemirror/view':
-        specifier: 'catalog:'
-        version: 6.43.9
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client

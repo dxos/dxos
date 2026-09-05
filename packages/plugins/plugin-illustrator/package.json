@@ -181,7 +181,6 @@
   },
   "devDependencies": {
     "@codemirror/language": "catalog:",
-    "@codemirror/view": "catalog:",
     "@dxos/echo-client": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",

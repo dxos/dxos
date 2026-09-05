@@ -171,15 +171,17 @@ const MultilineText = ({ cx, cy, text, weight, className }: MultilineTextProps) 
   );
 };
 
+/** Per-instance marker fragment ids (multiple SceneSvgs may share a page). */
+type MarkerIds = Record<Exclude<Scene.ArrowHead, 'none'> | 'circle', string>;
+
 type ElementProps = {
   object: Scene.WorldObject;
   element: Scene.Element;
   registry: Map<string, Rect>;
-  /** Per-instance arrowhead marker fragment id (multiple SceneSvgs may share a page). */
-  markerId: string;
+  markers: MarkerIds;
 };
 
-const SceneElement = ({ object, element, registry, markerId }: ElementProps) => {
+const SceneElement = ({ object, element, registry, markers }: ElementProps) => {
   const { x = 0, y = 0 } = object.origin ?? {};
   const scale = object.scale ?? 1;
   const map = (point: Point): Point => ({ x: x + point.x * scale, y: y + point.y * scale });
@@ -292,6 +294,7 @@ const SceneElement = ({ object, element, registry, markerId }: ElementProps) => 
         return null;
       }
       const mid = { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 };
+      const head = element.head ?? 'arrow';
       return (
         <g className={mx('stroke-current', colorClass(element.color))}>
           <line
@@ -301,7 +304,8 @@ const SceneElement = ({ object, element, registry, markerId }: ElementProps) => 
             y2={end.y}
             strokeWidth={1.5}
             strokeDasharray={element.stroke ? strokeDash[element.stroke] : undefined}
-            markerEnd={`url(#${markerId})`}
+            markerEnd={head === 'none' ? undefined : `url(#${markers[head]})`}
+            markerStart={element.tail === 'circle' ? `url(#${markers.circle})` : undefined}
           />
           {element.text && (
             <MultilineText
@@ -341,7 +345,12 @@ export const SceneSvg = ({ classNames, objects, grid, selection, onSelectionChan
   const { registry, viewBox } = useMemo(() => resolve(objects), [objects]);
   // Fragment ids are document-global: derive per-instance ids so co-rendered scenes don't collide.
   const instanceId = useId();
-  const markerId = `${instanceId}-arrowhead`;
+  const markers: MarkerIds = {
+    arrow: `${instanceId}-arrow`,
+    triangle: `${instanceId}-triangle`,
+    crowsfoot: `${instanceId}-crowsfoot`,
+    circle: `${instanceId}-circle`,
+  };
   const gridId = `${instanceId}-grid`;
   const selected = useMemo(() => new Set(selection), [selection]);
   const interactive = Boolean(onSelectionChange || onActivate);
@@ -369,8 +378,9 @@ export const SceneSvg = ({ classNames, objects, grid, selection, onSelectionChan
       onClick={onSelectionChange && selected.size > 0 ? () => onSelectionChange([]) : undefined}
     >
       <defs>
+        {/* UML end markers. `auto-start-reverse` lets the same shapes serve as head or tail. */}
         <marker
-          id={markerId}
+          id={markers.arrow}
           viewBox='0 0 10 10'
           refX='9'
           refY='5'
@@ -379,6 +389,49 @@ export const SceneSvg = ({ classNames, objects, grid, selection, onSelectionChan
           orient='auto-start-reverse'
         >
           <path d='M 0 1 L 9 5 L 0 9 z' className='fill-neutral-800 dark:fill-neutral-200 stroke-none' />
+        </marker>
+        <marker
+          id={markers.triangle}
+          viewBox='0 0 12 12'
+          refX='11'
+          refY='6'
+          markerWidth='12'
+          markerHeight='12'
+          orient='auto-start-reverse'
+        >
+          {/* Hollow: filled with the surface so the line does not show through the triangle. */}
+          <path
+            d='M 1 1 L 11 6 L 1 11 z'
+            fill='var(--surface-bg, transparent)'
+            className='stroke-neutral-800 dark:stroke-neutral-200'
+            strokeWidth={1.2}
+          />
+        </marker>
+        <marker
+          id={markers.crowsfoot}
+          viewBox='0 0 12 12'
+          refX='11'
+          refY='6'
+          markerWidth='12'
+          markerHeight='12'
+          orient='auto-start-reverse'
+        >
+          <path
+            d='M 0 6 L 11 1 M 0 6 L 11 6 M 0 6 L 11 11'
+            className='fill-none stroke-neutral-800 dark:stroke-neutral-200'
+            strokeWidth={1.2}
+          />
+        </marker>
+        <marker
+          id={markers.circle}
+          viewBox='0 0 10 10'
+          refX='2'
+          refY='5'
+          markerWidth='8'
+          markerHeight='8'
+          orient='auto'
+        >
+          <circle cx='5' cy='5' r='3' className='fill-neutral-800 dark:fill-neutral-200 stroke-none' />
         </marker>
         {grid && (
           <pattern id={gridId} width={grid} height={grid} patternUnits='userSpaceOnUse'>
@@ -404,7 +457,7 @@ export const SceneSvg = ({ classNames, objects, grid, selection, onSelectionChan
           }
         >
           {object.elements.map((element) => (
-            <SceneElement key={element.id} object={object} element={element} registry={registry} markerId={markerId} />
+            <SceneElement key={element.id} object={object} element={element} registry={registry} markers={markers} />
           ))}
         </g>
       ))}
