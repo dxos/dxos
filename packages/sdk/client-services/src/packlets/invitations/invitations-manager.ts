@@ -18,7 +18,9 @@ import { generatePasscode } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { bufWkt, fromPublicKey } from '@dxos/protocols/buf';
 import { Invitation, Invitation_AuthMethod, Invitation_State, Invitation_Type } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type InvitationsService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
@@ -26,6 +28,7 @@ import { trace } from '@dxos/tracing';
 import { type IMetadataStore, IMetadataStoreService, hasInvitationExpired } from '../metadata';
 import type { InvitationProtocol } from './invitation-protocol';
 import { type InvitationsHandler, InvitationsHandlerService, createAdmissionKeypair } from './invitations-handler';
+import { fromBufInvitation, toBufInvitation } from './utils';
 
 /**
  * Effect service tag for {@link InvitationsManager}.
@@ -135,7 +138,7 @@ export class InvitationsManager {
 
       const loadTasks = freshInvitations.map((persistentInvitation) => {
         invariant(!this._createInvitations.get(persistentInvitation.invitationId), 'invitation already exists');
-        return this.createInvitation(ctx, { ...persistentInvitation, persistent: false });
+        return this.createInvitation(ctx, { ...toBufInvitation(persistentInvitation), persistent: false });
       });
       const cInvitations = await Promise.all(loadTasks);
 
@@ -243,11 +246,11 @@ export class InvitationsManager {
       authMethod = Invitation_AuthMethod.SHARED_SECRET,
       state = Invitation_State.INIT,
       timeout = INVITATION_TIMEOUT,
-      swarmKey = PublicKey.random(),
+      swarmKey = fromPublicKey(PublicKey.random()),
       persistent = _options?.authMethod !== Invitation_AuthMethod.KNOWN_PUBLIC_KEY,
-      created = new Date(),
+      created = bufWkt.timestampNow(),
       guestKeypair = undefined,
-      role = SpaceMember.Role.ADMIN,
+      role = SpaceMember_Role.ADMIN,
       lifetime = 86400 * 7, // 7 days,
       multiUse = false,
       ...options
@@ -357,7 +360,7 @@ export class InvitationsManager {
       const delegationCredentialId = await handler.delegate(invitation);
       changeStream.next({ ...invitation, delegationCredentialId });
     } else if (invitation.persistent) {
-      await this._metadataStore.addInvitation(invitation);
+      await this._metadataStore.addInvitation(fromBufInvitation(invitation));
       this.saved.emit(invitation);
     }
   }

@@ -4,8 +4,9 @@
 
 import { type Mutex, type MutexGuard } from '@dxos/async';
 import { type Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
-import { bufWkt } from '@dxos/protocols/buf';
-import { Invitation, Invitation_AuthMethod, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { buf, bufWkt } from '@dxos/protocols/buf';
+import { Invitation, InvitationSchema, Invitation_AuthMethod, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { decodeCompat, encodeCompat } from '@dxos/protocols/buf-shape-compat';
 import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Invitation as LegacyInvitation } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -97,3 +98,17 @@ export const fromBufAuthMethod = (authMethod: Invitation_AuthMethod | undefined)
       return LegacyInvitation.AuthMethod.NONE;
   }
 };
+
+/**
+ * Reads a stored invitation as the buf message the services now speak.
+ *
+ * `EchoMetadata.invitations` is still written by the protobuf.js codec, so the two shapes meet in
+ * the manager; both codecs agree byte for byte, which makes the encoding the conversion. Goes when
+ * the metadata group moves to buf.
+ */
+export const toBufInvitation = (invitation: LegacyInvitation): Invitation =>
+  buf.fromBinary(InvitationSchema, encodeCompat(InvitationSchema, invitation));
+
+/** Writes a buf invitation in the shape the metadata store persists. Inverse of {@link toBufInvitation}. */
+export const fromBufInvitation = (invitation: Invitation): LegacyInvitation =>
+  decodeCompat(InvitationSchema, buf.toBinary(InvitationSchema, invitation));
