@@ -112,3 +112,15 @@ export const toBufInvitation = (invitation: LegacyInvitation): Invitation =>
 /** Writes a buf invitation in the shape the metadata store persists. Inverse of {@link toBufInvitation}. */
 export const fromBufInvitation = (invitation: Invitation): LegacyInvitation =>
   decodeCompat(InvitationSchema, buf.toBinary(InvitationSchema, invitation));
+
+/**
+ * Drops the message brand so a partial invitation can seed `buf.create`.
+ *
+ * `Partial<Invitation>` carries `$typeName` as optional, which `MessageInit` refuses; the fields
+ * themselves are what a caller means by a partial invitation.
+ */
+export const invitationInit = ({
+  $typeName,
+  $unknown,
+  ...fields
+}: Partial<Invitation>): Omit<Partial<Invitation>, '$typeName' | '$unknown'> => fields;

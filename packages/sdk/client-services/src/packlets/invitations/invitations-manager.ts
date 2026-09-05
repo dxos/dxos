@@ -28,7 +28,7 @@ import { trace } from '@dxos/tracing';
 import { type IMetadataStore, IMetadataStoreService, hasInvitationExpired } from '../metadata';
 import type { InvitationProtocol } from './invitation-protocol';
 import { type InvitationsHandler, InvitationsHandlerService, createAdmissionKeypair } from './invitations-handler';
-import { fromBufInvitation, toBufInvitation } from './utils';
+import { fromBufInvitation, invitationInit, toBufInvitation } from './utils';
 
 /**
  * Effect service tag for {@link InvitationsManager}.
@@ -275,8 +275,8 @@ export class InvitationsManager {
       role,
       multiUse,
       delegationCredentialId: options?.delegationCredentialId,
-      ...options,
-      ...protocol.getInvitationContext(),
+      ...invitationInit(options),
+      ...invitationInit(protocol.getInvitationContext()),
     });
   }
 

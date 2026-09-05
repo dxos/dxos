@@ -199,6 +199,6 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
 
     await this._signingContext.recordCredential(credential);
 
-    return { spaceKey: assertion.spaceKey };
+    return { spaceKey: fromPublicKey(assertion.spaceKey) };
   }
 }
