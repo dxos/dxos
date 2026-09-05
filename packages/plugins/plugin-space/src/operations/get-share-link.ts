@@ -12,7 +12,9 @@ import { SpaceOperationConfig } from './helpers';
 const handler: Operation.WithHandler<typeof SpaceOperation.GetShareLink> = SpaceOperation.GetShareLink.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
-      const { Invitation, InvitationEncoder } = yield* Effect.promise(() => import('@dxos/client/invitations'));
+      const { InvitationEncoder, Invitation_AuthMethod, Invitation_State, Invitation_Type } = yield* Effect.promise(
+        () => import('@dxos/client/invitations'),
+      );
 
       const invitation = yield* Operation.invoke(SpaceOperation.Share, {
         space: input.space,
