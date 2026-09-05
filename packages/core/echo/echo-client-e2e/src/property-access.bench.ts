@@ -160,14 +160,17 @@ await feedDb.flush();
 await automergeWideDb.flush();
 await feedWideDb.flush();
 
-// Flushes a persisted row's database once after its warmup and once after its run — tinybench's
-// `teardown` is per task, not per iteration, so this never lands inside a measured window. Without
-// it, pending changes accumulate across the whole block, and `DataService.update` ships them in a
-// single RPC under a 30s timeout; a block's worth on 250-field objects does not fit. As a side
-// effect each row starts from a drained queue, so automerge rows no longer drift as the run goes on.
+// Flushes a persisted row's database before each of its phases — tinybench `setup` runs once before
+// warmup and once before run, awaited, so the drain completes before any iteration is timed. It has
+// to be `setup` and not `teardown`: tinybench awaits the former but fires the latter without
+// awaiting, so an async flush there would overlap the next row's iterations and still be in flight
+// at `afterAll`. Without any per-row drain, pending changes accumulate across the whole block, and
+// `DataService.update` ships them in a single RPC under a 30s timeout; a block's worth on 250-field
+// objects does not fit. As a side effect each phase starts from a drained queue, so automerge rows
+// no longer drift as the run goes on.
 const flushing = (db: typeof automergeDb, options: typeof BENCH_OPTIONS) => ({
   ...options,
-  teardown: () => db.flush(),
+  setup: () => db.flush(),
 });
 
 // Generated at runtime so the written value is not a literal V8 can constant-fold into the store.
@@ -201,8 +204,8 @@ afterAll(async () => {
     feedWidePool,
     makeSink,
   ]);
-  // Each persisted row already flushes in its teardown (see `flushing`), so these are a final drain
-  // of anything the last row left behind. Sequential rather than inside `builder.close()`, which
+  // Each persisted row already drains in its `setup` (see `flushing`), so these only flush what the
+  // final row of each block left behind. Sequential rather than inside `builder.close()`, which
   // closes four peers in parallel and could not say which one was slow if it timed out.
   await automergeDb.flush();
   await feedDb.flush();
@@ -211,7 +214,10 @@ afterAll(async () => {
   // Closes the peers and disposes their storage. The exit handler above only unlinks the directory,
   // and cannot await this — which is why the close belongs here, where a hook can be async.
   await builder.close();
-});
+  // vitest's default hook budget is 10s, sized for unit tests. Draining four databases and closing
+  // four peers is legitimately slower than that; the 30s RPC timeout inside `flush` still fires as a
+  // real error if a single drain is too large, so this raises the hook budget without hiding one.
+}, 120_000);
 
 //
 // Each bench body writes its property access out literally instead of calling through a shared
