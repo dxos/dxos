@@ -349,6 +349,9 @@
       "path": "packages/core/compute/pipeline-transcription/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-archify/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-assistant/tsconfig.json"
     },
     {

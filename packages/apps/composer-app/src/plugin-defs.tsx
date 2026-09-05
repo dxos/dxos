@@ -3,6 +3,7 @@
 //
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
+import * as ArchifyPlugin from '@dxos/plugin-archify/ArchifyPlugin';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as BloggerPlugin from '@dxos/plugin-blogger/BloggerPlugin';
 import * as BlueskyPlugin from '@dxos/plugin-bluesky/BlueskyPlugin';
@@ -111,6 +112,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
     MarkdownPlugin.meta.profile.key,
     SheetPlugin.meta.profile.key,
     IllustratorPlugin.meta.profile.key,
+    ArchifyPlugin.meta.profile.key,
     TldrawPlugin.meta.profile.key,
     ExcalidrawPlugin.meta.profile.key,
     TablePlugin.meta.profile.key,
@@ -179,6 +181,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
   const { logStore, isDev, isLocal, isTauri, isPopover, isMobile } = config;
   return [
     ...getCorePlugins(config),
+    ArchifyPlugin.make(),
     AssistantPlugin.make(),
     BoardPlugin.make(),
     BookmarksPlugin.make(),
