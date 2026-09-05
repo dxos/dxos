@@ -62,4 +62,10 @@ export type DrawingVariantSurfaceProps = {
   editable?: boolean;
   /** Section surfaces: whether the embed is extrinsically sized. */
   extrinsic?: boolean;
+  /** Selected world-object ids, owned by the host so every renderer shares one selection model. */
+  selection?: readonly string[];
+  /** The user changed the selection. Ids are scene object ids — never renderer shape ids. */
+  onSelectionChange?: (objectIds: readonly string[]) => void;
+  /** The user activated an object (double-click / enter): open what it depicts. */
+  onActivate?: (objectId: string) => void;
 };

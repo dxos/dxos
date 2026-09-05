@@ -1,0 +1,43 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`corpus: app-framework > soft metrics 1`] = `
+{
+  "bends": 35,
+  "crossings": 13,
+}
+`;
+
+exports[`corpus: assistant > soft metrics 1`] = `
+{
+  "bends": 29,
+  "crossings": 7,
+}
+`;
+
+exports[`corpus: compute > soft metrics 1`] = `
+{
+  "bends": 32,
+  "crossings": 13,
+}
+`;
+
+exports[`corpus: echo > soft metrics 1`] = `
+{
+  "bends": 28,
+  "crossings": 7,
+}
+`;
+
+exports[`corpus: edge > soft metrics 1`] = `
+{
+  "bends": 37,
+  "crossings": 9,
+}
+`;
+
+exports[`corpus: pipeline > soft metrics 1`] = `
+{
+  "bends": 19,
+  "crossings": 2,
+}
+`;

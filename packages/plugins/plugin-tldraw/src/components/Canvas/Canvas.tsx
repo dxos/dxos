@@ -38,7 +38,23 @@ export type CanvasProps = {
   assetsBaseUrl?: string | null;
   settings?: Settings.Settings;
   onThreadCreate?: () => void;
+  /** Selected scene object ids (host-owned); mirrored onto the shapes stamped with that `meta.object`. */
+  selection?: readonly string[];
+  /** Shape selection changed; reported as scene object ids, never tldraw shape ids. */
+  onSelectionChange?: (objectIds: readonly string[]) => void;
+  /** Double-click on a managed shape. */
+  onActivate?: (objectId: string) => void;
 };
+
+/** Scene object ids of the selected shapes (unmanaged shapes carry no `meta.object` and are skipped). */
+const selectedObjectIds = (editor: Editor): string[] => [
+  ...new Set(
+    editor.getSelectedShapes().flatMap((shape) => (typeof shape.meta.object === 'string' ? [shape.meta.object] : [])),
+  ),
+];
+
+const sameSet = (left: readonly string[], right: readonly string[]) =>
+  left.length === right.length && left.every((id) => right.includes(id));
 
 export const CanvasComponent = composable<HTMLDivElement, CanvasProps>(
   (
@@ -50,6 +66,9 @@ export const CanvasComponent = composable<HTMLDivElement, CanvasProps>(
       assetsBaseUrl = '/assets/plugin-tldraw',
       settings,
       onThreadCreate,
+      selection,
+      onSelectionChange,
+      onActivate,
       ...props
     },
     forwardedRef,
@@ -96,13 +115,47 @@ export const CanvasComponent = composable<HTMLDivElement, CanvasProps>(
           // store, so an immediate save flushes one gesture behind (losing the final stroke).
           setTimeout(() => adapter.save());
         }
+        if (type === 'click' && name === 'double_click' && editor && onActivate) {
+          const objectId = editor.getShapeAtPoint(editor.inputs.currentPagePoint)?.meta.object;
+          if (typeof objectId === 'string') {
+            onActivate(objectId);
+          }
+        }
       };
 
       editor?.on('event', handleEvent);
       return () => {
         editor?.off('event', handleEvent);
       };
-    }, [adapter, editor]);
+    }, [adapter, editor, onActivate]);
+
+    // Selection, editor → host: the page state's `selectedShapeIds` is a session-scoped record.
+    useEffect(() => {
+      if (!editor || !onSelectionChange) {
+        return;
+      }
+      return editor.store.listen(
+        ({ changes: { updated } }) => {
+          if (Object.keys(updated).some((id) => id.startsWith('instance_page_state:'))) {
+            onSelectionChange(selectedObjectIds(editor));
+          }
+        },
+        { source: 'user', scope: 'session' },
+      );
+    }, [editor, onSelectionChange]);
+
+    // Selection, host → editor. Compared as sets so the echo of our own report is a no-op.
+    useEffect(() => {
+      if (!editor || !selection || sameSet(selectedObjectIds(editor), selection)) {
+        return;
+      }
+      editor.setSelectedShapes(
+        editor
+          .getCurrentPageShapes()
+          .filter((shape) => typeof shape.meta.object === 'string' && selection.includes(shape.meta.object))
+          .map((shape) => shape.id),
+      );
+    }, [editor, selection]);
 
     // UI state.
     useEffect(() => {

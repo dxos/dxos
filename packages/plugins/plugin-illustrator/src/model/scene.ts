@@ -166,6 +166,10 @@ export const WorldObject = Schema.Struct({
     description: 'Canvas position (px). Omit on upsert to keep the current position.',
   }),
   scale: Schema.optional(Schema.Number).annotate({ description: 'Canvas px per local unit (default 1).' }),
+  ref: Schema.optional(Schema.String).annotate({
+    description:
+      'What the object depicts, as a DXN (an ECHO object) or a URI (e.g. a repository path), so a selected node can resolve to related content.',
+  }),
   elements: Schema.Array(Element),
 });
 export type WorldObject = Schema.Schema.Type<typeof WorldObject>;

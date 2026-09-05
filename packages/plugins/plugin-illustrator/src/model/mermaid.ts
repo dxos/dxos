@@ -18,6 +18,8 @@ export type MermaidNode = {
   label: string;
   /** Enclosing subgraph id, when declared inside one. */
   group?: string;
+  /** What the node depicts (DXN or URI), from a `%% ref <id> <target>` directive. */
+  ref?: string;
 };
 
 export type MermaidGroup = {
@@ -46,6 +48,9 @@ const NODE = /^([A-Za-z0-9_-]+)(?:\[(.*?)\]|\((.*?)\)|\{(.*?)\})?$/;
 // `A --> B`, `A-->|label|B`, `A --- B`.
 const EDGE = /^(.+?)\s*(-->|---|-\.->|==>)\s*(?:\|(.*?)\|\s*)?(.+)$/;
 const SUBGRAPH = /^subgraph\s+([A-Za-z0-9_-]+)(?:\s*\[(.*?)\])?\s*$/;
+
+// `%% ref A packages/core/echo` — a comment to mermaid proper, so sources stay portable.
+const REF = /^%%\s*ref\s+([A-Za-z0-9_-]+)\s+(\S+)\s*$/;
 
 const unquote = (value: string) => value.trim().replace(/^"(.*)"$/, '$1');
 
@@ -80,8 +85,14 @@ export const parse = (source: string): MermaidGraph => {
     return id;
   };
 
+  const refs = new Map<string, string>();
   for (const raw of source.split('\n')) {
     const line = raw.trim();
+    const ref = REF.exec(line);
+    if (ref) {
+      refs.set(ref[1], ref[2]);
+      continue;
+    }
     if (!line || line.startsWith('%%')) {
       continue;
     }
@@ -120,7 +131,13 @@ export const parse = (source: string): MermaidGraph => {
     declare(line);
   }
 
-  return { direction, nodes: [...nodes.values()], groups, edges };
+  // Directives may precede or follow the node they name.
+  return {
+    direction,
+    nodes: [...nodes.values()].map((node) => (refs.has(node.id) ? { ...node, ref: refs.get(node.id) } : node)),
+    groups,
+    edges,
+  };
 };
 
 /** Layout constants in scene units. */
@@ -223,6 +240,7 @@ export const compile = (source: string, options: CompileOptions = {}): Scene.Com
         id: node.id,
         origin: { x: origin.x + point.x * scale, y: origin.y + point.y * scale },
         scale,
+        ...(node.ref ? { ref: node.ref } : {}),
         elements: [{ kind: 'rect', id: 'box', x: 0, y: 0, w: NODE_W, h: NODE_H, text: node.label }],
       },
     });

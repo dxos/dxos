@@ -23,15 +23,40 @@ import { useStoreAdapter } from '#hooks';
 
 export type ExcalidrawArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps;
 
+/** Scene object ids of the selected elements; unmanaged elements carry no `customData.object`. */
+const selectedObjectIds = (
+  elements: readonly ExcalidrawElement[],
+  selectedElementIds: Readonly<Record<string, boolean>>,
+): string[] => [
+  ...new Set(
+    elements.flatMap((element) =>
+      selectedElementIds[element.id] && typeof element.customData?.object === 'string'
+        ? [element.customData.object]
+        : [],
+    ),
+  ),
+];
+
+const sameSet = (left: readonly string[], right: readonly string[]) =>
+  left.length === right.length && left.every((id) => right.includes(id));
+
 /**
  * https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/props
  */
-export const ExcalidrawArticle = ({ role, canvas, attendableId }: ExcalidrawArticleProps) => {
+export const ExcalidrawArticle = ({
+  role,
+  canvas,
+  attendableId,
+  selection,
+  onSelectionChange,
+}: ExcalidrawArticleProps) => {
   invariant(Obj.instanceOf(Drawing.Canvas, canvas));
   const containerRef = useRef<HTMLDivElement>(null);
   const { themeMode } = useThemeContext();
   const [down, setDown] = useState<boolean>(false);
   const excalidrawAPIRef = useRef<ExcalidrawImperativeAPI>(null);
+  // Last selection reported to the host, so its echo back through `selection` is a no-op.
+  const reportedSelectionRef = useRef<readonly string[]>([]);
   // Buffer the most recent elements from the adapter so that however the adapter
   // and the <Excalidraw/> imperative API settle in (either order), we always hand
   // the current scene to the component once both are ready.
@@ -73,12 +98,37 @@ export const ExcalidrawArticle = ({ role, canvas, attendableId }: ExcalidrawArti
   };
 
   // Track updates.
-  const handleChange: ExcalidrawProps['onChange'] = (elements) => {
+  const handleChange: ExcalidrawProps['onChange'] = (elements, appState) => {
     const modified = adapter.update(elements);
     if (!down && modified.length) {
       adapter.save();
     }
+    if (onSelectionChange) {
+      const selected = selectedObjectIds(elements, appState.selectedElementIds);
+      if (!sameSet(selected, reportedSelectionRef.current)) {
+        reportedSelectionRef.current = selected;
+        onSelectionChange(selected);
+      }
+    }
   };
+
+  // Selection, host → editor: select every element stamped with a selected scene object id.
+  useEffect(() => {
+    const api = excalidrawAPIRef.current;
+    if (!api || !selection || sameSet(selection, reportedSelectionRef.current)) {
+      return;
+    }
+    reportedSelectionRef.current = selection;
+    const selectedElementIds = Object.fromEntries(
+      adapter
+        .getElements()
+        .filter(
+          (element) => typeof element.customData?.object === 'string' && selection.includes(element.customData.object),
+        )
+        .map((element) => [element.id, true as const]),
+    );
+    api.updateScene({ appState: { selectedElementIds } });
+  }, [adapter, selection]);
 
   // Save updates when mouse is released.
   const handlePointerUpdate: ExcalidrawProps['onPointerUpdate'] = ({ button }) => {

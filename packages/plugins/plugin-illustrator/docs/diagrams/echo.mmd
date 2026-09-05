@@ -1,0 +1,57 @@
+%% ECHO architecture — shared API layer, client tier (UI thread) and host tier (worker), and the RPC seam between them.
+flowchart TB
+  subgraph Shared [Shared API layer]
+    EchoApi[Echo API and Types]
+    Protocol[echo-protocol]
+  end
+  subgraph ClientTier [Client tier: UI thread]
+    Database[DatabaseImpl proxies]
+    QueryContext[Query context + cache]
+    EchoClient[EchoClient hypergraph]
+    RepoProxy[RepoProxy doc mirror]
+  end
+  subgraph HostTier [Host tier: worker]
+    DataService[DataService RPC]
+    QueryService[QueryService RPC]
+    EchoHost[EchoHost]
+    AutomergeHost[AutomergeHost Repo]
+    IndexEngine[IndexEngine]
+    FeedStore[FeedStore]
+    Storage[SQLite storage]
+    Replicators[Mesh and EDGE sync]
+  end
+  EchoApi --> Protocol
+  Database --> EchoApi
+  Database -->|db.query| QueryContext
+  Database -->|doc mutations| RepoProxy
+  EchoClient -->|constructs db| Database
+  EchoClient -->|index source| QueryContext
+  QueryContext -->|query stream| QueryService
+  RepoProxy -->|doc subscribe| DataService
+  DataService -->|doc sync| AutomergeHost
+  QueryService -->|plan + execute| IndexEngine
+  QueryService -->|load docs| AutomergeHost
+  EchoHost -->|hosts| DataService
+  EchoHost -->|hosts| QueryService
+  EchoHost -->|owns| AutomergeHost
+  EchoHost -->|owns| FeedStore
+  AutomergeHost -->|doc data source| IndexEngine
+  FeedStore -->|feed data source| IndexEngine
+  AutomergeHost -->|storage adapter| Storage
+  FeedStore --> Storage
+  IndexEngine --> Storage
+  AutomergeHost -->|subduction| Replicators
+  %% ref EchoApi packages/core/echo/echo
+  %% ref Protocol packages/core/echo/echo-protocol
+  %% ref Database packages/core/echo/echo-client/src/proxy-db
+  %% ref QueryContext packages/core/echo/echo-client/src/query
+  %% ref EchoClient packages/core/echo/echo-client/src/client
+  %% ref RepoProxy packages/core/echo/echo-client/src/automerge
+  %% ref DataService packages/core/echo/echo-host/src/db-host/data-service.ts
+  %% ref QueryService packages/core/echo/echo-host/src/db-host/query-service.ts
+  %% ref EchoHost packages/core/echo/echo-host/src/db-host/echo-host.ts
+  %% ref AutomergeHost packages/core/echo/echo-host/src/automerge
+  %% ref IndexEngine packages/core/echo/index-core
+  %% ref FeedStore packages/core/echo/feed
+  %% ref Storage packages/common/sql-sqlite
+  %% ref Replicators packages/core/echo/echo-host/src/edge

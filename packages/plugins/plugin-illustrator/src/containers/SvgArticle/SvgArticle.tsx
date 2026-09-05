@@ -19,7 +19,7 @@ export type SvgArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps
  * Article/section/card surface for the SVG variant: derives the scene from the canvas records
  * (reactively) and renders it read-only through {@link SceneSvg}.
  */
-export const SvgArticle = ({ canvas }: SvgArticleProps) => {
+export const SvgArticle = ({ canvas, selection, onSelectionChange, onActivate }: SvgArticleProps) => {
   invariant(Obj.instanceOf(Drawing.Canvas, canvas));
   const [snapshot] = useObject(canvas);
   const objects = useMemo(() => SvgHandler.read(snapshot?.content ?? {}).scene.objects, [snapshot]);
@@ -27,7 +27,13 @@ export const SvgArticle = ({ canvas }: SvgArticleProps) => {
   return (
     <Panel.Root classNames='dx-fill'>
       <Panel.Content asChild>
-        <SceneSvg classNames='dx-attention-surface dx-fill' objects={objects} />
+        <SceneSvg
+          classNames='dx-attention-surface dx-fill'
+          objects={objects}
+          selection={selection}
+          onSelectionChange={onSelectionChange}
+          onActivate={onActivate}
+        />
       </Panel.Content>
     </Panel.Root>
   );

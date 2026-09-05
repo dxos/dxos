@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useId, useMemo } from 'react';
+import React, { type MouseEvent, useId, useMemo } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
@@ -324,6 +324,12 @@ export type SceneSvgProps = ThemedClassName<{
   objects: readonly Scene.WorldObject[];
   /** Draw the alignment grid at this spacing (scene px). */
   grid?: number;
+  /** Selected object ids; rendering is controlled, the host owns the state. */
+  selection?: readonly string[];
+  /** Click selects one object (shift/meta toggles); clicking the background clears. */
+  onSelectionChange?: (objectIds: readonly string[]) => void;
+  /** Double-click. */
+  onActivate?: (objectId: string) => void;
 }>;
 
 /**
@@ -331,15 +337,37 @@ export type SceneSvgProps = ThemedClassName<{
  * resolving bound arrow refs against box borders. Useful for read-only previews and stories;
  * interaction/persistence stays with the tldraw backend.
  */
-export const SceneSvg = ({ classNames, objects, grid }: SceneSvgProps) => {
+export const SceneSvg = ({ classNames, objects, grid, selection, onSelectionChange, onActivate }: SceneSvgProps) => {
   const { registry, viewBox } = useMemo(() => resolve(objects), [objects]);
   // Fragment ids are document-global: derive per-instance ids so co-rendered scenes don't collide.
   const instanceId = useId();
   const markerId = `${instanceId}-arrowhead`;
   const gridId = `${instanceId}-grid`;
+  const selected = useMemo(() => new Set(selection), [selection]);
+  const interactive = Boolean(onSelectionChange || onActivate);
+
+  const handleSelect = (objectId: string, event: MouseEvent<SVGGElement>) => {
+    // Object clicks stop here so the background handler below does not immediately clear them.
+    event.stopPropagation();
+    if (!onSelectionChange) {
+      return;
+    }
+    const toggle = event.shiftKey || event.metaKey || event.ctrlKey;
+    onSelectionChange(
+      toggle
+        ? selected.has(objectId)
+          ? [...selected].filter((id) => id !== objectId)
+          : [...selected, objectId]
+        : [objectId],
+    );
+  };
 
   return (
-    <svg viewBox={viewBox} className={mx('dx-fill text-neutral-800 dark:text-neutral-200', classNames)}>
+    <svg
+      viewBox={viewBox}
+      className={mx('dx-fill text-neutral-800 dark:text-neutral-200', classNames)}
+      onClick={onSelectionChange && selected.size > 0 ? () => onSelectionChange([]) : undefined}
+    >
       <defs>
         <marker
           id={markerId}
@@ -360,7 +388,21 @@ export const SceneSvg = ({ classNames, objects, grid }: SceneSvgProps) => {
       </defs>
       {grid && <rect x='-10000' y='-10000' width='20000' height='20000' fill={`url(#${gridId})`} />}
       {objects.map((object) => (
-        <g key={object.id}>
+        <g
+          key={object.id}
+          data-object={object.id}
+          data-selected={selected.has(object.id) || undefined}
+          className={mx(interactive && 'cursor-pointer', selected.has(object.id) && 'text-accent-text')}
+          onClick={interactive ? (event) => handleSelect(object.id, event) : undefined}
+          onDoubleClick={
+            onActivate
+              ? (event) => {
+                  event.stopPropagation();
+                  onActivate(object.id);
+                }
+              : undefined
+          }
+        >
           {object.elements.map((element) => (
             <SceneElement key={element.id} object={object} element={element} registry={registry} markerId={markerId} />
           ))}

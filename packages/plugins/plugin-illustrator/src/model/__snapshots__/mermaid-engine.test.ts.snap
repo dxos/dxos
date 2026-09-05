@@ -1,0 +1,8 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`mermaid-engine > has no hard defects and records its soft metrics 1`] = `
+{
+  "bends": 12,
+  "crossings": 2,
+}
+`;
