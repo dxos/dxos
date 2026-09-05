@@ -39,17 +39,23 @@ const item: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
     ...etc,
   );
 
-const separator: ComponentFunction<MenuStyleProps> = (_props, ...etc) => mx('my-1 mx-2 h-px bg-separator', ...etc);
+const separator: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
+  mx('my-1 mx-2 h-px bg-subdued-separator', ...etc);
 
 const groupLabel: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
   mx('text-description', 'select-none px-(--dx-control-pad) py-1', ...etc);
 
 /**
- * A rotated square painted from `--arrow-background` in the content's border colour, sunk beneath
- * the content so only the half outside its edge shows — a triangle, not a diamond.
+ * Zag's arrow is a square straddling the content's edge, rotated so its top-left corner points
+ * outward. Painted in the surface colour with the border on those two edges, its inner half covers
+ * the content's border and the outline appears to bend around the tip.
  */
 const arrow: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
-  mx('z-[-1] [--arrow-size:12px] [--arrow-background:var(--color-separator)]', ...etc);
+  mx(
+    '[--arrow-size:12px] [--arrow-background:var(--surface-bg)]',
+    '[&>[data-part=arrow-tip]]:border-separator [&>[data-part=arrow-tip]]:border-t [&>[data-part=arrow-tip]]:border-l',
+    ...etc,
+  );
 
 export const menuTheme: Theme<MenuStyleProps> = {
   positioner,
