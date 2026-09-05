@@ -9,7 +9,14 @@ export {
   type Invitations,
 } from '@dxos/client-protocol';
 
-export { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+export {
+  type Invitation,
+  InvitationSchema,
+  Invitation_AuthMethod,
+  Invitation_Kind,
+  Invitation_State,
+  Invitation_Type,
+} from '@dxos/protocols/buf/dxos/client/invitation_pb';
 
 export { hostInvitation } from './host';
 
