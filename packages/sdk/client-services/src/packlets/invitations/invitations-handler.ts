@@ -22,7 +22,8 @@ import {
   createTeleportProtocolFactory,
 } from '@dxos/network-manager';
 import { InvalidInvitationError, InvalidInvitationExtensionRoleError } from '@dxos/protocols';
-import { type AdmissionKeypair, Invitation, Invitation_AuthMethod, Invitation_Kind, Invitation_State, Invitation_Type } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { buf, fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
+import { type AdmissionKeypair, AdmissionKeypairSchema, Invitation, Invitation_AuthMethod, Invitation_Kind, Invitation_State, Invitation_Type } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { AuthenticationResponse, type IntroductionResponse } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { InvitationOptions } from '@dxos/protocols/proto/dxos/halo/invitations';
@@ -475,6 +476,8 @@ export class InvitationsHandler {
         await ctx.dispose();
       } else {
         invariant(invitation.swarmKey);
+        const swarmKey = toPublicKey(invitation.swarmKey);
+        invariant(swarmKey);
 
         const timeoutInactive = () => {
           if (guardedState.mutex.isLocked()) {
@@ -505,10 +508,10 @@ export class InvitationsHandler {
     } else if (invitation.kind === Invitation_Kind.DEVICE) {
       label = 'invitation host for device';
     } else {
-      label = `invitation host for space ${invitation.spaceKey?.truncate()}`;
+      label = `invitation host for space ${toPublicKey(invitation.spaceKey)?.truncate()}`;
     }
     const swarmConnection = await this._networkManager.joinSwarm(ctx, {
-      topic: invitation.swarmKey,
+      topic: swarmKey,
       protocolProvider: createTeleportProtocolFactory(async (teleport) => {
         teleport.addExtension('dxos.halo.invitations', extensionFactory());
       }, this._connectionProps?.teleport),
@@ -554,14 +557,15 @@ export class InvitationsHandler {
     invitation: Invitation,
     introductionResponse: IntroductionResponse,
   ): Promise<void> {
-    if (invitation.guestKeypair?.privateKey == null) {
+    const guestPrivateKey = invitation.guestKeypair?.privateKey?.data;
+    if (guestPrivateKey == null) {
       throw new Error('keypair missing in the invitation');
     }
     if (introductionResponse.challenge == null) {
       throw new Error('challenge missing in the introduction');
     }
     log('sending authentication request');
-    const signature = sign(Buffer.from(introductionResponse.challenge), invitation.guestKeypair.privateKey);
+    const signature = sign(Buffer.from(introductionResponse.challenge), Buffer.from(guestPrivateKey));
     const response = await extension.rpc.InvitationHostService.authenticate({
       signedChallenge: signature,
     });
@@ -581,7 +585,10 @@ const checkInvitation = (protocol: InvitationProtocol, invitation: Partial<Invit
 
 export const createAdmissionKeypair = (): AdmissionKeypair => {
   const keypair = createKeyPair();
-  return { publicKey: PublicKey.from(keypair.publicKey), privateKey: keypair.secretKey };
+  return buf.create(AdmissionKeypairSchema, {
+    publicKey: fromPublicKey(PublicKey.from(keypair.publicKey)),
+    privateKey: { data: new Uint8Array(keypair.secretKey) },
+  });
 };
 
 export type InvitationsHandlerLayerOptions = {
