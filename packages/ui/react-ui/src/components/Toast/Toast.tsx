@@ -65,7 +65,8 @@ const ToastProvider = ({ duration = DEFAULT_DURATION, children }: ToastProviderP
   const [toaster] = useState(() =>
     createToaster({
       placement: 'bottom-end',
-      overlap: false,
+      // A fanned pile that expands while the pointer is over it, as Ark's own toaster.
+      overlap: true,
       gap: 8,
       duration,
       removeDelay: REMOVE_DELAY,

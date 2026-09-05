@@ -608,7 +608,7 @@ const DialogsSection = () => {
         </AlertDialog.Overlay>
       </AlertDialog.Root>
       <Button onClick={addToast}>Toast</Button>
-      {/* One root per toast: each click adds one and open ones stack. */}
+      {/* One root per toast: each click adds one; open ones pile up and expand under the pointer. */}
       {toasts.map((id) => (
         <Toast.Root key={id} duration={6_000} onOpenChange={(open) => !open && removeToast(id)}>
           <Toast.Title icon='ph--sparkle--regular' onClose={() => removeToast(id)}>

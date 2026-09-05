@@ -176,7 +176,7 @@ const StackedStory = () => {
   );
 };
 
-/** Every declared root is a toast of its own, and open ones stack with the machine's gap. */
+/** Every declared root is a toast of its own; open ones pile up, and the pile expands under the pointer. */
 export const Stacked: StoryObj = {
   render: () => <StackedStory />,
 };
@@ -190,8 +190,14 @@ export const TestStacked: StoryObj = {
       await userEvent.click(button);
       await waitFor(async () => expect(roots()).toHaveLength(count));
     }
-    // Laid out by the machine (newest first in the DOM): three distinct rows, each at least a
+    // Collapsed: the ones behind the front toast are scaled down into a pile.
+    await waitFor(async () => {
+      const scales = roots().map((root) => parseFloat(getComputedStyle(root).scale) || 1);
+      await expect(scales.filter((scale) => scale < 1)).toHaveLength(2);
+    });
+    // Under the pointer the pile expands into rows (newest first in the DOM), each at least a
     // toast's height apart.
+    await userEvent.hover(document.querySelector<HTMLElement>('[data-scope="toast"][data-part="group"]')!);
     await waitFor(async () => {
       const tops = roots()
         .map((root) => Math.round(root.getBoundingClientRect().top))

@@ -775,7 +775,7 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       packages, knip, format.
 - [x] **Phase 4b — Toast.** DONE 2026-09-05. Ark's toast is a store plus a `Toaster` host; the
       declarative API the nine consumers use is kept: `Toast.Provider` owns `createToaster` (bottom-end,
-      no overlap, 8px gap, offsets via `--dx-toast-offset-end` so `md` widens the end inset) and a
+      overlap — a pile that expands under the pointer, as Ark's demo (user, 2026-09-05) — 8px gap, offsets via `--dx-toast-offset-end` so `md` widens the end inset) and a
       `ToastRegistry` (an external store, so a root re-registering each render re-renders the viewport
       alone, not the app under the provider); `Toast.Root` renders nothing where it stands — it registers
       `{ children, classNames, props, ref, countdown }` and mirrors `open` into the store (`create` with
