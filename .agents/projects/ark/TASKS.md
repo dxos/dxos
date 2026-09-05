@@ -827,9 +827,18 @@ dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-p
       plugin-video, the only consumer that passed an `attendableId`, computes `hasAttention` itself.
       14 import sites and 12 manifests/tsconfig references updated; package removed; app-framework's
       package list and the focus/ontology docs follow.
-- [ ] **Fold `react-ui-menu` into `react-ui` and remove the package** (tracked 2026-09-05): the
-      action-graph menu wrappers (`useMenuActions`, `Menu.Root`, `ToolbarMenu`, `DropdownMenu`) sit
-      on `react-ui`'s Menu; one package fewer in the boot graph's dependency chain.
+- [ ] **Reconcile the `react-ui` satellite packages: `react-ui-attention`, `react-ui-menu`, etc.**
+      (tracked 2026-09-05; supersedes "fold `react-ui-menu` into `react-ui`"). Findings so far:
+      `react-ui-attention` and `app-graph` use `react-ui` only as a dev dependency (stories), so
+      there is no runtime cycle; `react-ui-menu`'s components (`Menu`, `DropdownMenu`, `ToolbarMenu`,
+      `ActionLabel`, `MenuContext`) reach `app-graph` only through `types.ts`/`util.ts` (the
+      `AppGraphNode.Action`/`ActionGroup` shapes, the `ActionType`/`ActionGroupType` strings,
+      `actionGroupSymbol`, `hasDisposition`, and running an action's `data` Effect), plus `effect`,
+      `@effect/atom-react` and `useAttention`. A decoupled move puts the item model and node-type
+      constants in `ui-types`, gives `react-ui` `effect` + `@effect/atom-react`, lifts attention to
+      a prop (as Tabs did with `selectedVariant`), and leaves the graph hooks/builder in
+      `react-ui-menu`; 46 consumer packages re-point. Decide the target layering for the whole
+      family (attention, menu, and the other `react-ui-*` satellites) before moving any one of them.
 - [ ] **Review each `react-ui` component's theme against its Ark anatomy** (tracked 2026-09-05), e.g.
       Tabs: the theme functions were written for Radix parts and data attributes (`data-state`,
       `data-orientation` values, `data-highlighted`); walk each ported component's theme file against
