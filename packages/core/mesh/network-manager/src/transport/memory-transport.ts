@@ -34,10 +34,10 @@ const createStreamDelay = (delay: number): NodeJS.ReadWriteStream => {
  * How long the receiving side waits for the initiator's `transportId` signal. That signal only leaves
  * the initiator after the answer has made its own trip, so the wait spans two signaling round trips:
  * microseconds in-process, but ~0.6s p50 / ~0.9s p90 per hop over a deployed edge router, where a 1s
- * default failed ~3.5% of invitation handshakes. Matched to the connection's own 10s transport budget,
- * which is the outer bound anyway.
+ * default failed ~3.5% of invitation handshakes; 2s covers two p90 hops without hiding a stalled peer
+ * behind the connection's own 10s transport budget.
  */
-const MEMORY_TRANSPORT_HANDSHAKE_TIMEOUT = 10_000; // [ms]
+const MEMORY_TRANSPORT_HANDSHAKE_TIMEOUT = 2_000; // [ms]
 
 export const MemoryTransportFactory: TransportFactory = {
   createTransport: (options) => new MemoryTransport(options),
