@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import React, { type ReactNode, useState } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
-import { SettingsScope, type AppSurface } from '@dxos/app-toolkit/ui';
+import { type AppSurface, SettingsScope } from '@dxos/app-toolkit/ui';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 

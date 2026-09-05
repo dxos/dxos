@@ -2,8 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import { describe, expect, test } from 'vitest';
+
+import { EffectEx } from '@dxos/effect';
 
 import { awaitDevice } from './device';
 
@@ -38,12 +39,12 @@ describe('awaitDevice', () => {
   test('resolves immediately when the device is already there', async () => {
     const halo = makeHalo({ key: 'device-a' });
 
-    await expect(Effect.runPromise(awaitDevice(halo))).resolves.toEqual({ key: 'device-a' });
+    await expect(EffectEx.runPromise(awaitDevice(halo))).resolves.toEqual({ key: 'device-a' });
   });
 
   test('waits for a device that arrives later, which is the just-joined case', async () => {
     const halo = makeHalo();
-    const pending = Effect.runPromise(awaitDevice(halo));
+    const pending = EffectEx.runPromise(awaitDevice(halo));
 
     // The replay on subscribe saw nothing, so this only resolves because the later change is heard.
     halo.arrive({ key: 'device-b' });
@@ -53,7 +54,7 @@ describe('awaitDevice', () => {
 
   test('unsubscribes once resolved, so a settled wait leaves nothing behind', async () => {
     const halo = makeHalo();
-    const pending = Effect.runPromise(awaitDevice(halo));
+    const pending = EffectEx.runPromise(awaitDevice(halo));
     halo.arrive({ key: 'device-c' });
     await pending;
 

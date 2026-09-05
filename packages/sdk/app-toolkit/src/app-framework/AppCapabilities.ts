@@ -27,8 +27,8 @@ import { Progress } from '@dxos/progress';
 import type { AnchoredTo } from '@dxos/types';
 import type { Position } from '@dxos/util';
 
-import type * as Translations$ from '../app/Translations';
 // eslint-disable-next-line @dxos/rules/import-as-namespace
+import type * as Translations$ from '../app/Translations';
 import type * as AppSettings from '../types/AppSettings';
 // eslint-disable-next-line @dxos/rules/import-as-namespace
 import type * as ObservabilityMapping$ from './ObservabilityMapping';

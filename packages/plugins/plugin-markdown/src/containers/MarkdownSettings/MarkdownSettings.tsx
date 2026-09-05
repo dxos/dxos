@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { useSettingsState } from '@dxos/app-framework/ui';
-import { SettingsScope, type AppSurface } from '@dxos/app-toolkit/ui';
+import { type AppSurface, SettingsScope } from '@dxos/app-toolkit/ui';
 import { Input } from '@dxos/react-ui';
 import { Form, type FormFieldRendererProps, FormRow } from '@dxos/react-ui-form';
 
