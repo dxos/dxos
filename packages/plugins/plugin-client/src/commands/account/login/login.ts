@@ -18,7 +18,7 @@ import { CommandConfig, openBrowser, print } from '@dxos/cli-util';
 import { type LocalCallbackServer, startLocalCallbackServer } from '@dxos/cli-util/callback';
 import { performRecoveryOAuthFlow } from '@dxos/cli-util/oauth';
 import { type Client, ClientService } from '@dxos/client';
-import { type Invitation, InvitationEncoder, Invitation_State } from '@dxos/client/invitations';
+import { Invitation_State, InvitationEncoder } from '@dxos/client/invitations';
 import { Context as DxContext } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { ATPROTO_OAUTH_SCOPES, OAuthProvider } from '@dxos/protocols';

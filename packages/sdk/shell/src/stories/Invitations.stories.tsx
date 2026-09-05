@@ -10,7 +10,7 @@ import { random } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { type Space, type SpaceMember, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { type Invitation, InvitationEncoder, Invitation_State } from '@dxos/react-client/invitations';
+import { type Invitation, Invitation_State, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
 import { useClientStory, withMultiClientProvider } from '@dxos/react-client/testing';
 import { ButtonGroup, Clipboard, IconButton } from '@dxos/react-ui';

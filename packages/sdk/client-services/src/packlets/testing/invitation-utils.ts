@@ -7,7 +7,12 @@ import { type AuthenticatingInvitation, type CancellableInvitation, InvitationEn
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { toPublicKey } from '@dxos/protocols/buf';
-import { Invitation, Invitation_AuthMethod, Invitation_Kind, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import {
+  Invitation,
+  Invitation_AuthMethod,
+  Invitation_Kind,
+  Invitation_State,
+} from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { ClientServicesHost, type ServiceContext } from '../services';

@@ -13,8 +13,16 @@ import { Context } from '@dxos/context';
 import { TestSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
 import { toPublicKey } from '@dxos/protocols/buf';
-import { Invitation, Invitation_AuthMethod, Invitation_State, Invitation_Type } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { QueryInvitationsResponse_Action, QueryInvitationsResponse_Type } from '@dxos/protocols/buf/dxos/client/services_pb';
+import {
+  Invitation,
+  Invitation_AuthMethod,
+  Invitation_State,
+  Invitation_Type,
+} from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import {
+  QueryInvitationsResponse_Action,
+  QueryInvitationsResponse_Type,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 // Mirror of `spaces-invitations.test.ts`, run with `useSubduction: true`. Subduction

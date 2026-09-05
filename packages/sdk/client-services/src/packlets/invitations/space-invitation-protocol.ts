@@ -15,8 +15,13 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError, AuthorizationError, InvalidInvitationError, SpaceNotFoundError } from '@dxos/protocols';
 import { fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
-import { Invitation, Invitation_AuthMethod, Invitation_Kind, Invitation_Type } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { type ProfileDocument, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import {
+  Invitation,
+  Invitation_AuthMethod,
+  Invitation_Kind,
+  Invitation_Type,
+} from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
   type AdmissionRequest,
   type AdmissionResponse,

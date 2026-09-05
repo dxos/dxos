@@ -34,7 +34,13 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError } from '@dxos/protocols';
 import { buf, fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
-import { AdmissionKeypairSchema, Invitation, Invitation_AuthMethod, Invitation_Kind, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import {
+  AdmissionKeypairSchema,
+  Invitation,
+  Invitation_AuthMethod,
+  Invitation_Kind,
+  Invitation_State,
+} from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 
@@ -401,7 +407,9 @@ describe('Invitations', () => {
         expect(invitation.get().state).to.eq(Invitation_State.EXPIRED);
         // TODO: assumes too much about implementation.
         expect(hostMetadata.getInvitations()).to.have.lengthOf(0);
-        const swarmTopic = hostContext.networkManager.topics.find((topic) => topic.equals(toPublicKey(invitation.get().swarmKey)!));
+        const swarmTopic = hostContext.networkManager.topics.find((topic) =>
+          topic.equals(toPublicKey(invitation.get().swarmKey)!),
+        );
         expect(swarmTopic).to.be.undefined;
       });
     });
@@ -443,10 +451,14 @@ describe('Invitations', () => {
           persistentInvitationId = persistentInvitation.get().invitationId;
           await savedTrigger.wait();
           await waitForCondition({
-            condition: () => hostContext.networkManager.topics.includes(toPublicKey(persistentInvitation.get().swarmKey)!),
+            condition: () =>
+              hostContext.networkManager.topics.includes(toPublicKey(persistentInvitation.get().swarmKey)!),
           });
           // TODO(nf): expose this in API as suspendInvitation()/SuspendableInvitation?
-          await hostContext.networkManager.leaveSwarm(Context.default(), toPublicKey(persistentInvitation.get().swarmKey)!);
+          await hostContext.networkManager.leaveSwarm(
+            Context.default(),
+            toPublicKey(persistentInvitation.get().swarmKey)!,
+          );
         }
 
         const { service: newHostService, manager: newHostManager } = await createInvitationsApi(

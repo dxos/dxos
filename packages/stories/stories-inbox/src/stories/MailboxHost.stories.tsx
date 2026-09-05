@@ -13,7 +13,7 @@ import * as Role from '@dxos/app-framework/Role';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
-import { type Invitation, InvitationEncoder, Invitation_AuthMethod, Invitation_State } from '@dxos/client/invitations';
+import { Invitation_AuthMethod, Invitation_State, InvitationEncoder } from '@dxos/client/invitations';
 import { persistentClientServices } from '@dxos/client/testing';
 import { Config } from '@dxos/config';
 import { Database, Feed, Tag } from '@dxos/echo';

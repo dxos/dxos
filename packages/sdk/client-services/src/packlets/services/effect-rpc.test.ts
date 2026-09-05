@@ -30,11 +30,23 @@ import {
 import { EffectEx } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
 import { IdentityNotInitializedError, TimeoutError } from '@dxos/protocols';
-import { ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { buf, fromPublicKey } from '@dxos/protocols/buf';
+import {
+  Invitation,
+  Invitation_AuthMethod,
+  Invitation_Kind,
+  Invitation_State,
+  Invitation_Type,
+  InvitationSchema,
+} from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import {
+  QueryInvitationsResponse,
+  QueryInvitationsResponse_Action,
+  QueryInvitationsResponse_Type,
+  QueryInvitationsResponseSchema,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
+import { ConfigSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { SpaceState, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
-import { Invitation, InvitationSchema, Invitation_AuthMethod, Invitation_Kind, Invitation_State, Invitation_Type } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { QueryInvitationsResponse, QueryInvitationsResponseSchema, QueryInvitationsResponse_Action, QueryInvitationsResponse_Type } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { InvitationsService, SpacesService, SystemService } from '@dxos/protocols/rpc';
 

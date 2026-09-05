@@ -11,9 +11,9 @@ import { buf } from '@dxos/protocols/buf';
 import { type Invitation } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   QueryInvitationsResponse,
-  QueryInvitationsResponseSchema,
   QueryInvitationsResponse_Action,
   QueryInvitationsResponse_Type,
+  QueryInvitationsResponseSchema,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type InvitationsService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';

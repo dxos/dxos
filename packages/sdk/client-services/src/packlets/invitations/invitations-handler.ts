@@ -23,7 +23,15 @@ import {
 } from '@dxos/network-manager';
 import { InvalidInvitationError, InvalidInvitationExtensionRoleError } from '@dxos/protocols';
 import { buf, fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
-import { type AdmissionKeypair, AdmissionKeypairSchema, Invitation, Invitation_AuthMethod, Invitation_Kind, Invitation_State, Invitation_Type } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import {
+  type AdmissionKeypair,
+  AdmissionKeypairSchema,
+  Invitation,
+  Invitation_AuthMethod,
+  Invitation_Kind,
+  Invitation_State,
+  Invitation_Type,
+} from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { AuthenticationResponse, type IntroductionResponse } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { InvitationOptions } from '@dxos/protocols/proto/dxos/halo/invitations';

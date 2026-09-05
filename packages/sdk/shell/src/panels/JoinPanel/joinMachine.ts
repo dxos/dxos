@@ -15,10 +15,15 @@ import {
 } from 'xstate';
 
 import { log } from '@dxos/log';
+import { toPublicKey } from '@dxos/protocols/buf';
 import { AlreadyJoinedError, type Client } from '@dxos/react-client';
 import { type Identity } from '@dxos/react-client/halo';
-import { toPublicKey } from '@dxos/protocols/buf';
-import { type AuthenticatingInvitationObservable, type Invitation, InvitationEncoder, Invitation_State } from '@dxos/react-client/invitations';
+import {
+  type AuthenticatingInvitationObservable,
+  type Invitation,
+  Invitation_State,
+  InvitationEncoder,
+} from '@dxos/react-client/invitations';
 
 import { type FailReason } from '../../types';
 import { type JoinPanelInitialDisposition, type JoinPanelMode } from './JoinPanelProps';

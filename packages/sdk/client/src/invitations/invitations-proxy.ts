@@ -16,8 +16,18 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { buf, bufInit, fromPublicKey } from '@dxos/protocols/buf';
-import { Invitation, InvitationSchema, Invitation_AuthMethod, Invitation_State, Invitation_Type } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { QueryInvitationsResponse, QueryInvitationsResponse_Action, QueryInvitationsResponse_Type } from '@dxos/protocols/buf/dxos/client/services_pb';
+import {
+  Invitation,
+  Invitation_AuthMethod,
+  Invitation_State,
+  Invitation_Type,
+  InvitationSchema,
+} from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import {
+  QueryInvitationsResponse,
+  QueryInvitationsResponse_Action,
+  QueryInvitationsResponse_Type,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { RPC_TIMEOUT } from '../common';

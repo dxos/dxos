@@ -11,6 +11,19 @@ import type { QueryInvitationsResponse } from '@dxos/protocols/buf/dxos/client/s
 import { Config } from '@dxos/protocols/buf/dxos/config_pb';
 import type { SignalResponse, SubscribeToSpacesResponse } from '@dxos/protocols/buf/dxos/devtools/host_pb';
 import type {
+  CreateEpochResponse,
+  Device,
+  Identity,
+  JoinSpaceResponse,
+  NetworkStatus,
+  Platform,
+  QueryAgentStatusResponse,
+  QueryEdgeStatusResponse,
+  QuerySpacesResponse,
+  RecoverIdentityRequest,
+  Space,
+} from '@dxos/protocols/proto/dxos/client/services';
+import type {
   GetSpaceSnapshotResponse,
   SaveSpaceSnapshotResponse,
   SubscribeToFeedBlocksResponse,
@@ -34,19 +47,6 @@ import type {
   Presentation,
   ProfileDocument,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
-import type {
-  CreateEpochResponse,
-  Device,
-  Identity,
-  JoinSpaceResponse,
-  NetworkStatus,
-  Platform,
-  QueryAgentStatusResponse,
-  QueryEdgeStatusResponse,
-  QuerySpacesResponse,
-  RecoverIdentityRequest,
-  Space,
-} from '@dxos/protocols/proto/dxos/client/services';
 import type { AppService, ShellService } from '@dxos/protocols/proto/dxos/iframe';
 import type { GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import type {

@@ -4,7 +4,7 @@
 
 import React, { type ChangeEvent, useState } from 'react';
 
-import { type Invitation, Invitation_AuthMethod } from '@dxos/react-client/invitations';
+import { Invitation_AuthMethod } from '@dxos/react-client/invitations';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { hexToEmoji } from '@dxos/util';
 

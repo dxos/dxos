@@ -7,7 +7,14 @@ import React, { type Dispatch, type FC, type SetStateAction, useCallback, useSta
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { useSpaceInvitations } from '@dxos/react-client/echo';
-import { type CancellableInvitationObservable, type Invitation, InvitationEncoder, Invitation_AuthMethod, Invitation_State, Invitation_Type } from '@dxos/react-client/invitations';
+import {
+  type CancellableInvitationObservable,
+  type Invitation,
+  Invitation_AuthMethod,
+  Invitation_State,
+  Invitation_Type,
+  InvitationEncoder,
+} from '@dxos/react-client/invitations';
 import { ScrollArea, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 

@@ -13,8 +13,8 @@ import { createInitializedClientsWithContext } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
 import { AlreadyJoinedError, AuthorizationError } from '@dxos/protocols';
 import { Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { ConnectionState, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { ConnectionState, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 
 describe('Spaces/member-management', () => {
   test('admins can remove members', async () => {

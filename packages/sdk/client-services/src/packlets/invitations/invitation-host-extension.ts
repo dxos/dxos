@@ -9,8 +9,8 @@ import { InvariantViolation, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { InvalidInvitationExtensionRoleError } from '@dxos/protocols';
-import { getBufService } from '@dxos/protocols/buf-service';
 import { toPublicKey } from '@dxos/protocols/buf';
+import { getBufService } from '@dxos/protocols/buf-service';
 import { Invitation, Invitation_AuthMethod, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {

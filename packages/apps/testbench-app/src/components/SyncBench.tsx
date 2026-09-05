@@ -11,7 +11,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useEffect, useState } from 'react';
 
 import { scheduleTaskInterval } from '@dxos/async';
-import { type Invitation, InvitationEncoder, Invitation_AuthMethod } from '@dxos/client/invitations';
+import { Invitation_AuthMethod, InvitationEncoder } from '@dxos/client/invitations';
 import { Context } from '@dxos/context';
 import { Filter, Obj } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';

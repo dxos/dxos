@@ -6,7 +6,7 @@ import { composeStories } from '@storybook/react-vite';
 import { cleanup } from '@testing-library/react';
 import { afterEach, describe, expect, test } from 'vitest';
 
-import { type Invitation, Invitation_AuthMethod } from '@dxos/react-client/invitations';
+import { Invitation_AuthMethod } from '@dxos/react-client/invitations';
 
 import { InvitationsTestManager } from '../testing';
 import * as stories from './Invitations.stories';

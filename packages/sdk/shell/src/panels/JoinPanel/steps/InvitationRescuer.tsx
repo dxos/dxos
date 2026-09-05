@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type Invitation, Invitation_State } from '@dxos/react-client/invitations';
+import { Invitation_State } from '@dxos/react-client/invitations';
 import { useTranslation } from '@dxos/react-ui';
 
 import { Action, ActionBar, InputLabel } from '../../../components';

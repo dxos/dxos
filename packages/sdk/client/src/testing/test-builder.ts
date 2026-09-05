@@ -27,8 +27,8 @@ import {
   createRtcTransportFactory,
 } from '@dxos/network-manager';
 import { TcpTransportFactory } from '@dxos/network-manager/transport/tcp';
-import { Runtime_Client_Storage_SqliteMode } from '@dxos/protocols/buf/dxos/config_pb';
 import { Invitation, Invitation_AuthMethod, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { Runtime_Client_Storage_SqliteMode } from '@dxos/protocols/buf/dxos/config_pb';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import * as Coordinator from '@dxos/worker-framework/Coordinator';

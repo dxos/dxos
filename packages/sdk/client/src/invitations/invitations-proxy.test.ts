@@ -8,7 +8,12 @@ import { Stream } from '@dxos/async';
 import type { ClientServices } from '@dxos/client-protocol';
 import { buf } from '@dxos/protocols/buf';
 import { Invitation_Kind } from '@dxos/protocols/buf/dxos/client/invitation_pb';
-import { QueryInvitationsResponse, QueryInvitationsResponse_Action, QueryInvitationsResponse_Type, QueryInvitationsResponseSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
+import {
+  QueryInvitationsResponse,
+  QueryInvitationsResponse_Action,
+  QueryInvitationsResponse_Type,
+  QueryInvitationsResponseSchema,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
 
 import { InvitationsProxy } from './invitations-proxy';
 

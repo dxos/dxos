@@ -5,8 +5,13 @@
 import { type Mutex, type MutexGuard } from '@dxos/async';
 import { type Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import { buf, bufWkt } from '@dxos/protocols/buf';
-import { type Invitation, InvitationSchema, Invitation_AuthMethod, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { decodeCompat, encodeCompat } from '@dxos/protocols/buf-shape-compat';
+import {
+  type Invitation,
+  Invitation_AuthMethod,
+  Invitation_State,
+  InvitationSchema,
+} from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Invitation as LegacyInvitation } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';

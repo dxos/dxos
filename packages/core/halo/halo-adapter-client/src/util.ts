@@ -10,10 +10,10 @@ import {
   AuthenticatingInvitationObservable,
   type CancellableInvitationObservable,
   type Invitation as ClientInvitation,
-  InvitationEncoder,
   Invitation_AuthMethod as ClientInvitationAuthMethod,
   Invitation_State as ClientInvitationState,
   Invitation_Type as ClientInvitationType,
+  InvitationEncoder,
 } from '@dxos/client/invitations';
 import { EffectEx } from '@dxos/effect';
 import { Invitation as HaloInvitation, Space as HaloSpace, InvitationError } from '@dxos/halo';

@@ -9,7 +9,7 @@ import { IdentityDid } from '@dxos/keys';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { random } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
-import { type Invitation, Invitation_State } from '@dxos/react-client/invitations';
+import { Invitation_State } from '@dxos/react-client/invitations';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { InvitationManager, type InvitationManagerProps } from '../../steps';

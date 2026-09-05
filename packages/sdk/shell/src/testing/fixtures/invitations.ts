@@ -2,9 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { PublicKey } from '@dxos/react-client';
 import { buf, fromPublicKey } from '@dxos/protocols/buf';
-import { CancellableInvitationObservable, type Invitation, InvitationSchema, Invitation_AuthMethod, Invitation_Kind, Invitation_State, Invitation_Type } from '@dxos/react-client/invitations';
+import { PublicKey } from '@dxos/react-client';
+import {
+  CancellableInvitationObservable,
+  Invitation_AuthMethod,
+  Invitation_Kind,
+  Invitation_State,
+  Invitation_Type,
+  InvitationSchema,
+} from '@dxos/react-client/invitations';
 
 export const inviteWithState = (state: Invitation_State) =>
   new CancellableInvitationObservable({

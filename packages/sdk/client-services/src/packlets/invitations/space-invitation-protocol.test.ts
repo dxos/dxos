@@ -9,7 +9,11 @@ import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { AlreadyJoinedError } from '@dxos/protocols';
 import { fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
-import { Invitation, Invitation_Kind, Invitation_State, Invitation_Type } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import {
+  Invitation,
+  Invitation_Kind,
+  Invitation_State,
+} from '@dxos/protocols/buf/dxos/client/invitation_pb';
 
 import { type ServiceContext } from '../services';
 import { createIdentity, createPeers } from '../testing';
@@ -48,7 +52,9 @@ describe('services/space-invitations-protocol', () => {
     const space1 = await host.dataSpaceManager!.createSpace(new Context());
     const spaceKey = space1.key;
 
-    await Promise.all(performInvitation({ host, guest, options: { kind: Invitation_Kind.SPACE, spaceKey: fromPublicKey(spaceKey) } }));
+    await Promise.all(
+      performInvitation({ host, guest, options: { kind: Invitation_Kind.SPACE, spaceKey: fromPublicKey(spaceKey) } }),
+    );
 
     {
       const space1 = host.dataSpaceManager!.spaces.get(spaceKey)!;
@@ -72,7 +78,9 @@ describe('services/space-invitations-protocol', () => {
     const space1 = await host.dataSpaceManager!.createSpace(new Context());
     const spaceKey = space1.key;
 
-    await Promise.all(performInvitation({ host, guest, options: { kind: Invitation_Kind.SPACE, spaceKey: fromPublicKey(spaceKey) } }));
+    await Promise.all(
+      performInvitation({ host, guest, options: { kind: Invitation_Kind.SPACE, spaceKey: fromPublicKey(spaceKey) } }),
+    );
 
     {
       const space1 = host.dataSpaceManager!.spaces.get(spaceKey)!;

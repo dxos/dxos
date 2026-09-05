@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Invitation, Invitation_State } from '@dxos/react-client/invitations';
+import { Invitation_State } from '@dxos/react-client/invitations';
 
 export const resolvedBgColor = (status: Invitation_State) =>
   status === Invitation_State.ERROR

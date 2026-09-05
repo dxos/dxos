@@ -6,9 +6,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { IdentityDid, PublicKey } from '@dxos/keys';
-import { HaloSpaceMember, SpaceMember } from '@dxos/react-client/echo';
 import { fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
-import { type Invitation, Invitation_State } from '@dxos/react-client/invitations';
+import { HaloSpaceMember, SpaceMember } from '@dxos/react-client/echo';
+import { Invitation_State } from '@dxos/react-client/invitations';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { InvitationList, InvitationListItemImpl, SpaceMemberListImpl } from '../../components';

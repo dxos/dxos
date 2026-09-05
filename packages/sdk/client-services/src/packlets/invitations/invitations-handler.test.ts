@@ -8,7 +8,13 @@ import { type PushStream, Trigger, sleep, waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
-import { Invitation, Invitation_AuthMethod, Invitation_Kind, Invitation_State, Invitation_Type } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import {
+  Invitation,
+  Invitation_AuthMethod,
+  Invitation_Kind,
+  Invitation_State,
+  Invitation_Type,
+} from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 

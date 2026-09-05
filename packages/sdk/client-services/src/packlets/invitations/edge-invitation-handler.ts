@@ -15,8 +15,13 @@ import {
   type JoinSpaceRequest,
   type JoinSpaceResponseBody,
 } from '@dxos/protocols';
+import {
+  Invitation_AuthMethod,
+  Invitation_Kind,
+  Invitation_State,
+  Invitation_Type,
+} from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { schema } from '@dxos/protocols/proto';
-import { Invitation_AuthMethod, Invitation_Kind, Invitation_State, Invitation_Type } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
   type AdmissionRequest,

@@ -5,7 +5,12 @@
 import { formatDistanceToNow } from 'date-fns';
 import React, { type ComponentPropsWithoutRef, useCallback } from 'react';
 
-import { type CancellableInvitationObservable, type Invitation, type InvitationStatus, Invitation_State, useInvitationStatus } from '@dxos/react-client/invitations';
+import {
+  type CancellableInvitationObservable,
+  Invitation_State,
+  type InvitationStatus,
+  useInvitationStatus,
+} from '@dxos/react-client/invitations';
 import {
   Avatar,
   type AvatarContentProps,

@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { type Invitation, Invitation_AuthMethod } from '@dxos/react-client/invitations';
+import { Invitation_AuthMethod } from '@dxos/react-client/invitations';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { ConfirmReset } from '../../steps';

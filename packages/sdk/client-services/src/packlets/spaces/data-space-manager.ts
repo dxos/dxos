@@ -50,10 +50,15 @@ import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError } from '@dxos/protocols';
 import { toPublicKey } from '@dxos/protocols/buf';
+import { buf, fromPublicKey } from '@dxos/protocols/buf';
+import {
+  AdmissionKeypairSchema,
+  Invitation_Kind,
+  Invitation_Type,
+  SpaceState,
+} from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
 import { type PeerState } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
-import { buf, fromPublicKey } from '@dxos/protocols/buf';
-import { AdmissionKeypairSchema, Invitation, Invitation_Kind, Invitation_Type, SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { EdgeReplicationSetting, type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import {

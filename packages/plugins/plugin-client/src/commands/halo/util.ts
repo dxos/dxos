@@ -6,7 +6,7 @@ import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 
 import { Doc, FormBuilder } from '@dxos/cli-util';
-import { type AuthenticatingInvitationObservable, type Invitation, Invitation_State } from '@dxos/client/invitations';
+import { type AuthenticatingInvitationObservable, Invitation_State } from '@dxos/client/invitations';
 
 /**
  * Pretty prints an identity with ANSI colors.

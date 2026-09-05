@@ -432,9 +432,11 @@ export const JoinPanel = ({
 
   const onHaloDone = useCallback(() => {
     propsOnDone?.({
-      identityKey: joinState.context.identity?.identityKey ?? toPublicKey(joinState.context.halo.invitation?.identityKey) ?? null,
+      identityKey:
+        joinState.context.identity?.identityKey ?? toPublicKey(joinState.context.halo.invitation?.identityKey) ?? null,
       swarmKey: toPublicKey(joinState.context.halo.invitation?.swarmKey) ?? null,
-      spaceKey: joinState.context.identity?.spaceKey ?? toPublicKey(joinState.context.halo.invitation?.spaceKey) ?? null,
+      spaceKey:
+        joinState.context.identity?.spaceKey ?? toPublicKey(joinState.context.halo.invitation?.spaceKey) ?? null,
       target: joinState.context.halo.invitation?.target ?? null,
     });
   }, [joinState, propsOnDone]);

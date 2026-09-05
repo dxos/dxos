@@ -9,10 +9,10 @@ import {
   type AuthenticatingInvitationObservable,
   type CancellableInvitationObservable,
   type Invitation,
-  InvitationEncoder,
   Invitation_AuthMethod,
   Invitation_State,
   Invitation_Type,
+  InvitationEncoder,
 } from '@dxos/client/invitations';
 import { log } from '@dxos/log';
 

@@ -14,8 +14,8 @@ import * as Prompt from 'effect/unstable/cli/Prompt';
 import { CommandConfig } from '@dxos/cli-util';
 import { print, waitForSync } from '@dxos/cli-util';
 import { FormBuilder } from '@dxos/cli-util';
-import { toPublicKey } from '@dxos/protocols/buf';
 import { ClientService } from '@dxos/client';
+import { toPublicKey } from '@dxos/protocols/buf';
 
 import { acceptInvitation } from './util';
 
