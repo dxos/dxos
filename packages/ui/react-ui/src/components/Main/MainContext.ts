@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import {
   type ComponentPropsWithoutRef,
   type Dispatch,
@@ -13,6 +12,7 @@ import {
 
 import { log } from '@dxos/log';
 import { useFocusGroup } from '@dxos/react-focus';
+import { createContext } from '@dxos/react-hooks';
 
 export const MAIN_NAME = 'Main';
 

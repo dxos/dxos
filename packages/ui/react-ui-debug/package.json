@@ -47,8 +47,7 @@
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@dxos/ui-types": "workspace:*",
-    "@radix-ui/react-context": "catalog:"
+    "@dxos/ui-types": "workspace:*"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",

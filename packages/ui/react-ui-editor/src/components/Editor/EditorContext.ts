@@ -3,9 +3,9 @@
 //
 
 import { type Extension } from '@codemirror/state';
-import { createContext } from '@radix-ui/react-context';
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 
+import { createContext } from '@dxos/react-hooks';
 import { type XmlWidgetState } from '@dxos/ui-editor';
 
 import { type EditorToolbarState } from '../EditorToolbar/types';

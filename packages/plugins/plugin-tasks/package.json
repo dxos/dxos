@@ -160,6 +160,7 @@
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-calendar": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
@@ -170,8 +171,6 @@
     "@dxos/types": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@radix-ui/react-compose-refs": "catalog:",
-    "@radix-ui/react-context": "catalog:",
     "date-fns": "catalog:"
   },
   "devDependencies": {

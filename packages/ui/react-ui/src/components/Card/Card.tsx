@@ -2,8 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
+import { ark } from '@ark-ui/react/factory';
 import DOMPurify from 'dompurify';
 import React, {
   CSSProperties,
@@ -72,8 +71,8 @@ type CardRootProps = {
  * overrides via `classNames` — land directly on the grid container.
  * Slot-parents (`Focus.Item asChild`, `Mosaic.Tile asChild`, etc.) continue to
  * work because `composable()` preserves the COMPOSABLE marker that slottable parents
- * check before warning, and Radix `Slot` merges the parent's props onto the inner
- * `<div>` exactly the way `slottable`'s `Slot`/`Primitive.div` branch did.
+ * check before warning, and `asChild` merges the parent's props onto the inner
+ * `<div>` exactly the way `slottable`'s `ark.div` did.
  */
 const CardRoot = composable<HTMLDivElement, CardRootProps>(
   (
@@ -121,18 +120,17 @@ const CardHeader = slottable<HTMLDivElement, CardHeaderProps>(
   ({ children, asChild, style, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const { className, ...rest } = composableProps(props);
-    // `@radix-ui/react-primitive` has no `header` node; the intrinsic element handles asChild via Slot.
-    const Comp = asChild ? Slot : 'header';
 
     return (
-      <Comp
+      <ark.header
+        asChild={asChild}
         {...rest}
         style={{ ...iconSize(5), ...style }}
         className={tx('card.header', {}, className)}
         ref={forwardedRef}
       >
         {children}
-      </Comp>
+      </ark.header>
     );
   },
 );
@@ -216,7 +214,7 @@ function CardMenu<T extends any | void = void>({ context, items }: CardMenuProps
   const { t } = useTranslation(translationKey);
   // A `Card.Root` with an `onClick` is a click target, and this menu sits inside it. React portals
   // propagate through the React tree rather than the DOM, so without this both the trigger and the
-  // item selection reach the card's handler and activate it on the way past. Radix's `asChild`
+  // item selection reach the card's handler and activate it on the way past. The factory's `asChild`
   // composes the trigger handler, so the menu still opens.
   const stopPropagation = useCallback<MouseEventHandler>((event) => event.stopPropagation(), []);
   return (
@@ -300,12 +298,11 @@ const CARD_TITLE_NAME = 'Card.Title';
 const CardTitle = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   const { className, ...rest } = composableProps(props, { role: 'heading' });
-  const Comp = asChild ? Slot : Primitive.div;
 
   return (
-    <Comp {...rest} className={tx('card.title', {}, className)} ref={forwardedRef}>
+    <ark.div asChild={asChild} {...rest} className={tx('card.title', {}, className)} ref={forwardedRef}>
       {children}
-    </Comp>
+    </ark.div>
   );
 });
 
@@ -319,13 +316,12 @@ const CARD_BODY_NAME = 'Card.Body';
 
 const CardBody = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const { className, ...rest } = composableProps(props);
-  const Comp = asChild ? Slot : Primitive.div;
   const { tx } = useThemeContext();
 
   return (
-    <Comp {...rest} className={tx('card.body', {}, className)} ref={forwardedRef}>
+    <ark.div asChild={asChild} {...rest} className={tx('card.body', {}, className)} ref={forwardedRef}>
       {children}
-    </Comp>
+    </ark.div>
   );
 });
 
@@ -348,12 +344,12 @@ type CardSectionProps = { title?: ReactNode };
 const CardSection = slottable<HTMLDivElement, CardSectionProps>(
   ({ children, asChild, title, role, ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
-    const Comp = asChild ? Slot : Primitive.div;
     const { tx } = useThemeContext();
     const titleId = useId();
 
     return (
-      <Comp
+      <ark.div
+        asChild={asChild}
         {...rest}
         role={role ?? (title ? 'group' : 'none')}
         aria-labelledby={title ? titleId : undefined}
@@ -366,7 +362,7 @@ const CardSection = slottable<HTMLDivElement, CardSectionProps>(
           </div>
         )}
         {children}
-      </Comp>
+      </ark.div>
     );
   },
 );
@@ -392,17 +388,17 @@ const CardRow = slottable<HTMLDivElement, CardRowProps>(
   ({ children, asChild, fullWidth, style, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const { className, ...rest } = composableProps(props);
-    const Comp = asChild ? Slot : Primitive.div;
 
     return (
-      <Comp
+      <ark.div
+        asChild={asChild}
         {...rest}
         style={{ ...iconSize(4), ...style }}
         className={tx('card.row', { fullWidth }, className)}
         ref={forwardedRef}
       >
         {children}
-      </Comp>
+      </ark.div>
     );
   },
 );
@@ -433,12 +429,17 @@ const CardText = slottable<HTMLDivElement, CardTextProps>(
   ({ children, asChild, role, truncate, variant = 'default', ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const { className, ...rest } = composableProps(props);
-    const Comp = asChild ? Slot : Primitive.div;
 
     return (
-      <Comp {...rest} role={role ?? 'none'} className={tx('card.text', { variant })} ref={forwardedRef}>
+      <ark.div
+        asChild={asChild}
+        {...rest}
+        role={role ?? 'none'}
+        className={tx('card.text', { variant })}
+        ref={forwardedRef}
+      >
         <span className={tx('card.text-span', { variant, truncate }, className)}>{children}</span>
-      </Comp>
+      </ark.div>
     );
   },
 );

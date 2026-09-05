@@ -2,33 +2,206 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as SelectPrimitive from '@radix-ui/react-select';
-import React, { forwardRef } from 'react';
+// `Select` on Ark's select machine, keeping the children-driven API: Ark takes the options as a
+// `collection`, so each `Option` registers itself with the root, which builds the collection from
+// what is rendered. Moving consumers to a `collection` prop is a later phase (MIGRATION.md).
+
+import { createListCollection } from '@ark-ui/react/collection';
+import { ark } from '@ark-ui/react/factory';
+import { Portal } from '@ark-ui/react/portal';
+import {
+  Select as SelectPrimitive,
+  useSelect,
+  useSelectContext as useSelectPrimitiveContext,
+} from '@ark-ui/react/select';
+import React, {
+  type ComponentPropsWithRef,
+  type FC,
+  type ReactNode,
+  forwardRef,
+  useCallback,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+
+import { useComposedRefs } from '@dxos/react-hooks';
 
 import { useElevationContext, useSafeCollisionPadding, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { Button, type ButtonProps } from '../Button';
 import { Icon } from '../Icon';
+import { SELECT_NAME, type SelectOptionEntry, SelectProvider, useSelectContext } from './SelectContext';
 
-type SelectRootProps = SelectPrimitive.SelectProps;
+/** Consumers hand the machine a per-side padding; it takes one number, so the widest side wins. */
+const toOverflowPadding = (padding: { top: number; right: number; bottom: number; left: number }) =>
+  Math.max(padding.top, padding.right, padding.bottom, padding.left);
 
-const SelectRoot = SelectPrimitive.Root;
+/** Document order, which is the order keyboard navigation and typeahead follow. */
+const byDocumentPosition = (a: SelectOptionEntry, b: SelectOptionEntry) => {
+  if (!a.element || !b.element || a.element === b.element) {
+    return 0;
+  }
+  return a.element.compareDocumentPosition(b.element) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
+};
 
-type SelectTriggerProps = SelectPrimitive.SelectTriggerProps;
+//
+// Root
+//
+
+type SelectRootProps = {
+  children?: ReactNode;
+  value?: string;
+  defaultValue?: string;
+  /** A method, so a handler typed for a narrower value union is accepted. */
+  onValueChange?(value: string): void;
+  open?: boolean;
+  defaultOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  disabled?: boolean;
+  required?: boolean;
+  /** Renders a hidden native `<select>` under this name for the enclosing form. */
+  name?: string;
+  form?: string;
+};
+
+const SelectRoot: FC<SelectRootProps> = ({
+  children,
+  value,
+  defaultValue,
+  onValueChange,
+  open,
+  defaultOpen,
+  onOpenChange,
+  disabled,
+  required,
+  name,
+  form,
+}) => {
+  const [entries, setEntries] = useState<ReadonlyMap<string, SelectOptionEntry>>(() => new Map());
+  const register = useCallback((entry: SelectOptionEntry) => {
+    setEntries((current) => new Map(current).set(entry.value, entry));
+    return () =>
+      setEntries((current) => {
+        if (current.get(entry.value) !== entry) {
+          return current;
+        }
+        const next = new Map(current);
+        next.delete(entry.value);
+        return next;
+      });
+  }, []);
+
+  const collection = useMemo(
+    () =>
+      createListCollection<SelectOptionEntry>({
+        items: [...entries.values()].sort(byDocumentPosition),
+        itemToValue: (item) => item.value,
+        itemToString: (item) => item.text,
+        isItemDisabled: (item) => item.disabled,
+      }),
+    [entries],
+  );
+
+  const safeCollisionPadding = useSafeCollisionPadding(8);
+  const positioning = useMemo(
+    () => ({
+      strategy: 'fixed' as const,
+      placement: 'bottom-start' as const,
+      overflowPadding: toOverflowPadding(safeCollisionPadding),
+    }),
+    [safeCollisionPadding],
+  );
+
+  const select = useSelect<SelectOptionEntry>({
+    collection,
+    value: value === undefined ? undefined : value === '' ? [] : [value],
+    defaultValue: defaultValue === undefined ? undefined : [defaultValue],
+    onValueChange: ({ value: next }) => onValueChange?.(next[0] ?? ''),
+    open,
+    defaultOpen,
+    onOpenChange: ({ open: next }) => onOpenChange?.(next),
+    disabled,
+    required,
+    name,
+    form,
+    positioning,
+  });
+
+  const context = useMemo(() => ({ register, entries }), [register, entries]);
+
+  return (
+    // The options register from inside the content, so it stays mounted (hidden) while closed, and
+    // the root's element takes no space.
+    <SelectPrimitive.RootProvider value={select} className='contents'>
+      <SelectProvider {...context}>{children}</SelectProvider>
+      {name && <SelectPrimitive.HiddenSelect />}
+    </SelectPrimitive.RootProvider>
+  );
+};
+
+SelectRoot.displayName = 'Select.Root';
+
+//
+// Trigger
+//
+
+type SelectTriggerProps = ComponentPropsWithRef<typeof SelectPrimitive.Trigger>;
 
 const SelectTrigger = SelectPrimitive.Trigger;
 
-type SelectValueProps = SelectPrimitive.SelectValueProps;
+//
+// Value
+//
 
-const SelectValue = SelectPrimitive.Value;
+const VALUE_NAME = 'Select.Value';
 
-type SelectIconProps = SelectPrimitive.SelectIconProps;
+type SelectValueProps = ComponentPropsWithRef<typeof SelectPrimitive.ValueText>;
 
-const SelectIcon = SelectPrimitive.Icon;
+/** Shows the selected option as it rendered itself, so an option with an icon keeps it here. */
+const SelectValue = forwardRef<HTMLSpanElement, SelectValueProps>(({ children, ...props }, forwardedRef) => {
+  const select = useSelectPrimitiveContext();
+  const { entries } = useSelectContext(VALUE_NAME);
+  const selected = select.value[0];
+  const entry = selected === undefined ? undefined : entries.get(selected);
+  return (
+    <SelectPrimitive.ValueText {...props} ref={forwardedRef}>
+      {children ?? entry?.node ?? undefined}
+    </SelectPrimitive.ValueText>
+  );
+});
 
-type SelectPortalProps = SelectPrimitive.SelectPortalProps;
+SelectValue.displayName = VALUE_NAME;
 
-const SelectPortal = SelectPrimitive.Portal;
+//
+// Icon
+//
+
+type SelectIconProps = ComponentPropsWithRef<typeof SelectPrimitive.Indicator>;
+
+const SelectIcon = SelectPrimitive.Indicator;
+
+//
+// Portal
+//
+
+type SelectPortalProps = {
+  children?: ReactNode;
+  /** Specify a container element to portal the content into. */
+  container?: HTMLElement | null;
+};
+
+const SelectPortal = ({ children, container }: SelectPortalProps) => {
+  const containerRef = useMemo(() => (container ? { current: container } : undefined), [container]);
+  return <Portal container={containerRef}>{children}</Portal>;
+};
+
+SelectPortal.displayName = 'Select.Portal';
+
+//
+// TriggerButton
+//
 
 type SelectTriggerButtonProps = Omit<ButtonProps, 'children'> & Pick<SelectValueProps, 'placeholder' | 'children'>;
 
@@ -38,10 +211,10 @@ const SelectTriggerButton = forwardRef<HTMLButtonElement, SelectTriggerButtonPro
     return (
       <SelectPrimitive.Trigger asChild ref={forwardedRef}>
         <Button {...props} classNames={tx('select.triggerButton', {}, classNames)}>
-          <SelectPrimitive.Value placeholder={placeholder}>{children}</SelectPrimitive.Value>
-          <SelectPrimitive.Icon asChild>
+          <SelectValue placeholder={placeholder}>{children}</SelectValue>
+          <SelectPrimitive.Indicator asChild>
             <Icon size={3} icon='ph--caret-down--bold' />
-          </SelectPrimitive.Icon>
+          </SelectPrimitive.Indicator>
         </Button>
       </SelectPrimitive.Trigger>
     );
@@ -50,97 +223,129 @@ const SelectTriggerButton = forwardRef<HTMLButtonElement, SelectTriggerButtonPro
 
 SelectTriggerButton.displayName = 'Select.TriggerButton';
 
-type SelectContentProps = ThemedClassName<SelectPrimitive.SelectContentProps>;
+//
+// Content
+//
+
+type SelectContentProps = ThemedClassName<ComponentPropsWithRef<typeof SelectPrimitive.Content>>;
 
 const SelectContent = forwardRef<HTMLDivElement, SelectContentProps>(
-  ({ classNames, children, collisionPadding = 8, ...props }, forwardedRef) => {
+  ({ classNames, children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const elevation = useElevationContext();
-    const safeCollisionPadding = useSafeCollisionPadding(collisionPadding);
     return (
-      <SelectPrimitive.Content
-        {...props}
-        data-arrow-keys='up down'
-        collisionPadding={safeCollisionPadding}
-        className={tx('select.content', { elevation }, classNames)}
-        position='popper'
-        ref={forwardedRef}
-      >
-        {children}
-      </SelectPrimitive.Content>
+      <SelectPrimitive.Positioner className={tx('select.positioner', { elevation })}>
+        <SelectPrimitive.Content
+          {...props}
+          data-arrow-keys='up down'
+          className={tx('select.content', { elevation }, classNames)}
+          ref={forwardedRef}
+        >
+          {children}
+        </SelectPrimitive.Content>
+      </SelectPrimitive.Positioner>
     );
   },
 );
 
 SelectContent.displayName = 'Select.Content';
 
-type SelectScrollUpButtonProps = ThemedClassName<SelectPrimitive.SelectScrollUpButtonProps>;
+//
+// Viewport
+//
 
-const SelectScrollUpButton = forwardRef<HTMLDivElement, SelectScrollUpButtonProps>(
-  ({ classNames, children, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
-    return (
-      <SelectPrimitive.SelectScrollUpButton
-        {...props}
-        className={tx('select.scrollButton', {}, classNames)}
-        ref={forwardedRef}
-      >
-        {children ?? <Icon size={3} icon='ph--caret-up--bold' />}
-      </SelectPrimitive.SelectScrollUpButton>
-    );
-  },
-);
-
-SelectScrollUpButton.displayName = 'Select.ScrollUpButton';
-
-type SelectScrollDownButtonProps = ThemedClassName<SelectPrimitive.SelectScrollDownButtonProps>;
-
-const SelectScrollDownButton = forwardRef<HTMLDivElement, SelectScrollDownButtonProps>(
-  ({ classNames, children, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
-    return (
-      <SelectPrimitive.SelectScrollDownButton
-        {...props}
-        className={tx('select.scrollButton', {}, classNames)}
-        ref={forwardedRef}
-      >
-        {children ?? <Icon size={3} icon='ph--caret-down--bold' />}
-      </SelectPrimitive.SelectScrollDownButton>
-    );
-  },
-);
-
-SelectScrollDownButton.displayName = 'Select.ScrollDownButton';
-
-type SelectViewportProps = ThemedClassName<SelectPrimitive.SelectViewportProps>;
+type SelectViewportProps = ThemedClassName<ComponentPropsWithRef<typeof SelectPrimitive.List>>;
 
 const SelectViewport = forwardRef<HTMLDivElement, SelectViewportProps>(
   ({ classNames, children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      <SelectPrimitive.SelectViewport {...props} className={tx('select.viewport', {}, classNames)} ref={forwardedRef}>
+      <SelectPrimitive.List {...props} className={tx('select.viewport', {}, classNames)} ref={forwardedRef}>
         {children}
-      </SelectPrimitive.SelectViewport>
+      </SelectPrimitive.List>
     );
   },
 );
 
 SelectViewport.displayName = 'Select.Viewport';
 
-type SelectItemProps = ThemedClassName<SelectPrimitive.SelectItemProps>;
+//
+// Item
+//
 
-const SelectItem = forwardRef<HTMLDivElement, SelectItemProps>(({ classNames, ...props }, forwardedRef) => {
-  const { tx } = useThemeContext();
-  return <SelectPrimitive.Item {...props} className={tx('select.item', {}, classNames)} ref={forwardedRef} />;
-});
+const ITEM_NAME = 'Select.Item';
 
-SelectItem.displayName = 'Select.Item';
+type SelectItemProps = ThemedClassName<
+  Omit<ComponentPropsWithRef<typeof SelectPrimitive.Item>, 'item' | 'value'> & {
+    value: string;
+    /** What typeahead matches when the children are not plain text. */
+    textValue?: string;
+    disabled?: boolean;
+  }
+>;
 
-type SelectItemTextProps = SelectPrimitive.SelectItemTextProps;
+type SelectItemImplProps = SelectItemProps & {
+  /** What the trigger shows for this item when selected; the item's children unless given. */
+  node?: ReactNode;
+};
+
+const SelectItemImpl = forwardRef<HTMLDivElement, SelectItemImplProps>(
+  ({ classNames, value, textValue, disabled = false, node, children, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    const { register } = useSelectContext(ITEM_NAME);
+    const elementRef = useRef<HTMLDivElement | null>(null);
+    const item = useMemo(() => ({ value, text: textValue ?? '', disabled }), [value, textValue, disabled]);
+
+    // The entry the collection holds; its text is the rendered text unless given, and its node is
+    // whatever rendered last, read by the trigger at its own render.
+    const valueNode = node ?? children;
+    const entryRef = useRef<SelectOptionEntry | null>(null);
+    useLayoutEffect(() => {
+      const element = elementRef.current;
+      const entry: SelectOptionEntry = {
+        value,
+        text: textValue ?? element?.textContent ?? '',
+        node: valueNode,
+        disabled,
+        element,
+      };
+      entryRef.current = entry;
+      return register(entry);
+      // The node is refreshed by the effect below rather than re-registering on every render.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [register, value, textValue, disabled]);
+    useLayoutEffect(() => {
+      if (entryRef.current) {
+        entryRef.current.node = valueNode;
+      }
+    });
+
+    return (
+      <SelectPrimitive.Item
+        {...props}
+        item={item}
+        className={tx('select.item', {}, classNames)}
+        ref={useComposedRefs(forwardedRef, elementRef)}
+      >
+        {children}
+      </SelectPrimitive.Item>
+    );
+  },
+);
+
+SelectItemImpl.displayName = ITEM_NAME;
+
+const SelectItem: typeof SelectItemImpl = SelectItemImpl;
+
+//
+// ItemText / ItemIndicator
+//
+
+type SelectItemTextProps = ComponentPropsWithRef<typeof SelectPrimitive.ItemText>;
 
 const SelectItemText = SelectPrimitive.ItemText;
 
-type SelectItemIndicatorProps = ThemedClassName<SelectPrimitive.SelectItemIndicatorProps>;
+type SelectItemIndicatorProps = ThemedClassName<ComponentPropsWithRef<typeof SelectPrimitive.ItemIndicator>>;
 
 const SelectItemIndicator = forwardRef<HTMLDivElement, SelectItemIndicatorProps>(
   ({ classNames, children, ...props }, forwardedRef) => {
@@ -159,46 +364,56 @@ const SelectItemIndicator = forwardRef<HTMLDivElement, SelectItemIndicatorProps>
 
 SelectItemIndicator.displayName = 'Select.ItemIndicator';
 
+//
+// Option
+//
+
 type SelectOptionProps = SelectItemProps;
 
-const SelectOption = forwardRef<HTMLDivElement, SelectItemProps>(({ children, classNames, ...props }, forwardedRef) => {
-  const { tx } = useThemeContext();
+const SelectOption = forwardRef<HTMLDivElement, SelectOptionProps>(({ children, ...props }, forwardedRef) => {
   return (
-    <SelectPrimitive.Item {...props} className={tx('select.item', {}, classNames)} ref={forwardedRef}>
+    <SelectItemImpl {...props} node={children} ref={forwardedRef}>
       <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
       <span className='grow' />
       <Icon size={3} icon='ph--check--regular' />
-    </SelectPrimitive.Item>
+    </SelectItemImpl>
   );
 });
 
 SelectOption.displayName = 'Select.Option';
 
-type SelectGroupProps = SelectPrimitive.SelectGroupProps;
+//
+// Group / Label / Separator
+//
 
-const SelectGroup = SelectPrimitive.Group;
+type SelectGroupProps = ComponentPropsWithRef<typeof SelectPrimitive.ItemGroup>;
 
-type SelectLabelProps = SelectPrimitive.SelectLabelProps;
+const SelectGroup = SelectPrimitive.ItemGroup;
 
-const SelectLabel = SelectPrimitive.Label;
+type SelectLabelProps = ComponentPropsWithRef<typeof SelectPrimitive.ItemGroupLabel>;
 
-type SelectSeparatorProps = ThemedClassName<SelectPrimitive.SelectSeparatorProps>;
+const SelectLabel = SelectPrimitive.ItemGroupLabel;
+
+type SelectSeparatorProps = ThemedClassName<ComponentPropsWithRef<typeof ark.div>>;
 
 const SelectSeparator = forwardRef<HTMLDivElement, SelectSeparatorProps>(({ classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
-  return <SelectPrimitive.Separator {...props} className={tx('select.separator', {}, classNames)} ref={forwardedRef} />;
+  return (
+    <ark.div
+      role='separator'
+      aria-orientation='horizontal'
+      {...props}
+      className={tx('select.separator', {}, classNames)}
+      ref={forwardedRef}
+    />
+  );
 });
 
 SelectSeparator.displayName = 'Select.Separator';
 
-type SelectArrowProps = ThemedClassName<SelectPrimitive.SelectArrowProps>;
-
-const SelectArrow = forwardRef<SVGSVGElement, SelectArrowProps>(({ classNames, ...props }, forwardedRef) => {
-  const { tx } = useThemeContext();
-  return <SelectPrimitive.Arrow {...props} className={tx('select.arrow', {}, classNames)} ref={forwardedRef} />;
-});
-
-SelectArrow.displayName = 'Select.Arrow';
+//
+// Select
+//
 
 export const Select = {
   Root: SelectRoot,
@@ -208,8 +423,6 @@ export const Select = {
   Icon: SelectIcon,
   Portal: SelectPortal,
   Content: SelectContent,
-  ScrollUpButton: SelectScrollUpButton,
-  ScrollDownButton: SelectScrollDownButton,
   Viewport: SelectViewport,
   Item: SelectItem,
   ItemText: SelectItemText,
@@ -218,11 +431,11 @@ export const Select = {
   Group: SelectGroup,
   Label: SelectLabel,
   Separator: SelectSeparator,
-  Arrow: SelectArrow,
 };
 
+export { SELECT_NAME };
+
 export type {
-  SelectArrowProps,
   SelectContentProps,
   SelectGroupProps,
   SelectIconProps,
@@ -233,8 +446,6 @@ export type {
   SelectOptionProps,
   SelectPortalProps,
   SelectRootProps,
-  SelectScrollDownButtonProps,
-  SelectScrollUpButtonProps,
   SelectSeparatorProps,
   SelectTriggerButtonProps,
   SelectTriggerProps,

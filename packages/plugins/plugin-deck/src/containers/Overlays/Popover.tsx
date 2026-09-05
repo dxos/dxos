@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, CardIconSlot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import { createContext } from '@dxos/react-hooks';
 import {
   Card,
   Icon,
@@ -142,7 +142,6 @@ export const PopoverContent = () => {
     <Popover.Portal>
       <Popover.Content
         side={side}
-        sticky='always'
         hideWhenDetached
         onOpenAutoFocus={isRename ? undefined : (event) => event.preventDefault()}
         onInteractOutside={handleInteractOutside}
@@ -150,7 +149,7 @@ export const PopoverContent = () => {
         classNames={[
           roundedClassNames,
           !isRename && [
-            'origin-(--radix-popover-content-transform-origin)',
+            'origin-(--transform-origin)',
             'data-[state=open]:animate-popover-in',
             'data-[state=closed]:animate-popover-out',
           ],

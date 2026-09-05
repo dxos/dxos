@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import React, {
   type KeyboardEvent,
   type MouseEvent,
@@ -26,6 +25,7 @@ import {
   Toolbar,
   composable,
   composableProps,
+  createContext,
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
@@ -53,7 +53,7 @@ import { type TaskNode, buildTaskForest, flattenVisibleTasks } from './tree-mode
 const shortDid = (did: string): string => `${did.slice(0, 12)}…`;
 
 //
-// Context — plain Radix context (un-scoped); nesting task lists has no meaning today.
+// Context — a plain `createContext` context from `@dxos/react-hooks` (un-scoped); nesting task lists has no meaning today.
 //
 
 const TASK_LIST_NAME = 'TaskList.Root';

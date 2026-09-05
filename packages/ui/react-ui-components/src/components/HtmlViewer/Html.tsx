@@ -158,8 +158,11 @@ export const Html = ({ html, loadRemoteImages = false, dialect, classNames }: Ht
   const dialectRef = useRef(dialect);
   dialectRef.current = dialect;
 
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    // Reset on mount: StrictMode runs the cleanup below and mounts again, and a flag left set would
+    // discard every resolved source afterwards.
+    disposedRef.current = false;
+    return () => {
       disposedRef.current = true;
       for (const url of srcCacheRef.current.values()) {
         if (url.startsWith('blob:')) {
@@ -167,9 +170,8 @@ export const Html = ({ html, loadRemoteImages = false, dialect, classNames }: Ht
         }
       }
       srcCacheRef.current.clear();
-    },
-    [],
-  );
+    };
+  }, []);
 
   const forbidTags = dialect?.forbidTags;
   const forbidTagsKey = forbidTags?.join(',') ?? '';

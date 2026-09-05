@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import React, { forwardRef, useMemo, useRef, useState } from 'react';
 
 import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
+import { useComposedRefs } from '@dxos/react-hooks';
 import { Panel, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Card, Icon, IconButton } from '@dxos/react-ui';
 import { Menu } from '@dxos/react-ui-menu';

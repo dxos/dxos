@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { type ReactVirtualizerOptions, type Virtualizer, useVirtualizer } from '@tanstack/react-virtual';
 import React, {
   type FC,
@@ -18,6 +17,7 @@ import React, {
 } from 'react';
 
 import { invariant } from '@dxos/invariant';
+import { useComposedRefs } from '@dxos/react-hooks';
 import { type Axis, type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
 import { type GetId } from '@dxos/react-ui-dnd';
 import { mx } from '@dxos/ui-theme';
@@ -46,8 +46,7 @@ import { type MosaicTileProps } from './Tile';
 // - [Placeholder 3.5]
 //
 // Implementation Notes
-// - We use [Radix composition](https://www.radix-ui.com/primitives/docs/guides/composition) to factor out composible aspects (e.g., Focus, Mosaic, etc.)
-// - NOTE: Use Slottable only if needed to disambiguate; otherwise a suspected Radix bug causes compositional problems.
+// - `asChild` composition (see the composite-components skill) factors out composable aspects (e.g., Focus, Mosaic, etc.)
 
 const MOSAIC_STACK_NAME = 'MosaicStack';
 

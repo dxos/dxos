@@ -14,7 +14,6 @@ export const TypeSelect = ({ value, onValueChange }: Pick<SelectRootProps, 'valu
       <Select.TriggerButton variant='ghost' classNames='w-full px-0!' />
       <Select.Portal>
         <Select.Content>
-          <Select.ScrollUpButton />
           <Select.Viewport>
             {ComputeValueType.literals.map((type) => (
               <Select.Option key={type} value={type}>
@@ -22,8 +21,6 @@ export const TypeSelect = ({ value, onValueChange }: Pick<SelectRootProps, 'valu
               </Select.Option>
             ))}
           </Select.Viewport>
-          <Select.ScrollDownButton />
-          <Select.Arrow />
         </Select.Content>
       </Select.Portal>
     </Select.Root>

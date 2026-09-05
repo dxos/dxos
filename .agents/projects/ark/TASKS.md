@@ -601,32 +601,252 @@ Findings that shaped the plan, so they are not re-derived:
   Radix had a 296-day release gap ending 2026-06-06, Ark's worst is 56 days; Radix has ~68× the
   downloads.
 
-- [ ] **Phase 0 — port Carousel, Editable, Splitter, Stepper to Ark.** In flight as background task
-      `task_2d437290` on its own worktree from `main` (started 2026-09-02). ~2,264 LOC; consumers
-      4 / 13 / 8 / 3; adds `@ark-ui/react` to `react-ui` (catalog). Lands as
-      `react-ui: rebuild Carousel, Editable, Splitter and Stepper on Ark UI`.
-- [ ] **Phase 1 — own the scaffolding.** `composeRefs`, `useControllableState`, unscoped
-      `createContext` in `react-primitives`; `Primitive.*` (270 sites) → `ark.*`. Sweep the 28
-      sibling packages and 28 plugin/app/sdk files; re-point the plugins that import
-      `@radix-ui/react-tooltip`/`-toolbar`/`-toggle-group`/`-toggle`/`-toast` directly at
-      `@dxos/react-ui` (layering violations regardless). Update the `composite-components` skill for
-      the no-scope context. Worth doing even if nothing after it happens.
-- [ ] **Phase 2 — leaves.** Slider, Progress, Clipboard, Avatars, ScrollArea, Button toggles,
-      `Input.Checkbox`, `react-list` Collapsible, `react-ui-tabs`, hand-rolled Separator. Namespace
-      API holds for all of them.
-- [ ] **Phase 3 — the forks.** Tooltip → Popover → Menu. Add `Positioner`, keep our `Viewport`,
+- [x] **Phase 0 — port Carousel, Editable, Splitter, Stepper to Ark.** Landed 2026-09-03 as #12902
+      (`react-ui: rebuild Carousel, Editable, Splitter and Stepper on Ark UI`); ~2,264 LOC; consumers
+      4 / 13 / 8 / 3; `@ark-ui/react` is now a `react-ui` dependency (catalog).
+      **Overnight run, decided 2026-09-05 (user, 1x1):** attempt Phases 1 → 2 → 3 → 4a in order, one branch
+      (`claude/react-ui-ark-port-fe9f63`), one draft PR opened after Phase 1 and rewritten per phase, merge
+      `origin/main` at every phase boundary. Stop at the first phase that cannot go green; commit what is.
+      Excluded: Toast (model change), Calendar/RAC cluster, retiring the `Toolbar.*` namespace, Phase 6.
+      Decisions: boot budget trips → re-baseline by the measured delta with the dated justification and the
+      number at the top of the PR body; Select keeps the children API (collection built internally) and
+      MIGRATION.md records moving to Ark's `collection` as a later phase; `Input.Checkbox` → Ark (DOM becomes
+      label + native input, ref type → input); `Input.Switch` and `PinInput` stay hand-built, MIGRATION.md
+      records `pin-input` as a later phase; `ToggleGroup` keeps the single/multiple API via an adapter;
+      **Toolbar is pulled into Phase 2** — `Toolbar.Root` on a `@dxos/react-focus` group, `Toolbar.ToggleGroup`
+      over Ark `toggle-group`, namespace kept; `Slottable` in Tooltip and ScrollArea → restructure, no shim;
+      all long suites (full build, full test, composer build + budget, Playwright e2e) pre-authorised; the
+      composite-components skill, MIGRATION.md status lines and this ledger are updated as phases land;
+      **every phase ends with the storybook render check** — the vitest storybook project of every touched
+      package, console errors counted as failures (user, 2026-09-05).
+
+- [x] **Phase 1 — own the scaffolding.** Done 2026-09-05 on this branch. `@dxos/react-hooks` owns
+      `composeRefs`/`useComposedRefs` (over the existing `mergeRefs`), `useControllableState` (Radix
+      signature, uncontrolled `onChange` reported post-commit so updaters resolve through React),
+      `createContext` (Radix signature, no scope) and `composeEventHandlers`, with tests. `Primitive.*` + `Slot` → `ark.<tag>` from `@ark-ui/react/factory` in 45 files; the seven scoped contexts nobody
+      ever scoped (react-list ×2, react-input, grid, menu, syntax-highlighter, shell Viewport) are plain
+      contexts — `create*Scope`, `*ScopedProps` and the `__*Scope` props are gone. The five Radix
+      scaffolding packages plus `-id` and `primitive` left 46 package.jsons; `react-ui` keeps
+      `react-context`/`-slot`/`-primitive` for the forks only (Tooltip, Popover, DropdownMenu,
+      ContextMenu, ScrollArea untouched — they go with Phases 2–3). Doc'd in the composite-components
+      skill and `slots.ts`. The plugin-level `@radix-ui/react-tooltip`/`-toolbar`/… imports the plan
+      mentions no longer existed in `src` — only composer-app's package.json listed six Radix packages
+      with no import; `react-slot` was the one this pass could drop, the rest wait for Phase 6.
+- [x] **Phase 2 — leaves.** Done 2026-09-05 (commits 2f58623d5f, 2ff04eccc4, d248f761cd, b533d002cd).
+      Order, one commit each, gated on build + the touched packages' unit and storybook tests: Separator (hand-rolled `role="separator"`) → Toggle + ToggleGroup (adapter keeps
+      the single/multiple API: `single` maps `value` ↔ `[value]`) + **Toolbar** (`Root` = `useFocusGroup`
+      with the orientation as axis, `memorizeCurrent`, `cyclic`; `role="toolbar"` kept; Button/IconButton/
+      Toggle/Link wrappers become pass-throughs since react-focus takes any focusable; `ToggleGroup` runs
+      `rovingFocus={false}` under the bar; the 196 `Toolbar.Root` consumers change nothing) →
+      `Input.Checkbox` (Ark `checkbox`: `Root(label) > Control > Indicator` + `HiddenInput` carrying the
+      `Input.Root` id and aria; `react-list`'s `CheckedState` type decoupled from Radix) → `react-list`
+      Collapsible (Ark `collapsible`; only the story consumes the parts) → `react-ui-tabs` (Ark `tabs`;
+      `[data-state="active"]` → `[data-selected]`; `Tabs.TabPrimitive` stays an alias of the Ark trigger)
+      → Slider (adapter keeps `value: number[]` / `onValueChange(number[])`; `thumbLabels` → Ark's
+      `aria-label[]`) → ScrollArea last (real rewrite: Ark `scroll-area` replaces the 250-line
+      `ScrollAreaThumbs` measurer; `Slottable` goes because the thumbs render inside `Root` beside the
+      viewport; options `autoHide`/`thin`/`padding`/`centered`/`snap`/`native` stay as theme props).
+      **Verdicts revised on inspection, 2026-09-05:** Progress, Avatars and Clipboard are NOT ported —
+      Progress is countdown/error/rewind semantics the `progress` machine has no notion of; Avatar's
+      content is the lit `DxAvatar` element, so Ark's image-fallback machine has nothing to own;
+      Clipboard is a ten-line context plus two buttons. Recorded in MIGRATION.md.
+      **Found doing it:** (1) an Ark checkbox toggles through label activation, which any ancestor
+      `preventDefault()` on click cancels in Chromium and happy-dom does not emulate — the react-ui-task
+      story caught it; the control now clicks the input itself and is pointer-focusable so focus does
+      not jump to the tree row (which re-renders the row under the click). (2) Ark's slider hides its
+      thumbs (`visibility: hidden`) until it has measured them — pass `thumbSize` or every
+      `getByRole('slider')` fails. (3) Ark's tabs have no per-panel `forceMount`; `keepMounted` on
+      `Tabs.Root` replaces it. (4) `pnpm install` while a moon test run is spawning vite yanks the
+      binary from under it (`spawn vite EACCES`); never install during a run.
+      **Phase 3 Tooltip design (found 2026-09-05, before starting):** the DXOS Tooltip is not a Radix copy but
+      a single-provider design — one `Tooltip.Provider`, one content node, N `Tooltip.Trigger content= side=`
+      (47 consumers), a virtual anchor moved to the active trigger, and `Tooltip.test.tsx` pins two invariants:
+      only the active trigger carries `aria-describedby`/`data-state`, and hovering one trigger re-renders no
+      other. Zag's tooltip machine (1.43) has native multi-trigger support (`triggerValue`, `ids.trigger(value)`,
+      active-trigger positioning), which fits the shape — BUT Ark's `Tooltip.Trigger` component subscribes every
+      trigger to machine state (all re-render on hover) and Zag stamps `aria-describedby` and `data-state=open`
+      on every trigger of the machine, not just the current one. So: keep our own trigger element (imperative
+      attributes as today), give it `id = value` so `ids.trigger = (value) => value` lets the machine find it,
+      drive the machine through `setTriggerValue`/`setOpen`/`reposition({ placement: side })` from the existing
+      delay/skip-delay logic, and take Ark's `Positioner`/`Content`/`Arrow`+`ArrowTip` + `interactive` content
+      hover in place of popper/dismissable-layer/presence and the 150-line grace-area hull. `onInteract` (the
+      TextTooltip truncation veto) gates the open in the provider. Deletion is smaller than the guide's 942
+      LOC suggests; the win is the content layer, not the trigger logic.
+
+- [x] **Phase 3 — the forks.** DONE 2026-09-05. Tooltip DONE 2026-09-05 (see design above): `Tooltip.Provider` is one
+      `useTooltip` machine with `ids.trigger = (value) => value`, our own `ark.button` trigger delegating
+      pointer/blur/click to `api.getTriggerProps({ value })` at event time (so no trigger subscribes),
+      imperative `aria-describedby`/`data-state` on the active trigger as before, Ark `Positioner` /
+      `Content` / `Arrow`+`ArrowTip` in a `Portal`, `interactive` content hover from the machine. The
+      positioner's inline `z-index: var(--z-index)` outranks any `z-*` class, so the theme sets the
+      variable (`[--z-index:50]`) instead; the arrow is painted from `--arrow-background`. `Tooltip.test.tsx`
+      (4) and a new `TestHover` play story (opens, positions at the trigger, hands over) pass. Gone:
+      `@radix-ui/react-tooltip`, `-visually-hidden`, the `TooltipScopedProps`/`createTooltipScope` exports,
+      the grace-area hull. `useSafeCollisionPadding` now types its padding itself (`CollisionPadding`).
+      Popover DONE 2026-09-05: `Popover.Root` = `usePopover` + `RootProvider lazyMount unmountOnExit`
+      (Ark's presence keeps closed content mounted-hidden before the first open unless `lazyMount`; Radix
+      never mounted it — a play story caught the difference). `Content` lifts placement (`side`/`align`/
+      `sideOffset`/`alignOffset`/`collisionPadding`/`collisionBoundary`/`avoidCollisions`/`hideWhenDetached`)
+      to the root as state and the dismissal/focus handlers as a ref, since Ark keeps both on the root;
+      `onOpenAutoFocus` is asked at render (every consumer only ever calls `preventDefault()`), which sets
+      the machine's `autoFocus`. `VirtualTrigger` registers a ref the root turns into
+      `positioning.getAnchorRect`; the `[data-popover-collision-boundary]` ancestor becomes
+      `positioning.boundary`; the safe-area padding collapses to its widest side because Zag's
+      `overflowPadding` is one number. `Viewport` reads `--available-*` (Zag sets them on the positioner);
+      `--radix-popover-content-transform-origin` → `--transform-origin` (2 consumers), the Combobox's
+      `--radix-popover-trigger-width` → `--reference-width`; `sticky` dropped (1 consumer). New
+      `surfaceZIndexVar` in ui-theme feeds the positioner's `--z-index`. Play stories: open/place/Escape,
+      virtual anchor. Gone: `aria-hidden`, `react-remove-scroll`, `createPopoverScope`.
+      Menu DONE 2026-09-05: `DropdownMenu` and `ContextMenu` are one implementation (`DropdownMenu.tsx`,
+      `ContextMenu.tsx` deleted) over Ark's `menu` machine — `Menu.Root` for both, `Trigger` vs
+      `ContextTrigger`, `Sub` = nested `Menu.Root` + `TriggerItem` (the machine parents it itself),
+      `Content` lifts placement to the root as Popover does; `lazyMount unmountOnExit`; `typeahead`.
+      **Selection is the item's own click**, not the machine's `onSelect`: Zag's `invokeOnSelect` reads
+      `highlightedValue` from React-state-backed context, and a click that lands before React commits the
+      pointerdown's highlight (which `userEvent.click` right after open does) finds it null and selects
+      nothing — an afternoon of Zag instrumentation to find. Keyboard Enter still works because the
+      machine clicks the highlighted element. `closeOnSelect={false}` and the item closes the root unless
+      its cancelable `onSelect` event was `preventDefault()`ed (Radix contract kept). `modal` accepted,
+      no-op. `MenuButton`, `react-ui-menu` and the 20-odd consumers compile unchanged. Play stories:
+      DropdownMenu select, ContextMenu, MenuButton select. Gone: `@radix-ui/react-menu`,
+      `-dropdown-menu`, `-context-menu`, `-popper`, `-dismissable-layer`, `-focus-scope`, `-focus-guards`,
+      `-presence`, `-portal`, `createDropdownMenuScope`. Radix left in `react-ui`: `react-dialog`,
+      `react-alert-dialog`, `react-select`, `react-toast` (Phase 4).
+      **Boot budget tripped at the Phase 3 boundary (2026-09-05):** 4,565,469 bytes, 4,164 over the 4.35 MB
+      ceiling; re-baselined to 4.55 MB per the decision above. Sourcemap attribution (`scratchpad/attribute.mjs`
+      over `out/boot-budget.json` with `@jridgewell/trace-mapping`) puts the whole ~78 KB delta from Phase 2 on
+      the Zag floating stack (`menu` 25.7 KB, `focus-trap` 12.8, `tooltip` 9.7, `popover` 7.7, `popper` 6.9,
+      `dismissable` 5.6, `presence` 3.7, `interact-outside` 3.2, `aria-hidden` 1.9, `remove-scroll` 1.1), while
+      the ~19 KB Radix floating stack stays in the graph via `react-select`/`react-dialog`/`react-toast` until
+      Phase 4 — so Phase 3 is the point of maximum duplication. Bring the ceiling back down after Phase 4a.
+      **Tooling trap (2026-09-05):** an install that swaps binaries under a running moon build leaves
+      tasks cached as successful with an EMPTY `dist/types` (dx-compile's type emit died, the lib emit
+      did not); every later full build then fails downstream with `Could not find a declaration file for
+module '@dxos/x'` while `x:build` reports "cached". Cure: find packages with `dist/lib` but no
+      `dist/types/src` and `moon run <pkg>:build --force` each, then rebuild. UPDATE: it recurred on every full build
+      for `types` and `react-ui-list` even after forced rebuilds, with dx-build logging `Failed to remove
+dist/types/src: ENOTEMPTY` — a concurrent writer. A Cursor TypeScript native-preview server
+      (`tsc --lsp`, pid seen in `ps`) runs against this worktree, and those two packages are the ones
+      whose files the user has open; the working assumption is that it emits into `dist/types` and leaves
+      a buildinfo that makes dx-build's incremental tsc emit nothing. Mitigation used for the rest of the
+      run: `scratchpad/repair-types.sh` (find buildinfo-only `dist/types`, delete, force-build) before and
+      after every full build. CI is unaffected. **Actual cause found:** `.moon/workspace.yml` sets
+      `cache.unstable_sharedWorktreeCache` — one output CAS per machine shared by every worktree — so a
+      task whose inputs hash matches an archive produced by ANOTHER worktree (with a buildinfo-only
+      `dist/types`, however that build lost them) hydrates that archive here on every full build, and a
+      local `--force` does not replace it. Fix: `moon --cache write exec :build` once, which rewrites
+      every archive from fresh outputs. Tooltip → Popover → Menu. Add `Positioner`, keep our `Viewport`,
       `Arrow` → `Arrow`+`ArrowTip` (`fill-separator` → `--arrow-background`), rename the five
       variables, delete the three aliasing blocks, collapse DropdownMenu + ContextMenu onto one
       `menu` machine, retire the 116 `__scope*` props. Removes ten Radix packages plus `aria-hidden`
       and `react-remove-scroll`.
-- [ ] **Phase 4 — Dialog + Main, Toast, Select.** Evaluate `drawer` for `Main`'s sidebars (also the
-      missing mobile bottom sheet); Toast is a model change (`createToaster` store); decide whether
-      `Select.Option` keeps a children-driven layer that builds the collection so most of the 44
-      consumers change one import.
+- [x] **Phase 4a — Dialog + Main, Select.** DONE 2026-09-05. `Dialog` and `AlertDialog` are one
+      implementation (`DialogRootImpl` with `role`) over Ark's dialog machine, `lazyMount unmountOnExit`;
+      `Overlay` is Ark's `Backdrop` with the content nested inside it, since all 27 consumers nest
+      `Content` in `Overlay` and Ark's separate `Positioner` would have changed every one — the backdrop's
+      own presence also runs the exit animation Radix's Presence ran. `Content` lifts its dismissal/focus
+      handlers to the root as Popover does; `onOpenAutoFocus` and `onCloseAutoFocus` are asked at render
+      (`initialFocusEl` → the `data-dx-autofocus` control, else the content when vetoed; `restoreFocus`).
+      Zag's `checkRenderedElements` sets `aria-labelledby`/`aria-describedby` only for a rendered
+      `Title`/`Description` (play story pins the no-description case). `AlertDialog`: `role='alertdialog'`,
+      `closeOnInteractOutside: false`; `Cancel`/`Action` are `CloseTrigger`. `modal={false}` maps to
+      `modal`/`trapFocus`/`preventScroll` off. `Dialog.Description` stays a `<p>` (Ark's default is a div).
+      `Main`'s sidebars keep the dialog machine (`useDialog` directly, `modal: false`, `aria-label` from
+      `label`, `open` only below `lg`) with `hidden={false}` on the content so the always-mounted sidebar
+      keeps its CSS slide; pointer-opened sidebars keep focus where it is by handing the machine
+      `document.activeElement` as `initialFocusEl` (Zag always focuses something). **Ark `drawer`
+      evaluated and NOT used:** its machine positions and animates the content itself (translate,
+      snap points), which would fight `main.css`'s inset-driven slide, and at `lg` the sidebar is not a
+      dialog at all — a mobile bottom sheet is a feature of its own, not this port.
+      `Select` keeps the children API: each `Item`/`Option` registers `{ value, text, node, element }`
+      with the root, which builds `createListCollection` from the entries in document order; `Value`
+      renders the selected entry's `node` (Radix's `ItemText` behaviour — the icon in `SelectField`
+      survives). Consequence: the content stays mounted hidden while closed (Radix kept it in a detached
+      fragment), or nothing would register. Root's element is `display: contents`. `onValueChange` is a
+      method signature (a consumer typed it for a narrower union). `Arrow`, `ScrollUpButton`,
+      `ScrollDownButton` deleted and removed from 28 consumer files (Zag scrolls the highlighted item
+      into view). `--radix-select-*` → `--reference-width`/`--available-height`; z-index via the
+      positioner variable. Play stories: Dialog open/labelled/described/Escape, no-description +
+      autofocus, AlertDialog outside click + Cancel, Select pointer + keyboard past a disabled option,
+      Main toggle. Radix left in `react-ui`: `react-toast` only (Toast excluded from this run).
+      Boot budget after 4a: 4,547,849 bytes (−17,620 from Phase 3), ceiling left at 4.55 MB until Toast
+      evicts the Radix layer. Gates: full build, 34-package storybook sweep (SearchDialog's FTS play story
+      timed out under the 2-wide sweep, passes alone in 2 s), react-ui unit tests, lint of the 18 touched
+      packages, knip, format.
+- [x] **Phase 4b — Toast.** DONE 2026-09-05. Ark's toast is a store plus a `Toaster` host; the
+      declarative API the nine consumers use is kept: `Toast.Provider` owns `createToaster` (bottom-end,
+      overlap — a pile that expands under the pointer, as Ark's demo (user, 2026-09-05), `overlap={false}`
+      on the provider for rows — 8px gap, offsets via `--dx-toast-offset-end` so `md` widens the end inset) and a
+      `ToastRegistry` (an external store, so a root re-registering each render re-renders the viewport
+      alone, not the app under the provider); `Toast.Root` renders nothing where it stands — it registers
+      `{ children, classNames, props, ref, countdown }` and mirrors `open` into the store (`create` with
+      its own id / `dismiss`), with `onStatusChange('dismissing')` reported back as `onOpenChange(false)`;
+      **Store calls are deferred to a microtask:** Zag's React binding `flushSync`s when the store
+      publishes, which React refuses inside an effect ("flushSync was called from inside a lifecycle
+      method", 72 per run). Hygiene, not the phantom-slot fix — the slot reproduced on 8ee1fe6662 (remove
+      on unmount) and not on e55eeabd87 (dismiss on unmount) with the same seven-toast script, which is
+      now `TestPileClosesRanks`. Lesson recorded: verify a repro fails on the old code before crediting a fix.
+      **StrictMode (the real remaining break, found 2026-09-05 by driving the user's tab through the
+      Chrome extension):** storybook renders under StrictMode, so effects run mount → cleanup → mount;
+      the root's cleanup dismissed the toast it had just created, so with dismiss-on-unmount NO toast
+      ever appeared in the dev storybook while the runner (no StrictMode) passed. Deferred store calls
+      now consult an `alive` ref, so only a real unmount dismisses. `TestStrictMode` wraps the stack in
+      `StrictMode` in the runner. Verified in the live tab: toasts appear; closing the middle closes ranks.
+      **Runner parity (2026-09-05):** the vitest storybook project now defines `FRAMEWORK_OPTIONS`
+      `{ strictMode: true }` in `vite.base.config.ts`, so it renders under StrictMode like the dev server
+      (a `setProjectAnnotations` decorator does not reach the renderer). Effect-count probe reads 2; the
+      Toast module without the alive guard fails two stories in it. Swept react-ui (61 files) and 38 of
+      40 consumer packages green; the one StrictMode-exposed defect found, `HtmlViewer`'s disposed flag
+      never reset on remount, is fixed. Toast stories rationalized to five (Default with args, Stacked
+      with an `overlap` control, TestLifecycle, TestPile, TestClosesRanks).
+      A root that unmounts while visible is `dismiss`ed, not `remove`d: removing drops the actor before
+      it retires its height from the pile, which left a phantom slot between survivors (seen 2026-09-05).
+      `Toast.Viewport` is Ark's `Toaster`, rendering each registered root inside the machine's actor so
+      `Title`/`Description`/`Close`/`Action` find their toast and the countdown reads `paused` from it.
+      `duration: Infinity` persists (Zag honours it). `title: true` on create so the root carries
+      `aria-labelledby`. `type` and `Action.altText` accepted, no-op. Positioning and the enter/exit
+      motion are the machine's inline variables transitioned by `ui-theme/css/components/toast.css`
+      (the `toast-*` keyframes and `--radix-toast-swipe-*` are gone). Removed `@radix-ui/react-toast`
+      and `tailwindcss-radix` (its only user). Play story: open from state, labelled by title, closed
+      from the action, both changes reported. `react-ui` now imports nothing from `@radix-ui`.
+      Boot budget after 4b: 4,546,844 bytes, no `@radix-ui` bytes in the graph; ~186 KB above main's
+      2026-08-31 figure (4,360,490) — the Zag machines are the new floor, ceiling stays 4.55 MB.
+      Lockfile: 31 `@radix-ui` versions gone (~1.9 MB built), rest via tldraw/excalidraw/leva (Phase 6).
+      Also: `playground/Playground.stories.tsx` — a section per component family (buttons, text fields,
+      controls, select, slider, progress, tags, avatar, skeleton, navigation, editable, collapsible, card,
+      banner, overlays, dialogs), each its own story plus `All` composing them, under a sticky bar that
+      sets the accent hue (overriding the accent role tokens on the subtree) and density.
+- [ ] **Replace `react-qr-rounded` with Ark's QR code** (`@ark-ui/react/qr-code`; tracked 2026-09-05).
+- [ ] **Fold `react-ui-tabs` into `react-ui` and remove the package** (tracked 2026-09-05): Tabs is on
+      Ark already; it belongs beside the other core components. Consumers change one import.
+- [ ] **Fold `react-ui-menu` into `react-ui` and remove the package** (tracked 2026-09-05): the
+      action-graph menu wrappers (`useMenuActions`, `Menu.Root`, `ToolbarMenu`, `DropdownMenu`) sit
+      on `react-ui`'s Menu; one package fewer in the boot graph's dependency chain.
 - [ ] **Phase 5 — decisions.** RAC (keep for the date/time cluster vs consolidate onto Ark; default
       keep); Toolbar (no Ark toolbar — focus group from `@dxos/react-focus` + `toggle-group`); Focus
       (keep as the seam).
-- [ ] **Phase 6 — remove `@radix-ui/*`** from catalog and lockfile; `pnpm knip` is the gate.
+- [x] **Phase 6 — remove `@radix-ui/*` from the catalog** DONE 2026-09-05: 36 `@radix-ui/*` entries plus
+      `aria-hidden`, `react-remove-scroll` and `tailwindcss-radix` removed from `pnpm-workspace.yaml`; no
+      manifest declared any of them. The 226 lockfile entries left are transitive to tldraw, excalidraw
+      and leva and stay with them. knip clean.
+- [x] **Re-organize `react-ui/src/primitives`** DONE 2026-09-05: `providers/` (Density, Elevation,
+      Theme), `layout/` (Container, Flex, Grid, `layout.ts`), `flow/` (Show, Switch — structural
+      rendering, no anatomy). Barrels unchanged for consumers; story titles follow the folders.
+- [ ] **Storybook icon sprite first-load gap** (tracked 2026-09-05, not the port's). The dev server
+      assembles the page's icon sprite from the modules it has scanned, so a story's first load can
+      receive a sprite (99 symbols) that lacks that story's own icons — `Toggle` showed a blank
+      button for `ph--text-b--regular` — and the runtime fallback 404s because `/phosphor` is
+      deliberately not served (`tools/storybook-react/.storybook/main.ts`). A reload gets the full
+      sprite (143). Fix belongs in the icons plugin: scan the story module before answering the
+      sprite request, or serve the fallback in dev.
+      **Second symptom (2026-09-05, playground):** after a `pnpm install` ran under the live server, its
+      sprite (`tools/storybook-react/static/icons.svg`) stopped being rewritten at all — stuck at 99
+      symbols while newly loaded stories' icons (all valid Phosphor names) never appeared, across
+      reloads and a re-transform of the story. A fresh server (the vitest storybook runner) builds the
+      sprite correctly (109 symbols, every icon present), so the plugin's write path wedges when
+      `node_modules` is relinked beneath it (watcher/asset stat on replaced symlinks is the suspect).
+      Recovery is a server restart; a durable fix would re-stat assets on each write and resubscribe
+      the watcher after the assets directory is replaced.
 - [ ] **Separate, not this phase: touch drag in the Tree.** `pragmatic-drag-and-drop` is native
       HTML5 DnD, which does not fire from touch in iPhone WKWebView, so Tree reordering is
       desktop-only under Tauri mobile. Library-independent; verify on device first. Tracked

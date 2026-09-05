@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
+import { createContext } from '@dxos/react-hooks';
 
 import { type GameboardModel, type Move, type PieceRecord } from './types';
 
@@ -16,9 +16,9 @@ export type GameboardContextValue<M extends GameboardModel<any>> = {
   onPromotion: (move: Move) => void;
 };
 
-export const [GameboardContextProvider, useRadixGameboardContext] =
+export const [GameboardContextProvider, useGameboardContextValue] =
   createContext<GameboardContextValue<any>>('Gameboard');
 
 export const useGameboardContext = <M extends GameboardModel<any>>(consumerName: string): GameboardContextValue<M> => {
-  return useRadixGameboardContext(consumerName);
+  return useGameboardContextValue(consumerName);
 };

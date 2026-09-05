@@ -9,20 +9,30 @@
     @apply border border-un-accent;
     &[aria-checked='true'],
     &[aria-checked='mixed'],
+    &[data-state='checked'],
+    &[data-state='indeterminate'],
     &:checked {
       @apply bg-accent-bg accent-accent-bg border-accent-bg;
     }
 
-    &:not([disabled]),
+    &:not([disabled]):not([data-disabled]),
     &[disabled='false'] {
       &:hover {
         @apply bg-un-accent-hover accent-un-accent-hover;
         &[aria-checked='true'],
         &[aria-checked='mixed'],
+        &[data-state='checked'],
+        &[data-state='indeterminate'],
         &:checked {
           @apply bg-accent-bg-hover accent-accent-bg-hover border-accent-bg-hover;
         }
       }
+    }
+
+    /* The Ark control is a div in front of a visually hidden input; the machine stamps the input's
+       keyboard focus onto it, so the ring is drawn from that attribute rather than :focus-visible. */
+    &[data-focus-visible] {
+      @apply ring-focus-line ring-offset-focus-offset z-[1] ring-[var(--color-focus-ring-subtle)];
     }
   }
 
@@ -31,7 +41,6 @@
   }
 
   /* TODO(ZaymonFC): Focus is handled by .dx-focus-ring, but should ideally be applied as part of this component.*/
-  /* NOTE: This isn't compatible with the Radix switch. */
   .dx-checkbox--switch {
     @apply inline-block appearance-none relative shrink-0 h-5 w-8;
     @apply shadow-inner transition-colors bg-un-accent;

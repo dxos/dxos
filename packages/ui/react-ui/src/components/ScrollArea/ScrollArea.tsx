@@ -2,16 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useComposedRefs } from '@radix-ui/react-compose-refs';
-import { createContext } from '@radix-ui/react-context';
-import { Primitive } from '@radix-ui/react-primitive';
-import { Slot, Slottable } from '@radix-ui/react-slot';
+import { ark } from '@ark-ui/react/factory';
 import React, { CSSProperties, useMemo, useState } from 'react';
 
+import { createContext, useComposedRefs } from '@dxos/react-hooks';
 import { type AllowedAxis, type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
-import { composableProps, slottable } from '../../util';
+import { composable, composableProps, slottable } from '../../util';
 import { ScrollAreaThumbs } from './ScrollAreaThumbs';
 import { type ScrollbarDensity, scrollbar } from './scrollbar';
 
@@ -57,12 +55,13 @@ type ScrollAreaRootProps = Partial<ScrollAreaOptions>;
 
 /**
  * ScrollArea provides native scrollbars with custom styling.
+ * The root owns its element: the overlay thumbs render beside the children inside it, so it has no
+ * `asChild` — a consumer that needs to be the scroll root nests the viewport in it instead.
  */
-const ScrollAreaRoot = slottable<HTMLDivElement, ScrollAreaRootProps>(
+const ScrollAreaRoot = composable<HTMLDivElement, ScrollAreaRootProps>(
   (
     {
       children,
-      asChild,
       orientation = 'vertical',
       autoHide = true,
       scrollbars = true,
@@ -77,7 +76,6 @@ const ScrollAreaRoot = slottable<HTMLDivElement, ScrollAreaRootProps>(
   ) => {
     const { tx } = useThemeContext();
     const { className, ...rest } = composableProps(props);
-    const Comp = asChild ? Slot : Primitive.div;
     const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
     const density = thin ? scrollbar.md : scrollbar.lg;
     const options = useMemo(
@@ -87,13 +85,12 @@ const ScrollAreaRoot = slottable<HTMLDivElement, ScrollAreaRootProps>(
 
     return (
       <ScrollAreaProvider {...options} density={density} setViewport={setViewport}>
-        <Comp {...rest} className={tx('scrollArea.root', options, className)} ref={forwardedRef}>
-          {/* Slottable marks the merge target so the thumbs render alongside `children` under `asChild`. */}
-          <Slottable>{children}</Slottable>
+        <div {...rest} className={tx('scrollArea.root', options, className)} ref={forwardedRef}>
+          {children}
           {!native && scrollbars && viewport && (
             <ScrollAreaThumbs viewport={viewport} orientation={orientation} density={density} autoHide={autoHide} />
           )}
-        </Comp>
+        </div>
       </ScrollAreaProvider>
     );
   },
@@ -121,7 +118,6 @@ const ScrollAreaViewport = slottable<HTMLDivElement>(({ children, asChild, ...pr
   const options = useScrollAreaContext(SCROLLAREA_VIEWPORT_NAME);
   const { density, setViewport } = options;
   const { className, style, ...rest } = composableProps(props);
-  const Comp = asChild ? Slot : Primitive.div;
   const ref = useComposedRefs(forwardedRef, setViewport);
   const vars: ScrollAreaVars = {
     '--scroll-width': options.scrollbars ? `${density.size}px` : '0px',
@@ -132,9 +128,15 @@ const ScrollAreaViewport = slottable<HTMLDivElement>(({ children, asChild, ...pr
   };
 
   return (
-    <Comp {...rest} style={vars} className={tx('scrollArea.viewport', options, className)} ref={ref}>
+    <ark.div
+      asChild={asChild}
+      {...rest}
+      style={vars}
+      className={tx('scrollArea.viewport', options, className)}
+      ref={ref}
+    >
       {children}
-    </Comp>
+    </ark.div>
   );
 });
 

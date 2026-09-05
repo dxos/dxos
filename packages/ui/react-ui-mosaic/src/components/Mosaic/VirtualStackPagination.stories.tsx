@@ -321,7 +321,6 @@ const FeedPaginationStory = () => {
                     <Select.Option value='number'>Number</Select.Option>
                     <Select.Option value='word'>Word</Select.Option>
                   </Select.Viewport>
-                  <Select.Arrow />
                 </Select.Content>
               </Select.Portal>
             </Select.Root>
@@ -335,7 +334,6 @@ const FeedPaginationStory = () => {
                     <Select.Option value='asc'>Ascending</Select.Option>
                     <Select.Option value='desc'>Descending</Select.Option>
                   </Select.Viewport>
-                  <Select.Arrow />
                 </Select.Content>
               </Select.Portal>
             </Select.Root>

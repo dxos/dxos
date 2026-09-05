@@ -16,7 +16,7 @@ import React, {
 
 import { useForwardedRef, useIsFocused } from '@dxos/react-hooks';
 
-import { INPUT_NAME, type InputScopedProps, useInputContext } from './InputContext';
+import { INPUT_NAME, useInputContext } from './InputContext';
 
 type PinInputProps = Omit<ComponentPropsWithRef<'input'>, 'type' | 'maxLength'> & {
   /** Class name applied to each segment div. */
@@ -28,7 +28,6 @@ type PinInputProps = Omit<ComponentPropsWithRef<'input'>, 'type' | 'maxLength'> 
 const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
   (
     {
-      __inputScope,
       className,
       disabled,
       segmentClassName,
@@ -38,10 +37,10 @@ const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
       onChange,
       onPaste,
       ...props
-    }: InputScopedProps<PinInputProps>,
+    }: PinInputProps,
     forwardedRef,
   ) => {
-    const { id, validationValence, descriptionId, errorMessageId } = useInputContext(INPUT_NAME, __inputScope);
+    const { id, validationValence, descriptionId, errorMessageId } = useInputContext(INPUT_NAME);
     const inputRef = useForwardedRef(forwardedRef);
     const inputFocused = useIsFocused(inputRef);
     const [internalValue, setInternalValue] = useState('');

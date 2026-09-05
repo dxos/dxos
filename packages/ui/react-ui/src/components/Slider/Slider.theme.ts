@@ -11,12 +11,11 @@ export type SliderStyleProps = {
 };
 
 const root: ComponentFunction<SliderStyleProps> = ({ orientation, disabled }, ...etc) =>
-  mx(
-    'relative flex touch-none select-none items-center',
-    orientation === 'vertical' ? 'h-full w-3 flex-col' : 'w-full h-3',
-    disabled && 'opacity-50 pointer-events-none',
-    ...etc,
-  );
+  mx(orientation === 'vertical' ? 'h-full' : 'w-full', disabled && 'opacity-50 pointer-events-none', ...etc);
+
+/** The box the machine positions the thumbs in; it is as tall (wide) as a thumb so `top-0` centres them on the track. */
+const control: ComponentFunction<SliderStyleProps> = ({ orientation }, ...etc) =>
+  mx('flex items-center', orientation === 'vertical' ? 'h-full w-3 flex-col' : 'w-full h-3', ...etc);
 
 const track: ComponentFunction<SliderStyleProps> = ({ orientation }, ...etc) =>
   mx(
@@ -28,11 +27,13 @@ const track: ComponentFunction<SliderStyleProps> = ({ orientation }, ...etc) =>
 const range: ComponentFunction<SliderStyleProps> = ({ orientation }, ...etc) =>
   mx('absolute bg-accent-bg', orientation === 'vertical' ? 'w-full' : 'h-full', ...etc);
 
-const thumb: ComponentFunction<SliderStyleProps> = (_props, ...etc) =>
+const thumb: ComponentFunction<SliderStyleProps> = ({ orientation }, ...etc) =>
   mx(
     'block h-3 w-3 shrink-0 rounded-full bg-base-surface border-2 border-accent-bg shadow-sm transition-colors dx-focus-ring',
+    // The machine sets the along-axis offset and transform inline; the cross axis is ours.
+    orientation === 'vertical' ? 'left-0' : 'top-0',
     'hover:bg-hover-surface',
     ...etc,
   );
 
-export const sliderTheme: Theme<SliderStyleProps> = { root, track, range, thumb };
+export const sliderTheme: Theme<SliderStyleProps> = { root, control, track, range, thumb };

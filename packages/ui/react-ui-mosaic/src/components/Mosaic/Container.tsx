@@ -2,12 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import { ark } from '@ark-ui/react/factory';
 import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { useComposedRefs } from '@radix-ui/react-compose-refs';
-import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
 import { bind } from 'bind-event-listener';
 import React, {
   type CSSProperties,
@@ -22,6 +20,7 @@ import React, {
   useState,
 } from 'react';
 
+import { useComposedRefs } from '@dxos/react-hooks';
 import { composable, composableProps } from '@dxos/react-ui';
 import {
   type DndContainerData,
@@ -107,7 +106,6 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
     },
     forwardedRef,
   ) => {
-    const Comp = asChild ? Slot : Primitive.div;
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
 
@@ -292,7 +290,8 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
         setSelected={setSelected}
         registerScrollTo={registerScrollTo}
       >
-        <Comp
+        <ark.div
+          asChild={asChild}
           {...composableProps(props, {
             classNames: 'h-full group',
             style: {
@@ -309,7 +308,7 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
           ref={composedRef}
         >
           {children}
-        </Comp>
+        </ark.div>
         {debug?.()}
       </MosaicContainerContextProvider>
     );

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Slot } from '@radix-ui/react-slot';
+import { ark } from '@ark-ui/react/factory';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type ReactNode, forwardRef } from 'react';
 
@@ -11,18 +11,21 @@ import { composable, composableProps, slottable } from './slots';
 
 //
 // A slottable host and two candidate children: one built with `composable()`, one a plain
-// `forwardRef`. Radix `Slot` merges its props into whichever child it is given, but a child that
+// `forwardRef`. The `asChild` factory merges its props into whichever child it is given, but a child that
 // does not spread them drops the injected `className` and `ref` — silently, with no error and no
 // type complaint. `slottable()` detects that in dev builds and marks the rendered element with
 // `dx-slot-warning` (a dashed rose outline).
 //
 
 const Host = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
-  const Comp: any = asChild ? Slot : 'div';
   return (
-    <Comp {...composableProps(props, { classNames: 'p-2 rounded-sm bg-base-surface text-base-fg' })} ref={forwardedRef}>
+    <ark.div
+      asChild={asChild}
+      {...composableProps(props, { classNames: 'p-2 rounded-sm bg-base-surface text-base-fg' })}
+      ref={forwardedRef}
+    >
       {children}
-    </Comp>
+    </ark.div>
   );
 });
 

@@ -2,12 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as TogglePrimitive from '@radix-ui/react-toggle';
+import { Toggle as TogglePrimitive } from '@ark-ui/react/toggle';
 import React, { forwardRef } from 'react';
 
 import { Button, type ButtonProps } from './Button';
 
-type ToggleProps = Omit<TogglePrimitive.ToggleProps, 'asChild'> & ButtonProps;
+type ToggleProps = ButtonProps & {
+  pressed?: boolean;
+  defaultPressed?: boolean;
+  onPressedChange?: (pressed: boolean) => void;
+};
 
 const Toggle = forwardRef<HTMLButtonElement, ToggleProps>(
   ({ defaultPressed, pressed, onPressedChange, ...props }, forwardedRef) => {
@@ -18,6 +22,8 @@ const Toggle = forwardRef<HTMLButtonElement, ToggleProps>(
     );
   },
 );
+
+Toggle.displayName = 'Toggle';
 
 export { Toggle };
 export type { ToggleProps };

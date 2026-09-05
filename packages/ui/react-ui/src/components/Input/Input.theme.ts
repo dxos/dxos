@@ -113,8 +113,8 @@ const adornment: ComponentFunction<Partial<{ side: 'start' | 'end' }>> = (props,
 const checkbox: ComponentFunction<InputStyleProps> = ({ size = 4 }, ...etc) =>
   mx('dx-checkbox dx-focus-ring', getSize(size), ...etc);
 
-const checkboxIndicator: ComponentFunction<InputStyleProps> = ({ size = 4, checked }, ...etc) =>
-  mx(getSize(snapSize(sizeValue(size) * 0.65, 4)), !checked && 'invisible', ...etc);
+const checkboxIndicator: ComponentFunction<InputStyleProps> = ({ size = 4 }, ...etc) =>
+  mx(getSize(snapSize(sizeValue(size) * 0.65, 4)), ...etc);
 
 const switch_: ComponentFunction<InputStyleProps> = (_props, ...etc) => mx('dx-checkbox--switch dx-focus-ring', ...etc);
 

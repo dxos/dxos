@@ -24,7 +24,7 @@ import { executeMenuAction } from '../util';
 import { actionLabel } from './action-label';
 import { ActionLabel } from './ActionLabel';
 import { DropdownMenu } from './DropdownMenu';
-import { type MenuScopedProps, useMenuItems, useMenuScoped } from './MenuContext';
+import { useMenuItems, useMenuScoped } from './MenuContext';
 
 export type ToolbarMenuDropdownMenuActionGroup = DropdownMenuItemGroupProperties;
 
@@ -54,8 +54,8 @@ export type ToolbarMenuActionProps = {
   action: MenuAction;
 };
 
-const ActionToolbarItem = ({ __menuScope, action }: MenuScopedProps<{ action: MenuAction }>) => {
-  const { iconSize, onAction } = useMenuScoped('ActionToolbarItem', __menuScope);
+const ActionToolbarItem = ({ action }: { action: MenuAction }) => {
+  const { iconSize, onAction } = useMenuScoped('ActionToolbarItem');
   const { t } = useTranslation(translationKey);
   const [pending, setPending] = useState(false);
   const pendingRef = useRef(false);
@@ -109,8 +109,8 @@ const ActionToolbarItem = ({ __menuScope, action }: MenuScopedProps<{ action: Me
   );
 };
 
-const SwitchToolbarItem = ({ __menuScope, action }: MenuScopedProps<{ action: MenuAction }>) => {
-  const { onAction } = useMenuScoped('SwitchToolbarItem', __menuScope);
+const SwitchToolbarItem = ({ action }: { action: MenuAction }) => {
+  const { onAction } = useMenuScoped('SwitchToolbarItem');
   const { t } = useTranslation(translationKey);
   const { label, iconOnly, disabled, testId, hidden, checked } = action.properties;
   const labelStr = toLocalizedString(label, t);
@@ -151,14 +151,10 @@ const SwitchToolbarItem = ({ __menuScope, action }: MenuScopedProps<{ action: Me
   );
 };
 
-const DropdownMenuToolbarItem = ({
-  __menuScope,
-  group,
-  items: propsItems,
-}: MenuScopedProps<ToolbarMenuDropdownGroupProps>) => {
+const DropdownMenuToolbarItem = ({ group, items: propsItems }: ToolbarMenuDropdownGroupProps) => {
   const { t } = useTranslation(translationKey);
-  const { iconSize } = useMenuScoped('DropdownMenuToolbarItem', __menuScope);
-  const items = useMenuItems(group, propsItems, 'DropdownMenuToolbarItem', __menuScope);
+  const { iconSize } = useMenuScoped('DropdownMenuToolbarItem');
+  const items = useMenuItems(group, propsItems, 'DropdownMenuToolbarItem');
   const {
     iconOnly,
     disabled,
@@ -203,7 +199,7 @@ const DropdownMenuToolbarItem = ({
     </NaturalToolbar.Button>
   );
 
-  // No menu behind a disabled trigger, since `disabled` alone does not gate Radix's open handler and the
+  // No menu behind a disabled trigger, since `disabled` alone does not gate the machine's open handler and the
   // group presented an empty dropdown.
   if (disabled) {
     return trigger;
@@ -216,8 +212,8 @@ const DropdownMenuToolbarItem = ({
   );
 };
 
-const ToggleGroupItem = ({ __menuScope, group, action }: MenuScopedProps<ToolbarMenuActionProps>) => {
-  const { iconSize, onAction } = useMenuScoped('ToggleGroupItem', __menuScope);
+const ToggleGroupItem = ({ group, action }: ToolbarMenuActionProps) => {
+  const { iconSize, onAction } = useMenuScoped('ToggleGroupItem');
   const { t } = useTranslation(translationKey);
   const { icon, iconOnly = true, disabled, testId, hidden, classNames, iconClassNames, spin } = action.properties;
 
@@ -254,12 +250,8 @@ const ToggleGroupItem = ({ __menuScope, group, action }: MenuScopedProps<Toolbar
   );
 };
 
-const ToggleGroupToolbarItem = ({
-  __menuScope,
-  group,
-  items: itemsProp,
-}: MenuScopedProps<ToolbarMenuToggleGroupProps>) => {
-  const items = useMenuItems(group, itemsProp, 'ToggleGroupToolbarItem', __menuScope);
+const ToggleGroupToolbarItem = ({ group, items: itemsProp }: ToolbarMenuToggleGroupProps) => {
+  const items = useMenuItems(group, itemsProp, 'ToggleGroupToolbarItem');
   const { selectCardinality } = group.properties;
 
   // TODO(thure): Handle other menu item types.
@@ -286,62 +278,50 @@ const ToggleGroupToolbarItem = ({
  * Attention-gated toolbar container with no graph items of its own — render {@link ToolbarMenuItems}
  * among its children, whose JSX order controls where the graph items sit.
  */
-export const ToolbarMenu = composable<HTMLDivElement, MenuScopedProps<ToolbarMenuProps>>(
-  ({ __menuScope, children, ...props }, forwardedRef) => {
-    const { attendableId, alwaysActive } = useMenuScoped('ToolbarMenu', __menuScope);
-    const { hasAttention } = useAttention(attendableId);
+export const ToolbarMenu = composable<HTMLDivElement, ToolbarMenuProps>(({ children, ...props }, forwardedRef) => {
+  const { attendableId, alwaysActive } = useMenuScoped('ToolbarMenu');
+  const { hasAttention } = useAttention(attendableId);
 
-    return (
-      <NaturalToolbar.Root
-        {...composableProps(props, { classNames: attendableId })}
-        disabled={!alwaysActive && !hasAttention}
-        ref={forwardedRef}
-      >
-        {children}
-      </NaturalToolbar.Root>
-    );
-  },
-);
+  return (
+    <NaturalToolbar.Root
+      {...composableProps(props, { classNames: attendableId })}
+      disabled={!alwaysActive && !hasAttention}
+      ref={forwardedRef}
+    >
+      {children}
+    </NaturalToolbar.Root>
+  );
+});
 
 /** The menu graph's toolbar items, container-free, so JSX order controls their placement. */
-export const ToolbarMenuItems = ({ __menuScope }: MenuScopedProps<{}>) => {
-  const items = useMenuItems(undefined, undefined, 'ToolbarMenuItems', __menuScope);
+export const ToolbarMenuItems = () => {
+  const items = useMenuItems(undefined, undefined, 'ToolbarMenuItems');
 
   return (
     <>
       {items?.map((item: MenuItem) => (
-        <ToolbarMenuItem key={item.id} __menuScope={__menuScope} item={item} />
+        <ToolbarMenuItem key={item.id} item={item} />
       ))}
     </>
   );
 };
 
-const ToolbarMenuItem = ({ __menuScope, item }: MenuScopedProps<{ item: MenuItem }>) => {
+const ToolbarMenuItem = ({ item }: { item: MenuItem }) => {
   if (isSeparator(item)) {
     return <NaturalToolbar.Separator variant={item.properties.variant} />;
   }
 
   if (isMenuGroup(item)) {
     if (item.properties.variant === 'dropdownMenu') {
-      return (
-        <DropdownMenuToolbarItem
-          __menuScope={__menuScope}
-          group={item as MenuItemGroup<DropdownMenuItemGroupProperties>}
-        />
-      );
+      return <DropdownMenuToolbarItem group={item as MenuItemGroup<DropdownMenuItemGroupProperties>} />;
     }
 
-    return (
-      <ToggleGroupToolbarItem
-        __menuScope={__menuScope}
-        group={item as MenuItemGroup<ToggleGroupMenuItemGroupProperties>}
-      />
-    );
+    return <ToggleGroupToolbarItem group={item as MenuItemGroup<ToggleGroupMenuItemGroupProperties>} />;
   }
 
   const action = item as MenuAction;
   if (action.properties?.variant === 'switch') {
-    return <SwitchToolbarItem __menuScope={__menuScope} action={action} />;
+    return <SwitchToolbarItem action={action} />;
   }
 
   // The contributor owns the rendered element (interactions the action model cannot express).
@@ -349,5 +329,5 @@ const ToolbarMenuItem = ({ __menuScope, item }: MenuScopedProps<{ item: MenuItem
     return <>{action.properties.render()}</>;
   }
 
-  return <ActionToolbarItem __menuScope={__menuScope} action={action} />;
+  return <ActionToolbarItem action={action} />;
 };

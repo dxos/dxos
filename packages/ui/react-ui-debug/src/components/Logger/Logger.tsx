@@ -246,7 +246,6 @@ const LoggerToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
         <Select.TriggerButton classNames='w-[6rem] text-sm' placeholder={t('level.label')} />
         <Select.Portal>
           <Select.Content>
-            <Select.ScrollUpButton />
             <Select.Viewport>
               {LEVELS.map((level) => (
                 <Select.Option key={level} value={level} classNames='text-sm'>
@@ -254,8 +253,6 @@ const LoggerToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
                 </Select.Option>
               ))}
             </Select.Viewport>
-            <Select.ScrollDownButton />
-            <Select.Arrow />
           </Select.Content>
         </Select.Portal>
       </Select.Root>
@@ -367,7 +364,6 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
                                   />
                                   <Select.Portal>
                                     <Select.Content>
-                                      <Select.ScrollUpButton />
                                       <Select.Viewport>
                                         <Select.Option value='inherit' classNames='text-sm'>
                                           {t('levels.inherit.label')}
@@ -378,8 +374,6 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
                                           </Select.Option>
                                         ))}
                                       </Select.Viewport>
-                                      <Select.ScrollDownButton />
-                                      <Select.Arrow />
                                     </Select.Content>
                                   </Select.Portal>
                                 </Select.Root>

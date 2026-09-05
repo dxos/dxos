@@ -4,7 +4,6 @@
 
 import '@xyflow/react/dist/base.css';
 
-import { createContext } from '@radix-ui/react-context';
 import {
   Background as BackgroundPrimitive,
   BackgroundVariant,
@@ -20,7 +19,7 @@ import {
 } from '@xyflow/react';
 import React, { type FC, type PropsWithChildren, useCallback, useEffect, useMemo } from 'react';
 
-import { composable, composableProps, useThemeContext } from '@dxos/react-ui';
+import { composable, composableProps, createContext, useThemeContext } from '@dxos/react-ui';
 import { type ComposableProps } from '@dxos/ui-types';
 
 import { GRID, layout } from '../../model';

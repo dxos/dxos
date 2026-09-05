@@ -70,7 +70,6 @@ export const PipelinePanel = ({
                     </Select.Option>
                   ))}
                 </Select.Viewport>
-                <Select.Arrow />
               </Select.Content>
             </Select.Portal>
           </Select.Root>

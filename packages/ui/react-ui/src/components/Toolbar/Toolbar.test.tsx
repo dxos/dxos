@@ -6,14 +6,14 @@ import { cleanup, render, screen } from '@testing-library/react';
 import React, { type PropsWithChildren } from 'react';
 import { afterEach, describe, test } from 'vitest';
 
-import { ThemeProvider } from '../../primitives';
+import { ThemeProvider } from '../../providers';
 import { defaultTx } from '../../theme';
 import { Toolbar } from './Toolbar';
 
 /**
- * Radix applies `role="toolbar"` before spreading caller props, so any `role` key present in the
- * spread wins — including an `undefined` one. That silently stripped the role from every toolbar in
- * the app (roving focus and assistive tech both key off it), so these pin the three cases.
+ * `Toolbar.Root` resolves its role as `role ?? 'toolbar'`, so a `role` key spread as `undefined`
+ * must not strip it — that once silently removed the role from every toolbar in the app (roving
+ * focus and assistive tech both key off it). These pin the three cases.
  */
 describe('Toolbar.Root', () => {
   afterEach(() => {

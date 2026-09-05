@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useMemo } from 'react';
 
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
+import { createContext } from '@dxos/react-hooks';
 import { useMediaQuery } from '@dxos/react-ui';
 
 import { Settings } from '#types';

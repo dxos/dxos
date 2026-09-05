@@ -1,39 +1,38 @@
-# Radix → Ark UI migration (plan)
+# → Ark UI migration (plan)
 
-**Status:** planning. Phase 0 (four hand-built components) is in flight on its own branch; nothing
-else has started. Every number below was measured against this tree at `@ark-ui/react@5.39.1` /
-`@zag-js/*@1.43.3` and the `@radix-ui/*` versions in the lockfile on 2026-09-02 — re-measure before
+**Status:** in progress. Phase 0 landed as #12902 (2026-09-03). Phase 1 (own the scaffolding) is on
+`claude/react-ui-ark-port-fe9f63`, with Phases 2, 3, 4a (Dialog/Main, Select) and 4b (Toast) — see the ledger in
+`.agents/projects/ark/TASKS.md` for what is decided and what is done. Every number below was measured against this tree at `@ark-ui/react@5.39.1` /
+`@zag-js/*@1.43.3` and the `@-ui/*` versions in the lockfile on 2026-09-02 — re-measure before
 trusting a figure in a later quarter.
 
 This document considers moving `@dxos/react-ui` — and the `@dxos/react-ui-*` packages that share
-its scaffolding — from Radix Primitives to Ark UI. It inventories what each component is built on,
-maps Radix's primitives onto Ark's and names the gaps, lists the Radix modules other packages depend
+its scaffolding — from Primitives to Ark UI. It inventories what each component is built on,
+maps 's primitives onto Ark's and names the gaps, lists the modules other packages depend
 on, and lays out a phased plan whose early phases are worth doing whether or not the later ones ever
 happen.
 
 The premise: the [Tree rebuild](../../react-ui-list/docs/TREE.md) (#12873, #12890) put Ark in the
-app because Radix has no tree. Once the Zag runtime is paid for, every further component we hand-build
+app because has no tree. Once the Zag runtime is paid for, every further component we hand-build
 that Ark ships is a recurring tax — and the [component inventory](#1-component-inventory) shows that
-tax is larger than the Radix-backed surface it would replace.
-
----
+tax is larger than the -backed surface it would replace.
 
 ## Summary
 
 - **Both libraries are headless, ship no CSS, and take `className` on every part.** `tx()` and the
   `*.theme.ts` files carry over unchanged. Styling is not a cost of this migration.
-- **Most of the Radix dependency is scaffolding, not behaviour.** Of ~230 `@radix-ui` imports under
+- **Most of the dependency is scaffolding, not behaviour.** Of ~230 `@-ui` imports under
   `packages/ui`, ~207 are `react-context`, `react-primitive`, `react-slot`, `react-compose-refs` and
   `react-use-controllable-state`. Those have nothing to do with Ark and can be owned in-repo in one
-  small module — which is what unblocks removing `@radix-ui/*` from the 28 sibling packages.
-- **Only 12 of `react-ui`'s 42 components wrap a Radix behavioural primitive.** Three of them —
+  small module — which is what unblocks removing `@-ui/*` from the 28 sibling packages.
+- **Only 12 of `react-ui`'s 42 components wrap a behavioural primitive.** Three of them —
   `Popover`, `Tooltip`, `Menu` — are not wrappers but _forks_: they compose `react-popper`,
   `react-dismissable-layer`, `react-focus-scope`, `react-presence` and `react-portal` directly and
-  re-implement Radix's own content layer (700–940 LOC each). Those are the expensive ones, and they
+  re-implement 's own content layer (700–940 LOC each). Those are the expensive ones, and they
   are also where Ark's machines would delete the most code.
-- **Ark's anatomy exposes what Radix hides and hides what Radix exposes.** Radix buries the
+- **Ark's anatomy exposes what hides and hides what exposes.** buries the
   floating-ui positioner inside `Content` and exposes `Select.Viewport`; Ark exposes `Positioner` and
-  has no viewport. Every floating component gains one node in the JSX and loses the `--radix-*`
+  has no viewport. Every floating component gains one node in the JSX and loses the `---*`
   variables in favour of one generic Zag set.
 - **The blast radius is bounded by the namespace API.** 1,136 files import `@dxos/react-ui`, but the
   `Foo.Root / Foo.Trigger / Foo.Content` surface is ours; where Ark's anatomy matches we change
@@ -43,8 +42,6 @@ tax is larger than the Radix-backed surface it would replace.
 - **`Calendar` and `DatePicker` are a separate decision.** They are built on `react-aria-components`,
   not by hand, and RAC is load-bearing in `Input`'s date/time fields and `react-ui-form`'s
   `DateField`. Consolidating a second headless library is a real choice, not a port.
-
----
 
 ## 1. Component inventory
 
@@ -65,7 +62,7 @@ not what a migration replaces.
 | Carousel        |  528 | hand-built (+ `@dxos/react-focus`)                                                           | `carousel`                                                         |          4 | **Phase 0, in flight**                                                 |
 | Clipboard       |  124 | hand-built                                                                                   | `clipboard`                                                        |            | port (leaf)                                                            |
 | Column          |  357 | scaffolding                                                                                  | —                                                                  |            | keep                                                                   |
-| DatePicker      |  332 | `Calendar` + Radix `Popover`                                                                 | `date-picker`                                                      |          1 | **decision** — see §4                                                  |
+| DatePicker      |  332 | `Calendar` + `Popover`                                                                       | `date-picker`                                                      |          1 | **decision** — see §4                                                  |
 | Deferred        |  118 | none                                                                                         | —                                                                  |            | keep                                                                   |
 | Dialog          |  590 | `react-dialog`, `react-alert-dialog`                                                         | `dialog` (`role="alertdialog"` variant)                            |            | port                                                                   |
 | Editable        |  427 | hand-built                                                                                   | `editable`                                                         |         13 | **Phase 0, in flight**                                                 |
@@ -105,11 +102,11 @@ Ark components with no counterpart in `react-ui`, for reference:
 | Ark component     | in the repo today                                   | note                                          |
 | ----------------- | --------------------------------------------------- | --------------------------------------------- |
 | `accordion`       | `react-ui-list` — already on Ark                    | migrated on merit (APG keymap), see `TREE.md` |
-| `collapsible`     | `react-list` on `@radix-ui/react-collapsible` (§3)  | leaf swap, Phase 2                            |
-| `tabs`            | `react-ui-tabs` on `@radix-ui/react-tabs` (§3)      | leaf swap, Phase 2                            |
+| `collapsible`     | `react-list` on `@-ui/react-collapsible` (§3)       | leaf swap, Phase 2                            |
+| `tabs`            | `react-ui-tabs` on `@-ui/react-tabs` (§3)           | leaf swap, Phase 2                            |
 | `combobox`        | hand-built in `react-ui-list`                       | candidate, not obligation (+87.9 KB raw)      |
 | `listbox`         | hand-built in `react-ui-list`                       | candidate, not obligation (+22.5 KB raw)      |
-| `drawer`          | none — `Main`'s sidebars are Radix dialogs          | the missing mobile bottom sheet, Phase 4      |
+| `drawer`          | none — `Main`'s sidebars are dialogs                | the missing mobile bottom sheet, Phase 4      |
 | `tree-view`       | `react-ui-list` `Tree` — already on Ark             | the reason Ark is in the app                  |
 | `hover-card`      | none                                                |                                               |
 | `navigation-menu` | none                                                |                                               |
@@ -135,22 +132,20 @@ Ark components with no counterpart in `react-ui`, for reference:
 | `angle-slider`    | none                                                |                                               |
 | `cascade-select`  | none                                                |                                               |
 
----
-
-## 2. Primitive mapping: Radix → Ark
+## 2. Primitive mapping: → Ark
 
 ### 2.1 Scaffolding
 
-| Radix                                          |                                                                       uses³ | Ark                                                       | gap                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| ---------------------------------------------- | --------------------------------------------------------------------------: | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `@radix-ui/react-context` `createContextScope` | 85 imports; 19 `createContextScope` calls in 10 files; 116 `__scope*` props | `createContext` from `@ark-ui/react/utils`                | **No scope concept.** Ark's answer to "which Popover does this Trigger belong to" is the machine: `Foo.RootProvider value={useFoo(...)}` plus `useFooContext()`. The `__scopeDropdownMenu` (42), `__scopeTooltip` (31), `__scopePopover` (28) and `__scopeSyntax` (12) props exist only because our forks re-implement Radix's internal scoping; they disappear with the forks. The `composite-components` skill's pattern needs updating either way.  |
-| `@radix-ui/react-primitive` `Primitive.div` …  |                              270 uses (`div` 53, `span` 16, `button` 13, …) | `ark.div` … from `@ark-ui/react/factory`                  | Drop-in. Both accept `asChild`; `ark.*` also takes `asChild` on every anatomy part.                                                                                                                                                                                                                                                                                                                                                                    |
-| `@radix-ui/react-slot` `Slot`, `asChild`       |                                             33 imports; 422 `asChild` sites | `asChild` on `ark.*` and every part                       | Same merge order and same className/style/handler rules, two differences — no `Slottable`, and an explicit `undefined` on the child no longer clears a slot prop. §2.6 has the full comparison and where our `slottable()`/`composable()` layer absorbs it.                                                                                                                                                                                            |
-| `@radix-ui/react-compose-refs`                 |                                             17 imports (+ ~12 packages, §3) | **not public** — Ark's `composeRefs` is internal          | Own it. Ten lines, and React 19's ref-cleanup semantics are worth controlling ourselves.                                                                                                                                                                                                                                                                                                                                                               |
-| `@radix-ui/react-use-controllable-state`       |                                             20 imports (+ ~14 packages, §3) | **not public** — Ark's `useControllableState` is internal | Own it. Same shape; ~30 lines.                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| `@radix-ui/react-id` `useId`                   |                                                                           3 | `React.useId`                                             | Drop-in.                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| `@radix-ui/react-visually-hidden`              |                                                               1 (+1 plugin) | `sr-only` class                                           | Drop-in.                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| `@radix-ui/primitive` `composeEventHandlers`   |                                                                           3 | `mergeProps` from `@ark-ui/react/utils`                   | Not a drop-in. `composeEventHandlers` runs the caller's handler first and skips its own when `event.defaultPrevented` is set (unless `checkForDefaultPrevented: false`); Zag's `mergeProps` merges prop objects and always invokes both handlers — it never reads `defaultPrevented`. Keep a ten-line `composeEventHandlers` in the Phase 1 scaffolding module for the three sites that rely on the skip; `mergeProps` is for merging whole prop bags. |
+|                                           |                                                                       uses³ | Ark                                                       | gap                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ----------------------------------------- | --------------------------------------------------------------------------: | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `@-ui/react-context` `createContextScope` | 85 imports; 19 `createContextScope` calls in 10 files; 116 `__scope*` props | `createContext` from `@ark-ui/react/utils`                | **No scope concept.** Ark's answer to "which Popover does this Trigger belong to" is the machine: `Foo.RootProvider value={useFoo(...)}` plus `useFooContext()`. The `__scopeDropdownMenu` (42), `__scopeTooltip` (31), `__scopePopover` (28) and `__scopeSyntax` (12) props exist only because our forks re-implement 's internal scoping; they disappear with the forks. The `composite-components` skill's pattern needs updating either way.       |
+| `@-ui/react-primitive` `Primitive.div` …  |                              270 uses (`div` 53, `span` 16, `button` 13, …) | `ark.div` … from `@ark-ui/react/factory`                  | Drop-in. Both accept `asChild`; `ark.*` also takes `asChild` on every anatomy part.                                                                                                                                                                                                                                                                                                                                                                    |
+| `@-ui/react-slot` `Slot`, `asChild`       |                                             33 imports; 422 `asChild` sites | `asChild` on `ark.*` and every part                       | Same merge order and same className/style/handler rules, two differences — no `Slottable`, and an explicit `undefined` on the child no longer clears a slot prop. §2.6 has the full comparison and where our `slottable()`/`composable()` layer absorbs it.                                                                                                                                                                                            |
+| `@-ui/react-compose-refs`                 |                                             17 imports (+ ~12 packages, §3) | **not public** — Ark's `composeRefs` is internal          | Own it. Ten lines, and React 19's ref-cleanup semantics are worth controlling ourselves.                                                                                                                                                                                                                                                                                                                                                               |
+| `@-ui/react-use-controllable-state`       |                                             20 imports (+ ~14 packages, §3) | **not public** — Ark's `useControllableState` is internal | Own it. Same shape; ~30 lines.                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `@-ui/react-id` `useId`                   |                                                                           3 | `React.useId`                                             | Drop-in.                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `@-ui/react-visually-hidden`              |                                                               1 (+1 plugin) | `sr-only` class                                           | Drop-in.                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `@-ui/primitive` `composeEventHandlers`   |                                                                           3 | `mergeProps` from `@ark-ui/react/utils`                   | Not a drop-in. `composeEventHandlers` runs the caller's handler first and skips its own when `event.defaultPrevented` is set (unless `checkForDefaultPrevented: false`); Zag's `mergeProps` merges prop objects and always invokes both handlers — it never reads `defaultPrevented`. Keep a ten-line `composeEventHandlers` in the Phase 1 scaffolding module for the three sites that rely on the skip; `mergeProps` is for merging whole prop bags. |
 
 ³ Counted under `packages/ui`, `dist` excluded.
 
@@ -162,47 +157,47 @@ layers, interact-outside, focus trapping, scroll locking, `aria-hidden` manageme
 `@zag-js/*` packages that are dependencies of Ark but not re-exported from it.
 
 The consequence: **the scaffolding layer should be ours, not Ark's.** A single internal module
-(`compose-refs`, `use-controllable-state`, a context helper) removes the five Radix scaffolding
+(`compose-refs`, `use-controllable-state`, a context helper) removes the five scaffolding
 packages from every `@dxos/react-ui-*` package and 19 plugin files, costs nothing in bundle, and is
 independent of whether any behavioural component ever moves. It is Phase 1 for that reason.
 
 ### 2.2 Structural parts
 
-| Radix                                                                              | Ark                                                                                                                         | difference                                                                                                                                                                                                                                                                                                                                                                                |
-| ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Positioner** — internal to `Content` (`react-popper` wraps it)                   | `Foo.Positioner` — a required, named part _around_ `Content`                                                                | Every floating component gains one JSX node. The floating-ui math, `--x`/`--y`, side/align data attributes and collision flipping live on it. Ours: [`Popover.tsx`](../src/components/Popover/Popover.tsx) and [`Tooltip.tsx`](../src/components/Tooltip/Tooltip.tsx) already render `PopperPrimitive.Content` themselves, so the node already exists in our forks — it just isn't named. |
-| **Viewport** — `Select.Viewport` (scroll clip; Radix sets `overflow: auto` inline) | none — `Select.List`                                                                                                        | Ark declares no overflow; our theme must (`overflow-y-auto` on `List` or `Content`). Note `Popover.Viewport` and `Tooltip.Viewport` are **ours**, not Radix's — Radix has no such part there. They exist so the arrow can straddle `Content`'s edge without being clipped ([`Popover.theme.ts:15`](../src/components/Popover/Popover.theme.ts)). They survive a port untouched.           |
-| `Dialog.Overlay`                                                                   | `Dialog.Backdrop`                                                                                                           | rename                                                                                                                                                                                                                                                                                                                                                                                    |
-| `Dialog.Close` / `Popover.Close`                                                   | `Dialog.CloseTrigger` / `Popover.CloseTrigger`                                                                              | rename                                                                                                                                                                                                                                                                                                                                                                                    |
-| `Select.Value`, `Select.Icon`                                                      | `Select.ValueText`, `Select.Indicator`; new `Select.Control` wrapper                                                        | rename + one node                                                                                                                                                                                                                                                                                                                                                                         |
-| `Select.ScrollUpButton` / `ScrollDownButton`                                       | none                                                                                                                        | Zag relies on native scroll. Delete or hand-roll (8 consumer files use them).                                                                                                                                                                                                                                                                                                             |
-| `Select.Arrow`                                                                     | none in `select` anatomy                                                                                                    | Delete.                                                                                                                                                                                                                                                                                                                                                                                   |
-| `Arrow` (an `<svg>`, styled `fill-separator`)                                      | `Arrow` > `ArrowTip` (two `<div>`s, styled via `--arrow-background`, `--arrow-size`)                                        | Not a rename — a theme change per floating component.                                                                                                                                                                                                                                                                                                                                     |
-| `Presence` (mount/unmount animation)                                               | `Presence` component, `lazyMount` / `unmountOnExit` props on every `Root`                                                   | Equivalent; Ark's is also the source of `data-state` + the `[data-animate]` hook the Tree uses for disclosure.                                                                                                                                                                                                                                                                            |
-| `Portal`                                                                           | `Portal` (`@ark-ui/react/portal`)                                                                                           | Equivalent.                                                                                                                                                                                                                                                                                                                                                                               |
-| `DismissableLayer`, `FocusScope`, `FocusGuards`                                    | inside the machine — `onInteractOutside`, `onPointerDownOutside`, `onFocusOutside`, `onEscapeKeyDown`; `trapFocus`, `modal` | Not composable primitives. A Radix-style fork that stacks its own layers is not possible on Ark; you configure the machine. This is exactly the code the `Popover`/`Tooltip`/`Menu` forks would delete.                                                                                                                                                                                   |
-| `Toolbar` (roving tabindex)                                                        | none                                                                                                                        | `@dxos/react-focus` (#12884) already owns focus groups; Toolbar becomes a `toggle-group` inside a focus group.                                                                                                                                                                                                                                                                            |
-| `AlertDialog`                                                                      | `Dialog` with `role="alertdialog"`                                                                                          | One prop.                                                                                                                                                                                                                                                                                                                                                                                 |
-| Menu family: `Menu` + `DropdownMenu` + `ContextMenu` (three packages)              | `Menu` (one machine): `Trigger` for dropdown, `ContextTrigger` for context, `TriggerItem` for submenus                      | Collapses three of our imports into one.                                                                                                                                                                                                                                                                                                                                                  |
+|                                                                              | Ark                                                                                                                         | difference                                                                                                                                                                                                                                                                                                                                                                                |
+| ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Positioner** — internal to `Content` (`react-popper` wraps it)             | `Foo.Positioner` — a required, named part _around_ `Content`                                                                | Every floating component gains one JSX node. The floating-ui math, `--x`/`--y`, side/align data attributes and collision flipping live on it. Ours: [`Popover.tsx`](../src/components/Popover/Popover.tsx) and [`Tooltip.tsx`](../src/components/Tooltip/Tooltip.tsx) already render `PopperPrimitive.Content` themselves, so the node already exists in our forks — it just isn't named. |
+| **Viewport** — `Select.Viewport` (scroll clip; sets `overflow: auto` inline) | none — `Select.List`                                                                                                        | Ark declares no overflow; our theme must (`overflow-y-auto` on `List` or `Content`). Note `Popover.Viewport` and `Tooltip.Viewport` are **ours**, not 's — has no such part there. They exist so the arrow can straddle `Content`'s edge without being clipped ([`Popover.theme.ts:15`](../src/components/Popover/Popover.theme.ts)). They survive a port untouched.                      |
+| `Dialog.Overlay`                                                             | `Dialog.Backdrop`                                                                                                           | rename                                                                                                                                                                                                                                                                                                                                                                                    |
+| `Dialog.Close` / `Popover.Close`                                             | `Dialog.CloseTrigger` / `Popover.CloseTrigger`                                                                              | rename                                                                                                                                                                                                                                                                                                                                                                                    |
+| `Select.Value`, `Select.Icon`                                                | `Select.ValueText`, `Select.Indicator`; new `Select.Control` wrapper                                                        | rename + one node                                                                                                                                                                                                                                                                                                                                                                         |
+| `Select.ScrollUpButton` / `ScrollDownButton`                                 | none                                                                                                                        | Zag relies on native scroll. Delete or hand-roll (8 consumer files use them).                                                                                                                                                                                                                                                                                                             |
+| `Select.Arrow`                                                               | none in `select` anatomy                                                                                                    | Delete.                                                                                                                                                                                                                                                                                                                                                                                   |
+| `Arrow` (an `<svg>`, styled `fill-separator`)                                | `Arrow` > `ArrowTip` (two `<div>`s, styled via `--arrow-background`, `--arrow-size`)                                        | Not a rename — a theme change per floating component.                                                                                                                                                                                                                                                                                                                                     |
+| `Presence` (mount/unmount animation)                                         | `Presence` component, `lazyMount` / `unmountOnExit` props on every `Root`                                                   | Equivalent; Ark's is also the source of `data-state` + the `[data-animate]` hook the Tree uses for disclosure.                                                                                                                                                                                                                                                                            |
+| `Portal`                                                                     | `Portal` (`@ark-ui/react/portal`)                                                                                           | Equivalent.                                                                                                                                                                                                                                                                                                                                                                               |
+| `DismissableLayer`, `FocusScope`, `FocusGuards`                              | inside the machine — `onInteractOutside`, `onPointerDownOutside`, `onFocusOutside`, `onEscapeKeyDown`; `trapFocus`, `modal` | Not composable primitives. A -style fork that stacks its own layers is not possible on Ark; you configure the machine. This is exactly the code the `Popover`/`Tooltip`/`Menu` forks would delete.                                                                                                                                                                                        |
+| `Toolbar` (roving tabindex)                                                  | none                                                                                                                        | `@dxos/react-focus` (#12884) already owns focus groups; Toolbar becomes a `toggle-group` inside a focus group.                                                                                                                                                                                                                                                                            |
+| `AlertDialog`                                                                | `Dialog` with `role="alertdialog"`                                                                                          | One prop.                                                                                                                                                                                                                                                                                                                                                                                 |
+| Menu family: `Menu` + `DropdownMenu` + `ContextMenu` (three packages)        | `Menu` (one machine): `Trigger` for dropdown, `ContextTrigger` for context, `TriggerItem` for submenus                      | Collapses three of our imports into one.                                                                                                                                                                                                                                                                                                                                                  |
 
 ### 2.3 CSS variables
 
-Radix namespaces per component; Zag sets one generic set on the positioner.
+namespaces per component; Zag sets one generic set on the positioner.
 95 occurrences across 12 source files today, of which 20 are the aliasing blocks in
 [`Tooltip.tsx:577`](../src/components/Tooltip/Tooltip.tsx),
 [`Popover.tsx:489`](../src/components/Popover/Popover.tsx) and
-[`DropdownMenu.tsx:281`](../src/components/Menu/DropdownMenu.tsx) that re-map `--radix-popper-*` onto
+[`DropdownMenu.tsx:281`](../src/components/Menu/DropdownMenu.tsx) that re-map `---popper-*` onto
 per-component names — those delete entirely.
 
-| Radix                                                                                         | Zag                                              |
-| --------------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| `--radix-popper-anchor-width`, `--radix-{select,popover,tooltip,dropdown-menu}-trigger-width` | `--reference-width`                              |
-| `--radix-popper-anchor-height`, `…-trigger-height`                                            | `--reference-height`                             |
-| `--radix-popper-available-height`, `…-content-available-height`                               | `--available-height`                             |
-| `--radix-popper-available-width`, `…-content-available-width`                                 | `--available-width`                              |
-| `--radix-popper-transform-origin`, `…-content-transform-origin`                               | `--transform-origin`                             |
-| `--radix-accordion-content-height`                                                            | collapsible `--height`                           |
-| `--radix-toast-swipe-end-x`, `--radix-toast-swipe-move-x`                                     | **none** — Zag's toast has its own gesture model |
+|                                                                                     | Zag                                              |
+| ----------------------------------------------------------------------------------- | ------------------------------------------------ |
+| `---popper-anchor-width`, `---{select,popover,tooltip,dropdown-menu}-trigger-width` | `--reference-width`                              |
+| `---popper-anchor-height`, `…-trigger-height`                                       | `--reference-height`                             |
+| `---popper-available-height`, `…-content-available-height`                          | `--available-height`                             |
+| `---popper-available-width`, `…-content-available-width`                            | `--available-width`                              |
+| `---popper-transform-origin`, `…-content-transform-origin`                          | `--transform-origin`                             |
+| `---accordion-content-height`                                                       | collapsible `--height`                           |
+| `---toast-swipe-end-x`, `---toast-swipe-move-x`                                     | **none** — Zag's toast has its own gesture model |
 
 External to `react-ui`: [`ui-theme/src/css/layout/size.css:53`](../../ui-theme/src/css/layout/size.css)
 and [`ui-theme/src/css/theme/animation.css:110`](../../ui-theme/src/css/theme/animation.css).
@@ -213,7 +208,7 @@ Both stamp state on the DOM as `data-*`, so variants are selectors in either lib
 richer: tree-view emits `data-branch data-checked data-depth data-disabled data-focus data-loading
 data-path data-renaming data-selected data-state data-value`; select adds `data-highlighted
 data-placement data-side data-placeholder-shown`. Only 11 `data-[…]` Tailwind selectors exist across
-`ui-theme` + `react-ui` today, none of them Radix state names, so nothing here breaks.
+`ui-theme` + `react-ui` today, none of them state names, so nothing here breaks.
 
 Every Ark part also carries `data-scope="<component>" data-part="<part>"`, and
 `createAnatomy(...).build()` returns a ready-made selector per part. That is how Park UI and Panda
@@ -240,10 +235,8 @@ adapter is needed.
   **+95.8 KB against 0.11 MB of remaining headroom** on a 4.35 MB budget. Every later phase that puts
   a machine into `react-ui` spends from that, and the budget will need re-baselining before Phase 3
   regardless of the net figure. Read `check-boot-budget.mjs` before assuming a swap is free.
-- **Touch.** Zag handles `pointerType`/touch in 17 machines; Radix in 6 packages. Under Tauri mobile
-  (WKWebView) that matters, and `drawer` is the component that has no Radix answer at all.
-
----
+- **Touch.** Zag handles `pointerType`/touch in 17 machines; in 6 packages. Under Tauri mobile
+  (WKWebView) that matters, and `drawer` is the component that has no answer at all.
 
 ### 2.6 Slots and `asChild`
 
@@ -253,10 +246,10 @@ part's props into it. The mechanics differ in three places that matter to us, an
 `slottable()`/`composable()` layer is where they get absorbed.
 
 **What each does**, read from the installed sources
-(`@radix-ui/react-slot@1.0.1` `Slot.tsx`; `@ark-ui/react@5.39.1` `factory.ts` over
+(`@-ui/react-slot@1.0.1` `Slot.tsx`; `@ark-ui/react@5.39.1` `factory.ts` over
 `@zag-js/core` `merge-props`):
 
-| concern         | Radix `Slot`                                                                    | Ark `ark.*` / every part (`asChild`)                                                                         |
+| concern         | `Slot`                                                                          | Ark `ark.*` / every part (`asChild`)                                                                         |
 | --------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
 | what it clones  | the single valid element child                                                  | the single valid element child (a `React.lazy` element is unwrapped); otherwise renders `null`               |
 | `className`     | `[slot, child].join(' ')`                                                       | `clsx(slot, child)` — same order, trimmed; neither de-duplicates                                             |
@@ -270,13 +263,13 @@ part's props into it. The mechanics differ in three places that matter to us, an
 
 **What we have on top.** 422 `asChild` sites, almost all on _our_ namespaces — `Panel` 277,
 `Dialog` 34, `Focus` 31, `Menu` 26, `Popover` 22, `Mosaic` 19, `DropdownMenu` 19, `Toolbar` 17,
-`Tooltip` 14 — and only 11 directly on a Radix primitive (`ToolbarPrimitive` 8,
+`Tooltip` 14 — and only 11 directly on a primitive (`ToolbarPrimitive` 8,
 `ToggleGroupPrimitive` 3). Those namespaces are built with two factories in
 [`react-ui/src/util/slots.ts`](../src/util/slots.ts): `slottable()` (20 files) for parts that accept
 `asChild`, `composable()` (51 files) for leaves, over `SlottableProps`/`ComposableProps` from
 `@dxos/ui-types`. `composableProps()` reconciles the `className` a slot merge injects with our
 `classNames` prop, and a dev-only `COMPOSABLE` marker paints `dx-slot-warning` on an `asChild`
-child that is not composable — the case where a slot's props are silently dropped. Radix's
+child that is not composable — the case where a slot's props are silently dropped. 's
 `Slottable` is used twice: `Tooltip` and `ScrollArea` (thumbs rendered beside the slotted child).
 
 **What the migration changes.**
@@ -284,10 +277,10 @@ child that is not composable — the case where a slot's props are silently drop
 - **The factories move, the call sites don't.** `slottable()`'s `asChild ? Slot : Primitive.div`
   becomes `ark.div` (which takes `asChild` itself), and `composable()` renders `ark.<tag>`. That is
   the whole swap for the 422 sites; it lands in Phase 1 with the rest of the scaffolding, and it is
-  what lets `@radix-ui/react-slot` and `react-primitive` leave every sibling package.
+  what lets `@-ui/react-slot` and `react-primitive` leave every sibling package.
 - **`Slottable` has no Ark equivalent.** `Tooltip` and `ScrollArea` restructure so the sibling
   content is rendered by the part rather than passed through the slot — or keep a 40-line local
-  `Slot`+`Slottable` (Radix's is that small). Decide per component in its own phase (Tooltip in 3,
+  `Slot`+`Slottable` ('s is that small). Decide per component in its own phase (Tooltip in 3,
   ScrollArea in 2); do not carry a global shim.
 - **The `undefined`-override difference** is the one semantic change. A consumer that clears a
   slot prop by passing `prop={undefined}` on the child keeps the slot's value under Ark. No known
@@ -298,7 +291,7 @@ child that is not composable — the case where a slot's props are silently drop
   event propagation between _elements_, not on merge order, so it is unaffected; the focus-follows
   guard in `Tree` is the precedent for what does need code.
 - **`memo` on every Ark part.** An `asChild` child element with a new identity per render bypasses
-  it, exactly as with Radix; nothing to do, but not a performance win to advertise.
+  it, exactly as with ; nothing to do, but not a performance win to advertise.
 - **`data-part` on consumer elements** is new: under `asChild` the consumer's element becomes the
   part for CSS purposes. Harmless with `tx()` (className-driven), and it is what would make a
   stylesheet-level skin possible later.
@@ -306,8 +299,6 @@ child that is not composable — the case where a slot's props are silently drop
 The dev diagnostic, `composableProps()` and the `SlottableProps`/`ComposableProps` types are ours
 and survive unchanged; the `composite-components` skill's example (`asChild ? Slot : Primitive.div`)
 is the only documentation that needs its line rewritten.
-
----
 
 ### 2.7 Theming
 
@@ -385,9 +376,9 @@ Ark builds itself, has no element of ours to take a `className` — there the at
 only handle. That lands in Phase 3 (floating), and is the one place this decision should be reopened
 rather than assumed.
 
-## 3. Radix modules used outside `react-ui`
+## 3. modules used outside `react-ui`
 
-`grep -rho "@radix-ui/[a-z-]*" <pkg>/src`, stories excluded. Every entry is scaffolding except the
+`grep -rho "@-ui/[a-z-]*" <pkg>/src`, stories excluded. Every entry is scaffolding except the
 three marked **behavioural**.
 
 | package                                                                                                                | `react-context` | `use-controllable-state` | `compose-refs` | `slot` | `primitive` | behavioural                                                                         |
@@ -415,25 +406,23 @@ three marked **behavioural**.
 
 **Gap analysis.**
 
-- **Scaffolding (every row).** 28 `react-ui-*` packages and 28 plugin/app/sdk files depend on Radix
+- **Scaffolding (every row).** 28 `react-ui-*` packages and 28 plugin/app/sdk files depend on
   for `createContext`, `composeRefs`, `useControllableState`, `Slot` and `Primitive`. None of that is
   behaviour, and Ark publicly exports only `createContext` and the `ark` factory. The fix is an
-  in-repo module, not Ark; see Phase 1. Until it exists, `@radix-ui/*` cannot leave the catalog no
+  in-repo module, not Ark; see Phase 1. Until it exists, `@-ui/*` cannot leave the catalog no
   matter how many components move.
 - **`react-list` — `collapsible` + `checkbox`.** Ark has both machines. `Collapsible` is a leaf swap;
   `Checkbox` shares its migration with `Input`. `react-list` is the lowest tier (`react-primitives`),
   so it moves in Phase 2 with the other leaves.
 - **`react-ui-tabs` — `tabs`.** Ark `Tabs` anatomy (`Root/List/Trigger/Content/Indicator`) is a
-  near-match for Radix's; the only addition is the optional `Indicator`. Leaf swap.
-- **Plugin-level behavioural imports** (`plugin-*` reaching for `@radix-ui/react-tooltip`, `-toolbar`,
+  near-match for 's; the only addition is the optional `Indicator`. Leaf swap.
+- **Plugin-level behavioural imports** (`plugin-*` reaching for `@-ui/react-tooltip`, `-toolbar`,
   `-toggle-group`, `-toggle`, `-toast` directly) are pre-existing layering violations — a plugin
-  should consume `@dxos/react-ui`'s namespace, not Radix's. They are fixed by re-pointing at
+  should consume `@dxos/react-ui`'s namespace, not 's. They are fixed by re-pointing at
   `@dxos/react-ui` regardless of the migration, and should be, in Phase 1.
 - **`react-ui-list`'s `Combobox` and `Listbox`** are hand-built on scaffolding and have Ark machines
   (`combobox` +87.9 KB raw, `listbox` +22.5 KB raw marginal — measured in the `ark` project). They are
   candidates, not obligations, and sit outside `react-ui`; listed for completeness.
-
----
 
 ## 4. Phased plan
 
@@ -444,19 +433,19 @@ if 3–5 never happen. Verification gate for every phase: `moon run <pkg>:build`
 ### Phase 0 — hand-built components with Ark machines _(in flight)_
 
 `Carousel`, `Editable`, `Splitter`, `Stepper` → `carousel`, `editable`, `splitter`, `steps`.
-~2,264 LOC of hand-maintained interaction and a11y, no Radix behavioural dependency, consumer counts
+~2,264 LOC of hand-maintained interaction and a11y, no behavioural dependency, consumer counts
 4 / 13 / 8 / 3. Adds `@ark-ui/react` to `react-ui`'s dependencies (catalog). Order: Stepper →
 Editable → Splitter → Carousel (Carousel also imports `@dxos/react-focus`).
 
 Deliverable: one PR, `react-ui: rebuild Carousel, Editable, Splitter and Stepper on Ark UI`.
 
-### Phase 1 — own the scaffolding
+### Phase 1 — own the scaffolding _(done, 2026-09-05)_
 
-Create the replacements for the five Radix scaffolding packages inside `react-primitives`
+Create the replacements for the five scaffolding packages inside `react-primitives`
 (`react-hooks` already holds `compose-refs`'s single use there):
 
 - `composeRefs` — ten lines, React 19 cleanup-aware.
-- `useControllableState` — same signature as Radix's.
+- `useControllableState` — same signature as 's.
 - `createContext` — decide between Ark's (no scope) and a scoped variant. Recommendation: **no
   scope**. The 116 `__scope*` props exist only inside the `Popover`/`Tooltip`/`Menu` forks that Phase
   3 deletes, and `react-ui-syntax-highlighter`'s 12 can move to a plain context.
@@ -467,10 +456,33 @@ Create the replacements for the five Radix scaffolding packages inside `react-pr
 Sweep the 28 `react-ui-*` packages and 28 plugin/app/sdk files. Re-point the plugin-level
 behavioural imports at `@dxos/react-ui`. Update the `composite-components` skill.
 
-Outcome: `@radix-ui/react-context`, `-primitive`, `-slot`, `-compose-refs`, `-use-controllable-state`
+Outcome: `@-ui/react-context`, `-primitive`, `-slot`, `-compose-refs`, `-use-controllable-state`
 and `-id` leave every `package.json` except `react-ui`'s. Zero anatomy change, zero consumer change.
 
-### Phase 2 — leaves: behavioural swaps with no anatomy leak
+### Phase 2 — leaves: behavioural swaps with no anatomy leak _(in progress, 2026-09-05)_
+
+Verdicts revised on inspection while doing it:
+
+- **Progress, Avatars, Clipboard are not ported.** `Progress` is countdown / error-fill / rewind-snap
+  semantics the `progress` machine has no notion of; `Avatar.Content` is the lit `DxAvatar` element,
+  so Ark's image-fallback machine has nothing to own; `Clipboard` is a ten-line context and two
+  buttons. Each would add a machine to the eager graph for no behaviour.
+- **ScrollArea keeps its hand-built thumbs.** Ark's `scroll-area` needs a `Content` part _inside_ the
+  viewport to measure, and 530 consumers style `ScrollArea.Viewport` as the direct parent of their
+  children — a wrapper there is a layout break, not a port. What Phase 2 does to it is the `Slottable`
+  restructure: `Root` owns its element and renders the thumbs beside the children (no consumer passed
+  `asChild` to it); `Viewport` keeps `asChild`.
+- **Toolbar is pulled forward from Phase 5.** `Toolbar.Root` is a `@dxos/react-focus` group (axis =
+  orientation, memorised entry, cyclic) and any focusable child is an item; `Toolbar.ToggleGroup` is the
+  Ark-backed `ToggleGroup` with `rovingFocus={false}`. The `Toolbar.*` namespace is unchanged.
+- **`ToggleGroup` keeps the -shaped single/multiple API** over Ark's `value: string[]`.
+- **`Input.Checkbox` is a native input behind a styled control.** Element props (test ids, handlers)
+  reach the control, form props the input; the `Input.Root` id lands on the input so `Input.Label`
+  still reaches it. The control toggles by clicking the input itself rather than through label
+  activation, because a tree row's click handler calls `preventDefault()` and that cancels label
+  activation in Chromium (happy-dom does not emulate it — the storybook run caught it).
+- **`Input.Switch` and `Input.PinInput` stay hand-built** for now; `pin-input` is a later-phase
+  candidate (deletes ~150 lines, three consumers).
 
 Each is a single component whose Ark anatomy matches ours closely enough that the namespace API
 holds. One PR each or small batches:
@@ -491,7 +503,7 @@ holds. One PR each or small batches:
 ### Phase 3 — floating: the forks
 
 The three forks — `Tooltip` (942 LOC), `Popover` (701), `Menu` (896) — are the heart of the
-migration and the largest deletion. Each currently reimplements Radix's content layer from `popper`,
+migration and the largest deletion. Each currently reimplements 's content layer from `popper`,
 `dismissable-layer`, `focus-scope`, `presence` and `portal`; on Ark that logic is the machine, and the
 component becomes anatomy + theme.
 
@@ -499,36 +511,75 @@ Order: **Tooltip → Popover → Menu**, so the positioner pattern, the `Arrow`/
 and the CSS-variable rename are settled on the smallest fork first.
 
 - Add `Positioner`; keep our `Viewport` (it is ours, and its clipping rationale still holds).
-- Rename the five `--radix-*` variables per §2.3; delete the three aliasing blocks.
+- Rename the five `---*` variables per §2.3; delete the three aliasing blocks.
 - `Arrow` → `Arrow` + `ArrowTip`, `fill-separator` → `--arrow-background`.
 - `DropdownMenu` + `ContextMenu` collapse onto one `Menu` machine with `ContextTrigger`.
 - `MenuButton` and `react-ui-menu` follow `Menu`.
 - Retire `__scopeTooltip`/`__scopePopover`/`__scopeDropdownMenu` with the forks.
 
 Consumer exposure: Tooltip 35 files, Popover 38, DropdownMenu 29 — but only sites rendering an
-`Arrow` or reading a `--radix-*` variable change; the namespace API holds otherwise.
+`Arrow` or reading a `---*` variable change; the namespace API holds otherwise.
 
 Outcome: `react-popper`, `-dismissable-layer`, `-focus-scope`, `-focus-guards`, `-presence`,
 `-portal`, `-tooltip`, `-menu`, `-dropdown-menu`, `-context-menu` leave `react-ui`. Also
 `aria-hidden` and `react-remove-scroll`, which only the Popover fork imports.
 
+**Done (2026-09-05).** Verdict revisions from the port:
+
+- `Tooltip` kept its single-provider design (one machine, one content node, N triggers) rather than
+  Ark's `Tooltip.Root` per trigger: Ark's `Tooltip.Trigger` subscribes every trigger to the machine,
+  which would re-render all 47 consumers' triggers on every open. Our trigger is an `ark.button` that
+  asks `api.getTriggerProps({ value })` at event time instead.
+- Zag's positioner sets `z-index: var(--z-index)` inline, so a `z-*` class cannot win; the theme sets
+  the variable (`surfaceZIndexVar` in `ui-theme`). `overflowPadding` is one number, so safe-area
+  collision padding collapses to its widest side. Closed content needs `lazyMount unmountOnExit` or
+  Ark keeps it mounted-hidden before the first open (a play story caught it).
+- `Popover.Content`'s placement props are lifted to the root as state, because Ark positions from the
+  root; `sticky` has no counterpart and was dropped (one consumer).
+- `Menu` selection is handled on the item's own click, not through the machine's `onSelect`: Zag's
+  `invokeOnSelect` reads `highlightedValue` from context, and a click landing before React commits the
+  pointerdown's highlight (a `userEvent.click` right after open) selects nothing. `closeOnSelect` is
+  off and the item closes the menu unless its cancelable `onSelect` was `preventDefault()`ed, which
+  keeps 's contract. `DropdownMenu.Root modal` is accepted as a no-op.
+
 ### Phase 4 — modal, toast, select
 
 - **`Dialog` + `Main`** → `dialog`. `Overlay` → `Backdrop`, `Close` → `CloseTrigger`, `AlertDialog`
-  → `role="alertdialog"`. `Main`'s sidebars are Radix dialogs today; evaluate `drawer` for them —
+  → `role="alertdialog"`. `Main`'s sidebars are dialogs today; evaluate `drawer` for them —
   it is also the missing mobile bottom-sheet. Acceptance: a dialog rendered without
   `Dialog.Description` carries **no** `aria-describedby`. `Dialog.Content` forces
-  `aria-describedby={undefined}` today to keep Radix from pointing it at a missing id; Ark omits the
+  `aria-describedby={undefined}` today to keep from pointing it at a missing id; Ark omits the
   attribute when the part is absent, so the contract holds by default — verify it in the story for
   the no-description case rather than assuming it.
 - **`Toast`** → `toast`. Model change: Ark's is a `createToaster()` store with a `Toaster` host,
-  not a provider-plus-`Toast.Root` tree. The `--radix-toast-swipe-*` animation in
+  not a provider-plus-`Toast.Root` tree. The `---toast-swipe-*` animation in
   `animation.css:164` has no equivalent and is replaced by Zag's gesture handling.
 - **`Select`** → `select`. The one API leak: required `collection: ListCollection<T>`, plus
   `Control`, `ValueText`, `Indicator`, `Positioner`, `List`; `ScrollUpButton`/`ScrollDownButton`/
   `Arrow` deleted. 44 consumer files, 39 using `Viewport`, 8 using the scroll buttons. Decide up front
   whether `Select.Option` keeps a children-driven convenience layer that builds the collection from
-  JSX, so most consumers change one import and nothing else.
+  JSX, so most consumers change one import and nothing else. **Decided 2026-09-05: keep the children
+  API in this pass; moving consumers to Ark's `collection` prop is a later phase of its own.**
+
+**Done for Dialog, Main and Select, then Toast (2026-09-05).** Verdict revisions:
+
+- `Dialog.Overlay` is Ark's `Backdrop` with the content nested inside it, not a sibling `Positioner`:
+  every consumer nests `Content` in `Overlay`, and the backdrop's own presence runs the exit animation.
+  `AlertDialog` is the same implementation with `role="alertdialog"` and outside clicks ignored.
+- The no-description acceptance holds: Zag adds `aria-describedby` only when a `Description` element is
+  in the DOM, pinned by a play story.
+- Ark's `drawer` was evaluated for `Main`'s sidebars and not used: it positions and animates its content
+  itself, which fights the inset-driven slide in `main.css`, and at `lg` the sidebar is a plain landmark.
+  The sidebars stay on the dialog machine with `hidden={false}` so they remain mounted for the CSS. A
+  mobile bottom sheet remains a feature of its own.
+- `Select` keeps the children API by having each option register with the root, which builds the
+  `collection`; the trigger shows the selected option's own children as 's `ItemText` did. The
+  content therefore stays mounted (hidden) while closed. `Arrow` and the scroll buttons are gone.
+- `Toast` keeps its declarative API over the store: the provider owns `createToaster` and a registry
+  of declared roots, `Toast.Root` renders nothing in place and mirrors `open` into the store, and
+  `Toast.Viewport` is Ark's `Toaster` rendering each root's content inside the machine's actor. The
+  `--radix-toast-swipe-*` animation is gone with the `tailwindcss-radix` plugin; motion is the
+  machine's inline variables transitioned in `toast.css`.
 
 ### Phase 5 — decisions, not ports
 
@@ -544,34 +595,32 @@ Outcome: `react-popper`, `-dismissable-layer`, `-focus-scope`, `-focus-guards`, 
 - **`Focus`.** Keep; it is the seam between `react-ui` and `@dxos/react-focus`, and Ark's
   `focus-trap` covers only the trapping half.
 
-### Phase 6 — remove Radix
+### Phase 6 — remove
 
-When `react-ui`'s remaining `@radix-ui/*` imports are gone, remove the packages from the catalog and
-lockfile, and delete `@radix-ui/react-select`'s `Viewport`-shaped theme slots. `pnpm knip` is the
+When `react-ui`'s remaining `@-ui/*` imports are gone, remove the packages from the catalog and
+lockfile, and delete `@-ui/react-select`'s `Viewport`-shaped theme slots. `pnpm knip` is the
 gate — it caught the orphaned `react-compose-refs` after the Tree's flat row was deleted, and will
 catch anything left behind here.
-
----
 
 ## Appendix A — measurements
 
 Bundle, esbuild `--bundle --minify --format=esm`, React external, gzip:
 
-| entry                                      |    gzip |
-| ------------------------------------------ | ------: |
-| Radix `Tabs`                               |  4.9 KB |
-| Ark `Tabs`                                 | 12.7 KB |
-| Radix `Dialog`                             | 11.2 KB |
-| Ark `Dialog`                               | 19.9 KB |
-| Ark `TreeView`                             | 20.0 KB |
-| Radix `Tabs`+`Dialog`                      | 13.5 KB |
-| Ark `Tabs`+`TreeView`                      | 25.6 KB |
-| Radix × 4 (tabs, dialog, popover, tooltip) | 30.6 KB |
-| Ark × 4 (same)                             | 41.2 KB |
-| Ark whole barrel                           |  297 KB |
+| entry                                |    gzip |
+| ------------------------------------ | ------: |
+| `Tabs`                               |  4.9 KB |
+| Ark `Tabs`                           | 12.7 KB |
+| `Dialog`                             | 11.2 KB |
+| Ark `Dialog`                         | 19.9 KB |
+| Ark `TreeView`                       | 20.0 KB |
+| `Tabs`+`Dialog`                      | 13.5 KB |
+| Ark `Tabs`+`TreeView`                | 25.6 KB |
+| × 4 (tabs, dialog, popover, tooltip) | 30.6 KB |
+| Ark × 4 (same)                       | 41.2 KB |
+| Ark whole barrel                     |  297 KB |
 
-Derived: shared core ≈ 7.1 KB gzip (Ark) vs ≈ 2.6 KB (Radix); marginal per component 6–13 KB (Ark)
-vs 4–11 KB (Radix). In-app, the Tree's landed cost was +82,205 bytes total JS (+0.12%), +1,652 in
+Derived: shared core ≈ 7.1 KB gzip (Ark) vs ≈ 2.6 KB (); marginal per component 6–13 KB (Ark)
+vs 4–11 KB (). In-app, the Tree's landed cost was +82,205 bytes total JS (+0.12%), +1,652 in
 the eager boot graph.
 
 Phase 0, measured the same way (2026-09-03). The four machines together are 101,906 raw / 31,921 gzip
@@ -588,7 +637,7 @@ graph is the standalone figure, which is what says the core was not eager before
 | Ark `TreeView`+`Accordion` (pre-Phase 0) |  76,038 | 22,525 |
 | Ark, all six                             | 158,903 | 46,320 |
 
-A whole-estate replacement, on the same method: the 32 Radix packages in use dedupe to ≈233 KB raw /
+A whole-estate replacement, on the same method: the 32 packages in use dedupe to ≈233 KB raw /
 ≈75 KB gzip, and Ark equivalents for the behavioural set add ≈263 KB raw / ≈74 KB gzip over what
 Phase 0 already ships. **Net ≈ +30 KB raw, ≈ −1 KB gzip** — on the wire it is a wash, because Zag's
 machines compress harder (3.6:1 vs 3.1:1) than they minify. Size is not an argument for or against
@@ -596,7 +645,7 @@ this migration; the boot graph above is the only place it bites.
 
 Maintenance, 2026-09-02:
 
-|                                       | Ark / Zag            | Radix                           |
+|                                       | Ark / Zag            |                                 |
 | ------------------------------------- | -------------------- | ------------------------------- |
 | stars                                 | 5.4k / 5.2k          | 19.2k                           |
 | weekly downloads                      | 1.05M                | 71.4M (`react-dialog`)          |
@@ -605,17 +654,17 @@ Maintenance, 2026-09-02:
 | longest release gap, 3 yr             | 56 d                 | 296 d (2025-08-13 → 2026-06-06) |
 | top committer share, last 100 commits | 56% (ark), 74% (zag) | 95%                             |
 
-Both projects are effectively one maintainer. Radix's ecosystem is ~68× larger by downloads; Ark's
-cadence is steady where Radix's was dormant for ten months and then burst.
+Both projects are effectively one maintainer. 's ecosystem is ~68× larger by downloads; Ark's
+cadence is steady where 's was dormant for ten months and then burst.
 
 ## Appendix B — out of scope here
 
 - **Touch drag in the Tree.** `@atlaskit/pragmatic-drag-and-drop`'s element adapter is native HTML5
   DnD (`draggable`/`dragstart`), which does not fire from touch in iPhone WKWebView. Tree reordering
-  is desktop-only under Tauri mobile regardless of Radix or Ark. Tracked separately.
+  is desktop-only under Tauri mobile regardless of or Ark. Tracked separately.
 - `react-ui-list`'s `Combobox`/`Listbox` and the navtree — covered by the `ark` project.
 
-## Appendix C — component catalogues: Ark, Radix, shadcn
+## Appendix C — component catalogues: Ark, , shadcn
 
 ### The three, briefly
 
@@ -626,15 +675,15 @@ cadence is steady where Radix's was dormant for ten months and then burst.
   `useX()` for controlled use). Every part and the `ark.<tag>` factory take `asChild`. Ships no CSS;
   styling is `className` per part or a `data-part` stylesheet. Controlled props set machine state,
   not DOM state (§2.5). One shared runtime (~7 KB gz) then single-digit KB per machine (Appendix A).
-- **Radix Primitives** (`@radix-ui/react-*`, or the unified `radix-ui`) — React-only headless
+- ** Primitives** (`@-ui/react-*`, or the unified `-ui`) — React-only headless
   primitives, one package per component, each a compound of context-scoped parts built on a small
   internal toolkit (`Slot`, `Primitive`, `Popper`, `DismissableLayer`, `FocusScope`, `Presence`)
   that consumers can also compose directly — which is how our `Popover`/`Tooltip`/`Menu` became
   forks (§1). State lives in React internals per primitive; scoping is `createContextScope`. Ships no
-  CSS; per-component `--radix-*` CSS variables (§2.3). Smaller core, per-package tree-shaking, the
+  CSS; per-component `---*` CSS variables (§2.3). Smaller core, per-package tree-shaking, the
   larger ecosystem, and the single-maintainer cadence in Appendix A.
 - **shadcn/ui** — not a library but a **registry of source files you copy into your app**: styled
-  components (Tailwind + `class-variance-authority`) over Radix Primitives, with the newer entries
+  components (Tailwind + `class-variance-authority`) over Primitives, with the newer entries
   moving to **Base UI** (`drawer` already depends on `@base-ui/react`) and several wrapping other
   libraries outright (`calendar` → react-day-picker, `command` → cmdk, `resizable` →
   react-resizable-panels, `input-otp`, `sonner`). You own the code after install; there is no
@@ -646,109 +695,109 @@ cadence is steady where Radix's was dormant for ten months and then burst.
 
 Every distinct component name across the three, alphabetically, as of 2026-09-02. Sources: Ark from
 the installed `@ark-ui/react@5.39.1` (`dist/components/*`, utilities such as `portal`, `presence`,
-`focus-trap` and `client-only` excluded); Radix from the `radix-ui@1.6.7` unified package's
+`focus-trap` and `client-only` excluded); from the `-ui@1.6.7` unified package's
 dependency list (internals such as `slot`, `popper`, `dismissable-layer` and the `use-*` hooks
 excluded); shadcn from its public registry index (`registry:ui` items, 63). A ✓ under shadcn means
 "ships a component by this name", not "ships a primitive". **ARIA role** is what the library puts on
-the component's root or primary part, read from Ark's `*.connect.js` and the installed Radix dists
+the component's root or primary part, read from Ark's `*.connect.js` and the installed dists
 (`a / b` = parts of one pattern, `a | b` = chosen by a prop, "native" = the semantics come from a
 native element); blank where the pattern defines no role, or where the package is not installed here
 to check. Where the same thing carries a different name the note says which.
 
-| component                 |  Ark   | Radix  | shadcn | ARIA role                         | note                                                                                   |
-| ------------------------- | :----: | :----: | :----: | --------------------------------- | -------------------------------------------------------------------------------------- |
-| `accordion`               |   ✓    |   ✓    |   ✓    | `region` (panel)                  |                                                                                        |
-| `alert`                   |        |        |   ✓    |                                   |                                                                                        |
-| `alert-dialog`            |        |   ✓    |   ✓    | `alertdialog`                     | Ark: `dialog` with `role="alertdialog"`                                                |
-| `angle-slider`            |   ✓    |        |        | `slider`                          |                                                                                        |
-| `aspect-ratio`            |        |   ✓    |   ✓    |                                   |                                                                                        |
-| `attachment`              |        |        |   ✓    |                                   |                                                                                        |
-| `avatar`                  |   ✓    |   ✓    |   ✓    |                                   |                                                                                        |
-| `badge`                   |        |        |   ✓    |                                   |                                                                                        |
-| `breadcrumb`              |        |        |   ✓    |                                   |                                                                                        |
-| `bubble`                  |        |        |   ✓    |                                   |                                                                                        |
-| `button`                  |        |        |   ✓    |                                   |                                                                                        |
-| `button-group`            |        |        |   ✓    |                                   |                                                                                        |
-| `calendar`                |        |        |   ✓    |                                   | shadcn wraps react-day-picker; Ark: `date-picker`                                      |
-| `card`                    |        |        |   ✓    |                                   |                                                                                        |
-| `carousel`                |   ✓    |        |   ✓    | `region` / `group`                |                                                                                        |
-| `chart`                   |        |        |   ✓    |                                   | Recharts wrappers                                                                      |
-| `checkbox`                |   ✓    |   ✓    |   ✓    | `checkbox` (native input)         |                                                                                        |
-| `clipboard`               |   ✓    |        |        |                                   |                                                                                        |
-| `collapsible`             |   ✓    |   ✓    |   ✓    |                                   |                                                                                        |
-| `color-picker`            |   ✓    |        |        | `group` / `slider`                |                                                                                        |
-| `combobox`                |   ✓    |        |   ✓    | `combobox` / `listbox` / `option` | shadcn composes `command` + `popover`                                                  |
-| `command`                 |        |        |   ✓    |                                   | a cmdk palette; nearest Ark: `combobox`/`listbox`                                      |
-| `context-menu`            |        |   ✓    |   ✓    | `menu` / `menuitem`               | Ark: `menu` with `ContextTrigger`                                                      |
-| `date-input`              |   ✓    |        |        |                                   |                                                                                        |
-| `date-picker`             |   ✓    |        |        |                                   | shadcn: `calendar` + `popover`                                                         |
-| `dialog`                  |   ✓    |   ✓    |   ✓    | `dialog` \| `alertdialog`         |                                                                                        |
-| `direction`               |        |        |   ✓    |                                   | RTL provider, not a component                                                          |
-| `drawer`                  |   ✓    |        |   ✓    |                                   | shadcn: `drawer` (on `@base-ui/react`) and `sheet`                                     |
-| `dropdown-menu`           |        |   ✓    |   ✓    | `menu` / `menuitem`               | Ark: `menu`                                                                            |
-| `editable`                |   ✓    |        |        |                                   | our `Editable`                                                                         |
-| `empty`                   |        |        |   ✓    |                                   |                                                                                        |
-| `field`                   |   ✓    |        |   ✓    |                                   | Ark: label/helper/error for one control; shadcn: the same idea                         |
-| `fieldset`                |   ✓    |        |        |                                   |                                                                                        |
-| `file-upload`             |   ✓    |        |        | `button` \| `application`         |                                                                                        |
-| `floating-panel`          |   ✓    |        |        | `dialog`                          |                                                                                        |
-| `form`                    |        |   ✓    |   ✓    |                                   | Radix Form (`react-form`); shadcn: react-hook-form wrappers; Ark: `field` + `fieldset` |
-| `hover-card`              |   ✓    |   ✓    |   ✓    |                                   |                                                                                        |
-| `image-cropper`           |   ✓    |        |        | `group` / `slider`                |                                                                                        |
-| `input`                   |        |        |   ✓    |                                   |                                                                                        |
-| `input-group`             |        |        |   ✓    |                                   |                                                                                        |
-| `input-otp`               |        |        |   ✓    |                                   | Ark: `pin-input`; Radix: `one-time-password-field`                                     |
-| `item`                    |        |        |   ✓    |                                   |                                                                                        |
-| `json-tree-view`          |   ✓    |        |        |                                   | devtools has `ObjectsTree` on `tree-view` instead                                      |
-| `kbd`                     |        |        |   ✓    |                                   |                                                                                        |
-| `label`                   |        |   ✓    |   ✓    |                                   |                                                                                        |
-| `listbox`                 |   ✓    |        |        | `listbox` / `option`              |                                                                                        |
-| `marker`                  |        |        |   ✓    |                                   |                                                                                        |
-| `marquee`                 |   ✓    |        |        | `region`                          |                                                                                        |
-| `menu`                    |   ✓    |        |        | `menu` / `menuitem`               | one machine for dropdown, context and nested menus                                     |
-| `menubar`                 |        |   ✓    |   ✓    |                                   | Ark: `menu` per item; no menubar machine                                               |
-| `message`                 |        |        |   ✓    |                                   |                                                                                        |
-| `message-scroller`        |        |        |   ✓    |                                   |                                                                                        |
-| `native-select`           |        |        |   ✓    |                                   | a styled `<select>`                                                                    |
-| `navigation-menu`         |   ✓    |   ✓    |   ✓    |                                   |                                                                                        |
-| `number-input`            |   ✓    |        |        | `spinbutton`                      |                                                                                        |
-| `one-time-password-field` |        |   ✓    |        |                                   | Ark: `pin-input`; shadcn: `input-otp`                                                  |
-| `pagination`              |   ✓    |        |   ✓    |                                   |                                                                                        |
-| `password-input`          |   ✓    |        |        |                                   | Radix: `password-toggle-field`                                                         |
-| `password-toggle-field`   |        |   ✓    |        |                                   | Ark: `password-input`                                                                  |
-| `pin-input`               |   ✓    |        |        |                                   | Radix: `one-time-password-field`; shadcn: `input-otp`                                  |
-| `popover`                 |   ✓    |   ✓    |   ✓    | `dialog`                          |                                                                                        |
-| `progress`                |   ✓    |   ✓    |   ✓    | `progressbar`                     |                                                                                        |
-| `qr-code`                 |   ✓    |        |        |                                   |                                                                                        |
-| `questionnaire`           |        |        |   ✓    |                                   |                                                                                        |
-| `radio-group`             |   ✓    |   ✓    |   ✓    | `radiogroup`                      |                                                                                        |
-| `rating-group`            |   ✓    |        |        | `radiogroup` / `radio`            |                                                                                        |
-| `resizable`               |        |        |   ✓    |                                   | Ark: `splitter`                                                                        |
-| `scroll-area`             |   ✓    |   ✓    |   ✓    | `presentation`                    |                                                                                        |
-| `segment-group`           |   ✓    |        |        |                                   |                                                                                        |
-| `select`                  |   ✓    |   ✓    |   ✓    | `combobox` / `listbox` / `option` |                                                                                        |
-| `separator`               |        |   ✓    |   ✓    | `separator`                       | no Ark part — hand-rolled `role="separator"`                                           |
-| `sheet`                   |        |        |   ✓    |                                   | Ark: `drawer`                                                                          |
-| `sidebar`                 |        |        |   ✓    |                                   | layout, not a primitive                                                                |
-| `signature-pad`           |   ✓    |        |        | `application`                     |                                                                                        |
-| `skeleton`                |        |        |   ✓    |                                   |                                                                                        |
-| `slider`                  |   ✓    |   ✓    |   ✓    | `slider`                          |                                                                                        |
-| `sonner`                  |        |        |   ✓    |                                   | a toast host; Ark: `toast` (`createToaster`)                                           |
-| `spinner`                 |        |        |   ✓    |                                   |                                                                                        |
-| `splitter`                |   ✓    |        |        | `separator`                       | shadcn: `resizable`                                                                    |
-| `steps`                   |   ✓    |        |        | `tablist` / `tab` / `tabpanel`    | our `Stepper`                                                                          |
-| `switch`                  |   ✓    |   ✓    |   ✓    | `checkbox` (native input)         |                                                                                        |
-| `table`                   |        |        |   ✓    |                                   |                                                                                        |
-| `tabs`                    |   ✓    |   ✓    |   ✓    | `tablist` / `tab` / `tabpanel`    |                                                                                        |
-| `tags-input`              |   ✓    |        |        |                                   |                                                                                        |
-| `textarea`                |        |        |   ✓    |                                   |                                                                                        |
-| `timer`                   |   ✓    |        |        | `timer`                           |                                                                                        |
-| `toast`                   |   ✓    |   ✓    |   ✓    | `status`                          |                                                                                        |
-| `toc`                     |   ✓    |        |        |                                   |                                                                                        |
-| `toggle`                  |   ✓    |   ✓    |   ✓    | `button` + `aria-pressed`         |                                                                                        |
-| `toggle-group`            |   ✓    |   ✓    |   ✓    | `group` \| `radiogroup`           |                                                                                        |
-| `toolbar`                 |        |   ✓    |        | `toolbar`                         | no Ark machine — roving focus from `@dxos/react-focus`                                 |
-| `tooltip`                 |   ✓    |   ✓    |   ✓    | `tooltip`                         |                                                                                        |
-| `tour`                    |   ✓    |        |        | `alertdialog`                     |                                                                                        |
-| `tree-view`               |   ✓    |        |        | `tree` / `treeitem`               | the reason Ark is in the app                                                           |
-| **total**                 | **52** | **30** | **63** | 38 with a role                    | 94 distinct names                                                                      |
+| component                 |  Ark   |        | shadcn | ARIA role                         | note                                                                             |
+| ------------------------- | :----: | :----: | :----: | --------------------------------- | -------------------------------------------------------------------------------- |
+| `accordion`               |   ✓    |   ✓    |   ✓    | `region` (panel)                  |                                                                                  |
+| `alert`                   |        |        |   ✓    |                                   |                                                                                  |
+| `alert-dialog`            |        |   ✓    |   ✓    | `alertdialog`                     | Ark: `dialog` with `role="alertdialog"`                                          |
+| `angle-slider`            |   ✓    |        |        | `slider`                          |                                                                                  |
+| `aspect-ratio`            |        |   ✓    |   ✓    |                                   |                                                                                  |
+| `attachment`              |        |        |   ✓    |                                   |                                                                                  |
+| `avatar`                  |   ✓    |   ✓    |   ✓    |                                   |                                                                                  |
+| `badge`                   |        |        |   ✓    |                                   |                                                                                  |
+| `breadcrumb`              |        |        |   ✓    |                                   |                                                                                  |
+| `bubble`                  |        |        |   ✓    |                                   |                                                                                  |
+| `button`                  |        |        |   ✓    |                                   |                                                                                  |
+| `button-group`            |        |        |   ✓    |                                   |                                                                                  |
+| `calendar`                |        |        |   ✓    |                                   | shadcn wraps react-day-picker; Ark: `date-picker`                                |
+| `card`                    |        |        |   ✓    |                                   |                                                                                  |
+| `carousel`                |   ✓    |        |   ✓    | `region` / `group`                |                                                                                  |
+| `chart`                   |        |        |   ✓    |                                   | Recharts wrappers                                                                |
+| `checkbox`                |   ✓    |   ✓    |   ✓    | `checkbox` (native input)         |                                                                                  |
+| `clipboard`               |   ✓    |        |        |                                   |                                                                                  |
+| `collapsible`             |   ✓    |   ✓    |   ✓    |                                   |                                                                                  |
+| `color-picker`            |   ✓    |        |        | `group` / `slider`                |                                                                                  |
+| `combobox`                |   ✓    |        |   ✓    | `combobox` / `listbox` / `option` | shadcn composes `command` + `popover`                                            |
+| `command`                 |        |        |   ✓    |                                   | a cmdk palette; nearest Ark: `combobox`/`listbox`                                |
+| `context-menu`            |        |   ✓    |   ✓    | `menu` / `menuitem`               | Ark: `menu` with `ContextTrigger`                                                |
+| `date-input`              |   ✓    |        |        |                                   |                                                                                  |
+| `date-picker`             |   ✓    |        |        |                                   | shadcn: `calendar` + `popover`                                                   |
+| `dialog`                  |   ✓    |   ✓    |   ✓    | `dialog` \| `alertdialog`         |                                                                                  |
+| `direction`               |        |        |   ✓    |                                   | RTL provider, not a component                                                    |
+| `drawer`                  |   ✓    |        |   ✓    |                                   | shadcn: `drawer` (on `@base-ui/react`) and `sheet`                               |
+| `dropdown-menu`           |        |   ✓    |   ✓    | `menu` / `menuitem`               | Ark: `menu`                                                                      |
+| `editable`                |   ✓    |        |        |                                   | our `Editable`                                                                   |
+| `empty`                   |        |        |   ✓    |                                   |                                                                                  |
+| `field`                   |   ✓    |        |   ✓    |                                   | Ark: label/helper/error for one control; shadcn: the same idea                   |
+| `fieldset`                |   ✓    |        |        |                                   |                                                                                  |
+| `file-upload`             |   ✓    |        |        | `button` \| `application`         |                                                                                  |
+| `floating-panel`          |   ✓    |        |        | `dialog`                          |                                                                                  |
+| `form`                    |        |   ✓    |   ✓    |                                   | Form (`react-form`); shadcn: react-hook-form wrappers; Ark: `field` + `fieldset` |
+| `hover-card`              |   ✓    |   ✓    |   ✓    |                                   |                                                                                  |
+| `image-cropper`           |   ✓    |        |        | `group` / `slider`                |                                                                                  |
+| `input`                   |        |        |   ✓    |                                   |                                                                                  |
+| `input-group`             |        |        |   ✓    |                                   |                                                                                  |
+| `input-otp`               |        |        |   ✓    |                                   | Ark: `pin-input`; : `one-time-password-field`                                    |
+| `item`                    |        |        |   ✓    |                                   |                                                                                  |
+| `json-tree-view`          |   ✓    |        |        |                                   | devtools has `ObjectsTree` on `tree-view` instead                                |
+| `kbd`                     |        |        |   ✓    |                                   |                                                                                  |
+| `label`                   |        |   ✓    |   ✓    |                                   |                                                                                  |
+| `listbox`                 |   ✓    |        |        | `listbox` / `option`              |                                                                                  |
+| `marker`                  |        |        |   ✓    |                                   |                                                                                  |
+| `marquee`                 |   ✓    |        |        | `region`                          |                                                                                  |
+| `menu`                    |   ✓    |        |        | `menu` / `menuitem`               | one machine for dropdown, context and nested menus                               |
+| `menubar`                 |        |   ✓    |   ✓    |                                   | Ark: `menu` per item; no menubar machine                                         |
+| `message`                 |        |        |   ✓    |                                   |                                                                                  |
+| `message-scroller`        |        |        |   ✓    |                                   |                                                                                  |
+| `native-select`           |        |        |   ✓    |                                   | a styled `<select>`                                                              |
+| `navigation-menu`         |   ✓    |   ✓    |   ✓    |                                   |                                                                                  |
+| `number-input`            |   ✓    |        |        | `spinbutton`                      |                                                                                  |
+| `one-time-password-field` |        |   ✓    |        |                                   | Ark: `pin-input`; shadcn: `input-otp`                                            |
+| `pagination`              |   ✓    |        |   ✓    |                                   |                                                                                  |
+| `password-input`          |   ✓    |        |        |                                   | : `password-toggle-field`                                                        |
+| `password-toggle-field`   |        |   ✓    |        |                                   | Ark: `password-input`                                                            |
+| `pin-input`               |   ✓    |        |        |                                   | : `one-time-password-field`; shadcn: `input-otp`                                 |
+| `popover`                 |   ✓    |   ✓    |   ✓    | `dialog`                          |                                                                                  |
+| `progress`                |   ✓    |   ✓    |   ✓    | `progressbar`                     |                                                                                  |
+| `qr-code`                 |   ✓    |        |        |                                   |                                                                                  |
+| `questionnaire`           |        |        |   ✓    |                                   |                                                                                  |
+| `radio-group`             |   ✓    |   ✓    |   ✓    | `radiogroup`                      |                                                                                  |
+| `rating-group`            |   ✓    |        |        | `radiogroup` / `radio`            |                                                                                  |
+| `resizable`               |        |        |   ✓    |                                   | Ark: `splitter`                                                                  |
+| `scroll-area`             |   ✓    |   ✓    |   ✓    | `presentation`                    |                                                                                  |
+| `segment-group`           |   ✓    |        |        |                                   |                                                                                  |
+| `select`                  |   ✓    |   ✓    |   ✓    | `combobox` / `listbox` / `option` |                                                                                  |
+| `separator`               |        |   ✓    |   ✓    | `separator`                       | no Ark part — hand-rolled `role="separator"`                                     |
+| `sheet`                   |        |        |   ✓    |                                   | Ark: `drawer`                                                                    |
+| `sidebar`                 |        |        |   ✓    |                                   | layout, not a primitive                                                          |
+| `signature-pad`           |   ✓    |        |        | `application`                     |                                                                                  |
+| `skeleton`                |        |        |   ✓    |                                   |                                                                                  |
+| `slider`                  |   ✓    |   ✓    |   ✓    | `slider`                          |                                                                                  |
+| `sonner`                  |        |        |   ✓    |                                   | a toast host; Ark: `toast` (`createToaster`)                                     |
+| `spinner`                 |        |        |   ✓    |                                   |                                                                                  |
+| `splitter`                |   ✓    |        |        | `separator`                       | shadcn: `resizable`                                                              |
+| `steps`                   |   ✓    |        |        | `tablist` / `tab` / `tabpanel`    | our `Stepper`                                                                    |
+| `switch`                  |   ✓    |   ✓    |   ✓    | `checkbox` (native input)         |                                                                                  |
+| `table`                   |        |        |   ✓    |                                   |                                                                                  |
+| `tabs`                    |   ✓    |   ✓    |   ✓    | `tablist` / `tab` / `tabpanel`    |                                                                                  |
+| `tags-input`              |   ✓    |        |        |                                   |                                                                                  |
+| `textarea`                |        |        |   ✓    |                                   |                                                                                  |
+| `timer`                   |   ✓    |        |        | `timer`                           |                                                                                  |
+| `toast`                   |   ✓    |   ✓    |   ✓    | `status`                          |                                                                                  |
+| `toc`                     |   ✓    |        |        |                                   |                                                                                  |
+| `toggle`                  |   ✓    |   ✓    |   ✓    | `button` + `aria-pressed`         |                                                                                  |
+| `toggle-group`            |   ✓    |   ✓    |   ✓    | `group` \| `radiogroup`           |                                                                                  |
+| `toolbar`                 |        |   ✓    |        | `toolbar`                         | no Ark machine — roving focus from `@dxos/react-focus`                           |
+| `tooltip`                 |   ✓    |   ✓    |   ✓    | `tooltip`                         |                                                                                  |
+| `tour`                    |   ✓    |        |        | `alertdialog`                     |                                                                                  |
+| `tree-view`               |   ✓    |        |        | `tree` / `treeitem`               | the reason Ark is in the app                                                     |
+| **total**                 | **52** | **30** | **63** | 38 with a role                    | 94 distinct names                                                                |

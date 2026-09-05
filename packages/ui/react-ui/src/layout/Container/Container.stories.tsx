@@ -15,7 +15,7 @@ const DefaultStory = () => (
 );
 
 const meta: Meta = {
-  title: 'ui/react-ui-core/primitives/Container',
+  title: 'ui/react-ui-core/layout/Container',
   component: Container,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],

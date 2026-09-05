@@ -2,8 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
+import { ark } from '@ark-ui/react/factory';
 import React from 'react';
 
 import { mx } from '@dxos/ui-theme';
@@ -47,9 +46,9 @@ export type FlexProps = {
 export const Flex = slottable<HTMLDivElement, FlexProps>(
   ({ children, asChild, column, gap, align, justify, wrap, grow, center, ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
-    const Comp = asChild ? Slot : Primitive.div;
     return (
-      <Comp
+      <ark.div
+        asChild={asChild}
         ref={forwardedRef}
         {...rest}
         className={mx(
@@ -65,7 +64,7 @@ export const Flex = slottable<HTMLDivElement, FlexProps>(
         )}
       >
         {children}
-      </Comp>
+      </ark.div>
     );
   },
 );

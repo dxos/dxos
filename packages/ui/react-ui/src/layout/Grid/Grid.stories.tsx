@@ -72,7 +72,7 @@ const SubgridStory = () => (
 );
 
 const meta: Meta = {
-  title: 'ui/react-ui-core/primitives/Grid',
+  title: 'ui/react-ui-core/layout/Grid',
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: { layout: 'fullscreen' },
 };

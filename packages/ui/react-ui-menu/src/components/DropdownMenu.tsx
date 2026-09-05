@@ -2,16 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type MouseEvent, useCallback } from 'react';
 
+import { useControllableState } from '@dxos/react-hooks';
 import { type DropdownMenuRootProps, Icon, DropdownMenu as NaturalDropdownMenu } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { type MenuAction, type MenuItem, type MenuItemGroup, isSeparator } from '../types';
 import { executeMenuAction } from '../util';
 import { ActionLabel } from './ActionLabel';
-import { type MenuScopedProps, useMenuItems, useMenuScoped } from './MenuContext';
+import { useMenuItems, useMenuScoped } from './MenuContext';
 
 export type DropdownMenuProps = DropdownMenuRootProps & {
   group?: MenuItemGroup;
@@ -23,16 +23,15 @@ const DropdownMenuItem = ({
   item,
   group,
   onClick,
-  __menuScope,
-}: MenuScopedProps<{
+}: {
   item: MenuItem;
   group?: MenuItemGroup;
   onClick: (action: MenuAction, event: MouseEvent) => void;
-}>) => {
+}) => {
   // TODO(thure): handle other items.
   const action = item as MenuAction;
   const handleClick = useCallback((event: MouseEvent) => onClick(action, event), [action, onClick]);
-  const { iconSize } = useMenuScoped('DropdownMenuItem', __menuScope);
+  const { iconSize } = useMenuScoped('DropdownMenuItem');
   // An item that declares `checked` is a select-group member: expose the checked role + state to AT so
   // the current value is announced, not conveyed by the trailing check icon alone. Mutually-exclusive
   // (single-select) groups use radio semantics; multi-select groups use checkbox.
@@ -73,16 +72,15 @@ const DropdownMenuRoot = ({
   onOpenChange,
   caller,
   children,
-  __menuScope,
   ...naturalProps
-}: MenuScopedProps<DropdownMenuProps>) => {
+}: DropdownMenuProps) => {
   const [optionsMenuOpen, setOptionsMenuOpen] = useControllableState({
     prop: open,
     defaultProp: defaultOpen,
     onChange: onOpenChange,
   });
 
-  const { onAction } = useMenuScoped('DropdownMenuRoot', __menuScope);
+  const { onAction } = useMenuScoped('DropdownMenuRoot');
 
   const handleActionClick = useCallback(
     (action: MenuAction, event: MouseEvent) => {

@@ -40,6 +40,7 @@ export const DebugPanel = ({ contextId = DEBUG_PANEL_CONTEXT, onClose }: DebugPa
       classNames='contents'
       orientation='horizontal'
       activationMode='automatic'
+      keepMounted
       value={tab}
       onValueChange={handleTabChange}
     >
@@ -69,10 +70,10 @@ export const DebugPanel = ({ contextId = DEBUG_PANEL_CONTEXT, onClose }: DebugPa
           </Toolbar.Root>
         </Panel.Toolbar>
         <Panel.Content>
-          <Tabs.Panel value='console' forceMount classNames='dx-expand data-[state="inactive"]:hidden'>
+          <Tabs.Panel value='console' classNames='dx-expand'>
             <DebugConsole fit />
           </Tabs.Panel>
-          <Tabs.Panel value='logs' forceMount classNames='dx-expand data-[state="inactive"]:hidden'>
+          <Tabs.Panel value='logs' classNames='dx-expand'>
             <LoggerPanel />
           </Tabs.Panel>
         </Panel.Content>

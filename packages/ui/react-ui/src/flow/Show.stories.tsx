@@ -5,9 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { withLayout, withTheme } from '../../testing';
-import { Button } from '../Button';
-import { Toolbar } from '../Toolbar';
+import { Button } from '../components/Button';
+import { Toolbar } from '../components/Toolbar';
+import { withLayout, withTheme } from '../testing';
 import { Show } from './Show';
 import { Switch } from './Switch';
 
@@ -61,7 +61,7 @@ const SwitchStory = () => {
 //
 
 const meta: Meta = {
-  title: 'ui/react-ui-core/components/Show',
+  title: 'ui/react-ui-core/flow/Show',
   decorators: [withTheme(), withLayout()],
 };
 

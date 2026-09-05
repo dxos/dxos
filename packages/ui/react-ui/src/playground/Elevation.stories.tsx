@@ -243,7 +243,6 @@ const AppFrame = () => {
                       <Select.Option value='all'>All</Select.Option>
                       <Select.Option value='mine'>Mine</Select.Option>
                     </Select.Viewport>
-                    <Select.Arrow />
                   </Select.Content>
                 </Select.Portal>
               </Select.Root>

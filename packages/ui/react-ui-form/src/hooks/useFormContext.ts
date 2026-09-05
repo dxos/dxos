@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import { useEffect, useMemo, useRef } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
 import { SchemaAST, SchemaEx } from '@dxos/effect';
+import { createContext } from '@dxos/react-hooks';
 
 import { type FieldContext, type FormFieldStateProps } from '#types';
 

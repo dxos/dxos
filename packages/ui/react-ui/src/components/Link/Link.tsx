@@ -2,14 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
+import { ark } from '@ark-ui/react/factory';
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 
-export type LinkProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.a>> &
+export type LinkProps = ThemedClassName<ComponentPropsWithRef<typeof ark.a>> &
   Partial<{
     asChild: boolean;
     variant: 'accent' | 'neutral';
@@ -18,9 +17,9 @@ export type LinkProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.a
 export const Link = forwardRef<HTMLAnchorElement, LinkProps>(
   ({ classNames, asChild, variant, target = '_blank', rel = 'noreferrer', ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const Comp = asChild ? Slot : Primitive.a;
     return (
-      <Comp
+      <ark.a
+        asChild={asChild}
         {...props}
         target={target}
         rel={rel}

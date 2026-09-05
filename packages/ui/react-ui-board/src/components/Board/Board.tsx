@@ -3,7 +3,6 @@
 //
 
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { composeRefs } from '@radix-ui/react-compose-refs';
 import React, {
   type ComponentPropsWithoutRef,
   type PropsWithChildren,
@@ -24,6 +23,7 @@ import {
   type ThemedClassName,
   composable,
   composableProps,
+  composeRefs,
   usePx,
   useTranslation,
 } from '@dxos/react-ui';
@@ -350,7 +350,7 @@ const BoardRoot = forwardRef<BoardController, BoardRootProps>(
       onZoomChange?.(Math.max(minZoom, Math.round((zoom - zoomStep) * 100) / 100));
     }, [captureAnchor, onZoomChange, zoom, zoomStep, minZoom]);
 
-    // Selection (hand-rolled controlled/uncontrolled; Radix useControllableState mishandles clearing).
+    // Selection (hand-rolled controlled/uncontrolled; `useControllableState` keys on presence and mishandles clearing).
     const emptySelection = useMemo<ReadonlySet<string>>(() => new Set(), []);
     const [uncontrolledSelected, setUncontrolledSelected] = useState<ReadonlySet<string>>(
       defaultSelected ?? emptySelection,

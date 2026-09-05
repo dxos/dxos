@@ -6,9 +6,9 @@ import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { disableNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/disable-native-drag-preview';
 import { preventUnhandled } from '@atlaskit/pragmatic-drag-and-drop/prevent-unhandled';
 import { type DragLocationHistory } from '@atlaskit/pragmatic-drag-and-drop/types';
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { useLayoutEffect, useRef } from 'react';
 
+import { useControllableState } from '@dxos/react-hooks';
 import { type ThemedClassName, useElevationContext } from '@dxos/react-ui';
 import { mx, surfaceZIndex } from '@dxos/ui-theme';
 

@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
+import { ark } from '@ark-ui/react/factory';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { PropsWithChildren } from 'react';
 
@@ -14,36 +13,35 @@ import { composable, composableProps, slottable } from '../util';
 import { ThemedClassName } from '../util';
 
 /**
- * Radix-style composition.
- * All Radix primitive parts that render a DOM element accept an asChild prop.
- * When asChild is set to true, Radix will not render a default DOM element,
- * instead cloning the part's child and passing it the props and behavior required to make it functional.
- * https://www.radix-ui.com/primitives/docs/guides/composition
+ * `asChild` composition.
+ * Every part that renders a DOM element accepts an `asChild` prop. When it is set, the part renders
+ * no element of its own and instead clones its child, passing it the props and behaviour it needs.
+ * https://ark-ui.com/docs/guides/composition
  */
 
 const Outer = slottable<HTMLDivElement, { priority?: number }>(
   ({ children, asChild, priority, ...props }, forwardedRef) => {
-    const Comp = asChild ? Slot : Primitive.div;
     return (
-      <Comp
+      <ark.div
+        asChild={asChild}
         {...composableProps<HTMLDivElement>(props, { classNames: 'p-2 border border-red-500 rounded' })}
         ref={forwardedRef}
       >
         {children}
-      </Comp>
+      </ark.div>
     );
   },
 );
 
 const Middle = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
-  const Comp = asChild ? Slot : Primitive.div;
   return (
-    <Comp
+    <ark.div
+      asChild={asChild}
       {...composableProps<HTMLDivElement>(props, { classNames: 'p-2 border border-red-500 rounded' })}
       ref={forwardedRef}
     >
       {children}
-    </Comp>
+    </ark.div>
   );
 });
 

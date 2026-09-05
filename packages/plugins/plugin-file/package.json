@@ -157,7 +157,6 @@
     "@dxos/types": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@radix-ui/react-compose-refs": "catalog:",
     "effect": "catalog:",
     "pdfjs-dist": "catalog:",
     "react-dropzone": "catalog:"

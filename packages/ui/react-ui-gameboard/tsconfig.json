@@ -27,6 +27,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../react-primitives/react-hooks"
+    },
+    {
       "path": "../react-ui"
     },
     {

@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import { useEffect } from 'react';
 
+import { createContext } from '@dxos/react-hooks';
 import { INPUT_NAME } from '@dxos/react-input';
 
 // Kept out of `Input.tsx`: react-refresh only fast-refreshes a module whose exports are all

@@ -4,7 +4,6 @@
 
 import 'leaflet/dist/leaflet.css';
 
-import { createContext } from '@radix-ui/react-context';
 import L, { Control, type ControlPosition, DomEvent, DomUtil, type LatLngLiteral, latLngBounds, point } from 'leaflet';
 import React, {
   type PropsWithChildren,
@@ -27,6 +26,7 @@ import {
   useMapEvents,
 } from 'react-leaflet';
 
+import { createContext } from '@dxos/react-hooks';
 import { type ThemedClassName, ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { composable, composableProps, defaultTx } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';

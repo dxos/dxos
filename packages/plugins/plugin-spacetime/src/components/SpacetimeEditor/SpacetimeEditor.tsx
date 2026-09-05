@@ -4,7 +4,6 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import { createContext } from '@radix-ui/react-context';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, {
   type PropsWithChildren,
@@ -20,6 +19,7 @@ import React, {
 
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
+import { createContext } from '@dxos/react-hooks';
 import { composable, composableProps } from '@dxos/react-ui';
 
 import { Scene } from '#types';

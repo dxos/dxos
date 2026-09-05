@@ -46,7 +46,6 @@ export const Toolbar = ({ classNames, onAction }: ToolbarProps) => {
         </NaturalToolbar.Button>
         <Select.Portal>
           <Select.Content>
-            <Select.ScrollUpButton />
             <Select.Viewport>
               {LAYOUTS.map((layout) => (
                 <Select.Option key={layout} value={layout}>
@@ -54,8 +53,6 @@ export const Toolbar = ({ classNames, onAction }: ToolbarProps) => {
                 </Select.Option>
               ))}
             </Select.Viewport>
-            <Select.ScrollDownButton />
-            <Select.Arrow />
           </Select.Content>
         </Select.Portal>
       </Select.Root>

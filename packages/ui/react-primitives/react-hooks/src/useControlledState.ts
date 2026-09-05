@@ -8,7 +8,7 @@ import { useDynamicRef } from './useDynamicRef';
 
 /**
  * A stateful hook with a controlled value.
- * NOTE: Consider using Radix's `useControllableState`.
+ * NOTE: Prefer `useControllableState` when the value has a controlled/uncontrolled split.
  */
 export const useControlledState = <T>(
   valueProp: T,

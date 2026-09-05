@@ -3,9 +3,9 @@
 //
 
 import { Collapsible } from '@ark-ui/react/collapsible';
-import { createContext } from '@radix-ui/react-context';
 import React, { type ComponentPropsWithoutRef, type JSX, type PropsWithChildren } from 'react';
 
+import { createContext } from '@dxos/react-hooks';
 import { Icon, IconBlock, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';

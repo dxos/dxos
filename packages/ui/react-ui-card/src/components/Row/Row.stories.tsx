@@ -49,9 +49,8 @@ const KNOWN_CONTACT = EID.make({
  * is visible in one place.
  */
 const CardPreviewHost = ({ children }: PropsWithChildren) => {
-  // Typed as the popover's trigger element: `Popover.VirtualTrigger` declares a button ref because
-  // Radix's `Anchor` wants a non-null `Measurable`, though a virtual trigger is only ever measured.
-  // `EditorPreviewProvider` carries the same cast; widening it upstream is a follow-up.
+  // Typed as the popover's trigger element, which is only ever measured; `EditorPreviewProvider`
+  // carries the same shape.
   const triggerRef = useRef<HTMLElement | null>(null);
   const [link, setLink] = useState<{ dxn: string; label: string; title?: string }>();
   const [open, setOpen] = useState(false);

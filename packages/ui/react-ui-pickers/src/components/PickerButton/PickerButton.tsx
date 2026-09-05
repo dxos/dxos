@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type FC, useEffect, useState } from 'react';
 
+import { useControllableState } from '@dxos/react-hooks';
 import { Button, DropdownMenu, Icon, type IconProps, type ThemedClassName, Toolbar, Tooltip } from '@dxos/react-ui';
 
 export type PickerButtonProps = ThemedClassName<{

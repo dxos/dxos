@@ -3,7 +3,7 @@
 //
 
 export * from './InputMeta';
-export { INPUT_NAME, type InputScopedProps, createInputScope, useInputContext } from './InputContext';
+export { INPUT_NAME, useInputContext } from './InputContext';
 export * from './Root';
 
 export * from './PinInput';

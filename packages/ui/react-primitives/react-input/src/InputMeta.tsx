@@ -2,83 +2,83 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
+import { ark } from '@ark-ui/react/factory';
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
-import { INPUT_NAME, type InputScopedProps, useInputContext } from './InputContext';
+import { INPUT_NAME, useInputContext } from './InputContext';
 
-type LabelProps = ComponentPropsWithRef<typeof Primitive.label> & { asChild?: boolean };
+type LabelProps = ComponentPropsWithRef<typeof ark.label> & { asChild?: boolean };
 
-const Label = forwardRef<HTMLLabelElement, LabelProps>(
-  ({ __inputScope, asChild, children, ...props }: InputScopedProps<LabelProps>, forwardedRef) => {
-    const { id } = useInputContext(INPUT_NAME, __inputScope);
-    const Comp = asChild ? Slot : Primitive.label;
-    return (
-      <Comp {...props} htmlFor={id} ref={forwardedRef}>
-        {children}
-      </Comp>
-    );
-  },
-);
+const Label = forwardRef<HTMLLabelElement, LabelProps>(({ asChild, children, ...props }: LabelProps, forwardedRef) => {
+  const { id } = useInputContext(INPUT_NAME);
+  return (
+    <ark.label asChild={asChild} {...props} htmlFor={id} ref={forwardedRef}>
+      {children}
+    </ark.label>
+  );
+});
 
-type DescriptionProps = Omit<ComponentPropsWithRef<typeof Primitive.span>, 'id'> & { asChild?: boolean };
+type DescriptionProps = Omit<ComponentPropsWithRef<typeof ark.span>, 'id'> & { asChild?: boolean };
 
 const Description = forwardRef<HTMLSpanElement, DescriptionProps>(
-  ({ __inputScope, asChild, children, ...props }: InputScopedProps<DescriptionProps>, forwardedRef) => {
-    const { descriptionId, validationValence } = useInputContext(INPUT_NAME, __inputScope);
-    const Comp = asChild ? Slot : Primitive.span;
+  ({ asChild, children, ...props }: DescriptionProps, forwardedRef) => {
+    const { descriptionId, validationValence } = useInputContext(INPUT_NAME);
     return (
-      <Comp {...props} {...(validationValence === 'error' && { id: descriptionId })} ref={forwardedRef}>
+      <ark.span
+        asChild={asChild}
+        {...props}
+        {...(validationValence === 'error' && { id: descriptionId })}
+        ref={forwardedRef}
+      >
         {children}
-      </Comp>
+      </ark.span>
     );
   },
 );
 
-type ErrorMessageProps = Omit<ComponentPropsWithRef<typeof Primitive.span>, 'id'> & { asChild?: boolean };
+type ErrorMessageProps = Omit<ComponentPropsWithRef<typeof ark.span>, 'id'> & { asChild?: boolean };
 
 const ErrorMessage = forwardRef<HTMLSpanElement, ErrorMessageProps>(
-  ({ __inputScope, asChild, children, ...props }: InputScopedProps<ErrorMessageProps>, forwardedRef) => {
-    const { errorMessageId } = useInputContext(INPUT_NAME, __inputScope);
-    const Comp = asChild ? Slot : Primitive.span;
+  ({ asChild, children, ...props }: ErrorMessageProps, forwardedRef) => {
+    const { errorMessageId } = useInputContext(INPUT_NAME);
     return (
-      <Comp {...props} id={errorMessageId} ref={forwardedRef}>
+      <ark.span asChild={asChild} {...props} id={errorMessageId} ref={forwardedRef}>
         {children}
-      </Comp>
+      </ark.span>
     );
   },
 );
 
-type ValidationProps = Omit<ComponentPropsWithRef<typeof Primitive.span>, 'id'> & { asChild?: boolean };
+type ValidationProps = Omit<ComponentPropsWithRef<typeof ark.span>, 'id'> & { asChild?: boolean };
 
-const Validation = forwardRef<HTMLSpanElement, ValidationProps>(
-  (props: InputScopedProps<ValidationProps>, forwardedRef) => {
-    const { __inputScope, asChild, children, ...otherProps } = props;
-    const { validationValence } = useInputContext(INPUT_NAME, __inputScope);
-    if (validationValence === 'error') {
-      return <ErrorMessage {...props} ref={forwardedRef} />;
-    } else {
-      const Comp = asChild ? Slot : Primitive.span;
-      return (
-        <Comp {...otherProps} ref={forwardedRef}>
-          {children}
-        </Comp>
-      );
-    }
-  },
-);
+const Validation = forwardRef<HTMLSpanElement, ValidationProps>((props: ValidationProps, forwardedRef) => {
+  const { asChild, children, ...otherProps } = props;
+  const { validationValence } = useInputContext(INPUT_NAME);
+  if (validationValence === 'error') {
+    return <ErrorMessage {...props} ref={forwardedRef} />;
+  } else {
+    return (
+      <ark.span asChild={asChild} {...otherProps} ref={forwardedRef}>
+        {children}
+      </ark.span>
+    );
+  }
+});
 
-type DescriptionAndValidationProps = ComponentPropsWithRef<typeof Primitive.p> & { asChild?: boolean };
+type DescriptionAndValidationProps = ComponentPropsWithRef<typeof ark.p> & { asChild?: boolean };
 
 const DescriptionAndValidation = forwardRef<HTMLParagraphElement, DescriptionAndValidationProps>(
-  ({ __inputScope, asChild, children, ...props }: InputScopedProps<DescriptionAndValidationProps>, forwardedRef) => {
-    const { descriptionId, validationValence } = useInputContext(INPUT_NAME, __inputScope);
-    const Comp = asChild ? Slot : Primitive.p;
+  ({ asChild, children, ...props }: DescriptionAndValidationProps, forwardedRef) => {
+    const { descriptionId, validationValence } = useInputContext(INPUT_NAME);
     return (
-      <Comp {...props} {...(validationValence !== 'error' && { id: descriptionId })} ref={forwardedRef}>
+      <ark.p
+        asChild={asChild}
+        {...props}
+        {...(validationValence !== 'error' && { id: descriptionId })}
+        ref={forwardedRef}
+      >
         {children}
-      </Comp>
+      </ark.p>
     );
   },
 );

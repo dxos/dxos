@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import React, {
   type ComponentType,
   type PropsWithChildren,
@@ -18,11 +17,12 @@ import React, {
 import {
   Column,
   ColumnRootProps,
+  composable,
+  composableProps,
+  createContext,
   IconButton,
   ScrollArea,
   type ScrollAreaRootProps,
-  composable,
-  composableProps,
   setRef,
 } from '@dxos/react-ui';
 import { type WindowController, type WindowState, useFollow, useWindow } from '@dxos/react-ui-virtual';

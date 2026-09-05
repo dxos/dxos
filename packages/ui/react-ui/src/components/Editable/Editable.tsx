@@ -20,8 +20,9 @@
 // unmounting it, so neither ever claims a row of its own.
 
 import { Editable as EditablePrimitive, useEditableContext } from '@ark-ui/react/editable';
-import { createContext } from '@radix-ui/react-context';
 import React, { type ComponentPropsWithRef, type PropsWithChildren, forwardRef, useEffect, useRef } from 'react';
+
+import { createContext } from '@dxos/react-hooks';
 
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';

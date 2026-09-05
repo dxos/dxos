@@ -3,7 +3,6 @@
 //
 
 import { useAtomSet, useAtomValue } from '@effect/atom-react/Hooks';
-import { createContext } from '@radix-ui/react-context';
 import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
@@ -13,6 +12,7 @@ import type * as AppGraph from '@dxos/app-graph/AppGraph';
 import { Database, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { normalizeText } from '@dxos/markdown';
+import { createContext } from '@dxos/react-hooks';
 import {
   Card,
   Collapsible,
