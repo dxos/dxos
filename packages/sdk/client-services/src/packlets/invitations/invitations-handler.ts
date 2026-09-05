@@ -329,8 +329,8 @@ export class InvitationsHandler {
       if (isLockedByAnotherConnection) {
         return false;
       }
-      // for delegated invitations we might try with other hosts and will dispose either after
-      // a timeout or when the number of tries was exceeded
+      // A delegated invitation may be retried against other hosts, so it is disposed only on timeout
+      // or once the retry budget is spent.
       return invitation.type !== Invitation_Type.DELEGATED || triedPeersIds.size >= MAX_DELEGATED_INVITATION_HOST_TRIES;
     };
 

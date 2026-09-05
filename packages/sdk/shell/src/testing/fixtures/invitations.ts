@@ -13,6 +13,7 @@ import {
   InvitationSchema,
 } from '@dxos/react-client/invitations';
 
+/** A cancellable invitation observable fixed in `state`, for stories and tests. */
 export const inviteWithState = (state: Invitation_State) =>
   new CancellableInvitationObservable({
     initialInvitation: buf.create(InvitationSchema, {

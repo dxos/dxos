@@ -20,21 +20,6 @@ import { InvitationEncoder } from './encoder';
 
 const CREATED = new Date(1739956589 * 1000);
 
-const makeInvitation = (fields: buf.MessageInitShape<typeof InvitationSchema> = {}): Invitation =>
-  buf.create(InvitationSchema, {
-    invitationId: PublicKey.random().toHex(),
-    type: Invitation_Type.INTERACTIVE,
-    kind: Invitation_Kind.SPACE,
-    authMethod: Invitation_AuthMethod.NONE,
-    state: Invitation_State.INIT,
-    swarmKey: fromPublicKey(PublicKey.random()),
-    spaceKey: fromPublicKey(PublicKey.random()),
-    spaceId: SpaceId.random(),
-    created: bufWkt.timestampFromDate(CREATED),
-    lifetime: 86400,
-    ...fields,
-  });
-
 describe('Invitation utils', () => {
   test('encodes and decodes an invitation', () => {
     const invitation = makeInvitation();
@@ -108,3 +93,18 @@ describe('Invitation utils', () => {
     expect(InvitationEncoder.decode(InvitationEncoder.encode(decoded))).to.deep.eq(decoded);
   });
 });
+
+const makeInvitation = (fields: buf.MessageInitShape<typeof InvitationSchema> = {}): Invitation =>
+  buf.create(InvitationSchema, {
+    invitationId: PublicKey.random().toHex(),
+    type: Invitation_Type.INTERACTIVE,
+    kind: Invitation_Kind.SPACE,
+    authMethod: Invitation_AuthMethod.NONE,
+    state: Invitation_State.INIT,
+    swarmKey: fromPublicKey(PublicKey.random()),
+    spaceKey: fromPublicKey(PublicKey.random()),
+    spaceId: SpaceId.random(),
+    created: bufWkt.timestampFromDate(CREATED),
+    lifetime: 86400,
+    ...fields,
+  });

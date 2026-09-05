@@ -81,8 +81,8 @@ const successfulInvitation = async ({
 
     case Invitation_Kind.DEVICE:
       expect(hostInvitation!.identityKey).not.to.exist;
-      expect(guestInvitation!.identityKey).to.deep.eq(host.identityManager.identity!.identityKey);
-      expect(guestInvitation!.identityKey).to.deep.eq(guest.identityManager.identity!.identityKey);
+      expect(toPublicKey(guestInvitation!.identityKey)).to.deep.eq(host.identityManager.identity!.identityKey);
+      expect(toPublicKey(guestInvitation!.identityKey)).to.deep.eq(guest.identityManager.identity!.identityKey);
 
       // Check devices.
       await expect.poll(() => host.identityManager.identity!.authorizedDeviceKeys.size).toEqual(2);

@@ -256,7 +256,7 @@ export class InvitationsManager {
       created = bufWkt.timestampNow(),
       guestKeypair = undefined,
       role = SpaceMember_Role.ADMIN,
-      lifetime = 86400 * 7, // 7 days,
+      lifetime = 86400 * 7, // 7 days.
       multiUse = false,
       ...options
     } = _options ?? {};
@@ -272,7 +272,7 @@ export class InvitationsManager {
       swarmKey,
       authCode,
       timeout,
-      persistent: persistent && type !== Invitation_Type.DELEGATED, // delegated invitations are persisted in control feed
+      persistent: persistent && type !== Invitation_Type.DELEGATED, // Delegated invitations are persisted in the control feed.
       guestKeypair:
         guestKeypair ?? (authMethod === Invitation_AuthMethod.KNOWN_PUBLIC_KEY ? createAdmissionKeypair() : undefined),
       created,

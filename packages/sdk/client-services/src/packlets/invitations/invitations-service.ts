@@ -128,7 +128,7 @@ export class InvitationsServiceImpl implements InvitationsService.Handlers {
         );
       });
 
-      // used only for testing
+      // Used only for testing.
       this._invitationsManager.saved.on(ctx, (invitation) => {
         void emit.single(
           buf.create(QueryInvitationsResponseSchema, {

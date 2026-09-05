@@ -16,10 +16,17 @@ import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Invitation as LegacyInvitation } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 
+/** Names an invitation state for logging; falls back to `unknown` for a value outside the enum. */
 export const stateToString = (state: Invitation_State): string => {
   return Object.entries(Invitation_State).find(([key, val]) => val === state)?.[0] ?? 'unknown';
 };
 
+/**
+ * When the invitation expires, or `undefined` where it carries no lifetime.
+ *
+ * An invitation with no `created` timestamp is treated as created now, which is what the host does
+ * when it mints one.
+ */
 export const computeExpirationTime = (invitation: Partial<Invitation>): Date | undefined => {
   if (!invitation.lifetime) {
     return;
@@ -108,8 +115,8 @@ export const fromBufAuthMethod = (authMethod: Invitation_AuthMethod | undefined)
  * Reads a stored invitation as the buf message the services now speak.
  *
  * `EchoMetadata.invitations` is still written by the protobuf.js codec, so the two shapes meet in
- * the manager; both codecs agree byte for byte, which makes the encoding the conversion. Goes when
- * the metadata group moves to buf.
+ * the manager; both codecs agree byte for byte, which makes the encoding the conversion. Remove
+ * this conversion when the metadata group moves to buf.
  */
 export const toBufInvitation = (invitation: LegacyInvitation): Invitation =>
   buf.fromBinary(InvitationSchema, encodeCompat(InvitationSchema, invitation));
