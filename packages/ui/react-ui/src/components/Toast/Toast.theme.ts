@@ -40,6 +40,8 @@ const description: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
 
 const actions: ComponentFunction<ToastStyleProps> = (_props, ...etc) => mx('flex gap-2 mt-1', ...etc);
 
+const countdown: ComponentFunction<ToastStyleProps> = (_props, ...etc) => mx('mx-1', ...etc);
+
 export const toastTheme: Theme<ToastStyleProps> = {
   viewport,
   root,
@@ -48,4 +50,5 @@ export const toastTheme: Theme<ToastStyleProps> = {
   title,
   description,
   actions,
+  countdown,
 };
