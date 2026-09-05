@@ -100,7 +100,7 @@ const MermaidDiagram = ({ source }: { source: string }) => {
 };
 
 const Header = ({ children }: { children: string }) => (
-  <div className='px-3 py-1.5 text-xs uppercase tracking-wide text-description bg-baseSurface'>{children}</div>
+  <div className='px-3 py-1.5 text-xs uppercase tracking-wide text-description dx-base-surface'>{children}</div>
 );
 
 type StoryArgs = {
@@ -141,11 +141,11 @@ const Bench = ({ source: initial, lattice }: StoryArgs) => {
       <div className='grid grid-rows-[auto_1fr_auto_1fr] min-h-0 gap-px bg-separator'>
         <Header>Source</Header>
         {/* Keyed on the fixture so switching stories replaces the buffer; edits otherwise persist. */}
-        <div className='bg-baseSurface min-h-0'>
+        <div className='dx-base-surface min-h-0'>
           <SourceEditor key={initial} initialValue={initial} onChange={setSource} />
         </div>
         <Header>Mermaid</Header>
-        <div className='bg-baseSurface min-h-0'>
+        <div className='dx-base-surface min-h-0'>
           <MermaidDiagram source={source} />
         </div>
       </div>
@@ -155,11 +155,11 @@ const Bench = ({ source: initial, lattice }: StoryArgs) => {
         {/* The SVG is the grid item itself: a percentage height inside a wrapper resolves to the
             viewBox's intrinsic size and the row grows to it instead of the SVG scaling to fit. */}
         <SceneSvg
-          classNames='dx-attention-surface bg-baseSurface min-h-0 min-w-0'
+          classNames='dx-attention-surface dx-base-surface min-h-0 min-w-0'
           objects={objects}
           grid={UmlGrid.GRID}
         />
-        <div className='p-2 font-mono text-xs bg-baseSurface' data-testid='layout-bench.report'>
+        <div className='p-2 font-mono text-xs dx-base-surface' data-testid='layout-bench.report'>
           {failure ? (
             <span className='text-rose-500'>{failure}</span>
           ) : (
