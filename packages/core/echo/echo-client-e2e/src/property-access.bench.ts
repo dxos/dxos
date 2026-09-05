@@ -63,12 +63,30 @@ class BenchObject extends Type.makeObject<BenchObject>(DXN.make('com.example.typ
   }),
 ) {}
 
+// The wide variant pads the same two fields out to `WIDE_FIELD_COUNT` short strings and still reads
+// and writes only `value`, to separate what an access costs per object from what it costs per field.
+// If a single-field read on a wide object is no slower than on a narrow one, the proxy is paying per
+// access; if it scales with width, something is walking or materializing the whole object.
+const WIDE_FIELD_COUNT = 250;
+const wideFieldName = (index: number) => `field${index}`;
+const wideSchemaFields = Object.fromEntries(
+  Array.from({ length: WIDE_FIELD_COUNT }, (unusedValue, index) => [wideFieldName(index), Schema.String]),
+);
+
+class WideBenchObject extends Type.makeObject<WideBenchObject>(DXN.make('com.example.type.wideBenchObject', '0.1.0'))(
+  Schema.Struct({
+    value: Schema.Number,
+    label: Schema.String,
+    ...wideSchemaFields,
+  }),
+) {}
+
 // Module-level setup, awaited before any `describe` registers, so every bench body below stays
 // synchronous. An `async` body would add a microtask turn (~50-100ns) to every sample, which is an
 // order of magnitude above a plain property read and would collapse the whole matrix into noise.
 // Safe because `*.bench.ts` is outside the test runner's `include` — this file is only ever loaded
 // by an explicit `vitest bench` run.
-const storagePaths = [createTmpPath(), createTmpPath()];
+const storagePaths = [createTmpPath(), createTmpPath(), createTmpPath(), createTmpPath()];
 process.once('exit', () => {
   for (const storagePath of storagePaths) {
     try {
@@ -82,20 +100,35 @@ process.once('exit', () => {
 const builder = await new EchoTestBuilder().open();
 
 const openDatabase = async (storagePath: string) => {
-  const peer = await builder.createPeer({ types: [Feed.Feed, BenchObject], storagePath });
+  const peer = await builder.createPeer({ types: [Feed.Feed, BenchObject, WideBenchObject], storagePath });
   return peer.createDatabase();
 };
 
-// A database per persisted kind rather than one shared between them. Every row mutates the database
-// it runs against — `make` adds objects, and no row flushes, so writes pile up as un-flushed changes
-// — so on a shared database each kind would be measured against a database sized by whichever blocks
-// happened to run before it, by an amount that varies with their iteration counts.
+// A database per persisted kind and width rather than one shared between them. Every row mutates the
+// database it runs against — `make` adds objects, and no row flushes, so writes pile up as un-flushed
+// changes — so on a shared database each block would be measured against a database sized by whichever
+// blocks happened to run before it, by an amount that varies with their iteration counts.
 const automergeDb = await openDatabase(storagePaths[0]);
 const feedDb = await openDatabase(storagePaths[1]);
+const automergeWideDb = await openDatabase(storagePaths[2]);
+const feedWideDb = await openDatabase(storagePaths[3]);
 const feed = feedDb.add(Feed.make({ name: 'bench' }));
+const wideFeed = feedWideDb.add(Feed.make({ name: 'bench-wide' }));
 await feedDb.flush();
+await feedWideDb.flush();
 
 const makeProps = (index: number) => ({ value: index, label: `label-${index}` });
+
+// The padding fields, built once. Generated at runtime so the strings are not literals V8 can fold,
+// and spread rather than rebuilt per iteration so the wide `make` rows measure constructing a wide
+// object rather than the array churn of assembling its field map.
+const widePadding: Record<string, string> = Object.fromEntries(
+  Array.from({ length: WIDE_FIELD_COUNT }, (unusedValue, index) => [
+    wideFieldName(index),
+    `s${index}-${Math.floor(Math.random() * 1_000)}`,
+  ]),
+);
+const makeWideProps = (index: number) => ({ ...widePadding, ...makeProps(index) });
 
 // One pool per kind. Rotating over many objects rather than hammering one keeps a single value or
 // branch from warming into a best case that never occurs in production, and — for the write
@@ -110,8 +143,20 @@ const automergePool = Array.from({ length: OBJECT_POOL_SIZE }, (unusedValue, ind
 const feedPool = Array.from({ length: OBJECT_POOL_SIZE }, (unusedValue, index) =>
   feedDb.add(Obj.make(BenchObject, makeProps(index)), { to: feed }),
 );
+const plainWidePool = Array.from({ length: OBJECT_POOL_SIZE }, (unusedValue, index) => makeWideProps(index));
+const unpersistedWidePool = Array.from({ length: OBJECT_POOL_SIZE }, (unusedValue, index) =>
+  Obj.make(WideBenchObject, makeWideProps(index)),
+);
+const automergeWidePool = Array.from({ length: OBJECT_POOL_SIZE }, (unusedValue, index) =>
+  automergeWideDb.add(Obj.make(WideBenchObject, makeWideProps(index))),
+);
+const feedWidePool = Array.from({ length: OBJECT_POOL_SIZE }, (unusedValue, index) =>
+  feedWideDb.add(Obj.make(WideBenchObject, makeWideProps(index)), { to: wideFeed }),
+);
 await automergeDb.flush();
 await feedDb.flush();
+await automergeWideDb.flush();
+await feedWideDb.flush();
 
 // Generated at runtime so the written value is not a literal V8 can constant-fold into the store.
 const valuePool = Array.from({ length: VALUE_POOL_SIZE }, () => Math.floor(Math.random() * 1_000_000));
@@ -132,7 +177,18 @@ afterAll(async () => {
   // The single sink for the whole file. `checksum` and the pools are closed over here, so they stay
   // live for the module's lifetime and V8 cannot prove either the benchmarked loads (which feed
   // `checksum`) or the benchmarked stores (which land in the pools) dead.
-  blackhole([checksum, plainPool, unpersistedPool, automergePool, feedPool, makeSink]);
+  blackhole([
+    checksum,
+    plainPool,
+    unpersistedPool,
+    automergePool,
+    feedPool,
+    plainWidePool,
+    unpersistedWidePool,
+    automergeWidePool,
+    feedWidePool,
+    makeSink,
+  ]);
   // Closes the peers and disposes their storage. The exit handler above only unlinks the directory,
   // and cannot await this — which is why the close belongs here, where a hook can be async.
   await builder.close();
@@ -448,3 +504,310 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
     );
   });
 });
+
+// Same matrix over the wide object. Kept as separate bench bodies rather than parameterized over the
+// narrow ones for the same monomorphism reason as above — a wide and a narrow object are different
+// hidden classes, so sharing a load site between them would make it polymorphic and slow both.
+describe(
+  `property access (plain vs echo) — wide object, ${WIDE_FIELD_COUNT} fields`,
+  { tags: ['manual'], timeout: 300_000 },
+  () => {
+    describe('plain object', () => {
+      bench(
+        'read x1',
+        () => {
+          checksum += plainWidePool[cursor++ & OBJECT_POOL_MASK].value;
+        },
+        BENCH_OPTIONS,
+      );
+
+      bench(
+        `read x${BATCH}`,
+        () => {
+          for (let n = 0; n < BATCH; n++) {
+            checksum += plainWidePool[cursor++ & OBJECT_POOL_MASK].value;
+          }
+        },
+        BENCH_OPTIONS,
+      );
+
+      bench(
+        'write x1',
+        () => {
+          plainWidePool[cursor++ & OBJECT_POOL_MASK].value = valuePool[cursor & VALUE_POOL_MASK];
+        },
+        BENCH_OPTIONS,
+      );
+
+      bench(
+        `write x${BATCH}`,
+        () => {
+          for (let n = 0; n < BATCH; n++) {
+            plainWidePool[cursor++ & OBJECT_POOL_MASK].value = valuePool[cursor & VALUE_POOL_MASK];
+          }
+        },
+        BENCH_OPTIONS,
+      );
+
+      bench(
+        'make x1',
+        () => {
+          const index = cursor++ & VALUE_POOL_MASK;
+          makeSink[index & MAKE_SINK_MASK] = { ...widePadding, value: valuePool[index], label: labelPool[index] };
+        },
+        MAKE_BENCH_OPTIONS,
+      );
+
+      bench(
+        `make x${BATCH}`,
+        () => {
+          for (let n = 0; n < BATCH; n++) {
+            const index = cursor++ & VALUE_POOL_MASK;
+            makeSink[index & MAKE_SINK_MASK] = { ...widePadding, value: valuePool[index], label: labelPool[index] };
+          }
+        },
+        MAKE_BENCH_OPTIONS,
+      );
+    });
+
+    describe('echo object (unpersisted)', () => {
+      bench(
+        'read x1',
+        () => {
+          checksum += unpersistedWidePool[cursor++ & OBJECT_POOL_MASK].value;
+        },
+        BENCH_OPTIONS,
+      );
+
+      bench(
+        `read x${BATCH}`,
+        () => {
+          for (let n = 0; n < BATCH; n++) {
+            checksum += unpersistedWidePool[cursor++ & OBJECT_POOL_MASK].value;
+          }
+        },
+        BENCH_OPTIONS,
+      );
+
+      bench(
+        'write x1',
+        () => {
+          Obj.update(unpersistedWidePool[cursor++ & OBJECT_POOL_MASK], (obj) => {
+            obj.value = valuePool[cursor & VALUE_POOL_MASK];
+          });
+        },
+        BENCH_OPTIONS,
+      );
+
+      bench(
+        `write x${BATCH}`,
+        () => {
+          for (let n = 0; n < BATCH; n++) {
+            Obj.update(unpersistedWidePool[cursor++ & OBJECT_POOL_MASK], (obj) => {
+              obj.value = valuePool[cursor & VALUE_POOL_MASK];
+            });
+          }
+        },
+        BENCH_OPTIONS,
+      );
+
+      bench(
+        `write x${BATCH} (batched in one Obj.update)`,
+        () => {
+          Obj.update(unpersistedWidePool[cursor++ & OBJECT_POOL_MASK], (obj) => {
+            for (let n = 0; n < BATCH; n++) {
+              obj.value = valuePool[(cursor + n) & VALUE_POOL_MASK];
+            }
+          });
+        },
+        BENCH_OPTIONS,
+      );
+
+      bench(
+        'make x1',
+        () => {
+          const index = cursor++ & VALUE_POOL_MASK;
+          makeSink[index & MAKE_SINK_MASK] = Obj.make(WideBenchObject, {
+            ...widePadding,
+            value: valuePool[index],
+            label: labelPool[index],
+          });
+        },
+        MAKE_BENCH_OPTIONS,
+      );
+
+      bench(
+        `make x${BATCH}`,
+        () => {
+          for (let n = 0; n < BATCH; n++) {
+            const index = cursor++ & VALUE_POOL_MASK;
+            makeSink[index & MAKE_SINK_MASK] = Obj.make(WideBenchObject, {
+              ...widePadding,
+              value: valuePool[index],
+              label: labelPool[index],
+            });
+          }
+        },
+        MAKE_BENCH_OPTIONS,
+      );
+    });
+
+    describe('echo object (automerge)', () => {
+      bench(
+        'read x1',
+        () => {
+          checksum += automergeWidePool[cursor++ & OBJECT_POOL_MASK].value;
+        },
+        BENCH_OPTIONS,
+      );
+
+      bench(
+        `read x${BATCH}`,
+        () => {
+          for (let n = 0; n < BATCH; n++) {
+            checksum += automergeWidePool[cursor++ & OBJECT_POOL_MASK].value;
+          }
+        },
+        BENCH_OPTIONS,
+      );
+
+      bench(
+        'write x1',
+        () => {
+          Obj.update(automergeWidePool[cursor++ & OBJECT_POOL_MASK], (obj) => {
+            obj.value = valuePool[cursor & VALUE_POOL_MASK];
+          });
+        },
+        BENCH_OPTIONS,
+      );
+
+      bench(
+        `write x${BATCH}`,
+        () => {
+          for (let n = 0; n < BATCH; n++) {
+            Obj.update(automergeWidePool[cursor++ & OBJECT_POOL_MASK], (obj) => {
+              obj.value = valuePool[cursor & VALUE_POOL_MASK];
+            });
+          }
+        },
+        BENCH_OPTIONS,
+      );
+
+      bench(
+        `write x${BATCH} (batched in one Obj.update)`,
+        () => {
+          Obj.update(automergeWidePool[cursor++ & OBJECT_POOL_MASK], (obj) => {
+            for (let n = 0; n < BATCH; n++) {
+              obj.value = valuePool[(cursor + n) & VALUE_POOL_MASK];
+            }
+          });
+        },
+        BENCH_OPTIONS,
+      );
+
+      bench(
+        'make x1 (Obj.make + db.add)',
+        () => {
+          const index = cursor++ & VALUE_POOL_MASK;
+          makeSink[index & MAKE_SINK_MASK] = automergeWideDb.add(
+            Obj.make(WideBenchObject, { ...widePadding, value: valuePool[index], label: labelPool[index] }),
+          );
+        },
+        MAKE_BENCH_OPTIONS,
+      );
+
+      bench(
+        `make x${BATCH} (Obj.make + db.add)`,
+        () => {
+          for (let n = 0; n < BATCH; n++) {
+            const index = cursor++ & VALUE_POOL_MASK;
+            makeSink[index & MAKE_SINK_MASK] = automergeWideDb.add(
+              Obj.make(WideBenchObject, { ...widePadding, value: valuePool[index], label: labelPool[index] }),
+            );
+          }
+        },
+        MAKE_BENCH_OPTIONS,
+      );
+    });
+
+    describe('echo object (feed)', () => {
+      bench(
+        'read x1',
+        () => {
+          checksum += feedWidePool[cursor++ & OBJECT_POOL_MASK].value;
+        },
+        BENCH_OPTIONS,
+      );
+
+      bench(
+        `read x${BATCH}`,
+        () => {
+          for (let n = 0; n < BATCH; n++) {
+            checksum += feedWidePool[cursor++ & OBJECT_POOL_MASK].value;
+          }
+        },
+        BENCH_OPTIONS,
+      );
+
+      bench(
+        'write x1',
+        () => {
+          Obj.update(feedWidePool[cursor++ & OBJECT_POOL_MASK], (obj) => {
+            obj.value = valuePool[cursor & VALUE_POOL_MASK];
+          });
+        },
+        BENCH_OPTIONS,
+      );
+
+      bench(
+        `write x${BATCH}`,
+        () => {
+          for (let n = 0; n < BATCH; n++) {
+            Obj.update(feedWidePool[cursor++ & OBJECT_POOL_MASK], (obj) => {
+              obj.value = valuePool[cursor & VALUE_POOL_MASK];
+            });
+          }
+        },
+        BENCH_OPTIONS,
+      );
+
+      bench(
+        `write x${BATCH} (batched in one Obj.update)`,
+        () => {
+          Obj.update(feedWidePool[cursor++ & OBJECT_POOL_MASK], (obj) => {
+            for (let n = 0; n < BATCH; n++) {
+              obj.value = valuePool[(cursor + n) & VALUE_POOL_MASK];
+            }
+          });
+        },
+        BENCH_OPTIONS,
+      );
+
+      bench(
+        'make x1 (Obj.make + db.add to feed)',
+        () => {
+          const index = cursor++ & VALUE_POOL_MASK;
+          makeSink[index & MAKE_SINK_MASK] = feedWideDb.add(
+            Obj.make(WideBenchObject, { ...widePadding, value: valuePool[index], label: labelPool[index] }),
+            { to: wideFeed },
+          );
+        },
+        MAKE_BENCH_OPTIONS,
+      );
+
+      bench(
+        `make x${BATCH} (Obj.make + db.add to feed)`,
+        () => {
+          for (let n = 0; n < BATCH; n++) {
+            const index = cursor++ & VALUE_POOL_MASK;
+            makeSink[index & MAKE_SINK_MASK] = feedWideDb.add(
+              Obj.make(WideBenchObject, { ...widePadding, value: valuePool[index], label: labelPool[index] }),
+              { to: wideFeed },
+            );
+          }
+        },
+        MAKE_BENCH_OPTIONS,
+      );
+    });
+  },
+);
