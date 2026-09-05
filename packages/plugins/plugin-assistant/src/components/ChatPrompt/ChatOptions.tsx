@@ -18,7 +18,7 @@ import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { getStyles, mx } from '@dxos/ui-theme';
 
-import { useActiveSkills, useContextObjects, useFilteredTypes, useSkillHandlers, useSkills } from '#hooks';
+import { getSkillId, useActiveSkills, useContextObjects, useFilteredTypes, useSkillHandlers, useSkills } from '#hooks';
 import { meta } from '#meta';
 import { Assistant, AssistantCapabilities, AssistantPreset } from '#types';
 
@@ -110,7 +110,7 @@ const SkillsPanel = ({ registry, db, context }: Pick<ChatOptionsProps, 'registry
 
   const skills = useSkills({ registry, db });
   const activeSkills = useActiveSkills({ context });
-  const { onUpdateSkill } = useSkillHandlers({ db, context, registry });
+  const { onUpdateSkill } = useSkillHandlers({ context });
   const { results, handleSearch } = useSearchListResults({
     items: skills,
     extract: (skill) => skill.name,
@@ -123,16 +123,16 @@ const SkillsPanel = ({ registry, db, context }: Pick<ChatOptionsProps, 'registry
             centered search surface, so the scroll strip is not reserved on both sides. */}
         <SearchList.Viewport padding={false}>
           {results.map((skill) => {
-            const skillKey = Obj.getMeta(skill).key ?? skill.id;
-            const isActive = activeSkills.has(skillKey);
+            const skillId = getSkillId(skill);
+            const isActive = activeSkills.has(skillId);
             return (
               <SearchList.Item
                 classNames='flex items-center overflow-hidden'
-                key={skillKey}
-                value={skillKey}
+                key={skillId}
+                value={skillId}
                 label={skill.name}
                 checked={isActive}
-                onSelect={() => onUpdateSkill?.(skillKey, !isActive)}
+                onSelect={() => onUpdateSkill?.(skill, !isActive)}
               />
             );
           })}

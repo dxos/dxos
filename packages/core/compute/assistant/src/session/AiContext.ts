@@ -158,7 +158,9 @@ export class Binder extends Resource {
       await this._updateBindings(results);
       log('sync complete', {
         skills: this._registry.get(this._skills).length,
-        skillKeys: this._registry.get(this._skills).map((bp) => Skill.getKey(bp)),
+        // Read the meta key directly: `Skill.getKey` throws on a space-authored skill, which would
+        // make a diagnostic log the thing that breaks the sync.
+        skillKeys: this._registry.get(this._skills).map((skill) => Obj.getMeta(skill).key),
       });
     }
   }
@@ -187,29 +189,19 @@ export class Binder extends Resource {
       resolvedSkillKeys: resolvedSkills.map((bp) => Obj.getMeta(bp).key ?? '<missing>'),
     });
 
-    // Drop skills that have no registry key — they cannot be used downstream
-    // (e.g. tool/operation registration calls Skill.getKey which throws).
-    const keyedSkills = resolvedSkills.filter((bp) => {
-      if (Obj.getMeta(bp).key === undefined) {
-        log.warn('dropping skill with no meta key', { uri: Obj.getURI(bp) });
-        return false;
-      }
-      return true;
-    });
-
     // Filter current state to only items still in the reduced binding set,
     // then merge in newly resolved items. This ensures unbind events are respected.
     const reducedSkillDxns = new Set<URI.URI>([...bindings.skills].map((ref) => ref.uri));
     const reducedObjectDxns = new Set<URI.URI>([...bindings.objects].map((ref) => ref.uri));
     const filteredSkills = currentSkills.filter((obj) => {
       const uri = Obj.getURI(obj);
-      return uri != null && reducedSkillDxns.has(uri) && Obj.getMeta(obj).key !== undefined;
+      return uri != null && reducedSkillDxns.has(uri);
     });
     const filteredObjects = currentObjects.filter((obj) => {
       const uri = Obj.getURI(obj);
       return uri != null && reducedObjectDxns.has(uri);
     });
-    const mergedSkills = this._mergeInto(filteredSkills, keyedSkills);
+    const mergedSkills = this._mergeInto(filteredSkills, resolvedSkills);
     const mergedObjects = this._mergeInto(filteredObjects, resolvedObjects);
 
     this._registry.set(this._skills, mergedSkills);

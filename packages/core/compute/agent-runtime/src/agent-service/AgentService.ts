@@ -74,8 +74,13 @@ export const createSession: (
 ) => Effect.Effect<Session, Skill.NotFoundError, Database.Service | Registry.Service | AgentService> = Effect.fn(
   'createSession',
 )(function* (opts) {
+  // A skill already in a database is bound as-is: it is either space-authored (no registry key at
+  // all) or a fork carrying the user's edits, and resolving it through the registry would substitute
+  // the pristine copy for the one the caller handed us.
   const skills = yield* Effect.forEach(opts?.skills ?? [], (skill) =>
-    Skill.upsert(Skill.getKey(skill)).pipe(Effect.map(Ref.make)),
+    Obj.getDatabase(skill) !== undefined
+      ? Effect.succeed(Ref.make(skill))
+      : Skill.upsert(Skill.getKey(skill)).pipe(Effect.map(Ref.make)),
   );
 
   const feed = yield* Database.add(Feed.make());
